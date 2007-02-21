@@ -1,0 +1,121 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":index.html
+
+</div>
+
+h1(pagetitle). Terminals
+
+<div class="content">
+
+h2. Text Selections
+
+Highlight terminal text by dragging over it with the mouse.  Keep it
+*rectangular* by holding down the Option key.
+
+h3(#selectdrag). Drag and Drop
+
+Text can be copied by using the mouse to move a selection to another
+location - for instance, the Desktop (to make a text clipping).
+
+Text can be imported in the same way - any text dropped into a
+terminal is effectively typed into the terminal.
+
+The Unix pathname of a file or folder can be typed by dropping the
+icon (from the Finder, say) into a terminal.
+
+h3(#selectappearance). Text Selection Preferences
+
+See "the Preferences page":preferences.html for some options related to the
+appearance and behavior of text selections.  For instance, you can
+choose to have them automatically copied to the clipboard.
+
+h2. Cursor
+
+The cursor is a special position in the bottommost screenful of a
+terminal, representing (usually) where text will appear when you type.
+
+h3(#findcursor). Finding the Cursor
+
+Use Edit >> Find Cursor to create a homing animation that tells
+you where the terminal cursor is in the active window.  This can
+be useful at times when the cursor is hard to see amongst several
+lines of text.
+
+h3(#cursorappearance). Cursor Preferences
+
+See "the Preferences page":preferences.html for some options related to the
+appearance and behavior of the cursor.  For instance, you can
+choose its shape and whether or not it is flashing on and off.
+
+h2(#commandline). Floating Command Line
+
+Use Window >> Show Command Line to display a floating window
+for entering text that _is not_ immediately sent to the active terminal
+as you type.
+
+Instead, the text is sent in one of two ways:
+
+* By hitting *Return*, which sends what's entered so far,
+  followed by a new-line sequence, to the active terminal
+
+* By hitting *Tab*, which sends only the text (no new-line)
+
+The command line also supports a small history of past lines of text
+that you have entered; you can either press the up-arrow key or use
+the pop-up menu to access them.
+
+As a special peculiarity, MacTelnet will allow you to enter a
+URL (http://www.apple.com/, telnet://nowhere.loopback.edu/, etc.)
+into the command line, and if you do it will **not** be sent to the
+active terminal.  Instead, it will be handled by your system,
+running whatever helper application is most appropriate (for
+example, your preferred web browser).
+
+h2. Window Operations
+
+MacTelnet provides many sophisticated ways to manage windows.
+
+h3(#dimensions). Screen Sizes
+
+The View menu contains a couple of short-cut commands that let you
+immediately change a terminal window to one of the standard sizes
+(80x24, 132x24), and you may also open a dialog to choose a specific
+number of rows and columns.  If you drag the resize box of the
+window, the rows and columns are changed dynamically (with a pop-up
+showing the dimensions as you drag).
+
+h3(#magnify). Magnification
+
+Use View >> Make Text as Big as Possible to alter a terminal's text
+size based on the display that contains the largest part of its window!
+See also View >> Full Screen, which can be used in tandem with
+this effect to create a dedicated terminal display (kiosk).  If you
+Option-drag the resize box of the window, the text is magnified
+dynamically (with a pop-up showing the font size as you drag).
+
+h3(#hide). Hiding Windows
+
+A window can be hidden from view while it is still open, allowing
+you to reduce clutter without disturbing active commands or
+remote connections.  Note that if you Option-click another window
+the active terminal will automatically hide before activating the
+new window.
+
+h3(#arrange). Arranging Windows
+
+When arranged, _all_ terminal windows return to a diagonal stagger
+pattern that matches their original opening positions.  NOTE that
+this cannot be undone.
+
+h3(#arrange). Session-Induced Window Changes
+
+MacTelnet respects some of XTerm's window sequences, so a terminal
+application may also affect a window.  Typically an application will
+rename the window or minimize it into the Dock.
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+

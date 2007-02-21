@@ -1,0 +1,30 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="2" name="allObjects">
+    <object class="IBCarbonWindow" id="166">
+      <string name="windowRect">181 186 541 666 </string>
+      <string name="title">(TEK)</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="bounds">0 0 360 480 </string>
+      </object>
+      <boolean name="liveResize">TRUE</boolean>
+      <int name="windowPosition">4</int>
+    </object>
+    <reference idRef="167"/>
+  </array>
+  <array count="2" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="166"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+    <string>Window</string>
+    <reference idRef="166"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">180</unsigned_int>
+</object>

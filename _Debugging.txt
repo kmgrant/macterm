@@ -1,0 +1,56 @@
+
+                     How to Debug MacTelnet            2006-09-27
+
+BACKGROUND
+  MacTelnet is in many ways very easy to debug because it is
+  launched by a Python interpreter: code in the application can
+  use the simplicity of scripting where practical to test, even
+  taking full advantage of Python testing capabilities like
+  "doctest" within scripts.
+  
+  However, this also brings a few complications you should be
+  aware of.  The biggest one is that MacTelnet is *not* the main
+  executable, *Python* is.  You are therefore debugging "python"
+  from the point of view of MallocDebug or any other tool that
+  attaches to running processes.  This does not change anything
+  in practice aside from making it slightly harder to find some
+  of the familiar application entry points.
+
+INVOKING GDB
+  See the script "Debug/DebugMacTelnet.sh.command" for a utility
+  script to invoke the GNU debugger, as well as comments that
+  explain what to do.  In a nutshell, since "python" is the front
+  end, "gdb" must run against python and step past the framework
+  load breakpoint for MacTelnet.
+
+THE CALL STACK
+  The Python interpreter has multiple threads and a moderately
+  deep call stack.  It can be daunting to figure out where the
+  main event loop for MacTelnet is actually invoked, so this
+  section helps you with that.
+  
+  In MallocDebug or another program that traces the call stack,
+  follow start() -> Py_Main() -> PyRun_SimpleFileExFlags() and
+  trace as shown below down to the event loop.  (Note that this
+  example is based Python 2.3 on Mac OS X 10.4; perhaps a future
+  version of Python will change the call stack a bit.)
+  
+  Example:
+  ...
+  #8  0x00222bcc in _wrap_Events_run_loop ()
+  #9  0x98a8c8e0 in PyObject_Call ()
+  #10 0x98aec5a4 in PyEval_GetFuncDesc ()
+  #11 0x98ae94f4 in PyEval_EvalCode ()
+  #12 0x98aea5e4 in PyEval_EvalCodeEx ()
+  #13 0x98aebf90 in PyEval_GetFuncDesc ()
+  #14 0x98aebd34 in PyEval_GetFuncDesc ()
+  #15 0x98ae9414 in PyEval_EvalCode ()
+  #16 0x98aea5e4 in PyEval_EvalCodeEx ()
+  #17 0x98ae6eb8 in PyEval_EvalCode ()
+  #18 0x98b0b08c in PyRun_FileExFlags ()
+  #19 0x98b0a0b0 in PyRun_SimpleFileExFlags ()
+  #20 0x98b14a00 in Py_Main ()
+  #21 0x00002574 in start ()
+
+                                     Kevin Grant (kevin@ieee.org)
+                                        Lead Developer, MacTelnet

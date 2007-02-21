@@ -1,0 +1,50 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="4" name="allObjects">
+    <object class="IBCarbonMenu" id="180">
+      <int name="menuID">525</int>
+      <array count="3" name="items">
+        <object class="IBCarbonMenuItem" id="181">
+          <boolean name="disabled">TRUE</boolean>
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">Contextual Help</string>
+          <string name="keyEquivalent">?</string>
+          <int name="keyEquivalentModifier">1310720</int>
+          <ostype name="command">mini</ostype>
+        </object>
+        <object class="IBCarbonMenuItem" id="235">
+          <boolean name="separator">TRUE</boolean>
+          <boolean name="updateSingleItem">TRUE</boolean>
+        </object>
+        <object class="IBCarbonMenuItem" id="234">
+          <boolean name="disabled">TRUE</boolean>
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">&lt;help tags&gt;</string>
+          <string name="keyEquivalent">?</string>
+          <int name="keyEquivalentModifier">1572864</int>
+          <ostype name="command">mini</ostype>
+        </object>
+      </array>
+    </object>
+    <reference idRef="181"/>
+    <reference idRef="234"/>
+    <reference idRef="235"/>
+  </array>
+  <array count="4" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="180"/>
+    <reference idRef="180"/>
+    <reference idRef="180"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+    <string>Normal</string>
+    <reference idRef="180"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">236</unsigned_int>
+</object>

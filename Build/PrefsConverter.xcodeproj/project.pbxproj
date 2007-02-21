@@ -1,0 +1,329 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A33CC4E07FABA6500248DDF /* PrefsConverterPrefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */; };
+		0A33CC5307FABACC00248DDF /* CFDictionaryManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */; };
+		0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5507FABAF800248DDF /* UniversalDefines.h */; };
+		0A33CC5807FABAF800248DDF /* CFKeyValueInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */; };
+		0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */; };
+		0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */; };
+		0AA163210825E7CE0071EA63 /* PrefsConverter.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */; };
+		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
+		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */; };
+		0AF2E26E06EBA1D200A7C4A9 /* PreferencesData.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */; };
+		8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		0AA7B36C09D8AC530032215C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.gcc.4_0;
+			fileType = sourcecode.c;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+		0AA7B36D09D8AC530032215C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.gcc.4_0;
+			fileType = sourcecode.c;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+/* End PBXBuildRule section */
+
+/* Begin PBXFileReference section */
+		0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefsConverterPrefix.pch; path = PrefsConverter/Code/PrefsConverterPrefix.pch; sourceTree = "<group>"; };
+		0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CFDictionaryManager.h; path = Shared/Code/CFDictionaryManager.h; sourceTree = "<group>"; };
+		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
+		0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CFKeyValueInterface.h; path = Shared/Code/CFKeyValueInterface.h; sourceTree = "<group>"; };
+		0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
+		0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
+		0AA163200825E7CE0071EA63 /* PrefsConverter.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = PrefsConverter.nib; path = PrefsConverter/Resources/English.lproj/PrefsConverter.nib; sourceTree = "<group>"; };
+		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = PrefsConverter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = PrefsConverter/Code/MainEntryPoint.cp; sourceTree = "<group>"; };
+		0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PreferencesData.h; path = PrefsConverter/Code/PreferencesData.h; sourceTree = "<group>"; };
+		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
+		4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
+		8D0C4E970486CD37000505A6 /* PrefsConverter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PrefsConverter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D0C4E910486CD37000505A6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A33CC5407FABADE00248DDF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				0A33CC6207FABB6F00248DDF /* CFDictionaryManager.cp */,
+				0A33CC5E07FABB5200248DDF /* CFKeyValueInterface.cp */,
+				0A33CC5207FABACC00248DDF /* CFDictionaryManager.h */,
+				0A33CC5607FABAF800248DDF /* CFKeyValueInterface.h */,
+				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		195DF8CFFE9D517E11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D0C4E970486CD37000505A6 /* PrefsConverter.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		20286C29FDCF999611CA2CEA /* MacTelnetPrefsConverter */ = {
+			isa = PBXGroup;
+			children = (
+				0A33CC5407FABADE00248DDF /* Shared */,
+				195DF8CFFE9D517E11CA2CBB /* Products */,
+				4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */,
+				20286C33FDCF999611CA2CEA /* Carbon.framework */,
+				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
+				0A33CC4D07FABA6500248DDF /* PrefsConverterPrefix.pch */,
+				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */,
+				0AF2E26D06EBA1D200A7C4A9 /* PreferencesData.h */,
+				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
+				0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */,
+			);
+			name = MacTelnetPrefsConverter;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		0AD4D6FB06E9A6FC004FF4CD /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AF2E26E06EBA1D200A7C4A9 /* PreferencesData.h in Headers */,
+				0A33CC4E07FABA6500248DDF /* PrefsConverterPrefix.pch in Headers */,
+				0A33CC5307FABACC00248DDF /* CFDictionaryManager.h in Headers */,
+				0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */,
+				0A33CC5807FABAF800248DDF /* CFKeyValueInterface.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8D0C4E890486CD37000505A6 /* PrefsConverter */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A578F0609D88AAC007D1289 /* Build configuration list for PBXNativeTarget "PrefsConverter" */;
+			buildPhases = (
+				0AD4D6FB06E9A6FC004FF4CD /* Headers */,
+				8D0C4E8F0486CD37000505A6 /* Sources */,
+				8D0C4E8C0486CD37000505A6 /* Resources */,
+				8D0C4E910486CD37000505A6 /* Frameworks */,
+			);
+			buildRules = (
+				0AA7B36D09D8AC530032215C /* PBXBuildRule */,
+				0AA7B36C09D8AC530032215C /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = PrefsConverter;
+			productInstallPath = "$(HOME)/Applications";
+			productName = MacTelnetPrefsConverter;
+			productReference = 8D0C4E970486CD37000505A6 /* PrefsConverter.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		20286C28FDCF999611CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 20286C29FDCF999611CA2CEA /* MacTelnetPrefsConverter */;
+			projectDirPath = "";
+			targets = (
+				8D0C4E890486CD37000505A6 /* PrefsConverter */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D0C4E8C0486CD37000505A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */,
+				0AA163210825E7CE0071EA63 /* PrefsConverter.nib in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D0C4E8F0486CD37000505A6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */,
+				0A33CC5F07FABB5200248DDF /* CFKeyValueInterface.cp in Sources */,
+				0A33CC6307FABB6F00248DDF /* CFDictionaryManager.cp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		0AA1631F0825E7CE0071EA63 /* PrefsConverter.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AA163200825E7CE0071EA63 /* PrefsConverter.nib */,
+			);
+			name = PrefsConverter.nib;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0A578F0709D88AAC007D1289 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = PrefsConverter/Code/PrefsConverterPrefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
+				INSTALL_PATH = "$(USER_APPS_DIR)";
+				OTHER_CFLAGS = (
+					"-fpascal-strings",
+					"-v",
+					"-IHeaders",
+				);
+				PRODUCT_NAME = PrefsConverter;
+				REZ_SHOW_DEBUG_OUTPUT = YES;
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = NO;
+			};
+			name = ForDebugging;
+		};
+		0A578F0809D88AAC007D1289 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = PrefsConverter/Code/PrefsConverterPrefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				INFOPLIST_FILE = "PrefsConverter/Resources/PrefsConverter-Info.plist";
+				INSTALL_PATH = "$(USER_APPS_DIR)";
+				OTHER_CFLAGS = (
+					"-fpascal-strings",
+					"-v",
+					"-IHeaders",
+				);
+				PRODUCT_NAME = PrefsConverter;
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = NO;
+			};
+			name = ForRelease;
+		};
+		0A578F0B09D88AAC007D1289 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
+			};
+			name = ForDebugging;
+		};
+		0A578F0C09D88AAC007D1289 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = ForRelease;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A578F0609D88AAC007D1289 /* Build configuration list for PBXNativeTarget "PrefsConverter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A578F0709D88AAC007D1289 /* ForDebugging */,
+				0A578F0809D88AAC007D1289 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+		0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A578F0B09D88AAC007D1289 /* ForDebugging */,
+				0A578F0C09D88AAC007D1289 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 20286C28FDCF999611CA2CEA /* Project object */;
+}

@@ -1,0 +1,321 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 42;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		0A2EA0E108E0F28A00108992 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2EA0E008E0F28A00108992 /* CFUtilities.cp */; };
+		0A33CC4E07FABA6500248DDF /* BugReporterPrefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */; };
+		0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A33CC5507FABAF800248DDF /* UniversalDefines.h */; };
+		0A3C0113081208530088580A /* CFUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3C0112081208530088580A /* CFUtilities.h */; };
+		0A3C025D08123ACD0088580A /* Releases.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3C025C08123ACD0088580A /* Releases.cp */; };
+		0A3C026408123ADE0088580A /* Releases.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3C026308123ADE0088580A /* Releases.h */; };
+		0AA742C906E45F2D00CBC7B5 /* BugReporter.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742C706E45F2D00CBC7B5 /* BugReporter.nib */; };
+		0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */; };
+		0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */; };
+		8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 20286C33FDCF999611CA2CEA /* Carbon.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXBuildRule section */
+		0AA7B35A09D8ABE70032215C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.gcc.4_0;
+			fileType = sourcecode.cpp;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+		0AA7B35B09D8AC060032215C /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.gcc.4_0;
+			fileType = sourcecode.c;
+			isEditable = 1;
+			outputFiles = (
+			);
+		};
+/* End PBXBuildRule section */
+
+/* Begin PBXFileReference section */
+		0A2EA0E008E0F28A00108992 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
+		0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = BugReporterPrefix.pch; path = BugReporter/Code/BugReporterPrefix.pch; sourceTree = "<group>"; };
+		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
+		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
+		0A3C025C08123ACD0088580A /* Releases.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Releases.cp; path = Shared/Code/Releases.cp; sourceTree = "<group>"; };
+		0A3C026308123ADE0088580A /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
+		0AA742C806E45F2D00CBC7B5 /* BugReporter.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = BugReporter.nib; path = BugReporter/Resources/English.lproj/BugReporter.nib; sourceTree = "<group>"; };
+		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = BugReporter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = BugReporter/Code/MainEntryPoint.cp; sourceTree = "<group>"; };
+		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
+		4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };
+		8D0C4E970486CD37000505A6 /* BugReporter.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = BugReporter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8D0C4E910486CD37000505A6 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D0C4E920486CD37000505A6 /* Carbon.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0A33CC5407FABADE00248DDF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				0A2EA0E008E0F28A00108992 /* CFUtilities.cp */,
+				0A3C0112081208530088580A /* CFUtilities.h */,
+				0A3C025C08123ACD0088580A /* Releases.cp */,
+				0A3C026308123ADE0088580A /* Releases.h */,
+				0A33CC5507FABAF800248DDF /* UniversalDefines.h */,
+			);
+			name = Shared;
+			sourceTree = "<group>";
+		};
+		195DF8CFFE9D517E11CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8D0C4E970486CD37000505A6 /* BugReporter.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		20286C29FDCF999611CA2CEA /* BugReporter */ = {
+			isa = PBXGroup;
+			children = (
+				0A33CC5407FABADE00248DDF /* Shared */,
+				195DF8CFFE9D517E11CA2CBB /* Products */,
+				4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */,
+				20286C33FDCF999611CA2CEA /* Carbon.framework */,
+				4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */,
+				0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */,
+				0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */,
+				0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */,
+				0AA742C706E45F2D00CBC7B5 /* BugReporter.nib */,
+			);
+			name = BugReporter;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		0AD4D6FB06E9A6FC004FF4CD /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A33CC4E07FABA6500248DDF /* BugReporterPrefix.pch in Headers */,
+				0A33CC5707FABAF800248DDF /* UniversalDefines.h in Headers */,
+				0A3C0113081208530088580A /* CFUtilities.h in Headers */,
+				0A3C026408123ADE0088580A /* Releases.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		8D0C4E890486CD37000505A6 /* BugReporter */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0A578EDE09D88A71007D1289 /* Build configuration list for PBXNativeTarget "BugReporter" */;
+			buildPhases = (
+				0AD4D6FB06E9A6FC004FF4CD /* Headers */,
+				8D0C4E8F0486CD37000505A6 /* Sources */,
+				8D0C4E8C0486CD37000505A6 /* Resources */,
+				8D0C4E910486CD37000505A6 /* Frameworks */,
+			);
+			buildRules = (
+				0AA7B35B09D8AC060032215C /* PBXBuildRule */,
+				0AA7B35A09D8ABE70032215C /* PBXBuildRule */,
+			);
+			dependencies = (
+			);
+			name = BugReporter;
+			productInstallPath = "$(HOME)/Applications";
+			productName = BugReporter;
+			productReference = 8D0C4E970486CD37000505A6 /* BugReporter.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		20286C28FDCF999611CA2CEA /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "BugReporter" */;
+			hasScannedForEncodings = 1;
+			mainGroup = 20286C29FDCF999611CA2CEA /* BugReporter */;
+			projectDirPath = "";
+			targets = (
+				8D0C4E890486CD37000505A6 /* BugReporter */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		8D0C4E8C0486CD37000505A6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AA742C906E45F2D00CBC7B5 /* BugReporter.nib in Resources */,
+				0AA742CB06E45F5A00CBC7B5 /* IconForBundle.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8D0C4E8F0486CD37000505A6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0AA742CD06E45FBC00CBC7B5 /* MainEntryPoint.cp in Sources */,
+				0A3C025D08123ACD0088580A /* Releases.cp in Sources */,
+				0A2EA0E108E0F28A00108992 /* CFUtilities.cp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		0AA742C706E45F2D00CBC7B5 /* BugReporter.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AA742C806E45F2D00CBC7B5 /* BugReporter.nib */,
+			);
+			name = BugReporter.nib;
+			sourceTree = SOURCE_ROOT;
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		0A578EDF09D88A71007D1289 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = BugReporter/Code/BugReporterPrefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				INFOPLIST_FILE = "BugReporter/Resources/BugReporter-Info.plist";
+				INSTALL_PATH = "$(USER_APPS_DIR)";
+				OTHER_CFLAGS = (
+					"-fpascal-strings",
+					"-v",
+					"-IHeaders",
+				);
+				PRODUCT_NAME = BugReporter;
+				REZ_SHOW_DEBUG_OUTPUT = YES;
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = NO;
+			};
+			name = ForDebugging;
+		};
+		0A578EE009D88A71007D1289 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COPY_PHASE_STRIP = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = BugReporter/Code/BugReporterPrefix.pch;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_FOUR_CHARACTER_CONSTANTS = NO;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = NO;
+				GCC_WARN_UNKNOWN_PRAGMAS = NO;
+				GCC_WARN_UNUSED_FUNCTION = NO;
+				GCC_WARN_UNUSED_LABEL = NO;
+				GCC_WARN_UNUSED_PARAMETER = NO;
+				GCC_WARN_UNUSED_VALUE = NO;
+				GCC_WARN_UNUSED_VARIABLE = NO;
+				INFOPLIST_FILE = "BugReporter/Resources/BugReporter-Info.plist";
+				INSTALL_PATH = "$(USER_APPS_DIR)";
+				OTHER_CFLAGS = (
+					"-fpascal-strings",
+					"-v",
+					"-IHeaders",
+				);
+				PRODUCT_NAME = BugReporter;
+				WARNING_CFLAGS = "-Wall";
+				WRAPPER_EXTENSION = app;
+				ZERO_LINK = NO;
+			};
+			name = ForRelease;
+		};
+		0A578EE309D88A71007D1289 /* ForDebugging */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = ppc;
+				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = ForDebugging;
+		};
+		0A578EE409D88A71007D1289 /* ForRelease */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+			};
+			name = ForRelease;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0A578EDE09D88A71007D1289 /* Build configuration list for PBXNativeTarget "BugReporter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A578EDF09D88A71007D1289 /* ForDebugging */,
+				0A578EE009D88A71007D1289 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+		0A578EE209D88A71007D1289 /* Build configuration list for PBXProject "BugReporter" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A578EE309D88A71007D1289 /* ForDebugging */,
+				0A578EE409D88A71007D1289 /* ForRelease */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForDebugging;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 20286C28FDCF999611CA2CEA /* Project object */;
+}

@@ -1,0 +1,1611 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="203" name="allObjects">
+    <object class="IBCarbonMenu" id="29">
+      <string name="title">Untitled</string>
+      <array count="12" name="items">
+        <object class="IBCarbonMenuItem" id="182">
+          <string name="title">MacTelnet</string>
+          <object name="submenu" class="IBCarbonMenu" id="181">
+            <string name="title">MacTelnet</string>
+            <int name="menuID">512</int>
+            <array count="12" name="items">
+              <object class="IBCarbonMenuItem" id="235">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">About MacTelnet</string>
+                <ostype name="command">abou</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="272">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="237">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Full Screen</string>
+                <ostype name="command">Kios</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="238">
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Disable Full Screen Mode</string>
+                <string name="keyEquivalent">&#27;</string>
+                <int name="keyEquivalentModifier">524288</int>
+                <ostype name="command">KskQ</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="239">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="240">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show IP Address…</string>
+                <string name="keyEquivalent">i</string>
+                <int name="keyEquivalentModifier">1310720</int>
+                <ostype name="command">CIPn</ostype>
+                <string name="helpTagText">Find the Internet addresses of your computer.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="241">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Send IP Address</string>
+                <string name="keyEquivalent">I</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">SIPn</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="242">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="243">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Check for Updates…</string>
+                <ostype name="command">ChUp</ostype>
+                <string name="helpTagText">See if a new version is available for download.</string>
+                <string name="extendedHelpTagText">Connects to the Internet to see if a newer version of MacTelnet has been released.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="244">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">MacTelnet Web Site</string>
+                <ostype name="command">.com</ostype>
+                <string name="helpTagText">http://www.mactelnet.com/</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="245">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Provide MacTelnet Feedback</string>
+                <ostype name="command">Mail</ostype>
+                <string name="helpTagText">kevin@ieee.org</string>
+                <string name="extendedHelpTagText">Composes an E-mail to the primary author of MacTelnet.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="246">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+            </array>
+            <string name="name">_NSAppleMenu</string>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="247">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">File</string>
+          <object name="submenu" class="IBCarbonMenu" id="248">
+            <string name="title">File</string>
+            <int name="menuID">513</int>
+            <array count="21" name="items">
+              <object class="IBCarbonMenuItem" id="250">
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="sectionHeader">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">New Session:</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="251">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Default</string>
+                <string name="keyEquivalent">n</string>
+                <ostype name="command">new </ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="252">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Shell</string>
+                <string name="keyEquivalent">n</string>
+                <int name="keyEquivalentModifier">1310720</int>
+                <ostype name="command">NShS</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="253">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Log-In Shell</string>
+                <string name="keyEquivalent">n</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">NLgS</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="254">
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Custom New Session…</string>
+                <string name="keyEquivalent">N</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">New…</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="255">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Open…</string>
+                <string name="keyEquivalent">o</string>
+                <ostype name="command">open</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="256">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="257">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Close</string>
+                <string name="keyEquivalent">w</string>
+                <ostype name="command">clos</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="258">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Save As…</string>
+                <string name="keyEquivalent">s</string>
+                <ostype name="command">svas</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="259">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="260">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Duplicate Session</string>
+                <string name="keyEquivalent">d</string>
+                <ostype name="command">NewD</ostype>
+                <string name="helpTagText">Create new session that is similar to the current one.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="261">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Open URL</string>
+                <string name="keyEquivalent">u</string>
+                <ostype name="command">HURL</ostype>
+                <string name="helpTagText">Launch helper application for a selected URL.</string>
+                <string name="extendedHelpTagText">A URL is a web address, such as &quot;http://www.mactelnet.com/&quot;.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="262">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Save Selection…</string>
+                <string name="keyEquivalent">S</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">SvTx</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="263">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="264">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Import Macro Set…</string>
+                <ostype name="command">IMcr</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="265">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Export Active Macro Set…</string>
+                <ostype name="command">EMcr</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="266">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="267">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Page Setup…</string>
+                <string name="keyEquivalent">P</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">page</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="268">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Print…</string>
+                <string name="keyEquivalent">p</string>
+                <ostype name="command">prnt</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="269">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Print One Copy</string>
+                <string name="keyEquivalent">p</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">Pr1C</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="270">
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Print Screen</string>
+                <string name="keyEquivalent"></string>
+                <int name="keyEquivalentModifier">0</int>
+                <ostype name="command">PrSc</ostype>
+                <string name="helpTagText">Print the visible terminal text.</string>
+              </object>
+            </array>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="273">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">Edit</string>
+          <object name="submenu" class="IBCarbonMenu" id="274">
+            <string name="title">Edit</string>
+            <int name="menuID">514</int>
+            <array count="23" name="items">
+              <object class="IBCarbonMenuItem" id="276">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Undo</string>
+                <string name="keyEquivalent">z</string>
+                <ostype name="command">undo</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="277">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Redo</string>
+                <string name="keyEquivalent">Z</string>
+                <ostype name="command">redo</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="278">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="279">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Cut</string>
+                <string name="keyEquivalent">x</string>
+                <ostype name="command">cut </ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="280">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Copy</string>
+                <string name="keyEquivalent">c</string>
+                <ostype name="command">copy</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="281">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Copy with Tab Substitution</string>
+                <string name="keyEquivalent">C</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">CpyT</ostype>
+                <string name="helpTagText">Replace consecutive spaces with tabs before copying selected text.</string>
+                <string name="extendedHelpTagText">The number of spaces converted to a tab can be set with Preferences.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="282">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Copy &amp; Paste</string>
+                <string name="keyEquivalent">V</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">CpPs</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="283">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Paste</string>
+                <string name="keyEquivalent">v</string>
+                <ostype name="command">past</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="284">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Delete</string>
+                <ostype name="command">clea</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="285">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="286">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Select All</string>
+                <string name="keyEquivalent">a</string>
+                <ostype name="command">sall</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="287">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Select Nothing</string>
+                <string name="keyEquivalent">A</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">Sel0</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="288">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Select Entire Scrollback Buffer</string>
+                <string name="keyEquivalent">a</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">SlSb</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="289">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Find…</string>
+                <string name="keyEquivalent">f</string>
+                <ostype name="command">Find</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="290">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Find Next</string>
+                <string name="keyEquivalent">g</string>
+                <ostype name="command">FndN</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="291">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Find Previous</string>
+                <string name="keyEquivalent">G</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">FndP</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="292">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="293">
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Find Cursor</string>
+                <string name="keyEquivalent">*</string>
+                <ostype name="command">FndC</ostype>
+                <string name="helpTagText">Animates terminal cursor location.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="294">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show Clipboard</string>
+                <ostype name="command">ShCl</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="295">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide Clipboard</string>
+                <ostype name="command">HiCl</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="471">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="470">
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Fix Character Translation…</string>
+                <string name="keyEquivalent">T</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">FixT</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="296">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Special Characters…</string>
+                <string name="keyEquivalent">t</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">chrp</ostype>
+              </object>
+            </array>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="297">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">Edit</string>
+          <object name="submenu" class="IBCarbonMenu" id="298">
+            <string name="title">Edit</string>
+            <int name="menuID">257</int>
+            <array count="8" name="items">
+              <object class="IBCarbonMenuItem" id="300">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Cut</string>
+                <string name="keyEquivalent">x</string>
+                <ostype name="command">cut </ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="301">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Copy</string>
+                <string name="keyEquivalent">c</string>
+                <ostype name="command">copy</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="302">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Paste</string>
+                <string name="keyEquivalent">v</string>
+                <ostype name="command">past</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="303">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Delete</string>
+                <ostype name="command">clea</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="304">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="305">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Select All</string>
+                <string name="keyEquivalent">a</string>
+                <ostype name="command">sall</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="306">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="307">
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Find Cursor</string>
+                <string name="keyEquivalent">*</string>
+                <ostype name="command">FndC</ostype>
+                <string name="helpTagText">Animates terminal cursor location.</string>
+              </object>
+            </array>
+            <boolean name="hidden">TRUE</boolean>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="308">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">View</string>
+          <object name="submenu" class="IBCarbonMenu" id="309">
+            <string name="title">View</string>
+            <int name="menuID">515</int>
+            <array count="19" name="items">
+              <object class="IBCarbonMenuItem" id="311">
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="sectionHeader">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Screen Size:</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="313">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Standard (80 x 24)</string>
+                <ostype name="command">StdW</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="467">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Tall (80 x 48)</string>
+                <ostype name="command">Tall</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="312">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Wide (132 x 24)</string>
+                <ostype name="command">Wide</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="314">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Custom Screen Size…</string>
+                <string name="keyEquivalent">k</string>
+                <ostype name="command">SSiz</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="315">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="316">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Make Text Bigger</string>
+                <string name="keyEquivalent">+</string>
+                <ostype name="command">FSzB</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="317">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Make Text as Big as Possible</string>
+                <ostype name="command">Full</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="318">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Make Text Smaller</string>
+                <string name="keyEquivalent">-</string>
+                <ostype name="command">FSzS</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="319">
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="sectionHeader">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Format:</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="320">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Default</string>
+                <ostype name="command">FmtD</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="321">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Custom Format…</string>
+                <string name="keyEquivalent">t</string>
+                <ostype name="command">Text</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="443">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="444">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">New TEK Page</string>
+                <string name="keyEquivalent">p</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">TEKP</ostype>
+                <string name="helpTagText">Create vector graphics window.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="445">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Clear TEK Canvas on Page</string>
+                <ostype name="command">TEKC</ostype>
+                <string name="helpTagText">Whether to always use a single graphics window.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="322">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="323">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show Toolbar</string>
+                <ostype name="command">tbsh</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="324">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide Toolbar</string>
+                <ostype name="command">tbhd</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="325">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Customize Toolbar…</string>
+                <ostype name="command">tcfg</ostype>
+              </object>
+            </array>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="326">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">Terminal</string>
+          <object name="submenu" class="IBCarbonMenu" id="327">
+            <string name="title">Terminal</string>
+            <int name="menuID">516</int>
+            <array count="21" name="items">
+              <object class="IBCarbonMenuItem" id="329">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Suspend (Scroll Lock)</string>
+                <ostype name="command">Susp</ostype>
+                <string name="helpTagText">Temporarily stop new text from appearing.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="330">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Interrupt Process</string>
+                <ostype name="command">IP  </ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="331">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="332">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Terminal Emulator Setup…</string>
+                <int name="keyEquivalentModifier">0</int>
+                <ostype name="command">Emul</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="333">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="334">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Disable Bell</string>
+                <ostype name="command">Qiet</ostype>
+                <string name="helpTagText">Turn off terminal-generated sound.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="335">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Local Echo</string>
+                <ostype name="command">Echo</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="336">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Line Wrap</string>
+                <ostype name="command">Wrap</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="337">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Save Lines on Clear</string>
+                <ostype name="command">CSSL</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="338">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Jump Scrolling</string>
+                <string name="keyEquivalent">j</string>
+                <ostype name="command">Jump</ostype>
+                <string name="helpTagText">When anticipating large amounts of data, jumps will scroll faster.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="339">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Notify At Next Activity</string>
+                <ostype name="command">Notf</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="340">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="341">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Begin Capture To File…</string>
+                <string name="keyEquivalent">b</string>
+                <ostype name="command">Capt</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="342">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">End Capture To File</string>
+                <string name="keyEquivalent">b</string>
+                <ostype name="command">CapE</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="346">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="347">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Speak Incoming Lines of Text</string>
+                <string name="keyEquivalent">v</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">Talk</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="348">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Speak Selected Text</string>
+                <ostype name="command">SpkS</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="349">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="350">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Delete Entire Scrollback Buffer</string>
+                <string name="keyEquivalent">r</string>
+                <int name="keyEquivalentModifier">1310720</int>
+                <ostype name="command">ClSB</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="351">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Reset Graphics Characters</string>
+                <string name="keyEquivalent">r</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">NoGr</ostype>
+                <string name="helpTagText">Partial reset; useful to fix text garbling.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="352">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Reset Terminal</string>
+                <string name="keyEquivalent">r</string>
+                <ostype name="command">RTrm</ostype>
+                <string name="helpTagText">Full reset; clears most terminal glitches.</string>
+              </object>
+            </array>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="353">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">Keys</string>
+          <object name="submenu" class="IBCarbonMenu" id="354">
+            <string name="title">Keys</string>
+            <int name="menuID">517</int>
+            <array count="12" name="items">
+              <object class="IBCarbonMenuItem" id="356">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Delete Key Sends “Backspace”</string>
+                <string name="keyEquivalent">[</string>
+                <ostype name="command">DBks</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="357">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Delete Key Sends “Delete”</string>
+                <string name="keyEquivalent">]</string>
+                <ostype name="command">DDel</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="358">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="359">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Arrows Send EMACS Sequences</string>
+                <ostype name="command">EMAC</ostype>
+                <string name="helpTagText">Translate arrow keys to text editor commands.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="360">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Page Keys Affect Terminal Display Only</string>
+                <ostype name="command">LcPg</ostype>
+                <string name="helpTagText">Set effect of Home, End, Page Up and Page Down.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="361">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Special Key Sequences…</string>
+                <ostype name="command">SetK</ostype>
+                <string name="helpTagText">Set up Control key sequences.</string>
+                <string name="extendedHelpTagText">These sequences are used for Interrupt, Suspend and Resume actions in the session.</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="362">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="363">
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="sectionHeader">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Active Macro Set:</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="364">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">None</string>
+                <ostype name="command">XMcr</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="365">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="366">
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="sectionHeader">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Active Translation Table:</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="367">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">None</string>
+                <ostype name="command">XXlt</ostype>
+              </object>
+            </array>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="384">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">Window</string>
+          <object name="submenu" class="IBCarbonMenu" id="385">
+            <string name="title">Window</string>
+            <int name="menuID">518</int>
+            <array count="27" name="items">
+              <object class="IBCarbonMenuItem" id="387">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Minimize</string>
+                <string name="keyEquivalent">m</string>
+                <ostype name="command">mini</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="388">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Zoom</string>
+                <ostype name="command">zoom</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="389">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Maximize</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">Maxm</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="390">
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Rename…</string>
+                <ostype name="command">WinT</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="391">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="392">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide</string>
+                <ostype name="command">HdFW</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="393">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide Other Windows</string>
+                <ostype name="command">HdOW</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="394">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show All Windows</string>
+                <string name="keyEquivalent">a</string>
+                <int name="keyEquivalentModifier">1310720</int>
+                <ostype name="command">ShAW</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="395">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="396">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Arrange All Windows in Front</string>
+                <ostype name="command">StkW</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="397">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Bring Next to Front</string>
+                <string name="keyEquivalent">`</string>
+                <ostype name="command">NxtW</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="398">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Bring Previous to Front</string>
+                <string name="keyEquivalent">`</string>
+                <int name="keyEquivalentModifier">1179648</int>
+                <ostype name="command">PrvW</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="399">
+                <boolean name="dynamic">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Bring Next to Front, Hide Previous</string>
+                <string name="keyEquivalent">`</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">NxWH</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="459">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="446">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show Session Info</string>
+                <string name="keyEquivalent">i</string>
+                <ostype name="command">ShCS</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="447">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide Session Info</string>
+                <string name="keyEquivalent">i</string>
+                <ostype name="command">HiCS</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="448">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show Macro Editor</string>
+                <string name="keyEquivalent">M</string>
+                <ostype name="command">ShMc</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="449">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide Macro Editor</string>
+                <string name="keyEquivalent">M</string>
+                <ostype name="command">HiMc</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="450">
+                <boolean name="separator">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="451">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show Command Line</string>
+                <string name="keyEquivalent">l</string>
+                <ostype name="command">ShCL</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="452">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide Command Line</string>
+                <string name="keyEquivalent">l</string>
+                <ostype name="command">HiCL</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="453">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show Control Keys</string>
+                <string name="keyEquivalent">1</string>
+                <int name="keyEquivalentModifier">786432</int>
+                <ostype name="command">ShCK</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="454">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide Control Keys</string>
+                <string name="keyEquivalent">1</string>
+                <int name="keyEquivalentModifier">786432</int>
+                <ostype name="command">HiCK</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="455">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show VT220 Function Keys</string>
+                <string name="keyEquivalent">2</string>
+                <int name="keyEquivalentModifier">786432</int>
+                <ostype name="command">ShFn</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="456">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide VT220 Function Keys</string>
+                <string name="keyEquivalent">2</string>
+                <int name="keyEquivalentModifier">786432</int>
+                <ostype name="command">HiFn</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="457">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show VT220 Keypad</string>
+                <string name="keyEquivalent">3</string>
+                <int name="keyEquivalentModifier">786432</int>
+                <ostype name="command">ShKp</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="458">
+                <boolean name="hidden">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide VT220 Keypad</string>
+                <string name="keyEquivalent">3</string>
+                <int name="keyEquivalentModifier">786432</int>
+                <ostype name="command">HiKp</ostype>
+              </object>
+            </array>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="400">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">Action</string>
+          <object name="submenu" class="IBCarbonMenu" id="401">
+            <string name="title">Action</string>
+            <int name="menuID">519</int>
+            <array count="4" name="items">
+              <object class="IBCarbonMenuItem" id="403">
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="sectionHeader">TRUE</boolean>
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Task:</string>
+              </object>
+              <object class="IBCarbonMenuItem" id="460">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Save</string>
+                <object name="submenu" class="IBCarbonMenu" id="461">
+                  <string name="title">Save</string>
+                  <array count="5" name="items">
+                    <object class="IBCarbonMenuItem" id="463">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Begin Capture To File…</string>
+                      <ostype name="command">Capt</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="462">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Preferences</string>
+                      <ostype name="command">pref</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="464">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Save As…</string>
+                      <ostype name="command">svas</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="466">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Save Lines on Clear</string>
+                      <ostype name="command">CSSL</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="465">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Save Selection…</string>
+                      <ostype name="command">SvTx</ostype>
+                    </object>
+                  </array>
+                </object>
+              </object>
+              <object class="IBCarbonMenuItem" id="404">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Show</string>
+                <object name="submenu" class="IBCarbonMenu" id="405">
+                  <string name="title">Show</string>
+                  <array count="10" name="items">
+                    <object class="IBCarbonMenuItem" id="411">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show All Windows</string>
+                      <ostype name="command">ShAW</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="410">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show Clipboard</string>
+                      <ostype name="command">ShCl</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="412">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show Command Line</string>
+                      <ostype name="command">ShCL</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="408">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show Control Keys</string>
+                      <ostype name="command">ShCK</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="409">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show Macro Editor</string>
+                      <ostype name="command">ShMc</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="413">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show Session Info</string>
+                      <ostype name="command">ShCS</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="415">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show Toolbar</string>
+                      <ostype name="command">tbsh</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="407">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show VT220 Function Keys</string>
+                      <ostype name="command">ShFn</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="406">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Show VT220 Keypad</string>
+                      <ostype name="command">ShKp</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="414">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Special Characters…</string>
+                      <ostype name="command">chrp</ostype>
+                    </object>
+                  </array>
+                </object>
+              </object>
+              <object class="IBCarbonMenuItem" id="416">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Hide</string>
+                <object name="submenu" class="IBCarbonMenu" id="417">
+                  <string name="title">Hide</string>
+                  <array count="13" name="items">
+                    <object class="IBCarbonMenuItem" id="469">
+                      <boolean name="dynamic">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Close</string>
+                      <ostype name="command">clos</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="424">
+                      <boolean name="hidden">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Clipboard</string>
+                      <ostype name="command">HiCl</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="420">
+                      <boolean name="hidden">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Command Line</string>
+                      <ostype name="command">HiCL</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="428">
+                      <boolean name="hidden">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Control Keys</string>
+                      <ostype name="command">HiCK</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="421">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Front Window</string>
+                      <ostype name="command">HdFW</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="423">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Other Windows</string>
+                      <ostype name="command">HdOW</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="419">
+                      <boolean name="hidden">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Macro Editor</string>
+                      <ostype name="command">HiMc</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="430">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide MacTelnet</string>
+                      <ostype name="command">hide</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="429">
+                      <boolean name="hidden">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Session Info</string>
+                      <ostype name="command">HiCS</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="422">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide Toolbar</string>
+                      <ostype name="command">tbhd</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="418">
+                      <boolean name="hidden">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide VT220 Function Keys</string>
+                      <ostype name="command">HiFn</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="426">
+                      <boolean name="hidden">TRUE</boolean>
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Hide VT220 Keypad</string>
+                      <ostype name="command">HiKp</ostype>
+                    </object>
+                    <object class="IBCarbonMenuItem" id="427">
+                      <boolean name="updateSingleItem">TRUE</boolean>
+                      <string name="title">Minimize</string>
+                      <ostype name="command">mini</ostype>
+                    </object>
+                  </array>
+                </object>
+              </object>
+            </array>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="431">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">&lt;scripts&gt;</string>
+          <object name="submenu" class="IBCarbonMenu" id="432">
+            <string name="title">&lt;scripts&gt;</string>
+            <int name="menuID">520</int>
+            <boolean name="hidden">TRUE</boolean>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="434">
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">&lt;context&gt;</string>
+          <object name="submenu" class="IBCarbonMenu" id="435">
+            <string name="title">&lt;context&gt;</string>
+            <int name="menuID">521</int>
+            <boolean name="hidden">TRUE</boolean>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="437">
+          <boolean name="hidden">TRUE</boolean>
+          <boolean name="updateSingleItem">TRUE</boolean>
+          <string name="title">&lt;fonts&gt;</string>
+          <object name="submenu" class="IBCarbonMenu" id="438">
+            <string name="title">&lt;fonts&gt;</string>
+            <int name="menuID">161</int>
+            <boolean name="hidden">TRUE</boolean>
+          </object>
+        </object>
+      </array>
+      <string name="name">_NSMainMenu</string>
+    </object>
+    <reference idRef="181"/>
+    <reference idRef="182"/>
+    <reference idRef="235"/>
+    <reference idRef="237"/>
+    <reference idRef="238"/>
+    <reference idRef="239"/>
+    <reference idRef="240"/>
+    <reference idRef="241"/>
+    <reference idRef="242"/>
+    <reference idRef="243"/>
+    <reference idRef="244"/>
+    <reference idRef="245"/>
+    <reference idRef="246"/>
+    <reference idRef="247"/>
+    <reference idRef="248"/>
+    <reference idRef="250"/>
+    <reference idRef="251"/>
+    <reference idRef="252"/>
+    <reference idRef="253"/>
+    <reference idRef="254"/>
+    <reference idRef="255"/>
+    <reference idRef="256"/>
+    <reference idRef="257"/>
+    <reference idRef="258"/>
+    <reference idRef="259"/>
+    <reference idRef="260"/>
+    <reference idRef="261"/>
+    <reference idRef="262"/>
+    <reference idRef="263"/>
+    <reference idRef="264"/>
+    <reference idRef="265"/>
+    <reference idRef="266"/>
+    <reference idRef="267"/>
+    <reference idRef="268"/>
+    <reference idRef="269"/>
+    <reference idRef="270"/>
+    <reference idRef="272"/>
+    <reference idRef="273"/>
+    <reference idRef="274"/>
+    <reference idRef="276"/>
+    <reference idRef="277"/>
+    <reference idRef="278"/>
+    <reference idRef="279"/>
+    <reference idRef="280"/>
+    <reference idRef="281"/>
+    <reference idRef="282"/>
+    <reference idRef="283"/>
+    <reference idRef="284"/>
+    <reference idRef="285"/>
+    <reference idRef="286"/>
+    <reference idRef="287"/>
+    <reference idRef="288"/>
+    <reference idRef="289"/>
+    <reference idRef="290"/>
+    <reference idRef="291"/>
+    <reference idRef="292"/>
+    <reference idRef="293"/>
+    <reference idRef="294"/>
+    <reference idRef="295"/>
+    <reference idRef="296"/>
+    <reference idRef="297"/>
+    <reference idRef="298"/>
+    <reference idRef="300"/>
+    <reference idRef="301"/>
+    <reference idRef="302"/>
+    <reference idRef="303"/>
+    <reference idRef="304"/>
+    <reference idRef="305"/>
+    <reference idRef="306"/>
+    <reference idRef="307"/>
+    <reference idRef="308"/>
+    <reference idRef="309"/>
+    <reference idRef="311"/>
+    <reference idRef="312"/>
+    <reference idRef="313"/>
+    <reference idRef="314"/>
+    <reference idRef="315"/>
+    <reference idRef="316"/>
+    <reference idRef="317"/>
+    <reference idRef="318"/>
+    <reference idRef="319"/>
+    <reference idRef="320"/>
+    <reference idRef="321"/>
+    <reference idRef="322"/>
+    <reference idRef="323"/>
+    <reference idRef="324"/>
+    <reference idRef="325"/>
+    <reference idRef="326"/>
+    <reference idRef="327"/>
+    <reference idRef="329"/>
+    <reference idRef="330"/>
+    <reference idRef="331"/>
+    <reference idRef="332"/>
+    <reference idRef="333"/>
+    <reference idRef="334"/>
+    <reference idRef="335"/>
+    <reference idRef="336"/>
+    <reference idRef="337"/>
+    <reference idRef="338"/>
+    <reference idRef="339"/>
+    <reference idRef="340"/>
+    <reference idRef="341"/>
+    <reference idRef="342"/>
+    <reference idRef="346"/>
+    <reference idRef="347"/>
+    <reference idRef="348"/>
+    <reference idRef="349"/>
+    <reference idRef="350"/>
+    <reference idRef="351"/>
+    <reference idRef="352"/>
+    <reference idRef="353"/>
+    <reference idRef="354"/>
+    <reference idRef="356"/>
+    <reference idRef="357"/>
+    <reference idRef="358"/>
+    <reference idRef="359"/>
+    <reference idRef="360"/>
+    <reference idRef="361"/>
+    <reference idRef="362"/>
+    <reference idRef="363"/>
+    <reference idRef="364"/>
+    <reference idRef="365"/>
+    <reference idRef="366"/>
+    <reference idRef="367"/>
+    <reference idRef="384"/>
+    <reference idRef="385"/>
+    <reference idRef="387"/>
+    <reference idRef="388"/>
+    <reference idRef="389"/>
+    <reference idRef="390"/>
+    <reference idRef="391"/>
+    <reference idRef="392"/>
+    <reference idRef="393"/>
+    <reference idRef="394"/>
+    <reference idRef="395"/>
+    <reference idRef="396"/>
+    <reference idRef="397"/>
+    <reference idRef="398"/>
+    <reference idRef="399"/>
+    <reference idRef="400"/>
+    <reference idRef="401"/>
+    <reference idRef="403"/>
+    <reference idRef="404"/>
+    <reference idRef="405"/>
+    <reference idRef="406"/>
+    <reference idRef="407"/>
+    <reference idRef="408"/>
+    <reference idRef="409"/>
+    <reference idRef="410"/>
+    <reference idRef="411"/>
+    <reference idRef="412"/>
+    <reference idRef="413"/>
+    <reference idRef="414"/>
+    <reference idRef="415"/>
+    <reference idRef="416"/>
+    <reference idRef="417"/>
+    <reference idRef="418"/>
+    <reference idRef="419"/>
+    <reference idRef="420"/>
+    <reference idRef="421"/>
+    <reference idRef="422"/>
+    <reference idRef="423"/>
+    <reference idRef="424"/>
+    <reference idRef="426"/>
+    <reference idRef="427"/>
+    <reference idRef="428"/>
+    <reference idRef="429"/>
+    <reference idRef="430"/>
+    <reference idRef="431"/>
+    <reference idRef="432"/>
+    <reference idRef="434"/>
+    <reference idRef="435"/>
+    <reference idRef="437"/>
+    <reference idRef="438"/>
+    <reference idRef="443"/>
+    <reference idRef="444"/>
+    <reference idRef="445"/>
+    <reference idRef="446"/>
+    <reference idRef="447"/>
+    <reference idRef="448"/>
+    <reference idRef="449"/>
+    <reference idRef="450"/>
+    <reference idRef="451"/>
+    <reference idRef="452"/>
+    <reference idRef="453"/>
+    <reference idRef="454"/>
+    <reference idRef="455"/>
+    <reference idRef="456"/>
+    <reference idRef="457"/>
+    <reference idRef="458"/>
+    <reference idRef="459"/>
+    <reference idRef="460"/>
+    <reference idRef="461"/>
+    <reference idRef="462"/>
+    <reference idRef="463"/>
+    <reference idRef="464"/>
+    <reference idRef="465"/>
+    <reference idRef="466"/>
+    <reference idRef="467"/>
+    <reference idRef="469"/>
+    <reference idRef="470"/>
+    <reference idRef="471"/>
+  </array>
+  <array count="203" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="182"/>
+    <reference idRef="29"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="181"/>
+    <reference idRef="29"/>
+    <reference idRef="247"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="248"/>
+    <reference idRef="181"/>
+    <reference idRef="29"/>
+    <reference idRef="273"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+    <reference idRef="29"/>
+    <reference idRef="297"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
+    <reference idRef="298"/>
+    <reference idRef="29"/>
+    <reference idRef="308"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="29"/>
+    <reference idRef="326"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="327"/>
+    <reference idRef="29"/>
+    <reference idRef="353"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="354"/>
+    <reference idRef="29"/>
+    <reference idRef="384"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="29"/>
+    <reference idRef="400"/>
+    <reference idRef="401"/>
+    <reference idRef="401"/>
+    <reference idRef="404"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="405"/>
+    <reference idRef="401"/>
+    <reference idRef="416"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="417"/>
+    <reference idRef="29"/>
+    <reference idRef="431"/>
+    <reference idRef="29"/>
+    <reference idRef="434"/>
+    <reference idRef="29"/>
+    <reference idRef="437"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="309"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="385"/>
+    <reference idRef="401"/>
+    <reference idRef="460"/>
+    <reference idRef="461"/>
+    <reference idRef="461"/>
+    <reference idRef="461"/>
+    <reference idRef="461"/>
+    <reference idRef="461"/>
+    <reference idRef="309"/>
+    <reference idRef="417"/>
+    <reference idRef="274"/>
+    <reference idRef="274"/>
+  </array>
+  <dictionary count="19" name="nameTable">
+    <string>Files Owner</string>
+    <reference idRef="1"/>
+    <string>IBCarbonMenuItem</string>
+    <reference idRef="235"/>
+    <string>IBCarbonMenuItem1</string>
+    <reference idRef="313"/>
+    <string>IBCarbonMenuItem11</string>
+    <reference idRef="255"/>
+    <string>IBCarbonMenuItem111</string>
+    <reference idRef="279"/>
+    <string>IBCarbonMenuItem1111</string>
+    <reference idRef="281"/>
+    <string>IBCarbonMenuItem11111</string>
+    <reference idRef="316"/>
+    <string>IBCarbonMenuItem111111</string>
+    <reference idRef="302"/>
+    <string>IBCarbonMenuItem111112</string>
+    <reference idRef="237"/>
+    <string>IBCarbonMenuItem1111121</string>
+    <reference idRef="415"/>
+    <string>IBCarbonMenuItem11111211</string>
+    <reference idRef="422"/>
+    <string>IBCarbonMenuItem111112111</string>
+    <reference idRef="325"/>
+    <string>IBCarbonMenuItem1112</string>
+    <reference idRef="280"/>
+    <string>IBCarbonMenuItem11121</string>
+    <reference idRef="470"/>
+    <string>IBCarbonMenuItem112</string>
+    <reference idRef="284"/>
+    <string>IBCarbonMenuItem1121</string>
+    <reference idRef="350"/>
+    <string>IBCarbonMenuItem2</string>
+    <reference idRef="276"/>
+    <string>IBCarbonMenuItem4</string>
+    <reference idRef="277"/>
+    <string>MenuBar</string>
+    <reference idRef="29"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">472</unsigned_int>
+</object>

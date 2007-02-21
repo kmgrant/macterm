@@ -1,0 +1,113 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="10" name="allObjects">
+    <object class="IBCarbonWindow" id="180">
+      <string name="windowRect">419 75 504 876 </string>
+      <string name="title"></string>
+      <object name="rootControl" class="IBCarbonRootControl" id="186">
+        <string name="bounds">0 0 85 801 </string>
+        <string name="viewFrame">0 0 801 85 </string>
+        <array count="6" name="subviews">
+          <object class="IBCarbonStaticText" id="207">
+            <string name="bounds">61 35 77 469 </string>
+            <string name="viewFrame">35 61 434 16 </string>
+            <ostype name="controlSignature">Info</ostype>
+            <boolean name="small">TRUE</boolean>
+            <int name="controlSize">1</int>
+            <string name="title">(help line)</string>
+          </object>
+          <object class="IBCarbonRoundButton" id="208">
+            <string name="bounds">60 6 78 27 </string>
+            <string name="viewFrame">6 60 21 18 </string>
+            <ostype name="controlSignature">Help</ostype>
+            <ostype name="command">?Ctx</ostype>
+            <int name="contentType">132</int>
+            <int name="iconType">1751477360</int>
+          </object>
+          <object class="IBCarbonBevelButton" id="209">
+            <string name="bounds">9 728 32 760 </string>
+            <string name="viewFrame">728 9 32 23 </string>
+            <ostype name="controlSignature">HMnu</ostype>
+            <string name="helpTagText">Recent command lines.</string>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">1</int>
+            <int name="contentResID">311</int>
+            <int name="textPlacement">3</int>
+            <int name="menuBehavior">8192</int>
+            <object name="menu" class="IBCarbonMenu" id="210">
+              <string name="title">BevelMenu</string>
+              <array count="1" name="items">
+                <object class="IBCarbonMenuItem" id="211">
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                </object>
+              </array>
+            </object>
+            <int name="selectedItem">1</int>
+            <boolean name="rounded">TRUE</boolean>
+          </object>
+          <object class="IBCarbonLittleArrows" id="212">
+            <string name="bounds">10 768 32 781 </string>
+            <string name="viewFrame">768 10 13 22 </string>
+            <ostype name="controlSignature">Hist</ostype>
+            <ostype name="command">Hist</ostype>
+            <string name="helpTagText">Rotate through recent command lines.</string>
+            <int name="maximumValue">5</int>
+          </object>
+          <object class="IBCarbonUserPane" id="213">
+            <string name="bounds">7 6 39 720 </string>
+            <string name="viewFrame">6 7 714 32 </string>
+            <ostype name="controlSignature">Line</ostype>
+          </object>
+          <object class="IBCarbonStaticText" id="214">
+            <string name="bounds">61 488 77 792 </string>
+            <string name="viewFrame">488 61 304 16 </string>
+            <boolean name="small">TRUE</boolean>
+            <int name="controlSize">1</int>
+            <string name="title">Focus floating windows with Control-F6.</string>
+            <int name="justification">-1</int>
+          </object>
+        </array>
+      </object>
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <int name="carbonWindowClass">5</int>
+      <boolean name="hideOnSuspend">TRUE</boolean>
+    </object>
+    <reference idRef="186"/>
+    <reference idRef="207"/>
+    <reference idRef="208"/>
+    <reference idRef="209"/>
+    <reference idRef="210"/>
+    <reference idRef="211"/>
+    <reference idRef="212"/>
+    <reference idRef="213"/>
+    <reference idRef="214"/>
+  </array>
+  <array count="10" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="180"/>
+    <reference idRef="186"/>
+    <reference idRef="186"/>
+    <reference idRef="186"/>
+    <reference idRef="209"/>
+    <reference idRef="210"/>
+    <reference idRef="186"/>
+    <reference idRef="186"/>
+    <reference idRef="186"/>
+  </array>
+  <dictionary count="3" name="nameTable">
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+    <string>NSCustomView11</string>
+    <reference idRef="208"/>
+    <string>Window</string>
+    <reference idRef="180"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">215</unsigned_int>
+</object>

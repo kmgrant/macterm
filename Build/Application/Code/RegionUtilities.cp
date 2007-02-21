@@ -1,0 +1,496 @@
+/*###############################################################
+
+	RegionUtilities.cp
+	
+	Interface Library 1.3
+	© 1998-2006 by Kevin Grant
+	
+	This library is free software; you can redistribute it or
+	modify it under the terms of the GNU Lesser Public License
+	as published by the Free Software Foundation; either version
+	2.1 of the License, or (at your option) any later version.
+	
+	This program is distributed in the hope that it will be
+	useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+	PURPOSE.  See the GNU Lesser Public License for details.
+
+	You should have received a copy of the GNU Lesser Public
+	License along with this library; if not, write to:
+	
+		Free Software Foundation, Inc.
+		59 Temple Place, Suite 330
+		Boston, MA  02111-1307
+		USA
+
+###############################################################*/
+
+#include "UniversalDefines.h"
+
+// library includes
+#include <Console.h>
+#include <MemoryBlocks.h>
+#include <RegionUtilities.h>
+
+// MacTelnet includes
+#include "ConstantsRegistry.h"
+
+
+
+#pragma mark Internal Method Prototypes
+
+static GDHandle		findWindowDevice	(WindowRef);
+
+
+
+#pragma mark Public Methods
+
+/*!
+A high level shape drawing routine for a Quartz
+graphics context that can be used to replace calls
+to QuickDraw rounded-rectangle drawing routines
+like FrameRoundRect() and PaintRoundRect().
+
+Based on a technical note from Apple.
+
+(3.1)
+*/
+void
+RegionUtilities_AddRoundedRectangleToPath	(CGContextRef		inContext,
+											 CGRect const&		inFrame,
+											 float				inCurveWidth,
+											 float				inCurveHeight)
+{
+	if ((0 == inCurveWidth) || (0 == inCurveHeight))
+	{
+		// without curves, this is just a regular rectangle
+		CGContextAddRect(inContext, inFrame);
+	}
+	else
+	{
+		CGContextSaveGState(inContext);
+		
+		// start in the lower-left corner
+		CGContextTranslateCTM(inContext, CGRectGetMinX(inFrame), CGRectGetMinY(inFrame));
+		
+		// normalize
+		CGContextScaleCTM(inContext, inCurveWidth, inCurveHeight);
+		
+		// define the entire path
+		{
+			float const		kScaledWidth = CGRectGetWidth(inFrame) / inCurveWidth;
+			float const		kScaledHalfWidth = kScaledWidth * 0.5;
+			float const		kScaledHeight = CGRectGetHeight(inFrame) / inCurveHeight;
+			float const		kScaledHalfHeight = kScaledHeight * 0.5;
+			float const		kRadius = 1.0;
+			
+			
+			// Since CGContextMoveToPoint() can draw both the curved part
+			// and line segments leading up to the curve, each of these
+			// calls constructs more of the shape than is first apparent.
+			// The order is also important (as is the starting point) as
+			// the “current” point is one of 3 key points defining the
+			// tangential lines for each curve.  Each equal "L" piece of
+			// the rectangle is drawn in turn, generating circular corners.
+			CGContextMoveToPoint(inContext, kScaledWidth, kScaledHalfHeight);
+			CGContextAddArcToPoint(inContext, kScaledWidth/* x1 */, kScaledHeight/* y1 */,
+									kScaledHalfWidth/* x2 */, kScaledHeight/* y2 */, kRadius);
+			CGContextAddArcToPoint(inContext, 0/* x1 */, kScaledHeight/* y1 */,
+									0/* x2 */, kScaledHalfHeight/* y2 */, kRadius);
+			CGContextAddArcToPoint(inContext, 0/* x1 */, 0/* y1 */,
+									kScaledHalfWidth/* x2 */, 0/* y2 */, kRadius);
+			CGContextAddArcToPoint(inContext, kScaledWidth/* x1 */, 0/* y1 */,
+									kScaledWidth/* x2 */, kScaledHalfHeight/* y2 */, kRadius);
+			CGContextClosePath(inContext);
+		}
+		
+		CGContextRestoreGState(inContext);
+	}
+}// AddRoundedRectangleToPath
+
+
+/*!
+Modifies the first rectangle to be positioned
+exactly in the center of the second rectangle.
+The size is unchanged.
+
+(3.1)
+*/
+void
+RegionUtilities_CenterHIRectIn	(HIRect&		inoutInner,
+								 HIRect const&	inOuter)
+{
+	// the algorithm offsets the first rectangle based on the difference between
+	// the center points of the 2nd and 1st rectangles
+	inoutInner = CGRectOffset(inoutInner, CGRectGetMidX(inOuter) - CGRectGetMidX(inoutInner),
+								CGRectGetMidY(inOuter) - CGRectGetMidY(inoutInner));
+}// CenterHIRectIn
+
+
+/*!
+Modifies the first rectangle to be positioned
+exactly in the center of the second rectangle.
+The size is unchanged.
+
+(2.6)
+*/
+void
+RegionUtilities_CenterRectIn	(Rect*			inoutInner,
+								 Rect const*	inOuter)
+{
+	// the algorithm offsets the first rectangle based on the difference between
+	// the center points of the 2nd and 1st rectangles, which conceptually is this:
+	//		OffsetRect(inoutInner, (inOuter->left + INTEGER_HALVED(inOuter->right - inOuter->left)) -
+	//									(inoutInner->left + INTEGER_HALVED(inoutInner->right - inoutInner->left)),
+	//								(inOuter->top + INTEGER_HALVED(inOuter->bottom - inOuter->top)) -
+	//									(inoutInner->top + INTEGER_HALVED(inoutInner->bottom - inoutInner->top)));
+	// however, it’s possible to multiply out the above equation and reduce it
+	// to the following, simpler form; since at first glance the simpler form
+	// is less obviously correct, the long expansion is included above for your
+	// peace of mind :)
+	OffsetRect(inoutInner, INTEGER_HALVED(inOuter->right + inOuter->left - inoutInner->right - inoutInner->left),
+				INTEGER_HALVED(inOuter->bottom + inOuter->top - inoutInner->bottom - inoutInner->top));
+}// CenterRectIn
+
+
+/*!
+This powerful routine iterates through the
+device list, determines the monitor that
+contains the largest chunk of the given
+window’s structure region, and then returns
+the available window space for that device.
+On Mac OS 9 and earlier, this will usually
+be the entire chunk of the desktop that
+crosses the device, unless it’s the main
+device, in which case the region will have
+the menu bar height subtracted from it.  On
+Mac OS X, the Dock (among other things)
+may also impact the available space.
+
+This routine is very useful for implementing
+operations such as zooming windows, since
+you typically need the available space to
+make zoomed-state calculations.
+
+(3.0)
+*/
+void
+RegionUtilities_GetPositioningBounds	(WindowRef	inWindow,
+										 Rect*		outRectPtr)
+{
+#if TARGET_API_MAC_OS8
+	// on Mac OS 9 and earlier, there is no distinction between the
+	// device rectangle and the available positioning bounds
+	RegionUtilities_GetWindowDeviceGrayRect(inWindow, outRectPtr);
+#else
+	// on Mac OS X, there is a special API for this purpose
+	if (outRectPtr != nullptr)
+	{
+		GDHandle	windowDevice = findWindowDevice(inWindow);
+		
+		
+		(OSStatus)GetAvailableWindowPositioningBounds(windowDevice, outRectPtr);
+	}
+#endif
+}// GetPositioningBounds
+
+
+/*!
+This powerful routine iterates through the
+device list, determines the monitor that
+contains the largest chunk of the given
+window’s structure region, and then returns
+the gray region of that device.  Usually,
+this will be the entire chunk of the desktop
+that crosses the device, unless it’s the
+main device, in which case the region will
+have the menu bar height subtracted from it.
+
+You should use this routine in place of the
+routine GetScreenBounds() whenever possible.
+
+(3.0)
+*/
+void
+RegionUtilities_GetWindowDeviceGrayRect		(WindowRef	inWindow,
+											 Rect*		outRectPtr)
+{
+	if (outRectPtr != nullptr)
+	{
+		GDHandle	device = nullptr;
+		GDHandle	windowDevice = nullptr;
+		Rect		windowRect;
+		Rect		areaRect;
+		SInt32		area = 0L;
+		SInt32		areaMax = 0L;
+		
+		
+		// obtain global structure rectangle of the window
+		(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &windowRect);
+		
+		// check for monitors in use - find the one containing the largest chunk of the window
+		for (device = GetDeviceList(); (device != nullptr); device = GetNextDevice(device))
+		{
+			if (TestDeviceAttribute(device, screenDevice) && TestDeviceAttribute(device, screenActive))
+			{
+				(Boolean)SectRect(&(**device).gdRect, &windowRect, &areaRect);
+				
+				area = (SInt32)(areaRect.bottom - areaRect.top) * (areaRect.right - areaRect.left);
+				if (area > areaMax)
+				{
+					areaMax = area;
+					windowDevice = device;
+				}
+			}
+		}
+		if (windowDevice == nullptr) windowDevice = GetMainDevice();
+		if ((windowDevice != nullptr) && (*windowDevice != nullptr)) *outRectPtr = (**windowDevice).gdRect;
+		if (TestDeviceAttribute(windowDevice, mainScreen)) outRectPtr->top += GetMBarHeight();
+	}
+}// GetWindowDeviceGrayRect
+
+
+/*!
+Determines the available window positioning
+bounds for the device that contains the largest
+part of the specified window’s structure region,
+and then returns the largest size the window may
+have according to the Human Interface Guidelines.
+This means that the window is capped at a maximum
+size no matter how large the device may be, since
+it is useless to make windows thousands of pixels
+wide just because the monitor is high resolution.
+
+The current window size is also returned, if
+that parameter is not nullptr.
+
+This is useful for implementing the Maximize
+flavor of the Zoom command for most kinds of
+windows.
+
+(3.0)
+*/
+void
+RegionUtilities_GetWindowMaximumBounds	(WindowRef	inWindow,
+										 Rect*		outNewBoundsPtr,
+										 Rect*		outOldBoundsPtrOrNull)
+{
+#if 0
+	enum
+	{
+		kMaximumReasonableWidth = 1152,	// arbitrary; no matter how big the monitor, window can’t be wider
+		kMaximumReasonableHeight = 768	// arbitrary; no matter how big the monitor, window can’t be higher
+	};
+#endif
+	Rect	maximumScreenBounds;
+	Rect	contentRegionBounds;
+	Rect	structureRegionBounds;
+	
+	
+	// determine these so that the thickness of all edges of the window frame can be determined
+	(OSStatus)GetWindowBounds(inWindow, kWindowContentRgn, &contentRegionBounds);
+	(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &structureRegionBounds);
+	
+	// figure out the largest bounding box the window’s structure region can have
+	RegionUtilities_GetPositioningBounds(inWindow, &maximumScreenBounds);
+#if TARGET_API_MAC_CARBON
+	InsetRect(&maximumScreenBounds, 7, 10); // Aqua Human Interface Guidelines - inset from screen edges by many pixels
+#else
+	InsetRect(&maximumScreenBounds, 3, 3); // Human Interface Guidelines - inset from screen edges by 3 pixels
+#endif
+	
+	// if requested, return the old size as well
+	if (outOldBoundsPtrOrNull != nullptr) *outOldBoundsPtrOrNull = contentRegionBounds;
+	
+	// calculate the new bounding box of the content region of the window
+	outNewBoundsPtr->top = maximumScreenBounds.top +
+							(contentRegionBounds.top - structureRegionBounds.top);
+	outNewBoundsPtr->left = maximumScreenBounds.left +
+							(contentRegionBounds.left - structureRegionBounds.left);
+	outNewBoundsPtr->bottom = maximumScreenBounds.bottom -
+								(contentRegionBounds.bottom - structureRegionBounds.bottom);
+	outNewBoundsPtr->right = maximumScreenBounds.right -
+								(structureRegionBounds.right - contentRegionBounds.right);
+	
+#if 0
+	// cap the window at an arbitrary maximize size, since for HUGE monitors
+	// it is basically useless to make a window fill the entire screen
+	if ((outNewBoundsPtr->right - outNewBoundsPtr->left) > kMaximumReasonableWidth)
+	{
+		outNewBoundsPtr->right = outNewBoundsPtr->left + kMaximumReasonableWidth;
+	}
+	if ((outNewBoundsPtr->bottom - outNewBoundsPtr->top) > kMaximumReasonableHeight)
+	{
+		outNewBoundsPtr->bottom = outNewBoundsPtr->top + kMaximumReasonableHeight;
+	}
+#endif
+}// GetWindowMaximumBounds
+
+
+/*!
+Converts a region to global coordinates by translating
+the origin of its bounding box relative to that of the
+current QuickDraw graphics port (owning window’s
+content region).
+
+(2.6)
+*/
+void
+RegionUtilities_LocalToGlobal	(RgnHandle		inoutRegion)
+{
+	Point	where;
+	
+	
+	SetPt(&where, 0, 0);
+	LocalToGlobal(&where);
+	OffsetRgn(inoutRegion, where.h, where.v);
+}// RegionUtilities_LocalToGlobal
+
+
+/*!
+Returns true only if the specified points are equal or
+“close”, as defined by the user interface guidelines
+for the amount the mouse can move in any direction and
+still be considered in the same place (e.g. for
+processing double-clicks).
+
+(3.0)
+*/
+Boolean
+RegionUtilities_NearPoints	(Point	inPoint1,
+							 Point	inPoint2)
+{
+	Boolean		result = EqualPt(inPoint1, inPoint2);
+	
+	
+	unless (result)
+	{
+		Rect	rect;
+		
+		
+		Pt2Rect(inPoint1, inPoint2, &rect);
+		result = (((rect.right - rect.left) < 5) && ((rect.bottom - rect.top) < 5));
+	}
+	return result;
+}// NearPoints
+
+
+/*!
+Invalidates the entire area of a control, plus an
+extra area around the edges in case a control
+draws outside its boundaries (for example, focus
+rings or shadows).  This routine calls
+InvalWindowRect().
+
+(3.0)
+*/
+void
+RegionUtilities_RedrawControlOnNextUpdate	(ControlRef		inControl)
+{
+	Rect	bounds;
+	
+	
+	(Rect*)GetControlBounds(inControl, &bounds);
+	InsetRect(&bounds, -3, -3);
+	(OSStatus)InvalWindowRect(GetControlOwner(inControl), &bounds);
+}// RedrawControlOnNextUpdate
+
+
+/*!
+Invalidates the entire area of a window’s graphics
+port (content region).  This routine calls
+InvalWindowRect().
+
+(3.0)
+*/
+void
+RegionUtilities_RedrawWindowOnNextUpdate	(WindowRef		inWindow)
+{
+	Rect	windowPortRect;
+	
+	
+	(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
+	(OSStatus)InvalWindowRect(inWindow, &windowPortRect);
+}// RedrawWindowOnNextUpdate
+
+
+/*!
+Validates the entire area of a control.  This
+routine calls ValidWindowRect().
+
+(3.0)
+*/
+void
+RegionUtilities_SetControlUpToDate	(ControlRef		inControl)
+{
+	Rect	bounds;
+	
+	
+	(Rect*)GetControlBounds(inControl, &bounds);
+	(OSStatus)ValidWindowRect(GetControlOwner(inControl), &bounds);
+}// SetControlUpToDate
+
+
+/*!
+Validates the entire area of a window’s graphics
+port (content region).  This routine calls
+ValidWindowRect().
+
+(3.0)
+*/
+void
+RegionUtilities_SetWindowUpToDate	(WindowRef	inWindow)
+{
+	Rect	windowPortRect;
+	
+	
+	(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
+	(OSStatus)ValidWindowRect(inWindow, &windowPortRect);
+}// SetWindowUpToDate
+
+
+#pragma mark Internal Methods
+
+/*!
+Scans the device list for the monitor that
+contains the largest piece of the given
+window, and then returns that device.  The
+window must be visible!
+
+(3.0)
+*/
+static GDHandle
+findWindowDevice	(WindowRef	inWindow)
+{
+	GDHandle	result = nullptr;
+	GDHandle	device = nullptr;
+	Rect		windowRect;
+	Rect		areaRect;
+	SInt32		area = 0L;
+	SInt32		areaMax = 0L;
+	
+	
+	// obtain global structure rectangle of the window
+	(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &windowRect);
+	
+	// check for monitors in use - find the one containing the largest chunk of the window
+	for (device = GetDeviceList(); (device != nullptr); device = GetNextDevice(device))
+	{
+		if (TestDeviceAttribute(device, screenDevice) && TestDeviceAttribute(device, screenActive))
+		{
+			(Boolean)SectRect(&(**device).gdRect, &windowRect, &areaRect);
+			
+			area = (SInt32)(areaRect.bottom - areaRect.top) * (areaRect.right - areaRect.left);
+			if (area > areaMax)
+			{
+				areaMax = area;
+				result = device;
+			}
+		}
+	}
+	if (result == nullptr) result = GetMainDevice();
+	
+	return result;
+}// findWindowDevice
+
+// BELOW IS REQUIRED NEWLINE TO END FILE

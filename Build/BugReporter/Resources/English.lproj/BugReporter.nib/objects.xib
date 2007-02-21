@@ -1,0 +1,109 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="13" name="allObjects">
+    <object class="IBCarbonMenu" id="29">
+      <string name="title">main</string>
+      <array count="2" name="items">
+        <object class="IBCarbonMenuItem" id="185">
+          <string name="title">MacTelnetPrefsConverter</string>
+          <object name="submenu" class="IBCarbonMenu" id="184">
+            <string name="title">BugReporter</string>
+            <array count="1" name="items">
+              <object class="IBCarbonMenuItem" id="187">
+                <string name="title">About BugReporter</string>
+                <int name="keyEquivalentModifier">0</int>
+                <ostype name="command">abou</ostype>
+              </object>
+            </array>
+            <string name="name">_NSAppleMenu</string>
+          </object>
+        </object>
+        <object class="IBCarbonMenuItem" id="192">
+          <string name="title">Window</string>
+          <object name="submenu" class="IBCarbonMenu" id="195">
+            <string name="title">Window</string>
+            <array count="7" name="items">
+              <object class="IBCarbonMenuItem" id="202">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Close</string>
+                <string name="keyEquivalent">w</string>
+                <ostype name="command">clos</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="190">
+                <boolean name="dynamic">TRUE</boolean>
+                <string name="title">Minimize</string>
+                <string name="keyEquivalent">m</string>
+                <ostype name="command">mini</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="191">
+                <boolean name="dynamic">TRUE</boolean>
+                <string name="title">Minimize All</string>
+                <string name="keyEquivalent">m</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">mina</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="197">
+                <string name="title">Zoom</string>
+                <ostype name="command">zoom</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="194">
+                <boolean name="separator">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="196">
+                <boolean name="dynamic">TRUE</boolean>
+                <string name="title">Bring All to Front</string>
+                <ostype name="command">bfrt</ostype>
+              </object>
+              <object class="IBCarbonMenuItem" id="193">
+                <boolean name="dynamic">TRUE</boolean>
+                <string name="title">Arrange All in Front</string>
+                <int name="keyEquivalentModifier">1572864</int>
+                <ostype name="command">frnt</ostype>
+              </object>
+            </array>
+            <string name="name">_NSWindowsMenu</string>
+          </object>
+        </object>
+      </array>
+      <string name="name">_NSMainMenu</string>
+    </object>
+    <reference idRef="184"/>
+    <reference idRef="185"/>
+    <reference idRef="187"/>
+    <reference idRef="190"/>
+    <reference idRef="191"/>
+    <reference idRef="192"/>
+    <reference idRef="193"/>
+    <reference idRef="194"/>
+    <reference idRef="195"/>
+    <reference idRef="196"/>
+    <reference idRef="197"/>
+    <reference idRef="202"/>
+  </array>
+  <array count="13" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="185"/>
+    <reference idRef="29"/>
+    <reference idRef="184"/>
+    <reference idRef="195"/>
+    <reference idRef="195"/>
+    <reference idRef="29"/>
+    <reference idRef="195"/>
+    <reference idRef="195"/>
+    <reference idRef="192"/>
+    <reference idRef="195"/>
+    <reference idRef="195"/>
+    <reference idRef="195"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>Files Owner</string>
+    <reference idRef="1"/>
+    <string>MenuBar</string>
+    <reference idRef="29"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">203</unsigned_int>
+</object>

@@ -1,0 +1,256 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":index.html
+
+</div>
+
+h1(pagetitle). Preferences
+
+<div class="content">
+
+This page is arranged in the same categories as those in the
+MacTelnet Preferences window.  To access any of the settings
+mentioned here, start by choosing the "Preferences..." item in
+the MacTelnet menu.
+
+h2(#general). General
+
+h3(#generaloptions). Options
+
+h4. Menus and Windows
+
+h5(#simplify). Simplified user interface
+
+Hides commands and portions of windows that are not frequently
+needed.
+
+h5(#noautoclose). Don't automatically close windows
+
+Prevents a window from closing when the process running inside it
+has quit.
+
+h5(#noautonew). Don't create new windows automatically
+
+Prevents a new shell from being created if MacTelnet is activated
+while it has no windows open.
+
+h4. Text
+
+h5(#invert). Invert selected text
+
+Uses high contrast colors for text selections instead of trying
+to create a blend with the current window color scheme.
+
+h5(#autocopy). Automatically Copy selected text
+
+Whenever new text is highlighted, it is copied to the Clipboard.
+This is how Unix-like systems behave, and may be how you are
+accustomed to working with terminal-based applications.
+
+h5(#dropmove). Move cursor to text drop location
+
+Sends a series of arrow key sequences when you drop text on a
+terminal, that instruct the application to put the cursor where
+you dropped the text.  As long as you are using an application in
+the terminal that understands this kind of sequence, you will see
+Mac-like drag and drop behavior added!  This is very cool in a
+terminal-based text editor or E-mail client, for instance.
+
+When this feature is enabled, MacTelnet displays a ghost cursor
+during drags to help you see exactly what the new cursor location
+will be.
+
+h5(#nodim). Don't dim background terminal text
+
+To help emphasize the active terminal, MacTelnet alters the color
+hues of background windows.  Use this option to quell recoloring.
+
+h4. Keyboard
+
+h5(#menukeys). Menu item key equivalents
+
+Certain terminal applications may benefit from stricter control
+over your keyboard; you can turn off even rudimentary menu item
+key recognition if it helps avoid confusing applications in your
+terminals.
+
+h5(#mapbackquote). Map backquote key to escape character
+
+On many keyboards, the backquote key is in a location similar to
+or identical to the location of the Esc key on other keyboards.
+Some users may wish to treat backquote keypresses as if they were
+escape keypresses for this reason, especially if using something
+that relies heavily on Esc such as the "vi" text editor.
+
+Note, however, that Unix shells and other applications may
+require use of a backquote.
+
+h3(#generalspecial). Special
+
+h4(#cursorflash). Terminal Cursor: Flashing
+
+The cursor blinks on and off periodically when Flashing is set,
+which may make it easier to see.  But, see also the Find Cursor
+command in the Edit menu, which locates the cursor on demand.
+
+h4(#cursorshape). Terminal Cursor: Shape
+
+MacTelnet allows one of 5 different shapes for the terminal
+cursor; a solid square is typical, but you may wish to have the
+standard Mac vertical bar, a horizontal underline, or thicker
+versions of either (more noticeable on LCD displays).
+
+h4(#stackorigin). Window Stacking Origin
+
+You can specify the location on the screen where the first
+MacTelnet window is placed.  Subsequent windows automatically
+stack diagonally.  Note that if you save a session or an entire
+workspace, window locations are preserved and ignore this origin.
+
+h4(#spacesfortab). Window Resize Effect
+
+When window resizes affect terminal screen size, MacTelnet
+dynamically calculates the maximum number of rows and columns
+that can fit in the current window size (at current font size).
+
+When window resizes affect text size, MacTelnet dynamically
+calculates the maximum font size that can be used (in the current
+terminal font) to fit the current number of rows and columns in
+the current window size.
+
+You can hold down the Option key prior to starting a window
+resize to temporarily switch this preference.
+
+h4(#spacesfortab). Copy Using Tabs For Spaces: Spaces Per Tab
+
+When copying text with Copy Using Tabs For Spaces, this number
+determines how many consecutive spaces are replaced with a single
+tab character in the clipboard version.
+
+h4(#commandN). Command-N Key Equivalent
+
+MacTelnet has several ways to create sessions, and you may wish
+to use one of them more than others.  You can map command-N as a
+short-cut to whichever one you use most.
+
+h3(#generalnotification). Notification
+
+h4. Terminal Bell
+
+h5. Sound
+
+When a terminal audio event occurs, you can have MacTelnet play
+the standard system beep (set up in System Preferences under
+Sound).  Or, you can select any other sound file.  Finally, you
+can turn off sound completely (note that this can be done for any
+individual terminal using "Disable Bell" in the Terminal menu).
+
+h5(#visualbell). Always use visual bell
+
+If a terminal window is not active, any bell events from the
+window (regardless of sound settings) will include a visual flash
+to show you which window the bell came from.
+
+However, you can choose to enable visuals all the time, in which
+case even active terminals will flash when bells occur.
+
+h5(#marginbell). Margin bell
+
+Not implemented.  But it will eventually, if enabled, generate a
+terminal bell event if you are typing and the cursor passes into
+the last 5 columns of the display.
+
+h5(#notifybeeps). Background notification on bell
+
+If MacTelnet is not the active application, you can ask that you
+receive special notification from the OS when one of your
+terminals generates a bell.
+
+h4(#notifymethod). Background Notification
+
+For Notify of Terminal Beeps, as well as any other alert that may
+show up when you are in another application (such as an error
+message), you can specify how "annoying" MacTelnet may be.  The
+options range from no interruptions at all, to an immediate alert
+in your other application telling you that MacTelnet needs your
+attention.
+
+h2(#sessions). Sessions
+
+You can create more than one set of preferences in this category.
+When you select Sessions, a drawer appears showing all the
+collections you have.  Simply choose a name from the list in the
+drawer and then edit settings in the main Preferences window for
+that collection.
+
+Sessions define how MacTelnet accesses a resource (a local or
+remote terminal application), as well as other settings like key
+mappings and the TEK graphics mode.  These are a little like
+Bookmarks from your web browser, in that they allow you to easily
+return to the things you use frequently.
+
+h2(#macros). Macros
+
+You can create more than one set of preferences in this category.
+When you select Macros, a drawer appears showing all the macro
+sets you have.  Simply choose a name from the list in the drawer
+and then edit settings in the main Preferences window for that
+macro set.
+
+All macro sets use the same key equivalents, so only one set can
+be available at a time.  When a terminal window is active, use
+the Keys menu to choose the current macro set.
+
+h3. Invoke With
+
+Currently, MacTelnet offers two ways to invoke macros: either
+using a combination of the command (cloverleaf) key and keypad
+keys such as numbers, or using the first twelve function keys at
+the top of your keyboard.
+
+h2(#terminals). Terminals
+
+You can create more than one set of preferences in this category.
+When you select Terminals, a drawer appears showing all the
+collections you have.  Simply choose a name from the list in the
+drawer and then edit settings in the main Preferences window for
+that collection.
+
+Terminals decide somewhat technical aspects of a window, such as
+the emulation type.  Usually, you set up one or more of these
+with the help of an administrator or the documentation for your
+terminal application, so that MacTelnet behaves correctly when
+you access that terminal application.  When you create a custom
+or Favorite session, you can associate a Terminal Favorite with
+it, ensuring these important settings are always made for you.
+
+h2(#formats). Formats
+
+You can create more than one set of preferences in this category.
+When you select Formats, a drawer appears showing all the formats
+you have.  Simply choose a name from the list in the drawer and
+then edit settings in the main Preferences window for that
+format.
+
+Formats are collects of fonts, font sizes, colors, and more, that
+decide how your terminal windows look.  You can use the View menu
+to quickly change a window's format to one of the Favorites you
+specify in Preferences, or to make customizations local to the
+frontmost window.
+
+h2(#macros). Full Screen
+
+Settings that control "kiosk mode", the Full Screen command in
+the View menu.  You can use these preferences to create a more
+complete kiosk (by hiding the Dock, for example).
+
+h2(#scripts). Scripts
+
+This panel provides easy access to your Scripts Menu Items and
+will make more scripting options available in the future.
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+

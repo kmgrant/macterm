@@ -1,0 +1,48 @@
+<div class="navigation">
+
+* MacTELNET Help
+
+</div>
+
+p(#lastupdated). Last updated LAST_UPDATED.
+
+p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
+
+<div id="mainnavigation">
+
+<dl>
+
+<dt>Running Applications</dt><dd>
+
+* "local sessions":access.html#unix
+* "remote sessions":access.html#servers
+
+</dd>
+
+<dt>Reference</dt><dd>
+
+* "preferences":preferences.html
+* "types of windows":windows.html
+* "terminal interaction":terminals.html
+* "terminal emulator specifics":vt.html
+
+</dd>
+
+<dt>Interesting Features</dt><dd>
+
+* "simpler user interface":preferences.html#simplify
+* "floating command line window":windows.html#commandline
+* "rectangular text selections":terminals.html#selectrect
+* "cursor location finder":terminals.html#findcursor
+* "full screen terminal":terminals.html#magnify
+* "hiding windows without closing":terminals.html#hide
+* "floating keypads":windows.html#keypads
+
+</dd>
+
+</dl>
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+

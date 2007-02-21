@@ -1,0 +1,49 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="4" name="allObjects">
+    <object class="IBCarbonWindow" id="166">
+      <string name="windowRect">295 86 417 508 </string>
+      <string name="title"></string>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="bounds">0 0 122 422 </string>
+        <array count="2" name="subviews">
+          <object class="IBCarbonStaticText" id="183">
+            <string name="bounds">20 20 36 402 </string>
+            <ostype name="controlSignature">PMsg</ostype>
+            <string name="title">(progress message)</string>
+            <int name="justification">1</int>
+          </object>
+          <object class="IBCarbonProgressBar" id="199">
+            <string name="bounds">67 60 86 362 </string>
+            <ostype name="controlSignature">Prog</ostype>
+          </object>
+        </array>
+      </object>
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <int name="themeBrush">5</int>
+    </object>
+    <reference idRef="167"/>
+    <reference idRef="183"/>
+    <reference idRef="199"/>
+  </array>
+  <array count="4" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="166"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>Dialog</string>
+    <reference idRef="166"/>
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">200</unsigned_int>
+</object>

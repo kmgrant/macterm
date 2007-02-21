@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleGetInfoString</key>
+	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.mactelnet.frameworks.Quills</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Quills</string>
+	<key>CFBundlePackageType</key>
+	<string>FMWK</string>
+	<key>CFBundleShortVersionString</key>
+	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%, build %MY_BUILD_NUMBER%</string>
+	<key>CFBundleSignature</key>
+	<string>KevG</string>
+	<key>CFBundleVersion</key>
+	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%.%MY_ALPHA_BETA%.%MY_BUILD_NUMBER%</string>
+</dict>
+</plist>

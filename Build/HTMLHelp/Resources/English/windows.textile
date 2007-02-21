@@ -1,0 +1,122 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":index.html
+
+</div>
+
+h1(pagetitle). Types of Windows
+
+<div class="content">
+
+h2(#terminal). Terminal
+
+A terminal window is what you will use most in MacTelnet.  It
+displays a primarily-text interface to the applications you are
+running.
+
+There are so many things you can do with terminal windows that
+there is a "dedicated page":terminals.html discussing them all!
+
+h2(#commandline). Command Line
+
+The command line is a special interface to the active terminal
+window.  See "the terminals page":terminals.html#commandline for more information.
+
+h2(#tek). Tektronix Vector Graphics
+
+If a session has a TEK graphics command set enabled, it will
+automatically spawn Tektronix vector graphics drawings whenever
+properly-formatted data is received from the session.
+
+A drawing can be copied to the Clipboard using Edit >> Copy.  It
+can be magnified or shrunk by resizing its window.  A portion of
+the graphic can be magnified by using the mouse to drag a rectangle.
+(This partial view can be undone by double-clicking the graphic.)
+
+**Note:** Currently, an open graphic will hijack all interaction with
+the terminal that generated it: for example, typing into the
+terminal will cause the text to be rendered graphically in the TEK
+window instead.  Close the graphics window to restore ordinary
+terminal behavior.
+
+h2(#sessioninfo). Session Info
+
+Displays the status of all windows at once, including whether or
+not processes are running.  There are icons in the Window menu
+that show similar information.
+
+h2(#macros). Macro Editor
+
+The macro editor allows you to define text short-cuts that can be
+"typed" for you, when certain keys are pressed.  In MacTelnet 3.1
+this is a fully modeless window, allowing you to edit macros in
+real time without having to commit changes to any dialog.
+
+The set of 12 macros visible in the editor is the active set; you
+can keep up to 5 sets in memory at once (and save others, using
+the "Export..." and "Import..." abilities).
+
+The "Invoke With:" section lets you choose whether your macros
+are invoked with numeric command keys (command-0, command-1,
+etc.) or with the top row of function keys (F1, F2, etc.).
+
+Use the "Special Sequences..." button to see how placeholders can
+be put into macro text for arbitrary characters as well as tabs,
+quotes, newlines, escapes, your computer's IP address and the
+number of lines in your terminal.
+
+h2(#keypads). Keypads
+
+MacTelnet provides a number of powerful keypad windows.  Clicking
+a keypad button is equivalent to typing the key or key sequence
+it represents.  However, keypad buttons __always__ send the right
+character code or character sequence, even in cases where the
+keyboard might not work (because of a terminal mode or a
+conflicting Mac OS X keyboard mapping, etc.).
+
+**Tip:** On later versions of Mac OS X, MacTelnet will allow you
+to navigate keypad keys using the keyboard.  By default, you use
+Control-F1 to turn on Full Keyboard Access and Control-F6 to give
+keyboard focus to one of the floating keypad windows.
+
+h3(#controlkeys). Control Keys
+
+This is a floating window providing access to 32 control key
+combinations, "invisible" characters of the ASCII character set.
+These keys are frequently useful in terminals and therefore are
+likely to trigger special responses when used.
+
+h3(#functionkeys). VT220 Function Keys
+
+This is a floating window providing access to the function keys
+of a VT220 terminal.  MacTelnet will not prevent their use when
+you have selected a terminal emulator other than VT220, however
+your session may respond oddly to the input.
+
+For completeness the keypad shows F1-F5, however these are not
+available (they have meaning to a real VT220 terminal, but not an
+emulated terminal).
+
+Unless you have used the macro editor to map your keyboard's
+function keys to macros, they will map to VT220 function keys by
+default.  Each key is __offset by 5__, so your keyboard F1 maps
+to the VT220 F6, and your keyboard F15 maps to the VT220 F20.
+
+h3(#vt220keypad). VT220 Keypad
+
+This is a floating window providing access to the special keypad
+functions of a real VT220 terminal.  MacTelnet will not prevent
+their use when you have selected a terminal emulator other than
+VT220, however your session may respond oddly to some of the
+keys.
+
+You can use the "Show Help Tags" command of the Help menu in
+MacTelnet to enable contextual descriptions of the buttons; then
+point your mouse at one of the VT220 Keypad icons to see what it
+means.
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+

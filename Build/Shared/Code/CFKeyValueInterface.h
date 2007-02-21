@@ -1,0 +1,731 @@
+/*!	\file CFKeyValueInterface.h
+	\brief Creates an abstraction layer over a dictionary that
+	uses Core Foundation keys and values, while providing
+	convenient access APIs for common types.
+	
+	Using this interface, you can set or get values that have
+	different sources underneath; currently, the possible
+	choices are a CFDictionary or Core Foundation Preferences.
+*/
+/*###############################################################
+
+	Data Access Library 1.3
+	© 1998-2006 by Kevin Grant
+	
+	This library is free software; you can redistribute it or
+	modify it under the terms of the GNU Lesser Public License
+	as published by the Free Software Foundation; either version
+	2.1 of the License, or (at your option) any later version.
+	
+	This program is distributed in the hope that it will be
+	useful, but WITHOUT ANY WARRANTY; without even the implied
+	warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+	PURPOSE.  See the GNU Lesser Public License for details.
+	
+	You should have received a copy of the GNU Lesser Public
+	License along with this library; if not, write to:
+	
+		Free Software Foundation, Inc.
+		59 Temple Place, Suite 330
+		Boston, MA  02111-1307
+		USA
+
+###############################################################*/
+
+#include "UniversalDefines.h"
+
+#ifndef __CFKEYVALUEINTERFACE__
+#define __CFKEYVALUEINTERFACE__
+
+// Mac includes
+#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+
+// Data Access library includes
+#include "CFDictionaryManager.h"
+#include "CFRetainRelease.h"
+
+
+
+#pragma mark Types
+
+/*!
+Contains context information, so that when settings
+are stored or retrieved, it is clear where they are.
+*/
+class CFKeyValueInterface
+{
+public:
+	//! cleans up an interface parent’s data, and any subclass data
+	virtual inline
+	~CFKeyValueInterface	();
+	
+	//! inserts array value into dictionary
+	virtual void
+	addArray	(CFStringRef	inKey,
+				 CFArrayRef		inValue) = 0;
+	
+	//! inserts data value into dictionary
+	virtual void
+	addData		(CFStringRef	inKey,
+				 CFDataRef		inValue) = 0;
+	
+	//! inserts true/false value into dictionary
+	virtual void
+	addFlag		(CFStringRef	inKey,
+				 Boolean		inValue) = 0;
+	
+	//! inserts short integer value into dictionary
+	virtual void
+	addInteger	(CFStringRef	inKey,
+				 SInt16			inValue) = 0;
+	
+	//! inserts long integer value into dictionary
+	virtual void
+	addLong		(CFStringRef	inKey,
+				 SInt32			inValue) = 0;
+	
+	//! inserts string value into dictionary
+	virtual void
+	addString	(CFStringRef	inKey,
+				 CFStringRef	inValue) = 0;
+	
+	//! retrieves an array value from the dictionary (use only if the value really is an array!); release it yourself!
+	virtual CFArrayRef
+	returnArrayCopy		(CFStringRef	inKey) const = 0;
+	
+	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
+	virtual Boolean
+	returnFlag		(CFStringRef	inKey) const = 0;
+	
+	//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
+	virtual SInt16
+	returnInteger	(CFStringRef	inKey) const = 0;
+	
+	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
+	virtual SInt32
+	returnLong		(CFStringRef	inKey) const = 0;
+	
+	//! retrieves a string value from the dictionary (use only if the value really is a string!); release it yourself!
+	virtual CFStringRef
+	returnStringCopy	(CFStringRef	inKey) const = 0;
+};
+
+/*!
+“Implements” all CFKeyValueInterface methods by
+assuming another class has those methods available.
+*/
+template < typename key_value_interface_delegate >
+class CFKeyValueInterfaceAdapter:
+public CFKeyValueInterface
+{
+public:
+	CFKeyValueInterfaceAdapter	(key_value_interface_delegate&		inDelegate);
+	
+	virtual void
+	addArray	(CFStringRef	inKey,
+				 CFArrayRef		inValue)
+	{
+		_delegate.addArray(inKey, inValue);
+	}
+	
+	virtual void
+	addData		(CFStringRef	inKey,
+				 CFDataRef		inValue)
+	{
+		_delegate.addData(inKey, inValue);
+	}
+	
+	virtual void
+	addFlag		(CFStringRef	inKey,
+				 Boolean		inValue)
+	{
+		_delegate.addFlag(inKey, inValue);
+	}
+	
+	virtual void
+	addInteger	(CFStringRef	inKey,
+				 SInt16			inValue)
+	{
+		_delegate.addInteger(inKey, inValue);
+	}
+	
+	virtual void
+	addLong		(CFStringRef	inKey,
+				 SInt32			inValue)
+	{
+		_delegate.addLong(inKey, inValue);
+	}
+	
+	virtual void
+	addString	(CFStringRef	inKey,
+				 CFStringRef	inValue)
+	{
+		_delegate.addString(inKey, inValue);
+	}
+	
+	virtual CFArrayRef
+	returnArrayCopy		(CFStringRef	inKey)
+	{
+		return _delegate.returnArrayCopy(inKey);
+	}
+	
+	virtual Boolean
+	returnFlag		(CFStringRef	inKey)
+	{
+		return _delegate.returnFlag(inKey);
+	}
+	
+	virtual SInt16
+	returnInteger	(CFStringRef	inKey)
+	{
+		return _delegate.returnInteger(inKey);
+	}
+	
+	virtual SInt32
+	returnLong		(CFStringRef	inKey)
+	{
+		return _delegate.returnLong(inKey);
+	}
+	
+	virtual CFStringRef
+	returnStringCopy	(CFStringRef	inKey)
+	{
+		return _delegate.returnStringCopy(inKey);
+	}
+
+private:
+	key_value_interface_delegate&	_delegate;
+};
+
+/*!
+Contains context information, so that when settings
+are stored or retrieved, it is clear where they are.
+*/
+class CFKeyValueDictionary:
+public CFKeyValueInterface
+{
+public:
+	explicit
+	CFKeyValueDictionary	(CFMutableDictionaryRef		inTarget);
+	
+	//! inserts array value into dictionary
+	inline void
+	addArray	(CFStringRef	inKey,
+				 CFArrayRef		inValue);
+	
+	//! inserts data value into dictionary
+	inline void
+	addData		(CFStringRef	inKey,
+				 CFDataRef		inValue);
+	
+	//! inserts true/false value into dictionary
+	inline void
+	addFlag		(CFStringRef	inKey,
+				 Boolean		inValue);
+	
+	//! inserts short integer value into dictionary
+	inline void
+	addInteger	(CFStringRef	inKey,
+				 SInt16			inValue);
+	
+	//! inserts short integer value into dictionary
+	inline void
+	addLong		(CFStringRef	inKey,
+				 SInt32			inValue);
+	
+	//! inserts string value into dictionary
+	inline void
+	addString	(CFStringRef	inKey,
+				 CFStringRef	inValue);
+	
+	//! retrieves an array value from the dictionary (use only if the value really is an array!)
+	inline CFArrayRef
+	returnArrayCopy		(CFStringRef	inKey) const;
+	
+	//! return the managed dictionary
+	inline CFMutableDictionaryRef
+	returnDictionary ();
+	
+	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
+	inline Boolean
+	returnFlag		(CFStringRef	inKey) const;
+	
+	//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
+	inline SInt16
+	returnInteger	(CFStringRef	inKey) const;
+	
+	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
+	inline SInt32
+	returnLong		(CFStringRef	inKey) const;
+	
+	//! retrieves a string value from the dictionary (use only if the value really is a string!)
+	inline CFStringRef
+	returnStringCopy	(CFStringRef	inKey) const;
+	
+	//! changes the managed dictionary
+	inline void
+	setDictionary	(CFMutableDictionaryRef		inNewDictionary);
+
+private:
+	CFDictionaryManager		_dataDictionary;	//!< contains the dictionary, and handles changes to it
+};
+
+/*!
+A context specifically for storing defaults.  It
+doesn’t actually manage a dictionary, it uses the
+Core Foundation Preferences APIs instead; though,
+the consistency of this API compared to that of
+other contexts is useful.
+*/
+class CFKeyValuePreferences:
+public CFKeyValueInterface
+{
+public:
+	explicit inline
+	CFKeyValuePreferences	(CFStringRef	inTargetApplication = kCFPreferencesCurrentApplication);
+	
+	//! inserts array value into Core Foundation Preferences
+	inline void
+	addArray	(CFStringRef	inKey,
+				 CFArrayRef		inValue);
+	
+	//! inserts data value into Core Foundation Preferences
+	inline void
+	addData		(CFStringRef	inKey,
+				 CFDataRef		inValue);
+	
+	//! inserts true/false value into Core Foundation Preferences
+	inline void
+	addFlag		(CFStringRef	inKey,
+				 Boolean		inValue);
+	
+	//! inserts short integer value into Core Foundation Preferences
+	void
+	addInteger	(CFStringRef	inKey,
+				 SInt16			inValue);
+	
+	//! inserts short integer value into Core Foundation Preferences
+	void
+	addLong		(CFStringRef	inKey,
+				 SInt32			inValue);
+	
+	//! inserts string value into Core Foundation Preferences
+	inline void
+	addString	(CFStringRef	inKey,
+				 CFStringRef	inValue);
+	
+	//! retrieves an array value from global preferences (use only if the value really is an array!)
+	inline CFArrayRef
+	returnArrayCopy		(CFStringRef	inKey) const;
+	
+	//! retrieves a true or false value from global preferences (use only if the value really is a Boolean!)
+	inline Boolean
+	returnFlag		(CFStringRef	inKey) const;
+	
+	//! retrieves a short integer value from global preferences (use only if the value really is a number!)
+	inline SInt16
+	returnInteger	(CFStringRef	inKey) const;
+	
+	//! retrieves a long integer value from global preferences (use only if the value really is a number!)
+	inline SInt32
+	returnLong		(CFStringRef	inKey) const;
+	
+	//! retrieves a string value from global preferences (use only if the value really is a string!)
+	inline CFStringRef
+	returnStringCopy	(CFStringRef	inKey) const;
+	
+	//! returns the domain in which preferences are saved
+	inline CFStringRef
+	returnTargetApplication () const;
+
+private:
+	CFRetainRelease		_targetApplication;
+};
+
+
+
+#pragma mark Public Methods
+
+/*!
+Destructor.
+
+(1.3)
+*/
+CFKeyValueInterface::
+~CFKeyValueInterface ()
+{
+}// CFKeyValueInterface destructor
+
+
+/*!
+Adds or overwrites a key value with an array
+(which is automatically retained by the dictionary).
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+addArray	(CFStringRef	inKey,
+			 CFArrayRef		inValue)
+{
+	_dataDictionary.addArray(inKey, inValue);
+}// addArray
+
+
+/*!
+Adds or overwrites a key value with raw data
+(which is automatically retained by the dictionary).
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+addData		(CFStringRef	inKey,
+			 CFDataRef		inValue)
+{
+	_dataDictionary.addData(inKey, inValue);
+}// addData
+
+
+/*!
+Adds or overwrites a key value with true or false
+(which is automatically retained by the dictionary).
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+addFlag		(CFStringRef	inKey,
+			 Boolean		inValue)
+{
+	_dataDictionary.addFlag(inKey, inValue);
+}// addFlag
+
+
+/*!
+Adds or overwrites a key value with a short integer
+(which is automatically retained by the dictionary).
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+addInteger	(CFStringRef	inKey,
+			 SInt16			inValue)
+{
+	_dataDictionary.addInteger(inKey, inValue);
+}// addInteger
+
+
+/*!
+Adds or overwrites a key value with a long integer
+(which is automatically retained by the dictionary).
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+addLong		(CFStringRef	inKey,
+			 SInt32			inValue)
+{
+	_dataDictionary.addLong(inKey, inValue);
+}// addLong
+
+
+/*!
+Adds or overwrites a key value with a string (which
+is automatically retained by the dictionary).
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+addString	(CFStringRef	inKey,
+			 CFStringRef	inValue)
+{
+	_dataDictionary.addString(inKey, inValue);
+}// addString
+
+
+/*!
+Returns the value of the specified key, automatically
+cast to a Core Foundation array type.  Do not use this
+unless you know the value is actually an array!
+
+(1.3)
+*/
+CFArrayRef
+CFKeyValueDictionary::
+returnArrayCopy		(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.returnArrayCopy(inKey);
+}// returnArrayCopy
+
+
+/*!
+Returns the dictionary managed by this instance.
+
+(1.3)
+*/
+CFMutableDictionaryRef
+CFKeyValueDictionary::
+returnDictionary ()
+{
+	return _dataDictionary.returnCFMutableDictionaryRef();
+}// returnDictionary
+
+
+/*!
+Returns the value of the specified key, automatically
+cast to a true or false value.  Do not use this
+unless you know the value is actually a Boolean!
+
+(1.3)
+*/
+Boolean
+CFKeyValueDictionary::
+returnFlag	(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.returnFlag(inKey);
+}// returnFlag
+
+
+/*!
+Returns the value of the specified key, automatically
+cast to a short integer type.  Do not use this
+unless you know the value is actually a number!
+
+(1.3)
+*/
+SInt16
+CFKeyValueDictionary::
+returnInteger	(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.returnInteger(inKey);
+}// returnInteger
+
+
+/*!
+Returns the value of the specified key, automatically
+cast to a long integer type.  Do not use this
+unless you know the value is actually a number!
+
+(1.3)
+*/
+SInt32
+CFKeyValueDictionary::
+returnLong	(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.returnLong(inKey);
+}// returnLong
+
+
+/*!
+Returns the value of the specified key, automatically
+cast to a Core Foundation string type.  Do not use this
+unless you know the value is actually a string!
+
+(1.3)
+*/
+CFStringRef
+CFKeyValueDictionary::
+returnStringCopy	(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.returnStringCopy(inKey);
+}// returnStringCopy
+
+
+/*!
+Changes the dictionary managed by this instance.
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+setDictionary	(CFMutableDictionaryRef		inNewDictionary)
+{
+	_dataDictionary.setCFMutableDictionaryRef(inNewDictionary);
+}// setDictionary
+
+
+/*!
+Constructor.
+
+(1.3)
+*/
+CFKeyValuePreferences::
+CFKeyValuePreferences	(CFStringRef	inTargetApplication)
+:
+CFKeyValueInterface(),
+_targetApplication(inTargetApplication)
+{
+}// CFKeyValuePreferences 2-argument constructor
+
+
+/*!
+Adds or overwrites a key value with an array, in
+the global application preferences.
+
+(1.3)
+*/
+void
+CFKeyValuePreferences::
+addArray	(CFStringRef	inKey,
+			 CFArrayRef		inValue)
+{
+	CFPreferencesSetAppValue(inKey, inValue, _targetApplication.returnCFStringRef());
+}// addArray
+
+
+/*!
+Adds or overwrites a key value with raw data, in
+the global application preferences.
+
+(1.3)
+*/
+void
+CFKeyValuePreferences::
+addData		(CFStringRef	inKey,
+			 CFDataRef		inValue)
+{
+	CFPreferencesSetAppValue(inKey, inValue, _targetApplication.returnCFStringRef());
+}// addData
+
+
+/*!
+Adds or overwrites a key value with true or false,
+in the global application preferences.
+
+(1.3)
+*/
+void
+CFKeyValuePreferences::
+addFlag		(CFStringRef	inKey,
+			 Boolean		inValue)
+{
+	CFPreferencesSetAppValue(inKey, (inValue) ? kCFBooleanTrue : kCFBooleanFalse,
+								_targetApplication.returnCFStringRef());
+}// addFlag
+
+
+/*!
+Adds or overwrites a key value with a string,
+in the global application preferences.
+
+(1.3)
+*/
+void
+CFKeyValuePreferences::
+addString	(CFStringRef	inKey,
+			 CFStringRef	inValue)
+{
+	CFPreferencesSetAppValue(inKey, inValue, _targetApplication.returnCFStringRef());
+}// addString
+
+
+/*!
+Returns the array value of the specified key in
+the global application preferences.  Use only if
+you know the value is actually an array!
+
+(1.3)
+*/
+CFArrayRef
+CFKeyValuePreferences::
+returnArrayCopy		(CFStringRef	inKey)
+const
+{
+	return CFUtilities_ArrayCast(CFPreferencesCopyAppValue(inKey, _targetApplication.returnCFStringRef()));
+}// returnArrayCopy
+
+
+/*!
+Returns the true or false value of the specified key
+in the global application preferences.  Use only if
+you know the value is actually a Boolean!
+
+(1.3)
+*/
+Boolean
+CFKeyValuePreferences::
+returnFlag	(CFStringRef	inKey)
+const
+{
+	return CFPreferencesGetAppBooleanValue(inKey, _targetApplication.returnCFStringRef(),
+											nullptr/* exists/valid flag pointer */);
+}// returnFlag
+
+
+/*!
+Returns the short integer value of the specified key
+in the global application preferences.  Use only if
+you know the value is actually a number!
+
+(1.3)
+*/
+SInt16
+CFKeyValuePreferences::
+returnInteger	(CFStringRef	inKey)
+const
+{
+	return STATIC_CAST(CFPreferencesGetAppIntegerValue(inKey, _targetApplication.returnCFStringRef(),
+														nullptr/* exists/valid flag pointer */),
+						SInt16);
+}// returnInteger
+
+
+/*!
+Returns the long integer value of the specified key
+in the global application preferences.  Use only if
+you know the value is actually a number!
+
+(1.3)
+*/
+SInt32
+CFKeyValuePreferences::
+returnLong	(CFStringRef	inKey)
+const
+{
+	return CFPreferencesGetAppIntegerValue(inKey, _targetApplication.returnCFStringRef(),
+											nullptr/* exists/valid flag pointer */);
+}// returnLong
+
+
+/*!
+Returns the string value of the specified key in
+the global application preferences.  Use only if
+you know the value is actually a string!
+
+(1.3)
+*/
+CFStringRef
+CFKeyValuePreferences::
+returnStringCopy	(CFStringRef	inKey)
+const
+{
+	return CFUtilities_StringCast(CFPreferencesCopyAppValue(inKey, _targetApplication.returnCFStringRef()));
+}// returnStringCopy
+
+
+/*!
+Returns the domain in which preferences are saved.
+
+(1.3)
+*/
+CFStringRef
+CFKeyValuePreferences::
+returnTargetApplication ()
+const
+{
+	return _targetApplication.returnCFStringRef();
+}// returnTargetApplication
+
+#endif
+
+// BELOW IS REQUIRED NEWLINE TO END FILE

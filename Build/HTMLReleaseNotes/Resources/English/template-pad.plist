@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+template-pad.plist
+
+This file is automatically updated by the build GNUmakefile in
+the Build/HTMLReleaseNotes module.  Values in ALL_CAPS will be
+substituted with runtime values.
+
+Kevin Grant (kevin@ieee.org)
+October 13, 2006
+-->
+<plist version="1.0">
+<dict>
+	<key>companyAddress</key>
+	<string></string>
+	<key>companyCountry</key>
+	<string></string>
+	<key>companyEmail</key>
+	<string>kevin@ieee.org</string>
+	<key>companyFax</key>
+	<string></string>
+	<key>companyName</key>
+	<string>Kevin Grant</string>
+	<key>companyPhone</key>
+	<string></string>
+	<key>companyWebSite</key>
+	<string>http://www.mactelnet.com/</string>
+	<key>fileBundleID</key>
+	<string>com.mactelnet.MacTelnet</string>
+	<key>fileCreator</key>
+	<string>KevG</string>
+	<key>fileReleaseDateD</key>
+	<string>LAST_UPDATED_DD</string>
+	<key>fileReleaseDateM</key>
+	<string>LAST_UPDATED_MM</string>
+	<key>fileReleaseDateY</key>
+	<string>LAST_UPDATED_YYYY</string>
+	<key>fileType</key>
+	<string>APPL</string>
+	<key>padVersion</key>
+	<string>3</string>
+	<key>productDescLong</key>
+	<string>A VT100 and VT220 terminal emulator for Mac OS X computers that also supports Tektronix 4104 and 4105 graphics commands and some valuable additions like printing, text color customization, multiple macro sets, drag and drop, and much more.
+
+It natively runs Unix applications on Mac OS X, however it provides support for remote connections as well (as its Classic predecessor did for the telnet protocol, hence its name).</string>
+	<key>productDescShort</key>
+	<string>Powerful Mac OS X terminal emulator, can run local or remote programs.</string>
+	<key>productDownloadURL</key>
+	<array>
+		<string>http://sourceforge.net/project/showfiles.php?group_id=20017&amp;package_id=53121</string>
+	</array>
+	<key>productFileSize</key>
+	<string></string>
+	<key>productIconURL</key>
+	<string>http://homepage.mac.com/kmg/mactelnet/releases/osx/AppIcon96x96.png</string>
+	<key>productKeywords</key>
+	<array>
+		<string>terminal</string>
+		<string>unix</string>
+		<string>telnet</string>
+		<string>ssh</string>
+		<string>ftp</string>
+	</array>
+	<key>productLanguages</key>
+	<array>
+		<string>English</string>
+	</array>
+	<key>productLicense</key>
+	<string>Freeware</string>
+	<key>productName</key>
+	<string>MacTelnet</string>
+	<key>productOS</key>
+	<array>
+		<string>10.3</string>
+		<string>10.4</string>
+	</array>
+	<key>productPageURL</key>
+	<string>http://www.mactelnet.com/</string>
+	<key>productPrice</key>
+	<string></string>
+	<key>productReleaseNotes</key>
+	<string>RELEASE_NOTES_ONE_STRING</string>
+	<key>productRequirements</key>
+	<string>Mac OS X 10.3 or later</string>
+	<key>productReviews</key>
+	<string></string>
+	<key>productVersion</key>
+	<string>VERSION_SUBSTITUTION</string>
+	<key>productWebStore</key>
+	<string></string>
+</dict>
+</plist>

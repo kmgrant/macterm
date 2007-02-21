@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IBDocumentLocation</key>
+	<string>118 26 375 281 0 0 1920 1178 </string>
+	<key>IBFramework Version</key>
+	<string>446.1</string>
+	<key>IBGroupedObjects</key>
+	<dict>
+		<key>238</key>
+		<array>
+			<string>1866</string>
+			<string>1870</string>
+		</array>
+		<key>239</key>
+		<array>
+			<string>1881</string>
+			<string>1877</string>
+		</array>
+		<key>240</key>
+		<array>
+			<string>1887</string>
+			<string>1915</string>
+		</array>
+		<key>250</key>
+		<array>
+			<string>1997</string>
+			<string>1998</string>
+		</array>
+		<key>251</key>
+		<array>
+			<string>2004</string>
+			<string>2005</string>
+		</array>
+		<key>252</key>
+		<array>
+			<string>2003</string>
+			<string>1996</string>
+		</array>
+	</dict>
+	<key>IBLastGroupID</key>
+	<string>253</string>
+	<key>IBOldestOS</key>
+	<integer>3</integer>
+	<key>IBOpenObjects</key>
+	<array>
+		<integer>2010</integer>
+		<integer>1872</integer>
+		<integer>1885</integer>
+		<integer>1858</integer>
+	</array>
+	<key>IBSystem Version</key>
+	<string>8L127</string>
+	<key>targetFramework</key>
+	<string>IBCarbonFramework</string>
+</dict>
+</plist>

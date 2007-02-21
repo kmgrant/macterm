@@ -1,0 +1,32 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":index.html
+
+</div>
+
+h1(pagetitle). Terminal Emulator Specifics
+
+<div class="content">
+
+h2(#vt100). VT100
+
+MacTelnet is an outstanding VT100 emulator.  However, it has some
+imperfections; this page outlines its standards compliance.
+
+TBD
+
+h2(#vt220). VT220
+
+MacTelnet is a very good VT220 emulator.  However, it has some
+imperfections; this page outlines its standards compliance.
+
+The Window menu can be used to show some floating keypads that
+allow certain VT220 keys to be "typed" by users.
+
+Remainder TBD
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+

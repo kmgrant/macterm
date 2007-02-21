@@ -1,0 +1,13 @@
+//
+// Prefix header for all source files of the 'MacTelnet' target in the 'MacTelnet' project.
+//
+
+#define __CF_USE_FRAMEWORK_INCLUDES__
+
+#include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
+#include <CoreServices/CoreServices.h>
+#include <QuickTime/QuickTime.h>
+
+#include <UniversalDefines.h>

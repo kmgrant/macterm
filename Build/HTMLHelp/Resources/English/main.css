@@ -1,0 +1,341 @@
+@charset "UTF-8";
+
+@import url('default.css');
+
+#lastupdated
+{
+	font-size:			smaller;
+	font-weight:		bold;
+	text-align:			center;
+	
+	margin-top:			0em;
+	border-top:			solid #111 0.1em;
+	padding-top:		0.3em;
+	height:				auto;
+	padding-bottom:		0.25em;
+	border-bottom:		solid #ccc 0.1em;
+	margin-bottom:		1em;
+	
+	margin-left:		0em;
+	border-left:		0em;
+	padding-left:		0em;
+	width:				auto;
+	padding-right:		0em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#externalnavigation
+{
+	font-size:			smaller;
+	font-weight:		normal;
+	text-align:			right;
+	
+	margin-top:			0em;
+	border-top:			0em;
+	padding-top:		0.3em;
+	height:				auto;
+	padding-bottom:		0.25em;
+	border-bottom:		0em;
+	margin-bottom:		0em;
+	
+	margin-left:		0em;
+	border-left:		0em;
+	padding-left:		0em;
+	width:				auto;
+	padding-right:		1em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#externalnavigation a
+{
+	background:			transparent;  /* okay because the background color is known */
+}
+
+#externalnavigation a:link
+{
+	background:			transparent;  /* okay because the background color is known */
+	color:				blue;
+	
+	margin-top:			0.2em;
+	border-top:			solid transparent 0.1em;
+	padding-top:		0.25em;
+	height:				auto;
+	padding-bottom:		0.30em;
+	border-bottom:		solid transparent 0.1em;
+	margin-bottom:		0.2em;
+	
+	margin-left:		1em;
+	border-left:		solid transparent 0.1em;
+	padding-left:		0.65em;
+	width:				auto;
+	padding-right:		0.65em;
+	border-right:		solid transparent 0.1em;
+	margin-right:		0em;
+}
+
+#externalnavigation a:visited
+{
+	background:			transparent;  /* okay because the background color is known */
+	color:				#5533cc;
+	
+	margin-top:			0.2em;
+	border-top:			solid transparent 0.1em;
+	padding-top:		0.25em;
+	height:				auto;
+	padding-bottom:		0.30em;
+	border-bottom:		solid transparent 0.1em;
+	margin-bottom:		0.2em;
+	
+	margin-left:		1em;
+	border-left:		solid transparent 0.1em;
+	padding-left:		0.65em;
+	width:				auto;
+	padding-right:		0.65em;
+	border-right:		solid transparent 0.1em;
+	margin-right:		0em;
+}
+
+#externalnavigation a:hover,
+#externalnavigation a:active
+{
+	background:			#777;
+	color:				white;
+	
+	border-top-color:	#111;
+	border-bottom-color:#999;
+	
+	border-left-color:	#111;
+	border-right-color:	#999;
+}
+
+#externalnavigation a:hover
+{
+	text-decoration:	none;
+}
+
+#mainnavigation
+{
+	background:			white;
+	color:				black;
+	float:				left;
+	
+	margin-top:			0em;
+	border-top:			0em;
+	padding-top:		0em;
+	height:				auto;
+	padding-bottom:		0em;
+	border-bottom:		0em;
+	margin-bottom:		0em;
+	
+	margin-left:		0em;
+	border-left:		0em;
+	padding-left:		0em;
+	width:				21em;
+	padding-right:		0em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#mainnavigation dl
+{
+	background:			transparent;
+	
+	margin-top:			0em;
+	border-top:			0em;
+	padding-top:		0em;
+	height:				auto;
+	padding-bottom:		0em;
+	border-bottom:		0em;
+	margin-bottom:		0em;
+	
+	margin-left:		0em;
+	border-left:		0em;
+	padding-left:		1em;
+	width:				auto;
+	padding-right:		0em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#mainnavigation dt
+{
+	color:				#333;
+	display:			block;
+	font-size:			x-small;
+	font-style:			italic;
+	font-weight:		bold;
+	text-shadow:		#666 0.075em 0.15em 0.5em;
+	text-transform:		uppercase;
+	
+	margin-top:			0em;
+	border-top:			0em;
+	padding-top:		0.25em;
+	height:				auto;
+	padding-bottom:		0.30em;
+	border-bottom:		0em;
+	margin-bottom:		0em;
+	
+	margin-left:		0em;
+	border-left:		0em;
+	padding-left:		0em;
+	width:				100%;
+	padding-right:		0em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#mainnavigation dt.sectiontitle
+{
+	display:			none;
+}
+
+#mainnavigation dd
+{
+	margin-top:			0em;
+	border-top:			0em;
+	padding-top:		0em;
+	height:				auto;
+	padding-bottom:		0em;
+	border-bottom:		0em;
+	margin-bottom:		0em;
+	
+	margin-left:		1em;
+	border-left:		0em;
+	padding-left:		0em;
+	width:				auto;
+	padding-right:		0em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#mainnavigation ul
+{
+	margin-top:			0em;
+	border-top:			0em;
+	padding-top:		0em;
+	height:				auto;
+	padding-bottom:		0em;
+	border-bottom:		0em;
+	margin-bottom:		0em;
+	
+	margin-left:		0em;
+	border-left:		0em;
+	padding-left:		0em;
+	width:				auto;
+	padding-right:		0em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#mainnavigation li
+{
+	list-style-type:	none;
+	white-space:		nowrap;
+	
+	margin-top:			0em;
+	border-top:			0em;
+	padding-top:		0em;
+	height:				auto;
+	padding-bottom:		0em;
+	border-bottom:		0em;
+	margin-bottom:		0em;
+	
+	margin-left:		-1em;
+	border-left:		solid transparent 0.1em;
+	padding-left:		0.65em;
+	width:				auto;
+	padding-right:		0.65em;
+	border-right:		solid transparent 0.2em;
+	margin-right:		0em;
+}
+
+#mainnavigation a
+{
+	display:			block;
+}
+
+#mainnavigation a:link,
+#mainnavigation a:visited,
+#mainnavigation a:hover,
+#mainnavigation a:active
+{
+	margin-top:			0.1em;
+	border-top:			solid transparent 0.1em;
+	padding-top:		0.25em;
+	height:				auto;
+	padding-bottom:		0.30em;
+	border-bottom:		solid transparent 0.1em;
+	margin-bottom:		0.1em;
+	
+	margin-left:		1em;
+	border-left:		solid transparent 0.3em;
+	padding-left:		0.65em;
+	width:				auto;
+	padding-right:		0.65em;
+	border-right:		solid transparent 0.1em;
+	margin-right:		0em;
+}
+
+#mainnavigation a:link
+{
+	background:			transparent;
+	color:				blue;
+}
+
+#mainnavigation a:visited
+{
+	background:			transparent;
+	color:				#5533cc;
+}
+
+#mainnavigation a:hover,
+#mainnavigation a:active
+{
+	background:			#777;
+	color:				white;
+	
+	border-top-color:	#111;
+	border-bottom-color:#999;
+	
+	border-left-color:	#111;
+	border-right-color:	#999;
+}
+
+#mainnavigation a:hover
+{
+	text-decoration:	none;
+}
+
+#footer
+{
+	background:			white;
+	clear:				both;
+	color:				black;
+	display:			block;
+	
+	font-size:			smaller;
+	text-align:			center;
+	
+	margin-top:			1em;
+	border-top:			solid #666 0.1em;
+	padding-top:		0.2em;
+	height:				auto;
+	padding-bottom:		0.15em;
+	border-bottom:		solid #666 0.1em;
+	margin-bottom:		1em;
+	
+	margin-left:		0em;
+	border-left:		0em;
+	padding-left:		1em;
+	width:				auto;
+	padding-right:		1em;
+	border-right:		0em;
+	margin-right:		0em;
+}
+
+#footer a
+{
+	background:			transparent;
+}

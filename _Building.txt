@@ -1,0 +1,60 @@
+
+                     How to Build MacTelnet            2006-03-27
+
+PREREQUISITES
+  Although in the past MacTelnet has used MPW and CodeWarrior,
+  now only Xcode is supported.  In addition, the latest version
+  of Mac OS X should be used to build (regardless of target OS)
+  because the build system is not maintained for older releases.
+  
+  MacTelnet 3.1 is implemented as a C++ framework that is loaded
+  into Python.  This is accomplished with the Simple Wrapper
+  Interface Generator (SWIG), which you must download and build
+  separately; look at "Build/Tools/MacTelnetSwigConfig.sh".  See
+  also "Build/PythonWrapper/GNUmakefile", which has a couple of
+  presumptions about where your SWIG and GCC will be.
+  
+  When building source code documentation only, you will need
+  Doxygen (http://www.doxygen.org/), and Dot (part of GraphViz,
+  http://www.graphviz.org/).
+
+UNDERSTANDING THE DIRECTORY STRUCTURE
+  The components of the project are in a few main folders:
+    Licenses/
+        Source code licenses.  Please see _Licenses.txt.
+    Build/
+        Source code for all components and documentation, and the
+        scripts required to build them.  The top level has Xcode
+        projects and/or build scripts for each component.  In
+        addition, files used by more than one component are in
+        Build/Shared/.
+    Debug/
+        Scripts that simplify MacTelnet debugging in "gdb".
+
+HOW TO BUILD
+  Open the "Build/Application.xcodeproj" project, and ask Xcode
+  to build the project.  This project will automatically build
+  the majority of MacTelnet.app.
+  
+  However, the bundled MacTelnet Preferences Converter and the
+  Bug Reporter are not yet built/installed automatically: each
+  must be built using its own Xcode project and copied manually
+  into the Resources folder of MacTelnet.app.  (MacTelnet has
+  code that launches these applications assuming they are in the
+  Resources folder; see the file "ResourceFileManager.cp" in the
+  "Build/Application/Code" folder for specific references.)
+  
+  MacTelnet Help is constructed in the "Build/HTMLHelp" directory
+  using "Build/HTMLHelpBuild.command" (which you can double-click
+  in the Finder).  Alternately, you could go to that directory
+  and just run "make" from a shell.
+  
+  All sources of release notes, such as the MacPAD property list
+  and web pages, are created automatically using the special
+  "Build/HTMLReleaseNotes" directory and the corresponding
+  "Build/HTMLReleaseNotesBuild.command" (which you can
+  double-click in the Finder).  Alternately, you could go to that
+  directory and just run "make" from a shell.
+
+                                     Kevin Grant (kevin@ieee.org)
+                                        Lead Developer, MacTelnet

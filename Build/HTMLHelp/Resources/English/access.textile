@@ -1,0 +1,86 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":index.html
+
+</div>
+
+h1(pagetitle). Running Applications
+
+<div class="content">
+
+h2(#servers). Remote Sessions: Connecting to Servers
+
+Select "Custom New Session..." from the File menu to begin.
+
+bq. Only your first sessions should require this customization step.
+In the future, it will be faster to rely on a Favorite or a saved
+session file to hold your preferences.  A Favorite can be opened
+directly from the File menu, and saved sessions can be opened
+by using the "Open Workspace..." command.
+
+A Custom New Session opens a terminal window and a sheet to allow
+configuration.
+
+If your application requires custom terminal settings and you have
+saved those as a Favorite, you can choose to enable them now with the
+Terminal menu; otherwise, simply leave it as Default.
+
+Your remote application will be accessible using a certain protocol -
+ask your administrator if none of the options (**SSH** versions 1 or 2,
+**TELNET**, **SFTP** or **FTP**) seems appropriate.
+
+There will be a "server" for your remote application, uniquely identified
+by a combination of **host** and **port**.  In the Host field, you can enter
+a name (like "apple.com") if one is applicable; if you have only an
+address (like "123.45.67.123"), enter that instead.  The Look Up button
+can be used to check if a server name is valid (if so, it is transformed
+into a numeric address; otherwise, it is unchanged).
+
+bq. MacTelnet supports IP version 6 addresses as well, so you
+could even use a new-style address like
+"0000:0000:0000:0000:0000:ffff:9d16:0164".
+
+The Port field may not require changing...it was set automatically when
+you chose a Protocol earlier.  But some servers use a custom port number,
+so adjust the value if necessary.
+
+The User ID is what the server uses to identify you.  If not provided,
+the name of your Mac OS X Home folder is used (one-word, all-lowercase
+name).  Note that if a password is also required to access the server,
+you will be prompted for that at connection time; you cannot enter it
+initially in the configuration sheet.
+
+bq. You'll notice that your changes set up a Unix command line.
+This is because MacTelnet relies on Apple's installed commands
+to establish your server connection.  Advanced users may wish
+to add extra options here.  See the Unix manual pages for
+each command to learn the available options.
+
+h2(#unix). Local Sessions: Running Unix Commands
+
+Select "Default" from the File menu to open a window running your
+default Unix shell.  Any commands you type here interact with
+that shell, providing full access to that shell's capabilities.
+
+bq. Note that the Preferences window can be used to change what
+any Favorite does, including Default!  Your Default will not
+open a new shell if you have modified Default to run something
+else.
+
+Another option is to select "Log-In Shell" from the File menu,
+which will prompt you for your Mac OS X user ID and password before
+presenting you with a shell.  The shell is also configured with some
+extra log-in-only settings that are shell-dependent.
+
+Yet another option is to use "Custom New Session...", ignoring the
+Remote Sessions section and replacing the command line at the bottom
+with a completely arbitrary Unix command.
+
+As with remote applications, "Open Workspace..." can be used to run a
+command that you previously saved.
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+

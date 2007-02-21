@@ -1,0 +1,92 @@
+#!/usr/bin/python
+"""The main entry point to MacTelnet.  Yes, a Python interpreter!
+
+This Python script has the same name as the base executable so
+that it is recognized as the main entry point of the bundle.
+(See the bundle Info.plist for this reference.)
+
+You will notice that this script actually turns around and
+invokes a *second* Python interpreter and script.  This is
+because the "real" entry point depends on compiled code, and the
+loader has to find the appropriate libraries.  The first script
+sets up loader environment variables to this end, and then runs a
+2nd interpreter and script to actually use the compiled modules.
+(Consequently, this first script could be written in any language
+but is in Python for consistency.)
+
+NOTE: It would be possible to avoid this script if all necessary
+MacTelnet libraries were installed in locations that the loader
+checks by default (/Library/Frameworks, for example).  However,
+that would also require the user to run an installer or otherwise
+use elevated permissions, which is inappropriate for this simple
+task.
+"""
+__author__ = "Kevin Grant <kevin@ieee.org>"
+__date__ = "2 September 2006"
+
+import sys, os
+
+# find the "MacOS" folder
+macos_dir = os.path.dirname(os.path.normpath(sys.argv[0]))
+contents_dir = os.path.join(macos_dir, "..")
+frameworks_dir = os.path.join(contents_dir, "Frameworks")
+resources_dir = os.path.join(contents_dir, "Resources")
+pymactelnet_dir = os.path.join(frameworks_dir, "PyMacTelnet.framework")
+pymactelnet_versions_dir = os.path.join(pymactelnet_dir, "Versions")
+pymactelnet_current_version_dir = os.path.join(pymactelnet_versions_dir, "Current")
+pymactelnet_py23_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python2.3")
+quills_dir = os.path.join(frameworks_dir, "Quills.framework")
+quills_versions_dir = os.path.join(quills_dir, "Versions")
+quills_current_version_dir = os.path.join(quills_versions_dir, "Current")
+quills_py23_dir = os.path.join(quills_current_version_dir, "lib", "python2.3")
+
+# there should be a symlink of this name in the MacOS folder of the
+# MacTelnet application bundle (see the Xcode project); it should
+# generally point to /usr/bin/python; note that the Python interpreter
+# MUST be invoked this way (via the application bundle location) in order
+# for the OS to identify the application as MacTelnet and not Python
+interpreter = os.path.join(macos_dir, "python")
+os.environ["PYTHONEXECUTABLE"] = interpreter
+
+# specify where dependent Python and C++ libraries will reside
+python_path = os.getenv("PYTHONPATH", "")
+if python_path:
+    python_path = ":" + python_path
+os.environ["PYTHONPATH"] = quills_py23_dir + ":" + pymactelnet_py23_dir + python_path
+os.environ["DYLD_LIBRARY_PATH"] = os.path.join(frameworks_dir, "Quills.framework")
+os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
+
+# DEBUGGING ONLY: if you want to do memory debugging, you can substitute
+# the allocator library as follows (do NOT do this on a whim, guard
+# allocation makes the program MUCH, MUCH slower!)
+#os.environ["DYLD_INSERT_LIBRARIES"] = "/usr/lib/libgmalloc.dylib"
+
+# DEBUGGING ONLY: here is an easy way to enable the debugging versions of
+# all loaded frameworks (including system libraries), but DO NOTE this
+# is only likely to work in a boxed OS version (e.g. definitely works in
+# 10.4.0, may break in 10.4.1 as Apple does not update debug libraries)
+#os.environ["DYLD_IMAGE_SUFFIX"] = "_debug"
+
+# locate the "real" main entry point script, the one depending on C++
+# libraries (hence the environment setup above); ensure it is passed as
+# the main argument to the interpreter
+main_script = os.path.join(macos_dir, "RunMacTelnet.py")
+sys.argv.insert(1, main_script)
+
+# WARNING: the Finder will include arguments (e.g. -psn_0_10223617) that
+# will not be present in a normal shell run; ensure these arguments are
+# preserved so that runs from the Finder are successful
+
+# if it is ever necessary to pass arguments to the 2nd Python script,
+# you could do so here
+#sys.argv.append('--whatever-option')
+
+# Since the main loop loads compiled Python modules, the environment of
+# the interpreter itself must know where those C++ libraries are.  It is
+# therefore necessary to re-exec an interpreter (with the environment
+# defined above) as opposed to simply running the 2nd Python file with
+# execfile(), say.  Note that sys.argv[0] was never changed, so it is
+# still the name of this script ("MacTelnet"); this is fine, as by
+# convention that parameter is a description of the running process.
+os.execve(interpreter, sys.argv, os.environ)
+sys.exit(0)

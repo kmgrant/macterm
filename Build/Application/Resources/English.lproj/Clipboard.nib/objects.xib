@@ -1,0 +1,30 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <string name="targetFramework">IBCarbonFramework</string>
+  <object name="rootObject" class="NSCustomObject" id="1">
+    <string name="customClass">NSApplication</string>
+  </object>
+  <array count="2" name="allObjects">
+    <object class="IBCarbonWindow" id="166">
+      <string name="windowRect">212 206 633 881 </string>
+      <string name="title">Clipboard: MacTelnet</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="bounds">0 0 421 675 </string>
+      </object>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="isConstrained">FALSE</boolean>
+    </object>
+    <reference idRef="167"/>
+  </array>
+  <array count="2" name="allParents">
+    <reference idRef="1"/>
+    <reference idRef="166"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+    <string>Window</string>
+    <reference idRef="166"/>
+  </dictionary>
+  <unsigned_int name="nextObjectID">187</unsigned_int>
+</object>

@@ -1,0 +1,33 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+	<title>$title (MacTelnet Developer Docs)</title>
+	<meta http-equiv="Content-type" content="text/html;charset=macintosh">
+	<meta http-equiv="Content-script-type" content="text/javascript">
+	<meta name="keywords" content="MacTelnet,source,code,developer,documentation">
+	<meta name="description" content="Developer documentation for the MacTelnet terminal emulator.">
+	
+	<link rel="author" href="mailto:kevin@ieee.org">
+	<link rel="home" href="http://homepage.mac.com/kmg/">
+	<link rel="index" href="files.html">
+	
+	<link rel="stylesheet" type="text/css" href="code.css" title="Default">
+	<link rel="stylesheet" type="text/css" href="tabs.css" title="Default">
+</head>
+
+<!-- the background color is specified for the benefit of browsers that do not support style sheets -->
+<body bgcolor="white">
+
+<div class="navigation">
+	MacTELNET.com
+	<ul>
+	<li><a href="http://www.mactelnet.com/" target="_top">Home</a></li>
+	<li><a href="http://homepage.mac.com/kmg/mactelnet/project/" target="_top">Project</a></li>
+	</ul>
+</div>
+
+<h1 class="page-title">Developer Documentation</h1><!-- template -->
+
+<div class="content">
+	<h2>$title</h2><!-- template -->
+

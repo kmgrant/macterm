@@ -1,0 +1,39 @@
+
+                        MacTelnet Project              2005-04-08
+
+ABOUT THE MACTELNET PROJECT
+  Welcome to this source release of MacTelnet for Mac OS X!
+  
+  MacTelnet's goal is to be an excellent terminal emulation
+  program for Mac OS X, while also being very easy to use.  It
+  streamlines terminal work on both local and remote machines,
+  by giving the user just the right set of powerful features, a
+  smart set of preferences and convenient window management.
+  
+  The project is written in C++ with its roots in regular C (so
+  a lot of code still looks more like plain C - and this is not
+  always a bad thing!).  As of MacTelnet 3.1 the application is
+  also entirely managed by a Python interpreter: APIs are not
+  only exposed to Python (through SWIG), but it is possible to
+  implement parts of MacTelnet using only Python!
+  
+  Python, Perl, shell scripts and GNU makefiles are also used for
+  various infrastructure and the documentation utilities.
+  
+  Useful web resources:
+    http://www.mactelnet.com/
+    http://sourceforge.net/projects/mactelnet/
+    http://www.swig.org/
+    http://www.doxygen.org/
+
+WHAT FILES ARE WHERE, HOW TO BUILD, ETC.
+  Please see the file "_Building.txt" for more.
+
+CONTACT
+  As always, ask me (kevin@ieee.org) if you have questions or
+  would like to contribute.
+
+Thank you for your interest!
+                                     Kevin Grant (kevin@ieee.org)
+                                        Lead Developer, MacTelnet
+

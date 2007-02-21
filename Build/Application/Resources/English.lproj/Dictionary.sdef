@@ -1,0 +1,1710 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<!--
+	!!! WARNING !!
+	
+	The "encoding" in the header above is king; this file is UTF-8!
+	In particular, if you include any fancy Macintosh font characters
+	like curly quotes, etc. the XML file will NOT PARSE CORRECTLY.
+	If "sdp" claims this file is not well formed XML, start by looking
+	for non-UTF-8 characters.
+-->
+
+<!--
+	ScriptingTerminology.sdef
+	
+	MacTelnet 3.0
+	© 1998-2005 by Kevin Grant
+	
+	This file defines MacTelnet's AppleScript Dictionary.  Various codes
+	used in this file come from AERegistry.h (in AE.framework in
+	ApplicationServices.framework).
+	
+	The Script Editor will not recognize this on its own; you must use
+	the Mac OS X program /Developer/Tools/sdp to process this XML file
+	and generate Rez input out of it.  Then, link the resultant Rez
+	input into the resource database of the application bundle.
+	
+	The Xcode project should do this automatically.  If you are not using
+	Xcode, run "CreateASDictionaryRezInput.tcsh.command" from MacTelnet's
+	Tools directory.
+-->
+
+<!--
+	The Basics
+	
+	See "man sdef" for detailed information, as well as "/Developer/Examples/Scripting Definitions".
+	
+	Here are other common things you might want to do:
+	- for optional parameters or results, tack on the attribute: optional="optional"
+	- to define a plural name for a class, tack on the attribute, e.g.: plural="this is the plural form"
+-->
+
+<!--
+	A note on indentation style...
+	
+	You may think the indentation in this file is a little weird.  And
+	you would be right.  But wait!  There are good reasons for it.
+	
+	Opening tags tend to have their attributes indented and on separate
+	lines; this makes it easy to see all that is defined for a particular
+	XML tag, and helps make more room for long description strings.  The
+	ending bracket is also indented on its own line, to reduce the chance
+	it will interfere with your eyes when scanning for clauses below.
+	
+	Name attributes are always listed first and broken across lines so
+	that the string part is directly beneath the tag.  This is done so
+	the name is *always* in a predictable location within a line, which
+	makes it much easier to scan for a particular event or enumeration
+	name, etc. (visual searches tend to be more efficient when the eyes
+	do not have to move and you do not have to concentrate on filtering
+	text in a line).
+-->
+
+<dictionary title="MacTelnet dictionary">
+
+	<suite name=
+	"Required Suite"
+		description="Terms used by all applications."
+		code="reqd"
+		>
+		<!-- traditionally empty...apparently everyone is supposed to know what is in this suite -->
+	</suite>
+	
+	<suite name=
+	"Subset of the Standard Suite"
+		description="Common terms used by this application."
+		code="****"
+		>
+		<types>
+			<enumeration name=
+			"save options"
+				description="how to handle unsaved workspaces when closing or quitting"
+				code="EWSO"
+				>
+				<enumerator name=
+				"yes"
+					description="save every open workspace"
+					code="yes "
+					/>
+				<enumerator name=
+				"no"
+					description="save none of the open workspaces"
+					code="no  "
+					/>
+				<enumerator name=
+				"ask"
+					description="display an alert asking the user to confirm each save"
+					code="ask "
+					/>
+			</enumeration>
+		</types>
+		<classes>
+			<class name=
+			"application"
+				plural="applications"
+				description="MacTelnet itself, and all its global properties"
+				code="capp"
+				>
+				<elements>
+					<element type="workspace">
+						<accessor style="index" />
+						<accessor style="name" />
+						<accessor style="relative" />
+					</element>
+					<element type="window">
+						<accessor style="index" />
+						<accessor style="name" />
+						<accessor style="range" />
+						<accessor style="relative" />
+						<accessor style="test" />
+					</element>
+					<element type="terminal window">
+						<accessor style="index" />
+						<accessor style="name" />
+						<accessor style="range" />
+						<accessor style="relative" />
+						<accessor style="test" />
+					</element>
+					<element type="session">
+						<accessor style="index" />
+						<accessor style="name" />
+						<accessor style="range" />
+						<accessor style="relative" />
+						<accessor style="test" />
+					</element>
+					<element type="macro set">
+						<accessor style="index" />
+						<accessor style="name" />
+						<accessor style="test" />
+					</element>
+				</elements>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"current IP addresses"
+						description="one or more 4-digit Internet Protocol addresses of the computer MacTelnet is running on"
+						code="RAIP"
+						type="string"
+						access="r"
+						/>
+					<property name=
+					"frontmost"
+						description="whether or not MacTelnet is the active application"
+						code="pisf"
+						type="boolean"
+						access="r"
+						/>
+					<property name=
+					"macros"
+						description="[unimpl.] the set of macros currently being used"
+						code="RAAM"
+						type="macro set"
+						/>
+					<property name=
+					"name"
+						description="the name of the MacTelnet application program file"
+						code="pnam"
+						type="string"
+						access="r"
+						/>
+					<property name=
+					"user Scripts Menu Items folder"
+						description="the Scripts Menu Items folder in MacTelnet's preferences folder"
+						code="RAfS"
+						type="file"
+						access="r"
+						/>
+					<property name=
+					"user Startup Items folder"
+						description="the Startup Items folder in MacTelnet's preferences folder"
+						code="RAfO"
+						type="file"
+						access="r"
+						/>
+					<property name=
+					"version"
+						description="the version of MacTelnet"
+						code="vers"
+						type="version"
+						access="r"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"window"
+				plural="windows"
+				description="a MacTelnet window"
+				code="cwin"
+				>
+				<elements>
+					<element type="terminals">
+						<accessor style="index" />
+					</element>
+				</elements>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"bounds"
+						description="the area on the screen that the window occupies"
+						code="pbnd"
+						type="bounding rectangle"
+						/>
+					<property name=
+					"closeable"
+						description="whether or not the window has a close button"
+						code="hclb"
+						type="boolean"
+						access="r"
+						/>
+					<property name=
+					"index"
+						description="the number of the window; 1 is the frontmost window in the MacTelnet layer"
+						code="pidx"
+						type="integer"
+						/>
+					<property name=
+					"minimized"
+						description="whether or not the window is minimized into the Dock"
+						code="RWSh"
+						type="boolean"
+						/>
+					<property name=
+					"minimizable"
+						description="whether or not the window has a minimize button"
+						code="RW=="
+						type="boolean"
+						access="r"
+						/>
+					<property name=
+					"name"
+						description="the window title"
+						code="pnam"
+						type="string"
+						/>
+					<property name=
+					"obscured"
+						description="set to true if the window is behaving like a visible window, but is invisible"
+						code="RWOb"
+						type="boolean"
+						/>
+					<property name=
+					"position"
+						description="the upper-left-hand corner of the window content area"
+						code="RWxy"
+						type="point"
+						/>
+					<property name=
+					"resizable"
+						description="[unimpl.] whether or not the window has a size box"
+						code="prsz"
+						type="boolean"
+						/>
+					<property name=
+					"titled"
+						description="whether or not window can be moved"
+						code="ptit"
+						type="boolean"
+						access="r"
+						/>
+					<property name=
+					"visible"
+						description="whether or not the window is showing"
+						code="pvis"
+						type="boolean"
+						access="r"
+						/>
+					<property name=
+					"zoomed"
+						description="whether or not the window size matches the application-defined ideal size, versus user-defined boundaries"
+						code="pzum"
+						type="boolean"
+						/>
+					<property name=
+					"zoomable"
+						description="whether or not the window has a zoom button"
+						code="iszm"
+						type="boolean"
+						access="r"
+						/>
+				</properties>
+			</class>
+		</classes>
+		<events>
+			<event name=
+			"close"
+				description="delete an object or terminate an open data stream"
+				code="coreclos"
+				>
+				<direct-parameter
+					description="the object to close"
+					type="object"
+					/>
+				<parameter name=
+				"saving"
+					description="how unsaved windows should be processed before going away"
+					code="savo"
+					type="save options"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"count"
+				description="return the number of elements of a particular class within an object"
+				code="corecnte"
+				>
+				<result
+					description="the number of elements"
+					type="integer"
+					/>
+				<direct-parameter
+					description="the object whose elements are to be counted"
+					type="object"
+					/>
+			</event>
+			<event name=
+			"data size"
+				description="return the size in bytes of an object"
+				code="coredsiz"
+				>
+				<result
+					description="the size of the object in bytes"
+					type="integer"
+					/>
+				<direct-parameter
+					description="the object whose data size is to be returned"
+					type="object"
+					/>
+				<parameter name=
+				"as"
+					description="[unimpl.] the data type for which the size is calculated"
+					code="rtyp"
+					type="type"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"delete"
+				description="delete an element from an object"
+				code="coredelo"
+				>
+				<direct-parameter
+					description="the element to delete"
+					type="object"
+					/>
+			</event>
+			<event name=
+			"duplicate"
+				description="clone object(s)"
+				code="coreclon"
+				>
+				<result
+					description="a clone of the specified object"
+					type="object"
+					/>
+				<direct-parameter
+					description="the object to create a clone of"
+					type="object"
+					/>
+			</event>
+			<event name=
+			"exists"
+				description="test whether or not something exists within the context of this application"
+				code="coredoex"
+				>
+				<result
+					description="true if it exists, false if not"
+					type="boolean"
+					/>
+				<direct-parameter
+					description="the object in question"
+					type="object"
+					/>
+			</event>
+			<event name=
+			"get"
+				description="return the data for an object"
+				code="coregetd"
+				>
+				<result
+					description="the data from the object"
+					type="any"
+					/>
+				<direct-parameter
+					description="the object whose data is to be returned"
+					type="object"
+					/>
+				<parameter name=
+				"as"
+					description="[works only for some classes] the desired types for the data, in order of preference"
+					code="rtyp"
+					type="type"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"make"
+				description="create a new element"
+				code="corecrel"
+				>
+				<result
+					description="the new object, or a list of new objects"
+					type="object"
+					/>
+				<parameter name=
+				"new"
+					description="[unimpl.] the class of the new element"
+					code="kocl"
+					type="type"
+					/>
+				<parameter name=
+				"with properties"
+					description="[unimpl.] the initial values for the properties of the element"
+					code="qpro"
+					type="record"
+					optional="optional"
+					/>
+				<parameter name=
+				"with terminal properties"
+					description="shorthand for initializing the terminal properties key of the properties map"
+					code="qTpr"
+					type="record"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"open"
+				description="import a macro set file, open a connection using a session description file, or run an AppleScript compiled script"
+				code="aevtodoc"
+				>
+				<direct-parameter
+					description="a list of things to open"
+					type="object"
+					/>
+			</event>
+			<event name=
+			"print"
+				description="send the specified object(s) to the default printer"
+				code="aevtpdoc"
+				>
+				<result
+					description="tracker for the printing in progress"
+					type="printout"
+					/>
+				<direct-parameter
+					description="the object(s) to print"
+					type="object"
+					/>
+				<parameter name=
+				"with copies"
+					description="[unimpl.] the number of copies to print; default is 1"
+					code="#Cpy"
+					type="integer"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"select"
+				description="highlight object(s), in order to operate on them"
+				code="coreslct"
+				>
+				<direct-parameter
+					description="the object to select"
+					type="object"
+					/>
+			</event>
+			<event name=
+			"set"
+				description="specify an object's data"
+				code="coresetd"
+				>
+				<direct-parameter
+					description="the object to change"
+					type="object"
+					/>
+				<parameter name=
+				"to"
+					description="[works only for some classes] the new value"
+					code="data"
+					type="any"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"quit"
+				description="terminate the application"
+				code="aevtquit"
+				>
+				<parameter name=
+				"saving"
+					description="how unsaved workspaces should be processed before going away"
+					code="savo"
+					type="save options"
+					optional="optional"
+					/>
+			</event>
+		</events>
+	</suite>
+	
+	<suite name=
+	"Subset of the Interaction Standard Additions"
+		description="Interaction terms from Standard Additions used by this application."
+		code="syso"
+		>
+		<classes>
+			<class name=
+			"dialog reply"
+				plural="dialog replies"
+				code="askr"
+				>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"button hit"
+						code="bhit"
+						type="string"
+						access="r"
+						/>
+					<property name=
+					"gave up"
+						code="gavu"
+						type="boolean"
+						access="r"
+						/>
+				</properties>
+			</class>
+		</classes>
+	</suite>
+	
+	<suite name=
+	"Subset of the Internet Suite"
+		description="Internet terms used by this application."
+		code="gurl"
+		>
+		<types>
+			<enumeration name=
+			"scheme"
+				description="protocol for remote sessions"
+				code="esch"
+				><!-- NOTE: this is defined to match the "scheme" in Apple's Internet suite "URL" class -->
+				<enumerator name=
+				"ssh1 URL"
+					description="secure remote shell, version 1"
+					code="ssh1"
+					/>
+				<enumerator name=
+				"ssh2 URL"
+					description="secure remote shell, version 2"
+					code="ssh2"
+					/>
+				<enumerator name=
+				"telnet URL"
+					description="telephone networking protocol"
+					code="tlnt"
+					/>
+				<enumerator name=
+				"ftp URL"
+					description="file transfer protocol"
+					code="ftp "
+					/>
+			</enumeration>
+		</types>
+		<classes>
+			<class name=
+			"Internet address"
+				plural="Internet addresses"
+				description="information about a server from which a resource may be accessed using the TCP/IP protocol"
+				code="IPAD"
+				>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"DNS form"
+						description="word-based form of address, such as apple.com (resolved by the Domain Name System)"
+						code="pDNS"
+						type="string"
+						/>
+					<property name=
+					"dotted decimal form"
+						description="number-based form of address, such as 123.45.67.123"
+						code="pipd"
+						type="string"
+						/>
+					<property name=
+					"port"
+						description="the port number on the host computer that the server uses; protocols usually assume this value if none is given"
+						code="ppor"
+						type="integer"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"URL"
+				plural="URLs"
+				description="a Uniform Resource Locator for something (such as a telnet server) that MacTelnet can gain access to"
+				code="url "
+				>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"name"
+						description="a name given to this URL, usually the default window name"
+						code="pnam"
+						type="string"
+						/>
+					<property name=
+					"scheme"
+						description="protocol for using this resource"
+						code="pusc"
+						type="scheme"
+						/>
+					<property name=
+					"host"
+						description="what computer this resource is on, and (if necessary) what port number to use"
+						code="HOST"
+						type="Internet address"
+						/>
+					<property name=
+					"user name"
+						description="the user name by which to access this URL"
+						code="RAun"
+						type="string"
+						/>
+				</properties>
+			</class>
+		</classes>
+		<events>
+			<event name=
+			"open location"
+				description="open a connection to a domain specified in a uniform-resource-locator string"
+				code="GURLGURL"
+				>
+				<result
+					description="result code - 0 for success, 1 for failure"
+					type="integer"
+					optional="optional"
+					/>
+				<direct-parameter
+					description="a string or list of strings in uniform-resource-locator format; if the URL can be handled, it will be; otherwise, an appropriate Internet helper application is launched; if that fails, 1 is returned"
+					type="object"
+					/>
+			</event>
+		</events>
+	</suite>
+	
+	<suite name=
+	"MacTelnet Suite"
+		description="Terms unique to this application."
+		code="KevG"
+		>
+		<types>
+			<enumeration name=
+			"alert icon"
+				description="what icon to display in an alert box"
+				code="EAIT"
+				>
+				<enumerator name=
+				"note"
+					description="icon for normal messages"
+					code="note"
+					/>
+				<enumerator name=
+				"stop"
+					description="icon for messages about failed or cancelled operations"
+					code="stop"
+					/>
+				<enumerator name=
+				"caution"
+					description="icon for warning messages"
+					code="caut"
+					/>
+			</enumeration>
+			<enumeration name=
+			"cursor shape"
+				description="what the insertion point looks like in a terminal window"
+				code="ECur"
+				>
+				<enumerator name=
+				"block"
+					description="describes a square text cursor style"
+					code="CurB"
+					/>
+				<enumerator name=
+				"vertical bar"
+					description="describes a standard Mac OS insertion point text cursor style"
+					code="CurV"
+					/>
+				<enumerator name=
+				"bold vertical bar"
+					description="describes a thicker version of the normal vertical bar cursor"
+					code="CuBV"
+					/>
+				<enumerator name=
+				"underline"
+					description="describes a text cursor that looks like an underscore"
+					code="CurU"
+					/>
+				<enumerator name=
+				"bold underline"
+					description="describes a thicker version of the normal underline cursor"
+					code="CuBU"
+					/>
+			</enumeration>
+			<enumeration name=
+			"capture status"
+				description="whether or not session data is being written to a file"
+				code="EFSt"
+				>
+				<enumerator name=
+				"uninitiated"
+					description="specifies that a file capture has not yet begun"
+					code="FStU"
+					/>
+				<enumerator name=
+				"capturing"
+					description="specifies a file capture in progress"
+					code="FStC"
+					/>
+				<enumerator name=
+				"finished"
+					description="specifies a file capture that has stopped"
+					code="FStD"
+					/>
+			</enumeration>
+			<enumeration name=
+			"macro key equivalents"
+				description="the set of keys that activate macros"
+				code="EMKE"
+				>
+				<enumerator name=
+				"command digit"
+					description="specifies that macros are invoked when the command key is combined with keypad keys"
+					code="MKED"
+					/>
+				<enumerator name=
+				"function keys"
+					description="specifies that macros are invoked using F1 through F12"
+					code="MKEF"
+					/>
+			</enumeration>
+			<enumeration name=
+			"session status"
+				description="succinct assessment of a session's state"
+				code="ECSt"
+				>
+				<enumerator name=
+				"unborn"
+					description="session is still initializing; guaranteed to be the initial state"
+					code="CSt0"
+					/>
+				<enumerator name=
+				"young"
+					description="session has existed for less than 15 seconds (so if the user kills it, there is no warning)"
+					code="CStD"
+					/>
+				<enumerator name=
+				"mature"
+					description="session has existed for 15 seconds or longer (so if the user kills it, a warning appears)"
+					code="CStA"
+					/>
+				<enumerator name=
+				"dead"
+					description="specifies that a session has been terminated, but its window may still be open"
+					code="CStX"
+					/>
+				<enumerator name=
+				"buried"
+					description="session is invalid and is still being torn down; guaranteed to be the final state"
+					code="CStZ"
+					/>
+			</enumeration>
+			<enumeration name=
+			"special character"
+				description="mnemonics for frequently-used command sequences"
+				code="ESpC"
+				>
+				<enumerator name=
+				"AYT"
+					description="are you there?"
+					code="SpCY"
+					/>
+				<enumerator name=
+				"AO"
+					description="abort output"
+					code="SpC."
+					/>
+				<enumerator name=
+				"BRK"
+					description="break"
+					code="SpC-"
+					/>
+				<enumerator name=
+				"CR"
+					description="carriage return"
+					code="SpCR"
+					/>
+				<enumerator name=
+				"IP"
+					description="interrupt process"
+					code="SpCI"
+					/>
+				<enumerator name=
+				"EC"
+					description="erase character"
+					code="SpCE"
+					/>
+				<enumerator name=
+				"EL"
+					description="erase line"
+					code="SpCX"
+					/>
+				<enumerator name=
+				"EOF"
+					description="end-of-file"
+					code="SpCD"
+					/>
+				<enumerator name=
+				"LF"
+					description="line feed"
+					code="SpCL"
+					/>
+				<enumerator name=
+				"SYNC"
+					description="synchronize"
+					code="SpC="
+					/>
+			</enumeration>
+		</types>
+		<classes>
+			<class name=
+			"basic palette"
+				plural="basic palettes"
+				description="a set of definitions for the 8 ANSI standard colors"
+				code="TANS"
+				>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"black"
+						description="color to use when black is requested"
+						code="RBlk"
+						type="RGB color"
+						/>
+					<property name=
+					"red"
+						description="color to use when red is requested"
+						code="RRed"
+						type="RGB color"
+						/>
+					<property name=
+					"green"
+						description="color to use when green is requested"
+						code="RGre"
+						type="RGB color"
+						/>
+					<property name=
+					"yellow"
+						description="color to use when yellow is requested"
+						code="RYel"
+						type="RGB color"
+						/>
+					<property name=
+					"blue"
+						description="color to use when blue is requested"
+						code="RBlu"
+						type="RGB color"
+						/>
+					<property name=
+					"magenta"
+						description="color to use when magenta is requested"
+						code="RMag"
+						type="RGB color"
+						/>
+					<property name=
+					"cyan"
+						description="color to use when cyan is requested"
+						code="RCya"
+						type="RGB color"
+						/>
+					<property name=
+					"white"
+						description="color to use when white is requested"
+						code="RWhi"
+						type="RGB color"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"command line window"
+				plural="command line windows"
+				description="a floating window displaying a one-line terminal for user input to the active window of a session"
+				inherits="window"
+				code="TCWn"
+				>
+				<elements>
+					<element type="string">
+						<accessor style="index" />
+						<accessor style="test" />
+					</element>
+					<element type="terminal">
+						<accessor style="index" />
+					</element>
+				</elements>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"terminal properties"
+						description="allows getting and setting of terminal properties for the primary input area"
+						code="pTPr"
+						type="terminal traits"
+						/>
+					<property name=
+					"main field"
+						description="the primary input area"
+						code="pCLI"
+						type="terminal"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"dump"
+				plural="dumps"
+				description="a file capture, which logs all incoming, renderable session data into a plain text file"
+				code="TDmp"
+				>
+				<properties>
+					<property name=
+					"stream properties"
+						description="allows getting of stream properties"
+						code="RFSt"
+						type="stream traits"
+						access="r"
+						/>
+					<property name=
+					"destination"
+						description="[unimpl.] the file where captured text is being saved"
+						code="RFFl"
+						type="alias"
+						access="r"
+						/>
+					<property name=
+					"viewer"
+						description="[unimpl.] the text editing application that will open the file"
+						code="RFFC"
+						type="application"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"macro set"
+				plural="macro sets"
+				description="a collection of a dozen macros, complete with key equivalents"
+				code="TMcS"
+				>
+				<elements>
+					<element type="string">
+						<accessor style="index" />
+						<accessor style="name" />
+						<accessor style="test" />
+					</element>
+				</elements>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"key equivalents"
+						description="the keystrokes that will activate the respective macros in this set"
+						code="RMKE"
+						type="macro key equivalents"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"printout"
+				plural="printouts"
+				description="a printing spool, which logs all incoming, renderable session data and sends it to a printer"
+				code="TPnt"
+				>
+				<properties>
+					<property name=
+					"stream properties"
+						description="allows getting of stream properties"
+						code="RFSt"
+						type="stream traits"
+						access="r"
+						/>
+					<property name=
+					"printer"
+						description="the name of the printer where the job is going"
+						code="RPDv"
+						type="string"
+						access="r"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"session"
+				plural="sessions"
+				description="an interaction between MacTelnet and a resource (either local or remote)"
+				code="TSWn"
+				>
+				<elements>
+					<element type="terminal">
+						<accessor style="index" />
+						<accessor style="name" />
+					</element>
+				</elements>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"exit status"
+						description="what the Unix program returns when terminated; 0 for success, failure for anything else"
+						code="RSES"
+						type="integer"
+						access="r"
+						/>
+					<property name=
+					"remote"
+						description="[unimpl.] false only if the window holds a local Unix process"
+						code="RSRm"
+						type="boolean"
+						access="r"
+						/>
+					<property name=
+					"status"
+						description="[unimpl.] current state of a session (also reflected in other places, such as the Window menu)"
+						code="RSSt"
+						type="session status"
+						access="r"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"stream traits"
+				plural="stream traits"
+				description="properties typical of a thing that reads lines of data from somewhere"
+				code="TFlC"
+				>
+				<properties>
+					<property name=
+					"progress"
+						description="[unimpl.] whether the capture is in progress, or complete"
+						code="RFSt"
+						type="capture status"
+						access="r"
+						/>
+					<property name=
+					"text"
+						description="[unimpl.] the captured text so far, if any"
+						code="RFTx"
+						type="string"
+						access="r"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"terminal"
+				plural="terminal"
+				description="displays a terminal screen"
+				code="TTrm"
+				>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"terminal properties"
+						description="allows getting and setting of terminal properties"
+						code="pTPr"
+						type="terminal traits"
+						/>
+					<property name=
+					"pipe"
+						description="where, if anywhere, data from this terminal is being continuously saved"
+						code="RTCF"
+						type="dump"
+						access="r"
+						/>
+					<property name=
+					"renderers"
+						description="[unimpl.] a window or list of windows that display the data from this terminal"
+						code="RTwn"
+						type="object"
+						access="r"
+						/>
+					<property name=
+					"spool"
+						description="where, if anywhere, data from this terminal is being printed"
+						code="RTPO"
+						type="printout"
+						access="r"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"terminal traits"
+				plural="terminal traits"
+				description="properties typical of a terminal screen"
+				code="TTTr"
+				>
+				<properties>
+					<property name=
+					"cursor"
+						description="[unimpl.] column and row (zero-based) where the cursor is within the visible screen area"
+						code="RTcl"
+						type="point"
+						/>
+					<property name=
+					"columns"
+						description="the horizontal display capacity, in terms of the number of characters"
+						code="RTvc"
+						type="integer"
+						/>
+					<property name=
+					"rows"
+						description="the vertical display view size, in terms of the number of lines"
+						code="RTvr"
+						type="integer"
+						/>
+					<property name=
+					"storage"
+						description="the number of lines saved, in addition to the regular rows"
+						code="RTir"
+						type="integer"
+						access="r"
+						/>
+					<property name=
+					"opacity"
+						description="the degree to which the terminal screen is opaque; 0.0 is completely transparent, 1.0 is completely opaque"
+						code="RTop"
+						type="real"
+						/>
+					<property name=
+					"font"
+						description="[unimpl.] shorthand for accessing the font of the normal look"
+						code="RfAa"
+						type="string"
+						/>
+					<property name=
+					"size"
+						description="[unimpl.] shorthand for accessing the size of the normal look"
+						code="RfSz"
+						type="integer"
+						/>
+					<property name=
+					"color"
+						description="shorthand for accessing the color of the normal look"
+						code="RfCT"
+						type="RGB color"
+						/>
+					<property name=
+					"background"
+						description="shorthand for accessing the background of the normal look"
+						code="RfCB"
+						type="RGB color"
+						/>
+					<property name=
+					"primaries"
+						description="shorthand for accessing the primaries of the normal look"
+						code="RfBP"
+						type="basic palette"
+						/>
+					<property name=
+					"normal look"
+						description="the font and color information for screen cells by default"
+						code="RTNF"
+						type="text decoration"
+						/>
+					<property name=
+					"bold look"
+						description="the font and color information for screen cells set to boldface"
+						code="RTbF"
+						type="text decoration"
+						/>
+					<property name=
+					"blinking look"
+						description="the font and color information for screen cells set to blink on and off"
+						code="RTBF"
+						type="text decoration"
+						/>
+					<property name=
+					"text"
+						description="the text of the terminal window's visible screen area, and its scrollback buffer (if any)"
+						code="RTtx"
+						type="string"
+						access="r"
+						/>
+					<property name=
+					"bottom"
+						description="[unimpl.] the text of the terminal window's visible screen area, not including its scrollback buffer"
+						code="RTsc"
+						type="string"
+						access="r"
+						/>
+					<property name=
+					"scrollback"
+						description="[unimpl.] the text of the terminal window's scrollback buffer (if any), not including its visible screen area"
+						code="RTsb"
+						type="format"
+						access="r"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"terminal window"
+				plural="terminal windows"
+				description="a special kind of window that displays a virtual terminal screen"
+				inherits="window"
+				code="TTWn"
+				>
+				<elements>
+					<element type="terminal">
+						<accessor style="index" />
+						<accessor style="test" />
+					</element>
+				</elements>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"terminal properties"
+						description="allows getting and setting of terminal properties common to ALL terminals in this window"
+						code="pTPr"
+						type="terminal traits"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"text decoration"
+				plural="text decorations"
+				description="a collection of text attributes"
+				code="TDec"
+				>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"font"
+						description="[unimpl.] the font to use for drawing text"
+						code="RfAa"
+						type="string"
+						/>
+					<property name=
+					"size"
+						description="[unimpl.] the font point size to use for drawing text"
+						code="RfSz"
+						type="integer"
+						/>
+					<property name=
+					"color"
+						description="the color to use for the foreground of screen cells"
+						code="RfCT"
+						type="RGB color"
+						/>
+					<property name=
+					"background"
+						description="the color to use for the background of screen cells"
+						code="RfCB"
+						type="RGB color"
+						/>
+					<property name=
+					"primaries"
+						description="the colors to use when one of the 8 standard ANSI colors is requested"
+						code="RfBP"
+						type="basic palette"
+						/>
+				</properties>
+			</class>
+			<class name=
+			"workspace"
+				plural="workspaces"
+				description="an arrangement of terminal windows to help organize tasks"
+				code="TWSp"
+				>
+				<elements>
+					<element type="terminal window">
+						<accessor style="index" />
+						<accessor style="name" />
+						<accessor style="test" />
+					</element>
+				</elements>
+				<properties>
+					<property name=
+					"properties"
+						description="allows getting and setting of multiple properties"
+						code="pALL"
+						type="record"
+						/>
+					<property name=
+					"closeable"
+						description="whether or not EVERY window in the workspace closes when any one workspace window is closed (if a window overlaps multiple workspaces, it will not close because the other workspaces are still open)"
+						code="RWLM"
+						type="boolean"
+						/>
+					<property name=
+					"minimizable"
+						description="whether or not EVERY window in the workspace minimizes when any one workspace window is minimized (if a window overlaps multiple workspaces, it will only be minimized if all its other workspaces are minimized)"
+						code="RWLM"
+						type="boolean"
+						/>
+					<property name=
+					"minimized"
+						description="whether or not EVERY window in the workspace is minimized into the Dock (reflects workspace state, not window state; if a window overlaps multiple workspaces, it will only be minimized if all its other workspaces are minimized)"
+						code="RWLM"
+						type="boolean"
+						/>
+					<property name=
+					"name"
+						description="[unimpl.] the title of this workspace (if set, does not change individual window titles)"
+						code="pnam"
+						type="string"
+						access="r"
+						/>
+					<property name=
+					"obscured"
+						description="set to true if all windows in this workspace are invisible because the workspace is invisible (if a window overlaps multiple workspaces, it will only be hidden if all its other workspaces are obscured)"
+						code="RWOb"
+						type="boolean"
+						/>
+				</properties>
+			</class>
+		</classes>
+		<events>
+			<event name=
+			"connect"
+				description="open a connection to a single host"
+				code="KevGTCnO"
+				>
+				<result
+					description="session for the new connection"
+					type="session"
+					/>
+				<parameter name=
+				"to host"
+					description="what to connect to (the URL implies the window name, protocol, host, port, user and password if necessary)"
+					code="OHst"
+					type="URL"
+					/>
+				<parameter name=
+				"giving up after"
+					description="number of seconds to wait for opening before aborting the attempt"
+					code="givu"
+					type="integer"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"display alert"
+				description="show an alert window"
+				code="KevGTDAl"
+				>
+				<result
+					description="which button (if any) was chosen, and whether or not the alert timed out"
+					type="dialog reply"
+					optional="optional"
+					/>
+				<direct-parameter
+					description="the text to display in normal print in the alert box"
+					type="string"
+					/>
+				<parameter name=
+				"as sheet of"
+					description="[unimpl.] the window the alert should attach itself to; the alert automatically becomes window-modal, but the script is suspended until the user responds, as with regular alerts"
+					code="PWin"
+					type="window"
+					optional="optional"
+					/>
+				<parameter name=
+				"alert sound"
+					description="whether or not an alert sound is played as the message window appears; by default, no sound is played"
+					code="ASnd"
+					type="boolean"
+					optional="optional"
+					/>
+				<parameter name=
+				"buttons"
+					description="a list of up to three buttons, where the first button is the default one; pass an empty string in the second string to skip that button position; the default is a single OK button"
+					code="BtnL"
+					type="list of string"
+					optional="optional"
+					/>
+				<parameter name=
+				"giving up after"
+					description="[unimpl.] number of seconds to wait before automatically dismissing the alert"
+					code="givu"
+					type="integer"
+					optional="optional"
+					/>
+				<parameter name=
+				"help button"
+					description="whether or not the alert has a help button; by default, it does not"
+					code="?Btn"
+					type="boolean"
+					optional="optional"
+					/>
+				<parameter name=
+				"help text"
+					description="text to display in smaller print underneath the message text"
+					code="?Txt"
+					type="string"
+					optional="optional"
+					/>
+				<parameter name=
+				"name"
+					description="a title for the alert window, displayed in huge text at the top of the window"
+					code="pnam"
+					type="string"
+					optional="optional"
+					/>
+				<parameter name=
+				"network disruption"
+					description="if false, network events continue to be serviced while the alert is displayed, which could cause other alerts to appear in front of this one"
+					code="ADsN"
+					type="boolean"
+					optional="optional"
+					/>
+				<parameter name=
+				"speech"
+					description="whether or not to speak the alert text immediately when the alert is displayed"
+					code="ASpk"
+					type="boolean"
+					optional="optional"
+					/>
+				<parameter name=
+				"with icon"
+					description="a standard alert icon type; the default is no icon"
+					code="disp"
+					type="alert icon"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"do what I mean"
+				description="magically determine exactly what you want to do, and do it (requires the Telepathy AppleScript extension, available in Mac OS XVII)"
+				code="KevG?!?!"
+				>
+			</event>
+			<!-- NOTE: "expect" has 2 forms, this is not an exact duplicate -->
+			<event name=
+			"expect"
+				description="wait for specific data to arrive from a session"
+				code="KevGTWai"
+				>
+				<direct-parameter
+					description="[unimpl.] the string or list of strings that must be received before continuing (lists may also include special characters)"
+					type="any"
+					/>
+				<parameter name=
+				"from source"
+					description="[unimpl.] an open connection to wait for data from"
+					code="FrSW"
+					type="session"
+					/>
+				<parameter name=
+				"giving up after"
+					description="number of seconds to wait for data before timing out"
+					code="givu"
+					type="integer"
+					optional="optional"
+					/>
+			</event>
+			<!-- NOTE: "expect" has 2 forms, this is not an exact duplicate -->
+			<event name=
+			"expect"
+				description="wait for specific data to arrive from a session"
+				code="KevGTWai"
+				>
+				<direct-parameter
+					description="[unimpl.] the special character or command that must be received before continuing"
+					type="special character"
+					/>
+				<parameter name=
+				"from source"
+					description="[unimpl.] an open connection to wait for data from"
+					code="FrSW"
+					type="session"
+					/>
+				<parameter name=
+				"giving up after"
+					description="number of seconds to wait for data before timing out"
+					code="givu"
+					type="integer"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"launch Sherlock"
+				description="launch Sherlock, prompting the user if the application cannot be found"
+				code="KevGTFnd"
+				>
+			</event>
+			<!-- NOTE: "send" has 2 forms, this is not an exact duplicate -->
+			<event name=
+			"send"
+				description="send data to a session"
+				code="KevGTDat"
+				>
+				<direct-parameter
+					description="the string or list of strings to send (lists may also include special characters)"
+					type="any"
+					/>
+				<parameter name=
+				"to destination"
+					description="an active session to send data to"
+					code="ToSW"
+					type="session"
+					/>
+				<parameter name=
+				"giving up after"
+					description="[unimpl.] maximum number of seconds to wait before aborting and not finishing the data transmission"
+					code="givu"
+					type="integer"
+					optional="optional"
+					/>
+				<parameter name=
+				"echoing"
+					description="whether or not to echo the data that is sent (regardless of the current echo setting); default is the current session echo setting"
+					code="Echo"
+					type="boolean"
+					optional="optional"
+					/>
+				<parameter name=
+				"newline"
+					description="whether to add an automatic carriage return (and possibly line feed) to the end of the specified string before sending; default is false"
+					code="S+NL"
+					type="boolean"
+					optional="optional"
+					/>
+			</event>
+			<!-- NOTE: "send" has 2 forms, this is not an exact duplicate -->
+			<event name=
+			"send"
+				description="send data to a session"
+				code="KevGTDat"
+				>
+				<direct-parameter
+					description="the special character or command to send"
+					type="special character"
+					/>
+				<parameter name=
+				"to destination"
+					description="an active session to send data to"
+					code="ToSW"
+					type="session"
+					/>
+				<parameter name=
+				"giving up after"
+					description="[unimpl.] maximum number of seconds to wait before aborting and not finishing the data transmission"
+					code="givu"
+					type="integer"
+					optional="optional"
+					/>
+				<parameter name=
+				"echoing"
+					description="whether or not to echo the data that is sent (regardless of the current echo setting); default is the current session echo setting"
+					code="Echo"
+					type="boolean"
+					optional="optional"
+					/>
+				<parameter name=
+				"newline"
+					description="whether to add an automatic carriage return (and possibly line feed) to the end of the specified string before sending; default is false"
+					code="S+NL"
+					type="boolean"
+					optional="optional"
+					/>
+			</event>
+			<event name=
+			"spawn process"
+				description="create a session running a specific command line"
+				code="KevGTUnx"
+				>
+				<result
+					description="session for the new process"
+					type="session"
+					optional="optional"
+					/>
+				<direct-parameter
+					description="the Unix command line to run, as a string containing spaces or as a list of arguments"
+					type="object"
+					/>
+				<parameter name=
+				"name"
+					description="the title of the main terminal window"
+					code="pnam"
+					type="string"
+					optional="optional"
+					/>
+			</event>
+		</events>
+	</suite>
+	
+	<!--
+		It would seem that "sdp" wants every type referenced by name to be defined,
+		hence this suite to define the outliers.  Although, there is no apparent way
+		to prevent these empty definitions from showing up in the dictionary that
+		users see...maybe this is not a bad thing, but it looks a little strange.
+	-->
+	<suite name=
+	"Type Definitions Suite"
+		description="Terms defined elsewhere but used in this dictionary."
+		code="tpdf"
+		>
+		<classes>
+			<class name=
+			"alias"
+				plural="aliases"
+				code="alis"
+				>
+			</class>
+			<class name=
+			"application signature"
+				plural="application signatures"
+				code="sign"
+				>
+			</class>
+			<class name=
+			"bounding rectangle"
+				plural="bounding rectangles"
+				code="qdrt"
+				>
+			</class>
+			<class name=
+			"point"
+				plural="points"
+				code="QDpt"
+				>
+			</class>
+			<class name=
+			"RGB color"
+				plural="RGB colors"
+				code="cRGB"
+				>
+			</class>
+			<class name=
+			"version"
+				plural="versions"
+				code="vers"
+				>
+			</class>
+		</classes>
+	</suite>
+
+</dictionary>
+
+<!-- BELOW IS REQUIRED NEWLINE TO END FILE -->
