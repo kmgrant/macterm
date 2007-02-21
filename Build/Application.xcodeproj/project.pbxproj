@@ -20,7 +20,6 @@
 		0A41231E0ACE525B0067D333 /* PrefPanelSessions.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A4123180ACE525B0067D333 /* PrefPanelSessions.nib */; };
 		0A41231F0ACE525B0067D333 /* PrefPanelTerminals.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A41231A0ACE525B0067D333 /* PrefPanelTerminals.nib */; };
 		0A6E225A06CF42F0004AC0A4 /* KioskPasswordDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A6E225806CF42F0004AC0A4 /* KioskPasswordDialog.nib */; };
-		0A6F3AFE055C6A8F0078649F /* Icons.rsrc in Rez */ = {isa = PBXBuildFile; fileRef = 0A6F3AFB055C6A8F0078649F /* Icons.rsrc */; };
 		0A719D39055D95EE009B0A88 /* InterfaceLibAppResources.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D23055D95ED009B0A88 /* InterfaceLibAppResources.r */; };
 		0A719D3C055D95EE009B0A88 /* FormatDialog.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D26055D95ED009B0A88 /* FormatDialog.r */; };
 		0A719D42055D95EE009B0A88 /* ReusableControls.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D2C055D95EE009B0A88 /* ReusableControls.r */; };
@@ -544,7 +543,7 @@
 		0A46FE3B055432A400ACDF3A /* WindowInfo.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowInfo.cp; path = Application/Code/WindowInfo.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowTitleDialog.cp; path = Application/Code/WindowTitleDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE72055433CA00ACDF3A /* MacTelnet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacTelnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A46FE72055433CA00ACDF3A /* MacTelnet.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MacTelnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A4A7837055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/SplashScreen.pict; sourceTree = "<group>"; };
 		0A4A7839055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttentionMask.pict; sourceTree = "<group>"; };
 		0A4A783B055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttention.pict; sourceTree = "<group>"; };
@@ -567,7 +566,6 @@
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Application/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6E225906CF42F0004AC0A4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskPasswordDialog.nib; sourceTree = "<group>"; };
-		0A6F3AFC055C6A8F0078649F /* English */ = {isa = PBXFileReference; lastKnownFileType = archive.rsrc; name = English; path = Application/Resources/English.lproj/Icons.rsrc; sourceTree = "<group>"; };
 		0A719D23055D95ED009B0A88 /* InterfaceLibAppResources.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = InterfaceLibAppResources.r; path = Application/Resources/InterfaceLibAppResources.r; sourceTree = "<group>"; };
 		0A719D26055D95ED009B0A88 /* FormatDialog.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = FormatDialog.r; path = Application/Resources/FormatDialog.r; sourceTree = "<group>"; };
 		0A719D2C055D95EE009B0A88 /* ReusableControls.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = ReusableControls.r; path = Application/Resources/ReusableControls.r; sourceTree = "<group>"; };
@@ -1062,7 +1060,6 @@
 		0AFF137A0AF42067006CCA34 /* Icons */ = {
 			isa = PBXGroup;
 			children = (
-				0A6F3AFB055C6A8F0078649F /* Icons.rsrc */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
@@ -1354,7 +1351,6 @@
 			isa = PBXRezBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A6F3AFE055C6A8F0078649F /* Icons.rsrc in Rez */,
 				0A719D39055D95EE009B0A88 /* InterfaceLibAppResources.r in Rez */,
 				0A719D3C055D95EE009B0A88 /* FormatDialog.r in Rez */,
 				0A719D42055D95EE009B0A88 /* ReusableControls.r in Rez */,
@@ -1748,14 +1744,6 @@
 				0A6E225906CF42F0004AC0A4 /* English */,
 			);
 			name = KioskPasswordDialog.nib;
-			sourceTree = "<group>";
-		};
-		0A6F3AFB055C6A8F0078649F /* Icons.rsrc */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A6F3AFC055C6A8F0078649F /* English */,
-			);
-			name = Icons.rsrc;
 			sourceTree = "<group>";
 		};
 		0A72360905703FB7005BA8D1 /* AboutBox.nib */ = {
