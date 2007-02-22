@@ -119,6 +119,7 @@ CFStringRef const kConstantsRegistry_HIToolbarItemIDNewDefaultSession		= CFSTR("
 CFStringRef const kConstantsRegistry_HIToolbarItemIDNewLoginSession			= CFSTR("com.mactelnet.toolbaritem.newloginsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDNewShellSession			= CFSTR("com.mactelnet.toolbaritem.newshellsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDScrollLock				= CFSTR("com.mactelnet.toolbaritem.scrolllock");
+CFStringRef const kConstantsRegistry_HIToolbarItemIDStackWindows			= CFSTR("com.mactelnet.toolbaritem.stackwindows");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED1			= CFSTR("com.mactelnet.toolbaritem.terminalled1");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED2			= CFSTR("com.mactelnet.toolbaritem.terminalled2");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED3			= CFSTR("com.mactelnet.toolbaritem.terminalled3");
@@ -152,7 +153,8 @@ enum
 	kConstantsRegistry_IconServicesIconToolbarItemLEDOff		= FOUR_CHAR_CODE('LEDO'),
 	kConstantsRegistry_IconServicesIconToolbarItemLEDOn			= FOUR_CHAR_CODE('LEDI'),
 	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOff	= FOUR_CHAR_CODE('XON '),
-	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn	= FOUR_CHAR_CODE('XOFF')
+	kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn	= FOUR_CHAR_CODE('XOFF'),
+	kConstantsRegistry_IconServicesIconToolbarItemStackWindows	= FOUR_CHAR_CODE('StkW')
 };
 
 //@}

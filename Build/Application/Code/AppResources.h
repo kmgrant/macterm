@@ -261,6 +261,13 @@ inline CFStringRef
 	return CFSTR("IconForSessionStatusDead");
 }
 
+inline CFStringRef
+	AppResources_ReturnStackWindowsIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForStackWindows");
+}
+
 /*###############################################################
 	HELPERS FOR USE WITH THE TRADITIONAL RESOURCE MANAGER
 ###############################################################*/

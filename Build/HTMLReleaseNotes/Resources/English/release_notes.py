@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20070220',
     '20070212',
     '20070207',
     '20070124',
@@ -45,6 +46,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20070220': [
+		'Keys menu renamed to Map, which is more accurate; also renamed some of the items in the menu.',
+		'Session Info window toolbars may now have "Arrange All Windows in Front".',
+	],
 	'20070212': [
 		'Added placeholder Fix Character command.',
 	],

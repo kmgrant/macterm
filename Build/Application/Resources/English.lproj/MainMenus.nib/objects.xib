@@ -683,9 +683,9 @@
         </object>
         <object class="IBCarbonMenuItem" id="353">
           <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">Keys</string>
+          <string name="title">Map</string>
           <object name="submenu" class="IBCarbonMenu" id="354">
-            <string name="title">Keys</string>
+            <string name="title">Map</string>
             <int name="menuID">517</int>
             <array count="12" name="items">
               <object class="IBCarbonMenuItem" id="356">
@@ -731,7 +731,7 @@
                 <boolean name="disabled">TRUE</boolean>
                 <boolean name="sectionHeader">TRUE</boolean>
                 <boolean name="updateSingleItem">TRUE</boolean>
-                <string name="title">Active Macro Set:</string>
+                <string name="title">Macro Set:</string>
               </object>
               <object class="IBCarbonMenuItem" id="364">
                 <boolean name="updateSingleItem">TRUE</boolean>
@@ -746,7 +746,7 @@
                 <boolean name="disabled">TRUE</boolean>
                 <boolean name="sectionHeader">TRUE</boolean>
                 <boolean name="updateSingleItem">TRUE</boolean>
-                <string name="title">Active Translation Table:</string>
+                <string name="title">Text Translation:</string>
               </object>
               <object class="IBCarbonMenuItem" id="367">
                 <boolean name="updateSingleItem">TRUE</boolean>

@@ -1745,6 +1745,49 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 									assert_noerr(result);
 								}
 							}
+							else if (kCFCompareEqualTo == CFStringCompare
+															(kConstantsRegistry_HIToolbarItemIDStackWindows,
+																identifierCFString, kCFCompareBackwards))
+							{
+								result = HIToolbarItemCreate(identifierCFString,
+																kHIToolbarItemNoAttributes, &itemRef);
+								if (noErr == result)
+								{
+									UInt32 const	kMyCommandID = kCommandStackWindows;
+									CFStringRef		nameCFString = nullptr;
+									FSRef			iconFile;
+									
+									
+									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
+									{
+										result = HIToolbarItemSetLabel(itemRef, nameCFString);
+										assert_noerr(result);
+										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
+																			nullptr/* long text */);
+										assert_noerr(result);
+										CFRelease(nameCFString), nameCFString = nullptr;
+									}
+									if (AppResources_GetArbitraryResourceFileFSRef
+										(AppResources_ReturnStackWindowsIconFilenameNoExtension(),
+											CFSTR("icns")/* type */, iconFile))
+									{
+										IconRef		iconRef = nullptr;
+										
+										
+										if (noErr == RegisterIconRefFromFSRef
+														(kConstantsRegistry_ApplicationCreatorSignature,
+															kConstantsRegistry_IconServicesIconToolbarItemStackWindows,
+															&iconFile, &iconRef))
+										{
+											result = HIToolbarItemSetIconRef(itemRef, iconRef);
+											assert_noerr(result);
+											(OSStatus)ReleaseIconRef(iconRef), iconRef = nullptr;
+										}
+									}
+									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+									assert_noerr(result);
+								}
+							}
 							
 							if (nullptr == itemRef)
 							{

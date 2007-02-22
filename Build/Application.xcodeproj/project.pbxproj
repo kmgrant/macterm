@@ -32,6 +32,7 @@
 		0A73DBAF08C568D90099BA73 /* MacTelnet.help in Resources */ = {isa = PBXBuildFile; fileRef = 0A73DB9608C568D90099BA73 /* MacTelnet.help */; };
 		0A7F8CC10ACF8555009DA83D /* IconForItemRemove.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */; };
 		0A7F8CC20ACF8555009DA83D /* IconForItemAdd.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */; };
+		0A8ACEC40B8C375A00D01058 /* IconForStackWindows.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */; };
 		0A9AF6740AF5A6B800E7DF18 /* _Quills.so in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0ACE9A960A9EE59700C693D7 /* _Quills.so */; };
 		0A9AF6750AF5A6B800E7DF18 /* Quills.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0ACE9A980A9EE59C00C693D7 /* Quills.py */; };
 		0A9AF68B0AF5A95100E7DF18 /* PyMacTelnet.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */; };
@@ -543,7 +544,7 @@
 		0A46FE3B055432A400ACDF3A /* WindowInfo.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowInfo.cp; path = Application/Code/WindowInfo.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowTitleDialog.cp; path = Application/Code/WindowTitleDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE72055433CA00ACDF3A /* MacTelnet.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = MacTelnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A46FE72055433CA00ACDF3A /* MacTelnet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacTelnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A4A7837055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/SplashScreen.pict; sourceTree = "<group>"; };
 		0A4A7839055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttentionMask.pict; sourceTree = "<group>"; };
 		0A4A783B055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttention.pict; sourceTree = "<group>"; };
@@ -602,6 +603,7 @@
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
 		0A88D05D07EA8BA1003FB644 /* ScriptInterfaceAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ScriptInterfaceAE.cp; path = Application/Code/ScriptInterfaceAE.cp; sourceTree = "<group>"; };
 		0A88D06207EA8BDD003FB644 /* ScriptInterfaceAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ScriptInterfaceAE.h; path = Application/Code/ScriptInterfaceAE.h; sourceTree = "<group>"; };
+		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
 		0A9841C7083457A4002E1BCE /* TerminalBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalBackground.h; path = Application/Code/TerminalBackground.h; sourceTree = "<group>"; };
 		0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PyMacTelnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -1081,6 +1083,7 @@
 				0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */,
 				0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */,
 				0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */,
+				0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */,
 				0A22A017059FBEEB00A0BB56 /* IconForCommand.icns */,
 				0A54E40E0560B62F005B4592 /* IconForMacroSet.icns */,
 				0A54E40C0560B62F005B4592 /* IconForSession.icns */,
@@ -1334,6 +1337,7 @@
 				0ACA57C60AEADC5C00B5F482 /* GenericDialog.nib in Resources */,
 				0AC57BC60B1AE73B000F0250 /* MainMenus.nib in Resources */,
 				0A3E07410B817E9800EDC16A /* IconForPrefPanelTranslations.icns in Resources */,
+				0A8ACEC40B8C375A00D01058 /* IconForStackWindows.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
