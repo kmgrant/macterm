@@ -41,6 +41,8 @@
 // library includes
 #include <CarbonEventUtilities.template.h>
 #include <CommonEventHandlers.h>
+#include <HIViewWrap.h>
+#include <IconManager.h>
 #include <ListenerModel.h>
 #include <Localization.h>
 #include <NIBLoader.h>
@@ -260,6 +262,184 @@ Keypads_Init ()
 	
 	// for each button in the window, change its font size to be more readable
 	makeAllButtonsUseTheSystemFont(gVT220KeypadWindow);
+	
+	// now install icons for certain command buttons
+	{
+		HIViewWrap				enterButton(HIViewIDWrap('KPEn'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (enterButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadEnterIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadEnter);
+			IconManager_SetButtonIcon(enterButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				arrowButton(HIViewIDWrap('KPAD'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (arrowButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadArrowDownIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadArrowDown);
+			IconManager_SetButtonIcon(arrowButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				arrowButton(HIViewIDWrap('KPAL'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (arrowButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadArrowLeftIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadArrowLeft);
+			IconManager_SetButtonIcon(arrowButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				arrowButton(HIViewIDWrap('KPAR'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (arrowButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadArrowRightIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadArrowRight);
+			IconManager_SetButtonIcon(arrowButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				arrowButton(HIViewIDWrap('KPAU'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (arrowButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadArrowUpIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadArrowUp);
+			IconManager_SetButtonIcon(arrowButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				keypadButton(HIViewIDWrap('KPDl'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (keypadButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadDeleteIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadDelete);
+			IconManager_SetButtonIcon(keypadButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				keypadButton(HIViewIDWrap('KPFn'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (keypadButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadFindIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadFind);
+			IconManager_SetButtonIcon(keypadButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				keypadButton(HIViewIDWrap('KPIn'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (keypadButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadInsertIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadInsert);
+			IconManager_SetButtonIcon(keypadButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				pageButton(HIViewIDWrap('KPPD'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (pageButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadPageDownIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadPageDown);
+			IconManager_SetButtonIcon(pageButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				pageButton(HIViewIDWrap('KPPU'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (pageButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadPageUpIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadPageUp);
+			IconManager_SetButtonIcon(pageButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
+	{
+		HIViewWrap				keypadButton(HIViewIDWrap('KPSl'), gVT220KeypadWindow);
+		IconManagerIconRef		iconRef = IconManager_NewIcon();
+		
+		
+		if ((nullptr != iconRef) && (keypadButton.exists()))
+		{
+			(OSStatus)IconManager_MakeIconRefFromBundleFile
+						(iconRef, AppResources_ReturnKeypadSelectIconFilenameNoExtension(),
+							kConstantsRegistry_ApplicationCreatorSignature,
+							kConstantsRegistry_IconServicesIconKeypadSelect);
+			IconManager_SetButtonIcon(keypadButton, iconRef);
+			
+			IconManager_DisposeIcon(&iconRef);
+		}
+	}
 	
 	SetPt(&deltaSize, 0, 0); // initially...
 	if (kPreferences_ResultCodeSuccess != Preferences_ArrangeWindow(gVT220KeypadWindow, kPreferences_WindowTagVT220Keypad,

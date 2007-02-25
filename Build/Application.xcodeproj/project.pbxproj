@@ -216,12 +216,23 @@
 		0ADC6B4208739552000A7EFC /* MainMenuHelp.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ADC6B4008739552000A7EFC /* MainMenuHelp.nib */; };
 		0ADEFCCE06C34E1B00814772 /* Clipboard.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ADEFCCC06C34E1B00814772 /* Clipboard.nib */; };
 		0AE1F16C0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */; };
+		0AE2859C0B8D6E7000E2253A /* IconForKeypadEnter.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */; };
+		0AE285A30B8D732600E2253A /* IconForKeypadArrowLeft.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */; };
+		0AE285B90B8D75F300E2253A /* IconForKeypadArrowRight.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */; };
+		0AE285CF0B8D78FD00E2253A /* IconForKeypadArrowDown.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285CE0B8D78FD00E2253A /* IconForKeypadArrowDown.icns */; };
+		0AE285D10B8D790200E2253A /* IconForKeypadArrowUp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285D00B8D790200E2253A /* IconForKeypadArrowUp.icns */; };
+		0AE285D80B8D7AE600E2253A /* IconForKeypadPageDown.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285D70B8D7AE600E2253A /* IconForKeypadPageDown.icns */; };
+		0AE285DA0B8D7AEA00E2253A /* IconForKeypadPageUp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */; };
+		0AE285F20B8D7EF800E2253A /* IconForKeypadDelete.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */; };
+		0AE286000B8D830600E2253A /* IconForKeypadFind.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */; };
 		0AE6E5F90B5351E10065FB62 /* PrefPanelGeneral.cp in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46FE05055432A400ACDF3A /* PrefPanelGeneral.cp */; };
 		0AEDD0950A5F76DB00705C1C /* IconForPreferenceCollections.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */; };
 		0AF289A306CC9ADC002A89A7 /* KioskDisableFloater.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF289A106CC9ADC002A89A7 /* KioskDisableFloater.nib */; };
 		0AF46B600B05495C00666419 /* Quills.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */; };
 		0AF4B5830A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */; };
 		0AF5080609006B3D00E6FE79 /* SizeDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5080409006B3D00E6FE79 /* SizeDialog.nib */; };
+		0AF5B8AF0B8ED23A0061B480 /* IconForKeypadSelect.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */; };
+		0AF5B8B10B8ED24A0061B480 /* IconForKeypadInsert.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */; };
 		0AFA782C0B470144001FCE83 /* com_mactelnet_ParseURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* com_mactelnet_Util.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */; };
 		0AFA782E0B470144001FCE83 /* com_mactelnet_HandleURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */; };
@@ -652,6 +663,15 @@
 		0ADEFCCD06C34E1B00814772 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/Clipboard.nib; sourceTree = "<group>"; };
 		0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsCallbacks.typedef.h; path = Application/Code/QuillsCallbacks.typedef.h; sourceTree = "<group>"; };
 		0AE1F38D0AF41DA200D2DC13 /* MacTelnet */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = MacTelnet; path = Application/PythonCode/MacTelnet; sourceTree = "<group>"; };
+		0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadEnter.icns; path = Application/Resources/IconForKeypadEnter.icns; sourceTree = "<group>"; };
+		0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowLeft.icns; path = Application/Resources/IconForKeypadArrowLeft.icns; sourceTree = "<group>"; };
+		0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowRight.icns; path = Application/Resources/IconForKeypadArrowRight.icns; sourceTree = "<group>"; };
+		0AE285CE0B8D78FD00E2253A /* IconForKeypadArrowDown.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowDown.icns; path = Application/Resources/IconForKeypadArrowDown.icns; sourceTree = "<group>"; };
+		0AE285D00B8D790200E2253A /* IconForKeypadArrowUp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadArrowUp.icns; path = Application/Resources/IconForKeypadArrowUp.icns; sourceTree = "<group>"; };
+		0AE285D70B8D7AE600E2253A /* IconForKeypadPageDown.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadPageDown.icns; path = Application/Resources/IconForKeypadPageDown.icns; sourceTree = "<group>"; };
+		0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadPageUp.icns; path = Application/Resources/IconForKeypadPageUp.icns; sourceTree = "<group>"; };
+		0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadDelete.icns; path = Application/Resources/IconForKeypadDelete.icns; sourceTree = "<group>"; };
+		0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadFind.icns; path = Application/Resources/IconForKeypadFind.icns; sourceTree = "<group>"; };
 		0AE63E2807F3B98100EB82FA /* Bind.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Bind.cp; path = Application/Code/Bind.cp; sourceTree = "<group>"; };
 		0AE63E3107F3B9C900EB82FA /* Bind.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Bind.h; path = Application/Code/Bind.h; sourceTree = "<group>"; };
 		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
@@ -661,6 +681,8 @@
 		0AF4B5460A1D61E400D187A3 /* PrefPanelKiosk.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelKiosk.cp; path = Application/Code/PrefPanelKiosk.cp; sourceTree = "<group>"; };
 		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
 		0AF5080509006B3D00E6FE79 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/SizeDialog.nib; sourceTree = "<group>"; };
+		0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadSelect.icns; path = Application/Resources/IconForKeypadSelect.icns; sourceTree = "<group>"; };
+		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
 		0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = com_mactelnet_ParseURL.py; path = Application/PythonCode/com_mactelnet_ParseURL.py; sourceTree = "<group>"; };
 		0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = com_mactelnet_Util.py; path = Application/PythonCode/com_mactelnet_Util.py; sourceTree = "<group>"; };
 		0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = com_mactelnet_HandleURL.py; path = Application/PythonCode/com_mactelnet_HandleURL.py; sourceTree = "<group>"; };
@@ -1067,6 +1089,17 @@
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
 				0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */,
 				0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */,
+				0AE285CE0B8D78FD00E2253A /* IconForKeypadArrowDown.icns */,
+				0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */,
+				0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */,
+				0AE285D00B8D790200E2253A /* IconForKeypadArrowUp.icns */,
+				0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */,
+				0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */,
+				0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */,
+				0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */,
+				0AE285D70B8D7AE600E2253A /* IconForKeypadPageDown.icns */,
+				0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */,
+				0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */,
 				0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */,
 				0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */,
 				0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */,
@@ -1338,6 +1371,17 @@
 				0AC57BC60B1AE73B000F0250 /* MainMenus.nib in Resources */,
 				0A3E07410B817E9800EDC16A /* IconForPrefPanelTranslations.icns in Resources */,
 				0A8ACEC40B8C375A00D01058 /* IconForStackWindows.icns in Resources */,
+				0AE2859C0B8D6E7000E2253A /* IconForKeypadEnter.icns in Resources */,
+				0AE285A30B8D732600E2253A /* IconForKeypadArrowLeft.icns in Resources */,
+				0AE285B90B8D75F300E2253A /* IconForKeypadArrowRight.icns in Resources */,
+				0AE285CF0B8D78FD00E2253A /* IconForKeypadArrowDown.icns in Resources */,
+				0AE285D10B8D790200E2253A /* IconForKeypadArrowUp.icns in Resources */,
+				0AE285D80B8D7AE600E2253A /* IconForKeypadPageDown.icns in Resources */,
+				0AE285DA0B8D7AEA00E2253A /* IconForKeypadPageUp.icns in Resources */,
+				0AE285F20B8D7EF800E2253A /* IconForKeypadDelete.icns in Resources */,
+				0AE286000B8D830600E2253A /* IconForKeypadFind.icns in Resources */,
+				0AF5B8AF0B8ED23A0061B480 /* IconForKeypadSelect.icns in Resources */,
+				0AF5B8B10B8ED24A0061B480 /* IconForKeypadInsert.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

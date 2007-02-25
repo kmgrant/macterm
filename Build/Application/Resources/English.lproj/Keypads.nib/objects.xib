@@ -313,12 +313,13 @@
     <object class="IBCarbonBevelButton" id="257">
       <string name="bounds">0 0 35 36 </string>
       <string name="viewFrame">0 0 36 35 </string>
+      <ostype name="controlSignature">KPFn</ostype>
       <ostype name="command">KFnd</ostype>
       <string name="helpTagText">Find</string>
       <int name="bevelThickness">1</int>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <int name="contentType">1</int>
-      <int name="contentResID">500</int>
+      <int name="contentType">0</int>
+      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
     </object>
     <object class="IBCarbonBevelButton" id="258">
@@ -344,22 +345,24 @@
     <object class="IBCarbonBevelButton" id="260">
       <string name="bounds">0 35 35 71 </string>
       <string name="viewFrame">35 0 36 35 </string>
+      <ostype name="controlSignature">KPIn</ostype>
       <ostype name="command">KIns</ostype>
       <string name="helpTagText">Insert</string>
       <int name="bevelThickness">1</int>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <int name="contentType">1</int>
-      <int name="contentResID">501</int>
+      <int name="contentType">0</int>
+      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
     </object>
     <object class="IBCarbonBevelButton" id="261">
       <string name="bounds">102 35 137 71 </string>
       <string name="viewFrame">35 102 36 35 </string>
+      <ostype name="controlSignature">KPAU</ostype>
       <ostype name="command">KAUp</ostype>
       <int name="bevelThickness">1</int>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <int name="contentType">1</int>
-      <int name="contentResID">506</int>
+      <int name="contentType">0</int>
+      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
     </object>
     <object class="IBCarbonRootControl" id="262">
@@ -371,76 +374,83 @@
         <object class="IBCarbonBevelButton" id="273">
           <string name="bounds">0 70 35 106 </string>
           <string name="viewFrame">70 0 36 35 </string>
+          <ostype name="controlSignature">KPDl</ostype>
           <ostype name="command">KDel</ostype>
           <string name="helpTagText">Delete</string>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">502</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <object class="IBCarbonBevelButton" id="271">
           <string name="bounds">34 0 69 36 </string>
           <string name="viewFrame">0 34 36 35 </string>
+          <ostype name="controlSignature">KPSl</ostype>
           <ostype name="command">KSel</ostype>
           <string name="helpTagText">Select</string>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">503</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <object class="IBCarbonBevelButton" id="275">
           <string name="bounds">34 35 69 71 </string>
           <string name="viewFrame">35 34 36 35 </string>
+          <ostype name="controlSignature">KPPU</ostype>
           <ostype name="command">KPgU</ostype>
           <string name="helpTagText">Page Up</string>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">504</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <object class="IBCarbonBevelButton" id="284">
           <string name="bounds">34 70 69 106 </string>
           <string name="viewFrame">70 34 36 35 </string>
+          <ostype name="controlSignature">KPPD</ostype>
           <ostype name="command">KPgD</ostype>
           <string name="helpTagText">Page Down</string>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">505</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <reference idRef="261"/>
         <object class="IBCarbonBevelButton" id="282">
           <string name="bounds">136 35 171 71 </string>
           <string name="viewFrame">35 136 36 35 </string>
+          <ostype name="controlSignature">KPAD</ostype>
           <ostype name="command">KADn</ostype>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">508</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <object class="IBCarbonBevelButton" id="280">
           <string name="bounds">136 0 171 36 </string>
           <string name="viewFrame">0 136 36 35 </string>
+          <ostype name="controlSignature">KPAL</ostype>
           <ostype name="command">KALt</ostype>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">507</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <object class="IBCarbonBevelButton" id="269">
           <string name="bounds">136 70 171 106 </string>
           <string name="viewFrame">70 136 36 35 </string>
+          <ostype name="controlSignature">KPAR</ostype>
           <ostype name="command">KARt</ostype>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">509</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <object class="IBCarbonBevelButton" id="268">
@@ -570,12 +580,13 @@
         <object class="IBCarbonBevelButton" id="265">
           <string name="bounds">102 245 171 281 </string>
           <string name="viewFrame">245 102 36 69 </string>
+          <ostype name="controlSignature">KPEn</ostype>
           <ostype name="command">KEnt</ostype>
           <string name="helpTagText">Enter</string>
           <int name="bevelThickness">1</int>
           <unsigned_int name="behavior">32768</unsigned_int>
-          <int name="contentType">1</int>
-          <int name="contentResID">510</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
           <int name="textPlacement">3</int>
         </object>
         <reference idRef="255"/>

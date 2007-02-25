@@ -150,6 +150,83 @@ inline CFStringRef
 }
 
 inline CFStringRef
+	AppResources_ReturnKeypadArrowDownIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadArrowDown");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadArrowLeftIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadArrowLeft");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadArrowRightIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadArrowRight");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadArrowUpIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadArrowUp");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadDeleteIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadDelete");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadEnterIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadEnter");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadFindIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadFind");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadInsertIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadInsert");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadPageDownIconFilenameNoExtension			()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadPageDown");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadPageUpIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadPageUp");
+}
+
+inline CFStringRef
+	AppResources_ReturnKeypadSelectIconFilenameNoExtension				()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForKeypadSelect");
+}
+
+inline CFStringRef
 	AppResources_ReturnLEDOffIconFilenameNoExtension					()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
