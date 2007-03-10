@@ -100,7 +100,7 @@ public:
 	
 	HIViewWrap							mainView;
 	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
-	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a tab is clicked
+	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a button is clicked
 
 protected:
 	HIViewWrap
