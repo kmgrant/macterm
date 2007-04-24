@@ -301,8 +301,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		TerminalWindowRef	frontTerminalWindow = nullptr;
 		TerminalScreenRef	activeScreen = nullptr;
 		TerminalViewRef		activeView = nullptr;
-		Boolean				isScreen = TerminalWindow_ExistsFor(EventLoop_GetRealFrontWindow()); // safety net - use it!
-		Boolean				isConnectionWindow = false;
+		Boolean				isSession = false; // initially...
+		Boolean				isTerminal = false; // initially...
 		Boolean				isDialog = false;
 		
 		
@@ -311,16 +311,18 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			isDialog = (kDialogWindowKind == GetWindowKind(EventLoop_GetRealFrontWindow()));
 		}
 		
-		if (isScreen)
-		{
-			frontSession = SessionFactory_ReturnUserFocusSession();
-			currentConnectionDataPtr = (nullptr == frontSession) ? nullptr : Session_ConnectionDataPtr(frontSession); // TEMPORARY
-			frontTerminalWindow = (nullptr == frontSession) ? nullptr : Session_ReturnActiveTerminalWindow(frontSession);
-			activeScreen = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnScreenWithFocus(frontTerminalWindow);
-			activeView = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnViewWithFocus(frontTerminalWindow);
-			isScreen = (isScreen && (nullptr != currentConnectionDataPtr)); // additional safety net!
-			isConnectionWindow = (nullptr != frontSession);
-		}
+		// TEMPORARY: This is a TON of legacy context crap.  Most of this
+		// should be refocused or removed.  In addition, it is expensive
+		// to do it per-command, it should probably be put into a more
+		// global context that is automatically updated whenever the user
+		// focus session is changed (and only then).
+		frontSession = SessionFactory_ReturnUserFocusSession();
+		currentConnectionDataPtr = (nullptr == frontSession) ? nullptr : Session_ConnectionDataPtr(frontSession); // TEMPORARY
+		frontTerminalWindow = (nullptr == frontSession) ? nullptr : Session_ReturnActiveTerminalWindow(frontSession);
+		activeScreen = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnScreenWithFocus(frontTerminalWindow);
+		activeView = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnViewWithFocus(frontTerminalWindow);
+		isSession = ((nullptr != frontSession) && (nullptr != currentConnectionDataPtr));
+		isTerminal = ((nullptr != activeScreen) && (nullptr != activeView));
 		
 		switch (inCommandID)
 		{
@@ -408,7 +410,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandSaveSession:
-			if (isConnectionWindow) Session_DisplaySaveDialog(frontSession);
+			if (isSession) Session_DisplaySaveDialog(frontSession);
 			break;
 		
 		case kCommandSaveText:
@@ -552,7 +554,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandHandleURL:
 			// open the appropriate helper application for the URL in the selected
 			// text (which may be MacTelnet itself), and send a Òhandle URLÓ event
-			if (isScreen) URL_HandleForScreenView(activeScreen, activeView);
+			if (isSession) URL_HandleForScreenView(activeScreen, activeView);
 			else Sound_StandardAlert();
 			break;
 		
@@ -631,7 +633,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandPageSetup:
 			// work with a saved reference to a printing record in the preferences file
 			//TelnetPrinting_PageSetup(AppResources_ReturnResFile(kAppResources_FileIDPreferences));
-			if (isConnectionWindow) Session_DisplayPrintPageSetupDialog(frontSession);
+			if (isSession) Session_DisplayPrintPageSetupDialog(frontSession);
 			break;
 		
 		case kCommandQuit:
@@ -761,11 +763,11 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandCopyAndPaste:
-			if (isConnectionWindow) Clipboard_TextType(activeView, frontSession); // type if there is a window to type into
+			if (isSession) Clipboard_TextType(activeView, frontSession); // type if there is a window to type into
 			break;
 		
 		case kCommandPaste:	
-			if (isConnectionWindow) Clipboard_TextFromScrap(frontSession); // paste if there is a window to paste into
+			if (isSession) Clipboard_TextFromScrap(frontSession); // paste if there is a window to paste into
 			else if (isDialog) DialogPaste(GetDialogFromWindow(EventLoop_GetRealFrontWindow()));
 			break;
 		
@@ -787,7 +789,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				// unimplemented
 				Sound_StandardAlert();
 			}
-			else if (isScreen)
+			else if (isSession)
 			{
 				if (inCommandID == kCommandSelectAllWithScrollback)
 				{
@@ -859,14 +861,14 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 			
 		case kCommandDisableBell:
-			if (isConnectionWindow)
+			if (isTerminal)
 			{
 				Terminal_SetBellEnabled(activeScreen, !Terminal_BellIsEnabled(activeScreen));
 			}
 			break;
 		
 		case kCommandEcho:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				// toggle local echo, if possible
 				if (Session_LocalEchoIsEnabled(frontSession) && (currentConnectionDataPtr->kblen > 0))
@@ -880,28 +882,28 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 			
 		case kCommandWrapMode:
-			if (isConnectionWindow)
+			if (isTerminal)
 			{
 				Terminal_SetLineWrapEnabled(activeScreen, !Terminal_LineWrapIsEnabled(activeScreen));
 			}
 			break;
 		
 		case kCommandClearScreenSavesLines:
-			if (isConnectionWindow)
+			if (isTerminal)
 			{
 				Terminal_SetSaveLinesOnClear(activeScreen, !Terminal_SaveLinesOnClearIsEnabled(activeScreen));
 			}
 			break;
 		
 		case kCommandJumpScrolling:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				Session_FlushNetwork(frontSession);
 			}
 			break;
 		
 		case kCommandCaptureToFile:
-			if (isScreen)
+			if (isSession)
 			{
 				Session_DisplayFileCaptureSaveDialog(frontSession);
 				//if (Terminal_FileCaptureBegin(activeScreen, nullptr/* let user choose a file */))
@@ -912,7 +914,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandEndCaptureToFile:
-			if (isScreen)
+			if (isSession)
 			{
 				Terminal_FileCaptureEnd(activeScreen);
 			}
@@ -920,7 +922,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandTEKPageCommand:
 			// Tektronix page command
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				if (!Session_TEKHasTargetGraphic(frontSession) ||
 					Session_TEKPageCommandOpensNewWindow(frontSession))
@@ -947,14 +949,14 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandTEKPageClearsScreen:
 			// clear on TEK page
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				currentConnectionDataPtr->TEK.pageLocation = !currentConnectionDataPtr->TEK.pageLocation;
 			}
 			break;
 		
 		case kCommandSpeechEnabled:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				if (Session_SpeechIsEnabled(frontSession))
 				{
@@ -970,28 +972,28 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandSpeakSelectedText:
-			if (isConnectionWindow)
+			if (isTerminal)
 			{
 				TerminalView_GetSelectedTextAsAudio(activeView);
 			}
 			break;
 		
 		case kCommandClearEntireScrollback:
-			if (isConnectionWindow)
+			if (isTerminal)
 			{
 				TerminalView_DeleteScrollback(activeView);
 			}
 			break;
 		
 		case kCommandResetGraphicsCharacters:
-			if (isConnectionWindow)
+			if (isTerminal)
 			{
 				Terminal_Reset(activeScreen, kTerminal_ResetFlagsGraphicsCharacters);
 			}
 			break;
 		
 		case kCommandResetTerminal:
-			if (isConnectionWindow)
+			if (isTerminal)
 			{
 				Terminal_Reset(activeScreen);
 			}
@@ -999,28 +1001,28 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandDeletePressSendsBackspace:
 		case kCommandDeletePressSendsDelete:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				currentConnectionDataPtr->bsdel = (inCommandID == kCommandDeletePressSendsDelete);
 			}
 			break;
 		
 		case kCommandEMACSArrowMapping:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				currentConnectionDataPtr->arrowmap = !currentConnectionDataPtr->arrowmap;
 			}
 			break;
 		
 		case kCommandLocalPageUpDown:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				currentConnectionDataPtr->pgupdwn = !currentConnectionDataPtr->pgupdwn;
 			}
 			break;
 		
 		case kCommandSetKeys:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				Session_DisplaySpecialKeySequencesDialog(frontSession);
 			}
@@ -1031,7 +1033,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandSendInternetProtocolNumber:
-			if (isConnectionWindow)
+			if (isSession)
 			{
 				std::string		ipAddressString;
 				int				addressType = AF_INET;
@@ -1090,7 +1092,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandWatchForActivity:
-			if (isScreen)
+			if (isSession)
 			{
 				Session_SetActivityNotificationEnabled(frontSession,
 														!Session_ActivityNotificationIsEnabled(frontSession));
