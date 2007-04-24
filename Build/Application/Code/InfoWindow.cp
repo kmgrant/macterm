@@ -134,6 +134,7 @@ static pascal OSStatus	receiveToolbarRequest		(EventHandlerCallRef, EventRef, vo
 static pascal OSStatus	receiveWindowClosing		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus	receiveWindowCursorChange	(EventHandlerCallRef, EventRef, void*);
 static void				refreshDisplay				();
+static SessionRef		returnItemSession			(DataBrowserItemID);
 static void				sessionAttributeChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				sessionStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				setDataBrowserColumnWidths	();
@@ -628,19 +629,6 @@ InfoWindow_Done	()
 
 
 /*!
-Returns the Mac OS window pointer for the session
-status window.
-
-(3.0)
-*/
-WindowRef
-InfoWindow_GetWindow ()
-{
-	return gSessionStatusWindow;
-}// GetWindow
-
-
-/*!
 Returns "true" only if the session status window is
 set to be visible.
 
@@ -654,6 +642,31 @@ InfoWindow_IsVisible ()
 
 
 /*!
+Returns the currently highlighted session in the list,
+or nullptr if there is nothing selected.
+
+(3.1)
+*/
+SessionRef
+InfoWindow_ReturnSelectedSession ()
+{
+	SessionRef			result = nullptr;
+	OSStatus			error = noErr;
+	DataBrowserItemID	firstID = nullptr;
+	DataBrowserItemID	lastID = nullptr;
+	
+	
+	error = GetDataBrowserSelectionAnchor(gSessionStatusDataBrowser, &firstID, &lastID);
+	if ((noErr == error) && (firstID != kDataBrowserNoItem))
+	{
+		assert(firstID == lastID);
+		result = returnItemSession(firstID);
+	}
+	return result;
+}// ReturnSelectedSession
+
+
+/*!
 Shows or hides the session status window.
 
 (3.0)
@@ -661,7 +674,7 @@ Shows or hides the session status window.
 void
 InfoWindow_SetVisible	(Boolean	inIsVisible)
 {
-	WindowRef	sessionStatusWindow = InfoWindow_GetWindow();
+	WindowRef	sessionStatusWindow = gSessionStatusWindow;
 	
 	
 	gIsShowing = inIsVisible;
@@ -694,7 +707,7 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 							 Boolean					inSetValue)
 {
 	OSStatus	result = noErr;
-	SessionRef	session = REINTERPRET_CAST(inItemID, SessionRef);
+	SessionRef	session = returnItemSession(inItemID);
 	
 	
 	assert(gSessionStatusDataBrowser == inDataBrowser);
@@ -850,8 +863,8 @@ compareDataBrowserItems		(ControlRef					UNUSED_ARGUMENT(inDataBrowser),
 							 DataBrowserItemID			inItemTwo,
 							 DataBrowserPropertyID		inSortProperty)
 {
-	SessionRef		session1 = REINTERPRET_CAST(inItemOne, SessionRef);
-	SessionRef		session2 = REINTERPRET_CAST(inItemTwo, SessionRef);
+	SessionRef		session1 = returnItemSession(inItemOne);
+	SessionRef		session2 = returnItemSession(inItemTwo);
 	Boolean			result = false;
 	
 	
@@ -995,7 +1008,7 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 							 DataBrowserItemID				inItemID,
 							 DataBrowserItemNotification	inMessage)
 {
-	SessionRef	session = REINTERPRET_CAST(inItemID, SessionRef);
+	SessionRef	session = returnItemSession(inItemID);
 	
 	
 	assert(gSessionStatusDataBrowser == inDataBrowser);
@@ -1284,6 +1297,39 @@ refreshDisplay ()
 
 
 /*!
+Casts from the stored Data Browser ID into the
+expected type.  Always invoke this routine when
+doing the translation to ensure safe and consistent
+use of the data.
+
+See also returnSessionItem().
+
+(3.1)
+*/
+static SessionRef
+returnItemSession	(DataBrowserItemID		inItemID)
+{
+	return REINTERPRET_CAST(inItemID, SessionRef);
+}// returnItemSession
+
+
+/*!
+Casts from a session reference into a Data Browser ID.
+Always invoke this routine when doing the translation
+to ensure safe and consistent use of the data.
+
+See also returnItemSession().
+
+(3.1)
+*/
+static DataBrowserItemID
+returnSessionItem	(SessionRef		inSession)
+{
+	return REINTERPRET_CAST(inSession, DataBrowserItemID);
+}// returnSessionItem
+
+
+/*!
 Invoked whenever the title of a session window is
 changed; this routine responds by updating the
 appropriate text in the list.
@@ -1384,7 +1430,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					// insert a row into the session list (the data responding routine will fill in its contents);
 					// in order for the data routine to figure out the user-defined window title, a cache is created
 					{
-						DataBrowserItemID	ids[] = { REINTERPRET_CAST(session, DataBrowserItemID) };
+						DataBrowserItemID	ids[] = { returnSessionItem(session) };
 						
 						
 						(OSStatus)AddDataBrowserItems(gSessionStatusDataBrowser, kDataBrowserNoItem/* parent item */,
@@ -1407,7 +1453,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			case kSession_StateImminentDisposal:
 				// delete the row in the list corresponding to the disappearing session, and its window title and URL caches
 				{
-					DataBrowserItemID	ids[] = { REINTERPRET_CAST(session, DataBrowserItemID) };
+					DataBrowserItemID	ids[] = { returnSessionItem(session) };
 					
 					
 					(OSStatus)RemoveDataBrowserItems(gSessionStatusDataBrowser, kDataBrowserNoItem/* parent item */,
