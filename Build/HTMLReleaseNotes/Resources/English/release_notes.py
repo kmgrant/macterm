@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20070424',
     '20070224',
     '20070220',
     '20070212',
@@ -47,6 +48,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20070424': [
+		'Session Info window list selections can now be the target of session-related menu bar commands.',
+	],
 	'20070224': [
 		'New, high-quality icons for the VT220 keypad window.',
 	],

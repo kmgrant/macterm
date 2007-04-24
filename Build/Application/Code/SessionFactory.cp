@@ -60,6 +60,7 @@
 // MacTelnet includes
 #include "DialogUtilities.h"
 #include "EventLoop.h"
+#include "InfoWindow.h"
 #include "Local.h"
 #include "NetEvents.h"
 #include "NewSessionDialog.h"
@@ -1468,6 +1469,14 @@ SessionFactory_ReturnUserFocusSession ()
 					result = terminalWindowToSessionIterator->second;
 				}
 			}
+		}
+		
+		// if all other attempts to find a focused window fail,
+		// look for the session selected in the Session Info list
+		// (if any)
+		if (nullptr == result)
+		{
+			result = InfoWindow_ReturnSelectedSession(); // could still be nullptr...
 		}
 	}
 	
