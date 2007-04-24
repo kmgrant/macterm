@@ -1210,6 +1210,7 @@ static Boolean
 areSessionRelatedItemsEnabled ()
 {
 	Boolean		result = false;
+#if 0
 	WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
 	
 	
@@ -1220,6 +1221,9 @@ areSessionRelatedItemsEnabled ()
 		
 		result = ((windowKind == WIN_CNXN) || (windowKind == WIN_SHELL));
 	}
+#else
+	result = (nullptr != SessionFactory_ReturnUserFocusSession());
+#endif
 	return result;
 }// areSessionRelatedItemsEnabled
 
