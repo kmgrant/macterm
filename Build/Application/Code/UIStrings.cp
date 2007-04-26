@@ -532,7 +532,7 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 	switch (inWhichString)
 	{
 	case kUIStrings_ContextualMenuArrangeAllInFront:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Stack Windows"), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Arrange All Windows in Front"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuArrangeAllInFront"));
 		break;
 	
@@ -547,7 +547,7 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 		break;
 	
 	case kUIStrings_ContextualMenuCopyUsingTabsForSpaces:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Copy Using Tabs For Spaces"), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Copy with Tab Substitution"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuCopyUsingTabsForSpaces"));
 		break;
 	
@@ -557,7 +557,7 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 		break;
 	
 	case kUIStrings_ContextualMenuCustomScreenDimensions:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Custom Screen Dimensions..."), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Custom Screen Size..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuCustomScreenDimensions"));
 		break;
 	
