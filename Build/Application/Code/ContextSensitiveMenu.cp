@@ -3,7 +3,7 @@
 	ContextSensitiveMenu.cp
 	
 	Contexts Library 2.0
-	© 1998-2006 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -32,7 +32,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include "ContextSensitiveMenu.h"
+#include <ContextSensitiveMenu.h>
 
 
 
@@ -132,7 +132,7 @@ ContextSensitiveMenu_AddItem	(MenuRef							inToWhichMenu,
 								 ContextSensitiveMenu_ItemConstPtr	inItemInfo)
 {
 	return ContextSensitiveMenu_AddItemProvisionally(inToWhichMenu, inItemInfo, nullptr/* arbiter */,
-														nullptr/* event */, nullptr/* context */, 0L/* command */);
+														nullptr/* event */, nullptr/* context */);
 }// AddItem
 
 
@@ -149,12 +149,13 @@ Note, however, that ContextSensitiveMenu_NewItemGroup()
 is often preferable because it guards against multiple
 dividers and other aesthetic problems.
 
-The last four arguments indicate respectively the
+The remaining arguments indicate respectively the
 function that is the context arbiter, and the parameters
 to pass to it.  If you pass nullptr values for these, the
 item is simply inserted into the menu without regard
 for any context.  (The ContextSensitiveMenu_AddItem()
-routine is a simpler way to achieve that.)
+routine is a simpler way to achieve that.)  The command
+ID passed to the arbiter is found from "inItemInfo".
 
 \retval noErr
 if the menu item was added successfully
@@ -172,8 +173,7 @@ ContextSensitiveMenu_AddItemProvisionally	(MenuRef								inToWhichMenu,
 											 ContextSensitiveMenu_ItemConstPtr		inItemInfo,
 											 ContextSensitiveMenu_VerifierProcPtr	inArbiter,
 											 EventRecord*							inoutEventPtr,
-											 void*									inoutUserDataPtr,
-											 UInt32									inCommandInfo)
+											 void*									inoutUserDataPtr)
 {
 	enum
 	{
@@ -191,7 +191,7 @@ ContextSensitiveMenu_AddItemProvisionally	(MenuRef								inToWhichMenu,
 		if (nullptr != inArbiter)
 		{
 			doInsert = ContextSensitiveMenu_InvokeContextVerifierProc
-						(inArbiter, inoutEventPtr, inoutUserDataPtr, inCommandInfo);
+						(inArbiter, inoutEventPtr, inoutUserDataPtr, inItemInfo->commandID);
 			if (!doInsert) result = reqFailed;
 		}
 		else doInsert = true;

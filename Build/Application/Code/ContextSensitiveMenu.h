@@ -132,8 +132,7 @@ OSStatus
 												 ContextSensitiveMenu_ItemConstPtr		inItemInfo,
 												 ContextSensitiveMenu_VerifierProcPtr	inArbiter,
 												 EventRecord*							inoutEventPtr,
-												 void*									inoutUserDataPtr,
-												 UInt32									inCommandInfo);
+												 void*									inoutUserDataPtr);
 
 void
 	ContextSensitiveMenu_DoneAddingItems		(MenuRef								inToWhichMenu);
