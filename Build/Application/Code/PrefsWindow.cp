@@ -1113,10 +1113,12 @@ init ()
 		// install a callback that responds as the drawer window is resized; this is used
 		// primarily to enforce a maximum drawer height, not to allow a resizable drawer
 		{
-			Rect	currentBounds;
+			Rect		currentBounds;
+			OSStatus	error = noErr;
 			
 			
-			(OSStatus)GetWindowBounds(gDrawerWindow, kWindowContentRgn, &currentBounds);
+			error = GetWindowBounds(gDrawerWindow, kWindowContentRgn, &currentBounds);
+			assert_noerr(error);
 			gDrawerWindowResizeHandler.install(gDrawerWindow, handleNewDrawerWindowSize, nullptr/* user data */,
 												currentBounds.right - currentBounds.left/* minimum width */,
 												currentBounds.bottom - currentBounds.top/* minimum height */,
