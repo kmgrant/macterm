@@ -2123,6 +2123,10 @@ Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagPureInverse:
 	case kPreferences_TagSimplifiedUserInterface:
 	case kPreferences_TagTerminalCursorType:
+	case kPreferences_TagTerminalResizeAffectsFontSize:
+	case kPreferences_TagTerminalScrollDelay:
+	case kPreferences_ChangeContextName:
+	case kPreferences_ChangeNumberOfContexts:
 		result = assertInitialized();
 		if (result == kPreferences_ResultCodeSuccess)
 		{
