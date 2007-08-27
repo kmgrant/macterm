@@ -3,7 +3,7 @@
 	SessionFactory.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -34,11 +34,11 @@
 // standard-C includes
 #include <cctype>
 #include <cstring>
-#include <sstream> // note, there is a version of this on the net that works with gcc 2.95.2, if necessary
 
 // standard-C++ includes
 #include <algorithm>
 #include <map>
+#include <sstream> // note, there is a version of this on the net that works with gcc 2.95.2, if necessary
 #include <vector>
 
 // Mac includes
@@ -72,6 +72,7 @@
 #include "TerminalView.h"
 #include "Terminology.h"
 #include "UIStrings.h"
+#include "Workspace.h"
 
 
 
@@ -80,6 +81,7 @@
 typedef std::vector< SessionRef >						SessionList;
 typedef std::vector< TerminalWindowRef >				TerminalWindowList;
 typedef std::multimap< TerminalWindowRef, SessionRef >	TerminalWindowToSessionsMap;
+typedef std::vector< Workspace_Ref >					MyWorkspaceList;
 
 #pragma mark Variables
 
@@ -97,6 +99,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	EventHandlerRef					gCarbonEventWindowFocusHandler = nullptr;
 	SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; return x; }
 	TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
+	MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
 	TerminalWindowToSessionsMap&	gTerminalWindowToSessions()	{ static TerminalWindowToSessionsMap x; return x; }
 }
 
@@ -112,6 +115,7 @@ static void						forEachSessionInListDo			(SessionList const&, SessionFactory_Se
 static void						forEveryTerminalWindowInListDo	(TerminalWindowList const&,
 																 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
 static void						handleNewSessionDialogClose		(NewSessionDialog_Ref, Boolean);
+static Workspace_Ref			returnActiveWorkspace			();
 static void						sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void						sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static pascal OSStatus			setSessionState					(EventHandlerCallRef, EventRef, void*);
@@ -124,12 +128,108 @@ static void						updatePaletteTerminalWindowOp	(TerminalWindowRef, void*, SInt32
 #pragma mark Functors
 
 /*!
+Examines every terminal window in the specified workspace
+and updates its tab placement to match its position in the
+workspace.  This has the effect of “nudging over” tabs
+when windows disappear or are inserted.
+
+Model of STL Unary Function.
+
+(3.1)
+*/
+#pragma mark fixTerminalWindowTabPositionsInWorkspace
+class fixTerminalWindowTabPositionsInWorkspace:
+public std::unary_function< Workspace_Ref/* argument */, void/* return */ >
+{
+public:
+	fixTerminalWindowTabPositionsInWorkspace ()
+	{
+	}
+	
+	void
+	operator()	(Workspace_Ref	inWorkspace)
+	{
+		UInt16 const	kMaxWindows = Workspace_ReturnWindowCount(inWorkspace);
+		
+		
+		if (kWorkspace_WindowIndexInfinity != kMaxWindows)
+		{
+			Float32		currentOffset = 0.0; // as each window is processed, its tab size is added here to define the next offset
+			
+			
+			for (UInt16 i = 0; i < kMaxWindows; ++i)
+			{
+				HIWindowRef			window = Workspace_ReturnWindowWithZeroBasedIndex(inWorkspace, i);
+				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+				
+				
+				if (nullptr != terminalWindow)
+				{
+					TerminalWindow_ResultCode	terminalResult = kTerminalWindow_ResultCodeSuccess;
+					Float32						tabWidth = 0.0;
+					
+					
+					terminalResult = TerminalWindow_SetTabPosition(terminalWindow, currentOffset);
+					if (kTerminalWindow_ResultCodeSuccess == terminalResult)
+					{
+						terminalResult = TerminalWindow_GetTabWidth(terminalWindow, tabWidth);
+						//assert(kTerminalWindow_ResultCodeSuccess == terminalResult);
+						if (kTerminalWindow_ResultCodeSuccess == terminalResult)
+						{
+							currentOffset += tabWidth;
+						}
+					}
+				}
+			}
+		}
+	}
+
+protected:
+
+private:
+};
+
+/*!
+This is a functor that removes the terminal window
+given at construction time, from a specified workspace.
+
+Model of STL Unary Function.
+
+(3.1)
+*/
+#pragma mark removeTerminalWindowFromWorkspace
+class removeTerminalWindowFromWorkspace:
+public std::unary_function< Workspace_Ref/* argument */, void/* return */ >
+{
+public:
+	removeTerminalWindowFromWorkspace	(TerminalWindowRef	inTerminalWindow)
+	: _window(TerminalWindow_ReturnWindow(inTerminalWindow))
+	{
+	}
+	
+	void
+	operator()	(Workspace_Ref	inWorkspace)
+	const
+	{
+		HIWindowRef		window = REINTERPRET_CAST(_window.returnHIObjectRef(), HIWindowRef);
+		
+		
+		Workspace_RemoveWindow(inWorkspace, window);
+	}
+
+protected:
+
+private:
+	CFRetainRelease		_window;
+};
+
+/*!
 This is a functor that determines if the specified
 terminal window is used by the given session.
 
 Model of STL Predicate.
 
-(1.0)
+(3.0)
 */
 #pragma mark sessionUsesTerminalWindow
 class sessionUsesTerminalWindow:
@@ -1422,6 +1522,61 @@ SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 
 
 /*!
+Creates a brand new workspace (window group or tab group)
+and moves the specified terminal window into it, removing
+the window from its previous workspace.
+
+(3.1)
+*/
+void
+SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalWindow)
+{
+	HIWindowRef			window = TerminalWindow_ReturnWindow(inTerminalWindow);
+	Workspace_Ref		newWorkspace = Workspace_New();
+	MyWorkspaceList&	workspaceList = gWorkspaceListSortedByCreationTime();
+	
+	
+	// IMPORTANT: Hiding the tab prior to window group manipulation
+	// seems to be key to avoiding graphical glitches.  As long as
+	// the tab drawer is hidden when the window changes groups, and
+	// redisplayed afterwards, drawers remain in the proper position.
+	(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, false);
+	
+	assert(nullptr != newWorkspace);
+	workspaceList.push_back(newWorkspace);
+	assert(workspaceList.end() != std::find(workspaceList.begin(), workspaceList.end(), newWorkspace));
+	
+	// ensure the window is not a member of any other workspace
+	(removeTerminalWindowFromWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
+														removeTerminalWindowFromWorkspace(inTerminalWindow));
+	
+	// TEMPORARY, INCOMPLETE - figure out what workspace the window used to be in,
+	// and call "fixTerminalWindowTabPositionsInWorkspace()(oldWorkspace)"
+	// (should this kind of thing be handled automatically through callbacks, when
+	// windows are removed from a workspace for any reason?)
+	
+	// offset the window slightly to emphasize its detachment
+	{
+		Rect		structureBounds;
+		OSStatus	error = noErr;
+		
+		
+		error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
+		if (noErr == error)
+		{
+			OffsetRect(&structureBounds, 20/* arbitrary */, 20/* arbitrary */);
+			SetWindowBounds(window, kWindowStructureRgn, &structureBounds);
+		}
+	}
+	
+	// now add it to the new workspace
+	Workspace_AddWindow(newWorkspace, window);
+	(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
+	fixTerminalWindowTabPositionsInWorkspace()(newWorkspace);
+}// MoveTerminalWindowToNewWorkspace
+
+
+/*!
 Returns the session the user is currently interacting with.
 This is the appropriate target to assume when processing
 keyboard input or commands, etc.
@@ -1902,9 +2057,34 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 	{
 		TerminalWindow_ResultCode	terminalWindowResult = kTerminalWindow_ResultCodeSuccess;
 		TerminalViewRef				view = nullptr;
+		Preferences_ResultCode		preferencesResult = kPreferences_ResultCodeSuccess;
+		Boolean						useTabs = false;
 		
 		
-		ShowWindow(window);
+		// figure out if this window should have a tab and be arranged
+		preferencesResult = Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs,
+												sizeof(useTabs), &useTabs, nullptr/* actual size */);
+		if (preferencesResult != kPreferences_ResultCodeSuccess) useTabs = false;
+		if (useTabs)
+		{
+			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
+			Workspace_Ref		targetWorkspace = returnActiveWorkspace();
+			
+			
+			// IMPORTANT: Although you should add a window to a workspace before
+			// it is visible, the window MUST be visible before you can give it a
+			// tabbed appearance.  This is due to the tab implementation being a
+			// drawer, which refuses to associate itself with an invisible window!
+			Workspace_AddWindow(targetWorkspace, window);
+			ShowWindow(window);
+			(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
+			(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
+																	fixTerminalWindowTabPositionsInWorkspace());
+		}
+		else
+		{
+			ShowWindow(window);
+		}
 		EventLoop_SelectBehindDialogWindows(window);
 		
 		// focus the first view of the first tab
@@ -2001,6 +2181,36 @@ handleNewSessionDialogClose		(NewSessionDialog_Ref	inDialogThatClosed,
 	
 	unless (inOKButtonPressed) TerminalWindow_Dispose(&terminalWindow);
 }// handleNewSessionDialogClose
+
+
+/*!
+Returns the most appropriate workspace for a new terminal
+window.  If no workspaces exist, one is created; otherwise,
+the workspace of the most recently active terminal window
+is used.
+
+(3.1)
+*/
+static Workspace_Ref
+returnActiveWorkspace ()
+{
+	Workspace_Ref	result = nullptr;
+	
+	
+	if (gWorkspaceListSortedByCreationTime().empty())
+	{
+		result = Workspace_New();
+		gWorkspaceListSortedByCreationTime().push_back(result);
+		assert(false == gWorkspaceListSortedByCreationTime().empty());
+	}
+	else
+	{
+		// TEMPORARY - just return the last one
+		result = gWorkspaceListSortedByCreationTime().back();
+	}
+	
+	return result;
+}// returnActiveWorkspace
 
 
 /*!
@@ -2175,8 +2385,8 @@ startTrackingSession	(SessionRef				inSession,
 
 /*!
 Invoke this routine from every factory method, to
-start tracking the new SessionRef in this module.
-See also stopTrackingSession().
+start tracking the new TerminalWindowRef in this
+module.  See also stopTrackingTerminalWindow().
 
 (3.1)
 */
@@ -2222,19 +2432,22 @@ stopTrackingSession		(SessionRef		inSession)
 		TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inSession);
 		
 		
-		// determine if the session of this terminal window is in use
-		// by any other sessions; if not, stop tracking the terminal
-		// window as well!
-		SessionList&			targetList = gSessionListSortedByCreationTime();
-		SessionList::iterator	sessionIterator = std::find_if(targetList.begin(), targetList.end(),
-																sessionUsesTerminalWindow(terminalWindow));
-		if (targetList.end() == sessionIterator)
+		if (nullptr != terminalWindow)
 		{
-			stopTrackingTerminalWindow(terminalWindow);
+			// determine if the session of this terminal window is in use
+			// by any other sessions; if not, stop tracking the terminal
+			// window as well!
+			SessionList&			targetList = gSessionListSortedByCreationTime();
+			SessionList::iterator	sessionIterator = std::find_if(targetList.begin(), targetList.end(),
+																	sessionUsesTerminalWindow(terminalWindow));
+			if (targetList.end() == sessionIterator)
+			{
+				stopTrackingTerminalWindow(terminalWindow);
+			}
+			
+			// forget the specific association of this terminal window and session
+			gTerminalWindowToSessions().erase(terminalWindow);
 		}
-		
-		// forget the specific association of this terminal window and session
-		gTerminalWindowToSessions().erase(terminalWindow);
 	}
 	
 	// notify listeners that this has occurred
@@ -2243,21 +2456,27 @@ stopTrackingSession		(SessionRef		inSession)
 
 
 /*!
-Invoke this routine when a session is being destroyed,
-to undo the effects of startTrackingSession().
+Invoke this routine when a terminal window is being destroyed,
+to undo the effects of startTrackingTerminalWindow().
 
 (3.1)
 */
 static void
 stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 {
+	// remove this window from any workspaces that contain it,
+	// and shuffle tab order across workspaces accordingly
+	MyWorkspaceList&		workspaceList = gWorkspaceListSortedByCreationTime();
+	(removeTerminalWindowFromWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
+														removeTerminalWindowFromWorkspace(inTerminalWindow));
+	(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
+															fixTerminalWindowTabPositionsInWorkspace());
+	
 	// remove the specified window from the creation-order list;
 	// the idea here is to shuffle the list so that the given
 	// window is at the end, and then all matching items are just
 	// erased off the end of the list
 	TerminalWindowList&		targetList = gTerminalWindowListSortedByCreationTime();
-	
-	
 	targetList.erase(std::remove(targetList.begin(), targetList.end(), inTerminalWindow),
 						targetList.end());
 	assert(targetList.end() == std::find(targetList.begin(), targetList.end(), inTerminalWindow));

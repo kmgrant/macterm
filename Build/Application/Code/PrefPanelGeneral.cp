@@ -102,6 +102,7 @@ In addition, they MUST be unique across all panels.
 static HIViewID const	idMyCheckBoxSimplifiedUI					= { FOUR_CHAR_CODE('SUIM'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotAutoClose					= { FOUR_CHAR_CODE('DACW'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotDimInactive				= { FOUR_CHAR_CODE('DDBW'), 0/* ID */ };
+static HIViewID const	idMyCheckBoxUseTabsToArrangeWindows			= { FOUR_CHAR_CODE('UTAW'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxInvertSelectedText				= { FOUR_CHAR_CODE('ISel'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxAutoCopySelectedText			= { FOUR_CHAR_CODE('ACST'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxMoveCursorToDropArea			= { FOUR_CHAR_CODE('MCTD'), 0/* ID */ };
@@ -815,6 +816,18 @@ const
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
 	{
+		HIViewWrap		checkBox(idMyCheckBoxUseTabsToArrangeWindows, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs, sizeof(flag), &flag,
+									&actualSize) == kPreferences_ResultCodeSuccess)
+		{
+			flag = false; // assume background screens are dimmed, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
+	{
 		HIViewWrap		checkBox(idMyCheckBoxInvertSelectedText, inOwningWindow);
 		
 		
@@ -1215,6 +1228,10 @@ changePreferenceUpdateScreenTerminalWindowOp	(TerminalWindowRef		inTerminalWindo
 {
 	switch (inDataPreferenceTag)
 	{
+	case kPreferences_TagArrangeWindowsUsingTabs:
+		// UNIMPLEMENTED - move windows into or out of tabs if necessary
+		break;
+	
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagPureInverse:
 		// update the entire terminal window, which will reflect the change
@@ -1681,6 +1698,15 @@ updateCheckBoxPreference	(MyGeneralPanelUIPtr	inInterfacePtr,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				SessionFactory_ForEveryTerminalWindowDo(changePreferenceUpdateScreenTerminalWindowOp,
 														nullptr/* undefined */, kPreferences_TagDontDimBackgroundScreens,
+														nullptr/* undefined */);
+				result = true;
+			}
+			else if (HIViewIDWrap(idMyCheckBoxUseTabsToArrangeWindows) == viewID)
+			{
+				Preferences_SetData(kPreferences_TagArrangeWindowsUsingTabs,
+									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+				SessionFactory_ForEveryTerminalWindowDo(changePreferenceUpdateScreenTerminalWindowOp,
+														nullptr/* undefined */, kPreferences_TagArrangeWindowsUsingTabs,
 														nullptr/* undefined */);
 				result = true;
 			}

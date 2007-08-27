@@ -7,7 +7,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -47,8 +47,13 @@
 
 enum Workspace_ResultCode
 {
-	kWorkspace_ResultCodeSuccess						= 0,	//!< no error occurred
-	kWorkspace_ResultCodeGenericFailure					= 1		//!< unspecified problem
+	kWorkspace_ResultCodeSuccess			= 0,	//!< no error occurred
+	kWorkspace_ResultCodeGenericFailure		= 1		//!< unspecified problem
+};
+
+enum
+{
+	kWorkspace_WindowIndexInfinity			= 0xFF	//!< window does not exist
 };
 
 #pragma mark Types
@@ -63,10 +68,10 @@ typedef struct Workspace_OpaqueStructure*	Workspace_Ref;
 //@{
 
 Workspace_Ref
-	Workspace_New							();
+	Workspace_New								();
 
 void
-	Workspace_Dispose						(Workspace_Ref*				inoutRefPtr);
+	Workspace_Dispose							(Workspace_Ref*				inoutRefPtr);
 
 //@}
 
@@ -74,11 +79,11 @@ void
 //@{
 
 Boolean
-	Workspace_IsObscured					(Workspace_Ref				inWorkspace);
+	Workspace_IsObscured						(Workspace_Ref				inWorkspace);
 
 void
-	Workspace_SetObscured					(Workspace_Ref				inWorkspace,
-											 Boolean					inIsHidden);
+	Workspace_SetObscured						(Workspace_Ref				inWorkspace,
+												 Boolean					inIsHidden);
 
 //@}
 
@@ -86,12 +91,28 @@ void
 //@{
 
 void
-	Workspace_AddWindow						(Workspace_Ref				inWorkspace,
-											 WindowRef					inWindowToAdd);
+	Workspace_AddWindow							(Workspace_Ref				inWorkspace,
+												 HIWindowRef				inWindowToAdd);
 
 void
-	Workspace_RemoveWindow					(Workspace_Ref				inWorkspace,
-											 WindowRef					inWindowToRemove);
+	Workspace_RemoveWindow						(Workspace_Ref				inWorkspace,
+												 HIWindowRef				inWindowToRemove);
+
+//@}
+
+//!\name General Information
+//@{
+
+UInt16
+	Workspace_ReturnWindowCount					(Workspace_Ref				inWorkspace);
+
+HIWindowRef
+	Workspace_ReturnWindowWithZeroBasedIndex	(Workspace_Ref				inWorkspace,
+												 UInt16						inIndex);
+
+UInt16
+	Workspace_ReturnZeroBasedIndexOfWindow		(Workspace_Ref				inWorkspace,
+												 HIWindowRef				inWindow);
 
 //@}
 

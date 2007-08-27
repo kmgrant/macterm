@@ -129,6 +129,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 								gNumberOfWindowMenuItemsAdded = 0,
 								gNumberOfSpecialScriptMenuItems = 0;
 	EventModifiers				gCurrentAdjustMenuItemModifiers = 0;
+	Boolean						gUsingTabs = false;
 	Boolean						gSimplifiedMenuBar = false;
 	Boolean						gFontMenusAvailable = false;
 	UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
@@ -209,6 +210,10 @@ MenuBar_Init ()
 		Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
 		
 		
+		prefsResult = Preferences_ListenForChanges
+						(gPreferenceChangeEventListener, kPreferences_TagArrangeWindowsUsingTabs,
+							true/* notify of initial value */);
+		assert(kPreferences_ResultCodeSuccess == prefsResult);
 		prefsResult = Preferences_ListenForChanges
 						(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys,
 							true/* notify of initial value */);
@@ -320,6 +325,7 @@ void
 MenuBar_Done ()
 {
 	// disable preference change listener
+	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagArrangeWindowsUsingTabs);
 	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys);
 	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect);
 	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface);
@@ -1664,6 +1670,7 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandNextWindow, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandNextWindowHideCurrent, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPreviousWindow, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTerminalNewWorkspace, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowConnectionStatus, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideConnectionStatus, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowMacros, stateTrackerShowHideItems);
@@ -1700,6 +1707,15 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	switch (inPreferenceTagThatChanged)
 	{
+	case kPreferences_TagArrangeWindowsUsingTabs:
+		unless (Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs,
+									sizeof(gUsingTabs), &gUsingTabs,
+									&actualSize) == kPreferences_ResultCodeSuccess)
+		{
+			gUsingTabs = false; // assume tabs are not being used, if preference can’t be found
+		}
+		break;
+	
 	case kPreferences_TagMenuItemKeys:
 		{
 			Boolean		flag = false;
@@ -3236,6 +3252,7 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 	case kCommandNextWindowHideCurrent:
 	case kCommandPreviousWindow:
 	case kCommandPreviousWindowHideCurrent:
+	case kCommandTerminalNewWorkspace:
 		result = areSessionRelatedItemsEnabled();
 		if (inCommandID == kCommandFormat)
 		{
@@ -3254,6 +3271,10 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 				(inCommandID == kCommandPreviousWindowHideCurrent))
 		{
 			result = (result && (nullptr != GetNextWindow(EventLoop_GetRealFrontWindow())));
+		}
+		else if (inCommandID == kCommandTerminalNewWorkspace)
+		{
+			result = (result && gUsingTabs);
 		}
 		break;
 	

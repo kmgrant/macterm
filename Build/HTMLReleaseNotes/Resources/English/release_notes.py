@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20070827',
     '20070424',
     '20070224',
     '20070220',
@@ -48,6 +49,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20070827': [
+		'Added tabbed-windows feature, accessible through a new General preference.',
+		'Added Move to New Workspace command (available only when using tabs) to move tabs into separate groups.',
+	],
 	'20070424': [
 		'Session Info window list selections can now be the target of session-related menu bar commands.',
 	],

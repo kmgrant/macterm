@@ -416,6 +416,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEditInterruptKey				'SIKy'		// “Special Key Sequences” dialog
 #define kCommandEditResumeKey					'SRKy'		// “Special Key Sequences” dialog
 #define kCommandEditSuspendKey					'SSKy'		// “Special Key Sequences” dialog
+#define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 
 #pragma mark Types
 

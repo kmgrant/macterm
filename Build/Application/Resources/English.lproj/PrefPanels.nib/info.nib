@@ -56,15 +56,15 @@
 	<integer>3</integer>
 	<key>IBOpenObjects</key>
 	<array>
-		<integer>1212</integer>
-		<integer>1250</integer>
 		<integer>208</integer>
-		<integer>1323</integer>
-		<integer>1019</integer>
 		<integer>1474</integer>
+		<integer>1019</integer>
+		<integer>1250</integer>
+		<integer>1323</integer>
+		<integer>1212</integer>
 	</array>
 	<key>IBSystem Version</key>
-	<string>8L127</string>
+	<string>8R218</string>
 	<key>targetFramework</key>
 	<string>IBCarbonFramework</string>
 </dict>

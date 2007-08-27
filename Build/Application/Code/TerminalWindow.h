@@ -63,7 +63,8 @@ enum TerminalWindow_ResultCode
 {
 	kTerminalWindow_ResultCodeSuccess					= 0,	//!< no error occurred
 	kTerminalWindow_ResultCodeGenericFailure			= 1,	//!< unspecified problem
-	kTerminalWindow_ResultCodeInsufficientBufferSpace	= 2		//!< not enough room in a provided array, for example
+	kTerminalWindow_ResultCodeInsufficientBufferSpace	= 2,	//!< not enough room in a provided array, for example
+	kTerminalWindow_ResultCodeInvalidReference			= 3		//!< TerminalWindowRef is not recognized
 };
 
 /*!
@@ -111,6 +112,8 @@ enum TerminalWindow_ViewGroup
 	kTerminalWindow_ViewGroup4				= FOUR_CHAR_CODE('Tab4'),	//!< contains all views in the fourth tab
 	kTerminalWindow_ViewGroup5				= FOUR_CHAR_CODE('Tab5')	//!< contains all views in the fifth tab
 };
+
+Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWindow_SetTabWidth() to restore a standard width
 
 #pragma mark Types
 
@@ -232,6 +235,22 @@ void
 
 void
 	TerminalWindow_DisplayTextSearchDialog			(TerminalWindowRef			inRef);
+
+TerminalWindow_ResultCode
+	TerminalWindow_GetTabWidth						(TerminalWindowRef			inRef,
+													 Float32&					inWidthInPixels);
+
+OSStatus
+	TerminalWindow_SetTabAppearance					(TerminalWindowRef			inRef,
+													 Boolean					inIsTab);
+
+TerminalWindow_ResultCode
+	TerminalWindow_SetTabPosition					(TerminalWindowRef			inRef,
+													 Float32					inOffsetFromStartingPointInPixels);
+
+TerminalWindow_ResultCode
+	TerminalWindow_SetTabWidth						(TerminalWindowRef			inRef,
+													 Float32					inWidthInPixels);
 
 // API UNDER EVALUATION
 void

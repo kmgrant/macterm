@@ -1906,6 +1906,7 @@ Preferences_ListenForChanges	(ListenerModel_ListenerRef	inListener,
 	// if you change the list below, also check the preference-setting
 	// code to make sure that the tag values checked here REALLY DO
 	// trigger callback invocations!
+	case kPreferences_TagArrangeWindowsUsingTabs:
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagMapBackquote:
@@ -2115,6 +2116,7 @@ Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 	
 	switch (inForWhatChange)
 	{
+	case kPreferences_TagArrangeWindowsUsingTabs:
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagMapBackquote:
@@ -3445,6 +3447,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagArrangeWindowsUsingTabs:
 				case kPreferences_TagCopySelectedText:
 				case kPreferences_TagCursorBlinks:
 				case kPreferences_TagCursorMovesPriorToDrops:
@@ -3955,6 +3958,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassTerminal;
 		break;
 	
+	case kPreferences_TagArrangeWindowsUsingTabs:
+		outKeyName = CFSTR("terminal-use-tabs");
+		outKeyValueType = typeNetEvents_CFBooleanRef;
+		outNonDictionaryValueSize = sizeof(Boolean);
+		outClass = kPreferences_ClassGeneral;
+		break;
+	
 	case kPreferences_TagAssociatedTerminalFavorite:
 		outKeyName = CFSTR("terminal-favorite");
 		outKeyValueType = typeCFStringRef;
@@ -4041,13 +4051,6 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 	
 	case kPreferences_TagDontAutoNewOnApplicationReopen:
 		outKeyName = CFSTR("no-auto-new");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagDontDimBackgroundScreens:
-		outKeyName = CFSTR("terminal-no-dim-on-deactivate");
 		outKeyValueType = typeNetEvents_CFBooleanRef;
 		outNonDictionaryValueSize = sizeof(Boolean);
 		outClass = kPreferences_ClassGeneral;
@@ -5904,6 +5907,17 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
+			case kPreferences_TagArrangeWindowsUsingTabs:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					changeNotify(inDataPreferenceTag);
+				}
+				break;
+			
 			case kPreferences_TagCaptureFileCreator:
 				{
 					OSType const	data = *(REINTERPRET_CAST(inDataPtr, OSType const*));

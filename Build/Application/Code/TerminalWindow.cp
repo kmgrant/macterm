@@ -3,7 +3,7 @@
 	TerminalWindow.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -61,6 +61,7 @@ extern "C"
 #include <Embedding.h>
 #include <Localization.h>
 #include <MemoryBlockPtrLocker.template.h>
+#include <MemoryBlockReferenceTracker.template.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 #include <RegionUtilities.h>
@@ -76,6 +77,7 @@ extern "C"
 // MacTelnet includes
 #include "AppResources.h"
 #include "Commands.h"
+#include "Console.h"
 #include "DialogUtilities.h"
 #include "EventInfoWindowScope.h"
 #include "EventLoop.h"
@@ -112,13 +114,18 @@ enum TerminalWindowScrollBarKind
 IMPORTANT
 
 The following values MUST agree with the control IDs in the
-"Window" NIB from the package "ScreenDimensionsFloater.nib".
+"DimensionsFloater" and "DimensionsSheet" NIB from the
+package "TerminalWindow.nib".
 */
-enum
-{
-	kSignatureMyTextScreenDimensions	= FOUR_CHAR_CODE('Dims')
-};
-static HIViewID const	idMyTextScreenDimensions	= { kSignatureMyTextScreenDimensions,	0/* ID */ };
+static HIViewID const	idMyTextScreenDimensions	= { FOUR_CHAR_CODE('Dims'),		0/* ID */ };
+
+/*!
+IMPORTANT
+
+The following values MUST agree with the control IDs in the
+"Tab" NIB from the package "TerminalWindow.nib".
+*/
+static HIViewID const	idMyButtonTabTitle			= { FOUR_CHAR_CODE('TTit'),		0/* ID */ };
 
 #pragma mark Types
 
@@ -128,6 +135,9 @@ typedef std::vector< TerminalViewRef >							TerminalViewList;
 typedef std::map< TerminalViewRef, TerminalScreenRef >			TerminalViewToScreenMap;
 typedef std::vector< Undoables_ActionRef >						UndoableActionList;
 
+typedef MemoryBlockReferenceTracker< TerminalWindowRef >			TerminalWindowRefTracker;
+typedef Registrar< TerminalWindowRef, TerminalWindowRefTracker >	TerminalWindowRefRegistrar;
+
 struct TerminalWindow
 {
 	TerminalWindow  (UInt16					inCountMaximumViewableColumns,
@@ -136,6 +146,7 @@ struct TerminalWindow
 					 TerminalWindow_Flags	inFlags);
 	~TerminalWindow ();
 	
+	TerminalWindowRefRegistrar	refValidator;				// ensures this reference is recognized as a valid one
 	TerminalWindowRef			selfRef;					// redundant reference to self, for convenience
 	
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
@@ -143,6 +154,10 @@ struct TerminalWindow
 	TerminalWindow_Flags		flags;						// flags used to construct the window
 	
 	HIWindowRef					window;						// the Mac OS window reference for the terminal window
+	CFRetainRelease				tab;						// the Mac OS window reference (if any) for the sister window acting as a tab
+	WindowGroupRef				tabAndWindowGroup;			// WindowGroupRef; forces the window and its tab to move together
+	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
+	Float32						tabWidthInPixels;			// used to position and size the tab drawer, if any
 	HIToolbarRef				toolbar;					// customizable toolbar of icons at the top
 	CFRetainRelease				toolbarItemLED1;			// if present, LED #1 status item
 	CFRetainRelease				toolbarItemLED2;			// if present, LED #2 status item
@@ -174,6 +189,7 @@ struct TerminalWindow
 	CFRetainRelease				preResizeTitleString;	// used to save the old title during resizes, where the title is overwritten
 	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
 	CommonEventHandlers_WindowResizer	windowResizeHandler;			// responds to changes in the window size
+	CommonEventHandlers_WindowResizer	tabDrawerWindowResizeHandler;	// responds to changes in the tab drawer size
 	EventHandlerUPP				commandUPP;								// wrapper for command callback
 	EventHandlerRef				commandHandler;							// invoked whenever a terminal window command is executed
 	EventHandlerUPP				windowClickActivationUPP;				// wrapper for window background clicks callback
@@ -251,13 +267,14 @@ static void					calculateIndexedWindowPosition	(TerminalWindowPtr, SInt16, Point
 static void					changeNotifyForTerminalWindow	(TerminalWindowPtr, TerminalWindow_Change, void*);
 static IconRef				createFullScreenIcon			();
 static IconRef				createHideWindowIcon			();
-static WindowRef			createKioskOffSwitchWindow		();
+static HIWindowRef			createKioskOffSwitchWindow		();
 static IconRef				createScrollLockOffIcon			();
 static IconRef				createScrollLockOnIcon			();
 static IconRef				createLEDOffIcon				();
 static IconRef				createLEDOnIcon					();
 static void					createViews						(TerminalWindowPtr);
-static WindowRef			createWindow					();
+static Boolean				createTabWindow					(TerminalWindowPtr);
+static HIWindowRef			createWindow					();
 static void					ensureTopLeftCornersExists		();
 static TerminalScreenRef	getActiveScreen					(TerminalWindowPtr);
 static TerminalViewRef		getActiveView					(TerminalWindowPtr);
@@ -271,6 +288,7 @@ static UInt16				getToolbarHeight				(TerminalWindowPtr);
 static void					getViewSizeFromWindowSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 static void					getWindowSizeFromViewSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 static void					handleFindDialogClose			(FindDialogRef);
+static void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 static void					handleNewSize					(WindowRef, Float32, Float32, void*);
 static void					handlePendingUpdates			();
 static void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
@@ -302,10 +320,11 @@ static void					updateScrollBars				(TerminalWindowPtr);
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
+	TerminalWindowRefTracker&	gTerminalWindowValidRefs ()		{ static TerminalWindowRefTracker x; return x; }
 	TerminalWindowPtrLocker&	gTerminalWindowPtrLocks ()		{ static TerminalWindowPtrLocker x; return x; }
 	SInt16**					gTopLeftCorners = nullptr;
 	SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
-	WindowRef					gKioskOffSwitchWindow ()		{ static WindowRef x = createKioskOffSwitchWindow(); return x; }
+	HIWindowRef					gKioskOffSwitchWindow ()		{ static HIWindowRef x = createKioskOffSwitchWindow(); return x; }
 	TerminalWindowRef&			gKioskTerminalWindow ()			{ static TerminalWindowRef x = nullptr; return x; }
 	IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
 	IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); return x; }
@@ -313,6 +332,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	IconRef&					gLEDOnIcon ()					{ static IconRef x = createLEDOnIcon(); return x; }
 	IconRef&					gScrollLockOffIcon ()			{ static IconRef x = createScrollLockOffIcon(); return x; }
 	IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
+	Float32						gDefaultTabWidth = 0.0;		// set later
 }
 
 
@@ -531,6 +551,47 @@ TerminalWindow_GetScreenDimensions	(TerminalWindowRef	inRef,
 	if (outColumnCountPtrOrNull != nullptr) *outColumnCountPtrOrNull = Terminal_ReturnColumnCount(getActiveScreen(ptr)/* TEMPORARY */);
 	if (outRowCountPtrOrNull != nullptr) *outRowCountPtrOrNull = Terminal_ReturnRowCount(getActiveScreen(ptr)/* TEMPORARY */);
 }// GetScreenDimensions
+
+
+/*!
+Returns the tab width, in pixels, of the specified terminal
+window.  If the window has never been explicitly sized, some
+default width will be returned.  Otherwise, the size most
+recently set with TerminalWindow_SetTabWidth() will be returned.
+
+\retval kTerminalWindow_ResultCodeSuccess
+if there are no errors
+
+\retval kTerminalWindow_ResultCodeInvalidReference
+if the specified terminal window is unrecognized
+
+\retval kTerminalWindow_ResultCodeGenericFailure
+if no window has ever had a tab; "outWidthInPixels" will be 0
+
+(3.1)
+*/
+TerminalWindow_ResultCode
+TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
+							 Float32&			outWidthInPixels)
+{
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_ResultCode	result = kTerminalWindow_ResultCodeSuccess;
+	
+	
+	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
+	{
+		result = kTerminalWindow_ResultCodeInvalidReference;
+		Console_WriteValueAddress("warning, attempt to TerminalWindow_GetTabWidth() with invalid reference", inRef);
+		outWidthInPixels = 0;
+	}
+	else
+	{
+		if (0.0 == ptr->tabWidthInPixels) result = kTerminalWindow_ResultCodeGenericFailure;
+		outWidthInPixels = ptr->tabWidthInPixels;
+	}
+	
+	return result;
+}// GetTabWidth
 
 
 /*!
@@ -1120,6 +1181,247 @@ TerminalWindow_SetIconTitle		(TerminalWindowRef	inRef,
 
 
 /*!
+Creates a sister window that appears to be attached to the
+specified terminal window, acting as its tab.  This is a
+visual adornment only; you typically use this for more than
+one terminal window and then place them into a window group
+that ensures only one is visible at a time.
+
+IMPORTANT:	You should only call this routine on visible
+			terminal windows, otherwise the tab may not be
+			displayed properly.  The result will only be
+			"noErr" if the tab is properly displayed.
+
+Note that since this affects only a single window, this is
+not the proper API for general tab manipulation; it is a
+low-level routine.  See the Workspace module.
+
+(3.1)
+*/
+OSStatus
+TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
+									 Boolean				inIsTab)
+{
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	OSStatus					result = noErr;
+	
+	
+	if (inIsTab)
+	{
+		HIWindowRef		tabWindow = nullptr;
+		Boolean			isNew = false;
+		
+		
+		// create a sister tab window and group it with the terminal window
+		if (false == ptr->tab.exists())
+		{
+			(Boolean)createTabWindow(ptr);
+			assert(ptr->tab.exists());
+			isNew = true;
+		}
+		
+		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+		
+		if (isNew)
+		{
+			// update the tab display to match the window title
+			TerminalWindow_SetWindowTitle(inRef, ptr->baseTitleString.returnCFStringRef());
+			
+			// attach the tab to the top edge of the window
+			result = SetDrawerParent(tabWindow, ptr->window);
+			if (noErr == result)
+			{
+				result = SetDrawerPreferredEdge(tabWindow, kWindowEdgeTop);
+			}
+		}
+		
+		if (noErr == result)
+		{
+			// IMPORTANT: This will return paramErr if the window is invisible.
+			result = OpenDrawer(tabWindow, kWindowEdgeDefault, false/* asynchronously */);
+		}
+	}
+	else
+	{
+		// remove window from group and destroy tab
+		HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+		
+		
+		if (ptr->tab.exists())
+		{
+			// IMPORTANT: This will return paramErr if the window is invisible.
+			result = CloseDrawer(tabWindow, false/* asynchronously */);
+		}
+	}
+	
+	return result;
+}// SetTabAppearance
+
+
+/*!
+Specifies the position of the tab (if any) for this window.
+This is a visual adornment only; you typically use this when
+windows are grouped and you want all tabs to be visible at
+the same time.
+
+WARNING:	The Mac OS X window manager will not allow a
+			drawer to be cut off, and it solves this problem
+			by resizing the *parent* (terminal) window to
+			make room for the tab.  If you do not want this
+			behavior, you need to check in advance how large
+			the window is, and what a reasonable tab placement
+			would be.
+
+Note that since this affects only a single window, this is
+not the proper API for general tab manipulation; it is a
+low-level routine.  See the Workspace module.
+
+\retval kTerminalWindow_ResultCodeSuccess
+if there are no errors
+
+\retval kTerminalWindow_ResultCodeInvalidReference
+if the specified terminal window is unrecognized
+
+\retval kTerminalWindow_ResultCodeGenericFailure
+if the specified terminal window has no tab (however,
+the proper offset is still remembered)
+
+(3.1)
+*/
+TerminalWindow_ResultCode
+TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
+								 Float32			inOffsetFromStartingPointInPixels)
+{
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_ResultCode	result = kTerminalWindow_ResultCodeSuccess;
+	
+	
+	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
+	{
+		result = kTerminalWindow_ResultCodeInvalidReference;
+		Console_WriteValueAddress("warning, attempt to TerminalWindow_SetTabPosition() with invalid reference", inRef);
+	}
+	else
+	{
+		ptr->tabOffsetInPixels = inOffsetFromStartingPointInPixels;
+		if (false == ptr->tab.exists())
+		{
+			result = kTerminalWindow_ResultCodeGenericFailure;
+		}
+		else
+		{
+			// drawers are managed in terms of start and end offsets as opposed to
+			// a “width”, so some roundabout calculations are done to find offsets
+			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+			HIWindowRef		parentWindow = ptr->window;
+			Rect			currentTabBounds;
+			Rect			currentParentBounds;
+			OSStatus		error = noErr;
+			float			leadingOffset = kWindowOffsetUnchanged;
+			float			trailingOffset = kWindowOffsetUnchanged;
+			
+			
+			error = GetWindowBounds(tabWindow, kWindowStructureRgn, &currentTabBounds);
+			assert_noerr(error);
+			error = GetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
+			assert_noerr(error);
+			leadingOffset = (float)ptr->tabOffsetInPixels;
+			// it does not appear necessary to set the trailing offset...
+			//trailingOffset = (float)(currentParentBounds.right - currentParentBounds.left -
+			//							(currentTabBounds.right - currentTabBounds.left) - leadingOffset);
+			
+			// force a “resize” to cause the tab position to update immediately
+			// (TEMPORARY: is there a better way to do this?)
+			++currentParentBounds.right;
+			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
+			error = SetDrawerOffsets(tabWindow, leadingOffset, trailingOffset);
+			--currentParentBounds.right;
+			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
+		}
+	}
+	
+	return result;
+}// SetTabPosition
+
+
+/*!
+Specifies the size of the tab (if any) for this window,
+including any frame it has.  This is a visual adornment
+only; see also TerminalWindow_SetTabPosition().
+
+You can pass "kTerminalWindow_DefaultMetaTabWidth" to
+indicate that the tab should be resized to its ordinary
+(default) width.
+
+Note that since this affects only a single window, this is
+not the proper API for general tab manipulation; it is a
+low-level routine.  See the Workspace module.
+
+\retval kTerminalWindow_ResultCodeSuccess
+if there are no errors
+
+\retval kTerminalWindow_ResultCodeInvalidReference
+if the specified terminal window is unrecognized
+
+\retval kTerminalWindow_ResultCodeGenericFailure
+if the specified terminal window has no tab (however,
+the proper width is still remembered)
+
+(3.1)
+*/
+TerminalWindow_ResultCode
+TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
+							 Float32			inWidthInPixels)
+{
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalWindow_ResultCode	result = kTerminalWindow_ResultCodeSuccess;
+	
+	
+	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
+	{
+		result = kTerminalWindow_ResultCodeInvalidReference;
+		Console_WriteValueAddress("warning, attempt to TerminalWindow_SetTabWidth() with invalid reference", inRef);
+	}
+	else
+	{
+		ptr->tabWidthInPixels = inWidthInPixels;
+		if (false == ptr->tab.exists())
+		{
+			result = kTerminalWindow_ResultCodeGenericFailure;
+		}
+		else
+		{
+			// drawers are managed in terms of start and end offsets as opposed to
+			// a “width”, so some roundabout calculations are done to find offsets
+			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+			HIWindowRef		parentWindow = GetDrawerParent(tabWindow);
+			Rect			currentParentBounds;
+			OSStatus		error = noErr;
+			float			leadingOffset = kWindowOffsetUnchanged;
+			float			trailingOffset = kWindowOffsetUnchanged;
+			
+			
+			error = GetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
+			assert_noerr(error);
+			leadingOffset = (float)ptr->tabOffsetInPixels;
+			trailingOffset = (float)(currentParentBounds.right - currentParentBounds.left -
+										inWidthInPixels - leadingOffset);
+			
+			// force a “resize” to cause the tab position to update immediately
+			// (TEMPORARY: is there a better way to do this?)
+			++currentParentBounds.right;
+			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
+			error = SetDrawerOffsets(tabWindow, leadingOffset, trailingOffset);
+			--currentParentBounds.right;
+			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
+		}
+	}
+	
+	return result;
+}// SetTabWidth
+
+
+/*!
 Renames a terminal window, notifying listeners that the
 window title has changed.
 
@@ -1155,12 +1457,26 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 			if (nullptr != adornedCFString)
 			{
 				SetWindowTitleWithCFString(ptr->window, adornedCFString);
+				if (ptr->tab.exists())
+				{
+					HIViewWrap		titleWrap(idMyButtonTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
+					
+					
+					SetControlTitleWithCFString(titleWrap, adornedCFString);
+				}
 				CFRelease(adornedCFString), adornedCFString = nullptr;
 			}
 		}
 		else if (nullptr != inName)
 		{
 			SetWindowTitleWithCFString(ptr->window, ptr->baseTitleString.returnCFStringRef());
+			if (ptr->tab.exists())
+			{
+				HIViewWrap		titleWrap(idMyButtonTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
+				
+				
+				SetControlTitleWithCFString(titleWrap, ptr->baseTitleString.returnCFStringRef());
+			}
 		}
 	}
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeWindowTitle, ptr->selfRef/* context */);
@@ -1250,11 +1566,16 @@ TerminalWindow  (UInt16					inCountMaximumViewableColumns,
 				 TerminalWindow_Flags	inFlags)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs()),
 selfRef(REINTERPRET_CAST(this, TerminalWindowRef)),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
 flags(inFlags),
 window(createWindow()),
+tab(),
+tabAndWindowGroup(nullptr),
+tabOffsetInPixels(0.0),
+tabWidthInPixels(0.0),
 toolbar(nullptr),
 toolbarItemLED1(),
 toolbarItemLED2(),
@@ -1275,6 +1596,7 @@ recentSearchString(),
 baseTitleString(),
 scrollProcUPP(nullptr), // reset below
 windowResizeHandler(),
+tabDrawerWindowResizeHandler(),
 commandUPP(nullptr),
 commandHandler(nullptr),
 windowClickActivationUPP(nullptr),
@@ -1757,6 +2079,10 @@ TerminalWindow::
 		HelpSystem_SetWindowKeyPhrase(this->window, kHelpSystem_KeyPhraseDefault); // clean up
 		DisposeWindow(this->window), this->window = nullptr;
 	}
+	if (nullptr == this->tabAndWindowGroup)
+	{
+		ReleaseWindowGroup(this->tabAndWindowGroup), this->tabAndWindowGroup = nullptr;
+	}
 }// TerminalWindow destructor
 
 
@@ -1975,10 +2301,10 @@ Returns nullptr if the window was not created successfully.
 
 (3.0)
 */
-static WindowRef
+static HIWindowRef
 createKioskOffSwitchWindow ()
 {
-	WindowRef   result = nullptr;
+	HIWindowRef		result = nullptr;
 	
 	
 	// load the NIB containing this floater (automatically finds the right localization)
@@ -2110,6 +2436,65 @@ createScrollLockOnIcon ()
 
 
 /*!
+Creates a floating window that looks like a tab, used to
+“attach” to an existing terminal window in tab view.
+
+Also installs a resize handler to ensure the drawer is
+no bigger than its default size (otherwise, the Toolbox
+will make it as wide as the window).
+
+(3.1)
+*/
+static Boolean
+createTabWindow		(TerminalWindowPtr		inPtr)
+{
+	HIWindowRef		tabWindow = nullptr;
+	Boolean			result = false;
+	
+	
+	// load the NIB containing this floater (automatically finds the right localization)
+	// TEMPORARY: using the Kiosk “off switch” window just because it happens to look like a tab;
+	// this should be replaced by a dedicated NIB
+	tabWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
+							CFSTR("TerminalWindow"), CFSTR("Tab")) << NIBLoader_AssertWindowExists;
+	if (nullptr != tabWindow)
+	{
+		// install a callback that responds as the drawer window is resized; this is used
+		// primarily to enforce a maximum drawer width, not to allow a resizable drawer
+		{
+			Rect		currentBounds;
+			OSStatus	error = noErr;
+			
+			
+			error = GetWindowBounds(tabWindow, kWindowContentRgn, &currentBounds);
+			assert_noerr(error);
+			inPtr->tabDrawerWindowResizeHandler.install(tabWindow, handleNewDrawerWindowSize, inPtr->selfRef/* user data */,
+														currentBounds.right - currentBounds.left/* minimum width */,
+														currentBounds.bottom - currentBounds.top/* minimum height */,
+														currentBounds.right - currentBounds.left/* maximum width */,
+														currentBounds.bottom - currentBounds.top/* maximum height */);
+			assert(inPtr->tabDrawerWindowResizeHandler.isInstalled());
+			
+			// if the global default width has not yet been initialized, set it;
+			// initialize this window’s tab width field to the global default
+			if (0.0 == gDefaultTabWidth)
+			{
+				error = GetWindowBounds(tabWindow, kWindowStructureRgn, &currentBounds);
+				assert_noerr(error);
+				gDefaultTabWidth = STATIC_CAST(currentBounds.right - currentBounds.left, Float32);
+			}
+			inPtr->tabWidthInPixels = gDefaultTabWidth;
+		}
+	}
+	
+	inPtr->tab = tabWindow;
+	result = (nullptr != tabWindow);
+	
+	return result;
+}// createTabWindow
+
+
+/*!
 Creates the content controls (except the terminal screen
 itself) in the specified terminal window, for which a
 Mac OS window must already exist.  The controls include
@@ -2179,10 +2564,10 @@ Returns nullptr if the window was not created successfully.
 
 (3.0)
 */
-static WindowRef
+static HIWindowRef
 createWindow ()
 {
-	WindowRef   result = nullptr;
+	HIWindowRef		result = nullptr;
 	
 	
 	// load the NIB containing this window (automatically finds the right localization)
@@ -2488,6 +2873,24 @@ handleFindDialogClose	(FindDialogRef		inDialogThatClosed)
 		// (and is destroyed when the Terminal Window is destroyed)
 	}
 }// handleFindDialogClose
+
+
+/*!
+This routine is called whenever the tab is resized,
+to make sure the drawer does not become too large.
+
+(3.1)
+*/
+static void
+handleNewDrawerWindowSize	(WindowRef		UNUSED_ARGUMENT(inWindowRef),
+							 Float32		UNUSED_ARGUMENT(inDeltaX),
+							 Float32		UNUSED_ARGUMENT(inDeltaY),
+							 void*			UNUSED_ARGUMENT(inContext))
+{
+	// nothing really needs to be done here; the routine exists only
+	// to ensure the initial constraints (at routine install time)
+	// are always enforced, otherwise the drawer size cannot shrink
+}// handleNewDrawerWindowSize
 
 
 /*!
@@ -3347,6 +3750,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						result = noErr;
 					}
+					break;
+				
+				case kCommandTerminalNewWorkspace:
+					// note that this event often originates from the tab drawer, but
+					// due to event hierarchy it will eventually be sent to the handler
+					// installed on the parent terminal window (how convenient!)
+					SessionFactory_MoveTerminalWindowToNewWorkspace(terminalWindow);
 					break;
 				
 				default:

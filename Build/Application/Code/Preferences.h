@@ -176,6 +176,7 @@ Tags for use with kPreferences_ClassGeneral.
 */
 enum
 {
+	kPreferences_TagArrangeWindowsUsingTabs				= FOUR_CHAR_CODE('tabs'),	//!< data: "Boolean"
 	kPreferences_TagCaptureFileCreator					= FOUR_CHAR_CODE('cpfc'),	//!< data: "OSType"
 	kPreferences_TagCopySelectedText					= FOUR_CHAR_CODE('cpsl'),	//!< data: "Boolean"
 	kPreferences_TagCopyTableThreshold					= FOUR_CHAR_CODE('ctth'),	//!< data: "UInt16", the number of spaces per tab
@@ -327,6 +328,7 @@ directly match preferences tags, allowing you to monitor
 changes to those preferences.  For efficiency, most changes
 do NOT trigger events: only the following tags are supported
 with notifiers:
+- kPreferences_TagArrangeWindowsUsingTabs
 - kPreferences_TagCursorBlinks
 - kPreferences_TagDontDimBackgroundScreens
 - kPreferences_TagMapBackquote

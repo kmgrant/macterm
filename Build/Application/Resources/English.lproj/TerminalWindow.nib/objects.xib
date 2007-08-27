@@ -4,7 +4,7 @@
   <object name="rootObject" class="NSCustomObject" id="1">
     <string name="customClass">NSApplication</string>
   </object>
-  <array count="8" name="allObjects">
+  <array count="11" name="allObjects">
     <object class="IBCarbonWindow" id="166">
       <string name="windowRect">212 206 633 881 </string>
       <string name="title"></string>
@@ -81,8 +81,36 @@
       <boolean name="isConstrained">FALSE</boolean>
       <boolean name="hideOnSuspend">TRUE</boolean>
     </object>
+    <object class="IBCarbonWindow" id="193">
+      <string name="windowRect">668 224 687 408 </string>
+      <string name="title"></string>
+      <object name="rootControl" class="IBCarbonRootControl" id="194">
+        <string name="bounds">0 0 19 184 </string>
+        <string name="viewFrame">0 0 184 19 </string>
+        <array count="1" name="subviews">
+          <object class="IBCarbonBevelButton" id="195">
+            <string name="bounds">0 0 19 184 </string>
+            <string name="viewFrame">0 0 184 19 </string>
+            <ostype name="controlSignature">TTit</ostype>
+            <string name="title">-</string>
+            <ostype name="command">MTab</ostype>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+          </object>
+        </array>
+      </object>
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <int name="carbonWindowClass">20</int>
+      <boolean name="doesNotCycle">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+    </object>
+    <reference idRef="194"/>
+    <reference idRef="195"/>
   </array>
-  <array count="8" name="allParents">
+  <array count="11" name="allParents">
     <reference idRef="1"/>
     <reference idRef="166"/>
     <reference idRef="1"/>
@@ -91,16 +119,21 @@
     <reference idRef="192"/>
     <reference idRef="190"/>
     <reference idRef="1"/>
+    <reference idRef="1"/>
+    <reference idRef="193"/>
+    <reference idRef="194"/>
   </array>
-  <dictionary count="4" name="nameTable">
+  <dictionary count="5" name="nameTable">
     <string>DimensionsFloater</string>
     <reference idRef="187"/>
     <string>DimensionsSheet</string>
     <reference idRef="192"/>
     <string>File&apos;s Owner</string>
     <reference idRef="1"/>
+    <string>Tab</string>
+    <reference idRef="193"/>
     <string>Window</string>
     <reference idRef="166"/>
   </dictionary>
-  <unsigned_int name="nextObjectID">193</unsigned_int>
+  <unsigned_int name="nextObjectID">196</unsigned_int>
 </object>
