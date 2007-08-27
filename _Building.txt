@@ -41,7 +41,7 @@ HOW TO BUILD
   must be built using its own Xcode project and copied manually
   into the Resources folder of MacTelnet.app.  (MacTelnet has
   code that launches these applications assuming they are in the
-  Resources folder; see the file "ResourceFileManager.cp" in the
+  Resources folder; see the file "AppResources.cp" in the
   "Build/Application/Code" folder for specific references.)
   
   MacTelnet Help is constructed in the "Build/HTMLHelp" directory
