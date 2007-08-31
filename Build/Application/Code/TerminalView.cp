@@ -6165,6 +6165,10 @@ recalculateCachedDimensions		(TerminalViewPtr	inTerminalViewPtr)
 Handles standard events for the HIObject of a terminal
 view’s text area.
 
+IMPORTANT:	You cannot simply add cases here to handle new
+			events...see TerminalView_Init() for the registry
+			of events that will invoke this routine.
+
 Invoked by Mac OS X.
 
 (3.1)
@@ -6359,7 +6363,8 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 				CFStringRef		requestedAttribute = nullptr;
 				
 				
-				// attempt to read key modifiers, so as to make the cursor change more accurate
+				// for the purposes of accessibility, identify a Terminal View as having
+				// the same role as a standard text area
 				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAccessibleAttributeName,
 																typeCFStringRef, requestedAttribute);
 				if (noErr == result)
