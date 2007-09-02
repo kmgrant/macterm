@@ -51,6 +51,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20070xxx': [
+		'Preferences window collections drawer is now below the toolbar to show that it affects only one category.',
 		'Terminal views and backgrounds now support a more complete set of accessibility attributes.',
 		'Terminal view backgrounds now have an accessibility role of "matte".',
 	],

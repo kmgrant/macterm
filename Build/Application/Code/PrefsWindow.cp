@@ -1127,6 +1127,16 @@ init ()
 			assert(gDrawerWindowResizeHandler.isInstalled());
 		}
 		
+		// set the initial offset of the drawer
+		{
+			float		leadingOffset = 52/* arbitrary; the current height of a standard toolbar */;
+			float		trailingOffset = kWindowOffsetUnchanged;
+			OSStatus	error = noErr;
+			
+			
+			error = SetDrawerOffsets(gDrawerWindow, leadingOffset, trailingOffset);
+		}
+		
 		// install a callback that disposes of the window properly when it should be closed
 		{
 			EventTypeSpec const		whenWindowClosing[] =
