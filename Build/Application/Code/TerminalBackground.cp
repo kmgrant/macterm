@@ -46,6 +46,7 @@
 #include "ConstantsRegistry.h"
 #include "NetEvents.h"
 #include "TerminalBackground.h"
+#include "UIStrings.h"
 
 
 
@@ -104,7 +105,10 @@ TerminalBackground_Init ()
 									{ kEventClassControl, kEventControlInitialize },
 									{ kEventClassControl, kEventControlDraw },
 									{ kEventClassControl, kEventControlGetPartRegion },
-									{ kEventClassControl, kEventControlSetData }
+									{ kEventClassControl, kEventControlSetData },
+									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
+									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
+									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable }
 								};
 		OSStatus				error = noErr;
 		
@@ -474,6 +478,137 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			Console_WriteLine("HI OBJECT destruct terminal background");
 			delete dataPtr;
 			result = noErr;
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	else if (kEventClass == kEventClassAccessibility)
+	{
+		assert(kEventClass == kEventClassAccessibility);
+		switch (kEventKind)
+		{
+		case kEventAccessibleGetAllAttributeNames:
+			{
+				CFMutableArrayRef	listOfNames = nullptr;
+				
+				
+				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAccessibleAttributeNames,
+																typeCFMutableArrayRef, listOfNames);
+				if (noErr == result)
+				{
+					// each attribute mentioned here should be handled below
+					CFArrayAppendValue(listOfNames, kAXDescriptionAttribute);
+					CFArrayAppendValue(listOfNames, kAXRoleAttribute);
+					CFArrayAppendValue(listOfNames, kAXRoleDescriptionAttribute);
+					CFArrayAppendValue(listOfNames, kAXTopLevelUIElementAttribute);
+					CFArrayAppendValue(listOfNames, kAXWindowAttribute);
+					CFArrayAppendValue(listOfNames, kAXParentAttribute);
+					CFArrayAppendValue(listOfNames, kAXEnabledAttribute);
+					CFArrayAppendValue(listOfNames, kAXPositionAttribute);
+					CFArrayAppendValue(listOfNames, kAXSizeAttribute);
+				}
+			}
+			break;
+		
+		case kEventAccessibleGetNamedAttribute:
+		case kEventAccessibleIsNamedAttributeSettable:
+			{
+				CFStringRef		requestedAttribute = nullptr;
+				
+				
+				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAccessibleAttributeName,
+																typeCFStringRef, requestedAttribute);
+				if (noErr == result)
+				{
+					// for the purposes of accessibility, identify a Terminal Background as
+					// having the same role as a standard matte
+					CFStringRef		roleCFString = kAXMatteRole;
+					Boolean			isSettable = false;
+					
+					
+					// IMPORTANT: The cases handled here should match the list returned
+					// by "kEventAccessibleGetAllAttributeNames", above.
+					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+							UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+							CFStringRef				descriptionCFString = nullptr;
+							
+							
+							stringResult = UIStrings_Copy(kUIStrings_TerminalBackgroundAccessibilityDescription,
+															descriptionCFString);
+							if (false == stringResult.ok())
+							{
+								result = resNotFound;
+							}
+							else
+							{
+								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+															sizeof(descriptionCFString), &descriptionCFString);
+							}
+						}
+					}
+					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+							result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+														sizeof(roleCFString), &roleCFString);
+						}
+					}
+					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleDescriptionAttribute,
+																	kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+							if (FlagManager_Test(kFlagOS10_4API))
+							{
+								CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
+																	(roleCFString, nullptr/* sub-role */);
+								
+								
+								if (nullptr != roleDescCFString)
+								{
+									result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+																sizeof(roleDescCFString), &roleDescCFString);
+									CFRelease(roleDescCFString), roleDescCFString = nullptr;
+								}
+							}
+							else
+							{
+								// no API available prior to 10.4 to find this value, so be lazy and return nothing
+								result = eventNotHandledErr;
+							}
+						}
+					}
+					else
+					{
+						// Many attributes are already supported by the default handler:
+						//	kAXTopLevelUIElementAttribute
+						//	kAXWindowAttribute
+						//	kAXParentAttribute
+						//	kAXEnabledAttribute
+						//	kAXSizeAttribute
+						//	kAXPositionAttribute
+						result = eventNotHandledErr;
+					}
+					
+					// return the read-only flag when requested, if the attribute was used above
+					if ((noErr == result) &&
+						(kEventAccessibleIsNamedAttributeSettable == kEventKind))
+					{
+						result = SetEventParameter(inEvent, kEventParamAccessibleAttributeSettable, typeBoolean,
+													sizeof(isSettable), &isSettable);
+					}
+				}
+			}
 			break;
 		
 		default:

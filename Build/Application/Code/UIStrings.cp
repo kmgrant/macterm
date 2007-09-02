@@ -1473,6 +1473,16 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
+	case kUIStrings_TerminalAccessibilityDescription:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("terminal text"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalAccessibilityDescription; must be all-lowercase without punctuation"));
+		break;
+	
+	case kUIStrings_TerminalBackgroundAccessibilityDescription:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("terminal background"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalBackgroundAccessibilityDescription; must be all-lowercase without punctuation"));
+		break;
+	
 	case kUIStrings_TerminalInterruptProcess:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("[Interrupted]"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalInterruptProcess"));

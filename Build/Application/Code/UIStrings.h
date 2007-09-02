@@ -353,9 +353,11 @@ Strings used in terminal windows.
 */
 enum UIStrings_TerminalCFString
 {
-	kUIStrings_TerminalInterruptProcess			= 'Intr',
-	kUIStrings_TerminalResumeOutput				= 'Resu',
-	kUIStrings_TerminalSuspendOutput			= 'Susp'
+	kUIStrings_TerminalAccessibilityDescription				= 'ADsc',
+	kUIStrings_TerminalBackgroundAccessibilityDescription	= 'ABDs',
+	kUIStrings_TerminalInterruptProcess						= 'Intr',
+	kUIStrings_TerminalResumeOutput							= 'Resu',
+	kUIStrings_TerminalSuspendOutput						= 'Susp'
 };
 
 /*!

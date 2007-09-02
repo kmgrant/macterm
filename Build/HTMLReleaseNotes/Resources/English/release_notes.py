@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20070xxx',
     '20070827',
     '20070424',
     '20070224',
@@ -49,6 +50,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20070xxx': [
+		'Terminal views and backgrounds now support a more complete set of accessibility attributes.',
+		'Terminal view backgrounds now have an accessibility role of "matte".',
+	],
 	'20070827': [
 		'Added tabbed-windows feature, accessible through a new General preference.',
 		'Added Move to New Workspace command (available only when using tabs) to move tabs into separate groups.',

@@ -80,6 +80,7 @@
 #include "TerminalBackground.h"
 #include "TerminalView.h"
 #include "TextTranslation.h"
+#include "UIStrings.h"
 #include "URL.h"
 
 
@@ -366,6 +367,7 @@ static OSStatus			receiveTerminalViewTrack		(EventHandlerCallRef, EventRef, Term
 static void				receiveVideoModeChange			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				redrawScreensTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
 static void				releaseRowIterator				(TerminalViewPtr, Terminal_LineRef*);
+static SInt32			returnNumberOfCharacters		(TerminalViewPtr);
 static void				screenBufferChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				screenCursorChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				screenToLocal					(TerminalViewPtr, SInt16*, SInt16*);
@@ -473,7 +475,9 @@ TerminalView_Init ()
 									{ kEventClassControl, kEventControlSetCursor },
 									{ kEventClassControl, kEventControlSetFocusPart },
 									{ kEventClassControl, kEventControlTrack },
-									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute }
+									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
+									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
+									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable }
 								};
 		OSStatus				error = noErr;
 		
@@ -6358,50 +6362,143 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 		assert(kEventClass == kEventClassAccessibility);
 		switch (kEventKind)
 		{
+		case kEventAccessibleGetAllAttributeNames:
+			{
+				CFMutableArrayRef	listOfNames = nullptr;
+				
+				
+				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAccessibleAttributeNames,
+																typeCFMutableArrayRef, listOfNames);
+				if (noErr == result)
+				{
+					// each attribute mentioned here should be handled below
+					CFArrayAppendValue(listOfNames, kAXDescriptionAttribute);
+					CFArrayAppendValue(listOfNames, kAXRoleAttribute);
+					CFArrayAppendValue(listOfNames, kAXRoleDescriptionAttribute);
+					CFArrayAppendValue(listOfNames, kAXNumberOfCharactersAttribute);
+					CFArrayAppendValue(listOfNames, kAXTopLevelUIElementAttribute);
+					CFArrayAppendValue(listOfNames, kAXWindowAttribute);
+					CFArrayAppendValue(listOfNames, kAXParentAttribute);
+					CFArrayAppendValue(listOfNames, kAXEnabledAttribute);
+					CFArrayAppendValue(listOfNames, kAXPositionAttribute);
+					CFArrayAppendValue(listOfNames, kAXSizeAttribute);
+				}
+			}
+			break;
+		
 		case kEventAccessibleGetNamedAttribute:
+		case kEventAccessibleIsNamedAttributeSettable:
 			{
 				CFStringRef		requestedAttribute = nullptr;
 				
 				
-				// for the purposes of accessibility, identify a Terminal View as having
-				// the same role as a standard text area
 				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamAccessibleAttributeName,
 																typeCFStringRef, requestedAttribute);
 				if (noErr == result)
 				{
+					// for the purposes of accessibility, identify a Terminal View as having
+					// the same role as a standard text area
 					CFStringRef		roleCFString = kAXTextAreaRole;
+					Boolean			isSettable = false;
 					
 					
-					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
+					// IMPORTANT: The cases handled here should match the list returned
+					// by "kEventAccessibleGetAllAttributeNames", above.
+					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
 					{
-						result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-													sizeof(roleCFString), &roleCFString);
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+							UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+							CFStringRef				descriptionCFString = nullptr;
+							
+							
+							stringResult = UIStrings_Copy(kUIStrings_TerminalAccessibilityDescription,
+															descriptionCFString);
+							if (false == stringResult.ok())
+							{
+								result = resNotFound;
+							}
+							else
+							{
+								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+															sizeof(descriptionCFString), &descriptionCFString);
+							}
+						}
+					}
+					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+							result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+														sizeof(roleCFString), &roleCFString);
+						}
 					}
 					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleDescriptionAttribute,
 																	kCFCompareBackwards))
 					{
-						if (FlagManager_Test(kFlagOS10_4API))
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
-							CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
-																(roleCFString, nullptr/* sub-role */);
-							
-							
-							if (nullptr != roleDescCFString)
+							if (FlagManager_Test(kFlagOS10_4API))
 							{
-								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-															sizeof(roleDescCFString), &roleDescCFString);
-								CFRelease(roleDescCFString), roleDescCFString = nullptr;
+								CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
+																	(roleCFString, nullptr/* sub-role */);
+								
+								
+								if (nullptr != roleDescCFString)
+								{
+									result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+																sizeof(roleDescCFString), &roleDescCFString);
+									CFRelease(roleDescCFString), roleDescCFString = nullptr;
+								}
+							}
+							else
+							{
+								// no API available prior to 10.4 to find this value, so be lazy and return nothing
+								result = eventNotHandledErr;
 							}
 						}
-						else
+					}
+					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXNumberOfCharactersAttribute,
+																	kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
-							// no API available prior to 10.4 to find this value, so be lazy and return nothing
-							result = eventNotHandledErr;
+							TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
+							SInt32					numChars = returnNumberOfCharacters(viewPtr);
+							CFNumberRef				numCharsCFNumber = CFNumberCreate(kCFAllocatorDefault,
+																						kCFNumberSInt32Type, &numChars);
+							
+							
+							if (nullptr != numCharsCFNumber)
+							{
+								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFTypeRef,
+															sizeof(numCharsCFNumber), &numCharsCFNumber);
+								CFRelease(numCharsCFNumber), numCharsCFNumber = nullptr;
+							}
 						}
 					}
 					else
 					{
+						// Many attributes are already supported by the default handler:
+						//	kAXTopLevelUIElementAttribute
+						//	kAXWindowAttribute
+						//	kAXParentAttribute
+						//	kAXEnabledAttribute
+						//	kAXSizeAttribute
+						//	kAXPositionAttribute
 						result = eventNotHandledErr;
+					}
+					
+					// return the read-only flag when requested, if the attribute was used above
+					if ((noErr == result) &&
+						(kEventAccessibleIsNamedAttributeSettable == kEventKind))
+					{
+						result = SetEventParameter(inEvent, kEventParamAccessibleAttributeSettable, typeBoolean,
+													sizeof(isSettable), &isSettable);
 					}
 				}
 			}
@@ -7640,6 +7737,25 @@ releaseRowIterator  (TerminalViewPtr	UNUSED_ARGUMENT(inTerminalViewPtr),
 {
 	Terminal_DisposeLineIterator(inoutRefPtr);
 }// releaseRowIterator
+
+
+/*!
+Returns an approximation of how many characters are
+represented by this terminal viewÕs text area.
+
+(3.1)
+*/
+static SInt32
+returnNumberOfCharacters	(TerminalViewPtr	inTerminalViewPtr)
+{
+	UInt16 const	kNumVisibleRows = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
+	UInt16 const	kNumScrollbackRows = Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
+	UInt16 const	kNumColumns = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
+	SInt32			result = (kNumVisibleRows + kNumScrollbackRows) * kNumColumns;
+	
+	
+	return result;
+}// returnNumberOfCharacters
 
 
 /*!
