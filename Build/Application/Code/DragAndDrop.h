@@ -89,6 +89,11 @@ OSStatus
 //@{
 
 void
+	DragAndDrop_HideHighlightBackground		(CGContextRef	inPort,
+											 CGRect const&	inArea);
+
+// DEPRECATED - USE THE CORE GRAPHICS VERSION INSTEAD
+void
 	DragAndDrop_HideHighlightBackground		(CGrafPtr		inPort,
 											 Rect const*	inAreaPtr);
 
@@ -101,6 +106,11 @@ void
 	DragAndDrop_HideHighlightFrame			(CGrafPtr		inPort,
 											 Rect const*	inAreaPtr);
 
+void
+	DragAndDrop_ShowHighlightBackground		(CGContextRef	inPort,
+											 CGRect const&	inArea);
+
+// DEPRECATED - USE THE CORE GRAPHICS VERSION INSTEAD
 void
 	DragAndDrop_ShowHighlightBackground		(CGrafPtr		inPort,
 											 Rect const*	inAreaPtr);

@@ -64,6 +64,7 @@
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	// these colors are based on the drag-and-drop rounded rectangles used in Mail on Tiger
+	// UNIMPLEMENTED: put these into an external file such as DefaultPreferences.plist
 	RGBColor const		kMy_DragHighlightFrameInColor	 = { 5140, 21074, 56026 };
 	RGBColor const		kMy_DragHighlightFrameInGraphite = { 5140, 5140, 5140 };
 	RGBColor const		kMy_DragHighlightBoxInColor		 = { 48316, 52685, 61680 };
@@ -85,6 +86,24 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 								(float)RGBCOLOR_INTENSITY_MAX;
 	float const			kMy_DragHighlightFrameInGraphiteBlueFraction
 							= (float)kMy_DragHighlightFrameInGraphite.blue /
+								(float)RGBCOLOR_INTENSITY_MAX;
+	float const			kMy_DragHighlightBoxInColorRedFraction
+							= (float)kMy_DragHighlightBoxInColor.red /
+								(float)RGBCOLOR_INTENSITY_MAX;
+	float const			kMy_DragHighlightBoxInColorGreenFraction
+							= (float)kMy_DragHighlightBoxInColor.green /
+								(float)RGBCOLOR_INTENSITY_MAX;
+	float const			kMy_DragHighlightBoxInColorBlueFraction
+							= (float)kMy_DragHighlightBoxInColor.blue /
+								(float)RGBCOLOR_INTENSITY_MAX;
+	float const			kMy_DragHighlightBoxInGraphiteRedFraction
+							= (float)kMy_DragHighlightBoxInGraphite.red /
+								(float)RGBCOLOR_INTENSITY_MAX;
+	float const			kMy_DragHighlightBoxInGraphiteGreenFraction
+							= (float)kMy_DragHighlightBoxInGraphite.green /
+								(float)RGBCOLOR_INTENSITY_MAX;
+	float const			kMy_DragHighlightBoxInGraphiteBlueFraction
+							= (float)kMy_DragHighlightBoxInGraphite.blue /
 								(float)RGBCOLOR_INTENSITY_MAX;
 	
 	float const			kMy_DragHighlightFrameCurveSize = 7.0; // width in pixels of circular corners
@@ -372,6 +391,41 @@ region.
 
 This is the reverse of DragAndDrop_ShowHighlightBackground().
 
+The drawing state of the given port is preserved.
+
+IMPORTANT:	This could completely erase the area.  You must
+			do your own drawing on top after this call (e.g.
+			to completely restore the normal view after the
+			drop highlight disappears).
+
+(3.1)
+*/
+void
+DragAndDrop_HideHighlightBackground	(CGContextRef	inTargetContext,
+									 CGRect const&	inArea)
+{
+	float const				kThickness = 2.0; // based on observation of Apple appearance
+	CGContextSaveRestore	contextLock(inTargetContext);
+	CGRect					mutableArea = CGRectInset(inArea, kThickness * 0.5, kThickness * 0.5);
+	
+	
+	CGContextSetRGBFillColor(inTargetContext, 1.0/* red */, 1.0/* green */, 1.0/* blue */, 1.0/* alpha */);
+	CGContextSetLineWidth(inTargetContext, kThickness);
+	CGContextBeginPath(inTargetContext);
+	RegionUtilities_AddRoundedRectangleToPath(inTargetContext, mutableArea,
+												kMy_DragHighlightFrameCurveSize,
+												kMy_DragHighlightFrameCurveSize);
+	CGContextFillPath(inTargetContext);
+}// HideHighlightBackground
+
+
+/*!
+Erases a standard drag highlight background.  Call this as
+part of your handling for the mouse leaving a valid drop
+region.
+
+This is the reverse of DragAndDrop_ShowHighlightBackground().
+
 The current port is preserved.  The drawing state of the
 given port is preserved.
 
@@ -425,7 +479,6 @@ void
 DragAndDrop_HideHighlightFrame	(CGContextRef	inTargetContext,
 								 CGRect const&	inArea)
 {
-// BROKEN!
 	float const				kThickness = 2.0; // based on observation of Apple appearance
 	CGContextSaveRestore	contextLock(inTargetContext);
 	CGRect					mutableArea = CGRectInset(inArea, kThickness * 0.5, kThickness * 0.5);
@@ -451,23 +504,6 @@ void
 DragAndDrop_HideHighlightFrame	(CGrafPtr		inPort,
 								 Rect const*	inAreaPtr)
 {
-#if 0
-	CGContextRef	targetContext = nullptr;
-	OSStatus		error = noErr;
-	
-	
-	error = QDBeginCGContext(inPort, &targetContext);
-	if (noErr == error)
-	{
-		CGRect		floatBounds = CGRectMake(inAreaPtr->left, inAreaPtr->top,
-												inAreaPtr->right - inAreaPtr->left,
-												inAreaPtr->bottom - inAreaPtr->top);
-		
-		
-		DragAndDrop_HideHighlightFrame(targetContext, floatBounds);
-		(OSStatus)QDEndCGContext(inPort, &targetContext);
-	}
-#else
 	// old QuickDraw implementation
 	GDHandle	oldDevice = nullptr;
 	CGrafPtr	oldPort = nullptr;
@@ -492,8 +528,57 @@ DragAndDrop_HideHighlightFrame	(CGrafPtr		inPort,
 	SetPenState(&oldPenState);
 	RGBForeColor(&oldForeColor);
 	SetGWorld(oldPort, oldDevice);
-#endif
 }// HideHighlightFrame
+
+
+/*!
+Draws a standard drag highlight background in the given port.
+Call this as part of your handling for the mouse entering a
+valid drop region.
+
+Typically, you call this routine first, then draw your content,
+then call DragAndDrop_ShowHighlightFrame() to complete.  This
+gives the frame high precedence (always Òon topÓ) but the
+background has least precedence.
+
+The drawing state of the given port is preserved.
+
+IMPORTANT:	This could completely erase the area.  You must
+			do your own drawing on top after this call (e.g.
+			to draw text but not a background).
+
+(3.1)
+*/
+void
+DragAndDrop_ShowHighlightBackground	(CGContextRef	inTargetContext,
+									 CGRect const&	inArea)
+{
+	float const				kThickness = 2.0; // based on observation of Apple appearance
+	CGContextSaveRestore	contextLock(inTargetContext);
+	CGRect					mutableArea = CGRectInset(inArea, kThickness * 0.5, kThickness * 0.5);
+	
+	
+	if (isGraphiteTheme())
+	{
+		CGContextSetRGBFillColor(inTargetContext, kMy_DragHighlightBoxInGraphiteRedFraction,
+									kMy_DragHighlightBoxInGraphiteGreenFraction,
+									kMy_DragHighlightBoxInGraphiteBlueFraction,
+									1.0/* alpha */);
+	}
+	else
+	{
+		CGContextSetRGBFillColor(inTargetContext, kMy_DragHighlightBoxInColorRedFraction,
+									kMy_DragHighlightBoxInColorGreenFraction,
+									kMy_DragHighlightBoxInColorBlueFraction,
+									1.0/* alpha */);
+	}
+	CGContextSetLineWidth(inTargetContext, kThickness);
+	CGContextBeginPath(inTargetContext);
+	RegionUtilities_AddRoundedRectangleToPath(inTargetContext, mutableArea,
+												kMy_DragHighlightFrameCurveSize,
+												kMy_DragHighlightFrameCurveSize);
+	CGContextFillPath(inTargetContext);
+}// ShowHighlightBackground
 
 
 /*!
@@ -553,7 +638,6 @@ void
 DragAndDrop_ShowHighlightFrame	(CGContextRef	inTargetContext,
 								 CGRect const&	inArea)
 {
-// BROKEN!
 	float const				kThickness = 2.0; // based on observation of Apple appearance
 	CGContextSaveRestore	contextLock(inTargetContext);
 	CGRect					mutableArea = CGRectInset(inArea, kThickness * 0.5, kThickness * 0.5);
@@ -592,23 +676,6 @@ void
 DragAndDrop_ShowHighlightFrame	(CGrafPtr		inPort,
 								 Rect const*	inAreaPtr)
 {
-#if 0
-	CGContextRef	targetContext = nullptr;
-	OSStatus		error = noErr;
-	
-	
-	error = QDBeginCGContext(inPort, &targetContext);
-	if (noErr == error)
-	{
-		CGRect		floatBounds = CGRectMake(inAreaPtr->left, inAreaPtr->top,
-												inAreaPtr->right - inAreaPtr->left,
-												inAreaPtr->bottom - inAreaPtr->top);
-		
-		
-		DragAndDrop_ShowHighlightFrame(targetContext, floatBounds);
-		(OSStatus)QDEndCGContext(inPort, &targetContext);
-	}
-#else
 	// old QuickDraw implementation
 	GDHandle	oldDevice = nullptr;
 	CGrafPtr	oldPort = nullptr;
@@ -629,7 +696,6 @@ DragAndDrop_ShowHighlightFrame	(CGrafPtr		inPort,
 	SetPenState(&oldPenState);
 	RGBForeColor(&oldForeColor);
 	SetGWorld(oldPort, oldDevice);
-#endif
 }// ShowHighlightFrame
 
 
