@@ -28,6 +28,7 @@
 #include "UniversalDefines.h"
 
 // library includes
+#include <CGContextSaveRestore.h>
 #include <Console.h>
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
@@ -68,7 +69,8 @@ RegionUtilities_AddRoundedRectangleToPath	(CGContextRef		inContext,
 	}
 	else
 	{
-		CGContextSaveGState(inContext);
+		CGContextSaveRestore	contextLock(inContext);
+		
 		
 		// start in the lower-left corner
 		CGContextTranslateCTM(inContext, CGRectGetMinX(inFrame), CGRectGetMinY(inFrame));
@@ -85,11 +87,11 @@ RegionUtilities_AddRoundedRectangleToPath	(CGContextRef		inContext,
 			float const		kRadius = 1.0;
 			
 			
-			// Since CGContextMoveToPoint() can draw both the curved part
-			// and line segments leading up to the curve, each of these
-			// calls constructs more of the shape than is first apparent.
-			// The order is also important (as is the starting point) as
-			// the “current” point is one of 3 key points defining the
+			// Since CGContextAddArcToPoint() draws both the curved part
+			// and the line segments leading up to the curve, each call
+			// is constructing more of the shape than is first apparent.
+			// The order and starting point are also important, as the
+			// “current” point is one of 3 key points defining the
 			// tangential lines for each curve.  Each equal "L" piece of
 			// the rectangle is drawn in turn, generating circular corners.
 			CGContextMoveToPoint(inContext, kScaledWidth, kScaledHalfHeight);
@@ -103,8 +105,6 @@ RegionUtilities_AddRoundedRectangleToPath	(CGContextRef		inContext,
 									kScaledWidth/* x2 */, kScaledHalfHeight/* y2 */, kRadius);
 			CGContextClosePath(inContext);
 		}
-		
-		CGContextRestoreGState(inContext);
 	}
 }// AddRoundedRectangleToPath
 
