@@ -6809,6 +6809,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		{
 			HIViewPartCode		partCode = 0;
 			CGrafPtr			drawingPort = nullptr;
+			CGContextRef		drawingContext = nullptr;
 			CGrafPtr			oldPort = nullptr;
 			GDHandle			oldDevice = nullptr;
 			
@@ -6829,6 +6830,11 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				result = noErr;
 			}
 			
+			// determine the context to draw in with Core Graphics
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
+															drawingContext);
+			assert_noerr(result);
+			
 			// if all information can be found, proceed with drawing
 			if (noErr == result)
 			{
@@ -6839,6 +6845,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				if (nullptr != viewPtr)
 				{
 					Rect		bounds;
+					HIRect		floatBounds;
 					HIPoint		localToViewOffset;
 					
 					
@@ -6846,6 +6853,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					// determine boundaries of the content view being drawn
 					GetControlBounds(view, &bounds);
+					HIViewGetBounds(view, &floatBounds);
 					
 					// the view position is also the conversion factor for
 					// translating QuickDraw points to view-local coordinates
@@ -6853,6 +6861,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					localToViewOffset.y = -bounds.top;
 					
 					// translate rectangle into view-local coordinates
+					// (note: "floatBounds" is already view-local)
 					OffsetRect(&bounds, STATIC_CAST(localToViewOffset.x, SInt16),
 								STATIC_CAST(localToViewOffset.y, SInt16)); // tmp
 					
@@ -6889,7 +6898,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (dragHighlight)
 							{
-								DragAndDrop_ShowHighlightBackground(drawingPort, &bounds);
+								DragAndDrop_ShowHighlightBackground(drawingContext, floatBounds);
 								// frame is drawn at the end, after any content
 							}
 							else
@@ -6985,7 +6994,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (dragHighlight)
 							{
-								DragAndDrop_ShowHighlightFrame(drawingPort, &bounds);
+								DragAndDrop_ShowHighlightFrame(drawingContext, floatBounds);
 							}
 						}
 					}

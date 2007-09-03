@@ -54,6 +54,7 @@ notes_by_version = {
 		'Preferences window collections drawer is now below the toolbar to show that it affects only one category.',
 		'Terminal views and backgrounds now support a more complete set of accessibility attributes.',
 		'Terminal view backgrounds now have an accessibility role of "matte".',
+		'Terminal view drag highlight now uses Core Graphics for a smoother display.',
 	],
 	'20070827': [
 		'Added tabbed-windows feature, accessible through a new General preference.',
