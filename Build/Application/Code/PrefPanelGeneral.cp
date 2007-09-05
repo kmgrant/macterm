@@ -3,7 +3,7 @@
 	PrefPanelGeneral.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -401,6 +401,7 @@ const
 		Point		tabPaneBottomRight;
 		
 		
+		// calculate initial frame and pane offsets (ignore width/height)
 		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
 		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
 		
@@ -408,6 +409,18 @@ const
 							tabPaneBottomRight.h + tabFrameTopLeft.h/* right is same as left */;
 		gIdealPanelHeight = tabFrameTopLeft.v + tabPaneTopLeft.v + gMaximumTabPaneHeight +
 							tabPaneBottomRight.v + tabFrameTopLeft.v/* bottom is same as top */;
+		
+		// make the container big enough for the tabs
+		{
+			HIRect		containerFrame = CGRectMake(0, 0, gIdealPanelWidth, gIdealPanelHeight);
+			
+			
+			error = HIViewSetFrame(result, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// recalculate the frame, this time the width and height will be correct
+		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
 		
 		// make the tabs match the ideal frame, because the size
 		// and position of NIB views is used to size subviews
@@ -448,6 +461,7 @@ const
 	assert(this->optionsTab.exists());
 	assert(this->specialTab.exists());
 	assert(this->notificationTab.exists());
+	
 	HIViewRef				result = nullptr;
 	Rect					containerBounds;
 	ControlTabEntry			tabInfo[NUMBER_OF_GENERAL_TABPANES];
@@ -514,6 +528,17 @@ const
 			error = HIViewSetFrame(this->specialTab, &containerFrame);
 			assert_noerr(error);
 			error = HIViewSetFrame(this->notificationTab, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// make the tabs big enough for any of the panes
+		{
+			HIRect		containerFrame = CGRectMake(0, 0,
+													tabPaneTopLeft.h + gMaximumTabPaneWidth + tabPaneBottomRight.h,
+													tabPaneTopLeft.v + gMaximumTabPaneHeight + tabPaneBottomRight.v);
+			
+			
+			error = HIViewSetFrame(result, &containerFrame);
 			assert_noerr(error);
 		}
 		
@@ -910,8 +935,8 @@ Resizes the views in this tab.
 */
 void
 MyGeneralTabOptions::
-deltaSize	(HIViewRef		inContainer,
-			 Float32		inDeltaX,
+deltaSize	(HIViewRef		UNUSED_ARGUMENT(inContainer),
+			 Float32		UNUSED_ARGUMENT(inDeltaX),
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
