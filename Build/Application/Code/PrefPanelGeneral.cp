@@ -376,9 +376,8 @@ const
 	assert(0 != gMaximumTabPaneWidth);
 	assert(0 != gMaximumTabPaneHeight);
 	
-	HIViewRef				result = nullptr;
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-	OSStatus				error = noErr;
+	HIViewRef	result = nullptr;
+	OSStatus	error = noErr;
 	
 	
 	// create the container
@@ -618,7 +617,7 @@ const
 		assert_noerr(error);
 	}
 	
-	// create subviews
+	// initialize values
 	{
 		size_t		actualSize = 0;
 		Boolean		visualBell = false;
