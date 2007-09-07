@@ -3,7 +3,7 @@
 	PrefPanelSessions.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -102,68 +102,111 @@ the NIBs from the package "PrefPanelSessions.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyFieldHostName		= { FOUR_CHAR_CODE('Host'), 0/* ID */ };
+static HIViewID const	idMyButtonLookUpHostName		= { FOUR_CHAR_CODE('Look'), 0/* ID */ };
+static HIViewID const	idMyChasingArrowsDNSWait		= { FOUR_CHAR_CODE('Wait'), 0/* ID */ };
+static HIViewID const	idMyFieldCommandLine			= { FOUR_CHAR_CODE('CmdL'), 0/* ID */ };
+static HIViewID const	idMyFieldHostName				= { FOUR_CHAR_CODE('Host'), 0/* ID */ };
+static HIViewID const	idMyHelpTextCommandLine			= { FOUR_CHAR_CODE('CmdH'), 0/* ID */ };
+static HIViewID const	idMyHelpTextControlKeys			= { FOUR_CHAR_CODE('CtlH'), 0/* ID */ };
+static HIViewID const	idMyStaticTextCaptureFilePath	= { FOUR_CHAR_CODE('CapP'), 0/* ID */ };
+static HIViewID const	idMySeparatorCaptureToFile		= { FOUR_CHAR_CODE('CapD'), 0/* ID */ };
+static HIViewID const	idMySeparatorRemoteSessionsOnly	= { FOUR_CHAR_CODE('RmSD'), 0/* ID */ };
+static HIViewID const	idMySeparatorTerminal			= { FOUR_CHAR_CODE('BotD'), 0/* ID */ };
 
 #pragma mark Types
 
 /*!
 Implements the “Resource” tab.
 */
-struct MySessionsTabResource
+struct MySessionsTabResource:
+public HIViewWrap
 {
-	MySessionsTabResource	(HIWindowRef, HIViewRef);
-	
-	HIViewWrap				pane;
+	MySessionsTabResource	(HIWindowRef);
 
 protected:
 	HIViewWrap
-	createContainerView		(HIWindowRef) const;
+	createPaneView		(HIWindowRef) const;
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	//! you should prefer setCFTypeRef(), which is clearer
+	inline CFRetainRelease&
+	operator =	(CFRetainRelease const&);
 	
 private:
-	CarbonEventHandlerWrap		buttonCommandsHandler;		//!< invoked when a button is clicked
-	CarbonEventHandlerWrap		whenLookupCompleteHandler;	//!< invoked when a DNS query finally returns
+	CommonEventHandlers_HIViewResizer	containerResizer;
+	CarbonEventHandlerWrap				buttonCommandsHandler;		//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				whenLookupCompleteHandler;	//!< invoked when a DNS query finally returns
 };
 
 /*!
 Implements the “Data Flow” tab.
 */
-struct MySessionsTabDataFlow
+struct MySessionsTabDataFlow:
+public HIViewWrap
 {
-	MySessionsTabDataFlow	(HIWindowRef, HIViewRef);
-	
-	HIViewWrap				pane;
+	MySessionsTabDataFlow	(HIWindowRef);
 
 protected:
 	HIViewWrap
-	createContainerView		(HIWindowRef) const;
+	createPaneView		(HIWindowRef) const;
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	//! you should prefer setCFTypeRef(), which is clearer
+	inline CFRetainRelease&
+	operator =	(CFRetainRelease const&);
+
+private:
+	CommonEventHandlers_HIViewResizer	containerResizer;
 };
 
 /*!
 Implements the “Control Keys” tab.
 */
-struct MySessionsTabControlKeys
+struct MySessionsTabControlKeys:
+public HIViewWrap
 {
-	MySessionsTabControlKeys	(HIWindowRef, HIViewRef);
-	
-	HIViewWrap				pane;
+	MySessionsTabControlKeys	(HIWindowRef);
 
 protected:
 	HIViewWrap
-	createContainerView		(HIWindowRef) const;
+	createPaneView		(HIWindowRef) const;
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	//! you should prefer setCFTypeRef(), which is clearer
+	inline CFRetainRelease&
+	operator =	(CFRetainRelease const&);
+
+private:
+	CommonEventHandlers_HIViewResizer	containerResizer;
 };
 
 /*!
 Implements the “TEK” tab.
 */
-struct MySessionsTabVectorGraphics
+struct MySessionsTabVectorGraphics:
+public HIViewWrap
 {
-	MySessionsTabVectorGraphics	(HIWindowRef, HIViewRef);
-	
-	HIViewWrap				pane;
+	MySessionsTabVectorGraphics	(HIWindowRef);
 
 protected:
 	HIViewWrap
-	createContainerView		(HIWindowRef) const;
+	createPaneView		(HIWindowRef) const;
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	//! you should prefer setCFTypeRef(), which is clearer
+	inline CFRetainRelease&
+	operator =	(CFRetainRelease const&);
+
+private:
+	CommonEventHandlers_HIViewResizer	containerResizer;
 };
 
 /*!
@@ -171,22 +214,26 @@ Implements the entire panel user interface.
 */
 struct MySessionsPanelUI
 {
-	MySessionsPanelUI	(HIWindowRef, HIViewRef);
-	
-	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
-	HIViewWrap							tabView;
-	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a tab is clicked
+	MySessionsPanelUI	(Panel_Ref, HIWindowRef);
 	
 	MySessionsTabResource				resourceTab;
 	MySessionsTabDataFlow				dataFlowTab;
 	MySessionsTabControlKeys			controlKeysTab;
 	MySessionsTabVectorGraphics			vectorGraphicsTab;
+	HIViewWrap							tabView;
+	HIViewWrap							mainView;
+	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
+	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a tab is clicked
 	
 protected:
 	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef) const;
+	
+	HIViewWrap
 	createTabsView	(HIWindowRef) const;
 };
-typedef MySessionsPanelUI*	MySessionsPanelUIPtr;
+typedef MySessionsPanelUI*			MySessionsPanelUIPtr;
+typedef MySessionsPanelUI const*	MySessionsPanelUIConstPtr;
 
 /*!
 Contains the panel reference and its user interface
@@ -203,23 +250,23 @@ typedef MySessionsPanelData*		MySessionsPanelDataPtr;
 
 #pragma mark Internal Method Prototypes
 
-static void				createPanelViews				(Panel_Ref, WindowRef);
 static void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
 static void				disposePanel					(Panel_Ref, void*);
-static Boolean			lookupHostName					(MySessionsTabResource*);
+static Boolean			lookupHostName					(MySessionsTabResource&);
 static SInt32			panelChanged					(Panel_Ref, Panel_Message, void*);
 static pascal OSStatus	receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus	receiveLookupComplete			(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
-static void				setUpMainTabs					(MySessionsPanelUIPtr);
 static void				showTabPane						(MySessionsPanelUIPtr, UInt16);
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	Float32		gIdealWidth = 0.0;
-	Float32		gIdealHeight = 0.0;
+	Float32		gIdealPanelWidth = 0.0;
+	Float32		gIdealPanelHeight = 0.0;
+	Float32		gMaximumTabPaneWidth = 0.0;
+	Float32		gMaximumTabPaneHeight = 0.0;
 }
 
 
@@ -275,6 +322,7 @@ Initializes a MySessionsPanelData structure.
 MySessionsPanelData::
 MySessionsPanelData ()
 :
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 panel(nullptr),
 interfacePtr(nullptr)
 {
@@ -287,27 +335,114 @@ Initializes a MySessionsPanelUI structure.
 (3.1)
 */
 MySessionsPanelUI::
-MySessionsPanelUI	(HIWindowRef	inOwningWindow,
-					 HIViewRef		inContainer)
+MySessionsPanelUI	(Panel_Ref		inPanel,
+					 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-containerResizer	(inContainer, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
-									kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-						deltaSizePanelContainerHIView, this/* context */),
+resourceTab			(inOwningWindow),
+dataFlowTab			(inOwningWindow),
+controlKeysTab		(inOwningWindow),
+vectorGraphicsTab	(inOwningWindow),
 tabView				(createTabsView(inOwningWindow)
-						<< HIViewWrap_AssertExists
-						<< HIViewWrap_EmbedIn(inContainer)),
+						<< HIViewWrap_AssertExists),
+mainView			(createContainerView(inPanel, inOwningWindow)
+						<< HIViewWrap_AssertExists),
+containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+								kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
+						deltaSizePanelContainerHIView, this/* context */),
 viewClickHandler	(GetControlEventTarget(this->tabView), receiveViewHit,
 						CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
-						this/* user data */),
-resourceTab			(inOwningWindow, this->tabView),
-dataFlowTab			(inOwningWindow, this->tabView),
-controlKeysTab		(inOwningWindow, this->tabView),
-vectorGraphicsTab	(inOwningWindow, this->tabView)
+						this/* user data */)
 {
-	assert(tabView.exists());
+	assert(containerResizer.isInstalled());
 	assert(viewClickHandler.isInstalled());
 }// MySessionsPanelUI 2-argument constructor
+
+
+/*!
+Constructs the container for the panel.  Assumes that
+the tabs view already exists.
+
+(3.1)
+*/
+HIViewWrap
+MySessionsPanelUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+const
+{
+	assert(this->tabView.exists());
+	assert(0 != gMaximumTabPaneWidth);
+	assert(0 != gMaximumTabPaneHeight);
+	
+	HIViewRef	result = nullptr;
+	OSStatus	error = noErr;
+	
+	
+	// create the container
+	{
+		Rect	containerBounds;
+		
+		
+		SetRect(&containerBounds, 0, 0, 0, 0);
+		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &result);
+		assert_noerr(error);
+		Panel_SetContainerView(inPanel, result);
+		SetControlVisibility(result, false/* visible */, false/* draw */);
+	}
+	
+	// calculate the ideal size
+	{
+		Point		tabFrameTopLeft;
+		Point		tabFrameWidthHeight;
+		Point		tabPaneTopLeft;
+		Point		tabPaneBottomRight;
+		
+		
+		// calculate initial frame and pane offsets (ignore width/height)
+		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
+		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
+		
+		gIdealPanelWidth = tabFrameTopLeft.h + tabPaneTopLeft.h + gMaximumTabPaneWidth +
+							tabPaneBottomRight.h + tabFrameTopLeft.h/* right is same as left */;
+		gIdealPanelHeight = tabFrameTopLeft.v + tabPaneTopLeft.v + gMaximumTabPaneHeight +
+							tabPaneBottomRight.v + tabFrameTopLeft.v/* bottom is same as top */;
+		
+		// make the container big enough for the tabs
+		{
+			HIRect		containerFrame = CGRectMake(0, 0, gIdealPanelWidth, gIdealPanelHeight);
+			
+			
+			error = HIViewSetFrame(result, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// recalculate the frame, this time the width and height will be correct
+		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
+		
+		// make the tabs match the ideal frame, because the size
+		// and position of NIB views is used to size subviews
+		// and subview resizing deltas are derived directly from
+		// changes to the container view size
+		{
+			HIRect		containerFrame = CGRectMake(tabFrameTopLeft.h, tabFrameTopLeft.v,
+													tabFrameWidthHeight.h, tabFrameWidthHeight.v);
+			
+			
+			error = HIViewSetFrame(this->tabView, &containerFrame);
+			assert_noerr(error);
+		}
+	}
+	
+	// embed the tabs in the content pane; done at this stage
+	// (after positioning the tabs) just in case the origin
+	// of the container is not (0, 0); this prevents the tabs
+	// from having to know where they will end up in the window
+	error = HIViewAddSubview(result, this->tabView);
+	assert_noerr(error);
+	
+	return result;
+}// MySessionsPanelUI::createContainerView
 
 
 /*!
@@ -320,6 +455,11 @@ MySessionsPanelUI::
 createTabsView	(HIWindowRef	inOwningWindow)
 const
 {
+	assert(this->resourceTab.exists());
+	assert(this->dataFlowTab.exists());
+	assert(this->controlKeysTab.exists());
+	assert(this->vectorGraphicsTab.exists());
+	
 	HIViewRef				result = nullptr;
 	Rect					containerBounds;
 	ControlTabEntry			tabInfo[NUMBER_OF_SESSIONS_TABPANES];
@@ -351,8 +491,83 @@ const
 		if (nullptr != tabInfo[i].name) CFRelease(tabInfo[i].name), tabInfo[i].name = nullptr;
 	}
 	
+	// calculate the largest area required for all tabs, and keep this as the ideal size
+	{
+		Rect		resourceTabSize;
+		Rect		dataFlowTabSize;
+		Rect		controlKeysTabSize;
+		Rect		vectorGraphicsTabSize;
+		Point		tabPaneTopLeft;
+		Point		tabPaneBottomRight;
+		
+		
+		// determine sizes of tabs from NIBs
+		GetControlBounds(this->resourceTab, &resourceTabSize);
+		GetControlBounds(this->dataFlowTab, &dataFlowTabSize);
+		GetControlBounds(this->controlKeysTab, &controlKeysTabSize);
+		GetControlBounds(this->vectorGraphicsTab, &vectorGraphicsTabSize);
+		
+		// also include pane margin in panel size
+		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
+		
+		// find the widest tab and the highest tab
+		gMaximumTabPaneWidth = std::max(resourceTabSize.right - resourceTabSize.left,
+										dataFlowTabSize.right - dataFlowTabSize.left);
+		gMaximumTabPaneWidth = std::max(controlKeysTabSize.right - controlKeysTabSize.left,
+										STATIC_CAST(gMaximumTabPaneWidth, int));
+		gMaximumTabPaneWidth = std::max(vectorGraphicsTabSize.right - vectorGraphicsTabSize.left,
+										STATIC_CAST(gMaximumTabPaneWidth, int));
+		gMaximumTabPaneHeight = std::max(resourceTabSize.bottom - resourceTabSize.top,
+											dataFlowTabSize.bottom - dataFlowTabSize.top);
+		gMaximumTabPaneHeight = std::max(controlKeysTabSize.bottom - controlKeysTabSize.top,
+											STATIC_CAST(gMaximumTabPaneHeight, int));
+		gMaximumTabPaneHeight = std::max(vectorGraphicsTabSize.bottom - vectorGraphicsTabSize.top,
+											STATIC_CAST(gMaximumTabPaneHeight, int));
+		
+		// make every tab pane match the ideal pane size
+		{
+			HIRect		containerFrame = CGRectMake(tabPaneTopLeft.h, tabPaneTopLeft.v,
+													gMaximumTabPaneWidth, gMaximumTabPaneHeight);
+			
+			
+			error = HIViewSetFrame(this->resourceTab, &containerFrame);
+			assert_noerr(error);
+			error = HIViewSetFrame(this->dataFlowTab, &containerFrame);
+			assert_noerr(error);
+			error = HIViewSetFrame(this->controlKeysTab, &containerFrame);
+			assert_noerr(error);
+			error = HIViewSetFrame(this->vectorGraphicsTab, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// make the tabs big enough for any of the panes
+		{
+			HIRect		containerFrame = CGRectMake(0, 0,
+													tabPaneTopLeft.h + gMaximumTabPaneWidth + tabPaneBottomRight.h,
+													tabPaneTopLeft.v + gMaximumTabPaneHeight + tabPaneBottomRight.v);
+			
+			
+			error = HIViewSetFrame(result, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// embed every tab pane in the tabs view; done at this stage
+		// so that the subsequent move of the tab frame (later) will
+		// also offset the embedded panes; if embedding is done too
+		// soon, then the panes have to know too much about where
+		// they will physically reside within the window content area
+		error = HIViewAddSubview(result, this->resourceTab);
+		assert_noerr(error);
+		error = HIViewAddSubview(result, this->dataFlowTab);
+		assert_noerr(error);
+		error = HIViewAddSubview(result, this->controlKeysTab);
+		assert_noerr(error);
+		error = HIViewAddSubview(result, this->vectorGraphicsTab);
+		assert_noerr(error);
+	}
+	
 	return result;
-}// createTabsView
+}// MySessionsPanelUI::createTabsView
 
 
 /*!
@@ -361,15 +576,16 @@ Initializes a MySessionsTabControlKeys structure.
 (3.1)
 */
 MySessionsTabControlKeys::
-MySessionsTabControlKeys	(HIWindowRef	inOwningWindow,
-							 HIViewRef		inTabsView)
+MySessionsTabControlKeys	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-pane	(createContainerView(inOwningWindow)
-			<< HIViewWrap_AssertExists
-			<< HIViewWrap_EmbedIn(inTabsView))
+HIViewWrap			(createPaneView(inOwningWindow)
+						<< HIViewWrap_AssertExists),
+containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+						MySessionsTabControlKeys::deltaSize, this/* context */)
 {
-	assert(this->pane.exists());
+	assert(exists());
+	assert(containerResizer.isInstalled());
 }// MySessionsTabControlKeys 1-argument constructor
 
 
@@ -381,7 +597,7 @@ the sub-views that belong in its hierarchy.
 */
 HIViewWrap
 MySessionsTabControlKeys::
-createContainerView		(HIWindowRef	inOwningWindow)
+createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
 	HIViewRef					result = nullptr;
@@ -411,8 +627,59 @@ const
 	cancelButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
 	if (helpButton.exists()) helpButton << HIViewWrap_SetVisibleState(false);
 	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
 	return result;
-}// createContainerView
+}// MySessionsTabControlKeys::createPaneView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+MySessionsTabControlKeys::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	//MySessionsTabControlKeys*	dataPtr = REINTERPRET_CAST(inContext, MySessionsTabControlKeys*);
+	HIViewWrap				viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyHelpTextControlKeys, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+}// MySessionsTabControlKeys::deltaSize
+
+
+/*!
+Exists so the superclass assignment operator is
+not hidden by an implicit assignment operator
+definition.
+
+(3.1)
+*/
+CFRetainRelease&
+MySessionsTabControlKeys::
+operator =	(CFRetainRelease const&		inCopy)
+{
+	return HIViewWrap::operator =(inCopy);
+}// MySessionsTabControlKeys::operator =
 
 
 /*!
@@ -421,15 +688,16 @@ Initializes a MySessionsTabDataFlow structure.
 (3.1)
 */
 MySessionsTabDataFlow::
-MySessionsTabDataFlow	(HIWindowRef	inOwningWindow,
-						 HIViewRef		inTabsView)
+MySessionsTabDataFlow	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-pane	(createContainerView(inOwningWindow)
-			<< HIViewWrap_AssertExists
-			<< HIViewWrap_EmbedIn(inTabsView))
+HIViewWrap			(createPaneView(inOwningWindow)
+						<< HIViewWrap_AssertExists),
+containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+						MySessionsTabDataFlow::deltaSize, this/* context */)
 {
-	assert(this->pane.exists());
+	assert(exists());
+	assert(containerResizer.isInstalled());
 }// MySessionsTabDataFlow 1-argument constructor
 
 
@@ -441,7 +709,7 @@ the sub-views that belong in its hierarchy.
 */
 HIViewWrap
 MySessionsTabDataFlow::
-createContainerView		(HIWindowRef	inOwningWindow)
+createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
 	HIViewRef					result = nullptr;
@@ -462,8 +730,62 @@ const
 					result/* parent */, viewList, idealContainerBounds);
 	assert_noerr(error);
 	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
 	return result;
-}// createContainerView
+}// MySessionsTabDataFlow::createPaneView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+MySessionsTabDataFlow::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	//MySessionsTabDataFlow*	dataPtr = REINTERPRET_CAST(inContext, MySessionsTabDataFlow*);
+	HIViewWrap				viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyStaticTextCaptureFilePath, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMySeparatorCaptureToFile, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	// INCOMPLETE
+}// MySessionsTabDataFlow::deltaSize
+
+
+/*!
+Exists so the superclass assignment operator is
+not hidden by an implicit assignment operator
+definition.
+
+(3.1)
+*/
+CFRetainRelease&
+MySessionsTabDataFlow::
+operator =	(CFRetainRelease const&		inCopy)
+{
+	return HIViewWrap::operator =(inCopy);
+}// MySessionsTabDataFlow::operator =
 
 
 /*!
@@ -472,13 +794,13 @@ Initializes a MySessionsTabResource structure.
 (3.1)
 */
 MySessionsTabResource::
-MySessionsTabResource	(HIWindowRef	inOwningWindow,
-						 HIViewRef		inTabsView)
+MySessionsTabResource	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-pane						(createContainerView(inOwningWindow)
-								<< HIViewWrap_AssertExists
-								<< HIViewWrap_EmbedIn(inTabsView)),
+HIViewWrap					(createPaneView(inOwningWindow)
+								<< HIViewWrap_AssertExists),
+containerResizer			(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+								MySessionsTabResource::deltaSize, this/* context */),
 buttonCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 								this/* user data */),
@@ -487,7 +809,8 @@ whenLookupCompleteHandler	(GetApplicationEventTarget(), receiveLookupComplete,
 														kEventNetEvents_HostLookupComplete),
 								this/* user data */)
 {
-	assert(this->pane.exists());
+	assert(exists());
+	assert(containerResizer.isInstalled());
 }// MySessionsTabResource 1-argument constructor
 
 
@@ -499,7 +822,7 @@ the sub-views that belong in its hierarchy.
 */
 HIViewWrap
 MySessionsTabResource::
-createContainerView		(HIWindowRef	inOwningWindow)
+createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
 	HIViewRef					result = nullptr;
@@ -529,8 +852,72 @@ const
 	cancelButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
 	if (helpButton.exists()) helpButton << HIViewWrap_SetVisibleState(false);
 	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
 	return result;
-}// createContainerView
+}// MySessionsTabResource::createPaneView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+MySessionsTabResource::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	//MySessionsTabResource*	dataPtr = REINTERPRET_CAST(inContext, MySessionsTabResource*);
+	HIViewWrap				viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMySeparatorTerminal, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMySeparatorRemoteSessionsOnly, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyChasingArrowsDNSWait, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyButtonLookUpHostName, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyFieldHostName, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyHelpTextCommandLine, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyFieldCommandLine, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	// INCOMPLETE
+}// MySessionsTabResource::deltaSize
+
+
+/*!
+Exists so the superclass assignment operator is
+not hidden by an implicit assignment operator
+definition.
+
+(3.1)
+*/
+CFRetainRelease&
+MySessionsTabResource::
+operator =	(CFRetainRelease const&		inCopy)
+{
+	return HIViewWrap::operator =(inCopy);
+}// MySessionsTabResource::operator =
 
 
 /*!
@@ -539,15 +926,16 @@ Initializes a MySessionsTabVectorGraphics structure.
 (3.1)
 */
 MySessionsTabVectorGraphics::
-MySessionsTabVectorGraphics	(HIWindowRef	inOwningWindow,
-							 HIViewRef		inTabsView)
+MySessionsTabVectorGraphics	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-pane	(createContainerView(inOwningWindow)
-			<< HIViewWrap_AssertExists
-			<< HIViewWrap_EmbedIn(inTabsView))
+HIViewWrap			(createPaneView(inOwningWindow)
+						<< HIViewWrap_AssertExists),
+containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+						MySessionsTabVectorGraphics::deltaSize, this/* context */)
 {
-	assert(this->pane.exists());
+	assert(exists());
+	assert(containerResizer.isInstalled());
 }// MySessionsTabVectorGraphics 1-argument constructor
 
 
@@ -559,7 +947,7 @@ the sub-views that belong in its hierarchy.
 */
 HIViewWrap
 MySessionsTabVectorGraphics::
-createContainerView		(HIWindowRef	inOwningWindow)
+createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
 	HIViewRef					result = nullptr;
@@ -580,94 +968,57 @@ const
 					result/* parent */, viewList, idealContainerBounds);
 	assert_noerr(error);
 	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
 	return result;
-}// createContainerView
+}// MySessionsTabVectorGraphics::createPaneView
 
 
 /*!
-Creates the views that belong in the “Sessions” panel, and
-attaches them to the specified owning window in the proper
-embedding hierarchy.  The specified panel’s descriptor must
-be "kMyPrefPanelDescriptorSessions".
-
-The views are not arranged or sized.
+Resizes the views in this tab.
 
 (3.1)
 */
-static void
-createPanelViews	(Panel_Ref		inPanel,
-					 WindowRef		inOwningWindow)
+void
+MySessionsTabVectorGraphics::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		UNUSED_ARGUMENT(inDeltaX),
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIViewRef				container = nullptr;
-	MySessionsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), MySessionsPanelDataPtr);
-	MySessionsPanelUIPtr	interfacePtr = nullptr;
-	OSStatus				error = noErr;
+	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	//MySessionsTabVectorGraphics*	dataPtr = REINTERPRET_CAST(inContext, MySessionsTabVectorGraphics*);
 	
 	
-	// create a container view, and attach it to the panel
-	{
-		Rect	containerBounds;
-		
-		
-		SetRect(&containerBounds, 0, 0, 0, 0);
-		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &container);
-		assert_noerr(error);
-		Panel_SetContainerView(inPanel, container);
-		SetControlVisibility(container, false/* visible */, false/* draw */);
-	}
-	
-	// create the rest of the panel user interface
-	dataPtr->interfacePtr = new MySessionsPanelUI(inOwningWindow, container);
-	assert(nullptr != dataPtr->interfacePtr);
-	interfacePtr = dataPtr->interfacePtr;
-	
-	// calculate the largest area required for all tabs, and keep this as the ideal size
-	{
-		NIBWindow	hostTab(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelSessions"), CFSTR("Resource"));
-		NIBWindow	dataFlowTab(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelSessions"), CFSTR("DataFlow"));
-		NIBWindow	controlKeysTab(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelSessions"), CFSTR("ControlKeys"));
-		NIBWindow	vectorGraphicsTab(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelSessions"), CFSTR("TEK"));
-		Rect		hostTabSize;
-		Rect		dataFlowTabSize;
-		Rect		controlKeysTabSize;
-		Rect		vectorGraphicsTabSize;
-		Point		tabFrameTopLeft;
-		Point		tabFrameWidthHeight;
-		Point		tabPaneTopLeft;
-		Point		tabPaneBottomRight;
-		
-		
-		// determine sizes of tabs from NIBs
-		hostTab << NIBLoader_AssertWindowExists;
-		dataFlowTab << NIBLoader_AssertWindowExists;
-		controlKeysTab << NIBLoader_AssertWindowExists;
-		vectorGraphicsTab << NIBLoader_AssertWindowExists;
-		GetWindowBounds(hostTab, kWindowContentRgn, &hostTabSize);
-		GetWindowBounds(dataFlowTab, kWindowContentRgn, &dataFlowTabSize);
-		GetWindowBounds(controlKeysTab, kWindowContentRgn, &controlKeysTabSize);
-		GetWindowBounds(vectorGraphicsTab, kWindowContentRgn, &vectorGraphicsTabSize);
-		
-		// also include pane margin in panel size
-		Panel_CalculateTabFrame(container, &tabFrameTopLeft, &tabFrameWidthHeight);
-		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
-		
-		// find the widest tab and the highest tab
-		gIdealWidth = std::max(hostTabSize.right - hostTabSize.left,
-								dataFlowTabSize.right - dataFlowTabSize.left);
-		gIdealWidth = std::max(controlKeysTabSize.right - controlKeysTabSize.left,
-								STATIC_CAST(gIdealWidth, int));
-		gIdealWidth = std::max(vectorGraphicsTabSize.right - vectorGraphicsTabSize.left,
-								STATIC_CAST(gIdealWidth, int));
-		gIdealWidth += (tabFrameTopLeft.h + tabPaneTopLeft.h + tabPaneBottomRight.h + tabFrameTopLeft.h/* same as left */);
-		gIdealHeight = std::max(hostTabSize.bottom - hostTabSize.top,
-								dataFlowTabSize.bottom - dataFlowTabSize.top);
-		gIdealHeight = std::max(controlKeysTabSize.bottom - controlKeysTabSize.top,
-								STATIC_CAST(gIdealHeight, int));
-		gIdealHeight = std::max(vectorGraphicsTabSize.bottom - vectorGraphicsTabSize.top,
-								STATIC_CAST(gIdealHeight, int));
-		gIdealHeight += (tabFrameTopLeft.v + tabPaneTopLeft.v + tabPaneBottomRight.v + tabFrameTopLeft.v/* same as top */);
-	}
-}// createPanelViews
+	// UNIMPLEMENTED
+}// MySessionsTabVectorGraphics::deltaSize
+
+
+/*!
+Exists so the superclass assignment operator is
+not hidden by an implicit assignment operator
+definition.
+
+(3.1)
+*/
+CFRetainRelease&
+MySessionsTabVectorGraphics::
+operator =	(CFRetainRelease const&		inCopy)
+{
+	return HIViewWrap::operator =(inCopy);
+}// MySessionsTabVectorGraphics::operator =
 
 
 /*!
@@ -678,7 +1029,7 @@ container.
 (3.1)
 */
 static void
-deltaSizePanelContainerHIView	(HIViewRef		inView,
+deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
 								 void*			inContext)
@@ -688,51 +1039,16 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		//HIWindowRef				kPanelWindow = GetControlOwner(inView);
 		MySessionsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inContext, MySessionsPanelUIPtr);
 		assert(nullptr != interfacePtr);
-		HIViewWrap				viewWrap;
-		UInt16					chosenTabIndex = STATIC_CAST(GetControl32BitValue(interfacePtr->tabView), UInt16);
 		
 		
-		setUpMainTabs(interfacePtr);
-		//(viewWrap = dataPtr->tabView)
-		//	<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-		//	;
 		
-		if (kTabIndexSessionHost == chosenTabIndex)
-		{
-			// resize the Host tab pane, and its views
-			viewWrap.setCFTypeRef(interfacePtr->resourceTab.pane);
-			viewWrap
-				<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-				;
-			// INCOMPLETE
-		}
-		else if (kTabIndexSessionDataFlow == chosenTabIndex)
-		{
-			// resize the Data Flow tab pane, and its views
-			viewWrap.setCFTypeRef(interfacePtr->dataFlowTab.pane);
-			viewWrap
-				<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-				;
-			// INCOMPLETE
-		}
-		else if (kTabIndexSessionControlKeys == chosenTabIndex)
-		{
-			// resize the Control Keys tab pane, and its views
-			viewWrap.setCFTypeRef(interfacePtr->controlKeysTab.pane);
-			viewWrap
-				<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-				;
-			// INCOMPLETE
-		}
-		else if (kTabIndexSessionVectorGraphics == chosenTabIndex)
-		{
-			// resize the TEK tab pane, and its views
-			viewWrap.setCFTypeRef(interfacePtr->vectorGraphicsTab.pane);
-			viewWrap
-				<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-				;
-			// INCOMPLETE
-		}
+		interfacePtr->tabView << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+		
+		// due to event handlers, this will automatically resize subviews too
+		interfacePtr->resourceTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+		interfacePtr->dataFlowTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+		interfacePtr->controlKeysTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+		interfacePtr->vectorGraphicsTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
 	}
 }// deltaSizePanelContainerHIView
 
@@ -767,10 +1083,10 @@ Returns true if the lookup succeeded.
 (3.0)
 */
 static Boolean
-lookupHostName		(MySessionsTabResource*		inPtr)
+lookupHostName		(MySessionsTabResource&		inTab)
 {
 	CFStringRef		textCFString = nullptr;
-	HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(inPtr->pane));
+	HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(inTab));
 	Boolean			result = false;
 	
 	
@@ -787,7 +1103,7 @@ lookupHostName		(MySessionsTabResource*		inPtr)
 		char	hostName[256];
 		
 		
-		//lookupWaitUI(inPtr);
+		//lookupWaitUI(inTab);
 		if (CFStringGetCString(textCFString, hostName, sizeof(hostName), kCFStringEncodingMacRoman))
 		{
 			DNR_ResultCode		lookupAttemptResult = kDNR_ResultCodeSuccess;
@@ -797,7 +1113,7 @@ lookupHostName		(MySessionsTabResource*		inPtr)
 			if (false == lookupAttemptResult.ok())
 			{
 				// could not even initiate, so restore UI
-				//lookupDoneUI(inPtr);
+				//lookupDoneUI(inTab);
 			}
 			else
 			{
@@ -837,7 +1153,9 @@ panelChanged	(Panel_Ref		inPanel,
 			WindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
 			
 			
-			createPanelViews(inPanel, *windowPtr);
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new MySessionsPanelUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
 			showTabPane(panelDataPtr->interfacePtr, 1/* tab index */);
 		}
 		break;
@@ -878,10 +1196,10 @@ panelChanged	(Panel_Ref		inPanel,
 			HISize&		newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
 			
 			
-			if ((0 != gIdealWidth) && (0 != gIdealHeight))
+			if ((0 != gIdealPanelWidth) && (0 != gIdealPanelHeight))
 			{
-				newLimits.width = gIdealWidth;
-				newLimits.height = gIdealHeight;
+				newLimits.width = gIdealPanelWidth;
+				newLimits.height = gIdealPanelHeight;
 				result = kPanel_ResponseSizeProvided;
 			}
 		}
@@ -951,7 +1269,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			switch (received.commandID)
 			{
 			case kCommandLookUpSelectedHostName:
-				if (lookupHostName(ptr))
+				if (lookupHostName(*ptr))
 				{
 					result = noErr;
 				}
@@ -1013,7 +1331,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				if (nullptr != addressCFString)
 				{
-					HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(ptr->pane));
+					HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(*ptr));
 					
 					
 					assert(fieldHostName.exists());
@@ -1079,28 +1397,6 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-Sizes and arranges the main tab view.
-
-(3.1)
-*/
-static void
-setUpMainTabs	(MySessionsPanelUIPtr	inInterfacePtr)
-{
-	HIPoint		tabFrameTopLeft;
-	HISize		tabFrameWidthHeight;
-	HIRect		newFrame;
-	OSStatus	error = noErr;
-	
-	
-	Panel_CalculateTabFrame(gIdealWidth, gIdealHeight, tabFrameTopLeft, tabFrameWidthHeight);
-	newFrame.origin = tabFrameTopLeft;
-	newFrame.size = tabFrameWidthHeight;
-	error = HIViewSetFrame(inInterfacePtr->tabView, &newFrame);
-	assert_noerr(error);
-}// setUpMainTabs
-
-
-/*!
 Sizes and arranges views in the currently-selected
 tab pane of the specified “Sessions” panel to fit
 the dimensions of the panel’s container.
@@ -1112,36 +1408,35 @@ showTabPane		(MySessionsPanelUIPtr	inUIPtr,
 				 UInt16					inTabIndex)
 {
 	HIViewRef	selectedTabPane = nullptr;
-	HIRect		newFrame;
 	
 	
 	if (kTabIndexSessionHost == inTabIndex)
 	{
-		selectedTabPane = inUIPtr->resourceTab.pane;
-		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab.pane, false/* visible */));
+		selectedTabPane = inUIPtr->resourceTab;
+		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab, false/* visible */));
 	}
 	else if (kTabIndexSessionDataFlow == inTabIndex)
 	{
-		selectedTabPane = inUIPtr->dataFlowTab.pane;
-		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab.pane, false/* visible */));
+		selectedTabPane = inUIPtr->dataFlowTab;
+		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab, false/* visible */));
 	}
 	else if (kTabIndexSessionControlKeys == inTabIndex)
 	{
-		selectedTabPane = inUIPtr->controlKeysTab.pane;
-		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab.pane, false/* visible */));
+		selectedTabPane = inUIPtr->controlKeysTab;
+		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab, false/* visible */));
 	}
 	else if (kTabIndexSessionVectorGraphics == inTabIndex)
 	{
-		selectedTabPane = inUIPtr->vectorGraphicsTab.pane;
-		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab.pane, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab.pane, false/* visible */));
+		selectedTabPane = inUIPtr->vectorGraphicsTab;
+		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab, false/* visible */));
+		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab, false/* visible */));
 	}
 	else
 	{
@@ -1150,24 +1445,7 @@ showTabPane		(MySessionsPanelUIPtr	inUIPtr,
 	
 	if (nullptr != selectedTabPane)
 	{
-		HIViewRef	tabPaneContainer = nullptr;
-		Point		tabPaneTopLeft;
-		Point		tabPaneBottomRight;
-		OSStatus	error = noErr;
-		
-		
-		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
-		tabPaneContainer = HIViewGetSuperview(selectedTabPane);
-		error = HIViewGetBounds(tabPaneContainer, &newFrame);
-		assert_noerr(error);
-		newFrame.origin.x = tabPaneTopLeft.h;
-		newFrame.origin.y = tabPaneTopLeft.v;
-		newFrame.size.width -= (tabPaneBottomRight.h + tabPaneTopLeft.h);
-		newFrame.size.height -= (tabPaneBottomRight.v + tabPaneTopLeft.v);
-		error = HIViewSetFrame(selectedTabPane, &newFrame);
-		assert_noerr(error);
-		error = HIViewSetVisible(selectedTabPane, true/* visible */);
-		assert_noerr(error);
+		assert_noerr(HIViewSetVisible(selectedTabPane, true/* visible */));
 	}
 }// showTabPane
 

@@ -18,7 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20070xxx',
+    '20070906',
     '20070827',
     '20070424',
     '20070224',
@@ -50,9 +50,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-	'20070xxx': [
+	'20070906': [
 		'Preferences window collections drawer is now below the toolbar to show that it affects only one category.',
 		'Preferences window General pane now has correctly sized tab content.',
+		'Preferences window Sessions pane now has correctly sized tab content.',
 		'Terminal views and backgrounds now support a more complete set of accessibility attributes.',
 		'Terminal view backgrounds now have an accessibility role of "matte".',
 		'Terminal view drag highlight now uses Core Graphics for a smoother display.',

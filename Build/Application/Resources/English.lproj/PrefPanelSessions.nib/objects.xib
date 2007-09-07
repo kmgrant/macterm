@@ -269,6 +269,7 @@
           <object class="IBCarbonSeparator" id="2083">
             <string name="bounds">226 20 227 404 </string>
             <string name="viewFrame">20 226 384 1 </string>
+            <ostype name="controlSignature">CapD</ostype>
           </object>
           <object class="IBCarbonStaticText" id="2036">
             <string name="bounds">271 20 287 168 </string>
@@ -315,6 +316,7 @@
           <object class="IBCarbonStaticText" id="2077">
             <string name="bounds">162 176 178 404 </string>
             <string name="viewFrame">176 162 228 16 </string>
+            <ostype name="controlSignature">CapP</ostype>
             <string name="title">&lt;pathname&gt;</string>
           </object>
           <object class="IBCarbonStaticText" id="2060">
@@ -524,8 +526,8 @@
     <reference idRef="2036"/>
     <reference idRef="2037"/>
     <object class="IBCarbonPopupButton" id="2038">
-      <string name="bounds">3817 -8608 3837 -8606 </string>
-      <string name="viewFrame">288 134889 2 20 </string>
+      <string name="bounds">-3835 -8577 -3815 -8573 </string>
+      <string name="viewFrame">287 -134907 4 20 </string>
       <object name="menu" class="IBCarbonMenu" id="2039">
         <string name="title">Popup:</string>
         <array count="2" name="items">
@@ -545,8 +547,8 @@
     <reference idRef="2040"/>
     <reference idRef="2041"/>
     <object class="IBCarbonStaticText" id="2044">
-      <string name="bounds">3888 -8828 3904 -8680 </string>
-      <string name="viewFrame">68 134891 148 16 </string>
+      <string name="bounds">1528 -8796 1544 -8648 </string>
+      <string name="viewFrame">68 -134907 148 16 </string>
       <string name="title">New Line:</string>
     </object>
     <reference idRef="2045"/>
@@ -618,6 +620,7 @@
           <object class="IBCarbonStaticText" id="2091">
             <string name="bounds">165 20 193 527 </string>
             <string name="viewFrame">20 165 507 28 </string>
+            <ostype name="controlSignature">CtlH</ostype>
             <boolean name="small">TRUE</boolean>
             <int name="controlSize">1</int>
             <string name="title">To change a sequence, click its button and then click a control key in the palette.</string>
@@ -1159,13 +1162,13 @@
     <reference idRef="2132"/>
     <reference idRef="2133"/>
     <object class="IBCarbonStaticText" id="2134">
-      <string name="bounds">3811 -8828 3827 -8680 </string>
-      <string name="viewFrame">68 134883 148 16 </string>
+      <string name="bounds">-3827 -8796 -3811 -8648 </string>
+      <string name="viewFrame">68 -134899 148 16 </string>
       <string name="title">New Line:</string>
     </object>
     <object class="IBCarbonPopupButton" id="2135">
-      <string name="bounds">3817 -8608 3837 -8606 </string>
-      <string name="viewFrame">288 134889 2 20 </string>
+      <string name="bounds">-3835 -8577 -3815 -8573 </string>
+      <string name="viewFrame">287 -134907 4 20 </string>
       <object name="menu" class="IBCarbonMenu" id="2136">
         <string name="title">Popup:</string>
         <array count="2" name="items">
