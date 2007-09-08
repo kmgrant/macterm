@@ -475,13 +475,13 @@
     <reference idRef="1226"/>
     <reference idRef="1227"/>
     <object class="IBCarbonStaticText" id="1231">
-      <string name="bounds">252 -8777 268 -8702 </string>
-      <string name="viewFrame">87 252 75 16 </string>
+      <string name="bounds">-268 -8777 -252 -8702 </string>
+      <string name="viewFrame">87 -268 75 16 </string>
       <string name="title">Red:</string>
     </object>
     <object class="IBCarbonStaticText" id="1232">
-      <string name="bounds">282 -8777 298 -8702 </string>
-      <string name="viewFrame">87 282 75 16 </string>
+      <string name="bounds">-298 -8777 -282 -8702 </string>
+      <string name="viewFrame">87 -298 75 16 </string>
       <string name="title">Black:</string>
     </object>
     <object class="IBCarbonMenuItem" id="1233">
@@ -489,8 +489,8 @@
       <boolean name="updateSingleItem">TRUE</boolean>
     </object>
     <object class="IBCarbonPopupButton" id="1236">
-      <string name="bounds">397 -8421 417 -8415 </string>
-      <string name="viewFrame">443 397 6 20 </string>
+      <string name="bounds">-415 -8418 -395 -8418 </string>
+      <string name="viewFrame">446 -415 0 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1297">
         <string name="title">Popup:</string>
         <array count="3" name="items">
@@ -539,21 +539,21 @@
       </array>
     </object>
     <object class="IBCarbonUserPane" id="1246">
-      <string name="bounds">-22675 165 -22653 212 </string>
-      <string name="viewFrame">165 257 47 22 </string>
+      <string name="bounds">-23211 -8843 -23189 -8796 </string>
+      <string name="viewFrame">165 -279 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonWindow" id="1250">
-      <string name="windowRect">849 578 966 1077 </string>
+      <string name="windowRect">849 578 966 1080 </string>
       <string name="title">Scripts</string>
       <object name="rootControl" class="IBCarbonRootControl" id="1311">
-        <string name="bounds">0 0 117 499 </string>
-        <string name="viewFrame">0 0 499 117 </string>
+        <string name="bounds">0 0 117 502 </string>
+        <string name="viewFrame">0 0 502 117 </string>
         <array count="4" name="subviews">
           <reference idRef="1241"/>
           <object class="IBCarbonStaticText" id="1252">
-            <string name="bounds">58 222 97 479 </string>
-            <string name="viewFrame">222 58 257 39 </string>
+            <string name="bounds">58 222 97 482 </string>
+            <string name="viewFrame">222 58 260 39 </string>
             <ostype name="controlSignature">HTSM</ostype>
             <boolean name="small">TRUE</boolean>
             <int name="controlSize">1</int>
@@ -587,8 +587,8 @@
     <reference idRef="1251"/>
     <reference idRef="1252"/>
     <object class="IBCarbonPopupButton" id="1257">
-      <string name="bounds">371 -8421 391 -8415 </string>
-      <string name="viewFrame">443 371 6 20 </string>
+      <string name="bounds">-389 -8418 -369 -8418 </string>
+      <string name="viewFrame">446 -389 0 20 </string>
       <reference name="menu" idRef="1244"/>
     </object>
     <object class="IBCarbonMenuItem" id="1262">
@@ -601,38 +601,38 @@
       <string name="title">Run script…</string>
     </object>
     <object class="IBCarbonStaticText" id="1266">
-      <string name="bounds">192 -8777 208 -8702 </string>
-      <string name="viewFrame">87 192 75 16 </string>
+      <string name="bounds">-208 -8777 -192 -8702 </string>
+      <string name="viewFrame">87 -208 75 16 </string>
       <string name="title">Yellow:</string>
     </object>
     <object class="IBCarbonStaticText" id="1267">
-      <string name="bounds">132 -8777 148 -8702 </string>
-      <string name="viewFrame">87 132 75 16 </string>
+      <string name="bounds">-148 -8777 -132 -8702 </string>
+      <string name="viewFrame">87 -148 75 16 </string>
       <string name="title">Magenta:</string>
     </object>
     <object class="IBCarbonStaticText" id="1268">
-      <string name="bounds">397 -8792 413 -8619 </string>
-      <string name="viewFrame">72 397 173 16 </string>
+      <string name="bounds">-413 -8792 -397 -8619 </string>
+      <string name="viewFrame">72 -413 173 16 </string>
       <string name="title">Close window:</string>
     </object>
     <object class="IBCarbonStaticText" id="1269">
-      <string name="bounds">222 -8777 238 -8702 </string>
-      <string name="viewFrame">87 222 75 16 </string>
+      <string name="bounds">-238 -8777 -222 -8702 </string>
+      <string name="viewFrame">87 -238 75 16 </string>
       <string name="title">Green:</string>
     </object>
     <object class="IBCarbonUserPane" id="1271">
-      <string name="bounds">-22795 164 -22773 211 </string>
-      <string name="viewFrame">164 137 47 22 </string>
+      <string name="bounds">-23091 -8844 -23069 -8797 </string>
+      <string name="viewFrame">164 -159 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonStaticText" id="1272">
-      <string name="bounds">332 -8797 348 -8624 </string>
-      <string name="viewFrame">67 332 173 16 </string>
+      <string name="bounds">-348 -8797 -332 -8624 </string>
+      <string name="viewFrame">67 -348 173 16 </string>
       <string name="title">Close window:</string>
     </object>
     <object class="IBCarbonStaticText" id="1273">
-      <string name="bounds">318 -8752 334 -8638 </string>
-      <string name="viewFrame">112 318 114 16 </string>
+      <string name="bounds">-334 -8752 -318 -8638 </string>
+      <string name="viewFrame">112 -334 114 16 </string>
       <string name="title">Normal</string>
     </object>
     <reference idRef="1274"/>
@@ -642,23 +642,23 @@
     </object>
     <reference idRef="1276"/>
     <object class="IBCarbonUserPane" id="1279">
-      <string name="bounds">-22765 -8684 -22743 -8637 </string>
-      <string name="viewFrame">164 167 47 22 </string>
+      <string name="bounds">-23121 -8684 -23099 -8637 </string>
+      <string name="viewFrame">164 -189 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonStaticText" id="1280">
-      <string name="bounds">332 -8611 348 -8509 </string>
-      <string name="viewFrame">253 332 102 16 </string>
+      <string name="bounds">-348 -8611 -332 -8509 </string>
+      <string name="viewFrame">253 -348 102 16 </string>
       <string name="title">Pre-action:</string>
     </object>
     <object class="IBCarbonStaticText" id="1281">
-      <string name="bounds">397 -8792 413 -8619 </string>
-      <string name="viewFrame">72 397 173 16 </string>
+      <string name="bounds">-413 -8792 -397 -8619 </string>
+      <string name="viewFrame">72 -413 173 16 </string>
       <string name="title">Close window:</string>
     </object>
     <object class="IBCarbonUserPane" id="1282">
-      <string name="bounds">-22735 164 -22713 211 </string>
-      <string name="viewFrame">164 197 47 22 </string>
+      <string name="bounds">-23151 164 -23129 211 </string>
+      <string name="viewFrame">164 -219 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonMenu" id="1283">
@@ -674,13 +674,13 @@
       </array>
     </object>
     <object class="IBCarbonStaticText" id="1284">
-      <string name="bounds">5785 -8606 5801 -8504 </string>
-      <string name="viewFrame">258 371 102 16 </string>
+      <string name="bounds">5027 -8606 5043 -8504 </string>
+      <string name="viewFrame">258 -387 102 16 </string>
       <string name="title">Post-action:</string>
     </object>
     <object class="IBCarbonUserPane" id="1287">
-      <string name="bounds">-22825 164 -22803 211 </string>
-      <string name="viewFrame">164 107 47 22 </string>
+      <string name="bounds">-23061 164 -23039 211 </string>
+      <string name="viewFrame">164 -129 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonMenuItem" id="1290">
@@ -688,8 +688,8 @@
       <string name="title">Run script…</string>
     </object>
     <object class="IBCarbonPopupButton" id="1293">
-      <string name="bounds">332 -8426 352 -8420 </string>
-      <string name="viewFrame">438 332 6 20 </string>
+      <string name="bounds">-350 -8423 -330 -8423 </string>
+      <string name="viewFrame">441 -350 0 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1314">
         <string name="title">Popup:</string>
         <array count="3" name="items">
@@ -700,53 +700,53 @@
       </object>
     </object>
     <object class="IBCarbonPopupButton" id="1294">
-      <string name="bounds">5819 -8421 5839 -8415 </string>
-      <string name="viewFrame">443 397 6 20 </string>
+      <string name="bounds">4947 -8418 4967 -8418 </string>
+      <string name="viewFrame">446 -415 0 20 </string>
       <reference name="menu" idRef="1283"/>
     </object>
     <object class="IBCarbonStaticText" id="1295">
-      <string name="bounds">397 -8606 413 -8504 </string>
-      <string name="viewFrame">258 397 102 16 </string>
+      <string name="bounds">-413 -8606 -397 -8504 </string>
+      <string name="viewFrame">258 -413 102 16 </string>
       <string name="title">Pre-action:</string>
     </object>
     <reference idRef="1297"/>
     <reference idRef="1298"/>
     <object class="IBCarbonUserPane" id="1299">
-      <string name="bounds">-22855 164 -22833 211 </string>
-      <string name="viewFrame">164 77 47 22 </string>
+      <string name="bounds">-23031 164 -23009 211 </string>
+      <string name="viewFrame">164 -99 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonUserPane" id="1302">
-      <string name="bounds">18663 -8876 18685 -8829 </string>
-      <string name="viewFrame">164 227 47 22 </string>
+      <string name="bounds">18187 -8876 18209 -8829 </string>
+      <string name="viewFrame">164 -249 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonStaticText" id="1303">
-      <string name="bounds">102 -8777 118 -8702 </string>
-      <string name="viewFrame">87 102 75 16 </string>
+      <string name="bounds">-118 -8777 -102 -8702 </string>
+      <string name="viewFrame">87 -118 75 16 </string>
       <string name="title">Cyan:</string>
     </object>
     <object class="IBCarbonStaticText" id="1304">
-      <string name="bounds">397 -8606 413 -8504 </string>
-      <string name="viewFrame">258 397 102 16 </string>
+      <string name="bounds">-413 -8606 -397 -8504 </string>
+      <string name="viewFrame">258 -413 102 16 </string>
       <string name="title">Pre-action:</string>
     </object>
     <reference idRef="1306"/>
     <reference idRef="1311"/>
     <object class="IBCarbonUserPane" id="1313">
-      <string name="bounds">-22645 164 -22623 211 </string>
-      <string name="viewFrame">164 287 47 22 </string>
+      <string name="bounds">-23241 164 -23219 211 </string>
+      <string name="viewFrame">164 -309 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <reference idRef="1314"/>
     <object class="IBCarbonStaticText" id="1316">
-      <string name="bounds">72 -8777 88 -8702 </string>
-      <string name="viewFrame">87 72 75 16 </string>
+      <string name="bounds">-88 -8777 -72 -8702 </string>
+      <string name="viewFrame">87 -88 75 16 </string>
       <string name="title">White:</string>
     </object>
     <object class="IBCarbonStaticText" id="1318">
-      <string name="bounds">162 -8777 178 -8702 </string>
-      <string name="viewFrame">87 162 75 16 </string>
+      <string name="bounds">-178 -8777 -162 -8702 </string>
+      <string name="viewFrame">87 -178 75 16 </string>
       <string name="title">Blue:</string>
     </object>
     <reference idRef="1322"/>
@@ -851,43 +851,43 @@
     </object>
     <reference idRef="1324"/>
     <object class="IBCarbonStaticText" id="1325">
-      <string name="bounds">318 -8752 334 -8638 </string>
-      <string name="viewFrame">112 318 114 16 </string>
+      <string name="bounds">-334 -8752 -318 -8638 </string>
+      <string name="viewFrame">112 -334 114 16 </string>
       <string name="title">Normal</string>
     </object>
     <object class="IBCarbonStaticText" id="1328">
-      <string name="bounds">252 -8777 268 -8702 </string>
-      <string name="viewFrame">87 252 75 16 </string>
+      <string name="bounds">-268 -8777 -252 -8702 </string>
+      <string name="viewFrame">87 -268 75 16 </string>
       <string name="title">Red:</string>
     </object>
     <object class="IBCarbonUserPane" id="1331">
-      <string name="bounds">-22795 164 -22773 211 </string>
-      <string name="viewFrame">164 137 47 22 </string>
+      <string name="bounds">-23091 164 -23069 211 </string>
+      <string name="viewFrame">164 -159 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonUserPane" id="1332">
-      <string name="bounds">18603 -8876 18625 -8829 </string>
-      <string name="viewFrame">164 167 47 22 </string>
+      <string name="bounds">18247 -8876 18269 -8829 </string>
+      <string name="viewFrame">164 -189 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonUserPane" id="1334">
-      <string name="bounds">18633 -8876 18655 -8829 </string>
-      <string name="viewFrame">164 197 47 22 </string>
+      <string name="bounds">18217 -8876 18239 -8829 </string>
+      <string name="viewFrame">164 -219 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonStaticText" id="1335">
-      <string name="bounds">397 -8606 413 -8504 </string>
-      <string name="viewFrame">258 397 102 16 </string>
+      <string name="bounds">-413 -8606 -397 -8504 </string>
+      <string name="viewFrame">258 -413 102 16 </string>
       <string name="title">Pre-action:</string>
     </object>
     <object class="IBCarbonUserPane" id="1336">
-      <string name="bounds">-22855 164 -22833 211 </string>
-      <string name="viewFrame">164 77 47 22 </string>
+      <string name="bounds">-23031 164 -23009 211 </string>
+      <string name="viewFrame">164 -99 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonPopupButton" id="1337">
-      <string name="bounds">397 -8421 417 -8415 </string>
-      <string name="viewFrame">443 397 6 20 </string>
+      <string name="bounds">-415 -8418 -395 -8418 </string>
+      <string name="viewFrame">446 -415 0 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1338">
         <string name="title">Popup:</string>
         <array count="3" name="items">
@@ -912,73 +912,73 @@
     <reference idRef="1340"/>
     <reference idRef="1341"/>
     <object class="IBCarbonUserPane" id="1342">
-      <string name="bounds">107 164 129 211 </string>
-      <string name="viewFrame">164 107 47 22 </string>
+      <string name="bounds">-129 164 -107 211 </string>
+      <string name="viewFrame">164 -129 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonUserPane" id="1348">
-      <string name="bounds">18693 -8876 18715 -8829 </string>
-      <string name="viewFrame">164 257 47 22 </string>
+      <string name="bounds">18157 -8876 18179 -8829 </string>
+      <string name="viewFrame">164 -279 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonStaticText" id="1349">
-      <string name="bounds">162 -8777 178 -8702 </string>
-      <string name="viewFrame">87 162 75 16 </string>
+      <string name="bounds">-178 -8777 -162 -8702 </string>
+      <string name="viewFrame">87 -178 75 16 </string>
       <string name="title">Blue:</string>
     </object>
     <object class="IBCarbonStaticText" id="1350">
-      <string name="bounds">397 -8792 413 -8619 </string>
-      <string name="viewFrame">72 397 173 16 </string>
+      <string name="bounds">-413 -8792 -397 -8619 </string>
+      <string name="viewFrame">72 -413 173 16 </string>
       <string name="title">Close window:</string>
     </object>
     <object class="IBCarbonStaticText" id="1357">
-      <string name="bounds">222 -8777 238 -8702 </string>
-      <string name="viewFrame">87 222 75 16 </string>
+      <string name="bounds">-238 -8777 -222 -8702 </string>
+      <string name="viewFrame">87 -238 75 16 </string>
       <string name="title">Green:</string>
     </object>
     <object class="IBCarbonStaticText" id="1363">
-      <string name="bounds">397 -8792 413 -8619 </string>
-      <string name="viewFrame">72 397 173 16 </string>
+      <string name="bounds">-413 -8792 -397 -8619 </string>
+      <string name="viewFrame">72 -413 173 16 </string>
       <string name="title">Close window:</string>
     </object>
     <object class="IBCarbonStaticText" id="1364">
-      <string name="bounds">102 -8777 118 -8702 </string>
-      <string name="viewFrame">87 102 75 16 </string>
+      <string name="bounds">-118 -8777 -102 -8702 </string>
+      <string name="viewFrame">87 -118 75 16 </string>
       <string name="title">Cyan:</string>
     </object>
     <object class="IBCarbonStaticText" id="1366">
-      <string name="bounds">397 -8606 413 -8504 </string>
-      <string name="viewFrame">258 397 102 16 </string>
+      <string name="bounds">-413 -8606 -397 -8504 </string>
+      <string name="viewFrame">258 -413 102 16 </string>
       <string name="title">Pre-action:</string>
     </object>
     <object class="IBCarbonStaticText" id="1368">
-      <string name="bounds">371 -8606 387 -8504 </string>
-      <string name="viewFrame">258 371 102 16 </string>
+      <string name="bounds">-387 -8606 -371 -8504 </string>
+      <string name="viewFrame">258 -387 102 16 </string>
       <string name="title">Post-action:</string>
     </object>
     <object class="IBCarbonStaticText" id="1369">
-      <string name="bounds">282 -8777 298 -8702 </string>
-      <string name="viewFrame">87 282 75 16 </string>
+      <string name="bounds">-298 -8777 -282 -8702 </string>
+      <string name="viewFrame">87 -298 75 16 </string>
       <string name="title">Black:</string>
     </object>
     <object class="IBCarbonStaticText" id="1371">
-      <string name="bounds">332 -8797 348 -8624 </string>
-      <string name="viewFrame">67 332 173 16 </string>
+      <string name="bounds">-348 -8797 -332 -8624 </string>
+      <string name="viewFrame">67 -348 173 16 </string>
       <string name="title">Close window:</string>
     </object>
     <object class="IBCarbonStaticText" id="1373">
-      <string name="bounds">332 -8611 348 -8509 </string>
-      <string name="viewFrame">253 332 102 16 </string>
+      <string name="bounds">-348 -8611 -332 -8509 </string>
+      <string name="viewFrame">253 -348 102 16 </string>
       <string name="title">Pre-action:</string>
     </object>
     <object class="IBCarbonStaticText" id="1374">
-      <string name="bounds">72 -8777 88 -8702 </string>
-      <string name="viewFrame">87 72 75 16 </string>
+      <string name="bounds">-88 -8777 -72 -8702 </string>
+      <string name="viewFrame">87 -88 75 16 </string>
       <string name="title">White:</string>
     </object>
     <object class="IBCarbonPopupButton" id="1385">
-      <string name="bounds">397 -8421 417 -8415 </string>
-      <string name="viewFrame">443 397 6 20 </string>
+      <string name="bounds">-415 -8418 -395 -8418 </string>
+      <string name="viewFrame">446 -415 0 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1386">
         <string name="title">Popup:</string>
         <array count="3" name="items">
@@ -1003,8 +1003,8 @@
     <reference idRef="1388"/>
     <reference idRef="1389"/>
     <object class="IBCarbonPopupButton" id="1391">
-      <string name="bounds">5793 -8421 5813 -8415 </string>
-      <string name="viewFrame">443 371 6 20 </string>
+      <string name="bounds">4973 -8418 4993 -8418 </string>
+      <string name="viewFrame">446 -389 0 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1392">
         <string name="title">Popup:</string>
         <array count="3" name="items">
@@ -1029,23 +1029,23 @@
     <reference idRef="1394"/>
     <reference idRef="1395"/>
     <object class="IBCarbonUserPane" id="1396">
-      <string name="bounds">287 164 309 211 </string>
-      <string name="viewFrame">164 287 47 22 </string>
+      <string name="bounds">-309 164 -287 211 </string>
+      <string name="viewFrame">164 -309 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonStaticText" id="1404">
-      <string name="bounds">132 -8777 148 -8702 </string>
-      <string name="viewFrame">87 132 75 16 </string>
+      <string name="bounds">-148 -8777 -132 -8702 </string>
+      <string name="viewFrame">87 -148 75 16 </string>
       <string name="title">Magenta:</string>
     </object>
     <object class="IBCarbonUserPane" id="1407">
-      <string name="bounds">-22705 164 -22683 211 </string>
-      <string name="viewFrame">164 227 47 22 </string>
+      <string name="bounds">-23181 164 -23159 211 </string>
+      <string name="viewFrame">164 -249 47 22 </string>
       <int name="featureBits">2</int>
     </object>
     <object class="IBCarbonPopupButton" id="1409">
-      <string name="bounds">332 -8426 352 -8420 </string>
-      <string name="viewFrame">438 332 6 20 </string>
+      <string name="bounds">-350 -8423 -330 -8423 </string>
+      <string name="viewFrame">441 -350 0 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1410">
         <string name="title">Popup:</string>
         <array count="3" name="items">
@@ -1070,8 +1070,8 @@
     <reference idRef="1412"/>
     <reference idRef="1413"/>
     <object class="IBCarbonStaticText" id="1414">
-      <string name="bounds">5614 -8777 5630 -8702 </string>
-      <string name="viewFrame">87 192 75 16 </string>
+      <string name="bounds">5154 -8777 5170 -8702 </string>
+      <string name="viewFrame">87 -208 75 16 </string>
       <string name="title">Yellow:</string>
     </object>
     <reference idRef="1416"/>
@@ -1211,8 +1211,8 @@
     <reference idRef="1475"/>
     <reference idRef="1476"/>
     <object class="IBCarbonStaticText" id="1477">
-      <string name="bounds">3819 -8796 3835 -8648 </string>
-      <string name="viewFrame">68 134891 148 16 </string>
+      <string name="bounds">-3835 -8796 -3819 -8648 </string>
+      <string name="viewFrame">68 -134907 148 16 </string>
       <string name="title">New Line:</string>
     </object>
     <reference idRef="1478"/>
@@ -1225,8 +1225,8 @@
     <reference idRef="1485"/>
     <reference idRef="1486"/>
     <object class="IBCarbonPopupButton" id="1487">
-      <string name="bounds">3817 -8576 3837 -8574 </string>
-      <string name="viewFrame">288 134889 2 20 </string>
+      <string name="bounds">-3835 -8577 -3815 -8573 </string>
+      <string name="viewFrame">287 -134907 4 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1488">
         <string name="title">Popup:</string>
         <array count="2" name="items">
