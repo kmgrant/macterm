@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20070908',
     '20070906',
     '20070827',
     '20070424',
@@ -50,6 +51,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20070908': [
+		'Redesigned the Find icon on the VT220 keypad.',
+	],
 	'20070906': [
 		'Preferences window collections drawer is now below the toolbar to show that it affects only one category.',
 		'Preferences window General pane now has correctly sized tab content.',
