@@ -55,7 +55,9 @@ Possible return values from Listener Model module routines.
 */
 enum ListenerModel_ResultCode
 {
-	kListenerModel_ResultCodeSuccess		= 0		//!< no error occurred
+	kListenerModel_ResultCodeSuccess		= 0,	//!< no error occurred
+	kListenerModel_InvalidModelReference	= 1,	//!< listener model is not recognized
+	kListenerModel_InvalidListenerReference	= 2		//!< listener is not recognized
 };
 
 /*!

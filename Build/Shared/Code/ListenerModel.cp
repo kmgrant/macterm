@@ -3,7 +3,7 @@
 	ListenerModel.cp
 	
 	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -37,6 +37,7 @@
 #include <ListenerModel.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlockReferenceLocker.template.h>
+#include <MemoryBlockReferenceTracker.template.h>
 
 
 
@@ -66,8 +67,15 @@ typedef std::vector< ListenerModel_ListenerRef >			My_ListenerList;
 typedef My_ListenerList*									My_ListenerListPtr;
 typedef std::map< ListenerModel_Event, My_ListenerListPtr >	My_EventToListenerListPtrMap;
 
+typedef MemoryBlockReferenceTracker< ListenerModel_Ref >			ListenerModelRefTracker;
+typedef Registrar< ListenerModel_Ref, ListenerModelRefTracker >		ListenerModelRefRegistrar;
+
 struct ListenerModel
 {
+	inline
+	ListenerModel ();
+	
+	ListenerModelRefRegistrar		refValidator;			// ensures this reference is recognized as a valid one
 	ListenerModel_Descriptor		descriptor;				// user-defined identifier for this model
 	ListenerModelBehavior			notificationBehavior;	// a "kListenerModelBehavior..." constant describing how to notify listeners
 	ListenerModelCallbackType		callbackType;			// what kind all listeners must be
@@ -75,13 +83,20 @@ struct ListenerModel
 };
 typedef ListenerModel*		ListenerModelPtr;
 
-typedef MemoryBlockPtrLocker< ListenerModel_Ref, ListenerModel >	ListenerModelPtrLocker;
-typedef LockAcquireRelease< ListenerModel_Ref, ListenerModel >		ListenerModelAutoLocker;
+typedef MemoryBlockPtrLocker< ListenerModel_Ref, ListenerModel >			ListenerModelPtrLocker;
+typedef LockAcquireRelease< ListenerModel_Ref, ListenerModel >				ListenerModelAutoLocker;
+
+typedef MemoryBlockReferenceTracker< ListenerModel_ListenerRef >			ListenerReferenceTracker;
+typedef Registrar< ListenerModel_ListenerRef, ListenerReferenceTracker >	ListenerReferenceRegistrar;
 
 struct Listener
 {
-	UInt16		callbackType;		// a "kListenerModelCallbackType..." constant specifying the legal union member
-	void*		context;			// context assigned at creation time to help callback code figure out what, specifically, this is for
+	inline
+	Listener ();
+	
+	ListenerReferenceRegistrar	refValidator;	// ensures this reference is recognized as a valid one
+	ListenerModelCallbackType	callbackType;	// a "kListenerModelCallbackType..." constant specifying the legal union member
+	void*						context;		// context assigned at creation time to help callback code figure out what, specifically, this is for
 	union
 	{
 		ListenerModel_BooleanProcPtr	boolean;
@@ -110,8 +125,10 @@ static void			unitTest000_Callback1		(ListenerModel_Ref,
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	ListenerModelPtrLocker&		gListenerModelPtrLocks ()	{ static ListenerModelPtrLocker x; return x; }
+	ListenerModelRefTracker&	gListenerModelValidRefs ()	{ static ListenerModelRefTracker x; return x; }
 	ListenerPtrLocker&			gListenerPtrLocks ()		{ static ListenerPtrLocker x; return x; }
 	ListenerReferenceLocker&	gListenerRefLocks ()		{ static ListenerReferenceLocker x; return x; }
+	ListenerReferenceTracker&	gListenerValidRefs ()		{ static ListenerReferenceTracker x; return x; }
 	SInt32						gUnitTest000_CallCount = 0;
 	ListenerModel_Ref			gUnitTest000_Model = nullptr;
 	Boolean						gUnitTest000_Result = false;
@@ -137,7 +154,7 @@ public:
 	booleanListenerInvoker		(ListenerModel_Ref		inForWhichModel,
 								 ListenerModel_Event	inEventThatOccurred,
 								 void*					inEventContextPtr)
-	: _model(inForWhichModel), _event(inEventThatOccurred), _context(inEventContextPtr)
+	: _model(inForWhichModel), _event(inEventThatOccurred), _context(inEventContextPtr), _anyInvalidListeners(false)
 	{
 	}
 	
@@ -148,8 +165,23 @@ public:
 		bool				result = false;
 		
 		
-		result = ListenerModel_InvokeBooleanProc(listenerPtr->callback.boolean, _model, _event, _context, listenerPtr->context);
+		if (gListenerValidRefs().end() == gListenerValidRefs().find(inListener))
+		{
+			Console_WriteValueAddress("warning, attempt to notify nonexistent Boolean listener",
+										inListener);
+		}
+		else
+		{
+			result = ListenerModel_InvokeBooleanProc(listenerPtr->callback.boolean, _model, _event,
+														_context, listenerPtr->context);
+		}
 		return result;
+	}
+	
+	bool
+	anyInvalidListeners () const
+	{
+		return _anyInvalidListeners;
 	}
 
 protected:
@@ -158,6 +190,7 @@ private:
 	ListenerModel_Ref		_model;
 	ListenerModel_Event		_event;
 	void*					_context;
+	bool					_anyInvalidListeners;
 };
 
 
@@ -204,7 +237,7 @@ public:
 	osStatusListenerInvoker		(ListenerModel_Ref		inForWhichModel,
 								 ListenerModel_Event	inEventThatOccurred,
 								 void*					inEventContextPtr)
-	: _model(inForWhichModel), _event(inEventThatOccurred), _context(inEventContextPtr)
+	: _model(inForWhichModel), _event(inEventThatOccurred), _context(inEventContextPtr), _anyInvalidListeners(false)
 	{
 	}
 	
@@ -215,10 +248,24 @@ public:
 		bool				result = false;
 		
 		
-		result = (eventNotHandledErr != ListenerModel_InvokeOSStatusProc
-										(listenerPtr->callback.osStatus, _model, _event,
-											_context, listenerPtr->context));
+		if (gListenerValidRefs().end() == gListenerValidRefs().find(inListener))
+		{
+			Console_WriteValueAddress("warning, attempt to notify nonexistent OSStatus listener",
+										inListener);
+		}
+		else
+		{
+			result = (eventNotHandledErr != ListenerModel_InvokeOSStatusProc
+											(listenerPtr->callback.osStatus, _model, _event,
+												_context, listenerPtr->context));
+		}
 		return result;
+	}
+	
+	bool
+	anyInvalidListeners () const
+	{
+		return _anyInvalidListeners;
 	}
 
 protected:
@@ -227,6 +274,7 @@ private:
 	ListenerModel_Ref		_model;
 	ListenerModel_Event		_event;
 	void*					_context;
+	bool					_anyInvalidListeners;
 };
 
 
@@ -247,7 +295,7 @@ public:
 	standardListenerInvoker		(ListenerModel_Ref		inForWhichModel,
 								 ListenerModel_Event	inEventThatOccurred,
 								 void*					inEventContextPtr)
-	: _model(inForWhichModel), _event(inEventThatOccurred), _context(inEventContextPtr)
+	: _model(inForWhichModel), _event(inEventThatOccurred), _context(inEventContextPtr), _anyInvalidListeners(false)
 	{
 	}
 	
@@ -257,7 +305,22 @@ public:
 		ListenerAutoLocker	listenerPtr(gListenerPtrLocks(), inListener);
 		
 		
-		ListenerModel_InvokeStandardProc(listenerPtr->callback.standard, _model, _event, _context, listenerPtr->context);
+		if (gListenerValidRefs().end() == gListenerValidRefs().find(inListener))
+		{
+			Console_WriteValueAddress("warning, attempt to notify nonexistent standard listener",
+										inListener);
+		}
+		else
+		{
+			ListenerModel_InvokeStandardProc(listenerPtr->callback.standard, _model, _event,
+												_context, listenerPtr->context);
+		}
+	}
+	
+	bool
+	anyInvalidListeners () const
+	{
+		return _anyInvalidListeners;
 	}
 
 protected:
@@ -266,6 +329,7 @@ private:
 	ListenerModel_Ref		_model;
 	ListenerModel_Event		_event;
 	void*					_context;
+	bool					_anyInvalidListeners;
 };
 
 
@@ -501,7 +565,15 @@ releases locks they may have).
 void
 ListenerModel_RetainListener	(ListenerModel_ListenerRef		inRef)
 {
-	gListenerRefLocks().acquireLock(inRef);
+	if ((nullptr == inRef) ||
+		(gListenerValidRefs().end() == gListenerValidRefs().find(inRef)))
+	{
+		Console_WriteValueAddress("warning, attempt to retain a nonexistent listener", inRef);
+	}
+	else
+	{
+		gListenerRefLocks().acquireLock(inRef);
+	}
 }// RetainListener
 
 
@@ -518,10 +590,19 @@ ListenerModel_ReleaseListener	(ListenerModel_ListenerRef*		inoutRefPtr)
 {
 	if (nullptr != inoutRefPtr)
 	{
-		gListenerRefLocks().releaseLock(*inoutRefPtr);
-		unless (gListenerRefLocks().isLocked(*inoutRefPtr))
+		if ((nullptr == *inoutRefPtr) ||
+			(gListenerValidRefs().end() == gListenerValidRefs().find(*inoutRefPtr)))
 		{
-			delete (REINTERPRET_CAST(*inoutRefPtr, Listener*));
+			Console_WriteValueAddress("warning, attempt to release a nonexistent listener",
+										*inoutRefPtr);
+		}
+		else
+		{
+			gListenerRefLocks().releaseLock(*inoutRefPtr);
+			unless (gListenerRefLocks().isLocked(*inoutRefPtr))
+			{
+				delete (REINTERPRET_CAST(*inoutRefPtr, Listener*));
+			}
 		}
 		*inoutRefPtr = nullptr;
 	}
@@ -685,7 +766,17 @@ of data it points to varies based on the model style:
   "eventNotHandledErr", even if some return "noErr")
 
 \retval kListenerModel_ResultCodeSuccess
-always; no other results are yet defined
+if no errors occur
+
+\retval kListenerModel_InvalidModelReference
+if "inForWhichModel" is not valid
+
+\retval kListenerModel_InvalidListenerReference
+if some listener found in the model is no longer valid;
+this does not prevent remaining listeners from being
+considered, it is purely an informational return value
+(but in the future, this routine may automatically remove
+listeners found to be invalid)
 
 (1.1)
 */
@@ -699,7 +790,14 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 	ListenerModel_ResultCode	result = kListenerModel_ResultCodeSuccess;
 	
 	
-	if (nullptr != ptr)
+	if ((nullptr == ptr) ||
+		(gListenerModelValidRefs().end() == gListenerModelValidRefs().find(inForWhichModel)))
+	{
+		Console_WriteValueAddress("warning, attempt to notify listeners in nonexistent model",
+									inForWhichModel);
+		result = kListenerModel_InvalidModelReference;
+	}
+	else
 	{
 		My_EventToListenerListPtrMap::const_iterator	toEventToListenerListPtr;
 		
@@ -710,10 +808,18 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 			toEventToListenerListPtr = ptr->eventListeners.find(inEventThatOccurred);
 			if (ptr->eventListeners.end() != toEventToListenerListPtr)
 			{
+				standardListenerInvoker		perListenerFunction(inForWhichModel, inEventThatOccurred,
+																inEventContextPtr);
+				
+				
 				// invoke each Standard listener in turn
-				std::for_each(toEventToListenerListPtr->second->begin(),
-								toEventToListenerListPtr->second->end(),
-								standardListenerInvoker(inForWhichModel, inEventThatOccurred, inEventContextPtr));
+				perListenerFunction = std::for_each(toEventToListenerListPtr->second->begin(),
+													toEventToListenerListPtr->second->end(), perListenerFunction);
+				
+				if (perListenerFunction.anyInvalidListeners())
+				{
+					result = kListenerModel_InvalidListenerReference;
+				}
 			}
 			break;
 		
@@ -726,15 +832,21 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 				// the STL find_if() algorithm to be exploited to do the right thing here
 				My_ListenerList::const_iterator		toListener;
 				Boolean								someListenerReturnedTrue = false;
+				booleanListenerInvoker				perListenerFunction(inForWhichModel, inEventThatOccurred,
+																		inEventContextPtr);
 				
 				
 				toListener = std::find_if(toEventToListenerListPtr->second->begin(),
-											toEventToListenerListPtr->second->end(),
-											booleanListenerInvoker(inForWhichModel, inEventThatOccurred, inEventContextPtr));
+											toEventToListenerListPtr->second->end(), perListenerFunction);
 				someListenerReturnedTrue = (toEventToListenerListPtr->second->end() != toListener);
 				if (nullptr != outReturnValuePtrOrNull)
 				{
 					*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedTrue;
+				}
+				
+				if (perListenerFunction.anyInvalidListeners())
+				{
+					result = kListenerModel_InvalidListenerReference;
 				}
 			}
 			break;
@@ -747,16 +859,22 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 				// returned; the fact that the callback invoker is modeled as a Predicate allows
 				// the STL find_if() algorithm to be exploited to do the right thing here
 				My_ListenerList::const_iterator		toListener;
+				osStatusListenerInvoker				perListenerFunction(inForWhichModel, inEventThatOccurred,
+																		inEventContextPtr);
 				Boolean								someListenerReturnedNonEventNotHandledErr = false;
 				
 				
 				toListener = std::find_if(toEventToListenerListPtr->second->begin(),
-											toEventToListenerListPtr->second->end(),
-											osStatusListenerInvoker(inForWhichModel, inEventThatOccurred, inEventContextPtr));
+											toEventToListenerListPtr->second->end(), perListenerFunction);
 				someListenerReturnedNonEventNotHandledErr = (toEventToListenerListPtr->second->end() != toListener);
 				if (nullptr != outReturnValuePtrOrNull)
 				{
 					*(REINTERPRET_CAST(outReturnValuePtrOrNull, Boolean*)) = someListenerReturnedNonEventNotHandledErr;
+				}
+				
+				if (perListenerFunction.anyInvalidListeners())
+				{
+					result = kListenerModel_InvalidListenerReference;
 				}
 			}
 			break;
@@ -782,7 +900,13 @@ destroy a listener object it is automatically removed from all
 models it is a member of.
 
 \retval kListenerModel_ResultCodeSuccess
-always; no other results are yet defined
+if no errors occur
+
+\retval kListenerModel_InvalidModelReference
+if "inFromWhichModel" is not valid
+
+\retval kListenerModel_InvalidListenerReference
+if "inListenerToRemove" is not valid
 
 (1.0)
 */
@@ -795,7 +919,21 @@ ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 	ListenerModel_ResultCode	result = kListenerModel_ResultCodeSuccess;
 	
 	
-	if (nullptr != ptr)
+	if ((nullptr == ptr) ||
+		(gListenerModelValidRefs().end() == gListenerModelValidRefs().find(inFromWhichModel)))
+	{
+		Console_WriteValueAddress("warning, attempt to remove listener from nonexistent model",
+									inFromWhichModel);
+		result = kListenerModel_InvalidModelReference;
+	}
+	else if ((nullptr == inListenerToRemove) ||
+				(gListenerValidRefs().end() == gListenerValidRefs().find(inListenerToRemove)))
+	{
+		Console_WriteValueAddress("warning, attempt to remove nonexistent listener",
+									inListenerToRemove);
+		result = kListenerModel_InvalidListenerReference;
+	}
+	else
 	{
 		My_EventToListenerListPtrMap::const_iterator	toEventToListenerListPtr =
 															ptr->eventListeners.find(inForWhichEvent);
@@ -814,6 +952,43 @@ ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 	
 	return result;
 }// RemoveListenerForEvent
+
+
+#pragma mark Internal Methods
+
+/*!
+Initializes a new Listener instance and registers
+its address in a table of valid references.  At
+destruction time, the address is automatically
+unregistered.
+*/
+Listener::
+Listener ()
+:
+refValidator(REINTERPRET_CAST(this, ListenerModel_ListenerRef), gListenerValidRefs()),
+callbackType(kListenerModelCallbackTypeStandard),
+context(nullptr)
+{
+	callback.standard = nullptr;
+}// Listener default constructor
+
+
+/*!
+Initializes a new ListenerModel instance and
+registers its address in a table of valid
+references.  At destruction time, the address
+is automatically unregistered.
+*/
+ListenerModel::
+ListenerModel ()
+:
+refValidator(REINTERPRET_CAST(this, ListenerModel_Ref), gListenerModelValidRefs()),
+descriptor(kListenerModel_InvalidDescriptor),
+notificationBehavior(kListenerModelBehaviorNotifyAllSequentially),
+callbackType(kListenerModelCallbackTypeStandard),
+eventListeners()
+{
+}// ListenerModel default constructor
 
 
 #pragma mark Internal Methods: Unit Tests
