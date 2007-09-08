@@ -52,6 +52,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20070908': [
+		'Fixed a few possible crash conditions.',
 		'Redesigned the Find icon on the VT220 keypad.',
 		'Key palettes now have a 5 pixel padding between buttons and the window edge.',
 	],
