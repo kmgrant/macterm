@@ -53,6 +53,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20070908': [
 		'Redesigned the Find icon on the VT220 keypad.',
+		'Key palettes now have a 5 pixel padding between buttons and the window edge.',
 	],
 	'20070906': [
 		'Preferences window collections drawer is now below the toolbar to show that it affects only one category.',
