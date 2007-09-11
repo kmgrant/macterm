@@ -51,14 +51,24 @@
 #pragma mark Public Methods
 
 OSStatus
-	ContextualMenuBuilder_DisplayMenu			(HIWindowRef		inWhichWindow,
+	ContextualMenuBuilder_DisplayMenuForView	(HIViewRef			inWhichView,
+												 EventRef			inContextualMenuClickEvent);
+
+OSStatus
+	ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef		inWhichWindow,
 												 EventRecord*		inoutEventPtr,
-												 SInt16				inWindowPart);
+												 WindowPartCode		inWindowPart);
+
+OSStatus
+	ContextualMenuBuilder_PopulateMenuForView	(HIViewRef			inWhichView,
+												 EventRef			inContextualMenuClickEvent,
+												 MenuRef			inoutMenu,
+												 AEDesc&			inoutViewContentsDesc);
 
 OSStatus
 	ContextualMenuBuilder_PopulateMenuForWindow	(HIWindowRef		inWhichWindow,
 												 EventRecord*		inoutEventPtrOrNull,
-												 SInt16				inWindowPart,
+												 WindowPartCode		inWindowPart,
 												 MenuRef			inoutMenu,
 												 AEDesc&			inoutWindowContentsDesc);
 

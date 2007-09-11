@@ -6762,7 +6762,7 @@ receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inH
 				fakeEvent.when = 0;
 				fakeEvent.modifiers = modifiers;
 				GetGlobalMouse(&fakeEvent.where);
-				(OSStatus)ContextualMenuBuilder_DisplayMenu(GetControlOwner(view), &fakeEvent, inContent);
+				(OSStatus)ContextualMenuBuilder_DisplayMenuForWindow(GetControlOwner(view), &fakeEvent, inContent);
 				result = noErr; // event is completely handled
 			}
 			else

@@ -1344,7 +1344,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				fakeEvent.when = 0;
 				fakeEvent.modifiers = EventLoop_CurrentModifiers();
 				GetGlobalMouse(&fakeEvent.where);
-				(OSStatus)ContextualMenuBuilder_DisplayMenu(window, &fakeEvent, inContent);
+				(OSStatus)ContextualMenuBuilder_DisplayMenuForWindow(window, &fakeEvent, inContent);
 			}
 			break;
 		

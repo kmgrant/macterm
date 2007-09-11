@@ -2141,7 +2141,7 @@ StandardDialogEventFilter	(DialogRef			inDialog,
 					}
 					else if (IsShowContextualMenuClick(inoutEventPtr))
 					{
-						(OSStatus)ContextualMenuBuilder_DisplayMenu(window, inoutEventPtr, part);
+						(OSStatus)ContextualMenuBuilder_DisplayMenuForWindow(window, inoutEventPtr, part);
 						result = pascal_true;
 					}
 				}

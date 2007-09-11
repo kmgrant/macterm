@@ -68,6 +68,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CarbonEventUtilities.template.h>
 #include <Console.h>
 #include <ContextSensitiveMenu.h>
 #include <MemoryBlocks.h>
@@ -112,22 +113,174 @@ static void buildTerminalWindowContextualMenu		(MenuRef, HIWindowRef, EventRecor
 #pragma mark Public Methods
 
 /*!
+Displays a contextual menu that is appropriate for the
+specified view.  Call this method from a control
+contextual menu click handler.
+
+Most views do not allow contextual menus, and what you
+really need is a menu for the entire window; see
+ContextualMenuBuilder_DisplayMenuForWindow().
+
+(3.1)
+*/
+OSStatus
+ContextualMenuBuilder_DisplayMenuForView	(HIViewRef		inWhichView,
+											 EventRef		inContextualMenuClickEvent)
+{
+	MenuRef					menu = nullptr;
+	HelpSystem_KeyPhrase	keyPhrase = kHelpSystem_KeyPhraseDefault; // determines the Help menu item text and the search string
+	Boolean					failed = false;
+	Boolean					makeCustomMenu = true;
+	OSStatus				result = noErr;
+	
+	
+	// WARNING: Do not call HandleControlContextualMenuClick() here!
+	// This code is relied upon by contextual menu event handlers,
+	// and HandleControlContextualMenuClick() triggers contextual menu
+	// events.  Endless looping is...inconvenient.
+	
+	if (makeCustomMenu)
+	{
+		// create a menu with a unique menu ID in the allowed range
+		menu = ContextSensitiveMenu_New((SInt16*)nullptr/* menu ID */);
+		if (nullptr == menu)
+		{
+			failed = true;
+			result = memFullErr;
+		}
+	}
+	
+	if ((makeCustomMenu) && (nullptr != menu))
+	{
+		OSStatus	error = noErr;
+		AEDesc		contentsDesc;
+		
+		
+		// add appropriate items
+		error = ContextualMenuBuilder_PopulateMenuForView(inWhichView, inContextualMenuClickEvent,
+															menu, contentsDesc);
+		
+		// now that all items have been added, notify the Contextual Menu modules to clean up
+		ContextSensitiveMenu_DoneAddingItems(menu);
+		
+		if (noErr == error)
+		{
+			UInt32		selectionType = 0;
+			SInt16		menuID = 0;
+			UInt16		itemNumber = 0;
+			Point		globalMouse;
+			
+			
+			// determine the mouse location
+			{
+				HIViewRef	contentView = nullptr;
+				
+				
+				error = HIViewFindByID(HIViewGetRoot(HIViewGetWindow(inWhichView)),
+										kHIViewWindowContentID, &contentView);
+				if (noErr == error)
+				{
+					HIPoint		mouseLocation = CGPointZero;
+					
+					
+					// determine window-relative location, and convert it to content-local
+					error = CarbonEventUtilities_GetEventParameter(inContextualMenuClickEvent,
+																	kEventParamWindowMouseLocation,
+																	typeHIPoint, mouseLocation);
+					if (noErr == error)
+					{
+						error = HIViewConvertPoint(&mouseLocation, nullptr/* source view or null for window */,
+													contentView/* destination view */);
+						if (noErr == error)
+						{
+							// the content-local mouse coordinates match QuickDraw “local”
+							// coordinates, and can finally be converted to a global point
+							globalMouse.h = STATIC_CAST(mouseLocation.x, SInt16);
+							globalMouse.v = STATIC_CAST(mouseLocation.y, SInt16);
+							(Point*)QDLocalToGlobalPoint(GetWindowPort(GetControlOwner(inWhichView)), &globalMouse);
+						}
+					}
+				}
+			}
+			
+			// display and track the menu, getting the name of the Help item from the MacTelnet resource file
+			if (noErr == error)
+			{
+				HelpSystem_ResultCode	helpSystemResult = kHelpSystem_ResultCodeSuccess;
+				CFStringRef				helpCFString = nullptr;
+				Str255					helpStringBuffer;
+				ConstStringPtr			helpStringAddress = nullptr; // by default do not specify the help item
+				
+				
+				// try to retrieve the name of the help system
+				helpSystemResult = HelpSystem_CopyKeyPhraseCFString(keyPhrase, helpCFString);
+				if (kHelpSystem_ResultCodeSuccess == helpSystemResult)
+				{
+					// retrieved CFString; must convert to Pascal string due to limitations in ContextualMenuSelect()
+					Boolean		conversionOK = false;
+					
+					
+					conversionOK = CFStringGetPascalString(helpCFString, helpStringBuffer, sizeof(helpStringBuffer),
+															CFStringGetSystemEncoding());
+					if (conversionOK)
+					{
+						// success; set the pointer to the buffer location
+						helpStringAddress = helpStringBuffer;
+					}
+					CFRelease(helpCFString), helpCFString = nullptr;
+				}
+				result = ContextualMenuSelect(menu, globalMouse, false/* reserved */, gHelpType,
+												helpStringAddress, &contentsDesc, &selectionType, &menuID, &itemNumber);
+			}
+			
+			if (userCanceledErr != result) failed = true;
+			else
+			{
+				if (kCMNothingSelected != selectionType)
+				{
+					if (kCMShowHelpSelected == selectionType)
+					{
+						// TMP - just pick something to search for
+						HelpSystem_DisplayHelpFromKeyPhrase(keyPhrase);
+					}
+					else if (kCMMenuItemSelected == selectionType)
+					{
+						UInt32		commandID = 0;
+						
+						
+						if (kContextSensitiveMenu_DefaultMenuID == menuID)
+						{
+							if (noErr == GetMenuItemCommandID(menu, itemNumber, &commandID))
+							{
+								failed = (!MenuBar_HandleMenuCommandByID(commandID));
+							}
+							else failed = true;
+						}
+					}
+					else failed = true;
+				}
+			}
+		}
+		ContextSensitiveMenu_Dispose(&menu);
+	}
+	
+	return result;
+}// DisplayMenuForView
+
+
+/*!
 Displays a contextual menu for the specified window
 that is appropriate for the window.  Call this method
 after you have determined that a contextual menu display
 event has occurred in the user focus window, and you
 know what part of the window was hit.
 
-Unlike ContextualMenuBuilder_PopulateMenuForWindow(),
-the event and window part parameters are not optional
-here.  They are used to determine the menu location.
-
 (3.1)
 */
 OSStatus
-ContextualMenuBuilder_DisplayMenu	(HIWindowRef	inWhichWindow,
-									 EventRecord*	inoutEventPtr,
-									 SInt16			inWindowPart)
+ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef		inWhichWindow,
+											 EventRecord*		inoutEventPtr,
+											 WindowPartCode		inWindowPart)
 {
 	MenuRef					menu = nullptr;
 	HelpSystem_KeyPhrase	keyPhrase = kHelpSystem_KeyPhraseDefault; // determines the Help menu item text and the search string
@@ -254,7 +407,61 @@ ContextualMenuBuilder_DisplayMenu	(HIWindowRef	inWhichWindow,
 	}
 	
 	return result;
-}// DisplayMenu
+}// DisplayMenuForWindow
+
+
+/*!
+Appends contextual items to a menu that are appropriate
+for the specified view and event (mouse location, modifier
+keys, etc.).
+
+A descriptor for the contents of the specified view may
+also be constructed; you can use this (for instance) to
+tell the Contextual Menu Manager what is in the view so
+that appropriate plug-ins can add their own items.  You
+must call AEDisposeDesc() on this result.
+
+Most views do not allow contextual menus, and what you
+really need is a menu for the entire window; see
+ContextualMenuBuilder_PopulateMenuForWindow().
+
+(3.1)
+*/
+OSStatus
+ContextualMenuBuilder_PopulateMenuForView	(HIViewRef		inWhichView,
+											 EventRef		inContextualMenuClickEvent,
+											 MenuRef		inoutMenu,
+											 AEDesc&		inoutViewContentsDesc)
+{
+	Boolean		failed = false;
+	OSStatus	result = noErr;
+	
+	
+	result = AppleEventUtilities_InitAEDesc(&inoutViewContentsDesc);
+	assert_noerr(result);
+	
+	if (nullptr != inoutMenu)
+	{
+		// determine what should go in the menu
+		// UNIMPLEMENTED
+		failed = true;
+		
+		unless (failed)
+		{
+			// Depending upon the view type, there may be data that can be used by contextual
+			// menu plug-ins.  The method of getting that data also depends on the view type.
+			// See what kind of view the contextual-menu-display event was for, and send that
+			// view’s data (usually the current selection) to the plug-ins via a new Apple
+			// Event descriptor.
+			// UNIMPLEMENTED
+			
+			// now that all items have been added, notify the Contextual Menu modules to clean up
+			ContextSensitiveMenu_DoneAddingItems(inoutMenu);
+		}
+	}
+	
+	return result;
+}// PopulateMenuForView
 
 
 /*!
@@ -280,11 +487,11 @@ keys will be ignored.
 (3.0)
 */
 OSStatus
-ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef	inWhichWindow,
-												 EventRecord*	inoutEventPtrOrNull,
-												 SInt16			inWindowPart,
-												 MenuRef		inoutMenu,
-												 AEDesc&		inoutWindowContentsDesc)
+ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef		inWhichWindow,
+												 EventRecord*		inoutEventPtrOrNull,
+												 WindowPartCode		inWindowPart,
+												 MenuRef			inoutMenu,
+												 AEDesc&			inoutWindowContentsDesc)
 {
 	WindowInfoRef			windowFeaturesRef = nullptr;
 	WindowInfoDescriptor	windowDescriptor = kInvalidWindowInfoDescriptor;
@@ -307,6 +514,7 @@ ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef	inWhichWindow,
 		switch (inWindowPart)
 		{
 		//case inSysWindow:
+		case inStructure:
 		case inContent:
 		case inDrag:
 		case inGrow:
@@ -315,6 +523,7 @@ ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef	inWhichWindow,
 		case inZoomOut:
 		case inCollapseBox:
 		case inProxyIcon:
+		case inToolbarButton:
 		case inNoWindow:
 			switch (windowDescriptor)
 			{

@@ -3,7 +3,7 @@
 	TerminalBackground.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -44,6 +44,7 @@
 
 // MacTelnet includes
 #include "ConstantsRegistry.h"
+#include "ContextualMenuBuilder.h"
 #include "NetEvents.h"
 #include "TerminalBackground.h"
 #include "UIStrings.h"
@@ -64,13 +65,15 @@ typedef MyTerminalBackground const*		MyTerminalBackgroundConstPtr;
 
 #pragma mark Internal Method Prototypes
 
-static OSStatus			receiveBackgroundDraw			(EventHandlerCallRef, EventRef,
-														 MyTerminalBackgroundPtr);
-static pascal OSStatus  receiveBackgroundHIObjectEvents	(EventHandlerCallRef, EventRef, void*);
-static OSStatus			receiveBackgroundRegionRequest	(EventHandlerCallRef, EventRef,
-														 MyTerminalBackgroundPtr);
-static OSStatus			receiveBackgroundSetData		(EventHandlerCallRef, EventRef,
-														 MyTerminalBackgroundPtr);
+static OSStatus			receiveBackgroundContextualMenuSelect	(EventHandlerCallRef, EventRef,
+																 MyTerminalBackgroundPtr);
+static OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
+																 MyTerminalBackgroundPtr);
+static pascal OSStatus  receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
+static OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
+																 MyTerminalBackgroundPtr);
+static OSStatus			receiveBackgroundSetData				(EventHandlerCallRef, EventRef,
+																 MyTerminalBackgroundPtr);
 
 #pragma mark Variables
 
@@ -104,6 +107,7 @@ TerminalBackground_Init ()
 									{ kEventClassHIObject, kEventHIObjectDestruct },
 									{ kEventClassControl, kEventControlInitialize },
 									{ kEventClassControl, kEventControlDraw },
+									{ kEventClassControl, kEventControlContextualMenuClick },
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlSetData },
 									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
@@ -120,7 +124,7 @@ TerminalBackground_Init ()
 											gMyBackgroundViewConstructorUPP,
 											GetEventTypeCount(whenHIObjectEventOccurs), whenHIObjectEventOccurs,
 											nullptr/* constructor data */, &gMyBackgroundViewHIObjectClassRef);
-		assert(noErr == error);
+		assert_noerr(error);
 	}
 	
 	gTerminalBackgroundInitialized = true;
@@ -234,6 +238,52 @@ TerminalBackground_CreateHIView		(WindowRef		inParentWindow,
 
 
 #pragma mark Internal Methods
+
+/*!
+Handles "kEventControlContextualMenuClick" of "kEventClassControl"
+for terminal backgrounds.
+
+(3.1)
+*/
+static OSStatus
+receiveBackgroundContextualMenuSelect	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
+										 EventRef					inEvent,
+										 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlContextualMenuClick);
+	{
+		HIViewRef	view = nullptr;
+		
+		
+		// determine the view in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		
+		// if the view was found, proceed
+		if (noErr == result)
+		{
+			if (view == inMyTerminalBackgroundPtr->view)
+			{
+				// display a contextual menu
+				(OSStatus)ContextualMenuBuilder_DisplayMenuForView(view, inEvent);
+				result = noErr; // event is completely handled
+			}
+			else
+			{
+				// ???
+				result = eventNotHandledErr;
+			}
+		}
+	}
+	
+	return result;
+}// receiveBackgroundContextualMenuSelect
+
 
 /*!
 Handles "kEventControlDraw" of "kEventClassControl".
@@ -626,12 +676,23 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			result = CallNextEventHandler(inHandlerCallRef, inEvent);
 			if (noErr == result)
 			{
-				UInt32		controlFeatures = kControlSupportsEmbedding;
+				UInt32		controlFeatures = kControlSupportsEmbedding |
+												kControlSupportsContextualMenus;
 				
 				
 				// return the features of this control
 				result = SetEventParameter(inEvent, kEventParamControlFeatures, typeUInt32,
 											sizeof(controlFeatures), &controlFeatures);
+				assert_noerr(result);
+			}
+			break;
+		
+		case kEventControlContextualMenuClick:
+			Console_WriteLine("HI OBJECT control contextual menu click for terminal background");
+			result = CallNextEventHandler(inHandlerCallRef, inEvent);
+			if ((noErr == result) || (eventNotHandledErr == result))
+			{
+				result = receiveBackgroundContextualMenuSelect(inHandlerCallRef, inEvent, dataPtr);
 			}
 			break;
 		
@@ -719,11 +780,8 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 				{
 				case kControlStructureMetaPart:
 				case kControlContentMetaPart:
-					GetControlBounds(dataPtr->view, &partBounds);
-					SetRect(&partBounds, 0, 0, partBounds.right - partBounds.left, partBounds.bottom - partBounds.top);
-					break;
-				
-				case FUTURE_SYMBOL(-3, kControlOpaqueMetaPart):
+				case kControlOpaqueMetaPart:
+				case kControlClickableMetaPart:
 					GetControlBounds(dataPtr->view, &partBounds);
 					SetRect(&partBounds, 0, 0, partBounds.right - partBounds.left, partBounds.bottom - partBounds.top);
 					break;
