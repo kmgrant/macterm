@@ -294,7 +294,7 @@ SessionFactory_Init ()
 		error = InstallApplicationEventHandler(gCarbonEventSessionSetStateUPP, GetEventTypeCount(whenSessionStateMustChange),
 												whenSessionStateMustChange, nullptr/* user data */,
 												&gCarbonEventSessionSetStateHandler/* event handler reference */);
-		assert(noErr == error);
+		assert_noerr(error);
 	}
 	
 	// under Carbon, listen for special Carbon Events that effectively invoke
@@ -313,7 +313,7 @@ SessionFactory_Init ()
 												GetEventTypeCount(whenSessionDataIsAvailableForProcessing),
 												whenSessionDataIsAvailableForProcessing, nullptr/* user data */,
 												&gCarbonEventSessionProcessDataHandler/* event handler reference */);
-		assert(noErr == error);
+		assert_noerr(error);
 	}
 }// Init
 

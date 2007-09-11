@@ -935,13 +935,13 @@ Session_CopyStateIconRef	(SessionRef		inRef,
 		case kSession_StateActiveUnstable:
 		case kSession_StateActiveStable:
 			outCopiedIcon = gSessionActiveIcon();
-			assert(noErr == AcquireIconRef(outCopiedIcon));
+			assert_noerr(AcquireIconRef(outCopiedIcon));
 			break;
 		
 		case kSession_StateDead:
 		case kSession_StateImminentDisposal:
 			outCopiedIcon = gSessionDeadIcon();
-			assert(noErr == AcquireIconRef(outCopiedIcon));
+			assert_noerr(AcquireIconRef(outCopiedIcon));
 			break;
 		
 		default:
@@ -6742,22 +6742,22 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 																GetEventTypeCount(whenTerminalViewTextInput),
 																whenTerminalViewTextInput, session/* user data */,
 																&ptr->terminalViewTextInputHandlers[view]);
-							assert(noErr == error);
+							assert_noerr(error);
 							
 							// ensure drags to this view are seen
 							error = HIViewInstallEventHandler(view, ptr->terminalViewDragDropUPP,
 																GetEventTypeCount(whenTerminalViewDragDrop),
 																whenTerminalViewDragDrop, session/* user data */,
 																&ptr->terminalViewDragDropHandlers[view]);
-							assert(noErr == error);
+							assert_noerr(error);
 							error = SetControlDragTrackingEnabled(view, true/* is drag enabled */);
-							assert(noErr == error);
+							assert_noerr(error);
 						}
 						
 						// enable drag tracking for the window, if it is not enabled already
 						error = SetAutomaticControlDragTrackingEnabledForWindow
 								(GetControlOwner(view), true/* is drag enabled */);
-						assert(noErr == error);
+						assert_noerr(error);
 					}
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
 				}

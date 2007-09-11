@@ -488,7 +488,7 @@ TerminalView_Init ()
 											kHIViewClassID/* base class */, 0/* options */, gMyTextViewConstructorUPP,
 											GetEventTypeCount(whenHIObjectEventOccurs), whenHIObjectEventOccurs,
 											nullptr/* constructor data */, &gTerminalTextViewHIObjectClassRef);
-		assert(noErr == error);
+		assert_noerr(error);
 	}
 	
 	// set up mappings between VT graphics ASCII characters and special
@@ -2818,11 +2818,11 @@ initialize		(TerminalScreenRef	inScreenDataSource,
 		
 		// see the HIObject callbacks, this will already exist
 		error = HIViewSetVisible(this->contentHIView, true);
-		assert(noErr == error);
+		assert_noerr(error);
 		
-		assert(noErr == TerminalBackground_CreateHIView(inOwningWindow, this->backgroundHIView));
+		assert_noerr(TerminalBackground_CreateHIView(inOwningWindow, this->backgroundHIView));
 		error = HIViewSetVisible(this->backgroundHIView, true);
-		assert(noErr == error);
+		assert_noerr(error);
 		
 		// since no extra rendering, etc. is required, make this a mere ALIAS
 		// for the background view; this is so that code intending to operate
@@ -2832,7 +2832,7 @@ initialize		(TerminalScreenRef	inScreenDataSource,
 		
 		// set up embedding hierarchy
 		error = HIViewAddSubview(this->backgroundHIView, this->contentHIView);
-		assert(noErr == error);
+		assert_noerr(error);
 	}
 	
 	// install a monitor on the container that finds out about
@@ -3172,9 +3172,9 @@ clipToScreen	(TerminalViewPtr	inTerminalViewPtr)
 	// convert the view location into QuickDraw local coordinates,
 	// which also match the coordinates of the window content view
 	error = HIViewFindByID(HIViewGetRoot(inTerminalViewPtr->window.ref), kHIViewWindowContentID, &windowContentView);
-	assert(noErr == error);
+	assert_noerr(error);
 	error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
-	assert(noErr == error);
+	assert_noerr(error);
 	error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
 	SetRect(&contentRect, STATIC_CAST(contentFrame.origin.x, SInt16), STATIC_CAST(contentFrame.origin.y, SInt16),
 			STATIC_CAST(contentFrame.origin.x + contentFrame.size.width, SInt16),
@@ -5017,9 +5017,9 @@ getScreenOriginFloat	(TerminalViewPtr	inTerminalViewPtr,
 	
 	
 	error = HIViewFindByID(HIViewGetRoot(inTerminalViewPtr->window.ref), kHIViewWindowContentID, &windowContentView);
-	assert(noErr == error);
+	assert_noerr(error);
 	error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
-	assert(noErr == error);
+	assert_noerr(error);
 	error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
 	outScreenPositionX = contentFrame.origin.x;
 	outScreenPositionY = contentFrame.origin.y;
@@ -6716,8 +6716,8 @@ receiveTerminalViewActiveStateChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHand
 
 
 /*!
-Handles "kEventWindowContextualMenuSelect" of "kEventClassWindow"
-for the New Session dialog.
+Handles "kEventControlContextualMenuClick" of "kEventClassControl"
+for terminal views.
 
 (3.0)
 */

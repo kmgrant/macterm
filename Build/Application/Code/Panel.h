@@ -15,7 +15,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -389,7 +389,7 @@ public:
 		
 		// adjust the size of this panel in the list
 		Panel_GetContainerView(inPanel, container);
-		assert(noErr == HIViewGetFrame(container, &newFrame));
+		assert_noerr(HIViewGetFrame(container, &newFrame));
 		if (_delta)
 		{
 			newFrame.size.width += _horizontal;
@@ -400,7 +400,7 @@ public:
 			newFrame.size.width = _horizontal;
 			newFrame.size.height = _vertical;
 		}
-		assert(noErr == HIViewSetFrame(container, &newFrame));
+		assert_noerr(HIViewSetFrame(container, &newFrame));
 	}
 
 protected:

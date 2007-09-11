@@ -3,7 +3,7 @@
 	PrefPanelConfigurations.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -314,7 +314,7 @@ createPanelControls		(Panel_Ref		inPanel,
 		// define a callback for specifying what data belongs in the list
 		callbacks.version = kDataBrowserLatestCallbacks;
 		error = InitDataBrowserCallbacks(&callbacks);
-		assert(noErr == error);
+		assert_noerr(error);
 	#if 0
 		callbacks.u.v1.itemDataCallback = NewDataBrowserItemDataUPP(accessDataBrowserItemData);
 		assert(nullptr != callbacks.u.v1.itemDataCallback);

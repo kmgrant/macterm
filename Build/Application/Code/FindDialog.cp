@@ -3,7 +3,7 @@
 	FindDialog.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -262,7 +262,7 @@ selfRef(REINTERPRET_CAST(this, FindDialogRef))
 		
 		
 		error = GetBevelButtonMenuRef(this->popUpMenuKeywordHistory, &this->keywordHistoryMenuRef);
-		assert(noErr == error);
+		assert_noerr(error);
 		
 		// in addition, use a 32-bit icon, if available
 		{

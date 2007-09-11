@@ -3,7 +3,7 @@
 	PrefPanelTerminals.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -162,7 +162,7 @@ createPanelControls		(Panel_Ref		inPanel,
 	
 	SetRect(&containerBounds, 0, 0, 0, 0);
 	error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &container);
-	assert(noErr == error);
+	assert_noerr(error);
 	Panel_SetContainerView(inPanel, container);
 	SetControlVisibility(container, false/* visible */, false/* draw */);
 	
