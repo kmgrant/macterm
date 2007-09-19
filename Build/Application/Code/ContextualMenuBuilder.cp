@@ -35,7 +35,7 @@
 	  menu to the user!
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -106,6 +106,7 @@ static void buildAboutBoxContextualMenu				(MenuRef, HIWindowRef, EventRecord* =
 static void buildClipboardWindowContextualMenu		(MenuRef, HIWindowRef, EventRecord* = nullptr);
 static void buildEmptyContextualMenu				(MenuRef, HIWindowRef, EventRecord* = nullptr);
 static void buildSessionStatusWindowContextualMenu	(MenuRef, HIWindowRef, EventRecord* = nullptr);
+static void buildTerminalBackgroundContextualMenu	(MenuRef, HIViewRef, EventRef = nullptr);
 static void buildTerminalWindowContextualMenu		(MenuRef, HIWindowRef, EventRecord* = nullptr);
 
 
@@ -443,8 +444,20 @@ ContextualMenuBuilder_PopulateMenuForView	(HIViewRef		inWhichView,
 	if (nullptr != inoutMenu)
 	{
 		// determine what should go in the menu
-		// UNIMPLEMENTED
-		failed = true;
+		if (HIObjectIsOfClass(REINTERPRET_CAST(inWhichView, HIObjectRef),
+								kConstantsRegistry_HIObjectClassIDTerminalBackgroundView))
+		{
+			// create an AEDesc describing the color
+			// UNIMPLEMENTED
+			//(OSStatus)BasicTypesAE_CreateRGBColorDesc(color, &inoutViewContentsDesc);
+			
+			// click in the background of a terminal view
+			buildTerminalBackgroundContextualMenu(inoutMenu, inWhichView, inContextualMenuClickEvent);
+		}
+		else
+		{
+			failed = true;
+		}
 		
 		unless (failed)
 		{
@@ -810,6 +823,49 @@ buildSessionStatusWindowContextualMenu	(MenuRef		inMenu,
 		}
 	}
 }// buildSessionStatusWindowContextualMenu
+
+
+/*!
+This routine will look at the frontmost window as being
+the Session Status window, and will construct a contextual
+menu appropriate for it.  The given window must have
+Window Info associated with it (see "WindowInfo.cp").
+
+(3.1)
+*/
+static void
+buildTerminalBackgroundContextualMenu	(MenuRef		inMenu,
+										 HIViewRef		inWhichView,
+										 EventRef		inEventOrNull)
+{
+	ContextSensitiveMenu_Item	itemInfo;
+	UInt32						modifiers = 0;
+	
+	
+	if (nullptr != inEventOrNull)
+	{
+		// this parameter is optional
+		(OSStatus)CarbonEventUtilities_GetEventParameter(inEventOrNull, kEventParamKeyModifiers,
+															typeUInt32, modifiers);
+	}
+	
+	// set up states for all items used below
+	MenuBar_SetUpMenuItemState(kCommandSetBackground, modifiers);
+	
+	// window-related menu items
+	ContextSensitiveMenu_NewItemGroup(inMenu);
+	
+	ContextSensitiveMenu_InitItem(&itemInfo);
+	itemInfo.commandID = kCommandSetBackground;
+	if (IsMenuCommandEnabled(nullptr/* menu */, itemInfo.commandID))
+	{
+		if (UIStrings_Copy(kUIStrings_ContextualMenuChangeBackground, itemInfo.commandText).ok())
+		{
+			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Close This Window”
+			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
+		}
+	}
+}// buildTerminalBackgroundContextualMenu
 
 
 /*!

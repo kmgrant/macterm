@@ -4,7 +4,7 @@
   <object name="rootObject" class="NSCustomObject" id="1">
     <string name="customClass">NSApplication</string>
   </object>
-  <array count="204" name="allObjects">
+  <array count="205" name="allObjects">
     <object class="IBCarbonMenu" id="29">
       <string name="title">Untitled</string>
       <array count="12" name="items">
@@ -448,7 +448,7 @@
           <object name="submenu" class="IBCarbonMenu" id="309">
             <string name="title">View</string>
             <int name="menuID">515</int>
-            <array count="19" name="items">
+            <array count="20" name="items">
               <object class="IBCarbonMenuItem" id="311">
                 <boolean name="disabled">TRUE</boolean>
                 <boolean name="sectionHeader">TRUE</boolean>
@@ -479,6 +479,11 @@
               <object class="IBCarbonMenuItem" id="315">
                 <boolean name="separator">TRUE</boolean>
                 <boolean name="updateSingleItem">TRUE</boolean>
+              </object>
+              <object class="IBCarbonMenuItem" id="473">
+                <boolean name="updateSingleItem">TRUE</boolean>
+                <string name="title">Change Frame Background…</string>
+                <ostype name="command">SBkg</ostype>
               </object>
               <object class="IBCarbonMenuItem" id="316">
                 <boolean name="updateSingleItem">TRUE</boolean>
@@ -1367,8 +1372,9 @@
     <reference idRef="470"/>
     <reference idRef="471"/>
     <reference idRef="472"/>
+    <reference idRef="473"/>
   </array>
-  <array count="204" name="allParents">
+  <array count="205" name="allParents">
     <reference idRef="1"/>
     <reference idRef="182"/>
     <reference idRef="29"/>
@@ -1573,6 +1579,7 @@
     <reference idRef="274"/>
     <reference idRef="274"/>
     <reference idRef="385"/>
+    <reference idRef="309"/>
   </array>
   <dictionary count="19" name="nameTable">
     <string>Files Owner</string>
@@ -1614,5 +1621,5 @@
     <string>MenuBar</string>
     <reference idRef="29"/>
   </dictionary>
-  <unsigned_int name="nextObjectID">473</unsigned_int>
+  <unsigned_int name="nextObjectID">474</unsigned_int>
 </object>

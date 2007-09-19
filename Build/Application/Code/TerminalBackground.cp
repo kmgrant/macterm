@@ -43,8 +43,11 @@
 #include <Console.h>
 
 // MacTelnet includes
+#include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "ContextualMenuBuilder.h"
+#include "DialogUtilities.h"
+#include "EventLoop.h"
 #include "NetEvents.h"
 #include "TerminalBackground.h"
 #include "UIStrings.h"
@@ -68,6 +71,8 @@ typedef MyTerminalBackground const*		MyTerminalBackgroundConstPtr;
 static OSStatus			receiveBackgroundContextualMenuSelect	(EventHandlerCallRef, EventRef,
 																 MyTerminalBackgroundPtr);
 static OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
+																 MyTerminalBackgroundPtr);
+static OSStatus			receiveBackgroundHICommand				(EventHandlerCallRef, EventRef,
 																 MyTerminalBackgroundPtr);
 static pascal OSStatus  receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
 static OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
@@ -110,6 +115,7 @@ TerminalBackground_Init ()
 									{ kEventClassControl, kEventControlContextualMenuClick },
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlSetData },
+									{ kEventClassCommand, kEventCommandProcess },
 									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
 									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
 									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable }
@@ -145,23 +151,6 @@ TerminalBackground_Done ()
 	HIObjectUnregisterClass(gMyBackgroundViewHIObjectClassRef), gMyBackgroundViewHIObjectClassRef = nullptr;
 	DisposeEventHandlerUPP(gMyBackgroundViewConstructorUPP), gMyBackgroundViewConstructorUPP = nullptr;
 }// Done
-
-
-/*!
-Constructor.  See receiveTerminalBackgroundHIObjectEvents().
-
-(3.1)
-*/
-MyTerminalBackground::
-MyTerminalBackground	(HIViewRef		inSuperclassViewInstance)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-view(inSuperclassViewInstance)
-{
-	backgroundColor.red = RGBCOLOR_INTENSITY_MAX;
-	backgroundColor.green = RGBCOLOR_INTENSITY_MAX;
-	backgroundColor.blue = RGBCOLOR_INTENSITY_MAX;
-}// MyTerminalBackground 1-argument constructor
 
 
 /*!
@@ -240,6 +229,23 @@ TerminalBackground_CreateHIView		(WindowRef		inParentWindow,
 #pragma mark Internal Methods
 
 /*!
+Constructor.  See receiveTerminalBackgroundHIObjectEvents().
+
+(3.1)
+*/
+MyTerminalBackground::
+MyTerminalBackground	(HIViewRef		inSuperclassViewInstance)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+view(inSuperclassViewInstance)
+{
+	backgroundColor.red = RGBCOLOR_INTENSITY_MAX;
+	backgroundColor.green = RGBCOLOR_INTENSITY_MAX;
+	backgroundColor.blue = RGBCOLOR_INTENSITY_MAX;
+}// MyTerminalBackground 1-argument constructor
+
+
+/*!
 Handles "kEventControlContextualMenuClick" of "kEventClassControl"
 for terminal backgrounds.
 
@@ -269,6 +275,13 @@ receiveBackgroundContextualMenuSelect	(EventHandlerCallRef		UNUSED_ARGUMENT(inHa
 		{
 			if (view == inMyTerminalBackgroundPtr->view)
 			{
+				// make this the current focus, so that menu commands are sent to it!
+				SetUserFocusWindow(HIViewGetWindow(view));
+				unless (HIViewSubtreeContainsFocus(view))
+				{
+					HIViewAdvanceFocus(view, 0/* modifiers */);
+				}
+				
 				// display a contextual menu
 				(OSStatus)ContextualMenuBuilder_DisplayMenuForView(view, inEvent);
 				result = noErr; // event is completely handled
@@ -402,6 +415,94 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveBackgroundDraw
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the terminal background.  Responds by displaying a
+color chooser and changing the background color if the
+user accepts.
+
+(3.1)
+*/
+static OSStatus
+receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
+							 EventRef					inEvent,
+							 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	{
+		HICommand	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			// don’t claim to have handled any commands not shown below
+			result = eventNotHandledErr;
+			
+			switch (kEventKind)
+			{
+			case kEventCommandProcess:
+				// execute a command
+				switch (received.commandID)
+				{
+				case kCommandSetBackground:
+					{
+						UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+						CFStringRef				askColorCFString = nullptr;
+						PickerMenuItemInfo		editMenuInfo;
+						Boolean					releaseAskColorCFString = true;
+						
+						
+						stringResult = UIStrings_Copy(kUIStrings_SystemDialogPromptPickColor, askColorCFString);
+						unless (stringResult.ok())
+						{
+							// cannot find prompt, but this is not a serious problem
+							askColorCFString = CFSTR("");
+							releaseAskColorCFString = false;
+						}
+						
+						DeactivateFrontmostWindow();
+						result = ColorUtilities_ColorChooserDialogDisplay
+									(askColorCFString, &inMyTerminalBackgroundPtr->backgroundColor/* input */,
+										&inMyTerminalBackgroundPtr->backgroundColor/* output */,
+										true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
+										&editMenuInfo);
+						RestoreFrontmostWindow();
+						(OSStatus)HIViewSetNeedsDisplay(inMyTerminalBackgroundPtr->view, true);
+						
+						if (releaseAskColorCFString)
+						{
+							CFRelease(askColorCFString), askColorCFString = nullptr;
+						}
+					}
+					result = noErr;
+					break;
+				
+				default:
+					// ???
+					break;
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// receiveBackgroundHICommand
 
 
 /*!
@@ -666,6 +767,19 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			break;
 		}
 	}
+	else if (kEventClass == kEventClassCommand)
+	{
+		switch (kEventKind)
+		{
+		case kEventCommandProcess:
+			result = receiveBackgroundHICommand(inHandlerCallRef, inEvent, dataPtr);
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
 	else
 	{
 		assert(kEventClass == kEventClassControl);
@@ -688,7 +802,7 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			break;
 		
 		case kEventControlContextualMenuClick:
-			Console_WriteLine("HI OBJECT control contextual menu click for terminal background");
+			//Console_WriteLine("HI OBJECT control contextual menu click for terminal background");
 			result = CallNextEventHandler(inHandlerCallRef, inEvent);
 			if ((noErr == result) || (eventNotHandledErr == result))
 			{

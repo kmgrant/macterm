@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20070918',
     '20070908',
     '20070906',
     '20070827',
@@ -51,6 +52,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20070918': [
+		'Terminal view backgrounds now have a user interface for changing the color, via menu or contextual menu.',
+		'Session Info window toolbar items rearranged in customization sheet, so that Customize is not hidden.',
+	],
 	'20070908': [
 		'Fixed a few possible crash conditions.',
 		'Redesigned the Find icon on the VT220 keypad.',

@@ -184,6 +184,7 @@ Strings used for commands in context-sensitive pop-up menus.
 enum UIStrings_ContextualMenuCFString
 {
 	kUIStrings_ContextualMenuArrangeAllInFront			= 'StkW',
+	kUIStrings_ContextualMenuChangeBackground			= 'SBkg',
 	kUIStrings_ContextualMenuCloseThisWindow			= 'Kill',
 	kUIStrings_ContextualMenuCopyToClipboard			= 'Copy',
 	kUIStrings_ContextualMenuCopyUsingTabsForSpaces		= 'CpyT',

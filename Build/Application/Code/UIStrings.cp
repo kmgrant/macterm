@@ -536,6 +536,11 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 													CFSTR("kUIStrings_ContextualMenuArrangeAllInFront"));
 		break;
 	
+	case kUIStrings_ContextualMenuChangeBackground:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Change Background..."), CFSTR("ContextualMenus"),
+													CFSTR("kUIStrings_ContextualMenuChangeBackground"));
+		break;
+	
 	case kUIStrings_ContextualMenuCloseThisWindow:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Close This Window"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuCloseThisWindow"));
