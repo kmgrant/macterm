@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20070919',
     '20070918',
     '20070908',
     '20070906',
@@ -52,6 +53,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20070919': [
+		'Terminal view resize commands that set rows and columns will now work properly in font-size resize mode.',
+	],
 	'20070918': [
 		'Terminal view backgrounds now have a user interface for changing the color, via menu or contextual menu.',
 		'Session Info window toolbar items rearranged in customization sheet, so that Customize is not hidden.',

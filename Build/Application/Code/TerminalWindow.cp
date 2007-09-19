@@ -5097,16 +5097,24 @@ setStandardState	(TerminalWindowPtr	inPtr,
 					 SInt16				inCountMaximumViewableRows,
 					 Boolean			inResizeWindow)
 {
-	SInt16		screenWidth = 0;
-	SInt16		screenHeight = 0;
-	SInt16		windowWidth = 0;
-	SInt16		windowHeight = 0;
+	SInt16						screenWidth = 0;
+	SInt16						screenHeight = 0;
+	SInt16						windowWidth = 0;
+	SInt16						windowHeight = 0;
+	TerminalViewRef				activeView = getActiveView(inPtr)/* TEMPORARY - must consider a list of views */;
+	TerminalView_DisplayMode	oldMode = TerminalView_ReturnDisplayMode(activeView);
 	
 	
-	TerminalView_GetTheoreticalViewSize(getActiveView(inPtr)/* TEMPORARY - must consider a list of views */,
+	TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
 										inCountMaximumViewableColumns, inCountMaximumViewableRows,
 										true/* include insets */, &screenWidth, &screenHeight);
 	getWindowSizeFromViewSize(inPtr, screenWidth, screenHeight, &windowWidth, &windowHeight);
+	
+	// temporarily force the display mode to be dimension-based, otherwise
+	// the act of resizing in “font size mode” would not product the
+	// expected result
+	TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
+	
 	(OSStatus)inPtr->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
 	{
 		Rect		bounds;
@@ -5126,6 +5134,9 @@ setStandardState	(TerminalWindowPtr	inPtr,
 		error = SetWindowBounds(inPtr->window, kWindowContentRgn, &bounds);
 		assert_noerr(error);
 	}
+	
+	// finally restore the user’s preference for resize
+	TerminalView_SetDisplayMode(activeView, oldMode);
 }// setStandardState
 
 
