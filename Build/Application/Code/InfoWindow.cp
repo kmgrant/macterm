@@ -1125,11 +1125,11 @@ receiveToolbarRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDNewDefaultSession);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDNewShellSession);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDNewLoginSession);
+						CFArrayAppendValue(allowedIdentifiers, kHIToolbarCustomizeIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDStackWindows);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
-						CFArrayAppendValue(allowedIdentifiers, kHIToolbarCustomizeIdentifier);
 					}
 				}
 				break;
