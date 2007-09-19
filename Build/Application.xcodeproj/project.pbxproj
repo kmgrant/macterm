@@ -225,7 +225,6 @@
 		0AE285DA0B8D7AEA00E2253A /* IconForKeypadPageUp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */; };
 		0AE285F20B8D7EF800E2253A /* IconForKeypadDelete.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */; };
 		0AE286000B8D830600E2253A /* IconForKeypadFind.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */; };
-		0AE6E5F90B5351E10065FB62 /* PrefPanelGeneral.cp in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46FE05055432A400ACDF3A /* PrefPanelGeneral.cp */; };
 		0AEDD0950A5F76DB00705C1C /* IconForPreferenceCollections.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */; };
 		0AF289A306CC9ADC002A89A7 /* KioskDisableFloater.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF289A106CC9ADC002A89A7 /* KioskDisableFloater.nib */; };
 		0AF46B600B05495C00666419 /* Quills.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */; };
@@ -290,7 +289,6 @@
 			files = (
 				0AF46B600B05495C00666419 /* Quills.framework in Copy Frameworks */,
 				0A9AF68B0AF5A95100E7DF18 /* PyMacTelnet.framework in Copy Frameworks */,
-				0AE6E5F90B5351E10065FB62 /* PrefPanelGeneral.cp in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
