@@ -307,7 +307,7 @@ static void					reverseScreenDimensionChanges	(Undoables_ActionInstruction, Undo
 static pascal void			scrollProc						(HIViewRef, HIViewPartCode);
 static void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
-static void					setStandardState				(TerminalWindowPtr, SInt16, SInt16, Boolean);
+static void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
 static void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
 static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 static void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -1049,6 +1049,13 @@ text in the toolbar).  If the font name is nullptr,
 the font is not changed.  If the size is 0, the
 size is not changed.
 
+The font and size are currently tied to the window
+dimensions, so adjusting these parameters will force
+the window to resize to use the new space.  In the
+future, it may make more sense to leave the user’s
+chosen size intact (at least, when the new view size
+will fit within the current window).
+
 IMPORTANT:	This API is under evaluation.  It does
 			not allow for the possibility of more
 			than one terminal view per window, in
@@ -1063,15 +1070,29 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 								 UInt16					inFontSizeOrZero)
 {
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalViewRef				activeView = getActiveView(ptr);
+	TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
+	TerminalView_ResultCode		viewResult = kTerminalView_ResultCodeSuccess;
+	SInt16						screenWidth = 0;
+	SInt16						screenHeight = 0;
 	
 	
-	// update terminal screen font attributes
-	TerminalView_SetFontAndSize(getActiveView(ptr), inFontFamilyNameOrNull, inFontSizeOrZero);
+	// update terminal screen font attributes; temporarily change the
+	// view mode to allow this, since the view might automatically
+	// be controlling its font size
+	oldMode = TerminalView_ReturnDisplayMode(activeView);
+	viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
+	assert(kTerminalView_ResultCodeSuccess == viewResult);
+	viewResult = TerminalView_SetFontAndSize(activeView, inFontFamilyNameOrNull, inFontSizeOrZero);
+	assert(kTerminalView_ResultCodeSuccess == viewResult);
+	viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
+	assert(kTerminalView_ResultCodeSuccess == viewResult);
 	
-	// set the standard state to be large enough for the specified number of columns and rows;
+	// set the standard state to be large enough for the current font and size;
 	// and, set window dimensions to this new standard size
-	setStandardState(ptr, Terminal_ReturnColumnCount(getActiveScreen(ptr)), Terminal_ReturnRowCount(getActiveScreen(ptr)),
-						true/* resize window */);
+	TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
+								true/* include insets */, screenWidth, screenHeight);
+	setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
 }// SetFontAndSize
 
 
@@ -1138,6 +1159,13 @@ in the given terminal window.  If split-panes are
 active, the total view size is shared among the
 panes, proportional to their current sizes.
 
+The screen size is currently tied to the window
+dimensions, so adjusting these parameters will
+force the window to resize to use the new space.
+In the future, it may make more sense to leave
+the user’s chosen size intact (at least, when the
+new view size will fit within the current window).
+
 As a convenience, you may choose to send the resize
 event back to MacTelnet, for recording into scripts.
 
@@ -1154,7 +1182,27 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 	
 	// set the standard state to be large enough for the specified number of columns and rows;
 	// and, set window dimensions to this new standard size
-	setStandardState(ptr, inNewColumnCount, inNewRowCount, true/* resize window */);
+	{
+		TerminalViewRef				activeView = getActiveView(ptr);
+		TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
+		TerminalView_ResultCode		viewResult = kTerminalView_ResultCodeSuccess;
+		SInt16						screenWidth = 0;
+		SInt16						screenHeight = 0;
+		
+		
+		// changing the window size will force the view to match;
+		// temporarily change the view mode to allow this, since
+		// the view might automatically be controlling its font size
+		oldMode = TerminalView_ReturnDisplayMode(activeView);
+		viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
+		assert(kTerminalView_ResultCodeSuccess == viewResult);
+		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
+											inNewColumnCount, inNewRowCount,
+											true/* include insets */, &screenWidth, &screenHeight);
+		setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+		viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
+		assert(kTerminalView_ResultCodeSuccess == viewResult);
+	}
 	
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeScreenDimensions, inRef/* context */);
 	
@@ -1779,7 +1827,16 @@ installedActions()
 	// set the standard state to be large enough for the specified number of columns and rows;
 	// and, use the standard size, initially; then, perform a maximize/restore to correct the
 	// initial-zoom quirk that would otherwise occur
-	setStandardState(this, inCountMaximumViewableColumns, inCountMaximumViewableRows, true/* resize window */);
+	{
+		SInt16		screenWidth = 0;
+		SInt16		screenHeight = 0;
+		
+		
+		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
+											inCountMaximumViewableColumns, inCountMaximumViewableRows,
+											true/* include insets */, &screenWidth, &screenHeight);
+		setStandardState(this, screenWidth, screenHeight, true/* resize window */);
+	}
 	
 	// stagger the window
 	{
@@ -5082,8 +5139,7 @@ setCursorInWindow	(WindowRef		inWindow,
 /*!
 Sets the standard state (for zooming) of the given
 terminal window to match the size required to fit
-the specified number of columns and rows using the
-current font metrics.
+the specified width and height in pixels.
 
 Once this is done, you can make the window this
 size by zooming “out”, or by passing "true" for
@@ -5093,28 +5149,15 @@ size by zooming “out”, or by passing "true" for
 */
 static void
 setStandardState	(TerminalWindowPtr	inPtr,
-					 SInt16				inCountMaximumViewableColumns,
-					 SInt16				inCountMaximumViewableRows,
+					 UInt16				inScreenWidthInPixels,
+					 UInt16				inScreenHeightInPixels,
 					 Boolean			inResizeWindow)
 {
-	SInt16						screenWidth = 0;
-	SInt16						screenHeight = 0;
-	SInt16						windowWidth = 0;
-	SInt16						windowHeight = 0;
-	TerminalViewRef				activeView = getActiveView(inPtr)/* TEMPORARY - must consider a list of views */;
-	TerminalView_DisplayMode	oldMode = TerminalView_ReturnDisplayMode(activeView);
+	SInt16		windowWidth = 0;
+	SInt16		windowHeight = 0;
 	
 	
-	TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
-										inCountMaximumViewableColumns, inCountMaximumViewableRows,
-										true/* include insets */, &screenWidth, &screenHeight);
-	getWindowSizeFromViewSize(inPtr, screenWidth, screenHeight, &windowWidth, &windowHeight);
-	
-	// temporarily force the display mode to be dimension-based, otherwise
-	// the act of resizing in “font size mode” would not product the
-	// expected result
-	TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
-	
+	getWindowSizeFromViewSize(inPtr, inScreenWidthInPixels, inScreenHeightInPixels, &windowWidth, &windowHeight);
 	(OSStatus)inPtr->windowResizeHandler.setWindowIdealSize(windowWidth, windowHeight);
 	{
 		Rect		bounds;
@@ -5134,9 +5177,6 @@ setStandardState	(TerminalWindowPtr	inPtr,
 		error = SetWindowBounds(inPtr->window, kWindowContentRgn, &bounds);
 		assert_noerr(error);
 	}
-	
-	// finally restore the user’s preference for resize
-	TerminalView_SetDisplayMode(activeView, oldMode);
 }// setStandardState
 
 

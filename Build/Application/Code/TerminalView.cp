@@ -873,6 +873,50 @@ TerminalView_GetFontAndSize		(TerminalViewRef	inView,
 
 
 /*!
+Retrieves the view’s best dimensions in pixels,
+optionally including the insets (margins), given
+the current font metrics and screen dimensions.
+Returns true only if successful.
+
+(3.1)
+*/
+Boolean
+TerminalView_GetIdealSize	(TerminalViewRef	inView,
+							 Boolean			inIncludeInsets,
+							 SInt16&			outWidthInPixels,
+							 SInt16&			outHeightInPixels)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	Boolean					result = false;
+	
+	
+	if (viewPtr != nullptr)
+	{
+		Point	topLeftInsets;
+		Point	bottomRightInsets;
+		
+		
+		if (inIncludeInsets)
+		{
+			TerminalView_GetInsets(&topLeftInsets, &bottomRightInsets);
+		}
+		else
+		{
+			SetPt(&topLeftInsets, 0, 0);
+			SetPt(&bottomRightInsets, 0, 0);
+		}
+		
+		outWidthInPixels = topLeftInsets.h + viewPtr->screen.viewWidthInPixels + bottomRightInsets.h;
+		outHeightInPixels = topLeftInsets.v + viewPtr->screen.viewHeightInPixels + bottomRightInsets.v;
+		
+		result = true;
+	}
+	
+	return result;
+}// GetIdealSize
+
+
+/*!
 Returns the screen insets.  These are the pixel offsets
 from the edges of the maximum “viewable area” that define
 the padding between the absolute edge of the screen and
@@ -1105,10 +1149,10 @@ TerminalView_GetTheoreticalViewSize		(TerminalViewRef	inView,
 	
 	if (viewPtr != nullptr)
 	{
-		Point		topLeftInsets,
-					bottomRightInsets;
-		UInt16		screenWidth = 0,
-					screenHeight = 0;
+		Point		topLeftInsets;
+		Point		bottomRightInsets;
+		UInt16		screenWidth = 0;
+		UInt16		screenHeight = 0;
 		
 		
 		if (inIncludeInsets)

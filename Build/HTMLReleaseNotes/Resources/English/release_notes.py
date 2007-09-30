@@ -18,7 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20070919',
+    '20070929',
     '20070918',
     '20070908',
     '20070906',
@@ -53,8 +53,8 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-	'20070919': [
-		'Terminal view resize commands that set rows and columns will now work properly in font-size resize mode.',
+	'20070929': [
+		'Fixed cases where size-change commands were ineffective in one terminal resize mode but not the other.',
 	],
 	'20070918': [
 		'Terminal view backgrounds now have a user interface for changing the color, via menu or contextual menu.',

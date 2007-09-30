@@ -423,6 +423,12 @@ void
 //!\name Metrics
 //@{
 
+Boolean
+	TerminalView_GetIdealSize					(TerminalViewRef			inView,
+												 Boolean					inIncludeInsets,
+												 SInt16&					outWidthInPixels,
+												 SInt16&					outHeightInPixels);
+
 // THE BOTTOM-RIGHT INSETS ARE GIVEN AS POSITIVE NUMBERS, MEASURED UP AND TO THE LEFT FROM THE BOTTOM-RIGHT CORNER
 void
 	TerminalView_GetInsets						(Point*						outTopLeftInsetOrNull,
