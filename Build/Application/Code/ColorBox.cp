@@ -3,7 +3,7 @@
 	ColorBox.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -82,10 +82,7 @@ typedef MyColorBoxData*		MyColorBoxDataPtr;
 
 #pragma mark Internal Method Prototypes
 
-static pascal void				colorBoxUserPaneDelayedMenuDisplay		(EventLoopTimerRef, void*);
-static pascal ControlPartCode	colorBoxUserPaneHitTestProc				(HIViewRef, Point);
-static pascal ControlPartCode	colorBoxUserPaneTrackingProc			(HIViewRef, Point, ControlActionUPP);
-static pascal OSStatus			receiveColorBoxDraw						(EventHandlerCallRef, EventRef, void*);
+static pascal OSStatus		receiveColorBoxDraw		(EventHandlerCallRef, EventRef, void*);
 
 
 
@@ -449,107 +446,5 @@ receiveColorBoxDraw	(EventHandlerCallRef	inHandlerCallRef,
 	}
 	return result;
 }// receiveColorBoxDraw
-
-
-/*!
-The old QuickDraw implementation.
-
-(3.1)
-*/
-static pascal OSStatus
-receiveColorBoxDraw2	(EventHandlerCallRef	inHandlerCallRef,
-						 EventRef				inEvent,
-						 void*					inColorBoxDataPtr)
-{
-	OSStatus			result = eventNotHandledErr;
-	MyColorBoxDataPtr	dataPtr = REINTERPRET_CAST(inColorBoxDataPtr, MyColorBoxDataPtr);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlDraw);
-	
-	// first call through to the parent handler to get the proper button appearance
-	result = CallNextEventHandler(inHandlerCallRef, inEvent);
-	if (noErr == result)
-	{
-		HIViewRef		view = nullptr;
-		
-		
-		// get the target view
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, continue
-		if (noErr == result)
-		{
-			//ControlPartCode		partCode = 0;
-			CGrafPtr			drawingPort = nullptr;
-			CGrafPtr			oldPort = nullptr;
-			GDHandle			oldDevice = nullptr;
-			
-			
-			// find out the current port
-			GetGWorld(&oldPort, &oldDevice);
-			
-			// could determine which part (if any) to draw; if none, draw everything
-			// (ignored, not needed)
-			//result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
-			//result = noErr; // ignore part code parameter if absent
-			
-			// determine the port to draw in; if none, the current port
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, drawingPort);
-			if (noErr != result)
-			{
-				// use current port
-				drawingPort = oldPort;
-				result = noErr;
-			}
-			
-			// if all information can be found, proceed with drawing
-			if (noErr == result)
-			{
-				Rect		bounds;
-				HIPoint		localToViewOffset;
-				
-				
-				SetPort(drawingPort);
-				
-				// determine boundaries of the content view being drawn
-				GetControlBounds(view, &bounds);
-				
-				// the view position is also the conversion factor for
-				// translating QuickDraw points to view-local coordinates
-				localToViewOffset.x = -bounds.left;
-				localToViewOffset.y = -bounds.top;
-				
-				// translate rectangle into view-local coordinates
-				OffsetRect(&bounds, STATIC_CAST(localToViewOffset.x, SInt16),
-							STATIC_CAST(localToViewOffset.y, SInt16));
-				
-				// define the area within the button where a color will be painted
-				InsetRect(&bounds, 5, 5);
-				
-				// paint the color; make the colored area rounded to match the
-				// bevel button, and draw a slightly brighter rounded border
-				{
-					RGBColor	oldForeColor;
-					
-					
-					GetPortForeColor(drawingPort, &oldForeColor);
-					RGBForeColor(&dataPtr->displayedColor);
-					PaintRoundRect(&bounds, 5, 5);
-					UseLighterColors();
-					FrameRoundRect(&bounds, 5, 5);
-					RGBForeColor(&oldForeColor);
-				}
-			}
-			
-			// restore port
-			SetGWorld(oldPort, oldDevice);
-		}
-	}
-	return result;
-}// receiveColorBoxDraw2
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
