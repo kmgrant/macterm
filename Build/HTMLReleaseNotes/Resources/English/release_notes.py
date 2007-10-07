@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071006',
     '20070929',
     '20070918',
     '20070908',
@@ -53,6 +54,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071006': [
+		'Internal improvements to the code (removing some compile warnings, etc.).',
+	],
 	'20070929': [
 		'Fixed cases where size-change commands were ineffective in one terminal resize mode but not the other.',
 	],

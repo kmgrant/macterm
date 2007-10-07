@@ -491,7 +491,7 @@ to SizeDialog_New() as your notification procedure.
 (3.0)
 */
 void
-SizeDialog_StandardCloseNotifyProc		(TerminalSizeDialogRef		inDialogThatClosed,
+SizeDialog_StandardCloseNotifyProc		(TerminalSizeDialogRef		UNUSED_ARGUMENT(inDialogThatClosed),
 										 Boolean					UNUSED_ARGUMENT(inOKButtonPressed))
 {
 	// do nothing

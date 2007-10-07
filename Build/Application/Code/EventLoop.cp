@@ -2456,7 +2456,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						HIToolbarRef	targetToolbar = nullptr;
 						OptionBits		toolbarAttributes = 0;
 						OSStatus		error = (nullptr == window)
-													? memPCErr
+													? STATIC_CAST(memPCErr, OSStatus)
 													: GetWindowToolbar(window, &targetToolbar);
 						
 						
@@ -2486,7 +2486,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						HIWindowRef			window = GetUserFocusWindow();
 						WindowAttributes	windowAttributes = 0;
 						OSStatus			error = (nullptr == window)
-														? memPCErr
+														? STATIC_CAST(memPCErr, OSStatus)
 														: GetWindowAttributes(window, &windowAttributes);
 						Boolean				toolbarCanBeHidden = false;
 						

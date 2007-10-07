@@ -826,16 +826,15 @@ buildSessionStatusWindowContextualMenu	(MenuRef		inMenu,
 
 
 /*!
-This routine will look at the frontmost window as being
-the Session Status window, and will construct a contextual
-menu appropriate for it.  The given window must have
-Window Info associated with it (see "WindowInfo.cp").
+This routine will look at the specified view as being a
+terminal view background, and will construct a contextual
+menu appropriate for it.
 
 (3.1)
 */
 static void
 buildTerminalBackgroundContextualMenu	(MenuRef		inMenu,
-										 HIViewRef		inWhichView,
+										 HIViewRef		UNUSED_ARGUMENT(inWhichView),
 										 EventRef		inEventOrNull)
 {
 	ContextSensitiveMenu_Item	itemInfo;

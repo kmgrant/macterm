@@ -2559,7 +2559,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	*/
 	Preferences_ResultCode
 	My_ContextDefault::
-	rename	(CFStringRef	inNewName)
+	rename	(CFStringRef	UNUSED_ARGUMENT(inNewName))
 	{
 		// NO-OP
 		return kPreferences_ResultCodeGenericFailure;

@@ -162,7 +162,6 @@ static pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID
 static void					chooseContext					(Preferences_ContextRef);
 static void					choosePanel						(UInt16);
 static void					findBestPanelSize				(HISize const&, HISize&);
-static MyPanelDataPtr		findPanelData					(Panel_Ref);
 static void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 static void					handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
 static void					init							();
@@ -759,28 +758,6 @@ findBestPanelSize	(HISize const&		inInitialSize,
 	outIdealSize.width = std::max(inInitialSize.width, idealSizeFinder.idealSize.width);
 	outIdealSize.height = std::max(inInitialSize.height, idealSizeFinder.idealSize.height);
 }// findBestPanelSize
-
-
-/*!
-Returns a pointer to the internal structure
-whose “panel” field corresponds to the given
-panel.
-
-(3.0)
-*/
-static MyPanelDataPtr
-findPanelData	(Panel_Ref	inPanel)
-{
-	MyPanelDataPtr				result = nullptr;
-	MyPanelDataList::iterator	panelDataIterator;
-	
-	
-	// look for the given panel in the linked list
-	panelDataIterator = std::find_if(gPanelList().begin(), gPanelList().end(), isPanelDataForSpecificPanel(inPanel));
-	if (panelDataIterator != gPanelList().end()) result = *panelDataIterator;
-	
-	return result;
-}// findPanelData
 
 
 /*!

@@ -3,7 +3,7 @@
 	URL.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -99,11 +99,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		nullptr // this list must end with a nullptr
 	};
 }
-
-#pragma mark Internal Method Prototypes
-
-static void		processURLEscapeCodes		(char*, char**);
-
 
 
 #pragma mark Public Methods
@@ -670,60 +665,5 @@ URL_SetSelectionToProximalURL	(TerminalView_Cell const&	inCommandClickColumnRow,
 	// TEMPORARY - REIMPLEMENT
 	return false;
 }// SetSelectionToProximalURL
-
-
-#pragma mark Internal Methods
-
-/*!
-Processes "%xx" escape codes in a URL string (replacing them
-by the characters they represent).
-
-	Entry:	url = URL with escape codes.
-			
-	Exit:	url = URL with escape codes replaced by the
-					characters they represent.
-
-Copyright © 1994, Northwestern University.
-Modified 12/94 Jim Browne for NCSA
-
-(2.6)
-*/
-static void
-processURLEscapeCodes	(char*		inoutURLString,
-						 char**		outEndPtrPtr)
-{
-	char*	p = nullptr;
-	char*	q = nullptr;
-	char	c1 = '\0';
-	char	c2 = '\0';
-	
-	
-	p = q = inoutURLString;
-	while (0 != *p)
-	{
-		if ('%' == *p)
-		{
-			c1 = CPP_STD::tolower(*(p+1));
-			c2 = CPP_STD::tolower(*(p+2));
-			if (CPP_STD::isxdigit(c1) && CPP_STD::isxdigit(c2))
-			{
-				c1 = CPP_STD::isdigit(c1) ? c1 - '0' : c1 - 'a' + 10;
-				c2 = CPP_STD::isdigit(c2) ? c2 - '0' : c2 - 'a' + 10;
-				*q++ = (c1 << 4) + c2;
-				p += 3;
-			}
-			else
-			{
-				*q++ = *p++;
-			}
-		}
-		else
-		{
-			*q++ = *p++;
-		}
-	}
-	*q = 0;
-	*outEndPtrPtr = q - 1;
-}// processURLEscapeCodes
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

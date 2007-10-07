@@ -3,7 +3,7 @@
 	AppResources.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -238,7 +238,9 @@ AppResources_GetToolbarPoofPictures		(UInt16			inZeroBasedAnimationStageIndex,
 										 PicHandle&		outFramePicture,
 										 PicHandle&		outFrameMask)
 {
-	AppResources_ResultCode		result = (inZeroBasedAnimationStageIndex >= 5) ? paramErr : noErr;
+	AppResources_ResultCode		result = (inZeroBasedAnimationStageIndex >= 5)
+											? STATIC_CAST(paramErr, AppResources_ResultCode)
+											: STATIC_CAST(noErr, AppResources_ResultCode);
 	
 	
 	if (result == noErr)

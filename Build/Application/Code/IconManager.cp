@@ -359,7 +359,9 @@ IconManager_MakeIconRef		(IconManagerIconRef		inRef,
 				{
 					ptr->type = kIconManagerIconTypeOS7;
 					ptr->data.OS7 = GetCIcon(suiteID);
-					result = (ptr->data.OS7 == nullptr) ? resNotFound : noErr; // correct?
+					result = (ptr->data.OS7 == nullptr)
+								? STATIC_CAST(resNotFound, OSStatus)
+								: STATIC_CAST(noErr, OSStatus); // correct?
 				}
 				else
 				{
@@ -665,7 +667,9 @@ IconManager_MakeOldColorIcon	(IconManagerIconRef		inRef,
 		{
 			ptr->type = kIconManagerIconTypeOS7;
 			ptr->data.OS7 = GetCIcon(inIconResourceID_cicn);
-			result = (ptr->data.OS7 == nullptr) ? resNotFound : noErr; // correct?
+			result = (ptr->data.OS7 == nullptr)
+						? STATIC_CAST(resNotFound, OSStatus)
+						: STATIC_CAST(noErr, OSStatus); // correct?
 		}
 		
 		refReleaseLock(inRef, &ptr);

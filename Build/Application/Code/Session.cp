@@ -2879,7 +2879,6 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 								 Boolean		inScrollLock)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFStringRef			userNotificationCFString = nullptr;
 	
 	
 	ptr->dataPtr->enabled = !inScrollLock;
@@ -2888,13 +2887,18 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 	if (inScrollLock)
 	{
 	#if 0
-		// 3.1 - dump a string that says “[Suspend Output]”
-		if (UIStrings_Copy(kUIStrings_TerminalSuspendOutput, userNotificationCFString).ok())
 		{
-			Session_TerminalWriteCString(inRef, "\033[3;5m"); // italic, blinking
-			Session_TerminalWriteCFString(inRef, userNotificationCFString);
-			Session_TerminalWriteCString(inRef, "\033[23;25m"); // remove italic, blinking
-			CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
+			CFStringRef		userNotificationCFString = nullptr;
+			
+			
+			// 3.1 - dump a string that says “[Suspend Output]”
+			if (UIStrings_Copy(kUIStrings_TerminalSuspendOutput, userNotificationCFString).ok())
+			{
+				Session_TerminalWriteCString(inRef, "\033[3;5m"); // italic, blinking
+				Session_TerminalWriteCFString(inRef, userNotificationCFString);
+				Session_TerminalWriteCString(inRef, "\033[23;25m"); // remove italic, blinking
+				CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
+			}
 		}
 	#endif
 		
@@ -2928,13 +2932,18 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 	else
 	{
 	#if 0
-		// 3.1 - dump a string that says “[Resume Output]”
-		if (UIStrings_Copy(kUIStrings_TerminalResumeOutput, userNotificationCFString).ok())
 		{
-			Session_TerminalWriteCString(inRef, "\033[3m"); // italic
-			Session_TerminalWriteCFString(inRef, userNotificationCFString);
-			Session_TerminalWriteCString(inRef, "\033[23m"); // remove italic
-			CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
+			CFStringRef		userNotificationCFString = nullptr;
+			
+			
+			// 3.1 - dump a string that says “[Resume Output]”
+			if (UIStrings_Copy(kUIStrings_TerminalResumeOutput, userNotificationCFString).ok())
+			{
+				Session_TerminalWriteCString(inRef, "\033[3m"); // italic
+				Session_TerminalWriteCFString(inRef, userNotificationCFString);
+				Session_TerminalWriteCString(inRef, "\033[23m"); // remove italic
+				CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
+			}
 		}
 	#endif
 		
@@ -3855,21 +3864,23 @@ void
 Session_UserInputInterruptProcess	(SessionRef		inRef,
 									 Boolean		inSendToRecordingScripts)
 {
-	CFStringRef		userNotificationCFString = nullptr;
-	
-	
 	// clear the Suspend state from MacTelnet’s point of view,
 	// since the process already considers the pipe reopened
 	Session_SetNetworkSuspended(inRef, false);
 	
 #if 0
-	// 3.0 - get a string that says “[Interrupt Process]”
-	if (UIStrings_Copy(kUIStrings_TerminalInterruptProcess, userNotificationCFString).ok())
 	{
-		Session_TerminalWriteCString(inRef, "\033[3m"); // italic
-		Session_TerminalWriteCFString(inRef, userNotificationCFString);
-		Session_TerminalWriteCString(inRef, "\033[23m"); // remove italic
-		CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
+		CFStringRef		userNotificationCFString = nullptr;
+		
+		
+		// 3.0 - get a string that says “[Interrupt Process]”
+		if (UIStrings_Copy(kUIStrings_TerminalInterruptProcess, userNotificationCFString).ok())
+		{
+			Session_TerminalWriteCString(inRef, "\033[3m"); // italic
+			Session_TerminalWriteCFString(inRef, userNotificationCFString);
+			Session_TerminalWriteCString(inRef, "\033[23m"); // remove italic
+			CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
+		}
 	}
 #endif
 	

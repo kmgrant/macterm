@@ -5102,9 +5102,6 @@ getSelectedTextAsNewHandle	(TerminalViewPtr			inTerminalViewPtr,
 	{
 		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
 		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
-		UInt16 const				kRowWidth = (inTerminalViewPtr->text.selection.isRectangular)
-												? INTEGER_ABSOLUTE(kSelectionPastEnd.first - kSelectionStart.first)
-												: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 		size_t const				kByteCount = getSelectedTextSize(inTerminalViewPtr);
 		
 		

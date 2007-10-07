@@ -65,8 +65,8 @@ This is technically the main entry point, but it is only
 available if the target is a real application.  Usually
 MacTelnet is built as a shared library that can be loaded
 into a running Python interpreter.  For more information
-on the Python interface, see "Resources/python2.3/*.py"
-and the various Quill API headers like "QuillBase.h".
+on the Python interface, see the "PythonCode" folder and
+the various Quill API headers like "QuillBase.h".
 
 This is the main entry point, what runs when the user
 launches the application.  Aside from C++ static
