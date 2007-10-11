@@ -5122,7 +5122,7 @@ getSelectedTextAsNewHandle	(TerminalViewPtr			inTerminalViewPtr,
 			
 			copyResult = Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator,
 											kSelectionPastEnd.second - kSelectionStart.second,
-											kSelectionStart.first, kSelectionPastEnd.second - 1/* make inclusive range */,
+											kSelectionStart.first, kSelectionPastEnd.first - 1/* make inclusive range */,
 											characters, kByteCount, &actualLength,
 											(inFlags & kTerminalView_TextFlagInline) ? "" : "\015",
 											inNumberOfSpacesToReplaceWithOneTabOrZero, flags);
@@ -5354,13 +5354,7 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 					 UInt16				inClickCount)													
 {
 	TerminalView_Cell	selectionStart;
-	TerminalView_Cell	selectionPastEnd;													
-	SInt32				actualLength = 0L;
-	char				theChar[5];
-	char				clickChar = '\0';
-	Boolean				foundEnd = false;
-	char const*			kEndOfLineSequence = "\015";
-	SInt16				kNumberOfSpacesPerTab = 0; // zero means Òdo not substitute tabsÓ
+	TerminalView_Cell	selectionPastEnd;
 	SInt16 const		kColumnCount = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 	SInt16 const		kRowCount = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
 	
@@ -5368,11 +5362,17 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 	selectionStart = inTerminalViewPtr->text.selection.range.first;
 	selectionPastEnd = inTerminalViewPtr->text.selection.range.second;
 	
+	// all multi-clicks result in a selection that is one line high,
+	// and the range is exclusive so the row difference must be 1
+	selectionPastEnd.second = selectionStart.second + 1;
+	
 	if (inClickCount == 2)
 	{
-		Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr,
-																	inTerminalViewPtr->text.selection.range.first.second);
+		char const* const			kEndOfLineSequence = "\015";
+		SInt16 const				kNumberOfSpacesPerTab = 0; // zero means Òdo not substitute tabsÓ
+		Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
 		Terminal_TextCopyFlags		flags = 0L;
+		char						theChar[5];
 		
 		
 		// configure range copying routine
@@ -5387,53 +5387,65 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 								theChar, 1L/* maximum characters to return */, nullptr/* actual length */, kEndOfLineSequence,
 								kNumberOfSpacesPerTab, flags))
 		{
-			clickChar = *theChar;
-		}
-		releaseRowIterator(inTerminalViewPtr, &lineIterator);
-		
-		// normal word selection mode; scan to the right and left
-		// of the click location, constrained to a single line
-		for (foundEnd = false; !foundEnd; )
-		{
-			if (selectionPastEnd.first >= kColumnCount)
+			SInt32		actualLength = 0L;
+			Boolean		foundEnd = false;
+			
+			
+			//
+			// IMPORTANT: The current line iterator is cached in the "lineIterator"
+			// variable, and should be reset if the selection line ever changes below.
+			//
+			
+			// normal word selection mode; scan to the right and left
+			// of the click location, constrained to a single line
+			for (foundEnd = false; !foundEnd; )
 			{
-				selectionPastEnd.first = 0;
-				++selectionPastEnd.second;
-			}
-			foundEnd = (selectionPastEnd.second >= kRowCount);
-			unless (foundEnd)
-			{
-				actualLength = 0L;
-				lineIterator = findRowIterator(inTerminalViewPtr, selectionPastEnd.second);
-				
-				// copy a single character and examine it
-				if (Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
-										selectionPastEnd.first, selectionPastEnd.first,
-										theChar, 1L/* maximum characters to return */, &actualLength, kEndOfLineSequence,
-										kNumberOfSpacesPerTab, flags) ==
-					kTerminal_ResultCodeSuccess)
+				if (selectionPastEnd.first >= kColumnCount)
 				{
-					foundEnd = ((actualLength == 0) || CPP_STD::isspace(*theChar));
-					unless (foundEnd)
+					// wrap to next line
+					releaseRowIterator(inTerminalViewPtr, &lineIterator);
+					++selectionPastEnd.second;
+					foundEnd = (selectionPastEnd.second >= kRowCount);
+					if (foundEnd)
 					{
-						++selectionPastEnd.first;
+						selectionPastEnd.second = kRowCount;
+					}
+					else
+					{
+						selectionPastEnd.first = 0;
+					}
+					lineIterator = findRowIterator(inTerminalViewPtr, selectionPastEnd.second);
+				}
+				unless (foundEnd)
+				{
+					actualLength = 0L;
+					
+					// copy a single character and examine it
+					if (kTerminal_ResultCodeSuccess ==
+						Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
+											selectionPastEnd.first, selectionPastEnd.first,
+											theChar, 1L/* maximum characters to return */, &actualLength, kEndOfLineSequence,
+											kNumberOfSpacesPerTab, flags))
+					{
+						foundEnd = ((actualLength == 0) || CPP_STD::isspace(*theChar));
+						unless (foundEnd)
+						{
+							++selectionPastEnd.first;
+						}
+					}
+					else
+					{
+						// read error...break now
+						foundEnd = true;
 					}
 				}
-				releaseRowIterator(inTerminalViewPtr, &lineIterator);
 			}
-		}
-		for (foundEnd = false; !foundEnd; )
-		{
-			if (selectionStart.first < 1)
-			{
-				selectionStart.first = kColumnCount; // past-the-end
-				--selectionStart.second;
-			}
-			foundEnd = (selectionStart.second == 0);
-			unless (foundEnd)
+			// note that because the start of the range is inclusive
+			// and the end is exclusive, the left-scan loop below is
+			// not quite similar to the right-scan loop above
+			for (foundEnd = false; !foundEnd; )
 			{
 				actualLength = 0L;
-				lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
 				
 				// copy a single character and examine it
 				if (kTerminal_ResultCodeSuccess ==
@@ -5443,14 +5455,54 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 										kNumberOfSpacesPerTab, flags))
 				{
 					foundEnd = ((actualLength == 0) || CPP_STD::isspace(*theChar));
-					unless (foundEnd)
+				}
+				else
+				{
+					// read error...break now
+					foundEnd = true;
+				}
+				
+				if (foundEnd)
+				{
+					// with an inclusive range, the discovered space should be ignored
+					++selectionStart.first;
+					if (selectionStart.first >= kColumnCount)
 					{
+						// also ignore the shift to the previous line, if it ended with a space
+						releaseRowIterator(inTerminalViewPtr, &lineIterator);
+						selectionStart.first = 0;
+						++selectionStart.second;
+						lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
+					}
+				}
+				else
+				{
+					if (selectionStart.first == 0)
+					{
+						// wrap to previous line
+						releaseRowIterator(inTerminalViewPtr, &lineIterator);
+						--selectionStart.second;
+						foundEnd = (selectionStart.second <= 0);
+						if (foundEnd)
+						{
+							selectionStart.second = 0;
+						}
+						else
+						{
+							selectionStart.first = kColumnCount - 1;
+						}
+						lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
+					}
+					else
+					{
+						// move to previous character on same line
 						--selectionStart.first;
 					}
 				}
-				releaseRowIterator(inTerminalViewPtr, &lineIterator);
 			}
 		}
+		
+		releaseRowIterator(inTerminalViewPtr, &lineIterator);
 	}
 	else
 	{
@@ -5610,6 +5662,13 @@ highlightCurrentSelection	(TerminalViewPtr	inTerminalViewPtr,
 							 Boolean			inIsHighlighted,
 							 Boolean			inRedraw)
 {
+#if 0
+	Console_WriteValueFloat4("Selection range",
+								inTerminalViewPtr->text.selection.range.first.first,
+								inTerminalViewPtr->text.selection.range.first.second,
+								inTerminalViewPtr->text.selection.range.second.first,
+								inTerminalViewPtr->text.selection.range.second.second);
+#endif
 	highlightVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range, inIsHighlighted, inRedraw);
 }// highlightCurrentSelection
 

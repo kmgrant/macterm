@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071010',
     '20071006',
     '20070929',
     '20070918',
@@ -54,6 +55,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071010': [
+		'Fixed line truncation during operations such as Copy and drag-and-drop.',
+		'Fixed word and line highlighting for double-clicks and triple-clicks.',
+	],
 	'20071006': [
 		'Internal improvements to the code (removing some compile warnings, etc.).',
 	],
