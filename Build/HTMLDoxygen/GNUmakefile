@@ -3,8 +3,8 @@
 # Kevin Grant (kevin@ieee.org)
 # March 26, 2005
 
-PATH := /opt/doxygen-1.3/bin:/Applications/Doxygen.app/Contents/Resources:/Applications/GraphViz.app/Contents/MacOS:$(PATH)
-OUTPUT_DIR := $(CURDIR)/DeveloperDocs/
+PATH := /opt/doxygen/bin:/Applications/Doxygen.app/Contents/Resources:/Applications/GraphViz.app/Contents/MacOS:$(PATH)
+OUTPUT_DIR := $(CURDIR)/documentation/
 
 # determine MacTelnet version
 # IMPORTANT: read from a built MacTelnet.app's Info.plist;
@@ -49,14 +49,21 @@ build:
 	@# throw away configuration file (no longer needed)
 	$(RM) "$(strip $(TMP_CONF))"
 	$(xcustom_index)
-	$(foreach FILE,$(wildcard $(OUTPUT_DIR)/*.html),$(call strip_unwanted_sections,$(FILE)))
+	@# note that postprocess depends on $(wildcard), which is resolved at
+	@# the time the makefile is parsed; a recursive "make" ensures the
+	@# wildcard is parsed only after Doxygen has actually created files!
+	$(MAKE) postprocess
 	$(copy_resources)
-	$(call open_browser_to_page,$(strip $(OUTPUT_DIR))/index.html)
+	$(MAKE) view
 	$(end_target)
 
 .PHONY: view
 view:
 	$(call open_browser_to_page,$(strip $(OUTPUT_DIR))/index.html)
+
+.PHONY: postprocess
+postprocess:
+	$(foreach FILE,$(wildcard $(OUTPUT_DIR)/*.html),$(call strip_unwanted_sections,$(FILE)))
 
 .PHONY: index
 index:
@@ -65,7 +72,8 @@ index:
 .PHONY: clean
 clean:
 	$(begin_target)
-	$(RM) "$(OUTPUT_DIR)/*"
+	$(RM) "$(OUTPUT_DIR)"/*
+	-rmdir "$(OUTPUT_DIR)"
 	$(end_target)
 
 test:
