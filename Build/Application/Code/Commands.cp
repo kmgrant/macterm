@@ -1068,7 +1068,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 
 		case kCommandSendInterruptProcess:
-			Console_WriteLine("WARNING, now unimplemented: interrupt process");
+			Session_UserInputInterruptProcess(frontSession, false/* record to scripts */);
 			break;
 		
 		case kCommandSendAbortOutput:

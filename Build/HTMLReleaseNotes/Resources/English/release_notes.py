@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071015',
     '20071013',
     '20071011',
     '20071010',
@@ -57,6 +58,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071015': [
+		'Fixed the Interrupt Process command to send the interrupt character to the active session.',
+	],
 	'20071013': [
 		'Changed the artwork for the main application icon and other icons showing terminals.',
 	],
