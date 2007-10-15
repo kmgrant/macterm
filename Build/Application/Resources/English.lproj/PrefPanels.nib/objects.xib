@@ -128,20 +128,22 @@
       <string name="bounds">13 277 43 309 </string>
       <string name="viewFrame">277 13 32 30 </string>
       <ostype name="controlSignature">CrVB</ostype>
+      <string name="title">│</string>
       <ostype name="command">CrVB</ostype>
       <unsigned_int name="behavior">256</unsigned_int>
-      <int name="contentType">1</int>
-      <int name="contentResID">341</int>
+      <int name="contentType">0</int>
+      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
     </object>
     <object class="IBCarbonBevelButton" id="995">
       <string name="bounds">13 339 43 371 </string>
       <string name="viewFrame">339 13 32 30 </string>
       <ostype name="controlSignature">CrBV</ostype>
+      <string name="title">┃</string>
       <ostype name="command">CrBV</ostype>
       <unsigned_int name="behavior">256</unsigned_int>
-      <int name="contentType">1</int>
-      <int name="contentResID">343</int>
+      <int name="contentType">0</int>
+      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
     </object>
     <object class="IBCarbonEditText" id="1000">
@@ -174,10 +176,11 @@
       <string name="bounds">13 246 43 278 </string>
       <string name="viewFrame">246 13 32 30 </string>
       <ostype name="controlSignature">CrBl</ostype>
+      <string name="title">▊</string>
       <ostype name="command">CrBl</ostype>
       <unsigned_int name="behavior">256</unsigned_int>
-      <int name="contentType">1</int>
-      <int name="contentResID">340</int>
+      <int name="contentType">0</int>
+      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
     </object>
     <object class="IBCarbonRadioButton" id="1006">
@@ -281,10 +284,11 @@
             <string name="bounds">13 308 43 340 </string>
             <string name="viewFrame">308 13 32 30 </string>
             <ostype name="controlSignature">CrUn</ostype>
+            <string name="title">▁</string>
             <ostype name="command">CrUn</ostype>
             <unsigned_int name="behavior">256</unsigned_int>
-            <int name="contentType">1</int>
-            <int name="contentResID">342</int>
+            <int name="contentType">0</int>
+            <int name="contentResID">0</int>
             <int name="graphicAlignment">4</int>
             <int name="textPlacement">3</int>
           </object>
@@ -293,10 +297,11 @@
             <string name="bounds">13 370 43 402 </string>
             <string name="viewFrame">370 13 32 30 </string>
             <ostype name="controlSignature">CrBU</ostype>
+            <string name="title">▂</string>
             <ostype name="command">CrBU</ostype>
             <unsigned_int name="behavior">256</unsigned_int>
-            <int name="contentType">1</int>
-            <int name="contentResID">344</int>
+            <int name="contentType">0</int>
+            <int name="contentResID">0</int>
             <int name="graphicAlignment">4</int>
             <int name="textPlacement">3</int>
           </object>
@@ -539,7 +544,7 @@
       </array>
     </object>
     <object class="IBCarbonUserPane" id="1246">
-      <string name="bounds">-23211 -8843 -23189 -8796 </string>
+      <string name="bounds">-23211 165 -23189 212 </string>
       <string name="viewFrame">165 -279 47 22 </string>
       <int name="featureBits">2</int>
     </object>
@@ -621,7 +626,7 @@
       <string name="title">Green:</string>
     </object>
     <object class="IBCarbonUserPane" id="1271">
-      <string name="bounds">-23091 -8844 -23069 -8797 </string>
+      <string name="bounds">-23091 164 -23069 211 </string>
       <string name="viewFrame">164 -159 47 22 </string>
       <int name="featureBits">2</int>
     </object>
@@ -674,7 +679,7 @@
       </array>
     </object>
     <object class="IBCarbonStaticText" id="1284">
-      <string name="bounds">5027 -8606 5043 -8504 </string>
+      <string name="bounds">5268 -8606 5284 -8504 </string>
       <string name="viewFrame">258 -387 102 16 </string>
       <string name="title">Post-action:</string>
     </object>
@@ -700,7 +705,7 @@
       </object>
     </object>
     <object class="IBCarbonPopupButton" id="1294">
-      <string name="bounds">4947 -8418 4967 -8418 </string>
+      <string name="bounds">5194 -8418 5214 -8418 </string>
       <string name="viewFrame">446 -415 0 20 </string>
       <reference name="menu" idRef="1283"/>
     </object>
@@ -1003,7 +1008,7 @@
     <reference idRef="1388"/>
     <reference idRef="1389"/>
     <object class="IBCarbonPopupButton" id="1391">
-      <string name="bounds">4973 -8418 4993 -8418 </string>
+      <string name="bounds">5220 -8418 5240 -8418 </string>
       <string name="viewFrame">446 -389 0 20 </string>
       <object name="menu" class="IBCarbonMenu" id="1392">
         <string name="title">Popup:</string>
@@ -1070,7 +1075,7 @@
     <reference idRef="1412"/>
     <reference idRef="1413"/>
     <object class="IBCarbonStaticText" id="1414">
-      <string name="bounds">5154 -8777 5170 -8702 </string>
+      <string name="bounds">5401 -8777 5417 -8702 </string>
       <string name="viewFrame">87 -208 75 16 </string>
       <string name="title">Yellow:</string>
     </object>

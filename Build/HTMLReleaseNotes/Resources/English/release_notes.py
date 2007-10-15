@@ -60,6 +60,8 @@ daily_build_lineage = [
 notes_by_version = {
 	'20071015': [
 		'Fixed the Interrupt Process command to send the interrupt character to the active session.',
+		'Preferences window General pane now correctly displays cursor shapes.',
+		'Preferences window General pane now uses Unicode text for cursor shapes instead of icon images.',
 	],
 	'20071013': [
 		'Changed the artwork for the main application icon and other icons showing terminals.',
