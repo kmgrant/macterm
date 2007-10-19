@@ -761,8 +761,7 @@ receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 		{
 			ControlPartCode		partCode = kControlNoPart;
 			SInt32				currentFieldValue = 0;
-			SInt32 const		kIncrement = 1;
-			SInt32 const		kDecrement = 1;
+			SInt32				kIncrementDecrement = 1;
 			
 			
 			GetControlNumericalText(ptr->field, &currentFieldValue);
@@ -770,28 +769,33 @@ receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
 			if (noErr != result) partCode = kControlUpButtonPart;
 			
+			// try to find the increment value associated with the arrows view;
+			// ignore any errors, this is not that important
+			(OSStatus)GetControlData(control, kControlEntireControl, kControlLittleArrowsIncrementValueTag,
+										sizeof(kIncrementDecrement), &kIncrementDecrement, nullptr/* actual size */);
+			
 			switch (partCode)
 			{
 			case kControlDownButtonPart:
-				if (GetControl32BitMinimum(control) == currentFieldValue)
+				if (GetControl32BitMinimum(control) >= currentFieldValue)
 				{
 					SetControlNumericalText(ptr->field, GetControl32BitMaximum(control));
 				}
 				else
 				{
-					SetControlNumericalText(ptr->field, currentFieldValue - kDecrement);
+					SetControlNumericalText(ptr->field, currentFieldValue - kIncrementDecrement);
 				}
 				break;
 			
 			case kControlUpButtonPart:
 			default:
-				if (GetControl32BitMaximum(control) == currentFieldValue)
+				if (GetControl32BitMaximum(control) <= currentFieldValue)
 				{
 					SetControlNumericalText(ptr->field, GetControl32BitMinimum(control));
 				}
 				else
 				{
-					SetControlNumericalText(ptr->field, currentFieldValue + kIncrement);
+					SetControlNumericalText(ptr->field, currentFieldValue + kIncrementDecrement);
 				}
 				break;
 			}
