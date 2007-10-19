@@ -457,17 +457,17 @@
               </object>
               <object class="IBCarbonMenuItem" id="313">
                 <boolean name="updateSingleItem">TRUE</boolean>
-                <string name="title">Standard (80 x 24)</string>
+                <string name="title">Standard (80 × 24)</string>
                 <ostype name="command">StdW</ostype>
               </object>
               <object class="IBCarbonMenuItem" id="467">
                 <boolean name="updateSingleItem">TRUE</boolean>
-                <string name="title">Tall (80 x 48)</string>
+                <string name="title">Tall (80 × 48)</string>
                 <ostype name="command">Tall</ostype>
               </object>
               <object class="IBCarbonMenuItem" id="312">
                 <boolean name="updateSingleItem">TRUE</boolean>
-                <string name="title">Wide (132 x 24)</string>
+                <string name="title">Wide (132 × 24)</string>
                 <ostype name="command">Wide</ostype>
               </object>
               <object class="IBCarbonMenuItem" id="314">
