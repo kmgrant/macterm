@@ -120,6 +120,7 @@ CFStringRef const kConstantsRegistry_HIToolbarItemIDNewLoginSession			= CFSTR("c
 CFStringRef const kConstantsRegistry_HIToolbarItemIDNewShellSession			= CFSTR("com.mactelnet.toolbaritem.newshellsession");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDScrollLock				= CFSTR("com.mactelnet.toolbaritem.scrolllock");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDStackWindows			= CFSTR("com.mactelnet.toolbaritem.stackwindows");
+CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalBell			= CFSTR("com.mactelnet.toolbaritem.terminalbell");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED1			= CFSTR("com.mactelnet.toolbaritem.terminalled1");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED2			= CFSTR("com.mactelnet.toolbaritem.terminalled2");
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED3			= CFSTR("com.mactelnet.toolbaritem.terminalled3");
@@ -159,6 +160,8 @@ enum
 	kConstantsRegistry_IconServicesIconPrefPanelTerminals		= FOUR_CHAR_CODE('PTrm'),
 	kConstantsRegistry_IconServicesIconSessionStatusActive		= FOUR_CHAR_CODE('Actv'),
 	kConstantsRegistry_IconServicesIconSessionStatusDead		= FOUR_CHAR_CODE('Dead'),
+	kConstantsRegistry_IconServicesIconToolbarItemBellOff		= FOUR_CHAR_CODE('BelO'),
+	kConstantsRegistry_IconServicesIconToolbarItemBellOn		= FOUR_CHAR_CODE('BelI'),
 	kConstantsRegistry_IconServicesIconToolbarItemFullScreen	= FOUR_CHAR_CODE('Kios'),
 	kConstantsRegistry_IconServicesIconToolbarItemHideWindow	= FOUR_CHAR_CODE('Hide'),
 	kConstantsRegistry_IconServicesIconToolbarItemLEDOff		= FOUR_CHAR_CODE('LEDO'),

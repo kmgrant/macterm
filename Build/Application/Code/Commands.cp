@@ -860,7 +860,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			Sound_StandardAlert();
 			break;
 			
-		case kCommandDisableBell:
+		case kCommandBellEnabled:
 			if (isTerminal)
 			{
 				Terminal_SetBellEnabled(activeScreen, !Terminal_BellIsEnabled(activeScreen));

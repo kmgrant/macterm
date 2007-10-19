@@ -177,7 +177,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 // Terminal menu
 // WARNING: These are referenced by value in the MainMenuTerminal.nib file!
 #define kCommandTerminalEmulatorSetup			'Emul'
-#define kCommandDisableBell						'Qiet'
+#define kCommandBellEnabled						'Bell'
 #define kCommandEcho							'Echo'
 #define kCommandWrapMode						'Wrap'
 #define kCommandClearScreenSavesLines			'CSSL'

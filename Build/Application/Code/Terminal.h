@@ -90,6 +90,8 @@ typedef FourCharCode Terminal_Change;
 enum
 {
 	kTerminal_ChangeAudioEvent			= FOUR_CHAR_CODE('Bell'),	//!< terminal bell triggered (context: TerminalScreenRef)
+	kTerminal_ChangeAudioState			= FOUR_CHAR_CODE('BEnD'),	//!< terminal bell enabled or disabled (context: TerminalScreenRef);
+																	//!  use Terminal_BellIsEnabled() to determine the new state
 	kTerminal_ChangeCursorLocation		= FOUR_CHAR_CODE('Curs'),	//!< cursor has moved; new position can be found with
 																	//!  Terminal_CursorGetLocation() (context:
 																	//!  TerminalScreenRef)

@@ -1619,7 +1619,7 @@ installMenuItemStateTrackers ()
 	
 	// Terminal
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTerminalEmulatorSetup, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandDisableBell, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandBellEnabled, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEcho, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWrapMode, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandClearScreenSavesLines, stateTrackerCheckableItems);
@@ -3096,9 +3096,9 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 		}
 		break;
 	
-	case kCommandDisableBell:
+	case kCommandBellEnabled:
 		result = connectionCommandResult;
-		if (nullptr != currentSession) checked = (result) ? !Terminal_BellIsEnabled(currentScreen) : false;
+		if (nullptr != currentSession) checked = (result) ? Terminal_BellIsEnabled(currentScreen) : false;
 		break;
 	
 	case kCommandEcho:

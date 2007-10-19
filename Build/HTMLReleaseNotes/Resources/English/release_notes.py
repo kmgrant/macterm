@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071019',
     '20071015',
     '20071013',
     '20071011',
@@ -58,6 +59,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071019': [
+		'Terminal window toolbars now have a Bell item option.  Clicking it will enable *or* disable the terminal bell.',
+		'Renamed the "Disable Bell" command to simply "Bell", which also inverts the state of its checkmark.',
+	],
 	'20071015': [
 		'Fixed the Interrupt Process command to send the interrupt character to the active session.',
 		'Preferences window General pane now correctly displays cursor shapes.',

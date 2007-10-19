@@ -3447,6 +3447,7 @@ Terminal_SetBellEnabled		(TerminalScreenRef	inRef,
 	if (dataPtr != nullptr)
 	{
 		dataPtr->bellDisabled = !inIsEnabled;
+		changeNotifyForTerminal(dataPtr, kTerminal_ChangeAudioState, dataPtr->selfRef/* context */);
 	}
 }// SetBellEnabled
 

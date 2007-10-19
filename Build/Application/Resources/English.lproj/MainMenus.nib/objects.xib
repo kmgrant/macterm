@@ -593,8 +593,8 @@
               </object>
               <object class="IBCarbonMenuItem" id="334">
                 <boolean name="updateSingleItem">TRUE</boolean>
-                <string name="title">Disable Bell</string>
-                <ostype name="command">Qiet</ostype>
+                <string name="title">Bell</string>
+                <ostype name="command">Bell</ostype>
                 <string name="helpTagText">Turn off terminal-generated sound.</string>
               </object>
               <object class="IBCarbonMenuItem" id="335">

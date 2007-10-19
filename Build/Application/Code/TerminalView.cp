@@ -3104,6 +3104,9 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 Responds to terminal bells visually, if visual bells
 are enabled.
 
+Also updates the bell toolbar item when sound is
+enabled or disabled for a terminal.
+
 (3.0)
 */
 static void

@@ -159,6 +159,7 @@ struct TerminalWindow
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabWidthInPixels;			// used to position and size the tab drawer, if any
 	HIToolbarRef				toolbar;					// customizable toolbar of icons at the top
+	CFRetainRelease				toolbarItemBell;			// if present, enable/disable bell item
 	CFRetainRelease				toolbarItemLED1;			// if present, LED #1 status item
 	CFRetainRelease				toolbarItemLED2;			// if present, LED #2 status item
 	CFRetainRelease				toolbarItemLED3;			// if present, LED #3 status item
@@ -265,6 +266,8 @@ typedef LockAcquireRelease< TerminalWindowRef, TerminalWindow >		TerminalWindowA
 static void					calculateWindowPosition			(TerminalWindowPtr, Rect*);
 static void					calculateIndexedWindowPosition	(TerminalWindowPtr, SInt16, Point*);
 static void					changeNotifyForTerminalWindow	(TerminalWindowPtr, TerminalWindow_Change, void*);
+static IconRef				createBellOffIcon				();
+static IconRef				createBellOnIcon				();
 static IconRef				createFullScreenIcon			();
 static IconRef				createHideWindowIcon			();
 static HIWindowRef			createKioskOffSwitchWindow		();
@@ -326,6 +329,8 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
 	HIWindowRef					gKioskOffSwitchWindow ()		{ static HIWindowRef x = createKioskOffSwitchWindow(); return x; }
 	TerminalWindowRef&			gKioskTerminalWindow ()			{ static TerminalWindowRef x = nullptr; return x; }
+	IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
+	IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
 	IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
 	IconRef&					gHideWindowIcon ()				{ static IconRef x = createHideWindowIcon(); return x; }
 	IconRef&					gLEDOffIcon ()					{ static IconRef x = createLEDOffIcon(); return x; }
@@ -1625,6 +1630,7 @@ tabAndWindowGroup(nullptr),
 tabOffsetInPixels(0.0),
 tabWidthInPixels(0.0),
 toolbar(nullptr),
+toolbarItemBell(),
 toolbarItemLED1(),
 toolbarItemLED2(),
 toolbarItemLED3(),
@@ -1862,6 +1868,7 @@ installedActions()
 	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, this->sessionStateChangeEventListener);
 	SessionFactory_StartMonitoringSessions(kSession_ChangeWindowTitle, this->sessionStateChangeEventListener);
 	this->terminalStateChangeEventListener = ListenerModel_NewStandardListener(terminalStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
@@ -2090,6 +2097,7 @@ TerminalWindow::
 		
 		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
 		{
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
@@ -2288,6 +2296,66 @@ changeNotifyForTerminalWindow	(TerminalWindowPtr		inPtr,
 	// invoke listener callback routines appropriately, from the specified terminal windowÕs listener model
 	ListenerModel_NotifyListenersOfEvent(inPtr->changeListenerModel, inWhatChanged, inContextPtr);
 }// changeNotifyForTerminalWindow
+
+
+/*!
+Registers the Òbell offÓ icon reference with the system,
+and returns a reference to the new icon.
+
+(3.1)
+*/
+static IconRef
+createBellOffIcon ()
+{
+	IconRef		result = nullptr;
+	FSRef		iconFile;
+	
+	
+	if (AppResources_GetArbitraryResourceFileFSRef
+		(AppResources_ReturnBellOffIconFilenameNoExtension(),
+			CFSTR("icns")/* type */, iconFile))
+	{
+		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+												kConstantsRegistry_IconServicesIconToolbarItemBellOff,
+												&iconFile, &result))
+		{
+			// failed!
+			result = nullptr;
+		}
+	}
+	
+	return result;
+}// createBellOffIcon
+
+
+/*!
+Registers the Òbell onÓ icon reference with the system,
+and returns a reference to the new icon.
+
+(3.1)
+*/
+static IconRef
+createBellOnIcon ()
+{
+	IconRef		result = nullptr;
+	FSRef		iconFile;
+	
+	
+	if (AppResources_GetArbitraryResourceFileFSRef
+		(AppResources_ReturnBellOnIconFilenameNoExtension(),
+			CFSTR("icns")/* type */, iconFile))
+	{
+		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+												kConstantsRegistry_IconServicesIconToolbarItemBellOn,
+												&iconFile, &result))
+		{
+			// failed!
+			result = nullptr;
+		}
+	}
+	
+	return result;
+}// createBellOnIcon
 
 
 /*!
@@ -3883,6 +3951,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDScrollLock);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDHideWindow);
 						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDFullScreen);
+						CFArrayAppendValue(allowedIdentifiers, kConstantsRegistry_HIToolbarItemIDTerminalBell);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSeparatorIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarSpaceIdentifier);
 						CFArrayAppendValue(allowedIdentifiers, kHIToolbarFlexibleSpaceIdentifier);
@@ -4147,6 +4216,41 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										CFRelease(nameCFString), nameCFString = nullptr;
 									}
 									result = HIToolbarItemSetIconRef(itemRef, gFullScreenIcon());
+									assert_noerr(result);
+									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+									assert_noerr(result);
+								}
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalBell,
+																			identifierCFString, kCFCompareBackwards))
+							{
+								TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+								
+								
+								result = HIToolbarItemCreate(identifierCFString,
+																kHIToolbarItemNoAttributes, &itemRef);
+								if (noErr == result)
+								{
+									UInt32 const	kMyCommandID = kCommandBellEnabled;
+									CFStringRef		nameCFString = nullptr;
+									
+									
+									// then this is the bell item; remember it so it can be updated later
+									if (nullptr != targetToolbar)
+									{
+										ptr->toolbarItemBell.setCFTypeRef(itemRef);
+									}
+									
+									if (Commands_CopyCommandName(kMyCommandID, kCommands_NameTypeShort, nameCFString))
+									{
+										result = HIToolbarItemSetLabel(itemRef, nameCFString);
+										assert_noerr(result);
+										result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
+																			nullptr/* long text */);
+										assert_noerr(result);
+										CFRelease(nameCFString), nameCFString = nullptr;
+									}
+									result = HIToolbarItemSetIconRef(itemRef, gBellOffIcon());
 									assert_noerr(result);
 									result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
 									assert_noerr(result);
@@ -5336,6 +5440,30 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 {
 	switch (inTerminalSettingThatChanged)
 	{
+	case kTerminal_ChangeAudioState:
+		// update the bell toolbar item based on the bell being enabled or disabled
+		{
+			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			
+			
+			if (nullptr != terminalWindow)
+			{
+				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				HIToolbarItemRef			bellItem = nullptr;
+				OSStatus					error = noErr;
+				
+				
+				bellItem = REINTERPRET_CAST(ptr->toolbarItemBell.returnHIObjectRef(), HIToolbarItemRef);
+				if (nullptr != bellItem)
+				{
+					error = HIToolbarItemSetIconRef(bellItem, (Terminal_BellIsEnabled(screen)) ? gBellOffIcon() : gBellOnIcon());
+					assert_noerr(error);
+				}
+			}
+		}
+		break;
+	
 	case kTerminal_ChangeNewLEDState:
 		// find the new LED state(s)
 		{

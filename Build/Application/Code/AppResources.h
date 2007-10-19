@@ -122,6 +122,20 @@ AppResources_ResultCode
 ###############################################################*/
 
 inline CFStringRef
+	AppResources_ReturnBellOffIconFilenameNoExtension					()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForBellOff");
+}
+
+inline CFStringRef
+	AppResources_ReturnBellOnIconFilenameNoExtension						()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForBellOn");
+}
+
+inline CFStringRef
 	AppResources_ReturnBundleIconFilenameNoExtension					()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"

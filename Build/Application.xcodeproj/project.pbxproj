@@ -232,6 +232,8 @@
 		0AF5080609006B3D00E6FE79 /* SizeDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5080409006B3D00E6FE79 /* SizeDialog.nib */; };
 		0AF5B8AF0B8ED23A0061B480 /* IconForKeypadSelect.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */; };
 		0AF5B8B10B8ED24A0061B480 /* IconForKeypadInsert.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */; };
+		0AF995F40CC3C849000A11DC /* IconForBellOff.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF995F20CC3C849000A11DC /* IconForBellOff.icns */; };
+		0AF995F50CC3C849000A11DC /* IconForBellOn.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF995F30CC3C849000A11DC /* IconForBellOn.icns */; };
 		0AFA782C0B470144001FCE83 /* com_mactelnet_ParseURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* com_mactelnet_Util.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */; };
 		0AFA782E0B470144001FCE83 /* com_mactelnet_HandleURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */; };
@@ -681,6 +683,8 @@
 		0AF5080509006B3D00E6FE79 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/SizeDialog.nib; sourceTree = "<group>"; };
 		0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadSelect.icns; path = Application/Resources/IconForKeypadSelect.icns; sourceTree = "<group>"; };
 		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
+		0AF995F20CC3C849000A11DC /* IconForBellOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOff.icns; path = Application/Resources/IconForBellOff.icns; sourceTree = "<group>"; };
+		0AF995F30CC3C849000A11DC /* IconForBellOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOn.icns; path = Application/Resources/IconForBellOn.icns; sourceTree = "<group>"; };
 		0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = com_mactelnet_ParseURL.py; path = Application/PythonCode/com_mactelnet_ParseURL.py; sourceTree = "<group>"; };
 		0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = com_mactelnet_Util.py; path = Application/PythonCode/com_mactelnet_Util.py; sourceTree = "<group>"; };
 		0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = com_mactelnet_HandleURL.py; path = Application/PythonCode/com_mactelnet_HandleURL.py; sourceTree = "<group>"; };
@@ -1082,6 +1086,8 @@
 		0AFF137A0AF42067006CCA34 /* Icons */ = {
 			isa = PBXGroup;
 			children = (
+				0AF995F20CC3C849000A11DC /* IconForBellOff.icns */,
+				0AF995F30CC3C849000A11DC /* IconForBellOn.icns */,
 				0A54E40D0560B62F005B4592 /* IconForBundle.icns */,
 				0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */,
 				0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */,
@@ -1380,6 +1386,8 @@
 				0AE286000B8D830600E2253A /* IconForKeypadFind.icns in Resources */,
 				0AF5B8AF0B8ED23A0061B480 /* IconForKeypadSelect.icns in Resources */,
 				0AF5B8B10B8ED24A0061B480 /* IconForKeypadInsert.icns in Resources */,
+				0AF995F40CC3C849000A11DC /* IconForBellOff.icns in Resources */,
+				0AF995F50CC3C849000A11DC /* IconForBellOn.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
