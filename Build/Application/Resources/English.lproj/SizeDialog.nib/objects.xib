@@ -50,6 +50,7 @@
             <string name="bounds">21 212 43 225 </string>
             <string name="viewFrame">212 21 13 22 </string>
             <ostype name="controlSignature">WArr</ostype>
+            <int name="increment">4</int>
           </object>
           <object class="IBCarbonEditText" id="259">
             <string name="bounds">53 130 69 201 </string>
@@ -61,6 +62,7 @@
             <string name="bounds">51 212 73 225 </string>
             <string name="viewFrame">212 51 13 22 </string>
             <ostype name="controlSignature">HArr</ostype>
+            <int name="increment">10</int>
           </object>
           <object class="IBCarbonButton" id="197">
             <string name="bounds">99 231 119 301 </string>

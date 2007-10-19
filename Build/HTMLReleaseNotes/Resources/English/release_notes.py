@@ -63,6 +63,7 @@ notes_by_version = {
 		'Terminal window toolbars now have a Bell item option.  Clicking it will enable *or* disable the terminal bell.',
 		'Renamed the "Disable Bell" command to simply "Bell", which also inverts the state of its checkmark.',
 		'Preferences window collections drawer further tweaked to align in an aesthetically pleasing way with tabs.',
+		'Custom Screen Size dialog arrows now increment and decrement by 4 for columns, and 10 for rows.',
 	],
 	'20071015': [
 		'Fixed the Interrupt Process command to send the interrupt character to the active session.',
