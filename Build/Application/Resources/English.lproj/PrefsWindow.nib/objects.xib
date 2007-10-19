@@ -38,8 +38,8 @@
         <string name="viewFrame">0 0 245 304 </string>
         <array count="5" name="subviews">
           <object class="IBCarbonDBListView" id="326">
-            <string name="bounds">24 2 269 243 </string>
-            <string name="viewFrame">2 24 241 245 </string>
+            <string name="bounds">26 2 269 243 </string>
+            <string name="viewFrame">2 26 241 243 </string>
             <ostype name="controlSignature">Favs</ostype>
             <int name="hiliteStyle">1</int>
             <int name="columnWidth">220</int>

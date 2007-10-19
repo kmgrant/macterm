@@ -62,6 +62,7 @@ notes_by_version = {
 	'20071019': [
 		'Terminal window toolbars now have a Bell item option.  Clicking it will enable *or* disable the terminal bell.',
 		'Renamed the "Disable Bell" command to simply "Bell", which also inverts the state of its checkmark.',
+		'Preferences window collections drawer further tweaked to align in an aesthetically pleasing way with tabs.',
 	],
 	'20071015': [
 		'Fixed the Interrupt Process command to send the interrupt character to the active session.',
