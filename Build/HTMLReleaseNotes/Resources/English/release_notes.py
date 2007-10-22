@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071022',
     '20071019',
     '20071015',
     '20071013',
@@ -59,6 +60,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071022': [
+		'Terminal window tabs now recognize drags, automatically switching tabs when the mouse moves over them.',
+	],
 	'20071019': [
 		'Terminal window toolbars now have a Bell item option.  Clicking it will enable *or* disable the terminal bell.',
 		'Renamed the "Disable Bell" command to simply "Bell", which also inverts the state of its checkmark.',

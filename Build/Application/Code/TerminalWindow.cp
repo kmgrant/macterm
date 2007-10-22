@@ -155,6 +155,7 @@ struct TerminalWindow
 	
 	HIWindowRef					window;						// the Mac OS window reference for the terminal window
 	CFRetainRelease				tab;						// the Mac OS window reference (if any) for the sister window acting as a tab
+	CarbonEventHandlerWrap*		tabDragHandlerPtr;			// used to track drags that enter tabs
 	WindowGroupRef				tabAndWindowGroup;			// WindowGroupRef; forces the window and its tab to move together
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
 	Float32						tabWidthInPixels;			// used to position and size the tab drawer, if any
@@ -300,6 +301,7 @@ static void					installUndoScreenDimensionChanges	(TerminalWindowRef);
 static Boolean				mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static pascal OSStatus		receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+static pascal OSStatus		receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
@@ -1626,6 +1628,7 @@ changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 flags(inFlags),
 window(createWindow()),
 tab(),
+tabDragHandlerPtr(nullptr),
 tabAndWindowGroup(nullptr),
 tabOffsetInPixels(0.0),
 tabWidthInPixels(0.0),
@@ -2024,6 +2027,9 @@ TerminalWindow::
 	
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
 	TerminalWindow_SetObscured(REINTERPRET_CAST(this, TerminalWindowRef), false);
+	
+	// remove any tab drag handler
+	if (nullptr != tabDragHandlerPtr) delete tabDragHandlerPtr, tabDragHandlerPtr = nullptr;
 	
 	// disable window command callback
 	RemoveEventHandler(this->commandHandler), this->commandHandler = nullptr;
@@ -2578,8 +2584,6 @@ createTabWindow		(TerminalWindowPtr		inPtr)
 	
 	
 	// load the NIB containing this floater (automatically finds the right localization)
-	// TEMPORARY: using the Kiosk “off switch” window just because it happens to look like a tab;
-	// this should be replaced by a dedicated NIB
 	tabWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
 							CFSTR("TerminalWindow"), CFSTR("Tab")) << NIBLoader_AssertWindowExists;
 	if (nullptr != tabWindow)
@@ -2609,6 +2613,29 @@ createTabWindow		(TerminalWindowPtr		inPtr)
 				gDefaultTabWidth = STATIC_CAST(currentBounds.right - currentBounds.left, Float32);
 			}
 			inPtr->tabWidthInPixels = gDefaultTabWidth;
+			
+			// enable drag tracking so that tabs can auto-activate during drags
+			error = SetAutomaticControlDragTrackingEnabledForWindow(tabWindow, true/* enabled */);
+			assert_noerr(error);
+			
+			// install a drag handler so that tabs switch automatically as
+			// items hover over them
+			{
+				HIViewRef		contentPane = nullptr;
+				
+				
+				error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
+				assert_noerr(error);
+				inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(HIViewGetEventTarget(contentPane), receiveTabDragDrop,
+																		CarbonEventSetInClass
+																		(CarbonEventClass(kEventClassControl),
+																			kEventControlDragEnter),
+																		inPtr->selfRef/* handler data */);
+				assert(nullptr != inPtr->tabDragHandlerPtr);
+				assert(inPtr->tabDragHandlerPtr->isInstalled());
+				error = SetControlDragTrackingEnabled(contentPane, true/* is drag enabled */);
+				assert_noerr(error);
+			}
 		}
 	}
 	
@@ -3898,6 +3925,71 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveHICommand
+
+
+/*!
+Handles "kEventControlDragEnter" for a terminal window tab.
+
+Invoked by Mac OS X whenever the tab is involved in a
+drag-and-drop operation.
+
+(3.1)
+*/
+static pascal OSStatus
+receiveTabDragDrop	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inTerminalWindowRef)
+{
+	OSStatus			result = eventNotHandledErr;
+	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlDragEnter);
+	{
+		HIViewRef	view = nullptr;
+		
+		
+		// get the target control
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		
+		// if the control was found, continue
+		if (noErr == result)
+		{
+			DragRef		dragRef = nullptr;
+			
+			
+			// determine the drag taking place
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDragRef, typeDragRef, dragRef);
+			if (noErr == result)
+			{
+				switch (kEventKind)
+				{
+				case kEventControlDragEnter:
+					// indicate whether or not this drag is interesting
+					{
+						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						Boolean						acceptDrag = true;
+						
+						
+						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
+													typeBoolean, sizeof(acceptDrag), &acceptDrag);
+						SelectWindow(ptr->window);
+					}
+					break;
+				
+				default:
+					// ???
+					result = eventNotHandledErr;
+					break;
+				}
+			}
+		}
+	}
+	return result;
+}// receiveTabDragDrop
 
 
 /*!
