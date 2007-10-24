@@ -284,6 +284,10 @@ copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithScreenFormatting, outString);
 		break;
 	
+	case kHelpSystem_KeyPhraseIPAddresses:
+		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithIPAddresses, outString);
+		break;
+	
 	case kHelpSystem_KeyPhraseKioskSetup:
 		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithKioskSetup, outString);
 		break;

@@ -70,6 +70,7 @@ enum
 	kHelpSystem_KeyPhraseFavorites		= FOUR_CHAR_CODE('Favr'),
 	kHelpSystem_KeyPhraseFind			= FOUR_CHAR_CODE('Find'),
 	kHelpSystem_KeyPhraseFormatting		= FOUR_CHAR_CODE('Frmt'),
+	kHelpSystem_KeyPhraseIPAddresses	= FOUR_CHAR_CODE('IPAd'),
 	kHelpSystem_KeyPhraseKioskSetup		= FOUR_CHAR_CODE('Kios'),
 	kHelpSystem_KeyPhraseMacros			= FOUR_CHAR_CODE('Mcro'),
 	kHelpSystem_KeyPhrasePreferences	= FOUR_CHAR_CODE('Pref'),

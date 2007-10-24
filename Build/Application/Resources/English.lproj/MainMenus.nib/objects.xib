@@ -42,7 +42,7 @@
               </object>
               <object class="IBCarbonMenuItem" id="240">
                 <boolean name="updateSingleItem">TRUE</boolean>
-                <string name="title">Show IP Address…</string>
+                <string name="title">Show IP Addresses…</string>
                 <string name="keyEquivalent">i</string>
                 <int name="keyEquivalentModifier">1310720</int>
                 <ostype name="command">CIPn</ostype>

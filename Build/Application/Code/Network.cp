@@ -3,7 +3,7 @@
 	Network.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -96,6 +96,51 @@ static void			getIPAddressListFromValue			(void const*, void const*, void*);
 
 #pragma mark Public Methods
 
+
+/*!
+Finds the IP address(es) of the computer running
+this program.  Returns true only if any are found.
+
+If there is a problem finding a particular address,
+an (empty) entry is still added to the list.  So
+the length of the resulting list should always be
+an accurate count of machine addresses, even if
+they are not all returned.
+
+(3.1)
+*/
+Boolean
+Network_CopyIPAddresses		(std::vector< CFRetainRelease >&	inoutAddresses)
+{
+	Boolean				result = false;
+	struct hostent*		currentHost = nullptr;
+	
+	
+	result = allCurrentIPAddressesAndAliases(currentHost);
+	if (result)
+	{
+		char**				hostList = currentHost->h_addr_list;
+		assert(nullptr != hostList);
+		register SInt16		hostIndex = 0;
+		CFStringRef			addressCFString = nullptr;
+		
+		
+		for (; nullptr != *hostList; ++hostList, ++hostIndex)
+		{
+			addressCFString = DNR_CopyResolvedHostAsCFString(currentHost, hostIndex/* index in array to use */);
+			inoutAddresses.push_back(addressCFString);
+			if (nullptr != addressCFString)
+			{
+				result = true;
+				CFRelease(addressCFString), addressCFString = nullptr;
+			}
+		}
+	}
+	
+	return result;
+}// CopyIPAddresses
+
+
 /*!
 Obtains the first available IP address of the computer running
 this program, as a C++ std::string.
@@ -161,142 +206,6 @@ Network_CurrentIPAddressToString	(std::string&	outString,
 	}
 	return result;
 }// CurrentIPAddressToString
-
-
-/*!
-Displays the IP address(es) of the computer running
-this program.
-
-(3.1)
-*/
-void
-Network_ShowIPAddress ()
-{
-#define HOST_ARRAY_SIZE				10
-#define ADDRESS_LIST_STRING_LENGTH	180
-
-	Boolean				addressesFound = false;
-	struct hostent*		currentHost;
-	
-	
-	addressesFound = allCurrentIPAddressesAndAliases(currentHost);
-	if (addressesFound)
-	{
-		CFMutableStringRef		listCFString = nullptr; // expected to hold all addresses & newlines
-		
-		
-		listCFString = CFStringCreateMutable(kCFAllocatorDefault, 0/* maximum length or 0 for unlimited */);
-		if (nullptr == listCFString)
-		{
-			// not ideal, but give the user SOME indication of a problem...
-			Sound_StandardAlert();
-			Console_WriteLine("unable to allocate an address string!");
-		}
-		else
-		{
-			char**				hostList = currentHost->h_addr_list;
-			assert(nullptr != hostList);
-			register SInt16		hostIndex = 0;
-			CFStringRef			dialogTextCFString = nullptr;
-			CFStringRef			addressCFString = nullptr;
-			
-			
-			// concatenate all addresses together, separated by space
-			for (; nullptr != *hostList; ++hostList, ++hostIndex)
-			{
-				addressCFString = DNR_CopyResolvedHostAsCFString(currentHost, hostIndex/* index in array to use */);
-				if (nullptr == addressCFString)
-				{
-					// not ideal, but give the user SOME indication of a problem...
-					Sound_StandardAlert();
-					Console_WriteLine("unable to resolve a host IP address");
-				}
-				else
-				{
-					if (hostIndex) CFStringAppend(listCFString, CFSTR("   ")); // separate by lots of whitespace
-					CFStringAppend(listCFString, addressCFString);
-					CFRelease(addressCFString), addressCFString = nullptr;
-				}
-			}
-			
-			// now display a message to the user showing the IP addresses,
-			// and allowing the user to copy them to the clipboard
-			if (UIStrings_Copy(kUIStrings_AlertWindowShowIPAddressesPrimaryText, dialogTextCFString).ok())
-			{
-				InterfaceLibAlertRef	box = nullptr;
-				
-				
-				box = Alert_New();
-				Alert_SetHelpButton(box, false);
-				Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-				Alert_SetButtonText(box, kAlertStdAlertCancelButton, nullptr);
-				{
-					CFStringRef		titleCFString = nullptr;
-					
-					
-					if (UIStrings_Copy(kUIStrings_ButtonCopyToClipboard, titleCFString).ok())
-					{
-						Alert_SetButtonText(box, kAlertStdAlertOtherButton, titleCFString);
-						CFRelease(titleCFString), titleCFString = nullptr;
-					}
-				}
-				Alert_SetTextCFStrings(box, dialogTextCFString, listCFString);
-				Alert_SetType(box, kAlertNoteAlert);
-				Alert_Display(box);
-				
-				if (Alert_ItemHit(box) == kAlertStdAlertOtherButton) // then “Copy to Clipboard” was requested
-				{
-					ScrapRef	currentScrap = nullptr;
-					
-					
-					(OSStatus)ClearCurrentScrap();
-					if (GetCurrentScrap(&currentScrap) == noErr)
-					{
-						CFStringEncoding const	kEncoding = kCFStringEncodingUTF8;
-						size_t const			kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
-																	(CFStringGetLength(listCFString), kEncoding);
-						
-						
-						try
-						{
-							char*	listBuffer = new char[kBufferSize];
-							
-							
-							if (CFStringGetCString(listCFString, listBuffer, kBufferSize, kEncoding))
-							{
-								if (noErr != PutScrapFlavor(currentScrap, kScrapFlavorTypeText, kScrapFlavorMaskNone,
-															CFStringGetLength(listCFString), listBuffer))
-								{
-									// not ideal, but let the user know somehow that the copy failed
-									Sound_StandardAlert();
-								}
-							}
-							delete [] listBuffer;
-						}
-						catch (std::bad_alloc)
-						{
-							// not ideal, but let the user know somehow that the copy failed
-							Sound_StandardAlert();
-						}
-					}
-				}
-				Alert_Dispose(&box);
-			}
-			else
-			{
-				// not ideal, but give the user SOME indication of a problem...
-				Sound_StandardAlert();
-				Console_WriteLine("unable to find alert message text");
-			}
-			
-			CFRelease(listCFString), listCFString = nullptr;
-		}
-	}
-	else
-	{
-		ErrorAlerts_DisplayStopMessageNoTitle(rStringsGeneralMessages, siIPAddressNotAttainable);
-	}
-}// ShowIPAddress
 
 
 #pragma mark Internal Methods

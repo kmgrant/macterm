@@ -1,17 +1,11 @@
 /*!	\file Network.h
 	\brief APIs dealing with the local machine’s Internet
-	protocol address.
-	
-	This module is currently being phased out, since
-	network-dependent code is now handled in entirely
-	separate executables (i.e. MacTelnet acts as the
-	terminal, and a Unix process must interact with it
-	in the expected ways).
+	protocol addresses.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -44,19 +38,21 @@
 
 // standard-C++ includes
 #include <string>
+#include <vector>
+
+// library includes
+#include <CFRetainRelease.h>
 
 
 
-/*###############################################################
-	UTILITIES
-###############################################################*/
+#pragma mark Public Methods
+
+Boolean
+	Network_CopyIPAddresses				(std::vector< CFRetainRelease >&	inoutAddresses);
 
 bool
-	Network_CurrentIPAddressToString				(std::string&	inoutString,
-													 int&			outAddressType);
-
-void
-	Network_ShowIPAddress							();
+	Network_CurrentIPAddressToString	(std::string&						inoutString,
+										 int&								outAddressType);
 
 #endif
 

@@ -65,6 +65,7 @@ extern "C"
 #include <UniversalPrint.h>
 
 // MacTelnet includes
+#include "AddressDialog.h"
 #include "AppleEventUtilities.h"
 #include "AppResources.h"
 #include "BasicTypesAE.h"
@@ -1029,7 +1030,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandShowNetworkNumbers:
-			Network_ShowIPAddress();
+			{
+				AddressDialog_Ref		dialog = AddressDialog_New(AddressDialog_StandardCloseNotifyProc);
+				
+				
+				AddressDialog_Display(dialog); // automatically disposed when the user clicks a button
+			}
 			break;
 		
 		case kCommandSendInternetProtocolNumber:

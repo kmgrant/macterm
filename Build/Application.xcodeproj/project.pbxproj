@@ -12,6 +12,8 @@
 		0A1BCD8A05CA2B21005CF1E5 /* TerminalWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */; };
 		0A1BCD9F05CA34FF005CF1E5 /* IconForSessionStatusActive.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */; };
 		0A1BCDA005CA34FF005CF1E5 /* IconForSessionStatusDead.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */; };
+		0A26DD9F0CCF0BCE00768AD8 /* AddressDialog.h in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */; };
+		0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A26DD900CCF09D400768AD8 /* AddressDialog.cp */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A3E06F70B81767A00EDC16A /* PrefPanelTranslations.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */; };
 		0A3E07410B817E9800EDC16A /* IconForPrefPanelTranslations.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */; };
@@ -65,6 +67,7 @@
 		0A9CC37B06DC470D00DCD12E /* PrefPanels.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A9CC37906DC470D00DCD12E /* PrefPanels.nib */; };
 		0AAB2D0907EAD07000CFAFF1 /* IconForLEDOff.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */; };
 		0AAB2D0A07EAD07000CFAFF1 /* IconForLEDOn.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */; };
+		0AB1C5110CCD608400E3A160 /* AddressDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AB1C50B0CCD608400E3A160 /* AddressDialog.nib */; };
 		0ABC0CF50A44FFA7009D07FC /* IconForPrefPanelSessions.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */; };
 		0ABC0CF70A44FFAA009D07FC /* IconForPrefPanelTerminals.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */; };
 		0ABC0CF90A44FFBD009D07FC /* IconForPrefPanelFormats.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */; };
@@ -291,6 +294,7 @@
 			files = (
 				0AF46B600B05495C00666419 /* Quills.framework in Copy Frameworks */,
 				0A9AF68B0AF5A95100E7DF18 /* PyMacTelnet.framework in Copy Frameworks */,
+				0A26DD9F0CCF0BCE00768AD8 /* AddressDialog.h in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -323,6 +327,8 @@
 		0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSessionStatusDead.icns; path = Application/Resources/IconForSessionStatusDead.icns; sourceTree = "<group>"; };
 		0A22A017059FBEEB00A0BB56 /* IconForCommand.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForCommand.icns; path = Application/Resources/IconForCommand.icns; sourceTree = "<group>"; };
 		0A22A019059FBF0300A0BB56 /* IconForScriptsMenu.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScriptsMenu.icns; path = Application/Resources/IconForScriptsMenu.icns; sourceTree = "<group>"; };
+		0A26DD900CCF09D400768AD8 /* AddressDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AddressDialog.cp; path = Application/Code/AddressDialog.cp; sourceTree = "<group>"; };
+		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ListenerModel.cp; path = Shared/Code/ListenerModel.cp; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
 		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
@@ -623,6 +629,7 @@
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
 		0AABEA0B05A1203200F15EF2 /* SpecialKeySequencesDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SpecialKeySequencesDialog.h; path = Application/Code/SpecialKeySequencesDialog.h; sourceTree = "<group>"; };
 		0AABEA3D05A1211400F15EF2 /* SpecialKeySequencesDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SpecialKeySequencesDialog.cp; path = Application/Code/SpecialKeySequencesDialog.cp; sourceTree = "<group>"; };
+		0AB1C50C0CCD608400E3A160 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AddressDialog.nib; sourceTree = "<group>"; };
 		0AB64A94057819E5005702BA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/InfoWindow.nib; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
 		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
@@ -746,6 +753,7 @@
 				0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */,
 				0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */,
 				0A46FDB7055432A400ACDF3A /* AboutBox.cp */,
+				0A26DD900CCF09D400768AD8 /* AddressDialog.cp */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.cp */,
 				0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */,
 				0A46FE12055432A400ACDF3A /* AppResources.cp */,
@@ -835,6 +843,7 @@
 				0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */,
 				0A46FE3D055432A400ACDF3A /* Workspace.cp */,
 				0A4603BA0554376100ACDF3A /* AboutBox.h */,
+				0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */,
 				0A4603F40554376100ACDF3A /* AlertMessages.h */,
 				0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */,
 				0A4604230554376100ACDF3A /* AppResources.h */,
@@ -1066,6 +1075,7 @@
 				0A8450A90554CB8E00CFF440 /* TEKWindow.nib */,
 				0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */,
 				0A8450AF0554CB8E00CFF440 /* WindowTitleDialog.nib */,
+				0AB1C50B0CCD608400E3A160 /* AddressDialog.nib */,
 			);
 			name = NIBs;
 			sourceTree = "<group>";
@@ -1388,6 +1398,7 @@
 				0AF5B8B10B8ED24A0061B480 /* IconForKeypadInsert.icns in Resources */,
 				0AF995F40CC3C849000A11DC /* IconForBellOff.icns in Resources */,
 				0AF995F50CC3C849000A11DC /* IconForBellOn.icns in Resources */,
+				0AB1C5110CCD608400E3A160 /* AddressDialog.nib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1701,6 +1712,7 @@
 				0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */,
 				0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */,
 				0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */,
+				0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1926,6 +1938,14 @@
 				0A4A86B3055B3DDF0011CC82 /* English */,
 			);
 			name = LocalizedPrefPanelGeneral.h;
+			sourceTree = "<group>";
+		};
+		0AB1C50B0CCD608400E3A160 /* AddressDialog.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AB1C50C0CCD608400E3A160 /* English */,
+			);
+			name = AddressDialog.nib;
 			sourceTree = "<group>";
 		};
 		0AB64A93057819E5005702BA /* InfoWindow.nib */ = {

@@ -949,6 +949,11 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 													CFSTR("kUIStrings_HelpSystemTopicHelpUsingMacros; should match topic title"));
 		break;
 	
+	case kUIStrings_HelpSystemTopicHelpWithIPAddresses:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Help With IP Addresses"), CFSTR("HelpSystem"),
+													CFSTR("kUIStrings_HelpSystemTopicHelpWithIPAddresses; should match topic title"));
+		break;
+	
 	case kUIStrings_HelpSystemTopicHelpWithKioskSetup:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Help With Kiosk Setup"), CFSTR("HelpSystem"),
 													CFSTR("kUIStrings_HelpSystemTopicHelpWithKioskSetup; should match topic title"));

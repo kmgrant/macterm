@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071023',
     '20071022',
     '20071019',
     '20071015',
@@ -60,6 +61,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071023': [
+		'Show IP Addresses command now displays a more sophisticated dialog with a proper list view for addresses.',
+		'Show IP Addresses dialog now allows addresses to be copied to the Clipboard individually.',
+	],
 	'20071022': [
 		'Terminal window tabs now recognize drags, automatically switching tabs when the mouse moves over them.',
 	],
