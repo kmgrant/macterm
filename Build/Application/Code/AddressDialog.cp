@@ -207,7 +207,11 @@ AddressDialog_Display	(AddressDialog_Ref		inDialog)
 		// display the dialog
 		ShowWindow(ptr->dialogWindow);
 		EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
-		RunAppModalLoopForWindow(ptr->dialogWindow);
+		
+		(OSStatus)HIViewSetNextFocus(HIViewGetRoot(ptr->dialogWindow), ptr->dataBrowserAddresses);
+		(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(ptr->dialogWindow), 0/* modifier keys */);
+		
+		(OSStatus)RunAppModalLoopForWindow(ptr->dialogWindow);
 		
 		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 	}
@@ -548,7 +552,7 @@ handleItemHit	(My_AddressDialogPtr	inPtr,
 	if (idMyButtonDone.signature == inID.signature)
 	{
 		// close the dialog with an appropriate transition for acceptance
-		QuitAppModalLoopForWindow(inPtr->dialogWindow);
+		(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
 		HideWindow(inPtr->dialogWindow);
 		
 		// notify of close
@@ -560,7 +564,7 @@ handleItemHit	(My_AddressDialogPtr	inPtr,
 	else if (idMyButtonCopyToClipboard.signature == inID.signature)
 	{
 		// user chose to Copy - close the dialog with an appropriate transition
-		QuitAppModalLoopForWindow(inPtr->dialogWindow);
+		(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
 		HideWindow(inPtr->dialogWindow);
 		
 		// copy the available IP addresses to the clipboard
