@@ -363,3 +363,26 @@ h6
 	border-right:		0;
 	margin-right:		1.2em;
 }
+
+blockquote
+{
+	background:			white;
+	color:				#556;
+	font-style:			italic;
+	
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
+	height:				auto;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
+	
+	margin-left:		3em;
+	border-left:		dashed #aae 0.1em;
+	padding-left:		1.5em;
+	width:				65%;
+	padding-right:		1.5em;
+	border-right:		0;
+	margin-right:		0;
+}
