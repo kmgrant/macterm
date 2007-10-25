@@ -12,7 +12,6 @@
 		0A1BCD8A05CA2B21005CF1E5 /* TerminalWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */; };
 		0A1BCD9F05CA34FF005CF1E5 /* IconForSessionStatusActive.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */; };
 		0A1BCDA005CA34FF005CF1E5 /* IconForSessionStatusDead.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */; };
-		0A26DD9F0CCF0BCE00768AD8 /* AddressDialog.h in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */; };
 		0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A26DD900CCF09D400768AD8 /* AddressDialog.cp */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A3E06F70B81767A00EDC16A /* PrefPanelTranslations.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */; };
@@ -294,7 +293,6 @@
 			files = (
 				0AF46B600B05495C00666419 /* Quills.framework in Copy Frameworks */,
 				0A9AF68B0AF5A95100E7DF18 /* PyMacTelnet.framework in Copy Frameworks */,
-				0A26DD9F0CCF0BCE00768AD8 /* AddressDialog.h in Copy Frameworks */,
 			);
 			name = "Copy Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
