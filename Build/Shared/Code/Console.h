@@ -54,6 +54,38 @@
 #pragma mark Types
 
 /*!
+Simply declare a variable of this type in a block,
+and if its input is false it will trigger an
+assertion failure in debugging mode.
+
+When would you use this?  Say you have an object that
+constructs successfully (throwing no exceptions) but
+still holds an error condition in a flag.  You might
+declare one of these assertion objects in the same
+block to test for the error condition.
+
+There is also a do-nothing default constructor, so
+that you can disable an assertion simply by failing
+to initialize it!  For example, if you declare some
+assertions in a class, the constructor’s member
+initialization list could contain "#ifdef DEBUG"
+lines around assertion initializers.
+*/
+struct Console_Assertion
+{
+public:
+	inline
+	Console_Assertion		();
+	
+	inline
+	Console_Assertion		(Boolean,
+							 char const*,
+							 unsigned long,
+							 char const* = "");
+};
+
+
+/*!
 Simply declare a variable of this type at the top
 of a block, and any console output written within
 the block will be indented.  When the block exits,
@@ -224,6 +256,34 @@ void
 
 
 #pragma mark Inline Methods
+
+/*!
+Does nothing.
+
+(3.1)
+*/
+Console_Assertion::
+Console_Assertion ()
+{
+}
+
+
+/*!
+Checks that the specified assertion has not failed.
+If it does, raises an assertion in debug mode with
+a traceable crash.
+
+(3.1)
+*/
+Console_Assertion::
+Console_Assertion	(Boolean			inAssertion,
+					 char const*		inFile,
+					 unsigned long		inLine,
+					 char const*		inAssertionName)
+{
+	if (false == inAssertion) __Console_AssertHelper(inAssertionName, inFile, inLine);
+}
+
 
 /*!
 Increases the indentation level.
