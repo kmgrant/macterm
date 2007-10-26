@@ -42,12 +42,14 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <DialogAdjust.h>
 #include <FlagManager.h>
 #include <HIViewWrap.h>
+#include <HIViewWrapManip.h>
 #include <IconManager.h>
 #include <Localization.h>
 #include <MemoryBlockPtrLocker.template.h>
@@ -118,31 +120,29 @@ struct FindDialog
 					 FindDialog_Options				inFlags);
 	~FindDialog ();
 	
+	FindDialogRef							selfRef;					//!< identical to address of structure, but typed as ref
 	TerminalWindowRef						terminalWindow;				//!< the terminal window for which this dialog applies
-	WindowRef								dialogWindow;				//!< the dialogÕs window
-	ControlRef								buttonSearch,				//!< Search button
-											buttonCancel,				//!< Cancel button
-											labelKeywords,				//!< the label for the keyword text field
-											fieldKeywords,				//!< the text field containing search keywords
-											popUpMenuKeywordHistory,	//!< pop-up menu showing previous searches
-											textNotFound,				//!< message stating that queried text was not found
-											iconNotFound,				//!< icon that appears when text was not found
-											arrowsSearchProgress,		//!< the progress indicator during searches
-											checkboxCaseSensitive,		//!< checkbox indicating whether ÒsimilarÓ letters match
-											checkboxOldestLinesFirst;	//!< checkbox indicating search direction
+	NIBWindow								dialogWindow;				//!< the dialogÕs window
+	HIViewWrap								buttonSearch;				//!< Search button
+	HIViewWrap								buttonCancel;				//!< Cancel button
+	HIViewWrap								labelKeywords;				//!< the label for the keyword text field
+	HIViewWrap								fieldKeywords;				//!< the text field containing search keywords
+	HIViewWrap								popUpMenuKeywordHistory;	//!< pop-up menu showing previous searches
+	HIViewWrap								textNotFound;				//!< message stating that queried text was not found
+	HIViewWrap								iconNotFound;				//!< icon that appears when text was not found
+	HIViewWrap								arrowsSearchProgress;		//!< the progress indicator during searches
+	HIViewWrap								checkboxCaseSensitive;		//!< checkbox indicating whether ÒsimilarÓ letters match
+	HIViewWrap								checkboxOldestLinesFirst;	//!< checkbox indicating search direction
 	HIViewWrap								buttonHelp;					//!< help button
 	
 	FindDialogCloseNotifyProcPtr			closeNotifyProc;			//!< routine to call when the dialog is dismissed
-	EventHandlerUPP							buttonHICommandsUPP;		//!< wrapper for button callback function
-	EventHandlerRef							buttonHICommandsHandler;	//!< invoked when a dialog button is clicked
-	EventHandlerUPP							fieldKeyPressUPP;			//!< wrapper for key press callback function
-	EventHandlerRef							fieldKeyPressHandler;		//!< invoked when a key is pressed while the field is focused
+	CarbonEventHandlerWrap					buttonHICommandsHandler;	//!< invoked when a dialog button is clicked
+	CarbonEventHandlerWrap					fieldKeyPressHandler;		//!< invoked when a key is pressed while the field is focused
 	EventHandlerUPP							historyMenuCommandUPP;		//!< wrapper for button callback function
 	EventHandlerRef							historyMenuCommandHandler;	//!< invoked when a dialog button is clicked
 	CommonEventHandlers_WindowResizer		windowResizeHandler;		//!< invoked when a window has been resized
 	MenuRef									keywordHistoryMenuRef;		//!< history menu
 	KeywordHistoryList						keywordHistory;				//!< contents of history menu
-	FindDialogRef							selfRef;					//!< identical to address of structure, but typed as ref
 };
 typedef FindDialog*		FindDialogPtr;
 typedef FindDialogPtr*	FindDialogHandle;
@@ -185,30 +185,46 @@ FindDialog	(TerminalWindowRef				inTerminalWindow,
 			 FindDialog_Options				inFlags)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-terminalWindow(inTerminalWindow),
-dialogWindow(nullptr),
-buttonSearch(nullptr),
-buttonCancel(nullptr),
-labelKeywords(nullptr),
-fieldKeywords(nullptr),
-popUpMenuKeywordHistory(nullptr),
-textNotFound(nullptr),
-iconNotFound(nullptr),
-arrowsSearchProgress(nullptr),
-checkboxCaseSensitive(nullptr),
-checkboxOldestLinesFirst(nullptr),
-buttonHelp(nullptr),
-closeNotifyProc(inCloseNotifyProcPtr),
-buttonHICommandsUPP(nullptr),
-buttonHICommandsHandler(nullptr),
-fieldKeyPressUPP(nullptr),
-fieldKeyPressHandler(nullptr),
-historyMenuCommandUPP(nullptr),
-historyMenuCommandHandler(nullptr),
-windowResizeHandler(),
-keywordHistoryMenuRef(nullptr),
-keywordHistory(kFindDialogKeywordHistorySize),
-selfRef(REINTERPRET_CAST(this, FindDialogRef))
+selfRef						(REINTERPRET_CAST(this, FindDialogRef)),
+terminalWindow				(inTerminalWindow),
+dialogWindow				(NIBWindow(AppResources_ReturnBundleForNIBs(),
+										CFSTR("FindDialog"), CFSTR("Dialog"))
+								<< NIBLoader_AssertWindowExists),
+buttonSearch				(dialogWindow.returnHIViewWithID(idMyButtonSearch)
+								<< HIViewWrap_AssertExists),
+buttonCancel				(dialogWindow.returnHIViewWithID(idMyButtonCancel)
+								<< HIViewWrap_AssertExists),
+labelKeywords				(dialogWindow.returnHIViewWithID(idMyLabelSearchKeywords)
+								<< HIViewWrap_AssertExists),
+fieldKeywords				(dialogWindow.returnHIViewWithID(idMyFieldSearchKeywords)
+								<< HIViewWrap_AssertExists),
+popUpMenuKeywordHistory		(dialogWindow.returnHIViewWithID(idMyKeywordHistoryMenu)
+								<< HIViewWrap_AssertExists),
+textNotFound				(dialogWindow.returnHIViewWithID(idMyTextNotFound)
+								<< HIViewWrap_AssertExists),
+iconNotFound				(dialogWindow.returnHIViewWithID(idMyIconNotFound)
+								<< HIViewWrap_AssertExists),
+arrowsSearchProgress		(dialogWindow.returnHIViewWithID(idMyArrowsSearchProgress)
+								<< HIViewWrap_AssertExists),
+checkboxCaseSensitive		(dialogWindow.returnHIViewWithID(idMyCheckBoxCaseSensitive)
+								<< HIViewWrap_AssertExists),
+checkboxOldestLinesFirst	(dialogWindow.returnHIViewWithID(idMyCheckBoxOldestFirst)
+								<< HIViewWrap_AssertExists),
+buttonHelp					(dialogWindow.returnHIViewWithID(idMyButtonHelp)
+								<< HIViewWrap_AssertExists
+								<< DialogUtilities_SetUpHelpButton),
+closeNotifyProc				(inCloseNotifyProcPtr),
+buttonHICommandsHandler		(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+								this->selfRef/* user data */),
+fieldKeyPressHandler		(HIViewGetEventTarget(this->fieldKeywords), receiveKeyPress,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard), kEventRawKeyDown),
+								this->selfRef/* user data */),
+historyMenuCommandUPP		(nullptr),
+historyMenuCommandHandler	(nullptr),
+windowResizeHandler			(),
+keywordHistoryMenuRef		(nullptr),
+keywordHistory				(kFindDialogKeywordHistorySize)
 {
 	// initialize keyword history
 	{
@@ -218,43 +234,6 @@ selfRef(REINTERPRET_CAST(this, FindDialogRef))
 		for (i = 0; i < kFindDialogKeywordHistorySize; ++i) this->keywordHistory[i] = nullptr;
 	}
 	addToHistory(this, CFSTR(""));
-	
-	// load the NIB containing this dialog (automatically finds the right localization)
-	this->dialogWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
-									CFSTR("FindDialog"), CFSTR("Dialog")) << NIBLoader_AssertWindowExists;
-	
-	// find references to all controls that are needed for any operation
-	// (button clicks, dealing with text or responding to window resizing)
-	{
-		OSStatus	error = noErr;
-		
-		
-		error = GetControlByID(this->dialogWindow, &idMyButtonSearch, &this->buttonSearch);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyButtonCancel, &this->buttonCancel);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyLabelSearchKeywords, &this->labelKeywords);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyFieldSearchKeywords, &this->fieldKeywords);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyKeywordHistoryMenu, &this->popUpMenuKeywordHistory);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyTextNotFound, &this->textNotFound);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyIconNotFound, &this->iconNotFound);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyArrowsSearchProgress, &this->arrowsSearchProgress);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyCheckBoxCaseSensitive, &this->checkboxCaseSensitive);
-		assert(error == noErr);
-		error = GetControlByID(this->dialogWindow, &idMyCheckBoxOldestFirst, &this->checkboxOldestLinesFirst);
-		assert(error == noErr);
-		this->buttonHelp.setCFTypeRef(HIViewWrap(idMyButtonHelp, this->dialogWindow));
-		assert(this->buttonHelp.exists());
-	}
-	
-	// make the help button icon appearance and state appropriate
-	DialogUtilities_SetUpHelpButton(this->buttonHelp);
 	
 	// history menu setup
 	{
@@ -312,39 +291,6 @@ selfRef(REINTERPRET_CAST(this, FindDialogRef))
 	(OSStatus)SetControlVisibility(this->iconNotFound, false/* visible */, false/* draw */);
 	(OSStatus)SetControlVisibility(this->arrowsSearchProgress, false/* visible */, false/* draw */);
 	
-	// install a callback that responds to buttons in the window
-	{
-		EventTypeSpec const		whenButtonClicked[] =
-								{
-									{ kEventClassCommand, kEventCommandProcess }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->buttonHICommandsUPP = NewEventHandlerUPP(receiveHICommand);
-		error = InstallWindowEventHandler(this->dialogWindow, this->buttonHICommandsUPP, GetEventTypeCount(whenButtonClicked),
-											whenButtonClicked, this->selfRef/* user data */,
-											&this->buttonHICommandsHandler/* event handler reference */);
-		assert(error == noErr);
-	}
-	
-	// install a callback that responds to key presses in the query field
-	{
-		EventTypeSpec const		whenKeyPressedInQueryField[] =
-								{
-									{ kEventClassKeyboard, kEventRawKeyDown }
-								};
-		OSStatus				error = noErr;
-		
-		
-		this->fieldKeyPressUPP = NewEventHandlerUPP(receiveKeyPress);
-		error = HIViewInstallEventHandler(this->fieldKeywords, this->fieldKeyPressUPP,
-											GetEventTypeCount(whenKeyPressedInQueryField),
-											whenKeyPressedInQueryField, this->selfRef/* user data */,
-											&this->fieldKeyPressHandler/* event handler reference */);
-		assert(error == noErr);
-	}
-	
 	// install a callback that handles history menu item selections
 	{
 		EventTypeSpec const		whenHistoryMenuItemSelected[] =
@@ -398,10 +344,6 @@ FindDialog::
 	HelpSystem_SetWindowKeyPhrase(this->dialogWindow, kHelpSystem_KeyPhraseDefault);
 	
 	// release all memory occupied by the dialog
-	RemoveEventHandler(this->buttonHICommandsHandler);
-	RemoveEventHandler(this->fieldKeyPressHandler);
-	DisposeEventHandlerUPP(this->buttonHICommandsUPP);
-	DisposeEventHandlerUPP(this->fieldKeyPressUPP);
 	DisposeWindow(this->dialogWindow);
 }// FindDialog destructor
 
