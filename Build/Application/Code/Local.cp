@@ -416,8 +416,11 @@ Local_SendTerminalResizeMessage		(PseudoTeletypewriterID		inPseudoTerminalID,
 
 /*!
 Calls Local_SpawnProcess() with the user’s default
-shell as the process (determined using the SHELL
-environment variable).
+shell as the process (determined using getpwuid()
+or falling back to the SHELL environment variable).
+
+See the documentation on Local_SpawnProcess() for
+more on how the working directory is handled.
 
 \return any code that Local_SpawnProcess() can return
 
@@ -427,10 +430,13 @@ LocalResultCode
 Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
 						 pid_t*				outProcessIDPtr,
-						 char*				outSlaveName)
+						 char*				outSlaveName,
+						 char const*		inWorkingDirectory)
 {
 	struct passwd*	userInfoPtr = getpwuid(getuid());
 	char const*		args[] = { nullptr, nullptr/* terminator */ };
+	char const*		homeDir = nullptr;
+	char const*		targetDir = inWorkingDirectory;
 	
 	
 	if (nullptr != userInfoPtr)
@@ -438,8 +444,7 @@ Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 		// grab the user’s preferred shell from the password file
 		args[0] = userInfoPtr->pw_shell;
 		
-		// change to the user’s home directory upon starting the shell
-		(int)chdir(userInfoPtr->pw_dir);
+		homeDir = userInfoPtr->pw_dir;
 	}
 	else
 	{
@@ -447,15 +452,25 @@ Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 		args[0] = getenv("SHELL");
 		
 		// revert to the $HOME method, which usually works but is less reliable...
-		(int)chdir(getenv("HOME"));
+		homeDir = getenv("HOME");
 	}
-	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName);
+	
+	// run in the specified directory, or home if no directory is given
+	if (nullptr == targetDir)
+	{
+		targetDir = homeDir;
+	}
+	
+	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName, targetDir);
 }// SpawnDefaultShell
 
 
 /*!
 Calls Local_SpawnProcess() with "/usr/bin/login",
 which launches the default login shell.
+
+See the documentation on Local_SpawnProcess() for
+more on how the working directory is handled.
 
 \return any code that Local_SpawnProcess() can return
 
@@ -465,12 +480,14 @@ LocalResultCode
 Local_SpawnLoginShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
 						 pid_t*				outProcessIDPtr,
-						 char*				outSlaveName)
+						 char*				outSlaveName,
+						 char const*		inWorkingDirectory)
 {
 	char const*		args[] = { "/usr/bin/login", nullptr/* terminator */ };
 	
 	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName);
+	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName,
+								inWorkingDirectory);
 }// SpawnLoginShell
 
 
@@ -484,6 +501,12 @@ nullptr entry in the array.
 The specified session’s data will be updated with
 whatever information is available for the created
 process.
+
+The specified working directory is targeted only in
+the child process, meaning the caller’s working
+directory is unchanged.  If it is not possible to
+change to that directory, the child process is
+aborted.
 
 The Unix process ID and TTY name (e.g. "/dev/ttyp2")
 are returned.  The buffer you provide for the slave
@@ -509,7 +532,8 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 TerminalScreenRef	inContainer,
 					 char const* const	argv[],
 					 pid_t*				outProcessIDPtr,
-					 char*				outSlaveName)
+					 char*				outSlaveName,
+					 char const*		inWorkingDirectory)
 {
 	LocalResultCode		result = kLocalResultCodeSuccess;
 	
@@ -629,6 +653,15 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 								++argvPtr;
 							}
 							*argvCopyPtr = nullptr; // terminate
+							
+							// set the current working directory...abort if this fails
+							// because presumably it is important that a command not
+							// start in the wrong directory
+							if (0 != chdir(inWorkingDirectory))
+							{
+								Console_WriteValueCString("Aborting, failed to chdir() to ", inWorkingDirectory);
+								abort();
+							}
 							
 							(int)execvp(argvCopy[0], argvCopy); // should not return
 						}

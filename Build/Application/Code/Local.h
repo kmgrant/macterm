@@ -116,20 +116,23 @@ LocalResultCode
 	Local_SpawnDefaultShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 pid_t*						outProcessIDPtr,
-											 char*						outSlaveName);
+											 char*						outSlaveName,
+											 char const*				inWorkingDirectory = nullptr);
 
 LocalResultCode
 	Local_SpawnLoginShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 pid_t*						outProcessIDPtr,
-											 char*						outSlaveName);
+											 char*						outSlaveName,
+											 char const*				inWorkingDirectory = nullptr);
 
 LocalResultCode
 	Local_SpawnProcess						(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 char const* const			argv[],
 											 pid_t*						outProcessIDPtr,
-											 char*						outSlaveName);
+											 char*						outSlaveName,
+											 char const*				inWorkingDirectory = nullptr);
 
 LocalResultCode
 	Local_SpawnProcessAndWaitForTermination	(char const*				inCommand);
