@@ -14,7 +14,7 @@
 	ScriptingTerminology.sdef
 	
 	MacTelnet 3.0
-	© 1998-2005 by Kevin Grant
+	(c) 1998-2005 by Kevin Grant
 	
 	This file defines MacTelnet's AppleScript Dictionary.  Various codes
 	used in this file come from AERegistry.h (in AE.framework in

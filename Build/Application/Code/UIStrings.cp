@@ -3,9 +3,9 @@
 	UIStrings.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2007 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -87,7 +87,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -227,7 +227,7 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -357,7 +357,7 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -462,7 +462,7 @@ UIStrings_Copy	(UIStrings_CommandLineCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -527,7 +527,7 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -652,7 +652,7 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -849,7 +849,7 @@ UIStrings_Copy	(UIStrings_FontListProgressWindowCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -895,7 +895,7 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1016,7 +1016,7 @@ UIStrings_Copy	(UIStrings_MacroSetupWindowCFString		inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1082,7 +1082,7 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1298,7 +1298,7 @@ UIStrings_Copy	(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1317,7 +1317,7 @@ UIStrings_Copy	(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
 
 
 /*!
-Locates the specified string used by the “session info”
+Locates the specified string used by the ‚Äúsession info‚Äù
 window, and returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease()
 on the returned string when you are finished with it.
@@ -1343,7 +1343,7 @@ UIStrings_Copy	(UIStrings_SessionInfoWindowCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1409,7 +1409,7 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1479,7 +1479,7 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1544,7 +1544,7 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1624,7 +1624,7 @@ UIStrings_Copy	(UIStrings_UndoCFString		inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1694,7 +1694,7 @@ UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichStringClass)
 	{
