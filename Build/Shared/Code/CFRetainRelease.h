@@ -26,7 +26,7 @@
 /*###############################################################
 
 	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	ï¿½ 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -82,6 +82,9 @@ public:
 	CFRetainRelease (CFArrayRef);
 	
 	inline
+	CFRetainRelease (CFBundleRef);
+	
+	inline
 	CFRetainRelease (CFDictionaryRef);
 	
 	inline
@@ -122,6 +125,9 @@ public:
 	
 	inline CFArrayRef
 	returnCFArrayRef () const;
+	
+	inline CFBundleRef
+	returnCFBundleRef () const;
 	
 	inline CFDictionaryRef
 	returnCFDictionaryRef () const;
@@ -168,6 +174,7 @@ private:
 		union
 		{
 			CFMutableArrayRef		array;
+			CFBundleRef				bundle;
 			CFMutableDictionaryRef	dictionary;
 		} _modifiable;
 	} _typeAs;
@@ -258,6 +265,30 @@ _isMutable(false)
 		CFRetain(_typeAs._constant.array);
 	}
 }// array type constructor
+
+
+/*!
+Creates a new reference using the value of an
+existing one that is a Core Foundation Bundle
+type.  In debug mode, an assertion failure will occur
+if the given reference is not a CFBundleRef.
+CFRetain() is called on the reference.
+
+(1.4)
+*/
+CFRetainRelease::
+CFRetainRelease		(CFBundleRef	inType)
+:
+_isMutable(true)
+{
+	_typeAs._modifiable.bundle = inType;
+	assert(_typeAs._modifiable.bundle == inType);
+	if (nullptr != _typeAs._modifiable.bundle)
+	{
+		assert(CFGetTypeID(_typeAs._modifiable.bundle) == CFBundleGetTypeID());
+		CFRetain(_typeAs._modifiable.bundle);
+	}
+}// bundle type constructor
 
 
 /*!
@@ -487,6 +518,24 @@ const
 	assert((nullptr == _typeAs._constant.array) || (CFGetTypeID(_typeAs._constant.array) == CFArrayGetTypeID()));
 	return _typeAs._constant.array;
 }// returnCFArrayRef
+
+
+/*!
+Convenience method to cast the internal reference
+into a CFBundleRef.  In debug mode, an assertion
+failure will occur if the reference is not really
+a CFBundleRef.
+
+(1.4)
+*/
+CFBundleRef
+CFRetainRelease::
+returnCFBundleRef ()
+const
+{
+	assert((nullptr == _typeAs._modifiable.bundle) || (CFGetTypeID(_typeAs._modifiable.bundle) == CFBundleGetTypeID()));
+	return _typeAs._modifiable.bundle;
+}// returnCFBundleRef
 
 
 /*!
