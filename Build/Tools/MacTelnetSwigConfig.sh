@@ -2,14 +2,23 @@
 
 # MacTelnetSwigConfig.sh
 #
-# Allows you to build SWIG 1.3.29 for MacTelnet's use.
+# Allows you to build SWIG for MacTelnet's use.
 # (Download SWIG from "http://www.swig.org/".)
 #
 # Run this instead of "./configure" from your untarred
-# "swig-1.3.29" build directory.
+# "swig-<x.x>" build directory.
 #
 # Kevin Grant (kevin@ieee.org)
 # July 29, 2006
+
+# IMPORTANT: MacTelnet's build system assumes /opt/swig
+# regardless of what you may customize here.
+#
+# SWIG 1.3.29 or later works with Tiger (10.4).
+# SWIG 1.3.30 or later is required for Leopard (10.5).
+swigversion=1.3.31
+prefix_with_ver=/opt/swig-${swigversion}
+prefix_no_ver=/opt/swig
 
 # it is not really clear if it matters what version of GCC is
 # used to build SWIG (after all, SWIG generates code that is
@@ -41,11 +50,11 @@ echo "checking gcc version... `gcc -dumpversion`"
 
 # set up a version-free alias for the specific version directory;
 # once SWIG is built (post-configuration) this link will be valid
-ln -s /opt/swig-1.3.29 /opt/swig
+ln -snf ${prefix_with_ver} ${prefix_no_ver}
 
 # enable only Python
 ./configure \
---prefix=/opt/swig-1.3.29 \
+--prefix=${prefix_with_ver} \
 --with-python \
 --without-allegrocl \
 --without-chicken \
