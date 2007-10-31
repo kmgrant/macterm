@@ -3,7 +3,7 @@
 	Local.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -431,37 +431,25 @@ Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
 						 pid_t*				outProcessIDPtr,
 						 char*				outSlaveName,
-						 char const*		inWorkingDirectory)
+						 char const*		inWorkingDirectoryOrNull)
 {
 	struct passwd*	userInfoPtr = getpwuid(getuid());
 	char const*		args[] = { nullptr, nullptr/* terminator */ };
-	char const*		homeDir = nullptr;
-	char const*		targetDir = inWorkingDirectory;
 	
 	
 	if (nullptr != userInfoPtr)
 	{
 		// grab the userÕs preferred shell from the password file
 		args[0] = userInfoPtr->pw_shell;
-		
-		homeDir = userInfoPtr->pw_dir;
 	}
 	else
 	{
 		// revert to the $SHELL method, which usually works but is less reliable...
 		args[0] = getenv("SHELL");
-		
-		// revert to the $HOME method, which usually works but is less reliable...
-		homeDir = getenv("HOME");
 	}
 	
-	// run in the specified directory, or home if no directory is given
-	if (nullptr == targetDir)
-	{
-		targetDir = homeDir;
-	}
-	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName, targetDir);
+	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName,
+								inWorkingDirectoryOrNull);
 }// SpawnDefaultShell
 
 
@@ -481,13 +469,13 @@ Local_SpawnLoginShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
 						 pid_t*				outProcessIDPtr,
 						 char*				outSlaveName,
-						 char const*		inWorkingDirectory)
+						 char const*		inWorkingDirectoryOrNull)
 {
 	char const*		args[] = { "/usr/bin/login", nullptr/* terminator */ };
 	
 	
 	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName,
-								inWorkingDirectory);
+								inWorkingDirectoryOrNull);
 }// SpawnLoginShell
 
 
@@ -533,7 +521,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 char const* const	argv[],
 					 pid_t*				outProcessIDPtr,
 					 char*				outSlaveName,
-					 char const*		inWorkingDirectory)
+					 char const*		inWorkingDirectoryOrNull)
 {
 	LocalResultCode		result = kLocalResultCodeSuccess;
 	
@@ -587,6 +575,26 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				//
 				// this is executed inside the child process
 				//
+				
+				char const*		targetDir = inWorkingDirectoryOrNull;
+				
+				
+				// determine the directory to be in when the command is run
+				if (nullptr == targetDir)
+				{
+					struct passwd*	userInfoPtr = getpwuid(getuid());
+					
+					
+					if (nullptr != userInfoPtr)
+					{
+						targetDir = userInfoPtr->pw_dir;
+					}
+					else
+					{
+						// revert to the $HOME method, which usually works but is less reliable...
+						targetDir = getenv("HOME");
+					}
+				}
 				
 				// run a Unix terminal-based application program; this is accomplished
 				// using an execvp() call, which DOES NOT RETURN UNLESS there is an
@@ -657,9 +665,9 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 							// set the current working directory...abort if this fails
 							// because presumably it is important that a command not
 							// start in the wrong directory
-							if (0 != chdir(inWorkingDirectory))
+							if (0 != chdir(targetDir))
 							{
-								Console_WriteValueCString("Aborting, failed to chdir() to ", inWorkingDirectory);
+								Console_WriteValueCString("Aborting, failed to chdir() to ", targetDir);
 								abort();
 							}
 							

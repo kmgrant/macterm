@@ -117,14 +117,14 @@ LocalResultCode
 											 TerminalScreenRef			inContainer,
 											 pid_t*						outProcessIDPtr,
 											 char*						outSlaveName,
-											 char const*				inWorkingDirectory = nullptr);
+											 char const*				inWorkingDirectoryOrNull = nullptr);
 
 LocalResultCode
 	Local_SpawnLoginShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 pid_t*						outProcessIDPtr,
 											 char*						outSlaveName,
-											 char const*				inWorkingDirectory = nullptr);
+											 char const*				inWorkingDirectoryOrNull = nullptr);
 
 LocalResultCode
 	Local_SpawnProcess						(SessionRef					inUninitializedSession,
@@ -132,7 +132,7 @@ LocalResultCode
 											 char const* const			argv[],
 											 pid_t*						outProcessIDPtr,
 											 char*						outSlaveName,
-											 char const*				inWorkingDirectory = nullptr);
+											 char const*				inWorkingDirectoryOrNull = nullptr);
 
 LocalResultCode
 	Local_SpawnProcessAndWaitForTermination	(char const*				inCommand);
