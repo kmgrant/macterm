@@ -576,6 +576,10 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				// this is executed inside the child process
 				//
 				
+				// IMPORTANT: There are limitations on what a child process can do.
+				// For example, global data and framework calls are generally unsafe.
+				// See the "fork" man page for more information.
+				
 				char const*		targetDir = inWorkingDirectoryOrNull;
 				
 				
@@ -596,84 +600,28 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					}
 				}
 				
+				// set the current working directory...abort if this fails
+				// because presumably it is important that a command not
+				// start in the wrong directory
+				if (0 != chdir(targetDir))
+				{
+					Console_WriteValueCString("Aborting, failed to chdir() to ", targetDir);
+					abort();
+				}
+				
 				// run a Unix terminal-based application program; this is accomplished
 				// using an execvp() call, which DOES NOT RETURN UNLESS there is an
 				// error; technically the return value is -1 on error, but really itÕs
 				// a problem if any return value is received, so an abort() is done no
 				// matter what (the abort() kills this child process, but not MacTelnet)
-				{
-					std::string		ipAddressString;
-					std::string		envValueString;
-					int				addressType = AF_INET;
+				{					
+					// An execvp() accepts mutable arguments and the input is constant.
+					// But the child process has a copy of the original data and the
+					// data goes away after the execvp(), so a const_cast should be okay.
+					char**		argvCopy = CONST_CAST(argv, char**);
 					
 					
-					// as a convenience to the user, set the X display
-					// to an appropriate value, if possible
-					if (Network_CurrentIPAddressToString(ipAddressString, addressType))
-					{
-						envValueString = ipAddressString;
-					}
-					else
-					{
-						envValueString = "localhost";
-					}
-					envValueString +=  ":0"; // add display number
-					setenv("DISPLAY", envValueString.c_str(), 0/* overwrite */); // convenience for the user
-				}
-				
-				// execvp() accepts mutable arguments on account of (presumably)
-				// efficiency; it is probably true that constant buffers are still
-				// in process boundaries and therefore can be trashed with a
-				// constant cast here, but in case constant data is actually
-				// stored someplace sacred, this routine copies everything so that
-				// execvp() can trash whatever part of the arguments it wants to
-				{
-					size_t				argvSize = 0;
-					char const* const*	argvPtr = argv;
-					
-					
-					while (nullptr != *argvPtr)
-					{
-						++argvSize;
-						++argvPtr;
-					}
-					
-					if (0 != argvSize)
-					{
-						char**	argvCopy = nullptr;
-						
-						
-						argvCopy = new char*[argvSize];
-						if (nullptr != argvCopy)
-						{
-							char**	argvCopyPtr = argvCopy;
-							
-							
-							argvPtr = argv;
-							while (nullptr != *argvPtr)
-							{
-								if (CPP_STD::strlen(*argvPtr) > 0)
-								{
-									*argvCopyPtr = new char[CPP_STD::strlen(*argvPtr)];
-									CPP_STD::strcpy(*argvCopyPtr, *argvPtr);
-									++argvCopyPtr;
-								}
-								++argvPtr;
-							}
-							*argvCopyPtr = nullptr; // terminate
-							
-							// set the current working directory...abort if this fails
-							// because presumably it is important that a command not
-							// start in the wrong directory
-							if (0 != chdir(targetDir))
-							{
-								Console_WriteValueCString("Aborting, failed to chdir() to ", targetDir);
-								abort();
-							}
-							
-							(int)execvp(argvCopy[0], argvCopy); // should not return
-						}
-					}
+					(int)execvp(argvCopy[0], argvCopy); // should not return
 					abort(); // almost no chance this line will be run, but if it does, just kill the child process
 				}
 			}
