@@ -36,6 +36,7 @@
 #include <QuickTime/QuickTime.h>
 
 // library includes
+#include <CFRetainRelease.h>
 #include <Console.h>
 
 // resource includes
@@ -52,10 +53,10 @@
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	CFBundleRef&	gApplicationBundle ()	{ static CFBundleRef x = nullptr; return x; }
-	SInt16			gResourceFileApplication = -1; // IMPORTANT - initialize to an INVALID file descriptor
-	SInt16			gResourceFilePreferences = -1;
-	SInt16			gResourceFileTerminalBellSound = -1;
+	CFRetainRelease&	gApplicationBundle ()	{ static CFRetainRelease x; return x; }
+	SInt16				gResourceFileApplication = -1; // IMPORTANT - initialize to an INVALID file descriptor
+	SInt16				gResourceFilePreferences = -1;
+	SInt16				gResourceFileTerminalBellSound = -1;
 }
 
 #pragma mark Internal Method Prototypes
@@ -83,7 +84,6 @@ AppResources_Init	(CFBundleRef	inApplicationBundle)
 {
 	if (nullptr != inApplicationBundle)
 	{
-		CFRetain(inApplicationBundle);
 		gApplicationBundle() = inApplicationBundle;
 	}
 }// Init
@@ -350,8 +350,11 @@ the bundle appropriate for a task.
 CFBundleRef
 AppResources_ReturnApplicationBundle ()
 {
-	assert(nullptr != gApplicationBundle());
-	return gApplicationBundle();
+	CFBundleRef		result = gApplicationBundle().returnCFBundleRef();
+	
+	
+	assert(nullptr != result);
+	return result;
 }// ReturnApplicationBundle
 
 
@@ -369,8 +372,11 @@ CFBundleRef
 AppResources_ReturnBundleForInfo ()
 {
 	// currently, this is the same as the primary bundle
-	assert(nullptr != gApplicationBundle());
-	return gApplicationBundle();
+	CFBundleRef		result = gApplicationBundle().returnCFBundleRef();
+	
+	
+	assert(nullptr != result);
+	return result;
 }// ReturnBundleForInfo
 
 
@@ -390,8 +396,11 @@ CFBundleRef
 AppResources_ReturnBundleForNIBs ()
 {
 	// currently, this is the same as the primary bundle
-	assert(nullptr != gApplicationBundle());
-	return gApplicationBundle();
+	CFBundleRef		result = gApplicationBundle().returnCFBundleRef();
+	
+	
+	assert(nullptr != result);
+	return result;
 }// ReturnBundleForNIBs
 
 
