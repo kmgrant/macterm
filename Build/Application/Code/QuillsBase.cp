@@ -3,7 +3,7 @@
 	QuillsBase.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -32,6 +32,7 @@
 #include "UniversalDefines.h"
 
 // standard-C++ includes
+#include <stdexcept>
 #include <string>
 
 // library includes
@@ -56,41 +57,41 @@ See header or "pydoc" for Python docstrings.
 (3.1)
 */
 void
-Base::all_init ()
+Base::all_init	(std::string	inBundlePath)
 {
-	Initialize_ApplicationStartup(CFBundleGetMainBundle());
-	
-#if 0
-	// should it ever become necessary to initialize the application
-	// from an explicit bundle location on disk (passed as input), the
-	// following code will convert the path to a real bundle reference
-	CFRetainRelease		pathCFString = CFStringCreateWithCString
-										(kCFAllocatorDefault, inBundlePath.c_str(),
-											kCFStringEncodingUTF8);
+	CFStringRef		pathCFString = CFStringCreateWithCString
+									(kCFAllocatorDefault, inBundlePath.c_str(),
+										kCFStringEncodingUTF8);
+	Boolean			success = false;
 	
 	
-	if (nullptr != pathCFString.returnCFStringRef())
+	if (nullptr != pathCFString)
 	{
-		Console_WriteValueCFString("given bundle URL", pathCFString.returnCFStringRef());
-		CFRetainRelease		pathCFURL = CFURLCreateWithFileSystemPath
-										(kCFAllocatorDefault, pathCFString.returnCFStringRef(),
-											kCFURLPOSIXPathStyle, true/* is directory */);
+		CFURLRef	pathCFURL = CFURLCreateWithFileSystemPath
+								(kCFAllocatorDefault, pathCFString,
+									kCFURLPOSIXPathStyle, true/* is directory */);
 		
 		
-		if (nullptr != pathCFURL.returnCFTypeRef())
+		if (nullptr != pathCFURL)
 		{
-			CFURLRef		pathAsURL = CFUtilities_URLCast(pathCFURL.returnCFTypeRef());
-			CFBundleRef		appBundle = CFBundleCreate(kCFAllocatorDefault, pathAsURL);
+			CFRetainRelease		appBundle = CFBundleCreate(kCFAllocatorDefault, pathCFURL);
 			
 			
-			if (nullptr != appBundle)
+			if (appBundle.exists())
 			{
-				Initialize_ApplicationStartup(appBundle);
-				CFRelease(appBundle), appBundle = nullptr;
+				Initialize_ApplicationStartup(appBundle.returnCFBundleRef());
+				success = true;
 			}
+			CFRelease(pathCFURL), pathCFURL = nullptr;
 		}
+		CFRelease(pathCFString), pathCFString = nullptr;
 	}
-#endif
+	
+	if (false == success)
+	{
+		Console_WriteValueCFString("given bundle path", pathCFString);
+		throw std::runtime_error("unable to find a bundle at the given path");
+	}
 }// all_init
 
 

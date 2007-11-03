@@ -38,7 +38,7 @@ from Quills import Base, Events, Session
 
 
 # load all required MacTelnet modules
-Base.all_init()
+Base.all_init(os.environ['INITIAL_APP_BUNDLE_DIR'])
 
 # banner
 print "MacTelnet: Base initialization complete.  This is MacTelnet version %s." % Base.version()
