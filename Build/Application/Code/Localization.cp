@@ -40,9 +40,13 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include "Localization.h"
-#include "MemoryBlocks.h"
-#include "Releases.h"
+#include <CFRetainRelease.h>
+#include <Localization.h>
+#include <MemoryBlocks.h>
+#include <Releases.h>
+
+// MacTelnet includes
+#include "AppResources.h"
 
 // resource includes
 #include "SpacingConstants.r"
@@ -66,14 +70,10 @@ enum
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-#if TARGET_API_MAC_OS8
-	ConstStringPtr	gApplicationName = nullptr;
-#else
-	Str255			gApplicationName;
-	CFStringRef		gApplicationNameCFString = nullptr;
-#endif
-	Boolean			gLeftToRight = true;		// text reads left-to-right?
-	Boolean			gTopToBottom = true;		// text reads top-to-bottom?
+	Str255				gApplicationName;
+	CFRetainRelease		gApplicationNameCFString;
+	Boolean				gLeftToRight = true;		// text reads left-to-right?
+	Boolean				gTopToBottom = true;		// text reads top-to-bottom?
 }
 
 #pragma mark Internal Method Prototypes
@@ -101,44 +101,31 @@ if you plan on using Localization_UseResourceFile().
 void
 Localization_Init	(UInt32		inFlags)
 {
-#if TARGET_API_MAC_OS8
-	gApplicationName = LMGetCurApName();
-#else
-	// this mess is used so that the bundle’s name (and not
-	// the buried executable’s name) is always returned;
-	// the executable name is never localized, but the bundle
-	// name will be
+	Boolean		gotIt = false;
+	
+	
+	gApplicationNameCFString = CFBundleGetValueForInfoDictionaryKey
+								(AppResources_ReturnBundleForInfo(), CFSTR("CFBundleName"));
+	gotIt = gApplicationNameCFString.exists();
+	if (gotIt)
 	{
-		ProcessSerialNumber		currentApplicationItself;
-		Boolean					gotIt = false;
+		ByteCount	actualSize = 0;
 		
 		
-		if (GetCurrentProcess(&currentApplicationItself) == noErr)
+		gApplicationName[0] = 255;
+		if (GetTextAndEncodingFromCFString(gApplicationNameCFString.returnCFStringRef(),
+											gApplicationName + 1, gApplicationName[0], &actualSize,
+											nullptr/* text encoding */) == noErr)
 		{
-			if (CopyProcessName(&currentApplicationItself, &gApplicationNameCFString) == noErr)
-			{
-				ByteCount		actualSize = 0;
-				
-				
-				gApplicationName[0] = 255;
-				// KNOWN MEMORY LEAK - CFRelease() should be called on this string,
-				// but there is no Localization_Done() and Localization_GetCurrentApplicationNameAsCFString()
-				// relies on the string’s existence
-				if (GetTextAndEncodingFromCFString(gApplicationNameCFString, gApplicationName + 1,
-													gApplicationName[0], &actualSize,
-													nullptr/* text encoding */) == noErr)
-				{
-					gotIt = (actualSize <= sizeof(gApplicationName));
-				}
-			}
+			gotIt = (actualSize <= sizeof(gApplicationName));
 		}
-		
-		// if process information fails, default to low-memory value
-		// (not ideal, as on Mac OS X this will not be the “display name”
-		// for the application, but that of its buried executable file)
-		unless (gotIt) PLstrcpy(gApplicationName, LMGetCurApName());
 	}
-#endif
+	
+	// if process information fails, default to low-memory value
+	// (not ideal, as on Mac OS X this will not be the “display name”
+	// for the application, but that of its buried executable file)
+	unless (gotIt) PLstrcpy(gApplicationName, LMGetCurApName());
+	
 	gLeftToRight = !(inFlags & kLocalization_InitFlagReadTextRightToLeft);
 	gTopToBottom = !(inFlags & kLocalization_InitFlagReadTextBottomToTop);
 }// Init
@@ -670,7 +657,7 @@ been called.
 void
 Localization_GetCurrentApplicationNameAsCFString	(CFStringRef*		outProcessDisplayNamePtr)
 {
-	*outProcessDisplayNamePtr = gApplicationNameCFString;
+	*outProcessDisplayNamePtr = gApplicationNameCFString.returnCFStringRef();
 }// GetCurrentApplicationName
 #endif
 
@@ -1194,11 +1181,7 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 		Localization_PreservePortFontState(&fontState);
 		
 		// set port font so CharWidth() can be used
-	#if TARGET_API_MAC_OS8
-		GetFNum(fontName, &fontID);
-	#else
 		fontID = FMGetFontFamilyFromName(fontName);
-	#endif
 		TextFont(fontID);
 		TextSize(fontSize);
 		TextFace(fontStyle);
@@ -1416,11 +1399,7 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 											: smScriptAppFond);
 		
 		
-	#if TARGET_API_MAC_OS8
-		GetFontName(fontID, outFontName);
-	#else
 		(OSStatus)FMGetFontFamilyName(fontID, outFontName);
-	#endif
 		*outFontSizePtr = (inThemeFontToUse == kThemeSystemFont) ? 12 : 10;
 		*outFontStylePtr = (inThemeFontToUse == kThemeSmallEmphasizedSystemFont) ? bold : normal;
 	}
@@ -1428,13 +1407,8 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 	// special case for Aqua-like dialogs with “huge” title text
 	if (inThemeFontToUse == USHRT_MAX)
 	{
-	#if TARGET_API_MAC_OS8
-		*outFontSizePtr = 12;
-		*outFontStylePtr = normal;
-	#else
 		*outFontSizePtr = 16;
 		*outFontStylePtr = bold;
-	#endif
 	}
 	
 	// change the font settings of the current graphics port to match the results
@@ -1442,11 +1416,7 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 		SInt16		fontID = 0;
 		
 		
-	#if TARGET_API_MAC_OS8
-		GetFNum(outFontName, &fontID);
-	#else
 		fontID = FMGetFontFamilyFromName(outFontName);
-	#endif
 		TextFont(fontID);
 	}
 	TextSize(*outFontSizePtr);
@@ -1719,11 +1689,7 @@ setControlFontInfo	(ControlRef			inControl,
 	OSStatus				result = noErr;
 	
 	
-#if TARGET_API_MAC_OS8
-	GetFNum(inFontName, &fontID);
-#else
 	fontID = FMGetFontFamilyFromName(inFontName);
-#endif
 	styleRecord.flags = 0;
 	(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlFontStyleTag,
 								sizeof(styleRecord), &styleRecord, &actualSize);
