@@ -44,6 +44,7 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <Console.h>
 #include <Cursors.h>
@@ -153,34 +154,6 @@ typedef struct OpaqueMyWindowEventTarget**	MyWindowEventTargetRef;
 
 typedef MemoryBlockPtrLocker< MyWindowEventTargetRef, MyWindowEventTarget >		MyWindowEventTargetPtrLocker;
 
-#pragma mark Variables
-
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	MyGlobalEventTargetRef				gGlobalEventTarget = nullptr;
-	Collection							gControlEventInfo = nullptr,
-										gWindowEventInfo = nullptr;
-	SInt16								gHaveInstalledNotification = 0;
-	UInt32								gTicksWaitNextEvent = 0L;
-	NMRec*								gBeepNotificationPtr = nullptr;
-	MyControlEventTargetHandleLocker&	gControlEventTargetHandleLocks ()	{ static MyControlEventTargetHandleLocker x; return x; }
-	MyGlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static MyGlobalEventTargetHandleLocker x; return x; }
-	MyWindowEventTargetPtrLocker&		gWindowEventTargetPtrLocks ()		{ static MyWindowEventTargetPtrLocker x; return x; }
-	UInt32								gCarbonEventModifiers = 0L; // current modifier key states; updated by the callback
-	EventHandlerUPP						gCarbonEventHICommandsUPP = nullptr; // Preferences command callback
-	EventHandlerRef						gCarbonEventHICommandsHandler = nullptr; // handler that must be removed before disposing UPP
-	EventHandlerUPP						gCarbonEventModifiersUPP = nullptr; // the callback
-	EventHandlerRef						gCarbonEventModifiersHandler = nullptr; // handler that must be removed before disposing UPP
-	EventHandlerUPP						gCarbonEventMouseWheelUPP = nullptr; // mouse wheel support (not automatic on Mac OS X)
-	EventHandlerRef						gCarbonEventMouseWheelHandler = nullptr; // handler that must be removed before disposing UPP
-	EventHandlerUPP						gCarbonEventServicePerformUPP = nullptr; // Services menu support
-	EventHandlerRef						gCarbonEventServicePerformHandler = nullptr; // handler that must be removed before disposing UPP
-	EventHandlerUPP						gCarbonEventSwitchUPP = nullptr; // application suspend/resume callback
-	EventHandlerRef						gCarbonEventSwitchHandler = nullptr; // handler that must be removed before disposing UPP
-	EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
-	EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
-}
-
 #pragma mark Internal Method Prototypes
 
 static EventLoop_KeyEquivalent	createKeyboardEquivalent		(SInt16, SInt16, Boolean);
@@ -213,6 +186,63 @@ static pascal OSStatus			receiveServicePerformEvent		(EventHandlerCallRef, Event
 static pascal OSStatus			receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, void*);
 
+#pragma mark Variables
+
+namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+{
+	MyGlobalEventTargetRef				gGlobalEventTarget = nullptr;
+	Collection							gControlEventInfo = nullptr,
+										gWindowEventInfo = nullptr;
+	SInt16								gHaveInstalledNotification = 0;
+	UInt32								gTicksWaitNextEvent = 0L;
+	NMRec*								gBeepNotificationPtr = nullptr;
+	MyControlEventTargetHandleLocker&	gControlEventTargetHandleLocks ()	{ static MyControlEventTargetHandleLocker x; return x; }
+	MyGlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static MyGlobalEventTargetHandleLocker x; return x; }
+	MyWindowEventTargetPtrLocker&		gWindowEventTargetPtrLocks ()		{ static MyWindowEventTargetPtrLocker x; return x; }
+	CarbonEventHandlerWrap				gCarbonEventHICommandHandler(GetApplicationEventTarget(),
+																		receiveHICommand,
+																		CarbonEventSetInClass
+																			(CarbonEventClass(kEventClassCommand),
+																				kEventCommandProcess,
+																				kEventCommandUpdateStatus),
+																		nullptr/* user data */);
+	Console_Assertion					_1(gCarbonEventHICommandHandler.isInstalled(), __FILE__, __LINE__);
+	UInt32								gCarbonEventModifiers = 0L; // current modifier key states; updated by the callback
+	CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget(),
+																		updateModifiers,
+																		CarbonEventSetInClass
+																			(CarbonEventClass(kEventClassKeyboard),
+																				kEventRawKeyModifiersChanged),
+																		nullptr/* user data */);
+	Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
+	CarbonEventHandlerWrap				gCarbonEventMouseWheelHandler(GetApplicationEventTarget(),
+																		receiveMouseWheelEvent,
+																		CarbonEventSetInClass
+																			(CarbonEventClass(kEventClassMouse),
+																				kEventMouseWheelMoved),
+																		nullptr/* user data */);
+#if 0
+	// don’t check for errors, it’s not critical if this handler is installed
+	Console_Assertion					_3(gCarbonEventMouseWheelHandler.isInstalled(), __FILE__, __LINE__);
+#endif
+	CarbonEventHandlerWrap				gCarbonEventServiceHandler(GetApplicationEventTarget(),
+																	receiveServicePerformEvent,
+																	CarbonEventSetInClass
+																		(CarbonEventClass(kEventClassService),
+																			kEventServicePerform),
+																	nullptr/* user data */);
+	Console_Assertion					_4(gCarbonEventServiceHandler.isInstalled(), __FILE__, __LINE__);
+	CarbonEventHandlerWrap				gCarbonEventSwitchHandler(GetApplicationEventTarget(),
+																	receiveApplicationSwitch,
+																	CarbonEventSetInClass
+																		(CarbonEventClass(kEventClassApplication),
+																			kEventAppActivated, kEventAppDeactivated),
+																	nullptr/* user data */);
+	Console_Assertion					_5(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
+	EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
+	EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
+}
+
 
 
 #pragma mark Public Methods
@@ -237,85 +267,6 @@ EventLoop_Init ()
 	
 	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
 	gTicksWaitNextEvent = 60; // make this larger to increase likelihood of high-frequency timers firing on time
-	
-	// install a callback that finds out when this application either becomes
-	// frontmost or ceases to be frontmost
-	{
-		EventTypeSpec const		whenApplicationSwitches[] =
-								{
-									{ kEventClassApplication, kEventAppActivated },
-									{ kEventClassApplication, kEventAppDeactivated }
-								};
-		
-		
-		gCarbonEventSwitchUPP = NewEventHandlerUPP(receiveApplicationSwitch);
-		error = InstallApplicationEventHandler(gCarbonEventSwitchUPP, GetEventTypeCount(whenApplicationSwitches),
-												whenApplicationSwitches, nullptr/* user data */,
-												&gCarbonEventSwitchHandler/* event handler reference */);
-		assert(error == noErr);
-	}
-	
-	// install a callback that keeps the modifiers variable up to date
-	{
-		EventTypeSpec const		whenModifierKeyStateChanges[] =
-								{
-									{ kEventClassKeyboard, kEventRawKeyModifiersChanged }
-								};
-		
-		
-		gCarbonEventModifiersUPP = NewEventHandlerUPP(updateModifiers);
-		error = InstallApplicationEventHandler(gCarbonEventModifiersUPP, GetEventTypeCount(whenModifierKeyStateChanges),
-												whenModifierKeyStateChanges, nullptr/* user data */,
-												&gCarbonEventModifiersHandler/* event handler reference */);
-	}
-	
-	// install a callback that detects the user selecting Preferences from the application menu
-	// and handles custom items in the Help menu
-	{
-		EventTypeSpec const		whenCommandReceived[] =
-								{
-									{ kEventClassCommand, kEventCommandProcess },
-									{ kEventClassCommand, kEventCommandUpdateStatus }
-								};
-		
-		
-		gCarbonEventHICommandsUPP = NewEventHandlerUPP(receiveHICommand);
-		error = InstallApplicationEventHandler(gCarbonEventHICommandsUPP, GetEventTypeCount(whenCommandReceived),
-												whenCommandReceived, nullptr/* user data */,
-												&gCarbonEventHICommandsHandler/* event handler reference */);
-		assert(error == noErr);
-	}
-	
-	// install a callback that detects mouse wheel movement (on select peripherals)
-	{
-		EventTypeSpec const		whenMouseWheelMoves[] =
-								{
-									{ kEventClassMouse, kEventMouseWheelMoved }
-								};
-		
-		
-		gCarbonEventMouseWheelUPP = NewEventHandlerUPP(receiveMouseWheelEvent);
-		error = InstallApplicationEventHandler(gCarbonEventMouseWheelUPP, GetEventTypeCount(whenMouseWheelMoves),
-												whenMouseWheelMoves, nullptr/* user data */,
-												&gCarbonEventMouseWheelHandler/* event handler reference */);
-		// don’t check for errors, it’s not critical if this handler is installed
-	}
-	
-	// install handlers for the Services menu
-	{
-		EventTypeSpec const		whenServiceShouldBePerformed[] =
-								{
-									{ kEventClassService, kEventServicePerform }
-								};
-		
-		
-		gCarbonEventServicePerformUPP = NewEventHandlerUPP(receiveServicePerformEvent);
-		error = InstallApplicationEventHandler(gCarbonEventServicePerformUPP,
-												GetEventTypeCount(whenServiceShouldBePerformed),
-												whenServiceShouldBePerformed, nullptr/* user data */,
-												&gCarbonEventServicePerformHandler/* event handler reference */);
-		// don’t check for errors, it’s not critical if this handler is installed
-	}
 	
 	// install a callback that detects toolbar sheets
 	if (FlagManager_Test(kFlagOS10_4API))
@@ -355,16 +306,6 @@ EventLoop_Done ()
 {
 	RemoveEventHandler(gCarbonEventSheetOpeningHandler), gCarbonEventSheetOpeningHandler = nullptr;
 	DisposeEventHandlerUPP(gCarbonEventSheetOpeningUPP), gCarbonEventSheetOpeningUPP = nullptr;
-	RemoveEventHandler(gCarbonEventHICommandsHandler), gCarbonEventHICommandsHandler = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventHICommandsUPP), gCarbonEventHICommandsUPP = nullptr;
-	RemoveEventHandler(gCarbonEventModifiersHandler), gCarbonEventModifiersHandler = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventModifiersUPP), gCarbonEventModifiersUPP = nullptr;
-	RemoveEventHandler(gCarbonEventMouseWheelHandler), gCarbonEventMouseWheelHandler = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventMouseWheelUPP), gCarbonEventMouseWheelUPP = nullptr;
-	RemoveEventHandler(gCarbonEventServicePerformHandler), gCarbonEventServicePerformHandler = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventServicePerformUPP), gCarbonEventServicePerformUPP = nullptr;
-	RemoveEventHandler(gCarbonEventSwitchHandler), gCarbonEventSwitchHandler = nullptr;
-	DisposeEventHandlerUPP(gCarbonEventSwitchUPP), gCarbonEventSwitchUPP = nullptr;
 	
 	
 	// destroy global event target
