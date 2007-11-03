@@ -29,6 +29,7 @@ import sys, os
 # find the "MacOS" folder
 macos_dir = os.path.dirname(os.path.normpath(sys.argv[0]))
 contents_dir = os.path.join(macos_dir, "..")
+bundle_dir = os.path.join(contents_dir, "..")
 frameworks_dir = os.path.join(contents_dir, "Frameworks")
 resources_dir = os.path.join(contents_dir, "Resources")
 pymactelnet_dir = os.path.join(frameworks_dir, "PyMacTelnet.framework")
@@ -39,6 +40,10 @@ quills_dir = os.path.join(frameworks_dir, "Quills.framework")
 quills_versions_dir = os.path.join(quills_dir, "Versions")
 quills_current_version_dir = os.path.join(quills_versions_dir, "Current")
 quills_py23_dir = os.path.join(quills_current_version_dir, "lib", "python2.3")
+
+# put the initial bundle location in the environment, for convenience
+# when initializing other components
+os.environ["INITIAL_APP_BUNDLE_DIR"] = bundle_dir
 
 # there should be a symlink of this name in the MacOS folder of the
 # MacTelnet application bundle (see the Xcode project); it should
