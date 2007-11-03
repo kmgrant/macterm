@@ -1204,14 +1204,7 @@ launchFind ()
 		SInt16		vRefNum = 0;
 		
 		
-		if (FlagManager_Test(kFlagOS8_5API))
-		{
-			GetIndString(sherlockName, rStringsMiscellaneous, siMacOS8_5AndBeyondFindFileName);
-		}
-		else
-		{
-			GetIndString(sherlockName, rStringsMiscellaneous, siPreMacOS8_5FindFileName);
-		}
+		GetIndString(sherlockName, rStringsMiscellaneous, siMacOS8_5AndBeyondFindFileName);
 		result = FindFolder(kOnSystemDisk, kAppleMenuFolderType, kDontCreateFolder, &vRefNum, &dirID);
 		if (result == noErr) result = FSMakeFSSpec(vRefNum, dirID, sherlockName, &sherlockSpec);
 	}

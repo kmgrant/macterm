@@ -578,17 +578,13 @@ initMacOSToolbox ()
 		minorRev = Releases_GetMinorRevisionForVersion(gestaltResult);
 		
 		// any advanced APIs available?
-		FlagManager_Set(kFlagOS8_5API, true); // this source tree is Mac OS X only
-		FlagManager_Set(kFlagOS8_6API, true); // this source tree is Mac OS X only
-		FlagManager_Set(kFlagOS9_0API, true); // this source tree is Mac OS X only
-		FlagManager_Set(kFlagOS9_1API, true); // this source tree is Mac OS X only
-		FlagManager_Set(kFlagOS9_2API, true); // this source tree is Mac OS X only
 		FlagManager_Set(kFlagOS10_0API, true); // this source tree is Mac OS X only
 		FlagManager_Set(kFlagOS10_1API, (((majorRev == 0x0A) && (minorRev >= 0x01)) || (majorRev > 0x0A)));
 		FlagManager_Set(kFlagOS10_2API, (((majorRev == 0x0A) && (minorRev >= 0x02)) || (majorRev > 0x0A)));
 		FlagManager_Set(kFlagOS10_3API, (((majorRev == 0x0A) && (minorRev >= 0x03)) || (majorRev > 0x0A)));
 		FlagManager_Set(kFlagOS10_4API, (((majorRev == 0x0A) && (minorRev >= 0x04)) || (majorRev > 0x0A)));
 		FlagManager_Set(kFlagOS10_5API, (((majorRev == 0x0A) && (minorRev >= 0x05)) || (majorRev > 0x0A)));
+		FlagManager_Set(kFlagOS10_6API, (((majorRev == 0x0A) && (minorRev >= 0x06)) || (majorRev > 0x0A)));
 	}
 	
 	InitCursor();

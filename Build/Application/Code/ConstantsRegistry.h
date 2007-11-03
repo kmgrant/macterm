@@ -319,25 +319,20 @@ enum
 	// of the Flag Manager, there is no real limit as to the number of flags
 	// you can define here.  There is also no efficiency concern - it is not
 	// necessary to use multiples of 16 or 32 flags, for example.
-	kFlagAppleScriptRecording		= (kFlagManager_FirstValidFlag + 2),	//!< is the user recording events into a script?
-	kFlagInitializationComplete		= (kFlagManager_FirstValidFlag + 9),	//!< has the application completely finished launching?
-	kFlagKioskMode					= (kFlagManager_FirstValidFlag + 11),	//!< is the application in Full Screen mode?
-	kFlagNetworkSuspended			= (kFlagManager_FirstValidFlag + 12),	//!< is all network activity suspended?
-	kFlagOS8_5API					= (kFlagManager_FirstValidFlag + 13),	//!< is Mac OS 8.5 or later in use?
-	kFlagOS8_6API					= (kFlagManager_FirstValidFlag + 14),	//!< is Mac OS 8.6 or later in use?
-	kFlagOS9_0API					= (kFlagManager_FirstValidFlag + 15),	//!< is Mac OS 9.0 or later in use?
-	kFlagOS9_1API					= (kFlagManager_FirstValidFlag + 16),	//!< is Mac OS 9.1 or later in use?
-	kFlagOS9_2API					= (kFlagManager_FirstValidFlag + 17),	//!< is Mac OS 9.2 or later in use?
-	kFlagOS10_0API					= (kFlagManager_FirstValidFlag + 18),	//!< is Mac OS 10.0 or later in use?
-	kFlagOS10_1API					= (kFlagManager_FirstValidFlag + 19),	//!< is Mac OS 10.1 or later in use?
-	kFlagOS10_2API					= (kFlagManager_FirstValidFlag + 20),	//!< is Mac OS 10.2 or later in use?
-	kFlagOS10_3API					= (kFlagManager_FirstValidFlag + 21),	//!< is Mac OS 10.3 or later in use?
-	kFlagOS10_4API					= (kFlagManager_FirstValidFlag + 22),	//!< is Mac OS 10.4 or later in use?
-	kFlagOS10_5API					= (kFlagManager_FirstValidFlag + 23),	//!< is Mac OS 10.5 or later in use?
-	kFlagQuickTime					= (kFlagManager_FirstValidFlag + 24),	//!< is QuickTime (any version) installed?
-	kFlagSuspended					= (kFlagManager_FirstValidFlag + 25),	//!< is MacTelnetÕs process in the background?
-	kFlagThreadManager				= (kFlagManager_FirstValidFlag + 26),	//!< is the Thread Manager (any version) installed?
-	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 28)	//!< skip auto-new-window on application launch?
+	kFlagAppleScriptRecording		= (kFlagManager_FirstValidFlag + 0),	//!< is the user recording events into a script?
+	kFlagInitializationComplete		= (kFlagManager_FirstValidFlag + 1),	//!< has the application completely finished launching?
+	kFlagKioskMode					= (kFlagManager_FirstValidFlag + 2),	//!< is the application in Full Screen mode?
+	kFlagOS10_0API					= (kFlagManager_FirstValidFlag + 3),	//!< is Mac OS 10.0 or later in use?
+	kFlagOS10_1API					= (kFlagManager_FirstValidFlag + 4),	//!< is Mac OS 10.1 or later in use?
+	kFlagOS10_2API					= (kFlagManager_FirstValidFlag + 5),	//!< is Mac OS 10.2 or later in use?
+	kFlagOS10_3API					= (kFlagManager_FirstValidFlag + 6),	//!< is Mac OS 10.3 or later in use?
+	kFlagOS10_4API					= (kFlagManager_FirstValidFlag + 7),	//!< is Mac OS 10.4 or later in use?
+	kFlagOS10_5API					= (kFlagManager_FirstValidFlag + 8),	//!< is Mac OS 10.5 or later in use?
+	kFlagOS10_6API					= (kFlagManager_FirstValidFlag + 9),	//!< is Mac OS 10.6 or later in use?
+	kFlagQuickTime					= (kFlagManager_FirstValidFlag + 10),	//!< is QuickTime (any version) installed?
+	kFlagSuspended					= (kFlagManager_FirstValidFlag + 11),	//!< is MacTelnetÕs process in the background?
+	kFlagThreadManager				= (kFlagManager_FirstValidFlag + 12),	//!< is the Thread Manager (any version) installed?
+	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 13)	//!< skip auto-new-window on application launch?
 };
 
 //@}
