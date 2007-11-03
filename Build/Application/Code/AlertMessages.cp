@@ -1,13 +1,9 @@
 /*###############################################################
 
-	Alert.cp
-	
-	This module has been created to make it possible to build
-	more powerful alert windows than even the Mac OS 8 Toolbox
-	allows by default.
+	AlertMessages.cp
 	
 	Interface Library 1.2
-	© 1998-2006 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -89,11 +85,11 @@ static HIViewID const		idMyApplicationIcon			= { FOUR_CHAR_CODE('AppI'),		0/* ID
 
 #pragma mark Types
 
-struct InterfaceLibAlert
+struct My_AlertMessage
 {
 public:
-	InterfaceLibAlert();
-	~InterfaceLibAlert();
+	My_AlertMessage ();
+	~My_AlertMessage ();
 	
 	AlertStdCFStringAlertParamRec   params;
 	AlertType						alertType;
@@ -122,9 +118,9 @@ public:
 	void*							sheetCloseNotifierUserData;
 	InterfaceLibAlertRef			selfRef;
 };
-typedef InterfaceLibAlert*		InterfaceLibAlertPtr;
+typedef My_AlertMessage*	My_AlertMessagePtr;
 
-typedef MemoryBlockPtrLocker< InterfaceLibAlertRef, InterfaceLibAlert >		AlertPtrLocker;
+typedef MemoryBlockPtrLocker< InterfaceLibAlertRef, My_AlertMessage >	My_AlertPtrLocker;
 
 #pragma mark Variables
 
@@ -139,102 +135,23 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	Str255				gNotificationMessage;
 	NMRecPtr			gNotificationPtr = nullptr;
 	EventHandlerUPP		gAlertButtonHICommandUPP = nullptr;
-	AlertPtrLocker&		gAlertPtrLocks ()	{ static AlertPtrLocker x; return x; }
+	My_AlertPtrLocker&	gAlertPtrLocks ()	{ static My_AlertPtrLocker x; return x; }
 }
 
-//
-// internal methods
-//
+#pragma mark Internal Method Prototypes
 
-static OSStatus					backgroundNotification			();
-
-static OSStatus					badgeApplicationDockTile		();
-
-static CGImageRef				createCGImageForCautionIcon		();
-
-static void						handleItemHit					(InterfaceLibAlertPtr		inPtr,
-																 DialogItemIndex			inItemIndex);
-
-static void						newButtonString					(CFStringRef&				outStringStorage,
-																 UIStrings_ButtonCFString	inButtonStringType);
-
-static pascal OSStatus			receiveHICommand				(EventHandlerCallRef		inHandlerCallRef,
-																 EventRef					inEvent,
-																 void*						inInterfaceLibAlertPtr);
-
-static void						setAlertVisibility				(InterfaceLibAlertPtr		inPtr,
-																 Boolean					inIsVisible,
-																 Boolean					inAnimate);
-
-static OSStatus					standardAlert					(InterfaceLibAlertPtr		inAlert,
-																 AlertType					inAlertType,
-																 CFStringRef				inDialogText,
-																 CFStringRef				inHelpText);
+static OSStatus				backgroundNotification			();
+static OSStatus				badgeApplicationDockTile		();
+static CGImageRef			createCGImageForCautionIcon		();
+static void					handleItemHit					(My_AlertMessagePtr, DialogItemIndex);
+static void					newButtonString					(CFStringRef&, UIStrings_ButtonCFString);
+static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+static void					setAlertVisibility				(My_AlertMessagePtr, Boolean, Boolean);
+static OSStatus				standardAlert					(My_AlertMessagePtr, AlertType, CFStringRef, CFStringRef);
 
 
 
-//
-// public methods
-//
-#pragma mark -
-
-/*!
-Constructor.  See Alert_New().
-
-(1.1)
-*/
-InterfaceLibAlert::
-InterfaceLibAlert()
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-params(),
-alertType(kAlertNoteAlert),
-dialogTextCFString(),
-helpTextCFString(),
-titleCFString(),
-buttonDefault(nullptr),
-buttonCancel(nullptr),
-buttonOther(nullptr),
-buttonHelp(nullptr),
-textTitle(nullptr),
-textMain(nullptr),
-textHelp(nullptr),
-mainIcon(nullptr),
-stopIcon(nullptr),
-noteIcon(nullptr),
-cautionIcon(nullptr),
-applicationIcon(nullptr),
-itemHit(kAlertStdAlertOtherButton),
-isSheet(false),
-isSheetForWindowCloseWarning(false),
-dialogWindow(nullptr),
-parentWindow(nullptr),
-buttonHICommandsHandler(nullptr),
-sheetCloseNotifier(nullptr),
-sheetCloseNotifierUserData(nullptr),
-selfRef(REINTERPRET_CAST(this, InterfaceLibAlertRef))
-{
-	assert_noerr(GetStandardAlertDefaultParams(&this->params, kStdCFStringAlertVersionOne));
-	this->params.movable = true;
-}// InterfaceLibAlert default constructor
-
-
-/*!
-Destructor.  See Alert_Dispose().
-
-(1.1)
-*/
-InterfaceLibAlert::
-~InterfaceLibAlert ()
-{
-	// clean up
-	if (nullptr != this->buttonHICommandsHandler)
-	{
-		RemoveEventHandler(this->buttonHICommandsHandler), this->buttonHICommandsHandler = nullptr;
-	}
-	if (nullptr != this->dialogWindow) DisposeWindow(this->dialogWindow), this->dialogWindow = nullptr;
-}// InterfaceLibAlert destructor
-
+#pragma mark Public Methods
 
 /*!
 This routine should be called once, before any
@@ -303,7 +220,7 @@ Alert_New ()
 	
 	try
 	{
-		result = REINTERPRET_CAST(new InterfaceLibAlert, InterfaceLibAlertRef);
+		result = REINTERPRET_CAST(new My_AlertMessage, InterfaceLibAlertRef);
 	}
 	catch (std::bad_alloc)
 	{
@@ -326,7 +243,7 @@ Alert_Dispose	(InterfaceLibAlertRef*		inoutAlert)
 {
 	if (nullptr != inoutAlert)
 	{
-		InterfaceLibAlertPtr	ptr = gAlertPtrLocks().acquireLock(*inoutAlert);
+		My_AlertMessagePtr		ptr = gAlertPtrLocks().acquireLock(*inoutAlert);
 		
 		
 		delete ptr;
@@ -540,7 +457,7 @@ Alert_Display	(InterfaceLibAlertRef	inAlert)
 	// only attempt to display an alert if the module was properly initialized
 	if (gIsInited)
 	{
-		InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+		My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 		
 		
 		result = backgroundNotification();
@@ -578,7 +495,7 @@ void
 Alert_HitItem	(InterfaceLibAlertRef	inAlert,
 				 SInt16					inItemIndex)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	handleItemHit(alertPtr, inItemIndex);
@@ -599,7 +516,7 @@ indicates the help button.  If the alert times out
 SInt16
 Alert_ItemHit	(InterfaceLibAlertRef	inAlert)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	SInt16					result = kAlertStdAlertOtherButton;
 	
 	
@@ -639,7 +556,7 @@ Alert_MakeWindowModal	(InterfaceLibAlertRef				inAlert,
 						 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 						 void*								inCloseNotifyProcUserData)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -837,7 +754,7 @@ Alert_SetButtonText		(InterfaceLibAlertRef	inAlert,
 						 short					inWhichButton,
 						 CFStringRef			inNewText)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -894,7 +811,7 @@ void
 Alert_SetHelpButton		(InterfaceLibAlertRef	inAlert,
 						 Boolean				inIsHelpButton)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -934,7 +851,7 @@ void
 Alert_SetMovable	(InterfaceLibAlertRef	inAlert,
 					 Boolean				inIsMovable)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -1002,7 +919,7 @@ void
 Alert_SetParamsFor	(InterfaceLibAlertRef	inAlert,
 					 short					inAlertStyle)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	CFStringRef				tempCFString = nullptr;
 	
 	
@@ -1154,7 +1071,7 @@ Alert_SetText	(InterfaceLibAlertRef	inAlert,
 				 ConstStringPtr			inDialogText,
 				 ConstStringPtr			inHelpText)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -1180,7 +1097,7 @@ Alert_SetTextCFStrings	(InterfaceLibAlertRef	inAlert,
 						 CFStringRef			inDialogText,
 						 CFStringRef			inHelpText)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -1207,7 +1124,7 @@ void
 Alert_SetTitleCFString	(InterfaceLibAlertRef	inAlert,
 						 CFStringRef			inNewTitle)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -1228,7 +1145,7 @@ void
 Alert_SetType	(InterfaceLibAlertRef		inAlert,
 				 AlertType					inNewType)
 {
-	InterfaceLibAlertPtr	alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -1277,10 +1194,65 @@ Alert_StandardCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 }// StandardCloseNotifyProc
 
 
-//
-// internal methods
-//
-#pragma mark -
+#pragma mark Internal Methods
+
+/*!
+Constructor.  See Alert_New().
+
+(1.1)
+*/
+My_AlertMessage::
+My_AlertMessage()
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+params(),
+alertType(kAlertNoteAlert),
+dialogTextCFString(),
+helpTextCFString(),
+titleCFString(),
+buttonDefault(nullptr),
+buttonCancel(nullptr),
+buttonOther(nullptr),
+buttonHelp(nullptr),
+textTitle(nullptr),
+textMain(nullptr),
+textHelp(nullptr),
+mainIcon(nullptr),
+stopIcon(nullptr),
+noteIcon(nullptr),
+cautionIcon(nullptr),
+applicationIcon(nullptr),
+itemHit(kAlertStdAlertOtherButton),
+isSheet(false),
+isSheetForWindowCloseWarning(false),
+dialogWindow(nullptr),
+parentWindow(nullptr),
+buttonHICommandsHandler(nullptr),
+sheetCloseNotifier(nullptr),
+sheetCloseNotifierUserData(nullptr),
+selfRef(REINTERPRET_CAST(this, InterfaceLibAlertRef))
+{
+	assert_noerr(GetStandardAlertDefaultParams(&this->params, kStdCFStringAlertVersionOne));
+	this->params.movable = true;
+}// My_AlertMessage default constructor
+
+
+/*!
+Destructor.  See Alert_Dispose().
+
+(1.1)
+*/
+My_AlertMessage::
+~My_AlertMessage ()
+{
+	// clean up
+	if (nullptr != this->buttonHICommandsHandler)
+	{
+		RemoveEventHandler(this->buttonHICommandsHandler), this->buttonHICommandsHandler = nullptr;
+	}
+	if (nullptr != this->dialogWindow) DisposeWindow(this->dialogWindow), this->dialogWindow = nullptr;
+}// My_AlertMessage destructor
+
 
 /*!
 Posts a general notification to the queue, with
@@ -1402,7 +1374,7 @@ Responds to clicks in alert boxes.
 (1.0)
 */
 static void
-handleItemHit	(InterfaceLibAlertPtr	inPtr,
+handleItemHit	(My_AlertMessagePtr		inPtr,
 				 DialogItemIndex		inItemIndex)
 {
 	switch (inItemIndex)
@@ -1468,10 +1440,10 @@ for the buttons in the special key sequences dialog.
 static pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
-					 void*					inInterfaceLibAlertPtr)
+					 void*					inMy_AlertMessagePtr)
 {
 	OSStatus				result = eventNotHandledErr;
-	InterfaceLibAlertPtr	ptr = REINTERPRET_CAST(inInterfaceLibAlertPtr, InterfaceLibAlertPtr);
+	My_AlertMessagePtr		ptr = REINTERPRET_CAST(inMy_AlertMessagePtr, My_AlertMessagePtr);
 	UInt32 const			kEventClass = GetEventClass(inEvent);
 	UInt32 const			kEventKind = GetEventKind(inEvent);
 	
@@ -1530,7 +1502,7 @@ because you can animate the effect.
 (1.0)
 */
 static void
-setAlertVisibility	(InterfaceLibAlertPtr	inPtr,
+setAlertVisibility	(My_AlertMessagePtr		inPtr,
 					 Boolean				inIsVisible,
 					 Boolean				inAnimate)
 {
@@ -1590,12 +1562,12 @@ This method is invoked by Alert_Display().
 (1.0)
 */
 static OSStatus
-standardAlert	(InterfaceLibAlertPtr	inAlert,
+standardAlert	(My_AlertMessagePtr		inAlert,
 				 AlertType				inAlertType,
 				 CFStringRef			inDialogText,
 				 CFStringRef			inHelpText)
 {
-	InterfaceLibAlertPtr	ptr = inAlert;
+	My_AlertMessagePtr		ptr = inAlert;
 	OSStatus				result = noErr;
 	
 	
