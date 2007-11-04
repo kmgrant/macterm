@@ -14,12 +14,13 @@
 		0A1BCDA005CA34FF005CF1E5 /* IconForSessionStatusDead.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */; };
 		0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A26DD900CCF09D400768AD8 /* AddressDialog.cp */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
-		0A3E06F70B81767A00EDC16A /* PrefPanelTranslations.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */; };
 		0A3E07410B817E9800EDC16A /* IconForPrefPanelTranslations.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */; };
 		0A41231C0ACE525B0067D333 /* PrefPanelFormats.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A4123140ACE525B0067D333 /* PrefPanelFormats.nib */; };
 		0A41231D0ACE525B0067D333 /* PrefPanelMacros.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A4123160ACE525B0067D333 /* PrefPanelMacros.nib */; };
 		0A41231E0ACE525B0067D333 /* PrefPanelSessions.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A4123180ACE525B0067D333 /* PrefPanelSessions.nib */; };
 		0A41231F0ACE525B0067D333 /* PrefPanelTerminals.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A41231A0ACE525B0067D333 /* PrefPanelTerminals.nib */; };
+		0A5CDBB00CDDB26D008EEFD5 /* _Quills.so in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A5CDBAE0CDDB22D008EEFD5 /* _Quills.so */; };
+		0A5CDBB10CDDB26D008EEFD5 /* Quills.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A5CDBA90CDDB1C7008EEFD5 /* Quills.py */; };
 		0A6E225A06CF42F0004AC0A4 /* KioskPasswordDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A6E225806CF42F0004AC0A4 /* KioskPasswordDialog.nib */; };
 		0A719D39055D95EE009B0A88 /* InterfaceLibAppResources.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D23055D95ED009B0A88 /* InterfaceLibAppResources.r */; };
 		0A719D3C055D95EE009B0A88 /* FormatDialog.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D26055D95ED009B0A88 /* FormatDialog.r */; };
@@ -34,8 +35,8 @@
 		0A7F8CC10ACF8555009DA83D /* IconForItemRemove.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */; };
 		0A7F8CC20ACF8555009DA83D /* IconForItemAdd.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */; };
 		0A8ACEC40B8C375A00D01058 /* IconForStackWindows.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */; };
-		0A9AF6740AF5A6B800E7DF18 /* _Quills.so in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0ACE9A960A9EE59700C693D7 /* _Quills.so */; };
-		0A9AF6750AF5A6B800E7DF18 /* Quills.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0ACE9A980A9EE59C00C693D7 /* Quills.py */; };
+		0A9AF6740AF5A6B800E7DF18 /* _Quills.so in Populate lib-python2.5 */ = {isa = PBXBuildFile; fileRef = 0ACE9A960A9EE59700C693D7 /* _Quills.so */; };
+		0A9AF6750AF5A6B800E7DF18 /* Quills.py in Populate lib-python2.5 */ = {isa = PBXBuildFile; fileRef = 0ACE9A980A9EE59C00C693D7 /* Quills.py */; };
 		0A9AF68B0AF5A95100E7DF18 /* PyMacTelnet.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */; };
 		0A9AF69F0AF5AB1F00E7DF18 /* RunMacTelnet.py in Copy MacOS Execs */ = {isa = PBXBuildFile; fileRef = 0AFF11220AF41FEE006CCA34 /* RunMacTelnet.py */; };
 		0A9C2BAC05B228DA0033C78C /* MenuForDockIcon.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */; };
@@ -71,9 +72,7 @@
 		0ABC0CF70A44FFAA009D07FC /* IconForPrefPanelTerminals.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */; };
 		0ABC0CF90A44FFBD009D07FC /* IconForPrefPanelFormats.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */; };
 		0AC57BC60B1AE73B000F0250 /* MainMenus.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC57BC40B1AE73B000F0250 /* MainMenus.nib */; };
-		0AC6A4EA0AC4D25000FF6FC6 /* QuillsTerminal.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
-		0AC6A60A0AC4E45E00FF6FC6 /* QuillsSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AC6A6040AC4E45600FF6FC6 /* QuillsSession.h */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADC0A8C0BA000AFF37A /* UniversalPrint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE09055432A400ACDF3A /* UniversalPrint.cp */; };
 		0AC6BADD0A8C0BA000AFF37A /* DragAndDrop.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */; };
@@ -209,15 +208,11 @@
 		0ACA57C60AEADC5C00B5F482 /* GenericDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */; };
 		0ACDD9260ABD16C200040553 /* AlertMessages.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ACDD9240ABD16C200040553 /* AlertMessages.nib */; };
-		0AD0B09E0A9EAAA3002064BA /* QuillsBase.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
-		0AD0B37C0A9EB8BD002064BA /* QuillsEvents.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AD0B37B0A9EB8BD002064BA /* QuillsEvents.h */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
-		0AD0B3C30A9EBDFC002064BA /* QuillsPrefs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */; };
 		0ADC6B4208739552000A7EFC /* MainMenuHelp.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ADC6B4008739552000A7EFC /* MainMenuHelp.nib */; };
 		0ADEFCCE06C34E1B00814772 /* Clipboard.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ADEFCCC06C34E1B00814772 /* Clipboard.nib */; };
-		0AE1F16C0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */; };
 		0AE2859C0B8D6E7000E2253A /* IconForKeypadEnter.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */; };
 		0AE285A30B8D732600E2253A /* IconForKeypadArrowLeft.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */; };
 		0AE285B90B8D75F300E2253A /* IconForKeypadArrowRight.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */; };
@@ -260,16 +255,28 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		0A9AF66E0AF5A6A600E7DF18 /* Populate lib-python2.3 */ = {
+		0A5CDBA80CDDA811008EEFD5 /* Populate lib-python2.3 */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/";
 			dstSubfolderSpec = 0;
 			files = (
-				0A9AF6740AF5A6B800E7DF18 /* _Quills.so in Populate lib-python2.3 */,
-				0A9AF6750AF5A6B800E7DF18 /* Quills.py in Populate lib-python2.3 */,
+				0A5CDBB00CDDB26D008EEFD5 /* _Quills.so in Populate lib-python2.3 */,
+				0A5CDBB10CDDB26D008EEFD5 /* Quills.py in Populate lib-python2.3 */,
 			);
 			name = "Populate lib-python2.3";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0A9AF66E0AF5A6A600E7DF18 /* Populate lib-python2.5 */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.5/";
+			dstSubfolderSpec = 0;
+			files = (
+				0A9AF6740AF5A6B800E7DF18 /* _Quills.so in Populate lib-python2.5 */,
+				0A9AF6750AF5A6B800E7DF18 /* Quills.py in Populate lib-python2.5 */,
+			);
+			name = "Populate lib-python2.5";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0A9AF6810AF5A81100E7DF18 /* Populate lib-python2.3 */ = {
@@ -495,7 +502,7 @@
 		0A46FDDF055432A400ACDF3A /* GetPropertyAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GetPropertyAE.cp; path = Application/Code/GetPropertyAE.cp; sourceTree = "<group>"; };
 		0A46FDE1055432A400ACDF3A /* HelpSystem.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HelpSystem.cp; path = Application/Code/HelpSystem.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE2055432A400ACDF3A /* HiddenAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HiddenAE.cp; path = Application/Code/HiddenAE.cp; sourceTree = "<group>"; };
-		0A46FDE3055432A400ACDF3A /* UIStrings.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = UIStrings.cp; path = Application/Code/UIStrings.cp; sourceTree = SOURCE_ROOT; };
+		0A46FDE3055432A400ACDF3A /* UIStrings.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UIStrings.cp; path = Application/Code/UIStrings.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ICGluePPC.cp; path = Application/Code/ICGluePPC.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE5055432A400ACDF3A /* IconListDef.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = IconListDef.cp; path = Application/Code/IconListDef.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE6055432A400ACDF3A /* IconManager.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = IconManager.cp; path = Application/Code/IconManager.cp; sourceTree = SOURCE_ROOT; };
@@ -576,6 +583,8 @@
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40E0560B62F005B4592 /* IconForMacroSet.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForMacroSet.icns; path = Application/Resources/IconForMacroSet.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
+		0A5CDBA90CDDB1C7008EEFD5 /* Quills.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = Quills.py; path = PythonWrapper/python2.3/Quills.py; sourceTree = "<group>"; };
+		0A5CDBAE0CDDB22D008EEFD5 /* _Quills.so */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = _Quills.so; path = PythonWrapper/python2.3/_Quills.so; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
@@ -654,8 +663,8 @@
 		0ACDD91C0ABD163700040553 /* ListUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ListUtilities.h; path = Application/Code/ListUtilities.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.interfacer; name = Quills.i; path = PythonWrapper/Quills.i; sourceTree = "<group>"; };
-		0ACE9A960A9EE59700C693D7 /* _Quills.so */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = _Quills.so; path = PythonWrapper/_Quills.so; sourceTree = "<group>"; };
-		0ACE9A980A9EE59C00C693D7 /* Quills.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = Quills.py; path = PythonWrapper/Quills.py; sourceTree = "<group>"; };
+		0ACE9A960A9EE59700C693D7 /* _Quills.so */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = _Quills.so; path = PythonWrapper/python2.5/_Quills.so; sourceTree = "<group>"; };
+		0ACE9A980A9EE59C00C693D7 /* Quills.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = Quills.py; path = PythonWrapper/python2.5/Quills.py; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
 		0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsBase.cp; path = Application/Code/QuillsBase.cp; sourceTree = "<group>"; };
 		0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsEvents.cp; path = Application/Code/QuillsEvents.cp; sourceTree = "<group>"; };
@@ -679,7 +688,7 @@
 		0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadFind.icns; path = Application/Resources/IconForKeypadFind.icns; sourceTree = "<group>"; };
 		0AE63E2807F3B98100EB82FA /* Bind.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Bind.cp; path = Application/Code/Bind.cp; sourceTree = "<group>"; };
 		0AE63E3107F3B9C900EB82FA /* Bind.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Bind.h; path = Application/Code/Bind.h; sourceTree = "<group>"; };
-		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
+		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
 		0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPreferenceCollections.icns; path = Application/Resources/IconForPreferenceCollections.icns; sourceTree = "<group>"; };
 		0AF289A206CC9ADC002A89A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskDisableFloater.nib; sourceTree = "<group>"; };
 		0AF4B5450A1D61C700D187A3 /* PrefPanelKiosk.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelKiosk.h; path = Application/Code/PrefPanelKiosk.h; sourceTree = "<group>"; };
@@ -964,6 +973,24 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		0A5CDBAB0CDDB1EB008EEFD5 /* python2.3 */ = {
+			isa = PBXGroup;
+			children = (
+				0A5CDBA90CDDB1C7008EEFD5 /* Quills.py */,
+				0A5CDBAE0CDDB22D008EEFD5 /* _Quills.so */,
+			);
+			name = python2.3;
+			sourceTree = "<group>";
+		};
+		0A5CDBAC0CDDB21A008EEFD5 /* python2.5 */ = {
+			isa = PBXGroup;
+			children = (
+				0ACE9A980A9EE59C00C693D7 /* Quills.py */,
+				0ACE9A960A9EE59700C693D7 /* _Quills.so */,
+			);
+			name = python2.5;
+			sourceTree = "<group>";
+		};
 		0AC6BDB90A8C130400AFF37A /* Python */ = {
 			isa = PBXGroup;
 			children = (
@@ -1000,8 +1027,8 @@
 		0AD0B0A10A9EAB70002064BA /* Generated */ = {
 			isa = PBXGroup;
 			children = (
-				0ACE9A980A9EE59C00C693D7 /* Quills.py */,
-				0ACE9A960A9EE59700C693D7 /* _Quills.so */,
+				0A5CDBAB0CDDB1EB008EEFD5 /* python2.3 */,
+				0A5CDBAC0CDDB21A008EEFD5 /* python2.5 */,
 			);
 			name = Generated;
 			sourceTree = "<group>";
@@ -1218,13 +1245,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0AD0B09E0A9EAAA3002064BA /* QuillsBase.h in Headers */,
-				0AE1F16C0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h in Headers */,
-				0AD0B37C0A9EB8BD002064BA /* QuillsEvents.h in Headers */,
-				0AD0B3C30A9EBDFC002064BA /* QuillsPrefs.h in Headers */,
-				0AC6A60A0AC4E45E00FF6FC6 /* QuillsSession.h in Headers */,
-				0AC6A4EA0AC4D25000FF6FC6 /* QuillsTerminal.h in Headers */,
-				0A3E06F70B81767A00EDC16A /* PrefPanelTranslations.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1284,7 +1304,8 @@
 				0AC6BAD00A8C0A8B00AFF37A /* Frameworks */,
 				0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */,
 				0A9AF6DE0AF5B6B500E7DF18 /* Build Python Wrapper */,
-				0A9AF66E0AF5A6A600E7DF18 /* Populate lib-python2.3 */,
+				0A5CDBA80CDDA811008EEFD5 /* Populate lib-python2.3 */,
+				0A9AF66E0AF5A6A600E7DF18 /* Populate lib-python2.5 */,
 			);
 			buildRules = (
 			);
@@ -1301,10 +1322,12 @@
 		0A46FDAC0554325700ACDF3A /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 0A46FDA80554325700ACDF3A;
 			productRefGroup = 0A46FE73055433CA00ACDF3A /* Products */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				0A46FE71055433CA00ACDF3A /* MacTelnet */,
 				0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */,
@@ -1519,10 +1542,14 @@
 			);
 			name = "Build Python Wrapper";
 			outputPaths = (
-				"$(SRCROOT)/PythonWrapper/Quills.py",
-				"$(SRCROOT)/PythonWrapper/_Quills.so",
-				"$(SRCROOT)/PythonWrapper/Quills_wrap.cxx",
-				"$(SRCROOT)/PythonWrapper/Quills_wrap.o",
+				"$(SRCROOT)/PythonWrapper/python2.3/Quills.py",
+				"$(SRCROOT)/PythonWrapper/python2.3/Quills_wrap.cxx",
+				"$(SRCROOT)/PythonWrapper/python2.3/Quills.o",
+				"$(SRCROOT)/PythonWrapper/python2.3/_Quills.so",
+				"$(SRCROOT)/PythonWrapper/python2.5/Quills.py",
+				"$(SRCROOT)/PythonWrapper/python2.5/Quills_wrap.cxx",
+				"$(SRCROOT)/PythonWrapper/python2.5/Quills.o",
+				"$(SRCROOT)/PythonWrapper/python2.5/_Quills.so",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

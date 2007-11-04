@@ -32,14 +32,25 @@ contents_dir = os.path.join(macos_dir, "..")
 bundle_dir = os.path.join(contents_dir, "..")
 frameworks_dir = os.path.join(contents_dir, "Frameworks")
 resources_dir = os.path.join(contents_dir, "Resources")
+
+# the PyMacTelnet.framework code is not compiled, so its version
+# will depend only on whatever the current implementation is
+pymactelnet_pylib_ver = "2.3"
 pymactelnet_dir = os.path.join(frameworks_dir, "PyMacTelnet.framework")
 pymactelnet_versions_dir = os.path.join(pymactelnet_dir, "Versions")
 pymactelnet_current_version_dir = os.path.join(pymactelnet_versions_dir, "Current")
-pymactelnet_py23_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python2.3")
+pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python" + pymactelnet_pylib_ver)
+
+# the Quills.framework code is compiled, so it will depend on the
+# version of the Python interpreter, which varies (e.g. Leopard has
+# Python 2.5, earlier releases have Python 2.3); this assumes that
+# the SWIG-based wrapper is built for multiple Python versions
+quills_pylib_ver = "2.3"
+if sys.hexversion > 0x02030000: quills_pylib_ver = "2.5"
 quills_dir = os.path.join(frameworks_dir, "Quills.framework")
 quills_versions_dir = os.path.join(quills_dir, "Versions")
 quills_current_version_dir = os.path.join(quills_versions_dir, "Current")
-quills_py23_dir = os.path.join(quills_current_version_dir, "lib", "python2.3")
+quills_pylib_dir = os.path.join(quills_current_version_dir, "lib", "python" + quills_pylib_ver)
 
 # put the initial bundle location in the environment, for convenience
 # when initializing other components
@@ -57,7 +68,7 @@ os.environ["PYTHONEXECUTABLE"] = interpreter
 python_path = os.getenv("PYTHONPATH", "")
 if python_path:
     python_path = ":" + python_path
-os.environ["PYTHONPATH"] = quills_py23_dir + ":" + pymactelnet_py23_dir + python_path
+os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + python_path
 os.environ["DYLD_LIBRARY_PATH"] = os.path.join(frameworks_dir, "Quills.framework")
 os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
 

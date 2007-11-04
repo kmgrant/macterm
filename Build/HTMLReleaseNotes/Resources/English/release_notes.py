@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071104',
     '20071103',
     '20071023',
     '20071022',
@@ -62,6 +63,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071104': [
+		'Internal changes to make MacTelnet run properly on Leopard.',
+	],
 	'20071103': [
 		'Added support for the file URL type.  The default behavior is to run "emacs" in file browser mode.',
 	],
