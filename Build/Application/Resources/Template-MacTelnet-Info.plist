@@ -136,6 +136,16 @@
 			<key>CFBundleURLIconFile</key>
 			<string>IconForSession.icns</string>
 			<key>CFBundleURLName</key>
+			<string>file URL</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>file</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLIconFile</key>
+			<string>IconForSession.icns</string>
+			<key>CFBundleURLName</key>
 			<string>file transfer URL</string>
 			<key>CFBundleURLSchemes</key>
 			<array>

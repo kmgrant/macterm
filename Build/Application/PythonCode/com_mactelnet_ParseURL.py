@@ -15,6 +15,7 @@ Below, example URLs fully specify all parts, although each type
 has a number of optional parts that may be omitted (e.g. user
 and port, man page section).
 
+file -- handle URLs of the form "file:///path/to/some/file"
 ftp -- handle URLs of the form "ftp://user@host:port"
 sftp -- handle URLs of the form "sftp://user@host:port"
 ssh -- handle URLs of the form "ssh://user@host:port"
