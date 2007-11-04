@@ -15,13 +15,8 @@ CC          := gcc
 CXX         := g++
 CXXSHARED   := g++ -bundle -undefined suppress -flat_namespace
 
-# set a target SDK; it is crucial that this be consistent for all dependencies in this file
-ifeq ($(strip $(SDKROOT)),)
-SDKROOT     := $(lastword $(wildcard /Developer/SDKs/MacOSX10.5*sdk))
-endif
-
 # set Python installation
-PYTHONINC := -I$(SDKROOT)/System/Library/Frameworks/Python.framework/Versions/2.5/include/python2.5/
+PYTHONINC := -I/System/Library/Frameworks/Python.framework/Versions/2.5/include/python2.5/
 
 # compiler setup
 CFLAGS      := -Wno-long-double
@@ -34,7 +29,7 @@ APPLIBS     := -lm -framework Quills
 LIBS        := $(APPLIBS) $(STDLIBS)
 INCLUDES    = -I$(BUILD_TOP)/Application/Code -I$(BUILD_TOP)/Shared/Code
 
-CFLAGS_ARCH  := -isysroot $(SDKROOT) $(foreach ARCH,$(ARCHS),-arch $(ARCH))
+CFLAGS_ARCH  := $(foreach ARCH,$(ARCHS),-arch $(ARCH))
 LDFLAGS_ARCH := $(foreach ARCH,$(ARCHS),-arch $(ARCH))
 
 CFLAGS     += $(CFLAGS_ARCH)
