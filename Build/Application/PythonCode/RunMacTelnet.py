@@ -61,6 +61,7 @@ if do_testing:
 	run_module_tests(com_mactelnet_HandleURL)
 
 # register MacTelnet features that are actually implemented in Python!
+Session.on_urlopen_call(HandleURL.file, 'file')
 Session.on_urlopen_call(HandleURL.ftp, 'ftp')
 Session.on_urlopen_call(HandleURL.sftp, 'sftp')
 Session.on_urlopen_call(HandleURL.ssh, 'ssh')

@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071103',
     '20071023',
     '20071022',
     '20071019',
@@ -61,6 +62,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071103': [
+		'Added support for the file URL type.  The default behavior is to run "emacs" in file browser mode.',
+	],
 	'20071023': [
 		'Show IP Addresses command now displays a more sophisticated dialog with a proper list view for addresses.',
 		'Show IP Addresses dialog now allows addresses to be copied to the Clipboard individually.',

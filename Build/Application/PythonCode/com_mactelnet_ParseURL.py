@@ -9,6 +9,7 @@ following keys defined (which ones depends on the URL type):
     'port': TCP port of server
     'section': (man pages) section to look up resource in
     'cmd': (man pages) command to look up
+    'path': the remainder after the host name and port
 
 Below, example URLs fully specify all parts, although each type
 has a number of optional parts that may be omitted (e.g. user
@@ -109,6 +110,37 @@ def _user_host_port(netloc):
 			remainder = elements[0]
 		(host, port) = _host_port(remainder)
 	return (user, host, port)
+
+def file(url):
+	"""file(url) -> None
+	
+	Return dictionary with the 'path' component of the given
+	"file://" URL.
+	
+	(Below are REAL testcases run by doctest!)
+	
+	>>> _sort_dict(file('file://'))
+	'path:/'
+	
+	>>> _sort_dict(file('file:///Users/kevin/Library'))
+	'path:/Users/kevin/Library'
+	
+	>>> try:
+	...    file('telnet://userid@yourserver.com:12345')
+	... except ValueError, e:
+	...    print e
+	not a file URL
+	
+	"""
+	result = dict()
+	import urlparse
+	allow_pound_notation = False
+	(scheme, netloc, path, params, query, fragment) = \
+		urlparse.urlparse(url, 'ftp', allow_pound_notation)
+	if 'file' != scheme: raise ValueError("not a file URL")
+	if path == '': path = '/'
+	result['path'] = path
+	return result
 
 def ftp(url):
 	"""ftp(url) -> None

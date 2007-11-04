@@ -17,12 +17,54 @@ __date__ = '24 August 2006'
 __version__ = '3.1.0'
 
 from com_mactelnet_ParseURL import \
+	file as _parse_file, \
 	ftp as _parse_ftp, \
 	sftp as _parse_sftp, \
 	ssh as _parse_ssh, \
 	telnet as _parse_telnet, \
 	x_man_page as _parse_x_man_page
 import Quills
+
+def file(url):
+	"""file(url) -> None
+	
+	Asynchronously open a session with "emacs" in file browser
+	mode, looking at the resource from a given "file://" URL.
+	
+	(Below are REAL testcases run by doctest!)
+	
+	>>> file('file:///System/Library')
+	
+	>>> file('file:///usr/bin')
+	
+	"""
+	try:
+		url_info = _parse_file(url)
+		path = url_info.get('path', None)
+		if path is not None:
+			if len(path) == 0:
+				# default to the home directory
+				from os import getuid as _getuid
+				from pwd import getpwuid as _getpwuid
+				(pw_name, pw_passwd, pw_uid, pw_gid, pw_gecos, \
+					pw_dir, pw_shell) = _getpwuid(_getuid())
+				path = pw_dir
+				if path is None or len(path) == 0:
+					from os import getenv as _getenv
+					path = _getenv('HOME')
+					if path is None: path = '/'
+			# emacs is a good choice because it has a command line
+			# option to set a start location, it is an excellent file
+			# browser and it can remain running to perform other tasks
+			args = ['/usr/bin/emacs', "--file=%s" % path];
+			session = Quills.Session(args)
+		else:
+			print "MacTelnet: unsupported form of file URL"
+			pass
+	except:
+		# catching all exceptions is normally bad, but MacTelnet should
+		# not crash simply because a URL handler fails
+		pass
 
 def ftp(url):
 	"""ftp(url) -> None

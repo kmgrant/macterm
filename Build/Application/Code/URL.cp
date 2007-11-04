@@ -96,6 +96,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		"ssh:",
 		"sftp:",
 		"x-man-page:",
+		"file:",
 		nullptr // this list must end with a nullptr
 	};
 }
