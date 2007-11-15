@@ -3,7 +3,7 @@
 	PrefsWindow.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -42,6 +42,7 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
 #include <CFUtilities.h>
@@ -128,33 +129,6 @@ typedef std::vector< MyPanelDataPtr >		MyPanelDataList;
 typedef std::vector< HIToolbarItemRef >		CategoryToolbarItems;
 typedef std::map< UInt32, SInt16 >			IndexByCommandID;
 
-#pragma mark Variables
-
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Panel_Ref								gCurrentPanel = nullptr;
-	WindowInfoRef							gPreferencesWindowInfo = nullptr;
-	WindowRef								gPreferencesWindow = nullptr; // the Mac OS window pointer
-	WindowRef								gDrawerWindow = nullptr; // the Mac OS window pointer
-	CommonEventHandlers_WindowResizer		gPreferencesWindowResizeHandler;
-	CommonEventHandlers_WindowResizer		gDrawerWindowResizeHandler;
-	EventHandlerUPP							gToolbarItemClickUPP = nullptr;
-	EventHandlerRef							gToolbarItemClickHandler = nullptr;
-	EventHandlerUPP							gPreferencesWindowClosingUPP = nullptr;
-	EventHandlerRef							gPreferencesWindowClosingHandler = nullptr;
-	ListenerModel_ListenerRef				gPreferenceChangeEventListener = nullptr;
-	HISize									gMaximumWindowSize = CGSizeMake(600, 400); // arbitrary; overridden later
-	HIViewRef								gDataBrowserTitle = nullptr;
-	HIViewRef								gDataBrowserForCollections = nullptr;
-	HIViewRef								gCollectionAddButton = nullptr;
-	HIViewRef								gCollectionRemoveButton = nullptr;
-	SInt16									gPanelChoiceListLastRowIndex = -1;
-	MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
-	CategoryToolbarItems&					gCategoryToolbarItems ()	{ static CategoryToolbarItems x; return x; }
-	IndexByCommandID&						gIndicesByCommandID ()		{ static IndexByCommandID x; return x; }
-	Preferences_ContextRef					gCurrentDataSet = nullptr;
-}
-
 #pragma mark Internal Method Prototypes
 
 static pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
@@ -178,6 +152,38 @@ static void					sizePanels						(HISize const&);
 
 // declare the LDEF entry point (it’s only referred to here, and is implemented in IconListDef.c)
 pascal void IconListDef(SInt16, Boolean, Rect*, Cell, SInt16, SInt16, ListHandle);
+
+#pragma mark Variables
+
+namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+{
+	Panel_Ref								gCurrentPanel = nullptr;
+	WindowInfoRef							gPreferencesWindowInfo = nullptr;
+	WindowRef								gPreferencesWindow = nullptr; // the Mac OS window pointer
+	WindowRef								gDrawerWindow = nullptr; // the Mac OS window pointer
+	CommonEventHandlers_WindowResizer		gPreferencesWindowResizeHandler;
+	CommonEventHandlers_WindowResizer		gDrawerWindowResizeHandler;
+	CarbonEventHandlerWrap					gPrefsCommandHandler(GetApplicationEventTarget(),
+																	receiveHICommand,
+																	CarbonEventSetInClass
+																		(CarbonEventClass(kEventClassCommand),
+																			kEventCommandProcess),
+																	nullptr/* user data */);
+	Console_Assertion						_1(gPrefsCommandHandler.isInstalled(), __FILE__, __LINE__);
+	EventHandlerUPP							gPreferencesWindowClosingUPP = nullptr;
+	EventHandlerRef							gPreferencesWindowClosingHandler = nullptr;
+	ListenerModel_ListenerRef				gPreferenceChangeEventListener = nullptr;
+	HISize									gMaximumWindowSize = CGSizeMake(600, 400); // arbitrary; overridden later
+	HIViewRef								gDataBrowserTitle = nullptr;
+	HIViewRef								gDataBrowserForCollections = nullptr;
+	HIViewRef								gCollectionAddButton = nullptr;
+	HIViewRef								gCollectionRemoveButton = nullptr;
+	SInt16									gPanelChoiceListLastRowIndex = -1;
+	MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
+	CategoryToolbarItems&					gCategoryToolbarItems ()	{ static CategoryToolbarItems x; return x; }
+	IndexByCommandID&						gIndicesByCommandID ()		{ static IndexByCommandID x; return x; }
+	Preferences_ContextRef					gCurrentDataSet = nullptr;
+}
 
 
 #pragma mark Functors
@@ -316,8 +322,6 @@ PrefsWindow_Done ()
 		ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 		
 		// disable event callbacks and destroy the window
-		RemoveEventHandler(gToolbarItemClickHandler), gToolbarItemClickHandler = nullptr;
-		DisposeEventHandlerUPP(gToolbarItemClickUPP), gToolbarItemClickUPP = nullptr;
 		RemoveEventHandler(gPreferencesWindowClosingHandler), gPreferencesWindowClosingHandler = nullptr;
 		DisposeEventHandlerUPP(gPreferencesWindowClosingUPP), gPreferencesWindowClosingUPP = nullptr;
 		for (panelDataIterator = gPanelList().begin(); panelDataIterator != gPanelList().end(); ++panelDataIterator)
@@ -1040,22 +1044,6 @@ init ()
 		installPanel(PrefPanelKiosk_New());
 		installPanel(PrefPanelScripts_New());
 		
-		// install a callback that responds to toolbar item commands
-		{
-			EventTypeSpec const		whenToolbarItemHit[] =
-									{
-										{ kEventClassCommand, kEventCommandProcess }
-									};
-			OSStatus				error = noErr;
-			
-			
-			gToolbarItemClickUPP = NewEventHandlerUPP(receiveHICommand);
-			error = InstallWindowEventHandler(gPreferencesWindow, gToolbarItemClickUPP,
-												GetEventTypeCount(whenToolbarItemHit), whenToolbarItemHit,
-												nullptr/* user data */, &gToolbarItemClickHandler/* event handler reference */);
-			assert(error == noErr);
-		}
-		
 		// install a callback that responds as the main window is resized
 		{
 			HISize		initialSize = CGSizeMake(panelBounds.right - panelBounds.left,
@@ -1352,7 +1340,7 @@ rebuildList ()
 /*!
 Handles "kEventCommandProcess" of "kEventClassCommand"
 for the preferences toolbar.  Responds by changing
-the currently selected panel.
+the currently-displayed panel.
 
 (3.1)
 */
@@ -1367,6 +1355,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	
 	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
 	{
 		HICommand	received;
 		
