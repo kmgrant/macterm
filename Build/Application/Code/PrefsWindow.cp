@@ -1099,6 +1099,12 @@ init ()
 			OSStatus	error = noErr;
 			
 			
+			if (FlagManager_Test(kFlagOS10_5API))
+			{
+				// on Leopard, the aesthetically-pleasing spot for the drawer
+				// is slightly higher
+				--leadingOffset;
+			}
 			error = SetDrawerOffsets(gDrawerWindow, leadingOffset, trailingOffset);
 		}
 		
