@@ -35,6 +35,22 @@ h5(#noautonew). Don't create new windows automatically
 Prevents a new shell from being created if MacTelnet is activated
 while it has no windows open.
 
+h5(#usetabs). Use tabs to arrange windows
+
+Once enabled, all new windows (but not existing ones) will use
+tabs.
+
+MacTelnet tabs are quite unique, in that they are still windows.
+Aside from being "glued" together and having a tab adornment,
+they are separate windows, so they retain a lot of flexibility.
+For example, a sheet open on one tab will not block other tabs.
+
+Currently, new tabs always appear in the most recently created
+"workspace".  By default there is one workspace, but clicking a
+tab or selecting Window >> Move to New Workspace will separate
+the tab into its own workspace, and that workspace becomes the
+new default for future tabs.
+
 h4. Text
 
 h5(#invert). Invert selected text
@@ -50,16 +66,15 @@ accustomed to working with terminal-based applications.
 
 h5(#dropmove). Move cursor to text drop location
 
-Sends a series of arrow key sequences when you drop text on a
-terminal, that instruct the application to put the cursor where
-you dropped the text.  As long as you are using an application in
-the terminal that understands this kind of sequence, you will see
-Mac-like drag and drop behavior added!  This is very cool in a
-terminal-based text editor or E-mail client, for instance.
+Displays a ghost terminal cursor during drags, and sends a series
+of arrow key sequences to move the cursor when the drag ends.
 
-When this feature is enabled, MacTelnet displays a ghost cursor
-during drags to help you see exactly what the new cursor location
-will be.
+When terminal applications properly respond to the sequences, the
+result is effectively to give them Mac-like drag-and-drop!
+
+However, not all terminal applications properly respond to arrow
+key sequences.  The typical error is to display various "garbage"
+characters instead of moving the cursor.
 
 h5(#nodim). Don't dim background terminal text
 
@@ -70,10 +85,10 @@ h4. Keyboard
 
 h5(#menukeys). Menu item key equivalents
 
-Certain terminal applications may benefit from stricter control
-over your keyboard; you can turn off even rudimentary menu item
-key recognition if it helps avoid confusing applications in your
-terminals.
+Disabling the key equivalents for all menu items is recommended
+when in kiosk (Full Screen) mode, or whenever it is necessary to
+use keys from menu commands as input to the application in the
+active terminal.
 
 h5(#mapbackquote). Map backquote key to escape character
 
@@ -122,11 +137,11 @@ the current window size.
 You can hold down the Option key prior to starting a window
 resize to temporarily switch this preference.
 
-h4(#spacesfortab). Copy Using Tabs For Spaces: Spaces Per Tab
+h4(#spacesfortab). Copy With Tab Substitution: Spaces Per Tab
 
-When copying text with Copy Using Tabs For Spaces, this number
+When copying text using Copy With Tab Substitution, this number
 determines how many consecutive spaces are replaced with a single
-tab character in the clipboard version.
+tab character before putting the text on the clipboard.
 
 h4(#commandN). Command-N Key Equivalent
 
@@ -143,8 +158,11 @@ h5. Sound
 When a terminal audio event occurs, you can have MacTelnet play
 the standard system beep (set up in System Preferences under
 Sound).  Or, you can select any other sound file.  Finally, you
-can turn off sound completely (note that this can be done for any
-individual terminal using "Disable Bell" in the Terminal menu).
+can turn off sound completely.
+
+Note that sound can also be controlled in individual terminals by
+using the "Bell" command in the Terminal menu (or the
+corresponding toolbar item).
 
 h5(#visualbell). Always use visual bell
 
@@ -169,12 +187,12 @@ terminals generates a bell.
 
 h4(#notifymethod). Background Notification
 
-For Notify of Terminal Beeps, as well as any other alert that may
-show up when you are in another application (such as an error
-message), you can specify how "annoying" MacTelnet may be.  The
-options range from no interruptions at all, to an immediate alert
-in your other application telling you that MacTelnet needs your
-attention.
+For "Background notification on bell", as well as any other alert
+that may show up when you are in another application (such as an
+error message), you can specify how "annoying" MacTelnet may be.
+The options range from no interruptions at all, to an immediate
+alert in your other application telling you that MacTelnet needs
+your attention.
 
 h2(#sessions). Sessions
 
@@ -200,14 +218,93 @@ macro set.
 
 All macro sets use the same key equivalents, so only one set can
 be available at a time.  When a terminal window is active, use
-the Keys menu to choose the current macro set.
+the Map menu to choose the current macro set.
 
-h3. Invoke With
+h3. Options
 
-Currently, MacTelnet offers two ways to invoke macros: either
-using a combination of the command (cloverleaf) key and keypad
-keys such as numbers, or using the first twelve function keys at
-the top of your keyboard.
+h4. Invoke With
+
+h5. Command + keypad
+
+Macros are invoked by combining the command (cloverleaf) key and
+keypad keys such as numbers.
+
+h5. Function keys
+
+Macros are invoked using the first twelve function keys at the
+top of your keyboard.
+
+h4. User Interface
+
+h5. Display as menu
+
+Macros are always available from the keyboard, but this option
+displays them in a top-level menu as well.  The menu changes as
+you swap macro sets with the Map menu.
+
+h3. Editing
+
+A macro contains only plain text.  To edit, click on its content
+portion in the list, and then hover until an edit box appears.
+Hit Return or Enter when finished editing.
+
+The name column can be edited in a similar way.  Note that macro
+names are currently only used when a macro menu is displayed.
+
+MacTelnet does allow you to put several special codes into the
+content of macros, representing additional characters:
+
+|_<{padding-right:0.5em}. Code|_<{padding-left:0.5em}. Meaning|
+|<. \"|<{padding-left:0.5em}. double-quote (")|
+|<. \\|<{padding-left:0.5em}. backslash (\)|
+|<. \t|<{padding-left:0.5em}. horizontal tab|
+|<. \r|<{padding-left:0.5em}. carriage return|
+|<. \n|<{padding-left:0.5em}. line feed|
+|<. \e|<{padding-left:0.5em}. escape (^[)|
+|<. \0nn|<{padding-left:0.5em}. arbitrary ASCII in octal; e.g. "\004" is ^D|
+
+bq. To see the octal versions of all ASCII characters, look at
+<a href="x-man-page://ascii">x-man-page://ascii</a> (opens a MacTelnet window and runs "man ascii").
+
+MacTelnet also recognizes codes that represent information to be
+inserted at the time a macro is actually used:
+
+|<. \i|<{padding-left:0.5em}. dynamically substitute an IP address of the computer|
+|<. \#|<{padding-left:0.5em}. dynamically substitute the number of terminal lines|
+
+h2(#translations). Translations
+
+You can create more than one set of preferences in this category.
+When you select Translations, a drawer appears showing all the
+collections you have.  Simply choose a name from the list in the
+drawer and then edit settings in the main Preferences window for
+that collection.
+
+A translation table eessentially allows the terminal to display
+text the way it is supposed to, according to what an application
+in a terminal expects.
+
+The Map menu allows you to choose any of these translation tables
+while sessions are running.
+
+h3. Base Translation Table
+
+Since translation tables are large and cumbersome, and it is
+common to customize small parts of existing character sets, you
+can choose a table on which to base your customizations.
+
+Alternatively, if you want to set up a collection that contains
+exactly what is in a standard table, simply choose the standard
+table and then avoid setting up Exceptions, below.
+
+h3. Exceptions
+
+For one or more characters in the selected base table, you can
+specify alternate mappings by adding them to the Exceptions list.
+
+For example, you could start with a United States character set
+and add an exception that changes "#" to the British symbol for
+pounds.
 
 h2(#terminals). Terminals
 
@@ -239,11 +336,85 @@ to quickly change a window's format to one of the Favorites you
 specify in Preferences, or to make customizations local to the
 frontmost window.
 
+h3. Normal
+
+Settings that apply to all text, unless overridden by some more
+specific property.
+
+Color settings have two entries, the leftmost box is the text
+(foreground) color and the rightmost box is the background color.
+
+h3. ANSI Colors
+
+Terminal applications can rely on an ANSI standard palette of
+colors.  While it is a good idea to choose colors that match the
+specified names, sometimes you have to change them so they don't
+clash with your other customizations!
+
+Color settings have two entries, the leftmost box is the "normal"
+version and the rightmost box is the "bold" (or emphasized) one.
+Ordinarily, the bold color is a slightly brighter version of the
+normal color.
+
+Not all applications in terminals will make use of these colors.
+In addition, a Terminal Favorite can disable them.
+
 h2(#macros). Full Screen
 
 Settings that control "kiosk mode", the Full Screen command in
 the View menu.  You can use these preferences to create a more
-complete kiosk (by hiding the Dock, for example).
+complete kiosk (by hiding the menu bar, for example).
+
+h3. Options
+
+h4. Access Control
+
+h5. Show menu bar when mouse is near it
+
+The menu bar is hidden in Full Screen mode, but it can normally
+be displayed simply by moving the mouse to the top of the screen
+and pausing a moment.
+
+If you want the menu bar to be completely unusable, disable this
+option and also disable the "Menu key equivalents" option in the
+General category.
+
+h5. Show scroll bar
+
+If your goal is to run an application in the terminal window for
+visitors of a kiosk, it may be appropriate to hide the scroll bar
+so that none of the "junk" normally cached in the scrollback is
+accessible.
+
+h5. Allow "Force Quit" command
+
+To make kiosks harder to mess with, you can prevent the user from
+accessing the system Force Quit function.
+
+Note that this offers "pretty good" security, but does not guard
+against all possible ways that MacTelnet could be interrupted.
+For example, a background application could pop up, MacTelnet
+could crash, or the user may be able to command-Tab to some other
+program.
+
+h4. Effects
+
+h5. Superfluous graphical effects
+
+In full screen mode, MacTelnet has significantly more screen
+resolution and therefore has more options for rendering terminals
+in interesting ways!  If you do not want kiosks to look
+significantly different from normal terminal windows, disable
+this option.
+
+h4. Deactivation
+
+h5. Display an "off switch" window
+
+If you do not want your kiosk disturbed, you may wish to remove
+the floating button that appears by default.  (Full Screen can
+always be disabled, but without this button it is less likely
+that visitors will determine how.)
 
 h2(#scripts). Scripts
 
