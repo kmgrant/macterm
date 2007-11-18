@@ -4,7 +4,7 @@ body
 {
 	background:			white;
 	color:				black;
-	font-family:		"Gill Sans", "Lucida Grande", sans-serif;
+	font-family:		"Tahoma", "Gill Sans", "Lucida Grande", sans-serif;
 	
 	margin-top:			0;
 	border-top:			0;
@@ -236,6 +236,7 @@ h2
 {
 	background:			#ccc;
 	color:				black;
+	font-family:		"Tahoma-Bold";
 	
 	margin-top:			0.25em;
 	border-top:			solid #aaa 0.075em;
@@ -289,8 +290,8 @@ h4
 	border-bottom:		solid white 0;
 	margin-bottom:		0.1em;
 	
-	margin-left:		-1.5em;
-	border-left:		solid #666 0.7em;
+	margin-left:		-0.8em;
+	border-left:		0;
 	padding-left:		0.8em;
 	width:				auto;
 	padding-right:		0;
@@ -312,7 +313,7 @@ h5
 	margin-bottom:		0.1em;
 	
 	margin-left:		-1.5em;
-	border-left:		solid #666 0.7em;
+	border-left:		dashed #ddd 0.7em;
 	padding-left:		0.8em;
 	width:				auto;
 	padding-right:		0;
@@ -334,7 +335,7 @@ h6
 	margin-bottom:		0.1em;
 	
 	margin-left:		-1.5em;
-	border-left:		solid #666 0.7em;
+	border-left:		dashed #ddd 0.7em;
 	padding-left:		0.8em;
 	width:				auto;
 	padding-right:		0;
