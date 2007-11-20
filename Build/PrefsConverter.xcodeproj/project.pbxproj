@@ -150,9 +150,11 @@
 		20286C28FDCF999611CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 0A578F0A09D88AAC007D1289 /* Build configuration list for PBXProject "PrefsConverter" */;
+			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
 			mainGroup = 20286C29FDCF999611CA2CEA /* MacTelnetPrefsConverter */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				8D0C4E890486CD37000505A6 /* PrefsConverter */,
 			);
