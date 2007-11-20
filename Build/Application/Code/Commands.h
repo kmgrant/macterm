@@ -407,6 +407,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPrefCommandNOpensDefault		'CNDf'		// “Preferences” window
 #define kCommandPrefCommandNOpensLogInShell		'CNSh'		// “Preferences” window
 #define kCommandPrefCommandNOpensCustomSession	'CNDg'		// “Preferences” window
+#define kCommandToggleMacrosMenuVisibility		'McMn'		// “Preferences” window
 #define kCommandPreferencesNewFavorite			kHICommandNew	// “Preferences” window; intentionally the same as the ordinary New
 #define kCommandPreferencesDuplicateFavorite	'DupC'		// “Preferences” window
 #define kCommandPreferencesRenameFavorite		'RnmC'		// “Preferences” window

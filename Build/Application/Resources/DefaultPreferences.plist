@@ -5,7 +5,7 @@
 	DefaultPreferences.plist
 	
 	MacTelnet 3.1
-	© 1998-2006 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This file defines MacTelnet's default preferences.  It has EXACTLY
 	the same format as the main Core Foundation Preferences file (i.e.
@@ -86,6 +86,8 @@
 	<key>favorite-macros</key>
 	<array>
 		<dict>
+			<key>menu-visible</key>
+			<false/>
 			<key>name-string</key>
 			<string>Set 1</string>
 			<key>key-mappings</key>
@@ -173,6 +175,8 @@
 			</array>
 		</dict>
 		<dict>
+			<key>menu-visible</key>
+			<false/>
 			<key>name-string</key>
 			<string>Set 2</string>
 			<key>key-mappings</key>
@@ -260,6 +264,8 @@
 			</array>
 		</dict>
 		<dict>
+			<key>menu-visible</key>
+			<false/>
 			<key>name-string</key>
 			<string>Set 3</string>
 			<key>key-mappings</key>
@@ -347,6 +353,8 @@
 			</array>
 		</dict>
 		<dict>
+			<key>menu-visible</key>
+			<false/>
 			<key>name-string</key>
 			<string>Set 4</string>
 			<key>key-mappings</key>
@@ -434,6 +442,8 @@
 			</array>
 		</dict>
 		<dict>
+			<key>menu-visible</key>
+			<false/>
 			<key>name-string</key>
 			<string>Set 5</string>
 			<key>key-mappings</key>

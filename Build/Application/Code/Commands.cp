@@ -1354,6 +1354,28 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
+		case kCommandToggleMacrosMenuVisibility:
+			{
+				Preferences_ResultCode		preferencesResult = kPreferences_ResultCodeSuccess;
+				size_t						actualSize = 0;
+				Boolean						isVisible = false;
+				
+				
+				preferencesResult = Preferences_GetData(kPreferences_TagMacrosMenuVisible,
+														sizeof(isVisible), &isVisible,
+														&actualSize);
+				unless (preferencesResult == kPreferences_ResultCodeSuccess)
+				{
+					isVisible = false; // assume a value, if preference can’t be found
+				}
+				
+				isVisible = !isVisible;
+				
+				preferencesResult = Preferences_SetData(kPreferences_TagMacrosMenuVisible,
+														sizeof(isVisible), &isVisible);
+			}
+			break;
+		
 		case kCommandSendMacro1:
 			MacroManager_UserInputMacroString(frontSession, 0/* zero-based macro number */);
 			break;

@@ -1,150 +1,108 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
-  <array count="17" name="allObjects">
+  <array count="10" name="allObjects">
+    <object class="IBCarbonRadioButton" id="1990">
+      <ostype name="controlSignature">Inv2</ostype>
+      <ostype name="command">MKFK</ostype>
+      <boolean name="autoToggle">FALSE</boolean>
+      <string name="title">Function keys</string>
+      <string name="viewFrame">190 43 202 19 </string>
+      <string name="bounds">43 190 62 392 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="2043">
+      <ostype name="controlSignature">McMH</ostype>
+      <int name="controlSize">1</int>
+      <string name="title">The menu will only appear when this macro set is active.</string>
+      <string name="viewFrame">211 116 393 13 </string>
+      <string name="bounds">116 211 129 604 </string>
+    </object>
+    <object class="IBCarbonEditText" id="2012">
+      <ostype name="controlSignature">MMNm</ostype>
+      <boolean name="useInlineInput">TRUE</boolean>
+      <boolean name="isUnicode">TRUE</boolean>
+      <boolean name="isSingleLine">TRUE</boolean>
+      <string name="title">Macros</string>
+      <int name="justification">-2</int>
+      <string name="foreColor">0 0 0 </string>
+      <string name="viewFrame">336 93 150 16 </string>
+      <string name="bounds">93 336 109 486 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1987">
+      <ostype name="controlSignature">MLst</ostype>
+      <int name="featureBits">2</int>
+      <string name="viewFrame">0 161 624 263 </string>
+      <string name="bounds">161 0 424 624 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="2009">
+      <int name="fontStyle">107</int>
+      <string name="title">User Interface:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 93 164 16 </string>
+      <string name="bounds">93 20 109 184 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1988">
+      <int name="fontStyle">107</int>
+      <string name="title">Invoke With:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 20 164 16 </string>
+      <string name="bounds">20 20 36 184 </string>
+    </object>
+    <object class="IBCarbonRadioButton" id="1989">
+      <ostype name="controlSignature">Inv1</ostype>
+      <ostype name="command">MKCK</ostype>
+      <int name="initialState">1</int>
+      <boolean name="autoToggle">FALSE</boolean>
+      <string name="title">Command + keypad</string>
+      <string name="viewFrame">190 18 202 19 </string>
+      <string name="bounds">18 190 37 392 </string>
+    </object>
+    <object class="IBCarbonRootControl" id="1927">
+      <string name="viewFrame">0 0 624 424 </string>
+      <array count="8" name="subviews">
+        <reference idRef="1987"/>
+        <reference idRef="1988"/>
+        <reference idRef="1989"/>
+        <reference idRef="1990"/>
+        <reference idRef="2009"/>
+        <object class="IBCarbonCheckBox" id="2011">
+          <ostype name="controlSignature">McMn</ostype>
+          <ostype name="command">McMn</ostype>
+          <boolean name="autoToggle">FALSE</boolean>
+          <string name="title">Display as menu:</string>
+          <string name="viewFrame">192 94 133 14 </string>
+          <string name="bounds">94 192 108 325 </string>
+        </object>
+        <reference idRef="2012"/>
+        <reference idRef="2043"/>
+      </array>
+      <string name="bounds">0 0 424 624 </string>
+    </object>
+    <reference idRef="2011"/>
     <object class="IBCarbonWindow" id="1926">
-      <string name="windowRect">425 182 852 809 </string>
-      <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="1927">
-        <string name="bounds">0 0 427 627 </string>
-        <string name="viewFrame">0 0 627 427 </string>
-        <array count="15" name="subviews">
-          <object class="IBCarbonUserPane" id="1987">
-            <string name="bounds">273 0 427 627 </string>
-            <string name="viewFrame">0 273 627 154 </string>
-            <ostype name="controlSignature">MLst</ostype>
-            <int name="featureBits">2</int>
-          </object>
-          <object class="IBCarbonStaticText" id="1988">
-            <string name="bounds">20 20 36 184 </string>
-            <string name="viewFrame">20 20 164 16 </string>
-            <int name="fontStyle">107</int>
-            <string name="title">Invoke With:</string>
-            <int name="justification">-1</int>
-          </object>
-          <object class="IBCarbonRadioButton" id="1989">
-            <string name="bounds">18 190 37 392 </string>
-            <string name="viewFrame">190 18 202 19 </string>
-            <ostype name="controlSignature">Inv1</ostype>
-            <string name="title">Command + Keypad</string>
-            <ostype name="command">MKCK</ostype>
-            <int name="initialState">1</int>
-            <boolean name="autoToggle">FALSE</boolean>
-          </object>
-          <object class="IBCarbonRadioButton" id="1990">
-            <string name="bounds">43 190 62 392 </string>
-            <string name="viewFrame">190 43 202 19 </string>
-            <ostype name="controlSignature">Inv2</ostype>
-            <string name="title">Function Keys</string>
-            <ostype name="command">MKFK</ostype>
-            <boolean name="autoToggle">FALSE</boolean>
-          </object>
-          <object class="IBCarbonStaticText" id="1997">
-            <string name="bounds">141 195 157 397 </string>
-            <string name="viewFrame">195 141 202 16 </string>
-            <string name="title">\i - computer’s IP address</string>
-          </object>
-          <object class="IBCarbonStaticText" id="1998">
-            <string name="bounds">165 195 181 397 </string>
-            <string name="viewFrame">195 165 202 16 </string>
-            <string name="title">\# - number of terminal lines</string>
-          </object>
-          <object class="IBCarbonStaticText" id="1999">
-            <string name="bounds">117 405 133 607 </string>
-            <string name="viewFrame">405 117 202 16 </string>
-            <string name="title">\r - carriage return</string>
-          </object>
-          <object class="IBCarbonStaticText" id="2000">
-            <string name="bounds">93 405 109 607 </string>
-            <string name="viewFrame">405 93 202 16 </string>
-            <string name="title">\t - tab</string>
-          </object>
-          <object class="IBCarbonStaticText" id="2001">
-            <string name="bounds">141 405 157 607 </string>
-            <string name="viewFrame">405 141 202 16 </string>
-            <string name="title">\n - line feed</string>
-          </object>
-          <object class="IBCarbonStaticText" id="2002">
-            <string name="bounds">93 195 109 397 </string>
-            <string name="viewFrame">195 93 202 16 </string>
-            <string name="title">\&quot; - double-quote (&quot;)</string>
-          </object>
-          <object class="IBCarbonStaticText" id="2003">
-            <string name="bounds">213 207 265 607 </string>
-            <string name="viewFrame">207 213 400 52 </string>
-            <ostype name="controlSignature">SeqH</ostype>
-            <boolean name="small">TRUE</boolean>
-            <int name="controlSize">1</int>
-            <string name="title">For example, &quot;\004&quot; inserts a control-D (EOF) character.  Run &quot;man ascii&quot; in a shell to see the octal values of all characters.</string>
-          </object>
-          <object class="IBCarbonStaticText" id="2004">
-            <string name="bounds">117 195 133 397 </string>
-            <string name="viewFrame">195 117 202 16 </string>
-            <string name="title">\\ - backslash (\)</string>
-          </object>
-          <object class="IBCarbonStaticText" id="2005">
-            <string name="bounds">165 405 181 607 </string>
-            <string name="viewFrame">405 165 202 16 </string>
-            <string name="title">\e - escape</string>
-          </object>
-          <object class="IBCarbonStaticText" id="2006">
-            <string name="bounds">93 25 109 189 </string>
-            <string name="viewFrame">25 93 164 16 </string>
-            <int name="fontStyle">107</int>
-            <string name="title">Special Sequences:</string>
-            <int name="justification">-1</int>
-          </object>
-          <object class="IBCarbonStaticText" id="2007">
-            <string name="bounds">189 195 205 397 </string>
-            <string name="viewFrame">195 189 202 16 </string>
-            <string name="title">\0nn - arbitrary ASCII in octal</string>
-          </object>
-        </array>
-      </object>
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
       <boolean name="compositing">TRUE</boolean>
-      <int name="themeBrush">1</int>
       <boolean name="isConstrained">FALSE</boolean>
+      <int name="themeBrush">1</int>
+      <string name="title"></string>
+      <reference name="rootControl" idRef="1927"/>
+      <string name="windowRect">425 182 849 806 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="1927"/>
-    <reference idRef="1987"/>
-    <reference idRef="1988"/>
-    <reference idRef="1989"/>
-    <reference idRef="1990"/>
-    <reference idRef="1997"/>
-    <reference idRef="1998"/>
-    <reference idRef="1999"/>
-    <reference idRef="2000"/>
-    <reference idRef="2001"/>
-    <reference idRef="2002"/>
-    <reference idRef="2003"/>
-    <reference idRef="2004"/>
-    <reference idRef="2005"/>
-    <reference idRef="2006"/>
-    <reference idRef="2007"/>
   </array>
-  <array count="17" name="allParents">
-    <reference idRef="1"/>
+  <array count="10" name="allParents">
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
     <reference idRef="1926"/>
     <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
+    <reference idRef="1"/>
   </array>
   <dictionary count="2" name="nameTable">
     <string>File&apos;s Owner</string>
@@ -152,5 +110,6 @@
     <string>Panel</string>
     <reference idRef="1926"/>
   </dictionary>
-  <unsigned_int name="nextObjectID">2008</unsigned_int>
+  <string name="targetFramework">IBCarbonFramework</string>
+  <unsigned_int name="nextObjectID">2044</unsigned_int>
 </object>

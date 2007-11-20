@@ -3,7 +3,7 @@
 	PrefPanelMacros.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -72,6 +72,7 @@
 #include "DialogUtilities.h"
 #include "MacroManager.h"
 #include "Panel.h"
+#include "Preferences.h"
 #include "PrefPanelMacros.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
@@ -124,9 +125,11 @@ In addition, they MUST be unique across all panels.
 */
 static HIViewID const	idMyUserPaneMacroSetList				= { FOUR_CHAR_CODE('MLst'), 0/* ID */ };
 static HIViewID const	idMyDataBrowserMacroSetList				= { FOUR_CHAR_CODE('McDB'), 0/* ID */ };
-static HIViewID const	idMyHelpTextSpecialSequences			= { FOUR_CHAR_CODE('SeqH'), 0/* ID */ };
+static HIViewID const	idMyHelpTextMacroMenu					= { FOUR_CHAR_CODE('McMH'), 0/* ID */ };
 static HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { FOUR_CHAR_CODE('Inv1'), 0/* ID */ };
 static HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { FOUR_CHAR_CODE('Inv2'), 0/* ID */ };
+static HIViewID const	idMyCheckBoxMacrosMenuVisible			= { FOUR_CHAR_CODE('McMn'), 0/* ID */ };
+static HIViewID const	idMyFieldMacrosMenuName					= { FOUR_CHAR_CODE('MMNm'), 0/* ID */ };
 
 #pragma mark Types
 
@@ -159,6 +162,7 @@ public:
 	HIViewWrap							mainView;
 	CommonEventHandlers_HIViewResizer	containerResizer;			//!< invoked when the panel is resized
 	ListenerModel_ListenerRef			macroSetChangeListener;		//!< invoked when macros change externally
+	ListenerModel_ListenerRef			preferenceChangeListener;	//!< notified when certain user preferences are changed
 
 protected:
 	HIViewWrap
@@ -197,6 +201,7 @@ static void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void
 static void				disposePanel						(Panel_Ref, void*);
 static void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static SInt32			panelChanged						(Panel_Ref, Panel_Message, void*);
+static void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				refreshDisplay						(MyMacrosPanelUIPtr);
 static void				setDataBrowserColumnWidths			(MyMacrosPanelUIPtr);
 
@@ -333,6 +338,18 @@ macroSetChangeListener		(nullptr)
 	Macros_StartMonitoring(kMacros_ChangeActiveSet, this->macroSetChangeListener);
 	Macros_StartMonitoring(kMacros_ChangeContents, this->macroSetChangeListener);
 	Macros_StartMonitoring(kMacros_ChangeMode, this->macroSetChangeListener);
+	
+	this->preferenceChangeListener = ListenerModel_NewStandardListener(preferenceChanged, this/* context */);
+	assert(nullptr != this->preferenceChangeListener);
+	{
+		Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+		
+		
+		prefsResult = Preferences_ListenForChanges
+						(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible,
+							true/* notify of initial value */);
+		assert(kPreferences_ResultCodeSuccess == prefsResult);
+	}
 }// MyMacrosPanelUI 2-argument constructor
 
 
@@ -350,6 +367,8 @@ MyMacrosPanelUI::
 	Macros_StopMonitoring(kMacros_ChangeContents, this->macroSetChangeListener);
 	Macros_StopMonitoring(kMacros_ChangeMode, this->macroSetChangeListener);
 	ListenerModel_ReleaseListener(&this->macroSetChangeListener);
+	Preferences_StopListeningForChanges(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible);
+	ListenerModel_ReleaseListener(&this->preferenceChangeListener);
 }// MyMacrosPanelUI destructor
 
 
@@ -765,7 +784,7 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		
 		setDataBrowserColumnWidths(interfacePtr);
 		
-		viewWrap = HIViewWrap(idMyHelpTextSpecialSequences, kPanelWindow);
+		viewWrap = HIViewWrap(idMyHelpTextMacroMenu, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	}
 }// deltaSizePanelContainerHIView
@@ -1313,6 +1332,67 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	return result;
 }// panelChanged
+
+
+/*!
+Invoked whenever a monitored preference value is changed
+(see PrefPanelMacros_New() to see which preferences are
+monitored).  This routine responds by ensuring that HIView
+states are up to date for the changed preference.
+
+(3.1)
+*/
+static void
+preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+					 ListenerModel_Event	inPreferenceTagThatChanged,
+					 void*					inEventContextPtr,
+					 void*					inMyMacrosPanelUIPtr)
+{
+	Preferences_ChangeContext*		contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
+	MyMacrosPanelUIPtr				interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, MyMacrosPanelUIPtr);
+	size_t							actualSize = 0L;
+	
+	
+	switch (inPreferenceTagThatChanged)
+	{
+	case kPreferences_TagMacrosMenuVisible:
+		{
+			Boolean		isVisible = false;
+			
+			
+			unless (Preferences_GetData(kPreferences_TagMacrosMenuVisible,
+										sizeof(isVisible), &isVisible,
+										&actualSize) == kPreferences_ResultCodeSuccess)
+			{
+				isVisible = false; // assume a value, if preference canÕt be found
+			}
+			
+			// update user interface
+			{
+				HIViewWrap		checkBox(idMyCheckBoxMacrosMenuVisible, GetControlOwner(interfacePtr->mainView));
+				HIViewWrap		textField(idMyFieldMacrosMenuName, GetControlOwner(interfacePtr->mainView));
+				assert(checkBox.exists());
+				assert(textField.exists());
+				
+				
+				SetControlValue(checkBox, BooleanToCheckBoxValue(isVisible));
+				if (isVisible)
+				{
+					(OSStatus)ActivateControl(textField);
+				}
+				else
+				{
+					(OSStatus)DeactivateControl(textField);
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// preferenceChanged
 
 
 /*!

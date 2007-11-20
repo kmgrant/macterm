@@ -215,6 +215,14 @@ enum
 };
 
 /*!
+Tags for use with kPreferences_ClassMacroSet.
+*/
+enum
+{
+	kPreferences_TagMacrosMenuVisible					= FOUR_CHAR_CODE('mmnu')	//!< data: "Boolean"
+};
+
+/*!
 Tags for use with kPreferences_ClassSession.
 */
 enum
@@ -332,6 +340,7 @@ with notifiers:
 - kPreferences_TagArrangeWindowsUsingTabs
 - kPreferences_TagCursorBlinks
 - kPreferences_TagDontDimBackgroundScreens
+- kPreferences_TagMacrosMenuVisible
 - kPreferences_TagMapBackquote
 - kPreferences_TagMenuItemKeys
 - kPreferences_TagNewCommandShortcutEffect
