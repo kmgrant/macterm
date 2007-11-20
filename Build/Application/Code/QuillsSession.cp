@@ -3,7 +3,7 @@
 	QuillsSession.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -93,7 +93,8 @@ See header or "pydoc" for Python docstrings.
 (3.1)
 */
 Session::
-Session		(std::vector< std::string >		inArgV)
+Session		(std::vector< std::string >		inArgV,
+			 std::string					inWorkingDirectory)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 _session(nullptr)
@@ -106,7 +107,10 @@ _session(nullptr)
 	std::transform(inArgV.begin(), inArgV.end(), args, find_cstr());
 	args[argc] = nullptr;
 	_session = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, args/* command */,
-															nullptr/* preferences context */);
+															nullptr/* preferences context */,
+															inWorkingDirectory.empty()
+																? nullptr
+																: inWorkingDirectory.c_str());
 	delete [] args;
 	
 	if (nullptr != gSessionOpenedCallbackInvoker) (*gSessionOpenedCallbackInvoker)(gSessionOpenedPythonCallback);

@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -54,13 +54,18 @@ class Session
 {
 public:
 #if SWIG
+%feature("kwargs") Session;
 %feature("docstring",
 "Create a new session with a terminal window, and run a Unix\n\
 command line in it.  The session remains active until it is\n\
 terminated by the user or the command finishes.\n\
+\n\
+If the given directory is not empty, the child process changes\n\
+to that directory before the given command is invoked.\n\
 ") Session;
 #endif
-	Session	(std::vector< std::string >		inArgV);
+	Session	(std::vector< std::string >		argv,
+			 std::string					cwd = "");
 	
 #if SWIG
 %feature("docstring",
@@ -72,7 +77,7 @@ however, use a routine like on_new_call() to be notified of\n\
 new sessions when they appear.\n\
 ") handle_url;
 #endif
-	static void handle_url (std::string		inURL);
+	static void handle_url (std::string		url);
 	
 	// only intended for direct use by the SWIG wrapper
 	static void _on_new_call_py (Quills::FunctionReturnVoidArg1VoidPtr, void*);
@@ -135,10 +140,10 @@ call to on_urlopen_call().\n\
 	// "CallPythonStringReturnVoid" is defined in Quills.i
 	static void
 	on_urlopen_call	(PyObject*		inPythonFunction,
-					 std::string	inSchema)
+					 std::string	schema)
 	{
 		Quills::Session::_on_urlopen_call_py(CallPythonStringReturnVoid, reinterpret_cast< void* >(inPythonFunction),
-												inSchema);
+												schema);
 		Py_INCREF(inPythonFunction);
 	}
 	
@@ -155,9 +160,9 @@ call to on_urlopen_call().\n\
 	// "CallPythonStringReturnVoid" is defined in Quills.i
 	static void
 	stop_urlopen_call	(PyObject*		inPythonFunction,
-						 std::string	inSchema)
+						 std::string	schema)
 	{
-		Quills::Session::_stop_urlopen_call_py(CallPythonStringReturnVoid, inSchema);
+		Quills::Session::_stop_urlopen_call_py(CallPythonStringReturnVoid, schema);
 		Py_DECREF(inPythonFunction);
 	}
 }

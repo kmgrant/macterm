@@ -193,7 +193,8 @@ SessionRef
 SessionRef
 	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
 													 char const* const				argv[],
-													 Preferences_ContextRef			inContextOrNull = nullptr);
+													 Preferences_ContextRef			inContextOrNull = nullptr,
+													 char const*					inWorkingDirectoryOrNull = nullptr);
 
 SessionRef
 	SessionFactory_NewSessionArbitraryCommand		(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,

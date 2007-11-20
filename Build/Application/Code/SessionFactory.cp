@@ -396,7 +396,8 @@ is returned.
 SessionRef
 SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
 											 char const* const			argv[],
-											 Preferences_ContextRef		inContext)
+											 Preferences_ContextRef		inContext,
+											 char const*				inWorkingDirectoryOrNull)
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
@@ -444,7 +445,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 			}
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnProcess(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
-												argv, &processID, devicePath);
+												argv, &processID, devicePath, inWorkingDirectoryOrNull);
 			if (kLocalResultCodeSuccess == localResult)
 			{
 				// success!
