@@ -22,7 +22,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -146,6 +146,7 @@ enum
 {
 	kPreferences_TagFontName							= FOUR_CHAR_CODE('font'),	//!< data: "Str255"
 	kPreferences_TagFontSize							= FOUR_CHAR_CODE('fsiz'),	//!< data: "SInt16"
+	kPreferences_TagTerminalColorMatteBackground		= FOUR_CHAR_CODE('mtte'),	//!< data: "RGBColor"
 	kPreferences_TagTerminalColorBlinkingForeground		= FOUR_CHAR_CODE('c*fg'),	//!< data: "RGBColor"
 	kPreferences_TagTerminalColorBlinkingBackground		= FOUR_CHAR_CODE('c*bg'),	//!< data: "RGBColor"
 	kPreferences_TagTerminalColorBoldForeground			= FOUR_CHAR_CODE('cbfg'),	//!< data: "RGBColor"

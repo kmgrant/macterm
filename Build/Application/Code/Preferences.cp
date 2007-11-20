@@ -3313,6 +3313,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagTerminalColorMatteBackground:
 				case kPreferences_TagTerminalColorBlinkingForeground:
 				case kPreferences_TagTerminalColorBlinkingBackground:
 				case kPreferences_TagTerminalColorBoldForeground:
@@ -4464,6 +4465,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 	
 	case kPreferences_TagTerminalColorBoldBackground:
 		outKeyName = CFSTR("terminal-color-bold-background-rgb");
+		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
+		outNonDictionaryValueSize = sizeof(RGBColor);
+		outClass = kPreferences_ClassFormat;
+		break;
+	
+	case kPreferences_TagTerminalColorMatteBackground:
+		outKeyName = CFSTR("terminal-color-matte-background-rgb");
 		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
 		outNonDictionaryValueSize = sizeof(RGBColor);
 		outClass = kPreferences_ClassFormat;
@@ -5699,6 +5707,7 @@ readPreferencesDictionary  (CFDictionaryRef		inPreferenceDictionary)
 									CFSTR("terminal-color-blinking-foreground-rgb"),
 									CFSTR("terminal-color-bold-background-rgb"),
 									CFSTR("terminal-color-bold-foreground-rgb"),
+									CFSTR("terminal-color-matte-background-rgb"),
 									CFSTR("terminal-color-normal-background-rgb"),
 									CFSTR("terminal-color-normal-foreground-rgb"),
 									CFSTR("terminal-cursor-auto-move-on-drop"),
@@ -5845,6 +5854,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagTerminalColorMatteBackground:
 			case kPreferences_TagTerminalColorBlinkingForeground:
 			case kPreferences_TagTerminalColorBlinkingBackground:
 			case kPreferences_TagTerminalColorBoldForeground:

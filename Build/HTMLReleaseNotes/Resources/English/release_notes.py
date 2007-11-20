@@ -66,6 +66,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20071119': [
 		'Added an optional argument to set the working directory of new Sessions in the Quills API.',
+		'Added a box to set the matte color in the Format preferences panel.',
 	],
 	'20071104': [
 		'Internal changes to make MacTelnet run properly on Leopard.',
