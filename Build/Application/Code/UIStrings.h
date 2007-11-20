@@ -88,6 +88,8 @@ the title strings, they are in a separate Buttons table.
 enum UIStrings_AlertWindowCFString
 {
 	kUIStrings_AlertWindowCloseName						= 'ImmC',
+	kUIStrings_AlertWindowCloseHelpText					= 'HCls',
+	kUIStrings_AlertWindowClosePrimaryText				= 'PCls',
 	kUIStrings_AlertWindowCommandFailedHelpText			= 'HCmd',
 	kUIStrings_AlertWindowCommandFailedPrimaryText		= 'PCmd',
 	kUIStrings_AlertWindowConnectionOpeningFailedName	= 'Xcxn',
@@ -106,7 +108,9 @@ enum UIStrings_AlertWindowCFString
 	kUIStrings_AlertWindowUpdateCheckErrorPrimaryText	= 'UpCE',
 	kUIStrings_AlertWindowUpToDateName					= 'UpTD',
 	kUIStrings_AlertWindowUpToDatePrimaryText			= 'UpTP',
-	kUIStrings_AlertWindowQuitName						= 'ImmQ'
+	kUIStrings_AlertWindowQuitName						= 'ImmQ',
+	kUIStrings_AlertWindowQuitHelpText					= 'HQui',
+	kUIStrings_AlertWindowQuitPrimaryText				= 'PQui'
 };
 
 /*!

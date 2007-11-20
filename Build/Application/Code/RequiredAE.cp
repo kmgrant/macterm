@@ -991,28 +991,34 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 	if ((inSaveOption == kAEAsk) && (sessionCount > 1))
 	{
 		InterfaceLibAlertRef	box = nullptr;
-		Str31					sessionCountText;
-		Str255					dialogText;
-		Str255					helpText;
 		
-		
-		GetIndString(dialogText, rStringsCautionAlerts, siConnectionsAreOpenQuitAnyway);
-		{
-			StringSubstitutionSpec const	metaMappings[] =
-											{
-												{ kStringSubstitutionDefaultTag1, sessionCountText },
-											};
-			
-			
-			NumToString(sessionCount, sessionCountText);
-			StringUtilities_PBuild(dialogText, sizeof(metaMappings) / sizeof(StringSubstitutionSpec),
-									metaMappings);
-		}
-		GetIndString(helpText, rStringsCautionAlerts, siConnectionsAreOpenQuitAnywayHelpText);
 		
 		box = Alert_New();
 		Alert_SetHelpButton(box, false);
 		Alert_SetParamsFor(box, kAlert_StyleDontSaveCancelSave);
+		Alert_SetType(box, kAlertCautionAlert);
+		// set message
+		{
+			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+			CFStringRef				primaryTextCFString = nullptr;
+			
+			
+			stringResult = UIStrings_Copy(kUIStrings_AlertWindowQuitPrimaryText, primaryTextCFString);
+			if (stringResult.ok())
+			{
+				CFStringRef		helpTextCFString = nullptr;
+				
+				
+				stringResult = UIStrings_Copy(kUIStrings_AlertWindowQuitHelpText, helpTextCFString);
+				if (stringResult.ok())
+				{
+					Alert_SetTextCFStrings(box, primaryTextCFString, helpTextCFString);
+					CFRelease(helpTextCFString);
+				}
+				CFRelease(primaryTextCFString);
+			}
+		}
+		// set title
 		{
 			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
 			CFStringRef				titleCFString = nullptr;
@@ -1025,6 +1031,7 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 				CFRelease(titleCFString);
 			}
 		}
+		// set buttons
 		{
 			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
 			CFStringRef				buttonCFString = nullptr;
@@ -1049,8 +1056,6 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 				CFRelease(buttonCFString);
 			}
 		}
-		Alert_SetText(box, dialogText, helpText);
-		Alert_SetType(box, kAlertCautionAlert);
 		Alert_Display(box);
 		itemHit = Alert_ItemHit(box);
 		Alert_Dispose(&box);

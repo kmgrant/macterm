@@ -232,32 +232,6 @@ status messages
 #define ALERTTEXT_CRITICALLY_LOW_MEMORY \
 	"This program is running dangerously low on memory.  Please close some windows, or quit as soon as possible to avoid a crash."
 
-// %a=(number of open sessions)
-#define ALERTTEXT_CONNECTIONS_ARE_OPEN_QUIT_ANYWAY \
-	"Review the %a main sessions?"
-	//"Review the %a sessions with unsaved changes?"
-
-#define ALERTTEXT_CONNECTIONS_ARE_OPEN_QUIT_ANYWAY_HELP_TEXT \
-	"You can then verify that each session should be forced to terminate.  Sessions open for less than 15 seconds will be closed automatically."
-	//"You can then save or discard each session individually."
-
-#define ALERTTEXT_CONNECTIONS_ARE_OPEN_CLOSE_ALL_ANYWAY \
-	"Closing all sessions will force them to disconnect, which is not recommended.  Do you still want to close all sessions?"
-
-// displayed in a sheet, which does not require the window name
-#define ALERTTEXT_CONFIRM_CONNECTION_CLOSE \
-	"Active remote processes in this window will be forced to quit.  Close anyway?"
-
-#define ALERTTEXT_CONFIRM_CONNECTION_CLOSE_HELP_TEXT \
-	"Most remote services have standard logout mechanisms (typing “logout”, for example) that will terminate connections smoothly."
-
-// displayed in a sheet, which does not require the window name
-#define ALERTTEXT_CONFIRM_PROCESS_KILL \
-	"Active processes in this window will be forced to quit.  Close anyway?"
-
-#define ALERTTEXT_CONFIRM_PROCESS_KILL_HELP_TEXT \
-	"You will lose any unsaved changes."
-
 // very generic
 #define ALERTTEXT_LOCATING_MENTIONED_COMMAND_HELP_TEXT \
 	"Click the question-mark icon for assistance."

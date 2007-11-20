@@ -96,6 +96,16 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowCloseName"));
 		break;
 	
+	case kUIStrings_AlertWindowCloseHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("You will lose any unsaved changes."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowCloseHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowClosePrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Active processes in this window will be forced to quit.  Close anyway?"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowClosePrimaryText"));
+		break;
+	
 	case kUIStrings_AlertWindowCommandFailedHelpText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Click Quit to shut down this program instantly.  Click Continue to ignore the error (not recommended for some types of errors)."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCommandFailedHelpText"));
@@ -189,6 +199,16 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	case kUIStrings_AlertWindowQuitName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Quit"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitName"));
+		break;
+	
+	case kUIStrings_AlertWindowQuitHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("You can then verify that each session should be forced to terminate.  Sessions open for less than 15 seconds will be closed automatically."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowQuitHelpText"));
+		break;
+	
+	case kUIStrings_AlertWindowQuitPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Review the sessions not recently opened?"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowQuitPrimaryText"));
 		break;
 	
 	default:

@@ -1220,8 +1220,6 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 																		TerminateAlertInfoPtr);
 	Rect					originalStructureBounds;
 	Rect					centeredStructureBounds;
-	Str255					dialogText;
-	Str255					helpText;
 	Boolean					isModal = inForceModalDialog;
 	
 	
@@ -1272,23 +1270,32 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 	
 	terminateAlertInfoPtr->sessionBeingTerminated = inRef;
 	
-	// set up alert message
-	GetIndString(dialogText, rStringsCautionAlerts, siConfirmProcessKill);
-	{
-		Str255							windowTitle;
-		StringSubstitutionSpec const	metaMappings[] =
-										{
-											{ kStringSubstitutionDefaultTag1, windowTitle }
-										};
-		
-		
-		GetWTitle(ptr->dataPtr->window, windowTitle);
-		StringUtilities_PBuild(dialogText, sizeof(metaMappings) / sizeof(StringSubstitutionSpec), metaMappings);
-	}
-	GetIndString(helpText, rStringsCautionAlerts, siConfirmProcessKillHelpText);
-	
 	ptr->currentTerminationAlert = Alert_New();
 	Alert_SetParamsFor(ptr->currentTerminationAlert, kAlert_StyleOKCancel);
+	Alert_SetType(ptr->currentTerminationAlert, kAlertCautionAlert);
+	
+	// set message
+	{
+		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+		CFStringRef				primaryTextCFString = nullptr;
+		
+		
+		stringResult = UIStrings_Copy(kUIStrings_AlertWindowClosePrimaryText, primaryTextCFString);
+		if (stringResult.ok())
+		{
+			CFStringRef		helpTextCFString = nullptr;
+			
+			
+			stringResult = UIStrings_Copy(kUIStrings_AlertWindowCloseHelpText, helpTextCFString);
+			if (stringResult.ok())
+			{
+				Alert_SetTextCFStrings(ptr->currentTerminationAlert, primaryTextCFString, helpTextCFString);
+				CFRelease(helpTextCFString);
+			}
+			CFRelease(primaryTextCFString);
+		}
+	}
+	// set title
 	{
 		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
 		CFStringRef				titleCFString = nullptr;
@@ -1301,6 +1308,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFRelease(titleCFString);
 		}
 	}
+	// set buttons
 	{
 		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
 		CFStringRef				buttonTitleCFString = nullptr;
@@ -1313,8 +1321,6 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			CFRelease(buttonTitleCFString);
 		}
 	}
-	Alert_SetText(ptr->currentTerminationAlert, dialogText, helpText);
-	Alert_SetType(ptr->currentTerminationAlert, kAlertCautionAlert);
 	
 	//if (Session_TimeSinceConnected(inRef) <= kSession_LifetimeMinimumForNoWarningClose)
 	if (Session_StateIsActiveUnstable(inRef))
