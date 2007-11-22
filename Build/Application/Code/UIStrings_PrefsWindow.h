@@ -81,6 +81,7 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowKioskCategoryName				= 'KioT',
 	kUIStrings_PreferencesWindowMacrosCategoryName				= 'McrT',
 	kUIStrings_PreferencesWindowMacrosListHeaderName			= 'McNm',
+	kUIStrings_PreferencesWindowMacrosListHeaderAction			= 'McAc',
 	kUIStrings_PreferencesWindowMacrosListHeaderContents		= 'McTx',
 	kUIStrings_PreferencesWindowMacrosListHeaderInvokeWith		= 'McKy',
 	kUIStrings_PreferencesWindowScriptsCategoryName				= 'ScrT',

@@ -81,13 +81,15 @@
 
 #pragma mark Constants
 
+UInt16 const	kMyMaxMacroActionColumnWidthInPixels = 120; // arbitrary
 UInt16 const	kMyMaxMacroKeyColumnWidthInPixels = 100; // arbitrary
 
 enum
 {
-	kMacrosFinderListColumnDescriptorInvokeWith = FOUR_CHAR_CODE('Keys'),
-	kMacrosFinderListColumnDescriptorMacroName = FOUR_CHAR_CODE('Name'),
-	kMacrosFinderListColumnDescriptorContents = FOUR_CHAR_CODE('Text')
+	kMacrosFinderListColumnDescriptorInvokeWith	= FOUR_CHAR_CODE('Keys'),
+	kMacrosFinderListColumnDescriptorMacroName	= FOUR_CHAR_CODE('Name'),
+	kMacrosFinderListColumnDescriptorAction		= FOUR_CHAR_CODE('ToDo'),
+	kMacrosFinderListColumnDescriptorContents	= FOUR_CHAR_CODE('Text')
 };
 
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
@@ -95,6 +97,7 @@ enum
 {
 	kMyDataBrowserPropertyIDInvokeWith			= FOUR_CHAR_CODE('Keys'),
 	kMyDataBrowserPropertyIDMacroName			= FOUR_CHAR_CODE('Name'),
+	kMyDataBrowserPropertyIDAction				= FOUR_CHAR_CODE('ToDo'),
 	kMyDataBrowserPropertyIDContents			= FOUR_CHAR_CODE('Text')
 };
 
@@ -197,6 +200,7 @@ static pascal OSStatus	accessDataBrowserItemData			(ControlRef, DataBrowserItemI
 															 DataBrowserItemDataRef, Boolean);
 static pascal Boolean	compareDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemID,
 															 DataBrowserPropertyID);
+static MenuRef			createActionMenu					();
 static void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
 static void				disposePanel						(Panel_Ref, void*);
 static void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -480,6 +484,31 @@ const
 			columnInfo.headerBtnDesc.maximumWidth = kDefaultMaxWidth;
 		}
 		
+		// create action column
+		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderAction,
+										columnInfo.headerBtnDesc.titleString);
+		if (stringResult.ok())
+		{
+			// this column does not follow the default minimum and maximum width rules set above
+			UInt16 const					kDefaultMinWidth = columnInfo.headerBtnDesc.minimumWidth;
+			UInt16 const					kDefaultMaxWidth = columnInfo.headerBtnDesc.maximumWidth;
+			// this column does not have the default property type
+			DataBrowserPropertyType const	kDefaultPropertyType = columnInfo.headerBtnDesc.maximumWidth;
+			
+			
+			columnInfo.propertyDesc.propertyType = kDataBrowserPopupMenuType;
+			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDAction;
+			columnInfo.headerBtnDesc.minimumWidth = kMyMaxMacroActionColumnWidthInPixels;
+			columnInfo.headerBtnDesc.maximumWidth = kMyMaxMacroActionColumnWidthInPixels;
+			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
+			assert_noerr(error);
+			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
+			
+			columnInfo.headerBtnDesc.minimumWidth = kDefaultMinWidth;
+			columnInfo.headerBtnDesc.maximumWidth = kDefaultMaxWidth;
+			columnInfo.propertyDesc.propertyType = kDefaultPropertyType;
+		}
+		
 		// create contents column
 		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderContents,
 										columnInfo.headerBtnDesc.titleString);
@@ -517,6 +546,18 @@ const
 			(OSStatus)DataBrowserChangeAttributes(macrosList,
 													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
 													0/* attributes to clear */);
+			
+			// new-style menus
+			{
+				DataBrowserPropertyFlags	oldFlags = 0;
+				
+				
+				if (noErr == GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction, &oldFlags))
+				{
+					(OSStatus)SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction,
+															oldFlags | kDataBrowserPopupMenuButtonless);
+				}
+			}
 		}
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
 		(OSStatus)SetDataBrowserTableViewHiliteStyle(macrosList, kDataBrowserTableViewFillHilite);
@@ -663,6 +704,18 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 			// UNIMPLEMENTED
 			break;
 		
+		case kMyDataBrowserPropertyIDAction:
+			// return menu of possible things macros can do
+			{
+				static MenuRef		actionMenu = createActionMenu();
+				
+				
+				result = SetDataBrowserItemDataMenuRef(inItemData, actionMenu);
+				assert_noerr(result);
+				result = SetDataBrowserItemDataValue(inItemData, 3/* selected item index */);
+			}
+			break;
+		
 		case kMyDataBrowserPropertyIDContents:
 			// return the text string for the macro text
 			// UNIMPLEMENTED
@@ -695,6 +748,12 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 					result = noErr;
 				}
 			}
+			break;
+		
+		case kMyDataBrowserPropertyIDAction:
+			// user has changed what the macro does; update the command in memory
+			// UNIMPLEMENTED
+			result = paramErr;
 			break;
 		
 		case kMyDataBrowserPropertyIDContents:
@@ -747,6 +806,10 @@ compareDataBrowserItems		(ControlRef					inDataBrowser,
 		// UNIMPLEMENTED
 		break;
 	
+	case kMyDataBrowserPropertyIDAction:
+		// UNIMPLEMENTED
+		break;
+	
 	case kMyDataBrowserPropertyIDContents:
 		// UNIMPLEMENTED
 		break;
@@ -757,6 +820,29 @@ compareDataBrowserItems		(ControlRef					inDataBrowser,
 	}
 	return result;
 }// compareDataBrowserItems
+
+
+/*!
+Creates the action menu that is displayed in the
+macro list, showing the user what macros can do.
+
+(3.1)
+*/
+static MenuRef
+createActionMenu ()
+{
+	MenuRef		result = nullptr;
+	NIBLoader	menuNIB(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelMacros"));
+	assert(menuNIB.isLoaded());
+	OSStatus	error = noErr;
+	
+	
+	error = CreateMenuFromNib(menuNIB.returnNIB(), CFSTR("ActionMenu"), &result);
+	assert_noerr(error);
+	assert(nullptr != result);
+	
+	return result;
+}// createActionMenu
 
 
 /*!
@@ -1454,8 +1540,15 @@ setDataBrowserColumnWidths	(MyMacrosPanelUIPtr		inInterfacePtr)
 						STATIC_CAST(calculatedWidth, UInt16));
 		totalWidthSoFar += STATIC_CAST(calculatedWidth, UInt16);
 		
+		// action menu is relatively small
+		calculatedWidth = kMyMaxMacroActionColumnWidthInPixels/* arbitrary */;
+		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+					(macrosListContainer, kMyDataBrowserPropertyIDAction,
+						STATIC_CAST(calculatedWidth, UInt16));
+		totalWidthSoFar += STATIC_CAST(calculatedWidth, UInt16);
+		
 		// title space is moderate
-		calculatedWidth = kAvailableWidth * 0.30/* arbitrary */;
+		calculatedWidth = kAvailableWidth * 0.25/* arbitrary */;
 		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
 					(macrosListContainer, kMyDataBrowserPropertyIDMacroName,
 						STATIC_CAST(calculatedWidth, UInt16));

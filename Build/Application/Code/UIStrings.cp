@@ -1221,6 +1221,11 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowMacrosListHeaderName"));
 		break;
 	
+	case kUIStrings_PreferencesWindowMacrosListHeaderAction:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Action"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowMacrosListHeaderAction"));
+		break;
+	
 	case kUIStrings_PreferencesWindowMacrosListHeaderContents:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Contents"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowMacrosListHeaderDescription"));

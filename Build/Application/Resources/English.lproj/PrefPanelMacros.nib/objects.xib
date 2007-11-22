@@ -2,46 +2,7 @@
 <object class="NSIBObjectData">
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
-  <array count="10" name="allObjects">
-    <object class="IBCarbonRadioButton" id="1990">
-      <ostype name="controlSignature">Inv2</ostype>
-      <ostype name="command">MKFK</ostype>
-      <boolean name="autoToggle">FALSE</boolean>
-      <string name="title">Function keys</string>
-      <string name="viewFrame">190 43 202 19 </string>
-      <string name="bounds">43 190 62 392 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="2043">
-      <ostype name="controlSignature">McMH</ostype>
-      <int name="controlSize">1</int>
-      <string name="title">The menu will only appear when this macro set is active.</string>
-      <string name="viewFrame">211 116 393 13 </string>
-      <string name="bounds">116 211 129 604 </string>
-    </object>
-    <object class="IBCarbonEditText" id="2012">
-      <ostype name="controlSignature">MMNm</ostype>
-      <boolean name="useInlineInput">TRUE</boolean>
-      <boolean name="isUnicode">TRUE</boolean>
-      <boolean name="isSingleLine">TRUE</boolean>
-      <string name="title">Macros</string>
-      <int name="justification">-2</int>
-      <string name="foreColor">0 0 0 </string>
-      <string name="viewFrame">336 93 150 16 </string>
-      <string name="bounds">93 336 109 486 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1987">
-      <ostype name="controlSignature">MLst</ostype>
-      <int name="featureBits">2</int>
-      <string name="viewFrame">0 161 624 263 </string>
-      <string name="bounds">161 0 424 624 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="2009">
-      <int name="fontStyle">107</int>
-      <string name="title">User Interface:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 93 164 16 </string>
-      <string name="bounds">93 20 109 184 </string>
-    </object>
+  <array count="14" name="allObjects">
     <object class="IBCarbonStaticText" id="1988">
       <int name="fontStyle">107</int>
       <string name="title">Invoke With:</string>
@@ -58,28 +19,51 @@
       <string name="viewFrame">190 18 202 19 </string>
       <string name="bounds">18 190 37 392 </string>
     </object>
-    <object class="IBCarbonRootControl" id="1927">
-      <string name="viewFrame">0 0 624 424 </string>
-      <array count="8" name="subviews">
-        <reference idRef="1987"/>
-        <reference idRef="1988"/>
-        <reference idRef="1989"/>
-        <reference idRef="1990"/>
-        <reference idRef="2009"/>
-        <object class="IBCarbonCheckBox" id="2011">
-          <ostype name="controlSignature">McMn</ostype>
-          <ostype name="command">McMn</ostype>
-          <boolean name="autoToggle">FALSE</boolean>
-          <string name="title">Display as menu:</string>
-          <string name="viewFrame">192 94 133 14 </string>
-          <string name="bounds">94 192 108 325 </string>
-        </object>
-        <reference idRef="2012"/>
-        <reference idRef="2043"/>
-      </array>
-      <string name="bounds">0 0 424 624 </string>
+    <object class="IBCarbonStaticText" id="2043">
+      <ostype name="controlSignature">McMH</ostype>
+      <int name="controlSize">1</int>
+      <string name="title">The menu will only appear when this macro set is active.</string>
+      <string name="viewFrame">211 116 393 13 </string>
+      <string name="bounds">116 211 129 604 </string>
     </object>
-    <reference idRef="2011"/>
+    <object class="IBCarbonMenuItem" id="2049">
+      <string name="title">Enter Text</string>
+      <boolean name="disabled">TRUE</boolean>
+      <boolean name="notPreviousAlternate">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenu" id="2048">
+      <array count="3" name="items">
+        <reference idRef="2049"/>
+        <object class="IBCarbonMenuItem" id="2054">
+          <string name="title">Open URL</string>
+          <boolean name="disabled">TRUE</boolean>
+          <boolean name="notPreviousAlternate">TRUE</boolean>
+        </object>
+        <object class="IBCarbonMenuItem" id="2053">
+          <string name="title">Run Command</string>
+          <boolean name="disabled">TRUE</boolean>
+          <boolean name="notPreviousAlternate">TRUE</boolean>
+        </object>
+      </array>
+    </object>
+    <object class="IBCarbonStaticText" id="2009">
+      <int name="fontStyle">107</int>
+      <string name="title">User Interface:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 93 164 16 </string>
+      <string name="bounds">93 20 109 184 </string>
+    </object>
+    <object class="IBCarbonEditText" id="2012">
+      <ostype name="controlSignature">MMNm</ostype>
+      <boolean name="useInlineInput">TRUE</boolean>
+      <boolean name="isUnicode">TRUE</boolean>
+      <boolean name="isSingleLine">TRUE</boolean>
+      <string name="title">Macros</string>
+      <int name="justification">-2</int>
+      <string name="foreColor">0 0 0 </string>
+      <string name="viewFrame">336 93 150 16 </string>
+      <string name="bounds">93 336 109 486 </string>
+    </object>
     <object class="IBCarbonWindow" id="1926">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
@@ -87,29 +71,73 @@
       <boolean name="isConstrained">FALSE</boolean>
       <int name="themeBrush">1</int>
       <string name="title"></string>
-      <reference name="rootControl" idRef="1927"/>
+      <object name="rootControl" class="IBCarbonRootControl" id="1927">
+        <string name="viewFrame">0 0 624 424 </string>
+        <array count="8" name="subviews">
+          <object class="IBCarbonUserPane" id="1987">
+            <ostype name="controlSignature">MLst</ostype>
+            <int name="featureBits">2</int>
+            <string name="viewFrame">0 161 624 263 </string>
+            <string name="bounds">161 0 424 624 </string>
+          </object>
+          <reference idRef="1988"/>
+          <reference idRef="1989"/>
+          <object class="IBCarbonRadioButton" id="1990">
+            <ostype name="controlSignature">Inv2</ostype>
+            <ostype name="command">MKFK</ostype>
+            <boolean name="autoToggle">FALSE</boolean>
+            <string name="title">Function keys</string>
+            <string name="viewFrame">190 43 202 19 </string>
+            <string name="bounds">43 190 62 392 </string>
+          </object>
+          <reference idRef="2009"/>
+          <object class="IBCarbonCheckBox" id="2011">
+            <ostype name="controlSignature">McMn</ostype>
+            <ostype name="command">McMn</ostype>
+            <boolean name="autoToggle">FALSE</boolean>
+            <string name="title">Display as menu:</string>
+            <string name="viewFrame">192 94 133 14 </string>
+            <string name="bounds">94 192 108 325 </string>
+          </object>
+          <reference idRef="2012"/>
+          <reference idRef="2043"/>
+        </array>
+        <string name="bounds">0 0 424 624 </string>
+      </object>
       <string name="windowRect">425 182 849 806 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
+    <reference idRef="1987"/>
+    <reference idRef="1990"/>
+    <reference idRef="2054"/>
+    <reference idRef="1927"/>
+    <reference idRef="2011"/>
+    <reference idRef="2053"/>
   </array>
-  <array count="10" name="allParents">
+  <array count="14" name="allParents">
     <reference idRef="1927"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
+    <reference idRef="2048"/>
+    <reference idRef="1"/>
     <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1926"/>
     <reference idRef="1927"/>
     <reference idRef="1"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="2048"/>
+    <reference idRef="1926"/>
+    <reference idRef="1927"/>
+    <reference idRef="2048"/>
   </array>
-  <dictionary count="2" name="nameTable">
+  <dictionary count="3" name="nameTable">
+    <string>ActionMenu</string>
+    <reference idRef="2048"/>
     <string>File&apos;s Owner</string>
     <reference idRef="1"/>
     <string>Panel</string>
     <reference idRef="1926"/>
   </dictionary>
   <string name="targetFramework">IBCarbonFramework</string>
-  <unsigned_int name="nextObjectID">2044</unsigned_int>
+  <unsigned_int name="nextObjectID">2057</unsigned_int>
 </object>
