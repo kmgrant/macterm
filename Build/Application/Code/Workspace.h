@@ -45,10 +45,10 @@
 
 #pragma mark Constants
 
-enum Workspace_ResultCode
+enum Workspace_Result
 {
-	kWorkspace_ResultCodeSuccess			= 0,	//!< no error occurred
-	kWorkspace_ResultCodeGenericFailure		= 1		//!< unspecified problem
+	kWorkspace_ResultOK					= 0,	//!< no error occurred
+	kWorkspace_ResultGenericFailure		= 1		//!< unspecified problem
 };
 
 enum

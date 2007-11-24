@@ -3,7 +3,7 @@
 	Bind.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -143,10 +143,10 @@ NOTE:	Modifications in the other direction
 
 (3.1)
 */
-Bind_ResultCode
+Bind_Result
 Bind_AttachmentSynchronize	(Bind_AttachmentRef		inTarget)
 {
-	Bind_ResultCode		result = kBind_ResultCodeSuccess;
+	Bind_Result		result = kBind_ResultOK;
 	
 	
 	return result;

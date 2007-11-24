@@ -27,7 +27,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -64,7 +64,7 @@
 
 #pragma mark Constants
 
-typedef OSStatus AppResources_ResultCode;
+typedef OSStatus AppResources_Result;
 
 typedef FourCharCode AppResources_FileID;
 enum
@@ -99,22 +99,22 @@ Boolean
 																		 CFStringRef					inTypeOrNull,
 																		 FSRef&							outFSRef);
 
-AppResources_ResultCode
+AppResources_Result
 	AppResources_GetDockTileAttentionPicture							(PicHandle&						outPicture,
 																		 PicHandle&						outMask);
 
-AppResources_ResultCode
+AppResources_Result
 	AppResources_GetSplashScreenPicture									(PicHandle&						outPicture);
 
-AppResources_ResultCode
+AppResources_Result
 	AppResources_GetToolbarPoofPictures									(UInt16							inZeroBasedAnimationStageIndex,
 																		 PicHandle&						outFramePicture,
 																		 PicHandle&						outFrameMask);
 
-AppResources_ResultCode
+AppResources_Result
 	AppResources_LaunchCrashCatcher										();
 
-AppResources_ResultCode
+AppResources_Result
 	AppResources_LaunchPreferencesConverter								();
 
 /*###############################################################

@@ -408,7 +408,7 @@ PrefsWindow_Remove ()
 	}
 	
 	// write all the preference data in memory to disk
-	(Preferences_ResultCode)Preferences_Save();
+	(Preferences_Result)Preferences_Save();
 	
 	// save window size and location in preferences
 	if (nullptr != gPreferencesWindow)
@@ -467,12 +467,12 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		case kMyDataBrowserPropertyIDSets:
 			// return the name of the collection
 			{
-				Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
-				CFStringRef					contextName = nullptr;
+				Preferences_Result		prefsResult = kPreferences_ResultOK;
+				CFStringRef				contextName = nullptr;
 				
 				
 				prefsResult = Preferences_ContextGetName(context, contextName);
-				if (kPreferences_ResultCodeSuccess != prefsResult)
+				if (kPreferences_ResultOK != prefsResult)
 				{
 					result = paramErr;
 				}
@@ -501,11 +501,11 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				result = GetDataBrowserItemDataText(inItemData, &newName);
 				if (noErr == result)
 				{
-					Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
 					
 					
 					prefsResult = Preferences_ContextRename(context, newName);
-					if (kPreferences_ResultCodeSuccess != prefsResult)
+					if (kPreferences_ResultOK != prefsResult)
 					{
 						result = paramErr;
 					}
@@ -865,7 +865,7 @@ init ()
 			CFStringRef		titleCFString = nullptr;
 			
 			
-			(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_PreferencesWindowIconName, titleCFString);
+			(UIStrings_Result)UIStrings_Copy(kUIStrings_PreferencesWindowIconName, titleCFString);
 			SetWindowAlternateTitle(gPreferencesWindow, titleCFString);
 			CFRelease(titleCFString), titleCFString = nullptr;
 		}
@@ -899,12 +899,12 @@ init ()
 			
 			// insert data - TEMPORARY
 			{
-				Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+				Preferences_Result			prefsResult = kPreferences_ResultOK;
 				Preferences_ContextRef		defaultContext = nullptr;
 				
 				
 				prefsResult = Preferences_GetDefaultContext(&defaultContext, returnCurrentPreferencesClass());
-				if (kPreferences_ResultCodeSuccess == prefsResult)
+				if (kPreferences_ResultOK == prefsResult)
 				{
 					DataBrowserItemID	ids[] = { REINTERPRET_CAST(defaultContext, DataBrowserItemID) };
 					
@@ -1071,8 +1071,8 @@ init ()
 			// controls to be adjusted automatically by the right amount
 			SetPt(&deltaSize, STATIC_CAST(idealWindowContentSize.width, SInt16),
 					STATIC_CAST(idealWindowContentSize.height, SInt16)); // initially...
-			(Preferences_ResultCode)Preferences_ArrangeWindow(gPreferencesWindow, kPreferences_WindowTagPreferences,
-																&deltaSize);
+			(Preferences_Result)Preferences_ArrangeWindow(gPreferencesWindow, kPreferences_WindowTagPreferences,
+															&deltaSize);
 		}
 		
 		// install a callback that responds as the drawer window is resized; this is used
@@ -1127,15 +1127,15 @@ init ()
 		// install a callback that finds out about changes to available preferences collections
 		gPreferenceChangeEventListener = ListenerModel_NewStandardListener(preferenceChanged);
 		{
-			Preferences_ResultCode		error = kPreferences_ResultCodeSuccess;
+			Preferences_Result		error = kPreferences_ResultOK;
 			
 			
 			error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_ChangeContextName,
 													false/* call immediately to get initial value */);
-			assert(kPreferences_ResultCodeSuccess == error);
+			assert(kPreferences_ResultOK == error);
 			error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts,
 													true/* call immediately to get initial value */);
-			assert(kPreferences_ResultCodeSuccess == error);
+			assert(kPreferences_ResultOK == error);
 		}
 	}
 }// init
@@ -1396,11 +1396,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (nullptr == newContext) isError = true;
 						else
 						{
-							Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+							Preferences_Result		prefsResult = kPreferences_ResultOK;
 							
 							
 							prefsResult = Preferences_ContextSave(newContext);
-							if (kPreferences_ResultCodeSuccess != prefsResult) isError = true;
+							if (kPreferences_ResultOK != prefsResult) isError = true;
 							else
 							{
 								DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext,
@@ -1474,11 +1474,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (nullptr == deletedContext) isError = true;
 							else
 							{
-								Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+								Preferences_Result		prefsResult = kPreferences_ResultOK;
 								
 								
 								prefsResult = Preferences_ContextDeleteSaved(deletedContext);
-								if (kPreferences_ResultCodeSuccess != prefsResult) isError = true;
+								if (kPreferences_ResultOK != prefsResult) isError = true;
 								else
 								{
 									// success!

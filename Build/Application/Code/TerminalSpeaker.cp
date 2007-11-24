@@ -3,7 +3,7 @@
 	TerminalSpeaker.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -280,10 +280,10 @@ Plays the terminal bell sound, which is either a
 standard system beep or the bell sound file provided
 by the user.
 
-\retval kTerminalSpeaker_ResultCodeSuccess
+\retval kTerminalSpeaker_ResultOK
 if the bell sound was loaded and played successfully
 
-\retval kTerminalSpeaker_ResultCodeSoundPlayFailed
+\retval kTerminalSpeaker_ResultSoundPlayFailed
 if any problems occurred
 
 (3.0)
@@ -347,25 +347,25 @@ current speech on that channel.  You might use this to
 speak terminal-specific things, such as the current
 selection of text.
 
-\retval kTerminalSpeaker_ResultCodeSuccess
+\retval kTerminalSpeaker_ResultOK
 if the speech was generated and played successfully
 
-\retval kTerminalSpeaker_ResultCodeSpeechSynthesisTryAgain
+\retval kTerminalSpeaker_ResultSpeechSynthesisTryAgain
 if the buffer was not spoken because the synthesizer is
 busy (try again)
 
-\retval kTerminalSpeaker_ResultCodeSpeechSynthesisFailed
+\retval kTerminalSpeaker_ResultSpeechSynthesisFailed
 if any problems occurred
 
 (3.0)
 */
-TerminalSpeaker_ResultCode
+TerminalSpeaker_Result
 TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref	inSpeaker,
 											 void const*			inBuffer,
 											 Size					inBufferSize)
 {
 	TerminalSpeakerPtr			ptr = gTerminalSpeakerPtrLocks().acquireLock(inSpeaker);
-	TerminalSpeaker_ResultCode	result = kTerminalSpeaker_ResultCodeSuccess;
+	TerminalSpeaker_Result		result = kTerminalSpeaker_ResultOK;
 	
 	
 	if (ptr != nullptr)
@@ -378,11 +378,11 @@ TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref	inSpeaker,
 			switch (error)
 			{
 			case synthNotReady:
-				result = kTerminalSpeaker_ResultCodeSpeechSynthesisTryAgain;
+				result = kTerminalSpeaker_ResultSpeechSynthesisTryAgain;
 				break;
 			
 			default:
-				result = kTerminalSpeaker_ResultCodeSpeechSynthesisFailed;
+				result = kTerminalSpeaker_ResultSpeechSynthesisFailed;
 				break;
 			}
 		}
@@ -533,18 +533,18 @@ audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					if (nullptr != rowIterator)
 					{
-						Terminal_ResultCode				getResult = kTerminal_ResultCodeSuccess;
-						char const*						rangeStart = nullptr;
-						char const*						rangePastEnd = nullptr;
+						Terminal_Result		getResult = kTerminal_ResultOK;
+						char const*			rangeStart = nullptr;
+						char const*			rangePastEnd = nullptr;
 						
 						
 						getResult = Terminal_GetLineRange(rangeInfoPtr->screen, rowIterator,
 															rangeInfoPtr->firstColumn,
 															rangeInfoPtr->firstColumn + rangeInfoPtr->columnCount,
 															rangeStart, rangePastEnd);
-						if (kTerminal_ResultCodeSuccess == getResult)
+						if (kTerminal_ResultOK == getResult)
 						{
-							TerminalSpeaker_ResultCode		speechResult = kTerminalSpeaker_ResultCodeSuccess;
+							TerminalSpeaker_Result		speechResult = kTerminalSpeaker_ResultOK;
 							
 							
 							// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
@@ -553,7 +553,7 @@ audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							{
 								speechResult = TerminalSpeaker_SynthesizeSpeechFromBuffer
 												(inSpeaker, rangeStart, rangePastEnd - rangeStart);
-							} while (speechResult == kTerminalSpeaker_ResultCodeSpeechSynthesisTryAgain);
+							} while (speechResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
 						}
 						Terminal_DisposeLineIterator(&rowIterator);
 					}

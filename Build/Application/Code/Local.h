@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -57,20 +57,20 @@ extern "C"
 /*!
 Possible return values from Local module routines.
 */
-typedef long LocalResultCode;
+typedef long Local_Result;
 enum
 {
-	kLocalResultCodeSuccess					= 0,	//!< no error
-	kLocalResultCodeParameterError			= 1,	//!< invalid input (e.g. null pointer provided)
-	kLocalResultCodeForkError				= 2,	//!< fork() failed
-	kLocalResultCodeThreadError				= 3,	//!< unable to create a thread
-	kLocalResultCodeIOControlError			= 4,	//!< ioctl() failed
-	kLocalResultCodeTermCapError			= 5,	//!< terminal capabilities interface routine failed
-	kLocalResultCodeSocketError				= 6,	//!< if a socket could not be created
-	kLocalResultCodeNoRouteToHost			= 7,	//!< if a physical connection could not be made
-	kLocalResultCodeConnectionRefused		= 8,	//!< if a connection was not allowed by the server
-	kLocalResultCodeCannotResolveAtAll		= 9,	//!< if a host name was given whose address cannot be found
-	kLocalResultCodeCannotResolveForNow		= 10,	//!< if an address cannot be found, but a retry might find it
+	kLocal_ResultOK							= 0,	//!< no error
+	kLocal_ResultParameterError				= 1,	//!< invalid input (e.g. null pointer provided)
+	kLocal_ResultForkError					= 2,	//!< fork() failed
+	kLocal_ResultThreadError				= 3,	//!< unable to create a thread
+	kLocal_ResultIOControlError				= 4,	//!< ioctl() failed
+	kLocal_ResultTermCapError				= 5,	//!< terminal capabilities interface routine failed
+	kLocal_ResultSocketError				= 6,	//!< if a socket could not be created
+	kLocal_ResultNoRouteToHost				= 7,	//!< if a physical connection could not be made
+	kLocal_ResultConnectionRefused			= 8,	//!< if a connection was not allowed by the server
+	kLocal_ResultCannotResolveAtAll			= 9,	//!< if a host name was given whose address cannot be found
+	kLocal_ResultCannotResolveForNow		= 10,	//!< if an address cannot be found, but a retry might find it
 	kLocalResultInsufficientBufferSpace		= 11	//!< out of memory; free more memory and try again
 };
 
@@ -91,13 +91,13 @@ typedef int/* file descriptor */		PseudoTeletypewriterID;
 
 #pragma mark Public Methods
 
-LocalResultCode
+Local_Result
 	Local_InstallCrashCatcher				();
 
 //!\name Creating Pseudo-Terminals
 //@{
 
-LocalResultCode
+Local_Result
 	Local_GetDefaultShell					(char**						outStringPtr);
 
 int
@@ -112,21 +112,21 @@ int
 void
 	Local_KillProcess						(pid_t						inUnixProcessID);
 
-LocalResultCode
+Local_Result
 	Local_SpawnDefaultShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 pid_t*						outProcessIDPtr,
 											 char*						outSlaveName,
 											 char const*				inWorkingDirectoryOrNull = nullptr);
 
-LocalResultCode
+Local_Result
 	Local_SpawnLoginShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 pid_t*						outProcessIDPtr,
 											 char*						outSlaveName,
 											 char const*				inWorkingDirectoryOrNull = nullptr);
 
-LocalResultCode
+Local_Result
 	Local_SpawnProcess						(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 char const* const			argv[],
@@ -134,7 +134,7 @@ LocalResultCode
 											 char*						outSlaveName,
 											 char const*				inWorkingDirectoryOrNull = nullptr);
 
-LocalResultCode
+Local_Result
 	Local_SpawnProcessAndWaitForTermination	(char const*				inCommand);
 
 Boolean
@@ -148,7 +148,7 @@ Boolean
 int
 	Local_DisableTerminalLocalEcho			(PseudoTeletypewriterID		inPseudoTerminalID);
 
-LocalResultCode
+Local_Result
 	Local_SendTerminalResizeMessage			(PseudoTeletypewriterID		inPseudoTerminalID,
 											 UInt16						inNewColumnCount,
 											 UInt16						inNewRowCount,

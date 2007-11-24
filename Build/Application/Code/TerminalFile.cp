@@ -3,7 +3,7 @@
 	TerminalFile.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -134,19 +134,19 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static TerminalFile_ResultCode	getBooleanValue			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getColorArrayValues		(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getDictionaryValue		(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getFloat32Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getFloat64Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getSInt16Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getSInt32Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getStringArrayValues	(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getStringValue			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getUInt16Value			(CFDictionaryRef, CFStringRef, void*);
-static TerminalFile_ResultCode	getUInt32Value			(CFDictionaryRef, CFStringRef, void*);
-static CFStringRef				rgbCopyDescription		(void const*);
-static Boolean					rgbEqual				(void const*, void const*);
+static TerminalFile_Result	getBooleanValue			(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getColorArrayValues		(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getDictionaryValue		(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getFloat32Value			(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getFloat64Value			(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getSInt16Value			(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getSInt32Value			(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getStringArrayValues	(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getStringValue			(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getUInt16Value			(CFDictionaryRef, CFStringRef, void*);
+static TerminalFile_Result	getUInt32Value			(CFDictionaryRef, CFStringRef, void*);
+static CFStringRef			rgbCopyDescription		(void const*);
+static Boolean				rgbEqual				(void const*, void const*);
 
 
 
@@ -202,7 +202,7 @@ TerminalFile_NewFromFile	(CFURLRef			inFileURL,
 				if (errorString != nullptr)
 				{
 					CFRelease(errorString), errorString = nullptr;
-					result = kTerminalFile_ResultCodeInvalidFileType;
+					result = kTerminalFile_ResultInvalidFileType;
 				}
 				gTerminalFilePtrLocks().releaseLock(*outTermFile, &ptr);
 			}
@@ -260,7 +260,7 @@ inAttributeCount is out of range.
 
 (3.0)
 */
-TerminalFile_ResultCode
+TerminalFile_Result
 TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 							 TerminalFile_SettingsType			inSettingsType,
 							 CFIndex							inSettingsIndex,
@@ -268,11 +268,11 @@ TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 							 TerminalFile_AttributeTag const	inTagArray[],
 							 TerminalFile_AttributeValuePtr		outValueArray[])
 {
-	TerminalFilePtr				ptr = gTerminalFilePtrLocks().acquireLock(inTermFile);
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFRetainRelease				mainDictionary(ptr->propertyList);
-	CFDictionaryRef				windowSettings = nullptr;
-	CFArrayRef					windowSettingsArray = nullptr;
+	TerminalFilePtr			ptr = gTerminalFilePtrLocks().acquireLock(inTermFile);
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFRetainRelease			mainDictionary(ptr->propertyList);
+	CFDictionaryRef			windowSettings = nullptr;
+	CFArrayRef				windowSettingsArray = nullptr;
 	
 	
 	switch (inSettingsType)
@@ -290,7 +290,7 @@ TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 			// then essentially doing a linear search through the list of possible 
 			// tags.  That is certainly not the most efficient method and definitely 
 			// something we will want to improve on in a future version.
-			for (currentItem = 0; ((currentItem < inAttributeCount) && (result == kTerminalFile_ResultCodeSuccess));
+			for (currentItem = 0; ((currentItem < inAttributeCount) && (result == kTerminalFile_ResultOK));
 					++currentItem)
 			{
 				TerminalFile_AttributeValuePtr&		value = outValueArray[currentItem];
@@ -444,25 +444,25 @@ TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 				
 				case kTerminalFile_AttributeTagWindowPadding:
 					result = getSInt16Value(windowSettings, kPadBottomKey, &bottom);
-					if (result == kTerminalFile_ResultCodeSuccess)
+					if (result == kTerminalFile_ResultOK)
 					{
 						short	left;
 						
 						
 						result = getSInt16Value(windowSettings, kPadLeftKey, &left);
-						if (result == kTerminalFile_ResultCodeSuccess)
+						if (result == kTerminalFile_ResultOK)
 						{
 							short	right;
 							
 							
 							result = getSInt16Value(windowSettings, kPadRightKey, &right);
-							if (result == kTerminalFile_ResultCodeSuccess)
+							if (result == kTerminalFile_ResultOK)
 							{
 								short	top;
 								
 								
 								result = getSInt16Value(windowSettings, kPadTopKey, &top);
-								if (result == kTerminalFile_ResultCodeSuccess)
+								if (result == kTerminalFile_ResultOK)
 								{
 									SetRect((Rect*)value, left, top, right, bottom);
 								}
@@ -552,13 +552,13 @@ TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 			
 				case kTerminalFile_AttributeTagWindowLocation:
 					result = getSInt16Value(windowSettings, kWinLocULYKey, &vertical);
-					if (result == kTerminalFile_ResultCodeSuccess)
+					if (result == kTerminalFile_ResultOK)
 					{
 						short	horizontal;
 						
 						
 						result = getSInt16Value(windowSettings, kWinLocXKey, &horizontal);
-						if (result == kTerminalFile_ResultCodeSuccess)
+						if (result == kTerminalFile_ResultOK)
 						{
 							RgnHandle	deskRegion;
 							Rect		bounds;
@@ -708,14 +708,14 @@ The "outValue" is expected to really be of type "Boolean*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getBooleanValue		(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
 						
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFPropertyListRef			value;	// this could be a CFBoolean or a CFString
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFPropertyListRef		value;	// this could be a CFBoolean or a CFString
 	
 	
 	CFRetain(inDictionary);
@@ -724,7 +724,7 @@ getBooleanValue		(CFDictionaryRef	inDictionary,
 	value = CFDictionaryGetValue(inDictionary, inKey);
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -772,7 +772,7 @@ The "outValue" is expected to really be of type "CFArrayRef*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getColorArrayValues		(CFDictionaryRef	inDictionary,
 						 CFStringRef		inKey,
 						 void*				outValues)
@@ -781,8 +781,8 @@ getColorArrayValues		(CFDictionaryRef	inDictionary,
 	{
 		kRGBColorCount = 8
 	};
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFStringRef					values = nullptr;
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFStringRef				values = nullptr;
 	
 	
 	CFRetain(inDictionary);
@@ -791,7 +791,7 @@ getColorArrayValues		(CFDictionaryRef	inDictionary,
 	values = CFUtilities_StringCast(CFDictionaryGetValue(inDictionary, CFUtilities_StringCast(inKey)));
 	if (values == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -801,7 +801,7 @@ getColorArrayValues		(CFDictionaryRef	inDictionary,
 		stringArray = CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, values, CFSTR(" "));
 		if (stringArray == nullptr)
 		{
-			result = kTerminalFile_ResultCodeMemAllocErr;
+			result = kTerminalFile_ResultMemAllocErr;
 		}
 		else
 		{
@@ -841,7 +841,7 @@ getColorArrayValues		(CFDictionaryRef	inDictionary,
 				else
 				{
 					// flag errors, but still try to return as many colors as possible
-					result = kTerminalFile_ResultCodeMemAllocErr;
+					result = kTerminalFile_ResultMemAllocErr;
 				}
 			}
 			
@@ -900,13 +900,13 @@ The "outValue" is expected to really be of type "CFDictionaryRef*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getDictionaryValue	(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFDictionaryRef				value;
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFDictionaryRef			value;
 	
 	
 	CFRetain(inDictionary);
@@ -915,7 +915,7 @@ getDictionaryValue	(CFDictionaryRef	inDictionary,
 	value = CFUtilities_DictionaryCast(CFDictionaryGetValue(inDictionary, inKey));
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -939,13 +939,13 @@ The "outValue" is expected to really be of type "Float32*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getFloat32Value		(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFPropertyListRef			value;	// this could be a CFNumber or CFString
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFPropertyListRef		value;	// this could be a CFNumber or CFString
 	
 	
 	CFRetain(inDictionary);
@@ -954,7 +954,7 @@ getFloat32Value		(CFDictionaryRef	inDictionary,
 	value = CFUtilities_PropertyListCast(CFDictionaryGetValue(inDictionary, inKey));
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -970,7 +970,7 @@ getFloat32Value		(CFDictionaryRef	inDictionary,
 			
 			success = CFNumberGetValue(CFUtilities_NumberCast(value), kCFNumberFloat32Type, outValue);
 			if (!success)
-				result = kTerminalFile_ResultCodeNumberConversionErr;
+				result = kTerminalFile_ResultNumberConversionErr;
 		}
 		else if (type == CFStringGetTypeID())
 		{
@@ -994,13 +994,13 @@ The "outValue" is expected to really be of type "Float64*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getFloat64Value		(CFDictionaryRef	inDictionary,
 					 CFStringRef		inKey,
 					 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFPropertyListRef			value;	// this could be a CFNumber or CFString
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFPropertyListRef		value;	// this could be a CFNumber or CFString
 	
 	
 	CFRetain(inDictionary);
@@ -1009,7 +1009,7 @@ getFloat64Value		(CFDictionaryRef	inDictionary,
 	value = CFUtilities_PropertyListCast(CFDictionaryGetValue(inDictionary, inKey));
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -1025,7 +1025,7 @@ getFloat64Value		(CFDictionaryRef	inDictionary,
 			
 			success = CFNumberGetValue(CFUtilities_NumberCast(value), kCFNumberFloat64Type, outValue);
 			if (!success)
-				result = kTerminalFile_ResultCodeNumberConversionErr;
+				result = kTerminalFile_ResultNumberConversionErr;
 		}
 		else if (type == CFStringGetTypeID())
 		{
@@ -1049,13 +1049,13 @@ The "outValue" is expected to really be of type "SInt16*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getSInt16Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFPropertyListRef			value;	// this could be a CFNumber or a CFString
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFPropertyListRef		value;	// this could be a CFNumber or a CFString
 	
 	
 	CFRetain(inDictionary);
@@ -1064,7 +1064,7 @@ getSInt16Value	(CFDictionaryRef	inDictionary,
 	value = CFDictionaryGetValue(inDictionary, inKey);
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -1080,7 +1080,7 @@ getSInt16Value	(CFDictionaryRef	inDictionary,
 			
 			success = CFNumberGetValue(CFUtilities_NumberCast(value), kCFNumberSInt16Type, outValue);
 			if (!success)
-				result = kTerminalFile_ResultCodeNumberConversionErr;
+				result = kTerminalFile_ResultNumberConversionErr;
 		}
 		else if (type == CFStringGetTypeID())
 		{
@@ -1104,13 +1104,13 @@ The "outValue" is expected to really be of type "SInt32*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getSInt32Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFPropertyListRef			value;	// this could be a CFNumber or a CFString
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFPropertyListRef		value;	// this could be a CFNumber or a CFString
 	
 	
 	CFRetain(inDictionary);
@@ -1119,7 +1119,7 @@ getSInt32Value	(CFDictionaryRef	inDictionary,
 	value = CFUtilities_PropertyListCast(CFDictionaryGetValue(inDictionary, inKey));
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -1135,7 +1135,7 @@ getSInt32Value	(CFDictionaryRef	inDictionary,
 			
 			success = CFNumberGetValue(CFUtilities_NumberCast(value), kCFNumberSInt32Type, outValue);
 			if (!success)
-				result = kTerminalFile_ResultCodeNumberConversionErr;
+				result = kTerminalFile_ResultNumberConversionErr;
 		}
 		else if (type == CFStringGetTypeID())
 		{
@@ -1160,13 +1160,13 @@ The "outValue" is expected to really be of type "CFArrayRef*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getStringArrayValues	(CFDictionaryRef	inDictionary,
 						 CFStringRef		inKey, 
 						 void*				outValues)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFStringRef					values = nullptr;
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFStringRef				values = nullptr;
 	
 	
 	CFRetain(inDictionary);
@@ -1176,7 +1176,7 @@ getStringArrayValues	(CFDictionaryRef	inDictionary,
 	
 	if (values == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -1199,13 +1199,13 @@ The "outValue" is expected to really be of type "CFStringRef*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getStringValue	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFStringRef					value;
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFStringRef				value;
 	
 	
 	CFRetain(inDictionary);
@@ -1214,7 +1214,7 @@ getStringValue	(CFDictionaryRef	inDictionary,
 	value = CFUtilities_StringCast(CFDictionaryGetValue(inDictionary, inKey));
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -1238,13 +1238,13 @@ The "outValue" is expected to really be of type "UInt16*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getUInt16Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFPropertyListRef			value;	// this could be a CFNumber or a CFString
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFPropertyListRef		value;	// this could be a CFNumber or a CFString
 	
 	
 	CFRetain(inDictionary);
@@ -1253,7 +1253,7 @@ getUInt16Value	(CFDictionaryRef	inDictionary,
 	value = CFDictionaryGetValue(inDictionary, inKey);
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -1269,7 +1269,7 @@ getUInt16Value	(CFDictionaryRef	inDictionary,
 			
 			success = CFNumberGetValue(CFUtilities_NumberCast(value), kCFNumberSInt16Type, outValue);
 			if (!success)
-				result = kTerminalFile_ResultCodeNumberConversionErr;
+				result = kTerminalFile_ResultNumberConversionErr;
 			else				// cast the signed value returned from the CFNumber 
 				*(REINTERPRET_CAST(outValue, UInt16*)) = (UInt16)*(SInt16*)outValue;		// to an unsigned value
 		}
@@ -1295,13 +1295,13 @@ The "outValue" is expected to really be of type "UInt32*".
 
 (3.0)
 */
-static TerminalFile_ResultCode
+static TerminalFile_Result
 getUInt32Value	(CFDictionaryRef	inDictionary,
 				 CFStringRef		inKey,
 				 void*				outValue)
 {
-	TerminalFile_ResultCode		result = kTerminalFile_ResultCodeSuccess;
-	CFPropertyListRef			value;	// this could be a CFNumber or a CFString
+	TerminalFile_Result		result = kTerminalFile_ResultOK;
+	CFPropertyListRef		value;	// this could be a CFNumber or a CFString
 	
 	
 	CFRetain(inDictionary);
@@ -1310,7 +1310,7 @@ getUInt32Value	(CFDictionaryRef	inDictionary,
 	value = CFDictionaryGetValue(inDictionary, inKey);
 	if (value == nullptr)
 	{
-		result = kTerminalFile_ResultCodeTagNotFound;
+		result = kTerminalFile_ResultTagNotFound;
 	}
 	else
 	{
@@ -1326,7 +1326,7 @@ getUInt32Value	(CFDictionaryRef	inDictionary,
 			
 			success = CFNumberGetValue(CFUtilities_NumberCast(value), kCFNumberSInt32Type, outValue);
 			if (!success)
-				result = kTerminalFile_ResultCodeNumberConversionErr;
+				result = kTerminalFile_ResultNumberConversionErr;
 			else				// cast the signed value returned from the CFNumber
 				*(REINTERPRET_CAST(outValue, UInt32*)) = (UInt32)*(SInt32*)outValue;		// to an unsigned value
 		}

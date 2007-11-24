@@ -3,7 +3,7 @@
 	PrefPanelFormats.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -326,7 +326,7 @@ const
 	HIViewRef				result = nullptr;
 	Rect					containerBounds;
 	ControlTabEntry			tabInfo[NUMBER_OF_FORMATS_TABPANES];
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result		stringResult = kUIStrings_ResultOK;
 	OSStatus				error = noErr;
 	
 	
@@ -582,13 +582,13 @@ MyFormatsTabNormal::
 createSampleTerminalScreen ()
 const
 {
-	Terminal_ResultCode		screenCreationError = kTerminal_ResultCodeSuccess;
+	Terminal_Result			screenCreationError = kTerminal_ResultOK;
 	TerminalScreenRef		result = nullptr;
 	
 	
 	screenCreationError = Terminal_NewScreen(0/* number of scrollback rows */, 3/* number of rows */, 80/* number of columns */,
 												false/* force save */, &result);
-	assert(kTerminal_ResultCodeSuccess == screenCreationError);
+	assert(kTerminal_ResultOK == screenCreationError);
 	assert(nullptr != result);
 	
 	return result;
@@ -674,7 +674,7 @@ colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
 	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
 	{
 		DrawOneControl(inColorBoxThatChanged);
-		(Preferences_ResultCode)Preferences_SetData(colorID, sizeof(*inNewColor), inNewColor);
+		(Preferences_Result)Preferences_SetData(colorID, sizeof(*inNewColor), inNewColor);
 		SessionFactory_UpdatePalettes(colorID/* preference tag */);
 	}
 }// colorBoxChangeNotify

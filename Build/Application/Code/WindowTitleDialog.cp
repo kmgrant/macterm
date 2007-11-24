@@ -3,7 +3,7 @@
 	WindowTitleDialog.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -279,12 +279,12 @@ WindowTitleDialog_NewForSession		(SessionRef								inSession,
 	if (ptr->fieldTitle.exists())
 	{
 		CFStringRef			titleString = nullptr;
-		Session_ResultCode	sessionResult = kSession_ResultCodeSuccess;
+		Session_Result		sessionResult = kSession_ResultOK;
 		OSStatus			error = noErr;
 		
 		
 		sessionResult = Session_GetWindowUserDefinedTitle(inSession, titleString);
-		if ((kSession_ResultCodeSuccess == sessionResult) && (nullptr != titleString))
+		if ((kSession_ResultOK == sessionResult) && (nullptr != titleString))
 		{
 			error = SetControlData(ptr->fieldTitle, kControlEditTextPart, kControlEditTextCFStringTag,
 									sizeof(titleString), &titleString);

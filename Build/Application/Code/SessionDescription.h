@@ -15,7 +15,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,20 +50,20 @@
 
 #pragma mark Constants
 
-enum SessionDescription_ResultCode
+enum SessionDescription_Result
 {
-	kSessionDescription_ResultCodeSuccess					= 0,	//!< no error occurred
-	kSessionDescription_ResultCodeDataUnavailable			= 1,	//!< file does not contain specified type of data
-	kSessionDescription_ResultCodeDataNotAllowed			= 2,	//!< file cannot contain specified type of data
-	kSessionDescription_ResultCodeGenericFailure			= 3,	//!< unknown kind of error occurred
-	kSessionDescription_ResultCodeParameterError			= 4,	//!< some problem with given input
-	kSessionDescription_ResultCodeInsufficientBufferSpace	= 5,	//!< not enough room in a given memory block
-	kSessionDescription_ResultCodeFileError					= 6,	//!< some file-related error (e.g. EOF)
-	kSessionDescription_ResultCodeInvalidValue				= 7,	//!< if you asked that data be validated before storage,
-																	//!  this result indicates there is something wrong with
-																	//!  the data you provided
-	kSessionDescription_ResultCodeUnknownType				= 8		//!< parameter error; type identifier not among the
-																	//!  expected set of values
+	kSessionDescription_ResultOK						= 0,	//!< no error occurred
+	kSessionDescription_ResultDataUnavailable			= 1,	//!< file does not contain specified type of data
+	kSessionDescription_ResultDataNotAllowed			= 2,	//!< file cannot contain specified type of data
+	kSessionDescription_ResultGenericFailure			= 3,	//!< unknown kind of error occurred
+	kSessionDescription_ResultParameterError			= 4,	//!< some problem with given input
+	kSessionDescription_ResultInsufficientBufferSpace	= 5,	//!< not enough room in a given memory block
+	kSessionDescription_ResultFileError					= 6,	//!< some file-related error (e.g. EOF)
+	kSessionDescription_ResultInvalidValue				= 7,	//!< if you asked that data be validated before storage,
+																//!  this result indicates there is something wrong with
+																//!  the data you provided
+	kSessionDescription_ResultUnknownType				= 8		//!< parameter error; type identifier not among the
+																//!  expected set of values
 };
 
 enum SessionDescription_ContentType
@@ -266,22 +266,22 @@ void
 //!\name Retrieving Parsed Data
 //@{
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_GetBooleanData			(SessionDescription_Ref				inRef,
 												 SessionDescription_BooleanType		inType,
 												 Boolean&							outFlag);
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_GetIntegerData			(SessionDescription_Ref				inRef,
 												 SessionDescription_IntegerType		inType,
 												 SInt32&							outNumber);
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_GetRGBColorData			(SessionDescription_Ref				inRef,
 												 SessionDescription_RGBColorType	inType,
 												 RGBColor&							outColor);
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_GetStringData			(SessionDescription_Ref				inRef,
 												 SessionDescription_StringType		inType,
 												 CFStringRef&						outString);
@@ -291,23 +291,23 @@ SessionDescription_ResultCode
 //!\name Setting New Data
 //@{
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_SetBooleanData			(SessionDescription_Ref				inRef,
 												 SessionDescription_BooleanType		inType,
 												 Boolean							inFlag);
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_SetIntegerData			(SessionDescription_Ref				inRef,
 												 SessionDescription_IntegerType		inType,
 												 SInt32								inNumber,
 												 Boolean							inValidateBeforeStoring = false);
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_SetRGBColorData			(SessionDescription_Ref				inRef,
 												 SessionDescription_RGBColorType	inType,
 												 RGBColor const&					inColor);
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_SetStringData			(SessionDescription_Ref				inRef,
 												 SessionDescription_StringType		inType,
 												 CFStringRef						inString,
@@ -318,7 +318,7 @@ SessionDescription_ResultCode
 //!\name Saving Changed Data
 //@{
 
-SessionDescription_ResultCode
+SessionDescription_Result
 	SessionDescription_Save						(SessionDescription_Ref				inRef,
 												 SInt16								inFileReferenceNumber);
 

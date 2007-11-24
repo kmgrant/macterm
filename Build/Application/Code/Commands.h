@@ -20,7 +20,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -69,9 +69,9 @@
 #pragma mark Constants
 
 #ifndef REZ
-typedef ResultCode< UInt16 >	Commands_ResultCode;
-Commands_ResultCode const	kCommands_ResultCodeSuccess(0);			//!< no error
-Commands_ResultCode const	kCommands_ResultCodeParameterError(1);	//!< bad input - for example, invalid listener type
+typedef ResultCode< UInt16 >	Commands_Result;
+Commands_Result const	kCommands_ResultOK(0);				//!< no error
+Commands_Result const	kCommands_ResultParameterError(1);	//!< bad input - for example, invalid listener type
 #endif
 
 enum Commands_NameType
@@ -485,22 +485,22 @@ pascal OSStatus
 //@{
 
 // EVENT CONTEXT PASSED TO LISTENER: Commands_ExecutionEventContextPtr
-Commands_ResultCode
+Commands_Result
 	Commands_StartHandlingExecution			(UInt32						inImplementedCommand,
 											 ListenerModel_ListenerRef	inCommandImplementor);
 
 // EVENT CONTEXT PASSED TO LISTENER: Commands_ModificationEventContextPtr
-Commands_ResultCode
+Commands_Result
 	Commands_StartHandlingModification		(UInt32						inModifiedCommand,
 											 ListenerModel_ListenerRef	inCommandModifier);
 
 // EVENT CONTEXT PASSED TO LISTENER: Commands_ExecutionEventContextPtr
-Commands_ResultCode
+Commands_Result
 	Commands_StopHandlingExecution			(UInt32						inImplementedCommand,
 											 ListenerModel_ListenerRef	inCommandImplementor);
 
 // EVENT CONTEXT PASSED TO LISTENER: Commands_ModificationEventContextPtr
-Commands_ResultCode
+Commands_Result
 	Commands_StopHandlingModification		(UInt32						inModifiedCommand,
 											 ListenerModel_ListenerRef	inCommandModifier);
 

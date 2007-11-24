@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,18 +56,18 @@ extern "C" {
 
 #pragma mark Constants
 
-enum TerminalFile_ResultCode
+enum TerminalFile_Result
 {
-	kTerminalFile_ResultCodeSuccess				= 0,	//!< no error occurred
-	kTerminalFile_ResultCodeGenericFailure		= 1,	//!< a nonspecific error has occurred
-	kTerminalFile_ResultCodeInvalidFileType		= 2,	//!< the file passed in was not a valid Terminal 
-														//   File (not of XML property list format)
-	kTerminalFile_ResultCodeNumberConversionErr	= 3,	//!< unable to convert a number from 
-														//   the Terminal File to a variable
-	kTerminalFile_ResultCodeTagNotFound			= 4,	//!< one of the requested tags was not 
-														//   found in the given Terminal File
-	kTerminalFile_ResultCodeMemAllocErr			= 5		//!< an error occurred during 
-														//   internal memory allocation
+	kTerminalFile_ResultOK					= 0,	//!< no error occurred
+	kTerminalFile_ResultGenericFailure		= 1,	//!< a nonspecific error has occurred
+	kTerminalFile_ResultInvalidFileType		= 2,	//!< the file passed in was not a valid Terminal 
+													//   File (not of XML property list format)
+	kTerminalFile_ResultNumberConversionErr	= 3,	//!< unable to convert a number from 
+													//   the Terminal File to a variable
+	kTerminalFile_ResultTagNotFound			= 4,	//!< one of the requested tags was not 
+													//   found in the given Terminal File
+	kTerminalFile_ResultMemAllocErr			= 5		//!< an error occurred during 
+													//   internal memory allocation
 };
 
 /*!
@@ -320,7 +320,7 @@ to shell" and that the string to send is the value.
 
 typedef struct TerminalFile_OpaqueStructure*		TerminalFileRef;
 
-typedef enum TerminalFile_ResultCode				TerminalFile_ResultCode;
+typedef enum TerminalFile_Result					TerminalFile_Result;
 
 typedef enum TerminalFile_Version					TerminalFile_Version;
 
@@ -357,7 +357,7 @@ void
 //!\name Working With Terminal Files
 //@{
 
-TerminalFile_ResultCode
+TerminalFile_Result
 	TerminalFile_GetAttributes			(TerminalFileRef					inTermFile,
 										 TerminalFile_SettingsType			inSettingsType,
 										 CFIndex							inSettingsIndex,

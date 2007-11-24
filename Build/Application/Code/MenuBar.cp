@@ -3,7 +3,7 @@
 	MenuBar.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -207,25 +207,25 @@ MenuBar_Init ()
 	// creating the menu bar, possibly setting simplified mode, etc.)
 	gPreferenceChangeEventListener = ListenerModel_NewStandardListener(preferenceChanged);
 	{
-		Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
 		prefsResult = Preferences_ListenForChanges
 						(gPreferenceChangeEventListener, kPreferences_TagArrangeWindowsUsingTabs,
 							true/* notify of initial value */);
-		assert(kPreferences_ResultCodeSuccess == prefsResult);
+		assert(kPreferences_ResultOK == prefsResult);
 		prefsResult = Preferences_ListenForChanges
 						(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys,
 							true/* notify of initial value */);
-		assert(kPreferences_ResultCodeSuccess == prefsResult);
+		assert(kPreferences_ResultOK == prefsResult);
 		prefsResult = Preferences_ListenForChanges
 						(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect,
 							true/* notify of initial value */);
-		assert(kPreferences_ResultCodeSuccess == prefsResult);
+		assert(kPreferences_ResultOK == prefsResult);
 		prefsResult = Preferences_ListenForChanges
 						(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface,
 							true/* notify of initial value */);
-		assert(kPreferences_ResultCodeSuccess == prefsResult);
+		assert(kPreferences_ResultOK == prefsResult);
 	}
 	
 	// set up a callback to receive session count change notifications
@@ -279,12 +279,12 @@ MenuBar_Init ()
 														itemIndex++, kMenuItemAttrSeparator,
 														0/* command ID */);
 			{
-				UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-				CFStringRef				itemNameCFString = nullptr;
+				UIStrings_Result	stringResult = kUIStrings_ResultOK;
+				CFStringRef			itemNameCFString = nullptr;
 				
 				
 				stringResult = UIStrings_Copy(kUIStrings_HelpSystemShowTagsCommandName, itemNameCFString);
-				if (kUIStrings_ResultCodeSuccess == stringResult)
+				if (stringResult.ok())
 				{
 					(OSStatus)InsertMenuItemTextWithCFString(helpMenu, itemNameCFString,
 																itemIndex++, 0/* attributes */,
@@ -292,7 +292,7 @@ MenuBar_Init ()
 					CFRelease(itemNameCFString), itemNameCFString = nullptr;
 				}
 				stringResult = UIStrings_Copy(kUIStrings_HelpSystemHideTagsCommandName, itemNameCFString);
-				if (kUIStrings_ResultCodeSuccess == stringResult)
+				if (stringResult.ok())
 				{
 					(OSStatus)InsertMenuItemTextWithCFString(helpMenu, itemNameCFString,
 															itemIndex++, 0/* attributes */,
@@ -691,7 +691,7 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 			error = SessionFactory_GetSessionWithZeroBasedIndex
 					(inMenuItemIndex - returnFirstWindowItemAnchor(inMenu),
 						kSessionFactory_ListInCreationOrder, &session);
-			if (error == kSessionFactory_ResultCodeSuccess)
+			if (error == kSessionFactory_ResultOK)
 			{
 				TerminalWindowRef	terminalWindow = nullptr;
 				HIWindowRef			window = nullptr;
@@ -1499,15 +1499,15 @@ from the Window menu.
 static HIWindowRef
 getWindowFromWindowMenuItemIndex	(MenuItemIndex		inIndex)
 {
-	SessionFactory_ResultCode	error = kSessionFactory_ResultCodeSuccess;
-	SessionRef					session = nullptr;
-	HIWindowRef					result = nullptr;
+	SessionFactory_Result	error = kSessionFactory_ResultOK;
+	SessionRef				session = nullptr;
+	HIWindowRef				result = nullptr;
 	
 	
 	error = SessionFactory_GetSessionWithZeroBasedIndex
 			(inIndex - returnFirstWindowItemAnchor(GetMenuRef(kMenuIDWindow)),
 				kSessionFactory_ListInCreationOrder, &session);
-	if (error == kSessionFactory_ResultCodeSuccess) result = Session_ReturnActiveWindow(session);
+	if (error == kSessionFactory_ResultOK) result = Session_ReturnActiveWindow(session);
 	return result;
 }// getWindowFromWindowMenuItemIndex
 
@@ -1521,14 +1521,14 @@ corresponding to the specified session’s window.
 static MenuItemIndex
 getWindowMenuItemIndexForSession	(SessionRef		inSession)
 {
-	SessionFactory_ResultCode	error = kSessionFactory_ResultCodeSuccess;
-	UInt16						sessionIndex = 0;
-	MenuItemIndex				result = 0;
+	SessionFactory_Result	error = kSessionFactory_ResultOK;
+	UInt16					sessionIndex = 0;
+	MenuItemIndex			result = 0;
 	
 	
 	error = SessionFactory_GetZeroBasedIndexOfSession
 				(inSession, kSessionFactory_ListInCreationOrder, &sessionIndex);
-	if (kSessionFactory_ResultCodeSuccess == error)
+	if (kSessionFactory_ResultOK == error)
 	{
 		result = returnFirstWindowItemAnchor(GetMenuRef(kMenuIDWindow)) + sessionIndex;
 	}
@@ -1710,7 +1710,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kPreferences_TagArrangeWindowsUsingTabs:
 		unless (Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs,
 									sizeof(gUsingTabs), &gUsingTabs,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			gUsingTabs = false; // assume tabs are not being used, if preference can’t be found
 		}
@@ -1722,7 +1722,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag, &actualSize) ==
-					kPreferences_ResultCodeSuccess)
+					kPreferences_ResultOK)
 			{
 				flag = true; // assume menu items have key equivalents, if preference can’t be found
 			}
@@ -1735,7 +1735,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// (easier than calling Preferences_GetData() every time!)
 		unless (Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
 									sizeof(gNewCommandShortcutEffect), &gNewCommandShortcutEffect,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite; // assume command, if preference can’t be found
 		}
@@ -1747,7 +1747,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// (easier than calling Preferences_GetData() every time!)
 		unless (Preferences_GetData(kPreferences_TagSimplifiedUserInterface,
 									sizeof(gSimplifiedMenuBar), &gSimplifiedMenuBar,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			gSimplifiedMenuBar = false; // assume normal mode, if preference can’t be found
 		}
@@ -1963,7 +1963,7 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			CFStringRef		text = nullptr;
 			
 			
-			if (Session_GetWindowUserDefinedTitle(session, text) == kSession_ResultCodeSuccess)
+			if (Session_GetWindowUserDefinedTitle(session, text) == kSession_ResultOK)
 			{
 				MenuItemIndex	itemIndex = getWindowMenuItemIndexForSession(session);
 				
@@ -2133,7 +2133,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 	
 	// determine if menus are supposed to display key equivalents at all...
 	unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuCommandKeys), &menuCommandKeys,
-			&actualSize) == kPreferences_ResultCodeSuccess)
+			&actualSize) == kPreferences_ResultOK)
 	{
 		menuCommandKeys = true; // assume menu items have key equivalents, if preference can’t be found
 	}
@@ -2374,9 +2374,9 @@ setUpFormatFavoritesMenu	(MenuRef	inMenu)
 		// add the names of all defined formats to the menu;
 		// update global count of items added at that location
 		gNumberOfFormatMenuItemsAdded = 0;
-		(Preferences_ResultCode)Preferences_InsertContextNamesInMenu(kPreferences_ClassFormat, inMenu,
-																		defaultIndex, 1/* indentation level */,
-																		gNumberOfFormatMenuItemsAdded);
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassFormat, inMenu,
+																	defaultIndex, 1/* indentation level */,
+																	gNumberOfFormatMenuItemsAdded);
 		
 		// also fix the indentation of the Default choice, as this
 		// cannot be set in the NIB and will be wrong (again) if
@@ -2421,9 +2421,9 @@ setUpMacroSetsMenu	(MenuRef	inMenu)
 		// add the names of all macro sets to the menu;
 		// update global count of items added at that location
 		gNumberOfMacroSetMenuItemsAdded = 0;
-		(Preferences_ResultCode)Preferences_InsertContextNamesInMenu(kPreferences_ClassMacroSet, inMenu,
-																		defaultIndex, 1/* indentation level */,
-																		gNumberOfMacroSetMenuItemsAdded);
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassMacroSet, inMenu,
+																	defaultIndex, 1/* indentation level */,
+																	gNumberOfMacroSetMenuItemsAdded);
 		
 		// also fix the indentation of the None choice, as this
 		// cannot be set in the NIB and will be wrong (again) if
@@ -2556,13 +2556,13 @@ setUpScriptsMenu	(MenuRef	inMenu)
 					
 					// specify a title for the Dock’s menu
 					{
-						CFStringRef				titleCFString = nullptr;
-						UIStrings_ResultCode	stringResult = UIStrings_Copy
-																(kUIStrings_ScriptsMenuProgressWindowIconName,
-																	titleCFString);
+						CFStringRef			titleCFString = nullptr;
+						UIStrings_Result	stringResult = UIStrings_Copy
+															(kUIStrings_ScriptsMenuProgressWindowIconName,
+																titleCFString);
 						
 						
-						if (stringResult == kUIStrings_ResultCodeSuccess)
+						if (stringResult.ok())
 						{
 							SetWindowAlternateTitle(ProgressDialog_ReturnWindow(progressDialog), titleCFString);
 							CFRelease(titleCFString);
@@ -2684,9 +2684,9 @@ setUpSessionFavoritesMenu	(MenuRef	inMenu)
 		// add the names of all session configurations to the menu;
 		// update global count of items added at that location
 		gNumberOfSessionMenuItemsAdded = 0;
-		(Preferences_ResultCode)Preferences_InsertContextNamesInMenu(kPreferences_ClassSession, inMenu,
-																		defaultIndex, 1/* indentation level */,
-																		gNumberOfSessionMenuItemsAdded);
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassSession, inMenu,
+																	defaultIndex, 1/* indentation level */,
+																	gNumberOfSessionMenuItemsAdded);
 		
 		// also fix the indentation of the Default choice, as this
 		// cannot be set in the NIB and will be wrong (again) if
@@ -2746,9 +2746,9 @@ setUpTranslationTablesMenu	(MenuRef	inMenu)
 		// add the names of all translation tables to the menu;
 		// update global count of items added at that location
 		gNumberOfTranslationTableMenuItemsAdded = 0;
-		//(Preferences_ResultCode)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslationTable, inMenu,
-		//																defaultIndex, 1/* indentation level */,
-		//																gNumberOfTranslationTableMenuItemsAdded);
+		//(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslationTable, inMenu,
+		//														defaultIndex, 1/* indentation level */,
+		//														gNumberOfTranslationTableMenuItemsAdded);
 		
 		// also fix the indentation of the None choice, as this
 		// cannot be set in the NIB and will be wrong (again) if

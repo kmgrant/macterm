@@ -266,9 +266,9 @@ createPanelControls		(Panel_Ref		inPanel,
 	
 	// tab control
 	{
-		ControlTabEntry			tabInfo[NUMBER_OF_CONFIGURATION_TYPES];
-		UInt16					i = 0;
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+		ControlTabEntry		tabInfo[NUMBER_OF_CONFIGURATION_TYPES];
+		UInt16				i = 0;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
 		
 		
 		// nullify or zero-fill everything, then set only what matters
@@ -345,8 +345,8 @@ createPanelControls		(Panel_Ref		inPanel,
 	control = dataPtr->controls.buttonContainer;
 	(OSStatus)EmbedControl(control, dataPtr->controls.tabs);
 	{
-		CFStringRef				titleCFString = nullptr;
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+		CFStringRef			titleCFString = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
 		
 		
 		SetRect(&containerBounds, 0, 0, 0, 0);
@@ -593,7 +593,7 @@ duplicateNameEntered	(DuplicateDialogRef		inDialogThatClosed,
 					else
 					{
 						// success!
-						(Preferences_ResultCode)Preferences_ContextSave(duplicateContext);
+						(Preferences_Result)Preferences_ContextSave(duplicateContext);
 						setUpConfigurationsListControl(preferencesClass, dataPtr);
 						Preferences_ReleaseContext(&duplicateContext);
 					}
@@ -879,8 +879,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						if (isDefaultItem(dataPtr, kSelectedItem))
 						{
-							CFStringRef				dialogTextCFString = nullptr;
-							UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+							CFStringRef			dialogTextCFString = nullptr;
+							UIStrings_Result	stringResult = kUIStrings_ResultOK;
 							
 							
 							stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowFavoritesCannotRemoveDefault,
@@ -913,9 +913,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							}
 							else
 							{
-								CFStringRef				itemNameCFString = findDataBrowserItemName(dataPtr, kSelectedItem);
-								CFStringRef				templateCFString = nullptr;
-								UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+								CFStringRef			itemNameCFString = findDataBrowserItemName(dataPtr, kSelectedItem);
+								CFStringRef			templateCFString = nullptr;
+								UIStrings_Result	stringResult = kUIStrings_ResultOK;
 								
 								
 								if (nullptr == itemNameCFString) itemNameCFString = CFSTR("");
@@ -971,7 +971,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						DataBrowserItemID const		kSelectedItem = **REINTERPRET_CAST(itemsHandle, DataBrowserItemID**);
 						CFStringRef					itemNameCFString = findDataBrowserItemName(dataPtr, kSelectedItem);
 						CFStringRef					templateCFString = nullptr;
-						UIStrings_ResultCode		stringResult = kUIStrings_ResultCodeSuccess;
+						UIStrings_Result			stringResult = kUIStrings_ResultOK;
 						
 						
 						if (nullptr == itemNameCFString) itemNameCFString = CFSTR("");
@@ -1170,7 +1170,7 @@ removeListItemWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 		
 		// find and delete the appropriate preferences data
 		preferencesContext = Preferences_NewContext(preferencesClass, itemNameCFString);
-		(Preferences_ResultCode)Preferences_ContextDeleteSaved(preferencesContext);
+		(Preferences_Result)Preferences_ContextDeleteSaved(preferencesContext);
 		Preferences_ReleaseContext(&preferencesContext);
 		
 		// update UI
@@ -1367,7 +1367,7 @@ setUpConfigurationsListControl		(Preferences_Class				inPreferencesClass,
 {
 return; // !!! TEMPORARY !!! (update to use DB APIs)
 	ListHandle				list = nullptr;
-	Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	Preferences_Class		preferencesClass = kPreferences_ClassSession;
 	CFArrayRef				nameCFStringCFArray = nullptr;
 	
@@ -1379,22 +1379,22 @@ return; // !!! TEMPORARY !!! (update to use DB APIs)
 	preferencesClass = getCurrentPreferencesClass(inDataPtr);
 	
 	preferencesResult = Preferences_CreateContextNameArray(preferencesClass, nameCFStringCFArray);
-	if (preferencesResult == kPreferences_ResultCodeSuccess)
+	if (preferencesResult == kPreferences_ResultOK)
 	{
 		// now re-populate the list using resource information;
 		// TEMPORARY: the data is converted to Pascal string for display,
 		//            but eventually a CFString-savvy display will be used
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		SInt16 const			kListItemCount = CFArrayGetCount(nameCFStringCFArray);
-		Cell					cell;
-		CFStringRef				nameCFString;
-		Str255					nameString;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		SInt16 const		kListItemCount = CFArrayGetCount(nameCFStringCFArray);
+		Cell				cell;
+		CFStringRef			nameCFString;
+		Str255				nameString;
 		
 		
 		// put the Default item at the top
 		LAddRow(1, -1, list);
 		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowDefaultFavoriteName, nameCFString);
-		if (kUIStrings_ResultCodeSuccess == stringResult)
+		if (stringResult.ok())
 		{
 			CFStringGetPascalString(nameCFString, nameString, sizeof(nameString), kCFStringEncodingMacRoman);
 			ListUtilities_SetListItemText(list, 0/* row */, nameString);

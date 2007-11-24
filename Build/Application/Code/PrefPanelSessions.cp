@@ -460,11 +460,11 @@ const
 	assert(this->controlKeysTab.exists());
 	assert(this->vectorGraphicsTab.exists());
 	
-	HIViewRef				result = nullptr;
-	Rect					containerBounds;
-	ControlTabEntry			tabInfo[NUMBER_OF_SESSIONS_TABPANES];
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-	OSStatus				error = noErr;
+	HIViewRef			result = nullptr;
+	Rect				containerBounds;
+	ControlTabEntry		tabInfo[NUMBER_OF_SESSIONS_TABPANES];
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	OSStatus			error = noErr;
 	
 	
 	// nullify or zero-fill everything, then set only what matters
@@ -1106,7 +1106,7 @@ lookupHostName		(MySessionsTabResource&		inTab)
 		//lookupWaitUI(inTab);
 		if (CFStringGetCString(textCFString, hostName, sizeof(hostName), kCFStringEncodingMacRoman))
 		{
-			DNR_ResultCode		lookupAttemptResult = kDNR_ResultCodeSuccess;
+			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
 			
 			
 			lookupAttemptResult = DNR_New(hostName, false/* use IP version 4 addresses (defaults to IPv6) */);

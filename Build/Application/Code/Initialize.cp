@@ -3,7 +3,7 @@
 	Initialize.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -482,8 +482,8 @@ initApplicationCore ()
 	
 	// determine help system attributes
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		CFStringRef				helpBookAppleTitle = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			helpBookAppleTitle = nullptr;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_HelpSystemName, helpBookAppleTitle);
@@ -500,7 +500,7 @@ initApplicationCore ()
 	Cursors_Init();
 	
 	// ensure preferences folders exist, then set up macro preferences
-	(Preferences_ResultCode)Preferences_CreateOrFindFiles();
+	(Preferences_Result)Preferences_CreateOrFindFiles();
 	Macros_Init();
 	
 	// initialize some other flags
@@ -621,7 +621,7 @@ initMacOSToolbox ()
 	
 	// install recording handlers
 	// UNIMPLEMENTED - if recording setup fails, notify the user
-	(RecordAE_ResultCode)RecordAE_Init();
+	(RecordAE_Result)RecordAE_Init();
 }// initMacOSToolbox
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

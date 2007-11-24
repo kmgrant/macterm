@@ -308,7 +308,7 @@ ColorBox_UserSetColor	(HIViewRef		inView)
 	
 	if (nullptr != dataPtr)
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+		UIStrings_Result		stringResult = kUIStrings_ResultOK;
 		CFStringRef				askColorCFString = nullptr;
 		PickerMenuItemInfo		editMenuInfo;
 		Boolean					releaseAskColorCFString = true;

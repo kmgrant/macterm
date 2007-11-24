@@ -14,7 +14,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -59,12 +59,12 @@
 
 #pragma mark Constants
 
-enum TerminalWindow_ResultCode
+enum TerminalWindow_Result
 {
-	kTerminalWindow_ResultCodeSuccess					= 0,	//!< no error occurred
-	kTerminalWindow_ResultCodeGenericFailure			= 1,	//!< unspecified problem
-	kTerminalWindow_ResultCodeInsufficientBufferSpace	= 2,	//!< not enough room in a provided array, for example
-	kTerminalWindow_ResultCodeInvalidReference			= 3		//!< TerminalWindowRef is not recognized
+	kTerminalWindow_ResultOK						= 0,	//!< no error occurred
+	kTerminalWindow_ResultGenericFailure			= 1,	//!< unspecified problem
+	kTerminalWindow_ResultInsufficientBufferSpace	= 2,	//!< not enough room in a provided array, for example
+	kTerminalWindow_ResultInvalidReference			= 3		//!< TerminalWindowRef is not recognized
 };
 
 /*!
@@ -164,7 +164,7 @@ void
 													 TerminalViewRef*			outViewArray,
 													 UInt16*					outActualCountOrNull);
 
-TerminalWindow_ResultCode
+TerminalWindow_Result
 	TerminalWindow_GetViewsInGroup					(TerminalWindowRef			inRef,
 													 TerminalWindow_ViewGroup	inViewGroup,
 													 UInt16						inArrayLength,
@@ -236,7 +236,7 @@ void
 void
 	TerminalWindow_DisplayTextSearchDialog			(TerminalWindowRef			inRef);
 
-TerminalWindow_ResultCode
+TerminalWindow_Result
 	TerminalWindow_GetTabWidth						(TerminalWindowRef			inRef,
 													 Float32&					inWidthInPixels);
 
@@ -244,11 +244,11 @@ OSStatus
 	TerminalWindow_SetTabAppearance					(TerminalWindowRef			inRef,
 													 Boolean					inIsTab);
 
-TerminalWindow_ResultCode
+TerminalWindow_Result
 	TerminalWindow_SetTabPosition					(TerminalWindowRef			inRef,
 													 Float32					inOffsetFromStartingPointInPixels);
 
-TerminalWindow_ResultCode
+TerminalWindow_Result
 	TerminalWindow_SetTabWidth						(TerminalWindowRef			inRef,
 													 Float32					inWidthInPixels);
 

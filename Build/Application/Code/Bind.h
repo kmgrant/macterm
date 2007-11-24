@@ -9,7 +9,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -55,8 +55,8 @@
 
 FourCharCode const	kBind_InvalidAttachmentID = '----';
 
-typedef ResultCode< UInt32 >	Bind_ResultCode;
-Bind_ResultCode const		kBind_ResultCodeSuccess(0);		//!< no error
+typedef ResultCode< UInt32 >	Bind_Result;
+Bind_Result const		kBind_ResultOK(0);		//!< no error
 
 enum Bind_TokenType
 {
@@ -318,7 +318,7 @@ inline Bind_Token
 FourCharCode
 	Bind_AttachmentReturnID					(Bind_AttachmentRef					inTarget);
 
-Bind_ResultCode
+Bind_Result
 	Bind_AttachmentSynchronize				(Bind_AttachmentRef					inTarget);
 
 //@}

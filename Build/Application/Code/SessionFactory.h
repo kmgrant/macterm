@@ -60,11 +60,11 @@
 
 #pragma mark Constants
 
-enum SessionFactory_ResultCode
+enum SessionFactory_Result
 {
-	kSessionFactory_ResultCodeSuccess			= 0,	//!< no error
-	kSessionFactory_ResultCodeNotInitialized	= 1,	//!< SessionFactory_Init() has never been called
-	kSessionFactory_ResultCodeParameterError	= 2		//!< invalid input (e.g. a null pointer)
+	kSessionFactory_ResultOK				= 0,	//!< no error
+	kSessionFactory_ResultNotInitialized	= 1,	//!< SessionFactory_Init() has never been called
+	kSessionFactory_ResultParameterError	= 2		//!< invalid input (e.g. a null pointer)
 };
 
 /*!
@@ -270,12 +270,12 @@ void
 //!\name Indexing Sessions
 //@{
 
-SessionFactory_ResultCode
+SessionFactory_Result
 	SessionFactory_GetSessionWithZeroBasedIndex		(UInt16							inZeroBasedSessionIndex,
 													 SessionFactory_List			inFromWhichList,
 													 SessionRef*					outSessionPtr);
 
-SessionFactory_ResultCode
+SessionFactory_Result
 	SessionFactory_GetZeroBasedIndexOfSession		(SessionRef						inOfWhichSession,
 													 SessionFactory_List			inFromWhichList,
 													 UInt16*						outIndexPtr);
@@ -300,11 +300,11 @@ UInt16
 //!\name Utilities
 //@{
 
-SessionFactory_ResultCode
+SessionFactory_Result
 	SessionFactory_StartMonitoring					(SessionFactory_Change			inForWhatChange,
 													 ListenerModel_ListenerRef		inListener);
 
-SessionFactory_ResultCode
+SessionFactory_Result
 	SessionFactory_StartMonitoringSessions			(Session_Change					inForWhatChange,
 													 ListenerModel_ListenerRef		inListener);
 

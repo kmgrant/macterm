@@ -762,24 +762,24 @@ to handle.
 
 See documentation on Session_DataTarget for details.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if the target was added successfully
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if "inRef" is invalid
 
-\retval kSession_ResultCodeParameterError
+\retval kSession_ResultParameterError
 if "inTarget" or "inTargetData" are invalid
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_AddDataTarget	(SessionRef				inRef,
 						 Session_DataTarget		inTarget,
 						 void*					inTargetData)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_ResultCode	result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
 	switch (inTarget)
@@ -836,7 +836,7 @@ Session_AddDataTarget	(SessionRef				inRef,
 	
 	default:
 		// ???
-		result = kSession_ResultCodeParameterError;
+		result = kSession_ResultParameterError;
 		break;
 	}
 	return result;
@@ -913,15 +913,15 @@ badge may be added.
 
 (3.1)
 */
-Session_ResultCode
+Session_Result
 Session_CopyStateIconRef	(SessionRef		inRef,
 							 IconRef&		outCopiedIcon)
 {
-	Session_ResultCode	result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
 	outCopiedIcon = nullptr;
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -963,7 +963,7 @@ Session_CopyStateIconRef	(SessionRef		inRef,
 		if (nullptr == outCopiedIcon)
 		{
 			// return some non-success value...
-			result = kSession_ResultCodeProtocolMismatch;
+			result = kSession_ResultProtocolMismatch;
 		}
 	}
 	
@@ -1035,8 +1035,8 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 		configureSaveDialog(inRef, dialogOptions);
 		
 		// now set things specific to this instance
-		(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
-		(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_SystemDialogPromptCaptureToFile, dialogOptions.message);
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptCaptureToFile, dialogOptions.message);
 		dialogOptions.modality = kWindowModalityWindowModal;
 	}
 	error = NavCreatePutFileDialog(&dialogOptions, 'TEXT'/* type */, 'ttxt'/* creator (TextEdit) */,
@@ -1148,8 +1148,8 @@ Session_DisplaySaveDialog	(SessionRef		inRef)
 		// this call sets most of the options up front (parent window, etc.)
 		configureSaveDialog(inRef, dialogOptions);
 		
-		(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_FileDefaultSession, dialogOptions.saveFileName);
-		(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_SystemDialogPromptSaveSession, dialogOptions.message);
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultSession, dialogOptions.saveFileName);
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptSaveSession, dialogOptions.message);
 		dialogOptions.modality = kWindowModalityWindowModal;
 	}
 	error = NavCreatePutFileDialog(&dialogOptions, kApplicationFileTypeSessionDescription,
@@ -1276,8 +1276,8 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 	
 	// set message
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		CFStringRef				primaryTextCFString = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			primaryTextCFString = nullptr;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_AlertWindowClosePrimaryText, primaryTextCFString);
@@ -1297,12 +1297,12 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 	}
 	// set title
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		CFStringRef				titleCFString = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			titleCFString = nullptr;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_AlertWindowCloseName, titleCFString);
-		if (stringResult == kUIStrings_ResultCodeSuccess)
+		if (stringResult == kUIStrings_ResultOK)
 		{
 			Alert_SetTitleCFString(ptr->currentTerminationAlert, titleCFString);
 			CFRelease(titleCFString);
@@ -1310,12 +1310,12 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 	}
 	// set buttons
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		CFStringRef				buttonTitleCFString = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			buttonTitleCFString = nullptr;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_ButtonClose, buttonTitleCFString);
-		if (stringResult == kUIStrings_ResultCodeSuccess)
+		if (stringResult == kUIStrings_ResultOK)
 		{
 			Alert_SetButtonText(ptr->currentTerminationAlert, kAlertStdAlertOKButton, buttonTitleCFString);
 			CFRelease(buttonTitleCFString);
@@ -1345,7 +1345,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			// can behave properly
 			unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(willLeaveTerminalWindowOpen),
 										&willLeaveTerminalWindowOpen, &actualSize) ==
-					kPreferences_ResultCodeSuccess)
+					kPreferences_ResultOK)
 			{
 				willLeaveTerminalWindowOpen = false; // assume windows automatically close, if preference can’t be found
 			}
@@ -1486,31 +1486,31 @@ from the specified session, and returns a new
 Session Description containing all the data.  You
 can use this to save a session to a file.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if there are no errors
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if the specified session is unrecognized
 
-\retval kSession_ResultCodeParameterError
+\retval kSession_ResultParameterError
 if "outNewSaveFileMemoryModelPtr" is nullptr
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_FillInSessionDescription	(SessionRef					inRef,
 									 SessionDescription_Ref*	outNewSaveFileMemoryModelPtr)
 {
-	Session_ResultCode		result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (outNewSaveFileMemoryModelPtr == nullptr) result = kSession_ResultCodeParameterError;
+	if (outNewSaveFileMemoryModelPtr == nullptr) result = kSession_ResultParameterError;
 	else
 	{
 		// now write to the file, using an in-memory model first
-		SessionDescription_ResultCode	saveError = kSessionDescription_ResultCodeSuccess;
-		SessionDescription_Ref			saveFileMemoryModel = SessionDescription_New
-																(kSessionDescription_ContentTypeCommand);
+		SessionDescription_Result	saveError = kSessionDescription_ResultOK;
+		SessionDescription_Ref		saveFileMemoryModel = SessionDescription_New
+															(kSessionDescription_ContentTypeCommand);
 		
 		
 		*outNewSaveFileMemoryModelPtr = saveFileMemoryModel;
@@ -1721,26 +1721,26 @@ IMPORTANT:	This API is under evaluation.  It exposes a lot
 			of data, which may be deemed too inflexible at
 			a later time.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if there are no errors
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if the specified session is unrecognized
 
-\retval kSession_ResultCodeParameterError
+\retval kSession_ResultParameterError
 if "outPasteStatePtr" is nullptr
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_GetPasteState	(SessionRef				inRef,
 						 SessionPasteStatePtr	outPasteStatePtr)
 {
-	Session_ResultCode		result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
-	else if (outPasteStatePtr == nullptr) result = kSession_ResultCodeParameterError;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
+	else if (outPasteStatePtr == nullptr) result = kSession_ResultParameterError;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -1824,14 +1824,14 @@ it can be displayed in user interface elements.
 
 (3.1)
 */
-Session_ResultCode
+Session_Result
 Session_GetStateString		(SessionRef		inRef,
 							 CFStringRef&	outUncopiedString)
 {
-	Session_ResultCode	result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -1855,22 +1855,22 @@ If the title has never been set, nullptr may be returned.
 A copy of the internal string is NOT made; retain it if
 you need to.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if there are no errors
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if the specified session is unrecognized
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_GetWindowUserDefinedTitle	(SessionRef		inRef,
 									 CFStringRef&	outUncopiedString)
 {
-	Session_ResultCode	result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -2103,17 +2103,17 @@ and in the proper sequence if multiple events exist.
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_PostDataArrivedEventToMainQueue		(SessionRef		inRef,
 											 void*			inBuffer,
 											 UInt32			inNumberOfBytesToProcess,
 											 EventPriority	inPriority,
 											 EventQueueRef	inDispatcherQueue)
 {
-	Session_ResultCode		result = kSession_ResultCodeParameterError;
+	Session_Result		result = kSession_ResultParameterError;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
 		EventRef	dataArrivedEvent = nullptr;
@@ -2158,7 +2158,7 @@ Session_PostDataArrivedEventToMainQueue		(SessionRef		inRef,
 							if (error == noErr)
 							{
 								// “data arrived” event successfully queued
-								result = kSession_ResultCodeSuccess;
+								result = kSession_ResultOK;
 							}
 						}
 					}
@@ -2322,18 +2322,18 @@ graphics device.
 See the documentation on Session_DataTarget for
 more information on session data targets.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 always; currently, no other errors are defined
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_ReceiveData		(SessionRef		inRef,
 						 void const*	inBufferPtr,
 						 size_t			inByteCount)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_ResultCode	result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
 	// “carbon copy” the data to all active attached targets
@@ -2388,24 +2388,24 @@ higher in precedence than other installed targets - for
 example, no terminals will be re-enabled if there are still
 TEK graphics devices attached.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if the target was added successfully
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if "inRef" is invalid
 
-\retval kSession_ResultCodeParameterError
+\retval kSession_ResultParameterError
 if "inTarget" or "inTargetData" are invalid
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_RemoveDataTarget	(SessionRef				inRef,
 							 Session_DataTarget		inTarget,
 							 void*					inTargetData)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_ResultCode	result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
 	switch (inTarget)
@@ -2449,7 +2449,7 @@ Session_RemoveDataTarget	(SessionRef				inRef,
 	
 	default:
 		// ???
-		result = kSession_ResultCodeParameterError;
+		result = kSession_ResultParameterError;
 		break;
 	}
 	return result;
@@ -2534,22 +2534,22 @@ perspective.  For example, brings all of its
 windows to the front, showing them if they are
 obscured, etc.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if there are no errors
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if the specified session is unrecognized
 
 (3.1)
 */
-Session_ResultCode
+Session_Result
 Session_Select	(SessionRef		inRef)
 {
-	Session_ResultCode		result = kSession_ResultCodeSuccess;
-	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	Session_Result		result = kSession_ResultOK;
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	if (nullptr == ptr) result = kSession_ResultCodeInvalidReference;
+	if (nullptr == ptr) result = kSession_ResultInvalidReference;
 	else
 	{
 		// notify listeners; this should trigger, for instance, the associated
@@ -2768,25 +2768,25 @@ may end up being less than the amount requested.
 Requests of less than 512 bytes are increased to be
 a minimum of 512 bytes.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if there are no errors
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if the specified session is unrecognized
 
-\retval kSession_ResultCodeInsufficientBufferSpace
+\retval kSession_ResultInsufficientBufferSpace
 if there is not enough memory to meet the request
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_SetDataProcessingCapacity	(SessionRef		inRef,
 									 size_t			inBlockSizeInBytes)
 {
-	Session_ResultCode		result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -2805,7 +2805,7 @@ Session_SetDataProcessingCapacity	(SessionRef		inRef,
 		}
 		catch (std::bad_alloc)
 		{
-			result = kSession_ResultCodeInsufficientBufferSpace;
+			result = kSession_ResultInsufficientBufferSpace;
 		}
 	}
 	
@@ -3584,30 +3584,30 @@ request.  For example, a VT100 terminal might return
 the message "vt100", or the name of some other
 compatible terminal.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if there are no errors
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if the specified session is unrecognized
 
-\retval kSession_ResultCodeParameterError
+\retval kSession_ResultParameterError
 if "outAnswerBackBufferPtr" is nullptr
 
-\retval kSession_ResultCodeInsufficientBufferSpace
+\retval kSession_ResultInsufficientBufferSpace
 if "inAnswerBackBufferSize" is too small
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_TerminalGetAnswerBackMessage	(SessionRef		inRef,
 										 char*			outAnswerBackBufferPtr,
 										 size_t			inAnswerBackBufferSize)
 {
-	Session_ResultCode		result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
-	else if (outAnswerBackBufferPtr == nullptr) result = kSession_ResultCodeParameterError;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
+	else if (outAnswerBackBufferPtr == nullptr) result = kSession_ResultParameterError;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -3615,7 +3615,7 @@ Session_TerminalGetAnswerBackMessage	(SessionRef		inRef,
 		
 		if (STATIC_CAST(inAnswerBackBufferSize, size_t) < sizeof(ptr->dataPtr->terminal.answerBack))
 		{
-			result = kSession_ResultCodeInsufficientBufferSpace;
+			result = kSession_ResultInsufficientBufferSpace;
 		}
 		else
 		{
@@ -3778,26 +3778,26 @@ Session_GetPasteState() to determine the current
 values, then change the desired value(s) and pass the
 modified data structure to this routine.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if there are no errors
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if the specified session is unrecognized
 
-\retval kSession_ResultCodeParameterError
+\retval kSession_ResultParameterError
 if "inPasteStatePtr" is nullptr
 
 (3.0)
 */
-Session_ResultCode
+Session_Result
 Session_UpdatePasteState	(SessionRef					inRef,
 							 SessionPasteStateConstPtr	inPasteStatePtr)
 {
-	Session_ResultCode		result = kSession_ResultCodeSuccess;
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultCodeInvalidReference;
-	else if (inPasteStatePtr == nullptr) result = kSession_ResultCodeParameterError;
+	if (inRef == nullptr) result = kSession_ResultInvalidReference;
+	else if (inPasteStatePtr == nullptr) result = kSession_ResultParameterError;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
@@ -3929,26 +3929,26 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 Sends the appropriate sequence for the specified key,
 taking into account the terminal mode settings.
 
-\retval kSession_ResultCodeSuccess
+\retval kSession_ResultOK
 if the key was input successfully
 
-\retval kSession_ResultCodeInvalidReference
+\retval kSession_ResultInvalidReference
 if "inRef" is invalid
 
-\retval kSession_ResultCodeParameterError
+\retval kSession_ResultParameterError
 if "inTarget" or "inTargetData" are invalid
 
 (3.1)
 */
-Session_ResultCode
+Session_Result
 Session_UserInputKey	(SessionRef		inRef,
 						 UInt8			inKeyOrASCII)
 {
-	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
-	Session_ResultCode		result = kSession_ResultCodeSuccess;
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (nullptr == ptr) result = kSession_ResultCodeInvalidReference;
+	if (nullptr == ptr) result = kSession_ResultInvalidReference;
 	else
 	{
 		TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
@@ -4393,14 +4393,14 @@ connectionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			}
 			else if (kSession_StateActiveUnstable == ptr->status)
 			{
-				(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessNewborn,
-														statusString);
+				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessNewborn,
+													statusString);
 				ptr->statusString.setCFTypeRef(statusString);
 			}
 			else if (kSession_StateActiveStable == ptr->status)
 			{
-				(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessRunning,
-														statusString);
+				(UIStrings_Result)UIStrings_Copy(kUIStrings_SessionInfoWindowStatusProcessRunning,
+													statusString);
 				ptr->statusString.setCFTypeRef(statusString);
 			}
 			else
@@ -4420,7 +4420,7 @@ connectionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				// get the user’s process service preference, if possible
 				unless (Preferences_GetData(kPreferences_TagDontAutoClose,
 											sizeof(keepWindowOpen), &keepWindowOpen,
-											&actualSize) == kPreferences_ResultCodeSuccess)
+											&actualSize) == kPreferences_ResultOK)
 				{
 					keepWindowOpen = false; // assume window should be closed, if preference can’t be found
 				}
@@ -5368,7 +5368,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				// get the user’s Capture File Creator preference, if possible
 				unless (Preferences_GetData(kPreferences_TagCaptureFileCreator,
 											sizeof(captureFileCreator), &captureFileCreator, &actualSize) ==
-						kPreferences_ResultCodeSuccess)
+						kPreferences_ResultOK)
 				{
 					captureFileCreator = 'ttxt'; // default to SimpleText if a preference can’t be found
 				}
@@ -5508,12 +5508,12 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 				if (error == noErr)
 				{
 					// now write to the file, using an in-memory model first
-					Session_ResultCode		sessionError = kSession_ResultCodeSuccess;
+					Session_Result			sessionError = kSession_ResultOK;
 					SessionDescription_Ref  saveFileMemoryModel = nullptr;
 					
 					
 					sessionError = Session_FillInSessionDescription(session, &saveFileMemoryModel);
-					if (sessionError == kSession_ResultCodeSuccess)
+					if (sessionError == kSession_ResultOK)
 					{
 						// now save to disk
 						SInt16		fileRefNum = -1;
@@ -5523,13 +5523,13 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 						error = FSOpenFork(&temporaryFile, 0/* fork name length */, nullptr/* fork name */, fsWrPerm, &fileRefNum);
 						if (error == noErr)
 						{
-							SessionDescription_ResultCode	saveError = kSessionDescription_ResultCodeSuccess;
+							SessionDescription_Result	saveError = kSessionDescription_ResultOK;
 							
 							
 							SetEOF(fileRefNum, 0L);
 							saveError = SessionDescription_Save(saveFileMemoryModel, fileRefNum);
 							FSClose(fileRefNum), fileRefNum = -1;
-							if (saveError == kSessionDescription_ResultCodeSuccess)
+							if (saveError == kSessionDescription_ResultOK)
 							{
 								error = FSExchangeObjects(&temporaryFile, &saveFile);
 								if (error != noErr)
@@ -5626,7 +5626,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		unless (Preferences_GetData(kPreferences_TagCursorBlinks,
 										sizeof(ptr->preferencesCache.cursorFlashes),
 										&ptr->preferencesCache.cursorFlashes, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			ptr->preferencesCache.cursorFlashes = true; // assume a value, if preference can’t be found
 		}
@@ -5637,7 +5637,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		unless (Preferences_GetData(kPreferences_TagMapBackquote,
 										sizeof(ptr->preferencesCache.remapBackquoteToEscape),
 										&ptr->preferencesCache.remapBackquoteToEscape, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			ptr->preferencesCache.remapBackquoteToEscape = false; // assume a value, if preference can’t be found
 		}
@@ -6455,7 +6455,7 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// if the user preference is set, first move the cursor to the drop location
 				unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
 											sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops,
-											&actualSize) == kPreferences_ResultCodeSuccess)
+											&actualSize) == kPreferences_ResultOK)
 				{
 					cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
 				}
@@ -6618,8 +6618,8 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 				Boolean		toolbarHidden = (false == IsWindowToolbarVisible(sessionPtr->dataPtr->window));
 				
 				
-				(Preferences_ResultCode)Preferences_SetData(kPreferences_TagHeadersCollapsed,
-															sizeof(toolbarHidden), &toolbarHidden);
+				(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
+														sizeof(toolbarHidden), &toolbarHidden);
 			}
 			
 			// temporary - eventually a Session API will know how to close properly
@@ -6637,7 +6637,7 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 				// otherwise, leave the window open
 				unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(leaveWindowOpen),
 											&leaveWindowOpen, &actualSize) ==
-						kPreferences_ResultCodeSuccess)
+						kPreferences_ResultOK)
 				{
 					leaveWindowOpen = false; // assume windows automatically close, if preference can’t be found
 				}

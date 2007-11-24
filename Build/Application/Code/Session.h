@@ -18,7 +18,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -69,12 +69,12 @@
 Possible return values from Session module routines.
 */
 #ifndef REZ
-typedef ResultCode< UInt16 >	Session_ResultCode;
-Session_ResultCode const	kSession_ResultCodeSuccess(0);					//!< no error
-Session_ResultCode const	kSession_ResultCodeInvalidReference(1);			//!< given SessionRef is not valid
-Session_ResultCode const	kSession_ResultCodeProtocolMismatch(2);			//!< attempt to, say, set an FTP option on a telnet session
-Session_ResultCode const	kSession_ResultCodeParameterError(3);			//!< invalid input (e.g. a null pointer)
-Session_ResultCode const	kSession_ResultCodeInsufficientBufferSpace(4);	//!< not enough memory space provided to copy data
+typedef ResultCode< UInt16 >	Session_Result;
+Session_Result const	kSession_ResultOK(0);						//!< no error
+Session_Result const	kSession_ResultInvalidReference(1);			//!< given SessionRef is not valid
+Session_Result const	kSession_ResultProtocolMismatch(2);			//!< attempt to, say, set an FTP option on a telnet session
+Session_Result const	kSession_ResultParameterError(3);			//!< invalid input (e.g. a null pointer)
+Session_Result const	kSession_ResultInsufficientBufferSpace(4);	//!< not enough memory space provided to copy data
 #endif
 
 /*!
@@ -354,14 +354,14 @@ void
 Boolean
 	Session_IsReadOnly						(SessionRef							inRef);
 
-Session_ResultCode
+Session_Result
 	Session_PostDataArrivedEventToMainQueue	(SessionRef							inRef,
 											 void*								inBuffer,
 											 UInt32								inNumberOfBytesToProcess,
 											 EventPriority						inPriority,
 											 EventQueueRef						inDispatcherQueue);
 
-Session_ResultCode
+Session_Result
 	Session_Select							(SessionRef							inRef);
 
 void
@@ -373,7 +373,7 @@ void
 	Session_UserInputInterruptProcess		(SessionRef							inRef,
 											 Boolean							inSendToRecordingScripts = true);
 
-Session_ResultCode
+Session_Result
 	Session_UserInputKey					(SessionRef							inRef,
 											 UInt8								inKeyOrASCII);
 
@@ -392,12 +392,12 @@ void
 //!\name Write-Targeting Routines
 //@{
 
-Session_ResultCode
+Session_Result
 	Session_AddDataTarget					(SessionRef							inRef,
 											 Session_DataTarget					inTarget,
 											 void*								inTargetData);
 
-Session_ResultCode
+Session_Result
 	Session_RemoveDataTarget				(SessionRef							inRef,
 											 Session_DataTarget					inTarget,
 											 void*								inTargetData);
@@ -454,7 +454,7 @@ SInt16
 //!\name Virtual Terminal Routines
 //@{
 
-Session_ResultCode
+Session_Result
 	Session_TerminalGetAnswerBackMessage	(SessionRef							inRef,
 											 char*								outAnswerBackBufferPtr,
 											 size_t								inAnswerBackBufferSize);
@@ -497,7 +497,7 @@ Boolean
 size_t
 	Session_ProcessMoreData					(SessionRef							inRef);
 
-Session_ResultCode
+Session_Result
 	Session_ReceiveData						(SessionRef							inRef,
 											 void const*						inBufferPtr,
 											 size_t								inByteCount);
@@ -528,7 +528,7 @@ void
 	Session_SetActivityNotificationEnabled	(SessionRef							inRef,
 											 Boolean							inIsEnabled);
 
-Session_ResultCode
+Session_Result
 	Session_SetDataProcessingCapacity		(SessionRef							inRef,
 											 size_t								inBlockSizeInBytes);
 
@@ -569,7 +569,7 @@ void
 void
 	Session_SpeechResume					(SessionRef							inRef);
 
-Session_ResultCode
+Session_Result
 	Session_UpdatePasteState				(SessionRef							inRef,
 											 SessionPasteStateConstPtr			inPasteStatePtr);
 
@@ -582,16 +582,16 @@ Session_ResultCode
 Boolean
 	Session_ActivityNotificationIsEnabled	(SessionRef							inRef);
 
-Session_ResultCode
+Session_Result
 	Session_CopyStateIconRef				(SessionRef							inRef,
 											 IconRef&							outCopiedIcon);
 
-Session_ResultCode
+Session_Result
 	Session_FillInSessionDescription		(SessionRef							inRef,
 											 SessionDescription_Ref*			outNewSaveFileMemoryModelPtr);
 
 // API UNDER EVALUATION
-Session_ResultCode
+Session_Result
 	Session_GetPasteState					(SessionRef							inRef,
 											 SessionPasteStatePtr				outPasteStatePtr);
 
@@ -608,11 +608,11 @@ Session_State
 Session_StateAttributes
 	Session_ReturnStateAttributes			(SessionRef							inRef);
 
-Session_ResultCode
+Session_Result
 	Session_GetStateString					(SessionRef							inRef,
 											 CFStringRef&						outUncopiedString);
 
-Session_ResultCode
+Session_Result
 	Session_GetWindowUserDefinedTitle		(SessionRef							inRef,
 											 CFStringRef&						outUncopiedString);
 

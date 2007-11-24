@@ -3,7 +3,7 @@
 	TerminalView.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -527,7 +527,7 @@ TerminalView_Init ()
 	// set up a callback to receive preference change notifications
 	gPreferenceChangeEventListener = ListenerModel_NewStandardListener(preferenceChanged);
 	{
-		Preferences_ResultCode		error = kPreferences_ResultCodeSuccess;
+		Preferences_Result		error = kPreferences_ResultOK;
 		
 		
 		error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks,
@@ -539,7 +539,7 @@ TerminalView_Init ()
 		error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
 												true/* call immediately to get initial value */);
 		// TMP - should check for errors here!
-		//if (error != kPreferences_ResultCodeSuccess) ...
+		//if (error != kPreferences_ResultOK) ...
 	}
 	
 	gTerminalViewInitialized = true;
@@ -956,28 +956,28 @@ Returns values for the specified range along one axis.
 See the documentation on "TerminalView_RangeCode" for
 more information.
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeInvalidID
+\retval kTerminalView_ResultInvalidID
 if the view reference is unrecognized
 
-\retval kTerminalView_ResultCodeParameterError
+\retval kTerminalView_ResultParameterError
 if the range code is not valid
 
 (3.1)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_GetRange	(TerminalViewRef			inView,
 						 TerminalView_RangeCode		inRangeCode,
 						 UInt32&					outStartOfRange,
 						 UInt32&					outPastEndOfRange)
 {
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (nullptr == viewPtr) result = kTerminalView_ResultCodeInvalidID;
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
 	else
 	{
 		switch (inRangeCode)
@@ -1002,7 +1002,7 @@ TerminalView_GetRange	(TerminalViewRef			inView,
 		
 		default:
 			// ???
-			result = kTerminalView_ResultCodeParameterError;
+			result = kTerminalView_ResultParameterError;
 			break;
 		}
 	}
@@ -1042,7 +1042,7 @@ TerminalView_GetSelectedTextAsAudio		(TerminalViewRef	inView)
 			
 			if (nullptr != speaker)
 			{
-				TerminalSpeaker_ResultCode		speakerResult = kTerminalSpeaker_ResultCodeSuccess;
+				TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
 				
 				
 				speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(speaker, *textHandle, GetHandleSize(textHandle));
@@ -1669,7 +1669,7 @@ TerminalView_SaveSelectedText	(TerminalViewRef	inView,
 			
 			// get the user’s Capture File Creator preference, if possible
 			unless (Preferences_GetData(kPreferences_TagCaptureFileCreator, sizeof(captureFileCreator),
-										&captureFileCreator, &actualSize) == kPreferences_ResultCodeSuccess)
+										&captureFileCreator, &actualSize) == kPreferences_ResultOK)
 			{
 				captureFileCreator = 'ttxt'; // default to SimpleText if a preference can’t be found
 			}
@@ -1803,12 +1803,12 @@ otherwise, the contents move up or to the left.
 
 (3.1)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_ScrollAround	(TerminalViewRef	inView,
 							 SInt16				inColumnCountDelta,
 							 SInt16				inRowCountDelta)
 {
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result		result = kTerminalView_ResultOK;
 	
 	
 	if (inColumnCountDelta > 0)
@@ -1840,12 +1840,12 @@ specify the number of columns to scroll.
 
 (2.6)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_ScrollColumnsTowardLeftEdge	(TerminalViewRef	inView,
 											 UInt16				inNumberOfColumnsToScroll)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
 	if ((viewPtr != nullptr) && (inNumberOfColumnsToScroll != 0))
@@ -1869,12 +1869,12 @@ specify the number of columns to scroll.
 
 (2.6)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_ScrollColumnsTowardRightEdge	(TerminalViewRef	inView,
 											 UInt16				inNumberOfColumnsToScroll)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
 	if (viewPtr != nullptr)
@@ -1896,23 +1896,23 @@ Scrolls the contents of the terminal screen as if
 the user clicked the up scroll arrow.  You must
 specify the number of rows to scroll.
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeInvalidID
+\retval kTerminalView_ResultInvalidID
 if the screen reference is unrecognized
 
 (2.6)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef	inView,
 											 UInt16 			inNumberOfRowsToScroll)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	if (viewPtr == nullptr) result = kTerminalView_ResultCodeInvalidID;
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
 		// just redraw everything
@@ -1935,23 +1935,23 @@ Scrolls the contents of the terminal screen as if
 the user clicked the down scroll arrow.  You must
 specify the number of rows to scroll.
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeInvalidID
+\retval kTerminalView_ResultInvalidID
 if the screen reference is unrecognized
 
 (2.6)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_ScrollRowsTowardTopEdge	(TerminalViewRef	inView,
 										 UInt16				inNumberOfRowsToScroll)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	if (viewPtr == nullptr) result = kTerminalView_ResultCodeInvalidID;
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
 		// just redraw everything
@@ -1980,14 +1980,14 @@ might return.
 
 (3.0)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_ScrollToBeginning	(TerminalViewRef	inView)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	if (viewPtr == nullptr) result = kTerminalView_ResultCodeInvalidID;
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
 		// scroll as far as possible
@@ -2009,10 +2009,10 @@ might return.
 
 (3.0)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_ScrollToEnd	(TerminalViewRef	inView)
 {
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result		result = kTerminalView_ResultOK;
 	
 	
 	// scroll as far as possible
@@ -2220,23 +2220,23 @@ TerminalView_SetCursorGhostVisibility	(TerminalViewRef	inView,
 Changes the current display mode, which is normal by default.
 Query it later with TerminalView_ReturnDisplayMode().
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeInvalidID
+\retval kTerminalView_ResultInvalidID
 if the screen reference is unrecognized
 
 (3.1)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_SetDisplayMode		(TerminalViewRef			inView,
 								 TerminalView_DisplayMode   inNewMode)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	if (viewPtr == nullptr) result = kTerminalView_ResultCodeInvalidID;
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
 		viewPtr->displayMode = inNewMode;
@@ -2316,23 +2316,23 @@ it is possible for a terminal to lose focus (when shifted
 to a toolbar item or floating window, for example) and
 the user should see when this occurs.
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeInvalidID
+\retval kTerminalView_ResultInvalidID
 if the specified view reference is not valid
 
 (3.1)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_SetFocusRingDisplayed	(TerminalViewRef	inView,
 									 Boolean			inShowFocusRingAndMatte)
 {
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
 	
 	
-	if (nullptr == viewPtr) result = kTerminalView_ResultCodeInvalidID;
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
 	else viewPtr->screen.focusRingEnabled = inShowFocusRingAndMatte;
 	
 	return result;
@@ -2358,21 +2358,21 @@ say, the Terminal Window level.
 
 You must redraw the screen yourself.
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeIllegalOperation
+\retval kTerminalView_ResultIllegalOperation
 if the display mode currently sets the size automatically
 
 (3.0)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_SetFontAndSize		(TerminalViewRef	inView,
 								 ConstStringPtr		inFontFamilyNameOrNull,
 								 UInt16				inFontSizeOrZero)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
 	if (viewPtr != nullptr)
@@ -2381,7 +2381,7 @@ TerminalView_SetFontAndSize		(TerminalViewRef	inView,
 			(viewPtr->displayMode == kTerminalView_DisplayModeZoom))
 		{
 			// the font size may not be changed explicitly if it is currently being controlled automatically
-			result = kTerminalView_ResultCodeIllegalOperation;
+			result = kTerminalView_ResultIllegalOperation;
 		}
 		else
 		{
@@ -2522,27 +2522,27 @@ IMPORTANT:	The context passed to the listener callback
 			to an event.  See "TerminalView.h" for comments
 			on what the context means for each event type.
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeInvalidID
+\retval kTerminalView_ResultInvalidID
 if the specified view reference is not valid
 
-\retval kTerminalView_ResultCodeParameterError
+\retval kTerminalView_ResultParameterError
 if the specified event could not be monitored successfully
 
 (3.0)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_StartMonitoring	(TerminalViewRef			inView,
 								 TerminalView_Event			inForWhatEvent,
 								 ListenerModel_ListenerRef	inListener)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	if (viewPtr == nullptr) result = kTerminalView_ResultCodeInvalidID;
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
 		OSStatus	error = noErr;
@@ -2550,7 +2550,7 @@ TerminalView_StartMonitoring	(TerminalViewRef			inView,
 		
 		// add a listener to the specified target’s listener model for the given event
 		error = ListenerModel_AddListenerForEvent(viewPtr->changeListenerModel, inForWhatEvent, inListener);
-		if (error != noErr) result = kTerminalView_ResultCodeParameterError;
+		if (error != noErr) result = kTerminalView_ResultParameterError;
 	}
 	return result;
 }// StartMonitoring
@@ -2565,24 +2565,24 @@ IMPORTANT:	This routine cancels the effects of a previous
 			parameters must match the previous start-call,
 			or the stop will fail.
 
-\retval kTerminalView_ResultCodeSuccess
+\retval kTerminalView_ResultOK
 if no error occurred
 
-\retval kTerminalView_ResultCodeInvalidID
+\retval kTerminalView_ResultInvalidID
 if the specified view reference is not valid
 
 (3.0)
 */
-TerminalView_ResultCode
+TerminalView_Result
 TerminalView_StopMonitoring		(TerminalViewRef			inView,
 								 TerminalView_Event			inForWhatEvent,
 								 ListenerModel_ListenerRef	inListener)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_ResultCode		result = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	if (viewPtr == nullptr) result = kTerminalView_ResultCodeInvalidID;
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
 		// remove a listener from the specified target’s listener model for the given event
@@ -2790,7 +2790,7 @@ initialize		(TerminalScreenRef	inScreenDataSource,
 		size_t		actualSize = 0;
 		
 		
-		if (kPreferences_ResultCodeSuccess !=
+		if (kPreferences_ResultOK !=
 			Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(affectsFontSize), &affectsFontSize,
 								&actualSize))
 		{
@@ -2938,7 +2938,7 @@ initialize		(TerminalScreenRef	inScreenDataSource,
 	// set up a callback to receive preference change notifications
 	this->screen.preferenceMonitor = ListenerModel_NewStandardListener(preferenceChangedForView, this->selfRef/* context */);
 	{
-		Preferences_ResultCode		error = kPreferences_ResultCodeSuccess;
+		Preferences_Result		error = kPreferences_ResultOK;
 		
 		
 		error = Preferences_ListenForChanges(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType,
@@ -3359,115 +3359,115 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 				//
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIBlack;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIBlack, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIBlack, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIRed;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIRed, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIRed, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIGreen;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIGreen, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIGreen, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIYellow;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIYellow, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIYellow, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIBlue;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIBlue, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIBlue, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIMagenta;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIMagenta, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIMagenta, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSICyan;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSICyan, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSICyan, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIWhite;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIWhite, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIWhite, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlack;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIBlackBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIBlackBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIRed;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIRedBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIRedBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIGreen;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIGreenBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIGreenBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIYellow;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIYellowBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIYellowBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlue;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIBlueBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIBlueBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIMagenta;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIMagentaBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIMagentaBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSICyan;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSICyanBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSICyanBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIWhite;
-				(Preferences_ResultCode)Preferences_GetData
-										(kPreferences_TagTerminalColorANSIWhiteBold, sizeof(RGBColor),
-											&(colorTableRGBColorArray[currentIndex]),
-											&actualSize);
+				(Preferences_Result)Preferences_GetData
+									(kPreferences_TagTerminalColorANSIWhiteBold, sizeof(RGBColor),
+										&(colorTableRGBColorArray[currentIndex]),
+										&actualSize);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				//
@@ -3495,50 +3495,50 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 						Preferences_ContextRef		formatPreferencesContext = nullptr;
 						
 						
-						if (kPreferences_ResultCodeSuccess == Preferences_GetDefaultContext
-																(&formatPreferencesContext, kPreferences_ClassFormat))
+						if (kPreferences_ResultOK == Preferences_GetDefaultContext
+														(&formatPreferencesContext, kPreferences_ClassFormat))
 						{
 							RGBColor	colorValue;
 							
 							
-							if (kPreferences_ResultCodeSuccess == Preferences_ContextGetData
-																	(formatPreferencesContext, kPreferences_TagTerminalColorNormalForeground,
-																		sizeof(colorValue), &colorValue))
+							if (kPreferences_ResultOK == Preferences_ContextGetData
+															(formatPreferencesContext, kPreferences_TagTerminalColorNormalForeground,
+																sizeof(colorValue), &colorValue))
 							{
 								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalText, &colorValue);
 							}
 							
-							if (kPreferences_ResultCodeSuccess == Preferences_ContextGetData
-																	(formatPreferencesContext, kPreferences_TagTerminalColorNormalBackground,
-																		sizeof(colorValue), &colorValue))
+							if (kPreferences_ResultOK == Preferences_ContextGetData
+															(formatPreferencesContext, kPreferences_TagTerminalColorNormalBackground,
+																sizeof(colorValue), &colorValue))
 							{
 								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalBackground, &colorValue);
 							}
 							
-							if (kPreferences_ResultCodeSuccess == Preferences_ContextGetData
-																	(formatPreferencesContext, kPreferences_TagTerminalColorBlinkingForeground,
-																		sizeof(colorValue), &colorValue))
+							if (kPreferences_ResultOK == Preferences_ContextGetData
+															(formatPreferencesContext, kPreferences_TagTerminalColorBlinkingForeground,
+																sizeof(colorValue), &colorValue))
 							{
 								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingText, &colorValue);
 							}
 							
-							if (kPreferences_ResultCodeSuccess == Preferences_ContextGetData
-																	(formatPreferencesContext, kPreferences_TagTerminalColorBlinkingBackground,
-																		sizeof(colorValue), &colorValue))
+							if (kPreferences_ResultOK == Preferences_ContextGetData
+															(formatPreferencesContext, kPreferences_TagTerminalColorBlinkingBackground,
+																sizeof(colorValue), &colorValue))
 							{
 								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingBackground, &colorValue);
 							}
 							
-							if (kPreferences_ResultCodeSuccess == Preferences_ContextGetData
-																	(formatPreferencesContext, kPreferences_TagTerminalColorBoldForeground,
-																		sizeof(colorValue), &colorValue))
+							if (kPreferences_ResultOK == Preferences_ContextGetData
+															(formatPreferencesContext, kPreferences_TagTerminalColorBoldForeground,
+																sizeof(colorValue), &colorValue))
 							{
 								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldText, &colorValue);
 							}
 							
-							if (kPreferences_ResultCodeSuccess == Preferences_ContextGetData
-																	(formatPreferencesContext, kPreferences_TagTerminalColorBoldBackground,
-																		sizeof(colorValue), &colorValue))
+							if (kPreferences_ResultOK == Preferences_ContextGetData
+															(formatPreferencesContext, kPreferences_TagTerminalColorBoldBackground,
+																sizeof(colorValue), &colorValue))
 							{
 								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldBackground, &colorValue);
 							}
@@ -3715,12 +3715,12 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 	
 	if (nullptr != inTerminalViewPtr)
 	{
-		Terminal_ResultCode		iteratorResult = kTerminal_ResultCodeSuccess;
-		RgnHandle				oldClipRegion = Memory_NewRegion();
-		CGrafPtr				oldPort = nullptr;
-		GDHandle				oldDevice = nullptr;
-		CGrafPtr				currentPort = nullptr;
-		GDHandle				currentDevice = nullptr;
+		Terminal_Result		iteratorResult = kTerminal_ResultOK;
+		RgnHandle			oldClipRegion = Memory_NewRegion();
+		CGrafPtr			oldPort = nullptr;
+		GDHandle			oldDevice = nullptr;
+		CGrafPtr			currentPort = nullptr;
+		GDHandle			currentDevice = nullptr;
 		
 		
 		// save the graphics port state and the current graphics port
@@ -3755,7 +3755,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 			if (nullptr != lineIterator)
 			{
 				TerminalTextAttributes		lineGlobalAttributes = 0L;
-				Terminal_ResultCode			terminalError = kTerminal_ResultCodeSuccess;
+				Terminal_Result				terminalError = kTerminal_ResultOK;
 				
 				
 				// unfortunately rendering requires knowledge of the physical location of
@@ -3775,7 +3775,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 					iteratorResult = Terminal_ForEachLikeAttributeRunDo
 										(inTerminalViewPtr->screen.ref, lineIterator/* starting row */,
 											drawTerminalScreenRunOp, inTerminalViewPtr/* context, passed to callback */);
-					if (iteratorResult != kTerminal_ResultCodeSuccess)
+					if (iteratorResult != kTerminal_ResultOK)
 					{
 						// did not draw successfully...?
 					}
@@ -3788,7 +3788,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 					// to the entire row instead of per-style-run; do that here
 					terminalError = Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, lineIterator,
 																		&lineGlobalAttributes);
-					if (kTerminal_ResultCodeSuccess != terminalError)
+					if (kTerminal_ResultOK != terminalError)
 					{
 						lineGlobalAttributes = 0;
 					}
@@ -4793,11 +4793,11 @@ getRowBounds	(TerminalViewPtr	inTerminalViewPtr,
 	if (nullptr != rowIterator)
 	{
 		TerminalTextAttributes		globalAttributes = 0L;
-		Terminal_ResultCode			terminalError = kTerminal_ResultCodeSuccess;
+		Terminal_Result				terminalError = kTerminal_ResultOK;
 		
 		
 		terminalError = Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
-		if (kTerminal_ResultCodeSuccess == terminalError)
+		if (kTerminal_ResultOK == terminalError)
 		{
 			if (STYLE_IS_DOUBLE_HEIGHT_TOP(globalAttributes))
 			{
@@ -4842,7 +4842,7 @@ getRowCharacterWidth	(TerminalViewPtr	inTerminalViewPtr,
 	rowIterator = findRowIterator(inTerminalViewPtr, inLineNumber);
 	if (rowIterator != nullptr)
 	{
-		(Terminal_ResultCode)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
+		(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
 		if ((globalAttributes & kMaskTerminalTextAttributeDoubleText) != 0) result = INTEGER_DOUBLED(result);
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
 	}
@@ -5111,7 +5111,7 @@ getSelectedTextAsNewHandle	(TerminalViewPtr			inTerminalViewPtr,
 		result = Memory_NewHandle(kByteCount);
 		if (nullptr != result)
 		{
-			Terminal_ResultCode		copyResult = kTerminal_ResultCodeSuccess;
+			Terminal_Result			copyResult = kTerminal_ResultOK;
 			Terminal_LineRef		lineIterator = findRowIterator(inTerminalViewPtr, kSelectionStart.second);
 			Terminal_TextCopyFlags	flags = 0L;
 			char*					characters = nullptr;
@@ -5135,8 +5135,8 @@ getSelectedTextAsNewHandle	(TerminalViewPtr			inTerminalViewPtr,
 			// signal fatal errors with a nullptr handle; a lack of
 			// space is not considered fatal, instead the truncated
 			// string is returned to the caller
-			if ((copyResult == kTerminal_ResultCodeSuccess) ||
-				(copyResult == kTerminal_ResultCodeNotEnoughMemory))
+			if ((copyResult == kTerminal_ResultOK) ||
+				(copyResult == kTerminal_ResultNotEnoughMemory))
 			{
 				(OSStatus)Memory_SetHandleSize(result, actualLength * sizeof(char));
 			}
@@ -5383,7 +5383,7 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 		
 		// double-click - select a word; or, do intelligent double-click
 		// based on the character underneath the cursor
-		if (kTerminal_ResultCodeSuccess ==
+		if (kTerminal_ResultOK ==
 			Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
 								inTerminalViewPtr->text.selection.range.first.first,
 								inTerminalViewPtr->text.selection.range.first.first,
@@ -5424,7 +5424,7 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 					actualLength = 0L;
 					
 					// copy a single character and examine it
-					if (kTerminal_ResultCodeSuccess ==
+					if (kTerminal_ResultOK ==
 						Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
 											selectionPastEnd.first, selectionPastEnd.first,
 											theChar, 1L/* maximum characters to return */, &actualLength, kEndOfLineSequence,
@@ -5451,7 +5451,7 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 				actualLength = 0L;
 				
 				// copy a single character and examine it
-				if (kTerminal_ResultCodeSuccess ==
+				if (kTerminal_ResultOK ==
 					Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
 										selectionStart.first, selectionStart.first,
 										theChar, 1L/* maximum characters to return */, &actualLength, kEndOfLineSequence,
@@ -5642,9 +5642,9 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	// (should the cursor boundaries be stored screen-relative
 	// so that this kind of maintenance can be avoided?)
 	{
-		Terminal_ResultCode		getCursorLocationError = kTerminal_ResultCodeSuccess;
-		UInt16					cursorX = 0;
-		UInt16					cursorY = 0;
+		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+		UInt16				cursorX = 0;
+		UInt16				cursorY = 0;
 		
 		
 		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
@@ -5725,12 +5725,12 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 		
 		if (nullptr != lineIterator)
 		{
-			(Terminal_ResultCode)Terminal_ChangeRangeAttributes
-									(inTerminalViewPtr->screen.ref, lineIterator, kNumberOfRows,
-										orderedRange.first.first, orderedRange.second.first,
-										inTerminalViewPtr->text.selection.isRectangular,
-										(inIsHighlighted) ? kTerminalTextAttributeSelected : kNoTerminalTextAttributes/* attributes to set */,
-										(inIsHighlighted) ? kNoTerminalTextAttributes : kTerminalTextAttributeSelected/* attributes to clear */);
+			(Terminal_Result)Terminal_ChangeRangeAttributes
+								(inTerminalViewPtr->screen.ref, lineIterator, kNumberOfRows,
+									orderedRange.first.first, orderedRange.second.first,
+									inTerminalViewPtr->text.selection.isRectangular,
+									(inIsHighlighted) ? kTerminalTextAttributeSelected : kNoTerminalTextAttributes/* attributes to set */,
+									(inIsHighlighted) ? kNoTerminalTextAttributes : kTerminalTextAttributeSelected/* attributes to clear */);
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 		}
 	}
@@ -6109,7 +6109,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// update global variable with current preference value
 		unless (Preferences_GetData(kPreferences_TagCursorBlinks, sizeof(gPreferenceProxies.cursorBlinks),
 									&gPreferenceProxies.cursorBlinks, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			gPreferenceProxies.cursorBlinks = false; // assume a value, if preference can’t be found
 		}
@@ -6119,7 +6119,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// update global variable with current preference value
 		unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(gPreferenceProxies.dontDimTerminals),
 									&gPreferenceProxies.dontDimTerminals, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			gPreferenceProxies.dontDimTerminals = false; // assume a value, if preference can’t be found
 		}
@@ -6129,7 +6129,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// update global variable with current preference value
 		unless (Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(gPreferenceProxies.notifyOfBeeps),
 									&gPreferenceProxies.notifyOfBeeps, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			gPreferenceProxies.notifyOfBeeps = false; // assume a value, if preference can’t be found
 		}
@@ -6139,7 +6139,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// update global variable with current preference value
 		unless (Preferences_GetData(kPreferences_TagPureInverse, sizeof(gPreferenceProxies.invertSelections),
 									&gPreferenceProxies.invertSelections, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			gPreferenceProxies.invertSelections = false; // assume a value, if preference can’t be found
 		}
@@ -6175,9 +6175,9 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kPreferences_TagTerminalCursorType:
 		// recalculate cursor boundaries for the specified view
 		{
-			Terminal_ResultCode		getCursorLocationError = kTerminal_ResultCodeSuccess;
-			UInt16					cursorX = 0;
-			UInt16					cursorY = 0;
+			Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+			UInt16				cursorX = 0;
+			UInt16				cursorY = 0;
 			
 			
 			// invalidate the entire old cursor region (in case it is bigger than the new one)
@@ -6209,13 +6209,13 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			unless (Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(resizeAffectsFont),
 										&resizeAffectsFont, &actualSize) ==
-					kPreferences_ResultCodeSuccess)
+					kPreferences_ResultOK)
 			{
 				resizeAffectsFont = false; // assume a value, if preference can’t be found
 			}
-			(TerminalView_ResultCode)TerminalView_SetDisplayMode(view, (resizeAffectsFont)
-																		? kTerminalView_DisplayModeZoom
-																		: kTerminalView_DisplayModeNormal);
+			(TerminalView_Result)TerminalView_SetDisplayMode(view, (resizeAffectsFont)
+																	? kTerminalView_DisplayModeZoom
+																	: kTerminalView_DisplayModeNormal);
 		}
 		break;
 	
@@ -6512,8 +6512,8 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						isSettable = false;
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
-							UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-							CFStringRef				descriptionCFString = nullptr;
+							UIStrings_Result	stringResult = kUIStrings_ResultOK;
+							CFStringRef			descriptionCFString = nullptr;
 							
 							
 							stringResult = UIStrings_Copy(kUIStrings_TerminalAccessibilityDescription,
@@ -7961,9 +7961,9 @@ screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		if (inTerminalChange == kTerminal_ChangeCursorLocation)
 		{
 			// in addition, when moving, recalculate the new bounds and invalidate again
-			Terminal_ResultCode		getCursorLocationError = kTerminal_ResultCodeSuccess;
-			UInt16					cursorX = 0;
-			UInt16					cursorY = 0;
+			Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+			UInt16				cursorX = 0;
+			UInt16				cursorY = 0;
 			
 			
 			getCursorLocationError = Terminal_CursorGetLocation(screen, &cursorX, &cursorY);
@@ -8212,9 +8212,9 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 	
 	// recalculate cursor boundaries for the specified view
 	{
-		Terminal_ResultCode		getCursorLocationError = kTerminal_ResultCodeSuccess;
-		UInt16					cursorX = 0;
-		UInt16					cursorY = 0;
+		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+		UInt16				cursorX = 0;
+		UInt16				cursorY = 0;
 		
 		
 		getCursorLocationError = Terminal_CursorGetLocation(inViewPtr->screen.ref, &cursorX, &cursorY);
@@ -8370,7 +8370,7 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 	if (inTerminalCursorType == kTerminalView_CursorTypeCurrentPreferenceValue)
 	{
 		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
-									&terminalCursorType, &actualSize) == kPreferences_ResultCodeSuccess)
+									&terminalCursorType, &actualSize) == kPreferences_ResultOK)
 		{
 			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference can’t be found
 		}
@@ -8612,7 +8612,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 	
 	// start by locating the cell under the mouse, scrolling to reveal it as needed
 	(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, clickedColumnRow, deltaColumn, deltaRow);
-	(TerminalView_ResultCode)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
+	(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
 	
 	if (inTerminalViewPtr->text.selection.exists)
 	{
@@ -8655,7 +8655,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 	{
 		// find new mouse location, scroll if necessary
 		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, localMouse, clickedColumnRow, deltaColumn, deltaRow);
-		(TerminalView_ResultCode)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
+		(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
 		
 		// if the mouse moves, update the selection
 		{
@@ -8716,7 +8716,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 		
 		
 		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(copySelectedText),
-									&copySelectedText, &actualSize) == kPreferences_ResultCodeSuccess)
+									&copySelectedText, &actualSize) == kPreferences_ResultOK)
 		{
 			copySelectedText = false; // assume text isn’t automatically copied, if preference can’t be found
 		}
@@ -9053,7 +9053,7 @@ visualBell	(TerminalViewRef	inView)
 	// otherwise, use a visual if the beep is in a background window.
 	unless (Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualPreference),
 								&visualPreference, &actualSize) ==
-			kPreferences_ResultCodeSuccess)
+			kPreferences_ResultOK)
 	{
 		visualPreference = false; // assume audible bell, if preference can’t be found
 	}

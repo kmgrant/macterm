@@ -3,7 +3,7 @@
 	SessionDescription.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -431,53 +431,53 @@ SessionDescription_Release	(SessionDescription_Ref*	inoutRefPtr)
 Retrieves the specified yes-no value from the in-memory
 model and returns it.
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the flag is retrieved successfully
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file whose type is inappropriate for the
 kind of data you request (for example, you ask for a
 flag from a macro set containing only strings)
 
-\retval kSessionDescription_ResultCodeDataUnavailable
+\retval kSessionDescription_ResultDataUnavailable
 if the data you asked for could not be delivered
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_GetBooleanData	(SessionDescription_Ref				inRef,
 									 SessionDescription_BooleanType		inType,
 									 Boolean&							outFlag)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
 	
 	
 	switch (inType)
 	{
 	case kSessionDescription_BooleanTypeTEKPageClears:
-		if (ptr->isTEKPageInSameWindowPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->isTEKPageInSameWindowPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outFlag = *(ptr->isTEKPageInSameWindowPtr);
 		break;
 	
 	case kSessionDescription_BooleanTypeRemapCR:
-		if (ptr->isBerkeleyCRPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->isBerkeleyCRPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outFlag = *(ptr->isBerkeleyCRPtr);
 		break;
 	
 	case kSessionDescription_BooleanTypePageKeysDoNotControlTerminal:
-		if (ptr->isPageUpPageDownRemappingPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->isPageUpPageDownRemappingPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outFlag = *(ptr->isPageUpPageDownRemappingPtr);
 		break;
 	
 	case kSessionDescription_BooleanTypeRemapKeypadTopRow:
-		if (ptr->isKeypadMappingToPFKeysPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->isKeypadMappingToPFKeysPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outFlag = *(ptr->isKeypadMappingToPFKeysPtr);
 		break;
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeDataUnavailable;
+		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
 	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
@@ -489,63 +489,63 @@ SessionDescription_GetBooleanData	(SessionDescription_Ref				inRef,
 Retrieves the specified information from the in-memory
 model and returns its integer value.
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the numerical value is retrieved successfully
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file whose type is inappropriate for the
 kind of data you request (for example, you ask for a
 numerical value from a macro set containing only strings)
 
-\retval kSessionDescription_ResultCodeDataUnavailable
+\retval kSessionDescription_ResultDataUnavailable
 if the data you asked for could not be delivered
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_GetIntegerData	(SessionDescription_Ref				inRef,
 									 SessionDescription_IntegerType		inType,
 									 SInt32&							outNumber)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
 	
 	
 	switch (inType)
 	{
 	case kSessionDescription_IntegerTypeScrollbackBufferLineCount:
-		if (ptr->invisibleLineCountPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->invisibleLineCountPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outNumber = *(ptr->invisibleLineCountPtr);
 		break;
 	
 	case kSessionDescription_IntegerTypeTerminalVisibleColumnCount:
-		if (ptr->visibleColumnCountPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->visibleColumnCountPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outNumber = *(ptr->visibleColumnCountPtr);
 		break;
 	
 	case kSessionDescription_IntegerTypeTerminalVisibleLineCount:
-		if (ptr->visibleLineCountPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->visibleLineCountPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outNumber = *(ptr->visibleLineCountPtr);
 		break;
 	
 	case kSessionDescription_IntegerTypeWindowContentLeftEdge:
-		if (ptr->windowPositionHPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->windowPositionHPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outNumber = *(ptr->windowPositionHPtr);
 		break;
 	
 	case kSessionDescription_IntegerTypeWindowContentTopEdge:
-		if (ptr->windowPositionVPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->windowPositionVPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outNumber = *(ptr->windowPositionVPtr);
 		break;
 	
 	case kSessionDescription_IntegerTypeTerminalFontSize:
-		if (ptr->fontSizePtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->fontSizePtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outNumber = *(ptr->fontSizePtr);
 		break;
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeDataUnavailable;
+		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
 	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
@@ -557,63 +557,63 @@ SessionDescription_GetIntegerData	(SessionDescription_Ref				inRef,
 Retrieves the specified information from the in-memory
 model and fills in an RGBColor structure using it.
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the color is retrieved successfully
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file whose type is inappropriate for the
 kind of data you request (for example, you ask for a color
 from a macro set)
 
-\retval kSessionDescription_ResultCodeDataUnavailable
+\retval kSessionDescription_ResultDataUnavailable
 if the data you asked for could not be delivered
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_GetRGBColorData	(SessionDescription_Ref				inRef,
 									 SessionDescription_RGBColorType	inType,
 									 RGBColor&							outColor)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
 	
 	
 	switch (inType)
 	{
 	case kSessionDescription_RGBColorTypeTextNormal:
-		if (ptr->colorTextNormalPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->colorTextNormalPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outColor = *(ptr->colorTextNormalPtr);
 		break;
 	
 	case kSessionDescription_RGBColorTypeBackgroundNormal:
-		if (ptr->colorBackgroundNormalPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->colorBackgroundNormalPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outColor = *(ptr->colorBackgroundNormalPtr);
 		break;
 	
 	case kSessionDescription_RGBColorTypeTextBold:
-		if (ptr->colorTextBoldPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->colorTextBoldPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outColor = *(ptr->colorTextBoldPtr);
 		break;
 	
 	case kSessionDescription_RGBColorTypeBackgroundBold:
-		if (ptr->colorBackgroundBoldPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->colorBackgroundBoldPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outColor = *(ptr->colorBackgroundBoldPtr);
 		break;
 	
 	case kSessionDescription_RGBColorTypeTextBlinking:
-		if (ptr->colorTextBlinkingPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->colorTextBlinkingPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outColor = *(ptr->colorTextBlinkingPtr);
 		break;
 	
 	case kSessionDescription_RGBColorTypeBackgroundBlinking:
-		if (ptr->colorBackgroundBlinkingPtr == nullptr) result = kSessionDescription_ResultCodeDataUnavailable;
+		if (ptr->colorBackgroundBlinkingPtr == nullptr) result = kSessionDescription_ResultDataUnavailable;
 		else outColor = *(ptr->colorBackgroundBlinkingPtr);
 		break;
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeDataUnavailable;
+		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
 	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
@@ -629,26 +629,26 @@ The string is NOT copied; if you want to use the string
 for any length of time, you must call CFRetain() on it
 (and CFRelease() when you are done).
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the string is retrieved successfully
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file whose type is inappropriate for the
 kind of data you request (for example, you ask for a host
 name from a local shell session file)
 
-\retval kSessionDescription_ResultCodeDataUnavailable
+\retval kSessionDescription_ResultDataUnavailable
 if the data you asked for could not be delivered
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 									 SessionDescription_StringType	inType,
 									 CFStringRef&					outString)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
 	
 	
 	switch (inType)
@@ -656,7 +656,7 @@ SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 	case kSessionDescription_StringTypeCommandLine:
 		if (ptr->fileType != kSessionDescription_ContentTypeCommand)
 		{
-			result = kSessionDescription_ResultCodeDataNotAllowed;
+			result = kSessionDescription_ResultDataNotAllowed;
 		}
 		else
 		{
@@ -682,7 +682,7 @@ SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeDataUnavailable;
+		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
 	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
@@ -709,8 +709,8 @@ SessionDescription_Load ()
 	OSStatus		error = noErr;
 	
 	
-	(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenSession, promptCFString);
-	(UIStrings_ResultCode)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
+	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenSession, promptCFString);
+	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
 	Alert_ReportOSStatus(error = FileSelectionDialogs_GetFiles
 									(promptCFString, titleCFString,
 										kConstantsRegistry_ApplicationCreatorSignature,
@@ -784,22 +784,22 @@ File to disk, effectively saving any changes made.  The
 specified open file obviously needs to be open with
 write permissions.
 
-Returns "kSessionDescription_ResultCodeSuccess" only if
+Returns "kSessionDescription_ResultOK" only if
 the entire file was written successfully.
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_Save		(SessionDescription_Ref		inRef,
 							 SInt16						inFileReferenceNumber)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	OSStatus						error = noErr;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	OSStatus					error = noErr;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
 	
 	
 	error = overwriteFile(inFileReferenceNumber, ptr);
-	if (error != noErr) result = kSessionDescription_ResultCodeFileError;
+	if (error != noErr) result = kSessionDescription_ResultFileError;
 	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// Save
@@ -809,30 +809,30 @@ SessionDescription_Save		(SessionDescription_Ref		inRef,
 Changes the specified yes-no value in the in-memory
 model, allocating memory for it if necessary.
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the flag is stored successfully
 
-\retval kSessionDescription_ResultCodeInsufficientBufferSpace
+\retval kSessionDescription_ResultInsufficientBufferSpace
 if there is not enough memory to store the given flag
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file whose type is inappropriate for the
 kind of data you try to store (for example, you try to
 store a flag in a macro set)
 
-\retval kSessionDescription_ResultCodeUnknownType
+\retval kSessionDescription_ResultUnknownType
 if the specified data type is unknown
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_SetBooleanData	(SessionDescription_Ref				inRef,
 									 SessionDescription_BooleanType		inType,
 									 Boolean							inFlag)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
-	Boolean**						flagPtrPtr = nullptr;
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	Boolean**					flagPtrPtr = nullptr;
 	
 	
 	switch (inType)
@@ -855,7 +855,7 @@ SessionDescription_SetBooleanData	(SessionDescription_Ref				inRef,
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeUnknownType;
+		result = kSessionDescription_ResultUnknownType;
 		break;
 	}
 	
@@ -867,7 +867,7 @@ SessionDescription_SetBooleanData	(SessionDescription_Ref				inRef,
 		{
 			*flagPtrPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(Boolean)), Boolean*);
 		}
-		if (*flagPtrPtr == nullptr) result = kSessionDescription_ResultCodeInsufficientBufferSpace;
+		if (*flagPtrPtr == nullptr) result = kSessionDescription_ResultInsufficientBufferSpace;
 		else **flagPtrPtr = inFlag;
 	}
 	
@@ -880,35 +880,35 @@ SessionDescription_SetBooleanData	(SessionDescription_Ref				inRef,
 Changes the specified number in the in-memory model,
 allocating memory for it if necessary.
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the number is stored successfully
 
-\retval kSessionDescription_ResultCodeInsufficientBufferSpace
+\retval kSessionDescription_ResultInsufficientBufferSpace
 if there is not enough memory to store the given value
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file whose type is inappropriate for the
 kind of data you try to store (for example, you try to
 store a numerical value in a macro set)
 
-\retval kSessionDescription_ResultCodeUnknownType
+\retval kSessionDescription_ResultUnknownType
 if the specified data type is unknown
 
-\retval kSessionDescription_ResultCodeInvalidValue
+\retval kSessionDescription_ResultInvalidValue
 if "inValidateBeforeStoring" is true and the data you
 provide is out of range
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_SetIntegerData	(SessionDescription_Ref				inRef,
 									 SessionDescription_IntegerType		inType,
 									 SInt32								inNumber,
 									 Boolean							inValidateBeforeStoring)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
-	SInt32**						numberPtrPtr = nullptr;
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	SInt32**					numberPtrPtr = nullptr;
 	
 	
 	switch (inType)
@@ -939,7 +939,7 @@ SessionDescription_SetIntegerData	(SessionDescription_Ref				inRef,
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeUnknownType;
+		result = kSessionDescription_ResultUnknownType;
 		break;
 	}
 	
@@ -951,7 +951,7 @@ SessionDescription_SetIntegerData	(SessionDescription_Ref				inRef,
 		{
 			*numberPtrPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(SInt32)), SInt32*);
 		}
-		if (*numberPtrPtr == nullptr) result = kSessionDescription_ResultCodeInsufficientBufferSpace;
+		if (*numberPtrPtr == nullptr) result = kSessionDescription_ResultInsufficientBufferSpace;
 		else **numberPtrPtr = inNumber;
 	}
 	
@@ -964,30 +964,30 @@ SessionDescription_SetIntegerData	(SessionDescription_Ref				inRef,
 Changes the specified color in the in-memory model,
 allocating memory for it if necessary.
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the color is stored successfully
 
-\retval kSessionDescription_ResultCodeInsufficientBufferSpace
+\retval kSessionDescription_ResultInsufficientBufferSpace
 if there is not enough memory to store the given color
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file whose type is inappropriate for the
 kind of data you try to store (for example, you try to
 store a color in a macro set)
 
-\retval kSessionDescription_ResultCodeUnknownType
+\retval kSessionDescription_ResultUnknownType
 if the specified data type is unknown
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 									 SessionDescription_RGBColorType	inType,
 									 RGBColor const&					inColor)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
-	RGBColor**						colorPtrPtr = nullptr;
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	RGBColor**					colorPtrPtr = nullptr;
 	
 	
 	switch (inType)
@@ -1018,7 +1018,7 @@ SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeUnknownType;
+		result = kSessionDescription_ResultUnknownType;
 		break;
 	}
 	
@@ -1030,7 +1030,7 @@ SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 		{
 			*colorPtrPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(RGBColor)), RGBColor*);
 		}
-		if (*colorPtrPtr == nullptr) result = kSessionDescription_ResultCodeInsufficientBufferSpace;
+		if (*colorPtrPtr == nullptr) result = kSessionDescription_ResultInsufficientBufferSpace;
 		else **colorPtrPtr = inColor;
 	}
 	
@@ -1043,18 +1043,18 @@ SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 Updates the specified information in the in-memory
 model.  The given string is retained if necessary.
 
-\retval kSessionDescription_ResultCodeSuccess
+\retval kSessionDescription_ResultOK
 if the string is stored successfully
 
-\retval kSessionDescription_ResultCodeDataNotAllowed
+\retval kSessionDescription_ResultDataNotAllowed
 if you pass in a file type inappropriate for the type
 of data you store (for example, you try to set a host
 name for a local shell session file)
 
-\retval kSessionDescription_ResultCodeUnknownType
+\retval kSessionDescription_ResultUnknownType
 if the specified data type is unknown
 
-\retval kSessionDescription_ResultCodeInvalidValue
+\retval kSessionDescription_ResultInvalidValue
 if "inValidateBeforeStoring" is true and the string
 you provide has the wrong format; this is very much
 data-type dependent (for example, if you are storing
@@ -1063,14 +1063,14 @@ must match)
 
 (3.0)
 */
-SessionDescription_ResultCode
+SessionDescription_Result
 SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 									 SessionDescription_StringType	inType,
 									 CFStringRef					inString,
 									 Boolean						inValidateBeforeStoring)
 {
-	SessionDescription_ResultCode	result = kSessionDescription_ResultCodeSuccess;
-	SessionFilePtr					ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	SessionDescription_Result	result = kSessionDescription_ResultOK;
+	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
 	
 	
 	switch (inType)
@@ -1078,7 +1078,7 @@ SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 	case kSessionDescription_StringTypeCommandLine:
 		if (ptr->fileType != kSessionDescription_ContentTypeCommand)
 		{
-			result = kSessionDescription_ResultCodeDataNotAllowed;
+			result = kSessionDescription_ResultDataNotAllowed;
 		}
 		else
 		{
@@ -1114,7 +1114,7 @@ SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 	
 	default:
 		// ???
-		result = kSessionDescription_ResultCodeUnknownType;
+		result = kSessionDescription_ResultUnknownType;
 		break;
 	}
 	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
@@ -1181,7 +1181,7 @@ overwriteFile	(SInt16					inFileReferenceNumber,
 		
 		if (inoutDataPtr->windowName != nullptr)
 		{
-			Preferences_ResultCode	prefResult = kPreferences_ResultCodeSuccess;
+			Preferences_Result		prefResult = kPreferences_ResultOK;
 			size_t					actualSize = 0;
 			Boolean					flag = false;
 			
@@ -1470,7 +1470,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 				((hashTable.find("host") != hashTable.end()) ||
 					(hashTable.find("command") != hashTable.end())))
 			{
-				SessionDescription_ResultCode	sessionFileError = kSessionDescription_ResultCodeSuccess;
+				SessionDescription_Result	sessionFileError = kSessionDescription_ResultOK;
 				
 				
 				// at this point, the read is considered successful

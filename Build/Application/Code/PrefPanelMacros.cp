@@ -346,13 +346,13 @@ macroSetChangeListener		(nullptr)
 	this->preferenceChangeListener = ListenerModel_NewStandardListener(preferenceChanged, this/* context */);
 	assert(nullptr != this->preferenceChangeListener);
 	{
-		Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
 		prefsResult = Preferences_ListenForChanges
 						(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible,
 							true/* notify of initial value */);
-		assert(kPreferences_ResultCodeSuccess == prefsResult);
+		assert(kPreferences_ResultOK == prefsResult);
 	}
 }// MyMacrosPanelUI 2-argument constructor
 
@@ -420,7 +420,7 @@ const
 		DataBrowserTableViewColumnIndex		columnNumber = 0;
 		DataBrowserListViewColumnDesc		columnInfo;
 		Rect								bounds;
-		UIStrings_ResultCode				stringResult = kUIStrings_ResultCodeSuccess;
+		UIStrings_Result					stringResult = kUIStrings_ResultOK;
 		
 		
 		GetControlBounds(listDummy, &bounds);
@@ -1448,7 +1448,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			unless (Preferences_GetData(kPreferences_TagMacrosMenuVisible,
 										sizeof(isVisible), &isVisible,
-										&actualSize) == kPreferences_ResultCodeSuccess)
+										&actualSize) == kPreferences_ResultOK)
 			{
 				isVisible = false; // assume a value, if preference can’t be found
 			}

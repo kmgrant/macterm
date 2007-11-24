@@ -370,7 +370,7 @@ MacroSetupWindow_Init ()
 		for (i = 0; i < MACRO_SET_COUNT; ++i)
 		{
 			StandardIconListCellDataRec			listItemData;
-			UIStrings_ResultCode				stringError = kUIStrings_ResultCodeSuccess;
+			UIStrings_Result					stringError = kUIStrings_ResultOK;
 			UIStrings_MacroSetupWindowCFString	stringType = kUIStrings_MacroSetupWindowSetName1;
 			CFStringRef							nameString = nullptr;
 			Cell								listCell;
@@ -419,7 +419,7 @@ MacroSetupWindow_Init ()
 				break;
 			}
 			stringError = UIStrings_Copy(stringType, nameString);
-			if (stringError == kUIStrings_ResultCodeSuccess)
+			if (stringError.ok())
 			{
 				if (CFStringGetPascalString(nameString, listItemData.name, sizeof(listItemData.name),
 											CFStringGetSystemEncoding()))
@@ -575,9 +575,9 @@ MacroSetupWindow_Init ()
 		// controls to be adjusted automatically by the right amount
 		SetPt(&deltaSize, currentBounds.right - currentBounds.left,
 				currentBounds.bottom - currentBounds.top); // initially...
-		(Preferences_ResultCode)Preferences_ArrangeWindow(gMacroSetupWindow, kPreferences_WindowTagMacroSetup, &deltaSize,
-															kPreferences_WindowBoundaryLocation |
-															kPreferences_WindowBoundaryElementWidth);
+		(Preferences_Result)Preferences_ArrangeWindow(gMacroSetupWindow, kPreferences_WindowTagMacroSetup, &deltaSize,
+														kPreferences_WindowBoundaryLocation |
+														kPreferences_WindowBoundaryElementWidth);
 	}
 	
 	// now that the macro window is ready, start listening for changes
@@ -1488,7 +1488,7 @@ updateCurrentSetName ()
 {
 	if (gMacroSetupWindow != nullptr)
 	{
-		UIStrings_ResultCode				stringError = kUIStrings_ResultCodeSuccess;
+		UIStrings_Result					stringError = kUIStrings_ResultOK;
 		UIStrings_MacroSetupWindowCFString	stringType = kUIStrings_MacroSetupWindowSetName1;
 		CFStringRef							nameString = nullptr;
 		
@@ -1520,7 +1520,7 @@ updateCurrentSetName ()
 			break;
 		}
 		stringError = UIStrings_Copy(stringType, nameString);
-		if (stringError == kUIStrings_ResultCodeSuccess)
+		if (stringError.ok())
 		{
 			SetControlTextWithCFString(gMacroSetupActiveSetNameLabel, nameString);
 			DrawOneControl(gMacroSetupActiveSetNameLabel);

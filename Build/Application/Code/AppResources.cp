@@ -144,14 +144,14 @@ if the file canÕt be found)
 
 (3.0)
 */
-AppResources_ResultCode
+AppResources_Result
 AppResources_GetDockTileAttentionPicture	(PicHandle&		outPicture,
 											 PicHandle&		outMask)
 {
-	SInt16						fileRefNum = 0;
-	AppResources_ResultCode		result = openPictureWithName
-											(kUIStrings_FileNameDockTileAttentionPicture,
-												&fileRefNum);
+	SInt16					fileRefNum = 0;
+	AppResources_Result		result = openPictureWithName
+										(kUIStrings_FileNameDockTileAttentionPicture,
+											&fileRefNum);
 	
 	
 	if (result == noErr)
@@ -190,13 +190,13 @@ if the file canÕt be found)
 
 (3.0)
 */
-AppResources_ResultCode
+AppResources_Result
 AppResources_GetSplashScreenPicture		(PicHandle&		outPicture)
 {
-	SInt16						fileRefNum = 0;
-	AppResources_ResultCode		result = openPictureWithName
-											(kUIStrings_FileNameSplashScreenPicture,
-												&fileRefNum);
+	SInt16					fileRefNum = 0;
+	AppResources_Result		result = openPictureWithName
+										(kUIStrings_FileNameSplashScreenPicture,
+											&fileRefNum);
 	
 	
 	if (result == noErr)
@@ -233,14 +233,14 @@ the file canÕt be found)
 
 (3.0)
 */
-AppResources_ResultCode
+AppResources_Result
 AppResources_GetToolbarPoofPictures		(UInt16			inZeroBasedAnimationStageIndex,
 										 PicHandle&		outFramePicture,
 										 PicHandle&		outFrameMask)
 {
-	AppResources_ResultCode		result = (inZeroBasedAnimationStageIndex >= 5)
-											? STATIC_CAST(paramErr, AppResources_ResultCode)
-											: STATIC_CAST(noErr, AppResources_ResultCode);
+	AppResources_Result		result = (inZeroBasedAnimationStageIndex >= 5)
+										? STATIC_CAST(paramErr, AppResources_Result)
+										: STATIC_CAST(noErr, AppResources_Result);
 	
 	
 	if (result == noErr)
@@ -309,7 +309,7 @@ from within a termination signal handler.
 
 (3.0)
 */
-AppResources_ResultCode
+AppResources_Result
 AppResources_LaunchCrashCatcher ()
 {
 	return launchResourceApplication(CFSTR("BugReporter.app"));
@@ -322,7 +322,7 @@ converts old user preferences to the new format.
 
 (3.1)
 */
-AppResources_ResultCode
+AppResources_Result
 AppResources_LaunchPreferencesConverter ()
 {
 	return launchResourceApplication(CFSTR("PrefsConverter.app"));
@@ -597,11 +597,11 @@ launchResourceApplication	(CFStringRef	inName)
 				if (CFURLGetFileSystemRepresentation(executableURL, true/* resolve against base */,
 														unixPath, sizeof(unixPath)))
 				{
-					LocalResultCode		spawnError = kLocalResultCodeSuccess;
+					Local_Result	spawnError = kLocal_ResultOK;
 					
 					
 					spawnError = Local_SpawnProcessAndWaitForTermination(REINTERPRET_CAST(unixPath, char const*));
-					if (spawnError != kLocalResultCodeSuccess)
+					if (spawnError != kLocal_ResultOK)
 					{
 						// kind of an arbitrary OS error, but reasonably close
 						// in meaning to what the real problem is
@@ -656,7 +656,7 @@ openPictureWithName		(UIStrings_FileOrFolderCFString		inName,
 	CFStringRef		nameCFString = nullptr;
 	
 	
-	if (kUIStrings_ResultCodeSuccess == UIStrings_Copy(inName, nameCFString))
+	if (UIStrings_Copy(inName, nameCFString).ok())
 	{
 		CFURLRef	resourceURL = nullptr;
 		

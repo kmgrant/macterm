@@ -3,7 +3,7 @@
 	InfoWindow.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -328,19 +328,19 @@ InfoWindow_Init	()
 		
 		// read user preferences for the column ordering, if any
 		{
-			Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+			Preferences_Result		preferencesResult = kPreferences_ResultOK;
 			Preferences_ContextRef	globalContext = nullptr;
 			
 			
 			preferencesResult = Preferences_GetDefaultContext(&globalContext);
-			if (kPreferences_ResultCodeSuccess == preferencesResult)
+			if (kPreferences_ResultOK == preferencesResult)
 			{
 				CFArrayRef		orderCFArray = nullptr;
 				
 				
 				preferencesResult = Preferences_ContextGetData(globalContext, kPreferences_TagInfoWindowColumnOrdering,
 																sizeof(orderCFArray), &orderCFArray);
-				if (kPreferences_ResultCodeSuccess == preferencesResult)
+				if (kPreferences_ResultOK == preferencesResult)
 				{
 					CFRange const	kWholeArray = CFRangeMake(0, CFArrayGetCount(orderCFArray));
 					
@@ -399,8 +399,8 @@ InfoWindow_Init	()
 		
 		// specify a different title for the Dock’s menu, one which doesn’t include the application name
 		{
-			CFStringRef				titleCFString = nullptr;
-			UIStrings_ResultCode	stringResult = UIStrings_Copy(kUIStrings_SessionInfoWindowIconName, titleCFString);
+			CFStringRef			titleCFString = nullptr;
+			UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_SessionInfoWindowIconName, titleCFString);
 			
 			
 			if (stringResult.ok())
@@ -515,7 +515,7 @@ InfoWindow_Init	()
 		// get visibility preference for the Clipboard
 		unless (Preferences_GetData(kPreferences_TagWasSessionInfoShowing,
 									sizeof(windowIsVisible), &windowIsVisible,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
@@ -539,8 +539,8 @@ InfoWindow_Done	()
 		
 		
 		windowIsVisible = InfoWindow_IsVisible();
-		(Preferences_ResultCode)Preferences_SetData(kPreferences_TagWasSessionInfoShowing,
-													sizeof(Boolean), &windowIsVisible);
+		(Preferences_Result)Preferences_SetData(kPreferences_TagWasSessionInfoShowing,
+												sizeof(Boolean), &windowIsVisible);
 	}
 	
 	// set user preferences for the column ordering; note that
@@ -548,12 +548,12 @@ InfoWindow_Done	()
 	// data is not easily generated and therefore not as good
 	// as strings for placement in DefaultPreferences.plist
 	{
-		Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+		Preferences_Result		preferencesResult = kPreferences_ResultOK;
 		Preferences_ContextRef	globalContext = nullptr;
 		
 		
 		preferencesResult = Preferences_GetDefaultContext(&globalContext);
-		if (kPreferences_ResultCodeSuccess == preferencesResult)
+		if (kPreferences_ResultOK == preferencesResult)
 		{
 			enum
 			{
@@ -926,8 +926,8 @@ compareDataBrowserItems		(ControlRef					UNUSED_ARGUMENT(inDataBrowser),
 		
 		case kMyDataBrowserPropertyIDStatus:
 			{
-				(Session_ResultCode)Session_GetStateString(session1, string1);
-				(Session_ResultCode)Session_GetStateString(session2, string2);
+				(Session_Result)Session_GetStateString(session1, string1);
+				(Session_Result)Session_GetStateString(session2, string2);
 			}
 			break;
 		
@@ -1368,7 +1368,7 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			CFStringRef		titleCFString = nullptr;
 			
 			
-			(Session_ResultCode)Session_GetWindowUserDefinedTitle(session, titleCFString);
+			(Session_Result)Session_GetWindowUserDefinedTitle(session, titleCFString);
 			gSessionToWindowTitleMap()[session].setCFTypeRef(titleCFString);
 			refreshDisplay();
 		}

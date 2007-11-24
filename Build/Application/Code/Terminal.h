@@ -25,7 +25,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -72,14 +72,14 @@
 /*!
 Possible return values from certain APIs in this module.
 */
-enum Terminal_ResultCode
+enum Terminal_Result
 {
-	kTerminal_ResultCodeSuccess = 0,				//!< no error
-	kTerminal_ResultCodeInvalidID = -1,				//!< a given "TerminalScreenRef" does not correspond to any known screen
-	kTerminal_ResultCodeInvalidIterator = -2,		//!< a given "Terminal_LineRef" does not correspond to any known row
-	kTerminal_ResultCodeParameterError = -3,		//!< invalid input (e.g. a null pointer)
-	kTerminal_ResultCodeNotEnoughMemory = -4,		//!< there is not enough memory to allocate required data structures
-	kTerminal_ResultCodeIteratorCannotAdvance = -5  //!< attempt to advance iterator past the end of its list
+	kTerminal_ResultOK = 0,						//!< no error
+	kTerminal_ResultInvalidID = -1,				//!< a given "TerminalScreenRef" does not correspond to any known screen
+	kTerminal_ResultInvalidIterator = -2,		//!< a given "Terminal_LineRef" does not correspond to any known row
+	kTerminal_ResultParameterError = -3,		//!< invalid input (e.g. a null pointer)
+	kTerminal_ResultNotEnoughMemory = -4,		//!< there is not enough memory to allocate required data structures
+	kTerminal_ResultIteratorCannotAdvance = -5  //!< attempt to advance iterator past the end of its list
 };
 
 /*!
@@ -314,7 +314,7 @@ InvokeScreenRunOperationProc	(ScreenRunOperationProcPtr		inUserRoutine,
 //!\name Creating and Destroying Terminal Screen Buffers
 //@{
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_NewScreen						(SInt16						inLineCountScrollBackBuffer,
 											 SInt16						inLineCountVisibleRows,
 											 SInt16						inMaximumColumnCount,
@@ -329,7 +329,7 @@ SInt16
 //!\name Enabling Session Talkback (Such As VT100 Device Attributes)
 //@{
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_SetListeningSession			(TerminalScreenRef			inScreen,
 											 SessionRef					inSession);
 
@@ -373,11 +373,11 @@ UInt16
 UInt16
 	Terminal_ReturnRowCount					(TerminalScreenRef			inScreen);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_SetVisibleColumnCount			(TerminalScreenRef			inScreen,
 											 UInt16						inNewNumberOfCharactersWide);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_SetVisibleRowCount				(TerminalScreenRef			inScreen,
 											 UInt16						inNewNumberOfLinesHigh);
 
@@ -386,13 +386,13 @@ Terminal_ResultCode
 //!\name Buffer Iteration
 //@{
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_ForEachLikeAttributeRunDo		(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 ScreenRunOperationProcPtr	inDoWhat,
 											 void*						inContextPtr);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_LineIteratorAdvance			(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 SInt16						inHowManyRowsForwardOrNegativeForBackward);
@@ -423,13 +423,13 @@ Boolean
 //!\name Accessing Screen Data
 //@{
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_ChangeLineAttributes			(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 TerminalTextAttributes		inAttributesToSet,
 											 TerminalTextAttributes		inAttributesToClear);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_ChangeLineRangeAttributes		(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumn,
@@ -437,7 +437,7 @@ Terminal_ResultCode
 											 TerminalTextAttributes		inAttributesToSet,
 											 TerminalTextAttributes		inAttributesToClear);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_ChangeRangeAttributes			(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inStartRow,
 											 UInt16						inNumberOfRowsToConsider,
@@ -447,7 +447,7 @@ Terminal_ResultCode
 											 TerminalTextAttributes		inAttributesToSet,
 											 TerminalTextAttributes		inAttributesToClear);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_CopyLineRange					(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumn,
@@ -457,7 +457,7 @@ Terminal_ResultCode
 											 SInt32*					outActualLengthPtrOrNull,
 											 UInt16						inNumberOfSpacesPerTabOrZeroForNoSubstitution);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_CopyRange						(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inStartRow,
 											 UInt16						inNumberOfRowsToConsider,
@@ -479,18 +479,18 @@ OSStatus
 void
 	Terminal_DeleteAllSavedLines			(TerminalScreenRef			inScreen);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_GetLineGlobalAttributes		(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 TerminalTextAttributes*	outAttributesPtr);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_GetLine						(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 char const*&				outReferenceStart,
 											 char const*&				outReferencePastEnd);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_GetLineRange					(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 UInt16						inZeroBasedStartColumn,
@@ -514,7 +514,7 @@ void
 	Terminal_CopyTitleForWindow				(TerminalScreenRef			inRef,
 											 CFStringRef&				outTitle);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_CursorGetLocation				(TerminalScreenRef			inScreen,
 											 UInt16*					outZeroBasedColumnPtr,
 											 UInt16*					outZeroBasedRowPtr);
@@ -522,7 +522,7 @@ Terminal_ResultCode
 Boolean
 	Terminal_CursorIsVisible				(TerminalScreenRef			inScreen);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_EmulatorDeriveFromCString		(TerminalScreenRef			inScreen,
 											 char const*				inCString,
 											 Terminal_Emulator&			outApparentEmulator);
@@ -588,15 +588,15 @@ Boolean
 //!\name Direct Interaction With the Emulator (Deprecated)
 //@{
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_EmulatorProcessCFString		(TerminalScreenRef			inScreen,
 											 CFStringRef				inCString);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_EmulatorProcessCString			(TerminalScreenRef			inScreen,
 											 char const*				inCString);
 
-Terminal_ResultCode
+Terminal_Result
 	Terminal_EmulatorProcessData			(TerminalScreenRef			inScreen,
 											 UInt8 const*				inBuffer,
 											 UInt32						inLength);

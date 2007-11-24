@@ -3,7 +3,7 @@
 	MacroManager.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -394,12 +394,12 @@ Macros_ExportToText		(MacroSet						inSet,
 			//            the Navigation Services calls; eventually, the CFString can
 			//            be passed directly (localized) instead of being hacked into
 			//            a Pascal string first
-			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-			CFStringRef				filenameCFString = nullptr;
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			CFStringRef			filenameCFString = nullptr;
 			
 			
 			stringResult = UIStrings_Copy(kUIStrings_FileDefaultMacroSet, filenameCFString);
-			if (kUIStrings_ResultCodeSuccess == stringResult)
+			if (kUIStrings_ResultOK == stringResult)
 			{
 				CFStringGetPascalString(filenameCFString, fileDefaultName, sizeof(fileDefaultName),
 										kCFStringEncodingMacRoman/* TEMPORARY */);

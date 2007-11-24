@@ -3,7 +3,7 @@
 	HelpSystem.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -63,9 +63,9 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static HelpSystem_ResultCode	copyCFStringHelpSearch			(HelpSystem_KeyPhrase, CFStringRef&);
-static HelpSystem_ResultCode	displayHelpFromKeyPhrase		(HelpSystem_KeyPhrase);
-static HelpSystem_ResultCode	displayMainHelp					();
+static HelpSystem_Result		copyCFStringHelpSearch			(HelpSystem_KeyPhrase, CFStringRef&);
+static HelpSystem_Result		displayHelpFromKeyPhrase		(HelpSystem_KeyPhrase);
+static HelpSystem_Result		displayMainHelp					();
 static HelpSystem_KeyPhrase		getCurrentContextKeyPhrase 		();
 
 
@@ -79,21 +79,21 @@ would handle a click in a dialog box help button.
 
 DEPRECATED.
 
-\retval kHelpSystem_ResultCodeSuccess
+\retval kHelpSystem_ResultOK
 if help has been displayed successfully
 
-\retval kHelpSystem_ResultCodeNoSuchString
+\retval kHelpSystem_ResultNoSuchString
 if the key phrase is invalid
 
-\retval kHelpSystem_ResultCodeCannotDisplayHelp
+\retval kHelpSystem_ResultCannotDisplayHelp
 if an OS error occurred
 
 (3.0)
 */
-HelpSystem_ResultCode
+HelpSystem_Result
 HelpSystem_DisplayHelpFromKeyPhrase		(HelpSystem_KeyPhrase	inKeyPhrase)
 {
-	HelpSystem_ResultCode	result = kHelpSystem_ResultCodeSuccess;
+	HelpSystem_Result	result = kHelpSystem_ResultOK;
 	
 	
 	if (inKeyPhrase == kHelpSystem_KeyPhraseDefault) result = displayMainHelp(); // same as “without context”
@@ -113,14 +113,14 @@ when the user clicks a help button).
 
 (3.0)
 */
-HelpSystem_ResultCode
+HelpSystem_Result
 HelpSystem_DisplayHelpInCurrentContext ()
 {
-	HelpSystem_ResultCode	result = kHelpSystem_ResultCodeSuccess;
+	HelpSystem_Result	result = kHelpSystem_ResultOK;
 	
 	
 	result = displayHelpFromKeyPhrase(getCurrentContextKeyPhrase());
-	if (result != kHelpSystem_ResultCodeSuccess) result = displayMainHelp(); // fall back on table of contents view
+	if (result != kHelpSystem_ResultOK) result = displayMainHelp(); // fall back on table of contents view
 	return result;
 }// DisplayHelpInCurrentContext
 
@@ -129,15 +129,15 @@ HelpSystem_DisplayHelpInCurrentContext ()
 Displays the main table of contents of the help system;
 that is, help content without any contextual focus.
 
-\retval kHelpSystem_ResultCodeSuccess
+\retval kHelpSystem_ResultOK
 if the context was changed successfully
 
-\retval kHelpSystem_ResultCodeCannotRetrieveString
+\retval kHelpSystem_ResultCannotRetrieveString
 if an OS error occurred
 
 (3.0)
 */
-HelpSystem_ResultCode
+HelpSystem_Result
 HelpSystem_DisplayHelpWithoutContext ()
 {
 	return displayMainHelp();
@@ -171,18 +171,18 @@ you are finished with it.  If you pass the value
 “kHelpSystem_KeyPhraseDefault”, the string will
 match the help book name.
 
-\retval kHelpSystem_ResultCodeSuccess
+\retval kHelpSystem_ResultOK
 if the string is found and returned successfully
 
-\retval kHelpSystem_ResultCodeNoSuchString
+\retval kHelpSystem_ResultNoSuchString
 if the key phrase is invalid
 
-\retval kHelpSystem_ResultCodeCannotRetrieveString
+\retval kHelpSystem_ResultCannotRetrieveString
 if an OS error occurred
 
 (3.0)
 */
-HelpSystem_ResultCode
+HelpSystem_Result
 HelpSystem_CopyKeyPhraseCFString	(HelpSystem_KeyPhrase	inKeyPhrase,
 									 CFStringRef&			outString)
 {
@@ -198,16 +198,16 @@ should always default the value just before destroying
 the window, to ensure this module can clean up its
 internal cache.
 
-\retval kHelpSystem_ResultCodeSuccess
+\retval kHelpSystem_ResultOK
 if the context was changed successfully
 
 (3.0)
 */
-HelpSystem_ResultCode
+HelpSystem_Result
 HelpSystem_SetWindowKeyPhrase	(WindowRef				inWindow,
 								 HelpSystem_KeyPhrase	inKeyPhrase)
 {
-	HelpSystem_ResultCode			result = kHelpSystem_ResultCodeSuccess;
+	HelpSystem_Result				result = kHelpSystem_ResultOK;
 	WindowToKeyPhraseMap::iterator	windowToKeyPhraseIterator;
 	
 	
@@ -238,23 +238,23 @@ HelpSystem_SetWindowKeyPhrase	(WindowRef				inWindow,
 Locates the specified key phrase and copies it
 into the given buffer.
 
-\retval kHelpSystem_ResultCodeSuccess
+\retval kHelpSystem_ResultOK
 if the string is copied successfully
 
-\retval kHelpSystem_ResultCodeNoSuchString
+\retval kHelpSystem_ResultNoSuchString
 if no key phrase with the given ID exists
 
-\retval kHelpSystem_ResultCodeCannotRetrieveString
+\retval kHelpSystem_ResultCannotRetrieveString
 if an OS error occurred
 
 (3.0)
 */
-static HelpSystem_ResultCode
+static HelpSystem_Result
 copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 						 CFStringRef&			outString)
 {
-	HelpSystem_ResultCode	result = kHelpSystem_ResultCodeSuccess;
-	UIStrings_ResultCode	stringError = kUIStrings_ResultCodeSuccess;
+	HelpSystem_Result	result = kHelpSystem_ResultOK;
+	UIStrings_Result	stringError = kUIStrings_ResultOK;
 	
 	
 	switch (inKeyPhrase)
@@ -315,7 +315,7 @@ copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 	case kHelpSystem_KeyPhraseDefault:
 	default:
 		// ???
-		if (inKeyPhrase != kHelpSystem_KeyPhraseDefault) result = kHelpSystem_ResultCodeNoSuchString;
+		if (inKeyPhrase != kHelpSystem_KeyPhraseDefault) result = kHelpSystem_ResultNoSuchString;
 		stringError = UIStrings_Copy(kUIStrings_HelpSystemContextualHelpCommandName, outString);
 		break;
 	}
@@ -327,31 +327,31 @@ copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 Opens MacTelnet Help and displays a page appropriate
 for the given key phrase.
 
-\retval kHelpSystem_ResultCodeSuccess
+\retval kHelpSystem_ResultOK
 if help has been displayed successfully
 
-\retval kHelpSystem_ResultCodeNoSuchString
+\retval kHelpSystem_ResultNoSuchString
 if the key phrase is invalid
 
-\retval kHelpSystem_ResultCodeCannotDisplayHelp
+\retval kHelpSystem_ResultCannotDisplayHelp
 if an OS error occurred
 
 (3.0)
 */
-static HelpSystem_ResultCode
+static HelpSystem_Result
 displayHelpFromKeyPhrase	(HelpSystem_KeyPhrase	inKeyPhrase)
 {
-	HelpSystem_ResultCode	result = kHelpSystem_ResultCodeSuccess;
-	CFStringRef				searchString = nullptr;
+	HelpSystem_Result	result = kHelpSystem_ResultOK;
+	CFStringRef			searchString = nullptr;
 	
 	
 	result = copyCFStringHelpSearch(inKeyPhrase, searchString);
-	if (result == kHelpSystem_ResultCodeSuccess)
+	if (result == kHelpSystem_ResultOK)
 	{
 		OSStatus	error = MacHelpUtilities_LaunchHelpSystemWithSearch(searchString);
 		
 		
-		if (error != noErr) result = kHelpSystem_ResultCodeCannotDisplayHelp;
+		if (error != noErr) result = kHelpSystem_ResultCannotDisplayHelp;
 	}
 	
 	return result;
@@ -363,21 +363,21 @@ Displays the main table of contents for the help
 system - that is, no particular context is
 considered for help.
 
-\retval kHelpSystem_ResultCodeSuccess
+\retval kHelpSystem_ResultOK
 if help has been displayed successfully
 
-\retval kHelpSystem_ResultCodeCannotDisplayHelp
+\retval kHelpSystem_ResultCannotDisplayHelp
 if an OS error occurred
 
 (3.0)
 */
-static HelpSystem_ResultCode
+static HelpSystem_Result
 displayMainHelp ()
 {
-	HelpSystem_ResultCode	result = kHelpSystem_ResultCodeSuccess;
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-	CFStringRef				helpBookNameString = nullptr;
-	OSStatus				error = noErr;
+	HelpSystem_Result	result = kHelpSystem_ResultOK;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	CFStringRef			helpBookNameString = nullptr;
+	OSStatus			error = noErr;
 	
 	
 	stringResult = UIStrings_Copy(kUIStrings_HelpSystemName, helpBookNameString);
@@ -388,7 +388,7 @@ displayMainHelp ()
 		CFRelease(helpBookNameString);
 	}
 	
-	if (error != noErr) result = kHelpSystem_ResultCodeCannotDisplayHelp;
+	if (error != noErr) result = kHelpSystem_ResultCannotDisplayHelp;
 	return result;
 }// displayMainHelp
 

@@ -31,7 +31,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -78,12 +78,12 @@
 /*!
 Possible return values from Event Loop module routines.
 */
-typedef OSStatus EventLoop_ResultCode;
+typedef OSStatus EventLoop_Result;
 enum
 {
-	kEventLoop_ResultCodeSuccess					= 0,	//!< no error
-	kEventLoop_ResultCodeBooleanListenerRequired	= 1		//!< ListenerModel_NewBooleanListener() was not used to create the
-															//!  ListenerModel_ListenerRef for a callback
+	kEventLoop_ResultOK							= 0,	//!< no error
+	kEventLoop_ResultBooleanListenerRequired	= 1		//!< ListenerModel_NewBooleanListener() was not used to create the
+														//!  ListenerModel_ListenerRef for a callback
 };
 
 /*!
@@ -160,7 +160,7 @@ enum
 	INITIALIZING AND FINISHING WITH EVENTS
 ###############################################################*/
 
-EventLoop_ResultCode
+EventLoop_Result
 	EventLoop_Init								();
 
 void
@@ -193,35 +193,35 @@ Boolean
 ###############################################################*/
 
 // DEPRECATED
-EventLoop_ResultCode
+EventLoop_Result
 	EventLoop_StartMonitoring					(EventLoop_GlobalEvent				inForWhatEvent,
 												 ListenerModel_ListenerRef			inListener);
 
 // DEPRECATED
-EventLoop_ResultCode
+EventLoop_Result
 	EventLoop_StartMonitoringControl			(EventLoop_ControlEvent				inForWhatEvent,
 												 ControlRef							inForWhichControlOrNullToReceiveEventsForAllControls,
 												 ListenerModel_ListenerRef			inListener);
 
 // DEPRECATED
-EventLoop_ResultCode
+EventLoop_Result
 	EventLoop_StartMonitoringWindow				(EventLoop_WindowEvent				inForWhatEvent,
 												 WindowRef							inForWhichWindowOrNullToReceiveEventsForAllWindows,
 												 ListenerModel_ListenerRef			inListener);
 
 // DEPRECATED
-EventLoop_ResultCode
+EventLoop_Result
 	EventLoop_StopMonitoring					(EventLoop_GlobalEvent				inForWhatEvent,
 												 ListenerModel_ListenerRef			inListener);
 
 // DEPRECATED
-EventLoop_ResultCode
+EventLoop_Result
 	EventLoop_StopMonitoringControl				(EventLoop_ControlEvent				inForWhatEvent,
 												 ControlRef							inForWhichControlOrNullToStopReceivingEventsForAllControls,
 												 ListenerModel_ListenerRef			inListener);
 
 // DEPRECATED
-EventLoop_ResultCode
+EventLoop_Result
 	EventLoop_StopMonitoringWindow				(EventLoop_WindowEvent				inForWhatEvent,
 												 WindowRef							inForWhichWindowOrNullToStopReceivingEventsForAllWindows,
 												 ListenerModel_ListenerRef			inListener);

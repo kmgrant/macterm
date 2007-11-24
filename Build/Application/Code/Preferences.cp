@@ -3,7 +3,7 @@
 	Preferences.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2004 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -156,11 +156,11 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		}
 		
 		//! delete this key-value set from application preferences
-		virtual Preferences_ResultCode
+		virtual Preferences_Result
 		destroy () NO_METHOD_IMPL = 0;
 		
 		//! alter the name under which this is saved; useful in UI elements
-		virtual Preferences_ResultCode
+		virtual Preferences_Result
 		rename	(CFStringRef) NO_METHOD_IMPL = 0;
 		
 		//! retrieves an array value from the dictionary (use only if the value really is an array!)
@@ -207,7 +207,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		}
 		
 		//! save changes to this key-value set in the application preferences
-		virtual Preferences_ResultCode
+		virtual Preferences_Result
 		save () NO_METHOD_IMPL = 0;
 	
 	protected:
@@ -239,11 +239,11 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		My_ContextCFDictionary	(Preferences_Class, CFStringRef);
 		
 		//! delete keys in this dictionary, and their values, from application preferences
-		Preferences_ResultCode
+		Preferences_Result
 		destroy ();
 		
 		//! alter the name under which this is saved; useful in UI elements
-		Preferences_ResultCode
+		Preferences_Result
 		rename	(CFStringRef);
 		
 		//! the name under which this is saved; useful in UI elements
@@ -251,7 +251,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		returnName () const;
 		
 		//! save changes to this dictionary in the application preferences
-		Preferences_ResultCode
+		Preferences_Result
 		save ();
 	
 	protected:
@@ -284,11 +284,11 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		My_ContextDefault	(Preferences_Class	inClass);
 		
 		//! remove values for all keys in this dictionary from application preferences
-		Preferences_ResultCode
+		Preferences_Result
 		destroy ();
 		
 		//! has no effect; a default context cannot be renamed
-		Preferences_ResultCode
+		Preferences_Result
 		rename	(CFStringRef);
 		
 		//! the name under which this is saved; useful in UI elements
@@ -296,7 +296,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		returnName () const;
 		
 		//! synchronize application’s Core Foundation preferences
-		Preferences_ResultCode
+		Preferences_Result
 		save ();
 	
 	protected:
@@ -357,54 +357,54 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static Preferences_ResultCode	assertInitialized				();
+static Preferences_Result		assertInitialized				();
 static void						changeNotify					(Preferences_Change,
 																 Preferences_ContextRef = nullptr, Boolean = false);
 static Boolean					convertCFArrayToRGBColor		(CFArrayRef, RGBColor*);
 static Boolean					convertRGBColorToCFArray		(RGBColor const*, CFArrayRef&);
-static Preferences_ResultCode	copyClassDictionaryByName		(Preferences_Class, CFStringRef,
+static Preferences_Result		copyClassDictionaryByName		(Preferences_Class, CFStringRef,
 																	CFMutableDictionaryRef&, Boolean = false);
-static Preferences_ResultCode	copyClassDictionaryCFArray		(Preferences_Class, CFArrayRef&);
-static Preferences_ResultCode	createAllPreferencesContextsFromDisk	();
+static Preferences_Result		copyClassDictionaryCFArray		(Preferences_Class, CFArrayRef&);
+static Preferences_Result		createAllPreferencesContextsFromDisk	();
 static CFDictionaryRef			createDefaultPrefDictionary		();
 static void						deleteAliasData					(My_AliasInfoPtr*);
 static void						deleteAllAliasNodes				();
 static My_AliasInfoPtr			findAlias						(Preferences_AliasID);
 static Boolean					findAliasOnDisk					(Preferences_AliasID, AliasHandle*);
 static Boolean					getDefaultContext				(Preferences_Class, My_ContextInterfacePtr&);
-static Preferences_ResultCode	getFormatPreference				(My_ContextInterfaceConstPtr, Preferences_Tag,
+static Preferences_Result		getFormatPreference				(My_ContextInterfaceConstPtr, Preferences_Tag,
 																	size_t, void*, size_t*);
-static Preferences_ResultCode	getGeneralPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
+static Preferences_Result		getGeneralPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
 																	size_t, void*, size_t*);
 static Boolean					getListOfContexts				(Preferences_Class, My_DictionaryContextList*&);
-static Preferences_ResultCode	getMacroSetPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
+static Preferences_Result		getMacroSetPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
 																	size_t, void*, size_t*);
 static Boolean					getNamedContext					(Preferences_Class, CFStringRef,
 																	My_ContextInterfacePtr&);
-static Preferences_ResultCode	getPreferenceDataInfo			(Preferences_Tag, CFStringRef&, FourCharCode&,
+static Preferences_Result		getPreferenceDataInfo			(Preferences_Tag, CFStringRef&, FourCharCode&,
 																	size_t&, Preferences_Class&);
-static Preferences_ResultCode	getSessionPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
+static Preferences_Result		getSessionPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
 																	size_t, void*, size_t*);
-static Preferences_ResultCode	getTerminalPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
+static Preferences_Result		getTerminalPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
 																	size_t, void*, size_t*);
 static Boolean					getWindowPreferences			(Preferences_Tag, MyWindowArrangement&);
 static OSStatus					initNewPreferences				();
-static Preferences_ResultCode	overwriteClassDictionaryCFArray	(Preferences_Class, CFArrayRef);
+static Preferences_Result		overwriteClassDictionaryCFArray	(Preferences_Class, CFArrayRef);
 static void						readMacTelnetCoordPreference	(CFStringRef, SInt16&, SInt16&);
 static void						readMacTelnetArrayPreference	(CFStringRef, CFArrayRef&);
 static OSStatus					readPreferencesDictionary		(CFDictionaryRef);
 static OSStatus					setAliasChanged					(My_AliasInfoPtr);
-static Preferences_ResultCode	setFormatPreference				(My_ContextInterfacePtr, Preferences_Tag,
+static Preferences_Result		setFormatPreference				(My_ContextInterfacePtr, Preferences_Tag,
 																	size_t, void const*);
-static Preferences_ResultCode	setGeneralPreference			(My_ContextInterfacePtr, Preferences_Tag,
+static Preferences_Result		setGeneralPreference			(My_ContextInterfacePtr, Preferences_Tag,
 																	size_t, void const*);
-static Preferences_ResultCode	setMacroSetPreference			(My_ContextInterfacePtr, Preferences_Tag,
+static Preferences_Result		setMacroSetPreference			(My_ContextInterfacePtr, Preferences_Tag,
 																	size_t, void const*);
 static Boolean					setMacTelnetCoordPreference		(CFStringRef, SInt16, SInt16);
 static void						setMacTelnetPreference			(CFStringRef, CFPropertyListRef);
-static Preferences_ResultCode	setSessionPreference			(My_ContextInterfacePtr, Preferences_Tag,
+static Preferences_Result		setSessionPreference			(My_ContextInterfacePtr, Preferences_Tag,
 																	size_t, void const*);
-static Preferences_ResultCode	setTerminalPreference			(My_ContextInterfacePtr, Preferences_Tag,
+static Preferences_Result		setTerminalPreference			(My_ContextInterfacePtr, Preferences_Tag,
 																	size_t, void const*);
 
 
@@ -500,18 +500,18 @@ WARNING:	This is called automatically as needed;
 			not invoke any Preferences module routine
 			that would recurse back into this code.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the module was initialized completely
 
-\retval kPreferences_ResultCodeNotInitialized
+\retval kPreferences_ResultNotInitialized
 if any initialization problems occurred
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_Init ()
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	// If MacTelnetPrefsConverter runs and succeeds, it will write a
@@ -562,7 +562,7 @@ Preferences_Init ()
 								&existsAndIsValidFormat);
 			if ((!existsAndIsValidFormat) || (kCurrentPrefsVersion > diskVersion))
 			{
-				AppResources_ResultCode		launchResult = noErr;
+				AppResources_Result		launchResult = noErr;
 				
 				
 				// if the tag does not exist at all, then XML-based
@@ -601,7 +601,7 @@ Preferences_Init ()
 	
 	gPreferenceEventListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 														kConstantsRegistry_ListenerModelDescriptorPreferences);
-	if (nullptr == gPreferenceEventListenerModel) result = kPreferences_ResultCodeNotInitialized;
+	if (nullptr == gPreferenceEventListenerModel) result = kPreferences_ResultNotInitialized;
 	else
 	{
 		// create ALL preferences contexts based on available data on disk;
@@ -1113,27 +1113,27 @@ this is somewhat deprecated on Mac OS X because the
 act of resizing the window should trigger event
 handlers that synchronize controls automatically).
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if no error occurred
 
-\retval kPreferences_ResultCodeBadVersionDataNotAvailable
+\retval kPreferences_ResultBadVersionDataNotAvailable
 if preferences for the specified tag cannot be found
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ArrangeWindow	(WindowRef								inWindow,
 							 Preferences_Tag						inWindowPreferenceTag,
 							 Point*									inoutMinimumSizeFinalSizePtr,
 							 Preferences_WindowBoundaryElements		inBoundaryElementsToRestore)
 {
-	Preferences_ResultCode  result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	MyWindowArrangement		arrangementPrefs;
 	Boolean					foundPrefs = false;
 	
 	
 	foundPrefs = getWindowPreferences(inWindowPreferenceTag, arrangementPrefs); // find the data, wherever it is
-	if (!foundPrefs) result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+	if (!foundPrefs) result = kPreferences_ResultBadVersionDataNotAvailable;
 	else
 	{
 		Rect		originalStructureBounds;
@@ -1210,29 +1210,29 @@ Deletes the specified context from in-memory structures;
 this will become permanent the next time application
 preferences are synchronized.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the persistent store is successfully deleted
 
-\retval kPreferences_ResultCodeInvalidContextReference
+\retval kPreferences_ResultInvalidContextReference
 if the specified context does not exist
 
-\retval kPreferences_ResultCodeOneOrMoreNamesNotAvailable
+\retval kPreferences_ResultOneOrMoreNamesNotAvailable
 if an unexpected error occurred while searching for names
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ContextDeleteSaved	(Preferences_ContextRef		inContext)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result			result = kPreferences_ResultOK;
 	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
 	
 	
-	if (nullptr == ptr) result = kPreferences_ResultCodeInvalidContextReference;
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
 		result = ptr->destroy();
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			// now do a release without a retain, which will allow this
 			// context to disappear from the internal list (see also
@@ -1265,38 +1265,38 @@ that are used if neither of the former is defined.
 
 Incomplete.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if data is acquired without errors; "outActualSizePtr" then
 points to the exact number of bytes used by the data
 
-\retval kPreferences_ResultCodeInvalidContextReference
+\retval kPreferences_ResultInvalidContextReference
 if the specified context does not exist
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the specified tag is not understood
 
-\retval kPreferences_ResultCodeInsufficientBufferSpace
+\retval kPreferences_ResultInsufficientBufferSpace
 if you provide a buffer too small to store the data
 
-\retval kPreferences_ResultCodeBadVersionDataNotAvailable
+\retval kPreferences_ResultBadVersionDataNotAvailable
 if the file on disk does not contain the requested data (it
 may be an older version); the output data will be garbage and
 the size pointed to by "outActualSizePtr" is set to 0
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 							 Preferences_Tag			inDataPreferenceTag,
 							 size_t						inDataStorageSize,
 							 void*						outDataStorage,
 							 size_t*					outActualSizePtrOrNull)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	result = assertInitialized();
-	if (result == kPreferences_ResultCodeSuccess)
+	if (result == kPreferences_ResultOK)
 	{
 		My_ContextInterfacePtr	ptr = gMyContextPtrLocks().acquireLock(inContext);
 		
@@ -1326,7 +1326,7 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		case kPreferences_ClassWindow:
 		default:
 			// unrecognized preference class
-			result = kPreferences_ResultCodeUnknownTagOrClass;
+			result = kPreferences_ResultUnknownTagOrClass;
 			break;
 		}
 		gMyContextPtrLocks().releaseLock(inContext, &ptr);
@@ -1339,30 +1339,30 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 Provides the name of a context (which is typically displayed
 in user interface elements).
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the context name was found
 
-\retval kPreferences_ResultCodeUnknownName
+\retval kPreferences_ResultUnknownName
 if the context name was not found
 
-\retval kPreferences_ResultCodeInvalidContextReference
+\retval kPreferences_ResultInvalidContextReference
 if the specified context does not exist
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ContextGetName	(Preferences_ContextRef		inContext,
 							 CFStringRef&				outName)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result			result = kPreferences_ResultOK;
 	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
 	
 	
-	if (nullptr == ptr) result = kPreferences_ResultCodeInvalidContextReference;
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
 		outName = ptr->returnName();
-		if (nullptr == outName) result = kPreferences_ResultCodeUnknownName;
+		if (nullptr == outName) result = kPreferences_ResultUnknownName;
 	}
 	
 	gMyContextPtrLocks().releaseLock(inContext, &ptr);
@@ -1375,28 +1375,28 @@ Changes the name of a context (which is typically displayed
 in user interface elements); this will become permanent the
 next time application preferences are synchronized.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the context is successfully renamed
 
-\retval kPreferences_ResultCodeInvalidContextReference
+\retval kPreferences_ResultInvalidContextReference
 if the specified context does not exist
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ContextRename	(Preferences_ContextRef		inContext,
 							 CFStringRef				inNewName)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result			result = kPreferences_ResultOK;
 	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
 	
 	
-	if (nullptr == ptr) result = kPreferences_ResultCodeInvalidContextReference;
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
 		result = ptr->rename(inNewName);
 		
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			changeNotify(kPreferences_ChangeContextName, inContext);
 		}
@@ -1414,26 +1414,26 @@ settings on disk.  This has the side effect of saving
 global preferences changes as well, but it will not
 commit changes to other specific contexts.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if no error occurred
 
-\retval kPreferences_ResultCodeGenericFailure
+\retval kPreferences_ResultGenericFailure
 if preferences could not be fully saved for any reason
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ContextSave		(Preferences_ContextRef		inContext)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result			result = kPreferences_ResultOK;
 	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
 	
 	
-	if (nullptr == ptr) result = kPreferences_ResultCodeInvalidContextReference;
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
 		result = ptr->save();
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			// now do a retain without a release, which will prevent this
 			// context from disappearing from the internal list (see also
@@ -1458,24 +1458,24 @@ choose to save explicitly with Preferences_Save(), but that is
 not strictly necessary unless you are paranoid that the
 application will crash before Preferences_Done() is invoked.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the data is set properly
 
-\retval kPreferences_ResultCodeInvalidContextReference
+\retval kPreferences_ResultInvalidContextReference
 if the specified context does not exist
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the specified tag is not understood
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 							 Preferences_Tag			inDataPreferenceTag,
 							 size_t						inDataSize,
 							 void const*				inDataPtr)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result			result = kPreferences_ResultOK;
 	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
 	
 	
@@ -1503,7 +1503,7 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 	
 	case kPreferences_ClassWindow:
 	default:
-		result = kPreferences_ResultCodeUnknownTagOrClass;
+		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
 	
@@ -1527,23 +1527,23 @@ non-success code may be returned, although the array
 could still be valid.  If the output array is not nullptr,
 it must be released regardless.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if all context names were found and retrieved successfully
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if "inClass" is not valid
 
-\retval kPreferences_ResultCodeOneOrMoreNamesNotAvailable
+\retval kPreferences_ResultOneOrMoreNamesNotAvailable
 if at least one of the context names could not be retrieved
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_CreateContextNameArray	(Preferences_Class		inClass,
 									 CFArrayRef&			outNewArrayOfNewCFStrings)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-	CFArrayRef					favoritesListCFArray = nullptr;
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFArrayRef				favoritesListCFArray = nullptr;
 	
 	
 	// set default value
@@ -1558,7 +1558,7 @@ Preferences_CreateContextNameArray	(Preferences_Class		inClass,
 	// CFString, which is stored as a CFData; convert it back to a string)
 	if (nullptr == favoritesListCFArray)
 	{
-		result = kPreferences_ResultCodeOneOrMoreNamesNotAvailable;
+		result = kPreferences_ResultOneOrMoreNamesNotAvailable;
 	}
 	else
 	{
@@ -1600,7 +1600,7 @@ Preferences_CreateContextNameArray	(Preferences_Class		inClass,
 					
 					if (nullptr == newCFString)
 					{
-						result = kPreferences_ResultCodeOneOrMoreNamesNotAvailable;
+						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
 					}
 					else
 					{
@@ -1626,19 +1626,19 @@ Preferences_CreateContextNameArray	(Preferences_Class		inClass,
 Ensures that all necessary preferences folders exist,
 and reads some global default preferences.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if no error occurred (currently the only possible return code)
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_CreateOrFindFiles ()
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	result = assertInitialized();
-	if (result == kPreferences_ResultCodeSuccess)
+	if (result == kPreferences_ResultOK)
 	{
 		// create the MacTelnet Preferences folder and important sub-folders
 		FSSpec		unusedFolderSpec;
@@ -1677,7 +1677,7 @@ Preferences_CreateOrFindFiles ()
 			
 			unless (Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
 										&notificationPreferences, &actualSize) ==
-					kPreferences_ResultCodeSuccess)
+					kPreferences_ResultOK)
 			{
 				notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
 			}
@@ -1712,12 +1712,12 @@ Preferences_GetContextsInClass	(Preferences_Class							inClass,
 								 std::vector< Preferences_ContextRef >&		outContextsList)
 {
 	Boolean					result = false;
-	Preferences_ResultCode	prefsResult = kPreferences_ResultCodeSuccess;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	Preferences_ContextRef	defaultContext = nullptr;
 	
 	
 	prefsResult = Preferences_GetDefaultContext(&defaultContext, inClass);
-	if (kPreferences_ResultCodeSuccess == prefsResult)
+	if (kPreferences_ResultOK == prefsResult)
 	{
 		My_DictionaryContextList*	listPtr = nullptr;
 		
@@ -1752,13 +1752,13 @@ given tag.
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 						 size_t				inDataStorageSize,
 						 void*				outDataStorage,
 						 size_t*			outActualSizePtrOrNull)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result			result = kPreferences_ResultOK;
 	Preferences_ContextRef		context = nullptr;
 	CFStringRef					keyName = nullptr;
 	FourCharCode				keyValueType = '----';
@@ -1767,10 +1767,10 @@ Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultCodeSuccess == result)
+	if (kPreferences_ResultOK == result)
 	{
 		result = Preferences_GetDefaultContext(&context, dataClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			result = Preferences_ContextGetData(context, inDataPreferenceTag, inDataStorageSize,
 												outDataStorage, outActualSizePtrOrNull);
@@ -1793,25 +1793,25 @@ context to trump one another.
 
 WARNING:	Do not dispose of default contexts.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the requested context was found
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if "inClass" is not valid
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_GetDefaultContext	(Preferences_ContextRef*	outContextPtr,
 								 Preferences_Class			inClass)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	result = assertInitialized();
-	if (result == kPreferences_ResultCodeSuccess)
+	if (result == kPreferences_ResultOK)
 	{
-		if (nullptr == outContextPtr) result = kPreferences_ResultCodeInsufficientBufferSpace;
+		if (nullptr == outContextPtr) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
 			My_ContextInterfacePtr		contextPtr = nullptr;
@@ -1819,7 +1819,7 @@ Preferences_GetDefaultContext	(Preferences_ContextRef*	outContextPtr,
 			
 			if (false == getDefaultContext(inClass, contextPtr))
 			{
-				result = kPreferences_ResultCodeUnknownTagOrClass;
+				result = kPreferences_ResultUnknownTagOrClass;
 			}
 			else
 			{
@@ -1842,30 +1842,30 @@ still be partially changed.  The "outHowManyItemsAdded"
 value is always valid and indicates how many items were
 added regardless of errors.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if all context names were found and added successfully
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if "inClass" is not valid
 
-\retval kPreferences_ResultCodeOneOrMoreNamesNotAvailable
+\retval kPreferences_ResultOneOrMoreNamesNotAvailable
 if at least one of the context names could not be retrieved
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_InsertContextNamesInMenu	(Preferences_Class		inClass,
 										 MenuRef				inoutMenuRef,
 										 MenuItemIndex			inAfterItemIndex,
 										 UInt32					inInitialIndent,
 										 MenuItemIndex&			outHowManyItemsAdded)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-	CFArrayRef					nameCFStringCFArray = nullptr;
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFArrayRef				nameCFStringCFArray = nullptr;
 	
 	
 	result = Preferences_CreateContextNameArray(inClass, nameCFStringCFArray);
-	if (result == kPreferences_ResultCodeSuccess)
+	if (result == kPreferences_ResultOK)
 	{
 		// now re-populate the menu using resource information
 		MenuItemIndex const		kMenuItemCount = CFArrayGetCount(nameCFStringCFArray);
@@ -1905,12 +1905,12 @@ is currently reserved and set to nullptr.
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_ListenForChanges	(ListenerModel_ListenerRef	inListener,
 								 Preferences_Change			inForWhatChange,
 								 Boolean					inNotifyOfInitialValue)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+	Preferences_Result		result = kPreferences_ResultBadVersionDataNotAvailable;
 	
 	
 	switch (inForWhatChange)
@@ -1933,7 +1933,7 @@ Preferences_ListenForChanges	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_ChangeContextName:
 	case kPreferences_ChangeNumberOfContexts:
 		result = assertInitialized();
-		if (result == kPreferences_ResultCodeSuccess)
+		if (result == kPreferences_ResultOK)
 		{
 			OSStatus	error = noErr;
 			
@@ -1943,7 +1943,7 @@ Preferences_ListenForChanges	(ListenerModel_ListenerRef	inListener,
 			if (error != noErr)
 			{
 				// should probably define a more specific error type here...
-				result = kPreferences_ResultCodeInsufficientBufferSpace;
+				result = kPreferences_ResultInsufficientBufferSpace;
 			}
 			
 			// if requested, invoke the callback immediately so that
@@ -1958,7 +1958,7 @@ Preferences_ListenForChanges	(ListenerModel_ListenerRef	inListener,
 	
 	default:
 		// unsupported tag for notifiers
-		result = kPreferences_ResultCodeUnknownTagOrClass;
+		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
 	
@@ -1973,18 +1973,18 @@ settings on disk.  This includes all contexts that
 have been created and not released, but also see
 Preferences_ContextSave().
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if no error occurred
 
-\retval kPreferences_ResultCodeGenericFailure
+\retval kPreferences_ResultGenericFailure
 if preferences could not be fully saved for any reason
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_Save ()
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	// make sure all open context dictionaries are in preferences too
@@ -1995,7 +1995,7 @@ Preferences_Save ()
 	
 	if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
 	{
-		result = kPreferences_ResultCodeGenericFailure;
+		result = kPreferences_ResultGenericFailure;
 	}
 	return result;
 }// Save
@@ -2008,12 +2008,12 @@ given tag.
 
 (3.1)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_SetData		(Preferences_Tag	inDataPreferenceTag,
 						 size_t				inDataSize,
 						 void const*		inDataPtr)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result			result = kPreferences_ResultOK;
 	Preferences_ContextRef		context = nullptr;
 	CFStringRef					keyName = nullptr;
 	FourCharCode				keyValueType = '----';
@@ -2022,10 +2022,10 @@ Preferences_SetData		(Preferences_Tag	inDataPreferenceTag,
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultCodeSuccess == result)
+	if (kPreferences_ResultOK == result)
 	{
 		result = Preferences_GetDefaultContext(&context, dataClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			result = Preferences_ContextSetData(context, inDataPreferenceTag, inDataSize, inDataPtr);
 		}
@@ -2110,21 +2110,21 @@ Preferences_SetWindowArrangementData	(WindowRef			inWindow,
 Arranges for a callback to no longer be invoked when
 the specified user preference changes.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if no error occurs
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the specified preference change is not supported
 with notifiers; therefore, you will have to use a
 polling solution
 
 (3.0)
 */
-Preferences_ResultCode
+Preferences_Result
 Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 										 Preferences_Change			inForWhatChange)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+	Preferences_Result		result = kPreferences_ResultBadVersionDataNotAvailable;
 	
 	
 	switch (inForWhatChange)
@@ -2144,7 +2144,7 @@ Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_ChangeContextName:
 	case kPreferences_ChangeNumberOfContexts:
 		result = assertInitialized();
-		if (result == kPreferences_ResultCodeSuccess)
+		if (result == kPreferences_ResultOK)
 		{
 			ListenerModel_RemoveListenerForEvent(gPreferenceEventListenerModel, inForWhatChange, inListener);
 		}
@@ -2152,7 +2152,7 @@ Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 	
 	default:
 		// unsupported tag for notifiers
-		result = kPreferences_ResultCodeUnknownTagOrClass;
+		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
 	
@@ -2252,30 +2252,30 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	createClassDictionary	(Preferences_Class	inClass,
 							 CFStringRef		inNameOrNull)
 	{
-		Preferences_ResultCode		error = kPreferences_ResultCodeSuccess;
+		Preferences_Result			error = kPreferences_ResultOK;
 		CFMutableDictionaryRef		result = nullptr;
 		
 		
 		error = copyClassDictionaryByName(inClass, inNameOrNull, result);
-		if (kPreferences_ResultCodeSuccess != error)
+		if (kPreferences_ResultOK != error)
 		{
 			// if a Unicode name cannot be found, default to the
 			// string backup before failing completely
 			error = copyClassDictionaryByName(inClass, inNameOrNull, result, true/* use string */);
-			if (kPreferences_ResultCodeSuccess != error)
+			if (kPreferences_ResultOK != error)
 			{
 				result = nullptr;
-				if (kPreferences_ResultCodeUnknownName == error)
+				if (kPreferences_ResultUnknownName == error)
 				{
 					// if the name is simply unknown, the dictionary does not exist; create one!
 					result = CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity */,
 																	&kCFTypeDictionaryKeyCallBacks,
 																	&kCFTypeDictionaryValueCallBacks);
-					if (nullptr == result) error = kPreferences_ResultCodeCannotCreateContext;
-					else error = kPreferences_ResultCodeSuccess;
+					if (nullptr == result) error = kPreferences_ResultCannotCreateContext;
+					else error = kPreferences_ResultOK;
 				}
 				
-				if (kPreferences_ResultCodeSuccess != error)
+				if (kPreferences_ResultOK != error)
 				{
 					throw std::logic_error("unable to construct data dictionary for given class and context name");
 				}
@@ -2299,25 +2299,25 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	Effects become permanent the next time preferences
 	are synchronized.
 	
-	\retval kPreferences_ResultCodeSuccess
+	\retval kPreferences_ResultOK
 	if no error occurred
 	
-	\retval kPreferences_ResultCodeGenericFailure
+	\retval kPreferences_ResultGenericFailure
 	if preferences could not be removed for any reason
 	
 	(3.1)
 	*/
-	Preferences_ResultCode
+	Preferences_Result
 	My_ContextCFDictionary::
 	destroy ()
 	{
-		Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-		CFArrayRef					favoritesListCFArray = nullptr;
+		Preferences_Result		result = kPreferences_ResultOK;
+		CFArrayRef				favoritesListCFArray = nullptr;
 		
 		
 		// figure out which MacTelnet preferences key holds the
 		// relevant list of Favorites dictionaries
-		(Preferences_ResultCode)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
+		(Preferences_Result)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
 		
 		if (nullptr != favoritesListCFArray)
 		{
@@ -2350,7 +2350,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 						externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
 						if (nullptr == externalStringRepresentationCFData)
 						{
-							result = kPreferences_ResultCodeOneOrMoreNamesNotAvailable;
+							result = kPreferences_ResultOneOrMoreNamesNotAvailable;
 						}
 						else
 						{
@@ -2364,7 +2364,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 								{
 									// delete this entry from the array
 									CFArrayRemoveValueAtIndex(mutableFavoritesListCFArray, i);
-									result = kPreferences_ResultCodeSuccess;
+									result = kPreferences_ResultOK;
 									found = true;
 								}
 								CFRelease(newCFString), newCFString = nullptr;
@@ -2389,20 +2389,20 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	Changes the name of this context.  This is often
 	used in user interface elements.
 	
-	\retval kPreferences_ResultCodeSuccess
+	\retval kPreferences_ResultOK
 	if no error occurred
 	
-	\retval kPreferences_ResultCodeGenericFailure
+	\retval kPreferences_ResultGenericFailure
 	if rename did not occur for any reason
 	
 	(3.1)
 	*/
-	Preferences_ResultCode
+	Preferences_Result
 	My_ContextCFDictionary::
 	rename	(CFStringRef	inNewName)
 	{
 		_contextName.setCFTypeRef(inNewName);
-		return kPreferences_ResultCodeSuccess;
+		return kPreferences_ResultOK;
 	}// rename
 	
 	
@@ -2428,20 +2428,20 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	any other modified application-wide preferences (but
 	will not save preferences from other contexts).
 	
-	\retval kPreferences_ResultCodeSuccess
+	\retval kPreferences_ResultOK
 	if no error occurred
 	
-	\retval kPreferences_ResultCodeGenericFailure
+	\retval kPreferences_ResultGenericFailure
 	if preferences could not be fully saved for any reason
 	
 	(3.1)
 	*/
-	Preferences_ResultCode
+	Preferences_Result
 	My_ContextCFDictionary::
 	save ()
 	{
-		Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-		CFArrayRef					favoritesListCFArray = nullptr;
+		Preferences_Result		result = kPreferences_ResultOK;
+		CFArrayRef				favoritesListCFArray = nullptr;
 		
 		
 	Console_WriteValueCFString("saving, name", this->returnName());
@@ -2449,8 +2449,8 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	CFShow(_dictionary.returnDictionary());
 		// figure out which MacTelnet preferences key holds the
 		// relevant list of Favorites dictionaries
-		(Preferences_ResultCode)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
-		if (nullptr == favoritesListCFArray) result = kPreferences_ResultCodeGenericFailure;
+		(Preferences_Result)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
+		if (nullptr == favoritesListCFArray) result = kPreferences_ResultGenericFailure;
 		else
 		{
 	Console_WriteLine("0");
@@ -2487,7 +2487,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 						if (nullptr == externalStringRepresentationCFData)
 						{
 	Console_WriteLine("4");
-							result = kPreferences_ResultCodeOneOrMoreNamesNotAvailable;
+							result = kPreferences_ResultOneOrMoreNamesNotAvailable;
 						}
 						else
 						{
@@ -2503,7 +2503,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 									// replace this entry in the array
 									CFArraySetValueAtIndex(mutableFavoritesListCFArray, i,
 															_dictionary.returnDictionary());
-									result = kPreferences_ResultCodeSuccess;
+									result = kPreferences_ResultOK;
 									found = true;
 								}
 								CFRelease(newCFString), newCFString = nullptr;
@@ -2523,7 +2523,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
 		{
 	Console_WriteLine("9");
-			result = kPreferences_ResultCodeGenericFailure;
+			result = kPreferences_ResultGenericFailure;
 		}
 	Console_WriteValue("save result", result);
 		return result;
@@ -2549,34 +2549,34 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	/*!
 	Has no effect, a default context cannot be destroyed.
 	
-	\retval kPreferences_ResultCodeGenericFailure
+	\retval kPreferences_ResultGenericFailure
 	always
 	
 	(3.1)
 	*/
-	Preferences_ResultCode
+	Preferences_Result
 	My_ContextDefault::
 	destroy ()
 	{
 		// NO-OP
-		return kPreferences_ResultCodeGenericFailure;
+		return kPreferences_ResultGenericFailure;
 	}// destroy
 	
 	
 	/*!
 	Has no effect, a default context cannot be renamed.
 	
-	\retval kPreferences_ResultCodeGenericFailure
+	\retval kPreferences_ResultGenericFailure
 	always
 	
 	(3.1)
 	*/
-	Preferences_ResultCode
+	Preferences_Result
 	My_ContextDefault::
 	rename	(CFStringRef	UNUSED_ARGUMENT(inNewName))
 	{
 		// NO-OP
-		return kPreferences_ResultCodeGenericFailure;
+		return kPreferences_ResultGenericFailure;
 	}// rename
 	
 	
@@ -2603,24 +2603,24 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	any other modified application-wide preferences (but
 	will not save contextual preferences).
 	
-	\retval kPreferences_ResultCodeSuccess
+	\retval kPreferences_ResultOK
 	if no error occurred
 	
-	\retval kPreferences_ResultCodeGenericFailure
+	\retval kPreferences_ResultGenericFailure
 	if preferences could not be fully saved for any reason
 	
 	(3.1)
 	*/
-	Preferences_ResultCode
+	Preferences_Result
 	My_ContextDefault::
 	save ()
 	{
-		Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+		Preferences_Result		result = kPreferences_ResultOK;
 		
 		
 		if (false == CFPreferencesAppSynchronize(_dictionary.returnTargetApplication()))
 		{
-			result = kPreferences_ResultCodeGenericFailure;
+			result = kPreferences_ResultGenericFailure;
 		}
 		return result;
 	}// save
@@ -2634,10 +2634,10 @@ needs to be called, it is called.
 
 (3.0)
 */
-static Preferences_ResultCode
+static Preferences_Result
 assertInitialized ()
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess; // kPreferences_ResultCodeNotInitialized?
+	Preferences_Result		result = kPreferences_ResultOK; // kPreferences_ResultNotInitialized?
 	
 	
 	unless (gInitialized) Preferences_Init();
@@ -2790,25 +2790,25 @@ If the specified name is NOT localized, you want to do a
 literal match against the string equivalent, and should
 set "inUseStringNameInsteadOfData" to true in that case ONLY.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if a matching dictionary was found and retrieved successfully
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if "inClass" is not valid
 
-\retval kPreferences_ResultCodeUnknownName
+\retval kPreferences_ResultUnknownName
 if no matching dictionary could be found
 
 (3.1)
 */
-static Preferences_ResultCode
+static Preferences_Result
 copyClassDictionaryByName	(Preferences_Class			inClass,
 							 CFStringRef				inName,
 							 CFMutableDictionaryRef&	outNewCFDictionary,
 							 Boolean					inUseStringNameInsteadOfData)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeUnknownName;
-	CFArrayRef					favoritesListCFArray = nullptr;
+	Preferences_Result		result = kPreferences_ResultUnknownName;
+	CFArrayRef				favoritesListCFArray = nullptr;
 	
 	
 	// set default value
@@ -2856,7 +2856,7 @@ Console_WriteLine("<7>");
 							outNewCFDictionary = CFDictionaryCreateMutableCopy
 													(kCFAllocatorDefault, 0/* capacity, or 0 for unlimited */,
 														dataCFDictionary);
-							result = kPreferences_ResultCodeSuccess;
+							result = kPreferences_ResultOK;
 							found = true;
 						}
 					}
@@ -2867,7 +2867,7 @@ Console_WriteLine("<7>");
 					externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
 					if (nullptr == externalStringRepresentationCFData)
 					{
-						result = kPreferences_ResultCodeOneOrMoreNamesNotAvailable;
+						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
 					}
 					else
 					{
@@ -2884,7 +2884,7 @@ Console_WriteLine("<7>");
 														(kCFAllocatorDefault, 0/* capacity, or 0 for unlimited */,
 															dataCFDictionary);
 							Console_WriteLine("<9>");
-								result = kPreferences_ResultCodeSuccess;
+								result = kPreferences_ResultOK;
 								found = true;
 							}
 							CFRelease(newCFString), newCFString = nullptr;
@@ -2921,11 +2921,11 @@ See also overwriteClassDictionaryCFArray().
 
 (3.1)
 */
-static Preferences_ResultCode
+static Preferences_Result
 copyClassDictionaryCFArray	(Preferences_Class		inClass,
 							 CFArrayRef&			outCFArrayOfCFDictionaries)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	// set default value
@@ -2953,7 +2953,7 @@ copyClassDictionaryCFArray	(Preferences_Class		inClass,
 	
 	default:
 		// ???
-		result = kPreferences_ResultCodeUnknownTagOrClass;
+		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
 	
@@ -2973,13 +2973,13 @@ IMPORTANT:	Only do this once, preferably at startup.
 
 (3.1)
 */
-static Preferences_ResultCode
+static Preferences_Result
 createAllPreferencesContextsFromDisk ()
 {
 	typedef std::vector< Preferences_Class >	PrefClassList;
 	static Boolean			gWasCalled = false;
 	PrefClassList			allClassesSupportingCollections;
-	Preferences_ResultCode	result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	assert(false == gWasCalled);
@@ -2998,7 +2998,7 @@ createAllPreferencesContextsFromDisk ()
 		
 		
 		result = Preferences_CreateContextNameArray(*toClass, namesInClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			CFIndex const	kNumberOfFavorites = CFArrayGetCount(namesInClass);
 			
@@ -3248,21 +3248,21 @@ getDefaultContext	(Preferences_Class			inClass,
 /*!
 Returns preference data for a font or color setting.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the data was found successfully
 
-\retval kPreferences_ResultCodeBadVersionDataNotAvailable
+\retval kPreferences_ResultBadVersionDataNotAvailable
 if the requested data is not in the preferences file
 
-\retval kPreferences_ResultCodeInsufficientBufferSpace
+\retval kPreferences_ResultInsufficientBufferSpace
 if the given buffer is not large enough for the requested data
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -3270,7 +3270,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						 size_t*						outActualSizePtrOrNull)
 {
 	size_t					actualSize = 0L;
-	Preferences_ResultCode	result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	if (nullptr != outDataPtr)
@@ -3281,10 +3281,10 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassFormat);
-			if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
 				switch (inDataPreferenceTag)
@@ -3297,7 +3297,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3308,7 +3308,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								// failed; make empty string
 								PLstrcpy(data, "\p");
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -3326,7 +3326,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = 12; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -3361,7 +3361,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFArray)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3372,7 +3372,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								// failed; make black
 								data->red = data->green = data->blue = 0;
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFArray), valueCFArray = nullptr;
 						}
@@ -3381,7 +3381,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				default:
 					// unrecognized tag
-					result = kPreferences_ResultCodeUnknownTagOrClass;
+					result = kPreferences_ResultUnknownTagOrClass;
 					break;
 				}
 			}
@@ -3395,21 +3395,21 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 /*!
 Returns preference data for a global setting.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the data was found successfully
 
-\retval kPreferences_ResultCodeBadVersionDataNotAvailable
+\retval kPreferences_ResultBadVersionDataNotAvailable
 if the requested data is not in the preferences file
 
-\retval kPreferences_ResultCodeInsufficientBufferSpace
+\retval kPreferences_ResultInsufficientBufferSpace
 if the given buffer is not large enough for the requested data
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -3417,7 +3417,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 size_t*						outActualSizePtrOrNull)
 {
 	size_t					actualSize = 0L;
-	Preferences_ResultCode	result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	if (nullptr != outDataPtr)
@@ -3428,10 +3428,10 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassGeneral);
-			if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
 				switch (inDataPreferenceTag)
@@ -3444,7 +3444,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3458,7 +3458,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 														REINTERPRET_CAST(outOSTypePtr, UInt8*),
 														sizeof(*outOSTypePtr), &usedBufferLength))
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							
 							CFRelease(valueCFString), valueCFString = nullptr;
@@ -3494,7 +3494,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*outUInt16Ptr = 8; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -3514,7 +3514,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						*data = inContextPtr->returnArrayCopy(keyName);
 						if (nullptr == *data)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -3538,7 +3538,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3563,7 +3563,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3588,7 +3588,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3609,7 +3609,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							}
 							else
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -3624,7 +3624,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3649,7 +3649,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							}
 							else
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -3664,7 +3664,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3689,7 +3689,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3718,7 +3718,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							}
 							else
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -3733,7 +3733,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3758,7 +3758,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3799,7 +3799,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFArray)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -3810,12 +3810,12 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							singleCoord = CFUtilities_NumberCast(CFArrayGetValueAtIndex(valueCFArray, 0));
 							unless (CFNumberGetValue(singleCoord, kCFNumberSInt16Type, &outPointPtr->h))
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							singleCoord = CFUtilities_NumberCast(CFArrayGetValueAtIndex(valueCFArray, 1));
 							unless (CFNumberGetValue(singleCoord, kCFNumberSInt16Type, &outPointPtr->v))
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							
 							// set reasonable values if there is an error
@@ -3829,7 +3829,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				default:
 					// unrecognized tag
-					result = kPreferences_ResultCodeUnknownTagOrClass;
+					result = kPreferences_ResultUnknownTagOrClass;
 					break;
 				}
 			}
@@ -3894,21 +3894,21 @@ getListOfContexts	(Preferences_Class				inClass,
 /*!
 Returns preference data for a macro setting.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the data was found successfully
 
-\retval kPreferences_ResultCodeBadVersionDataNotAvailable
+\retval kPreferences_ResultBadVersionDataNotAvailable
 if the requested data is not in the preferences file
 
-\retval kPreferences_ResultCodeInsufficientBufferSpace
+\retval kPreferences_ResultInsufficientBufferSpace
 if the given buffer is not large enough for the requested data
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 getMacroSetPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -3916,7 +3916,7 @@ getMacroSetPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 size_t*						outActualSizePtrOrNull)
 {
 	size_t					actualSize = 0L;
-	Preferences_ResultCode	result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	if (nullptr != outDataPtr)
@@ -3927,10 +3927,10 @@ getMacroSetPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassMacroSet);
-			if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
 				switch (inDataPreferenceTag)
@@ -3944,7 +3944,7 @@ getMacroSetPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				default:
 					// unrecognized tag
-					result = kPreferences_ResultCodeUnknownTagOrClass;
+					result = kPreferences_ResultUnknownTagOrClass;
 					break;
 				}
 			}
@@ -4011,22 +4011,22 @@ for storage in user Favorites will have a different
 class, and must be set in a specific dictionary; see
 copyClassDictionaryCFArray().
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the information was found successfully
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the given preference tag is not valid
 
 (3.1)
 */
-static Preferences_ResultCode
+static Preferences_Result
 getPreferenceDataInfo	(Preferences_Tag		inTag,
 						 CFStringRef&			outKeyName,
 						 FourCharCode&			outKeyValueType,
 						 size_t&				outNonDictionaryValueSize,
 						 Preferences_Class&		outClass)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	// IMPORTANT: The data types used here are documented in Preferences.h,
@@ -4715,7 +4715,7 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 	
 	default:
 		// ???
-		result = kPreferences_ResultCodeUnknownTagOrClass;
+		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
 	return result;
@@ -4725,21 +4725,21 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 /*!
 Returns preference data for a session setting.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the data was found successfully
 
-\retval kPreferences_ResultCodeBadVersionDataNotAvailable
+\retval kPreferences_ResultBadVersionDataNotAvailable
 if the requested data is not in the preferences file
 
-\retval kPreferences_ResultCodeInsufficientBufferSpace
+\retval kPreferences_ResultInsufficientBufferSpace
 if the given buffer is not large enough for the requested data
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -4747,7 +4747,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 size_t*						outActualSizePtrOrNull)
 {
 	size_t					actualSize = 0L;
-	Preferences_ResultCode	result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	if (nullptr != outDataPtr)
@@ -4758,10 +4758,10 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassSession);
-			if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
 				switch (inDataPreferenceTag)
@@ -4777,7 +4777,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -4813,7 +4813,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = kPreferences_InvalidAliasID;
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -4831,7 +4831,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						*data = inContextPtr->returnArrayCopy(keyName);
 						if (nullptr == *data)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -4849,7 +4849,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							(CFStringGetCharacterAtIndex(keystrokeCFString, 0) != '^'))
 						{
 							// nonexistent, or not a control key sequence
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -4870,7 +4870,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -4898,7 +4898,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -4929,7 +4929,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = 128; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -4942,7 +4942,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -4961,7 +4961,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								// failed; make default
 								*storedValuePtr = kClipboard_PasteMethodStandard; // arbitrary
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -4979,7 +4979,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = 23; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -4992,7 +4992,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5024,7 +5024,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								// failed; make default
 								*storedValuePtr = kSession_ProtocolSSH1; // arbitrary
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -5039,7 +5039,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5062,7 +5062,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								// failed; make default
 								*storedValuePtr = kTektronixModeNotAllowed; // arbitrary
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -5081,14 +5081,14 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = kTextEncodingMacRoman; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
 				
 				default:
 					// unrecognized tag
-					result = kPreferences_ResultCodeUnknownTagOrClass;
+					result = kPreferences_ResultUnknownTagOrClass;
 					break;
 				}
 			}
@@ -5104,21 +5104,21 @@ Returns preference data for a terminal setting.  Note
 that getFormatPreference() now handles fonts and
 colors (formerly terminal settings).
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the data was found successfully
 
-\retval kPreferences_ResultCodeBadVersionDataNotAvailable
+\retval kPreferences_ResultBadVersionDataNotAvailable
 if the requested data is not in the preferences file
 
-\retval kPreferences_ResultCodeInsufficientBufferSpace
+\retval kPreferences_ResultInsufficientBufferSpace
 if the given buffer is not large enough for the requested data
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -5126,7 +5126,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 size_t*						outActualSizePtrOrNull)
 {
 	size_t					actualSize = 0L;
-	Preferences_ResultCode	result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	if (nullptr != outDataPtr)
@@ -5137,10 +5137,10 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-		if (kPreferences_ResultCodeSuccess == result)
+		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassTerminal);
-			if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
 				switch (inDataPreferenceTag)
@@ -5165,7 +5165,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5186,7 +5186,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							}
 							else
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -5201,7 +5201,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5219,7 +5219,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5237,7 +5237,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5255,7 +5255,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5266,7 +5266,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								// failed; make default string
 								PLstrcpy(data, "\pvt100");
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -5281,7 +5281,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						if (nullptr == valueCFString)
 						{
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 						else
 						{
@@ -5302,7 +5302,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							}
 							else
 							{
-								result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
@@ -5321,7 +5321,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = 80; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -5338,7 +5338,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = 24; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -5355,7 +5355,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						{
 							// failed; make default
 							*data = 200; // arbitrary
-							result = kPreferences_ResultCodeBadVersionDataNotAvailable;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -5373,7 +5373,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				
 				default:
 					// unrecognized tag
-					result = kPreferences_ResultCodeUnknownTagOrClass;
+					result = kPreferences_ResultUnknownTagOrClass;
 					break;
 				}
 			}
@@ -5512,19 +5512,19 @@ by calling copyClassDictionaryCFArray() to get the
 original list, then you create a mutable copy, make
 your changes and pass it into this routine.
 
-\retval kPreferences_ResultCodeSuccess
+\retval kPreferences_ResultOK
 if the array was overwritten successfully
 
-\retval kPreferences_ResultCodeUnknownTagOrClass
+\retval kPreferences_ResultUnknownTagOrClass
 if the given preference class is unknown or does not have an array value
 
 (3.1)
 */
-static Preferences_ResultCode
+static Preferences_Result
 overwriteClassDictionaryCFArray	(Preferences_Class	inClass,
 								 CFArrayRef			inCFArrayOfCFDictionaries)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
 	// figure out which MacTelnet preferences key should hold this list of Favorites dictionaries
@@ -5546,7 +5546,7 @@ overwriteClassDictionaryCFArray	(Preferences_Class	inClass,
 	case kPreferences_ClassWindow:
 	default:
 		// ???
-		result = kPreferences_ResultCodeUnknownTagOrClass;
+		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
 	
@@ -5894,24 +5894,24 @@ for each one).
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
 						 void const*				inDataPtr)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-	CFStringRef					keyName = nullptr;
-	FourCharCode				keyValueType = '----';
-	size_t						actualSize = 0L;
-	Preferences_Class			dataClass = kPreferences_ClassFormat;
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Preferences_Class		dataClass = kPreferences_ClassFormat;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultCodeSuccess == result)
+	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassFormat);
-		if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
 			switch (inDataPreferenceTag)
@@ -5923,7 +5923,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					fontNameCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, data, kCFStringEncodingMacRoman);
-					if (nullptr == fontNameCFString) result = kPreferences_ResultCodeGenericFailure;
+					if (nullptr == fontNameCFString) result = kPreferences_ResultGenericFailure;
 					else
 					{
 						assert(typeCFStringRef == keyValueType);
@@ -5961,13 +5961,13 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 						inContextPtr->addArray(keyName, colorCFArray);
 						CFRelease(colorCFArray), colorCFArray = nullptr;
 					}
-					else result = kPreferences_ResultCodeGenericFailure;
+					else result = kPreferences_ResultGenericFailure;
 				}
 				break;
 			
 			default:
 				// unrecognized tag
-				result = kPreferences_ResultCodeUnknownTagOrClass;
+				result = kPreferences_ResultUnknownTagOrClass;
 				break;
 			}
 		}
@@ -5984,24 +5984,24 @@ for comments on what data format is expected for each one).
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
 						 void const*				inDataPtr)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-	CFStringRef					keyName = nullptr;
-	FourCharCode				keyValueType = '----';
-	size_t						actualSize = 0L;
-	Preferences_Class			dataClass = kPreferences_ClassGeneral;
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultCodeSuccess == result)
+	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassGeneral);
-		if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
 			switch (inDataPreferenceTag)
@@ -6425,7 +6425,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			default:
 				// unrecognized tag
-				result = kPreferences_ResultCodeUnknownTagOrClass;
+				result = kPreferences_ResultUnknownTagOrClass;
 				break;
 			}
 		}
@@ -6443,24 +6443,24 @@ one).
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 setMacroSetPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
 						 void const*				inDataPtr)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-	CFStringRef					keyName = nullptr;
-	FourCharCode				keyValueType = '----';
-	size_t						actualSize = 0L;
-	Preferences_Class			dataClass = kPreferences_ClassMacroSet;
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Preferences_Class		dataClass = kPreferences_ClassMacroSet;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultCodeSuccess == result)
+	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassMacroSet);
-		if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
 			switch (inDataPreferenceTag)
@@ -6478,7 +6478,7 @@ setMacroSetPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			default:
 				// unrecognized tag
-				result = kPreferences_ResultCodeUnknownTagOrClass;
+				result = kPreferences_ResultUnknownTagOrClass;
 				break;
 			}
 		}
@@ -6627,24 +6627,24 @@ for each one).
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
 						 void const*				inDataPtr)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-	CFStringRef					keyName = nullptr;
-	FourCharCode				keyValueType = '----';
-	size_t						actualSize = 0L;
-	Preferences_Class			dataClass = kPreferences_ClassSession;
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Preferences_Class		dataClass = kPreferences_ClassSession;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultCodeSuccess == result)
+	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassSession);
-		if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
 			switch (inDataPreferenceTag)
@@ -6848,7 +6848,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			default:
 				// unrecognized tag
-				result = kPreferences_ResultCodeUnknownTagOrClass;
+				result = kPreferences_ResultUnknownTagOrClass;
 				break;
 			}
 		}
@@ -6866,24 +6866,24 @@ comments on what data format is expected for each one.
 
 (3.0)
 */
-static Preferences_ResultCode	
+static Preferences_Result	
 setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
 						 void const*				inDataPtr)
 {
-	Preferences_ResultCode		result = kPreferences_ResultCodeSuccess;
-	CFStringRef					keyName = nullptr;
-	FourCharCode				keyValueType = '----';
-	size_t						actualSize = 0L;
-	Preferences_Class			dataClass = kPreferences_ClassTerminal;
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Preferences_Class		dataClass = kPreferences_ClassTerminal;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultCodeSuccess == result)
+	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassTerminal);
-		if (inDataSize < actualSize) result = kPreferences_ResultCodeInsufficientBufferSpace;
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
 			switch (inDataPreferenceTag)
@@ -6990,7 +6990,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					fontNameCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, data, kCFStringEncodingMacRoman);
-					if (nullptr == fontNameCFString) result = kPreferences_ResultCodeGenericFailure;
+					if (nullptr == fontNameCFString) result = kPreferences_ResultGenericFailure;
 					else
 					{
 						assert(typeCFStringRef == keyValueType);
@@ -7081,7 +7081,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			default:
 				// unrecognized tag
-				result = kPreferences_ResultCodeUnknownTagOrClass;
+				result = kPreferences_ResultUnknownTagOrClass;
 				break;
 			}
 		}

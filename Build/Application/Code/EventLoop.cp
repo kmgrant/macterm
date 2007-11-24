@@ -3,7 +3,7 @@
 	EventLoop.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -258,11 +258,11 @@ always; no errors are currently defined
 
 (3.0)
 */
-EventLoop_ResultCode
+EventLoop_Result
 EventLoop_Init ()
 {
-	EventLoop_ResultCode	result = noErr;
-	OSStatus				error = noErr;
+	EventLoop_Result	result = noErr;
+	OSStatus			error = noErr;
 	
 	
 	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
@@ -862,17 +862,17 @@ IMPORTANT:	The context passed to the listener callback
 
 (3.0)
 */
-EventLoop_ResultCode
+EventLoop_Result
 EventLoop_StartMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 							 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_ResultCode	result = noErr;
+	EventLoop_Result		result = noErr;
 	MyGlobalEventTargetPtr	ptr = gGlobalEventTargetHandleLocks().acquireLock(gGlobalEventTarget);
 	
 	
 	// add a listener to the specified target’s listener model for the given event
 	result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-	if (result == paramErr) result = kEventLoop_ResultCodeBooleanListenerRequired;
+	if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
 	gGlobalEventTargetHandleLocks().releaseLock(gGlobalEventTarget, &ptr);
 	
 	return result;
@@ -898,10 +898,10 @@ IMPORTANT:	The context passed to the listener callback
 			on what the context means for each type of
 			control event.
 
-\retval kEventLoop_ResultCodeSuccess
+\retval kEventLoop_ResultOK
 if no error occurred
 
-\retval kEventLoop_ResultCodeBooleanListenerRequired
+\retval kEventLoop_ResultBooleanListenerRequired
 if "inListener" is not a Boolean listener; event
 callbacks use the Boolean return value to state whether
 an event has been COMPLETELY handled (and therefore
@@ -910,12 +910,12 @@ callbacks)
 
 (3.0)
 */
-EventLoop_ResultCode
+EventLoop_Result
 EventLoop_StartMonitoringControl	(EventLoop_ControlEvent		inForWhatEvent,
 									 ControlRef					inForWhichControlOrNullToReceiveEventsForAllControls,
 									 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_ResultCode	result = noErr;
+	EventLoop_Result	result = noErr;
 	
 	
 	if (inForWhichControlOrNullToReceiveEventsForAllControls == nullptr)
@@ -936,7 +936,7 @@ EventLoop_StartMonitoringControl	(EventLoop_ControlEvent		inForWhatEvent,
 			
 			// add a listener to the specified target’s listener model for the given event
 			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-			if (result == paramErr) result = kEventLoop_ResultCodeBooleanListenerRequired;
+			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
 			gControlEventTargetHandleLocks().releaseLock(ref, &ptr);
 		}
 	}
@@ -962,10 +962,10 @@ IMPORTANT:	The context passed to the listener callback
 			on what the context means for each type of
 			window event.
 
-\retval kEventLoop_ResultCodeSuccess
+\retval kEventLoop_ResultOK
 if no error occurred
 
-\retval kEventLoop_ResultCodeBooleanListenerRequired
+\retval kEventLoop_ResultBooleanListenerRequired
 if "inListener" is not a Boolean listener; event
 callbacks use the Boolean return value to state whether
 an event has been COMPLETELY handled (and therefore
@@ -974,12 +974,12 @@ callbacks)
 
 (3.0)
 */
-EventLoop_ResultCode
+EventLoop_Result
 EventLoop_StartMonitoringWindow		(EventLoop_WindowEvent		inForWhatEvent,
 									 WindowRef					inForWhichWindowOrNullToReceiveEventsForAllWindows,
 									 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_ResultCode	result = noErr;
+	EventLoop_Result	result = noErr;
 	
 	
 	if (inForWhichWindowOrNullToReceiveEventsForAllWindows == nullptr)
@@ -1000,7 +1000,7 @@ EventLoop_StartMonitoringWindow		(EventLoop_WindowEvent		inForWhatEvent,
 			
 			// add a listener to the specified target’s listener model for the given event
 			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-			if (result == paramErr) result = kEventLoop_ResultCodeBooleanListenerRequired;
+			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
 			gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 		}
 	}
@@ -1017,11 +1017,11 @@ always; no errors are currently defined
 
 (3.0)
 */
-EventLoop_ResultCode
+EventLoop_Result
 EventLoop_StopMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 							 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_ResultCode	result = noErr;
+	EventLoop_Result		result = noErr;
 	MyGlobalEventTargetPtr	ptr = gGlobalEventTargetHandleLocks().acquireLock(gGlobalEventTarget);
 	
 	
@@ -1044,12 +1044,12 @@ always; no errors are currently defined
 
 (3.0)
 */
-EventLoop_ResultCode
+EventLoop_Result
 EventLoop_StopMonitoringControl		(EventLoop_ControlEvent		inForWhatEvent,
 									 ControlRef					inForWhichControlOrNullToStopReceivingEventsForAllControls,
 									 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_ResultCode	result = noErr;
+	EventLoop_Result	result = noErr;
 	
 	
 	if (inForWhichControlOrNullToStopReceivingEventsForAllControls == nullptr)
@@ -1088,12 +1088,12 @@ always; no errors are currently defined
 
 (3.0)
 */
-EventLoop_ResultCode
+EventLoop_Result
 EventLoop_StopMonitoringWindow	(EventLoop_WindowEvent		inForWhatEvent,
 								 WindowRef					inForWhichWindowOrNullToStopReceivingEventsForAllWindows,
 								 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_ResultCode	result = noErr;
+	EventLoop_Result	result = noErr;
 	
 	
 	if (inForWhichWindowOrNullToStopReceivingEventsForAllWindows == nullptr)
@@ -2301,7 +2301,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// set the menu key
 						unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuKeyEquivalents),
 													&menuKeyEquivalents, &actualSize) ==
-								kPreferences_ResultCodeSuccess)
+								kPreferences_ResultOK)
 						{
 							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
 						}
@@ -2313,10 +2313,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandContextSensitiveHelp:
 					{
 						// set the item state for the context-sensitive help item
-						HelpSystem_ResultCode	helpSystemResult = kHelpSystem_ResultCodeSuccess;
-						Boolean					menuKeyEquivalents = false;
-						size_t					actualSize = 0;
-						CFStringRef				itemText = nullptr;
+						HelpSystem_Result	helpSystemResult = kHelpSystem_ResultOK;
+						Boolean				menuKeyEquivalents = false;
+						size_t				actualSize = 0;
+						CFStringRef			itemText = nullptr;
 						
 						
 						// set enabled state; inactive only if no particular help context is set
@@ -2332,7 +2332,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// set the item text
 						helpSystemResult = HelpSystem_CopyKeyPhraseCFString
 											(HelpSystem_GetCurrentContextKeyPhrase(), itemText);
-						if (helpSystemResult == kHelpSystem_ResultCodeSuccess)
+						if (helpSystemResult == kHelpSystem_ResultOK)
 						{
 							SetMenuItemTextWithCFString(received.menu.menuRef, received.menu.menuItemIndex, itemText);
 							CFRelease(itemText);
@@ -2341,7 +2341,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// set the menu key
 						unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuKeyEquivalents),
 													&menuKeyEquivalents, &actualSize) ==
-								kPreferences_ResultCodeSuccess)
+								kPreferences_ResultOK)
 						{
 							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
 						}
@@ -2379,7 +2379,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// set the menu key
 						unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuKeyEquivalents),
 													&menuKeyEquivalents, &actualSize) ==
-								kPreferences_ResultCodeSuccess)
+								kPreferences_ResultOK)
 						{
 							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
 						}

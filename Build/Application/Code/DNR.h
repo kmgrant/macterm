@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -49,9 +49,9 @@
 
 #pragma mark Constants
 
-typedef ResultCode< UInt16 >	DNR_ResultCode;
-DNR_ResultCode const	kDNR_ResultCodeSuccess(0);		//!< no error
-DNR_ResultCode const	kDNR_ResultCodeThreadError(1);	//!< lookup failed because of error setting up thread
+typedef ResultCode< UInt16 >	DNR_Result;
+DNR_Result const	kDNR_ResultOK(0);			//!< no error
+DNR_Result const	kDNR_ResultThreadError(1);	//!< lookup failed because of error setting up thread
 
 #pragma mark Types
 
@@ -65,7 +65,7 @@ struct hostent;
 
 #pragma mark Public Methods
 
-DNR_ResultCode
+DNR_Result
 	DNR_New							(char const*			inHostNameCString,
 									 Boolean				inRestrictIPv4 = false);
 

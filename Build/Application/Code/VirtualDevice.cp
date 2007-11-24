@@ -3,7 +3,7 @@
 	VirtualDevice.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -69,7 +69,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static Boolean	isOK	(VirtualDevice_ResultCode);
+static Boolean	isOK	(VirtualDevice_Result);
 
 
 
@@ -81,42 +81,42 @@ with a specific boundary and color table.
 
 Possible return codes:
 
-"kVirtualDevice_ResultCodeInsufficientMemory"
+"kVirtualDevice_ResultInsufficientMemory"
 	There is not enough memory to create
 	a device.  The output device reference
 	is set to nullptr.
 
-"kVirtualDevice_ResultCodePointerCheck"
+"kVirtualDevice_ResultPointerCheck"
 	A specified pointer was nullptr.
 
-"kVirtualDevice_ResultCodeEmptyBoundaries"
+"kVirtualDevice_ResultEmptyBoundaries"
 	Successfully created a new video device,
 	but the specified rectangle was empty.
 	Therefore, the new device was given a
 	default rectangle that may not be the
 	desired boundary.
 
-"kVirtualDevice_ResultCodeNoError"
+"kVirtualDevice_ResultOK"
 	Successfully created a new video device.
 
 (3.0)
 */
-VirtualDevice_ResultCode
+VirtualDevice_Result
 VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 					 Rect const*			inInitialDeviceBounds,
 					 PaletteHandle			inInitialPaletteHandle)
 {
-	VirtualDevice_ResultCode	result = kVirtualDevice_ResultCodeSuccess;
+	VirtualDevice_Result	result = kVirtualDevice_ResultOK;
 	
 	
-	if (inoutVirtualDeviceRefPtr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+	if (inoutVirtualDeviceRefPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
 		*inoutVirtualDeviceRefPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(VDevice)),
 														VirtualDevice_Ref);
 		if (*inoutVirtualDeviceRefPtr == nullptr)
 		{
-			result = kVirtualDevice_ResultCodeInsufficientMemory;
+			result = kVirtualDevice_ResultInsufficientMemory;
 		}
 		else
 		{
@@ -129,7 +129,7 @@ VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 			
 			// copy the given rectangle
 			SetRect(&ptr->bounds, 0, 0, 0, 0);
-			if (inInitialDeviceBounds == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+			if (inInitialDeviceBounds == nullptr) result = kVirtualDevice_ResultPointerCheck;
 			else
 			{
 				SetRect(&ptr->bounds, inInitialDeviceBounds->left, inInitialDeviceBounds->top,
@@ -138,7 +138,7 @@ VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 				{
 					// empty rectangles are probably indicative of greater
 					// problems, but allow them anyway...
-					result = kVirtualDevice_ResultCodeEmptyBoundaries;
+					result = kVirtualDevice_ResultEmptyBoundaries;
 				}
 			}
 			
@@ -175,7 +175,7 @@ VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 							DisposeGWorld(ptr->whichWorld), ptr->whichWorld = nullptr;
 							Memory_DisposeHandle(REINTERPRET_CAST(&ptr->colorTable, Handle*));
 						}
-						result = kVirtualDevice_ResultCodeInsufficientMemory;
+						result = kVirtualDevice_ResultInsufficientMemory;
 					}
 					
 					// still fine?
@@ -194,7 +194,7 @@ VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 				}
 				else
 				{
-					result = kVirtualDevice_ResultCodeInsufficientMemory;
+					result = kVirtualDevice_ResultInsufficientMemory;
 				}
 			}
 			gVDevicePtrLocks().releaseLock(*inoutVirtualDeviceRefPtr, &ptr);
@@ -248,20 +248,20 @@ Carbon for use with CopyBits().
 
 (3.0)
 */
-VirtualDevice_ResultCode
+VirtualDevice_Result
 VirtualDevice_GetBitMapForCopyBits	(VirtualDevice_Ref	inVirtualDeviceRef,
 									 BitMap const**		outBitMapPtrPtr)
 {
-	VirtualDevice_ResultCode	result = kVirtualDevice_ResultCodeSuccess;
+	VirtualDevice_Result	result = kVirtualDevice_ResultOK;
 	
 	
-	if (outBitMapPtrPtr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+	if (outBitMapPtrPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
 		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
 		
 		
-		if (ptr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 		else
 		{
 			*outBitMapPtrPtr = GetPortBitMapForCopyBits(ptr->whichWorld);
@@ -280,20 +280,20 @@ into the given rectangle.
 
 (3.0)
 */
-VirtualDevice_ResultCode
+VirtualDevice_Result
 VirtualDevice_GetBounds		(VirtualDevice_Ref	inVirtualDeviceRef,
 							 Rect*				outRectPtr)
 {
-	VirtualDevice_ResultCode	result = kVirtualDevice_ResultCodeSuccess;
+	VirtualDevice_Result	result = kVirtualDevice_ResultOK;
 	
 	
-	if (outRectPtr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+	if (outRectPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
 		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
 		
 		
-		if (ptr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 		else
 		{
 			SetRect(outRectPtr,
@@ -311,20 +311,20 @@ Provides the graphics world of a virtual device.
 
 (3.0)
 */
-VirtualDevice_ResultCode
+VirtualDevice_Result
 VirtualDevice_GetGraphicsWorld	(VirtualDevice_Ref	inVirtualDeviceRef,
 								 GWorldPtr*			outGWorldPtrPtr)
 {
-	VirtualDevice_ResultCode	result = kVirtualDevice_ResultCodeSuccess;
+	VirtualDevice_Result	result = kVirtualDevice_ResultOK;
 	
 	
-	if (outGWorldPtrPtr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+	if (outGWorldPtrPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
 		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
 		
 		
-		if (ptr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 		else
 		{
 			*outGWorldPtrPtr = ptr->whichWorld;
@@ -342,20 +342,20 @@ a virtual device.
 
 (3.0)
 */
-VirtualDevice_ResultCode
+VirtualDevice_Result
 VirtualDevice_GetPixelMap	(VirtualDevice_Ref	inVirtualDeviceRef,
 							 PixMapHandle*		outPixMapHandle)
 {
-	VirtualDevice_ResultCode	result = kVirtualDevice_ResultCodeSuccess;
+	VirtualDevice_Result	result = kVirtualDevice_ResultOK;
 	
 	
-	if (outPixMapHandle == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+	if (outPixMapHandle == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
 		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
 		
 		
-		if (ptr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 		else
 		{
 			*outPixMapHandle = GetPortPixMap(ptr->whichWorld);
@@ -372,15 +372,15 @@ Specifies the colors to use for a virtual device.
 
 (3.0)
 */
-VirtualDevice_ResultCode
+VirtualDevice_Result
 VirtualDevice_SetColorTable		(VirtualDevice_Ref	inVirtualDeviceRef,
 								 PaletteHandle		inPaletteToUseForColorTable)
 {
-	VirtualDevice_ResultCode	result = kVirtualDevice_ResultCodeSuccess;
-	VDevicePtr					ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
+	VirtualDevice_Result	result = kVirtualDevice_ResultOK;
+	VDevicePtr				ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
 	
 	
-	if (ptr == nullptr) result = kVirtualDevice_ResultCodePointerCheck;
+	if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
 		PixMapHandle	pixMap = nullptr;
@@ -393,7 +393,7 @@ VirtualDevice_SetColorTable		(VirtualDevice_Ref	inVirtualDeviceRef,
 			
 			
 			colorTable = (*pixMap)->pmTable;
-			if (colorTable == nullptr) result = kVirtualDevice_ResultCodeInsufficientMemory;
+			if (colorTable == nullptr) result = kVirtualDevice_ResultInsufficientMemory;
 			else
 			{
 				Palette2CTab(inPaletteToUseForColorTable, colorTable);
@@ -422,25 +422,25 @@ VirtualDevice_SetColorTable		(VirtualDevice_Ref	inVirtualDeviceRef,
 Returns "true" only if a particular error
 code is serious.  This allows functions to
 continue even if a result other than
-"kVirtualDevice_ResultCodeNoError" occurs.
+"kVirtualDevice_ResultOK" occurs.
 
 (3.0)
 */
 static Boolean
-isOK	(VirtualDevice_ResultCode	inError)
+isOK	(VirtualDevice_Result	inError)
 {
 	Boolean		result = true;
 	
 	
 	switch (inError)
 	{
-	case kVirtualDevice_ResultCodeSuccess:
-	case kVirtualDevice_ResultCodeEmptyBoundaries:
+	case kVirtualDevice_ResultOK:
+	case kVirtualDevice_ResultEmptyBoundaries:
 		result = false;
 		break;
 	
-	case kVirtualDevice_ResultCodeInsufficientMemory:
-	case kVirtualDevice_ResultCodePointerCheck:
+	case kVirtualDevice_ResultInsufficientMemory:
+	case kVirtualDevice_ResultPointerCheck:
 	default:
 		// most errors are serious
 		result = true;

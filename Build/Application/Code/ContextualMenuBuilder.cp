@@ -207,15 +207,15 @@ ContextualMenuBuilder_DisplayMenuForView	(HIViewRef		inWhichView,
 			// display and track the menu, getting the name of the Help item from the MacTelnet resource file
 			if (noErr == error)
 			{
-				HelpSystem_ResultCode	helpSystemResult = kHelpSystem_ResultCodeSuccess;
-				CFStringRef				helpCFString = nullptr;
-				Str255					helpStringBuffer;
-				ConstStringPtr			helpStringAddress = nullptr; // by default do not specify the help item
+				HelpSystem_Result	helpSystemResult = kHelpSystem_ResultOK;
+				CFStringRef			helpCFString = nullptr;
+				Str255				helpStringBuffer;
+				ConstStringPtr		helpStringAddress = nullptr; // by default do not specify the help item
 				
 				
 				// try to retrieve the name of the help system
 				helpSystemResult = HelpSystem_CopyKeyPhraseCFString(keyPhrase, helpCFString);
-				if (kHelpSystem_ResultCodeSuccess == helpSystemResult)
+				if (kHelpSystem_ResultOK == helpSystemResult)
 				{
 					// retrieved CFString; must convert to Pascal string due to limitations in ContextualMenuSelect()
 					Boolean		conversionOK = false;
@@ -345,15 +345,15 @@ ContextualMenuBuilder_DisplayMenuForWindow	(HIWindowRef		inWhichWindow,
 			
 			// display and track the menu, getting the name of the Help item from the MacTelnet resource file
 			{
-				HelpSystem_ResultCode	helpSystemResult = kHelpSystem_ResultCodeSuccess;
-				CFStringRef				helpCFString = nullptr;
-				Str255					helpStringBuffer;
-				ConstStringPtr			helpStringAddress = nullptr; // by default do not specify the help item
+				HelpSystem_Result	helpSystemResult = kHelpSystem_ResultOK;
+				CFStringRef			helpCFString = nullptr;
+				Str255				helpStringBuffer;
+				ConstStringPtr		helpStringAddress = nullptr; // by default do not specify the help item
 				
 				
 				// try to retrieve the name of the help system
 				helpSystemResult = HelpSystem_CopyKeyPhraseCFString(keyPhrase, helpCFString);
-				if (kHelpSystem_ResultCodeSuccess == helpSystemResult)
+				if (kHelpSystem_ResultOK == helpSystemResult)
 				{
 					// retrieved CFString; must convert to Pascal string due to limitations in ContextualMenuSelect()
 					Boolean		conversionOK = false;

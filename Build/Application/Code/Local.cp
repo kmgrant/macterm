@@ -119,10 +119,10 @@ static void				handleTerminationSignal				(int);
 static TTYMasterID		openMasterTeletypewriter			(char*);
 static TTYSlaveID		openSlaveTeletypewriter				(char const*);
 static void				printTerminalControlStructure		(struct termios const*);
-static LocalResultCode	putTTYInOriginalMode				(PseudoTeletypewriterID);
+static Local_Result		putTTYInOriginalMode				(PseudoTeletypewriterID);
 static void				putTTYInOriginalModeAtExit			();
-static LocalResultCode	putTTYInRawMode						(PseudoTeletypewriterID);
-static LocalResultCode  sendTerminalResizeMessage			(PseudoTeletypewriterID, struct winsize const*);
+static Local_Result		putTTYInRawMode						(PseudoTeletypewriterID);
+static Local_Result		sendTerminalResizeMessage			(PseudoTeletypewriterID, struct winsize const*);
 static void*			threadForLocalProcessDataLoop		(void*);
 
 #pragma mark Variables
@@ -147,15 +147,15 @@ crash-catching application if MacTelnet ever quits
 unexpectedly.  The application asks the user to
 report back debugging information.
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 always; currently, no other errors are defined
 
 (3.0)
 */
-LocalResultCode
+Local_Result
 Local_InstallCrashCatcher ()
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result	result = kLocal_ResultOK;
 	
 	
 	if (Local_StandardInputIsATerminal())
@@ -217,21 +217,21 @@ Local_DisableTerminalLocalEcho		(PseudoTeletypewriterID		inPseudoTerminalID)
 Returns the current Unix userÕs login shell preference,
 as a pointer to an array of characters in C string format.
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 if the resultant string pointer is valid
 
-\retval kLocalResultCodeParameterError
+\retval kLocal_ResultParameterError
 if "outStringPtr" is nullptr
 
 (3.0)
 */
-LocalResultCode
+Local_Result
 Local_GetDefaultShell	(char**		outStringPtr)
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result	result = kLocal_ResultOK;
 	
 	
-	if (nullptr == outStringPtr) result = kLocalResultCodeParameterError;
+	if (nullptr == outStringPtr) result = kLocal_ResultParameterError;
 	else
 	{
 		// normally the password file is used to find the userÕs shell;
@@ -385,22 +385,22 @@ which a Unix process is running but do not send
 this message, then the process cannot make use
 of the additional space in the window.
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 if the message is sent successfully
 
-\retval kLocalResultCodeIOControlError
+\retval kLocal_ResultIOControlError
 if the message could not be sent
 
 (3.0)
 */
-LocalResultCode
+Local_Result
 Local_SendTerminalResizeMessage		(PseudoTeletypewriterID		inPseudoTerminalID,
 									 UInt16						inNewColumnCount,
 									 UInt16						inNewRowCount,
 									 UInt16						inNewColumnWidthInPixels,
 									 UInt16						inNewRowHeightInPixels)
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result		result = kLocal_ResultOK;
 	struct winsize		unixTerminalWindowSizeStructure; // defined in "/usr/include/sys/ttycom.h"
 	
 	
@@ -426,7 +426,7 @@ more on how the working directory is handled.
 
 (3.0)
 */
-LocalResultCode
+Local_Result
 Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
 						 pid_t*				outProcessIDPtr,
@@ -464,7 +464,7 @@ more on how the working directory is handled.
 
 (3.0)
 */
-LocalResultCode
+Local_Result
 Local_SpawnLoginShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
 						 pid_t*				outProcessIDPtr,
@@ -501,21 +501,21 @@ are returned.  The buffer you provide for the slave
 name should be sufficiently large (20 characters is
 probably enough).
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 if the process was created successfully
 
-\retval kLocalResultCodeParameterError
+\retval kLocal_ResultParameterError
 if a storage variable is nullptr
 
-\retval kLocalResultCodeForkError
+\retval kLocal_ResultForkError
 if the process cannot be spawned
 
-\retval kLocalResultCodeThreadError
+\retval kLocal_ResultThreadError
 if a thread cannot be created to read data
 
 (3.0)
 */
-LocalResultCode
+Local_Result
 Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 TerminalScreenRef	inContainer,
 					 char const* const	argv[],
@@ -523,10 +523,10 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 char*				outSlaveName,
 					 char const*		inWorkingDirectoryOrNull)
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result	result = kLocal_ResultOK;
 	
 	
-	if ((nullptr == outProcessIDPtr) || (nullptr == outSlaveName)) result = kLocalResultCodeParameterError;
+	if ((nullptr == outProcessIDPtr) || (nullptr == outSlaveName)) result = kLocal_ResultParameterError;
 	else
 	{
 		TTYMasterID		masterTTY = 0;
@@ -567,7 +567,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			*outProcessIDPtr = forkToNewTTY(&masterTTY, outSlaveName, &terminalControl, &terminalSize);
 		}
 		
-		if (-1 == *outProcessIDPtr) result = kLocalResultCodeForkError;
+		if (-1 == *outProcessIDPtr) result = kLocal_ResultForkError;
 		else
 		{
 			if (0 == *outProcessIDPtr)
@@ -631,7 +631,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			//
 			
 			// set userÕs TTY to raw mode
-			if (kLocalResultCodeSuccess != putTTYInRawMode(STDIN_FILENO)) { /* error */ }
+			if (kLocal_ResultOK != putTTYInRawMode(STDIN_FILENO)) { /* error */ }
 			
 			// reset userÕs TTY on exit
 			if (-1 != atexit(putTTYInOriginalModeAtExit))
@@ -647,7 +647,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				
 				
 				error = pthread_attr_init(&attr);
-				if (0 != error) result = kLocalResultCodeThreadError;
+				if (0 != error) result = kLocal_ResultThreadError;
 				else
 				{
 					ConnectionDataPtr			connectionDataPtr = nullptr;
@@ -704,7 +704,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					
 					threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(DataLoopThreadContext)),
 														DataLoopThreadContextPtr);
-					if (nullptr == threadContextPtr) result = kLocalResultCodeThreadError;
+					if (nullptr == threadContextPtr) result = kLocal_ResultThreadError;
 					else
 					{
 						// set up context
@@ -714,7 +714,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 						
 						// create thread
 						error = pthread_create(&thread, &attr, threadForLocalProcessDataLoop, threadContextPtr);
-						if (0 != error) result = kLocalResultCodeThreadError;
+						if (0 != error) result = kLocal_ResultThreadError;
 					}
 					
 					// put the session in the initialized state, to indicate it is complete
@@ -734,24 +734,24 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 A convenient way for other modules to call system()
 without including any Unix headers.
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 if the process was created successfully
 
-\retval kLocalResultCodeParameterError
+\retval kLocal_ResultParameterError
 if the command is nullptr
 
-\retval kLocalResultCodeForkError
+\retval kLocal_ResultForkError
 if the process cannot be spawned
 
 (3.1)
 */
-LocalResultCode
+Local_Result
 Local_SpawnProcessAndWaitForTermination		(char const*	inCommand)
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result	result = kLocal_ResultOK;
 	
 	
-	if (nullptr == inCommand) result = kLocalResultCodeParameterError;
+	if (nullptr == inCommand) result = kLocal_ResultParameterError;
 	else
 	{
 		int		commandResult = system(inCommand);
@@ -762,7 +762,7 @@ Local_SpawnProcessAndWaitForTermination		(char const*	inCommand)
 		// by the shell that is run
 		if (0 != commandResult)
 		{
-			result = kLocalResultCodeForkError;
+			result = kLocal_ResultForkError;
 		}
 	}
 	
@@ -1013,8 +1013,8 @@ forkToNewTTY	(TTYMasterID*			outMasterTTYPtr,
 				}
 				if (nullptr != inSlaveTerminalSizePtrOrNull)
 				{
-					if (kLocalResultCodeSuccess != sendTerminalResizeMessage
-													(slaveTTY, inSlaveTerminalSizePtrOrNull))
+					if (kLocal_ResultOK != sendTerminalResizeMessage
+											(slaveTTY, inSlaveTerminalSizePtrOrNull))
 					{
 						abort();
 					}
@@ -1202,18 +1202,18 @@ Puts a TTY in whichever mode it was in prior to being
 put in raw mode with putTTYInRawMode().  This is a
 good thing to do when a process exits.
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 if the process was created successfully
 
-\retval kLocalResultCodeTermCapError
+\retval kLocal_ResultTermCapError
 if the terminal attributes cannot be changed
 
 (3.0)
 */
-static LocalResultCode
+static Local_Result
 putTTYInOriginalMode	(PseudoTeletypewriterID		inTTY)
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result	result = kLocal_ResultOK;
 	
 	
 	if (kMyTTYStateRaw == gTTYState)
@@ -1221,7 +1221,7 @@ putTTYInOriginalMode	(PseudoTeletypewriterID		inTTY)
 		if (-1 == tcsetattr(inTTY, TCSAFLUSH/* when to apply changes */, &gCachedTerminalAttributes))
 		{
 			// error
-			result = kLocalResultCodeTermCapError;
+			result = kLocal_ResultTermCapError;
 		}
 		else
 		{
@@ -1256,7 +1256,7 @@ putTTYInOriginalModeAtExit ()
 		
 		if (terminalID >= 0)
 		{
-			(LocalResultCode)putTTYInOriginalMode(terminalID);
+			(Local_Result)putTTYInOriginalMode(terminalID);
 		}
 		gUnixProcessIDToTTYMap().erase(unixProcessIDToTTYIterator);
 	}
@@ -1274,24 +1274,24 @@ The routine fillInTerminalControlStructure() makes
 different "termios" settings appropriate for user
 input.
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 if the process was created successfully
 
-\retval kLocalResultCodeTermCapError
+\retval kLocal_ResultTermCapError
 if the terminal attributes cannot be retrieved
 or if they cannot be modified
 
 (3.0)
 */
-static LocalResultCode
+static Local_Result
 putTTYInRawMode		(PseudoTeletypewriterID		inTTY)
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result		result = kLocal_ResultOK;
 	struct termios		terminalControl;
 	
 	
 	// cache the current device attributes, they will be restored when the process dies
-	if (-1 == tcgetattr(inTTY, &gCachedTerminalAttributes)) result = kLocalResultCodeTermCapError;
+	if (-1 == tcgetattr(inTTY, &gCachedTerminalAttributes)) result = kLocal_ResultTermCapError;
 	else
 	{
 		//
@@ -1369,7 +1369,7 @@ putTTYInRawMode		(PseudoTeletypewriterID		inTTY)
 		// Now update the pseudo-terminal device.
 		if (-1 == tcsetattr(inTTY, TCSAFLUSH/* when to apply changes */, &terminalControl))
 		{
-			result = kLocalResultCodeTermCapError;
+			result = kLocal_ResultTermCapError;
 		}
 		else
 		{
@@ -1392,24 +1392,24 @@ putTTYInRawMode		(PseudoTeletypewriterID		inTTY)
 /*!
 Internal version of Local_SendTerminalResizeMessage().
 
-\retval kLocalResultCodeSuccess
+\retval kLocal_ResultOK
 if the message is sent successfully
 
-\retval kLocalResultCodeIOControlError
+\retval kLocal_ResultIOControlError
 if the message could not be sent
 
 (3.0)
 */
-static LocalResultCode
+static Local_Result
 sendTerminalResizeMessage   (PseudoTeletypewriterID		inTTY,
 							 struct winsize const*		inTerminalSizePtr)
 {
-	LocalResultCode		result = kLocalResultCodeSuccess;
+	Local_Result	result = kLocal_ResultOK;
 	
 	
 	if (-1 == ioctl(inTTY, TIOCSWINSZ/* command */, inTerminalSizePtr))
 	{
-		result = kLocalResultCodeIOControlError;
+		result = kLocal_ResultIOControlError;
 	}
 	return result;
 }// sendTerminalResizeMessage
@@ -1463,7 +1463,7 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 		}
 		else
 		{
-			Session_ResultCode		postingResult = kSession_ResultCodeSuccess;
+			Session_Result		postingResult = kSession_ResultOK;
 			
 			
 			//
@@ -1496,7 +1496,7 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 			// notify that data has arrived
 			postingResult = Session_PostDataArrivedEventToMainQueue(contextPtr->session, kBufferAddress, numberOfBytesToProcess,
 																	kEventPriorityStandard, contextPtr->eventQueue);
-			assert(kSession_ResultCodeSuccess == postingResult);
+			assert(kSession_ResultOK == postingResult);
 			{
 				// now block until the data processing has completed
 				EventRef				dataProcessedEvent = nullptr;

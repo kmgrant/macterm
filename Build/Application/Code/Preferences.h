@@ -73,23 +73,23 @@
 /*!
 Most APIs in this module return a code of this type.
 */
-typedef SInt32 Preferences_ResultCode;
+typedef SInt32 Preferences_Result;
 enum
 {
-	kPreferences_ResultCodeSuccess = 0,							//!< no error
-	kPreferences_ResultCodeNotInitialized = -1,					//!< Preferences_Init() has not been called at all, or not successfully
-	kPreferences_ResultCodeUnknownTagOrClass = -2,				//!< specified preference tag or class tag isnÕt valid
-	kPreferences_ResultCodeUnknownName = -3,					//!< specified name string doesnÕt match any existing preferences data
-	kPreferences_ResultCodeInsufficientBufferSpace = -4,		//!< memory space provided isnÕt large enough to hold data on disk
-	kPreferences_ResultCodeBadVersionDataNotAvailable = -5,		//!< preferences file does not contain this information in any form
-	kPreferences_ResultCodeBadVersionDataNewer = -6,			//!< preferences file contains more information than necessary
-	kPreferences_ResultCodeBadVersionDataOlder = -7,			//!< preferences file does not contain all necessary information
-	kPreferences_ResultCodeCannotCreateContext = -8,			//!< something prevents a requested context from being created
-	kPreferences_ResultCodeDescriptorNotUnique = -9,			//!< given descriptor was used in a previous call for the same purpose
-	kPreferences_ResultCodeInvalidContextReference = -10,		//!< a given "Preferences_ContextRef" cannot be resolved properly
-	kPreferences_ResultCodeNoMoreGeneralContext = -11,			//!< the global context was given
-	kPreferences_ResultCodeOneOrMoreNamesNotAvailable = -12,	//!< when returning a list of names, at least one was not retrievable
-	kPreferences_ResultCodeGenericFailure = -13					//!< if some unknown problem occurred
+	kPreferences_ResultOK = 0,								//!< no error
+	kPreferences_ResultNotInitialized = -1,					//!< Preferences_Init() has not been called at all, or not successfully
+	kPreferences_ResultUnknownTagOrClass = -2,				//!< specified preference tag or class tag isnÕt valid
+	kPreferences_ResultUnknownName = -3,					//!< specified name string doesnÕt match any existing preferences data
+	kPreferences_ResultInsufficientBufferSpace = -4,		//!< memory space provided isnÕt large enough to hold data on disk
+	kPreferences_ResultBadVersionDataNotAvailable = -5,		//!< preferences file does not contain this information in any form
+	kPreferences_ResultBadVersionDataNewer = -6,			//!< preferences file contains more information than necessary
+	kPreferences_ResultBadVersionDataOlder = -7,			//!< preferences file does not contain all necessary information
+	kPreferences_ResultCannotCreateContext = -8,			//!< something prevents a requested context from being created
+	kPreferences_ResultDescriptorNotUnique = -9,			//!< given descriptor was used in a previous call for the same purpose
+	kPreferences_ResultInvalidContextReference = -10,		//!< a given "Preferences_ContextRef" cannot be resolved properly
+	kPreferences_ResultNoMoreGeneralContext = -11,			//!< the global context was given
+	kPreferences_ResultOneOrMoreNamesNotAvailable = -12,	//!< when returning a list of names, at least one was not retrievable
+	kPreferences_ResultGenericFailure = -13					//!< if some unknown problem occurred
 };
 
 /*!
@@ -390,13 +390,13 @@ struct Preferences_ChangeContext
 //!\name Initialization
 //@{
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_Init						();
 
 void
 	Preferences_Done						();
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_CreateOrFindFiles			();
 
 //@}
@@ -420,7 +420,7 @@ void
 //!\name Using Existing Contexts (No Dispose Necessary)
 //@{
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_GetDefaultContext			(Preferences_ContextRef*			outContextPtr,
 											 Preferences_Class					inClass = kPreferences_ClassGeneral);
 
@@ -429,15 +429,15 @@ Preferences_ResultCode
 //!\name User Interface Utilities
 //@{
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ContextGetName				(Preferences_ContextRef				inContext,
 											 CFStringRef&						outNewName);
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ContextRename				(Preferences_ContextRef				inContext,
 											 CFStringRef						inNewName);
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_CreateContextNameArray		(Preferences_Class					inClass,
 											 CFArrayRef&						outNewArrayOfNewCFStrings);
 
@@ -445,7 +445,7 @@ Boolean
 	Preferences_GetContextsInClass			(Preferences_Class					inClass,
 											 std::vector< Preferences_ContextRef >&);
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_InsertContextNamesInMenu	(Preferences_Class					inClass,
 											 MenuRef							inoutMenuRef,
 											 MenuItemIndex						inAfterItemIndex,
@@ -457,20 +457,20 @@ Preferences_ResultCode
 //!\name Accessing Contextual Preferences
 //@{
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ContextDeleteSaved			(Preferences_ContextRef				inContext);
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ContextGetData				(Preferences_ContextRef				inStartingContext,
 											 Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataStorageSize,
 											 void*								outDataStorage,
 											 size_t*							outActualSizePtrOrNull = nullptr);
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ContextSave					(Preferences_ContextRef				inContext);
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ContextSetData				(Preferences_ContextRef				inContext,
 											 Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataSize,
@@ -481,18 +481,18 @@ Preferences_ResultCode
 //!\name Global Context APIs (Preferences Window Use Only)
 //@{
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_Save						();
 
 // DEPRECATED
-Preferences_ResultCode
+Preferences_Result
 	Preferences_GetData						(Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataStorageSize,
 											 void*								outDataStorage,
 											 size_t*							outActualSizePtrOrNull = nullptr);
 
 // DEPRECATED
-Preferences_ResultCode
+Preferences_Result
 	Preferences_SetData						(Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataSize,
 											 void const*						inDataPtr);
@@ -502,7 +502,7 @@ Preferences_ResultCode
 //!\name Window Size and Position Management - Deprecated
 //@{
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ArrangeWindow				(WindowRef							inWindow,
 											 Preferences_Tag					inWindowPreferenceTag,
 											 Point*								inoutMinimumSizeFinalSizePtr,
@@ -550,12 +550,12 @@ void
 //!\name Receiving Notification of Changes
 //@{
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_ListenForChanges			(ListenerModel_ListenerRef			inListener,
 											 Preferences_Change					inForWhatChange,
 											 Boolean							inNotifyOfInitialValue = false);
 
-Preferences_ResultCode
+Preferences_Result
 	Preferences_StopListeningForChanges		(ListenerModel_ListenerRef			inListener,
 											 Preferences_Change					inForWhatChange);
 

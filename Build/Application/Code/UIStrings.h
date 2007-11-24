@@ -31,7 +31,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -72,10 +72,10 @@
 
 #pragma mark Constants
 
-typedef ResultCode< UInt16 >	UIStrings_ResultCode;
-UIStrings_ResultCode const		kUIStrings_ResultCodeSuccess(0);			//!< no error
-UIStrings_ResultCode const		kUIStrings_ResultCodeNoSuchString(1);		//!< tag is invalid for given string category
-UIStrings_ResultCode const		kUIStrings_ResultCodeCannotGetString(2);	//!< probably an OS error, the string cannot be retrieved
+typedef ResultCode< UInt16 >	UIStrings_Result;
+UIStrings_Result const		kUIStrings_ResultOK(0);					//!< no error
+UIStrings_Result const		kUIStrings_ResultNoSuchString(1);		//!< tag is invalid for given string category
+UIStrings_Result const		kUIStrings_ResultCannotGetString(2);	//!< probably an OS error, the string cannot be retrieved
 
 /*!
 Alert Window String Table ("Alerts.strings")
@@ -399,69 +399,69 @@ enum UIStrings_StringClass
 //!\name Retrieving Strings
 //@{
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_AlertWindowCFString					inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_ButtonCFString						inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_ClipboardWindowCFString				inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_CommandLineCFString					inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_ContextualMenuCFString				inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_FileOrFolderCFString					inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_FontListProgressWindowCFString		inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_HelpSystemCFString					inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_MacroSetupWindowCFString				inWhichString,
 										 CFStringRef&									outString);
 
 // see "UIStrings_PrefsWindow.h" for a declaration that accepts "UIStrings_PreferencesWindowCFString"
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_SessionInfoWindowCFString			inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_SystemDialogCFString					inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_TerminalCFString						inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_ToolbarItemCFString					inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_Copy						(UIStrings_UndoCFString							inWhichString,
 										 CFStringRef&									outString);
 
-UIStrings_ResultCode
+UIStrings_Result
 	UIStrings_CopyRandom				(UIStrings_StringClass							inWhichStringClass,
 										 CFStringRef&									outString);
 

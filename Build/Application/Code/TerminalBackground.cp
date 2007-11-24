@@ -457,7 +457,7 @@ receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRe
 				{
 				case kCommandSetBackground:
 					{
-						UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+						UIStrings_Result		stringResult = kUIStrings_ResultOK;
 						CFStringRef				askColorCFString = nullptr;
 						PickerMenuItemInfo		editMenuInfo;
 						Boolean					releaseAskColorCFString = true;
@@ -687,8 +687,8 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 						isSettable = false;
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
-							UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-							CFStringRef				descriptionCFString = nullptr;
+							UIStrings_Result	stringResult = kUIStrings_ResultOK;
+							CFStringRef			descriptionCFString = nullptr;
 							
 							
 							stringResult = UIStrings_Copy(kUIStrings_TerminalBackgroundAccessibilityDescription,

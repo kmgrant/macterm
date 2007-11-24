@@ -66,22 +66,22 @@ a reference to a Core Foundation string.  Since a copy
 is made, you must call CFRelease() on the returned
 string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 				 CFStringRef&					outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -213,7 +213,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -226,22 +226,22 @@ a reference to a Core Foundation string.  Since a copy
 is made, you must call CFRelease() on the returned
 string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 				 CFStringRef&				outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -343,7 +343,7 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -356,22 +356,22 @@ Returns a reference to a Core Foundation string.  Since a
 copy is made, you must call CFRelease() on the returned
 string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 				 CFStringRef&						outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -448,7 +448,7 @@ UIStrings_Copy	(UIStrings_ClipboardWindowCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -461,22 +461,22 @@ floating window.  Returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease()
 on the returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_CommandLineCFString	inWhichString,
 				 CFStringRef&					outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -513,7 +513,7 @@ UIStrings_Copy	(UIStrings_CommandLineCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -526,22 +526,22 @@ pop-up menu.  Returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease()
 on the returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 				 CFStringRef&						outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -638,7 +638,7 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -651,22 +651,22 @@ name, and returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease()
 on the returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 				 CFStringRef&						outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -834,7 +834,7 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -848,22 +848,22 @@ a Core Foundation string.  Since a copy is made, you
 must call CFRelease() on the returned string when you
 are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_FontListProgressWindowCFString	inWhichString,
 				 CFStringRef&								outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -880,7 +880,7 @@ UIStrings_Copy	(UIStrings_FontListProgressWindowCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -894,22 +894,22 @@ Returns a reference to a Core Foundation string.  Since
 a copy is made, you must call CFRelease() on the
 returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 				 CFStringRef&					outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1001,7 +1001,7 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1015,22 +1015,22 @@ string.  Since a copy is made, you must call
 CFRelease() on the returned string when you are
 finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_MacroSetupWindowCFString		inWhichString,
 				 CFStringRef&							outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1067,7 +1067,7 @@ UIStrings_Copy	(UIStrings_MacroSetupWindowCFString		inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1081,22 +1081,22 @@ string.  Since a copy is made, you must call
 CFRelease() on the returned string when you are
 finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 				 CFStringRef&							outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1288,7 +1288,7 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1302,22 +1302,22 @@ a Core Foundation string.  Since a copy is made, you
 must call CFRelease() on the returned string when you
 are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
 				 CFStringRef&									outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1334,7 +1334,7 @@ UIStrings_Copy	(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1347,22 +1347,22 @@ window, and returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease()
 on the returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_SessionInfoWindowCFString	inWhichString,
 				 CFStringRef&							outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1399,7 +1399,7 @@ UIStrings_Copy	(UIStrings_SessionInfoWindowCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1413,22 +1413,22 @@ returns a reference to a Core Foundation string.  Since
 a copy is made, you must call CFRelease() on the returned
 string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 				 CFStringRef&						outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1470,7 +1470,7 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1483,22 +1483,22 @@ and returns a reference to a Core Foundation string.
 Since a copy is made, you must call CFRelease() on the
 returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 				 CFStringRef&					outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1535,7 +1535,7 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1548,22 +1548,22 @@ label, and returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease()
 on the returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 				 CFStringRef&					outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1615,7 +1615,7 @@ UIStrings_Copy	(UIStrings_ToolbarItemCFString	inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1628,22 +1628,22 @@ command, and returns a reference to a Core Foundation string.
 Since a copy is made, you must call CFRelease() on the
 returned string when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given tag is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_Copy	(UIStrings_UndoCFString		inWhichString,
 				 CFStringRef&				outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1685,7 +1685,7 @@ UIStrings_Copy	(UIStrings_UndoCFString		inWhichString,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1698,22 +1698,22 @@ entry from it as a Core Foundation string.  Since a copy
 is made, you must call CFRelease() on the returned string
 when you are finished with it.
 
-\retval kUIStrings_ResultCodeSuccess
+\retval kUIStrings_ResultOK
 if the string is copied successfully
 
-\retval kUIStrings_ResultCodeNoSuchString
+\retval kUIStrings_ResultNoSuchString
 if the given class is invalid
 
-\retval kUIStrings_ResultCodeCannotGetString
+\retval kUIStrings_ResultCannotGetString
 if an OS error occurred
 
 (3.0)
 */
-UIStrings_ResultCode
+UIStrings_Result
 UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 						 CFStringRef&				outString)
 {
-	UIStrings_ResultCode	result = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	result = kUIStrings_ResultOK;
 	
 	
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
@@ -1788,7 +1788,7 @@ UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 	
 	default:
 		// ???
-		result = kUIStrings_ResultCodeNoSuchString;
+		result = kUIStrings_ResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1831,15 +1831,15 @@ UIStrings_MakeFSSpec	(SInt16							inVRefNum,
 						 UIStrings_FileOrFolderCFString	inWhichString,
 						 FSSpec*						outFSSpecPtr)
 {
-	CFStringRef				nameCFString = nullptr;
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-	OSStatus				result = noErr;
+	CFStringRef			nameCFString = nullptr;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	OSStatus			result = noErr;
 	
 	
 	stringResult = UIStrings_Copy(inWhichString, nameCFString);
 	
 	// if the string was obtained, call FSMakeFSSpec
-	if (stringResult == kUIStrings_ResultCodeSuccess)
+	if (stringResult == kUIStrings_ResultOK)
 	{
 		Str255		name;
 		

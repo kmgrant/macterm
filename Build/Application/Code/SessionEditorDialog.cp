@@ -3,7 +3,7 @@
 	SessionEditorDialog.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -178,7 +178,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 		MenuHandle				terminalsMenu = nullptr;
 		WindowRef				parentWindow = nullptr;
 		ModalFilterUPP			filterUPP = nullptr;
-		Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+		Preferences_Result		preferencesResult = kPreferences_ResultOK;
 		
 		
 		init();
@@ -192,7 +192,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_CreateContextNameArray(kPreferences_ClassTerminal,
 																	terminalNameCFStringCFArray);
-			if (preferencesResult == kPreferences_ResultCodeSuccess)
+			if (preferencesResult == kPreferences_ResultOK)
 			{
 				ControlRef		popUpMenuControl = nullptr;
 				CFIndex			count = 0;
@@ -250,7 +250,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTektronixMode,
 															sizeof(tekMode), &tekMode);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) tekMode = kTektronixModeNotAllowed;
+			if (preferencesResult != kPreferences_ResultOK) tekMode = kTektronixModeNotAllowed;
 			switch (tekMode)
 			{
 			case kTektronixMode4105:
@@ -279,7 +279,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTektronixMode,
 															sizeof(pasteMethod), &pasteMethod);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) pasteMethod = kClipboard_PasteMethodStandard;
+			if (preferencesResult != kPreferences_ResultOK) pasteMethod = kClipboard_PasteMethodStandard;
 			switch (pasteMethod)
 			{
 			case kClipboard_PasteMethodBlock:
@@ -300,13 +300,13 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagPasteBlockSize,
 															sizeof(pasteBlockSize), &pasteBlockSize);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) pasteBlockSize = 128; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) pasteBlockSize = 128; // arbitrary
 			SetDialogItemNumericalText(gSessionEditorDialog, SessPasteBlockSize, pasteBlockSize);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagMapDeleteToBackspace,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(gSessionEditorDialog, SessDeleteDel, (flag) ? kControlRadioButtonUncheckedValue
 																			: kControlRadioButtonCheckedValue);
 			SetDialogItemValue(gSessionEditorDialog, SessDeleteBS, (flag) ? kControlRadioButtonCheckedValue
@@ -315,35 +315,35 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagMapCarriageReturnToCRNull,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(gSessionEditorDialog, SessBezerkeley, (flag) ? kControlCheckBoxCheckedValue
 																			: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagLineModeEnabled,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(gSessionEditorDialog, SessLinemode, (flag) ? kControlCheckBoxCheckedValue
 																			: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTektronixPAGEClearsScreen,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(gSessionEditorDialog, SessTEKclear, (flag) ? kControlCheckBoxCheckedValue
 																			: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagLocalEchoEnabled,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(gSessionEditorDialog, SessLocalEcho, (flag) ? kControlCheckBoxCheckedValue
 																			: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagLocalEchoHalfDuplex,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(gSessionEditorDialog, SessHalfDuplex, (flag) ? kControlCheckBoxCheckedValue
 																			: kControlCheckBoxUncheckedValue);
 		}
@@ -354,7 +354,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagServerHost,
 															sizeof(hostCFString), &hostCFString);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) hostCFString = CFSTR(""); // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) hostCFString = CFSTR(""); // arbitrary
 			if (noErr == GetDialogItemAsControl(gSessionEditorDialog, SessHostName, &textControl))
 			{
 				SetControlTextWithCFString(textControl, hostCFString);
@@ -375,13 +375,13 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagServerPort,
 															sizeof(portNumber), &portNumber);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) portNumber = 23; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) portNumber = 23; // arbitrary
 			SetDialogItemNumericalText(gSessionEditorDialog, SessPort, portNumber);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagAutoCaptureToFile,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(gSessionEditorDialog, SessAutoCaptureToFile, (flag) ? kControlCheckBoxCheckedValue
 																					: kControlCheckBoxUncheckedValue);
 		}
@@ -405,19 +405,19 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagKeyInterruptProcess,
 															sizeof(controlKey), &controlKey);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) controlKey = '\0'; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) controlKey = '\0'; // arbitrary
 			scratchPstring[2] = controlKey ^ 64; // remember, '^' means XOR!
 			SetDialogItemControlText(gSessionEditorDialog, SessInterrupt, scratchPstring);
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagKeyResumeOutput,
 															sizeof(controlKey), &controlKey);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) controlKey = '\0'; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) controlKey = '\0'; // arbitrary
 			scratchPstring[2] = controlKey ^ 64; // remember, '^' means XOR!
 			SetDialogItemControlText(gSessionEditorDialog, SessResume, scratchPstring);
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagKeySuspendOutput,
 															sizeof(controlKey), &controlKey);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) controlKey = '\0'; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) controlKey = '\0'; // arbitrary
 			scratchPstring[2] = controlKey ^ 64; // remember, '^' means XOR!
 			SetDialogItemControlText(gSessionEditorDialog, SessSuspend, scratchPstring);
 		}
@@ -428,7 +428,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagAssociatedTerminalFavorite,
 															sizeof(associatedTerminalName), &associatedTerminalName);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) associatedTerminalName = CFSTR(""); // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) associatedTerminalName = CFSTR(""); // arbitrary
 			
 			for (scratchshort = CountMenuItems(terminalsMenu); scratchshort; --scratchshort)
 			{
@@ -451,7 +451,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTextEncoding,
 															sizeof(textEncoding), &textEncoding);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) textEncoding = kTextEncodingMacRoman; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) textEncoding = kTextEncodingMacRoman; // arbitrary
 			// 3.0 - use Text Encoding Converters in the menu
 			SetDialogItemValue(gSessionEditorDialog, SessTransTablePopup,
 								TextTranslation_GetCharacterSetIndex(textEncoding) + kNumberOfNonEncodingItems);
@@ -472,7 +472,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagCaptureFileAlias,
 															sizeof(aliasID), &aliasID);
-			if (kPreferences_ResultCodeSuccess != preferencesResult)
+			if (kPreferences_ResultOK != preferencesResult)
 			{
 				// set to empty (or error message?)
 				SetDialogItemControlText(gSessionEditorDialog, SessAutoCaptureFilePath, EMPTY_PSTRING);
@@ -513,7 +513,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 						// get the user’s Capture File Creator preference, if possible
 						unless (Preferences_GetData(kPreferences_TagCaptureFileCreator,
 													sizeof(captureFileCreator), &captureFileCreator,
-													&actualSize) == kPreferences_ResultCodeSuccess)
+													&actualSize) == kPreferences_ResultOK)
 						{
 							captureFileCreator = 'ttxt'; // default to SimpleText if a preference can’t be found
 						}
@@ -705,7 +705,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				{
 					preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagAssociatedTerminalFavorite,
 																	sizeof(associatedTerminalName), &associatedTerminalName);
-					if (preferencesResult != kPreferences_ResultCodeSuccess)
+					if (preferencesResult != kPreferences_ResultOK)
 					{
 						saveError = true;
 					}
@@ -720,7 +720,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTextEncoding,
 																sizeof(savedEncoding), &savedEncoding);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -734,7 +734,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				else tekMode = kTektronixModeNotAllowed;
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTektronixMode,
 																sizeof(tekMode), &tekMode);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -748,7 +748,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagPasteMethod,
 																sizeof(pasteMethod), &pasteMethod);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -761,7 +761,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				// now point to that alias in the preference setting
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagCaptureFileAlias,
 																sizeof(pendingCaptureFileAliasID), &pendingCaptureFileAliasID);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -770,7 +770,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(gSessionEditorDialog, SessAutoCaptureToFile));
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagAutoCaptureToFile,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -779,7 +779,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				flag = (kControlRadioButtonCheckedValue == GetDialogItemValue(gSessionEditorDialog, SessDeleteBS));
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagMapDeleteToBackspace,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -788,7 +788,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(gSessionEditorDialog, SessBezerkeley));
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagMapCarriageReturnToCRNull,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -797,7 +797,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(gSessionEditorDialog, SessLinemode));
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagLineModeEnabled,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -806,7 +806,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(gSessionEditorDialog, SessTEKclear));
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTektronixPAGEClearsScreen,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -815,7 +815,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(gSessionEditorDialog, SessLocalEcho));
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagLocalEchoEnabled,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -824,7 +824,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(gSessionEditorDialog, SessHalfDuplex));
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagLocalEchoHalfDuplex,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -840,7 +840,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				portNumber = STATIC_CAST(scratchlong, SInt16);
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagServerPort,
 																sizeof(portNumber), &portNumber);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -856,7 +856,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				pasteBlockSize = STATIC_CAST(scratchlong, SInt16);
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagPasteBlockSize,
 																sizeof(pasteBlockSize), &pasteBlockSize);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -871,7 +871,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				{
 					preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagServerHost,
 																	sizeof(hostNameCFString), &hostNameCFString);
-					if (preferencesResult != kPreferences_ResultCodeSuccess)
+					if (preferencesResult != kPreferences_ResultOK)
 					{
 						saveError = true;
 					}
@@ -887,7 +887,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 					controlKey = CPP_STD::toupper(scratchPstring[2]) ^ 64;
 					preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagKeyInterruptProcess,
 																	sizeof(controlKey), &controlKey);
-					if (preferencesResult != kPreferences_ResultCodeSuccess)
+					if (preferencesResult != kPreferences_ResultOK)
 					{
 						saveError = true;
 					}
@@ -903,7 +903,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 					controlKey = CPP_STD::toupper(scratchPstring[2]) ^ 64;
 					preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagKeyResumeOutput,
 																	sizeof(controlKey), &controlKey);
-					if (preferencesResult != kPreferences_ResultCodeSuccess)
+					if (preferencesResult != kPreferences_ResultOK)
 					{
 						saveError = true;
 					}
@@ -919,7 +919,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 					controlKey = CPP_STD::toupper(scratchPstring[2]) ^ 64;
 					preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagKeySuspendOutput,
 																	sizeof(controlKey), &controlKey);
-					if (preferencesResult != kPreferences_ResultCodeSuccess)
+					if (preferencesResult != kPreferences_ResultOK)
 					{
 						saveError = true;
 					}
@@ -940,7 +940,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				blockSize = STATIC_CAST(scratchlong, SInt16);
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagDataReadBufferSize,
 																sizeof(blockSize), &blockSize);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					saveError = true;
 				}
@@ -951,7 +951,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			//then Preferences_ContextRename()
 			//}
 			
-			(Preferences_ResultCode)Preferences_ContextSave(preferencesContext);
+			(Preferences_Result)Preferences_ContextSave(preferencesContext);
 			
 			DialogTransitions_CloseToRectangle(GetDialogWindow(gSessionEditorDialog), parentWindow, inTransitionOpenRectOrNull);
 			

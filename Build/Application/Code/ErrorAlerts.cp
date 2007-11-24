@@ -3,7 +3,7 @@
 	ErrorAlerts.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -99,9 +99,9 @@ ErrorAlerts_DisplayNoteMessage	(SInt16							inStringListResourceID,
 								 UInt16							inStringIndex,
 								 UIStrings_AlertWindowCFString	inTitleStringID)
 {
-	Str255					dialogText;
-	CFStringRef				titleCFString = nullptr;
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+	Str255				dialogText;
+	CFStringRef			titleCFString = nullptr;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
 	
 	
 	GetIndString(dialogText, inStringListResourceID, inStringIndex);
@@ -115,7 +115,7 @@ ErrorAlerts_DisplayNoteMessage	(SInt16							inStringListResourceID,
 		bzero(&parameters, sizeof(parameters));
 		parameters.dialog.type = kAlertNoteAlert;
 		parameters.text.large = dialogText;
-		if (stringResult == kUIStrings_ResultCodeSuccess)
+		if (stringResult.ok())
 		{
 			parameters.text.titleCFString = titleCFString;
 		}
@@ -309,9 +309,9 @@ ErrorAlerts_DisplayStopMessage	(SInt16							inStringListResourceID,
 								 UInt16							inStringIndex,
 								 UIStrings_AlertWindowCFString	inTitleStringID)
 {
-	Str255					dialogText;
-	CFStringRef				titleCFString = nullptr;
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+	Str255				dialogText;
+	CFStringRef			titleCFString = nullptr;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
 	
 	
 	GetIndString(dialogText, inStringListResourceID, inStringIndex);
@@ -326,7 +326,7 @@ ErrorAlerts_DisplayStopMessage	(SInt16							inStringListResourceID,
 		parameters.dialog.type = kAlertStopAlert;
 		parameters.flags.alertSound = true;
 		parameters.text.large = dialogText;
-		if (stringResult == kUIStrings_ResultCodeSuccess)
+		if (stringResult.ok())
 		{
 			parameters.text.titleCFString = titleCFString;
 		}
@@ -392,12 +392,12 @@ ErrorAlerts_DisplayStopQuitMessage	(SInt16							inStringListResourceID,
 	box = Alert_New();
 	Alert_SetParamsFor(box, kAlert_StyleCancel);
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		CFStringRef				buttonString = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			buttonString = nullptr;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_ButtonQuit, buttonString);
-		if (stringResult == kUIStrings_ResultCodeSuccess)
+		if (stringResult.ok())
 		{
 			Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonString);
 			CFRelease(buttonString), buttonString = nullptr;
@@ -405,12 +405,12 @@ ErrorAlerts_DisplayStopQuitMessage	(SInt16							inStringListResourceID,
 	}
 	Alert_SetHelpButton(box, false);
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		CFStringRef				titleCFString = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			titleCFString = nullptr;
 		
 		
 		stringResult = UIStrings_Copy(inTitleStringID, titleCFString);
-		if (stringResult == kUIStrings_ResultCodeSuccess)
+		if (stringResult.ok())
 		{
 			Alert_SetTitleCFString(box, titleCFString);
 			CFRelease(titleCFString);

@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,12 +46,12 @@
 
 #pragma mark Constants
 
-enum VirtualDevice_ResultCode
+enum VirtualDevice_Result
 {
-	kVirtualDevice_ResultCodeSuccess = 0,				//!< no error
-	kVirtualDevice_ResultCodeInsufficientMemory = -1,	//!< not enough memory to do everything required
-	kVirtualDevice_ResultCodePointerCheck = -2,			//!< a null reference or null pointer was provided
-	kVirtualDevice_ResultCodeEmptyBoundaries = -3		//!< empty rectangle; default bounds used, otherwise valid result
+	kVirtualDevice_ResultOK = 0,					//!< no error
+	kVirtualDevice_ResultInsufficientMemory = -1,	//!< not enough memory to do everything required
+	kVirtualDevice_ResultPointerCheck = -2,			//!< a null reference or null pointer was provided
+	kVirtualDevice_ResultEmptyBoundaries = -3		//!< empty rectangle; default bounds used, otherwise valid result
 };
 
 #pragma mark Types
@@ -65,7 +65,7 @@ typedef struct OpaqueVirtualDevice*		VirtualDevice_Ref;
 //!\name Creating and Destroying Virtual Devices
 //@{
 
-VirtualDevice_ResultCode
+VirtualDevice_Result
 	VirtualDevice_New						(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 											 Rect const*			inInitialDeviceBounds,
 											 PaletteHandle			inInitialPaletteHandle);
@@ -78,23 +78,23 @@ void
 //!\name Manipulating Virtual Devices With QuickDraw
 //@{
 
-VirtualDevice_ResultCode
+VirtualDevice_Result
 	VirtualDevice_GetBitMapForCopyBits		(VirtualDevice_Ref		inVirtualDeviceRef,
 											 BitMap const**			outBitMapPtrPtr);
 
-VirtualDevice_ResultCode
+VirtualDevice_Result
 	VirtualDevice_GetBounds					(VirtualDevice_Ref		inVirtualDeviceRef,
 											 Rect*					outRectPtr);
 
-VirtualDevice_ResultCode
+VirtualDevice_Result
 	VirtualDevice_GetGraphicsWorld			(VirtualDevice_Ref		inVirtualDeviceRef,
 											 GWorldPtr*				outGWorldPtrPtr);
 
-VirtualDevice_ResultCode
+VirtualDevice_Result
 	VirtualDevice_GetPixelMap				(VirtualDevice_Ref		inVirtualDeviceRef,
 											 PixMapHandle*			outPixMapHandle);
 
-VirtualDevice_ResultCode
+VirtualDevice_Result
 	VirtualDevice_SetColorTable				(VirtualDevice_Ref		inVirtualDeviceRef,
 											 PaletteHandle			inPaletteToUseForColorTable);
 

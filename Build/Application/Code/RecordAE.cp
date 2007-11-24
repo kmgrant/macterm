@@ -3,7 +3,7 @@
 	RecordAE.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -85,19 +85,19 @@ for the Required Suite, and creates an address
 descriptor so MacTelnet can send events to itself
 (for recordability).
 
-\retval kRecordAE_ResultCodeSuccess
+\retval kRecordAE_ResultOK
 if all handlers were installed successfully
 
-\retval kRecordAE_ResultCodeCannotInitialize
+\retval kRecordAE_ResultCannotInitialize
 if any handler failed to install
 
 (3.0)
 */
-RecordAE_ResultCode
+RecordAE_Result
 RecordAE_Init ()
 {
-	RecordAE_ResultCode		result = kRecordAE_ResultCodeCannotInitialize;
-	OSStatus				error = noErr;
+	RecordAE_Result		result = kRecordAE_ResultCannotInitialize;
+	OSStatus			error = noErr;
 	
 	
 	// Set up a self-addressed, stamped envelope so MacTelnet can perform all
@@ -122,7 +122,7 @@ RecordAE_Init ()
 			if (error == noErr)
 			{
 				// okay!
-				result = kRecordAE_ResultCodeSuccess;
+				result = kRecordAE_ResultOK;
 			}
 		}
 	}

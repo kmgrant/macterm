@@ -3,7 +3,7 @@
 	RequiredAE.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -178,7 +178,7 @@ RequiredAE_HandleApplicationOpen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEvent
 	// get the user’s “don’t auto-new” application preference, if possible
 	if (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
 							&quellAutoNew, &actualSize) !=
-		kPreferences_ResultCodeSuccess)
+		kPreferences_ResultOK)
 	{
 		// assume a value if it cannot be found
 		quellAutoNew = false;
@@ -252,7 +252,7 @@ RequiredAE_HandleApplicationReopen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEve
 	// get the user’s “don’t auto-new” application preference, if possible
 	if (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
 							&quellAutoNew, &actualSize) !=
-		kPreferences_ResultCodeSuccess)
+		kPreferences_ResultOK)
 	{
 		// assume a value if it cannot be found
 		quellAutoNew = false;
@@ -999,8 +999,8 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 		Alert_SetType(box, kAlertCautionAlert);
 		// set message
 		{
-			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-			CFStringRef				primaryTextCFString = nullptr;
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			CFStringRef			primaryTextCFString = nullptr;
 			
 			
 			stringResult = UIStrings_Copy(kUIStrings_AlertWindowQuitPrimaryText, primaryTextCFString);
@@ -1020,12 +1020,12 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 		}
 		// set title
 		{
-			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-			CFStringRef				titleCFString = nullptr;
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			CFStringRef			titleCFString = nullptr;
 			
 			
 			stringResult = UIStrings_Copy(kUIStrings_AlertWindowQuitName, titleCFString);
-			if (stringResult == kUIStrings_ResultCodeSuccess)
+			if (stringResult.ok())
 			{
 				Alert_SetTitleCFString(box, titleCFString);
 				CFRelease(titleCFString);
@@ -1033,24 +1033,24 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 		}
 		// set buttons
 		{
-			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-			CFStringRef				buttonCFString = nullptr;
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			CFStringRef			buttonCFString = nullptr;
 			
 			
 			stringResult = UIStrings_Copy(kUIStrings_ButtonReviewWithEllipsis, buttonCFString);
-			if (stringResult == kUIStrings_ResultCodeSuccess)
+			if (stringResult.ok())
 			{
 				Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonCFString);
 				CFRelease(buttonCFString);
 			}
 		}
 		{
-			UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-			CFStringRef				buttonCFString = nullptr;
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			CFStringRef			buttonCFString = nullptr;
 			
 			
 			stringResult = UIStrings_Copy(kUIStrings_ButtonDiscardAll, buttonCFString);
-			if (stringResult == kUIStrings_ResultCodeSuccess)
+			if (stringResult.ok())
 			{
 				Alert_SetButtonText(box, kAlertStdAlertOtherButton, buttonCFString);
 				CFRelease(buttonCFString);

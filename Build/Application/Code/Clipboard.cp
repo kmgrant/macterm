@@ -3,7 +3,7 @@
 	Clipboard.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -270,8 +270,8 @@ Clipboard_Init ()
 	
 	// specify a different title for the Dock’s menu, one which doesn’t include the application name
 	{
-		CFStringRef				titleCFString = nullptr;
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+		CFStringRef			titleCFString = nullptr;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowIconName, titleCFString);
@@ -361,7 +361,7 @@ Clipboard_Init ()
 		// get visibility preference for the Clipboard
 		unless (Preferences_GetData(kPreferences_TagWasClipboardShowing,
 									sizeof(windowIsVisible), &windowIsVisible,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			windowIsVisible = false; // assume invisible if the preference can’t be found
 		}
@@ -388,8 +388,8 @@ Clipboard_Done ()
 		
 		
 		windowIsVisible = Clipboard_WindowIsVisible();
-		(Preferences_ResultCode)Preferences_SetData(kPreferences_TagWasClipboardShowing,
-													sizeof(Boolean), &windowIsVisible);
+		(Preferences_Result)Preferences_SetData(kPreferences_TagWasClipboardShowing,
+												sizeof(Boolean), &windowIsVisible);
 	}
 	
 	RemoveEventLoopTimer(gClipboardUpdatesTimer), gClipboardUpdatesTimer = nullptr;
@@ -663,7 +663,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 		// get the user’s “one tab equals X spaces” preference, if possible
 		unless (Preferences_GetData(kPreferences_TagCopyTableThreshold,
 									sizeof(tableThreshold), &tableThreshold,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			tableThreshold = 4; // default to 4 spaces per tab if no preference can be found
 		}
@@ -1285,12 +1285,12 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 							case kScrapFlavorTypeUnicode:
 								// use the default terminal’s monospaced font for drawing text
 								{
-									Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+									Preferences_Result			prefsResult = kPreferences_ResultOK;
 									Preferences_ContextRef		prefsContext = nullptr;
 									
 									
 									prefsResult = Preferences_GetDefaultContext(&prefsContext, kPreferences_ClassFormat);
-									if (prefsResult == kPreferences_ResultCodeSuccess)
+									if (prefsResult == kPreferences_ResultOK)
 									{
 										Str255		fontName;
 										SInt16		fontSize = 0;
@@ -1301,7 +1301,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 										prefsResult = Preferences_ContextGetData
 														(prefsContext, kPreferences_TagFontName, sizeof(fontName),
 															fontName, &actualSize);
-										if (prefsResult == kPreferences_ResultCodeSuccess)
+										if (prefsResult == kPreferences_ResultOK)
 										{
 											TextFontByName(fontName);
 										}
@@ -1310,7 +1310,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 										prefsResult = Preferences_ContextGetData
 														(prefsContext, kPreferences_TagFontSize, sizeof(fontSize),
 															&fontSize, &actualSize);
-										if (prefsResult == kPreferences_ResultCodeSuccess)
+										if (prefsResult == kPreferences_ResultOK)
 										{
 											TextSize(fontSize);
 										}
@@ -1640,10 +1640,10 @@ its size.
 static void
 setDataTypeInformation ()
 {
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-	ResType					validScrapType = '----';
-	CFStringRef				finalCFString = CFSTR("");
-	Boolean					releaseFinalCFString = false;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	ResType				validScrapType = '----';
+	CFStringRef			finalCFString = CFSTR("");
+	Boolean				releaseFinalCFString = false;
 	
 	
 	// figure out the scrap type and offset
@@ -1656,7 +1656,7 @@ setDataTypeInformation ()
 	{
 		// clipboard is empty; display a simple description
 		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionEmpty, finalCFString);
-		if (kUIStrings_ResultCodeSuccess == stringResult)
+		if (stringResult.ok())
 		{
 			releaseFinalCFString = true;
 		}
@@ -1670,7 +1670,7 @@ setDataTypeInformation ()
 		
 		// get a template for a description string
 		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionTemplate, descriptionTemplateCFString);
-		if (kUIStrings_ResultCodeSuccess == stringResult)
+		if (stringResult.ok())
 		{
 			CFStringRef							contentTypeCFString = CFSTR("");
 			Boolean								releaseContentTypeCFString = false;
@@ -1696,7 +1696,7 @@ setDataTypeInformation ()
 				break;
 			}
 			stringResult = UIStrings_Copy(contentTypeStringCode, contentTypeCFString);
-			if (kUIStrings_ResultCodeSuccess == stringResult)
+			if (stringResult.ok())
 			{
 				// a new string was created, so it must be released later
 				releaseContentTypeCFString = true;
@@ -1751,7 +1751,7 @@ setDataTypeInformation ()
 					{
 						stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionApproximately,
 														aboutCFString);
-						if (kUIStrings_ResultCodeSuccess == stringResult)
+						if (stringResult.ok())
 						{
 							// a new string was created, so it must be released later
 							releaseAboutCFString = true;
@@ -1760,7 +1760,7 @@ setDataTypeInformation ()
 					
 					// based on the determined units, find the proper unit string
 					stringResult = UIStrings_Copy(unitsStringCode, unitsCFString);
-					if (kUIStrings_ResultCodeSuccess == stringResult)
+					if (stringResult.ok())
 					{
 						// a new string was created, so it must be released later
 						releaseUnitsCFString = true;
@@ -1840,14 +1840,14 @@ setScalingInformation ()
 	// if the data is scaled, say so; otherwise, remove the footer text completely
 	if (gIsDataScaled)
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
-		CFStringRef				footerCFString = nullptr;
-		CFStringRef				footerTemplateCFString = nullptr;
-		Boolean					releaseFooterCFString = true;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			footerCFString = nullptr;
+		CFStringRef			footerTemplateCFString = nullptr;
+		Boolean				releaseFooterCFString = true;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDisplaySizePercentage, footerTemplateCFString);
-		if (kUIStrings_ResultCodeSuccess == stringResult)
+		if (stringResult.ok())
 		{
 			footerCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
 														footerTemplateCFString,

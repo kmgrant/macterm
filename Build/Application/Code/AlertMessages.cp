@@ -637,7 +637,7 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode)
 	
 	if (result)
 	{
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+		UIStrings_Result		stringResult = kUIStrings_ResultOK;
 		InterfaceLibAlertRef	box = nullptr;
 		CFStringRef				primaryTextCFString = nullptr;
 		CFStringRef				primaryTextTemplateCFString = nullptr;
@@ -647,7 +647,7 @@ Alert_ReportOSStatus	(OSStatus	inErrorCode)
 		
 		// generate dialog text
 		stringResult = UIStrings_Copy(kUIStrings_AlertWindowCommandFailedPrimaryText, primaryTextTemplateCFString);
-		if (stringResult == kUIStrings_ResultCodeSuccess)
+		if (stringResult.ok())
 		{
 			primaryTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
 															primaryTextTemplateCFString, inErrorCode);
@@ -1424,7 +1424,7 @@ static void
 newButtonString		(CFStringRef&				outStringStorage,
 					 UIStrings_ButtonCFString	inButtonStringType)
 {
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
 	
 	
 	stringResult = UIStrings_Copy(inButtonStringType, outStringStorage);

@@ -3,7 +3,7 @@
 	Keypads.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -220,15 +220,15 @@ Keypads_Init ()
 	makeAllButtonsUseTheSystemFont(gControlKeysWindow);
 	
 	SetPt(&deltaSize, 0, 0); // initially...
-	if (kPreferences_ResultCodeSuccess != Preferences_ArrangeWindow(gControlKeysWindow, kPreferences_WindowTagControlKeypad,
-																	&deltaSize, kPreferences_WindowBoundaryLocation))
+	if (kPreferences_ResultOK != Preferences_ArrangeWindow(gControlKeysWindow, kPreferences_WindowTagControlKeypad,
+															&deltaSize, kPreferences_WindowBoundaryLocation))
 	{
 		// no preference found, so pick a default location
 		// (use NIB-provided location)
 		//MoveWindow(gControlKeysWindow, 200, 300, false/* activate */);
 	}
 	unless (Preferences_GetData(kPreferences_TagWasControlKeypadShowing, sizeof(windowIsVisible),
-								&windowIsVisible, &actualSize) == kPreferences_ResultCodeSuccess)
+								&windowIsVisible, &actualSize) == kPreferences_ResultOK)
 	{
 		windowIsVisible = false; // assume invisible if the preference can’t be found
 	}
@@ -242,15 +242,15 @@ Keypads_Init ()
 	makeAllButtonsUseTheSystemFont(gFunctionKeysWindow);
 	
 	SetPt(&deltaSize, 0, 0); // initially...
-	if (kPreferences_ResultCodeSuccess != Preferences_ArrangeWindow(gFunctionKeysWindow, kPreferences_WindowTagFunctionKeypad,
-																	&deltaSize, kPreferences_WindowBoundaryLocation))
+	if (kPreferences_ResultOK != Preferences_ArrangeWindow(gFunctionKeysWindow, kPreferences_WindowTagFunctionKeypad,
+															&deltaSize, kPreferences_WindowBoundaryLocation))
 	{
 		// no preference found, so pick a default location
 		// (use NIB-provided location)
 		//MoveWindow(gFunctionKeysWindow, 450, 70, false/* activate */);
 	}
 	unless (Preferences_GetData(kPreferences_TagWasFunctionKeypadShowing, sizeof(windowIsVisible),
-								&windowIsVisible, &actualSize) == kPreferences_ResultCodeSuccess)
+								&windowIsVisible, &actualSize) == kPreferences_ResultOK)
 	{
 		windowIsVisible = false; // assume invisible if the preference can’t be found
 	}
@@ -442,15 +442,15 @@ Keypads_Init ()
 	}
 	
 	SetPt(&deltaSize, 0, 0); // initially...
-	if (kPreferences_ResultCodeSuccess != Preferences_ArrangeWindow(gVT220KeypadWindow, kPreferences_WindowTagVT220Keypad,
-																	&deltaSize, kPreferences_WindowBoundaryLocation))
+	if (kPreferences_ResultOK != Preferences_ArrangeWindow(gVT220KeypadWindow, kPreferences_WindowTagVT220Keypad,
+															&deltaSize, kPreferences_WindowBoundaryLocation))
 	{
 		// no preference found, so pick a default location
 		// (use NIB-provided location)
 		//MoveWindow(gVT220KeypadWindow, 200, 70, false/* activate */);
 	}
 	unless (Preferences_GetData(kPreferences_TagWasVT220KeypadShowing, sizeof(windowIsVisible),
-								&windowIsVisible, &actualSize) == kPreferences_ResultCodeSuccess)
+								&windowIsVisible, &actualSize) == kPreferences_ResultOK)
 	{
 		windowIsVisible = false; // assume invisible if the preference can’t be found
 	}
@@ -522,15 +522,15 @@ Keypads_Done ()
 	Preferences_SetWindowArrangementData(gFunctionKeysWindow, kPreferences_WindowTagFunctionKeypad);
 	Preferences_SetWindowArrangementData(gVT220KeypadWindow, kPreferences_WindowTagVT220Keypad);
 	windowIsVisible = IsWindowVisible(gControlKeysWindow);
-	(Preferences_ResultCode)Preferences_SetData(kPreferences_TagWasControlKeypadShowing,
-												sizeof(Boolean), &windowIsVisible);
+	(Preferences_Result)Preferences_SetData(kPreferences_TagWasControlKeypadShowing,
+											sizeof(Boolean), &windowIsVisible);
 	windowIsVisible = IsWindowVisible(gFunctionKeysWindow);
-	(Preferences_ResultCode)Preferences_SetData(kPreferences_TagWasFunctionKeypadShowing,
-												sizeof(Boolean), &windowIsVisible);
+	(Preferences_Result)Preferences_SetData(kPreferences_TagWasFunctionKeypadShowing,
+											sizeof(Boolean), &windowIsVisible);
 	windowIsVisible = IsWindowVisible(gVT220KeypadWindow);
-	(Preferences_ResultCode)Preferences_SetData(kPreferences_TagWasVT220KeypadShowing,
-												sizeof(Boolean), &windowIsVisible);
-	(Preferences_ResultCode)Preferences_Save(); // write the implicit data to disk
+	(Preferences_Result)Preferences_SetData(kPreferences_TagWasVT220KeypadShowing,
+											sizeof(Boolean), &windowIsVisible);
+	(Preferences_Result)Preferences_Save(); // write the implicit data to disk
 	
 	// unregister event listeners
 	RemoveEventHandler(gControlKeysButtonHICommandsHandler);

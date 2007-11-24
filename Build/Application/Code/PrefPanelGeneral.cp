@@ -464,7 +464,7 @@ const
 	HIViewRef				result = nullptr;
 	Rect					containerBounds;
 	ControlTabEntry			tabInfo[NUMBER_OF_GENERAL_TABPANES];
-	UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+	UIStrings_Result		stringResult = kUIStrings_ResultOK;
 	OSStatus				error = noErr;
 	
 	
@@ -626,18 +626,18 @@ const
 		
 		
 		unless (Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualBell), &visualBell, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			visualBell = false; // assume default, if preference can’t be found
 		}
 		unless (Preferences_GetData(kPreferences_TagMarginBell, sizeof(marginBell), &marginBell, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			marginBell = false; // assume default, if preference can’t be found
 		}
 		unless (Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(notifyOfBeeps),
 									&notifyOfBeeps, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			notifyOfBeeps = false; // assume default, if preference can’t be found
 		}
@@ -662,7 +662,7 @@ const
 			
 			unless (Preferences_GetData(kPreferences_TagNotification, sizeof(notificationPreferences),
 										&notificationPreferences, &actualSize) ==
-					kPreferences_ResultCodeSuccess)
+					kPreferences_ResultOK)
 			{
 				notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
 			}
@@ -809,7 +809,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagSimplifiedUserInterface, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume normal mode, if preference can’t be found
 		}
@@ -821,7 +821,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume windows automatically close, if preference can’t be found
 		}
@@ -833,7 +833,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume background screens are dimmed, if preference can’t be found
 		}
@@ -845,7 +845,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume background screens are dimmed, if preference can’t be found
 		}
@@ -857,7 +857,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagPureInverse, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume text is highlighted according to Mac OS standards, if preference can’t be found
 		}
@@ -869,7 +869,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume the clipboard isn’t affected by text highlighting, if preference can’t be found
 		}
@@ -881,7 +881,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume the cursor is not affected by drag and drop, if preference can’t be found
 		}
@@ -893,7 +893,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = true; // assume menu items have key equivalents, if preference can’t be found
 		}
@@ -905,7 +905,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagMapBackquote, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume the backquote key isn’t re-mapped, if preference can’t be found
 		}
@@ -917,7 +917,7 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultCodeSuccess)
+									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume new windows are created automatically, if preference can’t be found
 		}
@@ -1066,7 +1066,7 @@ const
 		
 		
 		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
-									&terminalCursorType, &actualSize) == kPreferences_ResultCodeSuccess)
+									&terminalCursorType, &actualSize) == kPreferences_ResultOK)
 		{
 			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference can’t be found
 		}
@@ -1083,7 +1083,7 @@ const
 		
 		unless (Preferences_GetData(kPreferences_TagCursorBlinks, sizeof(cursorBlinks),
 									&cursorBlinks, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			cursorBlinks = false; // assume the cursor doesn’t flash, if preference can’t be found
 		}
@@ -1099,7 +1099,7 @@ const
 		
 		unless (Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
 									&stackingOrigin, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can’t be found
 		}
@@ -1119,7 +1119,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize,
 									sizeof(affectsFontSize), &affectsFontSize,
 									&actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			affectsFontSize = false; // assume default, if preference can’t be found
 		}
@@ -1139,7 +1139,7 @@ const
 		
 		unless (Preferences_GetData(kPreferences_TagCopyTableThreshold, sizeof(copyTableThreshold),
 									&copyTableThreshold, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			copyTableThreshold = 4; // assume 4 spaces per tab, if preference can’t be found
 		}
@@ -1158,7 +1158,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
 									sizeof(newCommandShortcutEffect), &newCommandShortcutEffect,
 									&actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			newCommandShortcutEffect = kCommandNewSessionShell; // assume default, if preference can’t be found
 		}

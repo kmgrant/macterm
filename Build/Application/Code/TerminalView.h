@@ -21,7 +21,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -71,13 +71,13 @@
 /*!
 Possible return values from certain APIs in this module.
 */
-enum TerminalView_ResultCode
+enum TerminalView_Result
 {
-	kTerminalView_ResultCodeSuccess = 0,			//!< no error
-	kTerminalView_ResultCodeInvalidID = -1,			//!< a given "TerminalViewRef" does not correspond to any known view
-	kTerminalView_ResultCodeParameterError = -2,	//!< invalid input (e.g. a null pointer)
-	kTerminalView_ResultCodeNotEnoughMemory = -3,	//!< there is not enough memory to allocate required data structures
-	kTerminalView_ResultCodeIllegalOperation = -4   //!< attempt to change a setting that is currently automatically-controlled
+	kTerminalView_ResultOK = 0,					//!< no error
+	kTerminalView_ResultInvalidID = -1,			//!< a given "TerminalViewRef" does not correspond to any known view
+	kTerminalView_ResultParameterError = -2,	//!< invalid input (e.g. a null pointer)
+	kTerminalView_ResultNotEnoughMemory = -3,	//!< there is not enough memory to allocate required data structures
+	kTerminalView_ResultIllegalOperation = -4   //!< attempt to change a setting that is currently automatically-controlled
 };
 
 /*!
@@ -236,12 +236,12 @@ TerminalViewRef
 //!\name Event Notification
 //@{
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_StartMonitoring	(TerminalViewRef			inRef,
 									 TerminalView_Event			inForWhatEvent,
 									 ListenerModel_ListenerRef	inListener);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_StopMonitoring		(TerminalViewRef			inRef,
 									 TerminalView_Event			inForWhatEvent,
 									 ListenerModel_ListenerRef	inListener);
@@ -358,38 +358,38 @@ HIWindowRef
 TerminalView_DisplayMode
 	TerminalView_ReturnDisplayMode				(TerminalViewRef			inView);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_ScrollAround					(TerminalViewRef			inView,
 												 SInt16						inColumnCountDelta,
 												 SInt16						inRowCountDelta);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_ScrollColumnsTowardLeftEdge	(TerminalViewRef			inView,
 												 UInt16						inNumberOfColumnsToScroll);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_ScrollColumnsTowardRightEdge	(TerminalViewRef			inView,
 												 UInt16						inNumberOfColumnsToScroll);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef			inView,
 												 UInt16						inNumberOfRowsToScroll);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_ScrollRowsTowardTopEdge		(TerminalViewRef			inView,
 												 UInt16						inNumberOfRowsToScroll);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_ScrollToBeginning				(TerminalViewRef			inView);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_ScrollToEnd					(TerminalViewRef			inView);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_SetDisplayMode					(TerminalViewRef			inView,
 												 TerminalView_DisplayMode   inNewMode);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_SetFocusRingDisplayed			(TerminalViewRef			inView,
 												 Boolean					inShowFocusRingAndMatte);
 
@@ -434,7 +434,7 @@ void
 	TerminalView_GetInsets						(Point*						outTopLeftInsetOrNull,
 												 Point*						outBottomRightInsetOrNull);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_GetRange						(TerminalViewRef			inView,
 												 TerminalView_RangeCode		inRangeCode,
 												 UInt32&					outStartOfRange,
@@ -502,7 +502,7 @@ Boolean
 												 TerminalView_ColorIndex	inColorEntryNumber,
 												 RGBColor const*			inColorPtr);
 
-TerminalView_ResultCode
+TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,
 												 ConstStringPtr				inFontFamilyNameOrNull,
 												 UInt16						inFontSizeOrZero);

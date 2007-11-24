@@ -3,7 +3,7 @@
 	Terminal.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -804,7 +804,7 @@ static UInt32					emulatorVT220StateDeterminant			(My_ScreenBufferPtr, UInt8 con
 static UInt32					emulatorVT220StateTransition			(My_ScreenBufferPtr, UInt8 const*, UInt32,
 																		 My_Parser::State, My_Parser::State);
 static void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
-static Terminal_ResultCode		forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
+static Terminal_Result			forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
 																		 My_ScreenLineOperationProcPtr, void*);
 static inline My_LineIteratorPtr	getLineIterator						(Terminal_LineRef);
 static My_ScreenBufferPtr		getVirtualScreenData					(TerminalScreenRef);
@@ -889,7 +889,7 @@ static dest_char_seq_iter		whitespaceSensitiveCopy					(src_char_seq_const_iter,
 /*!
 Constructor.  See Terminal_NewScreen().
 
-Throws a Terminal_ResultCode if any problems occur.
+Throws a Terminal_Result if any problems occur.
 
 (3.0)
 */
@@ -952,7 +952,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	// the effect of allocating a screen buffer of the right size
 	unless (insertNewLines(this, inLineCountVisibleRows, true/* append only */))
 	{
-		throw kTerminal_ResultCodeNotEnoughMemory;
+		throw kTerminal_ResultNotEnoughMemory;
 	}
 	assert(!this->screenBuffer.empty());
 	
@@ -966,7 +966,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	}
 	catch (std::bad_alloc)
  	{
-		throw kTerminal_ResultCodeNotEnoughMemory;
+		throw kTerminal_ResultNotEnoughMemory;
 	}
 	
 	this->current.characterSetInfoPtr = &this->vtG0; // by definition, G0 is active initially
@@ -1019,28 +1019,28 @@ the contents of multiple buffers).  Therefore, although a
 single buffer and view is created by this routine, more
 could be constructed later.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the screen was created successfully
 
-\retval kTerminal_ResultCodeParameterError
+\retval kTerminal_ResultParameterError
 if any of the given storage pointers are nullptr
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 if there is a serious problem creating the screen
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_NewScreen	(SInt16					inLineCountScrollbackBuffer,
 					 SInt16					inLineCountVisibleRows,
 					 SInt16					inMaximumColumnCount,
 					 Boolean				inForceLineSaving,
 					 TerminalScreenRef*		outScreenPtr)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result		result = kTerminal_ResultOK;
 	
 	
-	if (outScreenPtr == nullptr) result = kTerminal_ResultCodeParameterError;
+	if (outScreenPtr == nullptr) result = kTerminal_ResultParameterError;
 	else
 	{
 		try
@@ -1053,7 +1053,7 @@ Terminal_NewScreen	(SInt16					inLineCountScrollbackBuffer,
 		{
 			*outScreenPtr = nullptr;
 		}
-		catch (Terminal_ResultCode	inConstructionError)
+		catch (Terminal_Result		inConstructionError)
 		{
 			result = inConstructionError;
 		}
@@ -1274,30 +1274,30 @@ with a range from first column to last column.
 You can use this to apply effects intended to be global
 to a line, like double-sized text.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the line attributes were changed successfully
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
-\retval kTerminal_ResultCodeInvalidIterator
+\retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_ChangeLineAttributes	(TerminalScreenRef			inRef,
 								 Terminal_LineRef			inRow,
 								 TerminalTextAttributes		inSetTheseAttributes,
 								 TerminalTextAttributes		inClearTheseAttributes)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
 	
 	
-	if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
-	else if (iteratorPtr == nullptr) result = kTerminal_ResultCodeInvalidIterator;
+	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
+	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
 		changeLineAttributes(dataPtr, *(iteratorPtr->rowIterator), inSetTheseAttributes, inClearTheseAttributes);
@@ -1323,18 +1323,18 @@ with the same start and end rows.
 You can use this to apply effects intended to be applied
 to a series of characters on a line, like text coloring.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the line range attributes were changed successfully
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
-\retval kTerminal_ResultCodeInvalidIterator
+\retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_ChangeLineRangeAttributes	(TerminalScreenRef			inRef,
 									 Terminal_LineRef			inRow,
 									 UInt16						inZeroBasedStartColumn,
@@ -1342,13 +1342,13 @@ Terminal_ChangeLineRangeAttributes	(TerminalScreenRef			inRef,
 									 TerminalTextAttributes		inSetTheseAttributes,
 									 TerminalTextAttributes		inClearTheseAttributes)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
 	
 	
-	if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
-	else if (iteratorPtr == nullptr) result = kTerminal_ResultCodeInvalidIterator;
+	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
+	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
 		changeLineRangeAttributes(dataPtr, *(iteratorPtr->rowIterator), inZeroBasedStartColumn,
@@ -1383,18 +1383,18 @@ the last column).
 You can use this to apply effects to a large number of
 characters at once (e.g. when highlighting).
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the range attributes were changed successfully
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
-\retval kTerminal_ResultCodeInvalidIterator
+\retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 								 Terminal_LineRef			inStartRow,
 								 UInt16						inNumberOfRowsToConsider,
@@ -1404,7 +1404,7 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 								 TerminalTextAttributes		inSetTheseAttributes,
 								 TerminalTextAttributes		inClearTheseAttributes)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inStartRow);
 	
@@ -1427,8 +1427,8 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 	{
 		// now apply changes to attributes of all specified cells, and to
 		// the “current” attributes (if the cursor is anywhere in the range)
-		if (nullptr == dataPtr) result = kTerminal_ResultCodeInvalidID;
-		else if (nullptr == iteratorPtr) result = kTerminal_ResultCodeInvalidIterator;
+		if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+		else if (nullptr == iteratorPtr) result = kTerminal_ResultInvalidIterator;
 		else
 		{
 			Boolean const						kSingleLineRange = (1 == inNumberOfRowsToConsider);
@@ -1507,26 +1507,26 @@ current visible width.  Trailing whitespace is skipped.
 
 DEPRECATED.  Use Terminal_GetLineRangePossibleCopy().
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the data was copied successfully
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
-\retval kTerminal_ResultCodeInvalidIterator
+\retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
-\retval kTerminal_ResultCodeParameterError
+\retval kTerminal_ResultParameterError
 if the given line number is too large or the given column
 numbers are out of range
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 if the specified buffer is too small; a truncated version of
 the text will be copied into the buffer
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 						 Terminal_LineRef		inRow,
 						 UInt16					inZeroBasedStartColumn,
@@ -1536,13 +1536,13 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 						 SInt32*				outActualLengthPtrOrNull,
 						 UInt16					inNumberOfSpacesPerTabOrZeroForNoSubstitution)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
 	
 	
-	if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
-	else if (iteratorPtr == nullptr) result = kTerminal_ResultCodeInvalidIterator;
+	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
+	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
 		UInt16		endColumn = (inZeroBasedEndColumnOrNegativeForLastColumn < 0)
@@ -1552,7 +1552,7 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 		
 		if (endColumn >= iteratorPtr->rowIterator->textVector.size())
 		{
-			result = kTerminal_ResultCodeParameterError;
+			result = kTerminal_ResultParameterError;
 		}
 		else
 		{
@@ -1600,22 +1600,22 @@ selection that is “rectangular” will only include text in
 the in-between rows that are part of the columns between
 the columns of the two anchor points.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the data was copied successfully
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
-\retval kTerminal_ResultCodeInvalidIterator
+\retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 if the specified buffer is too small; a truncated version
 of the text will be copied into the buffer
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_CopyRange	(TerminalScreenRef			inScreen,
 					 Terminal_LineRef			inStartRow,
 					 UInt16						inNumberOfRowsToConsider,
@@ -1628,13 +1628,13 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 					 SInt16						inNumberOfSpacesPerTabOrZeroForNoSubstitution,
 					 Terminal_TextCopyFlags		inFlags)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inStartRow);
 	
 	
-	if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
-	else if (iteratorPtr == nullptr) result = kTerminal_ResultCodeInvalidIterator;
+	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
+	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
 		char const* const	kOutBufferPastTheEndPtr = outBuffer + inBufferLength;
@@ -1867,24 +1867,24 @@ return values are not possible.
 
 Pass nullptr for one of the values if you do not want it.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if no error occurred
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_CursorGetLocation	(TerminalScreenRef		inRef,
 							 UInt16*				outZeroBasedColumnPtr,
 							 UInt16*				outZeroBasedRowPtr)
 {
-	Terminal_ResultCode			result = kTerminal_ResultCodeSuccess;
+	Terminal_Result				result = kTerminal_ResultOK;
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
+	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
 	else
 	{
 		if (outZeroBasedColumnPtr != nullptr) *outZeroBasedColumnPtr = dataPtr->current.cursorX;
@@ -1975,25 +1975,25 @@ Use this to help avoid getting the emulator into unknown
 states (the parser can recover, but gobbletygook doesn’t
 help the user much).
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the text is processed without errors
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the given terminal screen reference is invalid
 
 (3.1)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_EmulatorDeriveFromCString	(TerminalScreenRef		inRef,
 									 char const*			inCString,
 									 Terminal_Emulator&		outApparentEmulator)
 {
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	
 	
 	outApparentEmulator = kTerminal_EmulatorVT100;
-	if (nullptr == dataPtr) result = kTerminal_ResultCodeInvalidID;
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else
 	{
 		// INCOMPLETE; besides, this is essentially a heuristic
@@ -2067,18 +2067,18 @@ in an emulator-independent fashion; you should
 use those routines before hacking up a string as
 input to this routine.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the text is processed without errors
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the given terminal screen reference is invalid
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 if a text buffer cannot be allocated
 
 (3.1)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_EmulatorProcessCFString	(TerminalScreenRef	inRef,
 									 CFStringRef		inString)
 {
@@ -2086,11 +2086,11 @@ Terminal_EmulatorProcessCFString	(TerminalScreenRef	inRef,
 	//				into an array and processing it that way, ignoring any
 	//				special encoding.  This MUST be fixed, but it requires a
 	//				lot more CFString-aware code, first.
-	Handle					buffer = Memory_NewHandle(CFStringGetLength(inString) * sizeof(UniChar));
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Handle				buffer = Memory_NewHandle(CFStringGetLength(inString) * sizeof(UniChar));
+	Terminal_Result		result = kTerminal_ResultOK;
 	
 	
-	if (buffer == nullptr) result = kTerminal_ResultCodeNotEnoughMemory;
+	if (buffer == nullptr) result = kTerminal_ResultNotEnoughMemory;
 	else
 	{
 		CFIndex		actualSize = 0;
@@ -2130,15 +2130,15 @@ in an emulator-independent fashion; you should
 use those routines before hacking up a string as
 input to this routine.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the text is processed without errors
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the given terminal screen reference is invalid
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_EmulatorProcessCString		(TerminalScreenRef	inRef,
 									 char const*		inCString)
 {
@@ -2160,20 +2160,20 @@ in an emulator-independent fashion; you should
 use those routines before hacking up a string as
 input to this routine.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the text is processed without errors
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the given terminal screen reference is invalid
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 								 UInt8 const*		inBuffer,
 								 UInt32				inLength)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result		result = kTerminal_ResultOK;
 	
 	
 	if (inLength != 0)
@@ -2181,7 +2181,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 		My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 		
 		
-		if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
+		if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
 		else
 		{
 			UInt8 const*	ptr = inBuffer;
@@ -2471,7 +2471,7 @@ Terminal_FileCaptureSaveDialog		(FSSpec*	outFSSpecPtr)
 			
 			// get the user’s Capture File Creator preference, if possible
 			unless (Preferences_GetData(kPreferences_TagCaptureFileCreator, sizeof(captureFileCreator),
-										&captureFileCreator, &actualSize) == kPreferences_ResultCodeSuccess)
+										&captureFileCreator, &actualSize) == kPreferences_ResultOK)
 			{
 				captureFileCreator = 'ttxt'; // default to SimpleText if a preference can’t be found
 			}
@@ -2569,31 +2569,31 @@ associated attributes are all IDENTICAL.  The context is
 defined by you, and is passed directly to the specified
 function each time it is invoked.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if no error occurred
 
-\retval kTerminal_ResultCodeParameterError
+\retval kTerminal_ResultParameterError
 if the screen run operation function is invalid
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 if any line buffers are unexpectedly empty
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 									 Terminal_LineRef			inStartRow,
 									 ScreenRunOperationProcPtr	inDoWhat,
 									 void*						inContextPtr)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		screenPtr = getVirtualScreenData(inRef);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inStartRow);
 	
 	
 	if ((nullptr == inDoWhat) || (nullptr == screenPtr) || (nullptr == iteratorPtr))
 	{
-		result = kTerminal_ResultCodeParameterError;
+		result = kTerminal_ResultParameterError;
 	}
 	else
 	{
@@ -2687,17 +2687,17 @@ IMPORTANT:	To properly render a line, its global attributes
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_GetLineGlobalAttributes	(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 									 Terminal_LineRef			inRow,
 									 TerminalTextAttributes*	outAttributesPtr)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	//My_ScreenBufferConstPtr	dataPtr = getVirtualScreenData(inScreen);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
 	
 	
-	if ((iteratorPtr == nullptr) || (outAttributesPtr == nullptr)) result = kTerminal_ResultCodeParameterError;
+	if ((iteratorPtr == nullptr) || (outAttributesPtr == nullptr)) result = kTerminal_ResultParameterError;
 	else
 	{
 		*outAttributesPtr = iteratorPtr->rowIterator->globalAttributes;
@@ -2711,18 +2711,18 @@ Terminal_GetLineGlobalAttributes	(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 Like Terminal_GetLineRange(), but automatically pulls in the
 entire line (from the first column to past the end column).
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the data was copied successfully
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
-\retval kTerminal_ResultCodeInvalidIterator
+\retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
 (3.1)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_GetLine	(TerminalScreenRef		inScreen,
 					 Terminal_LineRef		inRow,
 					 char const*&			outPossibleReferenceStart,
@@ -2755,21 +2755,21 @@ NOTE:	This API is somewhat implementation dependent.  So this
 		API could change in the future, and any code that calls
 		it would have to change too.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the data was copied successfully
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the specified screen reference is invalid
 
-\retval kTerminal_ResultCodeInvalidIterator
+\retval kTerminal_ResultInvalidIterator
 if the specified row reference is invalid
 
-\retval kTerminal_ResultCodeParameterError
+\retval kTerminal_ResultParameterError
 if the specified column is out of range and nonnegative
 
 (3.1)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 						 Terminal_LineRef		inRow,
 						 UInt16					inZeroBasedStartColumn,
@@ -2777,7 +2777,7 @@ Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 						 char const*&			outReferenceStart,
 						 char const*&			outReferencePastEnd)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeParameterError;
+	Terminal_Result			result = kTerminal_ResultParameterError;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
 	
@@ -2785,8 +2785,8 @@ Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 	outReferenceStart = nullptr;
 	outReferencePastEnd = nullptr;
 	
-	if (nullptr == dataPtr) result = kTerminal_ResultCodeInvalidID;
-	else if (nullptr == iteratorPtr) result = kTerminal_ResultCodeInvalidIterator;
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+	else if (nullptr == iteratorPtr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
 		UInt16 const	kPastEndColumn = (inZeroBasedPastEndColumnOrNegativeForLastColumn < 0)
@@ -2796,13 +2796,13 @@ Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 		
 		if (kPastEndColumn > iteratorPtr->rowIterator->textVector.size())
 		{
-			result = kTerminal_ResultCodeParameterError;
+			result = kTerminal_ResultParameterError;
 		}
 		else
 		{
 			outReferenceStart = iteratorPtr->rowIterator->textVector.c_str() + inZeroBasedStartColumn;
 			outReferencePastEnd = iteratorPtr->rowIterator->textVector.c_str() + kPastEndColumn;
-			result = kTerminal_ResultCodeSuccess;
+			result = kTerminal_ResultOK;
 		}
 	}
 	
@@ -2969,30 +2969,29 @@ row that the iterator currently points to.  Pass a value less
 than zero to find a previous row, otherwise positive values
 find following rows.
 
-Returns "kTerminal_ResultCodeIteratorCannotAdvance" if the
+Returns "kTerminal_ResultIteratorCannotAdvance" if the
 specified iterator is at the end of its list of lines.
-Returns "kTerminal_ResultCodeParameterError" if the iterator
-is completely invalid.  Otherwise, returns
-"kTerminal_ResultCodeSuccess".
+Returns "kTerminal_ResultParameterError" if the iterator is
+completely invalid.  Otherwise, returns "kTerminal_ResultOK".
 
 (3.0)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_LineIteratorAdvance	(TerminalScreenRef		inRef,
 								 Terminal_LineRef		inRow,
 								 SInt16					inHowManyRowsForwardOrNegativeForBackward)
 {
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inRow);
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	
 	
-	if (iteratorPtr == nullptr) result = kTerminal_ResultCodeParameterError;
+	if (iteratorPtr == nullptr) result = kTerminal_ResultParameterError;
 	else if (((inHowManyRowsForwardOrNegativeForBackward > 0) && (iteratorPtr->rowIterator == iteratorPtr->sourceList.end())) ||
 			((inHowManyRowsForwardOrNegativeForBackward < 0) && (iteratorPtr->rowIterator == iteratorPtr->sourceList.begin())))
 	{
 		// unable to advance!
-		result = kTerminal_ResultCodeIteratorCannotAdvance;
+		result = kTerminal_ResultIteratorCannotAdvance;
 	}
 	else
 	{
@@ -3155,11 +3154,11 @@ Terminal_Reset		(TerminalScreenRef		inRef,
 					dataPtr->current.characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
 					
 					// force all visible characters to no longer use graphics
-					(Terminal_ResultCode)Terminal_ChangeRangeAttributes
-											(dataPtr->selfRef, lineIterator/* first row */, range.rowCount,
-												range.firstColumn/* start */, range.firstColumn + range.columnCount/* past the end */,
-												false/* constrain to rectangle */, 0/* attributes to set */,
-												kTerminalTextAttributeVTGraphics/* attributes to clear */);
+					(Terminal_Result)Terminal_ChangeRangeAttributes
+										(dataPtr->selfRef, lineIterator/* first row */, range.rowCount,
+											range.firstColumn/* start */, range.firstColumn + range.columnCount/* past the end */,
+											false/* constrain to rectangle */, 0/* attributes to set */,
+											kTerminalTextAttributeVTGraphics/* attributes to clear */);
 					
 					// add the entire visible buffer to the text-change region;
 					// this should trigger things like Terminal View updates
@@ -3482,15 +3481,15 @@ this, pass a nullptr session.
 
 (3.1)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_SetListeningSession	(TerminalScreenRef	inRef,
 								 SessionRef			inSession)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (nullptr == dataPtr) result = kTerminal_ResultCodeInvalidID;
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 	else
 	{
 		dataPtr->listeningSession = inSession;
@@ -3550,16 +3549,16 @@ percentage of the total that should be usable.  Although,
 this also forces the cursor into the new region, if
 necessary.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the terminal is resized without errors
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the given terminal screen reference is invalid
 
-\retval kTerminal_ResultCodeParameterError
+\retval kTerminal_ResultParameterError
 if the given number of columns is too small or too large
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 not currently returned because this routine does no memory
 reallocation; however a future implementation might decide
 to reallocate, and if such reallocation fails, this error
@@ -3567,15 +3566,15 @@ should be returned
 
 (2.6)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_SetVisibleColumnCount	(TerminalScreenRef	inRef,
 								 UInt16				inNewNumberOfCharactersWide)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
+	if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
 	else
 	{
 		// move cursor, if necessary
@@ -3587,7 +3586,7 @@ Terminal_SetVisibleColumnCount	(TerminalScreenRef	inRef,
 		if (inNewNumberOfCharactersWide > kMy_NumberOfCharactersPerLineMaximum)
 		{
 			// flag an error, but set a reasonable value anyway
-			result = kTerminal_ResultCodeParameterError;
+			result = kTerminal_ResultParameterError;
 			inNewNumberOfCharactersWide = kMy_NumberOfCharactersPerLineMaximum;
 		}
 		dataPtr->text.visibleScreen.numberOfColumnsPermitted = inNewNumberOfCharactersWide;
@@ -3602,26 +3601,26 @@ Changes the number of lines of text, not including the
 scrollback buffer, for a screen buffer.  This non-trivial
 operation requires reallocating a series of arrays.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if the terminal is resized without errors
 
-\retval kTerminal_ResultCodeInvalidID
+\retval kTerminal_ResultInvalidID
 if the given terminal screen reference is invalid
 
-\retval kTerminal_ResultCodeParameterError
+\retval kTerminal_ResultParameterError
 if the given number of rows is too small or too large
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 if it is not possible to allocate the requested number of rows
 
 (2.6)
 */
-Terminal_ResultCode
+Terminal_Result
 Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 								 UInt16				inNewNumberOfLinesHigh)
 {
-//return kTerminal_ResultCodeSuccess; // TMP
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+//return kTerminal_ResultOK; // TMP
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
@@ -3629,9 +3628,9 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 	if (inNewNumberOfLinesHigh > 200)
 	{
 		Console_WriteLine("refusing to resize on account of ridiculous line size");
-		result = kTerminal_ResultCodeParameterError;
+		result = kTerminal_ResultParameterError;
 	}
-	else if (dataPtr == nullptr) result = kTerminal_ResultCodeInvalidID;
+	else if (dataPtr == nullptr) result = kTerminal_ResultInvalidID;
 	else if (dataPtr->screenBuffer.size() != inNewNumberOfLinesHigh)
 	{
 		// then the requested number of lines is different than the current number; resize!
@@ -3652,7 +3651,7 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 			Boolean		insertOK = insertNewLines(dataPtr, kLineDelta, true/* append only */);
 			
 			
-			unless (insertOK) result = kTerminal_ResultCodeNotEnoughMemory;
+			unless (insertOK) result = kTerminal_ResultNotEnoughMemory;
 		}
 		else
 		{
@@ -5137,7 +5136,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 							++buffer[0]; // fix string length
 							if ((buffer[0] == 255) || (*speechIterator == '\r'))
 							{
-								TerminalSpeaker_ResultCode	speakerResult = kTerminalSpeaker_ResultCodeSuccess;
+								TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
 								
 								
 								// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
@@ -5148,7 +5147,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 									// when there is just no more room for characters
 									speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, 1 + buffer/* buffer */,
 																								buffer[0]/* buffer size */);
-								} while (speakerResult == kTerminalSpeaker_ResultCodeSpeechSynthesisTryAgain);
+								} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
 								buffer[0] = '\0'; // clear string
 							}
 						}
@@ -6443,7 +6442,7 @@ emulatorStandardStateTransition		(My_ScreenBufferPtr		inDataPtr,
 				
 				if (doSpeak)
 				{
-					TerminalSpeaker_ResultCode	speakerResult = kTerminalSpeaker_ResultCodeSuccess;
+					TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
 					
 					
 					// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
@@ -6453,7 +6452,7 @@ emulatorStandardStateTransition		(My_ScreenBufferPtr		inDataPtr,
 						// stop and speak when a new line is found, or
 						// when there is just no more room for characters
 						speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
-					} while (speakerResult == kTerminalSpeaker_ResultCodeSpeechSynthesisTryAgain);
+					} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
 				}
 			}
 		}
@@ -7654,33 +7653,33 @@ screen is.
 The context is defined by you, and is passed directly to
 the specified function each time it is invoked.
 
-\retval kTerminal_ResultCodeSuccess
+\retval kTerminal_ResultOK
 if no error occurred
 
-\retval kTerminal_ResultCodeParameterError
+\retval kTerminal_ResultParameterError
 if the screen line operation function, screen reference or
 line iterator reference is invalid
 
-\retval kTerminal_ResultCodeNotEnoughMemory
+\retval kTerminal_ResultNotEnoughMemory
 if any line buffers are unexpectedly empty
 
 (3.0)
 */
-static Terminal_ResultCode
+static Terminal_Result
 forEachLineDo	(TerminalScreenRef				inRef,
 				 Terminal_LineRef				inStartRow,
 				 UInt16							inNumberOfRowsToConsider,
 				 My_ScreenLineOperationProcPtr	inDoWhat,
 				 void*							inContextPtr)
 {
-	Terminal_ResultCode		result = kTerminal_ResultCodeSuccess;
+	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		screenPtr = getVirtualScreenData(inRef);
 	My_LineIteratorPtr		iteratorPtr = getLineIterator(inStartRow);
 	
 	
 	if ((inDoWhat == nullptr) || (screenPtr == nullptr) || (iteratorPtr == nullptr))
 	{
-		result = kTerminal_ResultCodeParameterError;
+		result = kTerminal_ResultParameterError;
 	}
 	else
 	{

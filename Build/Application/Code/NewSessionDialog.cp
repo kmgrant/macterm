@@ -425,9 +425,9 @@ noLookupInProgress				(true)
 			}
 			
 			// add the names of all terminal configurations to the menu
-			(Preferences_ResultCode)Preferences_InsertContextNamesInMenu(kPreferences_ClassTerminal, favoritesMenu,
-																			0/* after which item */, 0/* indentation level */,
-																			numberOfTerminalFavorites);
+			(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTerminal, favoritesMenu,
+																		0/* after which item */, 0/* indentation level */,
+																		numberOfTerminalFavorites);
 			
 			// adjust limits appropriately
 			SetControl32BitMinimum(this->popUpMenuTerminal, 1);
@@ -699,7 +699,7 @@ lookup	(MyNewSessionDialogPtr	inPtr)
 		lookupWaitUI(inPtr);
 		if (CFStringGetCString(textCFString, hostName, sizeof(hostName), kCFStringEncodingMacRoman))
 		{
-			DNR_ResultCode		lookupAttemptResult = kDNR_ResultCodeSuccess;
+			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
 			
 			
 			lookupAttemptResult = DNR_New(hostName, false/* use IP version 4 addresses (defaults to IPv6) */);
@@ -1380,12 +1380,12 @@ default states.
 static void
 updateResetRemoteFields		(MyNewSessionDialogPtr	inPtr)
 {
-	Preferences_ResultCode		preferencesResult = kPreferences_ResultCodeSuccess;
+	Preferences_Result			preferencesResult = kPreferences_ResultOK;
 	Preferences_ContextRef		preferencesContext = nullptr;
 	
 	
 	preferencesResult = Preferences_GetDefaultContext(&preferencesContext, kPreferences_ClassSession);
-	if (kPreferences_ResultCodeSuccess == preferencesResult)
+	if (kPreferences_ResultOK == preferencesResult)
 	{
 		// reset text fields
 		updateUsingSessionFavorite(inPtr, preferencesContext);
@@ -1406,7 +1406,7 @@ updateUsingSessionFavorite	(MyNewSessionDialogPtr		inPtr,
 							 Preferences_ContextRef		inContext)
 {
 	CFStringRef				hostCFString = nullptr;
-	Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
 	
 	// assume no host, port or command initially
@@ -1418,7 +1418,7 @@ updateUsingSessionFavorite	(MyNewSessionDialogPtr		inPtr,
 	// get host name for this session
 	preferencesResult = Preferences_ContextGetData(inContext, kPreferences_TagServerHost,
 													sizeof(hostCFString), &hostCFString);
-	if (kPreferences_ResultCodeSuccess == preferencesResult)
+	if (kPreferences_ResultOK == preferencesResult)
 	{
 		Session_Protocol	protocolPreference = kSession_ProtocolTelnet;
 		SInt16				port = 0;
@@ -1429,7 +1429,7 @@ updateUsingSessionFavorite	(MyNewSessionDialogPtr		inPtr,
 		// see if there is a port number preference as well
 		preferencesResult = Preferences_ContextGetData(inContext, kPreferences_TagServerPort,
 														sizeof(port), &port);
-		if (kPreferences_ResultCodeSuccess == preferencesResult)
+		if (kPreferences_ResultOK == preferencesResult)
 		{
 			SetControlNumericalText(inPtr->fieldPortNumber, port);
 		}
@@ -1437,7 +1437,7 @@ updateUsingSessionFavorite	(MyNewSessionDialogPtr		inPtr,
 		// see if there is a protocol preference as well
 		preferencesResult = Preferences_ContextGetData(inContext, kPreferences_TagServerProtocol,
 														sizeof(protocolPreference), &protocolPreference);
-		if (kPreferences_ResultCodeSuccess == preferencesResult)
+		if (kPreferences_ResultOK == preferencesResult)
 		{
 			inPtr->selectedProtocol = protocolPreference;
 			switch (protocolPreference)
@@ -1481,7 +1481,7 @@ updateUsingSessionFavorite	(MyNewSessionDialogPtr		inPtr,
 		// if no host name, perhaps it is actually a command favorite
 		preferencesResult = Preferences_ContextGetData(inContext, kPreferences_TagCommandLine,
 														sizeof(argumentListCFArray), &argumentListCFArray);
-		if (kPreferences_ResultCodeSuccess == preferencesResult)
+		if (kPreferences_ResultOK == preferencesResult)
 		{
 			CFStringRef		concatenatedString = CFStringCreateByCombiningStrings
 													(kCFAllocatorDefault, argumentListCFArray,

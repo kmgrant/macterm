@@ -12,7 +12,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -51,12 +51,12 @@
 
 #pragma mark Constants
 
-enum HelpSystem_ResultCode
+enum HelpSystem_Result
 {
-	kHelpSystem_ResultCodeSuccess				= 0,
-	kHelpSystem_ResultCodeNoSuchString			= 1,	//!< tag is invalid
-	kHelpSystem_ResultCodeCannotDisplayHelp		= 2,	//!< some problem trying to display help system
-	kHelpSystem_ResultCodeCannotRetrieveString	= 3		//!< some error while reading a valid key phrase
+	kHelpSystem_ResultOK					= 0,
+	kHelpSystem_ResultNoSuchString			= 1,	//!< tag is invalid
+	kHelpSystem_ResultCannotDisplayHelp		= 2,	//!< some problem trying to display help system
+	kHelpSystem_ResultCannotRetrieveString	= 3		//!< some error while reading a valid key phrase
 };
 
 typedef FourCharCode HelpSystem_KeyPhrase;
@@ -100,8 +100,8 @@ public:
 
 protected:
 private:
-	HelpSystem_ResultCode	_resultCode;
-	WindowRef				_window;
+	HelpSystem_Result	_resultCode;
+	WindowRef			_window;
 };
 
 
@@ -111,7 +111,7 @@ private:
 //!\name Initialization
 //@{
 
-HelpSystem_ResultCode
+HelpSystem_Result
 	HelpSystem_Init							();
 
 void
@@ -123,18 +123,18 @@ void
 //@{
 
 // NOT NORMALLY USED; YOU MIGHT NEED THIS FOR A CONTEXTUAL MENU ITEM
-HelpSystem_ResultCode
+HelpSystem_Result
 	HelpSystem_CopyKeyPhraseCFString		(HelpSystem_KeyPhrase		inKeyPhrase,
 											 CFStringRef&				outString);
 
 // DEPRECATED - USE HelpSystem_SetCurrentContextKeyPhrase() AND HelpSystem_DisplayHelpInCurrentContext() INSTEAD
-HelpSystem_ResultCode
+HelpSystem_Result
 	HelpSystem_DisplayHelpFromKeyPhrase		(HelpSystem_KeyPhrase		inKeyPhrase);
 
-HelpSystem_ResultCode
+HelpSystem_Result
 	HelpSystem_DisplayHelpInCurrentContext	();
 
-HelpSystem_ResultCode
+HelpSystem_Result
 	HelpSystem_DisplayHelpWithoutContext	();
 
 // IMPLICITLY FIGURES OUT THE KEY PHRASE, IF ANY, FOR THE FRONTMOST NON-FLOATING WINDOW
@@ -142,7 +142,7 @@ HelpSystem_KeyPhrase
 	HelpSystem_GetCurrentContextKeyPhrase	();
 
 // AFFECTS BEHAVIOR OF HelpSystem_GetCurrentContextKeyPhrase() AND HelpSystem_DisplayHelpInCurrentContext()
-HelpSystem_ResultCode
+HelpSystem_Result
 	HelpSystem_SetWindowKeyPhrase			(WindowRef					inWindow,
 											 HelpSystem_KeyPhrase		inKeyPhrase);
 
@@ -165,7 +165,7 @@ _window(inWindow)
 HelpSystem_WindowKeyPhraseSetter::
 ~HelpSystem_WindowKeyPhraseSetter ()
 {
-	(HelpSystem_ResultCode)HelpSystem_SetWindowKeyPhrase(_window, kHelpSystem_KeyPhraseDefault);
+	(HelpSystem_Result)HelpSystem_SetWindowKeyPhrase(_window, kHelpSystem_KeyPhraseDefault);
 }
 
 
@@ -174,7 +174,7 @@ HelpSystem_WindowKeyPhraseSetter::
 isInstalled ()
 const
 {
-	return (kHelpSystem_ResultCodeSuccess == _resultCode);
+	return (kHelpSystem_ResultOK == _resultCode);
 }
 
 #endif

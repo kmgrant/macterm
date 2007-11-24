@@ -18,7 +18,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,12 +56,12 @@
 
 #pragma mark Constants
 
-enum TerminalSpeaker_ResultCode
+enum TerminalSpeaker_Result
 {
-	kTerminalSpeaker_ResultCodeSuccess					= 0,	//!< no error occurred
-	kTerminalSpeaker_ResultCodeSoundPlayFailed			= 1,	//!< could not play a sampled sound for some reason
-	kTerminalSpeaker_ResultCodeSpeechSynthesisTryAgain	= 2,	//!< could not make the computer speak because the synthesizer is not ready
-	kTerminalSpeaker_ResultCodeSpeechSynthesisFailed	= 3		//!< could not make the computer speak for some reason
+	kTerminalSpeaker_ResultOK							= 0,	//!< no error occurred
+	kTerminalSpeaker_ResultSoundPlayFailed				= 1,	//!< could not play a sampled sound for some reason
+	kTerminalSpeaker_ResultSpeechSynthesisTryAgain		= 2,	//!< could not make the computer speak because the synthesizer is not ready
+	kTerminalSpeaker_ResultSpeechSynthesisFailed		= 3		//!< could not make the computer speak for some reason
 };
 
 #pragma mark Types
@@ -114,7 +114,7 @@ void
 void
 	TerminalSpeaker_SoundBell					(TerminalSpeaker_Ref		inSpeaker);
 
-TerminalSpeaker_ResultCode
+TerminalSpeaker_Result
 	TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref		inRef,
 												 void const*				inBuffer,
 												 Size						inBufferSize);

@@ -165,16 +165,16 @@ public:
 				
 				if (nullptr != terminalWindow)
 				{
-					TerminalWindow_ResultCode	terminalResult = kTerminalWindow_ResultCodeSuccess;
-					Float32						tabWidth = 0.0;
+					TerminalWindow_Result	terminalResult = kTerminalWindow_ResultOK;
+					Float32					tabWidth = 0.0;
 					
 					
 					terminalResult = TerminalWindow_SetTabPosition(terminalWindow, currentOffset);
-					if (kTerminalWindow_ResultCodeSuccess == terminalResult)
+					if (kTerminalWindow_ResultOK == terminalResult)
 					{
 						terminalResult = TerminalWindow_GetTabWidth(terminalWindow, tabWidth);
-						//assert(kTerminalWindow_ResultCodeSuccess == terminalResult);
-						if (kTerminalWindow_ResultCodeSuccess == terminalResult)
+						//assert(kTerminalWindow_ResultOK == terminalResult);
+						if (kTerminalWindow_ResultOK == terminalResult)
 						{
 							currentOffset += tabWidth;
 						}
@@ -423,7 +423,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 		{
 			CFMutableStringRef		commandLineCFString = CFStringCreateMutable(kCFAllocatorDefault,
 																				0/* length; 0 = unlimited */);
-			LocalResultCode			localResult = kLocalResultCodeSuccess;
+			Local_Result			localResult = kLocal_ResultOK;
 			WindowRef				window = TerminalWindow_ReturnWindow(terminalWindow);
 			pid_t					processID = 0;
 			char					devicePath[20];
@@ -446,7 +446,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnProcess(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 												argv, &processID, devicePath, inWorkingDirectoryOrNull);
-			if (kLocalResultCodeSuccess == localResult)
+			if (kLocal_ResultOK == localResult)
 			{
 				// success!
 				displayOK = true;
@@ -589,13 +589,13 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindowOrNul
 		if (nullptr != result)
 		{
 			char*				defaultShell = nullptr;
-			LocalResultCode		localResult = kLocalResultCodeSuccess;
+			Local_Result		localResult = kLocal_ResultOK;
 			WindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
 			pid_t				processID = 0;
 			char				devicePath[20];
 			
 			
-			if (Local_GetDefaultShell(&defaultShell) == kLocalResultCodeSuccess)
+			if (Local_GetDefaultShell(&defaultShell) == kLocal_ResultOK)
 			{
 				// indicate the active program
 				CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault, defaultShell,
@@ -617,7 +617,7 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindowOrNul
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 													&processID, devicePath);
-			if (kLocalResultCodeSuccess == localResult)
+			if (kLocal_ResultOK == localResult)
 			{
 				// success!
 				displayOK = true;
@@ -677,13 +677,13 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindowOr
 		if (nullptr != result)
 		{
 			char*				defaultShell = nullptr;
-			LocalResultCode		localResult = kLocalResultCodeSuccess;
+			Local_Result		localResult = kLocal_ResultOK;
 			WindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
 			pid_t				processID = 0;
 			char				devicePath[20];
 			
 			
-			if (Local_GetDefaultShell(&defaultShell) == kLocalResultCodeSuccess)
+			if (Local_GetDefaultShell(&defaultShell) == kLocal_ResultOK)
 			{
 				// indicate the active program
 				CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault, defaultShell,
@@ -705,7 +705,7 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindowOr
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 													&processID, devicePath);
-			if (kLocalResultCodeSuccess == localResult)
+			if (kLocal_ResultOK == localResult)
 			{
 				// construct a command that runs the shell script and then exits
 				Str255			buffer;
@@ -756,11 +756,11 @@ SessionRef
 SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
 											 SessionDescription_Ref		inSessionDescription)
 {
-	SessionRef						result = nullptr;
-	TerminalWindowRef				terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-														? createTerminalWindow()
-														: inTerminalWindowOrNullToMakeNewWindow;
-	SessionDescription_ResultCode   dataAccessError = kSessionDescription_ResultCodeSuccess;
+	SessionRef					result = nullptr;
+	TerminalWindowRef			terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
+													? createTerminalWindow()
+													: inTerminalWindowOrNullToMakeNewWindow;
+	SessionDescription_Result   dataAccessError = kSessionDescription_ResultOK;
 	
 	
 	SessionDescription_Retain(inSessionDescription); // prevent file object from being deleted until session setup completes
@@ -775,11 +775,11 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 		
 		dataAccessError = SessionDescription_GetIntegerData
 							(inSessionDescription, kSessionDescription_IntegerTypeTerminalVisibleColumnCount, columns);
-		if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+		if (kSessionDescription_ResultOK == dataAccessError)
 		{
 			dataAccessError = SessionDescription_GetIntegerData
 								(inSessionDescription, kSessionDescription_IntegerTypeTerminalVisibleLineCount, rows);
-			if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+			if (kSessionDescription_ResultOK == dataAccessError)
 			{
 				TerminalWindow_SetScreenDimensions(terminalWindow, columns, rows, false/* send to recording scripts */);
 			}
@@ -792,7 +792,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 		
 		dataAccessError = SessionDescription_GetStringData
 							(inSessionDescription, kSessionDescription_StringTypeTerminalFont, fontCFString);
-		if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+		if (kSessionDescription_ResultOK == dataAccessError)
 		{
 			Str255		fontName;
 			
@@ -815,16 +815,16 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 		
 		dataAccessError = SessionDescription_GetIntegerData
 							(inSessionDescription, kSessionDescription_IntegerTypeTerminalFontSize, fontSize);
-		if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+		if (kSessionDescription_ResultOK == dataAccessError)
 		{
 			TerminalWindow_SetFontAndSize(terminalWindow, nullptr/* font */, fontSize);
 		}
 	}
 	{
 		// colors (currently, cannot vary across views)
-		UInt16						viewCount = 0;
-		TerminalViewRef*			viewArray = nullptr;
-		TerminalWindow_ResultCode   terminalWindowResult = kTerminalWindow_ResultCodeSuccess;
+		UInt16					viewCount = 0;
+		TerminalViewRef*		viewArray = nullptr;
+		TerminalWindow_Result   terminalWindowResult = kTerminalWindow_ResultOK;
 		
 		
 		viewCount = TerminalWindow_ReturnViewCountInGroup(terminalWindow, kTerminalWindow_ViewGroupEverything);
@@ -835,7 +835,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 		{
 			terminalWindowResult = TerminalWindow_GetViewsInGroup(terminalWindow, kTerminalWindow_ViewGroupEverything,
 																	viewCount, viewArray, nullptr/* actual size */);
-			if (kTerminalWindow_ResultCodeSuccess != terminalWindowResult)
+			if (kTerminalWindow_ResultOK != terminalWindowResult)
 			{
 				RGBColor	colorValue;
 				UInt16		i = 0;
@@ -846,7 +846,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 					// normal foreground color
 					dataAccessError = SessionDescription_GetRGBColorData
 										(inSessionDescription, kSessionDescription_RGBColorTypeTextNormal, colorValue);
-					if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+					if (kSessionDescription_ResultOK == dataAccessError)
 					{
 						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexNormalText, &colorValue);
 					}
@@ -854,7 +854,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 					// normal background color
 					dataAccessError = SessionDescription_GetRGBColorData
 										(inSessionDescription, kSessionDescription_RGBColorTypeBackgroundNormal, colorValue);
-					if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+					if (kSessionDescription_ResultOK == dataAccessError)
 					{
 						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexNormalBackground, &colorValue);
 					}
@@ -862,7 +862,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 					// bold foreground color
 					dataAccessError = SessionDescription_GetRGBColorData
 										(inSessionDescription, kSessionDescription_RGBColorTypeTextBold, colorValue);
-					if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+					if (kSessionDescription_ResultOK == dataAccessError)
 					{
 						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBoldText, &colorValue);
 					}
@@ -870,7 +870,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 					// bold background color
 					dataAccessError = SessionDescription_GetRGBColorData
 										(inSessionDescription, kSessionDescription_RGBColorTypeBackgroundBold, colorValue);
-					if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+					if (kSessionDescription_ResultOK == dataAccessError)
 					{
 						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBoldBackground, &colorValue);
 					}
@@ -878,7 +878,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 					// blinking foreground color
 					dataAccessError = SessionDescription_GetRGBColorData
 										(inSessionDescription, kSessionDescription_RGBColorTypeTextBlinking, colorValue);
-					if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+					if (kSessionDescription_ResultOK == dataAccessError)
 					{
 						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBlinkingText, &colorValue);
 					}
@@ -886,7 +886,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 					// blinking background color
 					dataAccessError = SessionDescription_GetRGBColorData
 										(inSessionDescription, kSessionDescription_RGBColorTypeBackgroundBlinking, colorValue);
-					if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+					if (kSessionDescription_ResultOK == dataAccessError)
 					{
 						TerminalView_SetColor(viewArray[i], kTerminalView_ColorIndexBlinkingBackground, &colorValue);
 					}
@@ -903,7 +903,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 		
 		dataAccessError = SessionDescription_GetStringData(inSessionDescription, kSessionDescription_StringTypeCommandLine,
 															commandLine);
-		if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+		if (kSessionDescription_ResultOK == dataAccessError)
 		{
 			// okay, that data is in the file; this means it describes a “local” session...
 			CFArrayRef		argv = CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, commandLine,
@@ -924,7 +924,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 			
 			//dataAccessError = SessionDescription_GetStringData(inSessionDescription, kSessionDescription_StringTypeHostName,
 			//													hostName);
-			if (kSessionDescription_ResultCodeSuccess == dataAccessError)
+			if (kSessionDescription_ResultOK == dataAccessError)
 			{
 				// okay, host name data is in the file; this means it describes a “remote” session...
 				// UNIMPLEMENTED
@@ -1065,10 +1065,10 @@ SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindowOrNull
 		result = Session_New();
 		if (nullptr != result)
 		{
-			LocalResultCode		localResult = kLocalResultCodeSuccess;
-			WindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t				processID = 0;
-			char				devicePath[20];
+			Local_Result	localResult = kLocal_ResultOK;
+			WindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+			pid_t			processID = 0;
+			char			devicePath[20];
 			
 			
 			Session_SetResourceLocationCFString(result, CFSTR("/usr/bin/login"));
@@ -1076,7 +1076,7 @@ SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindowOrNull
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnLoginShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 												&processID, devicePath);
-			if (kLocalResultCodeSuccess == localResult)
+			if (kLocal_ResultOK == localResult)
 			{
 				// success!
 				displayOK = true;
@@ -1123,7 +1123,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 												? createTerminalWindow()
 												: inTerminalWindowOrNullToMakeNewWindow;
 	Preferences_ContextRef	associatedTerminalContext = nullptr;
-	Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
 	
 	// read the terminal associated with the session, and use it
@@ -1135,7 +1135,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		
 		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
 														sizeof(associatedTerminalName), &associatedTerminalName);
-		if (kPreferences_ResultCodeSuccess == preferencesResult)
+		if (kPreferences_ResultOK == preferencesResult)
 		{
 			associatedTerminalContext = Preferences_NewContext(kPreferences_ClassTerminal, associatedTerminalName);
 			if (nullptr != associatedTerminalContext)
@@ -1158,7 +1158,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		
 		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagCommandLine,
 														sizeof(commandCFString), &commandCFString);
-		if (kPreferences_ResultCodeSuccess == preferencesResult)
+		if (kPreferences_ResultOK == preferencesResult)
 		{
 			CFArrayRef		argumentCFArray = CFStringCreateArrayBySeparatingStrings
 												(kCFAllocatorDefault, commandCFString, CFSTR(" "));
@@ -1378,24 +1378,24 @@ Returns the session whose order in the specified list
 (each list is sorted by a different criteria) is the
 index given.
 
-\retval kSessionFactory_ResultCodeSuccess
+\retval kSessionFactory_ResultOK
 if there are no errors
 
-\retval kSessionFactory_ResultCodeParameterError
+\retval kSessionFactory_ResultParameterError
 if the specified index, list type or session pointer
 is invalid
 
 (3.0)
 */
-SessionFactory_ResultCode
+SessionFactory_Result
 SessionFactory_GetSessionWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex,
 												 SessionFactory_List	inFromWhichList,
 												 SessionRef*			outSessionPtr)
 {
-	SessionFactory_ResultCode	result = kSessionFactory_ResultCodeSuccess;
+	SessionFactory_Result	result = kSessionFactory_ResultOK;
 	
 	
-	if (nullptr == outSessionPtr) result = kSessionFactory_ResultCodeParameterError;
+	if (nullptr == outSessionPtr) result = kSessionFactory_ResultParameterError;
 	else
 	{
 		switch (inFromWhichList)
@@ -1408,7 +1408,7 @@ SessionFactory_GetSessionWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex
 				if (inZeroBasedSessionIndex >= gSessionListSortedByCreationTime().size())
 				{
 					// index is invalid
-					result = kSessionFactory_ResultCodeParameterError;
+					result = kSessionFactory_ResultParameterError;
 				}
 				else
 				{
@@ -1420,7 +1420,7 @@ SessionFactory_GetSessionWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex
 		
 		default:
 			// ???
-			result = kSessionFactory_ResultCodeParameterError;
+			result = kSessionFactory_ResultParameterError;
 			break;
 		}
 	}
@@ -1463,24 +1463,24 @@ Returns the order in which the given session
 appears in the specified list (each list is
 sorted by a different criteria).
 
-\retval kSessionFactory_ResultCodeSuccess
+\retval kSessionFactory_ResultOK
 if there are no errors
 
-\retval kSessionFactory_ResultCodeParameterError
+\retval kSessionFactory_ResultParameterError
 if the specified session, list type or index
 pointer is invalid
 
 (3.0)
 */
-SessionFactory_ResultCode
+SessionFactory_Result
 SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 											 SessionFactory_List	inFromWhichList,
 											 UInt16*				outIndexPtr)
 {
-	SessionFactory_ResultCode	result = kSessionFactory_ResultCodeSuccess;
+	SessionFactory_Result	result = kSessionFactory_ResultOK;
 	
 	
-	if (nullptr == inOfWhichSession) result = kSessionFactory_ResultCodeParameterError;
+	if (nullptr == inOfWhichSession) result = kSessionFactory_ResultParameterError;
 	else
 	{
 		switch (inFromWhichList)
@@ -1506,14 +1506,14 @@ SessionFactory_GetZeroBasedIndexOfSession	(SessionRef				inOfWhichSession,
 				if (*outIndexPtr >= gSessionListSortedByCreationTime().size())
 				{
 					// session was not in the list; return an error
-					result = kSessionFactory_ResultCodeParameterError;
+					result = kSessionFactory_ResultParameterError;
 				}
 			}
 			break;
 		
 		default:
 			// ???
-			result = kSessionFactory_ResultCodeParameterError;
+			result = kSessionFactory_ResultParameterError;
 			break;
 		}
 	}
@@ -1651,28 +1651,28 @@ IMPORTANT:	The context passed to the listener callback
 			comments on what the context means for each
 			type of change.
 
-\retval kSessionFactory_ResultCodeSuccess
+\retval kSessionFactory_ResultOK
 if there are no errors
 
-\retval kSessionFactory_ResultCodeParameterError
+\retval kSessionFactory_ResultParameterError
 if there are any problems installing the specified
 listener for the specified event
 
-\retval kSessionFactory_ResultCodeNotInitialized if
+\retval kSessionFactory_ResultNotInitialized if
 SessionFactory_Init() has not been called yet
 
 (3.0)
 */
-SessionFactory_ResultCode
+SessionFactory_Result
 SessionFactory_StartMonitoring	(SessionFactory_Change		inForWhatChange,
 								 ListenerModel_ListenerRef	inListener)
 {
-	SessionFactory_ResultCode	result = kSessionFactory_ResultCodeSuccess;
+	SessionFactory_Result	result = kSessionFactory_ResultOK;
 	
 	
 	if (nullptr == gSessionFactoryStateChangeListenerModel)
 	{
-		result = kSessionFactory_ResultCodeNotInitialized;
+		result = kSessionFactory_ResultNotInitialized;
 	}
 	else
 	{
@@ -1681,7 +1681,7 @@ SessionFactory_StartMonitoring	(SessionFactory_Change		inForWhatChange,
 		
 		
 		error = ListenerModel_AddListenerForEvent(gSessionFactoryStateChangeListenerModel, inForWhatChange, inListener);
-		if (noErr != error) result = kSessionFactory_ResultCodeParameterError;
+		if (noErr != error) result = kSessionFactory_ResultParameterError;
 	}
 	
 	return result;
@@ -1698,28 +1698,28 @@ IMPORTANT:	The context passed to the listener callback
 			on what the context means for each type of
 			change.
 
-\retval kSessionFactory_ResultCodeSuccess
+\retval kSessionFactory_ResultOK
 if there are no errors
 
-\retval kSessionFactory_ResultCodeParameterError
+\retval kSessionFactory_ResultParameterError
 if there are any problems installing the specified
 listener for the specified event
 
-\retval kSessionFactory_ResultCodeNotInitialized if
+\retval kSessionFactory_ResultNotInitialized if
 SessionFactory_Init() has not been called yet
 
 (3.0)
 */
-SessionFactory_ResultCode
+SessionFactory_Result
 SessionFactory_StartMonitoringSessions	(Session_Change				inForWhatChange,
 										 ListenerModel_ListenerRef	inListener)
 {
-	SessionFactory_ResultCode	result = kSessionFactory_ResultCodeSuccess;
+	SessionFactory_Result	result = kSessionFactory_ResultOK;
 	
 	
 	if (nullptr == gSessionFactoryStateChangeListenerModel)
 	{
-		result = kSessionFactory_ResultCodeNotInitialized;
+		result = kSessionFactory_ResultNotInitialized;
 	}
 	else
 	{
@@ -1728,7 +1728,7 @@ SessionFactory_StartMonitoringSessions	(Session_Change				inForWhatChange,
 		
 		
 		error = ListenerModel_AddListenerForEvent(gSessionStateChangeListenerModel, inForWhatChange, inListener);
-		if (noErr != error) result = kSessionFactory_ResultCodeParameterError;
+		if (noErr != error) result = kSessionFactory_ResultParameterError;
 	}
 	
 	return result;
@@ -1958,7 +1958,7 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 						 Preferences_ContextRef		inFontInfoOrNull)
 {
 	TerminalWindowRef		result = nullptr;
-	Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	UInt16					columns = 0;
 	UInt16					rows = 0;
 	UInt16					scrollbackRows = 0;
@@ -1985,7 +1985,7 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 		
 		unless (Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
 									&headersCollapsed, &actualSize) ==
-				kPreferences_ResultCodeSuccess)
+				kPreferences_ResultOK)
 		{
 			headersCollapsed = false; // assume headers aren’t collapsed, if preference can’t be found
 		}
@@ -1999,20 +1999,20 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 		
 		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalLineWrap,
 														sizeof(flag), &flag);
-		if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+		if (preferencesResult != kPreferences_ResultOK) flag = false;
 		if (flag) flags |= kTerminalWindow_FlagTextWraps;
 	}
 	
 	// read various dimension preferences
 	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenColumns,
 													sizeof(columns), &columns);
-	if (preferencesResult != kPreferences_ResultCodeSuccess) columns = 80; // arbitrary
+	if (preferencesResult != kPreferences_ResultOK) columns = 80; // arbitrary
 	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenRows,
 													sizeof(rows), &rows);
-	if (preferencesResult != kPreferences_ResultCodeSuccess) rows = 24; // arbitrary
+	if (preferencesResult != kPreferences_ResultOK) rows = 24; // arbitrary
 	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenScrollbackRows,
 													sizeof(scrollbackRows), &scrollbackRows);
-	if (preferencesResult != kPreferences_ResultCodeSuccess) scrollbackRows = 200; // arbitrary
+	if (preferencesResult != kPreferences_ResultOK) scrollbackRows = 200; // arbitrary
 	
 	// create a new terminal window to house the session
 	result = TerminalWindow_New(columns, rows, scrollbackRows, flags);
@@ -2022,9 +2022,9 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 		UInt16		fontSize = 0;
 		
 		
-		if ((kPreferences_ResultCodeSuccess ==
+		if ((kPreferences_ResultOK ==
 				Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontName, sizeof(fontName), fontName)) &&
-			(kPreferences_ResultCodeSuccess ==
+			(kPreferences_ResultOK ==
 				Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontSize, sizeof(fontSize), &fontSize)))
 		{
 			TerminalWindow_SetFontAndSize(result, fontName, fontSize);
@@ -2056,16 +2056,16 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 	if (nullptr == window) result = false;
 	else
 	{
-		TerminalWindow_ResultCode	terminalWindowResult = kTerminalWindow_ResultCodeSuccess;
+		TerminalWindow_Result		terminalWindowResult = kTerminalWindow_ResultOK;
 		TerminalViewRef				view = nullptr;
-		Preferences_ResultCode		preferencesResult = kPreferences_ResultCodeSuccess;
+		Preferences_Result			preferencesResult = kPreferences_ResultOK;
 		Boolean						useTabs = false;
 		
 		
 		// figure out if this window should have a tab and be arranged
 		preferencesResult = Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs,
 												sizeof(useTabs), &useTabs, nullptr/* actual size */);
-		if (preferencesResult != kPreferences_ResultCodeSuccess) useTabs = false;
+		if (preferencesResult != kPreferences_ResultOK) useTabs = false;
 		if (useTabs)
 		{
 			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
@@ -2091,7 +2091,7 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 		// focus the first view of the first tab
 		terminalWindowResult = TerminalWindow_GetViewsInGroup(inTerminalWindow, kTerminalWindow_ViewGroup1, 1/* array length */,
 																&view, nullptr/* actual count */);
-		if (terminalWindowResult == kTerminalWindow_ResultCodeSuccess)
+		if (terminalWindowResult == kTerminalWindow_ResultOK)
 		{
 			TerminalView_FocusForUser(view);
 		}
@@ -2582,7 +2582,7 @@ updatePaletteTerminalWindowOp	(TerminalWindowRef		inTerminalWindow,
 		size_t		actualSize = 0;
 		
 		
-		if (kPreferences_ResultCodeSuccess == Preferences_GetData(colorID, sizeof(colorRGB), &colorRGB, &actualSize))
+		if (kPreferences_ResultOK == Preferences_GetData(colorID, sizeof(colorRGB), &colorRGB, &actualSize))
 		{
 			UInt16 const	kViewCount = TerminalWindow_ReturnViewCount(inTerminalWindow);
 			

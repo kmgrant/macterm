@@ -3,7 +3,7 @@
 	PrefPanelKiosk.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -278,7 +278,7 @@ const
 		Boolean		showMenuBar = false;
 		
 		
-		unless (kPreferences_ResultCodeSuccess ==
+		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
 									&showMenuBar, &actualSize))
 		{
@@ -290,7 +290,7 @@ const
 		Boolean		showScrollBar = false;
 		
 		
-		unless (kPreferences_ResultCodeSuccess ==
+		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
 									&showScrollBar, &actualSize))
 		{
@@ -302,7 +302,7 @@ const
 		Boolean		allowForceQuit = false;
 		
 		
-		unless (kPreferences_ResultCodeSuccess ==
+		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
 									&allowForceQuit, &actualSize))
 		{
@@ -314,7 +314,7 @@ const
 		Boolean		superfluousEffects = false;
 		
 		
-		unless (kPreferences_ResultCodeSuccess ==
+		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskUsesSuperfluousEffects, sizeof(superfluousEffects),
 									&superfluousEffects, &actualSize))
 		{
@@ -326,7 +326,7 @@ const
 		Boolean		showOffSwitch = false;
 		
 		
-		unless (kPreferences_ResultCodeSuccess ==
+		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
 									&showOffSwitch, &actualSize))
 		{

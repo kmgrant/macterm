@@ -3,7 +3,7 @@
 	QuillsPrefs.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -65,12 +65,12 @@ Prefs::list_collections		(Prefs::Class	inForWhichClass)
 {
 	std::vector< std::string >	result;
 	CFArrayRef					nameCFArray = nullptr;
-	Preferences_ResultCode		prefsError = kPreferences_ResultCodeSuccess;
+	Preferences_Result			prefsError = kPreferences_ResultOK;
 	
 	
 	prefsError = Preferences_CreateContextNameArray
 					(returnPreferencesClassForPrefsClass(inForWhichClass), nameCFArray);
-	if (kPreferences_ResultCodeSuccess == prefsError)
+	if (kPreferences_ResultOK == prefsError)
 	{
 		CFIndex const	kCount = CFArrayGetCount(nameCFArray);
 		

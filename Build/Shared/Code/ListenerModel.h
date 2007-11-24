@@ -16,7 +16,7 @@
 /*###############################################################
 
 	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -53,11 +53,11 @@
 /*!
 Possible return values from Listener Model module routines.
 */
-enum ListenerModel_ResultCode
+enum ListenerModel_Result
 {
-	kListenerModel_ResultCodeSuccess		= 0,	//!< no error occurred
-	kListenerModel_InvalidModelReference	= 1,	//!< listener model is not recognized
-	kListenerModel_InvalidListenerReference	= 2		//!< listener is not recognized
+	kListenerModel_ResultOK							= 0,	//!< no error occurred
+	kListenerModel_ResultInvalidModelReference		= 1,	//!< listener model is not recognized
+	kListenerModel_ResultInvalidListenerReference	= 2		//!< listener is not recognized
 };
 
 /*!
@@ -229,12 +229,12 @@ Boolean
 	ListenerModel_IsAnyListenerForEvent		(ListenerModel_Ref				inForWhichModel,
 											 ListenerModel_Event			inEventThatOccurred);
 
-ListenerModel_ResultCode
+ListenerModel_Result
 	ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref				inFromWhichModel,
 											 ListenerModel_Event			inForWhichEvent,
 											 ListenerModel_ListenerRef		inListenerToRemove);
 
-ListenerModel_ResultCode
+ListenerModel_Result
 	ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref				inForWhichModel,
 											 ListenerModel_Event			inEventThatOccurred,
 											 void*							inContextPtr,
@@ -245,7 +245,7 @@ ListenerModel_ResultCode
 //!\name Accessing Listeners
 //@{
 
-ListenerModel_ResultCode
+ListenerModel_Result
 	ListenerModel_GetDescriptor				(ListenerModel_Ref				inForWhichModel,
 											 ListenerModel_Descriptor*		outDescriptorPtr);
 

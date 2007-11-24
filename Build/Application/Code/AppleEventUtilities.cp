@@ -356,15 +356,15 @@ AppleEventUtilities_ExecuteScript	(Handle		inScriptData,
 			if (result == errOSAScriptError)
 			{
 				// the script reported an error - display it to the user
-				UIStrings_ResultCode		stringResult = kUIStrings_ResultCodeSuccess;
-				CFStringRef					titleCFString = nullptr;
-				CFStringRef					messageCFString = nullptr;
-				CFStringRef					helpTextCFString = nullptr;
-				CFStringRef					helpTextTemplateCFString = nullptr;
-				AEDesc						errorMessageDescriptor;
-				AEDesc						errorNumberDescriptor;
-				AEDesc						titleDescriptor;
-				OSStatus					error = noErr;
+				UIStrings_Result	stringResult = kUIStrings_ResultOK;
+				CFStringRef			titleCFString = nullptr;
+				CFStringRef			messageCFString = nullptr;
+				CFStringRef			helpTextCFString = nullptr;
+				CFStringRef			helpTextTemplateCFString = nullptr;
+				AEDesc				errorMessageDescriptor;
+				AEDesc				errorNumberDescriptor;
+				AEDesc				titleDescriptor;
+				OSStatus			error = noErr;
 				
 				
 				(OSStatus)AppleEventUtilities_InitAEDesc(&errorMessageDescriptor);
@@ -383,7 +383,7 @@ AppleEventUtilities_ExecuteScript	(Handle		inScriptData,
 						(OSStatus)AEDisposeDesc(&errorNumberDescriptor);
 						stringResult = UIStrings_Copy(kUIStrings_AlertWindowScriptErrorHelpText,
 														helpTextTemplateCFString);
-						if (stringResult == kUIStrings_ResultCodeSuccess)
+						if (stringResult.ok())
 						{
 							helpTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
 																		helpTextTemplateCFString,

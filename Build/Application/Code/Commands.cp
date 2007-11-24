@@ -3,7 +3,7 @@
 	Commands.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -428,7 +428,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				else
 				{
 					InterfaceLibAlertRef	box = nullptr;
-					UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+					UIStrings_Result		stringResult = kUIStrings_ResultOK;
 					CFStringRef				dialogText = nullptr;
 					CFStringRef				helpText = nullptr;
 					Boolean					releaseDialogText = false;
@@ -436,9 +436,9 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					
 					
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroImportWarningPrimaryText, dialogText);
-					releaseDialogText = (kUIStrings_ResultCodeSuccess == stringResult);
+					releaseDialogText = (stringResult.ok());
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroImportWarningHelpText, helpText);
-					releaseHelpText = (kUIStrings_ResultCodeSuccess == stringResult);
+					releaseHelpText = (stringResult.ok());
 					
 					box = Alert_New();
 					Alert_SetHelpButton(box, false);
@@ -484,7 +484,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (Macros_AllEmpty(Macros_GetActiveSet()))
 			{
 				InterfaceLibAlertRef	box = nullptr;
-				UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+				UIStrings_Result		stringResult = kUIStrings_ResultOK;
 				CFStringRef				dialogText = nullptr;
 				CFStringRef				helpText = nullptr;
 				CFStringRef				openEditorText = nullptr;
@@ -495,11 +495,11 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				
 				
 				stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroExportNothingPrimaryText, dialogText);
-				releaseDialogText = (kUIStrings_ResultCodeSuccess == stringResult);
+				releaseDialogText = (stringResult.ok());
 				stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroExportNothingHelpText, helpText);
-				releaseHelpText = (kUIStrings_ResultCodeSuccess == stringResult);
+				releaseHelpText = (stringResult.ok());
 				stringResult = UIStrings_Copy(kUIStrings_ButtonOpenMacroEditor, openEditorText);
-				releaseOpenEditorText = (kUIStrings_ResultCodeSuccess == stringResult);
+				releaseOpenEditorText = (stringResult.ok());
 				
 				// send a Display Alert Apple Event
 				box = Alert_New();
@@ -1356,15 +1356,15 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandToggleMacrosMenuVisibility:
 			{
-				Preferences_ResultCode		preferencesResult = kPreferences_ResultCodeSuccess;
-				size_t						actualSize = 0;
-				Boolean						isVisible = false;
+				Preferences_Result		preferencesResult = kPreferences_ResultOK;
+				size_t					actualSize = 0;
+				Boolean					isVisible = false;
 				
 				
 				preferencesResult = Preferences_GetData(kPreferences_TagMacrosMenuVisible,
 														sizeof(isVisible), &isVisible,
 														&actualSize);
-				unless (preferencesResult == kPreferences_ResultCodeSuccess)
+				unless (preferencesResult == kPreferences_ResultOK)
 				{
 					isVisible = false; // assume a value, if preference can’t be found
 				}
@@ -1994,25 +1994,25 @@ execute the given command.
 The context passed to the listener is of type
 "Commands_ExecutionEventContextPtr".
 
-\retval kCommands_ResultCodeSuccess
+\retval kCommands_ResultOK
 if no error occurred
 
-\retval kCommands_ResultCodeParameterError
+\retval kCommands_ResultParameterError
 if an OSStatus listener was not provided or otherwise
 the listener could not be registered
 
 (3.0)
 */
-Commands_ResultCode
+Commands_Result
 Commands_StartHandlingExecution		(UInt32						inImplementedCommand,
 									 ListenerModel_ListenerRef	inCommandImplementor)
 {
-	Commands_ResultCode		result = kCommands_ResultCodeSuccess;
-	OSStatus				error = noErr;
+	Commands_Result		result = kCommands_ResultOK;
+	OSStatus			error = noErr;
 	
 	
 	error = ListenerModel_AddListenerForEvent(gCommandExecutionListenerModel(), inImplementedCommand, inCommandImplementor);
-	if (error != noErr) result = kCommands_ResultCodeParameterError;
+	if (error != noErr) result = kCommands_ResultParameterError;
 	
 	return result;
 }// StartHandlingExecution
@@ -2030,25 +2030,25 @@ only if the given command has been modified.
 The context passed to the listener is of type
 "Commands_ModificationEventContextPtr".
 
-\retval kCommands_ResultCodeSuccess
+\retval kCommands_ResultOK
 if no error occurred
 
-\retval kCommands_ResultCodeParameterError
+\retval kCommands_ResultParameterError
 if a Boolean listener was not provided or otherwise
 the listener could not be registered
 
 (3.0)
 */
-Commands_ResultCode
+Commands_Result
 Commands_StartHandlingModification	(UInt32						inModifiedCommand,
 									 ListenerModel_ListenerRef	inCommandModifier)
 {
-	Commands_ResultCode		result = kCommands_ResultCodeSuccess;
-	OSStatus				error = noErr;
+	Commands_Result		result = kCommands_ResultOK;
+	OSStatus			error = noErr;
 	
 	
 	error = ListenerModel_AddListenerForEvent(gCommandModificationListenerModel(), inModifiedCommand, inCommandModifier);
-	if (error != noErr) result = kCommands_ResultCodeParameterError;
+	if (error != noErr) result = kCommands_ResultParameterError;
 	
 	return result;
 }// StartHandlingModification
@@ -2062,16 +2062,16 @@ The given listener should match one installed
 previously with Commands_StartHandlingExecution();
 otherwise this routine silently fails.
 
-\retval kCommands_ResultCodeSuccess
+\retval kCommands_ResultOK
 always
 
 (3.0)
 */
-Commands_ResultCode
+Commands_Result
 Commands_StopHandlingExecution	(UInt32						inImplementedCommand,
 								 ListenerModel_ListenerRef	inCommandImplementor)
 {
-	Commands_ResultCode		result = kCommands_ResultCodeSuccess;
+	Commands_Result		result = kCommands_ResultOK;
 	
 	
 	ListenerModel_RemoveListenerForEvent(gCommandExecutionListenerModel(), inImplementedCommand, inCommandImplementor);
@@ -2087,16 +2087,16 @@ The given listener should match one installed
 previously with Commands_StartHandlingModification();
 otherwise this routine silently fails.
 
-\retval kCommands_ResultCodeSuccess
+\retval kCommands_ResultOK
 always
 
 (3.0)
 */
-Commands_ResultCode
+Commands_Result
 Commands_StopHandlingModification	(UInt32						inModifiedCommand,
 									 ListenerModel_ListenerRef	inCommandModifier)
 {
-	Commands_ResultCode		result = kCommands_ResultCodeSuccess;
+	Commands_Result		result = kCommands_ResultOK;
 	
 	
 	ListenerModel_RemoveListenerForEvent(gCommandModificationListenerModel(), inModifiedCommand, inCommandModifier);
@@ -2133,13 +2133,13 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 		if (nullptr == frontSession)
 		{
 			// not a session window; so, select the first or last session window
-			SessionRef					nextSession = nullptr;
-			SessionFactory_ResultCode	factoryError = SessionFactory_GetSessionWithZeroBasedIndex
-														((inPreviousInsteadOfNext) ? SessionFactory_GetCount() - 1 : 0,
-															kSessionFactory_ListInCreationOrder, &nextSession);
+			SessionRef				nextSession = nullptr;
+			SessionFactory_Result	factoryError = SessionFactory_GetSessionWithZeroBasedIndex
+													((inPreviousInsteadOfNext) ? SessionFactory_GetCount() - 1 : 0,
+														kSessionFactory_ListInCreationOrder, &nextSession);
 			
 			
-			if (kSessionFactory_ResultCodeSuccess == factoryError)
+			if (kSessionFactory_ResultOK == factoryError)
 			{
 				nextWindow = Session_ReturnActiveWindow(nextSession);
 			}
@@ -2147,14 +2147,14 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 		else
 		{
 			// is a session window; so, select the next or previous session window
-			SessionRef					nextSession = nullptr;
-			UInt16						frontSessionIndex = 0;
-			SessionFactory_ResultCode	factoryError = kSessionFactory_ResultCodeSuccess;
+			SessionRef				nextSession = nullptr;
+			UInt16					frontSessionIndex = 0;
+			SessionFactory_Result	factoryError = kSessionFactory_ResultOK;
 			
 			
 			factoryError = SessionFactory_GetZeroBasedIndexOfSession
 							(frontSession, kSessionFactory_ListInCreationOrder, &frontSessionIndex);
-			if (kSessionFactory_ResultCodeSuccess == factoryError)
+			if (kSessionFactory_ResultOK == factoryError)
 			{
 				// adjust the session index to determine the new session;
 				// if modified past the bounds, wrap around
@@ -2170,7 +2170,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 				
 				factoryError = SessionFactory_GetSessionWithZeroBasedIndex
 								(frontSessionIndex, kSessionFactory_ListInCreationOrder, &nextSession);
-				if (kSessionFactory_ResultCodeSuccess == factoryError)
+				if (kSessionFactory_ResultOK == factoryError)
 				{
 					nextWindow = Session_ReturnActiveWindow(nextSession);
 				}

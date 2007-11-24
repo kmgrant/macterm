@@ -684,12 +684,12 @@ help determine what kind of object an event came from.
 
 (1.0)
 */
-ListenerModel_ResultCode
+ListenerModel_Result
 ListenerModel_GetDescriptor		(ListenerModel_Ref			inForWhichModel,
 								 ListenerModel_Descriptor*	outDescriptorPtr)
 {
 	ListenerModelAutoLocker		ptr(gListenerModelPtrLocks(), inForWhichModel);
-	ListenerModel_ResultCode	result = kListenerModel_ResultCodeSuccess;
+	ListenerModel_Result		result = kListenerModel_ResultOK;
 	
 	
 	if (nullptr != outDescriptorPtr) *outDescriptorPtr = ptr->descriptor;
@@ -765,7 +765,7 @@ of data it points to varies based on the model style:
   if all listeners are notified and none of them returns
   "eventNotHandledErr", even if some return "noErr")
 
-\retval kListenerModel_ResultCodeSuccess
+\retval kListenerModel_ResultOK
 if no errors occur
 
 \retval kListenerModel_InvalidModelReference
@@ -780,14 +780,14 @@ listeners found to be invalid)
 
 (1.1)
 */
-ListenerModel_ResultCode
+ListenerModel_Result
 ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 										 ListenerModel_Event	inEventThatOccurred,
 										 void*					inEventContextPtr,
 										 void*					outReturnValuePtrOrNull)
 {
 	ListenerModelAutoLocker		ptr(gListenerModelPtrLocks(), inForWhichModel);
-	ListenerModel_ResultCode	result = kListenerModel_ResultCodeSuccess;
+	ListenerModel_Result		result = kListenerModel_ResultOK;
 	
 	
 	if ((nullptr == ptr) ||
@@ -795,7 +795,7 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 	{
 		Console_WriteValueAddress("warning, attempt to notify listeners in nonexistent model",
 									inForWhichModel);
-		result = kListenerModel_InvalidModelReference;
+		result = kListenerModel_ResultInvalidModelReference;
 	}
 	else
 	{
@@ -818,7 +818,7 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 				
 				if (perListenerFunction.anyInvalidListeners())
 				{
-					result = kListenerModel_InvalidListenerReference;
+					result = kListenerModel_ResultInvalidListenerReference;
 				}
 			}
 			break;
@@ -846,7 +846,7 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 				
 				if (perListenerFunction.anyInvalidListeners())
 				{
-					result = kListenerModel_InvalidListenerReference;
+					result = kListenerModel_ResultInvalidListenerReference;
 				}
 			}
 			break;
@@ -874,7 +874,7 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 				
 				if (perListenerFunction.anyInvalidListeners())
 				{
-					result = kListenerModel_InvalidListenerReference;
+					result = kListenerModel_ResultInvalidListenerReference;
 				}
 			}
 			break;
@@ -899,7 +899,7 @@ planning to remove an event before destroying it.  Now, when you
 destroy a listener object it is automatically removed from all
 models it is a member of.
 
-\retval kListenerModel_ResultCodeSuccess
+\retval kListenerModel_ResultOK
 if no errors occur
 
 \retval kListenerModel_InvalidModelReference
@@ -910,13 +910,13 @@ if "inListenerToRemove" is not valid
 
 (1.0)
 */
-ListenerModel_ResultCode
+ListenerModel_Result
 ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 										 ListenerModel_Event		inForWhichEvent,
 										 ListenerModel_ListenerRef	inListenerToRemove)
 {
 	ListenerModelAutoLocker		ptr(gListenerModelPtrLocks(), inFromWhichModel);
-	ListenerModel_ResultCode	result = kListenerModel_ResultCodeSuccess;
+	ListenerModel_Result		result = kListenerModel_ResultOK;
 	
 	
 	if ((nullptr == ptr) ||
@@ -924,14 +924,14 @@ ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 	{
 		Console_WriteValueAddress("warning, attempt to remove listener from nonexistent model",
 									inFromWhichModel);
-		result = kListenerModel_InvalidModelReference;
+		result = kListenerModel_ResultInvalidModelReference;
 	}
 	else if ((nullptr == inListenerToRemove) ||
 				(gListenerValidRefs().end() == gListenerValidRefs().find(inListenerToRemove)))
 	{
 		Console_WriteValueAddress("warning, attempt to remove nonexistent listener",
 									inListenerToRemove);
-		result = kListenerModel_InvalidListenerReference;
+		result = kListenerModel_ResultInvalidListenerReference;
 	}
 	else
 	{
@@ -1008,7 +1008,7 @@ unitTest000_Begin ()
 {
 	Boolean						result = true;
 	ListenerModel_ListenerRef	callbackWrapper = nullptr;
-	ListenerModel_ResultCode	modelError = kListenerModel_ResultCodeSuccess;
+	ListenerModel_Result		modelError = kListenerModel_ResultOK;
 	
 	
 	// create a listener, and arbitrarily pass in the address of this
@@ -1025,7 +1025,7 @@ unitTest000_Begin ()
 		
 		
 		modelError = ListenerModel_GetDescriptor(gUnitTest000_Model, &desc);
-		result &= Console_Assert("no errors getting model descriptor", kListenerModel_ResultCodeSuccess == modelError);
+		result &= Console_Assert("no errors getting model descriptor", kListenerModel_ResultOK == modelError);
 		result &= Console_Assert("proper model descriptor", 'u000' == desc);
 	}
 	
@@ -1045,22 +1045,22 @@ unitTest000_Begin ()
 	gUnitTest000_Result = true; // could be used by callbacks to raise assertions
 	modelError = ListenerModel_NotifyListenersOfEvent(gUnitTest000_Model, 'test',
 														REINTERPRET_CAST(0x54321234, void*)/* event context */);
-	result &= Console_Assert("no errors on notify", kListenerModel_ResultCodeSuccess == modelError);
+	result &= Console_Assert("no errors on notify", kListenerModel_ResultOK == modelError);
 	modelError = ListenerModel_NotifyListenersOfEvent(gUnitTest000_Model, 'test',
 														REINTERPRET_CAST(0x54321234, void*)/* event context */);
-	result &= Console_Assert("no errors on notify", kListenerModel_ResultCodeSuccess == modelError);
+	result &= Console_Assert("no errors on notify", kListenerModel_ResultOK == modelError);
 	modelError = ListenerModel_NotifyListenersOfEvent(gUnitTest000_Model, 'test',
 														REINTERPRET_CAST(0x54321234, void*)/* event context */);
-	result &= Console_Assert("no errors on notify", kListenerModel_ResultCodeSuccess == modelError);
+	result &= Console_Assert("no errors on notify", kListenerModel_ResultOK == modelError);
 	modelError = ListenerModel_NotifyListenersOfEvent(gUnitTest000_Model, 'test',
 														REINTERPRET_CAST(0x54321234, void*)/* event context */);
-	result &= Console_Assert("no errors on notify", kListenerModel_ResultCodeSuccess == modelError);
+	result &= Console_Assert("no errors on notify", kListenerModel_ResultOK == modelError);
 	modelError = ListenerModel_NotifyListenersOfEvent(gUnitTest000_Model, 'test',
 														REINTERPRET_CAST(0x54321234, void*)/* event context */);
-	result &= Console_Assert("no errors on notify", kListenerModel_ResultCodeSuccess == modelError);
+	result &= Console_Assert("no errors on notify", kListenerModel_ResultOK == modelError);
 	modelError = ListenerModel_NotifyListenersOfEvent(gUnitTest000_Model, 'test',
 														REINTERPRET_CAST(0x54321234, void*)/* event context */);
-	result &= Console_Assert("no errors on notify", kListenerModel_ResultCodeSuccess == modelError);
+	result &= Console_Assert("no errors on notify", kListenerModel_ResultOK == modelError);
 	
 	// incorporate any callback-raised failures
 	result &= gUnitTest000_Result;

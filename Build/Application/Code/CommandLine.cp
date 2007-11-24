@@ -3,7 +3,7 @@
 	CommandLine.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -204,10 +204,10 @@ CommandLine_Init ()
 	
 	// create the terminal view
 	{
-		Terminal_ResultCode		terminalError = kTerminal_ResultCodeSuccess;
-		Str255					fontName;
-		Rect					bounds;
-		HIRect					floatBounds;
+		Terminal_Result		terminalError = kTerminal_ResultOK;
+		Str255				fontName;
+		Rect				bounds;
+		HIRect				floatBounds;
 		
 		
 		// get the proper rectangle from the NIB; but NOTE, although the NIB-based
@@ -221,12 +221,12 @@ CommandLine_Init ()
 		
 		// use the default terminal’s font for the command line window, because the font is fixed-width
 		{
-			Preferences_ResultCode		prefsResult = kPreferences_ResultCodeSuccess;
+			Preferences_Result			prefsResult = kPreferences_ResultOK;
 			Preferences_ContextRef		prefsContext = nullptr;
 			
 			
 			prefsResult = Preferences_GetDefaultContext(&prefsContext, kPreferences_ClassFormat);
-			if (kPreferences_ResultCodeSuccess == prefsResult)
+			if (kPreferences_ResultOK == prefsResult)
 			{
 				size_t	actualSize = 0;
 				
@@ -234,7 +234,7 @@ CommandLine_Init ()
 				// find default terminal font family
 				prefsResult = Preferences_ContextGetData(prefsContext, kPreferences_TagFontName,
 															sizeof(fontName), fontName, &actualSize);
-				if (kPreferences_ResultCodeSuccess != prefsResult)
+				if (kPreferences_ResultOK != prefsResult)
 				{
 					// if unable to find a preference, choose some default
 					PLstrcpy(fontName, "\pMonaco");
@@ -243,7 +243,7 @@ CommandLine_Init ()
 		}
 		terminalError = Terminal_NewScreen(0/* number of scrollback rows */, 1/* number of rows */, 132/* number of columns */,
 											false/* force save */, &gCommandLineTerminalScreen);
-		if (kTerminal_ResultCodeSuccess == terminalError)
+		if (kTerminal_ResultOK == terminalError)
 		{
 			gCommandLineTerminalView = TerminalView_NewHIViewBased
 										(gCommandLineTerminalScreen, gCommandLineWindow, fontName, 14/* font size */);
@@ -348,10 +348,10 @@ CommandLine_Init ()
 		// controls to be adjusted automatically by the right amount
 		SetPt(&deltaSize, currentBounds.right - currentBounds.left,
 				currentBounds.bottom - currentBounds.top); // initially...
-		(Preferences_ResultCode)Preferences_ArrangeWindow(gCommandLineWindow, kPreferences_WindowTagCommandLine,
-															&deltaSize/* on input, initial size; on output, final size */,
-															kPreferences_WindowBoundaryLocation |
-															kPreferences_WindowBoundaryElementWidth);
+		(Preferences_Result)Preferences_ArrangeWindow(gCommandLineWindow, kPreferences_WindowTagCommandLine,
+														&deltaSize/* on input, initial size; on output, final size */,
+														kPreferences_WindowBoundaryLocation |
+														kPreferences_WindowBoundaryElementWidth);
 	}
 	
 	// restore the visible state implicitly saved at last Quit
@@ -360,7 +360,7 @@ CommandLine_Init ()
 		size_t		actualSize = 0L;
 		
 		
-		unless (kPreferences_ResultCodeSuccess ==
+		unless (kPreferences_ResultOK ==
 				Preferences_GetData(kPreferences_TagWasCommandLineShowing,
 									sizeof(windowIsVisible), &windowIsVisible,
 									&actualSize))
@@ -501,8 +501,8 @@ CommandLine_Done ()
 			
 			
 			windowIsVisible = IsWindowVisible(gCommandLineWindow);
-			(Preferences_ResultCode)Preferences_SetData(kPreferences_TagWasCommandLineShowing,
-														sizeof(Boolean), &windowIsVisible);
+			(Preferences_Result)Preferences_SetData(kPreferences_TagWasCommandLineShowing,
+													sizeof(Boolean), &windowIsVisible);
 		}
 		
 		// remove event handlers
@@ -687,9 +687,9 @@ commandLineKeyFilter	(UInt32*	inoutKeyCode)
 	if ((false == commandLineText.exists()) || (0 == commandLineTextSize))
 	{
 		// when empty, restore original biline string
-		CFStringRef				defaultHelpText = nullptr;
-		Boolean					releaseDefaultHelpText = true;
-		UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+		CFStringRef			defaultHelpText = nullptr;
+		Boolean				releaseDefaultHelpText = true;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
 		
 		
 		stringResult = UIStrings_Copy(kUIStrings_CommandLineHelpTextDefault, defaultHelpText);
@@ -726,7 +726,7 @@ commandLineKeyFilter	(UInt32*	inoutKeyCode)
 				if (nullptr != argv)
 				{
 					CommandLine_InterpreterProcPtr	procPtr = nullptr;
-					UIStrings_ResultCode			stringResult = kUIStrings_ResultCodeSuccess;
+					UIStrings_Result				stringResult = kUIStrings_ResultOK;
 					CFRetainRelease					finalText;
 					Boolean							haveDescription = false;
 					
@@ -834,9 +834,9 @@ commandLineKeyFilter	(UInt32*	inoutKeyCode)
 					else
 				#endif
 					{
-						CFStringRef				defaultHelpText = nullptr;
-						Boolean					releaseDefaultHelpText = true;
-						UIStrings_ResultCode	stringResult = kUIStrings_ResultCodeSuccess;
+						CFStringRef			defaultHelpText = nullptr;
+						Boolean				releaseDefaultHelpText = true;
+						UIStrings_Result	stringResult = kUIStrings_ResultOK;
 						
 						
 						stringResult = UIStrings_Copy(kUIStrings_CommandLineHelpTextDefault, defaultHelpText);
@@ -898,9 +898,9 @@ call CFRelease() on the string yourself.
 static CFStringRef
 getTextAsCFString ()
 {
-	CFStringRef				result = nullptr;
-	Terminal_LineRef		lineIterator = nullptr;
-	Terminal_ResultCode		getResult = kTerminal_ResultCodeSuccess;
+	CFStringRef			result = nullptr;
+	Terminal_LineRef	lineIterator = nullptr;
+	Terminal_Result		getResult = kTerminal_ResultOK;
 	
 	
 	// NOTE: A future Terminal API will return a CFString directly and can be used here.
@@ -913,7 +913,7 @@ getTextAsCFString ()
 		
 		getResult = Terminal_GetLine(gCommandLineTerminalScreen, lineIterator/* which row */,
 										startPtr, pastEndPtr);
-		if (kTerminal_ResultCodeSuccess == getResult)
+		if (kTerminal_ResultOK == getResult)
 		{
 			result = CFStringCreateWithBytes(kCFAllocatorDefault, REINTERPRET_CAST(startPtr, UInt8 const*),
 												pastEndPtr - startPtr, kTextEncodingMacRoman/* TEMPORARY */,

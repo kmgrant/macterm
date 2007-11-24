@@ -3,7 +3,7 @@
 	Configure.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -369,7 +369,7 @@ EditTerminal	(Preferences_Class		inClass,
 	if (preferencesContext == nullptr) result = false;
 	else
 	{
-		Preferences_ResultCode	preferencesResult = kPreferences_ResultCodeSuccess;
+		Preferences_Result		preferencesResult = kPreferences_ResultOK;
 		DialogRef				dialog = nullptr;
 		WindowRef				parentWindow = nullptr;
 		ModalFilterUPP			filterUPP = nullptr;
@@ -400,21 +400,21 @@ EditTerminal	(Preferences_Class		inClass,
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagANSIColorsEnabled,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, TermANSI, (flag) ? kControlCheckBoxCheckedValue
 														: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagXTermSequencesEnabled,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, TermXterm, (flag) ? kControlCheckBoxCheckedValue
 															: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalLineWrap,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, Termvtwrap, (flag) ? kControlCheckBoxCheckedValue
 															: kControlCheckBoxUncheckedValue);
 		}
@@ -424,7 +424,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagEMACSMetaKey,
 															sizeof(metaKey), &metaKey);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) metaKey = kSession_EMACSMetaKeyOff;
+			if (preferencesResult != kPreferences_ResultOK) metaKey = kSession_EMACSMetaKeyOff;
 			switch (metaKey)
 			{
 			case kSession_EMACSMetaKeyControlCommand:
@@ -451,28 +451,28 @@ EditTerminal	(Preferences_Class		inClass,
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagMapArrowsForEMACS,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, Termarrow, (flag) ? kControlCheckBoxCheckedValue
 															: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagPageKeysControlLocalTerminal,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, TermMAT, (flag) ? kControlCheckBoxCheckedValue
 														: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalClearSavesLines,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, Termclearsave, (flag) ? kControlCheckBoxCheckedValue
 																: kControlCheckBoxUncheckedValue);
 		}
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagDataReceiveDoNotStripHighBit,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, Termeightbit, (flag) ? kControlCheckBoxCheckedValue
 															: kControlCheckBoxUncheckedValue);
 		}
@@ -482,7 +482,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalEmulatorType,
 															sizeof(emulatorType), &emulatorType);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) emulatorType = kTerminal_EmulatorVT100;
+			if (preferencesResult != kPreferences_ResultOK) emulatorType = kTerminal_EmulatorVT100;
 			switch (emulatorType)
 			{
 			case kTerminal_EmulatorDumb:
@@ -514,7 +514,7 @@ EditTerminal	(Preferences_Class		inClass,
 		{
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagMapKeypadTopRowForVT220,
 															sizeof(flag), &flag);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) flag = false;
+			if (preferencesResult != kPreferences_ResultOK) flag = false;
 			SetDialogItemValue(dialog, TermRemapKeypad, (flag) ? kControlCheckBoxCheckedValue
 																: kControlCheckBoxUncheckedValue);
 		}
@@ -524,15 +524,15 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalScreenColumns,
 															sizeof(dimension), &dimension);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) dimension = 80; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) dimension = 80; // arbitrary
 			SetDialogItemNumericalText(dialog, TermWidth, dimension);
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalScreenRows,
 															sizeof(dimension), &dimension);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) dimension = 24; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) dimension = 24; // arbitrary
 			SetDialogItemNumericalText(dialog, TermHeight, dimension);
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalScreenScrollbackRows,
 															sizeof(dimension), &dimension);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) dimension = 200; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) dimension = 200; // arbitrary
 			SetDialogItemNumericalText(dialog, TermScrollback, dimension);
 		}
 		{
@@ -541,7 +541,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagFontSize,
 															sizeof(fontSize), &fontSize);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) fontSize = 12; // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) fontSize = 12; // arbitrary
 			SetDialogItemNumericalText(dialog, TermFontSize, fontSize);
 		}
 		{
@@ -550,7 +550,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalAnswerBackMessage,
 															sizeof(answerBack), answerBack);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) PLstrcpy(answerBack, "\pvt100"); // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) PLstrcpy(answerBack, "\pvt100"); // arbitrary
 			SetDialogItemControlText(dialog, TermAnswerback, answerBack);
 		}
 		
@@ -562,7 +562,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagFontName,
 															sizeof(fontName), fontName);
-			if (preferencesResult != kPreferences_ResultCodeSuccess) PLstrcpy(fontName, "\pMonaco"); // arbitrary
+			if (preferencesResult != kPreferences_ResultOK) PLstrcpy(fontName, "\pMonaco"); // arbitrary
 			
 			fontNameCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, fontName, kCFStringEncodingMacRoman);
 			if (nullptr != fontNameCFString)
@@ -598,7 +598,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalColorNormalForeground,
 															sizeof(colorValue), &colorValue);
-			if (preferencesResult != kPreferences_ResultCodeSuccess)
+			if (preferencesResult != kPreferences_ResultOK)
 			{
 				colorValue.red = colorValue.green = colorValue.blue = 0; // arbitrary
 			}
@@ -606,7 +606,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalColorNormalBackground,
 															sizeof(colorValue), &colorValue);
-			if (preferencesResult != kPreferences_ResultCodeSuccess)
+			if (preferencesResult != kPreferences_ResultOK)
 			{
 				colorValue.red = colorValue.green = colorValue.blue = 0; // arbitrary
 			}
@@ -614,7 +614,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalColorBoldForeground,
 															sizeof(colorValue), &colorValue);
-			if (preferencesResult != kPreferences_ResultCodeSuccess)
+			if (preferencesResult != kPreferences_ResultOK)
 			{
 				colorValue.red = colorValue.green = colorValue.blue = 0; // arbitrary
 			}
@@ -622,7 +622,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalColorBoldBackground,
 															sizeof(colorValue), &colorValue);
-			if (preferencesResult != kPreferences_ResultCodeSuccess)
+			if (preferencesResult != kPreferences_ResultOK)
 			{
 				colorValue.red = colorValue.green = colorValue.blue = 0; // arbitrary
 			}
@@ -630,7 +630,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalColorBlinkingForeground,
 															sizeof(colorValue), &colorValue);
-			if (preferencesResult != kPreferences_ResultCodeSuccess)
+			if (preferencesResult != kPreferences_ResultOK)
 			{
 				colorValue.red = colorValue.green = colorValue.blue = 0; // arbitrary
 			}
@@ -638,7 +638,7 @@ EditTerminal	(Preferences_Class		inClass,
 			
 			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalColorBlinkingBackground,
 															sizeof(colorValue), &colorValue);
-			if (preferencesResult != kPreferences_ResultCodeSuccess)
+			if (preferencesResult != kPreferences_ResultOK)
 			{
 				colorValue.red = colorValue.green = colorValue.blue = 0; // arbitrary
 			}
@@ -782,7 +782,7 @@ EditTerminal	(Preferences_Class		inClass,
 				preferencesResult = Preferences_ContextSetData
 									(preferencesContext, kPreferences_TagTerminalColorNormalForeground,
 										sizeof(colorValue), &colorValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -791,7 +791,7 @@ EditTerminal	(Preferences_Class		inClass,
 				preferencesResult = Preferences_ContextSetData
 									(preferencesContext, kPreferences_TagTerminalColorNormalBackground,
 										sizeof(colorValue), &colorValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -800,7 +800,7 @@ EditTerminal	(Preferences_Class		inClass,
 				preferencesResult = Preferences_ContextSetData
 									(preferencesContext, kPreferences_TagTerminalColorBoldForeground,
 										sizeof(colorValue), &colorValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -809,7 +809,7 @@ EditTerminal	(Preferences_Class		inClass,
 				preferencesResult = Preferences_ContextSetData
 									(preferencesContext, kPreferences_TagTerminalColorBoldBackground,
 										sizeof(colorValue), &colorValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -818,7 +818,7 @@ EditTerminal	(Preferences_Class		inClass,
 				preferencesResult = Preferences_ContextSetData
 									(preferencesContext, kPreferences_TagTerminalColorBlinkingForeground,
 										sizeof(colorValue), &colorValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -827,7 +827,7 @@ EditTerminal	(Preferences_Class		inClass,
 				preferencesResult = Preferences_ContextSetData
 									(preferencesContext, kPreferences_TagTerminalColorBlinkingBackground,
 										sizeof(colorValue), &colorValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -855,7 +855,7 @@ EditTerminal	(Preferences_Class		inClass,
 							if (PLstrlen(scratchPstring) > 63) scratchPstring[0] = 63;
 							preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagFontName,
 																			sizeof(scratchPstring), scratchPstring);
-							if (preferencesResult != kPreferences_ResultCodeSuccess)
+							if (preferencesResult != kPreferences_ResultOK)
 							{
 								// error...
 							}
@@ -875,7 +875,7 @@ EditTerminal	(Preferences_Class		inClass,
 				fontSize = STATIC_CAST(scratchlong, UInt16);
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagFontSize,
 																sizeof(fontSize), &fontSize);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -885,7 +885,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, TermANSI));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagANSIColorsEnabled,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -894,7 +894,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, TermXterm));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagXTermSequencesEnabled,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -903,7 +903,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, Termvtwrap));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalLineWrap,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -924,7 +924,7 @@ EditTerminal	(Preferences_Class		inClass,
 				
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagEMACSMetaKey,
 																sizeof(metaKeyType), &metaKeyType);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -934,7 +934,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, Termarrow));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagMapArrowsForEMACS,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -943,7 +943,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, TermMAT));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagPageKeysControlLocalTerminal,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -952,7 +952,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, Termeightbit));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagDataReceiveDoNotStripHighBit,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -961,7 +961,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, Termclearsave));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTerminalClearSavesLines,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -970,7 +970,7 @@ EditTerminal	(Preferences_Class		inClass,
 				flag = (kControlCheckBoxCheckedValue == GetDialogItemValue(dialog, TermRemapKeypad));
 				preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagMapKeypadTopRowForVT220,
 																sizeof(flag), &flag);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -990,7 +990,7 @@ EditTerminal	(Preferences_Class		inClass,
 				
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTerminalEmulatorType,
 																sizeof(emulatorType), &emulatorType);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -1006,7 +1006,7 @@ EditTerminal	(Preferences_Class		inClass,
 				dimensionValue = STATIC_CAST(scratchlong, UInt16);
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTerminalScreenColumns,
 																sizeof(dimensionValue), &dimensionValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -1018,7 +1018,7 @@ EditTerminal	(Preferences_Class		inClass,
 				dimensionValue = STATIC_CAST(scratchlong, UInt16);
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTerminalScreenRows,
 																sizeof(dimensionValue), &dimensionValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -1030,7 +1030,7 @@ EditTerminal	(Preferences_Class		inClass,
 				dimensionValue = STATIC_CAST(scratchlong, UInt16);
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTerminalScreenScrollbackRows,
 																sizeof(dimensionValue), &dimensionValue);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
@@ -1041,13 +1041,13 @@ EditTerminal	(Preferences_Class		inClass,
 				if (PLstrlen(scratchPstring) > 63) scratchPstring[0] = 63;
 				preferencesResult = Preferences_ContextSetData(preferencesContext, kPreferences_TagTerminalAnswerBackMessage,
 																sizeof(scratchPstring), scratchPstring);
-				if (preferencesResult != kPreferences_ResultCodeSuccess)
+				if (preferencesResult != kPreferences_ResultOK)
 				{
 					// error...
 				}
 			}
 			
-			(Preferences_ResultCode)Preferences_ContextSave(preferencesContext);
+			(Preferences_Result)Preferences_ContextSave(preferencesContext);
 			
 		#if 0
 			ColorBox_DetachFromUserPaneDialogItem(dialog, TermNFcolor);

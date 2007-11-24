@@ -3,7 +3,7 @@
 	DNR.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -77,8 +77,8 @@ static void*	threadForDNS		(void*);
 /*!
 Initiates an asynchronous lookup of a host name, which may be
 an IPv4 or IPv6 numerical or named address.  Returns
-"kDNR_ResultCodeSuccess" if this succeeded; also, upon success,
-spawns a thread that will wait for the lookup to complete.
+"kDNR_ResultOK" if this succeeded; also, upon success, spawns
+a thread that will wait for the lookup to complete.
 
 The thread sleeps until the resolver returns, at which time it
 fires a Carbon Event of class "kMyCarbonEventClassDNS" and kind
@@ -99,18 +99,18 @@ futureÓ hit?).
 
 (3.1)
 */
-DNR_ResultCode
+DNR_Result
 DNR_New		(char const*	inHostNameCString,
 			 Boolean		inRestrictIPv4)
 {
-	DNR_ResultCode		result = kDNR_ResultCodeSuccess;
+	DNR_Result			result = kDNR_ResultOK;
 	pthread_attr_t		attr;
 	int					error = 0;
 	
 	
 	// start a thread for DNS lookup so that MacTelnetÕs main event loop can still run
 	error = pthread_attr_init(&attr);
-	if (0 != error) result = kDNR_ResultCodeThreadError;
+	if (0 != error) result = kDNR_ResultThreadError;
 	else
 	{
 		DNSThreadContextPtr		threadContextPtr = nullptr;
@@ -119,7 +119,7 @@ DNR_New		(char const*	inHostNameCString,
 		
 		threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(DNSThreadContext)),
 											DNSThreadContextPtr);
-		if (nullptr == threadContextPtr) result = kDNR_ResultCodeThreadError;
+		if (nullptr == threadContextPtr) result = kDNR_ResultThreadError;
 		else
 		{
 			size_t const	kInputHostStringLength = std::strlen(inHostNameCString);
@@ -130,7 +130,7 @@ DNR_New		(char const*	inHostNameCString,
 			threadContextPtr->hostNameCString = REINTERPRET_CAST
 												(Memory_NewPtrInterruptSafe(kHostBufferLength),
 													char*);
-			if (nullptr == threadContextPtr) result = kDNR_ResultCodeThreadError;
+			if (nullptr == threadContextPtr) result = kDNR_ResultThreadError;
 			else
 			{
 				std::strncpy(threadContextPtr->hostNameCString, inHostNameCString, kInputHostStringLength);
@@ -139,7 +139,7 @@ DNR_New		(char const*	inHostNameCString,
 				
 				// create thread
 				error = pthread_create(&thread, &attr, threadForDNS, threadContextPtr);
-				if (0 != error) result = kDNR_ResultCodeThreadError;
+				if (0 != error) result = kDNR_ResultThreadError;
 			}
 		}
 	}

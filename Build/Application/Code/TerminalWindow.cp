@@ -566,34 +566,34 @@ window.  If the window has never been explicitly sized, some
 default width will be returned.  Otherwise, the size most
 recently set with TerminalWindow_SetTabWidth() will be returned.
 
-\retval kTerminalWindow_ResultCodeSuccess
+\retval kTerminalWindow_ResultOK
 if there are no errors
 
-\retval kTerminalWindow_ResultCodeInvalidReference
+\retval kTerminalWindow_ResultInvalidReference
 if the specified terminal window is unrecognized
 
-\retval kTerminalWindow_ResultCodeGenericFailure
+\retval kTerminalWindow_ResultGenericFailure
 if no window has ever had a tab; "outWidthInPixels" will be 0
 
 (3.1)
 */
-TerminalWindow_ResultCode
+TerminalWindow_Result
 TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
 							 Float32&			outWidthInPixels)
 {
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_ResultCode	result = kTerminalWindow_ResultCodeSuccess;
+	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
 	
 	
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
 	{
-		result = kTerminalWindow_ResultCodeInvalidReference;
+		result = kTerminalWindow_ResultInvalidReference;
 		Console_WriteValueAddress("warning, attempt to TerminalWindow_GetTabWidth() with invalid reference", inRef);
 		outWidthInPixels = 0;
 	}
 	else
 	{
-		if (0.0 == ptr->tabWidthInPixels) result = kTerminalWindow_ResultCodeGenericFailure;
+		if (0.0 == ptr->tabWidthInPixels) result = kTerminalWindow_ResultGenericFailure;
 		outWidthInPixels = ptr->tabWidthInPixels;
 	}
 	
@@ -682,14 +682,14 @@ to ensure correct behavior in the future.
 
 (3.0)
 */
-TerminalWindow_ResultCode
+TerminalWindow_Result
 TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 								 TerminalWindow_ViewGroup	inViewGroup,
 								 UInt16						inArrayLength,
 								 TerminalViewRef*			outViewArray,
 								 UInt16*					outActualCountOrNull)
 {
-	TerminalWindow_ResultCode	result = kTerminalWindow_ResultCodeGenericFailure;
+	TerminalWindow_Result	result = kTerminalWindow_ResultGenericFailure;
 	
 	
 	switch (inViewGroup)
@@ -718,7 +718,7 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 				*outViewArray++ = *viewIterator;
 			}
 			if (outActualCountOrNull != nullptr) *outActualCountOrNull = ptr->allViews.size();
-			result = kTerminalWindow_ResultCodeSuccess;
+			result = kTerminalWindow_ResultOK;
 		}
 		break;
 	
@@ -1079,7 +1079,7 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
 	TerminalViewRef				activeView = getActiveView(ptr);
 	TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
-	TerminalView_ResultCode		viewResult = kTerminalView_ResultCodeSuccess;
+	TerminalView_Result			viewResult = kTerminalView_ResultOK;
 	SInt16						screenWidth = 0;
 	SInt16						screenHeight = 0;
 	
@@ -1089,11 +1089,11 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 	// be controlling its font size
 	oldMode = TerminalView_ReturnDisplayMode(activeView);
 	viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
-	assert(kTerminalView_ResultCodeSuccess == viewResult);
+	assert(kTerminalView_ResultOK == viewResult);
 	viewResult = TerminalView_SetFontAndSize(activeView, inFontFamilyNameOrNull, inFontSizeOrZero);
-	assert(kTerminalView_ResultCodeSuccess == viewResult);
+	assert(kTerminalView_ResultOK == viewResult);
 	viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
-	assert(kTerminalView_ResultCodeSuccess == viewResult);
+	assert(kTerminalView_ResultOK == viewResult);
 	
 	// set the standard state to be large enough for the current font and size;
 	// and, set window dimensions to this new standard size
@@ -1192,7 +1192,7 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 	{
 		TerminalViewRef				activeView = getActiveView(ptr);
 		TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
-		TerminalView_ResultCode		viewResult = kTerminalView_ResultCodeSuccess;
+		TerminalView_Result			viewResult = kTerminalView_ResultOK;
 		SInt16						screenWidth = 0;
 		SInt16						screenHeight = 0;
 		
@@ -1202,13 +1202,13 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 		// the view might automatically be controlling its font size
 		oldMode = TerminalView_ReturnDisplayMode(activeView);
 		viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
-		assert(kTerminalView_ResultCodeSuccess == viewResult);
+		assert(kTerminalView_ResultOK == viewResult);
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
 											inNewColumnCount, inNewRowCount,
 											true/* include insets */, &screenWidth, &screenHeight);
 		setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
 		viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
-		assert(kTerminalView_ResultCodeSuccess == viewResult);
+		assert(kTerminalView_ResultOK == viewResult);
 	}
 	
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeScreenDimensions, inRef/* context */);
@@ -1331,29 +1331,29 @@ Note that since this affects only a single window, this is
 not the proper API for general tab manipulation; it is a
 low-level routine.  See the Workspace module.
 
-\retval kTerminalWindow_ResultCodeSuccess
+\retval kTerminalWindow_ResultOK
 if there are no errors
 
-\retval kTerminalWindow_ResultCodeInvalidReference
+\retval kTerminalWindow_ResultInvalidReference
 if the specified terminal window is unrecognized
 
-\retval kTerminalWindow_ResultCodeGenericFailure
+\retval kTerminalWindow_ResultGenericFailure
 if the specified terminal window has no tab (however,
 the proper offset is still remembered)
 
 (3.1)
 */
-TerminalWindow_ResultCode
+TerminalWindow_Result
 TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 								 Float32			inOffsetFromStartingPointInPixels)
 {
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_ResultCode	result = kTerminalWindow_ResultCodeSuccess;
+	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
 	
 	
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
 	{
-		result = kTerminalWindow_ResultCodeInvalidReference;
+		result = kTerminalWindow_ResultInvalidReference;
 		Console_WriteValueAddress("warning, attempt to TerminalWindow_SetTabPosition() with invalid reference", inRef);
 	}
 	else
@@ -1361,7 +1361,7 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 		ptr->tabOffsetInPixels = inOffsetFromStartingPointInPixels;
 		if (false == ptr->tab.exists())
 		{
-			result = kTerminalWindow_ResultCodeGenericFailure;
+			result = kTerminalWindow_ResultGenericFailure;
 		}
 		else
 		{
@@ -1412,29 +1412,29 @@ Note that since this affects only a single window, this is
 not the proper API for general tab manipulation; it is a
 low-level routine.  See the Workspace module.
 
-\retval kTerminalWindow_ResultCodeSuccess
+\retval kTerminalWindow_ResultOK
 if there are no errors
 
-\retval kTerminalWindow_ResultCodeInvalidReference
+\retval kTerminalWindow_ResultInvalidReference
 if the specified terminal window is unrecognized
 
-\retval kTerminalWindow_ResultCodeGenericFailure
+\retval kTerminalWindow_ResultGenericFailure
 if the specified terminal window has no tab (however,
 the proper width is still remembered)
 
 (3.1)
 */
-TerminalWindow_ResultCode
+TerminalWindow_Result
 TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 							 Float32			inWidthInPixels)
 {
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	TerminalWindow_ResultCode	result = kTerminalWindow_ResultCodeSuccess;
+	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
 	
 	
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
 	{
-		result = kTerminalWindow_ResultCodeInvalidReference;
+		result = kTerminalWindow_ResultInvalidReference;
 		Console_WriteValueAddress("warning, attempt to TerminalWindow_SetTabWidth() with invalid reference", inRef);
 	}
 	else
@@ -1442,7 +1442,7 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 		ptr->tabWidthInPixels = inWidthInPixels;
 		if (false == ptr->tab.exists())
 		{
-			result = kTerminalWindow_ResultCodeGenericFailure;
+			result = kTerminalWindow_ResultGenericFailure;
 		}
 		else
 		{
@@ -1716,23 +1716,23 @@ installedActions()
 	// create controls
 	{
 		Preferences_ContextRef	formatPreferencesContext = nullptr;
-		Terminal_ResultCode		terminalError = kTerminal_ResultCodeSuccess;
+		Terminal_Result			terminalError = kTerminal_ResultOK;
 		Str255					fontName;
 		SInt16					fontSize = 0;
 		
 		
 		// copy font defaults from preferences
-		if (kPreferences_ResultCodeSuccess == Preferences_GetDefaultContext(&formatPreferencesContext, kPreferences_ClassFormat))
+		if (kPreferences_ResultOK == Preferences_GetDefaultContext(&formatPreferencesContext, kPreferences_ClassFormat))
 		{
-			if (kPreferences_ResultCodeSuccess != Preferences_ContextGetData(formatPreferencesContext, kPreferences_TagFontName,
-																				sizeof(fontName), fontName))
+			if (kPreferences_ResultOK != Preferences_ContextGetData(formatPreferencesContext, kPreferences_TagFontName,
+																	sizeof(fontName), fontName))
 			{
 				// error - set default
 				PLstrcpy(fontName, "\pMonaco");
 			}
 			
-			if (kPreferences_ResultCodeSuccess != Preferences_ContextGetData(formatPreferencesContext, kPreferences_TagFontSize,
-																				sizeof(fontSize), &fontSize))
+			if (kPreferences_ResultOK != Preferences_ContextGetData(formatPreferencesContext, kPreferences_TagFontSize,
+																	sizeof(fontSize), &fontSize))
 			{
 				// error - set default
 				fontSize = 12;
@@ -1747,7 +1747,7 @@ installedActions()
 		
 		terminalError = Terminal_NewScreen(inCountScrollbackBufferRows, inCountMaximumViewableRows, inCountMaximumViewableColumns,
 											forceSave, &newScreen);
-		if (terminalError == kTerminal_ResultCodeSuccess)
+		if (terminalError == kTerminal_ResultOK)
 		{
 			newView = TerminalView_NewHIViewBased(newScreen, this->window, fontName, fontSize);
 			if (newView != nullptr)
@@ -2191,7 +2191,7 @@ calculateIndexedWindowPosition	(TerminalWindowPtr	inPtr,
 		
 		// determine the user’s preferred stacking origin
 		unless (Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
-									&stackingOrigin, &actualSize) == kPreferences_ResultCodeSuccess)
+									&stackingOrigin, &actualSize) == kPreferences_ResultOK)
 		{
 			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can’t be found
 		}
@@ -3593,7 +3593,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								size_t		actualSize = 0;
 								
 								
-								if (kPreferences_ResultCodeSuccess !=
+								if (kPreferences_ResultOK !=
 									Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
 														&allowForceQuit, &actualSize))
 								{
@@ -3601,7 +3601,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								}
 								unless (allowForceQuit) optionsForFullScreen |= kUIOptionDisableForceQuit;
 								
-								if (kPreferences_ResultCodeSuccess !=
+								if (kPreferences_ResultOK !=
 									Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
 														&showMenuBar, &actualSize))
 								{
@@ -3609,21 +3609,21 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								}
 								if (showMenuBar) optionsForFullScreen |= kUIOptionAutoShowMenuBar;
 								
-								if (kPreferences_ResultCodeSuccess !=
+								if (kPreferences_ResultOK !=
 									Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
 														&showOffSwitch, &actualSize))
 								{
 									showOffSwitch = true; // assume a value if the preference cannot be found
 								}
 								
-								if (kPreferences_ResultCodeSuccess !=
+								if (kPreferences_ResultOK !=
 									Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
 														&showScrollBar, &actualSize))
 								{
 									showScrollBar = true; // assume a value if the preference cannot be found
 								}
 								
-								if (kPreferences_ResultCodeSuccess !=
+								if (kPreferences_ResultOK !=
 									Preferences_GetData(kPreferences_TagKioskUsesSuperfluousEffects, sizeof(useEffects),
 														&useEffects, &actualSize))
 								{
@@ -4988,39 +4988,39 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			switch (inPartCode)
 			{
 			case kControlUpButtonPart: // “up arrow” on a horizontal scroll bar means “left arrow”
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
+				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
 				break;
 			
 			case kControlDownButtonPart: // “down arrow” on a horizontal scroll bar means “right arrow”
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
+				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
 				break;
 			
 			case kControlPageUpPart:
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardRightEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
 				break;
 			
 			case kControlPageDownPart:
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollColumnsTowardLeftEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
+				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, visibleColumnCount - 3 * INTEGER_QUARTERED(visibleColumnCount));
 				handlePendingUpdates();
 				break;
 			
@@ -5040,39 +5040,39 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			switch (inPartCode)
 			{
 			case kControlUpButtonPart:
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardBottomEdge(view, 1/* number of rows to scroll */);
+				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, 1/* number of rows to scroll */);
 				break;
 			
 			case kControlDownButtonPart:
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardTopEdge(view, 1/* number of rows to scroll */);
+				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, 1/* number of rows to scroll */);
 				break;
 			
 			case kControlPageUpPart:
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardBottomEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardBottomEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
 				break;
 			
 			case kControlPageDownPart:
 				// 3.0 - animate page scrolling a bit (users can more easily see what is happening)
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, INTEGER_QUARTERED(visibleRowCount));
 				handlePendingUpdates();
 				GenericThreads_DelayMinimumTicks(kPageScrollDelayTicks);
-				(Terminal_ResultCode)TerminalView_ScrollRowsTowardTopEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
+				(Terminal_Result)TerminalView_ScrollRowsTowardTopEdge(view, visibleRowCount - 3 * INTEGER_QUARTERED(visibleRowCount));
 				break;
 			
 			case kControlIndicatorPart:
@@ -5196,7 +5196,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				CFStringRef		titleCFString = nullptr;
 				
 				
-				if (kSession_ResultCodeSuccess == Session_GetWindowUserDefinedTitle(session, titleCFString))
+				if (kSession_ResultOK == Session_GetWindowUserDefinedTitle(session, titleCFString))
 				{
 					TerminalWindow_SetWindowTitle(terminalWindow, titleCFString);
 				}
@@ -5842,21 +5842,21 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 	assert(nullptr != view);
 	{
 		// update the scroll bars to reflect the contents of the selected view
-		HIViewRef					scrollBarView = nullptr;
-		UInt32						scrollVStartView = 0;
-		UInt32						scrollVPastEndView = 0;
-		UInt32						scrollVRangeMinimum = 0;
-		UInt32						scrollVRangePastMaximum = 0;
-		TerminalView_ResultCode		rangeResult = kTerminalView_ResultCodeSuccess;
+		HIViewRef				scrollBarView = nullptr;
+		UInt32					scrollVStartView = 0;
+		UInt32					scrollVPastEndView = 0;
+		UInt32					scrollVRangeMinimum = 0;
+		UInt32					scrollVRangePastMaximum = 0;
+		TerminalView_Result		rangeResult = kTerminalView_ResultOK;
 		
 		
 		// use the maximum possible screen size for the maximum resize limits
 		rangeResult = TerminalView_GetRange(view, kTerminalView_RangeCodeScrollRegionV,
 											scrollVStartView, scrollVPastEndView);
-		assert(kTerminalView_ResultCodeSuccess == rangeResult);
+		assert(kTerminalView_ResultOK == rangeResult);
 		rangeResult = TerminalView_GetRange(view, kTerminalView_RangeCodeScrollRegionVMaximum,
 											scrollVRangeMinimum, scrollVRangePastMaximum);
-		assert(kTerminalView_ResultCodeSuccess == rangeResult);
+		assert(kTerminalView_ResultOK == rangeResult);
 		
 		// update controls’ maximum and minimum values; the vertical scroll bar
 		// is special, in that its maximum value is zero (this ensures the main
