@@ -46,7 +46,7 @@ pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "py
 # Python 2.5, earlier releases have Python 2.3); this assumes that
 # the SWIG-based wrapper is built for multiple Python versions
 quills_pylib_ver = "2.3"
-if sys.hexversion > 0x02030000: quills_pylib_ver = "2.5"
+if sys.version_info[0] > 2 or sys.version_info[1] > 3: quills_pylib_ver = "2.5"
 quills_dir = os.path.join(frameworks_dir, "Quills.framework")
 quills_versions_dir = os.path.join(quills_dir, "Versions")
 quills_current_version_dir = os.path.join(quills_versions_dir, "Current")
