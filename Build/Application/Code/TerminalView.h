@@ -372,6 +372,11 @@ TerminalView_Result
 												 UInt16						inNumberOfColumnsToScroll);
 
 TerminalView_Result
+	TerminalView_ScrollPixelsTo					(TerminalViewRef			inView,
+												 UInt32						inStartOfVerticalRange,
+												 UInt32						inStartOfHorizontalRange = 0);
+
+TerminalView_Result
 	TerminalView_ScrollRowsTowardBottomEdge		(TerminalViewRef			inView,
 												 UInt16						inNumberOfRowsToScroll);
 
@@ -472,11 +477,6 @@ HIViewRef
 
 TerminalViewRef
 	TerminalView_ReturnUserFocusTerminalView	();
-
-void
-	TerminalView_SetVisibleRegion				(TerminalViewRef			inView,
-												 UInt16						inNewLeftEdgeInPixels,
-												 SInt16						inNewTopEdgeInPixels);
 
 //@}
 

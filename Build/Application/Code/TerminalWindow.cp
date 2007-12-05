@@ -2681,7 +2681,6 @@ createViews		(TerminalWindowPtr	inPtr)
 			error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
 											true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarV);
 			assert_noerr(error);
-			SetControlAction(inPtr->controls.scrollBarV, inPtr->scrollProcUPP); // ??? necessary ???
 			error = SetControlProperty(inPtr->controls.scrollBarV, kConstantsRegistry_ControlPropertyCreator,
 										kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
 										sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
@@ -5026,8 +5025,8 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			
 			case kControlIndicatorPart:
 				// 3.0 - live scrolling
-				TerminalView_SetVisibleRegion(view, GetControlValue(ptr->controls.scrollBarH),
-												GetControlValue(ptr->controls.scrollBarV));
+				TerminalView_ScrollPixelsTo(view, GetControl32BitValue(ptr->controls.scrollBarV),
+											GetControl32BitValue(ptr->controls.scrollBarH));
 				break;
 			
 			default:
@@ -5077,8 +5076,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 			
 			case kControlIndicatorPart:
 				// 3.0 - live scrolling
-				TerminalView_SetVisibleRegion(view, GetControlValue(ptr->controls.scrollBarH),
-												GetControlValue(ptr->controls.scrollBarV));
+				TerminalView_ScrollPixelsTo(view, GetControl32BitValue(ptr->controls.scrollBarV));
 				break;
 			
 			default:

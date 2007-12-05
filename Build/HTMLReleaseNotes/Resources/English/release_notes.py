@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071204',
     '20071119',
     '20071104',
     '20071103',
@@ -64,6 +65,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071204': [
+		'Fixed scroll bars in terminal windows to allow the indicator to be dragged.',
+	],
 	'20071119': [
 		'Added an optional argument to set the working directory of new Sessions in the Quills API.',
 		'Added a box to set the matte color in the Format preferences panel.',
