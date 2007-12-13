@@ -6502,11 +6502,15 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 				if (noErr == result)
 				{
 					// each attribute mentioned here should be handled below
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXDescriptionAttribute);
+				#endif
 					CFArrayAppendValue(listOfNames, kAXRoleAttribute);
 					CFArrayAppendValue(listOfNames, kAXRoleDescriptionAttribute);
 					CFArrayAppendValue(listOfNames, kAXNumberOfCharactersAttribute);
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXTopLevelUIElementAttribute);
+				#endif
 					CFArrayAppendValue(listOfNames, kAXWindowAttribute);
 					CFArrayAppendValue(listOfNames, kAXParentAttribute);
 					CFArrayAppendValue(listOfNames, kAXEnabledAttribute);
@@ -6534,29 +6538,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 					
 					// IMPORTANT: The cases handled here should match the list returned
 					// by "kEventAccessibleGetAllAttributeNames", above.
-					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
-					{
-						isSettable = false;
-						if (kEventAccessibleGetNamedAttribute == kEventKind)
-						{
-							UIStrings_Result	stringResult = kUIStrings_ResultOK;
-							CFStringRef			descriptionCFString = nullptr;
-							
-							
-							stringResult = UIStrings_Copy(kUIStrings_TerminalAccessibilityDescription,
-															descriptionCFString);
-							if (false == stringResult.ok())
-							{
-								result = resNotFound;
-							}
-							else
-							{
-								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-															sizeof(descriptionCFString), &descriptionCFString);
-							}
-						}
-					}
-					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
+					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
 					{
 						isSettable = false;
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
@@ -6571,6 +6553,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						isSettable = false;
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
 						{
+						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 							if (FlagManager_Test(kFlagOS10_4API))
 							{
 								CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
@@ -6585,6 +6568,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 								}
 							}
 							else
+						#endif
 							{
 								// no API available prior to 10.4 to find this value, so be lazy and return nothing
 								result = eventNotHandledErr;
@@ -6611,6 +6595,30 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 							}
 						}
 					}
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+							UIStrings_Result	stringResult = kUIStrings_ResultOK;
+							CFStringRef			descriptionCFString = nullptr;
+							
+							
+							stringResult = UIStrings_Copy(kUIStrings_TerminalAccessibilityDescription,
+															descriptionCFString);
+							if (false == stringResult.ok())
+							{
+								result = resNotFound;
+							}
+							else
+							{
+								result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+															sizeof(descriptionCFString), &descriptionCFString);
+							}
+						}
+					}
+				#endif
 					else
 					{
 						// Many attributes are already supported by the default handler:

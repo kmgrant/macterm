@@ -217,7 +217,7 @@ closeNotifyProc				(inCloseNotifyProcPtr),
 buttonHICommandsHandler		(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 								this->selfRef/* user data */),
-fieldKeyPressHandler		(HIViewGetEventTarget(this->fieldKeywords), receiveKeyPress,
+fieldKeyPressHandler		(CarbonEventUtilities_GetViewTarget(this->fieldKeywords), receiveKeyPress,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard), kEventRawKeyDown),
 								this->selfRef/* user data */),
 historyMenuCommandUPP		(nullptr),
@@ -258,6 +258,7 @@ keywordHistory				(kFindDialogKeywordHistorySize)
 			}
 		}
 		
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		// set accessibility information, if possible
 		if (FlagManager_Test(kFlagOS10_4API))
 		{
@@ -277,6 +278,7 @@ keywordHistory				(kFindDialogKeywordHistorySize)
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 		}
+	#endif
 	}
 	
 	// initialize the search text field

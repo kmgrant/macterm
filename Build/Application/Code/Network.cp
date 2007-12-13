@@ -223,7 +223,11 @@ bool
 allCurrentIPAddressesAndAliases		(struct hostent*&	outHost)
 {
 	bool	result = false;
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	char	hostName[_POSIX_HOST_NAME_MAX];
+#else
+	char	hostName[255];
+#endif
 	int		getHostResult = gethostname(hostName, sizeof(hostName) - 1);
 	
 	

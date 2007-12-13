@@ -183,7 +183,9 @@ static pascal OSStatus			receiveApplicationSwitch		(EventHandlerCallRef, EventRe
 static pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			receiveServicePerformEvent		(EventHandlerCallRef, EventRef, void*);
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 static pascal OSStatus			receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
+#endif
 static pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, void*);
 
 #pragma mark Variables
@@ -268,8 +270,8 @@ EventLoop_Init ()
 	// set the sleep time (3.0 - donÕt use preferences value, itÕs not user-specifiable anymore)
 	gTicksWaitNextEvent = 60; // make this larger to increase likelihood of high-frequency timers firing on time
 	
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	// install a callback that detects toolbar sheets
-	if (FlagManager_Test(kFlagOS10_4API))
 	{
 		EventTypeSpec const		whenToolbarSheetOpens[] =
 								{
@@ -284,6 +286,7 @@ EventLoop_Init ()
 												&gCarbonEventSheetOpeningHandler/* event handler reference */);
 		// donÕt check for errors, itÕs not critical if this handler is installed
 	}
+#endif
 	
 	// create listener models to handle event notifications
 	gGlobalEventTarget = newGlobalEventTarget();
@@ -2727,6 +2730,7 @@ receiveServicePerformEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 }// receiveServicePerformEvent
 
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 /*!
 Handles "kEventWindowSheetOpening" of "kEventClassWindow".
 
@@ -2853,6 +2857,7 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveSheetOpening
+#endif
 
 
 /*!

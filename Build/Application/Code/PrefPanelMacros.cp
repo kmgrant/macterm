@@ -541,6 +541,7 @@ const
 		assert_noerr(error);
 		
 		// set other nice things (most can be set in a NIB someday)
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		if (FlagManager_Test(kFlagOS10_4API))
 		{
 			(OSStatus)DataBrowserChangeAttributes(macrosList,
@@ -559,6 +560,7 @@ const
 				}
 			}
 		}
+	#endif
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
 		(OSStatus)SetDataBrowserTableViewHiliteStyle(macrosList, kDataBrowserTableViewFillHilite);
 		

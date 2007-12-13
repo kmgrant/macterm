@@ -197,13 +197,18 @@ DialogUtilities_CreateControlsBasedOnWindowNIB	(CFStringRef					inNIBFileBasenam
 			result = HIViewFindByID(HIViewGetRoot(dummyWindow), kHIViewWindowContentID, &contentView);
 			if (noErr == result)
 			{
-				// how many views are there?
-				CFIndex const	kControlCount = HIViewCountSubviews(contentView);
 				HIViewRef		templateView = HIViewGetLastSubview(contentView);
 				
 				
-				// first set the vector size appropriately
-				inoutControlArray.resize(inoutControlArray.size() + kControlCount);
+			#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+				{
+					CFIndex const	kControlCount = HIViewCountSubviews(contentView);
+					
+					
+					// first set the vector size appropriately
+					inoutControlArray.resize(inoutControlArray.size() + kControlCount);
+				}
+			#endif
 				
 				// find all the views in the window, and use their characteristics
 				// to create duplicate views; this is done ÒbackwardsÓ (last to
@@ -1986,6 +1991,7 @@ DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
 		// nicely centered
 		SizeControl(inoutView, 20, 20);
 	}
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	if (FlagManager_Test(kFlagOS10_4API))
 	{
 		// set accessibility title
@@ -2005,6 +2011,7 @@ DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
 			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 		}
 	}
+#endif
 	return inoutView;
 }// SetUpHelpButton
 

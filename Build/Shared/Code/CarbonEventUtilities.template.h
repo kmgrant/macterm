@@ -12,7 +12,7 @@
 /*###############################################################
 
 	Interface Library 1.1
-	© 1998-2006 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -111,6 +111,23 @@ CarbonEventUtilities_GetEventParameterVariableSize	(EventRef			inEvent,
 	}
 	return result;
 }// GetEventParameterVariableSize
+
+
+/*!
+Uses the most modern API available for determining the
+Carbon Event target of a given view.
+
+(3.1)
+*/
+inline EventTargetRef
+CarbonEventUtilities_GetViewTarget	(HIViewRef		inView)
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	return HIViewGetEventTarget(inView);
+#else
+	return GetControlEventTarget(inView);
+#endif
+}
 
 #endif
 

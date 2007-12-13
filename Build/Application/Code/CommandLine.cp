@@ -295,6 +295,7 @@ CommandLine_Init ()
 			}
 		}
 		
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		// set accessibility information, if possible
 		if (FlagManager_Test(kFlagOS10_4API))
 		{
@@ -314,6 +315,7 @@ CommandLine_Init ()
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 		}
+	#endif
 	}
 	SetControl32BitMaximum(gCommandLineArrows, kCommandLineCommandHistorySize - 1);
 	SetControl32BitMinimum(gCommandLineArrows, 0L);

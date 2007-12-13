@@ -2920,11 +2920,13 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 												globalCursorBounds);
 			tagData.setFrame(globalCursorBounds);
 			(OSStatus)HMDisplayTag(tagData.ptr());
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// this call does not immediately hide the tag, but rather after a short delay
 			if (FlagManager_Test(kFlagOS10_4API))
 			{
 				(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 			}
+		#endif
 		}
 		
 		// suspend
@@ -3902,11 +3904,13 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 											globalCursorBounds);
 		tagData.setFrame(globalCursorBounds);
 		(OSStatus)HMDisplayTag(tagData.ptr());
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		// this call does not immediately hide the tag, but rather after a short delay
 		if (FlagManager_Test(kFlagOS10_4API))
 		{
 			(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
 		}
+	#endif
 	}
 	
 	// send character to Unix process

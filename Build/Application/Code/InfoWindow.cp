@@ -288,12 +288,14 @@ InfoWindow_Init	()
 		assert_noerr(error);
 		
 		// set other nice things (most are set in the NIB already)
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		if (FlagManager_Test(kFlagOS10_4API))
 		{
 			(OSStatus)DataBrowserChangeAttributes(gSessionStatusDataBrowser,
 													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
 													0/* attributes to clear */);
 		}
+	#endif
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(gSessionStatusDataBrowser, false);
 		setDataBrowserColumnWidths();
 		{

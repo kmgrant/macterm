@@ -535,6 +535,7 @@ CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhich
 													&ptr->controlHitEventHandlerRef/* event handler reference */);
 			}
 			
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// set accessibility relationships, if possible
 			if (FlagManager_Test(kFlagOS10_4API))
 			{
@@ -553,6 +554,7 @@ CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhich
 					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 				}
 			}
+		#endif
 			
 			gMyNumericalFieldArrowsHandlerPtrLocks().releaseLock(*outHandlerPtr, &ptr);
 		}
@@ -624,6 +626,7 @@ CommonEventHandlers_InstallPopUpMenuArrows	(ControlRef									inForWhichArrows,
 													&ptr->controlHitEventHandlerRef/* event handler reference */);
 			}
 			
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 			// set accessibility relationships, if possible
 			if (FlagManager_Test(kFlagOS10_4API))
 			{
@@ -642,6 +645,7 @@ CommonEventHandlers_InstallPopUpMenuArrows	(ControlRef									inForWhichArrows,
 					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 				}
 			}
+		#endif
 			
 			gMyPopUpMenuArrowsHandlerPtrLocks().releaseLock(*outHandlerPtr, &ptr);
 		}

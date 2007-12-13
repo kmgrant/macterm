@@ -331,12 +331,14 @@ createPanelControls		(Panel_Ref		inPanel,
 		(OSStatus)SetDataBrowserHasScrollBars(control, false/* horizontal */, true/* vertical */);
 		(OSStatus)SetDataBrowserSelectionFlags(control, kDataBrowserSelectOnlyOne | kDataBrowserNoDisjointSelection |
 														kDataBrowserResetSelection | kDataBrowserCmdTogglesSelection);
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 		if (FlagManager_Test(kFlagOS10_4API))
 		{
 			(OSStatus)DataBrowserChangeAttributes
 						(control, FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
 							0/* attributes to clear */);
 		}
+	#endif
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(control, false);
 		(OSStatus)EmbedControl(control, dataPtr->controls.tabs);
 	}

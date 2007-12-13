@@ -340,6 +340,7 @@ addressList						()
 		}
 	}
 	
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	// set other nice things (most are set in the NIB already)
 	if (FlagManager_Test(kFlagOS10_4API))
 	{
@@ -347,6 +348,7 @@ addressList						()
 												FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
 												0/* attributes to clear */);
 	}
+#endif
 	(OSStatus)SetDataBrowserListViewUsePlainBackground(dataBrowserAddresses, false);
 }// My_AddressDialog 2-argument constructor
 

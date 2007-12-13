@@ -16,7 +16,7 @@
 /*###############################################################
 
 	Universal Defines
-		© 1998-2005 by Kevin Grant
+		© 1998-2007 by Kevin Grant
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -210,6 +210,14 @@ inline double FLOAT64_EIGHTHED		(double a)				{ return (a / 8.0); }				//!< divi
 // accessors for corner points within a QuickDraw rectangle ("Rect")
 #define topLeft(r)	(((Point*)&(r))[0])
 #define botRight(r)	(((Point*)&(r))[1])
+
+// HIObjectGetEventTarget() is defined back to 10.2, but the 10.3 headers
+// do not declare HIViewInstallEventHandler(); to minimize the need to
+// use 10.4 headers when 10.3 headers should do, define this macro here
+#ifndef HIViewInstallEventHandler
+#define HIViewInstallEventHandler( target, handler, numTypes, list, userData, outHandlerRef ) \
+       InstallEventHandler( HIObjectGetEventTarget( (HIObjectRef) (target) ), (handler), (numTypes), (list), (userData), (outHandlerRef) )
+#endif
 
 #endif /* REZ */
 

@@ -2621,12 +2621,13 @@ createTabWindow		(TerminalWindowPtr		inPtr)
 			// install a drag handler so that tabs switch automatically as
 			// items hover over them
 			{
-				HIViewRef		contentPane = nullptr;
+				HIViewRef	contentPane = nullptr;
 				
 				
 				error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
 				assert_noerr(error);
-				inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(HIViewGetEventTarget(contentPane), receiveTabDragDrop,
+				inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(CarbonEventUtilities_GetViewTarget(contentPane),
+																		receiveTabDragDrop,
 																		CarbonEventSetInClass
 																		(CarbonEventClass(kEventClassControl),
 																			kEventControlDragEnter),

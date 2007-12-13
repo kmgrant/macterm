@@ -270,8 +270,10 @@ drawSplashScreen	(WindowRef		UNUSED_ARGUMENT_CARBON(inSplashScreenWindow))
 							textInfo.options = 0;
 							textInfo.truncationPosition = kHIThemeTextTruncationNone;
 							
+						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 							(OSStatus)HIThemeSetFill(kThemeTextColorWhite, nullptr/* info */, graphicsContext,
 														kHIThemeOrientationInverted);
+						#endif
 							(OSStatus)HIThemeDrawTextBox(randomBilineCFString, &textBounds, &textInfo,
 															graphicsContext, kHIThemeOrientationInverted);
 							

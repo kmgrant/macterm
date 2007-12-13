@@ -651,10 +651,14 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 				if (noErr == result)
 				{
 					// each attribute mentioned here should be handled below
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXDescriptionAttribute);
+				#endif
 					CFArrayAppendValue(listOfNames, kAXRoleAttribute);
 					CFArrayAppendValue(listOfNames, kAXRoleDescriptionAttribute);
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					CFArrayAppendValue(listOfNames, kAXTopLevelUIElementAttribute);
+				#endif
 					CFArrayAppendValue(listOfNames, kAXWindowAttribute);
 					CFArrayAppendValue(listOfNames, kAXParentAttribute);
 					CFArrayAppendValue(listOfNames, kAXEnabledAttribute);
@@ -674,15 +678,57 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 																typeCFStringRef, requestedAttribute);
 				if (noErr == result)
 				{
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 					// for the purposes of accessibility, identify a Terminal Background as
 					// having the same role as a standard matte
 					CFStringRef		roleCFString = kAXMatteRole;
+				#else
+					CFStringRef		roleCFString = kAXImageRole;
+				#endif
 					Boolean			isSettable = false;
 					
 					
 					// IMPORTANT: The cases handled here should match the list returned
 					// by "kEventAccessibleGetAllAttributeNames", above.
-					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
+					if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+							result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+														sizeof(roleCFString), &roleCFString);
+						}
+					}
+					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleDescriptionAttribute,
+																	kCFCompareBackwards))
+					{
+						isSettable = false;
+						if (kEventAccessibleGetNamedAttribute == kEventKind)
+						{
+						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+							if (FlagManager_Test(kFlagOS10_4API))
+							{
+								CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
+																	(roleCFString, nullptr/* sub-role */);
+								
+								
+								if (nullptr != roleDescCFString)
+								{
+									result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
+																sizeof(roleDescCFString), &roleDescCFString);
+									CFRelease(roleDescCFString), roleDescCFString = nullptr;
+								}
+							}
+							else
+						#endif
+							{
+								// no API available prior to 10.4 to find this value, so be lazy and return nothing
+								result = eventNotHandledErr;
+							}
+						}
+					}
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXDescriptionAttribute, kCFCompareBackwards))
 					{
 						isSettable = false;
 						if (kEventAccessibleGetNamedAttribute == kEventKind)
@@ -704,41 +750,7 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 							}
 						}
 					}
-					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleAttribute, kCFCompareBackwards))
-					{
-						isSettable = false;
-						if (kEventAccessibleGetNamedAttribute == kEventKind)
-						{
-							result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-														sizeof(roleCFString), &roleCFString);
-						}
-					}
-					else if (kCFCompareEqualTo == CFStringCompare(requestedAttribute, kAXRoleDescriptionAttribute,
-																	kCFCompareBackwards))
-					{
-						isSettable = false;
-						if (kEventAccessibleGetNamedAttribute == kEventKind)
-						{
-							if (FlagManager_Test(kFlagOS10_4API))
-							{
-								CFStringRef		roleDescCFString = HICopyAccessibilityRoleDescription
-																	(roleCFString, nullptr/* sub-role */);
-								
-								
-								if (nullptr != roleDescCFString)
-								{
-									result = SetEventParameter(inEvent, kEventParamAccessibleAttributeValue, typeCFStringRef,
-																sizeof(roleDescCFString), &roleDescCFString);
-									CFRelease(roleDescCFString), roleDescCFString = nullptr;
-								}
-							}
-							else
-							{
-								// no API available prior to 10.4 to find this value, so be lazy and return nothing
-								result = eventNotHandledErr;
-							}
-						}
-					}
+				#endif
 					else
 					{
 						// Many attributes are already supported by the default handler:
