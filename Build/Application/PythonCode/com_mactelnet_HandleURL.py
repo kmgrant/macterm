@@ -24,7 +24,14 @@ from com_mactelnet_ParseURL import \
 	ssh as _parse_ssh, \
 	telnet as _parse_telnet, \
 	x_man_page as _parse_x_man_page
-import Quills
+try:
+	import Quills
+except ImportError, err:
+	import sys, os
+	if "DYLD_LIBRARY_PATH" in os.environ:
+		print >>sys.stderr, "Shared library path:", os.environ["DYLD_LIBRARY_PATH"]
+	print >>sys.stderr, "Python path:", sys.path
+	raise err
 
 def file(url):
 	"""file(url) -> None
