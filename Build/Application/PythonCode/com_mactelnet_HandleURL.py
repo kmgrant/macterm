@@ -28,6 +28,7 @@ try:
 	import Quills
 except ImportError, err:
 	import sys, os
+	print >>sys.stderr, "Unable to import Quills."
 	if "DYLD_LIBRARY_PATH" in os.environ:
 		print >>sys.stderr, "Shared library path:", os.environ["DYLD_LIBRARY_PATH"]
 	print >>sys.stderr, "Python path:", sys.path
