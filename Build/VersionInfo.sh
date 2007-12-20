@@ -2,33 +2,47 @@
 
 # VersionInfo.sh
 #
-# Parses the built executable's Info.plist file and finds the 5
-# major version components, printing them out in order and space-
-# delimited.
+# This script should be updated with each new release.  (Build
+# numbers, however, are based on dates and automatically set.)
+#
+# If invoked without arguments, prints the 5 major version
+# components space-delimited on a single line, in the following
+# order:
+#     major-version
+#     minor-version
+#     subminor-version
+#     alpha-beta
+#     build-number
+#
+# If invoked with arguments, executes the given command line but
+# first injects the 5 version components into the following
+# environment variables:
+#     MY_MAJOR_NUMBER
+#     MY_MINOR_NUMBER
+#     MY_SUBMINOR_NUMBER
+#     MY_ALPHA_BETA
+#     MY_BUILD_NUMBER
 #
 # Kevin Grant (kevin@ieee.org)
 # June 17, 2004
 
-if [ ! -r ./VersionInfo.sh ] ; then
-    echo "$0: run this from the Build directory" > /dev/stderr
-    exit 1
+MY_MAJOR_NUMBER=3
+export MY_MAJOR_NUMBER
+
+MY_MINOR_NUMBER=1
+export MY_MINOR_NUMBER
+
+MY_SUBMINOR_NUMBER=0
+export MY_SUBMINOR_NUMBER
+
+MY_ALPHA_BETA=a
+export MY_ALPHA_BETA
+
+MY_BUILD_NUMBER=`/bin/date +%Y%m%d`
+export MY_BUILD_NUMBER
+
+if [ "x$1" = "x" ] ; then
+    echo "$MY_MAJOR_NUMBER $MY_MINOR_NUMBER $MY_SUBMINOR_NUMBER $MY_ALPHA_BETA $MY_BUILD_NUMBER"
+else
+    exec ${1+"$@"}
 fi
-
-# config
-awk=/usr/bin/awk
-dirname=/usr/bin/dirname
-grep=/usr/bin/grep
-perl=/usr/bin/perl
-
-# find the generated property list
-top_dir=`$dirname $0`
-info_plist="${top_dir}/Application/ForDebugging/MacTelnet.app/Contents/Info.plist"
-
-if [ ! -r "${info_plist}" ] ; then
-    echo "$0: generated property list not found; please use Xcode to build the MacTelnet target" > /dev/stderr
-    exit 1
-fi
-
-# extract version components from Info.plist's XML
-$grep '<string>.*\..*\..*\..*\..*' ${info_plist} | $perl -ne 's/\s*<\/?string>\s*//g; print' | $awk 'BEGIN { FS = "." } { print $1" "$2" "$3" "$4" "$5 }'
-
