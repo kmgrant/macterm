@@ -138,6 +138,14 @@ kPanel_MessageGetEditType
 	"kPanel_ResponseEditTypeModelessSingle" or
 	"kPanel_ResponseEditTypeInspector".
 
+kPanel_MessageGetGrowBoxLook
+	Sent each time the panel is displayed to determine how
+	the window resize box should look (transparent or
+	opaque).  It is transparent by default.  If your panel
+	displays a list at the bottom or otherwise wants the
+	boxed appearance, return "kPanel_ResponseGrowBoxOpaque",
+	otherwise return kPanel_ResponseGrowBoxTransparent".
+
 kPanel_MessageGetIdealSize
 	Sent AFTER control creation to determine the ideal
 	dimensions of the panel.  This might be used by the
@@ -171,19 +179,22 @@ kPanel_MessageNewVisibility
 typedef UInt32 Panel_Message;
 enum
 {
-	kPanel_MessageCreateViews = '1win',				// data: -> HIWindowRef*, the owning window
-	kPanel_MessageDestroyed = 'tobe',				// data: -> void*, the auxiliary data pointer
-	kPanel_MessageFocusGained = 'focg',				// data: -> HIViewRef*, the field gaining focus
-	kPanel_MessageFocusLost = 'focl',				// data: -> HIViewRef*, the field losing focus
-	kPanel_MessageGetEditType = 'edit',				// data: -> nullptr
+	kPanel_MessageCreateViews = '1win',					// data: -> HIWindowRef*, the owning window
+	kPanel_MessageDestroyed = 'tobe',					// data: -> void*, the auxiliary data pointer
+	kPanel_MessageFocusGained = 'focg',					// data: -> HIViewRef*, the field gaining focus
+	kPanel_MessageFocusLost = 'focl',					// data: -> HIViewRef*, the field losing focus
+	kPanel_MessageGetEditType = 'edit',					// data: -> nullptr
 		kPanel_ResponseEditTypeInspector = (1U >> 0),		// result code of the above
 		kPanel_ResponseEditTypeModelessSingle = (0 >> 0),	// result code of the above
-	kPanel_MessageGetIdealSize = 'idsz',			// data: <- HISize*
-		kPanel_ResponseSizeProvided = (1U >> 0),	// result code of the above
-		kPanel_ResponseSizeNotProvided = (0 >> 0),	// result code of the above
-	kPanel_MessageNewAppearanceTheme = 'athm',		// data: -> nullptr
-	kPanel_MessageNewDataSet = 'cset',				// data: -> Panel_DataSetTransition*
-	kPanel_MessageNewVisibility = 'visb'			// data: -> Boolean*, Òis now visible?Ó
+	kPanel_MessageGetGrowBoxLook = 'grow',				// data: <- nullptr
+		kPanel_ResponseGrowBoxOpaque = (1U >> 0),			// result code of the above
+		kPanel_ResponseGrowBoxTransparent = (0 >> 0),		// result code of the above
+	kPanel_MessageGetIdealSize = 'idsz',				// data: <- HISize*
+		kPanel_ResponseSizeProvided = (1U >> 0),			// result code of the above
+		kPanel_ResponseSizeNotProvided = (0 >> 0),			// result code of the above
+	kPanel_MessageNewAppearanceTheme = 'athm',			// data: -> nullptr
+	kPanel_MessageNewDataSet = 'cset',					// data: -> Panel_DataSetTransition*
+	kPanel_MessageNewVisibility = 'visb'				// data: -> Boolean*, Òis now visible?Ó
 };
 typedef SInt32 (*Panel_ChangeProcPtr)	(Panel_Ref		inRef,
 										 Panel_Message	inMessage,
@@ -279,6 +290,9 @@ void
 
 SInt32
 	Panel_SendMessageGetEditType		(Panel_Ref					inRef);
+
+SInt32
+	Panel_SendMessageGetGrowBoxLook		(Panel_Ref					inRef);
 
 SInt32
 	Panel_SendMessageGetIdealSize		(Panel_Ref					inRef,

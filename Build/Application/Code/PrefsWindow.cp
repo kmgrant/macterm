@@ -728,6 +728,22 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 				{
 					(OSStatus)CloseDrawer(gDrawerWindow, true/* asynchronously */);
 				}
+				
+				// make the grow box transparent by default, which looks better most of the time;
+				// however, give the panel the option to change this appearance
+				{
+					HIViewWrap		growBox(kHIViewWindowGrowBoxID, gPreferencesWindow);
+					
+					
+					if (kPanel_ResponseGrowBoxOpaque == Panel_SendMessageGetGrowBoxLook(newPanelDataPtr->panel))
+					{
+						(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
+					}
+					else
+					{
+						(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
+					}
+				}
 			}
 		}
 		

@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071220',
     '20071219',
     '20071204',
     '20071119',
@@ -66,6 +67,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071220': [
+		'Preferences window resize box now has a transparent look on most panels.',
+	],
 	'20071219': [
 		'This build should once again support Panther, Tiger and Leopard.',
 	],

@@ -1376,6 +1376,10 @@ panelChanged	(Panel_Ref		inPanel,
 		result = kPanel_ResponseEditTypeInspector;
 		break;
 	
+	case kPanel_MessageGetGrowBoxLook: // request for panel to return its preferred appearance for the window grow box
+		result = kPanel_ResponseGrowBoxOpaque;
+		break;
+	
 	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after control creation)
 		{
 			HISize&		newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
