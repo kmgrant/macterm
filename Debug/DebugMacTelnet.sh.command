@@ -25,7 +25,7 @@ cd `dirname $0`
 #     Continuing.
 #     ...
 
-cd '../Build/Application/ForDebugging/MacTelnet.app/Contents'
+cd '../Build/MacTelnet.app/Contents'
 echo
 echo '______________________________________________________________________________'
 echo
