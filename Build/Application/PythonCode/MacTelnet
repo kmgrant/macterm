@@ -41,16 +41,32 @@ pymactelnet_versions_dir = os.path.join(pymactelnet_dir, "Versions")
 pymactelnet_current_version_dir = os.path.join(pymactelnet_versions_dir, "Current")
 pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python" + pymactelnet_pylib_ver)
 
-# the Quills.framework code is compiled, so it will depend on the
-# version of the Python interpreter, which varies (e.g. Leopard has
-# Python 2.5, earlier releases have Python 2.3); this assumes that
-# the SWIG-based wrapper is built for multiple Python versions
+# the Quills.framework code is compiled, so it is architecture-dependent;
+# the SWIG wrappers must be built for every possible Python version that
+# is incompatible, namely the Python 2.3 PowerPC of Panther, the Python
+# 2.3.5 universal of Tiger, and the Python 2.5 universal of Leopard; the
+# core Quills library (the biggest chunk of code) is not dependent on the
+# Python version but still requires a PowerPC version for 10.3 since only
+# 10.4+ supports universal binaries...so with all these combinations a
+# bit of magic is used here to figure out just which one to load:
+# - Panther is PowerPC only and requires the Python 2.3 SWIG wrapper
+# - Tiger is universal and requires the Python 2.3.5 SWIG wrapper
+# - Leopard is universal and requires the Python 2.5 SWIG wrapper
+# - version "A" of the framework supports PowerPC only (and Python 2.3)
+# - version "B" of the framework is universal (for Python 2.3.5 or 2.5)
+quills_fw_ver = "A"
 quills_pylib_ver = "2.3"
-if sys.version_info[0] > 2 or sys.version_info[1] > 3: quills_pylib_ver = "2.5"
+if sys.version_info[0] == 2 and sys.version_info[1] == 3 \
+   and sys.version_info[2] > 0:
+    quills_pylib_ver = "2.3.5"
+    quills_fw_ver = "B"
+elif sys.version_info[0] > 2 or sys.version_info[1] > 3:
+    quills_pylib_ver = "2.5"
+    quills_fw_ver = "B"
 quills_dir = os.path.join(frameworks_dir, "Quills.framework")
 quills_versions_dir = os.path.join(quills_dir, "Versions")
-quills_current_version_dir = os.path.join(quills_versions_dir, "Current")
-quills_pylib_dir = os.path.join(quills_current_version_dir, "lib", "python" + quills_pylib_ver)
+quills_proper_version_dir = os.path.join(quills_versions_dir, quills_fw_ver)
+quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + quills_pylib_ver)
 
 # put the initial bundle location in the environment, for convenience
 # when initializing other components
@@ -69,8 +85,8 @@ python_path = os.getenv("PYTHONPATH", "")
 if python_path:
     python_path = ":" + python_path
 os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + python_path
-os.environ["DYLD_LIBRARY_PATH"] = os.path.join(frameworks_dir, "Quills.framework")
-os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
+os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
+#os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
 
 # DEBUGGING ONLY: if you want to do memory debugging, you can substitute
 # the allocator library as follows (do NOT do this on a whim, guard

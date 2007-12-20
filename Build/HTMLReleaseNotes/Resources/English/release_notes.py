@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071219',
     '20071204',
     '20071119',
     '20071104',
@@ -65,6 +66,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071219': [
+		'This build should once again support Panther, Tiger and Leopard.',
+	],
 	'20071204': [
 		'Fixed scroll bars in terminal windows to allow the indicator to be dragged.',
 	],

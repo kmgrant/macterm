@@ -7,71 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0A060B2B078BA0D500A8BB55 /* ColorBox.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A060B29078BA0D500A8BB55 /* ColorBox.nib */; };
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */; };
-		0A1BCD8A05CA2B21005CF1E5 /* TerminalWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */; };
-		0A1BCD9F05CA34FF005CF1E5 /* IconForSessionStatusActive.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD9D05CA34FF005CF1E5 /* IconForSessionStatusActive.icns */; };
-		0A1BCDA005CA34FF005CF1E5 /* IconForSessionStatusDead.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A1BCD9E05CA34FF005CF1E5 /* IconForSessionStatusDead.icns */; };
 		0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A26DD900CCF09D400768AD8 /* AddressDialog.cp */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
-		0A3E07410B817E9800EDC16A /* IconForPrefPanelTranslations.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */; };
-		0A41231C0ACE525B0067D333 /* PrefPanelFormats.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A4123140ACE525B0067D333 /* PrefPanelFormats.nib */; };
-		0A41231D0ACE525B0067D333 /* PrefPanelMacros.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A4123160ACE525B0067D333 /* PrefPanelMacros.nib */; };
-		0A41231E0ACE525B0067D333 /* PrefPanelSessions.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A4123180ACE525B0067D333 /* PrefPanelSessions.nib */; };
-		0A41231F0ACE525B0067D333 /* PrefPanelTerminals.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A41231A0ACE525B0067D333 /* PrefPanelTerminals.nib */; };
-		0A5CDBB00CDDB26D008EEFD5 /* _Quills.so in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A5CDBAE0CDDB22D008EEFD5 /* _Quills.so */; };
-		0A5CDBB10CDDB26D008EEFD5 /* Quills.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A5CDBA90CDDB1C7008EEFD5 /* Quills.py */; };
-		0A6E225A06CF42F0004AC0A4 /* KioskPasswordDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A6E225806CF42F0004AC0A4 /* KioskPasswordDialog.nib */; };
-		0A719D39055D95EE009B0A88 /* InterfaceLibAppResources.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D23055D95ED009B0A88 /* InterfaceLibAppResources.r */; };
-		0A719D3C055D95EE009B0A88 /* FormatDialog.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D26055D95ED009B0A88 /* FormatDialog.r */; };
-		0A719D42055D95EE009B0A88 /* ReusableControls.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D2C055D95EE009B0A88 /* ReusableControls.r */; };
-		0A719D45055D95EE009B0A88 /* WindowsMisc.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D2F055D95EE009B0A88 /* WindowsMisc.r */; };
-		0A719D47055D95EE009B0A88 /* TerminalEditorDialog.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D31055D95EE009B0A88 /* TerminalEditorDialog.r */; };
-		0A719D48055D95EE009B0A88 /* StringsMisc.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D32055D95EE009B0A88 /* StringsMisc.r */; };
-		0A719D49055D95EE009B0A88 /* SpacingConstants.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D33055D95EE009B0A88 /* SpacingConstants.r */; };
-		0A719D4A055D95EE009B0A88 /* ApplicationMisc.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D34055D95EE009B0A88 /* ApplicationMisc.r */; };
-		0A719D4E055D95EE009B0A88 /* SessionEditorDialog.r in Rez */ = {isa = PBXBuildFile; fileRef = 0A719D38055D95EE009B0A88 /* SessionEditorDialog.r */; };
-		0A73DBAF08C568D90099BA73 /* MacTelnet.help in Resources */ = {isa = PBXBuildFile; fileRef = 0A73DB9608C568D90099BA73 /* MacTelnet.help */; };
-		0A7F8CC10ACF8555009DA83D /* IconForItemRemove.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */; };
-		0A7F8CC20ACF8555009DA83D /* IconForItemAdd.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */; };
-		0A8ACEC40B8C375A00D01058 /* IconForStackWindows.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */; };
-		0A9AF6740AF5A6B800E7DF18 /* _Quills.so in Populate lib-python2.5 */ = {isa = PBXBuildFile; fileRef = 0ACE9A960A9EE59700C693D7 /* _Quills.so */; };
-		0A9AF6750AF5A6B800E7DF18 /* Quills.py in Populate lib-python2.5 */ = {isa = PBXBuildFile; fileRef = 0ACE9A980A9EE59C00C693D7 /* Quills.py */; };
-		0A9AF68B0AF5A95100E7DF18 /* PyMacTelnet.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */; };
-		0A9AF69F0AF5AB1F00E7DF18 /* RunMacTelnet.py in Copy MacOS Execs */ = {isa = PBXBuildFile; fileRef = 0AFF11220AF41FEE006CCA34 /* RunMacTelnet.py */; };
-		0A9C2BAC05B228DA0033C78C /* MenuForDockIcon.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */; };
-		0A9C2BB405B228DA0033C78C /* AboutBox.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A72360905703FB7005BA8D1 /* AboutBox.nib */; };
-		0A9C2BB505B228DA0033C78C /* CommandLine.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A7530DD058048F800BCC5E4 /* CommandLine.nib */; };
-		0A9C2BB705B228DA0033C78C /* DuplicateDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A84509B0554CB8E00CFF440 /* DuplicateDialog.nib */; };
-		0A9C2BB805B228DA0033C78C /* FindDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A84509D0554CB8E00CFF440 /* FindDialog.nib */; };
-		0A9C2BBA05B228DA0033C78C /* InfoWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AB64A93057819E5005702BA /* InfoWindow.nib */; };
-		0A9C2BBB05B228DA0033C78C /* Keypads.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A75311505804BA000BCC5E4 /* Keypads.nib */; };
-		0A9C2BBD05B228DA0033C78C /* MacroSetupWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A8450A30554CB8E00CFF440 /* MacroSetupWindow.nib */; };
-		0A9C2BBF05B228DA0033C78C /* PrefsWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */; };
-		0A9C2BC005B228DA0033C78C /* ProgressDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A8450A70554CB8E00CFF440 /* ProgressDialog.nib */; };
-		0A9C2BC205B228DA0033C78C /* TEKWindow.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A8450A90554CB8E00CFF440 /* TEKWindow.nib */; };
-		0A9C2BC405B228DA0033C78C /* WindowTitleDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A8450AF0554CB8E00CFF440 /* WindowTitleDialog.nib */; };
-		0A9C2BC605B228F10033C78C /* DefaultPreferences.plist in Resources */ = {isa = PBXBuildFile; fileRef = 0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */; };
-		0A9C2BC705B228F10033C78C /* IconForBundle.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A54E40D0560B62F005B4592 /* IconForBundle.icns */; };
-		0A9C2BC905B228F10033C78C /* IconForPrefPanelGeneral.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */; };
-		0A9C2BCA05B228F10033C78C /* IconForPrefPanelScripts.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A11F54C059FE55D00A565C3 /* IconForPrefPanelScripts.icns */; };
-		0A9C2BCB05B228F10033C78C /* IconForPrefPanelMacros.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */; };
-		0A9C2BCC05B228F10033C78C /* IconForScriptsMenu.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A22A019059FBF0300A0BB56 /* IconForScriptsMenu.icns */; };
-		0A9C2BCD05B228F10033C78C /* IconForCommand.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A22A017059FBEEB00A0BB56 /* IconForCommand.icns */; };
-		0A9C2BCE05B228F10033C78C /* IconForMacroSet.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A54E40E0560B62F005B4592 /* IconForMacroSet.icns */; };
-		0A9C2BCF05B228F10033C78C /* IconForSession.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A54E40C0560B62F005B4592 /* IconForSession.icns */; };
-		0A9C2BD005B228F10033C78C /* IconForTerminal.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0A54E40F0560B62F005B4592 /* IconForTerminal.icns */; };
-		0A9C2BDB05B228F10033C78C /* SplashScreen.pict in Resources */ = {isa = PBXBuildFile; fileRef = 0A4A7836055B3D1D0011CC82 /* SplashScreen.pict */; };
-		0A9C2BDC05B228F10033C78C /* DockTileAttentionMask.pict in Resources */ = {isa = PBXBuildFile; fileRef = 0A4A7838055B3D1D0011CC82 /* DockTileAttentionMask.pict */; };
-		0A9C2BDD05B228F10033C78C /* DockTileAttention.pict in Resources */ = {isa = PBXBuildFile; fileRef = 0A4A783A055B3D1D0011CC82 /* DockTileAttention.pict */; };
-		0A9CC37B06DC470D00DCD12E /* PrefPanels.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0A9CC37906DC470D00DCD12E /* PrefPanels.nib */; };
-		0AAB2D0907EAD07000CFAFF1 /* IconForLEDOff.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */; };
-		0AAB2D0A07EAD07000CFAFF1 /* IconForLEDOn.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */; };
-		0AB1C5110CCD608400E3A160 /* AddressDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AB1C50B0CCD608400E3A160 /* AddressDialog.nib */; };
-		0ABC0CF50A44FFA7009D07FC /* IconForPrefPanelSessions.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */; };
-		0ABC0CF70A44FFAA009D07FC /* IconForPrefPanelTerminals.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */; };
-		0ABC0CF90A44FFBD009D07FC /* IconForPrefPanelFormats.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */; };
-		0AC57BC60B1AE73B000F0250 /* MainMenus.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AC57BC40B1AE73B000F0250 /* MainMenus.nib */; };
+		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADC0A8C0BA000AFF37A /* UniversalPrint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE09055432A400ACDF3A /* UniversalPrint.cp */; };
@@ -201,84 +140,31 @@
 		0AC6BD970A8C0BB100AFF37A /* QuickTime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059605543D7C00ACDF3A /* QuickTime.framework */; };
 		0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059705543D7C00ACDF3A /* System.framework */; };
 		0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059305543D7C00ACDF3A /* ApplicationServices.framework */; };
-		0AC7DDAA0AC2579D00ED8C19 /* IconForHide.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AC7DDA90AC2579D00ED8C19 /* IconForHide.icns */; };
-		0AC838680ABF915B00BEF8B9 /* IconForContextMenu.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AC838670ABF915B00BEF8B9 /* IconForContextMenu.icns */; };
-		0AC8386B0ABF917000BEF8B9 /* IconForScrollLockOff.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */; };
-		0AC8386C0ABF917000BEF8B9 /* IconForScrollLockOn.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */; };
-		0ACA57C60AEADC5C00B5F482 /* GenericDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */; };
-		0ACDD9260ABD16C200040553 /* AlertMessages.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ACDD9240ABD16C200040553 /* AlertMessages.nib */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
-		0ADC6B4208739552000A7EFC /* MainMenuHelp.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ADC6B4008739552000A7EFC /* MainMenuHelp.nib */; };
-		0ADEFCCE06C34E1B00814772 /* Clipboard.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0ADEFCCC06C34E1B00814772 /* Clipboard.nib */; };
-		0AE2859C0B8D6E7000E2253A /* IconForKeypadEnter.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */; };
-		0AE285A30B8D732600E2253A /* IconForKeypadArrowLeft.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285A20B8D732600E2253A /* IconForKeypadArrowLeft.icns */; };
-		0AE285B90B8D75F300E2253A /* IconForKeypadArrowRight.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285B80B8D75F200E2253A /* IconForKeypadArrowRight.icns */; };
-		0AE285CF0B8D78FD00E2253A /* IconForKeypadArrowDown.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285CE0B8D78FD00E2253A /* IconForKeypadArrowDown.icns */; };
-		0AE285D10B8D790200E2253A /* IconForKeypadArrowUp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285D00B8D790200E2253A /* IconForKeypadArrowUp.icns */; };
-		0AE285D80B8D7AE600E2253A /* IconForKeypadPageDown.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285D70B8D7AE600E2253A /* IconForKeypadPageDown.icns */; };
-		0AE285DA0B8D7AEA00E2253A /* IconForKeypadPageUp.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */; };
-		0AE285F20B8D7EF800E2253A /* IconForKeypadDelete.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */; };
-		0AE286000B8D830600E2253A /* IconForKeypadFind.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */; };
-		0AEDD0950A5F76DB00705C1C /* IconForPreferenceCollections.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */; };
-		0AF289A306CC9ADC002A89A7 /* KioskDisableFloater.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF289A106CC9ADC002A89A7 /* KioskDisableFloater.nib */; };
-		0AF46B600B05495C00666419 /* Quills.framework in Copy Frameworks */ = {isa = PBXBuildFile; fileRef = 0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */; };
-		0AF4B5830A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */; };
-		0AF5080609006B3D00E6FE79 /* SizeDialog.nib in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5080409006B3D00E6FE79 /* SizeDialog.nib */; };
-		0AF5B8AF0B8ED23A0061B480 /* IconForKeypadSelect.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */; };
-		0AF5B8B10B8ED24A0061B480 /* IconForKeypadInsert.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */; };
-		0AF995F40CC3C849000A11DC /* IconForBellOff.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF995F20CC3C849000A11DC /* IconForBellOff.icns */; };
-		0AF995F50CC3C849000A11DC /* IconForBellOn.icns in Resources */ = {isa = PBXBuildFile; fileRef = 0AF995F30CC3C849000A11DC /* IconForBellOn.icns */; };
 		0AFA782C0B470144001FCE83 /* com_mactelnet_ParseURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* com_mactelnet_Util.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */; };
 		0AFA782E0B470144001FCE83 /* com_mactelnet_HandleURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */; };
-		0AFF11040AF41E70006CCA34 /* MacTelnet in Copy MacOS Execs */ = {isa = PBXBuildFile; fileRef = 0AE1F38D0AF41DA200D2DC13 /* MacTelnet */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		0A9AF6870AF5A84A00E7DF18 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0A46FDAC0554325700ACDF3A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 0A9AF64D0AF5A50500E7DF18;
-			remoteInfo = PyMacTelnet.framework;
+/* Begin PBXBuildRule section */
+		0A983AA60D1108C80054B4D2 /* PBXBuildRule */ = {
+			isa = PBXBuildRule;
+			compilerSpec = com.apple.compilers.proxy.script;
+			filePatterns = "*.i";
+			fileType = pattern.proxy;
+			isEditable = 1;
+			outputFiles = (
+				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE)_wrap.cxx",
+				"$(DERIVED_FILES_DIR)/$(INPUT_FILE_BASE).py",
+			);
+			script = "Tools/RunSwig.sh -c++ -python -I`pwd`/PythonWrapper -I`pwd`/Application/Code -I`pwd`/Shared/Code ${INPUT_FILE_NAME}";
 		};
-		0AC6BDA60A8C104200AFF37A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 0A46FDAC0554325700ACDF3A /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 0AC6BAD10A8C0A8B00AFF37A;
-			remoteInfo = MacTelnet.framework;
-		};
-/* End PBXContainerItemProxy section */
+/* End PBXBuildRule section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		0A5CDBA80CDDA811008EEFD5 /* Populate lib-python2.3 */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.3/";
-			dstSubfolderSpec = 0;
-			files = (
-				0A5CDBB00CDDB26D008EEFD5 /* _Quills.so in Populate lib-python2.3 */,
-				0A5CDBB10CDDB26D008EEFD5 /* Quills.py in Populate lib-python2.3 */,
-			);
-			name = "Populate lib-python2.3";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0A9AF66E0AF5A6A600E7DF18 /* Populate lib-python2.5 */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/lib/python2.5/";
-			dstSubfolderSpec = 0;
-			files = (
-				0A9AF6740AF5A6B800E7DF18 /* _Quills.so in Populate lib-python2.5 */,
-				0A9AF6750AF5A6B800E7DF18 /* Quills.py in Populate lib-python2.5 */,
-			);
-			name = "Populate lib-python2.5";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0A9AF6810AF5A81100E7DF18 /* Populate lib-python2.3 */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -290,30 +176,6 @@
 				0AFA782D0B470144001FCE83 /* com_mactelnet_Util.py in Populate lib-python2.3 */,
 			);
 			name = "Populate lib-python2.3";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0AC6BDF30A8C173F00AFF37A /* Copy Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				0AF46B600B05495C00666419 /* Quills.framework in Copy Frameworks */,
-				0A9AF68B0AF5A95100E7DF18 /* PyMacTelnet.framework in Copy Frameworks */,
-			);
-			name = "Copy Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		0AC6BE000A8C17A500AFF37A /* Copy MacOS Execs */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 6;
-			files = (
-				0A9AF69F0AF5AB1F00E7DF18 /* RunMacTelnet.py in Copy MacOS Execs */,
-				0AFF11040AF41E70006CCA34 /* MacTelnet in Copy MacOS Execs */,
-			);
-			name = "Copy MacOS Execs";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -566,7 +428,6 @@
 		0A46FE3B055432A400ACDF3A /* WindowInfo.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowInfo.cp; path = Application/Code/WindowInfo.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowTitleDialog.cp; path = Application/Code/WindowTitleDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE72055433CA00ACDF3A /* MacTelnet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacTelnet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A4A7837055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/SplashScreen.pict; sourceTree = "<group>"; };
 		0A4A7839055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttentionMask.pict; sourceTree = "<group>"; };
 		0A4A783B055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttention.pict; sourceTree = "<group>"; };
@@ -583,8 +444,6 @@
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40E0560B62F005B4592 /* IconForMacroSet.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForMacroSet.icns; path = Application/Resources/IconForMacroSet.icns; sourceTree = "<group>"; };
 		0A54E40F0560B62F005B4592 /* IconForTerminal.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForTerminal.icns; path = Application/Resources/IconForTerminal.icns; sourceTree = "<group>"; };
-		0A5CDBA90CDDB1C7008EEFD5 /* Quills.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = Quills.py; path = PythonWrapper/python2.3/Quills.py; sourceTree = "<group>"; };
-		0A5CDBAE0CDDB22D008EEFD5 /* _Quills.so */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = _Quills.so; path = PythonWrapper/python2.3/_Quills.so; sourceTree = "<group>"; };
 		0A66CA450887464200FD616C /* HIViewWrap.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.h; path = Shared/Code/HIViewWrap.h; sourceTree = "<group>"; };
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
@@ -645,6 +504,7 @@
 		0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelFormats.h; path = Application/Code/PrefPanelFormats.h; sourceTree = "<group>"; };
 		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelSessions.cp; path = Application/Code/PrefPanelSessions.cp; sourceTree = "<group>"; };
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelTerminals.cp; path = Application/Code/PrefPanelTerminals.cp; sourceTree = "<group>"; };
+		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC57BC50B1AE73B000F0250 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MainMenus.nib; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
 		0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsTerminal.h; path = Application/Code/QuillsTerminal.h; sourceTree = "<group>"; };
@@ -663,8 +523,6 @@
 		0ACDD91C0ABD163700040553 /* ListUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ListUtilities.h; path = Application/Code/ListUtilities.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.interfacer; name = Quills.i; path = PythonWrapper/Quills.i; sourceTree = "<group>"; };
-		0ACE9A960A9EE59700C693D7 /* _Quills.so */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.bundle"; name = _Quills.so; path = PythonWrapper/python2.5/_Quills.so; sourceTree = "<group>"; };
-		0ACE9A980A9EE59C00C693D7 /* Quills.py */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.script.python; name = Quills.py; path = PythonWrapper/python2.5/Quills.py; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
 		0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsBase.cp; path = Application/Code/QuillsBase.cp; sourceTree = "<group>"; };
 		0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsEvents.cp; path = Application/Code/QuillsEvents.cp; sourceTree = "<group>"; };
@@ -709,6 +567,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		0A983A9A0D11087A0054B4D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0AC6BAD00A8C0A8B00AFF37A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -966,29 +831,11 @@
 		0A46FE73055433CA00ACDF3A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				0A46FE72055433CA00ACDF3A /* MacTelnet.app */,
 				0AC6BAD20A8C0A8B00AFF37A /* Quills.framework */,
 				0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */,
+				0AC1FAF30D1992D600ED3102 /* _Quills.so */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		0A5CDBAB0CDDB1EB008EEFD5 /* python2.3 */ = {
-			isa = PBXGroup;
-			children = (
-				0A5CDBA90CDDB1C7008EEFD5 /* Quills.py */,
-				0A5CDBAE0CDDB22D008EEFD5 /* _Quills.so */,
-			);
-			name = python2.3;
-			sourceTree = "<group>";
-		};
-		0A5CDBAC0CDDB21A008EEFD5 /* python2.5 */ = {
-			isa = PBXGroup;
-			children = (
-				0ACE9A980A9EE59C00C693D7 /* Quills.py */,
-				0ACE9A960A9EE59700C693D7 /* _Quills.so */,
-			);
-			name = python2.5;
 			sourceTree = "<group>";
 		};
 		0AC6BDB90A8C130400AFF37A /* Python */ = {
@@ -1000,7 +847,6 @@
 				0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */,
 				0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */,
 				0AD0B0A00A9EAB4A002064BA /* Quills */,
-				0AD0B0A10A9EAB70002064BA /* Generated */,
 			);
 			name = Python;
 			sourceTree = "<group>";
@@ -1022,15 +868,6 @@
 				0AC6A4E40AC4D24400FF6FC6 /* QuillsTerminal.h */,
 			);
 			name = Quills;
-			sourceTree = "<group>";
-		};
-		0AD0B0A10A9EAB70002064BA /* Generated */ = {
-			isa = PBXGroup;
-			children = (
-				0A5CDBAB0CDDB1EB008EEFD5 /* python2.3 */,
-				0A5CDBAC0CDDB21A008EEFD5 /* python2.5 */,
-			);
-			name = Generated;
 			sourceTree = "<group>";
 		};
 		0AD0B0A60A9EABDF002064BA /* AppleScript */ = {
@@ -1251,30 +1088,23 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		0A46FE71055433CA00ACDF3A /* MacTelnet */ = {
+		0A983A9B0D11087A0054B4D2 /* PythonWrapper */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 0ACFA17C0929BE6B005712A9 /* Build configuration list for PBXNativeTarget "MacTelnet" */;
+			buildConfigurationList = 0A983AA20D1108A20054B4D2 /* Build configuration list for PBXNativeTarget "PythonWrapper" */;
 			buildPhases = (
-				0A79B1D60AF71E8D0052ECD3 /* Auto-Date Property List */,
-				0A73DC1308C56E210099BA73 /* Build MacTelnet.help */,
-				0A9C2BA905B228A50033C78C /* Resources */,
-				0AEA45DE0642047500E701DA /* Build AutomaticallyGeneratedDictionary.r */,
-				0A46FE6F055433CA00ACDF3A /* Rez */,
-				0AC6BDF30A8C173F00AFF37A /* Copy Frameworks */,
-				0AC6BE000A8C17A500AFF37A /* Copy MacOS Execs */,
-				0A1119DC0AAAB3750062D152 /* Symlink MacOS python */,
-				0AE1104E0AA53D830067FC47 /* Generate .strings Files */,
+				0A983A990D11087A0054B4D2 /* Sources */,
+				0A983A9A0D11087A0054B4D2 /* Frameworks */,
+				0AA2495C0D13412A00BCAF94 /* Copy to Expected Names */,
 			);
 			buildRules = (
+				0A983AA60D1108C80054B4D2 /* PBXBuildRule */,
 			);
 			dependencies = (
-				0AC6BDA70A8C104200AFF37A /* PBXTargetDependency */,
-				0A9AF6880AF5A84A00E7DF18 /* PBXTargetDependency */,
 			);
-			name = MacTelnet;
-			productName = Debug;
-			productReference = 0A46FE72055433CA00ACDF3A /* MacTelnet.app */;
-			productType = "com.apple.product-type.application";
+			name = PythonWrapper;
+			productName = "Python Wrapper";
+			productReference = 0AC1FAF30D1992D600ED3102 /* _Quills.so */;
+			productType = "com.apple.product-type.library.dynamic";
 		};
 		0A9AF64D0AF5A50500E7DF18 /* PyMacTelnet.framework */ = {
 			isa = PBXNativeTarget;
@@ -1303,9 +1133,7 @@
 				0AC6BACF0A8C0A8B00AFF37A /* Sources */,
 				0AC6BAD00A8C0A8B00AFF37A /* Frameworks */,
 				0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */,
-				0A9AF6DE0AF5B6B500E7DF18 /* Build Python Wrapper */,
-				0A5CDBA80CDDA811008EEFD5 /* Populate lib-python2.3 */,
-				0A9AF66E0AF5A6A600E7DF18 /* Populate lib-python2.5 */,
+				0A9AF6DE0AF5B6B500E7DF18 /* Copy Python Wrapper */,
 			);
 			buildRules = (
 			);
@@ -1329,8 +1157,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				0A46FE71055433CA00ACDF3A /* MacTelnet */,
 				0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */,
+				0A983A9B0D11087A0054B4D2 /* PythonWrapper */,
 				0A9AF64D0AF5A50500E7DF18 /* PyMacTelnet.framework */,
 			);
 		};
@@ -1344,85 +1172,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		0A9C2BA905B228A50033C78C /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0A9C2BC605B228F10033C78C /* DefaultPreferences.plist in Resources */,
-				0A9C2BC705B228F10033C78C /* IconForBundle.icns in Resources */,
-				0A9C2BC905B228F10033C78C /* IconForPrefPanelGeneral.icns in Resources */,
-				0A9C2BCA05B228F10033C78C /* IconForPrefPanelScripts.icns in Resources */,
-				0A9C2BCB05B228F10033C78C /* IconForPrefPanelMacros.icns in Resources */,
-				0A9C2BCC05B228F10033C78C /* IconForScriptsMenu.icns in Resources */,
-				0A9C2BCD05B228F10033C78C /* IconForCommand.icns in Resources */,
-				0A9C2BCE05B228F10033C78C /* IconForMacroSet.icns in Resources */,
-				0A9C2BCF05B228F10033C78C /* IconForSession.icns in Resources */,
-				0A9C2BD005B228F10033C78C /* IconForTerminal.icns in Resources */,
-				0A9C2BDB05B228F10033C78C /* SplashScreen.pict in Resources */,
-				0A9C2BDC05B228F10033C78C /* DockTileAttentionMask.pict in Resources */,
-				0A9C2BDD05B228F10033C78C /* DockTileAttention.pict in Resources */,
-				0A9C2BAC05B228DA0033C78C /* MenuForDockIcon.nib in Resources */,
-				0A9C2BB405B228DA0033C78C /* AboutBox.nib in Resources */,
-				0A9C2BB505B228DA0033C78C /* CommandLine.nib in Resources */,
-				0A9C2BB705B228DA0033C78C /* DuplicateDialog.nib in Resources */,
-				0A9C2BB805B228DA0033C78C /* FindDialog.nib in Resources */,
-				0A9C2BBA05B228DA0033C78C /* InfoWindow.nib in Resources */,
-				0A9C2BBB05B228DA0033C78C /* Keypads.nib in Resources */,
-				0A9C2BBD05B228DA0033C78C /* MacroSetupWindow.nib in Resources */,
-				0A9C2BBF05B228DA0033C78C /* PrefsWindow.nib in Resources */,
-				0A9C2BC005B228DA0033C78C /* ProgressDialog.nib in Resources */,
-				0A9C2BC205B228DA0033C78C /* TEKWindow.nib in Resources */,
-				0A9C2BC405B228DA0033C78C /* WindowTitleDialog.nib in Resources */,
-				0A1BCD8A05CA2B21005CF1E5 /* TerminalWindow.nib in Resources */,
-				0A1BCD9F05CA34FF005CF1E5 /* IconForSessionStatusActive.icns in Resources */,
-				0A1BCDA005CA34FF005CF1E5 /* IconForSessionStatusDead.icns in Resources */,
-				0ADEFCCE06C34E1B00814772 /* Clipboard.nib in Resources */,
-				0AF289A306CC9ADC002A89A7 /* KioskDisableFloater.nib in Resources */,
-				0A6E225A06CF42F0004AC0A4 /* KioskPasswordDialog.nib in Resources */,
-				0A9CC37B06DC470D00DCD12E /* PrefPanels.nib in Resources */,
-				0A060B2B078BA0D500A8BB55 /* ColorBox.nib in Resources */,
-				0AAB2D0907EAD07000CFAFF1 /* IconForLEDOff.icns in Resources */,
-				0AAB2D0A07EAD07000CFAFF1 /* IconForLEDOn.icns in Resources */,
-				0ADC6B4208739552000A7EFC /* MainMenuHelp.nib in Resources */,
-				0A73DBAF08C568D90099BA73 /* MacTelnet.help in Resources */,
-				0AF5080609006B3D00E6FE79 /* SizeDialog.nib in Resources */,
-				0AF4B5830A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns in Resources */,
-				0ABC0CF50A44FFA7009D07FC /* IconForPrefPanelSessions.icns in Resources */,
-				0ABC0CF70A44FFAA009D07FC /* IconForPrefPanelTerminals.icns in Resources */,
-				0ABC0CF90A44FFBD009D07FC /* IconForPrefPanelFormats.icns in Resources */,
-				0AEDD0950A5F76DB00705C1C /* IconForPreferenceCollections.icns in Resources */,
-				0ACDD9260ABD16C200040553 /* AlertMessages.nib in Resources */,
-				0AC838680ABF915B00BEF8B9 /* IconForContextMenu.icns in Resources */,
-				0AC8386B0ABF917000BEF8B9 /* IconForScrollLockOff.icns in Resources */,
-				0AC8386C0ABF917000BEF8B9 /* IconForScrollLockOn.icns in Resources */,
-				0AC7DDAA0AC2579D00ED8C19 /* IconForHide.icns in Resources */,
-				0A41231C0ACE525B0067D333 /* PrefPanelFormats.nib in Resources */,
-				0A41231D0ACE525B0067D333 /* PrefPanelMacros.nib in Resources */,
-				0A41231E0ACE525B0067D333 /* PrefPanelSessions.nib in Resources */,
-				0A41231F0ACE525B0067D333 /* PrefPanelTerminals.nib in Resources */,
-				0A7F8CC10ACF8555009DA83D /* IconForItemRemove.icns in Resources */,
-				0A7F8CC20ACF8555009DA83D /* IconForItemAdd.icns in Resources */,
-				0ACA57C60AEADC5C00B5F482 /* GenericDialog.nib in Resources */,
-				0AC57BC60B1AE73B000F0250 /* MainMenus.nib in Resources */,
-				0A3E07410B817E9800EDC16A /* IconForPrefPanelTranslations.icns in Resources */,
-				0A8ACEC40B8C375A00D01058 /* IconForStackWindows.icns in Resources */,
-				0AE2859C0B8D6E7000E2253A /* IconForKeypadEnter.icns in Resources */,
-				0AE285A30B8D732600E2253A /* IconForKeypadArrowLeft.icns in Resources */,
-				0AE285B90B8D75F300E2253A /* IconForKeypadArrowRight.icns in Resources */,
-				0AE285CF0B8D78FD00E2253A /* IconForKeypadArrowDown.icns in Resources */,
-				0AE285D10B8D790200E2253A /* IconForKeypadArrowUp.icns in Resources */,
-				0AE285D80B8D7AE600E2253A /* IconForKeypadPageDown.icns in Resources */,
-				0AE285DA0B8D7AEA00E2253A /* IconForKeypadPageUp.icns in Resources */,
-				0AE285F20B8D7EF800E2253A /* IconForKeypadDelete.icns in Resources */,
-				0AE286000B8D830600E2253A /* IconForKeypadFind.icns in Resources */,
-				0AF5B8AF0B8ED23A0061B480 /* IconForKeypadSelect.icns in Resources */,
-				0AF5B8B10B8ED24A0061B480 /* IconForKeypadInsert.icns in Resources */,
-				0AF995F40CC3C849000A11DC /* IconForBellOff.icns in Resources */,
-				0AF995F50CC3C849000A11DC /* IconForBellOn.icns in Resources */,
-				0AB1C5110CCD608400E3A160 /* AddressDialog.nib in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		0AC6BACE0A8C0A8B00AFF37A /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1432,71 +1181,7 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXRezBuildPhase section */
-		0A46FE6F055433CA00ACDF3A /* Rez */ = {
-			isa = PBXRezBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				0A719D39055D95EE009B0A88 /* InterfaceLibAppResources.r in Rez */,
-				0A719D3C055D95EE009B0A88 /* FormatDialog.r in Rez */,
-				0A719D42055D95EE009B0A88 /* ReusableControls.r in Rez */,
-				0A719D45055D95EE009B0A88 /* WindowsMisc.r in Rez */,
-				0A719D47055D95EE009B0A88 /* TerminalEditorDialog.r in Rez */,
-				0A719D48055D95EE009B0A88 /* StringsMisc.r in Rez */,
-				0A719D49055D95EE009B0A88 /* SpacingConstants.r in Rez */,
-				0A719D4A055D95EE009B0A88 /* ApplicationMisc.r in Rez */,
-				0A719D4E055D95EE009B0A88 /* SessionEditorDialog.r in Rez */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXRezBuildPhase section */
-
 /* Begin PBXShellScriptBuildPhase section */
-		0A1119DC0AAAB3750062D152 /* Symlink MacOS python */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Symlink MacOS python";
-			outputPaths = (
-				"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/MacOS/python",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# The \"MacOS/MacTelnet\" (main) executable in the bundle\n# looks for a \"pythonw\" executable in the same place.\n# This script sets up that link.\n\n# IMPORTANT: This MUST be a link, Python MUST run from\n# a path WITHIN THE BUNDLE.  If it does not, Mac OS X\n# thinks Python is the core executable and uses the\n# Python bundle instead (e.g. setting the name of the\n# application menu to Python, and worse!).\n\n# the variables referenced here should be set by Xcode automatically\nmacos_dir=${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/MacOS/\n\n/bin/ln -snf /usr/bin/python ${macos_dir}/";
-		};
-		0A73DC1308C56E210099BA73 /* Build MacTelnet.help */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SRCROOT)/HTMLHelp/GNUmakefile",
-			);
-			name = "Build MacTelnet.help";
-			outputPaths = (
-				"$(SRCROOT)/HTMLHelp/MacTelnet.help/Contents/Resources/English.lproj/index.html",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# SRCROOT is in Xcode's environment at build time, and is\n# preset to a useful value relative to your project area.\n#\n# Kevin Grant (kevin@ieee.org)\n# August 30, 2005\n\n${SRCROOT}/HTMLHelpBuild.command";
-		};
-		0A79B1D60AF71E8D0052ECD3 /* Auto-Date Property List */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Auto-Date Property List";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "exec ${SRCROOT}/Tools/AutoDatePropertyList.sh";
-		};
 		0A79B1E70AF71FD90052ECD3 /* Auto-Date Property List */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1525,67 +1210,35 @@
 			shellPath = /bin/sh;
 			shellScript = "exec ${SRCROOT}/Tools/AutoDatePropertyList.sh";
 		};
-		0A9AF6DE0AF5B6B500E7DF18 /* Build Python Wrapper */ = {
+		0A9AF6DE0AF5B6B500E7DF18 /* Copy Python Wrapper */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/PythonWrapper/GNUmakefile",
-				"$(SRCROOT)/PythonWrapper/Quills.i",
-				"$(SRCROOT)/Application/Code/QuillsBase.h",
-				"$(SRCROOT)/Application/Code/QuillsCallbacks.template.h",
-				"$(SRCROOT)/Application/Code/QuillsEvents.h",
-				"$(SRCROOT)/Application/Code/QuillsPrefs.h",
-				"$(SRCROOT)/Application/Code/QuillsSession.h",
-				"$(SRCROOT)/Application/Code/QuillsTerminal.h",
 			);
-			name = "Build Python Wrapper";
+			name = "Copy Python Wrapper";
 			outputPaths = (
-				"$(SRCROOT)/PythonWrapper/python2.3/Quills.py",
-				"$(SRCROOT)/PythonWrapper/python2.3/Quills_wrap.cxx",
-				"$(SRCROOT)/PythonWrapper/python2.3/Quills.o",
-				"$(SRCROOT)/PythonWrapper/python2.3/_Quills.so",
-				"$(SRCROOT)/PythonWrapper/python2.5/Quills.py",
-				"$(SRCROOT)/PythonWrapper/python2.5/Quills_wrap.cxx",
-				"$(SRCROOT)/PythonWrapper/python2.5/Quills.o",
-				"$(SRCROOT)/PythonWrapper/python2.5/_Quills.so",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# SRCROOT is in Xcode's environment at build time, and is\n# preset to a useful value relative to your project area.\n#\n# Kevin Grant (kevin@ieee.org)\n# August 30, 2005\n\n${SRCROOT}/PythonWrapperBuild.command";
+			shellScript = "";
 		};
-		0AE1104E0AA53D830067FC47 /* Generate .strings Files */ = {
+		0AA2495C0D13412A00BCAF94 /* Copy to Expected Names */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Application/Code/UIStrings.cp",
+				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/_Quills_debug.so",
 			);
-			name = "Generate .strings Files";
+			name = "Copy to Expected Names";
 			outputPaths = (
-				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/Resources/English.lproj/Alerts.strings",
+				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/_Quills.so",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# MacTelnet source code is very well organized, almost all\n# localized string references are in a single file.  Run\n# this script to read the appropriate source file for\n# MacTelnet and generate the various *.strings files.\n\n${SRCROOT}/Tools/GenerateDotStringsApplication.command";
-		};
-		0AEA45DE0642047500E701DA /* Build AutomaticallyGeneratedDictionary.r */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"$(SOURCE_ROOT)/Application/Resources/English.lproj/Dictionary.sdef",
-			);
-			name = "Build AutomaticallyGeneratedDictionary.r";
-			outputPaths = (
-				"$(DERIVED_SOURCES_DIR)/English.lproj/AutomaticallyGeneratedDictionary.r",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "# SOURCE_ROOT and DERIVED_SOURCES_DIR are both in\n# Xcode's environment at build time, and are preset\n# (presumably by Xcode) to useful values relative\n# to your project area.\n#\n# Kevin Grant (kevin@ieee.org)\n# March 26, 2004\n\ninpf=\"${SOURCE_ROOT}/Application/Resources/English.lproj/Dictionary.sdef\"\noutf=\"${DERIVED_SOURCES_DIR}/English.lproj/AutomaticallyGeneratedDictionary.r\"\n\n${SOURCE_ROOT}/Tools/CreateASDictionaryRezInput.sh ${inpf} ${outf}";
+			shellScript = "# Python will look for \"_Quills.so\" when \"import Quills\" is used,\n# so the file cannot be named _Quills_debug.so (as Xcode makes it)\n\nif [ -r \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" ] ; then\n    cp \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills.so\"\nfi";
 		};
 		0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1599,11 +1252,19 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\n# referenced environment variables are set by Xcode\n\n# since the linker seems to prefer finding \"Foobar\" instead of \"Foobar_debug\"\n# in a [.framework]/Versions/A/ subdirectory, this hacks in a link to the\n# debug version so that *only* a debug version actually has to be built\n\nln -snf ${EXECUTABLE_NAME}_debug \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/${EXECUTABLE_NAME}\"\n\n# this gets weirder...the script that sets up library paths for Python ends\n# up using the top-level link [.framework]/Foobar, but in debugging mode *it*\n# looks for \"Foobar_debug\" (the opposite behavior of the other case above);\n# so at the top level, this script also hacks in a link to the non-debug name\n\nln -snf Versions/A/${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}\"\nln -snf ${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}_debug\"";
+			shellScript = "\n# referenced environment variables are set by Xcode\n\n# since the linker seems to prefer finding \"Foobar\" instead of \"Foobar_debug\"\n# in a [.framework]/Versions/A/ subdirectory, this hacks in a link to the\n# debug version so that *only* a debug version actually has to be built\n\nln -snf ${EXECUTABLE_NAME}_debug \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/${EXECUTABLE_NAME}\"\n\n# this gets weirder...the script that sets up library paths for Python ends\n# up using the top-level link [.framework]/Foobar, but in debugging mode *it*\n# looks for \"Foobar_debug\" (the opposite behavior of the other case above);\n# so at the top level, this script also hacks in a link to the non-debug name\n\nln -snf Versions/${FRAMEWORK_VERSION}/${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}\"\nln -snf ${EXECUTABLE_NAME} \"${BUILT_PRODUCTS_DIR}/${FULL_PRODUCT_NAME}/${EXECUTABLE_NAME}_debug\"";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0A983A990D11087A0054B4D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0A983AA70D11090A0054B4D2 /* Quills.i in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		0AC6BACF0A8C0A8B00AFF37A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1742,19 +1403,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXTargetDependency section */
-		0A9AF6880AF5A84A00E7DF18 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 0A9AF64D0AF5A50500E7DF18 /* PyMacTelnet.framework */;
-			targetProxy = 0A9AF6870AF5A84A00E7DF18 /* PBXContainerItemProxy */;
-		};
-		0AC6BDA70A8C104200AFF37A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */;
-			targetProxy = 0AC6BDA60A8C104200AFF37A /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		0A060B29078BA0D500A8BB55 /* ColorBox.nib */ = {
@@ -2048,83 +1696,35 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		0A6FC91D0929CC1C00D20C95 /* ForRelease */ = {
+		0A8110880D0A62BF00D5CDE2 /* ForPantherDebug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = ppc;
+				BUILD_VARIANTS = debug;
+				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = "\"$(SDKROOT)/System/Library/Frameworks\"";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-MacTelnet-Info.plist";
-				INSTALL_PATH = "$(USER_APPS_DIR)";
-				LIBRARY_STYLE = STATIC;
-				PRODUCT_NAME = MacTelnet;
-				REZ_EXECUTABLE = NO;
-			};
-			name = ForRelease;
-		};
-		0A6FC91F0929CC1C00D20C95 /* ForRelease */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_LABEL = YES;
+				GCC_WARN_UNUSED_PARAMETER = YES;
+				GCC_WARN_UNUSED_VALUE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
-				MY_ALPHA_BETA = a;
-				MY_MAJOR_NUMBER = 3;
-				MY_MINOR_NUMBER = 1;
-				MY_SUBMINOR_NUMBER = 0;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
-			};
-			name = ForRelease;
-		};
-		0A9AF6510AF5A50500E7DF18 /* ForDebugging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
-				PRODUCT_NAME = PyMacTelnet;
-			};
-			name = ForDebugging;
-		};
-		0A9AF6520AF5A50500E7DF18 /* ForRelease */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				FRAMEWORK_VERSION = A;
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
-				PRODUCT_NAME = PyMacTelnet;
-			};
-			name = ForRelease;
-		};
-		0AC6BAD50A8C0A8C00AFF37A /* ForDebugging */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_VERSION = A;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
-				PREBINDING = NO;
-				PRODUCT_NAME = Quills;
-			};
-			name = ForDebugging;
-		};
-		0AC6BAD60A8C0A8C00AFF37A /* ForRelease */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				DYLIB_COMPATIBILITY_VERSION = 1;
-				DYLIB_CURRENT_VERSION = 1;
-				FRAMEWORK_VERSION = A;
-				GCC_MODEL_TUNING = G5;
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
+					"-g",
 					"-fpascal-strings",
 					"-v",
 					"-IApplication/Code",
@@ -2133,21 +1733,260 @@
 					"-IApplication/Resources/English.lproj",
 				);
 				PREBINDING = NO;
-				PRODUCT_NAME = MacTelnet;
+				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
+				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
 			};
-			name = ForRelease;
+			name = ForPantherDebug;
 		};
-		0ACFA17D0929BE6B005712A9 /* ForDebugging */ = {
+		0A81108A0D0A62BF00D5CDE2 /* ForPantherDebug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-MacTelnet-Info.plist";
-				LIBRARY_STYLE = STATIC;
-				PRODUCT_NAME = MacTelnet;
-				REZ_EXECUTABLE = NO;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = A;
+				GCC_MODEL_TUNING = "";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				PREBINDING = NO;
+				PRODUCT_NAME = Quills;
 			};
-			name = ForDebugging;
+			name = ForPantherDebug;
 		};
-		0ACFA1810929BE6B005712A9 /* ForDebugging */ = {
+		0A81108B0D0A62BF00D5CDE2 /* ForPantherDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
+				PRODUCT_NAME = PyMacTelnet;
+			};
+			name = ForPantherDebug;
+		};
+		0A983A9D0D11087A0054B4D2 /* ForTigerDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_EXTENSION = so;
+				EXECUTABLE_PREFIX = _;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"$(SWIG_PYTHON_INCLUDE)",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Python,
+					"-framework",
+					Quills,
+				);
+				PRODUCT_NAME = Quills;
+				SWIG_PYTHON_INCLUDE = "-I$(SDKROOT)/System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3";
+				SWIG_VERSION = 1.3.31;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+					"-Wshadow",
+				);
+			};
+			name = ForTigerDebug;
+		};
+		0A983A9E0D11087A0054B4D2 /* ForPantherDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_EXTENSION = so;
+				EXECUTABLE_PREFIX = _;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				GCC_PREFIX_HEADER = "";
+				INSTALL_PATH = /usr/local/lib;
+				MACH_O_TYPE = mh_bundle;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"$(SWIG_PYTHON_INCLUDE)",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Python,
+					"-framework",
+					Quills,
+				);
+				PRODUCT_NAME = Quills;
+				SWIG_PYTHON_INCLUDE = "-I$(SDKROOT)/System/Library/Frameworks/Python.framework/Versions/2.3/include/python2.3";
+				SWIG_VERSION = 1.3.29;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+					"-Wshadow",
+				);
+			};
+			name = ForPantherDebug;
+		};
+		0A9AF6510AF5A50500E7DF18 /* ForTigerDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
+				PRODUCT_NAME = PyMacTelnet;
+			};
+			name = ForTigerDebug;
+		};
+		0AA249450D13342D00BCAF94 /* ForLeopardDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = (
+					ppc,
+					i386,
+				);
+				BUILD_VARIANTS = debug;
+				COPY_PHASE_STRIP = NO;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SDKROOT)/System/Library/Frameworks\"";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
+				GCC_WARN_HIDDEN_VIRTUAL_FUNCTIONS = YES;
+				GCC_WARN_INITIALIZER_NOT_FULLY_BRACKETED = YES;
+				GCC_WARN_MISSING_PARENTHESES = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_SHADOW = YES;
+				GCC_WARN_TYPECHECK_CALLS_TO_PRINTF = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNKNOWN_PRAGMAS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_LABEL = YES;
+				GCC_WARN_UNUSED_PARAMETER = YES;
+				GCC_WARN_UNUSED_VALUE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET_i386 = 10.5;
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.5;
+				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+				);
+				PREBINDING = NO;
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+				);
+			};
+			name = ForLeopardDebug;
+		};
+		0AA249460D13342D00BCAF94 /* ForLeopardDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = B;
+				GCC_MODEL_TUNING = "";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
+				PREBINDING = NO;
+				PRODUCT_NAME = Quills;
+			};
+			name = ForLeopardDebug;
+		};
+		0AA249470D13342D00BCAF94 /* ForLeopardDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = "";
+				DYLIB_CURRENT_VERSION = "";
+				EXECUTABLE_EXTENSION = so;
+				EXECUTABLE_PREFIX = _;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
+					"$(FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
+				);
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SDKROOT)/System/Library/Frameworks\"";
+				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(BUILD_ROOT)/ForTigerDebug\"";
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_MODEL_TUNING = G5;
+				INSTALL_PATH = /usr/local/lib;
+				OTHER_CFLAGS = (
+					"-g",
+					"-fpascal-strings",
+					"-v",
+					"-IApplication/Code",
+					"-IShared/Code",
+					"-IApplication/Resources",
+					"-IApplication/Resources/English.lproj",
+					"$(SWIG_PYTHON_INCLUDE)",
+				);
+				OTHER_LDFLAGS = (
+					"-framework",
+					Python,
+					"-framework",
+					Quills,
+				);
+				PRODUCT_NAME = Quills;
+				SWIG_PYTHON_INCLUDE = "-I$(SDKROOT)/System/Library/Frameworks/Python.framework/Versions/2.5/include/python2.5";
+				SWIG_VERSION = 1.3.31;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wextra",
+					"-Wshadow",
+				);
+			};
+			name = ForLeopardDebug;
+		};
+		0AA249490D13342D00BCAF94 /* ForLeopardDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				FRAMEWORK_VERSION = A;
+				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-PyMacTelnet.framework-Info.plist";
+				PRODUCT_NAME = PyMacTelnet;
+			};
+			name = ForLeopardDebug;
+		};
+		0AC6BAD50A8C0A8C00AFF37A /* ForTigerDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_VERSION = B;
+				GCC_MODEL_TUNING = "";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
+				PREBINDING = NO;
+				PRODUCT_NAME = Quills;
+			};
+			name = ForTigerDebug;
+		};
+		0ACFA1810929BE6B005712A9 /* ForTigerDebug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = (
@@ -2176,11 +2015,7 @@
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
-				MY_ALPHA_BETA = a;
-				MY_MAJOR_NUMBER = 3;
-				MY_MINOR_NUMBER = 1;
-				MY_SUBMINOR_NUMBER = 0;
+				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -2193,51 +2028,56 @@
 				);
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
+				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
 				);
 			};
-			name = ForDebugging;
+			name = ForTigerDebug;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		0A983AA20D1108A20054B4D2 /* Build configuration list for PBXNativeTarget "PythonWrapper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0A983A9D0D11087A0054B4D2 /* ForTigerDebug */,
+				0AA249470D13342D00BCAF94 /* ForLeopardDebug */,
+				0A983A9E0D11087A0054B4D2 /* ForPantherDebug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForTigerDebug;
+		};
 		0A9AF6500AF5A50500E7DF18 /* Build configuration list for PBXNativeTarget "PyMacTelnet.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0A9AF6510AF5A50500E7DF18 /* ForDebugging */,
-				0A9AF6520AF5A50500E7DF18 /* ForRelease */,
+				0A9AF6510AF5A50500E7DF18 /* ForTigerDebug */,
+				0AA249490D13342D00BCAF94 /* ForLeopardDebug */,
+				0A81108B0D0A62BF00D5CDE2 /* ForPantherDebug */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForDebugging;
+			defaultConfigurationName = ForTigerDebug;
 		};
 		0AC6BAD40A8C0A8C00AFF37A /* Build configuration list for PBXNativeTarget "Quills.framework" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0AC6BAD50A8C0A8C00AFF37A /* ForDebugging */,
-				0AC6BAD60A8C0A8C00AFF37A /* ForRelease */,
+				0AC6BAD50A8C0A8C00AFF37A /* ForTigerDebug */,
+				0AA249460D13342D00BCAF94 /* ForLeopardDebug */,
+				0A81108A0D0A62BF00D5CDE2 /* ForPantherDebug */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForDebugging;
-		};
-		0ACFA17C0929BE6B005712A9 /* Build configuration list for PBXNativeTarget "MacTelnet" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				0ACFA17D0929BE6B005712A9 /* ForDebugging */,
-				0A6FC91D0929CC1C00D20C95 /* ForRelease */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForDebugging;
+			defaultConfigurationName = ForTigerDebug;
 		};
 		0ACFA1800929BE6B005712A9 /* Build configuration list for PBXProject "Application" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				0ACFA1810929BE6B005712A9 /* ForDebugging */,
-				0A6FC91F0929CC1C00D20C95 /* ForRelease */,
+				0ACFA1810929BE6B005712A9 /* ForTigerDebug */,
+				0AA249450D13342D00BCAF94 /* ForLeopardDebug */,
+				0A8110880D0A62BF00D5CDE2 /* ForPantherDebug */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = ForDebugging;
+			defaultConfigurationName = ForTigerDebug;
 		};
 /* End XCConfigurationList section */
 	};

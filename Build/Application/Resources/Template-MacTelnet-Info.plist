@@ -109,7 +109,7 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>${EXECUTABLE_NAME}</string>
+	<string>MacTelnet</string>
 	<key>CFBundleGetInfoString</key>
 	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%%MY_ALPHA_BETA%, build %MY_BUILD_NUMBER%</string>
 	<key>CFBundleHelpBookFolder</key>

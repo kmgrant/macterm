@@ -10,9 +10,11 @@ PREREQUISITES
   MacTelnet 3.1 is implemented as a C++ framework that is loaded
   into Python.  This is accomplished with the Simple Wrapper
   Interface Generator (SWIG), which you must download and build
-  separately; look at "Build/Tools/MacTelnetSwigConfig.sh".  See
-  also "Build/PythonWrapper/GNUmakefile", which has a couple of
-  presumptions about where your SWIG and GCC will be.
+  separately; look at "Build/Tools/MacTelnetSwigConfig.sh".  You
+  need at least SWIG 1.3.31 to support the Python 2.5 in Leopard,
+  but SWIG 1.3.29 for the Python 2.3.x in earlier versions.  See
+  the Application.xcodeproj configuration for a variable that
+  sets where SWIG is (/opt/swig-<version>/bin/swig by default).
   
   When building source code documentation only, you will need
   Doxygen (http://www.doxygen.org/), and Dot (part of GraphViz,
@@ -32,29 +34,17 @@ UNDERSTANDING THE DIRECTORY STRUCTURE
         Scripts that simplify MacTelnet debugging in "gdb".
 
 HOW TO BUILD
-  Open the "Build/Application.xcodeproj" project, and ask Xcode
-  to build the project.  This project will automatically build
-  the majority of MacTelnet.app.
+  The MacTelnet.app bundle is composed of several things that are
+  all created automatically by running "make" from the Build
+  directory (or opening the Build/_MacTelnetBuild.command file in
+  the Finder, which has the same effect).
   
-  However, the bundled MacTelnet Preferences Converter and the
-  Bug Reporter are not yet built/installed automatically: each
-  must be built using its own Xcode project and copied manually
-  into the Resources folder of MacTelnet.app.  (MacTelnet has
-  code that launches these applications assuming they are in the
-  Resources folder; see the file "AppResources.cp" in the
-  "Build/Application/Code" folder for specific references.)
-  
-  MacTelnet Help is constructed in the "Build/HTMLHelp" directory
-  using "Build/HTMLHelpBuild.command" (which you can double-click
-  in the Finder).  Alternately, you could go to that directory
-  and just run "make" from a shell.
-  
-  All sources of release notes, such as the MacPAD property list
-  and web pages, are created automatically using the special
-  "Build/HTMLReleaseNotes" directory and the corresponding
-  "Build/HTMLReleaseNotesBuild.command" (which you can
-  double-click in the Finder).  Alternately, you could go to that
-  directory and just run "make" from a shell.
+  You can customize what is built by passing parameters to the
+  make (e.g. "FOR_PANTHER=no"), or by editing Build/GNUmakefile
+  and to some extent the Build/Application.xcodeproj project.
+  MacTelnet is fairly robust in terms of running with missing
+  components, so you can disable many things that you are not
+  interested in using.
 
                                      Kevin Grant (kevin@ieee.org)
                                         Lead Developer, MacTelnet
