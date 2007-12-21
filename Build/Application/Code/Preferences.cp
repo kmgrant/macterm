@@ -2687,21 +2687,21 @@ convertCFArrayToRGBColor	(CFArrayRef		inArray,
 		CFNumberRef		redValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 0));
 		CFNumberRef		greenValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 1));
 		CFNumberRef		blueValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 2));
-		Float32			floatValue = 0L;
+		Float64			floatValue = 0L;
 		
 		
 		// CFNumber is technically more flexible than is allowed;
 		// so read a large signed value, even though a small unsigned
 		// value is what is assumed
-		if (CFNumberGetValue(redValue, kCFNumberFloat32Type, &floatValue))
+		if (CFNumberGetValue(redValue, kCFNumberFloat64Type, &floatValue))
 		{
 			floatValue *= RGBCOLOR_INTENSITY_MAX;
 			outColorPtr->red = STATIC_CAST(floatValue, UInt16);
-			if (CFNumberGetValue(greenValue, kCFNumberFloat32Type, &floatValue))
+			if (CFNumberGetValue(greenValue, kCFNumberFloat64Type, &floatValue))
 			{
 				floatValue *= RGBCOLOR_INTENSITY_MAX;
 				outColorPtr->green = STATIC_CAST(floatValue, UInt16);
-				if (CFNumberGetValue(blueValue, kCFNumberFloat32Type, &floatValue))
+				if (CFNumberGetValue(blueValue, kCFNumberFloat64Type, &floatValue))
 				{
 					floatValue *= RGBCOLOR_INTENSITY_MAX;
 					outColorPtr->blue = STATIC_CAST(floatValue, UInt16);

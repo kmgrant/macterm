@@ -18,7 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20071220',
+    '20071221',
     '20071219',
     '20071204',
     '20071119',
@@ -67,7 +67,8 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-	'20071220': [
+	'20071221': [
+		'Fixed ANSI color rendering.',
 		'Preferences window resize box now has a transparent look on most panels.',
 	],
 	'20071219': [
