@@ -219,7 +219,7 @@ If possible, IPv6 addresses are returned.
 
 (3.1)
 */
-bool
+static bool
 allCurrentIPAddressesAndAliases		(struct hostent*&	outHost)
 {
 	bool	result = false;
