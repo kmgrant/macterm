@@ -112,10 +112,8 @@ typedef ScreenTranslationInfo*		ScreenTranslationInfoPtr;
 
 static void		activateAnotherWindow						(Boolean, Boolean);
 static void		changeNotifyForCommandExecution				(UInt32);
-static void		changeNotifyForCommandModification			(UInt32*, UInt32);
 static void		changeNotifyForCommandPostExecution			(UInt32);
 static Boolean	isAnyListenerForCommandExecution			(UInt32);
-static Boolean	isAnyListenerForCommandModification			(UInt32);
 static void		showWindowTerminalWindowOp					(TerminalWindowRef, void*, SInt32, void*);
 static Boolean	translateScreenLine							(TerminalScreenRef, char*, UInt16, UInt16, void*);
 
@@ -127,16 +125,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	{
 		static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleNonEventNotHandledErr,
 														kConstantsRegistry_ListenerModelDescriptorCommandExecution);
-		
-		
-		if (inDispose) ListenerModel_Dispose(&x);
-		return x;
-	}
-
-	ListenerModel_Ref&	gCommandModificationListenerModel		(Boolean	inDispose = false)
-	{
-		static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleLogicalOR,
-														kConstantsRegistry_ListenerModelDescriptorCommandModification);
 		
 		
 		if (inDispose) ListenerModel_Dispose(&x);
@@ -404,6 +392,31 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandOpenSession:
 			SessionDescription_Load();
+			break;
+		
+		case kCommandOpenScriptMenuItemsFolder:
+			{
+				FSSpec		folderSpec;
+				OSStatus	error = noErr;
+				
+				
+				error = Folder_GetFSSpec(kFolder_RefScriptsMenuItems, &folderSpec);
+				if (noErr == error)
+				{
+					FSRef	folderRef;
+					
+					
+					error = FSpMakeFSRef(&folderSpec, &folderRef);
+					if (noErr == error)
+					{
+						error = LSOpenFSRef(&folderRef, nullptr/* launched item */);
+					}
+				}
+				if (noErr != error)
+				{
+					Sound_StandardAlert();
+				}
+			}
 			break;
 		
 		case kCommandCloseConnection:
@@ -1845,140 +1858,6 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 
 
 /*!
-Uses the specified modifier key information to change
-the given command ID to a variant command.  For example,
-passing "kCommandNewSessionShell" with "optionKey" would
-yield "kCommandNewSessionLoginShell".
-
-Returns "true" only if the command was changed.
-
-WARNING:	This SHOULD match whatever MacTelnet puts
-			in its 'xmnu' resources as modifier keys
-			for commands.  It should also match any
-			item indices assigned in MenuBar.cp.
-			Unfortunately, this must be currently be
-			synchronized manually, because Classic
-			compatibility demands not using certain
-			nice things Mac OS X offers (like NIB files
-			to avoid this crap in the first place!).
-
-(3.0)
-*/
-Boolean
-Commands_ModifyID	(UInt32*	inoutCommandIDPtr,
-					 UInt32		inModifiers)
-{
-	Boolean		result = false;
-	
-	
-	if (inoutCommandIDPtr != nullptr)
-	{
-		Boolean		doSwitch = true;
-		
-		
-		if (isAnyListenerForCommandModification(*inoutCommandIDPtr))
-		{
-			UInt32 const	kOriginalID = *inoutCommandIDPtr;
-			
-			
-			// notify listeners that the command needs to be modified,
-			// resorting to default checks only if the command didn’t change
-			changeNotifyForCommandModification(inoutCommandIDPtr, inModifiers);
-			doSwitch = (*inoutCommandIDPtr == kOriginalID);
-		}
-		
-		if (doSwitch)
-		{
-			// nothing useful was done by a listener - so
-			// scan known values here
-			switch (*inoutCommandIDPtr)
-			{
-			case kCommandNewSessionShell:
-				if (inModifiers & optionKey)
-				{
-					*inoutCommandIDPtr = kCommandNewSessionLoginShell;
-					result = true;
-				}
-				break;
-			
-			case kCommandFindAgain:
-				if (inModifiers & shiftKey)
-				{
-					*inoutCommandIDPtr = kCommandFindPrevious;
-					result = true;
-				}
-				break;
-			
-			case kCommandSelectAll:
-				if (inModifiers & shiftKey)
-				{
-					*inoutCommandIDPtr = kCommandSelectNothing;
-					result = true;
-				}
-				else if (inModifiers & optionKey)
-				{
-					*inoutCommandIDPtr = kCommandSelectAllWithScrollback;
-					result = true;
-				}
-				break;
-			
-			case kCommandZoomWindow:
-				if (inModifiers & optionKey)
-				{
-					*inoutCommandIDPtr = kCommandMaximizeWindow;
-					result = true;
-				}
-				break;
-			
-			case kCommandNextWindow:
-				if (inModifiers & optionKey)
-				{
-					*inoutCommandIDPtr = kCommandNextWindowHideCurrent;
-					result = true;
-				}
-				else if (inModifiers & shiftKey)
-				{
-					*inoutCommandIDPtr = kCommandPreviousWindow;
-					result = true;
-				}
-				break;
-			
-			case kCommandOpenScriptMenuItemsFolder:
-				{
-					FSSpec		folderSpec;
-					OSStatus	error = noErr;
-					
-					
-					error = Folder_GetFSSpec(kFolder_RefScriptsMenuItems, &folderSpec);
-					if (noErr == error)
-					{
-						FSRef	folderRef;
-						
-						
-						error = FSpMakeFSRef(&folderSpec, &folderRef);
-						if (noErr == error)
-						{
-							error = LSOpenFSRef(&folderRef, nullptr/* launched item */);
-						}
-					}
-					if (noErr != error)
-					{
-						Sound_StandardAlert();
-					}
-				}
-				break;
-			
-			default:
-				// do not change command
-				break;
-			}
-		}
-	}
-	return result;
-}// ModifyID
-
-
-/*!
 Arranges for a callback to be invoked in order to
 execute the given command.
 
@@ -2019,42 +1898,6 @@ Commands_StartHandlingExecution		(UInt32						inImplementedCommand,
 
 
 /*!
-Arranges for a callback to be invoked if the specified
-command needs to be modified.  Currently, this means
-a modifier key is being pressed to change the command
-from the specified command to some other command.
-
-The specified callback is expected to return "true"
-only if the given command has been modified.
-
-The context passed to the listener is of type
-"Commands_ModificationEventContextPtr".
-
-\retval kCommands_ResultOK
-if no error occurred
-
-\retval kCommands_ResultParameterError
-if a Boolean listener was not provided or otherwise
-the listener could not be registered
-
-(3.0)
-*/
-Commands_Result
-Commands_StartHandlingModification	(UInt32						inModifiedCommand,
-									 ListenerModel_ListenerRef	inCommandModifier)
-{
-	Commands_Result		result = kCommands_ResultOK;
-	OSStatus			error = noErr;
-	
-	
-	error = ListenerModel_AddListenerForEvent(gCommandModificationListenerModel(), inModifiedCommand, inCommandModifier);
-	if (error != noErr) result = kCommands_ResultParameterError;
-	
-	return result;
-}// StartHandlingModification
-
-
-/*!
 Arranges for a callback to no longer be invoked when
 the specified command needs to be executed.
 
@@ -2077,31 +1920,6 @@ Commands_StopHandlingExecution	(UInt32						inImplementedCommand,
 	ListenerModel_RemoveListenerForEvent(gCommandExecutionListenerModel(), inImplementedCommand, inCommandImplementor);
 	return result;
 }// StopHandlingExecution
-
-
-/*!
-Arranges for a callback to no longer be invoked when
-the specified command needs to be modified.
-
-The given listener should match one installed
-previously with Commands_StartHandlingModification();
-otherwise this routine silently fails.
-
-\retval kCommands_ResultOK
-always
-
-(3.0)
-*/
-Commands_Result
-Commands_StopHandlingModification	(UInt32						inModifiedCommand,
-									 ListenerModel_ListenerRef	inCommandModifier)
-{
-	Commands_Result		result = kCommands_ResultOK;
-	
-	
-	ListenerModel_RemoveListenerForEvent(gCommandModificationListenerModel(), inModifiedCommand, inCommandModifier);
-	return result;
-}// StopHandlingModification
 
 
 #pragma mark Internal Methods
@@ -2228,33 +2046,6 @@ changeNotifyForCommandExecution		(UInt32		inCommand)
 
 
 /*!
-Notifies listeners that the specified command needs
-modifyinh, until a listener returns "true".  The
-listeners of this event are expected to check the
-modifier key states and change the given command ID
-to a new value if necessary.
-
-(3.0)
-*/
-static void
-changeNotifyForCommandModification	(UInt32*	inoutCommandPtr,
-									 UInt32		inModifiers)
-{
-	Commands_ModificationEventContext		context;
-	
-	
-	context.inoutCommandID = *inoutCommandPtr;
-	context.modifiers = inModifiers;
-	
-	// invoke listener callback routines appropriately, from the specified command’s modification listener model
-	ListenerModel_NotifyListenersOfEvent(gCommandModificationListenerModel(), *inoutCommandPtr, &context);
-	
-	// now get the result
-	*inoutCommandPtr = context.inoutCommandID;
-}// changeNotifyForCommandModification
-
-
-/*!
 Returns "true" only if at least one listener
 would be invoked when the specified command
 needs executing.
@@ -2266,20 +2057,6 @@ isAnyListenerForCommandExecution	(UInt32		inCommand)
 {
 	return ListenerModel_IsAnyListenerForEvent(gCommandExecutionListenerModel(), inCommand);
 }// isAnyListenerForCommandExecution
-
-
-/*!
-Returns "true" only if at least one listener
-would be invoked when the specified command
-needs to be modified.
-
-(3.0)
-*/
-static Boolean
-isAnyListenerForCommandModification		(UInt32		inCommand)
-{
-	return ListenerModel_IsAnyListenerForEvent(gCommandModificationListenerModel(), inCommand);
-}// isAnyListenerForCommandModification
 
 
 /*!

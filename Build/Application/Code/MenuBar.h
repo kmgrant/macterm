@@ -141,8 +141,7 @@ MenuRef
 
 Boolean
 	MenuBar_HandleMenuCommand						(MenuRef						inMenu,
-													 MenuItemIndex					inMenuItemIndex,
-													 EventModifiers					inModifiers);
+													 MenuItemIndex					inMenuItemIndex);
 
 Boolean
 	MenuBar_HandleMenuCommandByID					(UInt32							inCommandID);
@@ -151,9 +150,6 @@ Boolean
 
 //!\name Updating Menu Item States
 //@{
-
-void
-	MenuBar_Service									();
 
 void
 	MenuBar_SetFontMenuAvailable					(Boolean						inIsAvailable);
@@ -168,8 +164,7 @@ void
 													 MenuCommandStateTrackerProcPtr	inProc);
 
 void
-	MenuBar_SetUpMenuItemState						(UInt32							inCommandID,
-													 EventModifiers					inModifiers);
+	MenuBar_SetUpMenuItemState						(UInt32							inCommandID);
 
 //@}
 

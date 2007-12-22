@@ -102,12 +102,12 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static void buildAboutBoxContextualMenu				(MenuRef, HIWindowRef, EventRecord* = nullptr);
-static void buildClipboardWindowContextualMenu		(MenuRef, HIWindowRef, EventRecord* = nullptr);
-static void buildEmptyContextualMenu				(MenuRef, HIWindowRef, EventRecord* = nullptr);
-static void buildSessionStatusWindowContextualMenu	(MenuRef, HIWindowRef, EventRecord* = nullptr);
-static void buildTerminalBackgroundContextualMenu	(MenuRef, HIViewRef, EventRef = nullptr);
-static void buildTerminalWindowContextualMenu		(MenuRef, HIWindowRef, EventRecord* = nullptr);
+static void buildAboutBoxContextualMenu				(MenuRef, HIWindowRef);
+static void buildClipboardWindowContextualMenu		(MenuRef, HIWindowRef);
+static void buildEmptyContextualMenu				(MenuRef, HIWindowRef);
+static void buildSessionStatusWindowContextualMenu	(MenuRef, HIWindowRef);
+static void buildTerminalBackgroundContextualMenu	(MenuRef, HIViewRef);
+static void buildTerminalWindowContextualMenu		(MenuRef, HIWindowRef);
 
 
 
@@ -452,7 +452,7 @@ ContextualMenuBuilder_PopulateMenuForView	(HIViewRef		inWhichView,
 			//(OSStatus)BasicTypesAE_CreateRGBColorDesc(color, &inoutViewContentsDesc);
 			
 			// click in the background of a terminal view
-			buildTerminalBackgroundContextualMenu(inoutMenu, inWhichView, inContextualMenuClickEvent);
+			buildTerminalBackgroundContextualMenu(inoutMenu, inWhichView);
 		}
 		else
 		{
@@ -541,59 +541,59 @@ ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef		inWhichWindow,
 			switch (windowDescriptor)
 			{
 			case kConstantsRegistry_WindowDescriptorClipboard:
-				buildClipboardWindowContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildClipboardWindowContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseDefault;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorCommandLine:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseCommandLine;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorConnectionStatus:
-				buildSessionStatusWindowContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildSessionStatusWindowContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseDefault;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorFind:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseFind;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorFormat:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseFormatting;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorMacroSetup:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseMacros;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorPreferences:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhrasePreferences;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorScreenSize:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseScreenSize;
 				break;
 			
 			case kConstantsRegistry_WindowDescriptorStandardAboutBox:
-				buildAboutBoxContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+				buildAboutBoxContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhraseDefault;
 				break;
 			
 			default:
 				if (isConnectionWindow)
 				{
-					buildTerminalWindowContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+					buildTerminalWindowContextualMenu(inoutMenu, inWhichWindow);
 					keyPhrase = kHelpSystem_KeyPhraseTerminals;
 				}
 				else
 				{
-					buildEmptyContextualMenu(inoutMenu, inWhichWindow, inoutEventPtrOrNull);
+					buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 					keyPhrase = kHelpSystem_KeyPhraseDefault;
 				}
 				break;
@@ -691,15 +691,13 @@ Window Info associated with it (see "WindowInfo.cp").
 */
 static void
 buildAboutBoxContextualMenu		(MenuRef		inMenu,
-								 WindowRef		UNUSED_ARGUMENT(inWhichWindow),
-								 EventRecord*	inoutEventPtrOrNull)
+								 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
 	ContextSensitiveMenu_Item	itemInfo;
-	UInt32						modifiers = (nullptr == inoutEventPtrOrNull) ? 0 : inoutEventPtrOrNull->modifiers;
 	
 	
 	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandCloseConnection, modifiers);
+	MenuBar_SetUpMenuItemState(kCommandCloseConnection);
 	
 	// window-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
@@ -727,16 +725,14 @@ Window Info associated with it (see "WindowInfo.cp").
 */
 static void
 buildClipboardWindowContextualMenu	(MenuRef		inMenu,
-									 WindowRef		UNUSED_ARGUMENT(inWhichWindow),
-									 EventRecord*	inoutEventPtrOrNull)
+									 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
 	ContextSensitiveMenu_Item	itemInfo;
-	UInt32						modifiers = (nullptr == inoutEventPtrOrNull) ? 0 : inoutEventPtrOrNull->modifiers;
 	
 	
 	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandHandleURL, modifiers);
-	MenuBar_SetUpMenuItemState(kCommandCloseConnection, modifiers);
+	MenuBar_SetUpMenuItemState(kCommandHandleURL);
+	MenuBar_SetUpMenuItemState(kCommandCloseConnection);
 	
 	// text-editing-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
@@ -778,14 +774,13 @@ Window Info associated with it (see "WindowInfo.cp").
 */
 static void
 buildEmptyContextualMenu	(MenuRef		UNUSED_ARGUMENT(inMenu),
-							 WindowRef		UNUSED_ARGUMENT(inWhichWindow),
-							 EventRecord*	UNUSED_ARGUMENT(inoutEventPtrOrNull))
+							 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
 	//ContextSensitiveMenu_Item	itemInfo;
 	//MenuRef					menuBarMenu = nullptr;
 	
 	
-	//MenuBar_SetUpMenuItemState(..., inoutEventPtrOrNull->modifiers);
+	//MenuBar_SetUpMenuItemState(...);
 }// buildEmptyContextualMenu
 
 
@@ -799,15 +794,13 @@ Window Info associated with it (see "WindowInfo.cp").
 */
 static void
 buildSessionStatusWindowContextualMenu	(MenuRef		inMenu,
-										 WindowRef		UNUSED_ARGUMENT(inWhichWindow),
-										 EventRecord*	inoutEventPtrOrNull)
+										 WindowRef		UNUSED_ARGUMENT(inWhichWindow))
 {
 	ContextSensitiveMenu_Item	itemInfo;
-	UInt32						modifiers = (nullptr == inoutEventPtrOrNull) ? 0 : inoutEventPtrOrNull->modifiers;
 	
 	
 	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandCloseConnection, modifiers);
+	MenuBar_SetUpMenuItemState(kCommandCloseConnection);
 	
 	// window-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
@@ -834,22 +827,13 @@ menu appropriate for it.
 */
 static void
 buildTerminalBackgroundContextualMenu	(MenuRef		inMenu,
-										 HIViewRef		UNUSED_ARGUMENT(inWhichView),
-										 EventRef		inEventOrNull)
+										 HIViewRef		UNUSED_ARGUMENT(inWhichView))
 {
 	ContextSensitiveMenu_Item	itemInfo;
-	UInt32						modifiers = 0;
 	
-	
-	if (nullptr != inEventOrNull)
-	{
-		// this parameter is optional
-		(OSStatus)CarbonEventUtilities_GetEventParameter(inEventOrNull, kEventParamKeyModifiers,
-															typeUInt32, modifiers);
-	}
 	
 	// set up states for all items used below
-	MenuBar_SetUpMenuItemState(kCommandSetBackground, modifiers);
+	MenuBar_SetUpMenuItemState(kCommandSetBackground);
 	
 	// window-related menu items
 	ContextSensitiveMenu_NewItemGroup(inMenu);
@@ -883,11 +867,9 @@ are available if applicable.
 */
 static void
 buildTerminalWindowContextualMenu	(MenuRef		inMenu,
-									 WindowRef		inWhichWindow,
-									 EventRecord*	inoutEventPtrOrNull)
+									 WindowRef		inWhichWindow)
 {
 	ContextSensitiveMenu_Item	itemInfo;
-	UInt32						modifiers = (nullptr == inoutEventPtrOrNull) ? 0 : inoutEventPtrOrNull->modifiers;
 	TerminalWindowRef			terminalWindow = TerminalWindow_ReturnFromWindow(inWhichWindow);
 	TerminalViewRef				view =	TerminalWindow_ReturnViewWithFocus(terminalWindow);
 	Boolean						isTextSelected = false;
@@ -901,12 +883,12 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		
 		
 		// set up states for all items used below
-		MenuBar_SetUpMenuItemState(kCommandHandleURL, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandCopy, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandCopyTable, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandSaveText, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandPrintOne, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandSpeakSelectedText, modifiers);
+		MenuBar_SetUpMenuItemState(kCommandHandleURL);
+		MenuBar_SetUpMenuItemState(kCommandCopy);
+		MenuBar_SetUpMenuItemState(kCommandCopyTable);
+		MenuBar_SetUpMenuItemState(kCommandSaveText);
+		MenuBar_SetUpMenuItemState(kCommandPrintOne);
+		MenuBar_SetUpMenuItemState(kCommandSpeakSelectedText);
 		
 		// URL commands
 		ContextSensitiveMenu_NewItemGroup(inMenu);
@@ -1000,14 +982,14 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 	else
 	{
 		// set up states for all items used below
-		MenuBar_SetUpMenuItemState(kCommandPaste, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandFind, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandHideFrontWindow, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandStackWindows, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandSetScreenSize, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandFormat, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandSetKeys, modifiers);
-		MenuBar_SetUpMenuItemState(kCommandChangeWindowTitle, modifiers);
+		MenuBar_SetUpMenuItemState(kCommandPaste);
+		MenuBar_SetUpMenuItemState(kCommandFind);
+		MenuBar_SetUpMenuItemState(kCommandHideFrontWindow);
+		MenuBar_SetUpMenuItemState(kCommandStackWindows);
+		MenuBar_SetUpMenuItemState(kCommandSetScreenSize);
+		MenuBar_SetUpMenuItemState(kCommandFormat);
+		MenuBar_SetUpMenuItemState(kCommandSetKeys);
+		MenuBar_SetUpMenuItemState(kCommandChangeWindowTitle);
 		
 		// text-editing-related menu items
 		ContextSensitiveMenu_NewItemGroup(inMenu);

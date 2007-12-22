@@ -430,13 +430,6 @@ struct Commands_ExecutionEventContext
 };
 typedef Commands_ExecutionEventContext*		Commands_ExecutionEventContextPtr;
 
-struct Commands_ModificationEventContext
-{
-	UInt32		inoutCommandID;		//!< which command is to be modified, and on output the new command ID
-	UInt32		modifiers;			//!< key states to help determine the modified command
-};
-typedef Commands_ModificationEventContext*	Commands_ModificationEventContextPtr;
-
 #endif
 
 
@@ -465,10 +458,6 @@ Boolean
 											 Commands_NameType			inNameType,
 											 CFStringRef&				outName);
 
-Boolean
-	Commands_ModifyID						(UInt32*					inoutCommandIDPtr,
-											 UInt32						inModifiers);
-
 //@}
 
 //!\name Standard Carbon Event Handlers
@@ -489,20 +478,10 @@ Commands_Result
 	Commands_StartHandlingExecution			(UInt32						inImplementedCommand,
 											 ListenerModel_ListenerRef	inCommandImplementor);
 
-// EVENT CONTEXT PASSED TO LISTENER: Commands_ModificationEventContextPtr
-Commands_Result
-	Commands_StartHandlingModification		(UInt32						inModifiedCommand,
-											 ListenerModel_ListenerRef	inCommandModifier);
-
 // EVENT CONTEXT PASSED TO LISTENER: Commands_ExecutionEventContextPtr
 Commands_Result
 	Commands_StopHandlingExecution			(UInt32						inImplementedCommand,
 											 ListenerModel_ListenerRef	inCommandImplementor);
-
-// EVENT CONTEXT PASSED TO LISTENER: Commands_ModificationEventContextPtr
-Commands_Result
-	Commands_StopHandlingModification		(UInt32						inModifiedCommand,
-											 ListenerModel_ListenerRef	inCommandModifier);
 
 //@}
 

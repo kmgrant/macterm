@@ -128,7 +128,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 								gNumberOfTranslationTableMenuItemsAdded = 0,
 								gNumberOfWindowMenuItemsAdded = 0,
 								gNumberOfSpecialScriptMenuItems = 0;
-	EventModifiers				gCurrentAdjustMenuItemModifiers = 0;
 	Boolean						gUsingTabs = false;
 	Boolean						gSimplifiedMenuBar = false;
 	Boolean						gFontMenusAvailable = false;
@@ -141,7 +140,6 @@ static Boolean			addWindowMenuItemForSession			(SessionRef, MyMenuItemInsertionI
 static void				addWindowMenuItemSessionOp			(SessionRef, void*, SInt32, void*);
 static void				adjustMenuItem						(MenuRef, MenuItemIndex, UInt32);
 static void				adjustMenuItemByCommandID			(UInt32);
-static void				adjustUsingModifiers				(EventModifiers);
 static Boolean			areSessionRelatedItemsEnabled		();
 static Boolean			areTEKRelatedItemsEnabled			();
 static void 			buildMenuBar						();
@@ -591,8 +589,7 @@ with a Carbon Event.
 */
 Boolean
 MenuBar_HandleMenuCommand	(MenuRef			inMenu,
-							 MenuItemIndex		inMenuItemIndex,
-							 EventModifiers		inModifiers)
+							 MenuItemIndex		inMenuItemIndex)
 {
 	UInt32		commandID = 0L;
 	UInt16		menuID = GetMenuID(inMenu);
@@ -601,10 +598,6 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 	
 	
 	error = GetMenuItemCommandID(inMenu, inMenuItemIndex, &commandID);
-	if (noErr == error)
-	{
-		(Boolean)Commands_ModifyID(&commandID, inModifiers);
-	}
 	
 	switch (menuID)
 	{
@@ -992,31 +985,13 @@ menu command (such as item text, enabled state, checked
 states and menu enabled state) is correct for the context
 of the program at the time this method is invoked.
 
-(3.0)
+(3.1)
 */
 void
-MenuBar_SetUpMenuItemState	(UInt32				inCommandID,
-							 EventModifiers		inModifiers)
+MenuBar_SetUpMenuItemState	(UInt32		inCommandID)
 {
-	// set modifiers (takes effect for all subsequent adjustMenuItem...() calls;
-	// however, for the purpose of sychronizing menu item glyphs, assume the command
-	// key is down (otherwise it will not appear next to certain menu items)
-	adjustUsingModifiers(inModifiers | cmdKey);
 	adjustMenuItemByCommandID(inCommandID);
 }// SetUpMenuItemState
-
-
-/*!
-Updates the state of all menu titles in the menu bar.
-
-Obsolete.
-
-(3.0)
-*/
-void
-MenuBar_Service ()
-{
-}// Service
 
 
 #pragma mark Internal Methods
@@ -1132,11 +1107,6 @@ adjustMenuItem	(MenuRef		inMenu,
 	if (commandID == 0) error = GetMenuItemCommandID(inMenu, inItemNumber, &commandID);
 	if (error != noErr) commandID = 0;
 	
-	// change the command ID to allow for variants; note that this
-	// really assumes that the state tracker handling the original
-	// command is also handling all variants of that command!
-	(Boolean)Commands_ModifyID(&commandID, gCurrentAdjustMenuItemModifiers);
-	
 	// invoke the state tracker, if it exists
 	getMenuItemAdjustmentProc(inMenu, inItemNumber, &proc);
 	if (nullptr == proc)
@@ -1187,21 +1157,6 @@ adjustMenuItemByCommandID	(UInt32		inCommandID)
 	// some commands also appear in Simplified User Interface mode, but in different places
 	if ((itemIndex2 != itemIndex1) || (menu2 != menu1)) adjustMenuItem(menu2, itemIndex2, inCommandID);
 }// adjustMenuItemByCommandID
-
-
-/*!
-Sets the global variable used by adjustMenuItem() to
-determine how to modify a command ID.  This is done for
-efficiency so that the modifier information does not have
-to be passed in to EVERY call.
-
-(3.0)
-*/
-static void
-adjustUsingModifiers	(EventModifiers		inModifiers)
-{
-	gCurrentAdjustMenuItemModifiers = inModifiers;
-}// adjustUsingModifiers
 
 
 /*!
@@ -1893,7 +1848,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					setWindowMenuItemMarkForSession(session, kWindowMenu);
 					break;
 			}
-			MenuBar_Service();
 		}
 		break;
 	

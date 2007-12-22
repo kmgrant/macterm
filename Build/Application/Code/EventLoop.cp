@@ -2480,21 +2480,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					break;
 				
 				default:
-					{
-						UInt32		modifiers = 0L;
-						
-						
-						// determine the modifier key states
-						result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32,
-																		modifiers);
-						
-						// NOTE: The following type cast to EventModifiers is okay because
-						//       only the bottom bits are required for menu processing and
-						//       these are compatible.  But strictly speaking the entire
-						//       EventModifiers type is not completely compatible with the
-						//       UInt32 returned by Carbon Events.
-						MenuBar_SetUpMenuItemState(received.commandID, STATIC_CAST(modifiers, EventModifiers));
-					}
+					MenuBar_SetUpMenuItemState(received.commandID);
 					break;
 				}
 				break;
@@ -2518,11 +2504,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						Boolean		commandOK = false;
 						
 						
-						// execute the command; note that EventModifiers is not entirely
-						// compatible with the UInt32 returned by Carbon Events, but the
-						// masks used for command modifications - shiftKey, optionKey,
-						// commandKey and controlKey - ARE COMPATIBLE with the UInt32
-						(Boolean)Commands_ModifyID(&received.commandID, STATIC_CAST(modifiers, EventModifiers));
+						// execute the command
 						commandOK = Commands_ExecuteByID(received.commandID);
 						if (commandOK)
 						{
@@ -2535,13 +2517,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					else
 					{
-						// items without command IDs must be parsed individually; note that the EventModifiers
-						// type is not entirely compatible with the UInt32 returned by Carbon Events, but for
-						// the purposes of handling menu commands all the important bits (cmdKey, shiftKey, etc.)
-						// are in fact directly compatible
-						if (MenuBar_HandleMenuCommand
-								(received.menu.menuRef, received.menu.menuItemIndex,
-									STATIC_CAST(modifiers, EventModifiers)))
+						// items without command IDs must be parsed individually
+						if (MenuBar_HandleMenuCommand(received.menu.menuRef, received.menu.menuItemIndex))
 						{
 							result = noErr;
 						}
