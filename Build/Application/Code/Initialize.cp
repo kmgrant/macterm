@@ -72,7 +72,6 @@
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"
-#include "ErrorAlerts.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"
 #include "Folder.h"
@@ -84,6 +83,7 @@
 #include "Keypads.h"
 #include "MacroManager.h"
 #include "MacroSetupWindow.h"
+#include "MainEntryPoint.h"
 #include "MenuBar.h"
 #include "Preferences.h"
 #include "PrefsWindow.h"
@@ -417,7 +417,6 @@ Initialize_ApplicationShutdown ()
 	SessionFactory_Done();
 	Keypads_Done();
 	TextTranslation_Done();
-	ErrorAlerts_Done();
 	Alert_Done();
 	
 	Preferences_Done();
@@ -593,7 +592,6 @@ initMacOSToolbox ()
 	AppResources_SetResFile(kAppResources_FileIDPreferences, -1);
 	AppResources_SetResFile(kAppResources_FileIDApplication, CurResFile());
 	Alert_Init(CurResFile());
-	ErrorAlerts_Init();
 	
 	// initialize the Undoables module
 	{
@@ -614,9 +612,9 @@ initMacOSToolbox ()
 	// double-clicked documents to be opened, etc.
 	unless (InstallAE_Init())
 	{
+		Console_WriteLine("failed to install AppleEvent handlers!");
 		// this method does not return
-		ErrorAlerts_DisplayStopQuitMessage(rStringsStartupErrors, siUnableToInstallAppleEventHandlers,
-											kUIStrings_AlertWindowStartupErrorName);
+		MainEntryPoint_ImmediatelyQuit();
 	}
 	
 	// install recording handlers

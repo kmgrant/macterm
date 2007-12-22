@@ -78,7 +78,6 @@
 #include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"
-#include "ErrorAlerts.h"
 #include "EventInfoControlScope.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"
@@ -5405,14 +5404,14 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 						}
 					}
 					
-					if (error != noErr) ErrorAlerts_OperationFailed(siOpFailedCantCreateFile, 500, error);
+					if (error != noErr) Alert_ReportOSStatus(error);
 					else
 					{
 						SInt16		fileRefNum = 0;
 						
 						
 						error = FSOpenFork(&saveFile, 0/* name length */, nullptr/* name */, fsWrPerm, &fileRefNum);
-						if (error != noErr) ErrorAlerts_OperationFailed(siOpFailedCantOpenFile, 501, error);
+						if (error != noErr) Alert_ReportOSStatus(error);
 						else
 						{
 							// The capture file is opened for writing at this point - however,

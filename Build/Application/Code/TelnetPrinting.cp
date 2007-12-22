@@ -56,7 +56,6 @@
 // MacTelnet includes
 #include "ConnectionData.h"
 #include "DialogUtilities.h"
-#include "ErrorAlerts.h"
 #include "EventLoop.h"
 #include "Folder.h"
 #include "ProgressDialog.h"
@@ -441,12 +440,7 @@ TelnetPrinting_PageSetup		(SInt16		inResourceFileRefNum)
 	
 	Console_WriteValue("result", error);
 	
-	if (error == fnfErr)
-	{
-		// no printer configured
-		ErrorAlerts_OperationFailed(siOpFailedNoPrinter, 0/* internal code */, error);
-	}
-	else Alert_ReportOSStatus(error); // display a generic alert to the user if anything went wrong
+	Alert_ReportOSStatus(error); // display a generic alert to the user if anything went wrong
 	
 	UseResFile(oldResourceFile);
 }// PageSetup

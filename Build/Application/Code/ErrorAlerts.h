@@ -1,15 +1,13 @@
 /*!	\file ErrorAlerts.h
-	\brief Handles display of user interfaces to notify the user
-	of errors in typical formats.
+	\brief The Alert module can be used directly for modern
+	messages, since it supports sheets and other features.
 	
-	More specialized needs can use the parameterized call
-	ErrorAlerts_DisplayParameterizedAlert(), or the Alert module
-	directly.
+	This is a legacy module, it may be removed.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -44,107 +42,7 @@
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
-#include "ConstantsRegistry.h"
 #include "UIStrings.h"
-
-
-
-#pragma mark Constants
-
-typedef SInt32 InternalTelnetMemoryError;
-enum
-{
-	// these are used to help identify where memory errors take place
-	kInternalTelnetMemoryErrorClipboardTextToScrap = 1,
-	kInternalTelnetMemoryErrorConnectionOpenFromMenuItem = 2,
-	kInternalTelnetMemoryErrorDNRLookup = 3,
-	kInternalTelnetMemoryErrorRealScreenCreation = 4,
-	kInternalTelnetMemoryErrorSafeArrayCreation = 5,
-	kInternalTelnetMemoryErrorVirtualScreenResize = 6
-};
-
-#pragma mark Types
-
-struct TelnetAlertParameterBlock
-{
-	struct
-	{
-		ConstStringPtr	title1,
-						title2,
-						title3;	// OK, Cancel and Other buttons; invalid strings invoke defaults
-		ConstStringPtr	key1,
-						key2,
-						key3;	// only the first character of these strings is considered
-	} buttons;
-	
-	struct
-	{
-		UInt32		timeout;	// number of SECONDS before the alert disappears automatically
-		AlertType	type;
-	} dialog;
-	
-	struct
-	{
-		Boolean		alertSound,
-					helpButton,
-					networkDisruption,
-					notTitled,
-					speech;
-	} flags;
-	
-	struct
-	{
-		ConstStringPtr	large,		// REQUIRED parameter
-						small;
-		CFStringRef		titleCFString;
-	} text;
-};
-typedef struct TelnetAlertParameterBlock*			TelnetAlertParameterBlockPtr;
-typedef struct TelnetAlertParameterBlock const*		TelnetAlertParameterBlockConstPtr;
-
-
-
-#pragma mark Public Methods
-
-void
-	ErrorAlerts_Init						();
-
-void
-	ErrorAlerts_Done						();
-
-void
-	ErrorAlerts_DisplayNoteMessage			(SInt16									inStringListResourceID,
-											 UInt16									inStringIndex,
-											 UIStrings_AlertWindowCFString			inTitleStringID);
-
-void
-	ErrorAlerts_DisplayNoteMessageNoTitle	(SInt16									inStringListResourceID,
-											 UInt16									inStringIndex);
-
-SInt16
-	ErrorAlerts_DisplayParameterizedAlert	(TelnetAlertParameterBlockConstPtr		inParameters);
-
-void
-	ErrorAlerts_DisplayStopMessage			(SInt16									inStringListResourceID,
-											 UInt16									inStringIndex,
-											 UIStrings_AlertWindowCFString			inTitleStringID);
-
-void
-	ErrorAlerts_DisplayStopMessageNoTitle	(SInt16									inStringListResourceID,
-											 UInt16									inStringIndex);
-
-void
-	ErrorAlerts_DisplayStopQuitMessage		(SInt16									inStringListResourceID,
-											 UInt16									inStringIndex,
-											 UIStrings_AlertWindowCFString			inTitleStringID);
-
-void
-	ErrorAlerts_OperationFailed				(short									inMessageID,
-											 short									inInternalID,
-											 OSStatus								inOSID);
-
-void
-	ErrorAlerts_OutOfMemory					(InternalTelnetMemoryError				inInternalID);
 
 #endif
 

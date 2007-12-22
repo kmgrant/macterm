@@ -72,8 +72,7 @@
 
 // MacTelnet includes
 #define __ALLNU__
-
-#include "ErrorAlerts.h"
+#include "Console.h"
 #include "EventLoop.h"
 #include "VirtualDevice.h"
 #include "RasterGraphicsKernel.h"
@@ -256,8 +255,7 @@ MacRGnewwindow		(char const*	inTitle,
 		{
 			DisposeWindow(MacRGs[w].window), MacRGs[w].window = nullptr;
 		}
-		ErrorAlerts_DisplayStopMessageNoTitle(rStringsMemoryErrors,
-												siMemErrorCannotCreateRasterGraphicsWindow);
+		Console_WriteLine("failed to create raster graphics window!");
 	}
 	
 	return result;

@@ -70,15 +70,16 @@ extern "C"
 #include <AlertMessages.h>
 #include <CFUtilities.h>
 #include <Console.h>
+#include <FlagManager.h>
 #include <SoundSystem.h>
 
 // resource includes
 #include "StringResources.h"
 
 // MacTelnet includes
+#include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "DNR.h"
-#include "ErrorAlerts.h"
 #include "Network.h"
 #include "UIStrings.h"
 

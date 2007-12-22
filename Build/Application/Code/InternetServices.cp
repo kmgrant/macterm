@@ -3,7 +3,7 @@
 	InternetServices.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -41,8 +41,9 @@
 #include "StringResources.h"
 
 // MacTelnet includes
-#include "ErrorAlerts.h"
+#include "Console.h"
 #include "InternetServices.h"
+#include "MainEntryPoint.h"
 #include "UIStrings.h"
 
 
@@ -81,8 +82,8 @@ InternetServices_Init ()
 	
 	if (Alert_ReportOSStatus(error))
 	{
-		ErrorAlerts_DisplayStopQuitMessage(rStringsStartupErrors, siUnableToInitOpenTransport,
-											kUIStrings_AlertWindowStartupErrorName); // does not return
+		Console_WriteLine("failed to initialize Open Transport!");
+		MainEntryPoint_ImmediatelyQuit(); // does not return
 	}
 }// Init
 
