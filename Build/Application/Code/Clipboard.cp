@@ -41,6 +41,7 @@
 
 // library includes
 #include <CarbonEventUtilities.template.h>
+#include <CFUtilities.h>
 #include <ColorUtilities.h>
 #include <Console.h>
 #include <Cursors.h>
@@ -449,6 +450,88 @@ Clipboard_AEDescToScrap		(AEDesc const*		inDescPtr)
 
 
 /*!
+Returns true only if the specified type of data (or something
+similar enough to be compatible) is available from the given data
+source.
+
+If true is returned, the actual type name and Pasteboard item ID
+of the first conforming item is provided, so that you can easily
+retrieve its data if desired.  You must CFRelease() the type name
+string.
+
+The source is first synchronized before checking its contents.
+
+You typically pass kUTTypePlainText to see if text is available.
+
+For convenience, if you specify nullptr for the source, then
+Clipboard_ReturnPrimaryPasteboard() is used.
+
+(3.1)
+*/
+Boolean
+Clipboard_Contains	(CFStringRef			inUTI,
+					 CFStringRef&			outConformingItemActualType,
+					 PasteboardItemID&		outConformingItemID,
+					 PasteboardRef			inDataSourceOrNull)
+{
+	Boolean		result = false;
+	OSStatus	error = noErr;
+	ItemCount	numberOfItems = 0;
+	ItemCount	itemIndex = 0;
+	
+	
+	if (nullptr == inDataSourceOrNull)
+	{
+		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
+	}
+	assert(nullptr != inDataSourceOrNull);
+	
+	// the data could be out of date if another application changed it...resync
+	(PasteboardSyncFlags)PasteboardSynchronize(inDataSourceOrNull);
+	
+	error = PasteboardGetItemCount(inDataSourceOrNull, &numberOfItems);
+	assert_noerr(error);
+	for (itemIndex = 1; itemIndex <= numberOfItems; ++itemIndex)
+	{
+		PasteboardItemID	itemID = 0;
+		CFArrayRef			flavorArray = nullptr;
+		CFIndex				numberOfFlavors = 0;
+		CFIndex				flavorIndex = 0;
+		
+		
+		error = PasteboardGetItemIdentifier(inDataSourceOrNull, itemIndex, &itemID);
+		assert_noerr(error);
+		
+		error = PasteboardCopyItemFlavors(inDataSourceOrNull, itemID, &flavorArray);
+		assert_noerr(error);
+		
+		numberOfFlavors = CFArrayGetCount(flavorArray);
+		
+		for (flavorIndex = 0; flavorIndex < numberOfFlavors; ++flavorIndex)
+		{
+			CFStringRef		flavorType = nullptr;
+			Boolean			typeConforms = false;
+			
+			
+			flavorType = CFUtilities_StringCast(CFArrayGetValueAtIndex(flavorArray, flavorIndex));
+			typeConforms = UTTypeConformsTo(flavorType, inUTI);
+			if (typeConforms)
+			{
+				result = true;
+				outConformingItemActualType = flavorType;
+				CFRetain(outConformingItemActualType);
+				outConformingItemID = itemID;
+			}
+		}
+		
+		CFRelease(flavorArray), flavorArray = nullptr;
+	}
+	
+	return result;
+}// Contains
+
+
+/*!
 Creates an appropriate Apple Event descriptor
 containing the data currently on the clipboard
 (if any).
@@ -493,6 +576,101 @@ Clipboard_CreateContentsAEDesc		(AEDesc*		outDescPtr)
 
 
 /*!
+Returns true only if the data from the specified source (or the
+primary pasteboard, if nullptr is given) meets the given filter
+criteria.
+
+If true is returned, the copied data is returned, along with
+information about its actual type and where it came from.  You
+must CFRelease() the data and the type name string.
+
+The source is first synchronized before checking its contents.
+
+For convenience, if you specify nullptr for the source, then
+Clipboard_ReturnPrimaryPasteboard() is used.
+
+(3.1)
+*/
+Boolean
+Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
+					 CFDataRef&					outData,
+					 CFStringRef&				outConformingItemActualType,
+					 PasteboardItemID&			outConformingItemID,
+					 PasteboardRef				inDataSourceOrNull)
+{
+	Boolean			result = false;
+	Boolean			isText = false;
+	CFStringRef		actualTypeName = nullptr;
+	
+	
+	if (nullptr == inDataSourceOrNull)
+	{
+		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
+	}
+	assert(nullptr != inDataSourceOrNull);
+	
+	// NOTE: This returns only the first text format available.
+	isText = Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
+								actualTypeName, outConformingItemID, inDataSourceOrNull);
+	if (isText)
+	{
+		Boolean		copyData = false;
+		
+		
+		// not all data will have a recognizable format; handle whatever is reasonable
+		//Console_WriteValueCFString("clipboard actually contains", actualTypeName);
+		if ((false == copyData) && (inConstraint & kClipboard_DataConstraintText8Bit))
+		{
+			if ((kCFCompareEqualTo == CFStringCompare
+										(actualTypeName, FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
+											0/* flags */)) ||
+				(kCFCompareEqualTo == CFStringCompare
+										(actualTypeName, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"), kUTTypeUTF8PlainText),
+											0/* flags */)) ||
+				(kCFCompareEqualTo == CFStringCompare
+										(actualTypeName, CFSTR("com.apple.traditional-mac-plain-text"),
+											0/* flags */)))
+			{
+				// text that can be iterated over by byte (8-bit)
+				copyData = true;
+			}
+		}
+		if ((false == copyData) && (inConstraint & kClipboard_DataConstraintText16BitNative))
+		{
+			if (kCFCompareEqualTo == CFStringCompare
+										(actualTypeName, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
+											0/* flags */))
+			{
+				// text that can be iterated over by word (16-bit) in native byte order
+				copyData = true;
+			}
+		}
+		
+		// copy the data if it meets the criteria
+		if (copyData)
+		{
+			OSStatus	error = noErr;
+			
+			
+			error = PasteboardCopyItemFlavorData(inDataSourceOrNull, outConformingItemID, actualTypeName, &outData);
+			if (noErr == error)
+			{
+				result = true;
+				
+				// only expect the caller to release the type name once everything else succeeds!
+				outConformingItemActualType = actualTypeName;
+				CFRetain(outConformingItemActualType);
+			}
+		}
+		
+		CFRelease(actualTypeName), actualTypeName = nullptr;
+	}
+	
+	return result;
+}// Clipboard_GetData
+
+
+/*!
 Copies the indicated drawing to the clipboard.
 
 (2.6)
@@ -507,6 +685,64 @@ Clipboard_GraphicsToScrap	(short	inDrawingNumber)
 	pictureToScrap((Handle)picture);
 	KillPicture(picture);
 }// GraphicsToScrap
+
+
+/*!
+Returns true only if the specified plain text contains new-line
+characters as defined by ASCII-compatible encodings.
+
+See also the Unicode version of this routine.
+
+(3.1)
+*/
+Boolean
+Clipboard_IsOneLineInBuffer		(UInt8 const*	inTextPtr,
+								 CFIndex		inLength)
+{
+	Boolean		result = (nullptr != inTextPtr);
+	
+	
+	for (CFIndex i = 0; ((result) && (i < inLength)); ++i)
+	{
+		// NOTE: It may be useful to provide a mechanism for customizing
+		//       these rules for determining what makes a ÒlineÓ of text.
+		if (('\r' == inTextPtr[i]) || ('\n' == inTextPtr[i]))
+		{
+			result = false;
+		}
+	}
+	
+	return result;
+}// IsOneLineInBuffer (non-Unicode)
+
+
+/*!
+Returns true only if the specified Unicode text contains new-line
+characters.
+
+See also the non-Unicode version of this routine.
+
+(3.1)
+*/
+Boolean
+Clipboard_IsOneLineInBuffer		(UInt16 const*	inTextPtr,
+								 CFIndex		inLength)
+{
+	Boolean		result = (nullptr != inTextPtr);
+	
+	
+	for (CFIndex i = 0; ((result) && (i < inLength)); ++i)
+	{
+		// NOTE: It may be useful to provide a mechanism for customizing
+		//       these rules for determining what makes a ÒlineÓ of text.
+		if (('\r' == inTextPtr[i]) || ('\n' == inTextPtr[i]))
+		{
+			result = false;
+		}
+	}
+	
+	return result;
+}// IsOneLineInBuffer (Unicode)
 
 
 /*!

@@ -74,6 +74,7 @@
 // MacTelnet includes
 #include "AppResources.h"
 #include "BasicTypesAE.h"
+#include "Clipboard.h"
 #include "Commands.h"
 #include "ConnectionData.h"
 #include "DialogUtilities.h"
@@ -283,6 +284,15 @@ typedef SessionPtr*		SessionHandle;
 typedef MemoryBlockPtrLocker< SessionRef, Session >		SessionPtrLocker;
 typedef LockAcquireRelease< SessionRef, Session >		SessionAutoLocker;
 
+struct My_PasteAlertInfo
+{
+	// sent to pasteWarningCloseNotifyProc()
+	SessionRef					sessionForPaste;
+	CFRetainRelease				clipboardData;
+	Clipboard_DataConstraint	clipboardDataType;
+};
+typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
+
 struct TerminateAlertInfo
 {
 	// sent to terminationWarningCloseNotifyProc()
@@ -315,6 +325,7 @@ static void					killConnection						(SessionPtr);
 static pascal void			navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 static pascal void			navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
 static pascal void			pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
+static void					pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 static void					preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 static Boolean				queueCharacterInKeyboardBuffer		(SessionPtr, char);
@@ -1215,7 +1226,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 {
 	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
 	HIWindowRef				window = Session_ReturnActiveWindow(inRef);
-	TerminateAlertInfoPtr	terminateAlertInfoPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(terminateAlertInfoPtr)),
+	TerminateAlertInfoPtr	terminateAlertInfoPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(TerminateAlertInfo)),
 																		TerminateAlertInfoPtr);
 	Rect					originalStructureBounds;
 	Rect					centeredStructureBounds;
@@ -4137,6 +4148,162 @@ Session_UserInputKey	(SessionRef		inRef,
 
 
 /*!
+Allows the user to ÒtypeÓ whatever text is on the Clipboard.
+
+With some terminal applications (like shells), pasting in more
+than one line can cause unexpected results.  So, if the Clipboard
+text is multi-line, the user is warned and given options on how
+to perform the Paste.  This also means that this function could
+return before the Paste actually occurs.
+
+\retval kSession_ResultOK
+always; no other return codes currently defined
+
+(3.1)
+*/
+Session_Result
+Session_UserInputPaste	(SessionRef		inRef)
+{
+	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	My_PasteAlertInfoPtr	pasteAlertInfoPtr = new My_PasteAlertInfo;
+	Session_Result			result = kSession_ResultOK;
+	
+	
+	pasteAlertInfoPtr->sessionForPaste = inRef;
+	pasteAlertInfoPtr->clipboardDataType = kClipboard_DataConstraintText8Bit;
+	
+	// examine the Clipboard; if the data contains new-lines, warn the user
+	{
+		CFDataRef			clipboardData = nullptr;
+		CFStringRef			actualTypeName = nullptr;
+		PasteboardItemID	itemID;
+		Boolean				displayWarning = false;
+		
+		
+		// look for both 8-bit and 16-bit text; to save time, the data found for
+		// the multi-line check is passed to the callback for use in the Paste
+		pasteAlertInfoPtr->clipboardDataType = kClipboard_DataConstraintText8Bit;
+		if (Clipboard_GetData(pasteAlertInfoPtr->clipboardDataType, clipboardData, actualTypeName, itemID))
+		{
+			UInt8 const* const		kBufferPtr = CFDataGetBytePtr(clipboardData);
+			CFIndex const			kBufferLength = CFDataGetLength(clipboardData);
+			
+			
+			displayWarning = (false == Clipboard_IsOneLineInBuffer(kBufferPtr, kBufferLength));
+			pasteAlertInfoPtr->clipboardData = clipboardData;
+			CFRelease(clipboardData), clipboardData = nullptr;
+			CFRelease(actualTypeName), actualTypeName = nullptr;
+		}
+		else
+		{
+			pasteAlertInfoPtr->clipboardDataType = kClipboard_DataConstraintText16BitNative;
+			if (Clipboard_GetData(pasteAlertInfoPtr->clipboardDataType, clipboardData, actualTypeName, itemID))
+			{
+				UInt16 const* const		kBufferPtr = REINTERPRET_CAST(CFDataGetBytePtr(clipboardData), UInt16 const*);
+				CFIndex const			kBufferLength = CFDataGetLength(clipboardData);
+				
+				
+				displayWarning = (false == Clipboard_IsOneLineInBuffer(kBufferPtr, kBufferLength));
+				pasteAlertInfoPtr->clipboardData = clipboardData;
+				CFRelease(clipboardData), clipboardData = nullptr;
+				CFRelease(actualTypeName), actualTypeName = nullptr;
+			}
+		}
+		
+		// if text is available, proceed
+		if (pasteAlertInfoPtr->clipboardData.exists())
+		{
+			AlertMessages_BoxRef	box = Alert_New();
+			
+			
+			if (false == displayWarning)
+			{
+				// the Clipboard contains only one line of text, so do not warn first
+				pasteWarningCloseNotifyProc(box, kAlertStdAlertOKButton, pasteAlertInfoPtr/* user data */);
+			}
+			else
+			{
+				// configure and display the confirmation alert
+				
+				// set basics
+				Alert_SetParamsFor(box, kAlert_StyleOKCancel);
+				Alert_SetType(box, kAlertCautionAlert);
+				
+				// set message
+				{
+					UIStrings_Result	stringResult = kUIStrings_ResultOK;
+					CFStringRef			primaryTextCFString = nullptr;
+					
+					
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowPasteLinesWarningPrimaryText, primaryTextCFString);
+					if (stringResult.ok())
+					{
+						CFStringRef		helpTextCFString = nullptr;
+						
+						
+						stringResult = UIStrings_Copy(kUIStrings_AlertWindowPasteLinesWarningHelpText, helpTextCFString);
+						if (stringResult.ok())
+						{
+							Alert_SetTextCFStrings(box, primaryTextCFString, helpTextCFString);
+							CFRelease(helpTextCFString);
+						}
+						CFRelease(primaryTextCFString);
+					}
+				}
+				
+				// set title
+				{
+					UIStrings_Result	stringResult = kUIStrings_ResultOK;
+					CFStringRef			titleCFString = nullptr;
+					
+					
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowPasteLinesWarningName, titleCFString);
+					if (stringResult == kUIStrings_ResultOK)
+					{
+						Alert_SetTitleCFString(box, titleCFString);
+						CFRelease(titleCFString);
+					}
+				}
+				
+				// set buttons
+				{
+					UIStrings_Result	stringResult = kUIStrings_ResultOK;
+					CFStringRef			buttonTitleCFString = nullptr;
+					
+					
+					stringResult = UIStrings_Copy(kUIStrings_ButtonMakeOneLine, buttonTitleCFString);
+					if (stringResult == kUIStrings_ResultOK)
+					{
+						Alert_SetButtonText(box, kAlertStdAlertOKButton, buttonTitleCFString);
+						CFRelease(buttonTitleCFString);
+					}
+					stringResult = UIStrings_Copy(kUIStrings_ButtonPasteNormally, buttonTitleCFString);
+					if (stringResult == kUIStrings_ResultOK)
+					{
+						Alert_SetButtonText(box, kAlertStdAlertOtherButton, buttonTitleCFString);
+						CFRelease(buttonTitleCFString);
+					}
+				}
+				
+				// ensure that the relevant window is visible and frontmost
+				// when the message appears
+				ShowWindow(ptr->dataPtr->window);
+				EventLoop_SelectBehindDialogWindows(ptr->dataPtr->window);
+				Alert_MakeWindowModal(box, ptr->dataPtr->window/* parent */, false/* is window close alert */,
+										pasteWarningCloseNotifyProc, pasteAlertInfoPtr/* user data */);
+				
+				// returns immediately; notifier disposes the alert when the sheet
+				// eventually closes
+				Alert_Display(box);
+			}
+		}
+	}
+	
+	return result;
+}// UserInputPaste
+
+
+/*!
 Adds the specified character to the keyboard input
 queue, where it will eventually be processed.  This
 is normally used only by things that are intercepting
@@ -5601,6 +5768,53 @@ pageSetupCloseNotifyProc	(PMPrintSession		inPrintSession,
 	
     (OSStatus)PMRelease(inPrintSession);
 }// pageSetupCloseNotifyProc
+
+
+/*!
+The responder to a closed Òreally paste?Ó alert.  This routine
+performs the Paste to the specified session using the verbatim
+Clipboard text if the item hit is the OK button.  If the user
+hit the Other button, the Clipboard text is slightly modified
+to form a single line, before Paste.  Otherwise, the Paste does
+not occur.
+
+The given alert is destroyed.
+
+(3.1)
+*/
+static void
+pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
+								 SInt16					inItemHit,
+								 void*					inMy_PasteAlertInfoPtr)
+{
+	My_PasteAlertInfoPtr	dataPtr = REINTERPRET_CAST(inMy_PasteAlertInfoPtr, My_PasteAlertInfoPtr);
+	
+	
+	if (dataPtr != nullptr)
+	{
+		SessionAutoLocker	sessionPtr(gSessionPtrLocks(), dataPtr->sessionForPaste);
+		
+		
+		if (inItemHit == kAlertStdAlertOKButton)
+		{
+			// regular Paste, use verbatim what is on the Clipboard
+			Clipboard_TextFromScrap(sessionPtr->selfRef);
+		}
+		else if (inItemHit == kAlertStdAlertOtherButton)
+		{
+			// first join the text into one line (replace new-line sequences
+			// with single spaces), then Paste
+			// UNIMPLEMENTED
+			Sound_StandardAlert();
+		}
+		
+		// clean up
+		delete dataPtr, dataPtr = nullptr;
+	}
+	
+	// dispose of the alert
+	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
+}// pasteWarningCloseNotifyProc
 
 
 /*!

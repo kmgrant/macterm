@@ -141,6 +141,21 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowMacroImportWarningHelpText"));
 		break;
 	
+	case kUIStrings_AlertWindowPasteLinesWarningName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Multi-Line Paste"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowPasteLinesWarningName"));
+		break;
+	
+	case kUIStrings_AlertWindowPasteLinesWarningPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Join into a single line before pasting?"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowPasteLinesWarningPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowPasteLinesWarningHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("In terminal applications such as shells, entering multiple lines may produce unexpected results."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowPasteLinesWarningHelpText"));
+		break;
+	
 	case kUIStrings_AlertWindowRuntimeExceptionName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Fatal Error"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowRuntimeExceptionName"));
@@ -316,9 +331,14 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 													CFSTR("kUIStrings_ButtonOpenMacroEditor"));
 		break;
 	
-	case kUIStrings_ButtonCopyToClipboard:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Copy to Clipboard"), CFSTR("Buttons"),
-													CFSTR("kUIStrings_ButtonCopyToClipboard"));
+	case kUIStrings_ButtonPasteNormally:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Paste Normally"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonPasteNormally"));
+		break;
+	
+	case kUIStrings_ButtonMakeOneLine:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Join"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonMakeOneLine"));
 		break;
 	
 	case kUIStrings_ButtonHelpAccessibilityDesc:

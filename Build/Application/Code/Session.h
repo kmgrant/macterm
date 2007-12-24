@@ -377,6 +377,9 @@ Session_Result
 	Session_UserInputKey					(SessionRef							inRef,
 											 UInt8								inKeyOrASCII);
 
+Session_Result
+	Session_UserInputPaste					(SessionRef							inRef);
+
 void
 	Session_UserInputQueueCharacter			(SessionRef							inRef,
 											 char								inCharacter);

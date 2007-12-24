@@ -61,6 +61,22 @@ enum
 	kClipboard_CopyMethodInline			= 1 << 1
 };
 
+/*!
+A data constraint allows you to take advantage of common
+type filtering that the Clipboard module is already
+familiar with.  This can avoid an often cumbersome series
+of API calls and string comparisons necessary when dealing
+with pasteboards.  It can also simplify tasks like iterating
+over buffers, if you can ensure the array has elements of a
+certain size.
+*/
+enum Clipboard_DataConstraint
+{
+	kClipboard_DataConstraintNone				= 0xFFFF,	//!< any type of data
+	kClipboard_DataConstraintText8Bit			= 1 << 0,	//!< only text that can be expressed as bytes
+	kClipboard_DataConstraintText16BitNative	= 1 << 1	//!< only Unicode text with native byte-ordering
+};
+
 #if !REZ
 typedef UInt16 Clipboard_PasteMethod; // do not redefine
 #endif
@@ -76,14 +92,28 @@ enum
 
 #pragma mark Public Methods
 
+//!\name Initialization
+//@{
+
 void
 	Clipboard_Init						();
 
 void
 	Clipboard_Done						();
 
+//@}
+
+//!\name Accessing Clipboard Data
+//@{
+
 OSStatus
 	Clipboard_AEDescToScrap				(AEDesc const*			inDescPtr);
+
+Boolean
+	Clipboard_Contains					(CFStringRef			inUTI,
+										 CFStringRef&			outConformingItemActualType,
+										 PasteboardItemID&		outConformingItemID,
+										 PasteboardRef			inDataSourceOrNull = nullptr);
 
 OSStatus
 	Clipboard_CreateContentsAEDesc		(AEDesc*				outDescPtr);
@@ -91,14 +121,15 @@ OSStatus
 void
 	Clipboard_GraphicsToScrap			(short					inDrawingNumber);
 
+Boolean
+	Clipboard_GetData					(Clipboard_DataConstraint	inConstraint,
+										 CFDataRef&				outData,
+										 CFStringRef&			outConformingItemActualType,
+										 PasteboardItemID&		outConformingItemID,
+										 PasteboardRef			inDataSourceOrNull = nullptr);
+
 PasteboardRef
 	Clipboard_ReturnPrimaryPasteboard	();
-
-WindowRef
-	Clipboard_ReturnWindow				();
-
-void
-	Clipboard_SetWindowVisible			(Boolean				inIsVisible);
 
 void
 	Clipboard_TextFromScrap				(SessionRef				inSession);
@@ -111,8 +142,34 @@ void
 	Clipboard_TextType					(TerminalViewRef		inSource,
 										 SessionRef				inTarget);
 
+//@}
+
+//!\name Clipboard User Interface
+//@{
+
+WindowRef
+	Clipboard_ReturnWindow				();
+
+void
+	Clipboard_SetWindowVisible			(Boolean				inIsVisible);
+
 Boolean
 	Clipboard_WindowIsVisible			();
+
+//@}
+
+//!\name Utilities
+//@{
+
+Boolean
+	Clipboard_IsOneLineInBuffer			(UInt8 const*			inTextPtr,
+										 CFIndex				inLength);
+
+Boolean
+	Clipboard_IsOneLineInBuffer			(UInt16 const*			inTextPtr,
+										 CFIndex				inLength);
+
+//@}
 
 #endif /* REZ */
 

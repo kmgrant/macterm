@@ -781,7 +781,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandPaste:	
-			if (isSession) Clipboard_TextFromScrap(frontSession); // paste if there is a window to paste into
+			if (isSession) Session_UserInputPaste(frontSession); // paste if there is a window to paste into
 			else if (isDialog) DialogPaste(GetDialogFromWindow(EventLoop_GetRealFrontWindow()));
 			break;
 		

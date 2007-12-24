@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071222',
     '20071221',
     '20071219',
     '20071204',
@@ -67,6 +68,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071222': [
+		'Using Paste with multi-line Clipboard text now displays a warning with an option to form one line before proceeding.',
+	],
 	'20071221': [
 		'Fixed ANSI color rendering.',
 		'Preferences window resize box now has a transparent look on most panels.',
