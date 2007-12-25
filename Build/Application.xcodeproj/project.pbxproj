@@ -522,7 +522,7 @@
 		0ACDD8B10ABD13B200040553 /* SoundSystem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SoundSystem.h; path = Application/Code/SoundSystem.h; sourceTree = "<group>"; };
 		0ACDD91C0ABD163700040553 /* ListUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ListUtilities.h; path = Application/Code/ListUtilities.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
-		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.interfacer; name = Quills.i; path = PythonWrapper/Quills.i; sourceTree = "<group>"; };
+		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.interfacer; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
 		0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsBase.cp; path = Application/Code/QuillsBase.cp; sourceTree = "<group>"; };
 		0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsEvents.cp; path = Application/Code/QuillsEvents.cp; sourceTree = "<group>"; };
