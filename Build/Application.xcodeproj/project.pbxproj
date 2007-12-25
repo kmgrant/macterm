@@ -1194,7 +1194,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec ${SRCROOT}/Tools/AutoDatePropertyList.sh";
+			shellScript = "exec ${SRCROOT}/VersionInfo.sh ${SRCROOT}/Tools/AutoDatePropertyList.sh";
 		};
 		0A79B1EB0AF71FEA0052ECD3 /* Auto-Date Property List */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -1208,7 +1208,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec ${SRCROOT}/Tools/AutoDatePropertyList.sh";
+			shellScript = "exec ${SRCROOT}/VersionInfo.sh ${SRCROOT}/Tools/AutoDatePropertyList.sh";
 		};
 		0A9AF6DE0AF5B6B500E7DF18 /* Copy Python Wrapper */ = {
 			isa = PBXShellScriptBuildPhase;
