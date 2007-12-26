@@ -807,61 +807,122 @@ Clipboard_SetWindowVisible	(Boolean	inIsVisible)
 
 
 /*!
-Pastes text from the clipboard into the specified
-session.  If the clipboard does not have any text
-component, this routine does nothing.
+Pastes text from the clipboard into the specified session.
+If the clipboard does not have any text, this does nothing.
 
-(2.6)
+The modifier can be used to alter what is actually pasted.
+
+(3.1)
 */
 void
-Clipboard_TextFromScrap		(SessionRef		inSession)
+Clipboard_TextFromScrap		(SessionRef				inSession,
+							 Clipboard_Modifier		inModifier)
 {
-	if (TerminalWindow_ExistsFor(EventLoop_GetRealFrontWindow()))
+	CFDataRef			clipboardData = nullptr;
+	CFStringRef			actualTypeName = nullptr;
+	PasteboardItemID	itemID = 0;
+	
+	
+	// INCOMPLETE - text translation is not handled
+	
+	// IMPORTANT: It may be desirable to allow customization for what
+	//            identifies a line of text.  Currently, this is assumed.
+	
+	if (Clipboard_GetData(kClipboard_DataConstraintText8Bit, clipboardData,
+							actualTypeName, itemID))
 	{
-		SessionPasteState	pasteState;
+		// clipboard contains text that can be expressed in 8-bit characters
+		UInt8 const* const		kBufferPtr = CFDataGetBytePtr(clipboardData);
+		CFIndex const			kBufferLength = CFDataGetLength(clipboardData);
 		
 		
-		Session_GetPasteState(inSession, &pasteState);
-		if (0 != pasteState.outLength)
+		if (kClipboard_ModifierOneLine == inModifier)
 		{
-			// unable to paste any more, yet
+			UInt8*		bufferCopy = new UInt8[kBufferLength];
+			CFIndex		bufferLength = 0;
+			UInt8		currentChar = '\0';
+			
+			
+			// ignore any new-line characters in one-line mode
+			for (CFIndex i = 0; i < kBufferLength; ++i)
+			{
+				currentChar = *(kBufferPtr + i);
+				if (('\r' != currentChar) && ('\n' != currentChar))
+				{
+					bufferCopy[bufferLength] = currentChar;
+					++bufferLength;
+				}
+			}
+			Session_UserInputString(inSession, REINTERPRET_CAST(bufferCopy, char const*),
+									bufferLength, false/* send to scripts */);
+			delete [] bufferCopy, bufferCopy = nullptr;
+		}
+		else
+		{
+			// in 8-bit normal mode it is not necessary to make a copy
+			// and iterate, because nothing is changing
+			assert(kClipboard_ModifierNone == inModifier);
+			Session_UserInputString(inSession, REINTERPRET_CAST(kBufferPtr, char const*),
+									kBufferLength, false/* send to scripts */);
+		}
+		
+		CFRelease(clipboardData), clipboardData = nullptr;
+		CFRelease(actualTypeName), actualTypeName = nullptr;
+	}
+	else if (Clipboard_GetData(kClipboard_DataConstraintText16BitNative, clipboardData,
+								actualTypeName, itemID))
+	{
+		// clipboard contains text that can be expressed in 16-bit characters
+		// in the native byte order, but might still have a byte-order mark
+		CFStringRef		clipboardString = CFStringCreateFromExternalRepresentation
+											(kCFAllocatorDefault, clipboardData, kCFStringEncodingUnicode);
+		
+		
+		if (nullptr == clipboardString)
+		{
+			// conversion error
 			Sound_StandardAlert();
 		}
 		else
 		{
-			long				length = 0L;			// the length of what is on the scrap
-			Boolean				isAnyScrap = false;		// is any text on the clipboard?
-			ScrapRef			currentScrap = nullptr;
-			ScrapFlavorFlags	currentScrapFlags = 0L;
-			
-			
-			(OSStatus)GetCurrentScrap(&currentScrap);
-			
-			isAnyScrap = (GetScrapFlavorFlags(currentScrap, kScrapFlavorTypeText, &currentScrapFlags) == noErr);
-			if (isAnyScrap)
+			if (kClipboard_ModifierOneLine == inModifier)
 			{
-				(OSStatus)GetScrapFlavorSize(currentScrap, kScrapFlavorTypeText, &length);
-				pasteState.text = Memory_NewHandle(length); // for characters
-				pasteState.outLength = length;
-				(OSStatus)GetScrapFlavorData(currentScrap, kScrapFlavorTypeText, &pasteState.outLength, *pasteState.text);
+				CFMutableStringRef		mutableBuffer = CFStringCreateMutableCopy
+														(kCFAllocatorDefault, 0/* capacity or 0 for no limit */, clipboardString);
 				
-				HLock(pasteState.text);
-				pasteState.nextCharPtr = *pasteState.text;
 				
-				pasteState.inCount = pasteState.outCount = 0;
-				
-				//TextTranslation_ConvertBufferToNewHandle( . . . )
-				//TextTranslation_ConvertTextFromMac((UInt8*)pasteState.nextCharPtr,
-				//									pasteState.outLength,
-				//									connectionDataPtr->national); // translate to national characters
-				
-				Session_UpdatePasteState(inSession, &pasteState);
-				// UNIMPLEMENTED - FIX ME, IMPLEMENT PASTE HERE
-				Sound_StandardAlert(); // TMP
+				if (nullptr == mutableBuffer)
+				{
+					// no memory?
+					Sound_StandardAlert();
+				}
+				else
+				{
+					// ignore any new-line characters in one-line mode
+					(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\r"), CFSTR(""),
+													CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
+					(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR(""),
+													CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
+					Session_UserInputCFString(inSession, mutableBuffer, false/* send to scripts */);
+					CFRelease(mutableBuffer), mutableBuffer = nullptr;
+				}
 			}
+			else
+			{
+				// send the data unmodified to the session
+				Session_UserInputCFString(inSession, clipboardString, false/* send to scripts */);
+			}
+			CFRelease(clipboardString), clipboardString = nullptr;
 		}
+		
+		CFRelease(clipboardData), clipboardData = nullptr;
+		CFRelease(actualTypeName), actualTypeName = nullptr;
 	}
-	else Sound_StandardAlert();
+	else
+	{
+		// unknown or unsupported data type
+		Sound_StandardAlert();
+	}
 }// TextFromScrap
 
 

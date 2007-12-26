@@ -86,6 +86,16 @@ enum
 	kClipboard_PasteMethodBlock			= 1
 };
 
+/*!
+When pasting, you have the option of using a filtered version
+of the data actually on the Clipboard, to suit the destination.
+*/
+enum Clipboard_Modifier
+{
+	kClipboard_ModifierNone						= 0,		//!< leave data unchanged
+	kClipboard_ModifierOneLine					= 1			//!< strip all '\r' and '\n' characters first
+};
+
 
 
 #if !REZ
@@ -132,7 +142,8 @@ PasteboardRef
 	Clipboard_ReturnPrimaryPasteboard	();
 
 void
-	Clipboard_TextFromScrap				(SessionRef				inSession);
+	Clipboard_TextFromScrap				(SessionRef				inSession,
+										 Clipboard_Modifier		inFilter = kClipboard_ModifierNone);
 
 void
 	Clipboard_TextToScrap				(TerminalViewRef		inView,

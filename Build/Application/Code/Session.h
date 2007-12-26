@@ -364,6 +364,10 @@ Session_Result
 Session_Result
 	Session_Select							(SessionRef							inRef);
 
+Session_Result
+	Session_SetSendDataEncoding				(SessionRef							inRef,
+											 CFStringEncoding					inEncoding);
+
 void
 	Session_UserInputCFString				(SessionRef							inRef,
 											 CFStringRef						inStringBuffer,
@@ -572,10 +576,6 @@ void
 void
 	Session_SpeechResume					(SessionRef							inRef);
 
-Session_Result
-	Session_UpdatePasteState				(SessionRef							inRef,
-											 SessionPasteStateConstPtr			inPasteStatePtr);
-
 //@}
 
 //!\name Information on Sessions
@@ -592,15 +592,6 @@ Session_Result
 Session_Result
 	Session_FillInSessionDescription		(SessionRef							inRef,
 											 SessionDescription_Ref*			outNewSaveFileMemoryModelPtr);
-
-// API UNDER EVALUATION
-Session_Result
-	Session_GetPasteState					(SessionRef							inRef,
-											 SessionPasteStatePtr				outPasteStatePtr);
-
-// API UNDER EVALUATION
-SessionPasteStateConstPtr
-	Session_GetPasteStateReadOnly			(SessionRef							inRef);
 
 CFStringRef
 	Session_GetResourceLocationCFString		(SessionRef							inRef);

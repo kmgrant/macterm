@@ -253,6 +253,7 @@ struct Session
 	UInt8*						readBufferPtr;				// buffer space for processing data
 	size_t						readBufferSizeMaximum;		// maximum number of bytes that can be processed at once
 	size_t						readBufferSizeInUse;		// number of bytes of data currently in the read buffer
+	CFStringEncoding			writeEncoding;				// the character set that text (data) sent to a session should be using
 	SessionAuxiliaryDataMap		auxiliaryDataMap;			// all tagged data associated with this session
 	SessionRef					selfRef;					// convenient reference to this structure
 	
@@ -645,6 +646,7 @@ Session_New		(Boolean	inIsReadOnly)
 		// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
 		ptr->readBufferPtr = new UInt8[ptr->readBufferSizeMaximum];
 		assert(nullptr != ptr->readBufferPtr);
+		ptr->writeEncoding = kCFStringEncodingUTF8; // initially...
 		//ptr->auxiliaryDataMap is self-initializing
 		ptr->selfRef = result;
 		Session_StartMonitoring(result, kSession_ChangeState, ptr->changeListener);
@@ -1722,74 +1724,6 @@ Session_FlushUserInputBuffer	(SessionRef		inRef)
 
 
 /*!
-Returns a variety of variables used to manage Paste in the
-specified session.  Unless you are planning to write back
-a state later with Session_UpdatePasteState(), you should
-use Session_GetPasteStateReadOnly() for efficient access.
-
-IMPORTANT:	This API is under evaluation.  It exposes a lot
-			of data, which may be deemed too inflexible at
-			a later time.
-
-\retval kSession_ResultOK
-if there are no errors
-
-\retval kSession_ResultInvalidReference
-if the specified session is unrecognized
-
-\retval kSession_ResultParameterError
-if "outPasteStatePtr" is nullptr
-
-(3.0)
-*/
-Session_Result
-Session_GetPasteState	(SessionRef				inRef,
-						 SessionPasteStatePtr	outPasteStatePtr)
-{
-	Session_Result		result = kSession_ResultOK;
-	
-	
-	if (inRef == nullptr) result = kSession_ResultInvalidReference;
-	else if (outPasteStatePtr == nullptr) result = kSession_ResultParameterError;
-	else
-	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		// copy paste data
-		*outPasteStatePtr = ptr->dataPtr->paste;
-	}
-	
-	return result;
-}// GetPasteState
-
-
-/*!
-Returns a pointer to a data structure with state
-information for Paste handling in the given session.
-
-IMPORTANT:	Due to its inflexible nature, this API
-			should be considered volatile.  It
-			currently exists for efficient access
-			purposes.  Should the internal nature
-			of the paste data structures change (to
-			movable memory blocks, for example),
-			this API may be replaced.
-
-(3.0)
-*/
-SessionPasteStateConstPtr
-Session_GetPasteStateReadOnly	(SessionRef		inRef)
-{
-	SessionAutoLocker			ptr(gSessionPtrLocks(), inRef);
-	SessionPasteStateConstPtr	result = &ptr->dataPtr->paste;
-	
-	
-	return result;
-}// GetPasteStateReadOnly
-
-
-/*!
 Returns a succinct string representation of the
 specified sessionÕs resource; for a remote session
 this is always a URL, for local sessions it is the
@@ -2571,16 +2505,22 @@ Session_Select	(SessionRef		inRef)
 
 
 /*!
-Adds the specified data to a buffer, which will be
-sent to the local or remote process for the given
-session when the receiver is ready.  Returns the
-number of bytes left in the buffer, or a negative
-number on error.
+Adds the specified data to a buffer, which will be sent to
+the local or remote process for the given session when the
+receiver is ready.
 
-Currently, this is implemented backwards by calling
-the non-CFString version, which might result in
-incorrect translation and unnecessary copying.
-This will be fixed later.
+Since this version of the function has encoding information
+available (in the CFString), it converts the data into the
+target encoding and sends the new format as a raw stream of
+bytes.  The assumption is that the application running in
+the terminal will know how to decode the data in the format
+that the user has selected for the session.
+
+Returns the number of bytes actually written, or a negative
+number on error.  If conversion is required, conversion
+problems are represented as incomplete writes instead of
+errors; so you should check the returned count against the
+actual size of the string, to see if all data was sent.
 
 (3.0)
 */
@@ -2588,34 +2528,42 @@ SInt16
 Session_SendData	(SessionRef		inRef,
 					 CFStringRef	inString)
 {
-	// TEMPORARY - the CFString implementation should be preferred;
-	//             translating CF data into a regular byte array is backwards
-	Handle		buffer = Memory_NewHandle(CFStringGetLength(inString) * sizeof(UniChar));
-	SInt16		result = 0;
+	// first determine how much space will be needed
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFIndex				numberOfBytesRequired = 0;
+	CFIndex				numberOfCharactersConverted = CFStringGetBytes(inString,
+																		CFRangeMake(0, CFStringGetLength(inString)),
+																		ptr->writeEncoding,
+																		0/* loss byte, or 0 for no lossy conversion */,
+																		false/* is external representation */,
+																		nullptr/* no buffer means Òreturn size onlyÓ */,
+																		0/* size - ignored for null buffer */,
+																		&numberOfBytesRequired);
+	SInt16		result = -1;
 	
 	
-	if (buffer != nullptr)
+	if (numberOfBytesRequired > 0)
 	{
-		CFIndex		actualSize = 0;
-		CFIndex		numberOfCharactersCopied = CFStringGetBytes(inString,
-																CFRangeMake(0, CFStringGetLength(inString)),
-																kCFStringEncodingMacRoman/* TEMPORARY - should be session-dependent */,
-																0/* loss byte, or 0 for no lossy conversion */,
-																false/* is external representation */,
-																REINTERPRET_CAST(*buffer, UInt8*),
-																GetHandleSize(buffer), &actualSize);
+		CFIndex const	kBufferSize = numberOfBytesRequired;
+		UInt8*			buffer = new UInt8[kBufferSize];
 		
 		
-		if (numberOfCharactersCopied < CFStringGetLength(inString))
+		if (nullptr != buffer)
 		{
-			// error...
+			// now actually translate/copy the data
+			numberOfCharactersConverted = CFStringGetBytes(inString,
+															CFRangeMake(0, CFStringGetLength(inString)),
+															ptr->writeEncoding,
+															0/* loss byte, or 0 for no lossy conversion */,
+															false/* is external representation */,
+															buffer, kBufferSize, &numberOfBytesRequired);
+			
+			if ((numberOfBytesRequired > 0) && (numberOfBytesRequired <= kBufferSize))
+			{
+				result = Session_SendData(inRef, buffer, numberOfBytesRequired);
+			}
+			delete [] buffer;
 		}
-		if (actualSize > GetHandleSize(buffer))
-		{
-			// error...
-		}
-		result = Session_SendData(inRef, *buffer, GetHandleSize(buffer));
-		Memory_DisposeHandle(&buffer);
 	}
 	return result;
 }// SendData
@@ -2624,9 +2572,10 @@ Session_SendData	(SessionRef		inRef,
 /*!
 Adds the specified data to a buffer, which will be
 sent to the local or remote process for the given
-session when the receiver is ready.  Returns the
-number of bytes left in the buffer, or a negative
-number on error.
+session when the receiver is ready.
+
+Returns the number of bytes actually written, or a
+negative number on error.
 
 (3.0)
 */
@@ -2670,9 +2619,11 @@ Session_SendFlush	(SessionRef		inRef)
 /*!
 Sends the specified data to the local or remote
 process for the given session immediately (flushing
-the buffer), if possible.  Returns the number of
-bytes left in the buffer, or a negative number on
-error.
+the buffer), if possible.
+
+Returns the number of bytes actually written (not
+counting any previous cache that was flushed), or
+a negative number on error.
 
 (3.0)
 */
@@ -2685,8 +2636,8 @@ Session_SendFlushData	(SessionRef		inRef,
 	SInt16				result = 0;
 	
 	
-	result = Session_SendFlush(inRef);
-	if (result == 0) Session_SendData(inRef, inBufferPtr, inByteCount);
+	(SInt16)Session_SendFlush(inRef);
+	if (result == 0) result = Session_SendData(inRef, inBufferPtr, inByteCount);
 	
 	return result;
 }// SendFlushData
@@ -3021,6 +2972,43 @@ Session_SetResourceLocationCFString		(SessionRef		inRef,
 	ptr->resourceLocationString.setCFTypeRef(inResourceLocationString);
 	changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef);
 }// SetResourceLocationCFString
+
+
+/*!
+Specifies the encoding to use for data that is sent to the
+session via encoding-aware APIs such as Session_SendData()
+(with a CFStringRef parameter).
+
+WARNING:	This should generally match what the currently
+			running application in a terminal is capable of
+			handling.  It is probably user-specified if it
+			cannot be determined automatically.
+
+\retval kSession_ResultOK
+if there are no errors
+
+\retval kSession_ResultInvalidReference
+if the specified session is unrecognized
+
+(3.1)
+*/
+Session_Result
+Session_SetSendDataEncoding		(SessionRef			inRef,
+								 CFStringEncoding	inEncoding)
+{
+	Session_Result		result = kSession_ResultOK;
+	
+	
+	if (nullptr == inRef) result = kSession_ResultInvalidReference;
+	else
+	{
+		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		
+		
+		ptr->writeEncoding = inEncoding;
+	}
+	return result;
+}// SetSendDataEncoding
 
 
 /*!
@@ -3784,46 +3772,6 @@ Session_TypeIsLocalNonLoginShell	(SessionRef		inRef)
 
 
 /*!
-Modifies the specified sessionÕs paste state to match
-the given information.  You normally use
-Session_GetPasteState() to determine the current
-values, then change the desired value(s) and pass the
-modified data structure to this routine.
-
-\retval kSession_ResultOK
-if there are no errors
-
-\retval kSession_ResultInvalidReference
-if the specified session is unrecognized
-
-\retval kSession_ResultParameterError
-if "inPasteStatePtr" is nullptr
-
-(3.0)
-*/
-Session_Result
-Session_UpdatePasteState	(SessionRef					inRef,
-							 SessionPasteStateConstPtr	inPasteStatePtr)
-{
-	Session_Result		result = kSession_ResultOK;
-	
-	
-	if (inRef == nullptr) result = kSession_ResultInvalidReference;
-	else if (inPasteStatePtr == nullptr) result = kSession_ResultParameterError;
-	else
-	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		
-		
-		// copy paste data
-		ptr->dataPtr->paste = *inPasteStatePtr;
-	}
-	
-	return result;
-}// UpdatePasteState
-
-
-/*!
 Send a string to a session as if it were typed into
 the specified sessionÕs window.  If local echoing is
 enabled for the session, the string will be written
@@ -3845,11 +3793,11 @@ Session_UserInputCFString	(SessionRef		inRef,
 	{
 		try
 		{
-			char*	stringBuffer = new char[1 + CFStringGetLength(inStringBuffer)];
+			SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+			char*				stringBuffer = new char[1 + CFStringGetLength(inStringBuffer)];
 			
 			
-			if (CFStringGetCString(inStringBuffer, stringBuffer, sizeof(stringBuffer),
-									kCFStringEncodingMacRoman/* arbitrary!!! */))
+			if (CFStringGetCString(inStringBuffer, stringBuffer, sizeof(stringBuffer), ptr->writeEncoding))
 			{
 				Session_TerminalWriteCString(inRef, stringBuffer);
 			}
@@ -4391,7 +4339,6 @@ kblen			(0),
 // parsedat initialized below
 parseIndex		(0),
 controlKey		(),
-paste			(),
 terminal		(),
 TEK				(),
 mainProcess		()
@@ -5380,10 +5327,6 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					charactersToSend[1] = STATIC_CAST(primaryChar, UInt8);
 				}
 				
-				// handle whatever mapping is needed
-				//TextTranslation_ConvertBufferToNewHandle( . . . )
-				//TextTranslation_ConvertCharacterFromMac(&characterCode, connectionDataPtr->national); // translate character
-				
 				if (metaDown)
 				{
 					// EMACS respects a prefixing Escape character as being
@@ -5467,12 +5410,6 @@ killConnection		(SessionPtr		inPtr)
 		if (wasDead)
 		{
 			if (inPtr->dataPtr->TEK.graphicsID > -1) detachGraphics(inPtr->dataPtr->TEK.graphicsID); // detach the TEK screen
-			if (inPtr->dataPtr->paste.outLength > 0)
-			{
-				inPtr->dataPtr->paste.outLength = 0; // kill the remaining send
-				HUnlock(inPtr->dataPtr->paste.text); // buffer
-				HPurge(inPtr->dataPtr->paste.text);
-			}
 		}
 		
 		if (nullptr != inPtr->terminalWindow)
@@ -5797,15 +5734,14 @@ pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 		
 		if (inItemHit == kAlertStdAlertOKButton)
 		{
-			// regular Paste, use verbatim what is on the Clipboard
-			Clipboard_TextFromScrap(sessionPtr->selfRef);
+			// first join the text into one line (replace new-line sequences
+			// with single spaces), then Paste
+			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierOneLine);
 		}
 		else if (inItemHit == kAlertStdAlertOtherButton)
 		{
-			// first join the text into one line (replace new-line sequences
-			// with single spaces), then Paste
-			// UNIMPLEMENTED
-			Sound_StandardAlert();
+			// regular Paste, use verbatim what is on the Clipboard
+			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierNone);
 		}
 		
 		// clean up

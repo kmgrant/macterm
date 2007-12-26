@@ -18,7 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20071222',
+    '20071225',
     '20071221',
     '20071219',
     '20071204',
@@ -68,7 +68,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-	'20071222': [
+	'20071225': [
+		'Internal improvements to sessions to set a foundation for better text translation.',
+		'Fixed Paste, for both 8-bit and 16-bit Unicode sources (that can be translated).',
 		'Using Paste with multi-line Clipboard text now displays a warning with an option to form one line before proceeding.',
 	],
 	'20071221': [

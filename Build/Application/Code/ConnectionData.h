@@ -73,24 +73,6 @@ enum
 
 #pragma mark Types
 
-struct SessionPasteState
-{
-	SessionPasteState (): method(0), blockSize(0L), inCount(0L), outCount(0L),
-							outLength(0L), nextCharPtr(nullptr), text(nullptr) {}
-	
-	// paste operations
-	SInt16		method;				// “quick” or “block” paste method
-	SInt32		blockSize;			// the size of paste “blocks”
-	SInt32		inCount;			// count of bytes into this port 
-	SInt32		outCount;			// count of bytes out this port 
-	SInt32		outLength;			// length of text remaining to be pasted
-	
-	char*		nextCharPtr;		// pointer to next character to send
-	char**		text;				// text buffer for pasting
-};
-typedef SessionPasteState*			SessionPasteStatePtr;
-typedef SessionPasteState const*	SessionPasteStateConstPtr;
-
 struct ConnectionData
 {
 	explicit ConnectionData	();
@@ -145,11 +127,6 @@ struct ConnectionData
 							interrupt,			// character for “interrupt process”
 							pad;				// unused
 	} controlKey;
-	
-	SessionPasteState		paste;				// DIRECT ACCESS PROHIBITED; use:
-												//		Session_GetPasteState()
-												//		Session_GetPasteStateReadOnly()
-												//		Session_UpdatePasteState()
 	
 	struct TermInfo
 	{
