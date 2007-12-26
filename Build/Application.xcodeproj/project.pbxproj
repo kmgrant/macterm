@@ -1216,14 +1216,16 @@
 			);
 			inputPaths = (
 				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/_Quills_debug.so",
+				"$(DERIVED_SOURCES_DIR)/Quills.py",
 			);
 			name = "Copy to Expected Names";
 			outputPaths = (
 				"$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/_Quills.so",
+				"$(BUILT_PRODUCTS_DIR)/Quills.py",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Python will look for \"_Quills.so\" when \"import Quills\" is used,\n# so the file cannot be named _Quills_debug.so (as Xcode makes it)\n\nif [ -r \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" ] ; then\n    cp \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills.so\"\nfi";
+			shellScript = "# Python will look for \"_Quills.so\" when \"import Quills\" is used,\n# so the file cannot be named _Quills_debug.so (as Xcode makes it)\n\nif [ -r \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" ] ; then\n    cp \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills_debug.so\" \"${BUILT_PRODUCTS_DIR}/${CONTENTS_FOLDER_PATH}/_Quills.so\"\nfi\n\n# although the .so is automatically placed in the output directory, Xcode\n# does not normally consider the generated .py file to be important; so\n# this must be manually copied from the derived sources area\n\ncp \"${DERIVED_SOURCES_DIR}/Quills.py\" \"${BUILT_PRODUCTS_DIR}/\"";
 		};
 		0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */ = {
 			isa = PBXShellScriptBuildPhase;

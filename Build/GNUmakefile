@@ -243,23 +243,29 @@ endif
 	fi
 	$(RM) -R $(DEST_QUILLS_TOP)
 
-# reinstalls a SWIG wrapper when it changes
-$(DEST_SWIG_TOP_PANTHER)/%: $(SRC_APP_BUILD_TOP_PANTHER)/%
+$(SRC_SWIG_TOP_PANTHER)/%:
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
+
+# reinstalls a SWIG wrapper when it changes
+$(DEST_SWIG_TOP_PANTHER)/%: $(SRC_SWIG_TOP_PANTHER)/%
 	$(MKDIR_P) $(dir $@)
 	$(COPY) $^ $@
 
-# reinstalls a SWIG wrapper when it changes
-$(DEST_SWIG_TOP_TIGER)/%: $(SRC_APP_BUILD_TOP_TIGER)/%
+$(SRC_SWIG_TOP_TIGER)/%:
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
+
+# reinstalls a SWIG wrapper when it changes
+$(DEST_SWIG_TOP_TIGER)/%: $(SRC_SWIG_TOP_TIGER)/%
 	$(MKDIR_P) $(dir $@)
 	$(COPY) $^ $@
 
-# reinstalls a SWIG wrapper when it changes
-$(DEST_SWIG_TOP_LEOPARD)/%: $(SRC_APP_BUILD_TOP_LEOPARD)/%
+$(SRC_SWIG_TOP_LEOPARD)/%:
 	@# Python versions are different on each Mac OS, so the lightweight
 	@# SWIG wrapper code *does* have to be compiled for each separately
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForLeopardDebug
+
+# reinstalls a SWIG wrapper when it changes
+$(DEST_SWIG_TOP_LEOPARD)/%: $(SRC_SWIG_TOP_LEOPARD)/%
 	$(MKDIR_P) $(dir $@)
 	$(COPY) $^ $@
 
