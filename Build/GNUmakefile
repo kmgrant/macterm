@@ -225,13 +225,8 @@ endif
 .PHONY: clean-quills-framework
 clean-quills-framework:
 	$(MAKE) clean-swig-wrappers
-	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForLeopardDebug
 ifeq ($(strip $(FOR_PANTHER)),yes)
-	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
 	$(XCB) clean -project Application.xcodeproj -target Quills.framework -configuration ForPantherDebug
-endif
-ifeq ($(strip $(FOR_TIGER)),yes)
-	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
 endif
 	@# note: the majority of Quills isn't built specifically for Leopard,
 	@# so the Tiger clean applies to both Tiger and Leopard
@@ -278,6 +273,16 @@ $(LEOPARD_SWIG_WRAPPERS)
 
 .PHONY: clean-swig-wrappers
 clean-swig-wrappers:
+ifeq ($(strip $(FOR_PANTHER)),yes)
+	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
+	$(RM) $(SRC_SWIG_TOP_PANTHER)/Quills.py
+endif
+ifeq ($(strip $(FOR_TIGER)),yes)
+	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
+	$(RM) $(SRC_SWIG_TOP_TIGER)/Quills.py
+endif
+	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForLeopardDebug
+	$(RM) $(SRC_SWIG_TOP_LEOPARD)/Quills.py
 	echo '$(PANTHER_SWIG_WRAPPERS) $(PANTHER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
 	-$(RMDIR) $(DEST_SWIG_TOP_PANTHER)
 	echo '$(TIGER_SWIG_WRAPPERS) $(TIGER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
