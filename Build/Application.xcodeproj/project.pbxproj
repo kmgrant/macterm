@@ -1133,7 +1133,6 @@
 				0AC6BACF0A8C0A8B00AFF37A /* Sources */,
 				0AC6BAD00A8C0A8B00AFF37A /* Frameworks */,
 				0AFB11AA0AE9EECB005EAF90 /* Hack In Debug Symlinks */,
-				0A9AF6DE0AF5B6B500E7DF18 /* Copy Python Wrapper */,
 			);
 			buildRules = (
 			);
@@ -1209,20 +1208,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "exec ${SRCROOT}/VersionInfo.sh ${SRCROOT}/Tools/AutoDatePropertyList.sh";
-		};
-		0A9AF6DE0AF5B6B500E7DF18 /* Copy Python Wrapper */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Python Wrapper";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "";
 		};
 		0AA2495C0D13412A00BCAF94 /* Copy to Expected Names */ = {
 			isa = PBXShellScriptBuildPhase;

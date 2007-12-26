@@ -81,18 +81,25 @@ DEST_SWIG_TOP_TIGER := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.3.5
 DEST_SWIG_TOP_PANTHER := $(DEST_QUILLS_TOP)/Versions/A/lib/python2.3
 
 SWIG_WRAPPERS := _Quills.so Quills.py
+# .pyc files can be created by Python when code runs...not important
+SWIG_WRAPPERS_EXTRA := Quills.pyc
 
 PANTHER_SWIG_WRAPPERS :=
+PANTHER_SWIG_WRAPPERS_EXTRA :=
 ifeq ($(strip $(FOR_PANTHER)),yes)
 PANTHER_SWIG_WRAPPERS := $(addprefix $(DEST_SWIG_TOP_PANTHER)/,$(SWIG_WRAPPERS))
+PANTHER_SWIG_WRAPPERS_EXTRA := $(addprefix $(DEST_SWIG_TOP_PANTHER)/,$(SWIG_WRAPPERS_EXTRA))
 endif
 
 TIGER_SWIG_WRAPPERS :=
+TIGER_SWIG_WRAPPERS_EXTRA :=
 ifeq ($(strip $(FOR_TIGER)),yes)
 TIGER_SWIG_WRAPPERS := $(addprefix $(DEST_SWIG_TOP_TIGER)/,$(SWIG_WRAPPERS))
+TIGER_SWIG_WRAPPERS_EXTRA := $(addprefix $(DEST_SWIG_TOP_TIGER)/,$(SWIG_WRAPPERS_EXTRA))
 endif
 
 LEOPARD_SWIG_WRAPPERS := $(addprefix $(DEST_SWIG_TOP_LEOPARD)/,$(SWIG_WRAPPERS))
+LEOPARD_SWIG_WRAPPERS_EXTRA := $(addprefix $(DEST_SWIG_TOP_LEOPARD)/,$(SWIG_WRAPPERS_EXTRA))
 
 # the resource list is broken into types (files or
 # bundles) for convenience when writing rules that
@@ -229,7 +236,12 @@ endif
 	@# note: the majority of Quills isn't built specifically for Leopard,
 	@# so the Tiger clean applies to both Tiger and Leopard
 	$(XCB) clean -project Application.xcodeproj -target Quills.framework -configuration ForTigerDebug
-	-$(RMDIR) $(DEST_QUILLS_TOP)
+	@# avoid accidental over-deletion
+	@if [ "x$(DEST_QUILLS_TOP)" = "x" ] ; then \
+		echo "DEST_QUILLS_TOP variable unset" >&2 ; \
+		exit 1 ; \
+	fi
+	$(RM) -R $(DEST_QUILLS_TOP)
 
 # reinstalls a SWIG wrapper when it changes
 $(DEST_SWIG_TOP_PANTHER)/%: $(SRC_APP_BUILD_TOP_PANTHER)/%
@@ -260,11 +272,11 @@ $(LEOPARD_SWIG_WRAPPERS)
 
 .PHONY: clean-swig-wrappers
 clean-swig-wrappers:
-	echo '$(PANTHER_SWIG_WRAPPERS)' | $(XARGS) $(RM)
+	echo '$(PANTHER_SWIG_WRAPPERS) $(PANTHER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
 	-$(RMDIR) $(DEST_SWIG_TOP_PANTHER)
-	echo '$(TIGER_SWIG_WRAPPERS)' | $(XARGS) $(RM)
+	echo '$(TIGER_SWIG_WRAPPERS) $(TIGER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
 	-$(RMDIR) $(DEST_SWIG_TOP_TIGER)
-	echo '$(LEOPARD_SWIG_WRAPPERS)' | $(XARGS) $(RM)
+	echo '$(LEOPARD_SWIG_WRAPPERS) $(LEOPARD_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
 	-$(RMDIR) $(DEST_SWIG_TOP_LEOPARD)
 	@echo
 
@@ -285,7 +297,12 @@ install-py-framework:
 .PHONY: clean-py-framework
 clean-py-framework:
 	$(XCB) clean -project Application.xcodeproj -target PyMacTelnet.framework -configuration $(PY_CONFIG)
-	-$(RMDIR) $(DEST_PY_TOP)
+	@# avoid accidental over-deletion
+	@if [ "x$(DEST_PY_TOP)" = "x" ] ; then \
+		echo "DEST_PY_TOP variable unset" >&2 ; \
+		exit 1 ; \
+	fi
+	$(RM) -R $(DEST_PY_TOP)
 
 # Composite: Frameworks
 
@@ -422,7 +439,7 @@ clean-resources:
 # Info.plist file
 #
 
-$(DEST_APP_TOP)/Info.plist:
+$(DEST_APP_TOP)/Info.plist: FORCE
 	$(MKDIR_P) $(dir $@)
 	@# this is always regenerated because it changes daily and is a tiny file
 	$(COPY) $(SRC_APP_RESOURCES_TOP)/Template-MacTelnet-Info.plist $@
@@ -456,3 +473,4 @@ clean:
 	-$(RMDIR) $(dir $(DEST_APP_TOP))
 	@echo "Clean complete."
 
+FORCE:
