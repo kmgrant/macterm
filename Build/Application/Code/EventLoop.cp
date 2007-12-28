@@ -264,7 +264,6 @@ EventLoop_Result
 EventLoop_Init ()
 {
 	EventLoop_Result	result = noErr;
-	OSStatus			error = noErr;
 	
 	
 	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
@@ -277,6 +276,7 @@ EventLoop_Init ()
 								{
 									{ kEventClassWindow, kEventWindowSheetOpening }
 								};
+		OSStatus				error = noErr;
 		
 		
 		gCarbonEventSheetOpeningUPP = NewEventHandlerUPP(receiveSheetOpening);
@@ -292,6 +292,11 @@ EventLoop_Init ()
 	gGlobalEventTarget = newGlobalEventTarget();
 	gControlEventInfo = NewCollection();
 	gWindowEventInfo = NewCollection();
+	
+	// the update-status handler for Preferences does not appear to be
+	// called soon enough to properly initialize its state, so it is
+	// explicitly enabled here
+	EnableMenuCommand(nullptr/* menu */, kHICommandPreferences);
 	
 	return result;
 }// Init

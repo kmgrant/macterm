@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071227',
     '20071225',
     '20071221',
     '20071219',
@@ -68,6 +69,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071227': [
+		'Preferences command now correctly responds to its key equivalent even if the mouse has never hit the application menu.',
+	],
 	'20071225': [
 		'Internal improvements to sessions to set a foundation for better text translation.',
 		'Fixed Paste, for both 8-bit and 16-bit Unicode sources (that can be translated).',
