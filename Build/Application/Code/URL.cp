@@ -44,6 +44,7 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CFRetainRelease.h>
 #include <Console.h>
 #include <Localization.h>
 #include <MemoryBlocks.h>
@@ -52,6 +53,7 @@
 
 // MacTelnet includes
 #include "AppleEventUtilities.h"
+#include "AppResources.h"
 #include "BasicTypesAE.h"
 #include "DialogUtilities.h"
 #include "InternetPrefs.h"
@@ -483,13 +485,15 @@ generic to handle arbitrary URLs.
 Boolean
 URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 {
-	Boolean		result = false;
+	CFRetainRelease		urlCFString;
+	Boolean				result = false;
 	
 	
 	switch (inSpecialInternetLocationToOpen)
 	{
 	case kURL_InternetLocationApplicationHomePage:
-		if (noErr == URL_ParseCFString(CFSTR("http://www.mactelnet.com/")))
+		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MyHomePageURL"));
+		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
 			result = true;
@@ -497,7 +501,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationApplicationSupportEMail:
-		if (noErr == URL_ParseCFString(CFSTR("mailto:kevin@ieee.org?Subject=MacTelnet")))
+		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MySupportEMailURL"));
+		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
 			result = true;
@@ -505,7 +510,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationApplicationUpdatesPage:
-		if (noErr == URL_ParseCFString(CFSTR("http://homepage.mac.com/kmg/mactelnet/updates/3.1.0.html")))
+		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MyUpdatesURL"));
+		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
 			result = true;
@@ -513,7 +519,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationSourceCodeLicense:
-		if (noErr == URL_ParseCFString(CFSTR("http://www.gnu.org/copyleft/gpl.html")))
+		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MySourceCodeLicenseURL"));
+		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
 			result = true;
@@ -521,7 +528,8 @@ URL_OpenInternetLocation	(URL_InternetLocation	inSpecialInternetLocationToOpen)
 		break;
 	
 	case kURL_InternetLocationSourceForgeProject:
-		if (noErr == URL_ParseCFString(CFSTR("http://sourceforge.net/projects/mactelnet/")))
+		urlCFString = CFBundleGetValueForInfoDictionaryKey(AppResources_ReturnBundleForInfo(), CFSTR("MySourceForgeProjectURL"));
+		if (noErr == URL_ParseCFString(urlCFString.returnCFStringRef()))
 		{
 			// success!
 			result = true;

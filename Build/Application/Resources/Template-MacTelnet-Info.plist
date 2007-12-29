@@ -207,8 +207,17 @@
 	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%.%MY_ALPHA_BETA%.%MY_BUILD_NUMBER%</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
-	<key>MyPADFileURL</key>
-	<string>http://homepage.mac.com/kmg/mactelnet/download/seed/pad.plist</string>
+	<key>MyHomePageURL</key>
+	<string>http://www.mactelnet.com/</string>
+	<key>MySourceCodeLicenseURL</key>
+	<string>http://www.gnu.org/copyleft/gpl.html</string>
+	<key>MySourceForgeProjectURL</key>
+	<string>http://sourceforge.net/projects/mactelnet/</string>
+	<key>MySupportEMailURL</key>
+	<string>mailto:kevin@ieee.org?Subject=MacTelnet</string>
+	<key>MyUpdatesURL</key>
+	<string>http://homepage.mac.com/kmg/mactelnet/updates/daily.html</string>
+	<!--<string>http://homepage.mac.com/kmg/mactelnet/updates/%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%.html</string>-->
 	<key>NSAppleScriptEnabled</key>
 	<true/>
 	<key>NSServices</key>
