@@ -271,8 +271,9 @@ attributes was in effect.
 typedef UInt32 Session_StateAttributes;
 enum
 {
-	kSession_StateAttributeOpenDialog		= (1 << 0),	//!< an alert element (typically a sheet) is currently applicable to the session
-	kSession_StateAttributeSuspendNetwork	= (1 << 1)	//!< a Scroll Lock (XOFF) was initiated, so data has stopped transmitting
+	kSession_StateAttributeNotification		= (1 << 0),	//!< a watch has triggered for the session that has not been cleared by user focus
+	kSession_StateAttributeOpenDialog		= (1 << 1),	//!< an alert element (typically a sheet) is currently applicable to the session
+	kSession_StateAttributeSuspendNetwork	= (1 << 2)	//!< a Scroll Lock (XOFF) was initiated, so data has stopped transmitting
 };
 
 /*!
@@ -283,6 +284,28 @@ enum Session_TelnetOptionStateType
 {
 	kSession_TelnetOptionStateTypeFlowControl	= FOUR_CHAR_CODE('flow'),	//!< data: struct FlowControlState*
 	kSession_TelnetOptionStateTypeLineMode		= FOUR_CHAR_CODE('linm')	//!< data: LineModeStatePtr
+};
+
+/*!
+A session can watch for one special event at a time, which (if
+monitored) is automatically handled with an appropriate user
+interface.  Watches are defined in a mutually exclusive way, so
+it would never make sense to handle more than one of them at the
+same time for the same session.  See also the Session_Change,
+which is a way to install generic handlers for various events.
+
+It is assumed that the user will not want to receive any
+notifications for the session that he or she is using: if the
+application is frontmost and the current user focus session is
+the watched session, then the event is ignored.  This way, there
+are no ÒstupidÓ alerts (such as telling the user data has arrived
+in the session where they are typing!).
+*/
+enum Session_Watch
+{
+	kSession_WatchNothing				= 0,	//!< no basic monitors on data
+	kSession_WatchForPassiveData		= 1,	//!< data has arrived from the running process (not necessarily user-initiated)
+	kSession_WatchForInactivity			= 2		//!< there has been a lack of data for a short period of time
 };
 
 enum
@@ -530,11 +553,6 @@ void
 	Session_SendNewline						(SessionRef							inRef,
 											 Session_Echo						inEcho);
 
-// REMOTE SESSIONS ONLY
-void
-	Session_SetActivityNotificationEnabled	(SessionRef							inRef,
-											 Boolean							inIsEnabled);
-
 Session_Result
 	Session_SetDataProcessingCapacity		(SessionRef							inRef,
 											 size_t								inBlockSizeInBytes);
@@ -566,6 +584,11 @@ void
 	Session_SetState						(SessionRef							inRef,
 											 Session_State						inNewState);
 
+// AFFECTS RETURN VALUES OF THE Session_WatchIs...() METHODS
+void
+	Session_SetWatch						(SessionRef							inRef,
+											 Session_Watch						inNewWatch);
+
 void
 	Session_SetWindowUserDefinedTitle		(SessionRef							inRef,
 											 CFStringRef						inWindowName);
@@ -580,10 +603,6 @@ void
 
 //!\name Information on Sessions
 //@{
-
-// REMOTE SESSIONS ONLY
-Boolean
-	Session_ActivityNotificationIsEnabled	(SessionRef							inRef);
 
 Session_Result
 	Session_CopyStateIconRef				(SessionRef							inRef,
@@ -677,6 +696,15 @@ Boolean
 
 Boolean
 	Session_TypeIsLocalNonLoginShell		(SessionRef							inRef);
+
+Boolean
+	Session_WatchIsForInactivity			(SessionRef							inRef);
+
+Boolean
+	Session_WatchIsForPassiveData			(SessionRef							inRef);
+
+Boolean
+	Session_WatchIsOff						(SessionRef							inRef);
 
 /*###############################################################
 	SESSION ACCESSORS

@@ -168,6 +168,7 @@ static void				setNewCommand						(UInt32);
 static void				setUpDynamicMenus					();
 static void				setUpFormatFavoritesMenu			(MenuRef);
 static void				setUpMacroSetsMenu					(MenuRef);
+static void				setUpNotificationsMenu				(MenuRef);
 static void				setUpScreenSizeFavoritesMenu		(MenuRef);
 static void				setUpSessionFavoritesMenu			(MenuRef);
 static void				setUpScriptsMenu					(MenuRef);
@@ -1609,7 +1610,9 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendEraseLine, stateTrackerNetSendItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendEndOfFile, stateTrackerNetSendItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendSync, stateTrackerNetSendItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchNothing, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchForActivity, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchForInactivity, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSuspendNetwork, stateTrackerCheckableItems);
 	
 	// Window
@@ -2295,6 +2298,7 @@ setUpDynamicMenus ()
 	setUpScreenSizeFavoritesMenu(GetMenuRef(kMenuIDView));
 	setUpFormatFavoritesMenu(GetMenuRef(kMenuIDView));
 	setUpMacroSetsMenu(GetMenuRef(kMenuIDKeys));
+	setUpNotificationsMenu(GetMenuRef(kMenuIDTerminal));
 	setUpTranslationTablesMenu(GetMenuRef(kMenuIDKeys));
 	setUpWindowMenu(GetMenuRef(kMenuIDWindow));
 	setUpScriptsMenu(GetMenuRef(kMenuIDScripts));
@@ -2385,6 +2389,44 @@ setUpMacroSetsMenu	(MenuRef	inMenu)
 		(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
 	}
 }// setUpMacroSetsMenu
+
+
+/*!
+Destroys and rebuilds the menu items that automatically change
+the current session notification (if any).
+
+(3.1)
+*/
+static void
+setUpNotificationsMenu	(MenuRef	inMenu)
+{
+	OSStatus		error = noErr;
+	MenuItemIndex	defaultIndex = 0;
+	
+	
+	// find the key item to use as an anchor point
+	error = GetIndMenuItemWithCommandID(inMenu, kCommandWatchNothing, 1/* which match to return */,
+										&inMenu, &defaultIndex);
+	if (noErr == error)
+	{
+		// fix the indentation of the notification choices, as this
+		// cannot be set in the NIB and will be wrong (again) if
+		// the indicated menu has been reloaded recently
+		(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+		error = GetIndMenuItemWithCommandID(inMenu, kCommandWatchForActivity, 1/* which match to return */,
+											&inMenu, &defaultIndex);
+		if (noErr == error)
+		{
+			(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+			error = GetIndMenuItemWithCommandID(inMenu, kCommandWatchForInactivity, 1/* which match to return */,
+												&inMenu, &defaultIndex);
+			if (noErr == error)
+			{
+				(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+			}
+		}
+	}
+}// setUpNotificationsMenu
 
 
 /*!
@@ -3100,9 +3142,19 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 		if (nullptr != currentSession) checked = (result) ? Session_PageKeysControlTerminalView(currentSession) : false;
 		break;
 	
+	case kCommandWatchNothing:
+		result = connectionCommandResult;
+		if (nullptr != currentSession) checked = (result) ? Session_WatchIsOff(currentSession) : false;
+		break;
+	
 	case kCommandWatchForActivity:
 		result = connectionCommandResult;
-		if (nullptr != currentSession) checked = (result) ? Session_ActivityNotificationIsEnabled(currentSession) : false;
+		if (nullptr != currentSession) checked = (result) ? Session_WatchIsForPassiveData(currentSession) : false;
+		break;
+	
+	case kCommandWatchForInactivity:
+		result = connectionCommandResult;
+		if (nullptr != currentSession) checked = (result) ? Session_WatchIsForInactivity(currentSession) : false;
 		break;
 	
 	case kCommandSuspendNetwork:

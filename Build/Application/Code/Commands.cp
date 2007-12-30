@@ -1110,11 +1110,24 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			Console_WriteLine("WARNING, now unimplemented: end-of-file");
 			break;
 		
+		case kCommandWatchNothing:
+			if (isSession)
+			{
+				Session_SetWatch(frontSession, kSession_WatchNothing);
+			}
+			break;
+		
 		case kCommandWatchForActivity:
 			if (isSession)
 			{
-				Session_SetActivityNotificationEnabled(frontSession,
-														!Session_ActivityNotificationIsEnabled(frontSession));
+				Session_SetWatch(frontSession, kSession_WatchForPassiveData);
+			}
+			break;
+		
+		case kCommandWatchForInactivity:
+			if (isSession)
+			{
+				Session_SetWatch(frontSession, kSession_WatchForInactivity);
 			}
 			break;
 			

@@ -229,6 +229,8 @@ struct Session
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call at disconnection time
 	EventHandlerUPP				windowClosingUPP;			// wrapper for window closing callback
 	EventHandlerRef				windowClosingHandler;		// invoked whenever a session terminal window should close
+	EventHandlerUPP				windowFocusChangeUPP;		// wrapper for window focus-change callback
+	EventHandlerRef				windowFocusChangeHandler;	// invoked whenever a session terminal window is chosen for keyboard input
 	EventHandlerUPP				terminalViewDragDropUPP;	// wrapper for drag-and-drop callback
 	ControlDragDropHandlerMap	terminalViewDragDropHandlers;// invoked whenever a terminal view is the target of drag-and-drop
 	EventHandlerUPP				terminalViewTextInputUPP;   // wrapper for keystroke callback
@@ -254,6 +256,10 @@ struct Session
 	size_t						readBufferSizeMaximum;		// maximum number of bytes that can be processed at once
 	size_t						readBufferSizeInUse;		// number of bytes of data currently in the read buffer
 	CFStringEncoding			writeEncoding;				// the character set that text (data) sent to a session should be using
+	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
+	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
+	EventLoopTimerRef			inactivityWatchTimer;		// short timer
+	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
 	SessionAuxiliaryDataMap		auxiliaryDataMap;			// all tagged data associated with this session
 	SessionRef					selfRef;					// convenient reference to this structure
 	
@@ -301,6 +307,13 @@ struct TerminateAlertInfo
 };
 typedef TerminateAlertInfo*		TerminateAlertInfoPtr;
 
+struct My_WatchAlertInfo
+{
+	// sent to watchCloseNotifyProc()
+	SessionRef		sessionBeingWatched;
+};
+typedef My_WatchAlertInfo*		My_WatchAlertInfoPtr;
+
 #pragma mark Internal Method Prototypes
 
 static void					changeNotifyForSession				(SessionPtr, Session_Change, void*);
@@ -333,6 +346,7 @@ static Boolean				queueCharacterInKeyboardBuffer		(SessionPtr, char);
 static pascal OSStatus		receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
+static pascal OSStatus		receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 static void					sendRecordableDataTransmitEvent		(CFStringRef, Boolean);
 static void					sendRecordableDataTransmitEvent		(char const*, SInt16, Boolean);
 static void					sendRecordableSpecialTransmitEvent	(FourCharCode, Boolean);
@@ -341,6 +355,10 @@ static OSStatus				sessionDragDrop						(EventHandlerCallRef, EventRef, SessionR
 static void					terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 static void					terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
+static void					watchClearForSession				(SessionPtr);
+static void					watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
+static void					watchNotifyForSession				(SessionPtr, Session_Watch);
+static pascal void			watchNotifyFromTimer				(EventLoopTimerRef, void*);
 static void					windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 
@@ -647,6 +665,10 @@ Session_New		(Boolean	inIsReadOnly)
 		ptr->readBufferPtr = new UInt8[ptr->readBufferSizeMaximum];
 		assert(nullptr != ptr->readBufferPtr);
 		ptr->writeEncoding = kCFStringEncodingUTF8; // initially...
+		ptr->activeWatch = kSession_WatchNothing;
+		ptr->inactivityWatchTimerUPP = nullptr;
+		ptr->inactivityWatchTimer = nullptr;
+		ptr->watchBox = nullptr;
 		//ptr->auxiliaryDataMap is self-initializing
 		ptr->selfRef = result;
 		Session_StartMonitoring(result, kSession_ChangeState, ptr->changeListener);
@@ -736,26 +758,6 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 		delete *(REINTERPRET_CAST(inoutRefPtr, SessionPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
-
-
-/*!
-Returns "true" only if the specified session is being
-watched for activity.  Currently only applicable to
-remote sessions, as the activity monitor works only
-when TCP Òreceived dataÓ events arrive.
-
-(3.0)
-*/
-Boolean
-Session_ActivityNotificationIsEnabled	(SessionRef		inRef)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = false;
-	
-	
-	// INCOMPLETE
-	return result;
-}// ActivityNotificationIsEnabled
 
 
 /*!
@@ -963,6 +965,12 @@ Session_CopyStateIconRef	(SessionRef		inRef,
 		
 		switch (ptr->statusAttributes)
 		{
+		case kSession_StateAttributeNotification:
+			// TEMPORARY: a notification-specific icon (a bell?) may be better here
+			(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
+									kAlertCautionIcon, &outCopiedIcon);
+			break;
+		
 		case kSession_StateAttributeOpenDialog:
 			(OSStatus)GetIconRef(kOnSystemDisk, kSystemIconsCreator,
 									kAlertCautionIcon, &outCopiedIcon);
@@ -2701,26 +2709,6 @@ Session_SendNewline		(SessionRef		inRef,
 
 
 /*!
-Enables or disables notification of network activity.
-
-When a notifier fires, this flag is cleared.
-
-UNIMPLEMENTED
-
-(3.0)
-*/
-void
-Session_SetActivityNotificationEnabled	(SessionRef		inRef,
-										 Boolean		inIsEnabled)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	
-	
-	Console_WriteLine("WARNING, activity notification is not implemented anymore");
-}// SetActivityNotificationEnabled
-
-
-/*!
 Specifies the maximum number of bytes that can be
 read with each call to Session_ProcessMoreData().
 Depending on available memory, the actual buffer size
@@ -3105,6 +3093,25 @@ Session_SetTerminalWindow	(SessionRef			inRef,
 		changeNotifyForSession(ptr, kSession_ChangeWindowValid, inRef/* context */);
 	}
 }// SetTerminalWindow
+
+
+/*!
+Enables or disables notification of network activity and
+inactivity.
+
+When a notifier fires, this flag is cleared.
+
+(3.1)
+*/
+void
+Session_SetWatch	(SessionRef		inRef,
+					 Session_Watch	inNewWatch)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	
+	
+	ptr->activeWatch = inNewWatch;
+}// SetWatch
 
 
 /*!
@@ -4303,6 +4310,64 @@ Session_UserInputString		(SessionRef		inRef,
 }// UserInputString
 
 
+/*!
+Returns "true" only if the specified session is being
+watched for a lack of activity over a short period of
+time.
+
+See Session_SetWatch().
+
+(3.1)
+*/
+Boolean
+Session_WatchIsForInactivity	(SessionRef		inRef)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean				result = (kSession_WatchForInactivity == ptr->activeWatch);
+	
+	
+	return result;
+}// WatchIsForInactivity
+
+
+/*!
+Returns "true" only if the specified session is being
+watched for activity.
+
+See Session_SetWatch().
+
+(3.1)
+*/
+Boolean
+Session_WatchIsForPassiveData	(SessionRef		inRef)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean				result = (kSession_WatchForPassiveData == ptr->activeWatch);
+	
+	
+	return result;
+}// WatchIsForPassiveData
+
+
+/*!
+Returns "true" only if the specified session has no
+active monitors for activity (or lack thereof).
+
+See Session_SetWatch().
+
+(3.1)
+*/
+Boolean
+Session_WatchIsOff		(SessionRef		inRef)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean				result = (kSession_WatchNothing == ptr->activeWatch);
+	
+	
+	return result;
+}// WatchIsOff
+
+
 #pragma mark Internal Methods
 
 /*!
@@ -4747,6 +4812,8 @@ createSessionStateDeadIcon ()
 Invoked when more data has appeared in the internal buffer,
 and needs processing.
 
+This can also trigger any watches set on the session.
+
 (3.1)
 */
 static void
@@ -4763,6 +4830,45 @@ dataArrived		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			Session_ProcessMoreData(session);
+			
+			// also trigger a watch, if one exists
+			{
+				SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+				
+				
+				if (kSession_WatchForPassiveData == ptr->activeWatch)
+				{
+					watchNotifyForSession(ptr, ptr->activeWatch);
+				}
+				else if (kSession_WatchForInactivity == ptr->activeWatch)
+				{
+					// arbitrary length of time during which no data arrives, to label a
+					// session as inactive for the purposes of sending a notification
+					// TEMPORARY - should this be user-configurable?
+					EventTimerInterval const	kTimeBeforeInactive = kEventDurationSecond * 30;
+					OSStatus					error = noErr;
+					
+					
+					// install or reset timer to trigger the no-activity notification when appropriate
+					if (nullptr != ptr->inactivityWatchTimer)
+					{
+						// timer already exists; just reset it
+						error = SetEventLoopTimerNextFireTime(ptr->inactivityWatchTimer, kTimeBeforeInactive);
+						assert_noerr(error);
+					}
+					else
+					{
+						// first time; create the timer
+						ptr->inactivityWatchTimerUPP = NewEventLoopTimerUPP(watchNotifyFromTimer);
+						error = InstallEventLoopTimer(GetCurrentEventLoop(),
+														kTimeBeforeInactive,
+														kEventDurationForever/* time between fires - this timer does not repeat */,
+														ptr->inactivityWatchTimerUPP, ptr->selfRef/* user data */,
+														&ptr->inactivityWatchTimer);
+						assert_noerr(error);
+					}
+				}
+			}
 		}
 		break;
 	
@@ -6250,6 +6356,49 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
+Embellishes "kEventWindowFocusAcquired" of "kEventClassWindow"
+for a sessionÕs terminal window, by clearing any notifications
+set on the session.
+
+(3.1)
+*/
+static pascal OSStatus
+receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+							 EventRef				inEvent,
+							 void*					inSessionRef)
+{
+	OSStatus			result = eventNotHandledErr;
+	SessionRef			session = REINTERPRET_CAST(inSessionRef, SessionRef);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowFocusAcquired);
+	{
+		WindowRef	window = nullptr;
+		
+		
+		// determine the window in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
+		
+		// if the window was found, proceed
+		if (result == noErr)
+		{
+			SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			
+			
+			watchClearForSession(ptr);
+			
+			result = eventNotHandledErr; // pass event to parent handler
+		}
+	}
+	
+	return result;
+}// receiveWindowFocusChange
+
+
+/*!
 Sends Apple Events back to MacTelnet that instruct
 it to send the specified data to the frontmost
 connection ("connection 1").  If desired, you can
@@ -6822,6 +6971,159 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 
 
 /*!
+Closes the global modeless alert for notifications on the
+specified session, and clears any other indicators for a
+triggered notification on that session.
+
+(3.1)
+*/
+static void
+watchClearForSession	(SessionPtr		inPtr)
+{
+	// note the change (e.g. can cause icon displays to be updated)
+	changeStateAttributes(inPtr, 0/* attributes to set */,
+							kSession_StateAttributeNotification/* attributes to clear */);
+	
+	// hide the global alert, if present
+	if (nullptr != inPtr->watchBox)
+	{
+		Alert_Dispose(&inPtr->watchBox);
+	}
+}// watchClearForSession
+
+
+/*!
+The responder to a closed watch-notification alert.  The watch
+trigger for the session (if any) is cleared if it has not been
+cleared already.  The given alert is destroyed.
+
+(3.1)
+*/
+static void
+watchCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
+						 SInt16					inItemHit,
+						 void*					inMy_WatchAlertInfoPtr)
+{
+	My_WatchAlertInfoPtr	dataPtr = REINTERPRET_CAST(inMy_WatchAlertInfoPtr, My_WatchAlertInfoPtr);
+	
+	
+	if (nullptr != dataPtr)
+	{
+		SessionAutoLocker	ptr(gSessionPtrLocks(), dataPtr->sessionBeingWatched);
+		
+		
+		watchClearForSession(ptr);
+		
+		// clean up
+		delete dataPtr, dataPtr = nullptr;
+	}
+	
+	// dispose of the alert
+	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
+}// watchCloseNotifyProc
+
+
+/*!
+Displays the global modeless alert for notifications on the
+specified session of the given type.
+
+Automatically does nothing if the specified session is currently
+the user focus and this application is the frontmost process.
+
+(3.1)
+*/
+static void
+watchNotifyForSession	(SessionPtr		inPtr,
+						 Session_Watch	inWhatTriggered)
+{
+	if ((SessionFactory_ReturnUserFocusSession() != inPtr->selfRef) ||
+		FlagManager_Test(kFlagSuspended))
+	{
+		// note the change (e.g. can cause icon displays to be updated)
+		changeStateAttributes(inPtr, kSession_StateAttributeNotification/* attributes to set */,
+								0/* attributes to clear */);
+		
+		// create or update the global alert
+		if (nullptr == inPtr->watchBox)
+		{
+			My_WatchAlertInfoPtr	watchAlertInfoPtr = new My_WatchAlertInfo;
+			
+			
+			watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
+			
+			inPtr->watchBox = Alert_New();
+			Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
+			Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
+			
+			// set text
+			switch (inWhatTriggered)
+			{
+			case kSession_WatchForPassiveData:
+				{
+					CFStringRef			dialogTextCFString = nullptr;
+					UIStrings_Result	stringResult = kUIStrings_ResultOK;
+					
+					
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityPrimaryText, dialogTextCFString);
+					if (stringResult.ok())
+					{
+						Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
+						CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+					}
+				}
+				break;
+			
+			case kSession_WatchForInactivity:
+				{
+					CFStringRef			dialogTextCFString = nullptr;
+					UIStrings_Result	stringResult = kUIStrings_ResultOK;
+					
+					
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyInactivityPrimaryText, dialogTextCFString);
+					if (stringResult.ok())
+					{
+						Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
+						CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+					}
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+			
+			Alert_MakeModeless(inPtr->watchBox, watchCloseNotifyProc, watchAlertInfoPtr/* context */);
+			Alert_Display(inPtr->watchBox);
+		}
+	}
+}// watchNotifyForSession
+
+
+/*!
+This is invoked after a period of inactivity, and simply sends
+notification that the session is now inactive (from the point of
+view of the user).  This is not to be confused with the session
+active state.
+
+Timers that draw must save and restore the current graphics port.
+
+(3.1)
+*/
+static pascal void
+watchNotifyFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
+						 void*					inSessionRef)
+{
+	SessionRef			ref = REINTERPRET_CAST(inSessionRef, SessionRef);
+	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	OSStatus			error = noErr;
+	
+	
+	watchNotifyForSession(ptr, kSession_WatchForInactivity);
+}// watchNotifyFromTimer
+
+
+/*!
 Invoked whenever a monitored sessionÕs window has just
 been created, or is about to be destroyed.  This routine
 responds by installing or removing window-dependent event
@@ -6858,6 +7160,23 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 													ptr->windowClosingUPP, GetEventTypeCount(whenWindowClosing),
 													whenWindowClosing, session/* user data */,
 													&ptr->windowClosingHandler/* event handler reference */);
+				assert(error == noErr);
+			}
+			
+			// install a callback that clears notifications when the window is activated
+			{
+				EventTypeSpec const		whenWindowFocusChanged[] =
+										{
+											{ kEventClassWindow, kEventWindowFocusAcquired }
+										};
+				OSStatus				error = noErr;
+				
+				
+				ptr->windowFocusChangeUPP = NewEventHandlerUPP(receiveWindowFocusChange);
+				error = InstallWindowEventHandler(TerminalWindow_ReturnWindow(ptr->terminalWindow),
+													ptr->windowFocusChangeUPP, GetEventTypeCount(whenWindowFocusChanged),
+													whenWindowFocusChanged, session/* user data */,
+													&ptr->windowFocusChangeHandler/* event handler reference */);
 				assert(error == noErr);
 			}
 			
@@ -6944,6 +7263,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			RemoveEventHandler(ptr->windowClosingHandler), ptr->windowClosingHandler = nullptr;
 			DisposeEventHandlerUPP(ptr->windowClosingUPP), ptr->windowClosingUPP = nullptr;
+			RemoveEventHandler(ptr->windowFocusChangeHandler), ptr->windowFocusChangeHandler = nullptr;
+			DisposeEventHandlerUPP(ptr->windowFocusChangeUPP), ptr->windowFocusChangeUPP = nullptr;
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeScreenDimensions,
 											ptr->terminalWindowListener);
 			TerminalWindow_StopMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,

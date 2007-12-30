@@ -216,7 +216,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSendEraseCharacter				'EC  '
 #define kCommandSendEraseLine					'EL  '
 #define kCommandSendEndOfFile					'EOF '
+#define kCommandWatchNothing					'WOff'
 #define kCommandWatchForActivity				'Notf'
+#define kCommandWatchForInactivity				'Idle'
 #define kCommandSuspendNetwork					'Susp'
 
 // Window menu

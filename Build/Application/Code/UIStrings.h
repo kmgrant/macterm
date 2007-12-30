@@ -97,6 +97,8 @@ enum UIStrings_AlertWindowCFString
 	kUIStrings_AlertWindowMacroExportNothingHelpText	= 'MENH',
 	kUIStrings_AlertWindowMacroImportWarningPrimaryText	= 'MIOW',
 	kUIStrings_AlertWindowMacroImportWarningHelpText	= 'MIOH',
+	kUIStrings_AlertWindowNotifyActivityPrimaryText		= 'PNtA',
+	kUIStrings_AlertWindowNotifyInactivityPrimaryText	= 'PNtI',
 	kUIStrings_AlertWindowPasteLinesWarningName			= 'PstN',
 	kUIStrings_AlertWindowPasteLinesWarningHelpText		= 'PstH',
 	kUIStrings_AlertWindowPasteLinesWarningPrimaryText	= 'PstP',

@@ -141,6 +141,16 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowMacroImportWarningHelpText"));
 		break;
 	
+	case kUIStrings_AlertWindowNotifyActivityPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Data has arrived in one of the sessions you are monitoring."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifyInactivityPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("One of the sessions you are monitoring appears to be idle."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
+		break;
+	
 	case kUIStrings_AlertWindowPasteLinesWarningName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Multi-Line Paste"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowPasteLinesWarningName"));

@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071229',
     '20071227',
     '20071225',
     '20071221',
@@ -69,6 +70,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071229': [
+		'Fixed terminal activity notification, allowing you to watch for new data arriving in inactive windows.',
+		'Terminal inactivity notification is now available, allowing you to watch for sessions that become idle.',
+		'Session Info window icons are now updated when activity or inactivity notifications occur.',
+		'Notifications now display a new style of modeless alert window similar to those used by file copies in the Finder.',
+	],
 	'20071227': [
 		'Preferences command now correctly responds to its key equivalent even if the mouse has never hit the application menu.',
 	],
