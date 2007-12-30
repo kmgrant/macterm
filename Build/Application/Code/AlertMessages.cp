@@ -109,6 +109,7 @@ public:
 	ControlRef						cautionIcon;		//!< alert icon from NIB
 	ControlRef						applicationIcon;	//!< application icon overlay
 	SInt16							itemHit;
+	Boolean							isCompletelyModeless;
 	Boolean							isSheet;
 	Boolean							isSheetForWindowCloseWarning;
 	WindowRef						dialogWindow;
@@ -524,6 +525,46 @@ Alert_ItemHit	(InterfaceLibAlertRef	inAlert)
 	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 	return result;
 }// ItemHit
+
+
+/*!
+Turns the specified alert into a translucent floating window
+that is not attached to any particular window.
+
+A modeless alert is no different than a sheet in terms of
+handling, except that it is not associated with any window.  And
+since it is not modal, the user can literally ignore the alert
+forever.  (The Finder displays these kinds of alerts if problems
+arise during file copies, for example.)
+
+When you subsequently display the alert, you will actually have
+to defer handling of the alert until the notifier you specify is
+invoked.  For alerts with a single button for which you donÕt
+care about the result, just use "Alert_StandardCloseNotifyProc"
+as your notifier; for all other kinds of alerts, pass your own
+custom routine so you can tell which button was hit.
+
+Currently, the initial location of a modeless alert is chosen
+automatically.
+
+(2.0)
+*/
+void
+Alert_MakeModeless		(InterfaceLibAlertRef				inAlert,
+						 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+						 void*								inCloseNotifyProcUserData)
+{
+	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	
+	
+	if (nullptr != alertPtr)
+	{
+		alertPtr->isCompletelyModeless = true;
+		alertPtr->sheetCloseNotifier = inCloseNotifyProcPtr;
+		alertPtr->sheetCloseNotifierUserData = inCloseNotifyProcUserData;
+	}
+	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
+}// MakeModeless
 
 
 /*!
@@ -1223,6 +1264,7 @@ noteIcon(nullptr),
 cautionIcon(nullptr),
 applicationIcon(nullptr),
 itemHit(kAlertStdAlertOtherButton),
+isCompletelyModeless(false),
 isSheet(false),
 isSheetForWindowCloseWarning(false),
 dialogWindow(nullptr),
@@ -1496,8 +1538,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-Shows or hide an alert window.  This is ÒspecialÓ
-because you can animate the effect.
+Shows or hides an alert window, optionally with animation
+appropriate to the type of alert.
 
 (1.0)
 */
@@ -1511,6 +1553,11 @@ setAlertVisibility	(My_AlertMessagePtr		inPtr,
 		if (inPtr->isSheet)
 		{
 			ShowSheetWindow(inPtr->dialogWindow, inPtr->parentWindow);
+		}
+		else if (inPtr->isCompletelyModeless)
+		{
+			ShowWindow(inPtr->dialogWindow);
+			SendBehind(inPtr->dialogWindow, kLastWindowOfGroup);
 		}
 		else
 		{
@@ -1531,6 +1578,12 @@ setAlertVisibility	(My_AlertMessagePtr		inPtr,
 			}
 			HideSheetWindow(inPtr->dialogWindow);
 			
+			AlertMessages_InvokeCloseNotifyProc(inPtr->sheetCloseNotifier, inPtr->selfRef, inPtr->itemHit,
+												inPtr->sheetCloseNotifierUserData);
+		}
+		else if (inPtr->isCompletelyModeless)
+		{
+			HideWindow(inPtr->dialogWindow);
 			AlertMessages_InvokeCloseNotifyProc(inPtr->sheetCloseNotifier, inPtr->selfRef, inPtr->itemHit,
 												inPtr->sheetCloseNotifierUserData);
 		}
@@ -1584,7 +1637,11 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		
 		// load the NIB containing this dialog (automatically finds the right localization)
 		ptr->dialogWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
-										CFSTR("AlertMessages"), ptr->isSheet ? CFSTR("Sheet") : CFSTR("Dialog"))
+										CFSTR("AlertMessages"), ptr->isSheet
+																? CFSTR("Sheet")
+																: (ptr->isCompletelyModeless)
+																	? CFSTR("Modeless")
+																	: CFSTR("Dialog"))
 							<< NIBLoader_AssertWindowExists;
 		
 		// find references to all controls that are needed for any operation
@@ -1617,9 +1674,14 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			assert_noerr(error);
 		}
 		
-		// set up fonts (since NIBs are too crappy to support this in older Mac OS X versions)
-		Localization_SetControlThemeFontInfo(ptr->textTitle, USHRT_MAX/* special font - see Localization_UseThemeFont() */);
-		Localization_SetControlThemeFontInfo(ptr->textMain, kThemeAlertHeaderFont);
+		// set up fonts (since NIBs are too crappy to support this in older Mac OS X versions);
+		// note that completely-modeless alerts are generally smaller, so fonts are shrunk for them
+		Localization_SetControlThemeFontInfo(ptr->textTitle, (ptr->isCompletelyModeless)
+																? kThemeAlertHeaderFont
+																: USHRT_MAX/* special font - see Localization_UseThemeFont() */);
+		Localization_SetControlThemeFontInfo(ptr->textMain, (ptr->isCompletelyModeless)
+																? kThemeSmallEmphasizedSystemFont
+																: kThemeAlertHeaderFont);
 		Localization_SetControlThemeFontInfo(ptr->textHelp, kThemeSmallSystemFont);
 		
 		// set the window title to be the application name, on Mac OS X
@@ -1954,7 +2016,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(ptr->dialogWindow)/* view */, 0/* modifiers */);
 		}
 		
-		unless (ptr->isSheet)
+		unless ((ptr->isSheet) || (ptr->isCompletelyModeless))
 		{
 			ShowWindow(ptr->dialogWindow);
 			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);

@@ -9,8 +9,8 @@
 */
 /*###############################################################
 
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.0
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -193,6 +193,11 @@ void
 
 SInt16
 	Alert_ItemHit						(AlertMessages_BoxRef				inAlert);
+
+void
+	Alert_MakeModeless					(AlertMessages_BoxRef				inAlert,
+										 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+										 void*								inCloseNotifyProcUserData);
 
 void
 	Alert_MakeWindowModal				(AlertMessages_BoxRef				inAlert,
