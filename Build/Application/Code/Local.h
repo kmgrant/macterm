@@ -91,9 +91,6 @@ typedef int/* file descriptor */		PseudoTeletypewriterID;
 
 #pragma mark Public Methods
 
-Local_Result
-	Local_InstallCrashCatcher				();
-
 //!\name Creating Pseudo-Terminals
 //@{
 

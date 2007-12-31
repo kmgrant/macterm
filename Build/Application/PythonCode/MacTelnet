@@ -99,6 +99,10 @@ os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
 # 10.4.0, may break in 10.4.1 as Apple does not update debug libraries)
 #os.environ["DYLD_IMAGE_SUFFIX"] = "_debug"
 
+# the value of sys.argv[0] is replaced before passing arguments on,
+# because it originally referred to this script
+sys.argv[0] = interpreter
+
 # locate the "real" main entry point script, the one depending on C++
 # libraries (hence the environment setup above); ensure it is passed as
 # the main argument to the interpreter
@@ -117,8 +121,11 @@ sys.argv.insert(1, main_script)
 # the interpreter itself must know where those C++ libraries are.  It is
 # therefore necessary to re-exec an interpreter (with the environment
 # defined above) as opposed to simply running the 2nd Python file with
-# execfile(), say.  Note that sys.argv[0] was never changed, so it is
-# still the name of this script ("MacTelnet"); this is fine, as by
-# convention that parameter is a description of the running process.
-os.execve(interpreter, sys.argv, os.environ)
-sys.exit(0)
+# execfile(), say.  
+result = os.system(" ".join(sys.argv))
+if os.WIFSIGNALED(result):
+    # core dump or other signal; run crash reporter
+    print >>sys.stderr, "MacTelnet exited with signal", os.WTERMSIG(result)
+    os.execv("/usr/bin/open", ["BugReporter.app", os.path.join(resources_dir, "BugReporter.app")])
+sys.exit(result)
+

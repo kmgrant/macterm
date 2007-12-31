@@ -115,7 +115,6 @@ typedef std::map< pid_t, PseudoTeletypewriterID >		UnixProcessIDToTTYMap;
 static void				fillInTerminalControlStructure		(struct termios*);
 static pid_t			forkToNewTTY						(TTYMasterID*, char*, struct termios const*,
 																struct winsize const*);
-static void				handleTerminationSignal				(int);
 static TTYMasterID		openMasterTeletypewriter			(char*);
 static TTYSlaveID		openSlaveTeletypewriter				(char const*);
 static void				printTerminalControlStructure		(struct termios const*);
@@ -131,7 +130,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 {
 	struct termios		gCachedTerminalAttributes;
 	MyTTYState			gTTYState = kMyTTYStateReset;
-	Boolean				gInDebuggingMode = false;		//!< true if terminal I/O is possible for debugging
+	Boolean				gInDebuggingMode = Local_StandardInputIsATerminal();	//!< true if terminal I/O is possible for debugging
 	
 	//! used to help atexit() handlers know which terminal to touch
 	UnixProcessIDToTTYMap&	gUnixProcessIDToTTYMap ()	{ static UnixProcessIDToTTYMap x; return x; }
@@ -140,53 +139,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 
 #pragma mark Public Methods
-
-/*!
-Installs signal handlers that launch an external
-crash-catching application if MacTelnet ever quits
-unexpectedly.  The application asks the user to
-report back debugging information.
-
-\retval kLocal_ResultOK
-always; currently, no other errors are defined
-
-(3.0)
-*/
-Local_Result
-Local_InstallCrashCatcher ()
-{
-	Local_Result	result = kLocal_ResultOK;
-	
-	
-	if (Local_StandardInputIsATerminal())
-	{
-		// if the standard input stream is a terminal, then it is
-		// likely that a debugger is being run; so, crash catching
-		// should be disabled
-		DebugStr("\pMacTelnet: Not installing crash-catcher because stdin is a TTY.");
-		gInDebuggingMode = true;
-	}
-	else
-	{
-		// install signal handlers
-		int const	signals[] = {
-									// include common signals that suggest an unexpected quit has occurred
-									SIGILL, SIGBUS, SIGSEGV
-								};
-		
-		
-		for (int s = signals[0]; s < STATIC_CAST(sizeof(signals) / sizeof(int), int); ++s)
-		{
-			if (SIG_ERR == signal(s, handleTerminationSignal))
-			{
-				// Error!  The crash catcher cannot be installed for this signal.
-			}
-		}
-	}
-	
-	return result;
-}// InstallCrashCatcher
-
 
 /*!
 Disables local echoing for a pseudo-terminal.
@@ -1039,36 +991,6 @@ forkToNewTTY	(TTYMasterID*			outMasterTTYPtr,
 	}
 	return result;
 }// forkToNewTTY
-
-
-#if TARGET_API_MAC_CARBON
-/*!
-Responds to a termination signal if MacTelnet
-should happen to die unexpectedly.  A special
-application is launched to tell the user what
-happened, mention where a debugging log can be
-found and request that the author(s) be told
-about the problem.
-
-This isnÕt really a local-shell routine, but
-since itÕs a signal handler for Unix, itÕs
-simpler to implement it here for now.
-
-(3.0)
-*/
-static void
-handleTerminationSignal		(int	inSignalNumber)
-{
-	(OSStatus)AppResources_LaunchCrashCatcher();
-	
-	// restore default handler, which should cause an exit
-	if (SIG_ERR == signal(inSignalNumber, SIG_DFL))
-	{
-		// canÕt restore signal, just die
-		exit(1);
-	}
-}// handleTerminationSignal
-#endif
 
 
 /*!

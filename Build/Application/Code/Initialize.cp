@@ -126,6 +126,11 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 //#define RUN_MODULE_TESTS (defined DEBUG)
 #define RUN_MODULE_TESTS 1
 	
+	Console_Init();
+#if RUN_MODULE_TESTS
+	//Console_RunTests();
+#endif
+	
 	// set the application bundle so everything searches in the right place for resources
 	AppResources_Init(inApplicationBundle);
 	
@@ -140,8 +145,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	
 	initApplicationCore();
 	
-	Local_InstallCrashCatcher(); // enable MacTelnet to detect when it appears to have crashed
-	
 #ifndef NDEBUG
 	// the Console must be among the first things initialized if
 	// it is to be used for debugging of these early modules
@@ -153,10 +156,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		
 		// initialize the console and write initial information (the
 		// date and time, the console name, the web site URL, etc.)
-		Console_Init();
-	#if RUN_MODULE_TESTS
-		//Console_RunTests();
-	#endif
 		Console_WriteLine("Starting up.");
 		GetDateTime(&date);
 		DateString(STATIC_CAST(date, SInt32), longDate, REINTERPRET_CAST(dateString, StringPtr), nullptr/* intlHandle */);
