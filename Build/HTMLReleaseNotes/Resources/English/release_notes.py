@@ -72,6 +72,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20071230': [
+		'Terminal views now support a focus-follows-mouse General preference.',
 		'Fixed initialization of certain settings when creating a brand new preferences file.',
 	],
 	'20071229': [

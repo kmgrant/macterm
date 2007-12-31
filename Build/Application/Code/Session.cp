@@ -233,6 +233,8 @@ struct Session
 	EventHandlerRef				windowFocusChangeHandler;	// invoked whenever a session terminal window is chosen for keyboard input
 	EventHandlerUPP				terminalViewDragDropUPP;	// wrapper for drag-and-drop callback
 	ControlDragDropHandlerMap	terminalViewDragDropHandlers;// invoked whenever a terminal view is the target of drag-and-drop
+	EventHandlerUPP				terminalViewEnteredUPP;		// wrapper for mouse tracking (focus-follows-mouse) callback
+	ControlDragDropHandlerMap	terminalViewEnteredHandlers;// invoked whenever the mouse moves into a terminal view
 	EventHandlerUPP				terminalViewTextInputUPP;   // wrapper for keystroke callback
 	ControlTextInputHandlerMap	terminalViewTextInputHandlers;// invoked whenever a terminal view is focused during a key press
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
@@ -344,6 +346,9 @@ static void					preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 static Boolean				queueCharacterInKeyboardBuffer		(SessionPtr, char);
 static pascal OSStatus		receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+static pascal OSStatus		receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
+#endif
 static pascal OSStatus		receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
@@ -6083,6 +6088,103 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 }// receiveTerminalViewDragDrop
 
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+/*!
+Handles "kEventControlTrackingAreaEntered" of "kEventClassControl"
+for a terminal view.
+
+(3.1)
+*/
+static pascal OSStatus
+receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+								 EventRef				inEvent,
+								 void*					UNUSED_ARGUMENT(inSessionRef))
+{
+	OSStatus		result = eventNotHandledErr;
+	//SessionRef		session = REINTERPRET_CAST(inSessionRef, SessionRef);
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlTrackingAreaEntered);
+	{
+		Boolean		focusFollowsMouse = false;
+		size_t		actualSize = 0L;
+		
+		
+		// do not change focus unless the preference is set;
+		// TEMPORARY: possibly inefficient to always check this here,
+		// the alternative would be to update preferenceChanged() to
+		// monitor changes to the preference and add/remove the
+		// tracking handler as appropriate
+		unless (Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(focusFollowsMouse),
+									&focusFollowsMouse, &actualSize) ==
+				kPreferences_ResultOK)
+		{
+			focusFollowsMouse = false; // assume a value, if preference canÕt be found
+		}
+		
+		// ignore this event if the application is not frontmost
+		if (FlagManager_Test(kFlagSuspended))
+		{
+			focusFollowsMouse = false;
+		}
+		
+		if (focusFollowsMouse)
+		{
+			HIViewRef	view = nullptr;
+			
+			
+			// determine the view that is now under the mouse
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+			if (noErr == result)
+			{
+				HIWindowRef		oldWindow = GetUserFocusWindow();
+				HIWindowRef		newWindow = HIViewGetWindow(view);
+				
+				
+				// do not allow certain combinations of window to steal focus
+				if (nullptr != oldWindow)
+				{
+					OSStatus		error = noErr;
+					WindowModality	oldWindowModality = kWindowModalityNone;
+					HIWindowRef		blockedWindow = nullptr;
+					
+					
+					// most modal states should disable all focus-follows-mouse...
+					error = GetWindowModality(oldWindow, &oldWindowModality, &blockedWindow);
+					if (kWindowModalityNone != oldWindowModality)
+					{
+						focusFollowsMouse = false;
+						
+						// ...however, an open sheet in one window can still allow
+						// focus to switch to another window, as long as it is not
+						// the window beneath the current sheet
+						if ((kWindowModalityWindowModal == oldWindowModality) &&
+							(blockedWindow != newWindow))
+						{
+							focusFollowsMouse = true;
+						}
+					}
+				}
+				
+				if (focusFollowsMouse)
+				{
+					// highlight and focus, but do not bring to front, the view and its window
+					if (nullptr != oldWindow) HiliteWindow(oldWindow, false);
+					HiliteWindow(newWindow, true);
+					SetUserFocusWindow(newWindow);
+				}
+			}
+		}
+	}
+	
+	return result;
+}// receiveTerminalViewEntered
+#endif
+
+
 /*!
 Handles "kEventTextInputUnicodeForKeyEvent" of
 "kEventClassTextInput" for a sessionÕs terminal views.
@@ -7203,6 +7305,10 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					
 					ptr->terminalViewDragDropUPP = NewEventHandlerUPP(receiveTerminalViewDragDrop);
 					assert(nullptr != ptr->terminalViewDragDropUPP);
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+					ptr->terminalViewEnteredUPP = NewEventHandlerUPP(receiveTerminalViewEntered);
+					assert(nullptr != ptr->terminalViewEnteredUPP);
+				#endif
 					ptr->terminalViewTextInputUPP = NewEventHandlerUPP(receiveTerminalViewTextInput);
 					assert(nullptr != ptr->terminalViewTextInputUPP);
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
@@ -7217,6 +7323,12 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 													{
 														{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent }
 													};
+						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+							EventTypeSpec const		whenTerminalViewEntered[] =
+													{
+														{ kEventClassControl, kEventControlTrackingAreaEntered }
+													};
+						#endif
 							EventTypeSpec const		whenTerminalViewDragDrop[] =
 													{
 														{ kEventClassControl, kEventControlDragEnter },
@@ -7232,6 +7344,23 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 																whenTerminalViewTextInput, session/* user data */,
 																&ptr->terminalViewTextInputHandlers[view]);
 							assert_noerr(error);
+							
+						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+							// if possible, allow focus-follows-mouse
+							error = HIViewInstallEventHandler(view, ptr->terminalViewEnteredUPP,
+																GetEventTypeCount(whenTerminalViewEntered),
+																whenTerminalViewEntered, session/* user data */,
+																&ptr->terminalViewEnteredHandlers[view]);
+							assert_noerr(error);
+							{
+								HIViewTrackingAreaRef	ignoredRef = nullptr;
+								
+								
+								error = HIViewNewTrackingArea(view, nullptr/* shape */, 0/* ID */,
+																&ignoredRef);
+								assert_noerr(error);
+							}
+						#endif
 							
 							// ensure drags to this view are seen
 							error = HIViewInstallEventHandler(view, ptr->terminalViewDragDropUPP,
@@ -7290,6 +7419,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						RemoveEventHandler(ptr->terminalViewTextInputHandlers[view]);
 					}
 					DisposeEventHandlerUPP(ptr->terminalViewDragDropUPP), ptr->terminalViewDragDropUPP = nullptr;
+					DisposeEventHandlerUPP(ptr->terminalViewEnteredUPP), ptr->terminalViewEnteredUPP = nullptr;
 					DisposeEventHandlerUPP(ptr->terminalViewTextInputUPP), ptr->terminalViewTextInputUPP = nullptr;
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
 				}

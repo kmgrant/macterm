@@ -3477,6 +3477,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagDontAutoClose:
 				case kPreferences_TagDontAutoNewOnApplicationReopen:
 				case kPreferences_TagDontDimBackgroundScreens:
+				case kPreferences_TagFocusFollowsMouse:
 				case kPreferences_TagHeadersCollapsed:
 				case kPreferences_TagMenuItemKeys:
 				case kPreferences_TagPureInverse:
@@ -4155,6 +4156,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outKeyValueType = typeCFStringRef;
 		outNonDictionaryValueSize = sizeof(Session_EMACSMetaKey);
 		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagFocusFollowsMouse:
+		outKeyName = CFSTR("terminal-focus-follows-mouse");
+		outKeyValueType = typeNetEvents_CFBooleanRef;
+		outNonDictionaryValueSize = sizeof(Boolean);
+		outClass = kPreferences_ClassGeneral;
 		break;
 	
 	case kPreferences_TagFontName:
@@ -6027,6 +6035,17 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					WindowInfo_SetDynamicResizing(nullptr, true/* no longer a preference */);
+				}
+				break;
+			
+			case kPreferences_TagFocusFollowsMouse:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					changeNotify(inDataPreferenceTag);
 				}
 				break;
 			

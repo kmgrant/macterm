@@ -747,6 +747,8 @@
 	<true/>
 	<key>terminal-emulator-xterm-enable-window-alteration-sequences</key>
 	<true/>
+	<key>terminal-focus-follows-mouse</key>
+	<false/>
 	<key>terminal-font-family</key>
 	<string>Monaco</string>
 	<key>terminal-font-size-points</key>

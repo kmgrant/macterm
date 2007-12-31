@@ -109,6 +109,7 @@ static HIViewID const	idMyCheckBoxMoveCursorToDropArea			= { FOUR_CHAR_CODE('MCT
 static HIViewID const	idMyCheckBoxMenuKeyEquivalents				= { FOUR_CHAR_CODE('MIKE'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxMapBackquoteToEscape			= { FOUR_CHAR_CODE('MBQE'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotAutoCreateWindows			= { FOUR_CHAR_CODE('DCNW'), 0/* ID */ };
+static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { FOUR_CHAR_CODE('FcFM'), 0/* ID */ };
 static HIViewID const	idMyCheckBoxCursorFlashing					= { FOUR_CHAR_CODE('CurF'), 0/* ID */ };
 static HIViewID const	idMyButtonCursorBlock						= { FOUR_CHAR_CODE('CrBl'), 0/* ID */ };
 static HIViewID const	idMyButtonCursorVerticalBar					= { FOUR_CHAR_CODE('CrVB'), 0/* ID */ };
@@ -917,6 +918,18 @@ const
 		
 		assert(checkBox.exists());
 		unless (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(flag), &flag,
+									&actualSize) == kPreferences_ResultOK)
+		{
+			flag = false; // assume new windows are created automatically, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxFocusFollowsMouse, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
 			flag = false; // assume new windows are created automatically, if preference can’t be found
@@ -1769,9 +1782,9 @@ updateCheckBoxPreference	(MyGeneralPanelUIPtr	inInterfacePtr,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}
-			else if (HIViewIDWrap(idMyCheckBoxDoNotAutoCreateWindows) == viewID)
+			else if (HIViewIDWrap(idMyCheckBoxFocusFollowsMouse) == viewID)
 			{
-				Preferences_SetData(kPreferences_TagDontAutoNewOnApplicationReopen,
+				Preferences_SetData(kPreferences_TagFocusFollowsMouse,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}

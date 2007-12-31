@@ -187,6 +187,7 @@ enum
 	kPreferences_TagDontAutoNewOnApplicationReopen		= FOUR_CHAR_CODE('nonu'),	//!< data: "Boolean"
 	kPreferences_TagDontDimBackgroundScreens			= FOUR_CHAR_CODE('wddb'),	//!< data: "Boolean"
 	kPreferences_TagDynamicResizing						= FOUR_CHAR_CODE('dynr'),	//!< data: "Boolean"
+	kPreferences_TagFocusFollowsMouse					= FOUR_CHAR_CODE('fcfm'),	//!< data: "Boolean"
 	kPreferences_TagInfoWindowColumnOrdering			= FOUR_CHAR_CODE('sico'),	//!< data: "CFArrayRef" (of CFStrings)
 	kPreferences_TagHeadersCollapsed					= FOUR_CHAR_CODE('hdcl'),	//!< data: "Boolean"
 	kPreferences_TagKioskAllowsForceQuit				= FOUR_CHAR_CODE('kafq'),	//!< data: "Boolean"
@@ -340,6 +341,7 @@ with notifiers:
 - kPreferences_TagArrangeWindowsUsingTabs
 - kPreferences_TagCursorBlinks
 - kPreferences_TagDontDimBackgroundScreens
+- kPreferences_TagFocusFollowsMouse
 - kPreferences_TagMacrosMenuVisible
 - kPreferences_TagMapBackquote
 - kPreferences_TagMenuItemKeys
