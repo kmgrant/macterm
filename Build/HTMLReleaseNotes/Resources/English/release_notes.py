@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071231',
     '20071230',
     '20071229',
     '20071227',
@@ -71,6 +72,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071231': [
+		'Fixed window review on Quit to automatically show hidden sessions instead of ignoring them.',
+	],
 	'20071230': [
 		'Terminal views now support a focus-follows-mouse General preference.',
 		'Fixed initialization of certain settings when creating a brand new preferences file.',

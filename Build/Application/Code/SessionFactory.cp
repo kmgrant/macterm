@@ -1284,7 +1284,7 @@ window).
 The filter flags indicate which sessions you wish to
 operate upon.  Often, you pass
 "kSessionFactory_SessionFilterFlagAllSessions" to indicate
-that you only wish to work with every session.
+that you want every session.
 
 You also provide a routine that operates on each session
 from the subset you indicate.  Your routine defines what

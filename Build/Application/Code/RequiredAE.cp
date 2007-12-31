@@ -1277,8 +1277,17 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 		Boolean*		outFlagPtr = REINTERPRET_CAST(inoutResultPtr, Boolean*);
 		
 		
-		if ((window != nullptr) && IsWindowVisible(window))
+		if (nullptr != window)
 		{
+			// if the window was obscured, show it first
+			if (false == IsWindowVisible(window))
+			{
+				TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(window);
+				
+				
+				TerminalWindow_SetObscured(terminalWindow, false);
+			}
+			
 			// all windows became translucent; make sure the alert one is opaque
 			(OSStatus)SetWindowAlpha(window, 1.0);
 			
