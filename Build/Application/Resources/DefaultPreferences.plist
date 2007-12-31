@@ -677,6 +677,12 @@
 		<real>0.9155413138e+00</real>
 		<real>0.9155413138e+00</real>
 	</array>
+	<key>terminal-color-ansi-yellow-bold-rgb</key>
+	<array>
+		<real>1.0</real>
+		<real>1.0</real>
+		<real>0</real>
+	</array>
 	<key>terminal-color-ansi-yellow-normal-rgb</key>
 	<array>
 		<real>0.9155413138e+00</real>
