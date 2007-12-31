@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20071230',
     '20071229',
     '20071227',
     '20071225',
@@ -70,6 +71,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20071230': [
+		'Fixed initialization of certain settings when creating a brand new preferences file.',
+	],
 	'20071229': [
 		'Fixed terminal activity notification, allowing you to watch for new data arriving in inactive windows.',
 		'Terminal inactivity notification is now available, allowing you to watch for sessions that become idle.',

@@ -388,11 +388,11 @@ static Preferences_Result		getSessionPreference			(My_ContextInterfaceConstPtr, 
 static Preferences_Result		getTerminalPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
 																	size_t, void*, size_t*);
 static Boolean					getWindowPreferences			(Preferences_Tag, MyWindowArrangement&);
-static OSStatus					initNewPreferences				();
+static OSStatus					initPreferences					(Boolean);
 static Preferences_Result		overwriteClassDictionaryCFArray	(Preferences_Class, CFArrayRef);
 static void						readMacTelnetCoordPreference	(CFStringRef, SInt16&, SInt16&);
 static void						readMacTelnetArrayPreference	(CFStringRef, CFArrayRef&);
-static OSStatus					readPreferencesDictionary		(CFDictionaryRef);
+static OSStatus					readPreferencesDictionary		(CFDictionaryRef, Boolean);
 static OSStatus					setAliasChanged					(My_AliasInfoPtr);
 static Preferences_Result		setFormatPreference				(My_ContextInterfacePtr, Preferences_Tag,
 																	size_t, void const*);
@@ -565,10 +565,8 @@ Preferences_Init ()
 				AppResources_Result		launchResult = noErr;
 				
 				
-				// if the tag does not exist at all, then XML-based
-				// preferences have never been used before; so,
-				// initialize them ALL based on DefaultPreferences.plist!
-				unless (existsAndIsValidFormat) initNewPreferences();
+				// start with an initial set
+				initPreferences(true/* brand new */);
 				
 				// launch the converter and wait for it to complete
 				launchResult = AppResources_LaunchPreferencesConverter();
@@ -598,6 +596,12 @@ Preferences_Init ()
 			}
 		}
 	}
+	
+	// to ensure that the rest of the application can depend on its
+	// known keys being defined, ALWAYS merge in default values for
+	// any keys that may not already be defined (by the data on disk,
+	// by the Preferences Converter, etc.)
+	initPreferences(false/* brand new */);
 	
 	gPreferenceEventListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 														kConstantsRegistry_ListenerModelDescriptorPreferences);
@@ -5457,15 +5461,10 @@ getWindowPreferences	(Preferences_Tag		inWindowPreferenceTag,
 
 
 /*!
-Overwrites resources in the preferences file with
-the default values; probably, you do this only once
-when the file is first created.
-
-On Mac OS X, this routine looks for a file named
-DefaultPreferences.plist in the application bundle,
-an XML file which nicely externalizes all values in
-a flat structure.  These values are converted as
-necessary before being written to resources.
+Adds default values for known preference keys.  If "inIsBrandNew"
+is true, any existing values for those keys are replaced,
+otherwise existing values are kept and any other defaults are
+added.
 
 \retval noErr
 if successful
@@ -5476,7 +5475,7 @@ if some component could not be set up properly
 (2.6)
 */
 static OSStatus
-initNewPreferences ()
+initPreferences		(Boolean	inIsBrandNew)
 {
 	CFDictionaryRef		defaultPrefDictionary = createDefaultPrefDictionary();
 	OSStatus			result = noErr;
@@ -5491,10 +5490,10 @@ initNewPreferences ()
 		// to register (in memory only) the appropriate updates;
 		// other values are written to the specified handles,
 		// where the data must be extracted for saving elsewhere
-		result = readPreferencesDictionary(defaultPrefDictionary);
+		result = readPreferencesDictionary(defaultPrefDictionary, false == inIsBrandNew/* merge */);
 		CFRelease(defaultPrefDictionary), defaultPrefDictionary = nullptr;
 		
-		if (result == noErr)
+		if (noErr == result)
 		{
 			// save the preferences...
 			(Boolean)CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication);
@@ -5502,7 +5501,7 @@ initNewPreferences ()
 	}
 	
 	return result;
-}// initNewPreferences
+}// initPreferences
 
 
 /*!
@@ -5705,153 +5704,62 @@ Overrides stored preference values using master preferences
 from the given dictionary (which may have come from a
 "DefaultPreferences.plist" file, for example).
 
+All of the keys in the specified dictionary must be of type
+CFStringRef.
+
 \retval noErr
 currently always returned; there is no way to detect errors
 
 (3.0)
 */
 static OSStatus
-readPreferencesDictionary  (CFDictionaryRef		inPreferenceDictionary)
+readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
+							 Boolean			inMerge)
 {
 	// the keys can have their values copied directly into the application
 	// preferences property list; they are identical in format and even use
 	// the same key names
-	OSStatus					result = noErr;
-	CFDictionaryRef const&		dictionary = inPreferenceDictionary; // rename for convenience
-	CFStringRef					keys[] =
-								{
-									// TEMPORARY: This could (should?) be automatically generated code
-									// based on the XML in DefaultPreferences.plist.  Every key in that
-									// file should be listed here.
-									CFSTR("command-key-emacs-move-down"),
-									CFSTR("command-key-emacs-move-left"),
-									CFSTR("command-key-emacs-move-right"),
-									CFSTR("command-key-emacs-move-up"),
-									CFSTR("command-key-interrupt-process"),
-									CFSTR("command-key-resume-output"),
-									CFSTR("command-key-suspend-output"),
-									CFSTR("command-key-terminal-end"),
-									CFSTR("command-key-terminal-home"),
-									CFSTR("command-key-terminal-page-down"),
-									CFSTR("command-key-terminal-page-up"),
-									CFSTR("command-key-vt220-pf1"),
-									CFSTR("command-key-vt220-pf2"),
-									CFSTR("command-key-vt220-pf3"),
-									CFSTR("command-key-vt220-pf4"),
-									CFSTR("data-receive-buffer-size-bytes"),
-									CFSTR("data-receive-do-not-strip-high-bit"),
-									CFSTR("data-send-local-echo-enabled"),
-									CFSTR("data-send-local-echo-half-duplex"),
-									CFSTR("data-send-paste-block-size-bytes"),
-									CFSTR("data-send-paste-method"),
-									CFSTR("favorite-macros"),
-									CFSTR("favorite-sessions"),
-									CFSTR("favorite-styles"),
-									CFSTR("favorite-terminals"),
-									CFSTR("key-map-backquote"),
-									CFSTR("key-map-delete"),
-									CFSTR("key-map-emacs-meta"),
-									CFSTR("key-map-new-line"),
-									CFSTR("kiosk-effects-enabled"),
-									CFSTR("kiosk-force-quit-enabled"),
-									CFSTR("kiosk-menu-bar-visible"),
-									CFSTR("kiosk-off-switch-visible"),
-									CFSTR("kiosk-scroll-bar-visible"),
-									CFSTR("line-mode-enabled"),
-									CFSTR("menu-command-set-simplified"),
-									CFSTR("menu-key-equivalents"),
-									CFSTR("new-means"),
-									CFSTR("no-auto-close"),
-									CFSTR("no-auto-new"),
-									CFSTR("prefs-version"),
-									CFSTR("server-host"),
-									CFSTR("server-port"),
-									CFSTR("server-protocol"),
-									CFSTR("spaces-per-tab"),
-									CFSTR("tek-mode"),
-									CFSTR("tek-page-clears-screen"),
-									CFSTR("terminal-auto-copy-on-select"),
-									CFSTR("terminal-capture-auto-start"),
-									CFSTR("terminal-capture-file-creator-code"),
-									CFSTR("terminal-capture-file-open-with-application"),
-									CFSTR("terminal-capture-folder"),
-									CFSTR("terminal-clear-saves-lines"),
-									CFSTR("terminal-color-ansi-black-bold-rgb"),
-									CFSTR("terminal-color-ansi-black-normal-rgb"),
-									CFSTR("terminal-color-ansi-blue-bold-rgb"),
-									CFSTR("terminal-color-ansi-blue-normal-rgb"),
-									CFSTR("terminal-color-ansi-cyan-bold-rgb"),
-									CFSTR("terminal-color-ansi-cyan-normal-rgb"),
-									CFSTR("terminal-color-ansi-green-bold-rgb"),
-									CFSTR("terminal-color-ansi-green-normal-rgb"),
-									CFSTR("terminal-color-ansi-magenta-bold-rgb"),
-									CFSTR("terminal-color-ansi-magenta-normal-rgb"),
-									CFSTR("terminal-color-ansi-red-bold-rgb"),
-									CFSTR("terminal-color-ansi-red-normal-rgb"),
-									CFSTR("terminal-color-ansi-white-bold-rgb"),
-									CFSTR("terminal-color-ansi-white-normal-rgb"),
-									CFSTR("terminal-color-ansi-yellow-bold-rgb"),
-									CFSTR("terminal-color-ansi-yellow-normal-rgb"),
-									CFSTR("terminal-color-blinking-background-rgb"),
-									CFSTR("terminal-color-blinking-foreground-rgb"),
-									CFSTR("terminal-color-bold-background-rgb"),
-									CFSTR("terminal-color-bold-foreground-rgb"),
-									CFSTR("terminal-color-matte-background-rgb"),
-									CFSTR("terminal-color-normal-background-rgb"),
-									CFSTR("terminal-color-normal-foreground-rgb"),
-									CFSTR("terminal-cursor-auto-move-on-drop"),
-									CFSTR("terminal-cursor-blinking"),
-									CFSTR("terminal-cursor-shape"),
-									CFSTR("terminal-emulator-answerback"),
-									CFSTR("terminal-emulator-type"),
-									CFSTR("terminal-emulator-xterm-enable-color"),
-									CFSTR("terminal-emulator-xterm-enable-graphics"),
-									CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences"),
-									CFSTR("terminal-font-family"),
-									CFSTR("terminal-font-size-points"),
-									CFSTR("terminal-inverse-selections"),
-									CFSTR("terminal-line-wrap"),
-									CFSTR("terminal-no-dim-on-deactivate"),
-									CFSTR("terminal-resize-affects"),
-									CFSTR("terminal-screen-dimensions-columns"),
-									CFSTR("terminal-screen-dimensions-rows"),
-									CFSTR("terminal-scroll-delay-milliseconds"),
-									CFSTR("terminal-scrollback-enabled"),
-									CFSTR("terminal-scrollback-size-lines"),
-									CFSTR("terminal-text-translation-table"),
-									CFSTR("terminal-when-bell"),
-									CFSTR("terminal-when-bell-in-background"),
-									CFSTR("terminal-when-cursor-near-right-margin"),
-									CFSTR("when-alert-in-background"),
-									CFSTR("window-clipboard-visible"),
-									CFSTR("window-commandline-position-pixels"),
-									CFSTR("window-commandline-size-pixels"),
-									CFSTR("window-commandline-visible"),
-									CFSTR("window-controlkeys-position-pixels"),
-									CFSTR("window-controlkeys-visible"),
-									CFSTR("window-functionkeys-position-pixels"),
-									CFSTR("window-functionkeys-visible"),
-									CFSTR("window-macroeditor-position-pixels"),
-									CFSTR("window-macroeditor-size-pixels"),
-									CFSTR("window-macroeditor-visible"),
-									CFSTR("window-preferences-position-pixels"),
-									CFSTR("window-sessioninfo-column-order"),
-									CFSTR("window-sessioninfo-visible"),
-									CFSTR("window-terminal-position-pixels"),
-									CFSTR("window-vt220keys-position-pixels"),
-									CFSTR("window-vt220keys-visible")
-								};
-	UInt16						i = 0;
-	void const*					keyValue = nullptr;
+	CFIndex const	kDictLength = CFDictionaryGetCount(inPreferenceDictionary);
+	size_t			i = 0;
+	void const*		keyValue = nullptr;
+	void const**	keys = new void const*[kDictLength];
+	OSStatus		result = noErr;
 	
 	
-	for (i = 0; i < sizeof(keys) / sizeof(CFStringRef); ++i)
+	CFDictionaryGetKeysAndValues(inPreferenceDictionary, keys, nullptr/* values */);
+	for (i = 0; i < kDictLength; ++i)
 	{
-		if (CFDictionaryGetValueIfPresent(dictionary, keys[i], &keyValue))
+		CFStringRef const	kKey = CFUtilities_StringCast(keys[i]);
+		Boolean				useDefault = true;
+		
+		
+		if (inMerge)
 		{
-			CFPreferencesSetAppValue(keys[i], keyValue, kCFPreferencesCurrentApplication);
+			// when merging, do not replace any key that is already defined
+			CFPropertyListRef	foundValue = CFPreferencesCopyAppValue(kKey, kCFPreferencesCurrentApplication);
+			
+			
+			if (nullptr != foundValue)
+			{
+				useDefault = false;
+				CFRelease(foundValue), foundValue = nullptr;
+			}
+			else
+			{
+				// value is not yet defined
+				useDefault = true;
+			}
+		}
+		if (useDefault)
+		{
+			if (CFDictionaryGetValueIfPresent(inPreferenceDictionary, kKey, &keyValue))
+			{
+				//Console_WriteValueCFString("using DefaultPreferences.plist value for key", kKey); // debug
+				CFPreferencesSetAppValue(kKey, keyValue, kCFPreferencesCurrentApplication);
+			}
 		}
 	}
+	delete [] keys;
 	
 	return result;
 }// readPreferencesDictionary
