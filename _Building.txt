@@ -18,7 +18,8 @@ PREREQUISITES
   
   When building source code documentation only, you will need
   Doxygen (http://www.doxygen.org/), and Dot (part of GraphViz,
-  http://www.graphviz.org/).
+  http://www.graphviz.org/), and using doxypy for the Quills API
+  documentation is recommended (http://code.foosel.org/doxypy).
 
 UNDERSTANDING THE DIRECTORY STRUCTURE
   The components of the project are in a few main folders:

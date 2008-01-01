@@ -12,7 +12,7 @@
 #    being input to Doxygen.  This allows automatic configuration.  #
 #                                                                   #
 #    MacTelnet                                                      #
-#        (c) 1998-2006 by Kevin Grant.                              #
+#        (c) 1998-2007 by Kevin Grant.                              #
 #        (c) 2001-2003 by Ian Anderson.                             #
 #        (c) 1986-1994 University of Illinois Board of Trustees     #
 #        (see About box for full list of U of I contributors).      #
@@ -439,13 +439,13 @@ IMAGE_PATH             =
 # input file. Doxygen will then use the output that the filter program writes 
 # to standard output.
 
-INPUT_FILTER           = 
+INPUT_FILTER           = ===FILTER_COMMAND===
 
 # If the FILTER_SOURCE_FILES tag is set to YES, the input filter (if set using 
 # INPUT_FILTER) will be used to filter the input files when producing source 
 # files to browse.
 
-FILTER_SOURCE_FILES    = NO
+FILTER_SOURCE_FILES    = ===FILTER_YES_NO===
 
 #---------------------------------------------------------------------------
 # configuration options related to source browsing

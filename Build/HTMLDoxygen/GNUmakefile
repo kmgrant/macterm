@@ -4,27 +4,28 @@
 # March 26, 2005
 
 PATH := /opt/doxygen/bin:/Applications/Doxygen.app/Contents/Resources:/Applications/GraphViz.app/Contents/MacOS:$(PATH)
-OUTPUT_DIR := $(CURDIR)/documentation/
+OUTPUT_DIR_APP := $(CURDIR)/docs-c++/
+OUTPUT_DIR_PY := $(CURDIR)/docs-python/
+
+# this assumes you have installed "doxypy" in the indicated location;
+# you can download it (GPL'd) from http://code.foosel.org/doxypy
+FILTER_COMMAND_PY := python /opt/doxypy/bin/doxypy.py
 
 # determine MacTelnet version
 # IMPORTANT: read from a built MacTelnet.app's Info.plist;
 # if you don't build MacTelnet first, this won't work
-VERSION_INFO := $(shell cd $(CURDIR)/../ ; ./VersionInfo.sh ; cd $(CURDIR))
+VERSION_INFO := $(shell $(CURDIR)/../VersionInfo.sh)
 MAJOR := $(word 1,$(VERSION_INFO))
 MINOR := $(word 2,$(VERSION_INFO))
 SUBMINOR := $(word 3,$(VERSION_INFO))
-PRERELEASE := $(word 4,$(VERSION_INFO))
+ABR := $(word 4,$(VERSION_INFO))
 BUILD := $(word 5,$(VERSION_INFO))
-
-# choose whichever designation is appropriate for this build
-ABR := alpha
-#ABR := beta
-#ABR := release candidate
 
 DOXYGEN := doxygen
 DOXYGEN_CONF_TEMPLATE := $(CURDIR)/Resources/Doxygen.conf.in
 TMP_CONF := /tmp/Doxygen.conf
 
+PY_SRC := $(CURDIR)/../MacTelnet.app/Contents/Frameworks/Quills.framework/Versions/B/lib/python2.5/Quills.py
 APP_INCL := $(CURDIR)/../Application/Code/
 APP_SRC := $(CURDIR)/../Application/Code/
 DOC_SRC := $(CURDIR)/Resources/
@@ -36,34 +37,59 @@ STYLE_SRC := $(CURDIR)/Resources/
 .PHONY: all
 all:
 	$(begin_target)
-	mkdir -p "$(strip $(OUTPUT_DIR))"
 	$(MAKE) build
 	$(end_target)
 
 .PHONY: build
 build:
 	$(begin_target)
-	$(custom_config)
-	@# generate HTML from source
+	@#
+	@# 1. Quills (Python) API
+	@#
+	$(config_for_py)
+	install -d "$(strip $(OUTPUT_DIR_APP))"
+	@# generate HTML from Python source
+	$(DOXYGEN) "$(strip $(TMP_CONF))"
+	@# throw away configuration file (will be replaced)
+	$(RM) "$(strip $(TMP_CONF))"
+	@#
+	@# 2. MacTelnet (C++) API
+	@#
+	$(config_for_app)
+	install -d "$(strip $(OUTPUT_DIR_PY))"
+	@# generate HTML from C++ source
 	$(DOXYGEN) "$(strip $(TMP_CONF))"
 	@# throw away configuration file (no longer needed)
 	$(RM) "$(strip $(TMP_CONF))"
+	@#
+	@# 3. Post-processing
+	@#
 	$(xcustom_index)
 	@# note that postprocess depends on $(wildcard), which is resolved at
 	@# the time the makefile is parsed; a recursive "make" ensures the
 	@# wildcard is parsed only after Doxygen has actually created files!
-	$(MAKE) postprocess
-	$(copy_resources)
+	$(MAKE) postprocess_app
+	$(MAKE) postprocess_py
+	$(call copy_resources, $(OUTPUT_DIR_APP))
+	$(call copy_resources, $(OUTPUT_DIR_PY))
+	@#
+	@# 4. Show the results in a browser!
+	@#
 	$(MAKE) view
 	$(end_target)
 
 .PHONY: view
 view:
-	$(call open_browser_to_page,$(strip $(OUTPUT_DIR))/index.html)
+	$(call open_browser_to_page,$(strip $(OUTPUT_DIR_APP))/index.html)
+	$(call open_browser_to_page,$(strip $(OUTPUT_DIR_PY))/index.html)
 
-.PHONY: postprocess
-postprocess:
-	$(foreach FILE,$(wildcard $(OUTPUT_DIR)/*.html),$(call strip_unwanted_sections,$(FILE)))
+.PHONY: postprocess_app
+postprocess_app:
+	$(foreach FILE,$(wildcard $(OUTPUT_DIR_APP)/*.html),$(call strip_unwanted_sections,$(FILE)))
+
+.PHONY: postprocess_py
+postprocess_py:
+	$(foreach FILE,$(wildcard $(OUTPUT_DIR_PY)/*.html),$(call strip_unwanted_sections,$(FILE)))
 
 .PHONY: index
 index:
@@ -72,12 +98,15 @@ index:
 .PHONY: clean
 clean:
 	$(begin_target)
-	$(RM) "$(OUTPUT_DIR)"/*
-	-rmdir "$(OUTPUT_DIR)"
+	$(RM) "$(OUTPUT_DIR_APP)"/*
+	-rmdir "$(OUTPUT_DIR_APP)"
+	$(RM) "$(OUTPUT_DIR_PY)"/*
+	-rmdir "$(OUTPUT_DIR_PY)"
 	$(end_target)
 
 test:
-	$(foreach FILE,$(wildcard $(OUTPUT_DIR)/*.html),$(call strip_unwanted_sections,$(FILE)))
+	$(foreach FILE,$(wildcard $(OUTPUT_DIR_APP)/*.html),$(call strip_unwanted_sections,$(FILE)))
+	$(foreach FILE,$(wildcard $(OUTPUT_DIR_PY)/*.html),$(call strip_unwanted_sections,$(FILE)))
 
 define begin_target
 	@date "+      $(notdir $@): Started at %T."
@@ -87,39 +116,71 @@ define end_target
 	@date "+Finished $(notdir $@)."
 endef
 
-define copy_resources
-	@# copy in style sheets
-	@echo "Copying style sheets..."
-	cp "$(strip $(STYLE_SRC))/code.css" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(STYLE_SRC))/tabs.css" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(STYLE_SRC))/default.css" "$(strip $(OUTPUT_DIR))/"
-	@# style sheets refer to a few images that should be present
-	@echo "Copying images..."
-	cp "$(strip $(IMG_SRC))/LogoBlurFull.jpg" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(IMG_SRC))/SubtleBorderTop.png" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(IMG_SRC))/TabLeft.png" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(IMG_SRC))/TabRight.png" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(IMG_SRC))/TabBottom.png" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(IMG_SRC))/Translucent64x64.png" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(IMG_SRC))/White40Translucent64x64.png" "$(strip $(OUTPUT_DIR))/"
-	cp "$(strip $(IMG_SRC))/White60Translucent64x64.png" "$(strip $(OUTPUT_DIR))/"
+define config_common
+	@# update the Doxygen configuration file with settings common to
+	@# any type of documentation being created for this project
+	@echo "Substituting common template variables..."
+	perl -pi -e "s|===HTML_SOURCE===|$(strip $(DOC_SRC))|" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===VERSION===|$(MAJOR).$(MINOR).$(SUBMINOR)$(ABR), build $(BUILD)|" \
+			"$(strip $(TMP_CONF))"
 
 endef
 
-define custom_config
-	@# create the Doxygen configuration file that will actually be used
-	@echo "Creating custom Doxygen configuration file by substituting template variables..."
+define config_for_app
+	@# create the Doxygen configuration file that will actually be used;
+	@# substitute values appropriate for MacTelnet C++ documentation
+	@echo "Creating Doxygen configuration file for MacTelnet C++ by substituting template variables..."
 	$(RM) "$(strip $(TMP_CONF))"
 	cp "$(strip $(DOXYGEN_CONF_TEMPLATE))" "$(strip $(TMP_CONF))"
 	@# replace template variables with actual values
+	perl -pi -e "s|===FILTER_YES_NO===|NO|" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===FILTER_COMMAND===||" "$(strip $(TMP_CONF))"
 	perl -pi -e "s|===APP_SOURCE===|$(strip $(APP_SRC))|" "$(strip $(TMP_CONF))"
 	perl -pi -e "s|===APP_INCL===|$(strip $(APP_INCL))|" "$(strip $(TMP_CONF))"
-	perl -pi -e "s|===HTML_SOURCE===|$(strip $(DOC_SRC))|" "$(strip $(TMP_CONF))"
-	perl -pi -e "s|===OUTPUT_DIR===|$(strip $(OUTPUT_DIR))|" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===OUTPUT_DIR===|$(strip $(OUTPUT_DIR_APP))|" "$(strip $(TMP_CONF))"
 	perl -pi -e "s|===SHARED_SOURCE===|$(strip $(SHARED_SRC))|" "$(strip $(TMP_CONF))"
 	perl -pi -e "s|===SHARED_INCL===|$(strip $(SHARED_INCL))|" "$(strip $(TMP_CONF))"
-	perl -pi -e "s|===VERSION===|$(MAJOR).$(MINOR).$(SUBMINOR) ($(ABR) $(PRERELEASE)) build $(BUILD)|" \
-			"$(strip $(TMP_CONF))"
+	$(config_common)
+
+endef
+
+define config_for_py
+	@# create the Doxygen configuration file that will actually be used;
+	@# substitute values appropriate for Python (Quills) documentation
+	@echo "Creating Doxygen configuration file for Quills Python by substituting template variables..."
+	$(RM) "$(strip $(TMP_CONF))"
+	cp "$(strip $(DOXYGEN_CONF_TEMPLATE))" "$(strip $(TMP_CONF))"
+	@# replace template variables with actual values
+	perl -pi -e "s|===FILTER_YES_NO===|YES|" "$(strip $(TMP_CONF))"
+	@# make sure this command exists
+	@$(FILTER_COMMAND_PY) --help > /dev/null 2>&1 || (echo "failed: $(FILTER_COMMAND_PY) (maybe not installed; see FILTER_COMMAND_PY variable)" && exit 1)
+	perl -pi -e "s|===FILTER_COMMAND===|\"$(FILTER_COMMAND_PY)\"|" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===APP_SOURCE===|$(strip $(PY_SRC))|" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===APP_INCL===||" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===OUTPUT_DIR===|$(strip $(OUTPUT_DIR_PY))|" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===SHARED_SOURCE===||" "$(strip $(TMP_CONF))"
+	perl -pi -e "s|===SHARED_INCL===||" "$(strip $(TMP_CONF))"
+	$(config_common)
+
+endef
+
+# $(1) = destination directory
+define copy_resources
+	@# copy in style sheets
+	@echo "Copying style sheets..."
+	cp "$(strip $(STYLE_SRC))/code.css" "$(strip $(1))/"
+	cp "$(strip $(STYLE_SRC))/tabs.css" "$(strip $(1))/"
+	cp "$(strip $(STYLE_SRC))/default.css" "$(strip $(1))/"
+	@# style sheets refer to a few images that should be present
+	@echo "Copying images..."
+	cp "$(strip $(IMG_SRC))/LogoBlurFull.jpg" "$(strip $(1))/"
+	cp "$(strip $(IMG_SRC))/SubtleBorderTop.png" "$(strip $(1))/"
+	cp "$(strip $(IMG_SRC))/TabLeft.png" "$(strip $(1))/"
+	cp "$(strip $(IMG_SRC))/TabRight.png" "$(strip $(1))/"
+	cp "$(strip $(IMG_SRC))/TabBottom.png" "$(strip $(1))/"
+	cp "$(strip $(IMG_SRC))/Translucent64x64.png" "$(strip $(1))/"
+	cp "$(strip $(IMG_SRC))/White40Translucent64x64.png" "$(strip $(1))/"
+	cp "$(strip $(IMG_SRC))/White60Translucent64x64.png" "$(strip $(1))/"
 
 endef
 
@@ -127,7 +188,7 @@ define custom_index
 	@# replace Doxygen-generated index page with something a bit nicer
 	@echo "Creating custom index file by substituting template variables..."
 	cp "$(strip $(DOC_SRC))/index.html.in" "$(strip $(OUTPUT_DIR))/index.html"
-	perl -pi -e "s|===VERSION===|$(MAJOR).$(MINOR).$(SUBMINOR) ($(ABR) $(PRERELEASE)) build $(BUILD)|" \
+	perl -pi -e "s|===VERSION===|$(MAJOR).$(MINOR).$(SUBMINOR)$(ABR), build $(BUILD)|" \
 			"$(strip $(OUTPUT_DIR))/index.html"
 
 endef
