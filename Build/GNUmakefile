@@ -26,6 +26,12 @@ help:
 	@echo "assemble the final application bundle."
 	@echo
 
+# temporary files (subdirectories created)
+SYMROOT=$(CURDIR)/_Generated
+
+XCODE_ENV := \
+	SYMROOT=$(SYMROOT)
+
 # tools
 COPY=/bin/cp
 MKDIR_P=/usr/bin/install -d
@@ -33,7 +39,7 @@ RMDIR=/bin/rmdir
 RSYNC=/usr/bin/rsync
 SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
-XCB=/usr/bin/xcodebuild
+XCB=/usr/bin/xcodebuild $(XCODE_ENV)
 
 # set this to "no" if you want to disable Panther support (may
 # make MacTelnet easier to build if you don't care about 10.3);
@@ -54,14 +60,15 @@ SRC_APP_PROJ_TOP := $(CURDIR)/Application
 SRC_BUGREPORTER_PROJ_TOP := $(CURDIR)/BugReporter
 SRC_PREFSCONVERTER_PROJ_TOP := $(CURDIR)/PrefsConverter
 
-SRC_APP_BUILD_TOP_LEOPARD := $(SRC_APP_PROJ_TOP)/ForLeopardDebug
-SRC_APP_BUILD_TOP_TIGER := $(SRC_APP_PROJ_TOP)/ForTigerDebug
-SRC_APP_BUILD_TOP_PANTHER := $(SRC_APP_PROJ_TOP)/ForPantherDebug
+SRC_APP_BUILD_TOP_LEOPARD := $(SYMROOT)/ForLeopardDebug
+SRC_APP_BUILD_TOP_TIGER := $(SYMROOT)/ForTigerDebug
+SRC_APP_BUILD_TOP_PANTHER := $(SYMROOT)/ForPantherDebug
+SRC_APP_CODE_TOP := $(SRC_APP_PROJ_TOP)/Code
 SRC_APP_PYCODE_TOP := $(SRC_APP_PROJ_TOP)/PythonCode
 SRC_APP_RESOURCES_TOP := $(SRC_APP_PROJ_TOP)/Resources
-SRC_BUGREPORTER_TOP := $(SRC_BUGREPORTER_PROJ_TOP)/ForDebugging/BugReporter.app
-SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_PROJ_TOP)/ForDebugging/PrefsConverter.app
-SRC_PY_TOP := $(SRC_APP_PROJ_TOP)/$(PY_CONFIG)/PyMacTelnet.framework
+SRC_BUGREPORTER_TOP := $(SYMROOT)/ForDebugging/BugReporter.app
+SRC_PREFSCONVERTER_TOP := $(SYMROOT)/ForDebugging/PrefsConverter.app
+SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTelnet.framework
 SRC_QUILLS_TOP_TIGER := $(SRC_APP_BUILD_TOP_TIGER)/Quills.framework
 SRC_QUILLS_TOP_PANTHER := $(SRC_APP_BUILD_TOP_PANTHER)/Quills.framework
 SRC_SWIG_TOP_LEOPARD := $(SRC_APP_BUILD_TOP_LEOPARD)
@@ -371,10 +378,10 @@ clean-executables:
 # Component: Localized .strings Files
 
 .PHONY: install-app-dot-strings
-install-app-dot-strings: $(SRC_APP_PROJ_TOP)/Code/UIStrings.cp
+install-app-dot-strings: $(SRC_APP_CODE_TOP)/UIStrings.cp
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
-	/usr/bin/genstrings $(SRC_APP_PROJ_TOP)/Code/UIStrings.cp -o $(DEST_APP_RESOURCES_TOP)/English.lproj
+	/usr/bin/genstrings $(SRC_APP_CODE_TOP)/UIStrings.cp -o $(DEST_APP_RESOURCES_TOP)/English.lproj
 
 .PHONY: clean-app-dot-strings
 clean-app-dot-strings:
