@@ -42,7 +42,7 @@
             <ostype name="controlSignature">Cpy1</ostype>
             <boolean name="small">TRUE</boolean>
             <int name="controlSize">1</int>
-            <string name="title">©1998-2007 by Kevin M. Grant</string>
+            <string name="title">©1998-2008 by Kevin M. Grant</string>
             <int name="justification">1</int>
           </object>
           <object class="IBCarbonButton" id="185">
