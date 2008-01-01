@@ -146,7 +146,7 @@ void
 Embedding_DeactivateFrontmostWindow	()
 {
 #if 0
-	WindowRef	window = EventLoop_GetRealFrontWindow();
+	WindowRef	window = EventLoop_ReturnRealFrontWindow();
 	
 	
 	if (window != nullptr)
@@ -304,7 +304,7 @@ Embedding_OffscreenControlOperationInMode	(WindowRef					inForWhichWindow,
 				if (data.result != noErr)
 				{
 					// offscreen dump failed somehow - just invoke the routine manually, with “good guesses” of unknown parameters
-					(OSStatus)SetUpControlBackground(control, ColorUtilities_GetCurrentDepth(GetWindowPort(inForWhichWindow)),
+					(OSStatus)SetUpControlBackground(control, ColorUtilities_ReturnCurrentDepth(GetWindowPort(inForWhichWindow)),
 														IsPortColor(GetWindowPort(inForWhichWindow)));
 					EraseRect(&controlBounds);
 					if (inWhatToDo != nullptr)
@@ -470,7 +470,7 @@ void
 Embedding_RestoreFrontmostWindow ()
 {
 #if 0
-	WindowRef	window = EventLoop_GetRealFrontWindow();
+	WindowRef	window = EventLoop_ReturnRealFrontWindow();
 	
 	
 	if (window != nullptr)

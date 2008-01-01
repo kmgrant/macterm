@@ -93,7 +93,7 @@ void
 													 UInt16&						outRows);
 
 TerminalWindowRef
-	SizeDialog_GetParentTerminalWindow				(TerminalSizeDialogRef			inDialog);
+	SizeDialog_ReturnParentTerminalWindow			(TerminalSizeDialogRef			inDialog);
 
 void
 	SizeDialog_SendRecordableDimensionChangeEvents	(SInt16							inNewColumns,

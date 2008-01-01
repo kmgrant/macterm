@@ -81,15 +81,15 @@ void
 
 // GUARANTEED TO MATCH NUMBER OF ITEMS APPENDED WITH TextTranslation_AppendCharacterSetsToMenu(), ABOVE
 UInt16
-	TextTranslation_GetCharacterSetCount		();
+	TextTranslation_ReturnCharacterSetCount		();
 
 // GUARANTEED TO MATCH ORDER OF ITEM APPENDING FOR TextTranslation_AppendCharacterSetsToMenu(), ABOVE
 UInt16
-	TextTranslation_GetCharacterSetIndex		(CFStringEncoding		inTextEncoding);
+	TextTranslation_ReturnCharacterSetIndex		(CFStringEncoding		inTextEncoding);
 
 // GUARANTEED TO MATCH ORDER OF ITEM APPENDING FOR TextTranslation_AppendCharacterSetsToMenu(), ABOVE
 CFStringEncoding
-	TextTranslation_GetIndexedCharacterSet		(UInt16					inOneBasedIndex);
+	TextTranslation_ReturnIndexedCharacterSet	(UInt16					inOneBasedIndex);
 
 //@}
 

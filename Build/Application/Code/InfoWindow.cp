@@ -1355,7 +1355,7 @@ sessionAttributeChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// update list item text to show new resource location
 		{
 			SessionRef		session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			CFStringRef		newURLCFString = Session_GetResourceLocationCFString(session);
+			CFStringRef		newURLCFString = Session_ReturnResourceLocationCFString(session);
 			
 			
 			gSessionToURLMap()[session].setCFTypeRef(newURLCFString);
@@ -1405,7 +1405,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			SessionRef		session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
 			
 			
-			switch (Session_GetState(session))
+			switch (Session_ReturnState(session))
 			{
 			case kSession_StateBrandNew:
 				// here for completeness; there is no way to find out about transitions to the initial state
@@ -1423,7 +1423,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					// find out all session information for initialization purposes
 					// (registered callbacks handle any changes later on)
 					gSessionToCreationTimeMap()[session] = Session_TimeOfActivation(session);
-					gSessionToURLMap()[session].setCFTypeRef(Session_GetResourceLocationCFString(session));
+					gSessionToURLMap()[session].setCFTypeRef(Session_ReturnResourceLocationCFString(session));
 					if (Session_GetWindowUserDefinedTitle(session, titleCFString).ok())
 					{
 						gSessionToWindowTitleMap()[session].setCFTypeRef(titleCFString);

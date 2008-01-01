@@ -109,7 +109,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 							{
 								// DEVICE 1 - Mac picture output (QuickDraw PICT)
 								TektronixMacPictureOutput_New,
-								TektronixMacPictureOutput_GetDeviceName,
+								TektronixMacPictureOutput_ReturnDeviceName,
 								TektronixMacPictureOutput_Init,
 								TektronixNullOutput_DoNothingIntArgReturnZero/* gin */,
 								TektronixMacPictureOutput_SetPenColor,

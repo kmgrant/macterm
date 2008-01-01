@@ -296,11 +296,11 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 			{
 				messageBuffer
 				<< "This computer is running Mac OS X "
-				<< STATIC_CAST(Releases_GetMajorRevisionForVersion(gestaltResult), unsigned int)
+				<< STATIC_CAST(Releases_ReturnMajorRevisionForVersion(gestaltResult), unsigned int)
 				<< "."
-				<< STATIC_CAST(Releases_GetMinorRevisionForVersion(gestaltResult), unsigned int)
+				<< STATIC_CAST(Releases_ReturnMinorRevisionForVersion(gestaltResult), unsigned int)
 				<< "."
-				<< STATIC_CAST(Releases_GetSuperminorRevisionForVersion(gestaltResult), unsigned int)
+				<< STATIC_CAST(Releases_ReturnSuperminorRevisionForVersion(gestaltResult), unsigned int)
 				<< "."
 				;
 			}
@@ -572,8 +572,8 @@ initMacOSToolbox ()
 		
 		
 		(OSStatus)Gestalt(gestaltSystemVersion, &gestaltResult);
-		majorRev = Releases_GetMajorRevisionForVersion(gestaltResult);
-		minorRev = Releases_GetMinorRevisionForVersion(gestaltResult);
+		majorRev = Releases_ReturnMajorRevisionForVersion(gestaltResult);
+		minorRev = Releases_ReturnMinorRevisionForVersion(gestaltResult);
 		
 		// any advanced APIs available?
 		FlagManager_Set(kFlagOS10_0API, true); // this source tree is Mac OS X only

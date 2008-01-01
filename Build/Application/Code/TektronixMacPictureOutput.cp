@@ -201,10 +201,10 @@ QuickDraw pictures.
 (2.6)
 */
 char const*
-TektronixMacPictureOutput_GetDeviceName ()
+TektronixMacPictureOutput_ReturnDeviceName ()
 {
 	return "Macintosh PICTURE output";
-}// GetDeviceName
+}// ReturnDeviceName
 
 
 /*!

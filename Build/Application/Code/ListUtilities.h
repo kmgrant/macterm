@@ -62,10 +62,10 @@ void
 ###############################################################*/
 
 UInt16
-	ListUtilities_GetItemCount				(ListHandle					inListHandle);
+	ListUtilities_ReturnItemCount			(ListHandle					inListHandle);
 
 UInt16
-	ListUtilities_GetSelectedItemCount		(ListHandle					inListHandle);
+	ListUtilities_ReturnSelectedItemCount	(ListHandle					inListHandle);
 
 /*###############################################################
 	MANAGING LISTS WITH PASCAL STRING ITEM DATA

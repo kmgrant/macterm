@@ -112,10 +112,10 @@ private:
 //@{
 
 HelpSystem_Result
-	HelpSystem_Init							();
+	HelpSystem_Init								();
 
 void
-	HelpSystem_Done							();
+	HelpSystem_Done								();
 
 //@}
 
@@ -124,27 +124,27 @@ void
 
 // NOT NORMALLY USED; YOU MIGHT NEED THIS FOR A CONTEXTUAL MENU ITEM
 HelpSystem_Result
-	HelpSystem_CopyKeyPhraseCFString		(HelpSystem_KeyPhrase		inKeyPhrase,
-											 CFStringRef&				outString);
+	HelpSystem_CopyKeyPhraseCFString			(HelpSystem_KeyPhrase		inKeyPhrase,
+												 CFStringRef&				outString);
 
 // DEPRECATED - USE HelpSystem_SetCurrentContextKeyPhrase() AND HelpSystem_DisplayHelpInCurrentContext() INSTEAD
 HelpSystem_Result
-	HelpSystem_DisplayHelpFromKeyPhrase		(HelpSystem_KeyPhrase		inKeyPhrase);
+	HelpSystem_DisplayHelpFromKeyPhrase			(HelpSystem_KeyPhrase		inKeyPhrase);
 
 HelpSystem_Result
-	HelpSystem_DisplayHelpInCurrentContext	();
+	HelpSystem_DisplayHelpInCurrentContext		();
 
 HelpSystem_Result
-	HelpSystem_DisplayHelpWithoutContext	();
+	HelpSystem_DisplayHelpWithoutContext		();
 
 // IMPLICITLY FIGURES OUT THE KEY PHRASE, IF ANY, FOR THE FRONTMOST NON-FLOATING WINDOW
 HelpSystem_KeyPhrase
-	HelpSystem_GetCurrentContextKeyPhrase	();
+	HelpSystem_ReturnCurrentContextKeyPhrase	();
 
-// AFFECTS BEHAVIOR OF HelpSystem_GetCurrentContextKeyPhrase() AND HelpSystem_DisplayHelpInCurrentContext()
+// AFFECTS BEHAVIOR OF HelpSystem_ReturnCurrentContextKeyPhrase() AND HelpSystem_DisplayHelpInCurrentContext()
 HelpSystem_Result
-	HelpSystem_SetWindowKeyPhrase			(WindowRef					inWindow,
-											 HelpSystem_KeyPhrase		inKeyPhrase);
+	HelpSystem_SetWindowKeyPhrase				(WindowRef					inWindow,
+												 HelpSystem_KeyPhrase		inKeyPhrase);
 
 //@}
 

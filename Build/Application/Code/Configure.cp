@@ -200,7 +200,7 @@ Configure_NameNewConfigurationDialogDisplay		(ConstStringPtr		inWindowTitle,
 		Localization_AdjustHelpButtonItem(dialogPtr, iNameNewSessionFavoriteAppleGuideButton);
 		Localization_HorizontallyPlaceItems(dialogPtr, iNameNewSessionFavoriteFieldLabelText, iNameNewSessionFavoriteNameField);
 		
-		parentWindow = EventLoop_GetRealFrontWindow();
+		parentWindow = EventLoop_ReturnRealFrontWindow();
 		DialogTransitions_DisplayFromRectangle(GetDialogWindow(dialogPtr), parentWindow, inTransitionOpenRectOrNull);
 		
 		Cursors_UseArrow();
@@ -667,7 +667,7 @@ EditTerminal	(Preferences_Class		inClass,
 		wasInAliasText = false;
 		
 		// display dialog and handle events
-		parentWindow = EventLoop_GetRealFrontWindow();
+		parentWindow = EventLoop_ReturnRealFrontWindow();
 		DialogTransitions_DisplayFromRectangle(GetDialogWindow(dialog), parentWindow, inTransitionOpenRectOrNull);
 		
 		// set the focus

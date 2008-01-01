@@ -101,7 +101,7 @@ Boolean
 	ColorUtilities_IsColorGrafPort				(GrafPtr				inPort);
 
 SInt16
-	ColorUtilities_GetCurrentDepth				(CGrafPtr				inPort);
+	ColorUtilities_ReturnCurrentDepth			(CGrafPtr				inPort);
 
 //@}
 

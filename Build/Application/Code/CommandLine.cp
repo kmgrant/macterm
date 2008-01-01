@@ -558,25 +558,6 @@ CommandLine_AddInterpreter	(CommandLine_InterpreterProcPtr		inProcPtr)
 
 
 /*!
-Returns the Mac OS window for the command line.
-
-WARNING:	This will auto-initialize the module if needed
-			(by creating the window).  If you intend to do a
-			simple query, look at CommandLine_IsVisible() or
-			other similar methods that may not trigger this
-			initialization.
-
-(3.0)
-*/
-WindowRef
-CommandLine_GetWindow ()
-{
-	if (nullptr == gCommandLineWindow) CommandLine_Init();
-	return gCommandLineWindow;
-}// GetWindow
-
-
-/*!
 Returns true only if the command line is visible.  Useful
 to avoid auto-initializing this module when doing a simple
 query.
@@ -589,6 +570,25 @@ CommandLine_IsVisible ()
 	if (nullptr == gCommandLineWindow) return false;
 	return IsWindowVisible(gCommandLineWindow);
 }// IsVisible
+
+
+/*!
+Returns the Mac OS window for the command line.
+
+WARNING:	This will auto-initialize the module if needed
+			(by creating the window).  If you intend to do a
+			simple query, look at CommandLine_IsVisible() or
+			other similar methods that may not trigger this
+			initialization.
+
+(3.0)
+*/
+WindowRef
+CommandLine_ReturnWindow ()
+{
+	if (nullptr == gCommandLineWindow) CommandLine_Init();
+	return gCommandLineWindow;
+}// ReturnWindow
 
 
 /*!
@@ -1049,7 +1049,7 @@ parseCommandLine	(CFStringRef		inText,
 		isBlank = (0 == CFStringGetLength(inText));
 		
 		// check for URLs first
-		if (kNotURL != URL_GetTypeFromCFString(inText))
+		if (kNotURL != URL_ReturnTypeFromCFString(inText))
 		{
 			try
 			{

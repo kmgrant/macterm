@@ -209,7 +209,7 @@ FormatDialog_New	(FormatDialogSetupDataConstPtr		inSetupDataPtr,
 		Cursors_DeferredUseWatch(30); // if it takes more than half a second to initialize, show the watch cursor
 		
 		// initialize data
-		ptr->screenWindow = EventLoop_GetRealFrontWindow();
+		ptr->screenWindow = EventLoop_ReturnRealFrontWindow();
 		GetNewDialogWithWindowInfo(kDialogIDFormat, &ptr->dialog, &ptr->windowInfo);
 		ptr->closeNotifyProc = inCloseNotifyProcPtr;
 		ptr->setupData = *inSetupDataPtr;
@@ -472,7 +472,7 @@ Returns nullptr if any problems occur.
 (3.0)
 */
 WindowRef
-FormatDialog_GetParentWindow	(FormatDialogRef	inDialog)
+FormatDialog_ReturnParentWindow		(FormatDialogRef	inDialog)
 {
 	FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
 	WindowRef			result = nullptr;
@@ -484,7 +484,7 @@ FormatDialog_GetParentWindow	(FormatDialogRef	inDialog)
 	}
 	gFormatDialogHandleLocks().releaseLock(inDialog, &ptr);
 	return result;
-}// GetParentWindow
+}// ReturnParentWindow
 
 
 /*!
@@ -932,7 +932,7 @@ handleItemHit	(FormatDialogPtr		inPtr,
 			
 			LGetSelect(true/* get nearest */, &selectedCell/* on input, cell to start at; on output, selected cell */,
 						getCharacterSetList(inPtr));
-			encoding = TextTranslation_GetIndexedCharacterSet(1 + selectedCell.v/* one-based set index */);
+			encoding = TextTranslation_ReturnIndexedCharacterSet(1 + selectedCell.v/* one-based set index */);
 			error = RevertTextEncodingToScriptInfo(encoding, &scriptCode, nullptr/* language */, nullptr/* region */);
 			if (error == noErr) KeyScript(scriptCode);
 			else KeyScript(smKeySysScript); // on error, revert to the default script
@@ -1304,7 +1304,7 @@ setItemsForFormat		(FormatDialogPtr			inPtr,
 				
 				
 				// - find font text encoding
-				// - find text encoding in menu using TextTranslation_GetCharacterSetIndex()
+				// - find text encoding in menu using TextTranslation_ReturnCharacterSetIndex()
 				//MenuBar_ReturnMenuItemIndexByItemText(getCharacterSetList(inPtr), fontName);
 				//SetDialogItemValue(inPtr->dialog, iFormatEditFontPopUpMenu, index);
 				//DrawOneDialogItem(inPtr->dialog, iFormatEditFontPopUpMenu);

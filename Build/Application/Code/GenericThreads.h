@@ -94,27 +94,27 @@ OSStatus
 ###############################################################*/
 
 GenericThreadRef
-	GenericThreads_GetByDescriptor			(GenericThreadDescriptor	inThreadDescriptor);
+	GenericThreads_ReturnByDescriptor		(GenericThreadDescriptor	inThreadDescriptor);
 
 // AVOID IF AT ALL POSSIBLE
 GenericThreadRef
-	GenericThreads_GetByThreadManagerID		(ThreadID					inThreadID);
+	GenericThreads_ReturnByThreadManagerID	(ThreadID					inThreadID);
 
 GenericThreadRef
-	GenericThreads_GetCurrent				();
+	GenericThreads_ReturnCurrent			();
 
 GenericThreadDescriptor
-	GenericThreads_GetDescriptorOf			(GenericThreadRef			inThread);
+	GenericThreads_ReturnDescriptorOf		(GenericThreadRef			inThread);
 
 voidPtr
-	GenericThreads_GetResultOf				(GenericThreadRef			inThread);
+	GenericThreads_ReturnResultOf			(GenericThreadRef			inThread);
 
 UInt32
-	GenericThreads_GetStackOf				(GenericThreadRef			inThread);
+	GenericThreads_ReturnStackOf			(GenericThreadRef			inThread);
 
 // AVOID IF AT ALL POSSIBLE
 ThreadID
-	GenericThreads_GetThreadManagerID		(GenericThreadRef			inThread);
+	GenericThreads_ReturnThreadManagerID	(GenericThreadRef			inThread);
 
 /*###############################################################
 	THREAD CONTROL

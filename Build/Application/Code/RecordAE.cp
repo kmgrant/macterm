@@ -187,7 +187,7 @@ RecordAE_CreateRecordableAppleEvent		(DescType		inEventClass,
 	OSStatus	result = noErr;
 	
 	
-	result = AECreateAppleEvent(inEventClass, inEventID, RecordAE_GetSelfAddress(),
+	result = AECreateAppleEvent(inEventClass, inEventID, RecordAE_ReturnSelfAddress(),
 								kAutoGenerateReturnID, kAnyTransactionID, outAppleEventPtr);
 	return result;
 }// CreateRecordableAppleEvent
@@ -201,10 +201,10 @@ you have not used RecordAE_Init().
 (3.0)
 */
 AEAddressDesc const*
-RecordAE_GetSelfAddress ()
+RecordAE_ReturnSelfAddress ()
 {
 	return &gSelfAddress;
-}// GetSelfAddress
+}// ReturnSelfAddress
 
 
 #pragma mark Internal Methods

@@ -617,7 +617,7 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 		case kMyDataBrowserPropertyIDInvokeWith:
 			// return the text string for the key equivalent
 			{
-				MacroManager_InvocationMethod const		kMacroKeys = Macros_GetMode();
+				MacroManager_InvocationMethod const		kMacroKeys = Macros_ReturnMode();
 				
 				
 				switch (inItemID)
@@ -925,7 +925,7 @@ getFinderListCellData		(FinderListRef					UNUSED_ARGUMENT(inRef),
 	{
 		kDynamicBufferSize = 255 * sizeof(char)
 	};
-	MacroManager_InvocationMethod   macroKeys = Macros_GetMode();
+	MacroManager_InvocationMethod   macroKeys = Macros_ReturnMode();
 	char const*						string = nullptr;
 	static Ptr						buffer = nullptr;
 	Boolean							result = false;
@@ -1122,7 +1122,7 @@ getFinderListCellData		(FinderListRef					UNUSED_ARGUMENT(inRef),
 		case kMacrosFinderListColumnDescriptorContents:
 			// read the appropriate text directly from the macro store
 			{
-				MacroSet	macroSet = Macros_GetActiveSet();
+				MacroSet	macroSet = Macros_ReturnActiveSet();
 				
 				
 				switch (inRowDescriptor)
@@ -1294,7 +1294,7 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			refreshDisplay(interfacePtr);
-			if (kMacroManager_InvocationMethodCommandDigit == Macros_GetMode())
+			if (kMacroManager_InvocationMethodCommandDigit == Macros_ReturnMode())
 			{
 				SetControl32BitValue(radioButtonInvokeWithCommandKeys, kControlRadioButtonCheckedValue);
 				SetControl32BitValue(radioButtonInvokeWithFunctionKeys, kControlRadioButtonUncheckedValue);
@@ -1409,7 +1409,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
 		{
-			//MyMacrosPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_GetAuxiliaryDataPtr(inPanel), MyMacrosPanelDataPtr);
+			//MyMacrosPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnAuxiliaryDataPtr(inPanel), MyMacrosPanelDataPtr);
 			//Boolean				isNowVisible = *((Boolean*)inDataPtr);
 			
 			

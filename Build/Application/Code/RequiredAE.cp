@@ -262,7 +262,7 @@ RequiredAE_HandleApplicationReopen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEve
 	{
 		// handle the case where MacTelnet has no open windows and the user
 		// double-clicks its icon in the Finder
-		if (EventLoop_GetRealFrontWindow() == nullptr)
+		if (EventLoop_ReturnRealFrontWindow() == nullptr)
 		{
 			// no open windows - respond by spawning a shell
 			Commands_ExecuteByID(kCommandNewSessionShell);
@@ -479,7 +479,7 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 									StringUtilities_PEndsWith(file.name, "\p.macros"))
 						{
 							// read a macro set, replacing the next set if there is more than one
-							UInt16		preservedActiveSetNumber = Macros_GetActiveSetNumber();
+							UInt16		preservedActiveSetNumber = Macros_ReturnActiveSetNumber();
 							
 							
 							// no more than the maximum number of macro sets can be simultaneously imported
@@ -490,7 +490,7 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 								
 								Macros_SetActiveSetNumber(setNumber);
 								macrosImportedSuccessfully += Macros_ImportFromText
-																(Macros_GetActiveSet(), &file, &mode);
+																(Macros_ReturnActiveSet(), &file, &mode);
 								Macros_SetMode(mode);
 								Macros_SetActiveSetNumber(preservedActiveSetNumber);
 							}
@@ -981,7 +981,7 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 {
 	OSStatus	result = noErr;
 	SInt16		itemHit = kAlertStdAlertOKButton; // if only 1 session is open, the user “Reviews” it
-	SInt32		sessionCount = SessionFactory_GetCount();
+	SInt32		sessionCount = SessionFactory_ReturnCount();
 	Boolean		doQuit = false;
 	
 	

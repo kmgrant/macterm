@@ -7,7 +7,7 @@
 	shared libraries specific to one program.
 	
 	Data Access Library 1.3
-	© 1998-2004 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -62,7 +62,7 @@ ex. Mac OS 8.5.1
 (3.0)
 */
 UInt8
-Releases_GetMajorRevisionForVersion 	(long const		inVersion)
+Releases_ReturnMajorRevisionForVersion 	(long const		inVersion)
 {
 	long		scrap = ((inVersion >> 8) & 0x000000FF);
 	UInt8		result = 0;
@@ -70,7 +70,7 @@ Releases_GetMajorRevisionForVersion 	(long const		inVersion)
 	
 	result = nibblesToBase10(scrap);
 	return result;
-}// GetMajorRevisionForVersion
+}// ReturnMajorRevisionForVersion
 
 
 /*!
@@ -88,7 +88,7 @@ ex. Mac OS 8.5.1
 (3.0)
 */
 UInt8
-Releases_GetMinorRevisionForVersion 	(long const		inVersion)
+Releases_ReturnMinorRevisionForVersion 	(long const		inVersion)
 {
 	long		scrap = ((inVersion >> 4) & 0x0000000F);
 	UInt8		result = 0;
@@ -96,7 +96,7 @@ Releases_GetMinorRevisionForVersion 	(long const		inVersion)
 	
 	result = (scrap);
 	return result;
-}// GetMinorRevisionForVersion
+}// ReturnMinorRevisionForVersion
 
 
 /*!
@@ -114,7 +114,7 @@ ex. Mac OS 8.5.1
 (3.0)
 */
 UInt8
-Releases_GetSuperminorRevisionForVersion 	(long const		inVersion)
+Releases_ReturnSuperminorRevisionForVersion 	(long const		inVersion)
 {
 	long		scrap = (inVersion & 0x0000000F);
 	UInt8		result = 0;
@@ -122,7 +122,7 @@ Releases_GetSuperminorRevisionForVersion 	(long const		inVersion)
 	
 	result = (scrap);
 	return result;
-}// GetSuperminorRevisionForVersion
+}// ReturnSuperminorRevisionForVersion
 
 
 #pragma mark Internal Methods

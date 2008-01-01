@@ -385,29 +385,6 @@ StatusIcon_AddStageFromOldColorIcon		(StatusIconRef						inRef,
 
 
 /*!
-Returns a handle to the control that draws a
-status icon.  You need to call this method in
-order to display the icon in a window!
-
-(3.0)
-*/
-ControlRef
-StatusIcon_GetContainerControl		(StatusIconRef		inRef)
-{
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
-	ControlRef		result = nullptr;
-	
-	
-	if (ptr != nullptr)
-	{
-		result = ptr->userPane;
-	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
-	return result;
-}// GetContainerControl
-
-
-/*!
 Determines if animation is currently turned on
 for a status icon.
 
@@ -427,6 +404,29 @@ StatusIcon_IsAnimating		(StatusIconRef		inRef)
 	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// IsAnimating
+
+
+/*!
+Returns a handle to the control that draws a
+status icon.  You need to call this method in
+order to display the icon in a window!
+
+(3.0)
+*/
+HIViewRef
+StatusIcon_ReturnContainerView		(StatusIconRef		inRef)
+{
+	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	HIViewRef		result = nullptr;
+	
+	
+	if (ptr != nullptr)
+	{
+		result = ptr->userPane;
+	}
+	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
+	return result;
+}// ReturnContainerView
 
 
 /*!

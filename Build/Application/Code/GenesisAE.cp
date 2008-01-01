@@ -373,7 +373,7 @@ evolveWindow	(ObjectClassesAE_TokenPtr   inoutClassStructurePtr,
 	
 	if (descType == cMyWindow)
 	{
-		WindowInfoRef   windowInfo = WindowInfo_GetFromWindow(window);
+		WindowInfoRef   windowInfo = WindowInfo_ReturnFromWindow(window);
 		
 		
 		if (windowInfo != nullptr)
@@ -381,7 +381,7 @@ evolveWindow	(ObjectClassesAE_TokenPtr   inoutClassStructurePtr,
 			WindowInfoDescriptor	windowDescriptor = kInvalidWindowInfoDescriptor;
 			
 			
-			windowDescriptor = WindowInfo_GetWindowDescriptor(windowInfo);
+			windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfo);
 			switch (windowDescriptor)
 			{
 			case kConstantsRegistry_WindowDescriptorAnyTerminal:

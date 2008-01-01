@@ -307,7 +307,7 @@ your undo callback routine.
 (2.0)
 */
 Undoables_ContextIdentifier
-Undoables_GetActionID	(Undoables_ActionRef	inActionToAdd)
+Undoables_ReturnActionID	(Undoables_ActionRef	inActionToAdd)
 {
 	Undoables_ContextIdentifier		result = kUndoables_ContextIdentifierInvalid;
 	MyUndoDataAutoLocker			ptr(gUndoDataPtrLocks(), inActionToAdd);
@@ -318,7 +318,7 @@ Undoables_GetActionID	(Undoables_ActionRef	inActionToAdd)
 		result = ptr->contextID;
 	}
 	return result;
-}// GetActionID
+}// ReturnActionID
 
 
 /*!

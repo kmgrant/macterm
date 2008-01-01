@@ -177,7 +177,7 @@ Macros_Init ()
 				if (noErr == FSMakeFSSpec(folder.vRefNum, folder.parID, fileName, &file))
 				{
 					// if this point is reached, then the requested file exists; import it!
-					Macros_ImportFromText(Macros_GetActiveSet(), &file, &mode);
+					Macros_ImportFromText(Macros_ReturnActiveSet(), &file, &mode);
 				}
 			}
 		}
@@ -229,7 +229,7 @@ Macros_Done ()
 						// disk the macros go; export them!  Note that due to the nature of
 						// the import procedure, the “persistent” macro mode will really be
 						// Macro Set 1’s mode.
-						Macros_ExportToText(Macros_GetActiveSet(), &file, Macros_GetMode());
+						Macros_ExportToText(Macros_ReturnActiveSet(), &file, Macros_ReturnMode());
 						
 						// since MacTelnet depends on the file having a specific name, make
 						// sure the user can’t change it
@@ -493,51 +493,6 @@ Macros_Get	(MacroSet		inFromWhichSet,
 
 
 /*!
-Returns the active macro set.
-
-(3.0)
-*/
-MacroSet
-Macros_GetActiveSet ()
-{
-	return gMacros[Macros_GetActiveSetNumber() - 1];
-}// GetActiveSet
-
-
-/*!
-Determines which set (from 1 to MACRO_SET_COUNT) is
-active.  The active set is the one which is referenced
-by the Macros_Get() and Macros_Set() methods.
-
-(3.0)
-*/
-MacroSetNumber
-Macros_GetActiveSetNumber ()
-{
-	return gActiveSet;
-}// GetActiveSetNumber
-
-
-/*!
-Determines the current macro mode.  The mode does not
-affect how macros are stored or manipulated, it only
-affects what is required by the user in order to “type”
-one.  The default macro mode is "command-digit", which
-means that one of the key combinations from -0 through
--9 or -= or -/ is required to type a macro.  Other
-modes, such as "function key" (F1-F12), are also
-available.
-
-(3.0)
-*/
-MacroManager_InvocationMethod
-Macros_GetMode ()
-{
-	return gMacroMode;
-}// GetMode
-
-
-/*!
 Imports macros.  If you pass nullptr for the file specification,
 the user is prompted to locate a file from which to fill in the
 macro set.  If the user does not cancel and no errors occur
@@ -686,6 +641,51 @@ Macros_ParseTextBuffer	(MacroSet							inSet,
 
 
 /*!
+Returns the active macro set.
+
+(3.0)
+*/
+MacroSet
+Macros_ReturnActiveSet ()
+{
+	return gMacros[Macros_ReturnActiveSetNumber() - 1];
+}// ReturnActiveSet
+
+
+/*!
+Determines which set (from 1 to MACRO_SET_COUNT) is
+active.  The active set is the one which is referenced
+by the Macros_Get() and Macros_Set() methods.
+
+(3.0)
+*/
+MacroSetNumber
+Macros_ReturnActiveSetNumber ()
+{
+	return gActiveSet;
+}// ReturnActiveSetNumber
+
+
+/*!
+Determines the current macro mode.  The mode does not
+affect how macros are stored or manipulated, it only
+affects what is required by the user in order to “type”
+one.  The default macro mode is "command-digit", which
+means that one of the key combinations from -0 through
+-9 or -= or -/ is required to type a macro.  Other
+modes, such as "function key" (F1-F12), are also
+available.
+
+(3.0)
+*/
+MacroManager_InvocationMethod
+Macros_ReturnMode ()
+{
+	return gMacroMode;
+}// ReturnMode
+
+
+/*!
 Explicitlys change the value of a particular macro.
 You can use the Macros_Copy() method to work between
 two macro spaces.
@@ -827,7 +827,7 @@ MacroManager_UserInputMacroString	(SessionRef		inSession,
 {
 	UInt8*				mp = nullptr;
 	UInt8*				first = nullptr;
-	register UInt16		zeroBasedActiveSetNumber = Macros_GetActiveSetNumber() - 1;
+	register UInt16		zeroBasedActiveSetNumber = Macros_ReturnActiveSetNumber() - 1;
 	Boolean				result = true;
 	
 	

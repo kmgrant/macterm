@@ -186,11 +186,11 @@ always
 (2.6)
 */
 char const*
-TektronixNullOutput_GetDeviceName ()
+TektronixNullOutput_ReturnDeviceName ()
 {
 	// DO NOTHING!
 	return nullptr;
-}// GetDeviceName
+}// ReturnDeviceName
 
 
 /*!

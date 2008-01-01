@@ -215,13 +215,6 @@ UInt16
 												 DialogItemIndex			inItemIndex,
 												 UInt16						inMinimumWidth = 58);
 
-UInt16
-	Localization_GetSingleLineTextHeight		(ThemeFontID				inThemeFontToUse);
-
-UInt16
-	Localization_GetSingleLineTextWidth			(ConstStringPtr				inString,
-												 ThemeFontID				inThemeFontToUse);
-
 void
 	Localization_HorizontallyCenterControlWithinContainer	(ControlRef		inControlToCenterHorizontally,
 												 ControlRef					inContainerOrNullToUseHierarchyParent = nullptr);
@@ -234,6 +227,13 @@ void
 	Localization_HorizontallyPlaceItems			(DialogRef					inDialog,
 												 DialogItemIndex			inItemIndex1,
 												 DialogItemIndex			inItemIndex2);
+
+UInt16
+	Localization_ReturnSingleLineTextHeight		(ThemeFontID				inThemeFontToUse);
+
+UInt16
+	Localization_ReturnSingleLineTextWidth		(ConstStringPtr				inString,
+												 ThemeFontID				inThemeFontToUse);
 
 OSStatus
 	Localization_SetControlThemeFontInfo		(ControlRef					inControl,

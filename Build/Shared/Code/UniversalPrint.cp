@@ -158,40 +158,6 @@ UniversalPrint_Done ()
 
 
 /*!
-Returns a constant describing the printing
-architecture that this library supports.
-The ÒtraditionalÓ architecture refers to
-the Print Manager in place for Mac OS 8.6
-and earlier.  The ÒMac OS XÓ architecture
-refers to the Carbon printing architecture
-that is in place in Mac OS 9.
-
-Since this library handles printing totally
-transparently, you only need to check this
-architecture setting to ensure that the
-installed printing library will run on the
-userÕs system.  A Mac OS 8 version will not
-run under Mac OS X, and vice-versa; however,
-either version can be used under Mac OS 9.
-
-(1.0)
-*/
-UniversalPrint_Architecture
-UniversalPrint_GetArchitecture ()
-{
-	UniversalPrint_Architecture		result =
-				#if TARGET_API_MAC_OS8
-					kUniversalPrint_ArchitectureTraditional;
-				#else
-					kUniversalPrint_ArchitectureMacOSX;
-				#endif
-	
-	
-	return result;
-}// GetArchitecture
-
-
-/*!
 To allocate storage for an architecture-dependent
 data structure and acquire an opaque reference to
 it, use this method.  By using this routine to
@@ -405,7 +371,7 @@ the structure requires two handles, respectively
 to ÒflattenedÓ print settings and ÒflattenedÓ
 page format data.  If the structure contains an
 unknown architecture, "cfragArchitectureErr" is
-returned by UniversalPrint_GetLastResult().
+returned by UniversalPrint_ReturnLastResult().
 
 IMPORTANT:	A Pre-Carbon version of this library
 			will fail to retrieve data stored in
@@ -413,7 +379,7 @@ IMPORTANT:	A Pre-Carbon version of this library
 			whereas the reverse is not true.  If
 			the data canÕt be read, the error
 			"cfragArchitectureErr" is returned by
-			UniversalPrint_GetLastResult().
+			UniversalPrint_ReturnLastResult().
 
 (1.0)
 */
@@ -486,7 +452,7 @@ specified structure), and you must create valid
 handles that this method will resize as needed.
 If the structure contains an unknown
 architecture, "cfragArchitectureErr" is returned
-by UniversalPrint_GetLastResult().
+by UniversalPrint_ReturnLastResult().
 
 IMPORTANT:	A Pre-Carbon version of this library
 			will fail to store data in a Carbon
@@ -494,7 +460,7 @@ IMPORTANT:	A Pre-Carbon version of this library
 			reverse is not true.  If the data
 			canÕt be written, the error
 			"cfragArchitectureErr" is returned
-			by UniversalPrint_GetLastResult().
+			by UniversalPrint_ReturnLastResult().
 
 (1.0)
 */
@@ -518,7 +484,7 @@ UniversalPrint_CopyToSaved	(UniversalPrint_ContextRef			inRef,
 				// COPY the data to the given handle, resizing it if necessary; this allows the use
 				// of a resource handle, if desired, in the given structure
 				UniversalPrint_MakeTraditionalPrintData(inRef, &tempHandle);
-				if (UniversalPrint_GetLastResult(inRef) == noErr)
+				if (UniversalPrint_ReturnLastResult(inRef) == noErr)
 				{
 					if (IsHandleValid(givenHandle))
 					{
@@ -769,55 +735,6 @@ UniversalPrint_GetDeviceResolution	(UniversalPrint_ContextRef	inRef,
 
 
 /*!
-Returns the error code generated from the last
-printing function invoked.  The meaning and
-range of values will depend on the architecture
-(Mac OS 8 or Mac OS X) of this libraryÕs
-implementation.  In the rare event that this
-library needs to make multiple printing-related
-calls to perform a function, the ÒlastÓ result
-will actually refer to the error returned from
-the first call that fails.
-
-(1.0)
-*/
-OSStatus
-UniversalPrint_GetLastResult	(UniversalPrint_ContextRef		inRef)
-{
-	OSStatus		result = noErr;
-	
-	
-	if (inRef != nullptr)
-	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
-		
-		
-		result = ptr->lastResult;
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
-	}
-	else result = memPCErr;
-	
-	return result;
-}// GetLastResult
-
-
-/*!
-Returns a constant describing the current
-printing mode.  You must explicitly set the
-printing mode (using UniversalPrint_SetMode())
-to be sure the printing functions will behave
-as expected.
-
-(1.0)
-*/
-UniversalPrint_Mode
-UniversalPrint_GetMode ()
-{
-	return gPrintingMode;
-}// GetMode
-
-
-/*!
 To acquire the boundaries of a printed page, use
 this method.  Technically, Carbon allows greater
 precision on this measurement, but for compatibility
@@ -977,14 +894,14 @@ To create a new handle that is really a traditional
 "THPrint" containing settings from an opaque print
 record, use this method.
 
-IMPORTANT:	You should generally avoid creating a
-			data structure from an obsolete version
-			of the Printing Manager; this method is
-			for convenience only.
+IMPORTANT:	You should generally avoid creating a data
+			structure from an obsolete version of the
+			Printing Manager; this method is for
+			convenience only.
 
-WARNING:	This method allocates memory, and may
-			fail.  Check UniversalPrint_GetLastResult()
-			to be sure it succeeds.
+WARNING:	This method allocates memory, and may fail.
+			Check UniversalPrint_ReturnLastResult() to
+			be sure it succeeds.
 
 (1.0)
 */
@@ -1088,6 +1005,89 @@ UniversalPrint_PageSetupSheetDisplay	(UniversalPrint_ContextRef			inRef,
 	}
 }// PageSetupSheetDisplay
 #endif
+
+
+/*!
+Returns a constant describing the printing
+architecture that this library supports.
+The ÒtraditionalÓ architecture refers to
+the Print Manager in place for Mac OS 8.6
+and earlier.  The ÒMac OS XÓ architecture
+refers to the Carbon printing architecture
+that is in place in Mac OS 9.
+
+Since this library handles printing totally
+transparently, you only need to check this
+architecture setting to ensure that the
+installed printing library will run on the
+userÕs system.  A Mac OS 8 version will not
+run under Mac OS X, and vice-versa; however,
+either version can be used under Mac OS 9.
+
+(1.0)
+*/
+UniversalPrint_Architecture
+UniversalPrint_ReturnArchitecture ()
+{
+	UniversalPrint_Architecture		result =
+				#if TARGET_API_MAC_OS8
+					kUniversalPrint_ArchitectureTraditional;
+				#else
+					kUniversalPrint_ArchitectureMacOSX;
+				#endif
+	
+	
+	return result;
+}// ReturnArchitecture
+
+
+/*!
+Returns the error code generated from the last
+printing function invoked.  The meaning and
+range of values will depend on the architecture
+(Mac OS 8 or Mac OS X) of this libraryÕs
+implementation.  In the rare event that this
+library needs to make multiple printing-related
+calls to perform a function, the ÒlastÓ result
+will actually refer to the error returned from
+the first call that fails.
+
+(1.0)
+*/
+OSStatus
+UniversalPrint_ReturnLastResult		(UniversalPrint_ContextRef		inRef)
+{
+	OSStatus		result = noErr;
+	
+	
+	if (inRef != nullptr)
+	{
+		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		
+		
+		result = ptr->lastResult;
+		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
+	}
+	else result = memPCErr;
+	
+	return result;
+}// ReturnLastResult
+
+
+/*!
+Returns a constant describing the current
+printing mode.  You must explicitly set the
+printing mode (using UniversalPrint_SetMode())
+to be sure the printing functions will behave
+as expected.
+
+(1.0)
+*/
+UniversalPrint_Mode
+UniversalPrint_ReturnMode ()
+{
+	return gPrintingMode;
+}// ReturnMode
 
 
 /*!

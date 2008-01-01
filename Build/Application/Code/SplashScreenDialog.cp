@@ -117,7 +117,7 @@ SplashScreenDialog_Init ()
 												kWindowNoShadowAttribute/* clear these attributes */);
 			
 			// center window
-			error = RepositionWindow(gSplashScreenWindow, EventLoop_GetRealFrontWindow(),
+			error = RepositionWindow(gSplashScreenWindow, EventLoop_ReturnRealFrontWindow(),
 										kWindowAlertPositionOnMainScreen);
 		}
 	}

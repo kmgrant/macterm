@@ -276,11 +276,7 @@ label so that dialogs can use it to represent a set of
 panels.  For example, labels may be used for text in
 buttons, menus, lists or tabs that select amongst all
 active panels.  Do not assume how your panel’s label
-will be displyed in a user interface.
-
-See also Panel_GetIconSuite(), which lets you provide
-a set of icons for your panel.  The icon often appears
-together with the label in user interface elements.
+will be displayed in a user interface.
 
 The returned string is NOT retained.
 

@@ -4515,7 +4515,7 @@ eraseSection	(TerminalViewPtr	inTerminalViewPtr,
 		
 		
 		GetGWorld(&currentPort, &currentDevice);
-		colorDepth = ColorUtilities_GetCurrentDepth(currentPort);
+		colorDepth = ColorUtilities_ReturnCurrentDepth(currentPort);
 		isColor = IsPortColor(currentPort);
 		
 		// determine the line’s rectangle (e.g. taking into account double-sized text)
@@ -7601,7 +7601,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 				if (result != noErr)
 				{
 					// guess
-					currentModifiers = EventLoop_CurrentModifiers();
+					currentModifiers = EventLoop_ReturnCurrentModifiers();
 					result = noErr;
 				}
 				
@@ -7813,7 +7813,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 					SetGWorld(oldPort, oldDevice);
 					
 					// update the key modifiers parameter with the latest key modifier states
-					currentModifiers = EventLoop_CurrentModifiers();
+					currentModifiers = EventLoop_ReturnCurrentModifiers();
 					result = SetEventParameter(inEvent, kEventParamKeyModifiers,
 												typeUInt32, sizeof(currentModifiers), &currentModifiers);
 					

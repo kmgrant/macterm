@@ -224,7 +224,7 @@ CoreSuiteAE_CountElementsOfContainer	(DescType		inTypeOfCountedElements,
 				*outCount = 0L;
 				if ((inContainerClass == typeNull) || (inContainerClass == cApplication))
 				{
-					WindowRef	window = EventLoop_GetRealFrontWindow();
+					WindowRef	window = EventLoop_ReturnRealFrontWindow();
 					
 					
 					while (window != nullptr)
@@ -237,13 +237,13 @@ CoreSuiteAE_CountElementsOfContainer	(DescType		inTypeOfCountedElements,
 			
 			case cMySessionWindow:
 				// count all open session windows
-				*outCount = SessionFactory_GetCount();
+				*outCount = SessionFactory_ReturnCount();
 				break;
 			
 			case cMyTerminalWindow:
 				// count all open terminal windows, which includes both sessions and simple consoles
 				// unimplemented!
-				*outCount = SessionFactory_GetCount();
+				*outCount = SessionFactory_ReturnCount();
 				break;
 			
 			case cMyMacroSet:

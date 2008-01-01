@@ -1448,7 +1448,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 			if (result == noErr)
 			{
 				Rect		controlRect;
-				SInt16		colorDepth = ColorUtilities_GetCurrentDepth(drawingPort);
+				SInt16		colorDepth = ColorUtilities_ReturnCurrentDepth(drawingPort);
 				Boolean		isColorDevice = IsPortColor(drawingPort);
 				
 				

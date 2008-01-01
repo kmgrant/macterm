@@ -11,7 +11,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2007 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -68,50 +68,50 @@ enum URL_InternetLocation
 
 #pragma mark Public Methods
 
-UniformResourceLocatorType
-	URL_GetTypeFromCFString			(CFStringRef					inURLCFString);
-
-UniformResourceLocatorType
-	URL_GetTypeFromCharacterRange	(char const*					inBegin,
-									 char const*					inPastEnd);
-
-UniformResourceLocatorType
-	URL_GetTypeFromDataHandle		(Handle							inURLDataHandle);
-
 void
-	URL_HandleForScreenView			(TerminalScreenRef				inScreen,
-									 TerminalViewRef				inView);
+	URL_HandleForScreenView				(TerminalScreenRef				inScreen,
+										 TerminalViewRef				inView);
 
 OSStatus
-	URL_MakeSSHResourceLocator		(CFStringRef&					outNewURLString,
-									 char const*					inHostName,
-									 char const*					inPortStringOrNull = nullptr,
-									 char const*					inUserNameOrNull = nullptr);
+	URL_MakeSSHResourceLocator			(CFStringRef&					outNewURLString,
+										 char const*					inHostName,
+										 char const*					inPortStringOrNull = nullptr,
+										 char const*					inUserNameOrNull = nullptr);
 
 OSStatus
-	URL_MakeTelnetResourceLocator	(CFStringRef&					outNewURLString,
-									 char const*					inHostName,
-									 char const*					inPortStringOrNull = nullptr,
-									 char const*					inUserNameOrNull = nullptr);
+	URL_MakeTelnetResourceLocator		(CFStringRef&					outNewURLString,
+										 char const*					inHostName,
+										 char const*					inPortStringOrNull = nullptr,
+										 char const*					inUserNameOrNull = nullptr);
 
 Boolean
-	URL_OpenInternetLocation		(URL_InternetLocation			inSpecialInternetLocationToOpen);
+	URL_OpenInternetLocation			(URL_InternetLocation			inSpecialInternetLocationToOpen);
 
 OSStatus
-	URL_ParseCFString				(CFStringRef					inURLCFString);
+	URL_ParseCFString					(CFStringRef					inURLCFString);
+
+UniformResourceLocatorType
+	URL_ReturnTypeFromCFString			(CFStringRef					inURLCFString);
+
+UniformResourceLocatorType
+	URL_ReturnTypeFromCharacterRange	(char const*					inBegin,
+										 char const*					inPastEnd);
+
+UniformResourceLocatorType
+	URL_ReturnTypeFromDataHandle		(Handle							inURLDataHandle);
 
 Boolean
-	URL_SendGetURLEventToSelf		(void const*					inDataPtr,
-									 Size							inDataSize,
-									 AEDesc*						outReplyPtrOrNull);
+	URL_SendGetURLEventToSelf			(void const*					inDataPtr,
+										 Size							inDataSize,
+										 AEDesc*						outReplyPtrOrNull);
 
 Boolean
-	URL_SetSelectionToProximalURL	(TerminalView_Cell const&		inCommandClickColumnRow,
-									 TerminalScreenRef				inScreen,
-									 TerminalViewRef				inView);
+	URL_SetSelectionToProximalURL		(TerminalView_Cell const&		inCommandClickColumnRow,
+										 TerminalScreenRef				inScreen,
+										 TerminalViewRef				inView);
 
 Boolean
-	URL_TypeIsHandledByAppItself	(UniformResourceLocatorType		inType);
+	URL_TypeIsHandledByAppItself		(UniformResourceLocatorType		inType);
 
 #endif
 

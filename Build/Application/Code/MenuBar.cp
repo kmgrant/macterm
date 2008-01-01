@@ -383,48 +383,6 @@ MenuBar_CopyMenuItemTextByCommandID	(UInt32			inCommandID,
 
 
 /*!
-Determines the enabled or disabled (dimmed) state of a
-menu item in a menu bar menu knowing only its command ID.
-If the command specified cannot be found in any menu,
-this method does nothing and returns "false".
-
-IMPORTANT:	All commands must be associated with a
-			MenuCommandStateTrackerProcPtr callback, or
-			this routine will return "false" for any
-			item that does not have one.  MacTelnet always
-			determines item states dynamically, not
-			statically, so this routine will not read
-			the current enabled state of the item.
-			Rather, it invokes the commandÕs callback to
-			determine what the item state *should* be,
-			which ultimately is what youÕre interested
-			in, right???
-
-(3.0)
-*/
-Boolean
-MenuBar_GetMenuItemEnabledByCommandID	(UInt32		inCommandID)
-{
-	MenuRef							menu1 = nullptr;
-	MenuRef							menu2 = nullptr;
-	MenuItemIndex					itemIndex1 = 0;
-	MenuItemIndex					itemIndex2 = 0;
-	MenuCommandStateTrackerProcPtr	proc = nullptr;
-	Boolean							result = false;
-	
-	
-	getMenusAndMenuItemIndicesByCommandID(inCommandID, &menu1, &menu2, &itemIndex1, &itemIndex2);
-	if ((nullptr != menu1) && (itemIndex1 > 0)) // only look at the primary menu (both should be the same anyway)
-	{
-		getMenuItemAdjustmentProc(menu1, itemIndex1, &proc);
-		if (nullptr != proc) result = MenuBar_InvokeCommandStateTracker(proc, inCommandID, menu1, itemIndex1);
-	}
-	
-	return result;
-}// GetMenuItemEnabledByCommandID
-
-
-/*!
 Returns the global rectangle approximating the
 physical boundaries of the specified menuÕs title
 in the menu bar.  You might use this to show a
@@ -752,6 +710,48 @@ MenuBar_HandleMenuCommandByID	(UInt32		inCommandID)
 
 
 /*!
+Determines the enabled or disabled (dimmed) state of a
+menu item in a menu bar menu knowing only its command ID.
+If the command specified cannot be found in any menu,
+this method does nothing and returns "false".
+
+IMPORTANT:	All commands must be associated with a
+			MenuCommandStateTrackerProcPtr callback, or
+			this routine will return "false" for any
+			item that does not have one.  MacTelnet always
+			determines item states dynamically, not
+			statically, so this routine will not read
+			the current enabled state of the item.
+			Rather, it invokes the commandÕs callback to
+			determine what the item state *should* be,
+			which ultimately is what youÕre interested
+			in, right???
+
+(3.0)
+*/
+Boolean
+MenuBar_IsMenuCommandEnabled	(UInt32		inCommandID)
+{
+	MenuRef							menu1 = nullptr;
+	MenuRef							menu2 = nullptr;
+	MenuItemIndex					itemIndex1 = 0;
+	MenuItemIndex					itemIndex2 = 0;
+	MenuCommandStateTrackerProcPtr	proc = nullptr;
+	Boolean							result = false;
+	
+	
+	getMenusAndMenuItemIndicesByCommandID(inCommandID, &menu1, &menu2, &itemIndex1, &itemIndex2);
+	if ((nullptr != menu1) && (itemIndex1 > 0)) // only look at the primary menu (both should be the same anyway)
+	{
+		getMenuItemAdjustmentProc(menu1, itemIndex1, &proc);
+		if (nullptr != proc) result = MenuBar_InvokeCommandStateTracker(proc, inCommandID, menu1, itemIndex1);
+	}
+	
+	return result;
+}// IsMenuCommandEnabled
+
+
+/*!
 To determine if a menu contains no item with
 text identical to the specified item text,
 use this method.
@@ -1060,7 +1060,7 @@ addWindowMenuItemSessionOp	(SessionRef		inSession,
 	{
 		// no window yet; find a descriptive string for this session
 		// (resource location will be a remote URL or local Unix command)
-		nameCFString = Session_GetResourceLocationCFString(inSession);
+		nameCFString = Session_ReturnResourceLocationCFString(inSession);
 		if (nullptr == nameCFString)
 		{
 			nameCFString = CFSTR("<no name or URL found>"); // LOCALIZE THIS?
@@ -1173,12 +1173,12 @@ areSessionRelatedItemsEnabled ()
 {
 	Boolean		result = false;
 #if 0
-	WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
+	WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
 	
 	
 	if (nullptr != frontWindow)
 	{
-		short		windowKind = GetWindowKind(EventLoop_GetRealFrontWindow());
+		short		windowKind = GetWindowKind(EventLoop_ReturnRealFrontWindow());
 		
 		
 		result = ((windowKind == WIN_CNXN) || (windowKind == WIN_SHELL));
@@ -1202,12 +1202,12 @@ static Boolean
 areTEKRelatedItemsEnabled ()
 {
 	Boolean		result = false;
-	WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
+	WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
 	
 	
 	if (nullptr != frontWindow)
 	{
-		short		windowKind = GetWindowKind(EventLoop_GetRealFrontWindow());
+		short		windowKind = GetWindowKind(EventLoop_ReturnRealFrontWindow());
 		
 		
 		result = ((windowKind == WIN_CNXN) || (windowKind == WIN_SHELL));
@@ -1834,7 +1834,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			MenuRef const	kWindowMenu = GetMenuRef(kMenuIDWindow);
 			
 			
-			switch (Session_GetState(session))
+			switch (Session_ReturnState(session))
 			{
 				case kSession_StateActiveUnstable:
 				case kSession_StateImminentDisposal:
@@ -2514,7 +2514,7 @@ setUpScriptsMenu	(MenuRef	inMenu)
 			
 			// locate the Scripts folder, and find out when it was last modified
 			error = Folder_GetFSSpec(kFolder_RefScriptsMenuItems, &scriptsFolder);
-			date = FileUtilities_GetDirectoryDateFromFSSpec(&scriptsFolder, kFileUtilitiesDateOfModification);
+			date = FileUtilities_ReturnDirectoryDateFromFSSpec(&scriptsFolder, kFileUtilitiesDateOfModification);
 			
 			// only rebuild the Scripts menu if the Scripts Menu Items folder was found
 			// and the user has actually changed the folder contents
@@ -2962,7 +2962,7 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 	
 	
 	// first, set the icon
-	switch (Session_GetState(inSession))
+	switch (Session_ReturnState(inSession))
 	{
 	case kSession_StateBrandNew:
 	case kSession_StateInitialized:
@@ -3065,7 +3065,7 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 	// set up convenient data pointers
 	if (areSessionRelatedItemsEnabled())
 	{
-		WindowRef		frontWindow = EventLoop_GetRealFrontWindow();
+		WindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
 		
 		
 		if (nullptr != frontWindow)
@@ -3187,7 +3187,7 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 									 MenuRef			inMenu,
 									 MenuItemIndex		inItemNumber)
 {
-	WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
+	WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
 	Boolean		result = false;
 	
 	
@@ -3213,7 +3213,7 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 	case kCommandEndCaptureToFile:
 		result = areSessionRelatedItemsEnabled();
 		{
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(EventLoop_GetRealFrontWindow());
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
 			
 			
 			if ((result) && (nullptr != terminalWindow))
@@ -3276,7 +3276,7 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 				(inCommandID == kCommandPreviousWindow) ||
 				(inCommandID == kCommandPreviousWindowHideCurrent))
 		{
-			result = (result && (nullptr != GetNextWindow(EventLoop_GetRealFrontWindow())));
+			result = (result && (nullptr != GetNextWindow(EventLoop_ReturnRealFrontWindow())));
 		}
 		else if (inCommandID == kCommandTerminalNewWorkspace)
 		{
@@ -3351,7 +3351,7 @@ stateTrackerPrintingItems	(UInt32				inCommandID,
 	case kCommandPrintScreen:
 	case kCommandPageSetup:
 		{
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(EventLoop_GetRealFrontWindow());
+			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
 			
 			
 			result = (nullptr != terminalWindow);
@@ -3373,7 +3373,7 @@ stateTrackerPrintingItems	(UInt32				inCommandID,
 				SInt16		graphicNumber = 0;
 				
 				
-				result = TektronixRealGraphics_IsRealGraphicsWindow(EventLoop_GetRealFrontWindow(), &graphicNumber);
+				result = TektronixRealGraphics_IsRealGraphicsWindow(EventLoop_ReturnRealFrontWindow(), &graphicNumber);
 			}
 		}
 		break;
@@ -3407,7 +3407,7 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	case kCommandFindAgain:
 	case kCommandFindPrevious:
 		{
-			WindowRef		window = EventLoop_GetRealFrontWindow();
+			WindowRef		window = EventLoop_ReturnRealFrontWindow();
 			
 			
 			if (TerminalWindow_ExistsFor(window))
@@ -3434,7 +3434,7 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	
 	case kCommandMinimizeWindow:
 		{
-			WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
+			WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
 			
 			
 			result = (nullptr != frontWindow); // there must be at least one window
@@ -3444,7 +3444,7 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	case kCommandZoomWindow:
 	case kCommandMaximizeWindow:
 		{
-			WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
+			WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
 			
 			
 			result = (nullptr != frontWindow); // there must be at least one window
@@ -3469,7 +3469,7 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	case kCommandHideOtherWindows:
 		// TMP - incomplete, should really be disabled if all other terminal windows are hidden
 		result = (areSessionRelatedItemsEnabled()/* implicitly checks for a frontmost terminal window */ &&
-					(SessionFactory_GetCount() > 1)); // there must be multiple connection windows open!
+					(SessionFactory_ReturnCount() > 1)); // there must be multiple connection windows open!
 		break;
 	
 	case kCommandShowAllHiddenWindows:
@@ -3494,13 +3494,13 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	case kCommandShowMacros:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(MacroSetupWindow_GetWindow()));
+								false == IsWindowVisible(MacroSetupWindow_ReturnWindow()));
 		break;
 	
 	case kCommandHideMacros:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(MacroSetupWindow_GetWindow()));
+								IsWindowVisible(MacroSetupWindow_ReturnWindow()));
 		break;
 	
 	case kCommandShowCommandLine:
@@ -3516,37 +3516,37 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	case kCommandShowControlKeys:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(Keypads_GetWindow(kKeypads_WindowTypeControlKeys)));
+								false == IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys)));
 		break;
 	
 	case kCommandHideControlKeys:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(Keypads_GetWindow(kKeypads_WindowTypeControlKeys)));
+								IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys)));
 		break;
 	
 	case kCommandShowFunction:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(Keypads_GetWindow(kKeypads_WindowTypeFunctionKeys)));
+								false == IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys)));
 		break;
 	
 	case kCommandHideFunction:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(Keypads_GetWindow(kKeypads_WindowTypeFunctionKeys)));
+								IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys)));
 		break;
 	
 	case kCommandShowKeypad:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(Keypads_GetWindow(kKeypads_WindowTypeVT220Keys)));
+								false == IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys)));
 		break;
 	
 	case kCommandHideKeypad:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(Keypads_GetWindow(kKeypads_WindowTypeVT220Keys)));
+								IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys)));
 		break;
 	
 	default:
@@ -3573,7 +3573,7 @@ stateTrackerStandardEditItems	(UInt32			inCommandID,
 								 MenuItemIndex	inItemNumber)
 {
 	TerminalViewRef		currentTerminalView = nullptr;
-	WindowRef			frontWindow = EventLoop_GetRealFrontWindow();
+	WindowRef			frontWindow = EventLoop_ReturnRealFrontWindow();
 	Boolean				isDialog = false;
 	Boolean				isReadOnly = false;
 	Boolean				isTerminal = false;
@@ -3668,7 +3668,7 @@ stateTrackerStandardEditItems	(UInt32			inCommandID,
 							if (nullptr == selectedText) result = false;
 							else
 							{
-								urlKind = URL_GetTypeFromDataHandle(selectedText);
+								urlKind = URL_ReturnTypeFromDataHandle(selectedText);
 								if (urlKind == kNotURL) result = false; // disable command for non-URL text selections
 								Memory_DisposeHandle(&selectedText);
 							}
@@ -3748,7 +3748,7 @@ stateTrackerTEKItems	(UInt32				inCommandID,
 	{
 	case kCommandTEKPageCommand:
 	case kCommandTEKPageClearsScreen:
-		if (TerminalWindow_ExistsFor(EventLoop_GetRealFrontWindow()))
+		if (TerminalWindow_ExistsFor(EventLoop_ReturnRealFrontWindow()))
 		{
 			SessionRef		session = SessionFactory_ReturnUserFocusSession();
 			

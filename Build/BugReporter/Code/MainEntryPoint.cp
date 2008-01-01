@@ -368,9 +368,9 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 						// must appear doubled in the format string; each "%" destined for
 						// substitution by std::snprintf() must NOT be doubled!!!
 						CPP_STD::snprintf(s, sizeof(s), "%%20%%20This%%20computer%%20is%%20running%%20Mac%%20OS%%20X%%20%d.%d.%d.%%0D",
-											Releases_GetMajorRevisionForVersion(gestaltResult),
-											Releases_GetMinorRevisionForVersion(gestaltResult),
-											Releases_GetSuperminorRevisionForVersion(gestaltResult));
+											Releases_ReturnMajorRevisionForVersion(gestaltResult),
+											Releases_ReturnMinorRevisionForVersion(gestaltResult),
+											Releases_ReturnSuperminorRevisionForVersion(gestaltResult));
 					}
 					CFStringAppendCString(modifiedURLCFString, s, kCFStringEncodingUTF8);
 				}

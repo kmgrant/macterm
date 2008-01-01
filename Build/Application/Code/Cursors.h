@@ -20,8 +20,8 @@
 */
 /*###############################################################
 
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.0
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -102,11 +102,11 @@ Boolean
 SInt16
 	Cursors_DeferredUseWatch			(UInt32				inForHowManyTicks);
 
-SInt16
-	Cursors_GetCurrent					();
-
 void
 	Cursors_Idle						();
+
+SInt16
+	Cursors_ReturnCurrent				();
 
 SInt16
 	Cursors_Use							(SInt16				inCursorID);

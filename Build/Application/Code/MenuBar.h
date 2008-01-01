@@ -189,6 +189,9 @@ void
 													 CFStringRef&					outUniqueItemText);
 
 Boolean
+	MenuBar_IsMenuCommandEnabled					(UInt32							inCommandID);
+
+Boolean
 	MenuBar_IsMenuItemUnique						(MenuRef						inMenu,
 													 ConstStringPtr					inItemText);
 

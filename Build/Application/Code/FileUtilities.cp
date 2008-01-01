@@ -192,7 +192,7 @@ specification record.
 (3.0)
 */
 long
-FileUtilities_GetDirectoryIDFromFSSpec		(FSSpec const*		inFSSpecPtr)
+FileUtilities_ReturnDirectoryIDFromFSSpec	(FSSpec const*		inFSSpecPtr)
 {
 	StrFileName		name;
 	CInfoPBRec		thePB;
@@ -209,7 +209,7 @@ FileUtilities_GetDirectoryIDFromFSSpec		(FSSpec const*		inFSSpecPtr)
 	if (PBGetCatInfoSync(&thePB) == noErr) result = thePB.dirInfo.ioDrDirID;
 	
 	return result;
-}// GetDirectoryIDFromFSSpec
+}// ReturnDirectoryIDFromFSSpec
 
 
 /*!
@@ -224,8 +224,8 @@ it against another time).
 (3.0)
 */
 unsigned long
-FileUtilities_GetDirectoryDateFromFSSpec	(FSSpec const*		inFSSpecPtr,
-											 FileUtilitiesDate	inWhichDate)
+FileUtilities_ReturnDirectoryDateFromFSSpec		(FSSpec const*		inFSSpecPtr,
+												 FileUtilitiesDate	inWhichDate)
 {
 	StrFileName		name;
 	CInfoPBRec		thePB;
@@ -260,7 +260,7 @@ FileUtilities_GetDirectoryDateFromFSSpec	(FSSpec const*		inFSSpecPtr,
 	}
 	
 	return result;
-}// GetDirectoryModificationTimeFromFSSpec
+}// ReturnDirectoryModificationTimeFromFSSpec
 
 
 /*!
@@ -555,30 +555,6 @@ FileUtilities_GetTypedFilesInDirectory	(FSSpec const*		inDirectorySpecPtr,
 
 
 /*!
-Converts the given volume name into a disk
-volume reference number.  If the named
-volume cannot be found, the default volume
-reference number is returned.
-
-(2.6)
-*/
-short
-FileUtilities_GetVolumeReferenceNumberByName	(Str32		inVolumeName)
-{
-	short	result = -1;
-	
-	
-#if TARGET_API_MAC_OS8
-	if (HSetVol(inVolumeName, 0, fsRtDirID) == noErr) GetVol(nullptr, &result);
-#else
-	HGetVol(inVolumeName, &result, nullptr/* directory ID */);
-#endif
-	
-	return result;
-}// GetVolumeReferenceNumberByName
-
-
-/*!
 This routine launches an application with standard
 launch flags and (under OS 8.5 or later) the
 Òlaunch applicationÓ Finder theme sound.  If any
@@ -811,6 +787,30 @@ FileUtilities_PersistentCreate		(FSSpec*		inoutFSSpecPtr,
 
 
 /*!
+Converts the given volume name into a disk
+volume reference number.  If the named
+volume cannot be found, the default volume
+reference number is returned.
+
+(2.6)
+*/
+short
+FileUtilities_ReturnVolumeRefNumberForName	(Str32		inVolumeName)
+{
+	short	result = -1;
+	
+	
+#if TARGET_API_MAC_OS8
+	if (HSetVol(inVolumeName, 0, fsRtDirID) == noErr) GetVol(nullptr, &result);
+#else
+	HGetVol(inVolumeName, &result, nullptr/* directory ID */);
+#endif
+	
+	return result;
+}// ReturnVolumeRefNumberByName
+
+
+/*!
 Reads a text file into the specified handle, resizing
 it if necessary to fit the data.  The number of bytes
 read from the file is returned.
@@ -1026,7 +1026,7 @@ threadedGetFilesInDirectory		(FSSpec const*		inDirectorySpecPtr,
 					upperRangePtr->hFileInfo.ioFlFndrInfo.fdType =
 						upperRangePtr->hFileInfo.ioFlFndrInfo.fdCreator = STATIC_CAST(0xFFFFFFFF, OSType);
 					lowerRangePtr->hFileInfo.ioFlParID =
-						upperRangePtr->hFileInfo.ioFlParID = FileUtilities_GetDirectoryIDFromFSSpec(inDirectorySpecPtr);
+						upperRangePtr->hFileInfo.ioFlParID = FileUtilities_ReturnDirectoryIDFromFSSpec(inDirectorySpecPtr);
 					upperRangePtr->hFileInfo.ioFlFndrInfo.fdFlags = 0;
 					upperRangePtr->hFileInfo.ioFlFndrInfo.fdLocation.h = 0;
 					upperRangePtr->hFileInfo.ioFlFndrInfo.fdLocation.v = 0;
@@ -1139,7 +1139,7 @@ threadedGetFilesInDirectory2	(FSSpec const*	inDirectorySpecPtr,
 		register UInt16		i = 0;
 		UInt32				maximum = *inoutFileMaxCountFileActualCountPtr;
 		UInt32				originalTicks = TickCount(); // save time to determine approximate timeout
-		SInt32				directoryID = FileUtilities_GetDirectoryIDFromFSSpec(inDirectorySpecPtr);
+		SInt32				directoryID = FileUtilities_ReturnDirectoryIDFromFSSpec(inDirectorySpecPtr);
 		
 		
 		*inoutFileMaxCountFileActualCountPtr = 0; // no files initially

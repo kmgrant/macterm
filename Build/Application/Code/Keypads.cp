@@ -557,7 +557,7 @@ returned.
 (3.0)
 */
 WindowRef
-Keypads_GetWindow	(Keypads_WindowType		inFromKeypad)
+Keypads_ReturnWindow	(Keypads_WindowType		inFromKeypad)
 {
 	WindowRef	result = nullptr;
 	
@@ -584,7 +584,7 @@ Keypads_GetWindow	(Keypads_WindowType		inFromKeypad)
 	}
 	
 	return result;
-}// GetWindow
+}// ReturnWindow
 
 
 #pragma mark Internal Methods

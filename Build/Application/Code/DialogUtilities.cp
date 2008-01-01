@@ -2140,7 +2140,7 @@ StandardDialogEventFilter	(DialogRef			inDialog,
 						
 						
 						// the auxiliary structure must exist in order to get the sizing information
-						if ((windowFeaturesRef = WindowInfo_GetFromDialog(inDialog)) != nullptr)
+						if ((windowFeaturesRef = WindowInfo_ReturnFromDialog(inDialog)) != nullptr)
 						{
 							WindowInfo_GrowWindow(GetDialogWindow(inDialog), inoutEventPtr);
 						}

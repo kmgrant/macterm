@@ -76,12 +76,12 @@ Boolean
 Boolean
 	DragAndDrop_DragIsExactlyOneFile		(DragRef		inDrag);
 
-UInt16
-	DragAndDrop_GetDragItemCount			(DragRef		inDrag);
-
 OSStatus
 	DragAndDrop_GetDraggedTextAsNewHandle	(DragRef		inDrag,
 											 Handle*		outTextHandlePtr);
+
+UInt16
+	DragAndDrop_ReturnDragItemCount			(DragRef		inDrag);
 
 //@}
 

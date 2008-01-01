@@ -112,8 +112,8 @@ void
 										 SInt16								inIconResourceID,
 										 UInt32								inAnimationDelayInTicks);
 
-ControlRef
-	StatusIcon_GetContainerControl		(StatusIconRef						inRef);
+HIViewRef
+	StatusIcon_ReturnContainerView		(StatusIconRef						inRef);
 
 Boolean
 	StatusIcon_IsAnimating				(StatusIconRef						inRef);

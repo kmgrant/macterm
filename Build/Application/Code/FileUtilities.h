@@ -76,13 +76,6 @@ OSStatus
 													 FSSpec*			inFileArrayStoragePtr,
 													 UInt32*			inoutFileMaxCountFileActualCountPtr);
 
-unsigned long
-	FileUtilities_GetDirectoryDateFromFSSpec		(FSSpec const*		inFSSpecPtr,
-													 FileUtilitiesDate	inWhichDate);
-
-long
-	FileUtilities_GetDirectoryIDFromFSSpec			(FSSpec const*		inFSSpecPtr);
-
 void
 	FileUtilities_GetDirectoryName					(short				inVRefNum,
 													 long				inDirID,
@@ -111,9 +104,6 @@ OSStatus
 													 StringPtr			outFullPathNameString,
 													 Boolean			inIsDirectory);
 
-short
-	FileUtilities_GetVolumeReferenceNumberByName	(Str32				inVolumeName);
-
 OSStatus
 	FileUtilities_LaunchApplicationFromFSSpec		(FSSpec*			inFSSpecPtr);
 
@@ -131,6 +121,16 @@ OSStatus
 													 OSType				inCreator,
 													 OSType				inType,
 													 ScriptCode			inScriptTag);
+
+unsigned long
+	FileUtilities_ReturnDirectoryDateFromFSSpec		(FSSpec const*		inFSSpecPtr,
+													 FileUtilitiesDate	inWhichDate);
+
+long
+	FileUtilities_ReturnDirectoryIDFromFSSpec		(FSSpec const*		inFSSpecPtr);
+
+short
+	FileUtilities_ReturnVolumeRefNumberForName		(Str32				inVolumeName);
 
 SInt32
 	FileUtilities_TextToHandle						(SInt16				inFileRefNum,

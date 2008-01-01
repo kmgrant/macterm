@@ -83,7 +83,7 @@ OSStatus
 											 AppleEvent*		outAppleEventPtr);
 
 AEAddressDesc const*
-	RecordAE_GetSelfAddress					();
+	RecordAE_ReturnSelfAddress				();
 
 //@}
 

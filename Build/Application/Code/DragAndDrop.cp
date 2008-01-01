@@ -359,32 +359,6 @@ DragAndDrop_GetDraggedTextAsNewHandle	(DragRef	inDragRef,
 
 
 /*!
-If the specified drag began via this moduleÕs internal
-tracking handler, returns the number of items in that
-drag; otherwise, returns 0.
-
-(3.0)
-*/
-UInt16
-DragAndDrop_GetDragItemCount	(DragRef	inDragRef)
-{
-	UInt16								result = 0;
-	DragRefToDragInfoPtrMap::iterator	pairIterator = gDragRefsToDragInfoPtrs().find(inDragRef);
-	
-	
-	// find the drag data corresponding to this drag
-	if (pairIterator != gDragRefsToDragInfoPtrs().end())
-	{
-		DragInfoPtr		dragInfoPtr = pairIterator->second;
-		
-		
-		result = dragInfoPtr->numberOfDragItems;
-	}
-	return result;
-}// GetDragItemCount
-
-
-/*!
 Erases a standard drag highlight background.  Call this as
 part of your handling for the mouse leaving a valid drop
 region.
@@ -529,6 +503,32 @@ DragAndDrop_HideHighlightFrame	(CGrafPtr		inPort,
 	RGBForeColor(&oldForeColor);
 	SetGWorld(oldPort, oldDevice);
 }// HideHighlightFrame
+
+
+/*!
+If the specified drag began via this moduleÕs internal
+tracking handler, returns the number of items in that
+drag; otherwise, returns 0.
+
+(3.0)
+*/
+UInt16
+DragAndDrop_ReturnDragItemCount		(DragRef	inDragRef)
+{
+	UInt16								result = 0;
+	DragRefToDragInfoPtrMap::iterator	pairIterator = gDragRefsToDragInfoPtrs().find(inDragRef);
+	
+	
+	// find the drag data corresponding to this drag
+	if (pairIterator != gDragRefsToDragInfoPtrs().end())
+	{
+		DragInfoPtr		dragInfoPtr = pairIterator->second;
+		
+		
+		result = dragInfoPtr->numberOfDragItems;
+	}
+	return result;
+}// ReturnDragItemCount
 
 
 /*!
@@ -759,10 +759,10 @@ receiveDropHandler	(WindowRef		inWindow,
 			WindowInfoRef		windowFeaturesRef = nullptr;
 			
 			
-			windowFeaturesRef = WindowInfo_GetFromWindow(inWindow);
+			windowFeaturesRef = WindowInfo_ReturnFromWindow(inWindow);
 			if (windowFeaturesRef != nullptr)
 			{
-				windowDescriptor = WindowInfo_GetWindowDescriptor(windowFeaturesRef);
+				windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowFeaturesRef);
 			}
 		}
 		
@@ -936,8 +936,8 @@ trackingHandler	(DragTrackingMessage	inMessage,
 		}
 		
 		// determine the MacTelnet window descriptor, if possible
-		windowInfoRef = WindowInfo_GetFromWindow(inWindow);
-		if (windowInfoRef != nullptr) windowDescriptor = WindowInfo_GetWindowDescriptor(windowInfoRef);
+		windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
+		if (windowInfoRef != nullptr) windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
 		
 		switch (inMessage)
 		{
@@ -978,7 +978,7 @@ trackingHandler	(DragTrackingMessage	inMessage,
 			// if not the frontmost window, fire a timer that will
 			// bring the window to the front after a short delay
 			// TEMPORARY: doing this immediately without delay
-			unless (EventLoop_GetRealFrontWindow() == inWindow)
+			unless (EventLoop_ReturnRealFrontWindow() == inWindow)
 			{
 				SelectWindow(inWindow);
 			}

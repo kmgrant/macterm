@@ -217,16 +217,16 @@ TelnetPrinting_End		(TerminalPrintingInfoPtr	inPrintingInfoPtr)
 			
 			if (UniversalPrint_JobDialogDisplay(printRecordRef)) // if false, printing was cancelled
 			{
-				if ((error = UniversalPrint_GetLastResult(printRecordRef)) != noErr) {/* error */}
+				if ((error = UniversalPrint_ReturnLastResult(printRecordRef)) != noErr) {/* error */}
 				
 				UniversalPrint_BeginDocument(printRecordRef);
-				if ((error = UniversalPrint_GetLastResult(printRecordRef)) != noErr) failed = true;
+				if ((error = UniversalPrint_ReturnLastResult(printRecordRef)) != noErr) failed = true;
 				else
 				{
 					printPages(printRecordRef, (StringPtr)nullptr/* donÕt print title */,
 								inPrintingInfoPtr->wrapColumnCount, nullptr, inPrintingInfoPtr->temporaryFileRefNum);
 					UniversalPrint_EndDocument(printRecordRef);
-					if ((error = UniversalPrint_GetLastResult(printRecordRef)) != noErr) {/* error */}
+					if ((error = UniversalPrint_ReturnLastResult(printRecordRef)) != noErr) {/* error */}
 				}
 			}
 			
@@ -245,63 +245,6 @@ TelnetPrinting_End		(TerminalPrintingInfoPtr	inPrintingInfoPtr)
 	
 	if (failed) Sound_StandardAlert();
 }// End
-
-
-/*!
-To create a new Universal Print Record and
-either fill it in with default values or
-any saved values from the preferences file,
-use this method.  You dispose of the record
-later with UniversalPrint_DisposeContext().
-
-Always call this routine prior to starting a
-print job, from within a UniversalPrint_Init()-
-UniversalPrint_Done() loop, so that the userÕs
-Page Setup and Print settings are used, and so
-that the default print idle procedure is able
-to let the user cancel the print job.
-
-(3.0)
-*/
-UniversalPrint_ContextRef
-TelnetPrinting_GetNewPrintRecord ()
-{
-	UniversalPrint_ContextRef		result = nullptr;
-	UniversalPrint_SavedContextPtr	printDataPtr = (UniversalPrint_SavedContextPtr)Memory_NewPtr
-																					(sizeof(UniversalPrint_SavedContext));
-	
-	
-	if (printDataPtr != nullptr)
-	{
-		OSStatus	error = noErr;
-		
-		
-		// create a new print record, scanning for a resource
-		result = UniversalPrint_NewContext();
-		
-		printDataPtr->architecture = kUniversalPrint_ArchitectureTraditional;
-		printDataPtr->data.traditional.storageTHPrint = GetResource(kTHPrintResourceType, kTHPrintResourceID);
-		error = ResError();
-		if ((printDataPtr->data.traditional.storageTHPrint != nullptr) && (error == noErr))
-		{
-			// update the opaque data to match the retrieved resource
-			UniversalPrint_CopyFromSaved(result, printDataPtr);
-			ReleaseResource(printDataPtr->data.traditional.storageTHPrint);
-		}
-		else
-		{
-			// create a new default print record and update the opaque data to match it
-			printDataPtr->data.traditional.storageTHPrint = Memory_NewHandle(SIZE_OF_TPRINT);
-			UniversalPrint_DefaultSaved(result, printDataPtr);
-			UniversalPrint_CopyFromSaved(result, printDataPtr);
-			Memory_DisposeHandle(&printDataPtr->data.traditional.storageTHPrint);
-		}
-		Memory_DisposePtr((Ptr*)&printDataPtr);
-	}
-	
-	gPrintRecordInUse = result;
-	return result;
-}// GetNewPrintRecord
 
 
 /*!
@@ -368,7 +311,7 @@ TelnetPrinting_PageSetup		(SInt16		inResourceFileRefNum)
 				{
 					UseResFile(printingResourceFile);
 					UniversalPrint_DefaultSaved(printRecordRef, printDataPtr); // defaults the print record created above
-					error = UniversalPrint_GetLastResult(printRecordRef);
+					error = UniversalPrint_ReturnLastResult(printRecordRef);
 				}
 			}
 			
@@ -380,7 +323,7 @@ TelnetPrinting_PageSetup		(SInt16		inResourceFileRefNum)
 				Console_WriteLine("reading data (either new or existing) into memory");
 				UseResFile(printingResourceFile);
 				UniversalPrint_CopyFromSaved(printRecordRef, printDataPtr);
-				error = UniversalPrint_GetLastResult(printRecordRef);
+				error = UniversalPrint_ReturnLastResult(printRecordRef);
 			}
 			
 			if (error == noErr)
@@ -393,7 +336,7 @@ TelnetPrinting_PageSetup		(SInt16		inResourceFileRefNum)
 					// if the user made changes, copy them back
 					Console_WriteLine("user made changes: writing data to disk");
 					UniversalPrint_CopyToSaved(printRecordRef, printDataPtr);
-					error = UniversalPrint_GetLastResult(printRecordRef);
+					error = UniversalPrint_ReturnLastResult(printRecordRef);
 					if (error == noErr)
 					{
 						UseResFile(inResourceFileRefNum);
@@ -455,7 +398,7 @@ Selections of text or graphics are supported.
 void
 TelnetPrinting_PrintSelection ()
 {
-	WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
+	WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
 	SInt16		i = 0;
 	
 	
@@ -596,7 +539,7 @@ printPages		(UniversalPrint_ContextRef	inPrintingRef,
 		pgcount++;
 		lines = 1;
 		UniversalPrint_BeginPage(inPrintingRef, (Rect*)nullptr);
-		if ((sts=UniversalPrint_GetLastResult(inPrintingRef)) == noErr)
+		if ((sts=UniversalPrint_ReturnLastResult(inPrintingRef)) == noErr)
 		{
 			UniversalPrint_SetIdleProc(inPrintingRef, printIdle);
 			//snprintf (tmp,sizeof(tmp),"printing page:%d",pgcount); //putln(tmp);
@@ -665,7 +608,7 @@ printPages		(UniversalPrint_ContextRef	inPrintingRef,
 				}
 			}
 			UniversalPrint_EndPage(inPrintingRef);
-			if ((sts=UniversalPrint_GetLastResult(inPrintingRef)) != noErr) { /*snprintf(tmp,sizeof(tmp),"ClosePage: ERROR %d",sts); putln(tmp);*/ }
+			if ((sts=UniversalPrint_ReturnLastResult(inPrintingRef)) != noErr) { /*snprintf(tmp,sizeof(tmp),"ClosePage: ERROR %d",sts); putln(tmp);*/ }
 		}
 		else break;
 	}
@@ -693,6 +636,63 @@ printPages		(UniversalPrint_ContextRef	inPrintingRef,
 	RestoreFrontmostWindow();
 	Cursors_UseArrow();
 }// printPages
+
+
+/*!
+To create a new Universal Print Record and
+either fill it in with default values or
+any saved values from the preferences file,
+use this method.  You dispose of the record
+later with UniversalPrint_DisposeContext().
+
+Always call this routine prior to starting a
+print job, from within a UniversalPrint_Init()-
+UniversalPrint_Done() loop, so that the userÕs
+Page Setup and Print settings are used, and so
+that the default print idle procedure is able
+to let the user cancel the print job.
+
+(3.0)
+*/
+UniversalPrint_ContextRef
+TelnetPrinting_ReturnNewPrintRecord ()
+{
+	UniversalPrint_ContextRef		result = nullptr;
+	UniversalPrint_SavedContextPtr	printDataPtr = (UniversalPrint_SavedContextPtr)Memory_NewPtr
+																					(sizeof(UniversalPrint_SavedContext));
+	
+	
+	if (printDataPtr != nullptr)
+	{
+		OSStatus	error = noErr;
+		
+		
+		// create a new print record, scanning for a resource
+		result = UniversalPrint_NewContext();
+		
+		printDataPtr->architecture = kUniversalPrint_ArchitectureTraditional;
+		printDataPtr->data.traditional.storageTHPrint = GetResource(kTHPrintResourceType, kTHPrintResourceID);
+		error = ResError();
+		if ((printDataPtr->data.traditional.storageTHPrint != nullptr) && (error == noErr))
+		{
+			// update the opaque data to match the retrieved resource
+			UniversalPrint_CopyFromSaved(result, printDataPtr);
+			ReleaseResource(printDataPtr->data.traditional.storageTHPrint);
+		}
+		else
+		{
+			// create a new default print record and update the opaque data to match it
+			printDataPtr->data.traditional.storageTHPrint = Memory_NewHandle(SIZE_OF_TPRINT);
+			UniversalPrint_DefaultSaved(result, printDataPtr);
+			UniversalPrint_CopyFromSaved(result, printDataPtr);
+			Memory_DisposeHandle(&printDataPtr->data.traditional.storageTHPrint);
+		}
+		Memory_DisposePtr((Ptr*)&printDataPtr);
+	}
+	
+	gPrintRecordInUse = result;
+	return result;
+}// ReturnNewPrintRecord
 
 
 /*!
@@ -781,13 +781,13 @@ static void printGraph(SInt16 dnum)			/* Which drawing to print */
 	
 	
 	UniversalPrint_Init();
-	printRecordRef = TelnetPrinting_GetNewPrintRecord();
+	printRecordRef = TelnetPrinting_ReturnNewPrintRecord();
 	
 	{
 		Boolean		printOK = false;
 		
 		
-		if (UniversalPrint_GetMode() == kUniversalPrint_ModeNormal)
+		if (UniversalPrint_ReturnMode() == kUniversalPrint_ModeNormal)
 		{
 			DeactivateFrontmostWindow();
 			Cursors_UseArrow();
@@ -803,7 +803,7 @@ static void printGraph(SInt16 dnum)			/* Which drawing to print */
 		if (printOK)
 		{			/* Cancel the print if false */
 			UniversalPrint_BeginDocument(printRecordRef);
-			if (UniversalPrint_GetLastResult(printRecordRef) == noErr)	{				/* If we can't, then die */
+			if (UniversalPrint_ReturnLastResult(printRecordRef) == noErr)	{				/* If we can't, then die */
 				UniversalPrint_BeginPage(printRecordRef, (Rect*)nullptr);				/* Open a page */
 				UniversalPrint_SetIdleProc(printRecordRef, printIdle);
 				
@@ -880,7 +880,7 @@ printText	(TerminalScreenRef	inScreen,			/* Which screen to print */
 	
 	
 	UniversalPrint_Init();
-	printRecordRef = TelnetPrinting_GetNewPrintRecord();
+	printRecordRef = TelnetPrinting_ReturnNewPrintRecord();
 	
 	charh = TerminalView_ReturnSelectedTextAsNewHandle(inView, 0, 0/* flags */);		/* Get the characters to print */
 	
@@ -889,7 +889,7 @@ printText	(TerminalScreenRef	inScreen,			/* Which screen to print */
 		Boolean		printOK = false;
 		
 		
-		if (UniversalPrint_GetMode() == kUniversalPrint_ModeNormal)
+		if (UniversalPrint_ReturnMode() == kUniversalPrint_ModeNormal)
 		{
 			DeactivateFrontmostWindow();
 			Cursors_UseArrow();
@@ -905,7 +905,7 @@ printText	(TerminalScreenRef	inScreen,			/* Which screen to print */
 		if (printOK)
 		{
 			UniversalPrint_BeginDocument(printRecordRef);
-			if (UniversalPrint_GetLastResult(printRecordRef) == noErr)
+			if (UniversalPrint_ReturnLastResult(printRecordRef) == noErr)
 			{
 				printPages(printRecordRef, inTitle, Terminal_ReturnColumnCount(inScreen), charh, (SInt16)-1);
 				UniversalPrint_EndDocument(printRecordRef);

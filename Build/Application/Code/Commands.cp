@@ -295,9 +295,9 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		Boolean				isDialog = false;
 		
 		
-		if (EventLoop_GetRealFrontWindow() != nullptr)
+		if (EventLoop_ReturnRealFrontWindow() != nullptr)
 		{
-			isDialog = (kDialogWindowKind == GetWindowKind(EventLoop_GetRealFrontWindow()));
+			isDialog = (kDialogWindowKind == GetWindowKind(EventLoop_ReturnRealFrontWindow()));
 		}
 		
 		// TEMPORARY: This is a TON of legacy context crap.  Most of this
@@ -437,7 +437,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				
 				
 				// only warn the user if there are any macros in the active set that can be destroyed
-				if (Macros_AllEmpty(Macros_GetActiveSet())) doImport = true;
+				if (Macros_AllEmpty(Macros_ReturnActiveSet())) doImport = true;
 				else
 				{
 					InterfaceLibAlertRef	box = nullptr;
@@ -484,7 +484,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 						// Then the user did not cancel and no errors occurred,
 						// so the macros must have imported successfully.  Tell
 						// the user the good news.
-						Macros_Copy(temp, Macros_GetActiveSet());
+						Macros_Copy(temp, Macros_ReturnActiveSet());
 						Macros_SetMode(mode);
 					}
 					Macros_DisposeSet(&temp);
@@ -494,7 +494,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandExportCurrentMacroSet:
 			// only stop the user if there are no macros in the active set (and therefore no macros to export)
-			if (Macros_AllEmpty(Macros_GetActiveSet()))
+			if (Macros_AllEmpty(Macros_ReturnActiveSet()))
 			{
 				InterfaceLibAlertRef	box = nullptr;
 				UIStrings_Result		stringResult = kUIStrings_ResultOK;
@@ -546,7 +546,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			else
 			{
-				Macros_ExportToText(Macros_GetActiveSet(), nullptr/* no file; prompt user */, Macros_GetMode());
+				Macros_ExportToText(Macros_ReturnActiveSet(), nullptr/* no file; prompt user */, Macros_ReturnMode());
 			}
 			break;
 		
@@ -666,7 +666,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				error = RecordAE_CreateRecordableAppleEvent(kASRequiredSuite, kAEQuitApplication, &quitEvent);
 				if (noErr == error)
 				{
-					Boolean		confirm = (SessionFactory_GetStateCount(kSession_StateActiveStable) > 0);
+					Boolean		confirm = (SessionFactory_ReturnStateCount(kSession_StateActiveStable) > 0);
 					
 					
 					if (confirm)
@@ -715,16 +715,16 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				SInt16		j = 0;
 				
 				
-				j = MacRGfindwind(EventLoop_GetRealFrontWindow()); // ICR window?
-				if (j >= 0) MacRGcopy(EventLoop_GetRealFrontWindow()); // copy the ICR window
+				j = MacRGfindwind(EventLoop_ReturnRealFrontWindow()); // ICR window?
+				if (j >= 0) MacRGcopy(EventLoop_ReturnRealFrontWindow()); // copy the ICR window
 				else if (isDialog)
 				{
-					if (inCommandID == kCommandCut) DialogCut(GetDialogFromWindow(EventLoop_GetRealFrontWindow()));
-					else if (inCommandID == kCommandCopy) DialogCopy(GetDialogFromWindow(EventLoop_GetRealFrontWindow()));
+					if (inCommandID == kCommandCut) DialogCut(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
+					else if (inCommandID == kCommandCopy) DialogCopy(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
 				}
 				else
 				{
-					if (TektronixRealGraphics_IsRealGraphicsWindow(EventLoop_GetRealFrontWindow(), &j))
+					if (TektronixRealGraphics_IsRealGraphicsWindow(EventLoop_ReturnRealFrontWindow(), &j))
 					{
 						Clipboard_GraphicsToScrap(j); // copy graphics
 					}
@@ -771,7 +771,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				// concepts like connections to remote servers)
 				if (isDialog)
 				{
-					DialogDelete(GetDialogFromWindow(EventLoop_GetRealFrontWindow()));
+					DialogDelete(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
 				}
 			}
 			break;
@@ -782,7 +782,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandPaste:	
 			if (isSession) Session_UserInputPaste(frontSession); // paste if there is a window to paste into
-			else if (isDialog) DialogPaste(GetDialogFromWindow(EventLoop_GetRealFrontWindow()));
+			else if (isDialog) DialogPaste(GetDialogFromWindow(EventLoop_ReturnRealFrontWindow()));
 			break;
 		
 		//case kCommandFind:
@@ -1141,7 +1141,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandMinimizeWindow:
 			// behave as if the user clicked the collapse box of the frontmost window
 			{
-				WindowRef		frontWindow = EventLoop_GetRealFrontWindow();
+				WindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
 				Boolean			collapsing = false;
 				
 				
@@ -1173,7 +1173,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandChangeWindowTitle:
 			// display a dialog allowing the user to change the title of a terminal window
-			if (EventLoop_GetRealFrontWindow() == nullptr) Sound_StandardAlert();
+			if (EventLoop_ReturnRealFrontWindow() == nullptr) Sound_StandardAlert();
 			else
 			{
 				WindowTitleDialogRef		dialog = WindowTitleDialog_NewForSession(frontSession);
@@ -1246,7 +1246,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandShowCommandLine:
 			{
-				WindowRef	window = CommandLine_GetWindow();
+				WindowRef	window = CommandLine_ReturnWindow();
 				
 				
 				ShowWindow(window);
@@ -1264,7 +1264,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandHideCommandLine:
 			if (CommandLine_IsVisible())
 			{
-				WindowRef	window = CommandLine_GetWindow();
+				WindowRef	window = CommandLine_ReturnWindow();
 				
 				
 				(OSStatus)SetUserFocusWindow(REINTERPRET_CAST(kUserFocusAuto, WindowRef));
@@ -1294,7 +1294,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandShowControlKeys:
 			{
-				WindowRef	window = Keypads_GetWindow(kKeypads_WindowTypeControlKeys);
+				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys);
 				
 				
 				ShowWindow(window);
@@ -1303,7 +1303,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandHideControlKeys:
 			{
-				WindowRef	window = Keypads_GetWindow(kKeypads_WindowTypeControlKeys);
+				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys);
 				
 				
 				HideWindow(window);
@@ -1312,7 +1312,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandShowFunction:
 			{
-				WindowRef	window = Keypads_GetWindow(kKeypads_WindowTypeFunctionKeys);
+				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys);
 				
 				
 				ShowWindow(window);
@@ -1321,7 +1321,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandHideFunction:
 			{
-				WindowRef	window = Keypads_GetWindow(kKeypads_WindowTypeFunctionKeys);
+				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys);
 				
 				
 				HideWindow(window);
@@ -1330,7 +1330,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandShowKeypad:
 			{
-				WindowRef	window = Keypads_GetWindow(kKeypads_WindowTypeVT220Keys);
+				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys);
 				
 				
 				ShowWindow(window);
@@ -1339,7 +1339,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandHideKeypad:
 			{
-				WindowRef	window = Keypads_GetWindow(kKeypads_WindowTypeVT220Keys);
+				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys);
 				
 				
 				HideWindow(window);
@@ -1374,7 +1374,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				fakeEvent.what = mouseDown;
 				fakeEvent.message = 0;
 				fakeEvent.when = 0;
-				fakeEvent.modifiers = EventLoop_CurrentModifiers();
+				fakeEvent.modifiers = EventLoop_ReturnCurrentModifiers();
 				GetGlobalMouse(&fakeEvent.where);
 				(OSStatus)ContextualMenuBuilder_DisplayMenuForWindow(window, &fakeEvent, inContent);
 			}
@@ -1490,7 +1490,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 						// send a request for "macro set <index>", which resides in a null container;
 						// then, request the "key equivalents" property, and finally, issue an event
 						// that will change its value
-						(OSStatus)BasicTypesAE_CreateSInt32Desc(Macros_GetActiveSetNumber(), &keyDesc);
+						(OSStatus)BasicTypesAE_CreateSInt32Desc(Macros_ReturnActiveSetNumber(), &keyDesc);
 						error = CreateObjSpecifier(cMyMacroSet, &containerDesc,
 													formAbsolutePosition, &keyDesc, true/* dispose inputs */,
 													&objectDesc);
@@ -1585,7 +1585,7 @@ Commands_ExecuteByIDUsingEvent	(UInt32		inCommandID)
 		EventTargetRef	whereToStart = GetUserFocusEventTarget();
 		
 		
-		if (nullptr == whereToStart) whereToStart = GetWindowEventTarget(EventLoop_GetRealFrontWindow());
+		if (nullptr == whereToStart) whereToStart = GetWindowEventTarget(EventLoop_ReturnRealFrontWindow());
 		if (nullptr == whereToStart) whereToStart = GetApplicationEventTarget();
 		assert(nullptr != whereToStart);
 		
@@ -1952,7 +1952,7 @@ static void
 activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 						 Boolean	inHidePreviousWindow)
 {
-	HIWindowRef		frontWindow = EventLoop_GetRealFrontWindow();
+	HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
 	
 	
 	if (nullptr != frontWindow)
@@ -1966,7 +1966,7 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 			// not a session window; so, select the first or last session window
 			SessionRef				nextSession = nullptr;
 			SessionFactory_Result	factoryError = SessionFactory_GetSessionWithZeroBasedIndex
-													((inPreviousInsteadOfNext) ? SessionFactory_GetCount() - 1 : 0,
+													((inPreviousInsteadOfNext) ? SessionFactory_ReturnCount() - 1 : 0,
 														kSessionFactory_ListInCreationOrder, &nextSession);
 			
 			
@@ -1991,12 +1991,12 @@ activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 				// if modified past the bounds, wrap around
 				if (inPreviousInsteadOfNext)
 				{
-					if (frontSessionIndex == 0) frontSessionIndex = SessionFactory_GetCount() - 1;
+					if (frontSessionIndex == 0) frontSessionIndex = SessionFactory_ReturnCount() - 1;
 					else --frontSessionIndex;
 				}
 				else
 				{
-					if (++frontSessionIndex >= SessionFactory_GetCount()) frontSessionIndex = 0;
+					if (++frontSessionIndex >= SessionFactory_ReturnCount()) frontSessionIndex = 0;
 				}
 				
 				factoryError = SessionFactory_GetSessionWithZeroBasedIndex

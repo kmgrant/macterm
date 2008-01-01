@@ -285,10 +285,6 @@ Boolean
 	KEYBOARD STATE INFORMATION
 ###############################################################*/
 
-// FAVOR EVENT-SPECIFIC KEY STATE INFORMATION IF IT IS AVAILABLE
-EventModifiers
-	EventLoop_CurrentModifiers					();
-
 Boolean
 	EventLoop_IsCapsLockKeyDown					();
 
@@ -301,17 +297,21 @@ Boolean
 Boolean
 	EventLoop_IsShiftKeyDown					();
 
+// FAVOR EVENT-SPECIFIC KEY STATE INFORMATION IF IT IS AVAILABLE
+EventModifiers
+	EventLoop_ReturnCurrentModifiers			();
+
 /*###############################################################
 	MISCELLANEOUS
 ###############################################################*/
 
 // DEPRECATED
 WindowRef
-	EventLoop_GetRealFrontNonDialogWindow		();
+	EventLoop_ReturnRealFrontNonDialogWindow	();
 
 // DEPRECATED
 WindowRef
-	EventLoop_GetRealFrontWindow				();
+	EventLoop_ReturnRealFrontWindow				();
 
 #endif
 

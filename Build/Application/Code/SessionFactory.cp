@@ -358,7 +358,7 @@ SessionFactory_NewCloneSession	(TerminalWindowRef		inTerminalWindowOrNullToMakeN
 								 SessionRef				inBaseSession)
 {
 	SessionRef			result = nullptr;
-	CFRetainRelease		sessionResourceString = Session_GetResourceLocationCFString(inBaseSession);
+	CFRetainRelease		sessionResourceString = Session_ReturnResourceLocationCFString(inBaseSession);
 	
 	
 	if (sessionResourceString.exists())
@@ -1360,20 +1360,6 @@ SessionFactory_ForEveryTerminalWindowDo		(SessionFactory_TerminalWindowOpProcPtr
 
 
 /*!
-Returns the number of sessions that are in
-use, regardless of state (i.e. they are counted
-even if they aren’t connected yet).
-
-(3.0)
-*/
-UInt16
-SessionFactory_GetCount ()
-{
-	return gSessionListSortedByCreationTime().size();
-}// GetCount
-
-
-/*!
 Returns the session whose order in the specified list
 (each list is sorted by a different criteria) is the
 index given.
@@ -1427,35 +1413,6 @@ SessionFactory_GetSessionWithZeroBasedIndex		(UInt16					inZeroBasedSessionIndex
 	
 	return result;
 }// GetSessionWithZeroBasedIndex
-
-
-/*!
-Traverses all sessions and counts the number of
-sessions with the specified status.
-
-NOTE:	This operation is currently linear in the
-		number of open sessions.  It could probably
-		be made constant time if this is considered
-		important.
-
-(3.0)
-*/
-UInt16
-SessionFactory_GetStateCount	(Session_State		inStateToCheckFor)
-{
-	SessionList::const_iterator		sessionIterator;
-	UInt16							result = 0;
-	
-	
-	// traverse the list
-	for (sessionIterator = gSessionListSortedByCreationTime().begin();
-			sessionIterator != gSessionListSortedByCreationTime().end(); ++sessionIterator)
-	{
-		if ((nullptr != *sessionIterator) && (Session_GetState(*sessionIterator) == inStateToCheckFor)) ++result;
-	}
-	
-	return result;
-}// GetStateCount
 
 
 /*!
@@ -1575,6 +1532,49 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 	(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
 	fixTerminalWindowTabPositionsInWorkspace()(newWorkspace);
 }// MoveTerminalWindowToNewWorkspace
+
+
+/*!
+Returns the number of sessions that are in
+use, regardless of state (i.e. they are counted
+even if they aren’t connected yet).
+
+(3.0)
+*/
+UInt16
+SessionFactory_ReturnCount ()
+{
+	return gSessionListSortedByCreationTime().size();
+}// ReturnCount
+
+
+/*!
+Traverses all sessions and counts the number of
+sessions with the specified status.
+
+NOTE:	This operation is currently linear in the
+		number of open sessions.  It could probably
+		be made constant time if this is considered
+		important.
+
+(3.0)
+*/
+UInt16
+SessionFactory_ReturnStateCount		(Session_State		inStateToCheckFor)
+{
+	SessionList::const_iterator		sessionIterator;
+	UInt16							result = 0;
+	
+	
+	// traverse the list
+	for (sessionIterator = gSessionListSortedByCreationTime().begin();
+			sessionIterator != gSessionListSortedByCreationTime().end(); ++sessionIterator)
+	{
+		if ((nullptr != *sessionIterator) && (Session_ReturnState(*sessionIterator) == inStateToCheckFor)) ++result;
+	}
+	
+	return result;
+}// ReturnStateCount
 
 
 /*!
@@ -2252,7 +2252,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			SessionRef		session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
 			
 			
-			switch (Session_GetState(session))
+			switch (Session_ReturnState(session))
 			{
 			case kSession_StateImminentDisposal:
 				// final state; delete the session from all internal lists and maps that have it

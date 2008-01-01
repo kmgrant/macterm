@@ -378,7 +378,7 @@ attached to.
 (3.1)
 */
 TerminalWindowRef
-SizeDialog_GetParentTerminalWindow	(TerminalSizeDialogRef	inDialog)
+SizeDialog_ReturnParentTerminalWindow	(TerminalSizeDialogRef	inDialog)
 {
 	SizeDialogAutoLocker	ptr(gSizeDialogPtrLocks(), inDialog);
 	TerminalWindowRef		result = nullptr;
@@ -390,7 +390,7 @@ SizeDialog_GetParentTerminalWindow	(TerminalSizeDialogRef	inDialog)
 	}
 	
 	return result;
-}// GetParentTerminalWindow
+}// ReturnParentTerminalWindow
 
 
 /*!

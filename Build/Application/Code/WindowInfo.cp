@@ -2,8 +2,8 @@
 
 	WindowInfo.cp
 	
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.0
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -124,7 +124,7 @@ WARNING: Calling this method makes the given
 		 use it again.  Also, if you stored any
 		 auxiliary data pointer in the window
 		 features record that needs disposing,
-		 use WindowInfo_GetAuxiliaryDataPtr()
+		 use WindowInfo_ReturnAuxiliaryDataPtr()
 		 to obtain and destroy that data first,
 		 then call this method.
 
@@ -183,7 +183,7 @@ pass a nullptr reference to this method!
 (1.0)
 */
 void*
-WindowInfo_GetAuxiliaryDataPtr	(WindowInfoRef	inWindowInfoRef)
+WindowInfo_ReturnAuxiliaryDataPtr	(WindowInfoRef	inWindowInfoRef)
 {
 	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	void*			result = nullptr;
@@ -192,7 +192,7 @@ WindowInfo_GetAuxiliaryDataPtr	(WindowInfoRef	inWindowInfoRef)
 	result = windowInfoPtr->auxiliaryDataPtr;
 	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
-}// GetAuxiliaryDataPtr
+}// ReturnAuxiliaryDataPtr
 
 
 /*!
@@ -210,10 +210,10 @@ WARNING: The Window Info information is assumed to
 (1.0)
 */
 WindowInfoRef
-WindowInfo_GetFromDialog	(DialogRef	inDialog)
+WindowInfo_ReturnFromDialog		(DialogRef	inDialog)
 {
-	return WindowInfo_GetFromWindow(GetDialogWindow(inDialog));
-}// GetFromDialog
+	return WindowInfo_ReturnFromWindow(GetDialogWindow(inDialog));
+}// ReturnFromDialog
 
 
 /*!
@@ -227,7 +227,7 @@ not present, nullptr is returned.
 (1.0)
 */
 WindowInfoRef
-WindowInfo_GetFromWindow	(WindowRef	inWindow)
+WindowInfo_ReturnFromWindow		(WindowRef	inWindow)
 {
 	WindowInfoRef   result = nullptr;
 	
@@ -246,7 +246,7 @@ WindowInfo_GetFromWindow	(WindowRef	inWindow)
 		}
 	}
 	return result;
-}// GetFromWindow
+}// ReturnFromWindow
 
 
 /*!
@@ -258,7 +258,7 @@ this method!
 (1.0)
 */
 WindowInfoDescriptor
-WindowInfo_GetWindowDescriptor	(WindowInfoRef	inWindowInfoRef)
+WindowInfo_ReturnWindowDescriptor	(WindowInfoRef	inWindowInfoRef)
 {
 	WindowInfoDescriptor	result = kInvalidWindowInfoDescriptor;
 	WindowInfoPtr			windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
@@ -267,7 +267,7 @@ WindowInfo_GetWindowDescriptor	(WindowInfoRef	inWindowInfoRef)
 	if (windowInfoPtr != nullptr) result = (windowInfoPtr->windowDescriptor);
 	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
-}// GetWindowDescriptor
+}// ReturnWindowDescriptor
 
 
 /*!
@@ -324,7 +324,7 @@ YouÕre welcome.
 (1.0)
 */
 Rect*
-WindowInfo_GetWindowResizeLimits	(WindowInfoRef		inWindowInfoRef)
+WindowInfo_ReturnWindowResizeLimits		(WindowInfoRef		inWindowInfoRef)
 {
 	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	Rect*			result = nullptr;
@@ -333,7 +333,7 @@ WindowInfo_GetWindowResizeLimits	(WindowInfoRef		inWindowInfoRef)
 	result = &windowInfoPtr->sizeLimitRect.asRect;
 	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
-}// GetWindowResizeLimits
+}// ReturnWindowResizeLimits
 
 
 /*!
@@ -358,7 +358,7 @@ SInt16
 WindowInfo_GrowWindow	(WindowRef			inWindow,
 						 EventRecord*		inoutEventPtr)
 {
-	WindowInfoRef	windowInfoRef = WindowInfo_GetFromWindow(inWindow);
+	WindowInfoRef	windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
 	SInt16			result = 0;
 	
 	
@@ -415,8 +415,8 @@ WindowInfo_GrowWindow	(WindowRef			inWindow,
 					
 					
 					(OSStatus)Gestalt(gestaltAppearanceVersion, &sysv);
-					majorRev = Releases_GetMajorRevisionForVersion(sysv);
-					minorRev = Releases_GetMinorRevisionForVersion(sysv);
+					majorRev = Releases_ReturnMajorRevisionForVersion(sysv);
+					minorRev = Releases_ReturnMinorRevisionForVersion(sysv);
 					
 					haveAppearance1_1 = (((majorRev == 0x01) && (minorRev >= 0x01)) || (majorRev > 0x01));
 				}
@@ -606,14 +606,14 @@ WindowInfo_GrowWindow	(WindowRef			inWindow,
 			
 		#if TARGET_API_MAC_OS8
 			growResult = GrowWindow(inWindow, inoutEventPtr->where,
-									WindowInfo_GetWindowResizeLimits(windowInfoRef));
+									WindowInfo_ReturnWindowResizeLimits(windowInfoRef));
 		#else
 			{
 				Rect	newContentRect;
 				
 				
 				if (ResizeWindow(inWindow, inoutEventPtr->where,
-									WindowInfo_GetWindowResizeLimits(windowInfoRef),
+									WindowInfo_ReturnWindowResizeLimits(windowInfoRef),
 									&newContentRect))
 				{
 					growResult = (newContentRect.right - newContentRect.left) |
@@ -777,7 +777,7 @@ void
 WindowInfo_NotifyWindowOfContextualMenu	(WindowRef		inWindow,
 										 Point			inGlobalMouse)
 {
-	WindowInfoRef	windowInfoRef = WindowInfo_GetFromWindow(inWindow);
+	WindowInfoRef	windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
 	WindowInfoPtr	windowInfoPtr = nullptr;
 	
 	
@@ -815,7 +815,7 @@ WindowInfo_NotifyWindowOfResize			(WindowRef		inWindow,
 										 SInt32			inDeltaSizeX, 
 										 SInt32			inDeltaSizeY)
 {
-	WindowInfoRef	windowInfoRef = WindowInfo_GetFromWindow(inWindow);
+	WindowInfoRef	windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
 	WindowInfoPtr	windowInfoPtr = nullptr;
 	
 	

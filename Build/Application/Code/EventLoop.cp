@@ -360,56 +360,6 @@ EventLoop_Done ()
 
 
 /*!
-Determines the absolutely current state of the
-modifier keys and the mouse button.  The
-modifiers are somewhat incomplete (for example,
-no checking is done for the Òright shift keyÓ,
-etc.), but all the common modifiers (command,
-control, shift, option, caps lock, and the
-mouse button) are returned.
-
-(3.0)
-*/
-EventModifiers
-EventLoop_CurrentModifiers ()
-{
-	// under Carbon, a callback updates a global variable whenever
-	// the state of a modifier key changes; so, just return that value
-	return gCarbonEventModifiers;
-}// CurrentModifiers
-
-
-/*!
-Use instead of FrontWindow() to return the frontmost
-non-floating window that might be behind a frontmost
-modal dialog box.
-
-(3.0)
-*/
-WindowRef
-EventLoop_GetRealFrontNonDialogWindow ()
-{
-	WindowRef	result = FrontNonFloatingWindow();
-	
-	
-	return result;
-}// GetRealFrontNonDialogWindow
-
-
-/*!
-Use instead of FrontWindow() to return the active
-non-floating window.
-
-(3.0)
-*/
-WindowRef
-EventLoop_GetRealFrontWindow ()
-{
-	return ActiveNonFloatingWindow();
-}// GetRealFrontWindow
-
-
-/*!
 This method handles Color Picker 2.0+ event
 requests in as simple a way as possible: by
 responding to update events.  Time is also
@@ -804,6 +754,56 @@ EventLoop_RegisterButtonClickKey	(ControlRef					inButton,
 	
 	return result;
 }// RegisterButtonClickKey
+
+
+/*!
+Determines the absolutely current state of the
+modifier keys and the mouse button.  The
+modifiers are somewhat incomplete (for example,
+no checking is done for the Òright shift keyÓ,
+etc.), but all the common modifiers (command,
+control, shift, option, caps lock, and the
+mouse button) are returned.
+
+(3.0)
+*/
+EventModifiers
+EventLoop_ReturnCurrentModifiers ()
+{
+	// under Carbon, a callback updates a global variable whenever
+	// the state of a modifier key changes; so, just return that value
+	return gCarbonEventModifiers;
+}// ReturnCurrentModifiers
+
+
+/*!
+Use instead of FrontWindow() to return the frontmost
+non-floating window that might be behind a frontmost
+modal dialog box.
+
+(3.0)
+*/
+WindowRef
+EventLoop_ReturnRealFrontNonDialogWindow ()
+{
+	WindowRef	result = FrontNonFloatingWindow();
+	
+	
+	return result;
+}// ReturnRealFrontNonDialogWindow
+
+
+/*!
+Use instead of FrontWindow() to return the active
+non-floating window.
+
+(3.0)
+*/
+WindowRef
+EventLoop_ReturnRealFrontWindow ()
+{
+	return ActiveNonFloatingWindow();
+}// ReturnRealFrontWindow
 
 
 /*!
@@ -1698,7 +1698,7 @@ handleKeyDown	(EventRecord*	inoutEventPtr)
 		
 		
 		// figure out which window has focus
-		keyPressInfo.window = EventLoop_GetRealFrontWindow();
+		keyPressInfo.window = EventLoop_ReturnRealFrontWindow();
 		keyPressInfo.event = *inoutEventPtr; // TEMPORARY - best not to rely on this structure elsewhere
 		keyPressInfo.characterCode = inoutEventPtr->message & charCodeMask;
 		keyPressInfo.virtualKeyCode = ((inoutEventPtr->message & keyCodeMask) >> 8);
@@ -1861,10 +1861,10 @@ handleUpdate	(EventRecord*		inoutEventPtr)
 		else
 		{
 			// scan for known windows
-			windowInfoRef = WindowInfo_GetFromWindow(windowToUpdate);
+			windowInfoRef = WindowInfo_ReturnFromWindow(windowToUpdate);
 			if (windowInfoRef != nullptr)
 			{
-				WindowInfoDescriptor		windowDescriptor = WindowInfo_GetWindowDescriptor(windowInfoRef);
+				WindowInfoDescriptor	windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
 				
 				
 				switch (windowDescriptor)
@@ -2289,17 +2289,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						
 						// this item is disabled if the Preferences window is in front
-						if (EventLoop_GetRealFrontWindow() == nullptr) enabled = true;
+						if (EventLoop_ReturnRealFrontWindow() == nullptr) enabled = true;
 						else
 						{
 							WindowInfoRef			windowInfoRef = nullptr;
 							WindowInfoDescriptor	windowDescriptor = kInvalidWindowInfoDescriptor;
 							
 							
-							windowInfoRef = WindowInfo_GetFromWindow(EventLoop_GetRealFrontWindow());
+							windowInfoRef = WindowInfo_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
 							if (windowInfoRef != nullptr)
 							{
-								windowDescriptor = WindowInfo_GetWindowDescriptor(windowInfoRef);
+								windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
 							}
 							enabled = (windowDescriptor != kConstantsRegistry_WindowDescriptorPreferences);
 						}
@@ -2328,7 +2328,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						
 						// set enabled state; inactive only if no particular help context is set
-						if (HelpSystem_GetCurrentContextKeyPhrase() == kHelpSystem_KeyPhraseDefault)
+						if (HelpSystem_ReturnCurrentContextKeyPhrase() == kHelpSystem_KeyPhraseDefault)
 						{
 							DisableMenuItem(received.menu.menuRef, received.menu.menuItemIndex);
 						}
@@ -2339,7 +2339,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						// set the item text
 						helpSystemResult = HelpSystem_CopyKeyPhraseCFString
-											(HelpSystem_GetCurrentContextKeyPhrase(), itemText);
+											(HelpSystem_ReturnCurrentContextKeyPhrase(), itemText);
 						if (helpSystemResult == kHelpSystem_ResultOK)
 						{
 							SetMenuItemTextWithCFString(received.menu.menuRef, received.menu.menuItemIndex, itemText);
@@ -2603,7 +2603,7 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										nullptr/* actual size */, &scrollInfo.window) != noErr)
 				{
 					// cannot find information (implies Mac OS X 10.0.x) - fine, assume frontmost window
-					scrollInfo.window = EventLoop_GetRealFrontWindow();
+					scrollInfo.window = EventLoop_ReturnRealFrontWindow();
 				}
 				scrollInfo.horizontal.affected = (axis == kEventMouseWheelAxisX);
 				scrollInfo.vertical.affected = (axis == kEventMouseWheelAxisY);

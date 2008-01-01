@@ -576,7 +576,7 @@ getMacroByAbsolutePosition	(AEDesc const*		inReference,
 												false/* is a record */, outObjectOfDesiredClass);
 						if (result == noErr)
 						{
-							UInt16				oldSetNumber = Macros_GetActiveSetNumber();
+							UInt16				oldSetNumber = Macros_ReturnActiveSetNumber();
 							register SInt16		i = 0;
 							char				macroData[255]; // TEMPORARY (arbitrary size restriction)
 							
@@ -586,7 +586,7 @@ getMacroByAbsolutePosition	(AEDesc const*		inReference,
 							{
 								// add each macro to the list
 								Console_WriteLine("new macro descriptor");
-								Macros_Get(Macros_GetActiveSet(), i, macroData, sizeof(macroData));
+								Macros_Get(Macros_ReturnActiveSet(), i, macroData, sizeof(macroData));
 								result = AECreateDesc(cStringClass, macroData, CPP_STD::strlen(macroData),
 														&macroDesc);
 								Console_WriteValue("adding to list if zero:", result);
@@ -620,11 +620,11 @@ getMacroByAbsolutePosition	(AEDesc const*		inReference,
 		if ((handled) && (result == noErr) && (isNotAList))
 		{
 			char	macroData[255]; // TEMPORARY (arbitrary size restriction)
-			UInt16  oldSetNumber = Macros_GetActiveSetNumber();
+			UInt16  oldSetNumber = Macros_ReturnActiveSetNumber();
 			
 			
 			Console_WriteLine("constructing macro string");
-			Macros_Get(Macros_GetActiveSet(), finalMacroIndex, macroData, sizeof(macroData));
+			Macros_Get(Macros_ReturnActiveSet(), finalMacroIndex, macroData, sizeof(macroData));
 			result = AECreateDesc(cStringClass, macroData, CPP_STD::strlen(macroData) * sizeof(UInt8),
 									outObjectOfDesiredClass);
 			Macros_SetActiveSetNumber(oldSetNumber);
@@ -699,11 +699,11 @@ getMacroSetByAbsolutePosition	(AEDesc const*		inReference,
 				}
 				else
 				{
-					UInt16		oldSetNumber = Macros_GetActiveSetNumber();
+					UInt16		oldSetNumber = Macros_ReturnActiveSetNumber();
 					
 					
 					Macros_SetActiveSetNumber(STATIC_CAST(macroSetIndex, UInt16));
-					token.as.object.data.macroSet.number = Macros_GetActiveSetNumber();
+					token.as.object.data.macroSet.number = Macros_ReturnActiveSetNumber();
 					Macros_SetActiveSetNumber(oldSetNumber);
 				}
 			}
@@ -738,11 +738,11 @@ getMacroSetByAbsolutePosition	(AEDesc const*		inReference,
 			case kAEAny:
 				Console_WriteLine("(first or any macro set)");
 				{
-					UInt16		oldSetNumber = Macros_GetActiveSetNumber();
+					UInt16		oldSetNumber = Macros_ReturnActiveSetNumber();
 					
 					
 					Macros_SetActiveSetNumber(1);
-					token.as.object.data.macroSet.number = Macros_GetActiveSetNumber();
+					token.as.object.data.macroSet.number = Macros_ReturnActiveSetNumber();
 					Macros_SetActiveSetNumber(oldSetNumber);
 				}
 				break;
@@ -750,11 +750,11 @@ getMacroSetByAbsolutePosition	(AEDesc const*		inReference,
 			case kAELast:
 				Console_WriteLine("(last macro set)");
 				{
-					UInt16		oldSetNumber = Macros_GetActiveSetNumber();
+					UInt16		oldSetNumber = Macros_ReturnActiveSetNumber();
 					
 					
 					Macros_SetActiveSetNumber(MACRO_SET_COUNT);
-					token.as.object.data.macroSet.number = Macros_GetActiveSetNumber();
+					token.as.object.data.macroSet.number = Macros_ReturnActiveSetNumber();
 					Macros_SetActiveSetNumber(oldSetNumber);
 				}
 				break;
@@ -762,11 +762,11 @@ getMacroSetByAbsolutePosition	(AEDesc const*		inReference,
 			case kAEMiddle:
 				Console_WriteLine("(middle macro set)");
 				{
-					UInt16		oldSetNumber = Macros_GetActiveSetNumber();
+					UInt16		oldSetNumber = Macros_ReturnActiveSetNumber();
 					
 					
 					Macros_SetActiveSetNumber(1 + INTEGER_HALVED(MACRO_SET_COUNT));
-					token.as.object.data.macroSet.number = Macros_GetActiveSetNumber();
+					token.as.object.data.macroSet.number = Macros_ReturnActiveSetNumber();
 					Macros_SetActiveSetNumber(oldSetNumber);
 				}
 				break;
@@ -786,7 +786,7 @@ getMacroSetByAbsolutePosition	(AEDesc const*		inReference,
 											false/* is a record */, outObjectOfDesiredClass);
 					if (result == noErr)
 					{
-						UInt16				oldSetNumber = Macros_GetActiveSetNumber();
+						UInt16				oldSetNumber = Macros_ReturnActiveSetNumber();
 						register UInt16		i = 0;
 						
 						
@@ -794,7 +794,7 @@ getMacroSetByAbsolutePosition	(AEDesc const*		inReference,
 						{
 							// set up the token
 							Macros_SetActiveSetNumber(i);
-							token.as.object.data.macroSet.number = Macros_GetActiveSetNumber();
+							token.as.object.data.macroSet.number = Macros_ReturnActiveSetNumber();
 							
 							// add each macro set to the list
 							Console_WriteLine("new macro set descriptor");
@@ -1178,7 +1178,7 @@ getWindowByRelativePosition		(DescType			inDesiredClass,
 	
 	Console_BeginFunction();
 	Console_WriteLine("AppleScript: “window” by relative position");
-	if (EventLoop_GetRealFrontWindow() != nullptr)
+	if (EventLoop_ReturnRealFrontWindow() != nullptr)
 	{
 		DescType	windowRelationship = 0;	// kAENext or kAEPrevious
 		WindowRef	window = nullptr;

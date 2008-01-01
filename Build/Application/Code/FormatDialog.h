@@ -125,7 +125,7 @@ Boolean
 											 FormatDialogSetupDataPtr		outSetupDataPtr);
 
 WindowRef
-	FormatDialog_GetParentWindow			(FormatDialogRef				inDialog);
+	FormatDialog_ReturnParentWindow			(FormatDialogRef				inDialog);
 
 void
 	FormatDialog_StandardCloseNotifyProc	(FormatDialogRef				inDialogThatClosed,

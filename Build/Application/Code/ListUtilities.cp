@@ -84,33 +84,6 @@ ListUtilities_GetDialogItemListHandle		(DialogRef			inDialog,
 
 
 /*!
-To determine the total number of rows in a
-list, use this method.
-
-(1.0)
-*/
-UInt16
-ListUtilities_GetItemCount	(ListHandle		inListHandle)
-{
-	UInt16		result = 0;
-	
-	
-	if (inListHandle != nullptr)
-	{
-		Cell		junk;
-		Boolean		searchRows = true,
-					searchColumns = false;
-		
-		
-		SetPt(&junk, 0, -1);
-		while (LNextCell(searchColumns, searchRows, &junk, inListHandle)) result++;
-	}
-	
-	return result;
-}// GetItemCount
-
-
-/*!
 If a list contains Pascal string items (as
 standard lists do), you can use this method
 to obtain the list data as a string.  The
@@ -131,32 +104,6 @@ ListUtilities_GetListItemText		(ListHandle		inListHandle,
 	LGetCell(outItemText + 1, &length, cell, inListHandle);
 	outItemText[0] = (char)length;
 }// GetListItemText
-
-
-/*!
-To determine the total number of selected
-cells in a list, use this method.
-
-(1.0)
-*/
-UInt16
-ListUtilities_GetSelectedItemCount	(ListHandle		inListHandle)
-{
-	UInt16		result = 0;
-	
-	
-	if (inListHandle != nullptr)
-	{
-		Cell		junk;
-		UInt16		total = ListUtilities_GetItemCount(inListHandle);
-		
-		
-		SetPt(&junk, 0, 0);
-		while (LGetSelect(true/* next */, &junk, inListHandle) && (result <= total)) result++, junk.v++;
-	}
-	
-	return result;
-}// GetSelectedItemCount
 
 
 /*!
@@ -210,7 +157,7 @@ ListUtilities_IsItemUnique		(ListHandle		inListHandle,
 								 Str255			inItemText)
 {
 	Boolean		result = true;
-	UInt16		itemCount = ListUtilities_GetItemCount(inListHandle),
+	UInt16		itemCount = ListUtilities_ReturnItemCount(inListHandle),
 				i = 0;
 	Str255		itemString;
 	
@@ -224,6 +171,59 @@ ListUtilities_IsItemUnique		(ListHandle		inListHandle,
 	
 	return result;
 }// IsItemUnique
+
+
+/*!
+To determine the total number of rows in a
+list, use this method.
+
+(1.0)
+*/
+UInt16
+ListUtilities_ReturnItemCount	(ListHandle		inListHandle)
+{
+	UInt16		result = 0;
+	
+	
+	if (inListHandle != nullptr)
+	{
+		Cell		junk;
+		Boolean		searchRows = true,
+					searchColumns = false;
+		
+		
+		SetPt(&junk, 0, -1);
+		while (LNextCell(searchColumns, searchRows, &junk, inListHandle)) result++;
+	}
+	
+	return result;
+}// ReturnItemCount
+
+
+/*!
+To determine the total number of selected
+cells in a list, use this method.
+
+(1.0)
+*/
+UInt16
+ListUtilities_ReturnSelectedItemCount	(ListHandle		inListHandle)
+{
+	UInt16		result = 0;
+	
+	
+	if (inListHandle != nullptr)
+	{
+		Cell		junk;
+		UInt16		total = ListUtilities_ReturnItemCount(inListHandle);
+		
+		
+		SetPt(&junk, 0, 0);
+		while (LGetSelect(true/* next */, &junk, inListHandle) && (result <= total)) result++, junk.v++;
+	}
+	
+	return result;
+}// ReturnSelectedItemCount
 
 
 /*!

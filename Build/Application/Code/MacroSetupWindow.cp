@@ -378,7 +378,7 @@ MacroSetupWindow_Init ()
 			
 			listCell.h = 0;
 			listCell.v = i;
-			listItemData.iconHandle = IconManager_GetData(gMacroSetIcon);
+			listItemData.iconHandle = IconManager_ReturnData(gMacroSetIcon);
 			{
 				// use the Appearance Manager to find the list/views font
 				Str255		fontName;
@@ -465,7 +465,7 @@ MacroSetupWindow_Init ()
 	}
 	
 	// initialize other controls
-	setButtonsByMode(Macros_GetMode());
+	setButtonsByMode(Macros_ReturnMode());
 	updateCurrentSetName();
 	updateTextFields();
 	
@@ -689,25 +689,6 @@ MacroSetupWindow_Display ()
 
 
 /*!
-Returns the Mac OS window reference for the
-Macro Setup window, or nullptr if it has not
-been created.
-
-Use this routine only for unusual needs; if
-an appropriate API exists to do what you want,
-use that instead of trying to do it yourself
-with a window reference.
-
-(3.0)
-*/
-WindowRef
-MacroSetupWindow_GetWindow ()
-{
-	return gMacroSetupWindow;
-}// GetWindow
-
-
-/*!
 Handles a drag-and-drop of text by parsing the
 given buffer for macros, and updating the dialog
 boxÕs text fields appropriately if valid data is
@@ -733,7 +714,7 @@ MacroSetupWindow_ReceiveDrop	(DragReference		UNUSED_ARGUMENT(inDragRef),
 		MacroManager_InvocationMethod		mode = kMacroManager_InvocationMethodCommandDigit;
 		
 		
-		Macros_ParseTextBuffer(Macros_GetActiveSet(), inData, inDataSize, &mode);
+		Macros_ParseTextBuffer(Macros_ReturnActiveSet(), inData, inDataSize, &mode);
 		Macros_SetMode(mode);
 	}
 }// ReceiveDrop
@@ -761,6 +742,25 @@ MacroSetupWindow_Remove ()
 		HideWindow(gMacroSetupWindow);
 	}
 }// Remove
+
+
+/*!
+Returns the Mac OS window reference for the
+Macro Setup window, or nullptr if it has not
+been created.
+
+Use this routine only for unusual needs; if
+an appropriate API exists to do what you want,
+use that instead of trying to do it yourself
+with a window reference.
+
+(3.0)
+*/
+WindowRef
+MacroSetupWindow_ReturnWindow ()
+{
+	return gMacroSetupWindow;
+}// ReturnWindow
 
 
 //
@@ -936,7 +936,7 @@ macrosChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// macro text fields contain the active setÕs macros,
 			// and that the active set label is correct
 			{
-				SInt16 const	kActiveSetIndex = Macros_GetActiveSetNumber() - 1;
+				SInt16 const	kActiveSetIndex = Macros_ReturnActiveSetNumber() - 1;
 				Cell			selectedCell = { 0, 0 };
 				
 				
@@ -962,7 +962,7 @@ macrosChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				
 				// only the active set is displayed in the window, so nothing else matters
-				if (descriptorPtr->set == Macros_GetActiveSet())
+				if (descriptorPtr->set == Macros_ReturnActiveSet())
 				{
 					UInt8	newMacro[256];
 					
@@ -1290,7 +1290,7 @@ saveField	(ControlRef		inField)
 			
 			GetControlText(inField, text);
 			StringUtilities_PToCInPlace(text);
-			Macros_Set(Macros_GetActiveSet(), controlID.id/* macro index */, REINTERPRET_CAST(text, char const*));
+			Macros_Set(Macros_ReturnActiveSet(), controlID.id/* macro index */, REINTERPRET_CAST(text, char const*));
 			result = true;
 		}
 	}
@@ -1493,7 +1493,7 @@ updateCurrentSetName ()
 		CFStringRef							nameString = nullptr;
 		
 		
-		switch (Macros_GetActiveSetNumber())
+		switch (Macros_ReturnActiveSetNumber())
 		{
 		case 1:
 			stringType = kUIStrings_MacroSetupWindowSetName1;
@@ -1588,7 +1588,7 @@ updateTextFields ()
 		
 		for (i = 0; i < MACRO_COUNT; ++i)
 		{
-			Macros_Get(Macros_GetActiveSet(), i, (char*)&newMacro, 256);
+			Macros_Get(Macros_ReturnActiveSet(), i, (char*)&newMacro, 256);
 			updateTextField(newMacro, i);
 		}
 	}

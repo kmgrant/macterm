@@ -472,7 +472,7 @@ refer to the folder).
 static void
 transformFolderFSSpec		(FSSpec*	inoutFolderFSSpecPtr)
 {
-	inoutFolderFSSpecPtr->parID = FileUtilities_GetDirectoryIDFromFSSpec(inoutFolderFSSpecPtr);
+	inoutFolderFSSpecPtr->parID = FileUtilities_ReturnDirectoryIDFromFSSpec(inoutFolderFSSpecPtr);
 	PLstrcpy(inoutFolderFSSpecPtr->name, EMPTY_PSTRING);
 }// transformFolderFSSpec
 

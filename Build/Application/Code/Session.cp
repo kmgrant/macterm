@@ -1253,7 +1253,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 	// also remember its original location, in case the user cancels;
 	// do this only if more than one window is open, for a single window
 	// it should be clear what the alert is referring to!
-	if ((inForceModalDialog) && (SessionFactory_GetCount() > 1))
+	if ((inForceModalDialog) && (SessionFactory_ReturnCount() > 1))
 	{
 		SInt16 const	kOffsetFromCenterV = -130; // in pixels; arbitrary
 		SInt16 const	kAbsoluteMinimumV = 30; // in pixels; arbitrary
@@ -1734,44 +1734,6 @@ Session_FlushUserInputBuffer	(SessionRef		inRef)
 		*kblenPtr = 0;
 	}
 }// FlushUserInputBuffer
-
-
-/*!
-Returns a succinct string representation of the
-specified sessionÕs resource; for a remote session
-this is always a URL, for local sessions it is the
-Unix command line.  This can be displayed in user
-interface elements.
-
-(3.0)
-*/
-CFStringRef
-Session_GetResourceLocationCFString		(SessionRef		inRef)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFStringRef			result = ptr->resourceLocationString.returnCFStringRef();
-	
-	
-	return result;
-}// GetResourceLocationCFString
-
-
-/*!
-Returns the state of the specified session.  This
-is critical for knowing when it is safe to perform
-certain tasks.
-
-(3.0)
-*/
-Session_State
-Session_GetState	(SessionRef		inRef)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_State		result = ptr->status;
-	
-	
-	return result;
-}// GetState
 
 
 /*!
@@ -2468,6 +2430,44 @@ Session_ReturnActiveWindow	(SessionRef		inRef)
 
 
 /*!
+Returns a succinct string representation of the
+specified sessionÕs resource; for a remote session
+this is always a URL, for local sessions it is the
+Unix command line.  This can be displayed in user
+interface elements.
+
+(3.0)
+*/
+CFStringRef
+Session_ReturnResourceLocationCFString		(SessionRef		inRef)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFStringRef			result = ptr->resourceLocationString.returnCFStringRef();
+	
+	
+	return result;
+}// ReturnResourceLocationCFString
+
+
+/*!
+Returns the state of the specified session.  This
+is critical for knowing when it is safe to perform
+certain tasks.
+
+(3.0)
+*/
+Session_State
+Session_ReturnState	(SessionRef		inRef)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_State		result = ptr->status;
+	
+	
+	return result;
+}// ReturnState
+
+
+/*!
 Returns attributes of the current session state
 (for example, whether or not an alert user interface
 element is currently modal to the session).
@@ -2885,7 +2885,7 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		
 		// suspend
 		queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-										(Local_GetTerminalFlowStopCharacter
+										(Local_ReturnTerminalFlowStopCharacter
 											(ptr->dataPtr->mainProcess.pseudoTerminal), char));
 		// set the scroll lock attribute of the session
 		changeStateAttributes(ptr, kSession_StateAttributeSuspendNetwork/* attributes to set */,
@@ -2914,7 +2914,7 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		
 		// resume
 		queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-										(Local_GetTerminalFlowStartCharacter
+										(Local_ReturnTerminalFlowStartCharacter
 											(ptr->dataPtr->mainProcess.pseudoTerminal), char));
 		// clear the scroll lock attribute of the session
 		changeStateAttributes(ptr, 0/* attributes to set */,
@@ -2945,8 +2945,8 @@ Specifies a succinct string representation of the
 given sessionÕs resource; for a remote session this
 is always a URL, for local sessions it is the Unix
 command line.  This may be displayed in user interface
-elements; Session_GetResourceLocationCFString() can be
-used to retrieve the value later.
+elements; Session_ReturnResourceLocationCFString() can
+be used to retrieve the value later.
 
 IMPORTANT:  This is simply a stored property, and is
 			usually set only once, when a session first
@@ -3885,7 +3885,7 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 	
 	// send character to Unix process
 	Session_UserInputQueueCharacter(inRef, STATIC_CAST
-									(Local_GetTerminalInterruptCharacter
+									(Local_ReturnTerminalInterruptCharacter
 										(Session_ConnectionDataPtr(inRef)->mainProcess.pseudoTerminal),
 										char));
 	Session_FlushUserInputBuffer(inRef);
@@ -5045,7 +5045,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	switch (virtualKeyCode)
 	{
 	case 0x7A: // F1
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro1);
 		}
@@ -5057,7 +5057,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x78: // F2
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro2);
 		}
@@ -5069,7 +5069,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x63: // F3
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro3);
 		}
@@ -5081,7 +5081,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x76: // F4
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro4);
 		}
@@ -5093,7 +5093,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x60: // F5
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro5);
 		}
@@ -5105,7 +5105,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x61: // F6
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro6);
 		}
@@ -5117,7 +5117,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x62: // F7
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro7);
 		}
@@ -5129,7 +5129,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x64: // F8
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro8);
 		}
@@ -5141,7 +5141,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x65: // F9
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro9);
 		}
@@ -5153,7 +5153,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x6D: // F10
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro10);
 		}
@@ -5165,7 +5165,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x67: // F11
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro11);
 		}
@@ -5177,7 +5177,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case 0x6F: // F12
-		if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 		{
 			result = Commands_ExecuteByID(kCommandSendMacro12);
 		}
@@ -5304,84 +5304,84 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			switch (characterCode)
 			{
 			case '0':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro1);
 				}
 				break;
 			
 			case '1':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro2);
 				}
 				break;
 			
 			case '2':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro3);
 				}
 				break;
 			
 			case '3':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro4);
 				}
 				break;
 			
 			case '4':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro5);
 				}
 				break;
 			
 			case '5':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro6);
 				}
 				break;
 			
 			case '6':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro7);
 				}
 				break;
 			
 			case '7':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro8);
 				}
 				break;
 			
 			case '8':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro9);
 				}
 				break;
 			
 			case '9':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro10);
 				}
 				break;
 			
 			case '=':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro11);
 				}
 				break;
 			
 			case '/':
-				if ((commandDown) && (Macros_GetMode() == kMacroManager_InvocationMethodCommandDigit))
+				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
 				{
 					result = Commands_ExecuteByID(kCommandSendMacro12);
 				}

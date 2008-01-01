@@ -289,11 +289,11 @@ Boolean
 	SessionFactory_CountIsAtLeastOne				();
 
 UInt16
-	SessionFactory_GetCount							();
+	SessionFactory_ReturnCount						();
 
 // NUMBER OF SESSIONS WHOSE STATE MATCHES THE GIVEN STATE
 UInt16
-	SessionFactory_GetStateCount					(Session_State					inStateToCheckFor);
+	SessionFactory_ReturnStateCount					(Session_State					inStateToCheckFor);
 
 //@}
 

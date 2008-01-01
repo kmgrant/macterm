@@ -612,15 +612,6 @@ Session_Result
 	Session_FillInSessionDescription		(SessionRef							inRef,
 											 SessionDescription_Ref*			outNewSaveFileMemoryModelPtr);
 
-CFStringRef
-	Session_GetResourceLocationCFString		(SessionRef							inRef);
-
-Session_State
-	Session_GetState						(SessionRef							inRef);
-
-Session_StateAttributes
-	Session_ReturnStateAttributes			(SessionRef							inRef);
-
 Session_Result
 	Session_GetStateString					(SessionRef							inRef,
 											 CFStringRef&						outUncopiedString);
@@ -646,6 +637,15 @@ TerminalWindowRef
 
 HIWindowRef
 	Session_ReturnActiveWindow				(SessionRef							inRef);
+
+CFStringRef
+	Session_ReturnResourceLocationCFString	(SessionRef							inRef);
+
+Session_State
+	Session_ReturnState						(SessionRef							inRef);
+
+Session_StateAttributes
+	Session_ReturnStateAttributes			(SessionRef							inRef);
 
 void
 	Session_SetResourceLocationCFString		(SessionRef							inRef,

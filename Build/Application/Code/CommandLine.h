@@ -153,9 +153,6 @@ void
 void
 	CommandLine_AddInterpreter				(CommandLine_InterpreterProcPtr		inProcPtr);
 
-WindowRef
-	CommandLine_GetWindow					();
-
 /*!
 Convenience function for invoking routines of type
 "CommandLine_InterpreterProcPtr".
@@ -171,6 +168,9 @@ inline Boolean
 
 Boolean
 	CommandLine_IsVisible					();
+
+WindowRef
+	CommandLine_ReturnWindow				();
 
 void
 	CommandLine_SetText						(void const*						inDataPtr,

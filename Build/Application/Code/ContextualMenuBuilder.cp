@@ -517,8 +517,8 @@ ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef		inWhichWindow,
 	result = AppleEventUtilities_InitAEDesc(&inoutWindowContentsDesc);
 	assert_noerr(result);
 	
-	windowFeaturesRef = WindowInfo_GetFromWindow(inWhichWindow);
-	if (nullptr != windowFeaturesRef) windowDescriptor = WindowInfo_GetWindowDescriptor(windowFeaturesRef);
+	windowFeaturesRef = WindowInfo_ReturnFromWindow(inWhichWindow);
+	if (nullptr != windowFeaturesRef) windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowFeaturesRef);
 	isConnectionWindow = TerminalWindow_ExistsFor(inWhichWindow);
 	
 	if (nullptr != inoutMenu)

@@ -93,8 +93,8 @@ Cursors_Init ()
 	
 	//error = Gestalt(gestaltAppearanceAttr, &appearanceFlags);
 	//error = Gestalt(gestaltAppearanceVersion, &appearanceVersion);
-	//majorRev = Releases_GetMajorRevisionForVersion(appearanceVersion);
-	//minorRev = Releases_GetMinorRevisionForVersion(appearanceVersion);
+	//majorRev = Releases_ReturnMajorRevisionForVersion(appearanceVersion);
+	//minorRev = Releases_ReturnMinorRevisionForVersion(appearanceVersion);
 	
 	// Appearance 1.1 or later supports theme cursors
 	//gHaveAppearanceCursors = ((appearanceFlags & (1 << gestaltAppearanceExists)) &&
@@ -104,8 +104,8 @@ Cursors_Init ()
 	error = Gestalt(gestaltSystemVersion, &sysv);
 	if (error == noErr)
 	{
-		UInt8	majorRev = Releases_GetMajorRevisionForVersion(sysv);
-		UInt8	minorRev = Releases_GetMinorRevisionForVersion(sysv);
+		UInt8	majorRev = Releases_ReturnMajorRevisionForVersion(sysv);
+		UInt8	minorRev = Releases_ReturnMinorRevisionForVersion(sysv);
 		
 		
 		// Mac OS 8.5?
@@ -196,26 +196,8 @@ Cursors_DeferredUseWatch	(UInt32		inAfterHowManyTicks)
 {
 	gCountAtDeferral = TickCount();
 	gDeferralTicks = inAfterHowManyTicks;
-	return Cursors_GetCurrent();
+	return Cursors_ReturnCurrent();
 }// DeferredUseWatch
-
-
-/*!
-To determine the ID of the cursor that was
-most recently set using this module, use this
-method.  If you consistently use this module
-to change the cursor *everywhere* in your
-program, then you can use this method to
-effectively get the “current” cursor, which
-has many advantages.
-
-(1.0)
-*/
-SInt16
-Cursors_GetCurrent ()
-{
-	return gCurrentCursor;
-}// GetCurrent
 
 
 /*!
@@ -243,11 +225,29 @@ Cursors_Idle ()
 		if (((currentTicks - gCountAtLastUpdate) > 8) && (gAppearanceCursorInEffect))
 		{
 			// then it's time to update the cursor
-			(OSStatus)SetAnimatedThemeCursor(Cursors_GetCurrent(), ++gCursorStageCount);
+			(OSStatus)SetAnimatedThemeCursor(Cursors_ReturnCurrent(), ++gCursorStageCount);
 			gCountAtLastUpdate = TickCount();
 		}
 	}
 }// Idle
+
+
+/*!
+To determine the ID of the cursor that was
+most recently set using this module, use this
+method.  If you consistently use this module
+to change the cursor *everywhere* in your
+program, then you can use this method to
+effectively get the “current” cursor, which
+has many advantages.
+
+(1.0)
+*/
+SInt16
+Cursors_ReturnCurrent ()
+{
+	return gCurrentCursor;
+}// ReturnCurrent
 
 
 /*!
@@ -285,7 +285,7 @@ SInt16
 Cursors_Use		(SInt16		inCursorID)
 {
 	Boolean		tryToGetResource = true;
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	// cancel any deferred cursor
@@ -470,7 +470,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseArrow ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_Arrow);
@@ -499,7 +499,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseArrowContextualMenu ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_ArrowContextualMenu);
@@ -528,7 +528,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseArrowCopy ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_ArrowCopy);
@@ -557,7 +557,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseArrowHelp ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_ArrowHelp);
@@ -586,7 +586,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseArrowWatch ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_ArrowWatch);
@@ -614,7 +614,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseCrosshairs ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_Crosshairs);
@@ -642,7 +642,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseDisallow ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_Disallow);
@@ -670,7 +670,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseHandGrab ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_HandGrab);
@@ -698,7 +698,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseHandOpen ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_HandOpen);
@@ -727,7 +727,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseHandPoint ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_HandPoint);
@@ -757,7 +757,7 @@ Unimplemented.
 SInt16
 Cursors_UseMagnifyingGlass ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_UseArrow();
@@ -785,7 +785,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseIBeam ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_IBeam);
@@ -813,7 +813,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UsePlus ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_Plus);
@@ -843,7 +843,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UsePoof ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_Poof);
@@ -871,7 +871,7 @@ keep track of cursors easily.
 SInt16
 Cursors_UseWatch ()
 {
-	SInt16		result = Cursors_GetCurrent();
+	SInt16		result = Cursors_ReturnCurrent();
 	
 	
 	result = Cursors_Use(kCursor_Watch);
@@ -887,7 +887,7 @@ cursor, use this method.  This helps
 to keep track of what the shape of
 the mouse pointer most likely is
 (unless it was changed by some other
-process).  Use Cursors_GetCurrent()
+process).  Use Cursors_ReturnCurrent()
 to determine this value later.
 
 (1.0)

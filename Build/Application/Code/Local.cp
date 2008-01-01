@@ -207,102 +207,6 @@ Local_GetDefaultShell	(char**		outStringPtr)
 
 
 /*!
-Returns the resume-output character for a
-pseudo-terminal (usually, control-Q).  Returns
--1 if any errors are sent back from terminal
-control routines.
-
-(3.1)
-*/
-int
-Local_GetTerminalFlowStartCharacter		(PseudoTeletypewriterID		inPseudoTerminalID)
-{
-	struct termios	stermios;
-	int				result = 0;
-	int				error = 0;
-	
-	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
-	if (0 == error)
-	{
-		// success!
-		result = stermios.c_cc[VSTART];
-	}
-	else
-	{
-		// error
-		result = -1;
-	}
-	
-	return result;
-}// GetTerminalFlowStartCharacter
-
-
-/*!
-Returns the suspend-output (scroll lock) character
-for a pseudo-terminal (usually, control-S).  Returns
--1 if any errors are sent back from terminal control
-routines.
-
-(3.1)
-*/
-int
-Local_GetTerminalFlowStopCharacter		(PseudoTeletypewriterID		inPseudoTerminalID)
-{
-	struct termios	stermios;
-	int				result = 0;
-	int				error = 0;
-	
-	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
-	if (0 == error)
-	{
-		// success!
-		result = stermios.c_cc[VSTOP];
-	}
-	else
-	{
-		// error
-		result = -1;
-	}
-	
-	return result;
-}// GetTerminalFlowStopCharacter
-
-
-/*!
-Returns the interrupt-process character for a
-pseudo-terminal (usually, control-C).  Returns
--1 if any errors are sent back from terminal
-control routines.
-
-(3.1)
-*/
-int
-Local_GetTerminalInterruptCharacter		(PseudoTeletypewriterID		inPseudoTerminalID)
-{
-	struct termios	stermios;
-	int				result = 0;
-	int				error = 0;
-	
-	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
-	if (0 == error)
-	{
-		// success!
-		result = stermios.c_cc[VINTR];
-	}
-	else
-	{
-		// error
-		result = -1;
-	}
-	
-	return result;
-}// GetTerminalInterruptCharacter
-
-
-/*!
 Kills the specified process, whose input and output
 are being channeled through the given window.
 
@@ -327,6 +231,102 @@ Local_KillProcess	(pid_t		inUnixProcessID)
 		Console_WriteValue("warning, attempt to run kill with special pid", inUnixProcessID);
 	}
 }// KillProcess
+
+
+/*!
+Returns the resume-output character for a
+pseudo-terminal (usually, control-Q).  Returns
+-1 if any errors are sent back from terminal
+control routines.
+
+(3.1)
+*/
+int
+Local_ReturnTerminalFlowStartCharacter	(PseudoTeletypewriterID		inPseudoTerminalID)
+{
+	struct termios	stermios;
+	int				result = 0;
+	int				error = 0;
+	
+	
+	error = tcgetattr(inPseudoTerminalID, &stermios);
+	if (0 == error)
+	{
+		// success!
+		result = stermios.c_cc[VSTART];
+	}
+	else
+	{
+		// error
+		result = -1;
+	}
+	
+	return result;
+}// ReturnTerminalFlowStartCharacter
+
+
+/*!
+Returns the suspend-output (scroll lock) character
+for a pseudo-terminal (usually, control-S).  Returns
+-1 if any errors are sent back from terminal control
+routines.
+
+(3.1)
+*/
+int
+Local_ReturnTerminalFlowStopCharacter	(PseudoTeletypewriterID		inPseudoTerminalID)
+{
+	struct termios	stermios;
+	int				result = 0;
+	int				error = 0;
+	
+	
+	error = tcgetattr(inPseudoTerminalID, &stermios);
+	if (0 == error)
+	{
+		// success!
+		result = stermios.c_cc[VSTOP];
+	}
+	else
+	{
+		// error
+		result = -1;
+	}
+	
+	return result;
+}// ReturnTerminalFlowStopCharacter
+
+
+/*!
+Returns the interrupt-process character for a
+pseudo-terminal (usually, control-C).  Returns
+-1 if any errors are sent back from terminal
+control routines.
+
+(3.1)
+*/
+int
+Local_ReturnTerminalInterruptCharacter	(PseudoTeletypewriterID		inPseudoTerminalID)
+{
+	struct termios	stermios;
+	int				result = 0;
+	int				error = 0;
+	
+	
+	error = tcgetattr(inPseudoTerminalID, &stermios);
+	if (0 == error)
+	{
+		// success!
+		result = stermios.c_cc[VINTR];
+	}
+	else
+	{
+		// error
+		result = -1;
+	}
+	
+	return result;
+}// ReturnTerminalInterruptCharacter
 
 
 /*!

@@ -120,14 +120,14 @@ Carbon Event target of a given view.
 (3.1)
 */
 inline EventTargetRef
-CarbonEventUtilities_GetViewTarget	(HIViewRef		inView)
+CarbonEventUtilities_ReturnViewTarget	(HIViewRef		inView)
 {
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	return HIViewGetEventTarget(inView);
 #else
 	return GetControlEventTarget(inView);
 #endif
-}
+}// ReturnViewTarget
 
 #endif
 

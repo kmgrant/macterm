@@ -112,7 +112,7 @@ Boolean
 
 // RETURNS DATA COERCED TO A HANDLE; USE IconManager_Is...() METHODS TO FIND THE ACTUAL DATA TYPE!!!
 Handle
-	IconManager_GetData						(IconManagerIconRef			inRef);
+	IconManager_ReturnData					(IconManagerIconRef			inRef);
 
 //@}
 

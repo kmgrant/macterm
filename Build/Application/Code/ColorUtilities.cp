@@ -140,8 +140,8 @@ ColorUtilities_ColorChooserDialogDisplay	(CFStringRef			inPrompt,
 		
 		
 		error = Gestalt(gestaltColorPickerVersion, &version);
-		majorRev = Releases_GetMajorRevisionForVersion(version);
-		minorRev = Releases_GetMinorRevisionForVersion(version);
+		majorRev = Releases_ReturnMajorRevisionForVersion(version);
+		minorRev = Releases_ReturnMinorRevisionForVersion(version);
 	}
 	
 	// set the dialog location to 0, 0 so the Color Picker is centered on the main screen
@@ -224,27 +224,6 @@ ColorUtilities_ColorChooserDialogDisplay	(CFStringRef			inPrompt,
 	
 	return result;
 }// ColorChooserDialogDisplay
-
-
-/*!
-Determines the color depth of the specified port.
-
-(1.0)
-*/
-SInt16
-ColorUtilities_GetCurrentDepth	(CGrafPtr	inPort)
-{
-	SInt16		result = 1;
-	
-	
-#if TARGET_API_MAC_OS8
-	result = (ColorUtilities_IsColorGrafPort((GrafPtr)inPort) ? (**(inPort)->portPixMap).pixelSize : 1);
-#else
-	//result = (**GetPortPixMap(inPort)).pixelSize;
-	result = GetPixDepth(GetPortPixMap(inPort));
-#endif
-	return result;
-}// GetCurrentDepth
 
 
 /*!
@@ -569,6 +548,27 @@ ColorUtilities_RestoreColorAndPenState	(ColorPenState*		inoutStatePtr)
 	TextMode(inoutStatePtr->textMode);
 #endif
 }// RestoreColorAndPenState
+
+
+/*!
+Determines the color depth of the specified port.
+
+(1.0)
+*/
+SInt16
+ColorUtilities_ReturnCurrentDepth	(CGrafPtr	inPort)
+{
+	SInt16		result = 1;
+	
+	
+#if TARGET_API_MAC_OS8
+	result = (ColorUtilities_IsColorGrafPort((GrafPtr)inPort) ? (**(inPort)->portPixMap).pixelSize : 1);
+#else
+	//result = (**GetPortPixMap(inPort)).pixelSize;
+	result = GetPixDepth(GetPortPixMap(inPort));
+#endif
+	return result;
+}// ReturnCurrentDepth
 
 
 /*!

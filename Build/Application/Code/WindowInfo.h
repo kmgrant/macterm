@@ -169,10 +169,10 @@ void
 ###############################################################*/
 
 WindowInfoRef
-	WindowInfo_GetFromDialog					(DialogRef						inDialog);
+	WindowInfo_ReturnFromDialog					(DialogRef						inDialog);
 
 WindowInfoRef
-	WindowInfo_GetFromWindow					(WindowRef						inWindow);
+	WindowInfo_ReturnFromWindow					(WindowRef						inWindow);
 
 void
 	WindowInfo_SetForDialog						(DialogRef						inDialog,
@@ -186,12 +186,6 @@ void
 	ACCESSING DATA IN WINDOW INFO STRUCTURES
 ###############################################################*/
 
-void*
-	WindowInfo_GetAuxiliaryDataPtr				(WindowInfoRef					inWindowFeaturesRef);
-
-WindowInfoDescriptor
-	WindowInfo_GetWindowDescriptor				(WindowInfoRef					inWindowFeaturesRef);
-
 void
 	WindowInfo_GetWindowMaximumDimensions		(WindowInfoRef					inWindowFeaturesRef,
 												 Point*							outMaximumSizePtr);
@@ -200,14 +194,20 @@ void
 	WindowInfo_GetWindowMinimumDimensions		(WindowInfoRef					inWindowFeaturesRef,
 												 Point*							outMinimumSizePtr);
 
-Rect*
-	WindowInfo_GetWindowResizeLimits			(WindowInfoRef					inWindowFeaturesRef);
-
 Boolean
 	WindowInfo_IsPotentialDropTarget			(WindowInfoRef					inWindowFeaturesRef);
 
 Boolean
 	WindowInfo_IsWindowFloating					(WindowInfoRef					inWindowFeaturesRef);
+
+void*
+	WindowInfo_ReturnAuxiliaryDataPtr			(WindowInfoRef					inWindowFeaturesRef);
+
+WindowInfoDescriptor
+	WindowInfo_ReturnWindowDescriptor			(WindowInfoRef					inWindowFeaturesRef);
+
+Rect*
+	WindowInfo_ReturnWindowResizeLimits			(WindowInfoRef					inWindowFeaturesRef);
 
 void
 	WindowInfo_SetAuxiliaryDataPtr				(WindowInfoRef					inWindowFeaturesRef,

@@ -1537,52 +1537,52 @@ parseFile	(SInt16				inFileReferenceNumber,
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key0");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 0, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 0, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key1");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 1, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 1, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key2");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 2, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 2, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key3");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 3, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 3, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key4");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 4, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 4, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key5");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 5, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 5, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key6");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 6, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 6, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key7");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 7, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 7, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key8");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 8, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 8, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("key9");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
-					//Macros_Set(Macros_GetActiveSet(), 9, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
+					//Macros_Set(Macros_ReturnActiveSet(), 9, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				
 				// set Òmenus have key equivalentsÓ flag

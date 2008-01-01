@@ -145,26 +145,6 @@ HelpSystem_DisplayHelpWithoutContext ()
 
 
 /*!
-Returns the key phrase for the current context.  At
-the moment this module only defines contexts at the
-window level, so this means the return value
-corresponds to the key phrase of the frontmost non-
-floating window, if any.
-
-If the return value is “kHelpSystem_KeyPhraseDefault”,
-there is no particular context set.  This would mean
-a table-of-contents view should be displayed when help
-is provided to the user.
-
-(3.0)
-*/
-HelpSystem_KeyPhrase
-HelpSystem_GetCurrentContextKeyPhrase ()
-{
-	return getCurrentContextKeyPhrase();
-}// GetCurrentContextKeyPhrase
-
-/*!
 Locates the specified key phrase string, and returns
 a copy of it; thus, you must call CFRelease() when
 you are finished with it.  If you pass the value
@@ -188,6 +168,27 @@ HelpSystem_CopyKeyPhraseCFString	(HelpSystem_KeyPhrase	inKeyPhrase,
 {
 	return copyCFStringHelpSearch(inKeyPhrase, outString);
 }// GetKeyPhraseCFString
+
+
+/*!
+Returns the key phrase for the current context.  At
+the moment this module only defines contexts at the
+window level, so this means the return value
+corresponds to the key phrase of the frontmost non-
+floating window, if any.
+
+If the return value is “kHelpSystem_KeyPhraseDefault”,
+there is no particular context set.  This would mean
+a table-of-contents view should be displayed when help
+is provided to the user.
+
+(3.0)
+*/
+HelpSystem_KeyPhrase
+HelpSystem_ReturnCurrentContextKeyPhrase ()
+{
+	return getCurrentContextKeyPhrase();
+}// ReturnCurrentContextKeyPhrase
 
 
 /*!
@@ -404,7 +405,7 @@ static HelpSystem_KeyPhrase
 getCurrentContextKeyPhrase ()
 {
 	HelpSystem_KeyPhrase	result = kHelpSystem_KeyPhraseDefault;
-	WindowRef				frontWindow = EventLoop_GetRealFrontWindow();
+	WindowRef				frontWindow = EventLoop_ReturnRealFrontWindow();
 	
 	
 	if (frontWindow != nullptr)

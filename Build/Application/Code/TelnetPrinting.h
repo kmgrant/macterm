@@ -98,7 +98,7 @@ void
 	TelnetPrinting_End						(TerminalPrintingInfoPtr	inPrintingInfoPtr);
 
 UniversalPrint_ContextRef
-	TelnetPrinting_GetNewPrintRecord		();
+	TelnetPrinting_ReturnNewPrintRecord		();
 
 void
 	TelnetPrinting_PrintSelection			();

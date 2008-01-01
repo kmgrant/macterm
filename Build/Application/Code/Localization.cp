@@ -707,63 +707,6 @@ Localization_GetFontTextEncoding	(ConstStringPtr		inFontName,
 
 
 /*!
-Determines the height required to fit a single
-line of text in the specified theme font.  If
-no API exists (i.e. earlier than Appearance 1.1)
-to calculate the font exactly, the font constant
-is used to determine the correct value for a
-Òreasonable fontÓ (if you ask for the system
-font, you get a 12-point system font height, for
-most others you get 10-point Geneva, etc.).
-
-(1.0)
-*/
-UInt16
-Localization_GetSingleLineTextHeight	(ThemeFontID	inThemeFontToUse)
-{
-	UInt16		result = 0;
-	SInt16		fontSize = 0;
-	Style		fontStyle = normal;
-	Str255		fontName;
-	
-	
-	if (getThemeFontInfo(inThemeFontToUse, nullptr/* string to calculate width of - unused */,
-							fontName, &fontSize, &fontStyle, nullptr/* string width - unused */,
-							&result/* font height */) != noErr) result = 0;
-	return result;
-}// GetSingleLineTextHeight
-
-
-/*!
-Determines the width required to fit the given
-line of text in the specified theme font.  If
-no API exists (i.e. earlier than Appearance 1.1)
-to calculate the font exactly, the font constant
-is used to determine the correct value for a
-Òreasonable fontÓ (if you ask for the system
-font, you get a 12-point system font height, for
-most others you get 10-point Geneva, etc.).
-
-(1.0)
-*/
-UInt16
-Localization_GetSingleLineTextWidth		(ConstStringPtr		inString,
-										 ThemeFontID		inThemeFontToUse)
-{
-	UInt16		result = 0;
-	SInt16		fontSize = 0;
-	Style		fontStyle = normal;
-	Str255		fontName;
-	
-	
-	if (getThemeFontInfo(inThemeFontToUse, inString/* string to calculate width of */,
-							fontName, &fontSize, &fontStyle, &result/* string width */,
-							nullptr/* font height - unused */) != noErr) result = 0;
-	return result;
-}// GetSingleLineTextWidth
-
-
-/*!
 Arranges the specified control so that its bisector
 is aligned with the bisector of its parent, resulting
 in the left half of the control being to the left of
@@ -959,6 +902,63 @@ Localization_RestorePortFontState	(GrafPortFontState const*	inState)
 		TextMode(inState->textMode);
 	}
 }// RestorePortFontState
+
+
+/*!
+Determines the height required to fit a single
+line of text in the specified theme font.  If
+no API exists (i.e. earlier than Appearance 1.1)
+to calculate the font exactly, the font constant
+is used to determine the correct value for a
+Òreasonable fontÓ (if you ask for the system
+font, you get a 12-point system font height, for
+most others you get 10-point Geneva, etc.).
+
+(1.0)
+*/
+UInt16
+Localization_ReturnSingleLineTextHeight		(ThemeFontID	inThemeFontToUse)
+{
+	UInt16		result = 0;
+	SInt16		fontSize = 0;
+	Style		fontStyle = normal;
+	Str255		fontName;
+	
+	
+	if (getThemeFontInfo(inThemeFontToUse, nullptr/* string to calculate width of - unused */,
+							fontName, &fontSize, &fontStyle, nullptr/* string width - unused */,
+							&result/* font height */) != noErr) result = 0;
+	return result;
+}// ReturnSingleLineTextHeight
+
+
+/*!
+Determines the width required to fit the given
+line of text in the specified theme font.  If
+no API exists (i.e. earlier than Appearance 1.1)
+to calculate the font exactly, the font constant
+is used to determine the correct value for a
+Òreasonable fontÓ (if you ask for the system
+font, you get a 12-point system font height, for
+most others you get 10-point Geneva, etc.).
+
+(1.0)
+*/
+UInt16
+Localization_ReturnSingleLineTextWidth	(ConstStringPtr		inString,
+										 ThemeFontID		inThemeFontToUse)
+{
+	UInt16		result = 0;
+	SInt16		fontSize = 0;
+	Style		fontStyle = normal;
+	Str255		fontName;
+	
+	
+	if (getThemeFontInfo(inThemeFontToUse, inString/* string to calculate width of */,
+							fontName, &fontSize, &fontStyle, &result/* string width */,
+							nullptr/* font height - unused */) != noErr) result = 0;
+	return result;
+}// ReturnSingleLineTextWidth
 
 
 /*!
@@ -1361,8 +1361,8 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 		error = Gestalt(gestaltAppearanceVersion, &appv);
 		if (error == noErr)
 		{
-			UInt8		majorRev = Releases_GetMajorRevisionForVersion(appv);
-			UInt8		minorRev = Releases_GetMinorRevisionForVersion(appv);
+			UInt8		majorRev = Releases_ReturnMajorRevisionForVersion(appv);
+			UInt8		minorRev = Releases_ReturnMinorRevisionForVersion(appv);
 			
 			
 			haveAppearance1_1 = (((majorRev == 0x01) && (minorRev >= 0x01)) || (majorRev > 0x01));

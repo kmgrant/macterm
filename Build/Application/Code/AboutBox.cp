@@ -198,7 +198,7 @@ AboutBox_Init ()
 		
 		
 		GetControlBounds(iconUserPane, &bounds);
-		iconControl = StatusIcon_GetContainerControl(gAboutBoxApplicationIcon);
+		iconControl = StatusIcon_ReturnContainerView(gAboutBoxApplicationIcon);
 		MoveControl(iconControl, bounds.left, bounds.top);
 		SizeControl(iconControl, bounds.right - bounds.left, bounds.bottom - bounds.top);
 	}

@@ -605,8 +605,8 @@ dialogDisplayPreparation	(HIWindowRef	UNUSED_ARGUMENT(inWindow),
 	{
 		// remove close and zoom boxes (which disables the boxes, standard parent window behavior for sheets);
 		// this is not required for sheets displayed from NIBs, but required for ones created from dialog resources
-		(OSStatus)ChangeWindowAttributes(EventLoop_GetRealFrontWindow(), 0L/* set attributes */,
-										kWindowCloseBoxAttribute | kWindowFullZoomAttribute/* clear attributes */);
+		(OSStatus)ChangeWindowAttributes(EventLoop_ReturnRealFrontWindow(), 0L/* set attributes */,
+											kWindowCloseBoxAttribute | kWindowFullZoomAttribute/* clear attributes */);
 	}
 	Embedding_DeactivateFrontmostWindow();
 }// dialogDisplayPreparation

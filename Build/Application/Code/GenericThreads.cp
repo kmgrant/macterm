@@ -341,7 +341,7 @@ assigned to it at creation time.
 (3.0)
 */
 GenericThreadRef
-GenericThreads_GetByDescriptor		(GenericThreadDescriptor	inThreadDescriptor)
+GenericThreads_ReturnByDescriptor	(GenericThreadDescriptor	inThreadDescriptor)
 {
 	GenericThreadRef	result = nullptr;
 	
@@ -371,22 +371,22 @@ GenericThreads_GetByDescriptor		(GenericThreadDescriptor	inThreadDescriptor)
 	}
 	
 	return result;
-}// GetByDescriptor
+}// ReturnByDescriptor
 
 
 /*!
 Acquires a reference to a thread, given the Mac OS Thread Manager
 ID assigned to it when constructed.
 
-IMPORTANT:	This routine is implementation-dependent, and as such
-			more flexible routines like GenericThreads_GetByDescriptor()
+IMPORTANT:	This routine is implementation-dependent, and as such more
+			flexible routines like GenericThreads_ReturnByDescriptor()
 			should be favored.  If the Thread Manager is unsupported
 			one day, routines like this will not be available.
 
 (3.0)
 */
 GenericThreadRef
-GenericThreads_GetByThreadManagerID	(ThreadID	inThreadID)
+GenericThreads_ReturnByThreadManagerID		(ThreadID	inThreadID)
 {
 	GenericThreadRef								result = REINTERPRET_CAST(0x87654321, GenericThreadRef);
 	ThreadIDToGenericThreadRefMap::const_iterator	threadIDHandlePairIterator;
@@ -400,7 +400,7 @@ GenericThreads_GetByThreadManagerID	(ThreadID	inThreadID)
 	}
 	
 	return result;
-}// GetByThreadManagerID
+}// ReturnByThreadManagerID
 
 
 /*!
@@ -412,7 +412,7 @@ but you can assume that the main thread is running.
 (3.0)
 */
 GenericThreadRef
-GenericThreads_GetCurrent ()
+GenericThreads_ReturnCurrent ()
 {
 	GenericThreadRef	result = REINTERPRET_CAST(0x12345678, GenericThreadRef);
 	ThreadID			threadID = 0;
@@ -420,9 +420,9 @@ GenericThreads_GetCurrent ()
 	
 	
 	error = GetCurrentThread(&threadID);
-	if (error == noErr) result = GenericThreads_GetByThreadManagerID(threadID);
+	if (error == noErr) result = GenericThreads_ReturnByThreadManagerID(threadID);
 	return result;
-}// GetCurrent
+}// ReturnCurrent
 
 
 /*!
@@ -433,7 +433,7 @@ from other threads.
 (3.0)
 */
 GenericThreadDescriptor
-GenericThreads_GetDescriptorOf	(GenericThreadRef	inThread)
+GenericThreads_ReturnDescriptorOf	(GenericThreadRef	inThread)
 {
 	GenericThreadDescriptor		result = kGenericThreadDescriptorMainThread;
 	
@@ -447,7 +447,7 @@ GenericThreads_GetDescriptorOf	(GenericThreadRef	inThread)
 		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
-}// GetDescriptorOf
+}// ReturnDescriptorOf
 
 
 /*!
@@ -464,7 +464,7 @@ IMPORTANT:	The result is meaningless until the thread
 (3.0)
 */
 voidPtr
-GenericThreads_GetResultOf		(GenericThreadRef	inThread)
+GenericThreads_ReturnResultOf	(GenericThreadRef	inThread)
 {
 	voidPtr		result = nullptr;
 	
@@ -478,7 +478,7 @@ GenericThreads_GetResultOf		(GenericThreadRef	inThread)
 		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
-}// GetResultOf
+}// ReturnResultOf
 
 
 /*!
@@ -492,7 +492,7 @@ much free space is left on a thread’s stack.
 (3.0)
 */
 UInt32
-GenericThreads_GetStackOf	(GenericThreadRef	inThread)
+GenericThreads_ReturnStackOf	(GenericThreadRef	inThread)
 {
 	UInt32		result = 0L;
 	
@@ -506,7 +506,7 @@ GenericThreads_GetStackOf	(GenericThreadRef	inThread)
 		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
-}// GetStackOf
+}// ReturnStackOf
 
 
 /*!
@@ -527,9 +527,9 @@ WARNING:	If at all possible, use routines from this
 (3.0)
 */
 ThreadID
-GenericThreads_GetThreadManagerID	(GenericThreadRef	inThread)
+GenericThreads_ReturnThreadManagerID	(GenericThreadRef	inThread)
 {
-	ThreadID			result = kNoThreadID;
+	ThreadID	result = kNoThreadID;
 	
 	
 	if (FlagManager_Test(kFlagThreadManager))
@@ -541,7 +541,7 @@ GenericThreads_GetThreadManagerID	(GenericThreadRef	inThread)
 		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
-}// GetThreadManagerID
+}// ReturnThreadManagerID
 
 
 /*!
@@ -551,7 +551,7 @@ completes (if synchronization of multithreaded
 operations is required).  Use this method to specify
 a routine that should be called as soon as the
 given thread terminates (returns a value).  You can
-use GenericThreads_GetResult() to access the result
+use GenericThreads_ReturnResult() to access the result
 of a thread operation from within a termination method.
 
 (3.0)
@@ -679,7 +679,7 @@ static pascal void
 threadTerminationRoutine	(ThreadID	inWhichThreadTerminated,
 							 void*		UNUSED_ARGUMENT(inUnusedParameter))
 {
-	GenericThreadRef	ref = GenericThreads_GetByThreadManagerID(inWhichThreadTerminated);
+	GenericThreadRef	ref = GenericThreads_ReturnByThreadManagerID(inWhichThreadTerminated);
 	
 	
 	if (ref != nullptr)

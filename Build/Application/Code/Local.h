@@ -97,17 +97,17 @@ typedef int/* file descriptor */		PseudoTeletypewriterID;
 Local_Result
 	Local_GetDefaultShell					(char**						outStringPtr);
 
-int
-	Local_GetTerminalFlowStartCharacter		(PseudoTeletypewriterID		inPseudoTerminalID);
-
-int
-	Local_GetTerminalFlowStopCharacter		(PseudoTeletypewriterID		inPseudoTerminalID);
-
-int
-	Local_GetTerminalInterruptCharacter		(PseudoTeletypewriterID		inPseudoTerminalID);
-
 void
 	Local_KillProcess						(pid_t						inUnixProcessID);
+
+int
+	Local_ReturnTerminalFlowStartCharacter	(PseudoTeletypewriterID		inPseudoTerminalID);
+
+int
+	Local_ReturnTerminalFlowStopCharacter	(PseudoTeletypewriterID		inPseudoTerminalID);
+
+int
+	Local_ReturnTerminalInterruptCharacter	(PseudoTeletypewriterID		inPseudoTerminalID);
 
 Local_Result
 	Local_SpawnDefaultShell					(SessionRef					inUninitializedSession,

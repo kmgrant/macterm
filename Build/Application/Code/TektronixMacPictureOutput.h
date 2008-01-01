@@ -87,7 +87,7 @@ SInt16
 													 SInt16			inEndY);
 
 char const*
-	TektronixMacPictureOutput_GetDeviceName			();
+	TektronixMacPictureOutput_ReturnDeviceName		();
 
 SInt16
 	TektronixMacPictureOutput_SetBounds				(Rect const*	inBoundsPtr);

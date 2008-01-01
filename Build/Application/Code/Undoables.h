@@ -148,7 +148,7 @@ void
 ###############################################################*/
 
 Undoables_ContextIdentifier
-	Undoables_GetActionID				(Undoables_ActionRef				inRef);
+	Undoables_ReturnActionID			(Undoables_ActionRef				inRef);
 
 /*###############################################################
 	MANAGING THE STACKS OF UNDOABLE AND REDOABLE OPERATIONS

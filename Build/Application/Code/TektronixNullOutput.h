@@ -75,7 +75,7 @@ SInt16
 													 SInt16				inEndY);
 
 char const*
-	TektronixNullOutput_GetDeviceName				();
+	TektronixNullOutput_ReturnDeviceName			();
 
 void
 	TektronixNullOutput_SetCallbackData				(SInt16				inDevice,

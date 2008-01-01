@@ -107,57 +107,57 @@ typedef MacroDescriptor*	MacroDescriptorPtr;
 
 // CALL THIS ROUTINE ONCE, BEFORE ANY OTHER MACRO SET ROUTINE
 void
-	Macros_Init					();
+	Macros_Init							();
 
 // CALL THIS ROUTINE AFTER YOU ARE PERMANENTLY DONE WITH MACRO SETS
 void
-	Macros_Done					();
+	Macros_Done							();
 
 /*###############################################################
 	CREATING AND DESTROYING MACRO SETS
 ###############################################################*/
 
 MacroSet
-	Macros_NewSet				();
+	Macros_NewSet						();
 
 void
-	Macros_DisposeSet			(MacroSet*							inoutSetToDestroy);
+	Macros_DisposeSet					(MacroSet*							inoutSetToDestroy);
 
 /*###############################################################
 	GLOBAL MACRO ROUTINES
 ###############################################################*/
 
-Boolean
-	MacroManager_UserInputMacroString	(SessionRef					inSession,
-										 MacroIndex					inZeroBasedMacroNumber);
-
 MacroSet
-	Macros_GetActiveSet			();
+	Macros_ReturnActiveSet				();
 
 MacroSetNumber
-	Macros_GetActiveSetNumber	();
+	Macros_ReturnActiveSetNumber		();
 
 MacroManager_InvocationMethod
-	Macros_GetMode				();
+	Macros_ReturnMode					();
+
+Boolean
+	MacroManager_UserInputMacroString	(SessionRef							inSession,
+										 MacroIndex							inZeroBasedMacroNumber);
 
 // WARNING - THE MAXIMUM VALUE (ONE-BASED) YOU CAN SPECIFY IS ÒMACRO_SET_COUNTÓ
 void
-	Macros_SetActiveSetNumber	(MacroSetNumber						inNewActiveSetNumber);
+	Macros_SetActiveSetNumber			(MacroSetNumber						inNewActiveSetNumber);
 
 void
-	Macros_SetMode				(MacroManager_InvocationMethod		inNewMode);
+	Macros_SetMode						(MacroManager_InvocationMethod		inNewMode);
 
 /*###############################################################
 	NOTIFICATION OF CHANGES
 ###############################################################*/
 
 void
-	Macros_StartMonitoring		(Macros_Change						inForWhatChange,
-								 ListenerModel_ListenerRef			inListener);
+	Macros_StartMonitoring				(Macros_Change						inForWhatChange,
+										 ListenerModel_ListenerRef			inListener);
 
 void
-	Macros_StopMonitoring		(Macros_Change						inForWhatChange,
-								 ListenerModel_ListenerRef			inListener);
+	Macros_StopMonitoring				(Macros_Change						inForWhatChange,
+										 ListenerModel_ListenerRef			inListener);
 
 /*###############################################################
 	UTILITIES FOR GETTING AND SETTING MACROS
@@ -165,43 +165,43 @@ void
 
 // IF YOU PASS A NULL FILE, THE USER IS QUERIED (VIA NAVIGATION SERVICES) TO SPECIFY A FILE
 void
-	Macros_ExportToText			(MacroSet							inSet,
-								 FSSpec*							inFileSpecPtrOrNull,
-								 MacroManager_InvocationMethod		inMacroModeOfExportedSet);
+	Macros_ExportToText					(MacroSet							inSet,
+										 FSSpec*							inFileSpecPtrOrNull,
+										 MacroManager_InvocationMethod		inMacroModeOfExportedSet);
 
 void
-	Macros_Get					(MacroSet							inFromWhichSet,
-								 MacroIndex							inZeroBasedMacroNumber,
-								 char*								outValue,
-								 SInt16								inRoom);
+	Macros_Get							(MacroSet							inFromWhichSet,
+										 MacroIndex							inZeroBasedMacroNumber,
+										 char*								outValue,
+										 SInt16								inRoom);
 
 // IF YOU PASS A NULL FILE, THE USER IS QUERIED (VIA NAVIGATION SERVICES) TO SPECIFY A FILE
 Boolean
-	Macros_ImportFromText		(MacroSet							inSet,
-								 FSSpec const*						inFileSpecPtrOrNull,
-								 MacroManager_InvocationMethod*		outMacroModeOfImportedSet);
+	Macros_ImportFromText				(MacroSet							inSet,
+										 FSSpec const*						inFileSpecPtrOrNull,
+										 MacroManager_InvocationMethod*		outMacroModeOfImportedSet);
 
 void
-	Macros_ParseTextBuffer		(MacroSet							inSet,
-								 UInt8*								inBuffer,
-								 Size								inSize,
-								 MacroManager_InvocationMethod*		outMacroModeOfImportedSet);
+	Macros_ParseTextBuffer				(MacroSet							inSet,
+										 UInt8*								inBuffer,
+										 Size								inSize,
+										 MacroManager_InvocationMethod*		outMacroModeOfImportedSet);
 
 void
-	Macros_Set					(MacroSet							inFromWhichSet,
-								 MacroIndex							inZeroBasedMacroNumber,
-								 char const*						inValue);
+	Macros_Set							(MacroSet							inFromWhichSet,
+										 MacroIndex							inZeroBasedMacroNumber,
+										 char const*						inValue);
 
 /*###############################################################
 	OTHER MACRO UTILITIES
 ###############################################################*/
 
 Boolean
-	Macros_AllEmpty				(MacroSet							inSet);
+	Macros_AllEmpty						(MacroSet							inSet);
 
 void
-	Macros_Copy					(MacroSet							inSource,
-								 MacroSet							inDestination);
+	Macros_Copy							(MacroSet							inSource,
+										 MacroSet							inDestination);
 
 #endif
 

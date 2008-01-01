@@ -732,7 +732,7 @@ panelChanged	(Panel_Ref			inPanel,
 	SInt32		result = 0L;
 	
 	
-	//if (Panel_GetDescriptor(inPanel) == kMyPrefPanelDescriptorFavorites)
+	//if (Panel_ReturnDescriptor(inPanel) == kMyPrefPanelDescriptorFavorites)
 	{
 		switch (inMessage)
 		{

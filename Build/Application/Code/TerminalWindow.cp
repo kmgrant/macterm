@@ -453,11 +453,11 @@ TerminalWindow_ExistsFor	(WindowRef	inWindow)
 	}
 	#else
 	{
-		WindowInfoRef		windowInfo = WindowInfo_GetFromWindow(inWindow);
+		WindowInfoRef		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
 		
 		
 		result = ((nullptr != windowInfo) &&
-					(kConstantsRegistry_WindowDescriptorAnyTerminal == WindowInfo_GetWindowDescriptor(windowInfo)));
+					(kConstantsRegistry_WindowDescriptorAnyTerminal == WindowInfo_ReturnWindowDescriptor(windowInfo)));
 	}
 	#endif
 	
@@ -804,13 +804,13 @@ TerminalWindowRef
 TerminalWindow_ReturnFromWindow		(WindowRef	inWindow)
 {
 	TerminalWindowRef	result = nullptr;
-	WindowInfoRef		windowInfo = WindowInfo_GetFromWindow(inWindow);
+	WindowInfoRef		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
 	
 	
 	if ((nullptr != windowInfo) &&
-		(kConstantsRegistry_WindowDescriptorAnyTerminal == WindowInfo_GetWindowDescriptor(windowInfo)))
+		(kConstantsRegistry_WindowDescriptorAnyTerminal == WindowInfo_ReturnWindowDescriptor(windowInfo)))
 	{
-		result = REINTERPRET_CAST(WindowInfo_GetAuxiliaryDataPtr(windowInfo), TerminalWindowRef);
+		result = REINTERPRET_CAST(WindowInfo_ReturnAuxiliaryDataPtr(windowInfo), TerminalWindowRef);
 	}
 	
 	return result;
@@ -2626,7 +2626,7 @@ createTabWindow		(TerminalWindowPtr		inPtr)
 				
 				error = HIViewFindByID(HIViewGetRoot(tabWindow), kHIViewWindowContentID, &contentPane);
 				assert_noerr(error);
-				inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(CarbonEventUtilities_GetViewTarget(contentPane),
+				inPtr->tabDragHandlerPtr = new CarbonEventHandlerWrap(CarbonEventUtilities_ReturnViewTarget(contentPane),
 																		receiveTabDragDrop,
 																		CarbonEventSetInClass
 																		(CarbonEventClass(kEventClassControl),
@@ -3578,7 +3578,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// enable kiosk mode only if it is not enabled already
 						if (turnOnFullScreen)
 						{
-							HIWindowRef			window = EventLoop_GetRealFrontWindow();
+							HIWindowRef			window = EventLoop_ReturnRealFrontWindow();
 							Rect				deviceBounds;
 							Boolean				allowForceQuit = true;
 							Boolean				showMenuBar = true;
@@ -3804,7 +3804,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBoldBackground,
 															&setupData.format[arrayIndex].colors.background);
 							setupData.format[arrayIndex].options = kFormatDialogFormatOptionDisableFontItems;
-							//if (TerminalView_GetDisplayMode(view) == kTerminalView_DisplayModeZoom)
+							//if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
 							{
 								// currently, font size from “normal” is shared by all styles, so this is never active
 								setupData.format[arrayIndex].options |= kFormatDialogFormatOptionDisableFontSizeItems;
@@ -3818,7 +3818,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingBackground,
 															&setupData.format[arrayIndex].colors.background);
 							setupData.format[arrayIndex].options = kFormatDialogFormatOptionDisableFontItems;
-							//if (TerminalView_GetDisplayMode(view) == kTerminalView_DisplayModeZoom)
+							//if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
 							{
 								// currently, font size from “normal” is shared by all styles, so this is never active
 								setupData.format[arrayIndex].options |= kFormatDialogFormatOptionDisableFontSizeItems;
@@ -4803,7 +4803,7 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 					 void*							inContextPtr)
 {
 	// this routine only recognizes one kind of context - be absolutely sure that’s what was given!
-	assert(Undoables_GetActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFontSizeChanges);
+	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFontSizeChanges);
 	
 	{
 		UndoDataFontSizeChangesPtr	dataPtr = REINTERPRET_CAST(inContextPtr, UndoDataFontSizeChangesPtr);
@@ -4855,7 +4855,7 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 							 void*							inContextPtr)
 {
 	// this routine only recognizes one kind of context - be absolutely sure that’s what was given!
-	assert(Undoables_GetActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFullScreenChanges);
+	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFullScreenChanges);
 	
 	{
 		UndoDataFullScreenChangesPtr	dataPtr = REINTERPRET_CAST(inContextPtr, UndoDataFullScreenChangesPtr);
@@ -4900,7 +4900,7 @@ reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 								 void*							inContextPtr)
 {
 	// this routine only recognizes one kind of context - be absolutely sure that’s what was given!
-	assert(Undoables_GetActionID(inApplicableAction) == kUndoableContextIdentifierTerminalDimensionChanges);
+	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalDimensionChanges);
 	
 	{
 		UndoDataScreenDimensionChangesPtr	dataPtr = REINTERPRET_CAST(inContextPtr, UndoDataScreenDimensionChangesPtr);
@@ -5751,7 +5751,7 @@ updateScreenFormatDialogCloseNotifyProc		(FormatDialogRef	inDialogThatClosed,
 	{
 		// update the screen window to reflect the user’s changes
 		FormatDialogSetupData	setupData;
-		WindowRef				screenWindow = FormatDialog_GetParentWindow(inDialogThatClosed);
+		WindowRef				screenWindow = FormatDialog_ReturnParentWindow(inDialogThatClosed);
 		
 		
 		if (FormatDialog_GetContents(inDialogThatClosed, &setupData) && (nullptr != screenWindow))
@@ -5807,7 +5807,7 @@ updateScreenSizeDialogCloseNotifyProc	(TerminalSizeDialogRef	inDialogThatClosed,
 {
 	if (inOKButtonPressed)
 	{
-		TerminalWindowRef	forWhichTerminalWindow = SizeDialog_GetParentTerminalWindow(inDialogThatClosed);
+		TerminalWindowRef	forWhichTerminalWindow = SizeDialog_ReturnParentTerminalWindow(inDialogThatClosed);
 		
 		
 		if (nullptr != forWhichTerminalWindow)

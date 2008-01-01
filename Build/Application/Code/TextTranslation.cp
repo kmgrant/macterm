@@ -257,10 +257,10 @@ would add.
 (3.0)
 */
 inline UInt16
-TextTranslation_GetCharacterSetCount ()
+TextTranslation_ReturnCharacterSetCount ()
 {
 	return gTextEncodingInfoList().size();
-}// GetCharacterSetCount
+}// ReturnCharacterSetCount
 
 
 /*!
@@ -277,7 +277,7 @@ If the index canÕt be found, 0 is returned.
 (3.0)
 */
 UInt16
-TextTranslation_GetCharacterSetIndex	(CFStringEncoding	inTextEncoding)
+TextTranslation_ReturnCharacterSetIndex		(CFStringEncoding	inTextEncoding)
 {
 	UInt16									result = 0;
 	SInt16									i = 1;
@@ -293,7 +293,7 @@ TextTranslation_GetCharacterSetIndex	(CFStringEncoding	inTextEncoding)
 		if ((dataPtr != nullptr) && (dataPtr->textEncoding == inTextEncoding)) result = i;
 	}
 	return result;
-}// GetCharacterSetIndex
+}// ReturnCharacterSetIndex
 
 
 /*!
@@ -311,7 +311,7 @@ If the encoding canÕt be found, one is assumed.
 (3.0)
 */
 CFStringEncoding
-TextTranslation_GetIndexedCharacterSet		(UInt16		inOneBasedIndex)
+TextTranslation_ReturnIndexedCharacterSet	(UInt16		inOneBasedIndex)
 {
 	CFStringEncoding		result = kCFStringEncodingMacRoman;
 	MyTextEncodingInfoPtr	dataPtr = nullptr;
@@ -322,7 +322,7 @@ TextTranslation_GetIndexedCharacterSet		(UInt16		inOneBasedIndex)
 	if (dataPtr != nullptr) result = dataPtr->textEncoding;
 	
 	return result;
-}// GetIndexedCharacterSet
+}// ReturnIndexedCharacterSet
 
 
 #pragma mark Internal Methods

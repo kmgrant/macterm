@@ -107,122 +107,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 #pragma mark Public Methods
 
 /*!
-Parses the given Core Foundation string and returns
-what kind of URL it seems to represent.
-
-Any whitespace on either end of the string is
-stripped prior to checks.
-
-FUTURE: Could probably rely on CFURLGetBytes() and
-CFURLGetByteRangeForComponent() to do part of this
-gruntwork, only in a way that is flexible to many
-more types of URLs.
-
-(3.1)
-*/
-UniformResourceLocatorType
-URL_GetTypeFromCFString		(CFStringRef	inURLCFString)
-{
-	UniformResourceLocatorType	result = kNotURL;
-	CFMutableStringRef			urlCopyCFString = CFStringCreateMutableCopy
-													(kCFAllocatorDefault, 0/* length or 0 for unlimited */,
-														inURLCFString);
-	
-	
-	if (nullptr != urlCopyCFString)
-	{
-		CFStringTrimWhitespace(urlCopyCFString);
-		{
-			CFStringEncoding const	kEncoding = kCFStringEncodingUTF8;
-			size_t const			kStringLength = CFStringGetLength(urlCopyCFString);
-			size_t const			kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
-														(kStringLength, kEncoding);
-			char*					buffer = nullptr;
-			
-			
-			buffer = new char[kBufferSize];
-			if (CFStringGetCString(urlCopyCFString, buffer, kBufferSize, kEncoding))
-			{
-				result = URL_GetTypeFromCharacterRange(buffer, buffer + kStringLength);
-			}
-			delete [] buffer, buffer = nullptr;
-		}
-		CFRelease(urlCopyCFString), urlCopyCFString = nullptr;
-	}
-	
-	return result;
-}// GetTypeFromCFString
-
-
-/*!
-Parses the given data handle, assumed to be a
-string, and returns what kind of URL it seems
-to represent.
-
-Whitespace is NOT stripped in this version of
-the routine.
-
-(3.1)
-*/
-UniformResourceLocatorType
-URL_GetTypeFromCharacterRange	(char const*	inBegin,
-								 char const*	inPastEnd)
-{
-	UniformResourceLocatorType	result = kNotURL;
-	register SInt16				i = 0;
-	
-	
-	// look for a match on the prefix (e.g. "http:")
-	for (i = 0; (nullptr != gURLSchemeNames[i]); ++i)
-	{
-		char const* const	kCStringPtr = gURLSchemeNames[i];
-		
-		
-		// obviously the URL must be at least as long as its prefix!
-		if ((inPastEnd - inBegin) > STATIC_CAST(std::strlen(kCStringPtr), ptrdiff_t))
-		{
-			if (std::equal(kCStringPtr, kCStringPtr + std::strlen(kCStringPtr), inBegin))
-			{
-				result = STATIC_CAST(i, UniformResourceLocatorType);
-				break;
-			}
-		}
-	}
-	return result;
-}// GetTypeFromCharacterRange
-
-
-/*!
-Parses the given data handle, assumed to be a
-string, and returns what kind of URL it seems
-to represent.
-
-Any whitespace on either end of the string is
-stripped prior to checks.
-
-(2.6)
-*/
-UniformResourceLocatorType
-URL_GetTypeFromDataHandle	(Handle		inURLDataHandle)
-{
-	UniformResourceLocatorType	result = kNotURL;
-	char const*					textBegin = *inURLDataHandle;
-	char const*					textEnd = *inURLDataHandle +
-											(GetHandleSize(inURLDataHandle) / sizeof(char));
-	
-	
-	// strip off leading white space and lagging white space
-	while (IS_WHITE_SPACE_OR_CR_CHARACTER(*textBegin) && textBegin < textEnd) ++textBegin;
-	while (IS_WHITE_SPACE_OR_CR_CHARACTER(*textBegin) && textBegin < textEnd) --textEnd;
-	
-	// get URL type
-	result = URL_GetTypeFromCharacterRange(textBegin, textEnd);
-	
-	return result;
-}// GetTypeFromDataHandle
-
-
-/*!
 Examines the currently-selected text of the specified
 terminal view for a valid URL.  If it finds one, the
 text is flashed briefly and then the proper Apple Events
@@ -249,7 +133,7 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 		{
 			HLock(urlH);
 			
-			urlKind = URL_GetTypeFromDataHandle(urlH);
+			urlKind = URL_ReturnTypeFromDataHandle(urlH);
 			if (kNotURL != urlKind)
 			{
 				WindowRef	screenWindow = TerminalView_ReturnWindow(inView);
@@ -308,33 +192,6 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 	
 	unless (isValidHandle) Sound_StandardAlert();
 }// HandleForScreenView
-
-
-/*!
-Determines whether MacTelnet supports URLs of the
-specified type.
-
-See URL_ParseCFString() for actual implementations
-of URL handlers.
-
-(3.0)
-*/
-Boolean
-URL_TypeIsHandledByAppItself	(UniformResourceLocatorType		inType)
-{
-	Boolean		result = false;
-	
-	
-	result = (
-				(kTelnetURL == inType) ||
-				(kRloginURL == inType) ||
-				(kSshURL == inType) ||
-				(kFtpURL == inType) ||
-				(kSftpURL == inType) ||
-				(kXmanpageURL == inType)
-			);
-	return result;
-}// TypeIsHandledByAppItself
 
 
 /*!
@@ -581,7 +438,7 @@ URL_ParseCFString	(CFStringRef	inURLString)
 		UniformResourceLocatorType	urlKind = kNotURL;
 		
 		
-		urlKind = URL_GetTypeFromCFString(inURLString);
+		urlKind = URL_ReturnTypeFromCFString(inURLString);
 		if (kNotURL != urlKind)
 		{
 			CFURLRef	theCFURL = CFURLCreateWithString(kCFAllocatorDefault, inURLString, nullptr/* base URL */);
@@ -598,6 +455,122 @@ URL_ParseCFString	(CFStringRef	inURLString)
 	}
 	return result;
 }// ParseCFString
+
+
+/*!
+Parses the given Core Foundation string and returns
+what kind of URL it seems to represent.
+
+Any whitespace on either end of the string is
+stripped prior to checks.
+
+FUTURE: Could probably rely on CFURLGetBytes() and
+CFURLGetByteRangeForComponent() to do part of this
+gruntwork, only in a way that is flexible to many
+more types of URLs.
+
+(3.1)
+*/
+UniformResourceLocatorType
+URL_ReturnTypeFromCFString		(CFStringRef	inURLCFString)
+{
+	UniformResourceLocatorType	result = kNotURL;
+	CFMutableStringRef			urlCopyCFString = CFStringCreateMutableCopy
+													(kCFAllocatorDefault, 0/* length or 0 for unlimited */,
+														inURLCFString);
+	
+	
+	if (nullptr != urlCopyCFString)
+	{
+		CFStringTrimWhitespace(urlCopyCFString);
+		{
+			CFStringEncoding const	kEncoding = kCFStringEncodingUTF8;
+			size_t const			kStringLength = CFStringGetLength(urlCopyCFString);
+			size_t const			kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
+														(kStringLength, kEncoding);
+			char*					buffer = nullptr;
+			
+			
+			buffer = new char[kBufferSize];
+			if (CFStringGetCString(urlCopyCFString, buffer, kBufferSize, kEncoding))
+			{
+				result = URL_ReturnTypeFromCharacterRange(buffer, buffer + kStringLength);
+			}
+			delete [] buffer, buffer = nullptr;
+		}
+		CFRelease(urlCopyCFString), urlCopyCFString = nullptr;
+	}
+	
+	return result;
+}// ReturnTypeFromCFString
+
+
+/*!
+Parses the given data handle, assumed to be a
+string, and returns what kind of URL it seems
+to represent.
+
+Whitespace is NOT stripped in this version of
+the routine.
+
+(3.1)
+*/
+UniformResourceLocatorType
+URL_ReturnTypeFromCharacterRange	(char const*	inBegin,
+									 char const*	inPastEnd)
+{
+	UniformResourceLocatorType	result = kNotURL;
+	register SInt16				i = 0;
+	
+	
+	// look for a match on the prefix (e.g. "http:")
+	for (i = 0; (nullptr != gURLSchemeNames[i]); ++i)
+	{
+		char const* const	kCStringPtr = gURLSchemeNames[i];
+		
+		
+		// obviously the URL must be at least as long as its prefix!
+		if ((inPastEnd - inBegin) > STATIC_CAST(std::strlen(kCStringPtr), ptrdiff_t))
+		{
+			if (std::equal(kCStringPtr, kCStringPtr + std::strlen(kCStringPtr), inBegin))
+			{
+				result = STATIC_CAST(i, UniformResourceLocatorType);
+				break;
+			}
+		}
+	}
+	return result;
+}// ReturnTypeFromCharacterRange
+
+
+/*!
+Parses the given data handle, assumed to be a
+string, and returns what kind of URL it seems
+to represent.
+
+Any whitespace on either end of the string is
+stripped prior to checks.
+
+(2.6)
+*/
+UniformResourceLocatorType
+URL_ReturnTypeFromDataHandle	(Handle		inURLDataHandle)
+{
+	UniformResourceLocatorType	result = kNotURL;
+	char const*					textBegin = *inURLDataHandle;
+	char const*					textEnd = *inURLDataHandle +
+											(GetHandleSize(inURLDataHandle) / sizeof(char));
+	
+	
+	// strip off leading white space and lagging white space
+	while (IS_WHITE_SPACE_OR_CR_CHARACTER(*textBegin) && textBegin < textEnd) ++textBegin;
+	while (IS_WHITE_SPACE_OR_CR_CHARACTER(*textBegin) && textBegin < textEnd) --textEnd;
+	
+	// get URL type
+	result = URL_ReturnTypeFromCharacterRange(textBegin, textEnd);
+	
+	return result;
+}// ReturnTypeFromDataHandle
 
 
 /*!
@@ -674,5 +647,32 @@ URL_SetSelectionToProximalURL	(TerminalView_Cell const&	inCommandClickColumnRow,
 	// TEMPORARY - REIMPLEMENT
 	return false;
 }// SetSelectionToProximalURL
+
+
+/*!
+Determines whether MacTelnet supports URLs of the
+specified type.
+
+See URL_ParseCFString() for actual implementations
+of URL handlers.
+
+(3.0)
+*/
+Boolean
+URL_TypeIsHandledByAppItself	(UniformResourceLocatorType		inType)
+{
+	Boolean		result = false;
+	
+	
+	result = (
+				(kTelnetURL == inType) ||
+				(kRloginURL == inType) ||
+				(kSshURL == inType) ||
+				(kFtpURL == inType) ||
+				(kSftpURL == inType) ||
+				(kXmanpageURL == inType)
+			);
+	return result;
+}// TypeIsHandledByAppItself
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

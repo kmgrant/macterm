@@ -158,40 +158,6 @@ IconManager_DisposeIcon		(IconManagerIconRef*	inoutRefPtr)
 
 
 /*!
-Returns a reference to the internal icon, coerced to
-a Handle.  Use IconManager_Is...() methods to determine
-what type of data this is (IconSuite or IconRef).
-
-(1.0)
-*/
-Handle
-IconManager_GetData		(IconManagerIconRef		inRef)
-{
-	Handle					result = false;
-	IconManagerIconPtr		ptr = refAcquireLock(inRef);
-	
-	
-	if (ptr != nullptr)
-	{
-		if ((ptr->type == kIconManagerIconTypeOSX) && gHaveIconServices)
-		{
-			result = (Handle)ptr->data.OSX;
-		}
-		else if (ptr->type == kIconManagerIconTypeOS8)
-		{
-			result = (Handle)ptr->data.OS8;
-		}
-		else
-		{
-			result = (Handle)ptr->data.OS7;
-		}
-		refReleaseLock(inRef, &ptr);
-	}
-	return result;
-}// GetData
-
-
-/*!
 To determine if an abstract icon reference defines an
 icon based on modern Mac OS icon data, use this method.
 If the application is presently running Mac OS 8.0 or
@@ -741,6 +707,40 @@ IconManager_PlotIcon	(IconManagerIconRef		inRef,
 	
 	return result;
 }// PlotIcon
+
+
+/*!
+Returns a reference to the internal icon, coerced to
+a Handle.  Use IconManager_Is...() methods to determine
+what type of data this is (IconSuite or IconRef).
+
+(1.0)
+*/
+Handle
+IconManager_ReturnData	(IconManagerIconRef		inRef)
+{
+	Handle					result = false;
+	IconManagerIconPtr		ptr = refAcquireLock(inRef);
+	
+	
+	if (ptr != nullptr)
+	{
+		if ((ptr->type == kIconManagerIconTypeOSX) && gHaveIconServices)
+		{
+			result = (Handle)ptr->data.OSX;
+		}
+		else if (ptr->type == kIconManagerIconTypeOS8)
+		{
+			result = (Handle)ptr->data.OS8;
+		}
+		else
+		{
+			result = (Handle)ptr->data.OS7;
+		}
+		refReleaseLock(inRef, &ptr);
+	}
+	return result;
+}// ReturnData
 
 
 /*!

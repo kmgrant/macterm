@@ -14,13 +14,13 @@
 	interfaces in both means that your application generally
 	never needs to worry about which of the two editions is
 	actually in place at run time.  Nevertheless, the method
-	UniversalPrint_GetArchitecture() is provided so you can find
-	out which runtime version is being used, when necessary.
+	UniversalPrint_ReturnArchitecture() is provided so you can
+	find out which runtime version is being used, when necessary.
 */
 /*###############################################################
 
 	Universal Printing Library 1.1
-	© 1998-2005 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -41,10 +41,6 @@
 		USA
 
 ###############################################################*/
-
-/*!
-	@header Universal Printing Library
-*/
 
 #include "UniversalDefines.h"
 
@@ -74,7 +70,7 @@ typedef struct UniversalPrint_OpaqueContext*	UniversalPrint_ContextRef;
 typedef SInt16 UniversalPrint_Architecture;
 enum
 {
-	// one of these constants is returned from UniversalPrint_GetArchitecture()
+	// one of these constants is returned from UniversalPrint_ReturnArchitecture()
 	kUniversalPrint_ArchitectureTraditional = 0,
 	kUniversalPrint_ArchitectureMacOSX = 1	// Carbon printing
 };
@@ -176,7 +172,7 @@ inline Boolean
 	}
 
 UniversalPrint_Architecture
-	UniversalPrint_GetArchitecture			();
+	UniversalPrint_ReturnArchitecture		();
 
 /*###############################################################
 	CREATING AND DESTROYING OPAQUE PRINT RECORDS
@@ -193,7 +189,7 @@ void
 ###############################################################*/
 
 OSStatus
-	UniversalPrint_GetLastResult			(UniversalPrint_ContextRef			inRef);
+	UniversalPrint_ReturnLastResult			(UniversalPrint_ContextRef			inRef);
 
 /*###############################################################
 	ACCESSING DATA IN OPAQUE PRINT RECORDS
@@ -231,7 +227,7 @@ void
 ###############################################################*/
 
 UniversalPrint_Mode
-	UniversalPrint_GetMode					();
+	UniversalPrint_ReturnMode				();
 
 void
 	UniversalPrint_SetMode					(UniversalPrint_Mode				inNewMode);

@@ -13,7 +13,7 @@
 	implement a versioning function for a library.
 	
 	Data Access Library 1.3
-	© 1998-2004 by Kevin Grant
+	© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -72,10 +72,10 @@ enum
 	EXTRACTING APPLICATION OR LIBRARY VERSION INFORMATION
 ###############################################################*/
 
-#define Releases_GetMajorVersionNumber(v)		((v & kReleaseMajorVersionNumberMask) >> 24)
-#define Releases_GetMinorVersionNumber(v)		((v & kReleaseMinorVersionNumberMask) >> 13)
-#define Releases_GetSuperminorVersionNumber(v)	((v & kReleaseSuperminorVersionNumberMask) >> 2)
-#define Releases_GetKind(v)						((v & kReleaseKindMask) >> 0)
+#define Releases_ReturnMajorVersionNumber(v)		((v & kReleaseMajorVersionNumberMask) >> 24)
+#define Releases_ReturnMinorVersionNumber(v)		((v & kReleaseMinorVersionNumberMask) >> 13)
+#define Releases_ReturnSuperminorVersionNumber(v)	((v & kReleaseSuperminorVersionNumberMask) >> 2)
+#define Releases_ReturnKind(v)						((v & kReleaseKindMask) >> 0)
 #define Releases_Version(maj, min, supm, kind)	(	\
 													((maj << 24) & kReleaseMajorVersionNumberMask) & \
 													((min << 13) & kReleaseMinorVersionNumberMask) & \
@@ -88,13 +88,13 @@ enum
 ###############################################################*/
 
 UInt8
-	Releases_GetMajorRevisionForVersion 		(long const		inVersion);
+	Releases_ReturnMajorRevisionForVersion			(long const		inVersion);
 
 UInt8
-	Releases_GetMinorRevisionForVersion 		(long const		inVersion);
+	Releases_ReturnMinorRevisionForVersion			(long const		inVersion);
 
 UInt8
-	Releases_GetSuperminorRevisionForVersion 	(long const		inVersion);
+	Releases_ReturnSuperminorRevisionForVersion 	(long const		inVersion);
 
 #endif
 

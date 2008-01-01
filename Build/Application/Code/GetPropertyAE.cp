@@ -1042,11 +1042,11 @@ accessPropertyOfClassMacroSet		(ObjectClassesAE_TokenPtr   inTokenPtr,
 			else if (inPropertyAccessMechanism == kPropertyAccessObtain)
 			{
 				FourCharCode	keys = kTelnetEnumeratedClassMacroSetKeyEquivalentsCommandDigit;
-				UInt16			oldActiveSetNumber = Macros_GetActiveSetNumber();
+				UInt16			oldActiveSetNumber = Macros_ReturnActiveSetNumber();
 				
 				
 				Macros_SetActiveSetNumber(macroSetNumber);
-				if (Macros_GetMode() == kMacroManager_InvocationMethodFunctionKeys)
+				if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
 				{
 					// if the macro set uses function keys instead, change the default
 					keys = kTelnetEnumeratedClassMacroSetKeyEquivalentsFunctionKeys;
@@ -1071,7 +1071,7 @@ accessPropertyOfClassMacroSet		(ObjectClassesAE_TokenPtr   inTokenPtr,
 					if (result == noErr)
 					{
 						// update the macro setÕs key equivalents
-						UInt16			oldActiveSetNumber = Macros_GetActiveSetNumber();
+						UInt16		oldActiveSetNumber = Macros_ReturnActiveSetNumber();
 						
 						
 						Macros_SetActiveSetNumber(macroSetNumber);
@@ -1464,7 +1464,7 @@ accessPropertyOfClassWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 	}
 	
 	// if the window is valid, get any Window Info associated with it
-	if (result == noErr) windowInfo = WindowInfo_GetFromWindow(window);
+	if (result == noErr) windowInfo = WindowInfo_ReturnFromWindow(window);
 	
 	// verify that itÕs a property, and verify its container class type
 	if (result == noErr)
@@ -1522,7 +1522,7 @@ accessPropertyOfClassWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 				}
 				else if (windowInfo != nullptr)
 				{
-					switch (WindowInfo_GetWindowDescriptor(windowInfo))
+					switch (WindowInfo_ReturnWindowDescriptor(windowInfo))
 					{
 					case kConstantsRegistry_WindowDescriptorClipboard:
 					case kConstantsRegistry_WindowDescriptorPreferences:
@@ -1746,7 +1746,7 @@ accessPropertyOfClassWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 			else if (inPropertyAccessMechanism == kPropertyAccessObtain)
 			{
 				SInt16		windowIndex = 1;
-				WindowRef	frontWindow = EventLoop_GetRealFrontWindow();
+				WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
 				
 				
 				// find the window
@@ -1929,7 +1929,7 @@ accessPropertyOfClassWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 			{
 				if (windowInfo != nullptr)
 				{
-					switch (WindowInfo_GetWindowDescriptor(windowInfo))
+					switch (WindowInfo_ReturnWindowDescriptor(windowInfo))
 					{
 					case kConstantsRegistry_WindowDescriptorAnyTerminal:
 					case kConstantsRegistry_WindowDescriptorDebuggingConsole:
@@ -2256,7 +2256,7 @@ tokenAccess		(AEDesc const*				inTokenDescriptor,
 					(OSErr)AppleEventUtilities_InitAEDesc(&containerDesc);
 					(OSErr)AppleEventUtilities_InitAEDesc(&keyDesc);
 					
-					if (dataPtr->ref == EventLoop_GetRealFrontWindow())
+					if (dataPtr->ref == EventLoop_ReturnRealFrontWindow())
 					{
 						// frontmost window; return the specifier "window 1", which is more flexible
 						(OSErr)BasicTypesAE_CreateSInt32Desc(1, &keyDesc);

@@ -454,7 +454,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			if (preferencesResult != kPreferences_ResultOK) textEncoding = kTextEncodingMacRoman; // arbitrary
 			// 3.0 - use Text Encoding Converters in the menu
 			SetDialogItemValue(gSessionEditorDialog, SessTransTablePopup,
-								TextTranslation_GetCharacterSetIndex(textEncoding) + kNumberOfNonEncodingItems);
+								TextTranslation_ReturnCharacterSetIndex(textEncoding) + kNumberOfNonEncodingItems);
 		}
 		
 		// initialize this structure, in case FSMakeFSSpec() fails
@@ -555,7 +555,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 		
 		wasInAliasText = false;
 		
-		parentWindow = EventLoop_GetRealFrontWindow();
+		parentWindow = EventLoop_ReturnRealFrontWindow();
 		DialogTransitions_DisplayFromRectangle(GetDialogWindow(gSessionEditorDialog), parentWindow, inTransitionOpenRectOrNull);
 		
 		// set the focus
@@ -713,7 +713,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				}
 			}
 			{
-				TextEncoding	savedEncoding = TextTranslation_GetIndexedCharacterSet
+				TextEncoding	savedEncoding = TextTranslation_ReturnIndexedCharacterSet
 												(GetDialogItemValue(gSessionEditorDialog, SessTransTablePopup) -
 													kNumberOfNonEncodingItems);
 				
