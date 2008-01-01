@@ -21,7 +21,9 @@ svn=svn
 
 $date "+Started creating source tarball at %T."
 
+# this must run from the top level of the trunk
 BIN=`$dirname $0`
+cd ${BIN}
 
 # find the current version
 version_parts=`Build/VersionInfo.sh`
@@ -51,7 +53,7 @@ target=$root/$directory
 # use Subversion to dump all checked-in files to the target;
 # this is awesome because it simply omits any temporary files
 # or other work-area gunk that doesn't belong in the release
-cd ${BIN} && $svn export . ${target}/
+$svn export . ${target}/
 
 # create archive
 $gnu_tar zcvf "$root/$directory.tar.gz" -C "$root" "$directory"
