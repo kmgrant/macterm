@@ -54,7 +54,7 @@ $(foreach PREFIX,$(strip $(MODULES)),$(strip $(MAIN_SRC))/$(1)/$(strip $(PREFIX)
 endef
 
 define SOURCE_IMG
-$(wildcard $(call MAIN_SRC_SUB,$(1))/*.gif) \
+$(wildcard $(call MAIN_SRC_SUB,$(1))/*.png) \
 $(wildcard $(strip $(SHARED_SRC))/*.jpg) \
 $(wildcard $(strip $(SHARED_SRC))/*.png)
 endef
