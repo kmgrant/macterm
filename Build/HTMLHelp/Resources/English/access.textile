@@ -11,13 +11,14 @@ h1(pagetitle). Running Applications
 
 h2(#servers). Remote Sessions: Connecting to Servers
 
-Select "Custom New Session..." from the File menu to begin.
+Select File >> Custom New Session... to begin.
 
-bq. Only your first sessions should require this customization step.
-In the future, it will be faster to rely on a Favorite or a saved
-session file to hold your preferences.  A Favorite can be opened
-directly from the File menu, and saved sessions can be opened
-by using the "Open Workspace..." command.
+bq. Only your first sessions should require this
+customization step.  In the future, it will be
+faster to rely on a Favorite or a saved session
+file to hold your preferences.  A Favorite can be
+opened directly from the File menu; for others,
+use File >> Open.
 
 A Custom New Session opens a terminal window and a sheet to allow
 configuration.
@@ -37,47 +38,48 @@ address (like "123.45.67.123"), enter that instead.  The Look Up button
 can be used to check if a server name is valid (if so, it is transformed
 into a numeric address; otherwise, it is unchanged).
 
-bq. MacTelnet supports IP version 6 addresses as well, so you
-could even use a new-style address like
+bq. MacTelnet supports IP version 6 addresses too,
+so you could also enter something like
 "0000:0000:0000:0000:0000:ffff:9d16:0164".
 
-The Port field may not require changing...it was set automatically when
-you chose a Protocol earlier.  But some servers use a custom port number,
-so adjust the value if necessary.
+The Port field may not require changing...it was set automatically
+when you chose a Protocol earlier.  But some servers use a custom
+port number, so adjust the value if necessary.
 
 The User ID is what the server uses to identify you.  If not provided,
-the name of your Mac OS X Home folder is used (one-word, all-lowercase
+the name of your local Home folder is used (one-word, all-lowercase
 name).  Note that if a password is also required to access the server,
 you will be prompted for that at connection time; you cannot enter it
 initially in the configuration sheet.
 
-bq. You'll notice that your changes set up a Unix command line.
-This is because MacTelnet relies on Apple's installed commands
-to establish your server connection.  Advanced users may wish
-to add extra options here.  See the Unix manual pages for
-each command to learn the available options.
+bq. You'll notice that your changes set up a Unix
+command line.  This is because MacTelnet relies
+on Apple's installed commands to connect to
+your server.  Advanced users may wish to add
+extra options here; see the Unix manual pages
+for each command to learn what is available.
 
 h2(#unix). Local Sessions: Running Unix Commands
 
-Select "Default" from the File menu to open a window running your
-default Unix shell.  Any commands you type here interact with
-that shell, providing full access to that shell's capabilities.
+Select File >> Default to open a window running your default Unix
+shell.  Any commands you type here interact with that shell,
+providing full access to that shell's capabilities.
 
-bq. Note that the Preferences window can be used to change what
-any Favorite does, including Default!  Your Default will not
-open a new shell if you have modified Default to run something
-else.
+bq. Note that the Preferences window can be used
+to change what any Favorite does, including
+Default!  Your Default will not open a new shell
+if you have modified it to run something else.
 
-Another option is to select "Log-In Shell" from the File menu,
-which will prompt you for your Mac OS X user ID and password before
-presenting you with a shell.  The shell is also configured with some
-extra log-in-only settings that are shell-dependent.
+Another option is to select File >> Log-In Shell, which will prompt
+you for your Mac OS X user ID and password before presenting you
+with a shell.  The shell is also configured with some extra
+log-in-only settings that are shell-dependent.
 
-Yet another option is to use "Custom New Session...", ignoring the
-Remote Sessions section and replacing the command line at the bottom
-with a completely arbitrary Unix command.
+Yet another option is to use File >> Custom New Session..., ignoring
+the Remote Sessions section and replacing the command line at the
+bottom with a completely arbitrary Unix command.
 
-As with remote applications, "Open Workspace..." can be used to run a
+As with remote applications, File >> Open... can be used to run a
 command that you previously saved.
 
 </div>

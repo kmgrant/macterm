@@ -101,6 +101,13 @@ that relies heavily on Esc such as the "vi" text editor.
 Note, however, that Unix shells and other applications may
 require use of a backquote.
 
+h5(#focusfollowsmouse). Focus follows mouse
+
+Allows you to type into any terminal without bringing its window
+to the front; you simply point at the terminal with the mouse
+before typing.  This is the way many window managers behave on
+Unix-like systems.
+
 h3(#generalspecial). Special
 
 h4(#cursorflash). Terminal Cursor: Flashing

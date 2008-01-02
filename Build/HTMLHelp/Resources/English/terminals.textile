@@ -9,7 +9,7 @@ h1(pagetitle). Terminals
 
 <div class="content">
 
-h2. Text Selections
+h2(#select). Text Selections
 
 Highlight terminal text by dragging over it with the mouse.  Keep it
 *rectangular* by holding down the Option key.
@@ -52,26 +52,19 @@ choose its shape and whether or not it is flashing on and off.
 h2(#commandline). Floating Command Line
 
 Use Window >> Show Command Line to display a floating window
-for entering text that _is not_ immediately sent to the active terminal
-as you type.
+for entering text locally.  Unlike typing directly into a terminal,
+nothing you type in the floating window is seen until you press
+the *Return* key (which also sends a new-line sequence to the
+terminal).
 
-Instead, the text is sent in one of two ways:
+As a special exception, you can enter URLs (such as
+http://www.apple.com/ or telnet://nowhere.loopback.edu/) into the
+command line, and they are handled locally using your preferred
+application.  Note that MacTelnet can handle some URLs itself.
 
-* By hitting *Return*, which sends what's entered so far,
-  followed by a new-line sequence, to the active terminal
-
-* By hitting *Tab*, which sends only the text (no new-line)
-
-The command line also supports a small history of past lines of text
-that you have entered; you can either press the up-arrow key or use
-the pop-up menu to access them.
-
-As a special peculiarity, MacTelnet will allow you to enter a
-URL (http://www.apple.com/, telnet://nowhere.loopback.edu/, etc.)
-into the command line, and if you do it will **not** be sent to the
-active terminal.  Instead, it will be handled by your system,
-running whatever helper application is most appropriate (for
-example, your preferred web browser).
+The command line is somewhat shell-like, in that you can use the
+up-arrow key to automatically type recently-entered command lines.
+You can also use the mouse to access the history from the window.
 
 h2. Window Operations
 
@@ -79,21 +72,29 @@ MacTelnet provides many sophisticated ways to manage windows.
 
 h3(#dimensions). Screen Sizes
 
-The View menu contains a couple of short-cut commands that let you
-immediately change a terminal window to one of the standard sizes
-(80x24, 132x24), and you may also open a dialog to choose a specific
-number of rows and columns.  If you drag the resize box of the
-window, the rows and columns are changed dynamically (with a pop-up
-showing the dimensions as you drag).
+The View menu contains a few short-cut commands that let you
+immediately change a terminal window to common sizes (80x24,
+80x48, 132x24).  You may also open a dialog to choose a specific
+number of rows and columns.  Note that Edit >> Undo can be used
+to cancel dimension changes made with these commands.
+
+Depending on your "Window Resize Affects" preferences, dragging
+the size box with or without the Option key will also change the
+terminal screen dimensions.
 
 h3(#magnify). Magnification
 
 Use View >> Make Text as Big as Possible to alter a terminal's text
 size based on the display that contains the largest part of its window!
 See also View >> Full Screen, which can be used in tandem with
-this effect to create a dedicated terminal display (kiosk).  If you
-Option-drag the resize box of the window, the text is magnified
-dynamically (with a pop-up showing the font size as you drag).
+this effect to create a dedicated terminal display (kiosk).
+
+Note that Edit >> Undo can be used to cancel dimension changes
+made with the "Make Text..." commands.
+
+Depending on your "Window Resize Affects" preferences, dragging
+the size box with or without the Option key will also change the
+magnification of text.
 
 h3(#hide). Hiding Windows
 

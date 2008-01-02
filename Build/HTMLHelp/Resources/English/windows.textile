@@ -12,33 +12,29 @@ h1(pagetitle). Types of Windows
 h2(#terminal). Terminal
 
 A terminal window is what you will use most in MacTelnet.  It
-displays a primarily-text interface to the applications you are
-running.
+displays a primarily-text interface to other applications.
 
 There are so many things you can do with terminal windows that
 there is a "dedicated page":terminals.html discussing them all!
-
-h2(#commandline). Command Line
-
-The command line is a special interface to the active terminal
-window.  See "the terminals page":terminals.html#commandline for more information.
 
 h2(#tek). Tektronix Vector Graphics
 
 If a session has a TEK graphics command set enabled, it will
 automatically spawn Tektronix vector graphics drawings whenever
-properly-formatted data is received from the session.
+properly-formatted data is received from the session.  You may
+also create pages using View >> New TEK Page.
 
-A drawing can be copied to the Clipboard using Edit >> Copy.  It
-can be magnified or shrunk by resizing its window.  A portion of
-the graphic can be magnified by using the mouse to drag a rectangle.
-(This partial view can be undone by double-clicking the graphic.)
+**Note:** Once a graphics window is opened, its terminal is tied
+to the canvas and any typing in the terminal will be rendered in
+the graphics window only.  To restore normal terminal behavior,
+close the graphics window.
 
-**Note:** Currently, an open graphic will hijack all interaction with
-the terminal that generated it: for example, typing into the
-terminal will cause the text to be rendered graphically in the TEK
-window instead.  Close the graphics window to restore ordinary
-terminal behavior.
+What you can do with a graphics window:
+
+* Edit >> Copy to copy a bitmap of the graphic to the clipboard.
+* Magnify or shrink the image by resizing the window.
+* Focus on one part by dragging a rectangle with the mouse.  You
+  can undo this focus by double-clicking the image.
 
 h2(#sessioninfo). Session Info
 
@@ -46,25 +42,44 @@ Displays the status of all windows at once, including whether or
 not processes are running.  There are icons in the Window menu
 that show similar information.
 
-h2(#macros). Macro Editor
+To bring a window to the front, you can double-click its entry in
+the Session Info list.
 
-The macro editor allows you to define text short-cuts that can be
-"typed" for you, when certain keys are pressed.  In MacTelnet 3.1
-this is a fully modeless window, allowing you to edit macros in
-real time without having to commit changes to any dialog.
+To rename a window, select the appropriate item in the list and
+press Return to display an edit box (as you would in the Finder).
+This is equivalent to using the Window >> Rename command.
 
-The set of 12 macros visible in the editor is the active set; you
-can keep up to 5 sets in memory at once (and save others, using
-the "Export..." and "Import..." abilities).
+The Status column can show a few different text descriptions:
 
-The "Invoke With:" section lets you choose whether your macros
-are invoked with numeric command keys (command-0, command-1,
-etc.) or with the top row of function keys (F1, F2, etc.).
+* ***Running (just opened):** It has only been a few seconds
+  since the window opened, so you can close it without warning.
+* **Running:** The session has been open for awhile; MacTelnet
+  will confirm when you try to close it.
+* **Not Running:** The application running in the window has
+  quit, but the window is still open; only possible when you have
+  set the "Don't automatically close windows" preference.
 
-Use the "Special Sequences..." button to see how placeholders can
-be put into macro text for arbitrary characters as well as tabs,
-quotes, newlines, escapes, your computer's IP address and the
-number of lines in your terminal.
+An icon is also displayed, and normally matches the text above;
+but, it can sometimes change to show a transient state:
+
+* A yellow caution icon indicates an open alert message, or that
+  a notification is up (for example, a watch for activity in a
+  window).
+* A "dimmed" icon indicates the window was hidden from view with
+  the Hide command.  (Hidden windows can be redisplayed in many
+  ways, including double-clicking Session Info list items.)
+
+You can rearrange the columns in this window and your preferred
+order will be saved automatically.
+
+Note that View >> Hide Toolbar and View >> Customize Toolbar also
+work for the Session Info window, and can be used to change your
+display preferences for the top of that window.
+
+h2(#commandline). Command Line
+
+The command line is a special interface to the active terminal
+window.  See "the terminals page":terminals.html#commandline for more information.
 
 h2(#keypads). Keypads
 

@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080101',
     '20071231',
     '20071230',
     '20071229',
@@ -72,6 +73,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080101': [
+		'MacTelnet Help has received several minor corrections and other edits.',
+	],
 	'20071231': [
 		'Fixed window review on Quit to automatically show hidden sessions instead of ignoring them.',
 	],

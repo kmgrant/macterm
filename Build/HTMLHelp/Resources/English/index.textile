@@ -31,8 +31,8 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 <dt>Interesting Features</dt><dd>
 
 * "simpler user interface":preferences.html#simplify
-* "floating command line window":windows.html#commandline
-* "rectangular text selections":terminals.html#selectrect
+* "floating command line window":terminals.html#commandline
+* "rectangular text selections":terminals.html#select
 * "cursor location finder":terminals.html#findcursor
 * "full screen terminal":terminals.html#magnify
 * "hiding windows without closing":terminals.html#hide
