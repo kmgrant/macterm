@@ -1619,55 +1619,6 @@ RestoreFrontmostWindow ()
 
 
 /*!
-Displays a file selection dialog box that
-shows the user only directories, and asks
-the user to choose a default directory.
-
-This has been updated in MacTelnet 3.0 to
-support the Navigation Services dialog for
-choosing directories, and to return a
-Boolean value.  If the user selected a
-directory, true is returned; otherwise
-(if the user canceled or an error occurred)
-false is returned.
-
-(2.6)
-*/
-Boolean
-SelectDirectory		(short*		inoutVolumeReferenceNumber,
-					 long*		inoutDirectoryID)
-{
-	Boolean		result = false;
-	Str255		prompt,
-				title;
-	
-	
-	GetIndString(prompt, rStringsNavigationServices, siNavPromptSelectDefaultDirectory);
-	GetIndString(title, rStringsNavigationServices, siNavDialogTitleDefaultDirectory);
-	
-	// updated for Navigation Services
-	{
-		FSSpec		file;
-		OSStatus	theErr = noErr;
-		
-		
-		unless (Alert_ReportOSStatus(theErr = FileSelectionDialogs_GetDirectory
-												(prompt, title, kPreferences_NavPrefKeyGenericChooseFolder,
-													kNavDefaultNavDlogOptions,
-													EventLoop_HandleNavigationUpdate, &file)))
-		{
-			// then we got a directory without a problem or a cancellation
-			*inoutVolumeReferenceNumber = file.vRefNum;
-			*inoutDirectoryID = file.parID;
-		}
-		result = (theErr == noErr);
-	}
-	
-	return result;
-}// SelectDirectory
-
-
-/*!
 To fill in a text field or static text control
 with a number, use this convenient method.
 The specified signed number is first converted

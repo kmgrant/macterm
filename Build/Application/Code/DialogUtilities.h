@@ -252,10 +252,6 @@ void
 void
 	RestoreFrontmostWindow					();
 
-Boolean
-	SelectDirectory							(short*					inoutVolumeReferenceNumber,
-											 long*					inoutDirectoryID);
-
 void
 	SetControlNumericalText					(ControlRef				inControl,
 											 SInt32					inNumber);
