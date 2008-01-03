@@ -44,7 +44,6 @@
 		0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */; };
 		0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */; };
 		0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE1055432A400ACDF3A /* HelpSystem.cp */; };
-		0AC6BAFD0A8C0BA000AFF37A /* PrefPanelConfigurations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE04055432A400ACDF3A /* PrefPanelConfigurations.cp */; };
 		0AC6BAFE0A8C0BA000AFF37A /* ScriptInterfaceAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A88D05D07EA8BA1003FB644 /* ScriptInterfaceAE.cp */; };
 		0AC6BAFF0A8C0BA000AFF37A /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */; };
 		0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFE055432A400ACDF3A /* NetEvents.cp */; };
@@ -274,7 +273,6 @@
 		0A46040E0554376100ACDF3A /* ObjectClassesAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ObjectClassesAE.h; path = Application/Code/ObjectClassesAE.h; sourceTree = "<group>"; };
 		0A46040F0554376100ACDF3A /* Panel.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Panel.h; path = Application/Code/Panel.h; sourceTree = SOURCE_ROOT; };
 		0A4604120554376100ACDF3A /* Preferences.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Preferences.h; path = Application/Code/Preferences.h; sourceTree = "<group>"; };
-		0A4604140554376100ACDF3A /* PrefPanelConfigurations.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelConfigurations.h; path = Application/Code/PrefPanelConfigurations.h; sourceTree = "<group>"; };
 		0A4604160554376100ACDF3A /* PrefPanelGeneral.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelGeneral.h; path = Application/Code/PrefPanelGeneral.h; sourceTree = "<group>"; };
 		0A4604170554376100ACDF3A /* PrefPanelMacros.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelMacros.h; path = Application/Code/PrefPanelMacros.h; sourceTree = "<group>"; };
 		0A4604180554376100ACDF3A /* PrefPanelScripts.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelScripts.h; path = Application/Code/PrefPanelScripts.h; sourceTree = "<group>"; };
@@ -388,7 +386,6 @@
 		0A46FE00055432A400ACDF3A /* NewSessionDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NewSessionDialog.cp; path = Application/Code/NewSessionDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE01055432A400ACDF3A /* Panel.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Panel.cp; path = Application/Code/Panel.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE03055432A400ACDF3A /* Preferences.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Preferences.cp; path = Application/Code/Preferences.cp; sourceTree = "<group>"; };
-		0A46FE04055432A400ACDF3A /* PrefPanelConfigurations.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelConfigurations.cp; path = Application/Code/PrefPanelConfigurations.cp; sourceTree = "<group>"; };
 		0A46FE05055432A400ACDF3A /* PrefPanelGeneral.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelGeneral.cp; path = Application/Code/PrefPanelGeneral.cp; sourceTree = "<group>"; };
 		0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelMacros.cp; path = Application/Code/PrefPanelMacros.cp; sourceTree = "<group>"; };
 		0A46FE07055432A400ACDF3A /* PrefPanelScripts.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelScripts.cp; path = Application/Code/PrefPanelScripts.cp; sourceTree = "<group>"; };
@@ -1043,7 +1040,6 @@
 			isa = PBXGroup;
 			children = (
 				0A46FE03055432A400ACDF3A /* Preferences.cp */,
-				0A46FE04055432A400ACDF3A /* PrefPanelConfigurations.cp */,
 				0ABC0CFD0A450061009D07FC /* PrefPanelFormats.cp */,
 				0A46FE05055432A400ACDF3A /* PrefPanelGeneral.cp */,
 				0AF4B5460A1D61E400D187A3 /* PrefPanelKiosk.cp */,
@@ -1061,7 +1057,6 @@
 			isa = PBXGroup;
 			children = (
 				0A4604120554376100ACDF3A /* Preferences.h */,
-				0A4604140554376100ACDF3A /* PrefPanelConfigurations.h */,
 				0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */,
 				0A4604160554376100ACDF3A /* PrefPanelGeneral.h */,
 				0AF4B5450A1D61C700D187A3 /* PrefPanelKiosk.h */,
@@ -1287,7 +1282,6 @@
 				0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */,
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
 				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */,
-				0AC6BAFD0A8C0BA000AFF37A /* PrefPanelConfigurations.cp in Sources */,
 				0AC6BAFE0A8C0BA000AFF37A /* ScriptInterfaceAE.cp in Sources */,
 				0AC6BAFF0A8C0BA000AFF37A /* MainEntryPoint.cp in Sources */,
 				0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */,
