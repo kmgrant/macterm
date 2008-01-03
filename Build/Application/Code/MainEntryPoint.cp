@@ -167,8 +167,6 @@ exitCleanly ()
 		
 		resFile = AppResources_ReturnResFile(kAppResources_FileIDPreferences);
 		if (resFile >= 0) CloseResFile(resFile);
-		resFile = AppResources_ReturnResFile(kAppResources_FileIDTerminalBellSound);
-		if (resFile >= 0) CloseResFile(resFile);
 	}
 	RestoreApplicationDockTileImage();
 	ExitToShell();

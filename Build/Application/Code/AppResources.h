@@ -27,7 +27,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -69,9 +69,7 @@ typedef OSStatus AppResources_Result;
 typedef FourCharCode AppResources_FileID;
 enum
 {
-	kAppResources_FileIDApplication			= FOUR_CHAR_CODE('TRFA'),
-	kAppResources_FileIDPreferences			= FOUR_CHAR_CODE('TRFP'),
-	kAppResources_FileIDTerminalBellSound	= FOUR_CHAR_CODE('TRFB')
+	kAppResources_FileIDPreferences		= FOUR_CHAR_CODE('TRFP')
 };
 
 

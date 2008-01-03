@@ -3,7 +3,7 @@
 	TerminalSpeaker.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -293,49 +293,8 @@ TerminalSpeaker_SoundBell	(TerminalSpeaker_Ref	inSpeaker)
 {
 	unless ((gTerminalSoundsOff) || TerminalSpeaker_IsMuted(inSpeaker))
 	{
-		SInt16		resID = AppResources_ReturnResFile(kAppResources_FileIDTerminalBellSound);
-		Boolean		justBeep = false; // don’t use a custom sound?
-		
-		
-		if (resID < 0) justBeep = true;
-		else
-		{
-			// then the user has provided a “Bell” file; use its sound resource instead
-			enum
-			{
-				kSoundResourceType = 'snd '
-			};
-			SInt16		oldResFile = CurResFile();
-			OSStatus	error = noErr;
-			
-			
-			AppResources_UseResFile(kAppResources_FileIDTerminalBellSound);
-			if (Count1Resources(kSoundResourceType) <= 0) error = resNotFound;
-			else
-			{
-				Handle		resHandle = Get1IndResource(kSoundResourceType, 1); // get first available sound
-				
-				
-				error = ResError();
-				if (error == noErr)
-				{
-					ResType		resType = kSoundResourceType;
-					Str255		resName;
-					
-					
-					GetResInfo(resHandle, &resID, &resType, resName);
-					error = ResError();
-					if (error == noErr) error = Sound_PlayAsyncStereo(resType, resID, nullptr/* SoundInfoRef storage */);
-				}
-			}
-			UseResFile(oldResFile);
-			
-			justBeep = (error != noErr);
-			if (justBeep) Console_WriteValue("Error while trying to play custom bell sound", error);
-		}
-		
-		// no custom sound file, or an error occurred while trying to play the sound, so emit a standard beep
-		if (justBeep) Sound_StandardAlert();
+		// UNIMPLEMENTED - add back the ability to play a custom sound file
+		Sound_StandardAlert();
 	}
 }// SoundBell
 

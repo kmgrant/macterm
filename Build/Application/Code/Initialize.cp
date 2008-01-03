@@ -3,7 +3,7 @@
 	Initialize.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -503,33 +503,6 @@ initApplicationCore ()
 	
 	// initialize some other flags
 	FlagManager_Set(kFlagSuspended, false); // initially, the application is active
-	
-	// look for a terminal bell sound file, and if it exists, open it and save its file number;
-	// currently, MacTelnet does this by looking for a particular sound file or alias in its
-	// preferences directory
-	{
-		FSSpec		bellFolder,
-					soundFile;
-		OSStatus	error = noErr;
-		SInt16		resourceFileID = -1;
-		
-		
-		if (Folder_GetFSSpec(kFolder_RefPreferences, &bellFolder) == noErr)
-		{
-			Str255		soundFileName;
-			
-			
-			// create a file specification for the “Bell” file, which should be in the MacTelnet Preferences folder
-			GetIndString(soundFileName, rStringsImportantFileNames, siImportantFileNameTerminalBellSound);
-			error = FSMakeFSSpec(bellFolder.vRefNum, bellFolder.parID, soundFileName, &soundFile);
-			if (error == noErr)
-			{
-				error = FileUtilities_EnsureOriginalFile(&soundFile); // resolve any aliases
-				if (error == noErr) resourceFileID = FSpOpenResFile(&soundFile, fsCurPerm);
-			}
-		}
-		AppResources_SetResFile(kAppResources_FileIDTerminalBellSound, resourceFileID);
-	}
 }// initApplicationCore
 
 
@@ -589,7 +562,6 @@ initMacOSToolbox ()
 	
 	// initialization of the Alert module must be done here, otherwise startup error alerts can’t be displayed
 	AppResources_SetResFile(kAppResources_FileIDPreferences, -1);
-	AppResources_SetResFile(kAppResources_FileIDApplication, CurResFile());
 	Alert_Init(CurResFile());
 	
 	// initialize the Undoables module

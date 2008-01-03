@@ -3,7 +3,7 @@
 	AppResources.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -54,9 +54,7 @@
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	CFRetainRelease&	gApplicationBundle ()	{ static CFRetainRelease x; return x; }
-	SInt16				gResourceFileApplication = -1; // IMPORTANT - initialize to an INVALID file descriptor
 	SInt16				gResourceFilePreferences = -1;
-	SInt16				gResourceFileTerminalBellSound = -1;
 }
 
 #pragma mark Internal Method Prototypes
@@ -422,16 +420,8 @@ AppResources_ReturnResFile		(AppResources_FileID	inResourceFileType)
 	
 	switch (inResourceFileType)
 	{
-	case kAppResources_FileIDApplication:
-		result = gResourceFileApplication;
-		break;
-	
 	case kAppResources_FileIDPreferences:
 		result = gResourceFilePreferences;
-		break;
-	
-	case kAppResources_FileIDTerminalBellSound:
-		result = gResourceFileTerminalBellSound;
 		break;
 	
 	default:
@@ -466,16 +456,8 @@ AppResources_SetResFile		(AppResources_FileID	inResourceFileType,
 {
 	switch (inResourceFileType)
 	{
-	case kAppResources_FileIDApplication:
-		gResourceFileApplication = inResourceFileRefNum;
-		break;
-	
 	case kAppResources_FileIDPreferences:
 		gResourceFilePreferences = inResourceFileRefNum;
-		break;
-	
-	case kAppResources_FileIDTerminalBellSound:
-		gResourceFileTerminalBellSound = inResourceFileRefNum;
 		break;
 	
 	default:
