@@ -551,11 +551,7 @@ printPages		(UniversalPrint_ContextRef	inPrintingRef,
 			//snprintf (tmp,sizeof(tmp),"printing page:%d",pgcount); //putln(tmp);
 	
 			if (Title != nullptr) {
-				Str255 SessionNameString;
-				GetIndString(SessionNameString, rStringsMiscellaneous, siSessionName);
 				MoveTo( indent, lines*pFheight);
-				DrawString(SessionNameString);
-		
 				DrawString( Title);
 				CPP_STD::snprintf(pagetemp, sizeof(pagetemp), "Page %d", pgcount); // LOCALIZE THIS
 				pgtmplen=CPP_STD::strlen(pagetemp);
@@ -620,23 +616,7 @@ printPages		(UniversalPrint_ContextRef	inPrintingRef,
 	}
 	if (charh != nullptr) HUnlock(charh);
 	
-	if (sts != noErr)
-	{
-		InterfaceLibAlertRef	box = nullptr;
-		Str255					dialogText,
-								helpText;
-		
-		
-		GetIndString(dialogText, rStringsGeneralMessages, siPrintingFailed);
-		GetIndString(helpText, rStringsGeneralMessages, siPrintingFailedHelpText);
-		box = Alert_New();
-		Alert_SetHelpButton(box, false);
-		Alert_SetParamsFor(box, kAlert_StyleOK);
-		Alert_SetText(box, dialogText, helpText);
-		Alert_SetType(box, kAlertStopAlert);
-		Alert_Display(box);
-		Alert_Dispose(&box);
-	}
+	Alert_ReportOSStatus(sts);
 	
 	ProgressDialog_Dispose(&idleDialog);
 	RestoreFrontmostWindow();

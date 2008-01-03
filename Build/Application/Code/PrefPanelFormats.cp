@@ -963,18 +963,21 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandResetANSIColors:
 				// check with the user first!
 				{
-					InterfaceLibAlertRef	box = nullptr;
-					Str255					dialogText;
-					Str255					helpText;
+					AlertMessages_BoxRef	box = nullptr;
+					UIStrings_Result		stringResult = kUIStrings_ResultOK;
+					CFStringRef				dialogTextCFString = nullptr;
+					CFStringRef				helpTextCFString = nullptr;
 					
 					
-					GetIndString(dialogText, rStringsCautionAlerts, siConfirmANSIColorsReset);
-					GetIndString(helpText, rStringsCautionAlerts, siProcedureNotUndoableHelpText);
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowANSIColorsResetPrimaryText, dialogTextCFString);
+					assert(stringResult.ok());
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowGenericCannotUndoHelpText, helpTextCFString);
+					assert(stringResult.ok());
 					
 					box = Alert_New();
 					Alert_SetHelpButton(box, false);
 					Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-					Alert_SetText(box, dialogText, helpText);
+					Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
 					Alert_SetType(box, kAlertCautionAlert);
 					Alert_MakeWindowModal(box, GetControlOwner(dataPtr->pane), false/* is window close alert */,
 											resetANSIWarningCloseNotifyProc, dataPtr/* user data */);

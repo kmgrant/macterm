@@ -3,7 +3,7 @@
 	SessionEditorDialog.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -229,9 +229,6 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 			(OSStatus)GetDialogItemAsControl(gSessionEditorDialog, SessTransTablePopup, &popUpMenuControl);
 			(OSStatus)CreateNewMenu(kMenuIDSessionEditorTranslationTables, 0/* menu attributes */, &characterSetMenu);
 			SetMenuTitleWithCFString(characterSetMenu, CFSTR(""));
-			//GetIndString(scratchPstring, rStringsMiscellaneous, siNone); // "None" string
-			//AppendMenu(characterSetMenu, "\p<none>"); // avoid Menu Manager interpolation
-			//SetMenuItemText(characterSetMenu, CountMenuItems(characterSetMenu), scratchPstring);
 			TextTranslation_AppendCharacterSetsToMenu(characterSetMenu, 0/* levels of indentation */);
 			count = CountMenuItems(characterSetMenu);
 			EnableMenuItem(characterSetMenu, 0);

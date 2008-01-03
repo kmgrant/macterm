@@ -91,6 +91,11 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
+	case kUIStrings_AlertWindowANSIColorsResetPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Reset to the 16 default ANSI colors?"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowANSIColorsResetPrimaryText"));
+		break;
+	
 	case kUIStrings_AlertWindowCloseName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Close"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCloseName"));
@@ -119,6 +124,11 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	case kUIStrings_AlertWindowConnectionOpeningFailedName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Connection Opening Timed Out"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowConnectionOpeningFailedName"));
+		break;
+	
+	case kUIStrings_AlertWindowGenericCannotUndoHelpText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("This cannot be undone."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowGenericCannotUndoHelpText"));
 		break;
 	
 	case kUIStrings_AlertWindowMacroExportNothingPrimaryText:

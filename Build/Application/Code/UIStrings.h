@@ -87,12 +87,14 @@ the title strings, they are in a separate Buttons table.
 */
 enum UIStrings_AlertWindowCFString
 {
+	kUIStrings_AlertWindowANSIColorsResetPrimaryText	= 'ANSI',
 	kUIStrings_AlertWindowCloseName						= 'ImmC',
 	kUIStrings_AlertWindowCloseHelpText					= 'HCls',
 	kUIStrings_AlertWindowClosePrimaryText				= 'PCls',
 	kUIStrings_AlertWindowCommandFailedHelpText			= 'HCmd',
 	kUIStrings_AlertWindowCommandFailedPrimaryText		= 'PCmd',
 	kUIStrings_AlertWindowConnectionOpeningFailedName	= 'Xcxn',
+	kUIStrings_AlertWindowGenericCannotUndoHelpText		= 'HNUn',
 	kUIStrings_AlertWindowMacroExportNothingPrimaryText	= 'MENW',
 	kUIStrings_AlertWindowMacroExportNothingHelpText	= 'MENH',
 	kUIStrings_AlertWindowMacroImportWarningPrimaryText	= 'MIOW',
