@@ -3,7 +3,7 @@
 	RequiredAE.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -83,7 +83,6 @@
 #pragma mark Internal Method Prototypes
 
 static OSStatus		handleQuit										(AppleEvent const*, AppleEvent*, DescType);
-static OSStatus		launchFind										();
 static void			moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef, void*, SInt32, void*);
 static void			receiveTerminationWarningAnswer					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void			setTerminalWindowTranslucency					(TerminalWindowRef, void*, SInt32, void*);
@@ -942,11 +941,10 @@ AppleEvents_HandleLaunchFind	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr)
 								 SInt32				UNUSED_ARGUMENT(inData))
 {
 	OSErr const		result = noErr; // errors are ALWAYS returned via the reply record
-	OSStatus		error = noErr;
+	OSStatus		error = resNotFound;
 	
 	
-	// launch Sherlock or Find File, possibly asking the user where to run it from
-	error = launchFind();
+	// TEMPORARY - placeholder, this whole event will just be removed eventually
 	
 	(OSStatus)AppleEventUtilities_AddErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
 	return result;
@@ -1184,75 +1182,6 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 	
 	return result;
 }// handleQuit
-
-
-/*!
-Runs the Find File or Sherlock application.
-If the application cannot be found, the user
-is asked to locate it and its location is
-saved in the preferences file.
-
-(3.0)
-*/
-static OSStatus
-launchFind ()
-{
-	Str31		sherlockName;
-	FSSpec		sherlockSpec; // type 'APPL', creator 'fndf'
-	Boolean		launchSuccessful = false;
-	OSStatus	result = noErr;
-	
-	
-	// guess where Sherlock is
-	{
-		SInt32		dirID = 0L;
-		SInt16		vRefNum = 0;
-		
-		
-		GetIndString(sherlockName, rStringsMiscellaneous, siMacOS8_5AndBeyondFindFileName);
-		result = FindFolder(kOnSystemDisk, kAppleMenuFolderType, kDontCreateFolder, &vRefNum, &dirID);
-		if (result == noErr) result = FSMakeFSSpec(vRefNum, dirID, sherlockName, &sherlockSpec);
-	}
-	
-	// If none of the above measures worked, give in and display
-	// a query dialog box asking the user where this program is!
-	// If the user picks something, save that location - if it's
-	// right, it may not be necessary to query the user again
-	// the next time around.
-	unless (launchSuccessful)
-	{
-		Boolean		doContinue = false;
-		Str255		prompt,
-					title;
-		
-		
-		result = noErr; // give it another chance
-		GetIndString(prompt, rStringsNavigationServices, siNavPromptLocateApplication);
-		GetIndString(title, rStringsNavigationServices, siNavDialogTitleLocateApplication);
-		{
-			StringSubstitutionSpec const	metaMappings[] =
-											{
-												{ kStringSubstitutionDefaultTag1, sherlockName }
-											};
-			
-			
-			StringUtilities_PBuild(prompt, sizeof(metaMappings) / sizeof(StringSubstitutionSpec), metaMappings);
-			StringUtilities_PBuild(title, sizeof(metaMappings) / sizeof(StringSubstitutionSpec), metaMappings);
-		}
-		doContinue = GetApplicationSpec(prompt, title, &sherlockSpec);
-		if (doContinue)
-		{
-			result = FileUtilities_LaunchApplicationFromFSSpec(&sherlockSpec);
-			launchSuccessful = (result == noErr);
-		}
-		else
-		{
-			result = userCanceledErr;
-		}
-	}
-	
-	return result;
-}// launchFind
 
 
 /*!
