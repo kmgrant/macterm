@@ -31,7 +31,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -249,17 +249,6 @@ enum UIStrings_FileOrFolderCFString
 };
 
 /*!
-Font List Rebuild Progress Window String Table ("FontListProgressWindow.strings")
-
-Strings used in the progress window that appears while the
-contents of the Fonts menu are being determined.
-*/
-enum UIStrings_FontListProgressWindowCFString
-{
-	kUIStrings_FontListProgressWindowIconName			= 'Icon'
-};
-
-/*!
 Help System String Table ("HelpSystem.strings")
 
 These strings are used to interact with the Help Viewer.
@@ -303,14 +292,17 @@ enum UIStrings_MacroSetupWindowCFString
 // see "UIStrings_PrefsWindow.h" for declaration of "UIStrings_PreferencesWindowCFString"
 
 /*!
-Scripts Menu Rebuild Progress Window String Table ("ScriptsMenuProgressWindow.strings")
+Progress Windows String Table ("ProgressWindows.strings")
 
-Strings used in the progress window that appears while the
-contents of the Scripts menu are being determined.
+Strings used in the various progress windows that appear:
+font list building, scripts menu building, printing, etc.
 */
-enum UIStrings_ScriptsMenuProgressWindowCFString
+enum UIStrings_ProgressWindowCFString
 {
-	kUIStrings_ScriptsMenuProgressWindowIconName		= 'Icon'
+	kUIStrings_ProgressWindowFontListIconName			= 'FIcn',
+	kUIStrings_ProgressWindowPrintingPrimaryText		= 'PMsg',
+	kUIStrings_ProgressWindowScriptsMenuIconName		= 'SIcn',
+	kUIStrings_ProgressWindowScriptsMenuPrimaryText		= 'SMsg'
 };
 
 /*!
@@ -430,10 +422,6 @@ UIStrings_Result
 										 CFStringRef&									outString);
 
 UIStrings_Result
-	UIStrings_Copy						(UIStrings_FontListProgressWindowCFString		inWhichString,
-										 CFStringRef&									outString);
-
-UIStrings_Result
 	UIStrings_Copy						(UIStrings_HelpSystemCFString					inWhichString,
 										 CFStringRef&									outString);
 
@@ -444,7 +432,7 @@ UIStrings_Result
 // see "UIStrings_PrefsWindow.h" for a declaration that accepts "UIStrings_PreferencesWindowCFString"
 
 UIStrings_Result
-	UIStrings_Copy						(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
+	UIStrings_Copy						(UIStrings_ProgressWindowCFString				inWhichString,
 										 CFStringRef&									outString);
 
 UIStrings_Result

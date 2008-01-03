@@ -3,7 +3,7 @@
 	TelnetPrinting.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -65,6 +65,7 @@
 #include "TektronixVirtualGraphics.h"
 #include "Terminal.h"
 #include "TerminalView.h"
+#include "UIStrings.h"
 
 
 
@@ -455,20 +456,25 @@ printPages		(UniversalPrint_ContextRef	inPrintingRef,
 	long				dummyCount = 0L;
 	//char				tmp[100];			// only for debugging
 	char				stupidarray[160];	// used for finding string widths
-	ProgressDialogRef	idleDialog = nullptr;
+	ProgressDialog_Ref	idleDialog = nullptr;
 	Rect				pageBounds;
 	
 	
 	// 3.0 - display a cool printing progress dialog
 	{
-		Str255			text;
+		UIStrings_Result	stringResult = kUIStrings_ResultOK;
+		CFStringRef			dialogCFString = nullptr;
 		
 		
-		GetIndString(text, rStringsStatus, siStatusPrintingInProgress);
-		idleDialog = ProgressDialog_New(text, true/* modal */);
+		stringResult = UIStrings_Copy(kUIStrings_ProgressWindowPrintingPrimaryText, dialogCFString);
+		if (stringResult.ok())
+		{
+			idleDialog = ProgressDialog_New(dialogCFString, true/* modal */);
+			CFRelease(dialogCFString), dialogCFString = nullptr;
+		}
 	}
 	ProgressDialog_Display(idleDialog);
-	ProgressDialog_SetProgressIndicator(idleDialog, kTelnetProgressIndicatorIndeterminate);
+	ProgressDialog_SetProgressIndicator(idleDialog, kProgressDialog_IndicatorIndeterminate);
 	
 	// Printer drivers automatically “guess” the document name by looking
 	// at the title of the frontmost window.  Therefore, setting the title

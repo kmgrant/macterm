@@ -3,7 +3,7 @@
 	MenuBar.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -2535,37 +2535,32 @@ setUpScriptsMenu	(MenuRef	inMenu)
 									firstScript = true,		// as soon as a divider is put in the menu, this flag overturns
 									anyTopItems = false;	// set if there are any script filenames beginning with "!"
 			#if SCRIPTS_MENU_PROGRESS_WINDOW
-				ProgressDialogRef	progressDialog = nullptr;
+				ProgressDialog_Ref	progressDialog = nullptr;
 			#endif
 				SInt16				numberOfSpecialScriptMenuItems = 0;
 				SInt16				oldResFile = CurResFile();
 				
 				
 			#if SCRIPTS_MENU_PROGRESS_WINDOW
-				// create a progress dialog
 				{
-					Str255			text;
+					UIStrings_Result	stringResult = kUIStrings_ResultOK;
+					CFStringRef			dialogCFString = nullptr;
 					
 					
-					GetIndString(text, rStringsStatus, siStatusBuildingScriptsMenu);
-					progressDialog = ProgressDialog_New(text, false/* modal */);
+					// create a progress dialog with a status string
+					stringResult = UIStrings_Copy(kUIStrings_ProgressWindowScriptsMenuPrimaryText, dialogCFString);
+					assert(stringResult.ok());
+					progressDialog = ProgressDialog_New(dialogCFString, false/* modal */);
 					
 					// specify a title for the Dock’s menu
+					stringResult = UIStrings_Copy(kUIStrings_ProgressWindowScriptsMenuIconName, dialogCFString);
+					if (stringResult.ok())
 					{
-						CFStringRef			titleCFString = nullptr;
-						UIStrings_Result	stringResult = UIStrings_Copy
-															(kUIStrings_ScriptsMenuProgressWindowIconName,
-																titleCFString);
-						
-						
-						if (stringResult.ok())
-						{
-							SetWindowAlternateTitle(ProgressDialog_ReturnWindow(progressDialog), titleCFString);
-							CFRelease(titleCFString);
-						}
+						SetWindowAlternateTitle(ProgressDialog_ReturnWindow(progressDialog), dialogCFString);
+						CFRelease(dialogCFString);
 					}
 				}
-				ProgressDialog_SetProgressIndicator(progressDialog, kTelnetProgressIndicatorIndeterminate);
+				ProgressDialog_SetProgressIndicator(progressDialog, kProgressDialog_IndicatorIndeterminate);
 				
 				// show the progress window
 				ProgressDialog_Display(progressDialog);

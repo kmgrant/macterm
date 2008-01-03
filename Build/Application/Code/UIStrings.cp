@@ -3,7 +3,7 @@
 	UIStrings.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -872,52 +872,6 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 
 
 /*!
-Locates the specified string used by the font list
-rebuilding progress window, and returns a reference to
-a Core Foundation string.  Since a copy is made, you
-must call CFRelease() on the returned string when you
-are finished with it.
-
-\retval kUIStrings_ResultOK
-if the string is copied successfully
-
-\retval kUIStrings_ResultNoSuchString
-if the given tag is invalid
-
-\retval kUIStrings_ResultCannotGetString
-if an OS error occurred
-
-(3.0)
-*/
-UIStrings_Result
-UIStrings_Copy	(UIStrings_FontListProgressWindowCFString	inWhichString,
-				 CFStringRef&								outString)
-{
-	UIStrings_Result	result = kUIStrings_ResultOK;
-	
-	
-	// IMPORTANT: The external utility program "genstrings" is not smart enough to
-	//            figure out the proper string table name if you do not inline it.
-	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
-	//            automatically generate localizable ".strings" files.
-	switch (inWhichString)
-	{
-	case kUIStrings_FontListProgressWindowIconName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Font List Rebuilding Progress"), CFSTR("FontListProgressWindow"),
-													CFSTR("kUIStrings_FontListProgressWindowIconName"));
-		break;
-	
-	default:
-		// ???
-		result = kUIStrings_ResultNoSuchString;
-		break;
-	}
-	return result;
-}// Copy (font list window strings)
-
-
-/*!
 Locates the specified string used by the help system,
 either for display in a menu item or as a search string.
 Returns a reference to a Core Foundation string.  Since
@@ -1326,11 +1280,10 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 
 
 /*!
-Locates the specified string used by the Scripts menu
-rebuilding progress window, and returns a reference to
-a Core Foundation string.  Since a copy is made, you
-must call CFRelease() on the returned string when you
-are finished with it.
+Locates the specified string used by a progress window,
+and returns a reference to a Core Foundation string.
+Since a copy is made, you must call CFRelease() on the
+returned string when you are finished with it.
 
 \retval kUIStrings_ResultOK
 if the string is copied successfully
@@ -1344,8 +1297,8 @@ if an OS error occurred
 (3.0)
 */
 UIStrings_Result
-UIStrings_Copy	(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
-				 CFStringRef&									outString)
+UIStrings_Copy	(UIStrings_ProgressWindowCFString	inWhichString,
+				 CFStringRef&						outString)
 {
 	UIStrings_Result	result = kUIStrings_ResultOK;
 	
@@ -1357,9 +1310,24 @@ UIStrings_Copy	(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
-	case kUIStrings_ScriptsMenuProgressWindowIconName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Scripts Menu Rebuilding Progress"), CFSTR("ScriptsMenuProgressWindow"),
-													CFSTR("kUIStrings_ScriptsMenuProgressWindowIconName"));
+	case kUIStrings_ProgressWindowFontListIconName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Font List Rebuilding Progress"), CFSTR("ProgressWindows"),
+													CFSTR("kUIStrings_ProgressWindowFontListIconName"));
+		break;
+	
+	case kUIStrings_ProgressWindowPrintingPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Printing..."), CFSTR("ProgressWindows"),
+													CFSTR("kUIStrings_ProgressWindowPrintingPrimaryText"));
+		break;
+	
+	case kUIStrings_ProgressWindowScriptsMenuIconName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Scripts Menu Rebuilding Progress"), CFSTR("ProgressWindows"),
+													CFSTR("kUIStrings_ProgressWindowScriptsMenuIconName"));
+		break;
+	
+	case kUIStrings_ProgressWindowScriptsMenuPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Searching for Scripts menu items..."), CFSTR("ProgressWindows"),
+													CFSTR("kUIStrings_ProgressWindowScriptsMenuPrimaryText"));
 		break;
 	
 	default:
@@ -1368,7 +1336,7 @@ UIStrings_Copy	(UIStrings_ScriptsMenuProgressWindowCFString	inWhichString,
 		break;
 	}
 	return result;
-}// Copy (scripts menu progress window strings)
+}// Copy (progress window strings)
 
 
 /*!

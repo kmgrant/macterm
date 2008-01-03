@@ -12,7 +12,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,13 +50,13 @@
 
 #pragma mark Types
 
-typedef struct OpaqueProgressDialog*	ProgressDialogRef;
+typedef struct ProgressDialog_OpaqueStruct*		ProgressDialog_Ref;
 
-typedef SInt16 TelnetProgressIndicator;
+typedef SInt16 ProgressDialog_Indicator;
 enum
 {
-	kTelnetProgressIndicatorThermometer = 0,	// a standard progress bar
-	kTelnetProgressIndicatorIndeterminate = 1	// a barber-pole indeterminate progress bar
+	kProgressDialog_IndicatorThermometer	= 0,	// a standard progress bar
+	kProgressDialog_IndicatorIndeterminate	= 1		// a barber-pole indeterminate progress bar
 };
 
 
@@ -66,12 +66,12 @@ enum
 //!\name Creating and Destroying Progress Dialogs
 //@{
 
-ProgressDialogRef
-	ProgressDialog_New						(ConstStringPtr				inPromptText,
+ProgressDialog_Ref
+	ProgressDialog_New						(CFStringRef				inStatusText,
 											 Boolean					inIsModal);
 
 void
-	ProgressDialog_Dispose					(ProgressDialogRef*			inoutRefPtr);
+	ProgressDialog_Dispose					(ProgressDialog_Ref*		inoutRefPtr);
 
 //@}
 
@@ -79,26 +79,26 @@ void
 //@{
 
 void
-	ProgressDialog_Display					(ProgressDialogRef			inRef);
+	ProgressDialog_Display					(ProgressDialog_Ref			inRef);
 
-WindowRef
-	ProgressDialog_ReturnWindow				(ProgressDialogRef			inRef);
-
-void
-	ProgressDialog_SetProgressIndicator		(ProgressDialogRef			inRef,
-											 TelnetProgressIndicator	inIndicatorType);
+HIWindowRef
+	ProgressDialog_ReturnWindow				(ProgressDialog_Ref			inRef);
 
 void
-	ProgressDialog_SetProgressPercentFull	(ProgressDialogRef			inRef,
+	ProgressDialog_SetProgressIndicator		(ProgressDialog_Ref			inRef,
+											 ProgressDialog_Indicator	inIndicatorType);
+
+void
+	ProgressDialog_SetProgressPercentFull	(ProgressDialog_Ref			inRef,
 											 SInt8						inPercentage);
 
 void
-	ProgressDialog_SetStatus				(ProgressDialogRef			inRef,
-											 ConstStringPtr				inStatusText);
+	ProgressDialog_SetStatus				(ProgressDialog_Ref			inRef,
+											 CFStringRef				inStatusText);
 
 void
-	ProgressDialog_SetTitle					(ProgressDialogRef			inRef,
-											 ConstStringPtr				inTitleText);
+	ProgressDialog_SetTitle					(ProgressDialog_Ref			inRef,
+											 CFStringRef				inTitleText);
 
 //@}
 

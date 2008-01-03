@@ -36,6 +36,8 @@
 
 // library includes
 #include <Console.h>
+#include <HIViewWrap.h>
+#include <HIViewWrapManip.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
@@ -70,27 +72,31 @@ static HIViewID const	idMyProgressBar				= { kSignatureMyProgressBar,			0/* ID *
 
 #pragma mark Types
 
-struct ProgressDialog
+struct My_ProgressDialog
 {
-	WindowRef		dialogWindow;			//!< the progress window
-	ControlRef		textProgressMessage;	//!< the prompt text
-	ControlRef		progressBar;			//!< the thermometer
+	My_ProgressDialog	(CFStringRef, Boolean);
+	~My_ProgressDialog	();
+	
+	ProgressDialog_Ref	selfRef;				//!< convenient reference to this structure
+	NIBWindow			dialogWindow;			//!< the progress window
+	HIViewWrap			textProgressMessage;	//!< the prompt text
+	HIViewWrap			progressBar;			//!< the thermometer
 };
-typedef struct ProgressDialog	ProgressDialog;
-typedef ProgressDialog*			ProgressDialogPtr;
+typedef My_ProgressDialog const*	My_ProgressDialogConstPtr;
+typedef My_ProgressDialog*			My_ProgressDialogPtr;
 
-typedef MemoryBlockPtrLocker< ProgressDialogRef, ProgressDialog >	ProgressDialogPtrLocker;
+typedef MemoryBlockPtrLocker< ProgressDialog_Ref, My_ProgressDialog >	My_ProgressDialogPtrLocker;
 
 #pragma mark Internal Method Prototypes
 
-static void		arrangeWindow			(ProgressDialogPtr);
+static void		arrangeWindow		(My_ProgressDialogPtr);
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	Point						gNewDialogOrigin = { 0, 0 };
-	ProgressDialogPtrLocker&	gProgressDialogPtrLocks()	{ static ProgressDialogPtrLocker x; return x; }
+	Point							gNewDialogOrigin = { 0, 0 };
+	My_ProgressDialogPtrLocker&		gProgressDialogPtrLocks()	{ static My_ProgressDialogPtrLocker x; return x; }
 }
 
 
@@ -105,41 +111,20 @@ the new window.
 
 (3.0)
 */
-ProgressDialogRef
-ProgressDialog_New		(ConstStringPtr		inStatusText,
-						 Boolean			inIsModal)
+ProgressDialog_Ref
+ProgressDialog_New		(CFStringRef	inStatusText,
+						 Boolean		inIsModal)
 {
-	ProgressDialogRef	result = REINTERPRET_CAST(Memory_NewPtr(sizeof(ProgressDialog)), ProgressDialogRef);
+	ProgressDialog_Ref		result = nullptr;
 	
 	
-	if (result != nullptr)
+	try
 	{
-		ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(result);
-		
-		
-		// load the NIB containing this dialog (automatically finds the right localization)
-		ptr->dialogWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
-										CFSTR("ProgressDialog"), CFSTR("Dialog")) << NIBLoader_AssertWindowExists;
-		
-		// find references to all controls that are needed for any operation
-		{
-			OSStatus	error = noErr;
-			
-			
-			error = GetControlByID(ptr->dialogWindow, &idMyTextProgressMessage, &ptr->textProgressMessage);
-			assert(error == noErr);
-			error = GetControlByID(ptr->dialogWindow, &idMyProgressBar, &ptr->progressBar);
-			assert(error == noErr);
-		}
-		
-		// modeless windows should be offset out of the way (not in the middle),
-		// whereas modal windows are best left in the center of the screen
-		unless (inIsModal) arrangeWindow(ptr);
-		
-		ProgressDialog_SetStatus(result, inStatusText);
-		ProgressDialog_SetTitle(result, "\p");
-		
-		gProgressDialogPtrLocks().releaseLock(result, &ptr);
+		result = REINTERPRET_CAST(new My_ProgressDialog(inStatusText, inIsModal), ProgressDialog_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
 	}
 	return result;
 }// New
@@ -152,22 +137,22 @@ ProgressDialog_New().
 (3.0)
 */
 void
-ProgressDialog_Dispose		(ProgressDialogRef*		inoutRefPtr)
+ProgressDialog_Dispose		(ProgressDialog_Ref*	inoutRefPtr)
 {
-	if (inoutRefPtr != nullptr)
+	if (gProgressDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(*inoutRefPtr);
-		
-		
-		DisposeWindow(ptr->dialogWindow);
-		gProgressDialogPtrLocks().releaseLock(*inoutRefPtr, &ptr);
-		Memory_DisposePtr(REINTERPRET_CAST(inoutRefPtr, Ptr*));
+		Console_WriteValue("warning, attempt to dispose of locked progress dialog; outstanding locks",
+							gProgressDialogPtrLocks().returnLockCount(*inoutRefPtr));
+	}
+	else
+	{
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_ProgressDialogPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
 
 /*!
-Shows a progress window.  Do not use ProgressDialog_GetWindow()
+Shows a progress window.  Do not use ProgressDialog_ReturnWindow()
 to help you display a particular progress dialog, because
 future implementations may not place each progress dialog in
 its own window.
@@ -175,9 +160,9 @@ its own window.
 (3.0)
 */
 void
-ProgressDialog_Display	(ProgressDialogRef	inRef)
+ProgressDialog_Display	(ProgressDialog_Ref		inRef)
 {
-	ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
 	
 	
 	if (ptr != nullptr)
@@ -195,11 +180,11 @@ occur, nullptr is returned.
 
 (3.0)
 */
-WindowRef
-ProgressDialog_ReturnWindow		(ProgressDialogRef	inRef)
+HIWindowRef
+ProgressDialog_ReturnWindow		(ProgressDialog_Ref		inRef)
 {
-	ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
-	WindowRef			result = nullptr;
+	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	HIWindowRef				result = nullptr;
 	
 	
 	if (ptr != nullptr)
@@ -218,10 +203,10 @@ dialog.
 (3.0)
 */
 void
-ProgressDialog_SetProgressPercentFull	(ProgressDialogRef	inRef,
-										 SInt8				inPercentage)
+ProgressDialog_SetProgressPercentFull	(ProgressDialog_Ref		inRef,
+										 SInt8					inPercentage)
 {
-	ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
 	
 	
 	if (ptr != nullptr)
@@ -241,10 +226,10 @@ completion time cannot be determined.
 (3.0)
 */
 void
-ProgressDialog_SetProgressIndicator		(ProgressDialogRef			inRef,
-										 TelnetProgressIndicator	inIndicatorType)
+ProgressDialog_SetProgressIndicator		(ProgressDialog_Ref			inRef,
+										 ProgressDialog_Indicator	inIndicatorType)
 {
-	ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
 	
 	
 	if (ptr != nullptr)
@@ -254,7 +239,7 @@ ProgressDialog_SetProgressIndicator		(ProgressDialogRef			inRef,
 		
 		switch (inIndicatorType)
 		{
-			case kTelnetProgressIndicatorIndeterminate:
+			case kProgressDialog_IndicatorIndeterminate:
 				isIndeterminate = true;
 				break;
 			
@@ -272,18 +257,18 @@ ProgressDialog_SetProgressIndicator		(ProgressDialogRef			inRef,
 /*!
 Sets the text displayed in a progress dialog.
 
-(3.0)
+(3.1)
 */
 void
-ProgressDialog_SetStatus	(ProgressDialogRef	inRef,
-							 ConstStringPtr		inStatusText)
+ProgressDialog_SetStatus	(ProgressDialog_Ref		inRef,
+							 CFStringRef			inStatusText)
 {
-	ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
 	
 	
 	if (ptr != nullptr)
 	{
-		SetControlText(ptr->textProgressMessage, inStatusText);
+		SetControlTextWithCFString(ptr->textProgressMessage, inStatusText);
 	}
 	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 }// SetStatus
@@ -292,18 +277,18 @@ ProgressDialog_SetStatus	(ProgressDialogRef	inRef,
 /*!
 Sets the title of a progress dialogÕs window.
 
-(3.0)
+(3.1)
 */
 void
-ProgressDialog_SetTitle		(ProgressDialogRef	inRef,
-							 ConstStringPtr		inTitleText)
+ProgressDialog_SetTitle		(ProgressDialog_Ref		inRef,
+							 CFStringRef			inTitleText)
 {
-	ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
 	
 	
 	if (ptr != nullptr)
 	{
-		SetWTitle(ptr->dialogWindow, inTitleText);
+		(OSStatus)SetWindowTitleWithCFString(ptr->dialogWindow, inTitleText);
 	}
 	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 }// SetTitle
@@ -312,17 +297,57 @@ ProgressDialog_SetTitle		(ProgressDialogRef	inRef,
 #pragma mark Internal Methods
 
 /*!
+Constructor.  See ProgressDialog_New().
+
+(3.1)
+*/
+My_ProgressDialog::
+My_ProgressDialog	(CFStringRef	inStatusText,
+					 Boolean		inIsModal)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+selfRef				(REINTERPRET_CAST(this, ProgressDialog_Ref)),
+dialogWindow		(NIBWindow(AppResources_ReturnBundleForNIBs(),
+						CFSTR("ProgressDialog"), CFSTR("Dialog"))
+						<< NIBLoader_AssertWindowExists),
+textProgressMessage	(dialogWindow.returnHIViewWithID(idMyTextProgressMessage)
+						<< HIViewWrap_AssertExists),
+progressBar			(dialogWindow.returnHIViewWithID(idMyProgressBar)
+						<< HIViewWrap_AssertExists)
+{
+	// modeless windows should be offset out of the way (not in the middle),
+	// whereas modal windows are best left in the center of the screen
+	unless (inIsModal) arrangeWindow(this);
+	
+	ProgressDialog_SetStatus(this->selfRef, inStatusText);
+	ProgressDialog_SetTitle(this->selfRef, CFSTR(""));
+}// My_ProgressDialog constructor
+
+
+/*!
+Destructor.  See ProgressDialog_Dispose().
+
+(3.1)
+*/
+My_ProgressDialog::
+~My_ProgressDialog ()
+{
+	DisposeWindow(this->dialogWindow.operator WindowRef());
+}// destructor
+
+
+/*!
 Arranges the specified progress dialog in an
 appropriate stagger position.
 
 (3.0)
 */
 static void
-arrangeWindow	(ProgressDialogPtr	inPtr)
+arrangeWindow	(My_ProgressDialogPtr	inPtr)
 {
 	if (inPtr != nullptr)
 	{
-		WindowRef	window = inPtr->dialogWindow;
+		HIWindowRef		window = inPtr->dialogWindow;
 		
 		
 		// is the origin already saved?
