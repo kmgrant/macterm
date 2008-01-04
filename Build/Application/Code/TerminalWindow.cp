@@ -198,6 +198,8 @@ struct TerminalWindow
 	EventHandlerRef				windowClickActivationHandler;			// invoked whenever a terminal window is hit while inactive
 	EventHandlerUPP				windowCursorChangeUPP;					// wrapper for window cursor change callback
 	EventHandlerRef				windowCursorChangeHandler;				// invoked whenever the mouse cursor might change in a terminal window
+	EventHandlerUPP				windowDragCompletedUPP;					// wrapper for window move completion callback
+	EventHandlerRef				windowDragCompletedHandler;				// invoked whenever a terminal window has finished being moved by the user
 	EventHandlerUPP				windowResizeEmbellishUPP;				// wrapper for window resize callback
 	EventHandlerRef				windowResizeEmbellishHandler;			// invoked whenever a terminal window is resized
 	EventHandlerUPP				growBoxClickUPP;						// wrapper for grow box click callback
@@ -304,6 +306,7 @@ static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void
 static pascal OSStatus		receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
+static pascal OSStatus		receiveWindowDragCompleted		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowGetClickActivation	(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowResize				(EventHandlerCallRef, EventRef, void*);
 static void					reverseFontChanges				(Undoables_ActionInstruction, Undoables_ActionRef, void*);
@@ -1918,6 +1921,22 @@ installedActions()
 		assert_noerr(error);
 	}
 	
+	// install a callback that attempts to fix tab locations after a window is moved far enough below the menu bar
+	{
+		EventTypeSpec const		whenWindowDragCompleted[] =
+								{
+									{ kEventClassWindow, kEventWindowDragCompleted }
+								};
+		OSStatus				error = noErr;
+		
+		
+		this->windowDragCompletedUPP = NewEventHandlerUPP(receiveWindowDragCompleted);
+		error = InstallWindowEventHandler(this->window, this->windowDragCompletedUPP, GetEventTypeCount(whenWindowDragCompleted),
+											whenWindowDragCompleted, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
+											&this->windowDragCompletedHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
 	// install a callback that changes the mouse cursor appropriately
 	{
 		EventTypeSpec const		whenCursorChangeRequired[] =
@@ -2042,6 +2061,10 @@ TerminalWindow::
 	// disable window cursor change callback
 	RemoveEventHandler(this->windowCursorChangeHandler), this->windowCursorChangeHandler = nullptr;
 	DisposeEventHandlerUPP(this->windowCursorChangeUPP), this->windowCursorChangeUPP = nullptr;
+	
+	// disable window move completion callback
+	RemoveEventHandler(this->windowDragCompletedHandler), this->windowDragCompletedHandler = nullptr;
+	DisposeEventHandlerUPP(this->windowDragCompletedUPP), this->windowDragCompletedUPP = nullptr;
 	
 	// disable window resize callback
 	RemoveEventHandler(this->windowResizeEmbellishHandler), this->windowResizeEmbellishHandler = nullptr;
@@ -4502,6 +4525,65 @@ receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 	
 	return result;
 }// receiveWindowCursorChange
+
+
+/*!
+Handles "kEventWindowDragCompleted" of "kEventClassWindow"
+for a terminal window.
+
+(3.1)
+*/
+static pascal OSStatus
+receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+							 EventRef				inEvent,
+							 void*					inTerminalWindowRef)
+{
+	OSStatus			result = eventNotHandledErr;
+	TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inTerminalWindowRef, TerminalWindowRef);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowDragCompleted);
+	{
+		WindowRef	window = nullptr;
+		
+		
+		// determine the window in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
+		
+		// if the window was found, proceed
+		if (result == noErr)
+		{
+			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			
+			
+			// check the tab location and fix if necessary
+			if (ptr->tab.exists())
+			{
+				HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+				
+				
+				if (GetDrawerPreferredEdge(tabWindow) != GetDrawerCurrentEdge(tabWindow))
+				{
+					OSStatus	error = noErr;
+					
+					
+					// toggle twice; the first should close the drawer at its
+					// “wrong” location, the 2nd should open it on the right edge
+					error = CloseDrawer(tabWindow, false/* asynchronously */);
+					if (noErr == error)
+					{
+						error = OpenDrawer(tabWindow, kWindowEdgeDefault, true/* asynchronously */);
+					}
+				}
+			}
+		}
+	}
+	
+	return result;
+}// receiveWindowDragCompleted
 
 
 /*!

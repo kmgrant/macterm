@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080103',
     '20080101',
     '20071231',
     '20071230',
@@ -73,6 +74,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080103': [
+		'Terminal window tabs forced to the bottom edge by the system (window too close to menu bar) are now corrected when you move the window.',
+	],
 	'20080101': [
 		'MacTelnet Help has received several minor corrections and other edits.',
 	],
