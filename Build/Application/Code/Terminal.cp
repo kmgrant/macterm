@@ -3,7 +3,7 @@
 	Terminal.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -2583,7 +2583,7 @@ if any line buffers are unexpectedly empty
 Terminal_Result
 Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 									 Terminal_LineRef			inStartRow,
-									 ScreenRunOperationProcPtr	inDoWhat,
+									 Terminal_ScreenRunProcPtr	inDoWhat,
 									 void*						inContextPtr)
 {
 	Terminal_Result			result = kTerminal_ResultOK;
@@ -2637,7 +2637,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 				// found new style run; so handle the previous run
 				if (styleRunLength > 0)
 				{
-					InvokeScreenRunOperationProc(inDoWhat, inRef, lineIterator->textVector.c_str() + runStartCharacterIndex/* starting point */,
+					Terminal_InvokeScreenRunProc(inDoWhat, inRef, lineIterator->textVector.c_str() + runStartCharacterIndex/* starting point */,
 													styleRunLength/* length */, inStartRow,
 													runStartCharacterIndex/* zero-based start column */,
 													previousAttributes | lineIterator->globalAttributes, inContextPtr);
@@ -2666,7 +2666,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 					attributesForRemainder |= kTerminalTextAttributeSelected;
 				}
 				
-				InvokeScreenRunOperationProc(inDoWhat, inRef, nullptr/* starting point */, styleRunLength/* length */,
+				Terminal_InvokeScreenRunProc(inDoWhat, inRef, nullptr/* starting point */, styleRunLength/* length */,
 												inStartRow, runStartCharacterIndex/* zero-based start column */,
 												attributesForRemainder, inContextPtr);
 			}

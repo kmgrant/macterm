@@ -168,7 +168,7 @@ struct TerminalWindow
 	CFRetainRelease				toolbarItemScrollLock;		// if present, scroll lock status item
 	HIWindowRef					resizeFloater;				// temporary window that appears during resizes
 	TerminalView_DisplayMode	preResizeViewDisplayMode;	// stored in case user invokes option key variation on resize
-	WindowInfoRef				windowInfo;					// window information object for the terminal window
+	WindowInfo_Ref				windowInfo;					// window information object for the terminal window
 	
 	struct
 	{
@@ -184,7 +184,7 @@ struct TerminalWindow
 	Boolean						isObscured;				// is the window hidden, via a command in the Window menu?
 	Boolean						isDead;					// is the window title flagged to indicate a disconnected session?
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
-	FindDialogRef				searchSheet;			// search dialog, if any (retained so that history is kept each time, etc.)
+	FindDialog_Ref				searchSheet;			// search dialog, if any (retained so that history is kept each time, etc.)
 	FindDialog_Options			recentSearchOptions;	// used to implement Find Again baesd on the most recent Find
 	CFRetainRelease				recentSearchString;		// CFStringRef; used to implement Find Again based on the most recent Find
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
@@ -291,7 +291,7 @@ static UInt16				getStatusBarHeight				(TerminalWindowPtr);
 static UInt16				getToolbarHeight				(TerminalWindowPtr);
 static void					getViewSizeFromWindowSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
 static void					getWindowSizeFromViewSize		(TerminalWindowPtr, SInt16, SInt16, SInt16*, SInt16*);
-static void					handleFindDialogClose			(FindDialogRef);
+static void					handleFindDialogClose			(FindDialog_Ref);
 static void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 static void					handleNewSize					(WindowRef, Float32, Float32, void*);
 static void					handlePendingUpdates			();
@@ -317,8 +317,8 @@ static void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
 static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 static void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void					terminalViewScrolled			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void		updateScreenFormatDialogCloseNotifyProc		(FormatDialogRef, Boolean);
-static void		updateScreenSizeDialogCloseNotifyProc		(TerminalSizeDialogRef, Boolean);
+static void		updateScreenFormatDialogCloseNotifyProc		(FormatDialog_Ref, Boolean);
+static void		updateScreenSizeDialogCloseNotifyProc		(SizeDialog_Ref, Boolean);
 static void					updateScrollBars				(TerminalWindowPtr);
 
 #pragma mark Variables
@@ -442,7 +442,7 @@ TerminalWindow_ExistsFor	(WindowRef	inWindow)
 	Boolean		result = false;
 	
 	
-	#if 0
+#if 0
 	if (inWindow != nullptr)
 	{
 		SInt16  kind = GetWindowKind(inWindow);
@@ -451,15 +451,15 @@ TerminalWindow_ExistsFor	(WindowRef	inWindow)
 		result = ((kind == WIN_CONSOLE) || (kind == WIN_CNXN) || (kind == WIN_SHELL));
 		if (result) result = (ScreenFactory_GetWindowActiveScreen(inWindow) != nullptr);
 	}
-	#else
+#else
 	{
-		WindowInfoRef		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
+		WindowInfo_Ref		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
 		
 		
 		result = ((nullptr != windowInfo) &&
 					(kConstantsRegistry_WindowDescriptorAnyTerminal == WindowInfo_ReturnWindowDescriptor(windowInfo)));
 	}
-	#endif
+#endif
 	
 	return result;
 }// ExistsFor
@@ -804,7 +804,7 @@ TerminalWindowRef
 TerminalWindow_ReturnFromWindow		(WindowRef	inWindow)
 {
 	TerminalWindowRef	result = nullptr;
-	WindowInfoRef		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
+	WindowInfo_Ref		windowInfo = WindowInfo_ReturnFromWindow(inWindow);
 	
 	
 	if ((nullptr != windowInfo) &&
@@ -3005,7 +3005,7 @@ most recent checkbox settings.
 (3.0)
 */
 static void
-handleFindDialogClose	(FindDialogRef		inDialogThatClosed)
+handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 {
 	TerminalWindowRef		terminalWindow = FindDialog_ReturnTerminalWindow(inDialogThatClosed);
 	
@@ -3775,14 +3775,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					{
 						// display a format customization dialog
 						TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-						FormatDialogSetupData	setupData;
-						FormatDialogRef			dialog = nullptr;
+						FormatDialog_SetupData	setupData;
+						FormatDialog_Ref		dialog = nullptr;
 						SInt16					arrayIndex = 0;
 						
 						
 						// initialize structure with data of frontmost session window - incomplete
 						{
-							arrayIndex = kFormatDialogIndexNormalText;
+							arrayIndex = kFormatDialog_IndexNormalText;
 							TerminalWindow_GetFontAndSize(terminalWindow, setupData.format[arrayIndex].font.familyName,
 															&setupData.format[arrayIndex].font.size);
 							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexNormalText,
@@ -3793,35 +3793,35 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
 							{
 								// do not allow font size changes when in zoom mode
-								setupData.format[arrayIndex].options |= kFormatDialogFormatOptionDisableFontSizeItems;
+								setupData.format[arrayIndex].options |= kFormatDialog_FormatOptionDisableFontSizeItems;
 							}
 							
-							arrayIndex = kFormatDialogIndexBoldText; // incomplete
+							arrayIndex = kFormatDialog_IndexBoldText; // incomplete
 							TerminalWindow_GetFontAndSize(terminalWindow, setupData.format[arrayIndex].font.familyName,
 															&setupData.format[arrayIndex].font.size);
 							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBoldText,
 															&setupData.format[arrayIndex].colors.foreground);
 							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBoldBackground,
 															&setupData.format[arrayIndex].colors.background);
-							setupData.format[arrayIndex].options = kFormatDialogFormatOptionDisableFontItems;
+							setupData.format[arrayIndex].options = kFormatDialog_FormatOptionDisableFontItems;
 							//if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
 							{
 								// currently, font size from “normal” is shared by all styles, so this is never active
-								setupData.format[arrayIndex].options |= kFormatDialogFormatOptionDisableFontSizeItems;
+								setupData.format[arrayIndex].options |= kFormatDialog_FormatOptionDisableFontSizeItems;
 							}
 							
-							arrayIndex = kFormatDialogIndexBlinkingText;
+							arrayIndex = kFormatDialog_IndexBlinkingText;
 							TerminalWindow_GetFontAndSize(terminalWindow, setupData.format[arrayIndex].font.familyName,
 															&setupData.format[arrayIndex].font.size);
 							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingText,
 															&setupData.format[arrayIndex].colors.foreground);
 							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingBackground,
 															&setupData.format[arrayIndex].colors.background);
-							setupData.format[arrayIndex].options = kFormatDialogFormatOptionDisableFontItems;
+							setupData.format[arrayIndex].options = kFormatDialog_FormatOptionDisableFontItems;
 							//if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
 							{
 								// currently, font size from “normal” is shared by all styles, so this is never active
-								setupData.format[arrayIndex].options |= kFormatDialogFormatOptionDisableFontSizeItems;
+								setupData.format[arrayIndex].options |= kFormatDialog_FormatOptionDisableFontSizeItems;
 							}
 						}
 						
@@ -3893,7 +3893,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandSetScreenSize:
 					{
-						TerminalSizeDialogRef	dialog = nullptr;
+						SizeDialog_Ref		dialog = nullptr;
 						
 						
 						// display the sheet
@@ -5744,13 +5744,13 @@ being used.
 (3.0)
 */
 static void
-updateScreenFormatDialogCloseNotifyProc		(FormatDialogRef	inDialogThatClosed,
+updateScreenFormatDialogCloseNotifyProc		(FormatDialog_Ref	inDialogThatClosed,
 											 Boolean			inOKButtonPressed)
 {
 	if (inOKButtonPressed)
 	{
 		// update the screen window to reflect the user’s changes
-		FormatDialogSetupData	setupData;
+		FormatDialog_SetupData	setupData;
 		WindowRef				screenWindow = FormatDialog_ReturnParentWindow(inDialogThatClosed);
 		
 		
@@ -5762,22 +5762,22 @@ updateScreenFormatDialogCloseNotifyProc		(FormatDialogRef	inDialogThatClosed,
 			SInt16				arrayIndex = 0;
 			
 			
-			arrayIndex = kFormatDialogIndexNormalText;
+			arrayIndex = kFormatDialog_IndexNormalText;
 			TerminalView_SetColor(view, kTerminalView_ColorIndexNormalText,
 									&setupData.format[arrayIndex].colors.foreground);
 			TerminalView_SetColor(view, kTerminalView_ColorIndexNormalBackground,
 									&setupData.format[arrayIndex].colors.background);
-			arrayIndex = kFormatDialogIndexBoldText;
+			arrayIndex = kFormatDialog_IndexBoldText;
 			TerminalView_SetColor(view, kTerminalView_ColorIndexBoldText,
 									&setupData.format[arrayIndex].colors.foreground);
 			TerminalView_SetColor(view, kTerminalView_ColorIndexBoldBackground,
 									&setupData.format[arrayIndex].colors.background);
-			arrayIndex = kFormatDialogIndexBlinkingText;
+			arrayIndex = kFormatDialog_IndexBlinkingText;
 			TerminalView_SetColor(view, kTerminalView_ColorIndexBlinkingText,
 									&setupData.format[arrayIndex].colors.foreground);
 			TerminalView_SetColor(view, kTerminalView_ColorIndexBlinkingBackground,
 									&setupData.format[arrayIndex].colors.background);
-			arrayIndex = kFormatDialogIndexNormalText;
+			arrayIndex = kFormatDialog_IndexNormalText;
 			TerminalWindow_SetFontAndSize(TerminalWindow_ReturnFromWindow(screenWindow),
 											setupData.format[arrayIndex].font.familyName,
 											setupData.format[arrayIndex].font.size);
@@ -5802,7 +5802,7 @@ window to reflect changes to the column and row count.
 (3.1)
 */
 static void
-updateScreenSizeDialogCloseNotifyProc	(TerminalSizeDialogRef	inDialogThatClosed,
+updateScreenSizeDialogCloseNotifyProc	(SizeDialog_Ref		inDialogThatClosed,
 										 Boolean				inOKButtonPressed)
 {
 	if (inOKButtonPressed)

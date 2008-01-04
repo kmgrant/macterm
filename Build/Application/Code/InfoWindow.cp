@@ -100,7 +100,7 @@ typedef std::map< SessionRef, CFRetainRelease >		SessionToWindowTitleMap;
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	WindowRef								gSessionStatusWindow = nullptr;
-	WindowInfoRef							gSessionStatusWindowInfo = nullptr;
+	WindowInfo_Ref							gSessionStatusWindowInfo = nullptr;
 	HIViewRef								gSessionStatusDataBrowser = nullptr;
 	Boolean									gIsShowing = false;
 	CommonEventHandlers_WindowResizer		gSessionStatusWindowResizeHandler;

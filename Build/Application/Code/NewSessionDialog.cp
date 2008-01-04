@@ -133,7 +133,7 @@ struct MyNewSessionDialog
 	TerminalWindowRef						terminalWindow;					//!< the terminal window for which this dialog applies
 	WindowRef								screenWindow;					//!< the window for which this dialog applies
 	NIBWindow								dialogWindow;					//!< acts as the Mac OS window for the dialog
-	WindowInfoRef							windowInfo;						//!< auxiliary data for the dialog
+	WindowInfo_Ref							windowInfo;						//!< auxiliary data for the dialog
 	HIViewWrap								helpTextCommandLine;			//!< indication of what belongs in the command line field
 	HIViewWrap								fieldCommandLine;				//!< text of Unix command line to run
 	HIViewWrap								popUpMenuTerminal;				//!< menu of terminal favorites

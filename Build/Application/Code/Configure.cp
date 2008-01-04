@@ -163,7 +163,7 @@ Configure_NameNewConfigurationDialogDisplay		(ConstStringPtr		inWindowTitle,
 	
 	if (inoutName != nullptr)
 	{
-		WindowInfoRef		windowInfo = nullptr;
+		WindowInfo_Ref		windowInfo = nullptr;
 		DialogRef			dialogPtr = nullptr;
 		WindowRef			windowPtr = nullptr,
 							parentWindow = nullptr;
@@ -207,18 +207,18 @@ Configure_NameNewConfigurationDialogDisplay		(ConstStringPtr		inWindowTitle,
 		
 		// set up the Window Info information
 		{
-			WindowResizeResponderProcPtr	resizeProc = adjustNameNewSessionFavoriteDialog;
-			Rect							rect;
+			WindowInfo_ResizeResponderProcPtr	resizeProc = adjustNameNewSessionFavoriteDialog;
+			Rect								rect;
 			
 			
 			(OSStatus)GetWindowBounds(GetDialogWindow(dialogPtr), kWindowContentRgn, &rect);
 			
 			WindowInfo_SetWindowDescriptor(windowInfo, kConstantsRegistry_WindowDescriptorNameNewFavorite);
 			WindowInfo_SetWindowResizeLimits(windowInfo,
-													rect.bottom - rect.top + 1/* minimum height */,
-													rect.right - rect.left + 1/* minimum width */,
-													rect.bottom - rect.top + 1/* maximum height */,
-													rect.right - rect.left + 140/* maximum width - arbitrary */);
+												rect.bottom - rect.top + 1/* minimum height */,
+												rect.right - rect.left + 1/* minimum width */,
+												rect.bottom - rect.top + 1/* maximum height */,
+												rect.right - rect.left + 140/* maximum width - arbitrary */);
 			WindowInfo_SetWindowResizeResponder(windowInfo, resizeProc, 0L);
 		}
 		WindowInfo_SetForDialog(dialogPtr, windowInfo);

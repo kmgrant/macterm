@@ -25,7 +25,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -263,11 +263,11 @@ typedef Terminal_RangeDescription const*	Terminal_RangeDescriptionConstPtr;
 #pragma mark Callbacks
 
 /*!
-Screen Run Operation Routine
+Screen Run Routine
 
 This defines a function that can be used as an iterator
 over all contiguous blocks of text in a virtual screen
-sharing *exactly* the same attributes.  The specified
+that share *exactly* the same attributes.  The specified
 text buffer (which is read-only) includes the contents of
 the current chunk of text, whose starting column is also
 given - assuming a renderer needs to know this.  The
@@ -284,9 +284,9 @@ is that you are using this for rendering purposes.
 IMPORTANT:  The line text buffer may be nullptr, and if it
 			is, you should still pay attention to the
 			length value; it implies a blank area of that
-			many characters long.
+			many characters in length.
 */
-typedef void (*ScreenRunOperationProcPtr)	(TerminalScreenRef			inScreen,
+typedef void (*Terminal_ScreenRunProcPtr)	(TerminalScreenRef			inScreen,
 											 char const*				inLineTextBufferOrNull,
 											 UInt16						inLineTextBufferLength,
 											 Terminal_LineRef			inRow,
@@ -294,7 +294,7 @@ typedef void (*ScreenRunOperationProcPtr)	(TerminalScreenRef			inScreen,
 											 TerminalTextAttributes		inAttributes,
 											 void*						inContextPtr);
 inline void
-InvokeScreenRunOperationProc	(ScreenRunOperationProcPtr		inUserRoutine,
+Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
 								 TerminalScreenRef				inScreen,
 								 char const*					inLineTextBufferOrNull,
 								 UInt16							inLineTextBufferLength,
@@ -389,7 +389,7 @@ Terminal_Result
 Terminal_Result
 	Terminal_ForEachLikeAttributeRunDo		(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
-											 ScreenRunOperationProcPtr	inDoWhat,
+											 Terminal_ScreenRunProcPtr	inDoWhat,
 											 void*						inContextPtr);
 
 Terminal_Result

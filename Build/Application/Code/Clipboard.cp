@@ -106,7 +106,7 @@ static void				textToScrap						(Handle);
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	WindowRef								gClipboardWindow = nullptr;
-	WindowInfoRef							gClipboardWindowInfo = nullptr;
+	WindowInfo_Ref							gClipboardWindowInfo = nullptr;
 	ControlRef								//gClipboardScrollBarH = nullptr,
 											//gClipboardScrollBarV = nullptr,
 											gClipboardFooterPlacard = nullptr,

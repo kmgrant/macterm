@@ -11,7 +11,7 @@
 	This new, extremely powerful means of associating
 	information with windows makes it possible to tag windows
 	with a wide array of feature information and access it
-	using a simple, Mac OS window pointer (WindowRef) or dialog
+	using a simple, Mac OS window pointer (HIWindowRef) or dialog
 	pointer (DialogRef).  Use of attached procedure pointers
 	allows standardization of the means of performing operations
 	on all your windows, while each individual window can still
@@ -26,8 +26,8 @@
 */
 /*###############################################################
 
-	Interface Library 1.1
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.0
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -64,25 +64,25 @@
 
 #pragma mark Constants
 
-typedef FourCharCode WindowInfoDescriptor;
+typedef FourCharCode WindowInfo_Descriptor;
 enum
 {
-	kInvalidWindowInfoDescriptor = FOUR_CHAR_CODE('----')
+	kWindowInfo_InvalidDescriptor = FOUR_CHAR_CODE('----')
 };
 
-typedef SInt32 WindowInfoMessage;
+typedef SInt32 WindowInfo_Message;
 enum
 {
 	// messages applicable to a WindowContextualMenuProcPtr
-	kWindowInfoMessageContextualMenuSetup = 1,		// request to set up a contextual menu’s items, and perform other
+	kWindowInfo_MessageContextualMenuSetup = 1,		// request to set up a contextual menu’s items, and perform other
 													//   appropriate actions (e.g. highlight subject of contextual menu event)
-	kWindowInfoMessageContextualMenuCleanup = 2		// contextual menu is now gone; perform any necessary cleanup actions
+	kWindowInfo_MessageContextualMenuCleanup = 2	// contextual menu is now gone; perform any necessary cleanup actions
 													//   (e.g. remove highlighting from object of contextual menu click)
 };
 
 #pragma mark Types
 
-typedef struct OpaqueWindowInfo**		WindowInfoRef;
+typedef struct WindowInfo_OpaqueStruct*		WindowInfo_Ref;
 
 #pragma mark Callbacks
 
@@ -103,12 +103,19 @@ appropriate for this notifier to highlight the most specific
 item in the window that the contextual menu will apply to,
 prior to returning the menu that should be displayed.
 */
-typedef pascal void (*WindowContextualMenuProcPtr)		(WindowRef			inWindow,
+typedef pascal void (*WindowInfo_ContextualMenuProcPtr)	(HIWindowRef		inWindow,
 														 Point				inGlobalMouse,
 														 MenuRef			inoutMenu,
-														 WindowInfoMessage	inCallbackMessage);
-#define InvokeWindowContextualMenuProc(userRoutine, inWindow, inGlobalMouse, inoutMenu, inCallbackMessage) \
-	(*userRoutine)((inWindow), (inGlobalMouse), (inoutMenu), (inCallbackMessage))
+														 WindowInfo_Message	inCallbackMessage);
+inline void
+WindowInfo_InvokeContextualMenuProc		(WindowInfo_ContextualMenuProcPtr	inUserRoutine,
+										 HIWindowRef						inWindow,
+										 Point								inGlobalMouse,
+										 MenuRef							inoutMenu,
+										 WindowInfo_Message					inCallbackMessage)
+{
+	(*inUserRoutine)(inWindow, inGlobalMouse, inoutMenu, inCallbackMessage);
+}
 
 /*!
 Window Resize Notification Method
@@ -119,12 +126,19 @@ general Window Info reference for that window.  The function is
 notified of the change in size of the window, and should respond
 accordingly (usually by moving and/or resizing controls).
 */
-typedef pascal void (*WindowResizeResponderProcPtr)		(WindowRef			inWindow,
-														 SInt32				inDeltaSizeX,
-														 SInt32				inDeltaSizeY,
-														 SInt32				inData);
-#define InvokeWindowResizeResponderProc(userRoutine, inWindow, inDeltaSizeX, inDeltaSizeY, inData) \
-	(*userRoutine)((inWindow), (inDeltaSizeX), (inDeltaSizeY), (inData))
+typedef pascal void (*WindowInfo_ResizeResponderProcPtr)	(HIWindowRef	inWindow,
+															 SInt32			inDeltaSizeX,
+															 SInt32			inDeltaSizeY,
+															 SInt32			inData);
+inline void
+WindowInfo_InvokeResizeResponderProc	(WindowInfo_ResizeResponderProcPtr	inUserRoutine,
+										 HIWindowRef						inWindow,
+										 SInt32								inDeltaSizeX,
+										 SInt32								inDeltaSizeY,
+										 SInt32								inData)
+{
+	(*inUserRoutine)(inWindow, inDeltaSizeX, inDeltaSizeY, inData);
+}
 
 
 
@@ -134,21 +148,21 @@ typedef pascal void (*WindowResizeResponderProcPtr)		(WindowRef			inWindow,
 	CREATING, INITIALIZING AND DESTROYING WINDOW INFO DATA
 ###############################################################*/
 
-WindowInfoRef
+WindowInfo_Ref
 	WindowInfo_New								();
 
 void
-	WindowInfo_Dispose							(WindowInfoRef					inoutWindowFeaturesRef);
+	WindowInfo_Dispose							(WindowInfo_Ref					inoutWindowFeaturesRef);
 
 void
-	WindowInfo_Init								(WindowInfoRef					inoutWindowFeaturesRef);
+	WindowInfo_Init								(WindowInfo_Ref					inoutWindowFeaturesRef);
 
 /*###############################################################
 	POLYMORPHIC OPERATIONS USING GENERIC WINDOW INFO
 ###############################################################*/
 
 SInt16
-	WindowInfo_GrowWindow						(WindowRef						inWindow,
+	WindowInfo_GrowWindow						(HIWindowRef					inWindow,
 												 EventRecord*					inoutEventPtr);
 
 /*###############################################################
@@ -156,11 +170,11 @@ SInt16
 ###############################################################*/
 
 void
-	WindowInfo_NotifyWindowOfContextualMenu		(WindowRef						inWindow,
+	WindowInfo_NotifyWindowOfContextualMenu		(HIWindowRef					inWindow,
 												 Point							inGlobalMouse);
 
 void
-	WindowInfo_NotifyWindowOfResize				(WindowRef						inWindow,
+	WindowInfo_NotifyWindowOfResize				(HIWindowRef					inWindow,
 												 SInt32							inDeltaSizeX, 
 												 SInt32							inDeltaSizeY);
 
@@ -168,81 +182,81 @@ void
 	ASSOCIATING WINDOW INFO WITH WINDOWS
 ###############################################################*/
 
-WindowInfoRef
+WindowInfo_Ref
 	WindowInfo_ReturnFromDialog					(DialogRef						inDialog);
 
-WindowInfoRef
-	WindowInfo_ReturnFromWindow					(WindowRef						inWindow);
+WindowInfo_Ref
+	WindowInfo_ReturnFromWindow					(HIWindowRef					inWindow);
 
 void
 	WindowInfo_SetForDialog						(DialogRef						inDialog,
-												 WindowInfoRef					inWindowFeaturesRef);
+												 WindowInfo_Ref					inWindowFeaturesRef);
 
 void
-	WindowInfo_SetForWindow						(WindowRef						inWindow,
-												 WindowInfoRef					inWindowFeaturesRef);
+	WindowInfo_SetForWindow						(HIWindowRef					inWindow,
+												 WindowInfo_Ref					inWindowFeaturesRef);
 
 /*###############################################################
 	ACCESSING DATA IN WINDOW INFO STRUCTURES
 ###############################################################*/
 
 void
-	WindowInfo_GetWindowMaximumDimensions		(WindowInfoRef					inWindowFeaturesRef,
+	WindowInfo_GetWindowMaximumDimensions		(WindowInfo_Ref					inWindowFeaturesRef,
 												 Point*							outMaximumSizePtr);
 
 void
-	WindowInfo_GetWindowMinimumDimensions		(WindowInfoRef					inWindowFeaturesRef,
+	WindowInfo_GetWindowMinimumDimensions		(WindowInfo_Ref					inWindowFeaturesRef,
 												 Point*							outMinimumSizePtr);
 
 Boolean
-	WindowInfo_IsPotentialDropTarget			(WindowInfoRef					inWindowFeaturesRef);
+	WindowInfo_IsPotentialDropTarget			(WindowInfo_Ref					inWindowFeaturesRef);
 
 Boolean
-	WindowInfo_IsWindowFloating					(WindowInfoRef					inWindowFeaturesRef);
+	WindowInfo_IsWindowFloating					(WindowInfo_Ref					inWindowFeaturesRef);
 
 void*
-	WindowInfo_ReturnAuxiliaryDataPtr			(WindowInfoRef					inWindowFeaturesRef);
+	WindowInfo_ReturnAuxiliaryDataPtr			(WindowInfo_Ref					inWindowFeaturesRef);
 
-WindowInfoDescriptor
-	WindowInfo_ReturnWindowDescriptor			(WindowInfoRef					inWindowFeaturesRef);
+WindowInfo_Descriptor
+	WindowInfo_ReturnWindowDescriptor			(WindowInfo_Ref					inWindowFeaturesRef);
 
 Rect*
-	WindowInfo_ReturnWindowResizeLimits			(WindowInfoRef					inWindowFeaturesRef);
+	WindowInfo_ReturnWindowResizeLimits			(WindowInfo_Ref					inWindowFeaturesRef);
 
 void
-	WindowInfo_SetAuxiliaryDataPtr				(WindowInfoRef					inWindowFeaturesRef,
+	WindowInfo_SetAuxiliaryDataPtr				(WindowInfo_Ref					inWindowFeaturesRef,
 												 void*							inAuxiliaryDataPtr);
 
 void
-	WindowInfo_SetDynamicResizing				(WindowInfoRef					inWindowFeaturesRefOrNullToSetGlobalFlag,
+	WindowInfo_SetDynamicResizing				(WindowInfo_Ref					inWindowFeaturesRefOrNullToSetGlobalFlag,
 												 Boolean						inLiveResizeEnabled);
 
 void
-	WindowInfo_SetWindowContextualMenuResponder	(WindowInfoRef					inWindowFeaturesRef,
-												 WindowContextualMenuProcPtr	inNewProc);
+	WindowInfo_SetWindowContextualMenuResponder	(WindowInfo_Ref					inWindowFeaturesRef,
+												 WindowInfo_ContextualMenuProcPtr	inNewProc);
 
 void
-	WindowInfo_SetWindowDescriptor				(WindowInfoRef					inWindowFeaturesRef,
-												 WindowInfoDescriptor			inNewWindowDescriptor);
+	WindowInfo_SetWindowDescriptor				(WindowInfo_Ref					inWindowFeaturesRef,
+												 WindowInfo_Descriptor			inNewWindowDescriptor);
 
 void
-	WindowInfo_SetWindowFloating				(WindowInfoRef					inWindowFeaturesRef,
+	WindowInfo_SetWindowFloating				(WindowInfo_Ref					inWindowFeaturesRef,
 												 Boolean						inIsFloating);
 
 void
-	WindowInfo_SetWindowPotentialDropTarget		(WindowInfoRef					inWindowFeaturesRef,
+	WindowInfo_SetWindowPotentialDropTarget		(WindowInfo_Ref					inWindowFeaturesRef,
 												 Boolean						inIsPotentialDropTarget);
 
 void
-	WindowInfo_SetWindowResizeLimits			(WindowInfoRef					inWindowFeaturesRef,
+	WindowInfo_SetWindowResizeLimits			(WindowInfo_Ref					inWindowFeaturesRef,
 												 SInt16							inMinimumHeight,
 												 SInt16							inMinimumWidth,
 												 SInt16							inMaximumHeight,
 												 SInt16							inMaximumWidth);
 
 void
-	WindowInfo_SetWindowResizeResponder			(WindowInfoRef					inWindowFeaturesRef,
-												 WindowResizeResponderProcPtr	inNewProc,
+	WindowInfo_SetWindowResizeResponder			(WindowInfo_Ref					inWindowFeaturesRef,
+												 WindowInfo_ResizeResponderProcPtr	inNewProc,
 												 SInt32							inData);
 
 #endif /* ifndef REZ */

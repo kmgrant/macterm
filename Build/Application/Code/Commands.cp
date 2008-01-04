@@ -1176,7 +1176,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (EventLoop_ReturnRealFrontWindow() == nullptr) Sound_StandardAlert();
 			else
 			{
-				WindowTitleDialogRef		dialog = WindowTitleDialog_NewForSession(frontSession);
+				WindowTitleDialog_Ref		dialog = WindowTitleDialog_NewForSession(frontSession);
 				
 				
 				WindowTitleDialog_Display(dialog); // automatically disposed when the user clicks a button

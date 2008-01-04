@@ -3,7 +3,7 @@
 	SizeDialog.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -98,19 +98,19 @@ enum
 
 #pragma mark Types
 
-struct SizeDialog
+struct My_SizeDialog
 {	
-	SizeDialog	(TerminalWindowRef,
-				 SizeDialogCloseNotifyProcPtr);
+	My_SizeDialog	(TerminalWindowRef,
+					 SizeDialog_CloseNotifyProcPtr);
 	
-	~SizeDialog	();
+	~My_SizeDialog	();
 	
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
-	TerminalSizeDialogRef				selfRef;				//!< identical to address of structure, but typed as ref
+	SizeDialog_Ref						selfRef;				//!< identical to address of structure, but typed as ref
 	TerminalWindowRef					terminalWindow;			//!< the terminal window for which this dialog applies
 	WindowRef							screenWindow;			//!< the window for which this dialog applies
 	NIBWindow							dialogWindow;			//!< acts as the Mac OS window for the dialog
-	WindowInfoRef						windowInfo;				//!< auxiliary data for the dialog
+	WindowInfo_Ref						windowInfo;				//!< auxiliary data for the dialog
 	UInt16								displayedColumns;		//!< number of columns most recently given by user in UI
 	UInt16								displayedRows;			//!< number of rows most recently given by user in UI
 	HIViewWrap							labelWidth;				//!< label for columns field
@@ -126,24 +126,23 @@ struct SizeDialog
 	CommonEventHandlers_NumericalFieldArrowsRef	widthArrowsHandler;		//!< syncs arrows and field
 	CommonEventHandlers_NumericalFieldArrowsRef	heightArrowsHandler;	//!< syncs arrows and field
 	HelpSystem_WindowKeyPhraseSetter	contextualHelpSetup;	//!< ensures proper contextual help for this window
-	SizeDialogCloseNotifyProcPtr		closeNotifyProc;		//!< routine to call when the dialog is dismissed
+	SizeDialog_CloseNotifyProcPtr		closeNotifyProc;		//!< routine to call when the dialog is dismissed
 };
-typedef SizeDialog*			SizeDialogPtr;
-typedef SizeDialogPtr*		SizeDialogHandle;
+typedef My_SizeDialog*		My_SizeDialogPtr;
 
-typedef MemoryBlockPtrLocker< TerminalSizeDialogRef, SizeDialog >	SizeDialogPtrLocker;
-typedef LockAcquireRelease< TerminalSizeDialogRef, SizeDialog >		SizeDialogAutoLocker;
+typedef MemoryBlockPtrLocker< SizeDialog_Ref, My_SizeDialog >	My_SizeDialogPtrLocker;
+typedef LockAcquireRelease< SizeDialog_Ref, My_SizeDialog >		My_SizeDialogAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	SizeDialogPtrLocker&		gSizeDialogPtrLocks ()	{ static SizeDialogPtrLocker x; return x; }
+	My_SizeDialogPtrLocker&		gSizeDialogPtrLocks ()	{ static My_SizeDialogPtrLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
 
-static Boolean			handleItemHit			(SizeDialogPtr, HIViewID const&);
+static Boolean			handleItemHit			(My_SizeDialogPtr, HIViewID const&);
 static pascal OSStatus	receiveHICommand		(EventHandlerCallRef, EventRef, void*);
 
 
@@ -160,12 +159,12 @@ forces good object design.
 
 (3.1)
 */
-SizeDialog::
-SizeDialog	(TerminalWindowRef				inTerminalWindow,
-			 SizeDialogCloseNotifyProcPtr	inCloseNotifyProcPtr)
+My_SizeDialog::
+My_SizeDialog	(TerminalWindowRef				inTerminalWindow,
+				 SizeDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-selfRef							(REINTERPRET_CAST(this, TerminalSizeDialogRef)),
+selfRef							(REINTERPRET_CAST(this, SizeDialog_Ref)),
 terminalWindow					(inTerminalWindow),
 screenWindow					(TerminalWindow_ReturnWindow(inTerminalWindow)),
 dialogWindow					(NIBWindow(AppResources_ReturnBundleForNIBs(),
@@ -247,7 +246,7 @@ closeNotifyProc					(inCloseNotifyProcPtr)
 	
 	// ensure other handlers were installed
 	assert(buttonHICommandsHandler.isInstalled());
-}// SizeDialog 2-argument constructor
+}// My_SizeDialog 2-argument constructor
 
 
 /*!
@@ -255,14 +254,14 @@ Destructor.  See SizeDialog_Dispose().
 
 (3.1)
 */
-SizeDialog::
-~SizeDialog ()
+My_SizeDialog::
+~My_SizeDialog ()
 {
 	CommonEventHandlers_RemoveNumericalFieldArrows(&this->widthArrowsHandler);
 	CommonEventHandlers_RemoveNumericalFieldArrows(&this->heightArrowsHandler);
 	DisposeWindow(this->dialogWindow.operator WindowRef());
 	WindowInfo_Dispose(this->windowInfo);
-}// SizeDialog destructor
+}// My_SizeDialog destructor
 
 
 /*!
@@ -273,16 +272,16 @@ dialog box to use the screenÕs dimensions.
 
 (3.0)
 */
-TerminalSizeDialogRef
+SizeDialog_Ref
 SizeDialog_New	(TerminalWindowRef				inTerminalWindow,
-				 SizeDialogCloseNotifyProcPtr	inCloseNotifyProcPtr)
+				 SizeDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
-	TerminalSizeDialogRef		result = nullptr;
+	SizeDialog_Ref		result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new SizeDialog(inTerminalWindow, inCloseNotifyProcPtr), TerminalSizeDialogRef);
+		result = REINTERPRET_CAST(new My_SizeDialog(inTerminalWindow, inCloseNotifyProcPtr), SizeDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -300,7 +299,7 @@ your copy of the dialog reference is set to nullptr.
 (3.0)
 */
 void
-SizeDialog_Dispose	(TerminalSizeDialogRef*		inoutRefPtr)
+SizeDialog_Dispose	(SizeDialog_Ref*	inoutRefPtr)
 {
 	if (gSizeDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
@@ -309,7 +308,7 @@ SizeDialog_Dispose	(TerminalSizeDialogRef*		inoutRefPtr)
 	}
 	else
 	{
-		delete *(REINTERPRET_CAST(inoutRefPtr, SizeDialogPtr*)), *inoutRefPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_SizeDialogPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -328,9 +327,9 @@ IMPORTANT:	Invoking this routine means it is no longer your
 (3.0)
 */
 void
-SizeDialog_Display		(TerminalSizeDialogRef		inDialog)
+SizeDialog_Display		(SizeDialog_Ref		inDialog)
 {
-	SizeDialogAutoLocker	ptr(gSizeDialogPtrLocks(), inDialog);
+	My_SizeDialogAutoLocker		ptr(gSizeDialogPtrLocks(), inDialog);
 	
 	
 	if (nullptr == ptr) Alert_ReportOSStatus(memFullErr);
@@ -356,11 +355,11 @@ WARNING:	Only valid in a close notification
 (3.1)
 */
 void
-SizeDialog_GetDisplayedDimensions	(TerminalSizeDialogRef	inDialog,
-									 UInt16&				outColumns,
-									 UInt16&				outRows)
+SizeDialog_GetDisplayedDimensions	(SizeDialog_Ref		inDialog,
+									 UInt16&			outColumns,
+									 UInt16&			outRows)
 {
-	SizeDialogAutoLocker	ptr(gSizeDialogPtrLocks(), inDialog);
+	My_SizeDialogAutoLocker		ptr(gSizeDialogPtrLocks(), inDialog);
 	
 	
 	if (nullptr != ptr)
@@ -378,10 +377,10 @@ attached to.
 (3.1)
 */
 TerminalWindowRef
-SizeDialog_ReturnParentTerminalWindow	(TerminalSizeDialogRef	inDialog)
+SizeDialog_ReturnParentTerminalWindow	(SizeDialog_Ref		inDialog)
 {
-	SizeDialogAutoLocker	ptr(gSizeDialogPtrLocks(), inDialog);
-	TerminalWindowRef		result = nullptr;
+	My_SizeDialogAutoLocker		ptr(gSizeDialogPtrLocks(), inDialog);
+	TerminalWindowRef			result = nullptr;
 	
 	
 	if (nullptr != ptr)
@@ -491,8 +490,8 @@ to SizeDialog_New() as your notification procedure.
 (3.0)
 */
 void
-SizeDialog_StandardCloseNotifyProc		(TerminalSizeDialogRef		UNUSED_ARGUMENT(inDialogThatClosed),
-										 Boolean					UNUSED_ARGUMENT(inOKButtonPressed))
+SizeDialog_StandardCloseNotifyProc		(SizeDialog_Ref		UNUSED_ARGUMENT(inDialogThatClosed),
+										 Boolean			UNUSED_ARGUMENT(inOKButtonPressed))
 {
 	// do nothing
 }// StandardCloseNotifyProc
@@ -516,7 +515,7 @@ to be IGNORED.
 (3.0)
 */
 static Boolean
-handleItemHit	(SizeDialogPtr		inPtr,
+handleItemHit	(My_SizeDialogPtr	inPtr,
 				 HIViewID const&	inID)
 {
 	Boolean		result = false;
@@ -573,7 +572,7 @@ handleItemHit	(SizeDialogPtr		inPtr,
 		// notify of close
 		if (nullptr != inPtr->closeNotifyProc)
 		{
-			InvokeSizeDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK pressed */);
+			SizeDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK pressed */);
 		}
 	}
 	else if (idMyButtonCancel.signature == inID.signature)
@@ -584,7 +583,7 @@ handleItemHit	(SizeDialogPtr		inPtr,
 		// notify of close
 		if (nullptr != inPtr->closeNotifyProc)
 		{
-			InvokeSizeDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK pressed */);
+			SizeDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK pressed */);
 		}
 	}
 	else if (idMyButtonHelp.signature == inID.signature)
@@ -609,12 +608,12 @@ for the buttons in the terminal size dialog.
 static pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
-					 void*					inTerminalSizeDialogRef)
+					 void*					inSizeDialogRef)
 {
-	OSStatus				result = eventNotHandledErr;
-	TerminalSizeDialogRef	ref = REINTERPRET_CAST(inTerminalSizeDialogRef, TerminalSizeDialogRef);
-	UInt32 const			kEventClass = GetEventClass(inEvent);
-	UInt32 const			kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	SizeDialog_Ref		ref = REINTERPRET_CAST(inSizeDialogRef, SizeDialog_Ref);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -633,7 +632,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 			case kHICommandOK:
 				{
-					SizeDialogAutoLocker	ptr(gSizeDialogPtrLocks(), ref);
+					My_SizeDialogAutoLocker		ptr(gSizeDialogPtrLocks(), ref);
 					
 					
 					if (handleItemHit(ptr, idMyButtonResize)) result = eventNotHandledErr;
@@ -645,7 +644,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			case kHICommandCancel:
 				{
-					SizeDialogAutoLocker	ptr(gSizeDialogPtrLocks(), ref);
+					My_SizeDialogAutoLocker		ptr(gSizeDialogPtrLocks(), ref);
 					
 					
 					if (handleItemHit(ptr, idMyButtonCancel)) result = eventNotHandledErr;
@@ -657,7 +656,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			case kCommandContextSensitiveHelp:
 				{
-					SizeDialogAutoLocker	ptr(gSizeDialogPtrLocks(), ref);
+					My_SizeDialogAutoLocker		ptr(gSizeDialogPtrLocks(), ref);
 					
 					
 					if (handleItemHit(ptr, idMyButtonHelp)) result = eventNotHandledErr;

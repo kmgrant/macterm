@@ -158,7 +158,7 @@ pascal void IconListDef(SInt16, Boolean, Rect*, Cell, SInt16, SInt16, ListHandle
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	Panel_Ref								gCurrentPanel = nullptr;
-	WindowInfoRef							gPreferencesWindowInfo = nullptr;
+	WindowInfo_Ref							gPreferencesWindowInfo = nullptr;
 	WindowRef								gPreferencesWindow = nullptr; // the Mac OS window pointer
 	WindowRef								gDrawerWindow = nullptr; // the Mac OS window pointer
 	CommonEventHandlers_WindowResizer		gPreferencesWindowResizeHandler;

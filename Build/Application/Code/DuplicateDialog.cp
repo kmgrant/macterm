@@ -3,7 +3,7 @@
 	DuplicateDialog.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -83,29 +83,29 @@ static HIViewID const		idMyFieldNewName	= { kSignatureMyFieldNewName,   0/* ID *
 
 #pragma mark Types
 
-struct DuplicateDialog
+struct My_DuplicateDialog
 {	
-	WindowRef								dialogWindow;				//!< the dialogÕs window
+	HIWindowRef								dialogWindow;				//!< the dialogÕs window
 	ControlRef								buttonCreate,				//!< Create button
 											buttonCancel,				//!< Cancel button
 											labelNewName,				//!< the label for the name text field
 											fieldNewName;				//!< the text field containing the name of the duplicate
 	HIViewWrap								buttonHelp;					//!< help button
 	
-	DuplicateDialogCloseNotifyProcPtr		closeNotifyProc;			//!< routine to call when the dialog is dismissed
+	DuplicateDialog_CloseNotifyProcPtr		closeNotifyProc;			//!< routine to call when the dialog is dismissed
 	void*									closeNotifyProcUserData;	//!< passed to the close notification routine
 	EventHandlerUPP							buttonHICommandsUPP;		//!< wrapper for button callback function
 	EventHandlerRef							buttonHICommandsHandler;	//!< invoked when a dialog button is clicked
 	CommonEventHandlers_WindowResizer		windowResizeHandler;		//!< invoked when a window has been resized
-	DuplicateDialogRef						selfRef;					//!< identical to address of structure, but typed as ref
+	DuplicateDialog_Ref						selfRef;					//!< identical to address of structure, but typed as ref
 };
-typedef DuplicateDialog*	DuplicateDialogPtr;
+typedef My_DuplicateDialog*		My_DuplicateDialogPtr;
 
-typedef MemoryBlockPtrLocker< DuplicateDialogRef, DuplicateDialog >		DuplicateDialogPtrLocker;
+typedef MemoryBlockPtrLocker< DuplicateDialog_Ref, My_DuplicateDialog >		My_DuplicateDialogPtrLocker;
 
 #pragma mark Internal Method Prototypes
 
-static Boolean				handleItemHit			(DuplicateDialogPtr, HIViewID const&);
+static Boolean				handleItemHit			(My_DuplicateDialogPtr, HIViewID const&);
 
 static void					handleNewSize			(WindowRef, Float32, Float32, void*);
 
@@ -115,7 +115,7 @@ static pascal OSStatus		receiveHICommand		(EventHandlerCallRef, EventRef, void*)
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	DuplicateDialogPtrLocker&	gDuplicateDialogPtrLocks()	{ static DuplicateDialogPtrLocker x; return x; }
+	My_DuplicateDialogPtrLocker&	gDuplicateDialogPtrLocks()	{ static My_DuplicateDialogPtrLocker x; return x; }
 }
 
 
@@ -129,17 +129,17 @@ only the contents of the specified window.
 
 (3.0)
 */
-DuplicateDialogRef
-DuplicateDialog_New		(DuplicateDialogCloseNotifyProcPtr		inCloseNotifyProcPtr,
+DuplicateDialog_Ref
+DuplicateDialog_New		(DuplicateDialog_CloseNotifyProcPtr		inCloseNotifyProcPtr,
 						 CFStringRef							inInitialNameString,
 						 void*									inCloseNotifyProcUserData)
 {
-	DuplicateDialogRef	result = REINTERPRET_CAST(new DuplicateDialog, DuplicateDialogRef);
+	DuplicateDialog_Ref		result = REINTERPRET_CAST(new My_DuplicateDialog, DuplicateDialog_Ref);
 	
 	
 	if (result != nullptr)
 	{
-		DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(result);
+		My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(result);
 		
 		
 		// load the NIB containing this dialog (automatically finds the right localization)
@@ -225,11 +225,11 @@ your copy of the dialog reference is set to nullptr.
 (3.0)
 */
 void
-DuplicateDialog_Dispose		(DuplicateDialogRef*	inoutDialogPtr)
+DuplicateDialog_Dispose		(DuplicateDialog_Ref*	inoutDialogPtr)
 {
 	if (inoutDialogPtr != nullptr)
 	{
-		DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(*inoutDialogPtr);
+		My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(*inoutDialogPtr);
 		
 		
 		// clean up the Help System
@@ -255,10 +255,10 @@ invoked.
 (3.0)
 */
 void
-DuplicateDialog_Display		(DuplicateDialogRef		inDialog,
+DuplicateDialog_Display		(DuplicateDialog_Ref	inDialog,
 							 WindowRef				inParentWindow)
 {
-	DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(inDialog);
+	My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(inDialog);
 	
 	
 	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
@@ -283,10 +283,10 @@ search field by the user, WITHOUT retaining it.
 (3.0)
 */
 void
-DuplicateDialog_GetNameString	(DuplicateDialogRef		inDialog,
+DuplicateDialog_GetNameString	(DuplicateDialog_Ref	inDialog,
 								 CFStringRef&			outString)
 {
-	DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(inDialog);
+	My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(inDialog);
 	
 	
 	if (ptr != nullptr)
@@ -307,7 +307,7 @@ DuplicateDialog_New() as your notification procedure.
 (3.0)
 */
 void
-DuplicateDialog_StandardCloseNotifyProc		(DuplicateDialogRef		inDialogThatClosed,
+DuplicateDialog_StandardCloseNotifyProc		(DuplicateDialog_Ref	inDialogThatClosed,
 											 Boolean				UNUSED_ARGUMENT(inOKButtonPressed),
 											 void*					UNUSED_ARGUMENT(inUserData))
 {
@@ -333,7 +333,7 @@ to be IGNORED.
 (3.0)
 */
 static Boolean
-handleItemHit	(DuplicateDialogPtr		inPtr,
+handleItemHit	(My_DuplicateDialogPtr	inPtr,
 				 HIViewID const&		inHIViewID)
 {
 	Boolean		result = false;
@@ -348,7 +348,7 @@ handleItemHit	(DuplicateDialogPtr		inPtr,
 		// notify of close
 		if (inPtr->closeNotifyProc != nullptr)
 		{
-			InvokeDuplicateDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef,
+			DuplicateDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef,
 													true/* OK pressed */, inPtr->closeNotifyProcUserData);
 		}
 		break;
@@ -360,7 +360,7 @@ handleItemHit	(DuplicateDialogPtr		inPtr,
 		// notify of close
 		if (inPtr->closeNotifyProc != nullptr)
 		{
-			InvokeDuplicateDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef,
+			DuplicateDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef,
 													false/* OK pressed */, inPtr->closeNotifyProcUserData);
 		}
 		break;
@@ -391,10 +391,10 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 	// only horizontal changes are significant to this dialog
 	if (inDeltaX)
 	{
-		DuplicateDialogRef	ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialogRef);
-		DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(ref);
-		SInt32				truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
-		SInt32				truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
+		DuplicateDialog_Ref		ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialog_Ref);
+		My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(ref);
+		SInt32					truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
+		SInt32					truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
 		
 		
 		DialogAdjust_BeginControlAdjustment(ptr->dialogWindow);
@@ -431,11 +431,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inDuplicateDialogRef)
 {
-	OSStatus			result = eventNotHandledErr;
-	DuplicateDialogRef	ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialogRef);
-	DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(ref);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus				result = eventNotHandledErr;
+	DuplicateDialog_Ref		ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialog_Ref);
+	My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(ref);
+	UInt32 const			kEventClass = GetEventClass(inEvent);
+	UInt32 const			kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);

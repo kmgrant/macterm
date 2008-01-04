@@ -3,7 +3,7 @@
 	WindowTitleDialog.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -86,16 +86,16 @@ static HIViewID const		idMyFieldWindowTitle		= { kSignatureMyFieldWindowTitle,		
 
 #pragma mark Types
 
-struct WindowTitleDialog
+struct My_WindowTitleDialog
 {
-	WindowTitleDialog	(WindowRef,
-						 WindowTitleDialogCloseNotifyProcPtr);
+	My_WindowTitleDialog	(HIWindowRef,
+							 WindowTitleDialog_CloseNotifyProcPtr);
 	
-	~WindowTitleDialog	();
+	~My_WindowTitleDialog	();
 	
-	WindowTitleDialogRef					selfRef;					// convenient reference to this structure
+	WindowTitleDialog_Ref					selfRef;					// convenient reference to this structure
 	SessionRef								session;					// the session, if any, to which this applies
-	WindowRef								screenWindow;				// the terminal window for which this dialog applies
+	HIWindowRef								screenWindow;				// the terminal window for which this dialog applies
 	NIBWindow								dialogWindow;				// the dialog’s window
 	HIViewWrap								buttonRename;				// Rename button
 	HIViewWrap								buttonCancel;				// Cancel button
@@ -103,26 +103,26 @@ struct WindowTitleDialog
 	HIViewWrap								labelTitle;					// the label for the title text field
 	HIViewWrap								fieldTitle;					// the text field containing the new window title
 	
-	WindowTitleDialogCloseNotifyProcPtr		closeNotifyProc;			// routine to call when the dialog is dismissed
+	WindowTitleDialog_CloseNotifyProcPtr	closeNotifyProc;			// routine to call when the dialog is dismissed
 	CarbonEventHandlerWrap					buttonHICommandsHandler;	// invoked when a dialog button is clicked
 	CommonEventHandlers_WindowResizer		windowResizeHandler;		// invoked when a window has been resized
 };
-typedef WindowTitleDialog*		WindowTitleDialogPtr;
+typedef My_WindowTitleDialog*	My_WindowTitleDialogPtr;
 
-typedef MemoryBlockPtrLocker< WindowTitleDialogRef, WindowTitleDialog >		WindowTitleDialogPtrLocker;
-typedef LockAcquireRelease< WindowTitleDialogRef, WindowTitleDialog >		WindowTitleDialogAutoLocker;
+typedef MemoryBlockPtrLocker< WindowTitleDialog_Ref, My_WindowTitleDialog >		My_WindowTitleDialogPtrLocker;
+typedef LockAcquireRelease< WindowTitleDialog_Ref, My_WindowTitleDialog >		My_WindowTitleDialogAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	WindowTitleDialogPtrLocker&	gWindowTitleDialogPtrLocks()	{ static WindowTitleDialogPtrLocker x; return x; }
+	My_WindowTitleDialogPtrLocker&	gWindowTitleDialogPtrLocks()	{ static My_WindowTitleDialogPtrLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
 
-static void				handleItemHit					(WindowTitleDialogPtr, HIViewID const&);
-static void				handleNewSize					(WindowRef, Float32, Float32, void*);
+static void				handleItemHit					(My_WindowTitleDialogPtr, HIViewID const&);
+static void				handleNewSize					(HIWindowRef, Float32, Float32, void*);
 static pascal OSStatus	receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 
 
@@ -139,12 +139,12 @@ forces good object design.
 
 (3.1)
 */
-WindowTitleDialog::
-WindowTitleDialog	(WindowRef								inParentWindow,
-					 WindowTitleDialogCloseNotifyProcPtr	inCloseNotifyProcPtr)
+My_WindowTitleDialog::
+My_WindowTitleDialog	(HIWindowRef							inParentWindow,
+						 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.,
-selfRef					(REINTERPRET_CAST(this, WindowTitleDialogRef)),
+selfRef					(REINTERPRET_CAST(this, WindowTitleDialog_Ref)),
 session					(nullptr),
 screenWindow			(inParentWindow),
 dialogWindow			(NIBWindow(AppResources_ReturnBundleForNIBs(), CFSTR("WindowTitleDialog"), CFSTR("Dialog"))
@@ -212,7 +212,7 @@ windowResizeHandler		()
 	
 	// ensure other handlers were installed
 	assert(this->buttonHICommandsHandler.isInstalled());
-}// WindowTitleDialog 2-argument constructor
+}// My_WindowTitleDialog 2-argument constructor
 
 
 /*!
@@ -220,11 +220,11 @@ Destructor.  See WindowTitleDialog_Dispose().
 
 (3.1)
 */
-WindowTitleDialog::
-~WindowTitleDialog ()
+My_WindowTitleDialog::
+~My_WindowTitleDialog ()
 {
 	DisposeWindow(this->dialogWindow);
-}// WindowTitleDialog destructor
+}// My_WindowTitleDialog destructor
 
 
 /*!
@@ -234,16 +234,16 @@ the specified window’s title as the initial field value.
 
 (3.0)
 */
-WindowTitleDialogRef
-WindowTitleDialog_New	(WindowRef								inParentWindow,
-						 WindowTitleDialogCloseNotifyProcPtr	inCloseNotifyProcPtr)
+WindowTitleDialog_Ref
+WindowTitleDialog_New	(HIWindowRef							inParentWindow,
+						 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
-	WindowTitleDialogRef	result = nullptr;
+	WindowTitleDialog_Ref	result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new WindowTitleDialog(inParentWindow, inCloseNotifyProcPtr), WindowTitleDialogRef);
+		result = REINTERPRET_CAST(new My_WindowTitleDialog(inParentWindow, inCloseNotifyProcPtr), WindowTitleDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -265,12 +265,12 @@ windows, but this is up to the Session implementation).
 
 (3.1)
 */
-WindowTitleDialogRef
+WindowTitleDialog_Ref
 WindowTitleDialog_NewForSession		(SessionRef								inSession,
-									 WindowTitleDialogCloseNotifyProcPtr	inCloseNotifyProcPtr)
+									 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
-	WindowTitleDialogRef			result = WindowTitleDialog_New(Session_ReturnActiveWindow(inSession), inCloseNotifyProcPtr);
-	WindowTitleDialogAutoLocker		ptr(gWindowTitleDialogPtrLocks(), result);
+	WindowTitleDialog_Ref			result = WindowTitleDialog_New(Session_ReturnActiveWindow(inSession), inCloseNotifyProcPtr);
+	My_WindowTitleDialogAutoLocker	ptr(gWindowTitleDialogPtrLocks(), result);
 	
 	
 	ptr->session = inSession;
@@ -303,7 +303,7 @@ your copy of the dialog reference is set to nullptr.
 (3.0)
 */
 void
-WindowTitleDialog_Dispose	(WindowTitleDialogRef*	inoutRefPtr)
+WindowTitleDialog_Dispose	(WindowTitleDialog_Ref*		inoutRefPtr)
 {
 	if (gWindowTitleDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
@@ -312,7 +312,7 @@ WindowTitleDialog_Dispose	(WindowTitleDialogRef*	inoutRefPtr)
 	}
 	else
 	{
-		delete *(REINTERPRET_CAST(inoutRefPtr, WindowTitleDialogPtr*)), *inoutRefPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_WindowTitleDialogPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -326,9 +326,9 @@ callback is invoked.
 (3.0)
 */
 void
-WindowTitleDialog_Display	(WindowTitleDialogRef	inDialog)
+WindowTitleDialog_Display	(WindowTitleDialog_Ref		inDialog)
 {
-	WindowTitleDialogAutoLocker		ptr(gWindowTitleDialogPtrLocks(), inDialog);
+	My_WindowTitleDialogAutoLocker		ptr(gWindowTitleDialogPtrLocks(), inDialog);
 	
 	
 	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
@@ -356,7 +356,7 @@ procedure.
 (3.0)
 */
 void
-WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialogRef	inDialogThatClosed,
+WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialog_Ref	inDialogThatClosed,
 											 Boolean				UNUSED_ARGUMENT(inOKButtonPressed))
 {
 	WindowTitleDialog_Dispose(&inDialogThatClosed);
@@ -378,8 +378,8 @@ reference can be provided to the notifier.
 (3.0)
 */
 static void
-handleItemHit	(WindowTitleDialogPtr	inPtr,
-				 HIViewID const&		inHIViewID)
+handleItemHit	(My_WindowTitleDialogPtr	inPtr,
+				 HIViewID const&			inHIViewID)
 {
 	switch (inHIViewID.signature)
 	{
@@ -417,7 +417,7 @@ handleItemHit	(WindowTitleDialogPtr	inPtr,
 		// notify of close
 		if (inPtr->closeNotifyProc != nullptr)
 		{
-			InvokeWindowTitleDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK pressed */);
+			WindowTitleDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK pressed */);
 		}
 		break;
 	
@@ -428,7 +428,7 @@ handleItemHit	(WindowTitleDialogPtr	inPtr,
 		// notify of close
 		if (inPtr->closeNotifyProc != nullptr)
 		{
-			InvokeWindowTitleDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK pressed */);
+			WindowTitleDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK pressed */);
 		}
 		break;
 	
@@ -448,7 +448,7 @@ Moves or resizes the controls in window title dialogs.
 (3.0)
 */
 static void
-handleNewSize	(WindowRef		inWindow,
+handleNewSize	(HIWindowRef	inWindow,
 				 Float32		inDeltaX,
 				 Float32		inDeltaY,
 				 void*			inWindowTitleDialogRef)
@@ -456,8 +456,8 @@ handleNewSize	(WindowRef		inWindow,
 	// only horizontal changes are significant to this dialog
 	if (inDeltaX)
 	{
-		WindowTitleDialogRef			ref = REINTERPRET_CAST(inWindowTitleDialogRef, WindowTitleDialogRef);
-		WindowTitleDialogAutoLocker		ptr(gWindowTitleDialogPtrLocks(), ref);
+		WindowTitleDialog_Ref			ref = REINTERPRET_CAST(inWindowTitleDialogRef, WindowTitleDialog_Ref);
+		My_WindowTitleDialogAutoLocker	ptr(gWindowTitleDialogPtrLocks(), ref);
 		SInt32							truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
 		SInt32							truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
 		
@@ -499,8 +499,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 void*					inWindowTitleDialogRef)
 {
 	OSStatus						result = eventNotHandledErr;
-	WindowTitleDialogRef			ref = REINTERPRET_CAST(inWindowTitleDialogRef, WindowTitleDialogRef);
-	WindowTitleDialogAutoLocker		ptr(gWindowTitleDialogPtrLocks(), ref);
+	WindowTitleDialog_Ref			ref = REINTERPRET_CAST(inWindowTitleDialogRef, WindowTitleDialog_Ref);
+	My_WindowTitleDialogAutoLocker	ptr(gWindowTitleDialogPtrLocks(), ref);
 	UInt32 const					kEventClass = GetEventClass(inEvent);
 	UInt32 const					kEventKind = GetEventKind(inEvent);
 	

@@ -3,7 +3,7 @@
 	FormatDialog.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -28,8 +28,6 @@
 		USA
 
 ###############################################################*/
-
-#define DIALOG_IS_SHEET TARGET_API_MAC_CARBON
 
 #include "UniversalDefines.h"
 
@@ -99,87 +97,49 @@ enum
 
 #pragma mark Types
 
-struct FormatDialog
+struct My_FormatDialog
 {	
 	SInt16							oldPanelIndex;				// previously displayed panel
 	Boolean							isCustomSizeMenuItemAdded;	// does the size pop-up menu contain a custom size?
-	WindowRef						screenWindow;				// the terminal window for which this dialog applies
+	HIWindowRef						screenWindow;				// the terminal window for which this dialog applies
 	MenuRef							characterSetMenu;			// menu containing character set names
-	FormatDialogSetupData			setupData;					// running values for colors, fonts, etc.
+	FormatDialog_SetupData			setupData;					// running values for colors, fonts, etc.
 	DialogRef						dialog;						// the Mac OS dialog reference
-	WindowInfoRef					windowInfo;					// auxiliary data for the dialog
-	FormatDialogCloseNotifyProcPtr	closeNotifyProc;			// routine to call when the dialog is dismissed
-#if DIALOG_IS_SHEET
+	WindowInfo_Ref					windowInfo;					// auxiliary data for the dialog
+	FormatDialog_CloseNotifyProcPtr	closeNotifyProc;			// routine to call when the dialog is dismissed
 	ListenerModel_ListenerRef		mainEventListener;			// listener for global application events
-#endif
-	FormatDialogRef					selfRef;					// identical to address of structure, but typed as ref
+	FormatDialog_Ref				selfRef;					// identical to address of structure, but typed as ref
 };
-typedef FormatDialog*		FormatDialogPtr;
-typedef FormatDialogPtr*	FormatDialogHandle;
+typedef My_FormatDialog*		My_FormatDialogPtr;
+typedef My_FormatDialogPtr*		My_FormatDialogHandle;
 
-typedef MemoryBlockHandleLocker< FormatDialogRef, FormatDialog >	FormatDialogHandleLocker;
+typedef MemoryBlockHandleLocker< FormatDialog_Ref, My_FormatDialog >	My_FormatDialogHandleLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	FormatDialogPtr				gCurrentEventFormatDialogPtr = nullptr;	// used ONLY when necessary, to pass info to callbacks
-	FormatDialogHandleLocker&	gFormatDialogHandleLocks()  { static FormatDialogHandleLocker x; return x; }
+	My_FormatDialogPtr				gCurrentEventFormatDialogPtr = nullptr;	// used ONLY when necessary, to pass info to callbacks
+	My_FormatDialogHandleLocker&	gFormatDialogHandleLocks()  { static My_FormatDialogHandleLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
 
-static void				checkSizeMenuSize			(FormatDialogPtr				inPtr,
-													 MenuRef						inStandardSizeMenu,
-													 SInt16							inSize);
-
-static Boolean			customSizeMenuSize			(FormatDialogPtr				inPtr,
-													 MenuRef						inStandardSizeMenu,
-													 SInt16							inCustomSizeOrZero);
-
-static void				disableItemGroupsAsNeeded	(FormatDialogPtr				inPtr,
-													 FormatDialogFormatOptions		inBasedOnTheseOptions);
-
-static void				fontUpdate					(FormatDialogPtr				inPtr);
-
-static pascal Boolean	formatDialogEventFilter		(DialogRef						inDialog,
-													 EventRecord*					inoutEventPtr,
-													 short*							outItemIndex);
-
-static ListHandle		getCharacterSetList			(FormatDialogPtr				inPtr);
-
-static MenuRef			getFontMenu					(FormatDialogPtr				inPtr);
-
-static MenuRef			getSizeMenu					(FormatDialogPtr				inPtr);
-
-static void				handleItemHit				(FormatDialogPtr				inPtr,
-													 DialogItemIndex*				inoutItemIndexPtr);
-
-static pascal void		handleNewSize				(WindowRef						inWindow,
-													 SInt32							inDeltaSizeX,
-													 SInt32							inDeltaSizeY,
-													 SInt32							inData);
-
-#if DIALOG_IS_SHEET
-static Boolean			mainEventLoopEvent			(ListenerModel_Ref				inUnusedModel,
-													 ListenerModel_Event			inEventThatOccurred,
-													 void*							inEventContextPtr,
-													 void*							inListenerContextPtr);
-#endif
-
-static void				setFormatFromItems			(FormatDialogPtr				inPtr,
-													 FormatDialogSetupDataPtr		inDataPtr,
-													 UInt16							inFormatIndexToUse);
-
-static void				setItemsForFormat			(FormatDialogPtr				inPtr,
-													 FormatDialogSetupDataPtr		inDataPtr,
-													 UInt16							inFormatIndexToUse);
-
-static void				setSizeField				(FormatDialogPtr				inPtr,
-													 SInt16							inNewSizeOrZero);
-
-static void				setUpSizeMenuForFont		(MenuRef						inStandardSizeMenu,
-													 ConstStringPtr					inFontName);
+static void				checkSizeMenuSize			(My_FormatDialogPtr, MenuRef, SInt16);
+static Boolean			customSizeMenuSize			(My_FormatDialogPtr, MenuRef, SInt16);
+static void				disableItemGroupsAsNeeded	(My_FormatDialogPtr, FormatDialog_FormatOptions);
+static void				fontUpdate					(My_FormatDialogPtr);
+static pascal Boolean	formatDialogEventFilter		(DialogRef, EventRecord*, short*);
+static ListHandle		getCharacterSetList			(My_FormatDialogPtr);
+static MenuRef			getFontMenu					(My_FormatDialogPtr);
+static MenuRef			getSizeMenu					(My_FormatDialogPtr);
+static void				handleItemHit				(My_FormatDialogPtr, DialogItemIndex*);
+static pascal void		handleNewSize				(HIWindowRef, SInt32, SInt32, SInt32);
+static Boolean			mainEventLoopEvent			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+static void				setFormatFromItems			(My_FormatDialogPtr, FormatDialog_SetupDataPtr, UInt16);
+static void				setItemsForFormat			(My_FormatDialogPtr, FormatDialog_SetupDataPtr, UInt16);
+static void				setSizeField				(My_FormatDialogPtr, SInt16);
+static void				setUpSizeMenuForFont		(MenuRef, ConstStringPtr);
 
 
 
@@ -194,16 +154,16 @@ controls in the dialog box.  Do not pass nullptr for
 
 (3.0)
 */
-FormatDialogRef
-FormatDialog_New	(FormatDialogSetupDataConstPtr		inSetupDataPtr,
-					 FormatDialogCloseNotifyProcPtr		inCloseNotifyProcPtr)
+FormatDialog_Ref
+FormatDialog_New	(FormatDialog_SetupDataConstPtr		inSetupDataPtr,
+					 FormatDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
-	FormatDialogRef		result = (FormatDialogRef)Memory_NewHandle(sizeof(FormatDialog));
+	FormatDialog_Ref	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_FormatDialog)), FormatDialog_Ref);
 	
 	
 	if (result != nullptr)
 	{
-		FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(result);
+		My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(result);
 		
 		
 		Cursors_DeferredUseWatch(30); // if it takes more than half a second to initialize, show the watch cursor
@@ -213,7 +173,7 @@ FormatDialog_New	(FormatDialogSetupDataConstPtr		inSetupDataPtr,
 		GetNewDialogWithWindowInfo(kDialogIDFormat, &ptr->dialog, &ptr->windowInfo);
 		ptr->closeNotifyProc = inCloseNotifyProcPtr;
 		ptr->setupData = *inSetupDataPtr;
-		ptr->oldPanelIndex = kFormatDialogIndexNormalText;
+		ptr->oldPanelIndex = kFormatDialog_IndexNormalText;
 		ptr->isCustomSizeMenuItemAdded = false;
 		ptr->selfRef = result;
 		
@@ -222,7 +182,6 @@ FormatDialog_New	(FormatDialogSetupDataConstPtr		inSetupDataPtr,
 		
 		if (ptr->dialog != nullptr)
 		{
-		#if DIALOG_IS_SHEET
 			// install a notification routine in the main event loop, to find out when dialog events occur
 			ptr->mainEventListener = ListenerModel_NewBooleanListener(mainEventLoopEvent, result/* context */);
 			EventLoop_StartMonitoringWindow(kEventLoop_WindowEventContentTrack, GetDialogWindow(ptr->dialog),
@@ -236,7 +195,6 @@ FormatDialog_New	(FormatDialogSetupDataConstPtr		inSetupDataPtr,
 			(OSStatus)ChangeWindowAttributes(GetDialogWindow(ptr->dialog),
 												kWindowResizableAttribute/* set these attributes */,
 												0/* clear these attributes */);
-		#endif
 			
 			// adjust the OK and Cancel buttons so they are big enough for their titles
 			SetDialogDefaultItem(ptr->dialog, iFormatOKButton);
@@ -316,15 +274,15 @@ FormatDialog_New	(FormatDialogSetupDataConstPtr		inSetupDataPtr,
 			
 			// set up the Window Info information
 			{
-				WindowResizeResponderProcPtr	resizeProc = handleNewSize;
+				WindowInfo_ResizeResponderProcPtr	resizeProc = handleNewSize;
 				
 				
 				WindowInfo_SetWindowDescriptor(ptr->windowInfo, kConstantsRegistry_WindowDescriptorFormat);
 				WindowInfo_SetWindowResizeLimits(ptr->windowInfo,
-														FORMAT_DIALOG_HT/* minimum height */,
-														FORMAT_DIALOG_WD/* minimum width */,
-														FORMAT_DIALOG_HT + 200/* arbitrary maximum height */,
-														FORMAT_DIALOG_WD + 50/* arbitrary maximum width */);
+													FORMAT_DIALOG_HT/* minimum height */,
+													FORMAT_DIALOG_WD/* minimum width */,
+													FORMAT_DIALOG_HT + 200/* arbitrary maximum height */,
+													FORMAT_DIALOG_WD + 50/* arbitrary maximum width */);
 				WindowInfo_SetWindowResizeResponder(ptr->windowInfo, resizeProc, 0L);
 			}
 			WindowInfo_SetForDialog(ptr->dialog, ptr->windowInfo);
@@ -343,7 +301,7 @@ FormatDialog_New() to contain the userÕs changes.
 (3.0)
 */
 void
-FormatDialog_Dispose	(FormatDialogRef*	inoutDialogPtr)
+FormatDialog_Dispose	(FormatDialog_Ref*	inoutDialogPtr)
 {
 	if (gFormatDialogHandleLocks().isLocked(*inoutDialogPtr))
 	{
@@ -352,7 +310,7 @@ FormatDialog_Dispose	(FormatDialogRef*	inoutDialogPtr)
 	}
 	else
 	{
-		FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(*inoutDialogPtr);
+		My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(*inoutDialogPtr);
 		
 		
 		// clean up the Help System
@@ -363,7 +321,6 @@ FormatDialog_Dispose	(FormatDialogRef*	inoutDialogPtr)
 		//ColorBox_DetachFromUserPaneDialogItem(ptr->dialog, iFormatBackgroundColorBox);
 		WindowInfo_Dispose(ptr->windowInfo);
 		DisposeDialog(ptr->dialog), ptr->dialog = nullptr;
-	#if DIALOG_IS_SHEET
 		EventLoop_StopMonitoringWindow(kEventLoop_WindowEventContentTrack, GetDialogWindow(ptr->dialog),
 										ptr->mainEventListener);
 		EventLoop_StopMonitoringWindow(kEventLoop_WindowEventKeyPress, GetDialogWindow(ptr->dialog),
@@ -371,7 +328,6 @@ FormatDialog_Dispose	(FormatDialogRef*	inoutDialogPtr)
 		EventLoop_StopMonitoringWindow(kEventLoop_WindowEventUpdate, GetDialogWindow(ptr->dialog),
 										ptr->mainEventListener);
 		ListenerModel_ReleaseListener(&ptr->mainEventListener);
-	#endif
 		gFormatDialogHandleLocks().releaseLock(*inoutDialogPtr, &ptr);
 		Memory_DisposeHandle(REINTERPRET_CAST(inoutDialogPtr, Handle*));
 	}
@@ -387,9 +343,9 @@ returned.
 (3.0)
 */
 void
-FormatDialog_Display	(FormatDialogRef	inDialog)
+FormatDialog_Display	(FormatDialog_Ref	inDialog)
 {
-	FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
+	My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
 	
 	
 	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
@@ -397,37 +353,15 @@ FormatDialog_Display	(FormatDialogRef	inDialog)
 	{
 		// define this only for debugging; this lets you dump the dialogÕs
 		// control embedding hierarchy to a file, before it is displayed
-		#if 0
+	#if 0
 		DebugSelectControlHierarchyDumpFile(GetDialogWindow(ptr->dialog));
-		#endif
+	#endif
 		
 		// display the dialog
-	#if DIALOG_IS_SHEET
 		DialogTransitions_DisplaySheet(GetDialogWindow(ptr->dialog), ptr->screenWindow, true/* opaque */);
-	#else
-		DialogTransitions_Display(GetDialogWindow(ptr->dialog));
-	#endif
 		
 		// set the focus
 		FocusDialogItem(ptr->dialog, iFormatEditSizeField);
-		
-		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
-	#if !DIALOG_IS_SHEET
-		gCurrentEventFormatDialogPtr = ptr;
-		{
-			ModalFilterUPP			filterProc = NewModalFilterUPP(formatDialogEventFilter);
-			DialogItemIndex			itemIndex = 0;
-			
-			
-			itemIndex = 0;
-			do
-			{
-				ModalDialog(filterProc, &itemIndex);
-				handleItemHit(ptr, &itemIndex);
-			} while ((itemIndex != iFormatOKButton) && (itemIndex != iFormatCancelButton));
-			DisposeModalFilterUPP(filterProc), filterProc = nullptr;
-		}
-	#endif
 	}
 	gFormatDialogHandleLocks().releaseLock(inDialog, &ptr);
 }// Display
@@ -444,11 +378,11 @@ Returns "true" only if the data could be found.
 (3.0)
 */
 Boolean
-FormatDialog_GetContents	(FormatDialogRef			inDialog,
-							 FormatDialogSetupDataPtr	outSetupDataPtr)
+FormatDialog_GetContents	(FormatDialog_Ref			inDialog,
+							 FormatDialog_SetupDataPtr	outSetupDataPtr)
 {
-	FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
-	Boolean				result = false;
+	My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
+	Boolean					result = false;
 	
 	
 	if (ptr != nullptr)
@@ -471,11 +405,11 @@ Returns nullptr if any problems occur.
 
 (3.0)
 */
-WindowRef
-FormatDialog_ReturnParentWindow		(FormatDialogRef	inDialog)
+HIWindowRef
+FormatDialog_ReturnParentWindow		(FormatDialog_Ref	inDialog)
 {
-	FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
-	WindowRef			result = nullptr;
+	My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
+	HIWindowRef				result = nullptr;
 	
 	
 	if (ptr != nullptr)
@@ -497,7 +431,7 @@ to FormatDialog_New() as your notification procedure.
 (3.0)
 */
 void
-FormatDialog_StandardCloseNotifyProc	(FormatDialogRef	inDialogThatClosed,
+FormatDialog_StandardCloseNotifyProc	(FormatDialog_Ref	inDialogThatClosed,
 										 Boolean			UNUSED_ARGUMENT(inOKButtonPressed))
 {
 	FormatDialog_Dispose(&inDialogThatClosed);
@@ -516,9 +450,9 @@ method.
 (3.0)
 */
 static void
-checkSizeMenuSize		(FormatDialogPtr	inPtr,
-						 MenuRef			inStandardSizeMenu,
-						 SInt16				inSize)
+checkSizeMenuSize	(My_FormatDialogPtr		inPtr,
+					 MenuRef				inStandardSizeMenu,
+					 SInt16					inSize)
 {
 	register SInt16 	i = 0;
 	SInt32				itemFontSize = 0L;
@@ -563,9 +497,9 @@ IMPORTANT:	This method may not produce the
 (3.0)
 */
 static Boolean
-customSizeMenuSize		(FormatDialogPtr	inPtr,
-						 MenuRef			inStandardSizeMenu,
-						 SInt16				inCustomSizeOrZero)
+customSizeMenuSize	(My_FormatDialogPtr		inPtr,
+					 MenuRef				inStandardSizeMenu,
+					 SInt16					inCustomSizeOrZero)
 {
 	SInt16 			i = 0;
 	SInt32			itemFontSize = 0L;
@@ -624,14 +558,14 @@ the foreground color, and the background color.
 IMPORTANT:	Any group that you do not explicitly identify as
 			being disabled will become enabled after calling
 			this routine.  To enable all item groups, mask off
-			"kFormatDialogFormatOptionMaskDisableAllItems" in
+			"kFormatDialog_FormatOptionMaskDisableAllItems" in
 			the given format options.
 
 (3.0)
 */
 static void
-disableItemGroupsAsNeeded		(FormatDialogPtr			inPtr,
-								 FormatDialogFormatOptions	inBasedOnTheseOptions)
+disableItemGroupsAsNeeded	(My_FormatDialogPtr				inPtr,
+							 FormatDialog_FormatOptions		inBasedOnTheseOptions)
 {
 	// initially enable everything
 	ActivateDialogItem(inPtr->dialog, iFormatEditMenuFontItemsPane);
@@ -640,19 +574,19 @@ disableItemGroupsAsNeeded		(FormatDialogPtr			inPtr,
 	ActivateDialogItem(inPtr->dialog, iFormatEditMenuBackColorItemsPane);
 	
 	// now disable whatever was requested by the options
-	if (inBasedOnTheseOptions & kFormatDialogFormatOptionDisableFontItems)
+	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableFontItems)
 	{
 		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuFontItemsPane);
 	}
-	if (inBasedOnTheseOptions & kFormatDialogFormatOptionDisableFontSizeItems)
+	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableFontSizeItems)
 	{
 		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuFontSizeItemsPane);
 	}
-	if (inBasedOnTheseOptions & kFormatDialogFormatOptionDisableForeColorItems)
+	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableForeColorItems)
 	{
 		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuForeColorItemsPane);
 	}
-	if (inBasedOnTheseOptions & kFormatDialogFormatOptionDisableBackColorItems)
+	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableBackColorItems)
 	{
 		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuBackColorItemsPane);
 	}
@@ -669,7 +603,7 @@ date.
 (3.0)
 */
 static void
-fontUpdate	(FormatDialogPtr	inPtr)
+fontUpdate	(My_FormatDialogPtr		inPtr)
 {
 	ControlFontStyleRec		styleRecord;
 	ControlRef				fontMenuButton = nullptr;
@@ -788,7 +722,7 @@ available Character Sets, use this convenient method.
 (3.0)
 */
 static ListHandle
-getCharacterSetList		(FormatDialogPtr	inPtr)
+getCharacterSetList		(My_FormatDialogPtr		inPtr)
 {
 	ListHandle		result = nullptr;
 	
@@ -805,7 +739,7 @@ pop-up menu button, use this convenient method.
 (3.0)
 */
 static MenuRef
-getFontMenu		(FormatDialogPtr	inPtr)
+getFontMenu		(My_FormatDialogPtr		inPtr)
 {
 	MenuRef			result = nullptr;
 	ControlRef		fontMenuButton = nullptr;
@@ -827,7 +761,7 @@ pop-up menu button, use this convenient method.
 (3.0)
 */
 static MenuRef
-getSizeMenu		(FormatDialogPtr	inPtr)
+getSizeMenu		(My_FormatDialogPtr		inPtr)
 {
 	MenuRef			result = nullptr;
 	ControlRef		sizeMenuButton = nullptr;
@@ -851,7 +785,7 @@ an adjustment is made to the display.
 (3.0)
 */
 static void
-handleItemHit	(FormatDialogPtr		inPtr,
+handleItemHit	(My_FormatDialogPtr		inPtr,
 				 DialogItemIndex*		inoutItemIndexPtr)
 {
 	switch (*inoutItemIndexPtr)
@@ -862,31 +796,23 @@ handleItemHit	(FormatDialogPtr		inPtr,
 		
 		// get the information from the dialog and then kill it
 		setFormatFromItems(inPtr, &inPtr->setupData, inPtr->oldPanelIndex);
-	#if DIALOG_IS_SHEET
 		DialogTransitions_CloseSheet(GetDialogWindow(inPtr->dialog), inPtr->screenWindow);
-	#else
-		DialogTransitions_Close(GetDialogWindow(inPtr->dialog));
-	#endif
 		
 		// notify of close
 		if (inPtr->closeNotifyProc != nullptr)
 		{
-			InvokeFormatDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK pressed */);
+			FormatDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK pressed */);
 		}
 		break;
 	
 	case iFormatCancelButton:
 		// user cancelled - close the dialog with an appropriate transition for cancelling
-	#if DIALOG_IS_SHEET
 		DialogTransitions_CloseSheet(GetDialogWindow(inPtr->dialog), inPtr->screenWindow);
-	#else
-		DialogTransitions_CloseCancel(GetDialogWindow(inPtr->dialog));
-	#endif
 		
 		// notify of close
 		if (inPtr->closeNotifyProc != nullptr)
 		{
-			InvokeFormatDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK pressed */);
+			FormatDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK pressed */);
 		}
 		break;
 	
@@ -901,9 +827,9 @@ handleItemHit	(FormatDialogPtr		inPtr,
 			
 			switch (--value) // indices are zero-based, item numbers are one-based
 			{
-			case kFormatDialogIndexNormalText:
-			case kFormatDialogIndexBoldText:
-			case kFormatDialogIndexBlinkingText:
+			case kFormatDialog_IndexNormalText:
+			case kFormatDialog_IndexBoldText:
+			case kFormatDialog_IndexBlinkingText:
 				if (value != inPtr->oldPanelIndex)
 				{
 					setFormatFromItems(inPtr, &inPtr->setupData, inPtr->oldPanelIndex); // save old
@@ -1005,7 +931,7 @@ a resize of the ÒFormatÓ movable modal dialog box.
 (3.0)
 */
 static pascal void
-handleNewSize		(WindowRef		inWindow,
+handleNewSize		(HIWindowRef	inWindow,
 					 SInt32			inDeltaSizeX,
 					 SInt32			inDeltaSizeY,
 					 SInt32			UNUSED_ARGUMENT(inData))
@@ -1099,7 +1025,6 @@ handleNewSize		(WindowRef		inWindow,
 }// handleNewSize
 
 
-#if DIALOG_IS_SHEET
 /*!
 Processes events from the main event loop, used when
 the Format Dialog is actually window-modal (a sheet)
@@ -1113,7 +1038,7 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 void*					inEventContextPtr,
 						 void*					inListenerContextPtr)
 {
-	FormatDialogRef		ref = REINTERPRET_CAST(inListenerContextPtr, FormatDialogRef);
+	FormatDialog_Ref	ref = REINTERPRET_CAST(inListenerContextPtr, FormatDialog_Ref);
 	Boolean				result = true;
 	
 	
@@ -1129,7 +1054,7 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (ref != nullptr)
 			{
-				FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(ref);
+				My_FormatDialogPtr	ptr = gFormatDialogHandleLocks().acquireLock(ref);
 				DialogRef			dialogHit = nullptr;
 				DialogItemIndex		itemHit = 0;
 				
@@ -1157,7 +1082,7 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (ref != nullptr)
 			{
-				FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(ref);
+				My_FormatDialogPtr	ptr = gFormatDialogHandleLocks().acquireLock(ref);
 				DialogRef			dialogHit = nullptr;
 				DialogItemIndex		itemHit = 0;
 				
@@ -1184,7 +1109,7 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (ref != nullptr)
 			{
-				FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(ref);
+				My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(ref);
 				
 				
 				BeginUpdate(updateInfoPtr->window);
@@ -1202,7 +1127,6 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	}
 	return result;
 }// mainEventLoopEvent
-#endif
 
 
 /*!
@@ -1213,8 +1137,8 @@ method.
 (3.0)
 */
 static void
-setFormatFromItems		(FormatDialogPtr			inPtr,
-						 FormatDialogSetupDataPtr	inDataPtr,
+setFormatFromItems		(My_FormatDialogPtr			inPtr,
+						 FormatDialog_SetupDataPtr	inDataPtr,
 						 UInt16						inFormatIndexToUse)
 {
 	Boolean		didSet = true;
@@ -1222,7 +1146,7 @@ setFormatFromItems		(FormatDialogPtr			inPtr,
 	
 	if (inDataPtr != nullptr)
 	{
-		if (inFormatIndexToUse < kFormatDialogNumberOfFormats)
+		if (inFormatIndexToUse < kFormatDialog_NumberOfFormats)
 		{
 			RGBColor*		colorPtr = nullptr;
 			ControlRef		control = nullptr;
@@ -1268,16 +1192,16 @@ this method.
 (3.0)
 */
 static void
-setItemsForFormat		(FormatDialogPtr			inPtr,
-						 FormatDialogSetupDataPtr	inDataPtr,
-						 UInt16						inFormatIndexToUse)
+setItemsForFormat	(My_FormatDialogPtr			inPtr,
+					 FormatDialog_SetupDataPtr	inDataPtr,
+					 UInt16						inFormatIndexToUse)
 {
 	Boolean		didSet = true;
 	
 	
 	if (inDataPtr != nullptr)
 	{
-		if (inFormatIndexToUse < kFormatDialogNumberOfFormats)
+		if (inFormatIndexToUse < kFormatDialog_NumberOfFormats)
 		{
 			ControlRef		control = nullptr;
 			RGBColor*		foreColorPtr = &inDataPtr->format[inFormatIndexToUse].colors.foreground;
@@ -1343,8 +1267,8 @@ controls.
 (3.0)
 */
 static void
-setSizeField		(FormatDialogPtr	inPtr,
-					 SInt16				inNewSizeOrZero)
+setSizeField	(My_FormatDialogPtr		inPtr,
+				 SInt16					inNewSizeOrZero)
 {
 	ControlRef		control = nullptr;
 	SInt32			newSize = inNewSizeOrZero;

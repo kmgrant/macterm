@@ -12,7 +12,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -59,7 +59,7 @@
 #pragma mark Callbacks
 
 /*!
-Device Loop Draw Control Routine
+Device Loop Draw-Control Routine
 
 Used to enforce type safety when using the
 DeviceLoopClipAndDrawControl() routine.
@@ -69,18 +69,18 @@ to DeviceLoop() is used that casts the user
 data to an appropriate type and then invokes
 this strongly-typed callback.
 */
-typedef void (*DeviceLoopDrawControlProcPtr)	(short				inColorDepth,
+typedef void (*DialogUtilities_DrawViewProcPtr)	(short				inColorDepth,
 												 short				inDeviceFlags,
 												 GDHandle			inTargetDevice,
 												 ControlRef			inControl,
 												 ControlPartCode	inControlPartCode);
 inline void
-InvokeDeviceLoopDrawControlProc	(DeviceLoopDrawControlProcPtr	inProc,
-								 short							inColorDepth,
-								 short							inDeviceFlags,
-								 GDHandle						inTargetDevice,
-								 ControlRef						inControl,
-								 ControlPartCode				inControlPartCode)
+DialogUtilities_InvokeDrawViewProc	(DialogUtilities_DrawViewProcPtr	inProc,
+									 short								inColorDepth,
+									 short								inDeviceFlags,
+									 GDHandle							inTargetDevice,
+									 ControlRef							inControl,
+									 ControlPartCode					inControlPartCode)
 {
 	(*inProc)(inColorDepth, inDeviceFlags, inTargetDevice, inControl, inControlPartCode);
 }
@@ -127,7 +127,7 @@ void
 void
 	DeviceLoopClipAndDrawControl			(ControlRef						inControl,
 											 SInt16							inControlPartCode,
-											 DeviceLoopDrawControlProcPtr	inProc,
+											 DialogUtilities_DrawViewProcPtr inProc,
 											 Boolean						inExtendClipBoundaryForFocusRing = false);
 
 void
@@ -203,7 +203,7 @@ SInt16
 void
 	GetNewDialogWithWindowInfo				(SInt16					inDialogResourceID,
 											 DialogRef*				outDialog,
-											 WindowInfoRef*			outWindowInfoRefPtr);
+											 WindowInfo_Ref*		outWindowInfoRefPtr);
 
 class DialogUtilities_HIViewIDEqualTo; // STL Unary Function - returns: bool, argument: HIViewRef
 

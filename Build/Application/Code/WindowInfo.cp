@@ -3,7 +3,7 @@
 	WindowInfo.cp
 	
 	Interface Library 2.0
-	© 1998-2007 by Kevin Grant
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -49,43 +49,43 @@
 
 #pragma mark Types
 
-struct WindowInfo
+struct My_WindowInfo
 {
-	WindowInfoDescriptor			windowDescriptor;
-	Boolean							isFloatingWindow,		// is window considered a floating window?
-									isSheetWindow,			// is window attached to its parent?
-									isPotentialDropTarget,	// can the window EVER receive a drop?
-									noDynamicResize;		// force window to drag a resize outline?
+	WindowInfo_Descriptor	windowDescriptor;
+	Boolean					isFloatingWindow;		// is window considered a floating window?
+	Boolean					isSheetWindow;			// is window attached to its parent?
+	Boolean					isPotentialDropTarget;	// can the window EVER receive a drop?
+	Boolean					noDynamicResize;		// force window to drag a resize outline?
 	union
 	{
 		struct
 		{
-			SInt16		minimumHeight,
-						minimumWidth,
-						maximumHeight,
-						maximumWidth;
+			SInt16		minimumHeight;
+			SInt16		minimumWidth;
+			SInt16		maximumHeight;
+			SInt16		maximumWidth;
 		} asShorts;
 		Rect		asRect; // identical to the above information: convenient for calling GrowWindow()
 	} sizeLimitRect;
 	
-	Point							preferredLocation;
-	Point							preferredSize;
-	WindowContextualMenuProcPtr		contextualMenuNotifyMethod;
-	WindowResizeResponderProcPtr	resizeNotifyMethod;
-	SInt32							resizeNotifyMethodData;
-	void*							auxiliaryDataPtr;
+	Point								preferredLocation;
+	Point								preferredSize;
+	WindowInfo_ContextualMenuProcPtr	contextualMenuNotifyMethod;
+	WindowInfo_ResizeResponderProcPtr	resizeNotifyMethod;
+	SInt32								resizeNotifyMethodData;
+	void*								auxiliaryDataPtr;
 };
-typedef struct WindowInfo		WindowInfo;
-typedef struct WindowInfo*		WindowInfoPtr;
+typedef struct My_WindowInfo	My_WindowInfo;
+typedef struct My_WindowInfo*	My_WindowInfoPtr;
 
-typedef MemoryBlockHandleLocker< WindowInfoRef, WindowInfo >	WindowInfoHandleLocker;
+typedef MemoryBlockHandleLocker< WindowInfo_Ref, My_WindowInfo >	My_WindowInfoHandleLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	WindowInfoHandleLocker	gWindowInfoHandleLocks;
-	Boolean					gLiveResizing = true;
+	My_WindowInfoHandleLocker	gWindowInfoHandleLocks;
+	Boolean						gLiveResizing = true;
 }
 
 
@@ -101,13 +101,13 @@ this routine, call WindowInfo_Dispose().
 
 (1.0)
 */
-WindowInfoRef
+WindowInfo_Ref
 WindowInfo_New ()
 {
-	WindowInfoRef		result = nullptr;
+	WindowInfo_Ref		result = nullptr;
 	
 	
-	result = (WindowInfoRef)Memory_NewHandle(sizeof(WindowInfo));
+	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_WindowInfo)), WindowInfo_Ref);
 	WindowInfo_Init(result);
 	
 	return result;
@@ -131,7 +131,7 @@ WARNING: Calling this method makes the given
 (1.0)
 */
 void
-WindowInfo_Dispose	(WindowInfoRef	inWindowInfoRef)
+WindowInfo_Dispose	(WindowInfo_Ref		inWindowInfoRef)
 {
 	if (inWindowInfoRef != nullptr)
 	{
@@ -151,12 +151,12 @@ reference.
 (1.0)
 */
 void
-WindowInfo_Init		(WindowInfoRef		inoutWindowInfoRef)
+WindowInfo_Init		(WindowInfo_Ref		inoutWindowInfoRef)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inoutWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inoutWindowInfoRef);
 	
 	
-	windowInfoPtr->windowDescriptor = kInvalidWindowInfoDescriptor;
+	windowInfoPtr->windowDescriptor = kWindowInfo_InvalidDescriptor;
 	windowInfoPtr->isFloatingWindow = false;
 	windowInfoPtr->isPotentialDropTarget = false;
 	windowInfoPtr->noDynamicResize = false;
@@ -175,114 +175,18 @@ WindowInfo_Init		(WindowInfoRef		inoutWindowInfoRef)
 
 
 /*!
-To obtain the auxiliary data pointer of a
-particular Window Info structure to which
-you have a reference, call this method.  Do not
-pass a nullptr reference to this method!
-
-(1.0)
-*/
-void*
-WindowInfo_ReturnAuxiliaryDataPtr	(WindowInfoRef	inWindowInfoRef)
-{
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
-	void*			result = nullptr;
-	
-	
-	result = windowInfoPtr->auxiliaryDataPtr;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
-	return result;
-}// ReturnAuxiliaryDataPtr
-
-
-/*!
-To obtain a reference to the general window data for a
-particular dialog box, call this method.
-
-WARNING: The Window Info information is assumed to
-         exist in the reference constant field of the
-		 dialogÕs window.  If you provide a dialog whose
-		 window has no Window Info but has a non-nullptr
-		 reference constant, using the resultant pointer
-		 will most likely cause a pointer referencing
-		 error and crash the program.
-
-(1.0)
-*/
-WindowInfoRef
-WindowInfo_ReturnFromDialog		(DialogRef	inDialog)
-{
-	return WindowInfo_ReturnFromWindow(GetDialogWindow(inDialog));
-}// ReturnFromDialog
-
-
-/*!
-To obtain a reference to the general window data for a
-particular window, call this method.
-
-The Window Info information is assumed to exist as a
-specific property on the window.  If that property is
-not present, nullptr is returned.
-
-(1.0)
-*/
-WindowInfoRef
-WindowInfo_ReturnFromWindow		(WindowRef	inWindow)
-{
-	WindowInfoRef   result = nullptr;
-	
-	
-	if (inWindow != nullptr)
-	{
-		OSStatus	error = noErr;
-		
-		
-		error = GetWindowProperty(inWindow, kConstantsRegistry_WindowPropertyCreator,
-									kConstantsRegistry_WindowPropertyTypeWindowInfoRef,
-									sizeof(result), nullptr/* actual size */, &result);
-		if (error != noErr)
-		{
-			result = nullptr;
-		}
-	}
-	return result;
-}// ReturnFromWindow
-
-
-/*!
-To obtain the window descriptor constant from a
-particular general window data reference, call
-this method.  Do not pass a nullptr reference to
-this method!
-
-(1.0)
-*/
-WindowInfoDescriptor
-WindowInfo_ReturnWindowDescriptor	(WindowInfoRef	inWindowInfoRef)
-{
-	WindowInfoDescriptor	result = kInvalidWindowInfoDescriptor;
-	WindowInfoPtr			windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
-	
-	
-	if (windowInfoPtr != nullptr) result = (windowInfoPtr->windowDescriptor);
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
-	return result;
-}// ReturnWindowDescriptor
-
-
-/*!
 To determine the largest size that a resizable dialog
 box can have, call this method.
 
 (1.0)
 */
 void
-WindowInfo_GetWindowMaximumDimensions	(WindowInfoRef		inWindowInfoRef,
+WindowInfo_GetWindowMaximumDimensions	(WindowInfo_Ref		inWindowInfoRef,
 										 Point*				outMaximumSizePtr)
 {
 	if (outMaximumSizePtr != nullptr)
 	{
-		WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+		My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 		
 		
 		SetPt(outMaximumSizePtr, windowInfoPtr->sizeLimitRect.asShorts.maximumWidth,
@@ -299,12 +203,12 @@ box can have, call this method.
 (1.0)
 */
 void
-WindowInfo_GetWindowMinimumDimensions	(WindowInfoRef		inWindowInfoRef,
+WindowInfo_GetWindowMinimumDimensions	(WindowInfo_Ref		inWindowInfoRef,
 										 Point*				outMinimumSizePtr)
 {
 	if (outMinimumSizePtr != nullptr)
 	{
-		WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+		My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 		
 		
 		SetPt(outMinimumSizePtr, windowInfoPtr->sizeLimitRect.asShorts.minimumWidth,
@@ -324,10 +228,10 @@ YouÕre welcome.
 (1.0)
 */
 Rect*
-WindowInfo_ReturnWindowResizeLimits		(WindowInfoRef		inWindowInfoRef)
+WindowInfo_ReturnWindowResizeLimits		(WindowInfo_Ref		inWindowInfoRef)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
-	Rect*			result = nullptr;
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	Rect*				result = nullptr;
 	
 	
 	result = &windowInfoPtr->sizeLimitRect.asRect;
@@ -355,20 +259,20 @@ WARNING: Do not pass the Mac OS window pointer of a
 (1.0)
 */
 SInt16
-WindowInfo_GrowWindow	(WindowRef			inWindow,
+WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 						 EventRecord*		inoutEventPtr)
 {
-	WindowInfoRef	windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
+	WindowInfo_Ref	windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
 	SInt16			result = 0;
 	
 	
 	if (windowInfoRef == nullptr) Sound_StandardAlert();
 	else
 	{
-		WindowInfoPtr	ptr = gWindowInfoHandleLocks.acquireLock(windowInfoRef);
-		long			growResult = 0L;
-		Rect			contentRect;
-		Boolean			smallWindow = false;
+		My_WindowInfoPtr	ptr = gWindowInfoHandleLocks.acquireLock(windowInfoRef);
+		long				growResult = 0L;
+		Rect				contentRect;
+		Boolean				smallWindow = false;
 		
 		
 		// Obtain the ÒcurrentÓ size of the window, so when it
@@ -723,10 +627,10 @@ kind.
 (1.0)
 */
 Boolean
-WindowInfo_IsPotentialDropTarget	(WindowInfoRef	inWindowInfoRef)
+WindowInfo_IsPotentialDropTarget	(WindowInfo_Ref		inWindowInfoRef)
 {
-	Boolean			result = false;
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	Boolean				result = false;
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) result = (windowInfoPtr->isPotentialDropTarget);
@@ -745,10 +649,10 @@ WindowInfo_SetWindowFloating().
 (1.0)
 */
 Boolean
-WindowInfo_IsWindowFloating	(WindowInfoRef	inWindowInfoRef)
+WindowInfo_IsWindowFloating	(WindowInfo_Ref		inWindowInfoRef)
 {
-	Boolean			result = false;
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	Boolean				result = false;
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) result = (windowInfoPtr->isFloatingWindow);
@@ -774,11 +678,11 @@ WARNING:	Do not invoke this routine if you
 (1.0)
 */
 void
-WindowInfo_NotifyWindowOfContextualMenu	(WindowRef		inWindow,
+WindowInfo_NotifyWindowOfContextualMenu	(HIWindowRef	inWindow,
 										 Point			inGlobalMouse)
 {
-	WindowInfoRef	windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
-	WindowInfoPtr	windowInfoPtr = nullptr;
+	WindowInfo_Ref		windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
+	My_WindowInfoPtr	windowInfoPtr = nullptr;
 	
 	
 	if (windowInfoRef != nullptr)
@@ -786,8 +690,8 @@ WindowInfo_NotifyWindowOfContextualMenu	(WindowRef		inWindow,
 		windowInfoPtr = gWindowInfoHandleLocks.acquireLock(windowInfoRef);
 		if (windowInfoPtr->contextualMenuNotifyMethod != nullptr)
 		{
-			InvokeWindowContextualMenuProc(windowInfoPtr->contextualMenuNotifyMethod,
-											inWindow, inGlobalMouse, nullptr/* tmp */, 0/* tmp*/);
+			WindowInfo_InvokeContextualMenuProc(windowInfoPtr->contextualMenuNotifyMethod,
+												inWindow, inGlobalMouse, nullptr/* tmp */, 0/* tmp*/);
 		}
 		gWindowInfoHandleLocks.releaseLock(windowInfoRef, &windowInfoPtr);
 	}
@@ -811,12 +715,12 @@ WARNING:	Do not invoke this routine if you
 (1.0)
 */
 void
-WindowInfo_NotifyWindowOfResize			(WindowRef		inWindow,
-										 SInt32			inDeltaSizeX, 
-										 SInt32			inDeltaSizeY)
+WindowInfo_NotifyWindowOfResize		(HIWindowRef	inWindow,
+									 SInt32			inDeltaSizeX, 
+									 SInt32			inDeltaSizeY)
 {
-	WindowInfoRef	windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
-	WindowInfoPtr	windowInfoPtr = nullptr;
+	WindowInfo_Ref		windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
+	My_WindowInfoPtr	windowInfoPtr = nullptr;
 	
 	
 	if (windowInfoRef != nullptr)
@@ -824,13 +728,109 @@ WindowInfo_NotifyWindowOfResize			(WindowRef		inWindow,
 		windowInfoPtr = gWindowInfoHandleLocks.acquireLock(windowInfoRef);
 		if (windowInfoPtr->resizeNotifyMethod != nullptr)
 		{
-			(InvokeWindowResizeResponderProc(windowInfoPtr->resizeNotifyMethod,
-											inWindow, inDeltaSizeX, inDeltaSizeY,
-											windowInfoPtr->resizeNotifyMethodData));
+			WindowInfo_InvokeResizeResponderProc(windowInfoPtr->resizeNotifyMethod,
+												inWindow, inDeltaSizeX, inDeltaSizeY,
+												windowInfoPtr->resizeNotifyMethodData);
 		}
 		gWindowInfoHandleLocks.releaseLock(windowInfoRef, &windowInfoPtr);
 	}
 }// NotifyWindowOfResize
+
+
+/*!
+To obtain the auxiliary data pointer of a
+particular Window Info structure to which
+you have a reference, call this method.  Do not
+pass a nullptr reference to this method!
+
+(1.0)
+*/
+void*
+WindowInfo_ReturnAuxiliaryDataPtr	(WindowInfo_Ref		inWindowInfoRef)
+{
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	void*				result = nullptr;
+	
+	
+	result = windowInfoPtr->auxiliaryDataPtr;
+	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
+	return result;
+}// ReturnAuxiliaryDataPtr
+
+
+/*!
+To obtain a reference to the general window data for a
+particular dialog box, call this method.
+
+WARNING: The Window Info information is assumed to
+         exist in the reference constant field of the
+		 dialogÕs window.  If you provide a dialog whose
+		 window has no Window Info but has a non-nullptr
+		 reference constant, using the resultant pointer
+		 will most likely cause a pointer referencing
+		 error and crash the program.
+
+(1.0)
+*/
+WindowInfo_Ref
+WindowInfo_ReturnFromDialog		(DialogRef	inDialog)
+{
+	return WindowInfo_ReturnFromWindow(GetDialogWindow(inDialog));
+}// ReturnFromDialog
+
+
+/*!
+To obtain a reference to the general window data for a
+particular window, call this method.
+
+The Window Info information is assumed to exist as a
+specific property on the window.  If that property is
+not present, nullptr is returned.
+
+(1.0)
+*/
+WindowInfo_Ref
+WindowInfo_ReturnFromWindow		(HIWindowRef	inWindow)
+{
+	WindowInfo_Ref		result = nullptr;
+	
+	
+	if (inWindow != nullptr)
+	{
+		OSStatus	error = noErr;
+		
+		
+		error = GetWindowProperty(inWindow, kConstantsRegistry_WindowPropertyCreator,
+									kConstantsRegistry_WindowPropertyTypeWindowInfoRef,
+									sizeof(result), nullptr/* actual size */, &result);
+		if (error != noErr)
+		{
+			result = nullptr;
+		}
+	}
+	return result;
+}// ReturnFromWindow
+
+
+/*!
+To obtain the window descriptor constant from a
+particular general window data reference, call
+this method.  Do not pass a nullptr reference to
+this method!
+
+(1.0)
+*/
+WindowInfo_Descriptor
+WindowInfo_ReturnWindowDescriptor	(WindowInfo_Ref		inWindowInfoRef)
+{
+	WindowInfo_Descriptor	result = kWindowInfo_InvalidDescriptor;
+	My_WindowInfoPtr		windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	
+	
+	if (windowInfoPtr != nullptr) result = (windowInfoPtr->windowDescriptor);
+	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
+	return result;
+}// ReturnWindowDescriptor
 
 
 /*!
@@ -843,10 +843,10 @@ WARNING: If any problems occur, nullptr is returned.
 (1.0)
 */
 void
-WindowInfo_SetAuxiliaryDataPtr	(WindowInfoRef	inWindowInfoRef,
-								 void*			inAuxiliaryDataPtr)
+WindowInfo_SetAuxiliaryDataPtr	(WindowInfo_Ref		inWindowInfoRef,
+								 void*				inAuxiliaryDataPtr)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	windowInfoPtr->auxiliaryDataPtr = inAuxiliaryDataPtr;
@@ -869,12 +869,12 @@ IMPORTANT:	To globally set this flag for all
 (1.0)
 */
 void
-WindowInfo_SetDynamicResizing		(WindowInfoRef		inWindowFeaturesRefOrNullToSetGlobalFlag,
+WindowInfo_SetDynamicResizing		(WindowInfo_Ref		inWindowFeaturesRefOrNullToSetGlobalFlag,
 									 Boolean			inLiveResizeEnabled)
 {
 	if (inWindowFeaturesRefOrNullToSetGlobalFlag != nullptr)
 	{
-		WindowInfoPtr	ptr = gWindowInfoHandleLocks.acquireLock(inWindowFeaturesRefOrNullToSetGlobalFlag);
+		My_WindowInfoPtr	ptr = gWindowInfoHandleLocks.acquireLock(inWindowFeaturesRefOrNullToSetGlobalFlag);
 		
 		
 		if (ptr != nullptr)
@@ -900,10 +900,10 @@ to WindowInfo_IsWindowFloating().
 (1.0)
 */
 void
-WindowInfo_SetWindowFloating	(WindowInfoRef	inWindowInfoRef,
-								 Boolean		inIsFloating)
+WindowInfo_SetWindowFloating	(WindowInfo_Ref		inWindowInfoRef,
+								 Boolean			inIsFloating)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) windowInfoPtr->isFloatingWindow = inIsFloating;
@@ -920,10 +920,10 @@ call to WindowInfo_IsWindowPotentialDropTarget().
 (1.0)
 */
 void
-WindowInfo_SetWindowPotentialDropTarget		(WindowInfoRef	inWindowInfoRef,
-											 Boolean		inIsPotentialDropTarget)
+WindowInfo_SetWindowPotentialDropTarget		(WindowInfo_Ref		inWindowInfoRef,
+											 Boolean			inIsPotentialDropTarget)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) windowInfoPtr->isPotentialDropTarget = inIsPotentialDropTarget;
@@ -945,7 +945,7 @@ WARNING: The Window Info information must be placed
 */
 void
 WindowInfo_SetForDialog	(DialogRef			inDialog,
-						 WindowInfoRef		inWindowInfoRef)
+						 WindowInfo_Ref		inWindowInfoRef)
 {
 	WindowInfo_SetForWindow(GetDialogWindow(inDialog), inWindowInfoRef);
 }// SetForDialog
@@ -964,12 +964,9 @@ WARNING: The Window Info information must be placed
 (1.0)
 */
 void
-WindowInfo_SetForWindow	(WindowRef			inWindow,
-						 WindowInfoRef		inWindowInfoRef)
+WindowInfo_SetForWindow	(HIWindowRef		inWindow,
+						 WindowInfo_Ref		inWindowInfoRef)
 {
-#if 0
-	SetWRefCon(inWindow, (UInt32)inWindowInfoRef);
-#else
 	OSStatus	error = noErr;
 	
 	
@@ -977,7 +974,6 @@ WindowInfo_SetForWindow	(WindowRef			inWindow,
 								kConstantsRegistry_WindowPropertyTypeWindowInfoRef,
 								sizeof(inWindowInfoRef), &inWindowInfoRef);
 	assert(error == noErr);
-#endif
 }// SetForWindow
 
 
@@ -993,10 +989,10 @@ use this routine on as many windows as possible.
 (1.0)
 */
 void
-WindowInfo_SetWindowContextualMenuResponder	(WindowInfoRef					inWindowInfoRef,
-											 WindowContextualMenuProcPtr	inNewProc)
+WindowInfo_SetWindowContextualMenuResponder	(WindowInfo_Ref						inWindowInfoRef,
+											 WindowInfo_ContextualMenuProcPtr	inNewProc)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	windowInfoPtr->contextualMenuNotifyMethod = inNewProc;
@@ -1012,10 +1008,10 @@ have a reference, call this method.
 (1.0)
 */
 void
-WindowInfo_SetWindowDescriptor	(WindowInfoRef			inWindowInfoRef,
-								 WindowInfoDescriptor	inNewWindowDescriptor)
+WindowInfo_SetWindowDescriptor	(WindowInfo_Ref			inWindowInfoRef,
+								 WindowInfo_Descriptor	inNewWindowDescriptor)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	windowInfoPtr->windowDescriptor = inNewWindowDescriptor;
@@ -1033,13 +1029,13 @@ features.
 (1.0)
 */
 void
-WindowInfo_SetWindowResizeLimits	(WindowInfoRef	inWindowInfoRef,
-									 SInt16			inMinimumHeight,
-									 SInt16			inMinimumWidth,
-									 SInt16			inMaximumHeight,
-									 SInt16			inMaximumWidth)
+WindowInfo_SetWindowResizeLimits	(WindowInfo_Ref		inWindowInfoRef,
+									 SInt16				inMinimumHeight,
+									 SInt16				inMinimumWidth,
+									 SInt16				inMaximumHeight,
+									 SInt16				inMaximumWidth)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	windowInfoPtr->sizeLimitRect.asShorts.minimumHeight = inMinimumHeight;
@@ -1061,11 +1057,11 @@ redrawing any regions that have not been updated.
 (1.0)
 */
 void
-WindowInfo_SetWindowResizeResponder	(WindowInfoRef					inWindowInfoRef,
-									 WindowResizeResponderProcPtr	inNewProc,
-									 SInt32							inData)
+WindowInfo_SetWindowResizeResponder	(WindowInfo_Ref						inWindowInfoRef,
+									 WindowInfo_ResizeResponderProcPtr	inNewProc,
+									 SInt32								inData)
 {
-	WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
 	
 	
 	windowInfoPtr->resizeNotifyMethod = inNewProc;

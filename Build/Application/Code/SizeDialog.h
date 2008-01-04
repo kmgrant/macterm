@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -49,7 +49,7 @@
 
 #pragma mark Types
 
-typedef struct OpaqueTerminalSizeDialog**		TerminalSizeDialogRef;
+typedef struct SizeDialog_OpaqueStruct*		SizeDialog_Ref;
 
 #pragma mark Callbacks
 
@@ -63,11 +63,11 @@ See also SizeDialog_StandardCloseNotifyProc().
 You should NOT call SizeDialog_Dispose() in this
 routine!
 */
-typedef void	 (*SizeDialogCloseNotifyProcPtr)	(TerminalSizeDialogRef		inDialogThatClosed,
-													 Boolean 					inOKButtonPressed);
+typedef void	 (*SizeDialog_CloseNotifyProcPtr)	(SizeDialog_Ref		inDialogThatClosed,
+													 Boolean 			inOKButtonPressed);
 inline void
-InvokeSizeDialogCloseNotifyProc		(SizeDialogCloseNotifyProcPtr	inUserRoutine,
-									 TerminalSizeDialogRef			inDialogThatClosed,
+SizeDialog_InvokeCloseNotifyProc	(SizeDialog_CloseNotifyProcPtr	inUserRoutine,
+									 SizeDialog_Ref					inDialogThatClosed,
 									 Boolean						inOKButtonPressed)
 {
 	(*inUserRoutine)(inDialogThatClosed, inOKButtonPressed);
@@ -77,30 +77,30 @@ InvokeSizeDialogCloseNotifyProc		(SizeDialogCloseNotifyProcPtr	inUserRoutine,
 
 #pragma mark Public Methods
 
-TerminalSizeDialogRef
+SizeDialog_Ref
 	SizeDialog_New									(TerminalWindowRef				inTerminalWindow,
-													 SizeDialogCloseNotifyProcPtr	inCloseNotifyProcPtr);
+													 SizeDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr);
 
 void
-	SizeDialog_Dispose								(TerminalSizeDialogRef*			inoutDialogPtr);
+	SizeDialog_Dispose								(SizeDialog_Ref*				inoutDialogPtr);
 
 void
-	SizeDialog_Display								(TerminalSizeDialogRef			inDialog);
+	SizeDialog_Display								(SizeDialog_Ref					inDialog);
 
 void
-	SizeDialog_GetDisplayedDimensions				(TerminalSizeDialogRef			inDialog,
+	SizeDialog_GetDisplayedDimensions				(SizeDialog_Ref					inDialog,
 													 UInt16&						outColumns,
 													 UInt16&						outRows);
 
 TerminalWindowRef
-	SizeDialog_ReturnParentTerminalWindow			(TerminalSizeDialogRef			inDialog);
+	SizeDialog_ReturnParentTerminalWindow			(SizeDialog_Ref					inDialog);
 
 void
 	SizeDialog_SendRecordableDimensionChangeEvents	(SInt16							inNewColumns,
 													 SInt16							inNewRows);
 
 void
-	SizeDialog_StandardCloseNotifyProc				(TerminalSizeDialogRef			inDialogThatClosed,
+	SizeDialog_StandardCloseNotifyProc				(SizeDialog_Ref					inDialogThatClosed,
 													 Boolean						inOKButtonPressed);
 
 #endif

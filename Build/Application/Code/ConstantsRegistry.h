@@ -184,7 +184,7 @@ API; kept in one place so they are known to be unique.
 enum
 {
 	kConstantsRegistry_WindowPropertyCreator			= 'KevG',	//!< use as the creator code of all window properties
-	kConstantsRegistry_WindowPropertyTypeWindowInfoRef	= 'WInf'	//!< data: WindowInfoRef
+	kConstantsRegistry_WindowPropertyTypeWindowInfoRef	= 'WInf'	//!< data: WindowInfo_Ref
 };
 
 /*!

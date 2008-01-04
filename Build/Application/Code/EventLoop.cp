@@ -1840,7 +1840,7 @@ handleUpdate	(EventRecord*		inoutEventPtr)
 	// (although receiving update events for invisible ports is very rare...)
 	if (visibleRegion != nullptr) unless (EmptyRgn(visibleRegion))
 	{
-		WindowInfoRef		windowInfoRef = nullptr;
+		WindowInfo_Ref		windowInfoRef = nullptr;
 		
 		
 		if (isAnyListenerForWindowEvent(windowToUpdate, kEventLoop_WindowEventUpdate))
@@ -1864,7 +1864,7 @@ handleUpdate	(EventRecord*		inoutEventPtr)
 			windowInfoRef = WindowInfo_ReturnFromWindow(windowToUpdate);
 			if (windowInfoRef != nullptr)
 			{
-				WindowInfoDescriptor	windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
+				WindowInfo_Descriptor	windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
 				
 				
 				switch (windowDescriptor)
@@ -2292,8 +2292,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (EventLoop_ReturnRealFrontWindow() == nullptr) enabled = true;
 						else
 						{
-							WindowInfoRef			windowInfoRef = nullptr;
-							WindowInfoDescriptor	windowDescriptor = kInvalidWindowInfoDescriptor;
+							WindowInfo_Ref			windowInfoRef = nullptr;
+							WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
 							
 							
 							windowInfoRef = WindowInfo_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());

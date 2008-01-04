@@ -9,7 +9,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -51,7 +51,7 @@
 
 #pragma mark Types
 
-typedef struct OpaqueWindowTitleDialog**		WindowTitleDialogRef;
+typedef struct WindowTitleDialog_OpaqueStruct*		WindowTitleDialog_Ref;
 
 #pragma mark Callbacks
 
@@ -62,11 +62,11 @@ When a window title dialog is closed, this method
 is invoked.  Use this to know exactly when it is
 safe to call WindowTitleDialog_Dispose().
 */
-typedef void	 (*WindowTitleDialogCloseNotifyProcPtr)	(WindowTitleDialogRef	inDialogThatClosed,
-														 Boolean				inOKButtonPressed);
+typedef void	 (*WindowTitleDialog_CloseNotifyProcPtr)	(WindowTitleDialog_Ref	inDialogThatClosed,
+															 Boolean				inOKButtonPressed);
 inline void
-InvokeWindowTitleDialogCloseNotifyProc		(WindowTitleDialogCloseNotifyProcPtr	inUserRoutine,
-											 WindowTitleDialogRef					inDialogThatClosed,
+WindowTitleDialog_InvokeCloseNotifyProc		(WindowTitleDialog_CloseNotifyProcPtr	inUserRoutine,
+											 WindowTitleDialog_Ref					inDialogThatClosed,
 											 Boolean								inOKButtonPressed)
 {
 	(*inUserRoutine)(inDialogThatClosed, inOKButtonPressed);
@@ -77,24 +77,24 @@ InvokeWindowTitleDialogCloseNotifyProc		(WindowTitleDialogCloseNotifyProcPtr	inU
 #pragma mark Public Methods
 
 void
-	WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialogRef					inDialogThatClosed,
+	WindowTitleDialog_StandardCloseNotifyProc	(WindowTitleDialog_Ref					inDialogThatClosed,
 												 Boolean								inOKButtonPressed);
 
-WindowTitleDialogRef
-	WindowTitleDialog_New						(WindowRef								inParentWindow,
-												 WindowTitleDialogCloseNotifyProcPtr	inCloseNotifyProcPtr =
+WindowTitleDialog_Ref
+	WindowTitleDialog_New						(HIWindowRef							inParentWindow,
+												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
 																							WindowTitleDialog_StandardCloseNotifyProc);
 
-WindowTitleDialogRef
+WindowTitleDialog_Ref
 	WindowTitleDialog_NewForSession				(SessionRef								inSession,
-												 WindowTitleDialogCloseNotifyProcPtr	inCloseNotifyProcPtr =
+												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
 																							WindowTitleDialog_StandardCloseNotifyProc);
 
 void
-	WindowTitleDialog_Dispose					(WindowTitleDialogRef*					inoutDialogPtr);
+	WindowTitleDialog_Dispose					(WindowTitleDialog_Ref*					inoutDialogPtr);
 
 void
-	WindowTitleDialog_Display					(WindowTitleDialogRef					inDialog);
+	WindowTitleDialog_Display					(WindowTitleDialog_Ref					inDialog);
 
 #endif
 

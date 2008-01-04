@@ -3,7 +3,7 @@
 	DialogUtilities.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -83,13 +83,13 @@
 /*!
 This structure is used for DeviceLoopClipAndDrawControl().
 */
-struct DeviceLoopControlInfo
+struct My_DeviceLoopControlInfo
 {
-	DeviceLoopDrawControlProcPtr	proc;
-	ControlRef						control;
-	SInt16							controlPartCode;
+	DialogUtilities_DrawViewProcPtr		proc;
+	ControlRef							control;
+	SInt16								controlPartCode;
 };
-typedef struct DeviceLoopControlInfo const*		DeviceLoopControlInfoConstPtr;
+typedef struct My_DeviceLoopControlInfo const*		My_DeviceLoopControlInfoConstPtr;
 
 #pragma mark Internal Method Prototypes
 
@@ -447,19 +447,19 @@ DeviceLoop() flags and your drawing procedure
 (3.0)
 */
 void
-DeviceLoopClipAndDrawControl	(ControlRef						inControl,
-								 SInt16							inControlPartCode,
-								 DeviceLoopDrawControlProcPtr	inProc,
-								 Boolean						inExtendClipBoundaryForFocusRing)
+DeviceLoopClipAndDrawControl	(ControlRef							inControl,
+								 SInt16								inControlPartCode,
+								 DialogUtilities_DrawViewProcPtr	inProc,
+								 Boolean							inExtendClipBoundaryForFocusRing)
 {
 	RgnHandle	newClipRgn = Memory_NewRegion();
 	
 	
 	if (newClipRgn != nullptr)
 	{
-		DeviceLoopDrawingUPP	upp = nullptr;
-		DeviceLoopControlInfo	controlInfo;
-		OSStatus				error = noErr;
+		DeviceLoopDrawingUPP		upp = nullptr;
+		My_DeviceLoopControlInfo	controlInfo;
+		OSStatus					error = noErr;
 		
 		
 		// first determine the exact area in which to draw (the intersection
@@ -1281,7 +1281,7 @@ WindowInfo_Dispose().
 void
 GetNewDialogWithWindowInfo		(SInt16				inDialogResourceID,
 								 DialogRef*			outDialog,
-								 WindowInfoRef*		outWindowInfoRefPtr)
+								 WindowInfo_Ref*	outWindowInfoRefPtr)
 {
 	if (outDialog != nullptr)
 	{
@@ -2087,7 +2087,7 @@ StandardDialogEventFilter	(DialogRef			inDialog,
 					// then itÕs this dialog thatÕs being touched
 					if (part == inGrow)
 					{
-						WindowInfoRef		windowFeaturesRef = nullptr;
+						WindowInfo_Ref		windowFeaturesRef = nullptr;
 						
 						
 						// the auxiliary structure must exist in order to get the sizing information
@@ -2324,12 +2324,12 @@ clipAndDrawControlDeviceLoop	(short		inColorDepth,
 								 GDHandle	inTargetDevice,
 								 long		inControlInfoConstPtr)
 {
-	DeviceLoopControlInfoConstPtr	controlInfoPtr = REINTERPRET_CAST(inControlInfoConstPtr,
-																		DeviceLoopControlInfoConstPtr);
+	My_DeviceLoopControlInfoConstPtr	controlInfoPtr = REINTERPRET_CAST(inControlInfoConstPtr,
+																			My_DeviceLoopControlInfoConstPtr);
 	
 	
-	InvokeDeviceLoopDrawControlProc(controlInfoPtr->proc, inColorDepth, inDeviceFlags, inTargetDevice,
-									controlInfoPtr->control, controlInfoPtr->controlPartCode);
+	DialogUtilities_InvokeDrawViewProc(controlInfoPtr->proc, inColorDepth, inDeviceFlags, inTargetDevice,
+										controlInfoPtr->control, controlInfoPtr->controlPartCode);
 }// clipAndDrawControlDeviceLoop
 
 

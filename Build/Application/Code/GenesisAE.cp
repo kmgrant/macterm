@@ -3,7 +3,7 @@
 	GenesisAE.cp
 	
 	MacTelnet
-		© 1998-2004 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,24 +56,15 @@
 
 
 
-//
-// internal methods
-//
+#pragma mark Internal Method Prototypes
 
-static OSStatus		evolve					(ObjectClassesAE_TokenPtr   inoutClassStructurePtr,
-											 DescType*					outFinalClassTypeFromTerminologyOrNull);
-
-static OSStatus		evolveTerminalWindow	(ObjectClassesAE_TokenPtr   inoutClassStructurePtr,
-											 DescType*					outFinalClassTypeFromTerminologyOrNull);
-
-static OSStatus		evolveWindow			(ObjectClassesAE_TokenPtr   inoutClassStructurePtr,
-											 DescType*					outFinalClassTypeFromTerminologyOrNull);
+static OSStatus		evolve					(ObjectClassesAE_TokenPtr, DescType*);
+static OSStatus		evolveTerminalWindow	(ObjectClassesAE_TokenPtr, DescType*);
+static OSStatus		evolveWindow			(ObjectClassesAE_TokenPtr, DescType*);
 
 
 
-//
-// public methods
-//
+#pragma mark Public Methods
 
 /*!
 Creates any kind of MacTelnet scripting class.
@@ -247,10 +238,7 @@ GenesisAE_FirstClassIs	(DescType	inUnknownClassTypeFromTerminology,
 }// FirstClassIs
 
 
-//
-// internal methods
-//
-#pragma mark -
+#pragma mark Internal Methods
 
 /*!
 Object accessors create primitive types; this routine
@@ -373,12 +361,12 @@ evolveWindow	(ObjectClassesAE_TokenPtr   inoutClassStructurePtr,
 	
 	if (descType == cMyWindow)
 	{
-		WindowInfoRef   windowInfo = WindowInfo_ReturnFromWindow(window);
+		WindowInfo_Ref		windowInfo = WindowInfo_ReturnFromWindow(window);
 		
 		
 		if (windowInfo != nullptr)
 		{
-			WindowInfoDescriptor	windowDescriptor = kInvalidWindowInfoDescriptor;
+			WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
 			
 			
 			windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfo);

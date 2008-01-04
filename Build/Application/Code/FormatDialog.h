@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -43,49 +43,49 @@
 
 #pragma mark Constants
 
-typedef UInt32 FormatDialogFormatOptions;
+typedef UInt32 FormatDialog_FormatOptions;
 enum
 {
 	// flags that affect one particular format, not all formats
-	kFormatDialogFormatOptionDisableFontItems = (1 << 0),
-	kFormatDialogFormatOptionDisableFontSizeItems = (1 << 1),
-	kFormatDialogFormatOptionDisableForeColorItems = (1 << 2),
-	kFormatDialogFormatOptionDisableBackColorItems = (1 << 3),
-	kFormatDialogFormatOptionMaskDisableAllItems = 0xFFFFFFFF
+	kFormatDialog_FormatOptionDisableFontItems		= (1 << 0),
+	kFormatDialog_FormatOptionDisableFontSizeItems	= (1 << 1),
+	kFormatDialog_FormatOptionDisableForeColorItems	= (1 << 2),
+	kFormatDialog_FormatOptionDisableBackColorItems	= (1 << 3),
+	kFormatDialog_FormatOptionMaskDisableAllItems	= 0xFFFFFFFF
 };
 enum
 {
-	kFormatDialogNumberOfFormats = 3,	// the number of format indices, below
-	kFormatDialogIndexNormalText = 0,
-	kFormatDialogIndexBoldText = 1,
-	kFormatDialogIndexBlinkingText = 2
+	kFormatDialog_NumberOfFormats	= 3,	// the number of format indices, below
+	kFormatDialog_IndexNormalText	= 0,
+	kFormatDialog_IndexBoldText		= 1,
+	kFormatDialog_IndexBlinkingText	= 2
 };
 
 #pragma mark Types
 
-typedef struct OpaqueFormatDialog**		FormatDialogRef;
+typedef struct FormatDialog_OpaqueStruct*	FormatDialog_Ref;
 
-struct FormatDialogSetupData
+struct FormatDialog_SetupData
 {
 	struct
 	{
-		FormatDialogFormatOptions		options;	// see the valid enumerated flags above
+		FormatDialog_FormatOptions		options;	// see the valid enumerated flags above
 		
 		struct
 		{
-			Str255			familyName;
-			UInt16			size;			// provide an acceptable size value (4 or more)
+			Str255		familyName;
+			UInt16		size;			// provide an acceptable size value (4 or more)
 		} font;
 		
 		struct
 		{
-			RGBColor		foreground;
-			RGBColor		background;
+			RGBColor	foreground;
+			RGBColor	background;
 		} colors;
-	} format[kFormatDialogNumberOfFormats];
+	} format[kFormatDialog_NumberOfFormats];
 };
-typedef FormatDialogSetupData const*		FormatDialogSetupDataConstPtr;
-typedef FormatDialogSetupData*				FormatDialogSetupDataPtr;
+typedef FormatDialog_SetupData const*	FormatDialog_SetupDataConstPtr;
+typedef FormatDialog_SetupData*			FormatDialog_SetupDataPtr;
 
 #pragma mark Callbacks
 
@@ -96,11 +96,11 @@ When a Format dialog is closed, this method is
 invoked.  Use this to know exactly when it is
 safe to call FormatDialog_Dispose().
 */
-typedef void	 (*FormatDialogCloseNotifyProcPtr)	(FormatDialogRef		inDialogThatClosed,
-													 Boolean				inOKButtonPressed);
+typedef void	(*FormatDialog_CloseNotifyProcPtr)		(FormatDialog_Ref	inDialogThatClosed,
+														 Boolean			inOKButtonPressed);
 inline void
-InvokeFormatDialogCloseNotifyProc	(FormatDialogCloseNotifyProcPtr		inUserRoutine,
-									 FormatDialogRef					inDialogThatClosed,
+FormatDialog_InvokeCloseNotifyProc	(FormatDialog_CloseNotifyProcPtr	inUserRoutine,
+									 FormatDialog_Ref					inDialogThatClosed,
 									 Boolean							inOKButtonPressed)
 {
 	(*inUserRoutine)(inDialogThatClosed, inOKButtonPressed);
@@ -110,26 +110,26 @@ InvokeFormatDialogCloseNotifyProc	(FormatDialogCloseNotifyProcPtr		inUserRoutine
 
 #pragma mark Public Methods
 
-FormatDialogRef
-	FormatDialog_New						(FormatDialogSetupDataConstPtr	inSetupDataPtr,
-											 FormatDialogCloseNotifyProcPtr	inCloseNotifyProcPtr);
+FormatDialog_Ref
+	FormatDialog_New						(FormatDialog_SetupDataConstPtr		inSetupDataPtr,
+											 FormatDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr);
 
 void
-	FormatDialog_Dispose					(FormatDialogRef*				inoutDialogPtr);
+	FormatDialog_Dispose					(FormatDialog_Ref*					inoutDialogPtr);
 
 void
-	FormatDialog_Display					(FormatDialogRef				inDialog);
+	FormatDialog_Display					(FormatDialog_Ref					inDialog);
 
 Boolean
-	FormatDialog_GetContents				(FormatDialogRef				inDialog,
-											 FormatDialogSetupDataPtr		outSetupDataPtr);
+	FormatDialog_GetContents				(FormatDialog_Ref					inDialog,
+											 FormatDialog_SetupDataPtr			outSetupDataPtr);
 
-WindowRef
-	FormatDialog_ReturnParentWindow			(FormatDialogRef				inDialog);
+HIWindowRef
+	FormatDialog_ReturnParentWindow			(FormatDialog_Ref					inDialog);
 
 void
-	FormatDialog_StandardCloseNotifyProc	(FormatDialogRef				inDialogThatClosed,
-											 Boolean						inOKButtonPressed);
+	FormatDialog_StandardCloseNotifyProc	(FormatDialog_Ref					inDialogThatClosed,
+											 Boolean							inOKButtonPressed);
 
 #endif
 

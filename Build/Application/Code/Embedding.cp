@@ -2,8 +2,8 @@
 
 	Embedding.cp
 	
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.0
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -44,18 +44,18 @@
 
 #pragma mark Types
 
-struct OffscreenDeviceLoopParams
+struct My_OffscreenDeviceLoopParams
 {
-	OffscreenOperationProcPtr	proc;
-	WindowRef					window;
-	ControlRef					control;
-	SInt32						data1,
-								data2;
-	SInt32						dumpMode;
-	OSStatus					result;
+	Embedding_OffscreenOpProcPtr	proc;
+	WindowRef						window;
+	ControlRef						control;
+	SInt32							data1;
+	SInt32							data2;
+	SInt32							dumpMode;
+	OSStatus						result;
 };
-typedef struct OffscreenDeviceLoopParams	OffscreenDeviceLoopParams;
-typedef OffscreenDeviceLoopParams*			OffscreenDeviceLoopParamsPtr;
+typedef struct My_OffscreenDeviceLoopParams		My_OffscreenDeviceLoopParams;
+typedef My_OffscreenDeviceLoopParams*			My_OffscreenDeviceLoopParamsPtr;
 
 #pragma mark Internal Method Prototypes
 
@@ -170,11 +170,11 @@ mode.
 (1.0)
 */
 OSStatus
-Embedding_OffscreenControlOperation		(WindowRef					inForWhichWindow,
-										 ControlRef					inForWhichControlOrNullForRoot,
-										 OffscreenOperationProcPtr	inWhatToDo,
-										 SInt32						inData1,
-										 SInt32						inData2)
+Embedding_OffscreenControlOperation		(WindowRef						inForWhichWindow,
+										 ControlRef						inForWhichControlOrNullForRoot,
+										 Embedding_OffscreenOpProcPtr	inWhatToDo,
+										 SInt32							inData1,
+										 SInt32							inData2)
 {
 	return Embedding_OffscreenControlOperationInMode(inForWhichWindow, inForWhichControlOrNullForRoot, inWhatToDo, inData1, inData2, srcCopy);
 }// OffscreenControlOperation
@@ -214,12 +214,12 @@ IMPORTANT:	Only the given control is drawn in the offscreen
 (1.0)
 */
 OSStatus
-Embedding_OffscreenControlOperationInMode	(WindowRef					inForWhichWindow,
-											 ControlRef					inForWhichControlOrNullForRoot,
-											 OffscreenOperationProcPtr	inWhatToDo,
-											 SInt32						inData1,
-											 SInt32						inData2,
-											 SInt32						inDrawingMode)
+Embedding_OffscreenControlOperationInMode	(WindowRef						inForWhichWindow,
+											 ControlRef						inForWhichControlOrNullForRoot,
+											 Embedding_OffscreenOpProcPtr	inWhatToDo,
+											 SInt32							inData1,
+											 SInt32							inData2,
+											 SInt32							inDrawingMode)
 {
 	OSStatus	result = noErr;
 	
@@ -237,8 +237,8 @@ Embedding_OffscreenControlOperationInMode	(WindowRef					inForWhichWindow,
 		}
 		if (noErr == result)
 		{
-			(Boolean)InvokeOffscreenOperationProc(inWhatToDo, view, 8/* default depth */, 0/* default device flags */,
-													GetMainDevice(), inData1, inData2);
+			(Boolean)Embedding_InvokeOffscreenOpProc(inWhatToDo, view, 8/* default depth */, 0/* default device flags */,
+														GetMainDevice(), inData1, inData2);
 		}
 	}
 	else
@@ -254,10 +254,10 @@ Embedding_OffscreenControlOperationInMode	(WindowRef					inForWhichWindow,
 		if (control == nullptr) result = GetRootControl(inForWhichWindow, &control);
 		if (result == noErr)
 		{
-			Rect						controlBounds;
-			RgnHandle					oldClipRgn = nullptr;
-			RgnHandle					newClipRgn = nullptr;
-			OffscreenDeviceLoopParams	data;
+			Rect							controlBounds;
+			RgnHandle						oldClipRgn = nullptr;
+			RgnHandle						newClipRgn = nullptr;
+			My_OffscreenDeviceLoopParams	data;
 			
 			
 			data.proc = inWhatToDo;
@@ -310,8 +310,8 @@ Embedding_OffscreenControlOperationInMode	(WindowRef					inForWhichWindow,
 					if (inWhatToDo != nullptr)
 					{
 						// desperation: invoke the routine to draw the control anyway, providing reasonable default values
-						(Boolean)InvokeOffscreenOperationProc(inWhatToDo, control, 8/* default depth */, 0/* default device flags */,
-																GetMainDevice(), inData1, inData2);
+						(Boolean)Embedding_InvokeOffscreenOpProc(inWhatToDo, control, 8/* default depth */, 0/* default device flags */,
+																	GetMainDevice(), inData1, inData2);
 					}
 					DrawOneControl(control);
 				}
@@ -531,8 +531,8 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 							 GDHandle	inTargetDevice,
 							 long		inDataPtr)
 {
-	OffscreenDeviceLoopParamsPtr	dataPtr = (OffscreenDeviceLoopParamsPtr)inDataPtr;
-	GrafPtr							oldPort = nullptr;
+	My_OffscreenDeviceLoopParamsPtr		dataPtr = REINTERPRET_CAST(inDataPtr, My_OffscreenDeviceLoopParamsPtr);
+	GrafPtr								oldPort = nullptr;
 	
 	
 	GetPort(&oldPort);
@@ -572,8 +572,8 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 				// change the controls as specified by the user-defined routine
 				if (dataPtr->proc != nullptr)
 				{
-					(Boolean)InvokeOffscreenOperationProc(dataPtr->proc, dataPtr->control, inColorDepth, inDeviceFlags, inTargetDevice,
-															dataPtr->data1, dataPtr->data2);
+					(Boolean)Embedding_InvokeOffscreenOpProc(dataPtr->proc, dataPtr->control, inColorDepth, inDeviceFlags,
+																inTargetDevice, dataPtr->data1, dataPtr->data2);
 				}
 				
 				// now dump the offscreen world to the onscreen window in the most efficient way possible

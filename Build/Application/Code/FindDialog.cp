@@ -3,7 +3,7 @@
 	FindDialog.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -106,21 +106,21 @@ static HIViewID const		idMyCheckBoxOldestFirst		= { kSignatureMyCheckBoxOldestFi
 
 enum
 {
-	kFindDialogKeywordHistorySize = 5
+	kMy_KeywordHistorySize = 5
 };
 
 #pragma mark Types
 
 typedef std::vector< CFStringRef >		KeywordHistoryList;
 
-struct FindDialog
+struct My_FindDialog
 {
-	FindDialog		(TerminalWindowRef				inTerminalWindow,
-					 FindDialogCloseNotifyProcPtr	inCloseNotifyProcPtr,
+	My_FindDialog	(TerminalWindowRef				inTerminalWindow,
+					 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 					 FindDialog_Options				inFlags);
-	~FindDialog ();
+	~My_FindDialog ();
 	
-	FindDialogRef							selfRef;					//!< identical to address of structure, but typed as ref
+	FindDialog_Ref							selfRef;					//!< identical to address of structure, but typed as ref
 	TerminalWindowRef						terminalWindow;				//!< the terminal window for which this dialog applies
 	NIBWindow								dialogWindow;				//!< the dialogÕs window
 	HIViewWrap								buttonSearch;				//!< Search button
@@ -135,7 +135,7 @@ struct FindDialog
 	HIViewWrap								checkboxOldestLinesFirst;	//!< checkbox indicating search direction
 	HIViewWrap								buttonHelp;					//!< help button
 	
-	FindDialogCloseNotifyProcPtr			closeNotifyProc;			//!< routine to call when the dialog is dismissed
+	FindDialog_CloseNotifyProcPtr			closeNotifyProc;			//!< routine to call when the dialog is dismissed
 	CarbonEventHandlerWrap					buttonHICommandsHandler;	//!< invoked when a dialog button is clicked
 	CarbonEventHandlerWrap					fieldKeyPressHandler;		//!< invoked when a key is pressed while the field is focused
 	EventHandlerUPP							historyMenuCommandUPP;		//!< wrapper for button callback function
@@ -144,15 +144,14 @@ struct FindDialog
 	MenuRef									keywordHistoryMenuRef;		//!< history menu
 	KeywordHistoryList						keywordHistory;				//!< contents of history menu
 };
-typedef FindDialog*		FindDialogPtr;
-typedef FindDialogPtr*	FindDialogHandle;
+typedef My_FindDialog*		My_FindDialogPtr;
 
-typedef MemoryBlockPtrLocker< FindDialogRef, FindDialog >	FindDialogPtrLocker;
+typedef MemoryBlockPtrLocker< FindDialog_Ref, My_FindDialog >	My_FindDialogPtrLocker;
 
 #pragma mark Internal Method Prototypes
 
-static void					addToHistory					(FindDialogPtr, CFStringRef);
-static Boolean				handleItemHit					(FindDialogPtr, HIViewID const&);
+static void					addToHistory					(My_FindDialogPtr, CFStringRef);
+static Boolean				handleItemHit					(My_FindDialogPtr, HIViewID const&);
 static void					handleNewSize					(WindowRef, Float32, Float32, void*);
 static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
@@ -162,7 +161,7 @@ static pascal OSStatus		receiveKeyPress					(EventHandlerCallRef, EventRef, void
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	FindDialogPtrLocker&		gFindDialogPtrLocks()	{ static FindDialogPtrLocker x; return x; }
+	My_FindDialogPtrLocker&		gFindDialogPtrLocks()	{ static My_FindDialogPtrLocker x; return x; }
 }
 
 
@@ -179,13 +178,13 @@ is made.
 
 (3.0)
 */
-FindDialog::
-FindDialog	(TerminalWindowRef				inTerminalWindow,
-			 FindDialogCloseNotifyProcPtr	inCloseNotifyProcPtr,
-			 FindDialog_Options				inFlags)
+My_FindDialog::
+My_FindDialog	(TerminalWindowRef				inTerminalWindow,
+				 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+				 FindDialog_Options				inFlags)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-selfRef						(REINTERPRET_CAST(this, FindDialogRef)),
+selfRef						(REINTERPRET_CAST(this, FindDialog_Ref)),
 terminalWindow				(inTerminalWindow),
 dialogWindow				(NIBWindow(AppResources_ReturnBundleForNIBs(),
 										CFSTR("FindDialog"), CFSTR("Dialog"))
@@ -224,14 +223,14 @@ historyMenuCommandUPP		(nullptr),
 historyMenuCommandHandler	(nullptr),
 windowResizeHandler			(),
 keywordHistoryMenuRef		(nullptr),
-keywordHistory				(kFindDialogKeywordHistorySize)
+keywordHistory				(kMy_KeywordHistorySize)
 {
 	// initialize keyword history
 	{
 		register SInt16		i = 0;
 		
 		
-		for (i = 0; i < kFindDialogKeywordHistorySize; ++i) this->keywordHistory[i] = nullptr;
+		for (i = 0; i < kMy_KeywordHistorySize; ++i) this->keywordHistory[i] = nullptr;
 	}
 	addToHistory(this, CFSTR(""));
 	
@@ -323,7 +322,7 @@ keywordHistory				(kFindDialogKeywordHistorySize)
 											currentBounds.bottom - currentBounds.top/* maximum height */);
 		assert(this->windowResizeHandler.isInstalled());
 	}
-}// FindDialog 3-argument constructor
+}// My_FindDialog 3-argument constructor
 
 
 /*!
@@ -331,13 +330,13 @@ Destructor.  See FindDialog_Dispose().
 
 (3.0)
 */
-FindDialog::
-~FindDialog ()
+My_FindDialog::
+~My_FindDialog ()
 {
 	register SInt16		i = 0;
 	
 	
-	for (i = 0; i < kFindDialogKeywordHistorySize; ++i)
+	for (i = 0; i < kMy_KeywordHistorySize; ++i)
 	{
 		if (this->keywordHistory[i] != nullptr) CFRelease(this->keywordHistory[i]), this->keywordHistory[i] = nullptr;
 	}
@@ -347,7 +346,7 @@ FindDialog::
 	
 	// release all memory occupied by the dialog
 	DisposeWindow(this->dialogWindow);
-}// FindDialog destructor
+}// My_FindDialog destructor
 
 
 /*!
@@ -357,17 +356,17 @@ the contents of the specified window.
 
 (3.0)
 */
-FindDialogRef
+FindDialog_Ref
 FindDialog_New  (TerminalWindowRef				inTerminalWindow,
-				 FindDialogCloseNotifyProcPtr	inCloseNotifyProcPtr,
+				 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 				 FindDialog_Options				inFlags)
 {
-	FindDialogRef	result = nullptr;
+	FindDialog_Ref		result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new FindDialog(inTerminalWindow, inCloseNotifyProcPtr, inFlags), FindDialogRef);
+		result = REINTERPRET_CAST(new My_FindDialog(inTerminalWindow, inCloseNotifyProcPtr, inFlags), FindDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -385,7 +384,7 @@ your copy of the dialog reference is set to nullptr.
 (3.0)
 */
 void
-FindDialog_Dispose   (FindDialogRef*	inoutRefPtr)
+FindDialog_Dispose   (FindDialog_Ref*	inoutRefPtr)
 {
 	if (gFindDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
@@ -393,7 +392,7 @@ FindDialog_Dispose   (FindDialogRef*	inoutRefPtr)
 	}
 	else
 	{
-		FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(*inoutRefPtr);
+		My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(*inoutRefPtr);
 		
 		
 		delete ptr;
@@ -411,9 +410,9 @@ in the dialog, its disposal callback is invoked.
 (3.0)
 */
 void
-FindDialog_Display		(FindDialogRef		inDialog)
+FindDialog_Display		(FindDialog_Ref		inDialog)
 {
-	FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
 	
 	
 	if (ptr == nullptr) Alert_ReportOSStatus(paramErr);
@@ -438,10 +437,10 @@ search field by the user, WITHOUT retaining it.
 (3.0)
 */
 void
-FindDialog_GetSearchString	(FindDialogRef		inDialog,
+FindDialog_GetSearchString	(FindDialog_Ref		inDialog,
 							 CFStringRef&		outString)
 {
-	FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
 	
 	
 	if (ptr != nullptr)
@@ -463,9 +462,9 @@ result will be "kFindDialog_OptionsAllOff".
 (3.0)
 */
 FindDialog_Options
-FindDialog_ReturnOptions	(FindDialogRef		inDialog)
+FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
 {
-	FindDialogPtr		ptr = gFindDialogPtrLocks().acquireLock(inDialog);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
 	FindDialog_Options	result = kFindDialog_OptionsAllOff;
 	
 	
@@ -486,9 +485,9 @@ dialog is attached to.
 (3.0)
 */
 TerminalWindowRef
-FindDialog_ReturnTerminalWindow		(FindDialogRef		inDialog)
+FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
 {
-	FindDialogPtr		ptr = gFindDialogPtrLocks().acquireLock(inDialog);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
 	TerminalWindowRef	result = nullptr;
 	
 	
@@ -511,7 +510,7 @@ to FindDialog_New() as your notification procedure.
 (3.0)
 */
 void
-FindDialog_StandardCloseNotifyProc		(FindDialogRef		inDialogThatClosed)
+FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		inDialogThatClosed)
 {
 	FindDialog_Dispose(&inDialogThatClosed);
 }// StandardCloseNotifyProc
@@ -528,11 +527,11 @@ given string reference is retained.
 (3.0)
 */
 static void
-addToHistory	(FindDialogPtr		inPtr,
+addToHistory	(My_FindDialogPtr	inPtr,
 				 CFStringRef		inText)
 {
 	register SInt16		i = 0;
-	SInt16 const		kLastItem = kFindDialogKeywordHistorySize - 1;
+	SInt16 const		kLastItem = kMy_KeywordHistorySize - 1;
 	
 	
 	if (inPtr->keywordHistory[kLastItem] != nullptr) CFRelease(&inPtr->keywordHistory[kLastItem]), inPtr->keywordHistory[kLastItem] = nullptr;
@@ -564,7 +563,7 @@ to be IGNORED.
 (3.0)
 */
 static Boolean
-handleItemHit	(FindDialogPtr		inPtr,
+handleItemHit	(My_FindDialogPtr	inPtr,
 				 HIViewID const&	inHIViewID)
 {
 	Boolean		result = false;
@@ -612,7 +611,7 @@ handleItemHit	(FindDialogPtr		inPtr,
 				// notify of close
 				if (inPtr->closeNotifyProc != nullptr)
 				{
-					InvokeFindDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
+					FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
 				}
 			}
 			else
@@ -646,7 +645,7 @@ handleItemHit	(FindDialogPtr		inPtr,
 		// notify of close
 		if (inPtr->closeNotifyProc != nullptr)
 		{
-			InvokeFindDialogCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
+			FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
 		}
 		break;
 	
@@ -676,10 +675,10 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 	// only horizontal changes are significant to this dialog
 	if (inDeltaX)
 	{
-		FindDialogRef	ref = REINTERPRET_CAST(inFindDialogRef, FindDialogRef);
-		FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-		SInt32			truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
-		SInt32			truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
+		FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+		My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
+		SInt32				truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
+		SInt32				truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
 		
 		
 		DialogAdjust_BeginControlAdjustment(ptr->dialogWindow);
@@ -722,11 +721,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
 {
-	OSStatus		result = eventNotHandledErr;
-	FindDialogRef	ref = REINTERPRET_CAST(inFindDialogRef, FindDialogRef);
-	FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -786,11 +785,11 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 								 EventRef				inEvent,
 								 void*					inFindDialogRef)
 {
-	OSStatus		result = eventNotHandledErr;
-	FindDialogRef	ref = REINTERPRET_CAST(inFindDialogRef, FindDialogRef);
-	FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -835,11 +834,11 @@ receiveKeyPress		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
 {
-	OSStatus		result = eventNotHandledErr;
-	FindDialogRef	ref = REINTERPRET_CAST(inFindDialogRef, FindDialogRef);
-	FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassKeyboard);

@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -58,7 +58,7 @@ enum
 
 #pragma mark Types
 
-typedef struct OpaqueFindDialog**	FindDialogRef;
+typedef struct FindDialog_OpaqueStruct*		FindDialog_Ref;
 
 #pragma mark Callbacks
 
@@ -69,10 +69,10 @@ When a Find dialog is closed, this method is
 invoked.  Use this to know exactly when it is
 safe to call FindDialog_Dispose().
 */
-typedef void	 (*FindDialogCloseNotifyProcPtr)	(FindDialogRef		inDialogThatClosed);
+typedef void	 (*FindDialog_CloseNotifyProcPtr)	(FindDialog_Ref		inDialogThatClosed);
 inline void
-InvokeFindDialogCloseNotifyProc		(FindDialogCloseNotifyProcPtr	inUserRoutine,
-									 FindDialogRef					inDialogThatClosed)
+FindDialog_InvokeCloseNotifyProc	(FindDialog_CloseNotifyProcPtr	inUserRoutine,
+									 FindDialog_Ref					inDialogThatClosed)
 {
 	(*inUserRoutine)(inDialogThatClosed);
 }
@@ -81,29 +81,29 @@ InvokeFindDialogCloseNotifyProc		(FindDialogCloseNotifyProcPtr	inUserRoutine,
 
 #pragma mark Public Methods
 
-FindDialogRef
+FindDialog_Ref
 	FindDialog_New						(TerminalWindowRef				inTerminalWindow,
-										 FindDialogCloseNotifyProcPtr	inCloseNotifyProcPtr,
+										 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 										 FindDialog_Options				inFlags = kFindDialog_OptionsAllOff);
 
 void
-	FindDialog_Dispose					(FindDialogRef*					inoutDialogPtr);
+	FindDialog_Dispose					(FindDialog_Ref*				inoutDialogPtr);
 
 void
-	FindDialog_Display					(FindDialogRef					inDialog);
+	FindDialog_Display					(FindDialog_Ref					inDialog);
 
 void
-	FindDialog_GetSearchString			(FindDialogRef					inDialog,
+	FindDialog_GetSearchString			(FindDialog_Ref					inDialog,
 										 CFStringRef&					outString);
 
 FindDialog_Options
-	FindDialog_ReturnOptions			(FindDialogRef					inDialog);
+	FindDialog_ReturnOptions			(FindDialog_Ref					inDialog);
 
 TerminalWindowRef
-	FindDialog_ReturnTerminalWindow		(FindDialogRef					inDialog);
+	FindDialog_ReturnTerminalWindow		(FindDialog_Ref					inDialog);
 
 void
-	FindDialog_StandardCloseNotifyProc	(FindDialogRef					inDialogThatClosed);
+	FindDialog_StandardCloseNotifyProc	(FindDialog_Ref					inDialogThatClosed);
 
 #endif
 

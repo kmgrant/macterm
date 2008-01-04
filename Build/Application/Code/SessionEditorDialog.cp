@@ -118,7 +118,7 @@ enum
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	DialogRef			gSessionEditorDialog = nullptr; // the Mac OS dialog pointer
-	WindowInfoRef		gSessionEditorDialogWindowInfo = nullptr;
+	WindowInfo_Ref		gSessionEditorDialogWindowInfo = nullptr;
 }
 
 //

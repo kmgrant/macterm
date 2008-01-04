@@ -16,8 +16,8 @@
 */
 /*###############################################################
 
-	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Interface Library 2.0
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -75,20 +75,20 @@ method is designed to provide you with all of
 the information that DeviceLoop() would normally
 provide.
 */
-typedef pascal Boolean (*OffscreenOperationProcPtr)	(ControlRef			inSpecificControlOrRoot,
-													 SInt16				inColorDepth,
-													 SInt16				inDeviceFlags,
-													 GDHandle			inTargetDevice,
-													 SInt32				inData1,
-													 SInt32				inData2);
+typedef pascal Boolean (*Embedding_OffscreenOpProcPtr)	(ControlRef			inSpecificControlOrRoot,
+														 SInt16				inColorDepth,
+														 SInt16				inDeviceFlags,
+														 GDHandle			inTargetDevice,
+														 SInt32				inData1,
+														 SInt32				inData2);
 inline Boolean
-InvokeOffscreenOperationProc	(OffscreenOperationProcPtr	inUserRoutine,
-								 ControlRef					inControl,
-								 SInt16						inColorDepth,
-								 SInt16						inDeviceFlags,
-								 GDHandle					inTargetDevice,
-								 SInt32						inData1,
-								 SInt32						inData2)
+Embedding_InvokeOffscreenOpProc	(Embedding_OffscreenOpProcPtr	inUserRoutine,
+								 ControlRef						inControl,
+								 SInt16							inColorDepth,
+								 SInt16							inDeviceFlags,
+								 GDHandle						inTargetDevice,
+								 SInt32							inData1,
+								 SInt32							inData2)
 {
 	return (*inUserRoutine)(inControl, inColorDepth, inDeviceFlags, inTargetDevice, inData1, inData2);
 }
@@ -132,14 +132,14 @@ Boolean
 OSStatus
 	Embedding_OffscreenControlOperation			(WindowRef						inForWhichWindow,
 												 ControlRef						inForWhichControlOrNullForRoot,
-												 OffscreenOperationProcPtr		inUPP,
+												 Embedding_OffscreenOpProcPtr	inUPP,
 												 SInt32							inData1,
 												 SInt32							inData2);
 
 OSStatus
 	Embedding_OffscreenControlOperationInMode	(WindowRef						inForWhichWindow,
 												 ControlRef						inForWhichControlOrNullForRoot,
-												 OffscreenOperationProcPtr		inUPP,
+												 Embedding_OffscreenOpProcPtr	inUPP,
 												 SInt32							inData1,
 												 SInt32							inData2,
 												 SInt32							inDrawingMode);

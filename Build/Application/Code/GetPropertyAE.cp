@@ -1446,7 +1446,7 @@ accessPropertyOfClassWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 	OSErr						result = noErr;
 	ObjectClassesAE_PropertyPtr	propertyPtr = &inTokenPtr->as.property;
 	WindowRef					window = nullptr;
-	WindowInfoRef				windowInfo = nullptr;
+	WindowInfo_Ref				windowInfo = nullptr;
 	Boolean						canModifyProperty = true;	// change this flag when appropriate to restrict access
 	
 	

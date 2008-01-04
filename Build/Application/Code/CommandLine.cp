@@ -128,7 +128,7 @@ enum My_TerminatorType
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	WindowRef								gCommandLineWindow = nullptr;
-	WindowInfoRef							gCommandLineWindowInfo = nullptr;
+	WindowInfo_Ref							gCommandLineWindowInfo = nullptr;
 	TerminalScreenRef						gCommandLineTerminalScreen = nullptr;
 	TerminalViewRef							gCommandLineTerminalView = nullptr;
 	HIViewWrap								gCommandLineTerminalViewFocus = nullptr;

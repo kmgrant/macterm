@@ -506,8 +506,8 @@ ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef		inWhichWindow,
 												 MenuRef			inoutMenu,
 												 AEDesc&			inoutWindowContentsDesc)
 {
-	WindowInfoRef			windowFeaturesRef = nullptr;
-	WindowInfoDescriptor	windowDescriptor = kInvalidWindowInfoDescriptor;
+	WindowInfo_Ref			windowFeaturesRef = nullptr;
+	WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
 	HelpSystem_KeyPhrase	keyPhrase = kHelpSystem_KeyPhraseDefault; // determines the Help menu item text and the search string
 	Boolean					failed = false;
 	Boolean					isConnectionWindow = false;

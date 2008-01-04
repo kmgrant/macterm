@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -43,7 +43,7 @@
 
 #pragma mark Types
 
-typedef struct OpaqueDuplicateDialog**	DuplicateDialogRef;
+typedef struct DuplicateDialog_OpaqueStruct*	DuplicateDialog_Ref;
 
 #pragma mark Callbacks
 
@@ -54,12 +54,12 @@ When a Duplicate dialog is closed, this method is
 invoked.  Use this to know exactly when it is safe
 to call DuplicateDialog_Dispose().
 */
-typedef void	 (*DuplicateDialogCloseNotifyProcPtr)	(DuplicateDialogRef		inDialogThatClosed,
+typedef void	 (*DuplicateDialog_CloseNotifyProcPtr)	(DuplicateDialog_Ref	inDialogThatClosed,
 														 Boolean				inOKButtonPressed,
 														 void*					inUserData);
 inline void
-InvokeDuplicateDialogCloseNotifyProc	(DuplicateDialogCloseNotifyProcPtr	inUserRoutine,
-										 DuplicateDialogRef					inDialogThatClosed,
+DuplicateDialog_InvokeCloseNotifyProc	(DuplicateDialog_CloseNotifyProcPtr	inUserRoutine,
+										 DuplicateDialog_Ref				inDialogThatClosed,
 										 Boolean							inOKButtonPressed,
 										 void*								inUserData)
 {
@@ -70,24 +70,24 @@ InvokeDuplicateDialogCloseNotifyProc	(DuplicateDialogCloseNotifyProcPtr	inUserRo
 
 #pragma mark Public Methods
 
-DuplicateDialogRef
-	DuplicateDialog_New						(DuplicateDialogCloseNotifyProcPtr	inCloseNotifyProcPtr,
+DuplicateDialog_Ref
+	DuplicateDialog_New						(DuplicateDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 											 CFStringRef						inInitialNameString,
 											 void*								inCloseNotifyProcUserData);
 
 void
-	DuplicateDialog_Dispose					(DuplicateDialogRef*				inoutDialogPtr);
+	DuplicateDialog_Dispose					(DuplicateDialog_Ref*				inoutDialogPtr);
 
 void
-	DuplicateDialog_Display					(DuplicateDialogRef					inDialog,
-											 WindowRef							inParentWindow);
+	DuplicateDialog_Display					(DuplicateDialog_Ref				inDialog,
+											 HIWindowRef						inParentWindow);
 
 void
-	DuplicateDialog_GetNameString			(DuplicateDialogRef					inDialog,
+	DuplicateDialog_GetNameString			(DuplicateDialog_Ref				inDialog,
 											 CFStringRef&						outString);
 
 void
-	DuplicateDialog_StandardCloseNotifyProc	(DuplicateDialogRef					inDialogThatClosed,
+	DuplicateDialog_StandardCloseNotifyProc	(DuplicateDialog_Ref				inDialogThatClosed,
 											 Boolean							inOKButtonPressed,
 											 void*								inUserData);
 
