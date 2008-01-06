@@ -3,7 +3,7 @@
 	PrefPanelTerminals.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -73,12 +73,12 @@
 
 #pragma mark Types
 
-struct TerminalsPanelData
+struct My_TerminalsPanelData
 {
-	Panel_Ref			panel;						//!< the panel this data is for
+	Panel_Ref		panel;	//!< the panel this data is for
 };
-typedef struct TerminalsPanelData	TerminalsPanelData;
-typedef TerminalsPanelData*			TerminalsPanelDataPtr;
+typedef struct My_TerminalsPanelData	My_TerminalsPanelData;
+typedef My_TerminalsPanelData*			My_TerminalsPanelDataPtr;
 
 #pragma mark Internal Method Prototypes
 
@@ -116,8 +116,8 @@ PrefPanelTerminals_New ()
 	
 	if (result != nullptr)
 	{
-		TerminalsPanelDataPtr	dataPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(TerminalsPanelData)), TerminalsPanelDataPtr);
-		CFStringRef				nameCFString = nullptr;
+		My_TerminalsPanelDataPtr	dataPtr = new My_TerminalsPanelData();
+		CFStringRef					nameCFString = nullptr;
 		
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminals);
@@ -153,11 +153,11 @@ static void
 createPanelControls		(Panel_Ref		inPanel,
 						 WindowRef		inOwningWindow)
 {
-	HIViewRef				container = nullptr;
-	HIViewRef				control = nullptr;
-	TerminalsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), TerminalsPanelDataPtr);
-	Rect					containerBounds;
-	OSStatus				error = noErr;
+	HIViewRef					container = nullptr;
+	HIViewRef					control = nullptr;
+	My_TerminalsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_TerminalsPanelDataPtr);
+	Rect						containerBounds;
+	OSStatus					error = noErr;
 	
 	
 	SetRect(&containerBounds, 0, 0, 0, 0);
@@ -179,12 +179,10 @@ static void
 disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 				 void*		inDataPtr)
 {
-	TerminalsPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, TerminalsPanelDataPtr);
+	My_TerminalsPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, My_TerminalsPanelDataPtr);
 	
 	
-	// remove event handlers
-	
-	Memory_DisposePtr(REINTERPRET_CAST(&dataPtr, Ptr*));
+	delete dataPtr;
 }// disposePanel
 
 

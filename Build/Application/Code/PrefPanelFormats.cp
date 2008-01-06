@@ -3,7 +3,7 @@
 	PrefPanelFormats.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -82,17 +82,12 @@
 
 #pragma mark Constants
 
-enum
-{
-	kMyNumberOfColorBoxes = 16		//!< used for color box view arrays
-};
-
 #define NUMBER_OF_FORMATS_TABPANES		2
 enum
 {
 	// must match tab order at creation, and be one-based
-	kTabIndexFormatNormal = 1,
-	kTabIndexFormatANSIColors = 2
+	kMy_TabIndexFormatNormal		= 1,
+	kMy_TabIndexFormatANSIColors	= 2
 };
 
 /*!
@@ -135,9 +130,9 @@ static HIViewID const	idMyBevelButtonANSIBoldWhite		= { FOUR_CHAR_CODE('CWht'), 
 /*!
 Implements the ÒANSI ColorsÓ tab.
 */
-struct MyFormatsTabANSIColors
+struct My_FormatsTabANSIColors
 {
-	MyFormatsTabANSIColors	(HIWindowRef, HIViewRef);
+	My_FormatsTabANSIColors		(HIWindowRef, HIViewRef);
 	
 	HIViewWrap				pane;
 	CarbonEventHandlerWrap	buttonCommandsHandler;		//!< invoked when a button is clicked
@@ -150,10 +145,10 @@ protected:
 /*!
 Implements the ÒNormalÓ tab.
 */
-struct MyFormatsTabNormal
+struct My_FormatsTabNormal
 {
-	MyFormatsTabNormal	(HIWindowRef, HIViewRef);
-	~MyFormatsTabNormal	();
+	My_FormatsTabNormal		(HIWindowRef, HIViewRef);
+	~My_FormatsTabNormal	();
 	
 	TerminalScreenRef	sampleTerminalScreen;
 	HIViewWrap			pane;
@@ -175,35 +170,35 @@ private:
 /*!
 Implements the entire panel user interface.
 */
-struct MyFormatsPanelUI
+struct My_FormatsPanelUI
 {
-	MyFormatsPanelUI	(HIWindowRef, HIViewRef);
+	My_FormatsPanelUI	(HIWindowRef, HIViewRef);
 	
 	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
 	HIViewWrap							tabView;
 	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a tab is clicked
 	
-	MyFormatsTabNormal			normalTab;
-	MyFormatsTabANSIColors		colorsTab;
+	My_FormatsTabNormal			normalTab;
+	My_FormatsTabANSIColors		colorsTab;
 
 protected:
 	HIViewWrap
 	createTabsView	(HIWindowRef) const;
 };
-typedef MyFormatsPanelUI*	MyFormatsPanelUIPtr;
+typedef My_FormatsPanelUI*		My_FormatsPanelUIPtr;
 
 /*!
 Contains the panel reference and its user interface
 (once the UI is constructed).
 */
-struct MyFormatsPanelData
+struct My_FormatsPanelData
 {
-	MyFormatsPanelData ();
+	My_FormatsPanelData ();
 	
 	Panel_Ref			panel;			//!< the panel this data is for
-	MyFormatsPanelUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
+	My_FormatsPanelUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
 };
-typedef MyFormatsPanelData*		MyFormatsPanelDataPtr;
+typedef My_FormatsPanelData*	My_FormatsPanelDataPtr;
 
 #pragma mark Internal Method Prototypes
 
@@ -215,8 +210,8 @@ static SInt32			panelChanged					(Panel_Ref, Panel_Message, void*);
 static pascal OSStatus	receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
 static void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
-static void				setUpMainTabs					(MyFormatsPanelUIPtr);
-static void				showTabPane						(MyFormatsPanelUIPtr, UInt16);
+static void				setUpMainTabs					(My_FormatsPanelUIPtr);
+static void				showTabPane						(My_FormatsPanelUIPtr, UInt16);
 
 #pragma mark Variables
 
@@ -248,7 +243,7 @@ PrefPanelFormats_New ()
 	
 	if (nullptr != result)
 	{
-		MyFormatsPanelDataPtr	dataPtr = new MyFormatsPanelData();
+		My_FormatsPanelDataPtr	dataPtr = new My_FormatsPanelData();
 		CFStringRef				nameCFString = nullptr;
 		
 		
@@ -272,26 +267,26 @@ PrefPanelFormats_New ()
 #pragma mark Internal Methods
 
 /*!
-Initializes a MyFormatsPanelData structure.
+Initializes a My_FormatsPanelData structure.
 
 (3.1)
 */
-MyFormatsPanelData::
-MyFormatsPanelData ()
+My_FormatsPanelData::
+My_FormatsPanelData ()
 :
 panel(nullptr),
 interfacePtr(nullptr)
 {
-}// MyFormatsPanelData default constructor
+}// My_FormatsPanelData default constructor
 
 
 /*!
-Initializes a MyFormatsPanelUI structure.
+Initializes a My_FormatsPanelUI structure.
 
 (3.1)
 */
-MyFormatsPanelUI::
-MyFormatsPanelUI	(HIWindowRef	inOwningWindow,
+My_FormatsPanelUI::
+My_FormatsPanelUI	(HIWindowRef	inOwningWindow,
 					 HIViewRef		inContainer)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
@@ -310,7 +305,7 @@ colorsTab			(inOwningWindow, this->tabView)
 	assert(containerResizer.isInstalled());
 	assert(tabView.exists());
 	assert(viewClickHandler.isInstalled());
-}// MyFormatsPanelUI 2-argument constructor
+}// My_FormatsPanelUI 2-argument constructor
 
 
 /*!
@@ -319,7 +314,7 @@ Constructs the tab container for the panel.
 (3.1)
 */
 HIViewWrap
-MyFormatsPanelUI::
+My_FormatsPanelUI::
 createTabsView	(HIWindowRef	inOwningWindow)
 const
 {
@@ -335,9 +330,9 @@ const
 	tabInfo[0].enabled =
 		tabInfo[1].enabled = true;
 	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowFormatsNormalTabName,
-									tabInfo[kTabIndexFormatNormal - 1].name);
+									tabInfo[kMy_TabIndexFormatNormal - 1].name);
 	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowFormatsANSIColorsTabName,
-									tabInfo[kTabIndexFormatANSIColors - 1].name);
+									tabInfo[kMy_TabIndexFormatANSIColors - 1].name);
 	SetRect(&containerBounds, 0, 0, 0, 0);
 	error = CreateTabsControl(inOwningWindow, &containerBounds, kControlTabSizeLarge, kControlTabDirectionNorth,
 								sizeof(tabInfo) / sizeof(ControlTabEntry)/* number of tabs */, tabInfo,
@@ -349,17 +344,17 @@ const
 	}
 	
 	return result;
-}// createTabsView
+}// My_FormatsPanelUI::createTabsView
 
 
 /*!
-Initializes a MyFormatsTabANSIColors structure.
+Initializes a My_FormatsTabANSIColors structure.
 
 (3.1)
 */
-MyFormatsTabANSIColors::
-MyFormatsTabANSIColors	(HIWindowRef	inOwningWindow,
-						 HIViewRef		inTabsView)
+My_FormatsTabANSIColors::
+My_FormatsTabANSIColors		(HIWindowRef	inOwningWindow,
+							 HIViewRef		inTabsView)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 pane					(createContainerView(inOwningWindow)
@@ -371,7 +366,7 @@ buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 {
 	assert(this->pane.exists());
 	assert(this->buttonCommandsHandler.isInstalled());
-}// MyFormatsTabANSIColors 2-argument constructor
+}// My_FormatsTabANSIColors 2-argument constructor
 
 
 /*!
@@ -381,7 +376,7 @@ the sub-views that belong in its hierarchy.
 (3.1)
 */
 HIViewWrap
-MyFormatsTabANSIColors::
+My_FormatsTabANSIColors::
 createContainerView		(HIWindowRef	inOwningWindow)
 const
 {
@@ -430,17 +425,17 @@ const
 	}
 	
 	return result;
-}// createContainerView
+}// My_FormatsTabANSIColors::createContainerView
 
 
 /*!
-Initializes a MyFormatsTabNormal structure.
+Initializes a My_FormatsTabNormal structure.
 
 (3.1)
 */
-MyFormatsTabNormal::
-MyFormatsTabNormal	(HIWindowRef	inOwningWindow,
-					 HIViewRef		inTabsView)
+My_FormatsTabNormal::
+My_FormatsTabNormal		(HIWindowRef	inOwningWindow,
+						 HIViewRef		inTabsView)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 sampleTerminalScreen	(createSampleTerminalScreen()),
@@ -460,22 +455,22 @@ _fontSizeArrowsHandler	(nullptr) // set later
 		(OSStatus)CommonEventHandlers_InstallNumericalFieldArrows
 					(littleArrowsFontSize, fieldFontSize, &_fontSizeArrowsHandler);
 	}
-}// MyFormatsTabNormal 2-argument constructor
+}// My_FormatsTabNormal 2-argument constructor
 
 
 /*!
-Tears down a MyFormatsTabNormal structure.
+Tears down a My_FormatsTabNormal structure.
 
 (3.1)
 */
-MyFormatsTabNormal::
-~MyFormatsTabNormal ()
+My_FormatsTabNormal::
+~My_FormatsTabNormal ()
 {
 	if (nullptr != _fontSizeArrowsHandler)
 	{
 		CommonEventHandlers_RemoveNumericalFieldArrows(&_fontSizeArrowsHandler);
 	}
-}// MyFormatsTabNormal 2-argument constructor
+}// My_FormatsTabNormal 2-argument constructor
 
 
 /*!
@@ -485,7 +480,7 @@ the sub-views that belong in its hierarchy.
 (3.1)
 */
 HIViewWrap
-MyFormatsTabNormal::
+My_FormatsTabNormal::
 createContainerView		(HIWindowRef		inOwningWindow,
 						 TerminalScreenRef	inSampleTerminalScreen)
 const
@@ -568,7 +563,7 @@ const
 	}
 	
 	return result;
-}// createContainerView
+}// My_FormatsTabNormal::createContainerView
 
 
 /*!
@@ -578,7 +573,7 @@ sample terminal screen view.
 (3.1)
 */
 TerminalScreenRef
-MyFormatsTabNormal::
+My_FormatsTabNormal::
 createSampleTerminalScreen ()
 const
 {
@@ -601,7 +596,7 @@ Constructs the sample terminal screen HIView.
 (3.1)
 */
 HIViewRef
-MyFormatsTabNormal::
+My_FormatsTabNormal::
 createSampleTerminalHIView	(HIWindowRef		inOwningWindow,
 							 TerminalScreenRef	inSampleTerminalScreen)
 const
@@ -695,8 +690,8 @@ createPanelViews	(Panel_Ref		inPanel,
 					 WindowRef		inOwningWindow)
 {
 	HIViewRef				container = nullptr;
-	MyFormatsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), MyFormatsPanelDataPtr);
-	MyFormatsPanelUIPtr		interfacePtr = nullptr;
+	My_FormatsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_FormatsPanelDataPtr);
+	My_FormatsPanelUIPtr	interfacePtr = nullptr;
 	OSStatus				error = noErr;
 	
 	
@@ -713,7 +708,7 @@ createPanelViews	(Panel_Ref		inPanel,
 	}
 	
 	// create the rest of the panel user interface
-	dataPtr->interfacePtr = new MyFormatsPanelUI(inOwningWindow, container);
+	dataPtr->interfacePtr = new My_FormatsPanelUI(inOwningWindow, container);
 	assert(nullptr != dataPtr->interfacePtr);
 	interfacePtr = dataPtr->interfacePtr;
 	
@@ -766,7 +761,7 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 	if ((0 != inDeltaX) || (0 != inDeltaY))
 	{
 		HIWindowRef				kPanelWindow = GetControlOwner(inView);
-		MyFormatsPanelUIPtr		interfacePtr = REINTERPRET_CAST(inContext, MyFormatsPanelUIPtr);
+		My_FormatsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inContext, My_FormatsPanelUIPtr);
 		assert(nullptr != interfacePtr);
 		HIViewWrap				viewWrap;
 		UInt16					chosenTabIndex = STATIC_CAST(GetControl32BitValue(interfacePtr->tabView), UInt16);
@@ -777,7 +772,7 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		//	<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
 		//	;
 		
-		if (kTabIndexFormatNormal == chosenTabIndex)
+		if (kMy_TabIndexFormatNormal == chosenTabIndex)
 		{
 			// resize the Options tab pane, and its views
 			viewWrap.setCFTypeRef(interfacePtr->normalTab.pane);
@@ -790,7 +785,7 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 				<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta-Y */)
 				;
 		}
-		else if (kTabIndexFormatANSIColors == chosenTabIndex)
+		else if (kMy_TabIndexFormatANSIColors == chosenTabIndex)
 		{
 			// resize the Colors tab pane, and its views
 			viewWrap.setCFTypeRef(interfacePtr->colorsTab.pane);
@@ -811,7 +806,7 @@ static void
 disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 				 void*		inDataPtr)
 {
-	MyFormatsPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, MyFormatsPanelDataPtr);
+	My_FormatsPanelDataPtr		dataPtr = REINTERPRET_CAST(inDataPtr, My_FormatsPanelDataPtr);
 	
 	
 	// destroy UI, if present
@@ -842,8 +837,8 @@ panelChanged	(Panel_Ref		inPanel,
 	{
 	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
 		{
-			MyFormatsPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																	MyFormatsPanelDataPtr);
+			My_FormatsPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																	My_FormatsPanelDataPtr);
 			WindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
 			
 			
@@ -941,7 +936,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 void*					inMyFormatsTabANSIColorsPtr)
 {
 	OSStatus					result = eventNotHandledErr;
-	MyFormatsTabANSIColors*		dataPtr = REINTERPRET_CAST(inMyFormatsTabANSIColorsPtr, MyFormatsTabANSIColors*);
+	My_FormatsTabANSIColors*	dataPtr = REINTERPRET_CAST(inMyFormatsTabANSIColorsPtr, My_FormatsTabANSIColors*);
 	UInt32 const				kEventClass = GetEventClass(inEvent);
 	UInt32 const				kEventKind = GetEventKind(inEvent);
 	
@@ -1052,7 +1047,7 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 void*					inMyFormatsPanelUIPtr)
 {
 	OSStatus				result = eventNotHandledErr;
-	MyFormatsPanelUIPtr		interfacePtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, MyFormatsPanelUIPtr);
+	My_FormatsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelUIPtr);
 	assert(nullptr != interfacePtr);
 	UInt32 const			kEventClass = GetEventClass(inEvent);
 	UInt32 const			kEventKind = GetEventKind(inEvent);
@@ -1098,7 +1093,7 @@ resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 									 SInt16					inItemHit,
 									 void*					inMyFormatsTabANSIColorsPtr)
 {
-	MyFormatsTabANSIColors*		dataPtr = REINTERPRET_CAST(inMyFormatsTabANSIColorsPtr, MyFormatsTabANSIColors*);
+	My_FormatsTabANSIColors*	dataPtr = REINTERPRET_CAST(inMyFormatsTabANSIColorsPtr, My_FormatsTabANSIColors*);
 	
 	
 	// if user consented to color reset, then change all colors to defaults
@@ -1118,7 +1113,7 @@ Sizes and arranges the main tab view.
 (3.1)
 */
 static void
-setUpMainTabs	(MyFormatsPanelUIPtr	inInterfacePtr)
+setUpMainTabs	(My_FormatsPanelUIPtr	inInterfacePtr)
 {
 	HIPoint		tabFrameTopLeft;
 	HISize		tabFrameWidthHeight;
@@ -1142,19 +1137,19 @@ dimensions of the panelÕs container.
 (3.0)
 */
 static void
-showTabPane		(MyFormatsPanelUIPtr	inUIPtr,
+showTabPane		(My_FormatsPanelUIPtr	inUIPtr,
 				 UInt16					inTabIndex)
 {
 	HIViewRef	selectedTabPane = nullptr;
 	HIRect		newFrame;
 	
 	
-	if (kTabIndexFormatNormal == inTabIndex)
+	if (kMy_TabIndexFormatNormal == inTabIndex)
 	{
 		selectedTabPane = inUIPtr->normalTab.pane;
 		assert_noerr(HIViewSetVisible(inUIPtr->colorsTab.pane, false/* visible */));
 	}
-	else if (kTabIndexFormatANSIColors == inTabIndex)
+	else if (kMy_TabIndexFormatANSIColors == inTabIndex)
 	{
 		selectedTabPane = inUIPtr->colorsTab.pane;
 		assert_noerr(HIViewSetVisible(inUIPtr->normalTab.pane, false/* visible */));

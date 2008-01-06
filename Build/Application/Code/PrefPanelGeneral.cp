@@ -3,7 +3,7 @@
 	PrefPanelGeneral.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -82,13 +82,13 @@
 
 #pragma mark Constants
 
-#define NUMBER_OF_GENERAL_TABPANES			3
+#define NUMBER_OF_GENERAL_TABPANES		3
 enum
 {
 	// must match tab order at creation, and be one-based
-	kTabIndexGeneralOptions = 1,
-	kTabIndexGeneralSpecial = 2,
-	kTabIndexGeneralNotification = 3
+	kMy_TabIndexGeneralOptions			= 1,
+	kMy_TabIndexGeneralSpecial			= 2,
+	kMy_TabIndexGeneralNotification		= 3
 };
 
 /*!
@@ -140,11 +140,11 @@ static HIViewID const	idMyRadioButtonNotifyDisplayMessage			= { FOUR_CHAR_CODE('
 /*!
 Implements the “Notification” tab.
 */
-struct MyGeneralTabNotification:
+struct My_GeneralTabNotification:
 public HIViewWrap
 {
 public:
-	MyGeneralTabNotification	(HIWindowRef);
+	My_GeneralTabNotification	(HIWindowRef);
 
 protected:
 	HIViewWrap
@@ -164,11 +164,11 @@ private:
 /*!
 Implements the “Options” tab.
 */
-struct MyGeneralTabOptions:
+struct My_GeneralTabOptions:
 public HIViewWrap
 {
 public:
-	MyGeneralTabOptions		(HIWindowRef);
+	My_GeneralTabOptions	(HIWindowRef);
 
 protected:
 	HIViewWrap
@@ -188,11 +188,11 @@ private:
 /*!
 Implements the “Special” tab.
 */
-struct MyGeneralTabSpecial:
+struct My_GeneralTabSpecial:
 public HIViewWrap
 {
 public:
-	MyGeneralTabSpecial		(HIWindowRef);
+	My_GeneralTabSpecial	(HIWindowRef);
 	
 	CarbonEventHandlerWrap		buttonCommandsHandler;		//!< invoked when a button is clicked
 
@@ -214,14 +214,14 @@ private:
 /*!
 Implements the entire panel user interface.
 */
-struct MyGeneralPanelUI
+struct My_GeneralPanelUI
 {
 public:
-	MyGeneralPanelUI	(Panel_Ref, HIWindowRef);
+	My_GeneralPanelUI	(Panel_Ref, HIWindowRef);
 	
-	MyGeneralTabOptions					optionsTab;
-	MyGeneralTabSpecial					specialTab;
-	MyGeneralTabNotification			notificationTab;
+	My_GeneralTabOptions				optionsTab;
+	My_GeneralTabSpecial				specialTab;
+	My_GeneralTabNotification			notificationTab;
 	HIViewWrap							tabView;
 	HIViewWrap							mainView;
 	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
@@ -234,21 +234,21 @@ protected:
 	HIViewWrap
 	createTabsView	(HIWindowRef) const;
 };
-typedef MyGeneralPanelUI*			MyGeneralPanelUIPtr;
-typedef MyGeneralPanelUI const*		MyGeneralPanelUIConstPtr;
+typedef My_GeneralPanelUI*			My_GeneralPanelUIPtr;
+typedef My_GeneralPanelUI const*	My_GeneralPanelUIConstPtr;
 
 /*!
 Contains the panel reference and its user interface
 (once the UI is constructed).
 */
-struct MyGeneralPanelData
+struct My_GeneralPanelData
 {
-	MyGeneralPanelData ();
+	My_GeneralPanelData ();
 	
 	Panel_Ref			panel;			//!< the panel this data is for
-	MyGeneralPanelUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
+	My_GeneralPanelUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
 };
-typedef MyGeneralPanelData*		MyGeneralPanelDataPtr;
+typedef My_GeneralPanelData*	My_GeneralPanelDataPtr;
 
 #pragma mark Internal Method Prototypes
 
@@ -259,8 +259,8 @@ static SInt32			panelChanged									(Panel_Ref, Panel_Message, void*);
 static pascal OSStatus	receiveHICommand								(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus	receiveViewHit									(EventHandlerCallRef, EventRef, void*);
 static void				savePreferenceForField							(Panel_Ref, HIViewRef);
-static void				showTabPane										(MyGeneralPanelUIPtr, UInt16);
-static Boolean			updateCheckBoxPreference						(MyGeneralPanelUIPtr, HIViewRef);
+static void				showTabPane										(My_GeneralPanelUIPtr, UInt16);
+static Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
 
 #pragma mark Variables
 
@@ -294,7 +294,7 @@ PrefPanelGeneral_New ()
 	
 	if (nullptr != result)
 	{
-		MyGeneralPanelDataPtr	dataPtr = new MyGeneralPanelData();
+		My_GeneralPanelDataPtr	dataPtr = new My_GeneralPanelData();
 		CFStringRef				nameCFString = nullptr;
 		
 		
@@ -318,18 +318,18 @@ PrefPanelGeneral_New ()
 #pragma mark Internal Methods
 
 /*!
-Initializes a MyGeneralPanelData structure.
+Initializes a My_GeneralPanelData structure.
 
 (3.1)
 */
-MyGeneralPanelData::
-MyGeneralPanelData ()
+My_GeneralPanelData::
+My_GeneralPanelData ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 panel(nullptr),
 interfacePtr(nullptr)
 {
-}// MyGeneralPanelData default constructor
+}// My_GeneralPanelData default constructor
 
 
 /*!
@@ -337,8 +337,8 @@ Initializes a MyFormatsPanelUI structure.
 
 (3.1)
 */
-MyGeneralPanelUI::
-MyGeneralPanelUI	(Panel_Ref		inPanel,
+My_GeneralPanelUI::
+My_GeneralPanelUI	(Panel_Ref		inPanel,
 					 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
@@ -358,7 +358,7 @@ viewClickHandler	(GetControlEventTarget(this->tabView), receiveViewHit,
 {
 	assert(containerResizer.isInstalled());
 	assert(viewClickHandler.isInstalled());
-}// MyGeneralPanelUI 2-argument constructor
+}// My_GeneralPanelUI 2-argument constructor
 
 
 /*!
@@ -368,7 +368,7 @@ the tabs view already exists.
 (3.1)
 */
 HIViewWrap
-MyGeneralPanelUI::
+My_GeneralPanelUI::
 createContainerView		(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
 const
@@ -444,7 +444,7 @@ const
 	assert_noerr(error);
 	
 	return result;
-}// MyGeneralPanelUI::createContainerView
+}// My_GeneralPanelUI::createContainerView
 
 
 /*!
@@ -454,7 +454,7 @@ Assumes that all tabs already exist.
 (3.1)
 */
 HIViewWrap
-MyGeneralPanelUI::
+My_GeneralPanelUI::
 createTabsView	(HIWindowRef	inOwningWindow)
 const
 {
@@ -475,11 +475,11 @@ const
 		tabInfo[1].enabled =
 		tabInfo[2].enabled = true;
 	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowGeneralOptionsTabName,
-									tabInfo[kTabIndexGeneralOptions - 1].name);
+									tabInfo[kMy_TabIndexGeneralOptions - 1].name);
 	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowGeneralSpecialTabName,
-									tabInfo[kTabIndexGeneralSpecial - 1].name);
+									tabInfo[kMy_TabIndexGeneralSpecial - 1].name);
 	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowGeneralNotificationTabName,
-									tabInfo[kTabIndexGeneralNotification - 1].name);
+									tabInfo[kMy_TabIndexGeneralNotification - 1].name);
 	SetRect(&containerBounds, 0, 0, 0, 0);
 	error = CreateTabsControl(inOwningWindow, &containerBounds, kControlTabSizeLarge, kControlTabDirectionNorth,
 								sizeof(tabInfo) / sizeof(ControlTabEntry)/* number of tabs */, tabInfo,
@@ -556,26 +556,26 @@ const
 	}
 	
 	return result;
-}// MyGeneralPanelUI::createTabsView
+}// My_GeneralPanelUI::createTabsView
 
 
 /*!
-Initializes a MyGeneralTabNotification structure.
+Initializes a My_GeneralTabNotification structure.
 
 (3.1)
 */
-MyGeneralTabNotification::
-MyGeneralTabNotification	(HIWindowRef	inOwningWindow)
+My_GeneralTabNotification::
+My_GeneralTabNotification	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 HIViewWrap			(createPaneView(inOwningWindow)
 						<< HIViewWrap_AssertExists),
 containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-						MyGeneralTabNotification::deltaSize, this/* context */)
+						My_GeneralTabNotification::deltaSize, this/* context */)
 {
 	assert(exists());
 	assert(containerResizer.isInstalled());
-}// MyGeneralTabNotification 2-argument constructor
+}// My_GeneralTabNotification 2-argument constructor
 
 
 /*!
@@ -585,7 +585,7 @@ the sub-views that belong in its hierarchy.
 (3.1)
 */
 HIViewWrap
-MyGeneralTabNotification::
+My_GeneralTabNotification::
 createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
@@ -699,7 +699,7 @@ const
 	}
 	
 	return result;
-}// MyGeneralTabNotification::createPaneView
+}// My_GeneralTabNotification::createPaneView
 
 
 /*!
@@ -708,20 +708,20 @@ Resizes the views in this tab.
 (3.1)
 */
 void
-MyGeneralTabNotification::
+My_GeneralTabNotification::
 deltaSize	(HIViewRef		inContainer,
 			 Float32		inDeltaX,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
 	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
-	//MyGeneralTabNotification*	dataPtr = REINTERPRET_CAST(inContext, MyGeneralTabNotification*);
+	//My_GeneralTabNotification*	dataPtr = REINTERPRET_CAST(inContext, My_GeneralTabNotification*);
 	HIViewWrap				viewWrap;
 	
 	
 	viewWrap = HIViewWrap(idMyHelpTextBellType, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-}// MyGeneralTabNotification::deltaSize
+}// My_GeneralTabNotification::deltaSize
 
 
 /*!
@@ -732,30 +732,30 @@ definition.
 (3.1)
 */
 CFRetainRelease&
-MyGeneralTabNotification::
+My_GeneralTabNotification::
 operator =	(CFRetainRelease const&		inCopy)
 {
 	return HIViewWrap::operator =(inCopy);
-}// MyGeneralTabNotification::operator =
+}// My_GeneralTabNotification::operator =
 
 
 /*!
-Initializes a MyGeneralTabOptions structure.
+Initializes a My_GeneralTabOptions structure.
 
 (3.1)
 */
-MyGeneralTabOptions::
-MyGeneralTabOptions		(HIWindowRef	inOwningWindow)
+My_GeneralTabOptions::
+My_GeneralTabOptions	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 HIViewWrap			(createPaneView(inOwningWindow)
 						<< HIViewWrap_AssertExists),
 containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-						MyGeneralTabOptions::deltaSize, this/* context */)
+						My_GeneralTabOptions::deltaSize, this/* context */)
 {
 	assert(exists());
 	assert(containerResizer.isInstalled());
-}// MyGeneralTabOptions 2-argument constructor
+}// My_GeneralTabOptions 2-argument constructor
 
 
 /*!
@@ -765,7 +765,7 @@ the sub-views that belong in its hierarchy.
 (3.1)
 */
 HIViewWrap
-MyGeneralTabOptions::
+My_GeneralTabOptions::
 createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
@@ -937,7 +937,7 @@ const
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
 	return result;
-}// MyGeneralTabOptions::createPaneView
+}// My_GeneralTabOptions::createPaneView
 
 
 /*!
@@ -946,14 +946,14 @@ Resizes the views in this tab.
 (3.1)
 */
 void
-MyGeneralTabOptions::
+My_GeneralTabOptions::
 deltaSize	(HIViewRef		UNUSED_ARGUMENT(inContainer),
 			 Float32		UNUSED_ARGUMENT(inDeltaX),
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
 	// nothing needed
-}// MyGeneralTabOptions::deltaSize
+}// My_GeneralTabOptions::deltaSize
 
 
 /*!
@@ -964,20 +964,20 @@ definition.
 (3.1)
 */
 CFRetainRelease&
-MyGeneralTabOptions::
+My_GeneralTabOptions::
 operator =	(CFRetainRelease const&		inCopy)
 {
 	return HIViewWrap::operator =(inCopy);
-}// MyGeneralTabOptions::operator =
+}// My_GeneralTabOptions::operator =
 
 
 /*!
-Initializes a MyGeneralTabSpecial structure.
+Initializes a My_GeneralTabSpecial structure.
 
 (3.1)
 */
-MyGeneralTabSpecial::
-MyGeneralTabSpecial		(HIWindowRef	inOwningWindow)
+My_GeneralTabSpecial::
+My_GeneralTabSpecial	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 HIViewWrap				(createPaneView(inOwningWindow)
@@ -986,12 +986,12 @@ buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							nullptr/* user data */),
 containerResizer		(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-							MyGeneralTabSpecial::deltaSize, this/* context */)
+							My_GeneralTabSpecial::deltaSize, this/* context */)
 {
 	assert(exists());
 	assert(buttonCommandsHandler.isInstalled());
 	assert(containerResizer.isInstalled());
-}// MyGeneralTabSpecial 2-argument constructor
+}// My_GeneralTabSpecial 2-argument constructor
 
 
 /*!
@@ -1001,7 +1001,7 @@ the sub-views that belong in its hierarchy.
 (3.1)
 */
 HIViewWrap
-MyGeneralTabSpecial::
+My_GeneralTabSpecial::
 createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
@@ -1199,7 +1199,7 @@ const
 	}
 	
 	return result;
-}// MyGeneralTabSpecial::createPaneView
+}// My_GeneralTabSpecial::createPaneView
 
 
 /*!
@@ -1208,20 +1208,20 @@ Resizes the views in this tab.
 (3.1)
 */
 void
-MyGeneralTabSpecial::
+My_GeneralTabSpecial::
 deltaSize	(HIViewRef		inContainer,
 			 Float32		inDeltaX,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
 	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
-	//MyGeneralTabSpecial*	dataPtr = REINTERPRET_CAST(inContext, MyGeneralTabSpecial*);
+	//My_GeneralTabSpecial*	dataPtr = REINTERPRET_CAST(inContext, My_GeneralTabSpecial*);
 	HIViewWrap				viewWrap;
 	
 	
 	viewWrap = HIViewWrap(idMyHelpTextResizeEffect, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-}// MyGeneralTabSpecial::deltaSize
+}// My_GeneralTabSpecial::deltaSize
 
 
 /*!
@@ -1232,11 +1232,11 @@ definition.
 (3.1)
 */
 CFRetainRelease&
-MyGeneralTabSpecial::
+My_GeneralTabSpecial::
 operator =	(CFRetainRelease const&		inCopy)
 {
 	return HIViewWrap::operator =(inCopy);
-}// MyGeneralTabSpecial::operator =
+}// My_GeneralTabSpecial::operator =
 
 
 /*!
@@ -1298,7 +1298,7 @@ deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 	if ((0 != inDeltaX) || (0 != inDeltaY))
 	{
 		//HIWindowRef				kPanelWindow = GetControlOwner(inView);
-		MyGeneralPanelUIPtr		interfacePtr = REINTERPRET_CAST(inContext, MyGeneralPanelUIPtr);
+		My_GeneralPanelUIPtr	interfacePtr = REINTERPRET_CAST(inContext, My_GeneralPanelUIPtr);
 		assert(nullptr != interfacePtr);
 		
 		
@@ -1321,7 +1321,7 @@ static void
 disposePanel	(Panel_Ref		UNUSED_ARGUMENT(inPanel),
 				 void*			inDataPtr)
 {
-	MyGeneralPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, MyGeneralPanelDataPtr);
+	My_GeneralPanelDataPtr		dataPtr = REINTERPRET_CAST(inDataPtr, My_GeneralPanelDataPtr);
 	
 	
 	// destroy UI, if present
@@ -1352,13 +1352,13 @@ panelChanged	(Panel_Ref			inPanel,
 	{
 	case kPanel_MessageCreateViews: // specification of the window containing the panel - create controls using this window
 		{
-			MyGeneralPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																	MyGeneralPanelDataPtr);
+			My_GeneralPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																	My_GeneralPanelDataPtr);
 			WindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
 			
 			
 			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new MyGeneralPanelUI(inPanel, *windowPtr);
+			panelDataPtr->interfacePtr = new My_GeneralPanelUI(inPanel, *windowPtr);
 			assert(nullptr != panelDataPtr->interfacePtr);
 			showTabPane(panelDataPtr->interfacePtr, 1/* tab index */);
 		}
@@ -1539,7 +1539,7 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 void*					inMyGeneralPanelUIPtr)
 {
 	OSStatus				result = eventNotHandledErr;
-	MyGeneralPanelUIPtr		interfacePtr = REINTERPRET_CAST(inMyGeneralPanelUIPtr, MyGeneralPanelUIPtr);
+	My_GeneralPanelUIPtr	interfacePtr = REINTERPRET_CAST(inMyGeneralPanelUIPtr, My_GeneralPanelUIPtr);
 	assert(nullptr != interfacePtr);
 	UInt32 const			kEventClass = GetEventClass(inEvent);
 	UInt32 const			kEventKind = GetEventKind(inEvent);
@@ -1596,8 +1596,8 @@ static void
 savePreferenceForField	(Panel_Ref	inPanel,
 						 HIViewRef	inView)
 {
-	MyGeneralPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), MyGeneralPanelDataPtr);
-	MyGeneralPanelUIPtr		interfacePtr = dataPtr->interfacePtr;
+	My_GeneralPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_GeneralPanelDataPtr);
+	My_GeneralPanelUIPtr	interfacePtr = dataPtr->interfacePtr;
 	assert(nullptr != interfacePtr);
 	
 	
@@ -1648,25 +1648,25 @@ Displays the specified tab pane and hides the others.
 (3.1)
 */
 static void
-showTabPane		(MyGeneralPanelUIPtr	inUIPtr,
+showTabPane		(My_GeneralPanelUIPtr	inUIPtr,
 				 UInt16					inTabIndex)
 {
 	HIViewRef	selectedTabPane = nullptr;
 	
 	
-	if (kTabIndexGeneralOptions == inTabIndex)
+	if (kMy_TabIndexGeneralOptions == inTabIndex)
 	{
 		selectedTabPane = inUIPtr->optionsTab;
 		assert_noerr(HIViewSetVisible(inUIPtr->specialTab, false/* visible */));
 		assert_noerr(HIViewSetVisible(inUIPtr->notificationTab, false/* visible */));
 	}
-	else if (kTabIndexGeneralSpecial == inTabIndex)
+	else if (kMy_TabIndexGeneralSpecial == inTabIndex)
 	{
 		selectedTabPane = inUIPtr->specialTab;
 		assert_noerr(HIViewSetVisible(inUIPtr->optionsTab, false/* visible */));
 		assert_noerr(HIViewSetVisible(inUIPtr->notificationTab, false/* visible */));
 	}
-	else if (kTabIndexGeneralNotification == inTabIndex)
+	else if (kMy_TabIndexGeneralNotification == inTabIndex)
 	{
 		selectedTabPane = inUIPtr->notificationTab;
 		assert_noerr(HIViewSetVisible(inUIPtr->optionsTab, false/* visible */));
@@ -1699,7 +1699,7 @@ Otherwise, "false" is returned.
 (3.0)
 */
 static Boolean
-updateCheckBoxPreference	(MyGeneralPanelUIPtr	inInterfacePtr,
+updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 							 HIViewRef				inCheckBoxClicked)
 {
 	Boolean		result = false;
@@ -1716,7 +1716,7 @@ updateCheckBoxPreference	(MyGeneralPanelUIPtr	inInterfacePtr,
 		
 		switch (chosenTabIndex)
 		{
-		case kTabIndexGeneralOptions:
+		case kMy_TabIndexGeneralOptions:
 			if (HIViewIDWrap(idMyCheckBoxSimplifiedUI) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagSimplifiedUserInterface,
@@ -1790,7 +1790,7 @@ updateCheckBoxPreference	(MyGeneralPanelUIPtr	inInterfacePtr,
 			}
 			break;
 		
-		case kTabIndexGeneralSpecial:
+		case kMy_TabIndexGeneralSpecial:
 			if (HIViewIDWrap(idMyCheckBoxCursorFlashing) == viewID)
 			{
 				// save the new value
@@ -1862,7 +1862,7 @@ updateCheckBoxPreference	(MyGeneralPanelUIPtr	inInterfacePtr,
 			}
 			break;
 		
-		case kTabIndexGeneralNotification:
+		case kMy_TabIndexGeneralNotification:
 			{
 				HIViewWrap		radioButtonNotificationNone(idMyRadioButtonNotifyDoNothing, kWindow);
 				HIViewWrap		radioButtonNotificationBadge(idMyRadioButtonNotifyBadgeDockIcon, kWindow);
