@@ -49,6 +49,28 @@ _dataDictionary(inTarget)
 
 
 /*!
+Adds or overwrites a key value with a floating-point
+value, in the global application preferences.
+
+(1.4)
+*/
+void
+CFKeyValuePreferences::
+addFloat	(CFStringRef	inKey,
+			 Float32		inValue)
+{
+	CFNumberRef		valueCFNumber = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &inValue);
+	
+	
+	if (nullptr != valueCFNumber)
+	{
+		CFPreferencesSetAppValue(inKey, valueCFNumber, _targetApplication.returnCFStringRef());
+		CFRelease(valueCFNumber), valueCFNumber = nullptr;
+	}
+}// addFloat
+
+
+/*!
 Adds or overwrites a key value with a short integer,
 in the global application preferences.
 

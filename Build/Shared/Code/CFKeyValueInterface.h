@@ -9,8 +9,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	Data Access Library 1.4
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -75,6 +75,11 @@ public:
 	addFlag		(CFStringRef	inKey,
 				 Boolean		inValue) = 0;
 	
+	//! inserts floating-point value into dictionary
+	virtual void
+	addFloat	(CFStringRef	inKey,
+				 Float32		inValue) = 0;
+	
 	//! inserts short integer value into dictionary
 	virtual void
 	addInteger	(CFStringRef	inKey,
@@ -97,6 +102,10 @@ public:
 	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
 	virtual Boolean
 	returnFlag		(CFStringRef	inKey) const = 0;
+	
+	//! retrieves a floating-point value from the dictionary (use only if the value really is a number!)
+	virtual Float32
+	returnFloat		(CFStringRef	inKey) const = 0;
 	
 	//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
 	virtual SInt16
@@ -144,6 +153,13 @@ public:
 	}
 	
 	virtual void
+	addFlag		(CFStringRef	inKey,
+				 Float32		inValue)
+	{
+		_delegate.addFloat(inKey, inValue);
+	}
+	
+	virtual void
 	addInteger	(CFStringRef	inKey,
 				 SInt16			inValue)
 	{
@@ -174,6 +190,12 @@ public:
 	returnFlag		(CFStringRef	inKey)
 	{
 		return _delegate.returnFlag(inKey);
+	}
+	
+	virtual Float32
+	returnFloat		(CFStringRef	inKey)
+	{
+		return _delegate.returnFloat(inKey);
 	}
 	
 	virtual SInt16
@@ -224,6 +246,11 @@ public:
 	addFlag		(CFStringRef	inKey,
 				 Boolean		inValue);
 	
+	//! inserts floating-point value into dictionary
+	inline void
+	addFloat	(CFStringRef	inKey,
+				 Float32		inValue);
+	
 	//! inserts short integer value into dictionary
 	inline void
 	addInteger	(CFStringRef	inKey,
@@ -250,6 +277,10 @@ public:
 	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
 	inline Boolean
 	returnFlag		(CFStringRef	inKey) const;
+	
+	//! retrieves a floating-point value from the dictionary (use only if the value really is a number!)
+	inline Float32
+	returnFloat		(CFStringRef	inKey) const;
 	
 	//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
 	inline SInt16
@@ -300,6 +331,11 @@ public:
 	addFlag		(CFStringRef	inKey,
 				 Boolean		inValue);
 	
+	//! inserts floating-point value into Core Foundation Preferences
+	void
+	addFloat	(CFStringRef	inKey,
+				 Float32		inValue);
+	
 	//! inserts short integer value into Core Foundation Preferences
 	void
 	addInteger	(CFStringRef	inKey,
@@ -322,6 +358,10 @@ public:
 	//! retrieves a true or false value from global preferences (use only if the value really is a Boolean!)
 	inline Boolean
 	returnFlag		(CFStringRef	inKey) const;
+	
+	//! retrieves a floating-point value from global preferences (use only if the value really is a number!)
+	inline Float32
+	returnFloat		(CFStringRef	inKey) const;
 	
 	//! retrieves a short integer value from global preferences (use only if the value really is a number!)
 	inline SInt16
@@ -401,6 +441,21 @@ addFlag		(CFStringRef	inKey,
 {
 	_dataDictionary.addFlag(inKey, inValue);
 }// addFlag
+
+
+/*!
+Adds or overwrites a key value with a floating-point
+number (which is automatically retained by the dictionary).
+
+(1.3)
+*/
+void
+CFKeyValueDictionary::
+addFloat	(CFStringRef	inKey,
+			 Float32		inValue)
+{
+	_dataDictionary.addFlag(inKey, inValue);
+}// addFloat
 
 
 /*!
@@ -491,6 +546,22 @@ const
 {
 	return _dataDictionary.returnFlag(inKey);
 }// returnFlag
+
+
+/*!
+Returns the value of the specified key, automatically
+cast to a floating-point type.  Do not use this unless
+you know the value is actually a number!
+
+(1.4)
+*/
+Float32
+CFKeyValueDictionary::
+returnFloat		(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.returnFloat(inKey);
+}// returnFloat
 
 
 /*!
@@ -660,6 +731,32 @@ const
 	return CFPreferencesGetAppBooleanValue(inKey, _targetApplication.returnCFStringRef(),
 											nullptr/* exists/valid flag pointer */);
 }// returnFlag
+
+
+/*!
+Returns the floating-point value of the specified key
+in the global application preferences.  Use only if
+you know the value is actually a number!
+
+(1.4)
+*/
+Float32
+CFKeyValuePreferences::
+returnFloat		(CFStringRef	inKey)
+const
+{
+	CFNumberRef		number = CFUtilities_NumberCast(CFPreferencesCopyAppValue(inKey, _targetApplication.returnCFStringRef()));
+	Float32			result = 0;
+	
+	
+	if (nullptr != number)
+	{
+		(Boolean)CFNumberGetValue(number, kCFNumberFloat32Type, &result);
+		CFRelease(number), number = nullptr;
+	}
+	
+	return result;
+}// returnFloat
 
 
 /*!

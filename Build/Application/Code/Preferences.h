@@ -22,7 +22,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -267,6 +267,10 @@ enum
 	kPreferences_TagTerminalClearSavesLines				= FOUR_CHAR_CODE('clsv'),	//!< data: "Boolean"
 	kPreferences_TagTerminalEmulatorType				= FOUR_CHAR_CODE('emul'),	//!< data: "Terminal_Emulator", a "kTerminal_Emulator..." constant
 	kPreferences_TagTerminalLineWrap					= FOUR_CHAR_CODE('wrap'),	//!< data: "Boolean"
+	kPreferences_TagTerminalPaddingLeft					= FOUR_CHAR_CODE('padl'),	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingRight				= FOUR_CHAR_CODE('padr'),	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingTop					= FOUR_CHAR_CODE('padt'),	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingBottom				= FOUR_CHAR_CODE('padb'),	//!< data: "Float32"
 	kPreferences_TagTerminalScreenColumns				= FOUR_CHAR_CODE('scol'),	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenRows					= FOUR_CHAR_CODE('srow'),	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenScrollbackRows		= FOUR_CHAR_CODE('scrb'),	//!< data: "UInt16"

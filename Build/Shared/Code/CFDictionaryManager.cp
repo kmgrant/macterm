@@ -3,7 +3,7 @@
 	CFDictionaryManager.cp
 	
 	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -35,6 +35,29 @@
 #pragma mark Public Methods
 
 /*!
+Adds or overwrites a key value with a floating-point
+number (which is automatically retained by the dictionary).
+
+(1.4)
+*/
+void
+CFDictionaryManager::
+addFloat	(CFStringRef	inKey,
+			 Float32		inValue)
+{
+	CFNumberRef		valueCFNumber = nullptr;
+	
+	
+	valueCFNumber = CFNumberCreate(CFGetAllocator(returnCFMutableDictionaryRef()), kCFNumberFloat32Type, &inValue);
+	if (nullptr != valueCFNumber)
+	{
+		CFDictionarySetValue(returnCFMutableDictionaryRef(), inKey, valueCFNumber);
+		CFRelease(valueCFNumber), valueCFNumber = nullptr;
+	}
+}// addFloat
+
+
+/*!
 Adds or overwrites a key value with a short integer
 (which is automatically retained by the dictionary).
 
@@ -49,7 +72,7 @@ addInteger	(CFStringRef	inKey,
 	
 	
 	valueCFNumber = CFNumberCreate(CFGetAllocator(returnCFMutableDictionaryRef()), kCFNumberSInt16Type, &inValue);
-	if (valueCFNumber != nullptr)
+	if (nullptr != valueCFNumber)
 	{
 		CFDictionarySetValue(returnCFMutableDictionaryRef(), inKey, valueCFNumber);
 		CFRelease(valueCFNumber), valueCFNumber = nullptr;
@@ -72,7 +95,7 @@ addLong		(CFStringRef	inKey,
 	
 	
 	valueCFNumber = CFNumberCreate(CFGetAllocator(returnCFMutableDictionaryRef()), kCFNumberSInt32Type, &inValue);
-	if (valueCFNumber != nullptr)
+	if (nullptr != valueCFNumber)
 	{
 		CFDictionarySetValue(returnCFMutableDictionaryRef(), inKey, valueCFNumber);
 		CFRelease(valueCFNumber), valueCFNumber = nullptr;
@@ -129,13 +152,43 @@ const
 		CFBooleanRef	valueCFBoolean = CFUtilities_BooleanCast(voidPointerValue);
 		
 		
-		if (valueCFBoolean != nullptr)
+		if (nullptr != valueCFBoolean)
 		{
 			result = (kCFBooleanTrue == valueCFBoolean);
 		}
 	}
 	return result;
 }// returnFlag
+
+
+/*!
+Returns the specified key’s value, automatically
+cast into a floating-point number type.  Do not
+use this unless you know the value is a number!
+
+(1.4)
+*/
+Float32
+CFDictionaryManager::
+returnFloat		(CFStringRef	inKey)
+const
+{
+	Float32			result = 0;
+	void const*		voidPointerValue = nullptr;
+	
+	
+	if (CFDictionaryGetValueIfPresent(returnCFDictionaryRef(), inKey, &voidPointerValue))
+	{
+		CFNumberRef		valueCFNumber = CFUtilities_NumberCast(voidPointerValue);
+		
+		
+		if (nullptr != valueCFNumber)
+		{
+			(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberFloat32Type, &result);
+		}
+	}
+	return result;
+}// returnFloat
 
 
 /*!
@@ -159,7 +212,7 @@ const
 		CFNumberRef		valueCFNumber = CFUtilities_NumberCast(voidPointerValue);
 		
 		
-		if (valueCFNumber != nullptr)
+		if (nullptr != valueCFNumber)
 		{
 			(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberSInt16Type, &result);
 		}
@@ -189,7 +242,7 @@ const
 		CFNumberRef		valueCFNumber = CFUtilities_NumberCast(voidPointerValue);
 		
 		
-		if (valueCFNumber != nullptr)
+		if (nullptr != valueCFNumber)
 		{
 			(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberSInt32Type, &result);
 		}

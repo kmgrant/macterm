@@ -3,7 +3,7 @@
 	Preferences.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2004 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -131,6 +131,14 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 			_implementorPtr->addFlag(inKey, inValue);
 		}
 		
+		//! inserts floating-point value into dictionary
+		void
+		addFloat	(CFStringRef	inKey,
+					 Float32		inValue)
+		{
+			_implementorPtr->addFloat(inKey, inValue);
+		}
+		
 		//! inserts short integer value into dictionary
 		void
 		addInteger	(CFStringRef	inKey,
@@ -186,6 +194,13 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		returnInteger	(CFStringRef	inKey) const
 		{
 			return _implementorPtr->returnInteger(inKey);
+		}
+		
+		//! retrieves a floating-point value from the dictionary (use only if the value really is a number!)
+		virtual Float32
+		returnFloat		(CFStringRef	inKey) const
+		{
+			return _implementorPtr->returnFloat(inKey);
 		}
 		
 		//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
@@ -4613,6 +4628,34 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassTerminal;
 		break;
 	
+	case kPreferences_TagTerminalPaddingLeft:
+		outKeyName = CFSTR("terminal-padding-left-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagTerminalPaddingRight:
+		outKeyName = CFSTR("terminal-padding-right-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagTerminalPaddingTop:
+		outKeyName = CFSTR("terminal-padding-top-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagTerminalPaddingBottom:
+		outKeyName = CFSTR("terminal-padding-bottom-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
 	case kPreferences_TagTerminalResizeAffectsFontSize:
 		outKeyName = CFSTR("terminal-resize-affects");
 		outKeyValueType = typeCFStringRef; // one of: "screen", "font"
@@ -5317,6 +5360,26 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
+				case kPreferences_TagTerminalPaddingLeft:
+				case kPreferences_TagTerminalPaddingRight:
+				case kPreferences_TagTerminalPaddingTop:
+				case kPreferences_TagTerminalPaddingBottom:
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						Float32			valueFloat32 = inContextPtr->returnFloat(keyName);
+						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
+						
+						
+						*data = valueFloat32;
+						if (0 == *data)
+						{
+							// failed; make default
+							*data = 0; // arbitrary
+							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -6969,6 +7032,19 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					inContextPtr->addFlag(keyName, data);
+				}
+				break;
+			
+			case kPreferences_TagTerminalPaddingLeft:
+			case kPreferences_TagTerminalPaddingRight:
+			case kPreferences_TagTerminalPaddingTop:
+			case kPreferences_TagTerminalPaddingBottom:
+				{
+					Float32 const	data = *(REINTERPRET_CAST(inDataPtr, Float32 const*));
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addFloat(keyName, data);
 				}
 				break;
 			

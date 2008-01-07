@@ -5,8 +5,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	Data Access Library 1.4
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -36,7 +36,6 @@
 // Data Access library includes
 #include "CFRetainRelease.h"
 #include "CFUtilities.h"
-#include "Console.h"//tmp
 
 
 
@@ -75,6 +74,9 @@ public:
 	addFlag		(CFStringRef, Boolean);
 	
 	void
+	addFloat	(CFStringRef, Float32);
+	
+	void
 	addInteger	(CFStringRef, SInt16);
 	
 	void
@@ -88,6 +90,9 @@ public:
 	
 	Boolean
 	returnFlag	(CFStringRef) const;
+	
+	Float32
+	returnFloat		(CFStringRef) const;
 	
 	SInt16
 	returnInteger	(CFStringRef) const;
