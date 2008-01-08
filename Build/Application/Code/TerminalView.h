@@ -21,7 +21,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -321,29 +321,6 @@ Boolean
 
 //@}
 
-//!\name Coordinate Translation
-//@{
-
-void
-	TerminalView_LocalToScreen					(TerminalViewRef			inView,
-												 SInt16*					inoutHorizontalPixelOffsetFromPortOrigin,
-												 SInt16*					inoutVerticalPixelOffsetFromPortOrigin);
-
-void
-	TerminalView_LocalToScreenRect				(TerminalViewRef			inView,
-												 Rect*						inoutPortOriginBounds);
-
-void
-	TerminalView_ScreenToLocal					(TerminalViewRef			inView,
-												 SInt16*					inoutHorizontalPixelOffsetFromScreenOrigin,
-												 SInt16*					inoutVerticalPixelOffsetFromScreenOrigin);
-
-void
-	TerminalView_ScreenToLocalRect				(TerminalViewRef			inView,
-												 Rect*						inoutScreenOriginBounds);
-
-//@}
-
 //!\name Window Management
 //@{
 
@@ -414,14 +391,6 @@ void
 // IF THE CURSOR IS SET TO FLASH, THIS ROUTINE HIDES THE CURSOR UNTIL THE IDLING ROUTINE REDRAWS IT
 void
 	TerminalView_ObscureCursor					(TerminalViewRef			inView);
-
-void
-	TerminalView_SetCursorGhostVisibility		(TerminalViewRef			inView,
-												 Boolean					inIsVisible);
-
-void
-	TerminalView_SetUpCursorGhost				(TerminalViewRef			inView,
-												 Point						inLocalMouse);
 
 //@}
 
@@ -528,9 +497,6 @@ void
 
 void
 	TerminalView_DeleteScrollback				(TerminalViewRef			inView);
-
-SInt16
-	TerminalView_SetPortScreenPort				(TerminalViewRef			inView);
 
 void
 	TerminalView_ZoomToCursor					(TerminalViewRef			inView,

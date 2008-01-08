@@ -376,11 +376,13 @@ static void				setBlinkingTimerActive			(TerminalViewPtr, Boolean);
 static void				setCursorGhostVisibility		(TerminalViewPtr, Boolean);
 static void				setCursorVisibility				(TerminalViewPtr, Boolean);
 static void				setFontAndSize					(TerminalViewPtr, ConstStringPtr, UInt16);
+static SInt16			setPortScreenPort				(TerminalViewPtr);
 static void				setScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
 static void				setScreenPaletteColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
 static void				setUpCursorBounds				(TerminalViewPtr, SInt16, SInt16, Rect*,
 														 TerminalView_CursorType =
 															kTerminalView_CursorTypeCurrentPreferenceValue);
+static void				setUpCursorGhost				(TerminalViewPtr, Point);
 static void				setUpScreenFontMetrics			(TerminalViewPtr);
 static void				sortAnchors						(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 static pascal OSErr		supplyTextSelectionToDrag		(FlavorType, void*, DragItemRef, DragRef);
@@ -1186,61 +1188,6 @@ TerminalView_GetTheoreticalViewSize		(TerminalViewRef	inView,
 
 
 /*!
-Translates pixels in the coordinate system of a
-window so that they are relative to the origin of
-the screen.  In version 2.6, the program always
-assumed that the screen origin was the top-left
-corner of the window, which made it extremely hard
-to change.  Now, this routine is invoked everywhere
-to ensure that, before port pixel offsets are used
-to refer to the screen, they are translated
-correctly.
-
-If you are not interested in translating a point,
-but rather in shifting a dimension horizontally or
-vertically, you can pass nullptr for the dimension
-that you do not use.
-
-See also TerminalView_ScreenToLocal().
-
-(3.0)
-*/
-void
-TerminalView_LocalToScreen	(TerminalViewRef	inView,
-							 SInt16*			inoutHorizontalPixelOffsetFromPortOrigin,
-							 SInt16*			inoutVerticalPixelOffsetFromPortOrigin)
-{
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	localToScreen(viewPtr, inoutHorizontalPixelOffsetFromPortOrigin, inoutVerticalPixelOffsetFromPortOrigin);
-}// LocalToScreen
-
-
-/*!
-Translates a boundary in the coordinate system of a
-window so that it is relative to the origin of the
-screen.  In version 2.6, the program always assumed
-that the screen origin was the top-left corner of
-the window, which made it extremely hard to change.
-Now, this routine is invoked everywhere to ensure
-that, before port pixel offsets are used to refer to
-the screen, they are translated correctly.
-
-(3.0)
-*/
-void
-TerminalView_LocalToScreenRect	(TerminalViewRef	inView,
-								 Rect*				inoutPortOriginBounds)
-{
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	localToScreenRect(viewPtr, inoutPortOriginBounds);
-}// LocalToScreenRect
-
-
-/*!
 MacTelnet 3.0 supports two modes of text selection:
 standard, like most Macintosh applications, and
 rectangular, which allows only rectangular regions,
@@ -1749,65 +1696,6 @@ TerminalView_SaveSelectedText	(TerminalViewRef	inView,
 
 
 /*!
-Translates pixels in the coordinate system of a
-screen so that they are relative to the origin of
-the window itself.  In version 2.6, the program
-always assumed that the screen origin was the
-top-left corner of the window, which made it
-extremely hard to change.  Now, this routine is
-invoked everywhere to ensure that, before pixel
-offsets are used to refer to the screen, they are
-translated correctly.
-
-If you are not interested in translating a point,
-but rather in shifting a dimension horizontally or
-vertically, you can pass nullptr for the dimension
-that you do not use.
-
-See also TerminalView_LocalToScreen().
-
-(3.0)
-*/
-void
-TerminalView_ScreenToLocal	(TerminalViewRef	inView,
-							 SInt16*			inoutHorizontalPixelOffsetFromScreenOrigin,
-							 SInt16*			inoutVerticalPixelOffsetFromScreenOrigin)
-{
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	if (viewPtr != nullptr) screenToLocal(viewPtr, inoutHorizontalPixelOffsetFromScreenOrigin,
-											inoutVerticalPixelOffsetFromScreenOrigin);
-}// ScreenToLocal
-
-
-/*!
-Translates a boundary in the coordinate system of a
-screen so that it is relative to the origin of the
-window itself.  In version 2.6, the program always
-assumed that the screen origin was the top-left
-corner of the window, which made it extremely hard
-to change.  Now, this routine is invoked everywhere
-to ensure that, before pixel offsets are used to
-refer to the screen, they are translated correctly.
-
-(3.0)
-*/
-void
-TerminalView_ScreenToLocalRect	(TerminalViewRef	inView,
-								 Rect*				inoutScreenOriginBounds)
-{
-	if (inoutScreenOriginBounds != nullptr)
-	{
-		TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-		
-		
-		screenToLocalRect(viewPtr, inoutScreenOriginBounds);
-	}
-}// ScreenToLocalRect
-
-
-/*!
 Scrolls the contents of the terminal screen both
 horizontally and vertically.  If a delta is negative,
 the *contents* of the screen move down or to the right;
@@ -2248,37 +2136,6 @@ TerminalView_SetColor	(TerminalViewRef			inView,
 
 
 /*!
-This method hides or shows the cursor ÒghostÓ
-in the specified view.  The ghost can exist at
-a location other than the real cursor, and is
-used to indicate a theoretical new cursor
-position.  Typically you display the ghost at
-the beginning of a mouse drag operation, and
-hide it at the end.
-
-NOTE:	You cannot move the real cursor through
-		a similar API, in part because it is
-		best controlled by the terminal screen
-		model (events in the screen buffer
-		trigger events to update the cursor in
-		corresponding views).  But the ghost is
-		purely a view decoration and therefore
-		is not in the terminal screen model.
-
-(3.0)
-*/
-void
-TerminalView_SetCursorGhostVisibility	(TerminalViewRef	inView,
-										 Boolean			inIsVisible)
-{
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	setCursorGhostVisibility(viewPtr, inIsVisible);
-}// SetCursorGhostVisibility
-
-
-/*!
 Changes the current display mode, which is normal by default.
 Query it later with TerminalView_ReturnDisplayMode().
 
@@ -2453,97 +2310,6 @@ TerminalView_SetFontAndSize		(TerminalViewRef	inView,
 	
 	return result;
 }// SetFontAndSize
-
-
-/*!
-Sets the current port to the port of the
-indicated terminal window.
-
-Obsolete.
-
-(2.6)
-*/
-SInt16
-TerminalView_SetPortScreenPort	(TerminalViewRef	inView)
-{
-	SInt16					result = 0;
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	if (viewPtr == nullptr) result = -3;
-	else
-	{
-		static TerminalViewRef	oldView = nullptr;
-		WindowRef				window = viewPtr->window.ref;
-		
-		
-		if (window == nullptr) result = -4;
-		else
-		{
-			if (oldView != inView) // is last-used window different?
-			{
-				oldView = inView;
-				viewPtr->text.attributes = kInvalidTerminalTextAttributes; // attributes will need setting
-				result = 1;
-			}
-			SetPortWindowPort(window);
-		}
-	}
-	
-	return result;
-}// SetPortScreenPort
-
-
-/*!
-Specifies the top-left corner of the ghost cursor in
-coordinates local to the WINDOW.  The coordinates are
-automatically converted to screen coordinates based on
-wherever the terminal view happens to be.
-
-The ghost cursor is used during drags to indicate where
-the cursor would go, but is not indicative of the
-cursorÕs actual position.
-
-NOTE:	This routine currently anchors the cursor at the
-		edges of the screen, when in fact the better
-		behavior is to hide the cursor if it is not in
-		the screen area.
-
-(3.0)
-*/
-void
-TerminalView_SetUpCursorGhost	(TerminalViewRef	inView,
-								 Point				inLocalMouse)
-{
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	if (viewPtr != nullptr)
-	{
-		Rect	screenBounds;
-		
-		
-		GetControlBounds(viewPtr->contentHIView, &screenBounds);
-		
-		// do not show the ghost if the point is not inside the screen area
-		if (PtInRect(inLocalMouse, &screenBounds))
-		{
-			TerminalView_Cell	newColumnRow;
-			SInt16				deltaColumn = 0;
-			SInt16				deltaRow = 0;
-			
-			
-			(Boolean)findVirtualCellFromLocalPoint(viewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
-			// cursor is visible - put it where itÕs supposed to be
-			setUpCursorBounds(viewPtr, newColumnRow.first, newColumnRow.second, &viewPtr->screen.cursor.ghostBounds);
-		}
-		else
-		{
-			// cursor is outside the screen - do not show any cursor in the visible screen area
-			setUpCursorBounds(viewPtr, -100/* arbitrary */, -100/* arbitrary */, &viewPtr->screen.cursor.ghostBounds);
-		}
-	}
-}// SetUpCursorGhost
 
 
 /*!
@@ -3760,7 +3526,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 		
 		// save the graphics port state and the current graphics port
 		GetGWorld(&oldPort, &oldDevice);
-		TerminalView_SetPortScreenPort(inTerminalViewPtr->selfRef);
+		setPortScreenPort(inTerminalViewPtr);
 		
 		// for better performance on Mac OS X, lock the bits of a port
 		// before performing a series of QuickDraw operations in it,
@@ -8242,7 +8008,7 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 	
 	// set the font metrics (including double size)
 	GetGWorld(&oldPort, &oldDevice);
-	TerminalView_SetPortScreenPort(inViewPtr->selfRef);
+	setPortScreenPort(inViewPtr);
 	TextFontByName(inViewPtr->text.font.familyName);
 	TextSize(inViewPtr->text.font.normalMetrics.size);
 	setUpScreenFontMetrics(inViewPtr);
@@ -8266,6 +8032,44 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 	// notify listeners that the size has changed
 	eventNotifyForView(inViewPtr, kTerminalView_EventFontSizeChanged, inViewPtr->selfRef/* context */);
 }// setFontAndSize
+
+
+/*!
+Sets the current port to the port of the
+indicated terminal window.
+
+Obsolete.
+
+(2.6)
+*/
+static SInt16
+setPortScreenPort	(TerminalViewPtr	inTerminalViewPtr)
+{
+	SInt16		result = 0;
+	
+	
+	if (nullptr == inTerminalViewPtr) result = -3;
+	else
+	{
+		static TerminalViewPtr	oldViewPtr = nullptr;
+		WindowRef				window = inTerminalViewPtr->window.ref;
+		
+		
+		if (nullptr == window) result = -4;
+		else
+		{
+			if (oldViewPtr != inTerminalViewPtr) // is last-used window different?
+			{
+				oldViewPtr = inTerminalViewPtr;
+				inTerminalViewPtr->text.attributes = kInvalidTerminalTextAttributes; // attributes will need setting
+				result = 1;
+			}
+			SetPortWindowPort(window);
+		}
+	}
+	
+	return result;
+}// setPortScreenPort
 
 
 /*!
@@ -8446,6 +8250,52 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 		break;
 	}
 }// setUpCursorBounds
+
+
+/*!
+Specifies the top-left corner of the ghost cursor in
+coordinates local to the WINDOW.  The coordinates are
+automatically converted to screen coordinates based on
+wherever the terminal view happens to be.
+
+The ghost cursor is used during drags to indicate where
+the cursor would go, but is not indicative of the
+cursorÕs actual position.
+
+NOTE:	This routine currently anchors the cursor at the
+		edges of the screen, when in fact the better
+		behavior is to hide the cursor if it is not in
+		the screen area.
+
+(3.0)
+*/
+static void
+setUpCursorGhost	(TerminalViewPtr	inTerminalViewPtr,
+					 Point				inLocalMouse)
+{
+	Rect	screenBounds;
+	
+	
+	GetControlBounds(inTerminalViewPtr->contentHIView, &screenBounds);
+	
+	// do not show the ghost if the point is not inside the screen area
+	if (PtInRect(inLocalMouse, &screenBounds))
+	{
+		TerminalView_Cell	newColumnRow;
+		SInt16				deltaColumn = 0;
+		SInt16				deltaRow = 0;
+		
+		
+		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
+		// cursor is visible - put it where itÕs supposed to be
+		setUpCursorBounds(inTerminalViewPtr, newColumnRow.first, newColumnRow.second, &inTerminalViewPtr->screen.cursor.ghostBounds);
+	}
+	else
+	{
+		// cursor is outside the screen - do not show any cursor in the visible screen area
+		setUpCursorBounds(inTerminalViewPtr, -100/* arbitrary */, -100/* arbitrary */, &inTerminalViewPtr->screen.cursor.ghostBounds);
+	}
+}// setUpCursorGhost
 
 
 /*!
@@ -9078,7 +8928,7 @@ visualBell	(TerminalViewRef	inView)
 	
 	GetGWorld(&oldPort, &oldDevice);
 	
-	TerminalView_SetPortScreenPort(inView);
+	setPortScreenPort(viewPtr);
 	
 	if (viewPtr == nullptr) SetRect(&terminalScreenRect, 0, 0, 0, 0);
 	else
@@ -9112,7 +8962,7 @@ visualBell	(TerminalViewRef	inView)
 	// very little delay, therefore a standard visual delay of 8
 	// ticks should be enforced even if a beep was emitted.
 	GenericThreads_DelayMinimumTicks(8);
-	TerminalView_SetPortScreenPort(inView);
+	setPortScreenPort(viewPtr);
 	
 	// if previously inverted, invert again to restore to normal
 	if (visual)
