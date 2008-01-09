@@ -164,7 +164,7 @@ define config_for_app
 			s|===SHARED_SOURCE===|$(strip $(SHARED_SRC))|; \
 			s|===SHARED_INCL===|$(strip $(SHARED_INCL))|; \
 			"\
-			$(strip $(TMP_CONF))"
+			"$(strip $(TMP_CONF))"
 	$(config_common)
 
 endef
