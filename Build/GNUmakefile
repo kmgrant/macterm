@@ -465,6 +465,14 @@ $(DEST_APP_TOP)/Info.plist: FORCE
 		$(CURDIR)/VersionInfo.sh $(CURDIR)/Tools/AutoDatePropertyList.sh
 
 #
+# PkgInfo file
+#
+
+$(DEST_APP_TOP)/PkgInfo: FORCE
+	$(MKDIR_P) $(dir $@)
+	/bin/echo -n 'APPLKevG' >| $@
+
+#
 # Primary Rules
 #
 
@@ -473,6 +481,7 @@ debug:
 	@# just comment-out anything you don't care about; MacTelnet
 	@# still works with most of its components missing
 	$(MAKE) $(DEST_APP_TOP)/Info.plist
+	$(MAKE) $(DEST_APP_TOP)/PkgInfo
 	$(MAKE) install-frameworks
 	$(MAKE) install-executables
 	$(MAKE) install-resources
