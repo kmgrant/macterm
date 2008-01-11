@@ -3,7 +3,7 @@
 	Configure.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -57,6 +57,7 @@
 #include "StringResources.h"
 
 // MacTelnet includes
+#include "AppResources.h"
 #include "ColorBox.h"
 #include "Configure.h"
 #include "ConstantsRegistry.h"
@@ -291,7 +292,7 @@ GetApplicationSpec	(ConstStr255Param		inPrompt,
 	
 	
 	Alert_ReportOSStatus(error = FileSelectionDialogs_GetFile
-									(inPrompt, inTitle, kConstantsRegistry_ApplicationCreatorSignature,
+									(inPrompt, inTitle, AppResources_ReturnCreatorCode(),
 										kPreferences_NavPrefKeyChooseTextEditor,
 										kNavNoTypePopup |
 										kNavDontAutoTranslate |
@@ -332,7 +333,7 @@ GetApplicationType	(OSType*	type)
 		
 		
 		Alert_ReportOSStatus(error = FileSelectionDialogs_GetFile
-										(prompt, title, kConstantsRegistry_ApplicationCreatorSignature,
+										(prompt, title, AppResources_ReturnCreatorCode(),
 											kPreferences_NavPrefKeyChooseTextEditor,
 											kNavNoTypePopup |
 											kNavDontAutoTranslate |

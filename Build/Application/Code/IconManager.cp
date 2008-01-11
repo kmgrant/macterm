@@ -3,7 +3,7 @@
 	IconManager.cp
 	
 	Interface Library 2.0
-	© 1998-2006 by Kevin Grant
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -502,7 +502,7 @@ IconManager_MakeIconSuite	(IconManagerIconRef		inRef,
 					// to ensure that separate references are created is to coerce the
 					// resource ID into an icon type four-character code.  If a
 					// static value were chosen, then all icons would be the same!!!
-					if (RegisterIconRefFromResource(kConstantsRegistry_ApplicationCreatorSignature,
+					if (RegisterIconRefFromResource(AppResources_ReturnCreatorCode(),
 													(OSType)inSuiteResourceID,
 													&mainApplicationResourceFile, inSuiteResourceID,
 													&ptr->data.OSX) == noErr)
@@ -616,7 +616,7 @@ IconManager_MakeOldColorIcon	(IconManagerIconRef		inRef,
 					// to ensure that separate references are created is to coerce the
 					// resource ID into an icon type four-character code.  If a
 					// static value were chosen, then all icons would be the same!!!
-					if (RegisterIconRefFromResource(kConstantsRegistry_ApplicationCreatorSignature,
+					if (RegisterIconRefFromResource(AppResources_ReturnCreatorCode(),
 													(OSType)inIconResourceID_cicn,
 													&mainApplicationResourceFile, inIconResourceID_cicn,
 													&ptr->data.OSX) == noErr)

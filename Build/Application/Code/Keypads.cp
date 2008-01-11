@@ -3,7 +3,7 @@
 	Keypads.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -273,7 +273,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadEnterIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadEnter);
 			IconManager_SetButtonIcon(enterButton, iconRef);
 			
@@ -289,7 +289,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadArrowDownIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadArrowDown);
 			IconManager_SetButtonIcon(arrowButton, iconRef);
 			
@@ -305,7 +305,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadArrowLeftIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadArrowLeft);
 			IconManager_SetButtonIcon(arrowButton, iconRef);
 			
@@ -321,7 +321,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadArrowRightIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadArrowRight);
 			IconManager_SetButtonIcon(arrowButton, iconRef);
 			
@@ -337,7 +337,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadArrowUpIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadArrowUp);
 			IconManager_SetButtonIcon(arrowButton, iconRef);
 			
@@ -353,7 +353,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadDeleteIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadDelete);
 			IconManager_SetButtonIcon(keypadButton, iconRef);
 			
@@ -369,7 +369,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadFindIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadFind);
 			IconManager_SetButtonIcon(keypadButton, iconRef);
 			
@@ -385,7 +385,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadInsertIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadInsert);
 			IconManager_SetButtonIcon(keypadButton, iconRef);
 			
@@ -401,7 +401,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadPageDownIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadPageDown);
 			IconManager_SetButtonIcon(pageButton, iconRef);
 			
@@ -417,7 +417,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadPageUpIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadPageUp);
 			IconManager_SetButtonIcon(pageButton, iconRef);
 			
@@ -433,7 +433,7 @@ Keypads_Init ()
 		{
 			(OSStatus)IconManager_MakeIconRefFromBundleFile
 						(iconRef, AppResources_ReturnKeypadSelectIconFilenameNoExtension(),
-							kConstantsRegistry_ApplicationCreatorSignature,
+							AppResources_ReturnCreatorCode(),
 							kConstantsRegistry_IconServicesIconKeypadSelect);
 			IconManager_SetButtonIcon(keypadButton, iconRef);
 			

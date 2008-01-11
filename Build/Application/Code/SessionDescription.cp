@@ -3,7 +3,7 @@
 	SessionDescription.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -79,6 +79,7 @@
 #include "StringResources.h"
 
 // MacTelnet includes
+#include "AppResources.h"
 #include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
@@ -713,7 +714,7 @@ SessionDescription_Load ()
 	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
 	Alert_ReportOSStatus(error = FileSelectionDialogs_GetFiles
 									(promptCFString, titleCFString,
-										kConstantsRegistry_ApplicationCreatorSignature,
+										AppResources_ReturnCreatorCode(),
 										kPreferences_NavPrefKeyGenericOpenFile,
 										kNavDontAddTranslateItems | kNavAllowMultipleFiles | kNavAllFilesInPopup,
 										sizeof(typeList) / sizeof(OSType), typeList,
@@ -745,7 +746,7 @@ SessionDescription_ReadFromFile		(FSSpec const*		inFilePtr)
 	error = FSMakeFSSpec(inFilePtr->vRefNum, inFilePtr->parID, inFilePtr->name, &fileSpec);
 	if (error == fnfErr)
 	{
-		error = FSpCreate(&fileSpec, kConstantsRegistry_ApplicationCreatorSignature,
+		error = FSpCreate(&fileSpec, AppResources_ReturnCreatorCode(),
 							kApplicationFileTypeSessionDescription, APPLICATION_SCRIPTMANAGER_REGIONCODE);
 	}
 	if (error == noErr)

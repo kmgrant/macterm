@@ -92,6 +92,9 @@ CFBundleRef
 CFBundleRef
 	AppResources_ReturnBundleForNIBs									();
 
+UInt32
+	AppResources_ReturnCreatorCode										();
+
 Boolean
 	AppResources_GetArbitraryResourceFileFSRef							(CFStringRef					inName,
 																		 CFStringRef					inTypeOrNull,

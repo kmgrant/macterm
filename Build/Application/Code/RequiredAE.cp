@@ -55,6 +55,7 @@
 
 // MacTelnet includes
 #include "AppleEventUtilities.h"
+#include "AppResources.h"
 #include "BasicTypesAE.h"
 #include "Clipboard.h"
 #include "Commands.h"
@@ -466,14 +467,14 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 							// it appears to be a script; run it
 							AppleEventUtilities_ExecuteScriptFile(&file, true/* notify user of errors */);
 						}
-						else if ((fileInfo.fileCreator == kConstantsRegistry_ApplicationCreatorSignature &&
+						else if ((fileInfo.fileCreator == AppResources_ReturnCreatorCode() &&
 										fileInfo.fileType == kApplicationFileTypeSessionDescription) ||
 									StringUtilities_PEndsWith(file.name, "\p.session"))
 						{
 							// read a configuration set
 							SessionDescription_ReadFromFile(&file);
 						}
-						else if ((//fileInfo.fileCreator == kConstantsRegistry_ApplicationCreatorSignature &&
+						else if ((//fileInfo.fileCreator == AppResources_ReturnCreatorCode() &&
 										fileInfo.fileType == kApplicationFileTypeMacroSet) ||
 									StringUtilities_PEndsWith(file.name, "\p.macros"))
 						{

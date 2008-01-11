@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -52,7 +52,7 @@
 //@{
 
 /*!
-Control kinds that use kConstantsRegistry_ApplicationCreatorSignature
+Control kinds that use AppResources_ReturnCreatorCode()
 (this application) as the signature.
 */
 enum
@@ -66,7 +66,7 @@ API; kept in one place so they are known to be unique.
 */
 enum
 {
-	kConstantsRegistry_ControlPropertyCreator						= 'KevG',	//!< use as the creator code of all control properties
+	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
 	kConstantsRegistry_ControlPropertyTypeAddressDialog				= 'ADlg',	//!< data: AddressDialog_Ref
 	kConstantsRegistry_ControlPropertyTypeColorBoxData				= 'ClBx',	//!< data: MyColorBoxDataPtr (internal to ColorBox.cp)
 	kConstantsRegistry_ControlPropertyTypeShowDragHighlight			= 'Drag',	//!< data: Boolean (if true, draw highlight; if false; erase)
@@ -76,7 +76,7 @@ enum
 };
 
 /*!
-Control kinds that use kConstantsRegistry_ApplicationCreatorSignature
+Control kinds that use AppResources_ReturnCreatorCode()
 (this application) as the signature.
 */
 enum
@@ -129,12 +129,12 @@ CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalLED4			= CFSTR("com.
 CFStringRef const kConstantsRegistry_HIToolbarItemIDTerminalSearch			= CFSTR("com.mactelnet.toolbaritem.terminalsearch");
 
 /*!
-Used when registering icons with Icon Services under the
-creator "kConstantsRegistry_ApplicationCreatorSignature".
+Used when registering icons with Icon Services.
 These must all be unique within the application.
 */
 enum
 {
+	// use AppResources_ReturnCreatorCode() to set the creator of these icons
 	kConstantsRegistry_IconServicesIconApplication				= FOUR_CHAR_CODE('AppI'),
 	kConstantsRegistry_IconServicesIconFileTypeMacroSet			= FOUR_CHAR_CODE('PMcS'),
 	kConstantsRegistry_IconServicesIconItemAdd					= FOUR_CHAR_CODE('AddI'),
@@ -183,7 +183,7 @@ API; kept in one place so they are known to be unique.
 */
 enum
 {
-	kConstantsRegistry_WindowPropertyCreator			= 'KevG',	//!< use as the creator code of all window properties
+	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
 	kConstantsRegistry_WindowPropertyTypeWindowInfoRef	= 'WInf'	//!< data: WindowInfo_Ref
 };
 
@@ -333,16 +333,6 @@ enum
 	kFlagSuspended					= (kFlagManager_FirstValidFlag + 11),	//!< is MacTelnetÕs process in the background?
 	kFlagThreadManager				= (kFlagManager_FirstValidFlag + 12),	//!< is the Thread Manager (any version) installed?
 	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 13)	//!< skip auto-new-window on application launch?
-};
-
-//@}
-
-//!\name Miscellaneous Constants
-//@{
-
-enum
-{
-	kConstantsRegistry_ApplicationCreatorSignature = FOUR_CHAR_CODE('KevG')
 };
 
 //@}

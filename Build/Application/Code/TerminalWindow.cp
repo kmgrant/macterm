@@ -3,7 +3,7 @@
 	TerminalWindow.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -2344,7 +2344,7 @@ createBellOffIcon ()
 		(AppResources_ReturnBellOffIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemBellOff,
 												&iconFile, &result))
 		{
@@ -2374,7 +2374,7 @@ createBellOnIcon ()
 		(AppResources_ReturnBellOnIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemBellOn,
 												&iconFile, &result))
 		{
@@ -2404,7 +2404,7 @@ createFullScreenIcon ()
 		(AppResources_ReturnPrefPanelKioskIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemFullScreen,
 												&iconFile, &result))
 		{
@@ -2434,7 +2434,7 @@ createHideWindowIcon ()
 		(AppResources_ReturnHideWindowIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemHideWindow,
 												&iconFile, &result))
 		{
@@ -2486,7 +2486,7 @@ createLEDOffIcon ()
 		(AppResources_ReturnLEDOffIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemLEDOff,
 												&iconFile, &result))
 		{
@@ -2516,7 +2516,7 @@ createLEDOnIcon ()
 		(AppResources_ReturnLEDOnIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemLEDOn,
 												&iconFile, &result))
 		{
@@ -2546,7 +2546,7 @@ createScrollLockOffIcon ()
 		(AppResources_ReturnScrollLockOffIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemScrollLockOff,
 												&iconFile, &result))
 		{
@@ -2576,7 +2576,7 @@ createScrollLockOnIcon ()
 		(AppResources_ReturnScrollLockOnIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconToolbarItemScrollLockOn,
 												&iconFile, &result))
 		{
@@ -2705,7 +2705,7 @@ createViews		(TerminalWindowPtr	inPtr)
 			error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
 											true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarV);
 			assert_noerr(error);
-			error = SetControlProperty(inPtr->controls.scrollBarV, kConstantsRegistry_ControlPropertyCreator,
+			error = SetControlProperty(inPtr->controls.scrollBarV, AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
 										sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
 			assert_noerr(error);
@@ -2717,7 +2717,7 @@ createViews		(TerminalWindowPtr	inPtr)
 			error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
 											true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarH);
 			assert_noerr(error);
-			error = SetControlProperty(inPtr->controls.scrollBarH, kConstantsRegistry_ControlPropertyCreator,
+			error = SetControlProperty(inPtr->controls.scrollBarH, AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
 										sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
 			assert_noerr(error);
@@ -5038,7 +5038,7 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 	
 	
 	// retrieve TerminalWindowRef from control
-	error = GetControlProperty(inScrollBarClicked, kConstantsRegistry_ControlPropertyCreator,
+	error = GetControlProperty(inScrollBarClicked, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
 								sizeof(terminalWindow), &actualSize, &terminalWindow);
 	assert_noerr(error);
@@ -5344,7 +5344,7 @@ setCursorInWindow	(WindowRef		inWindow,
 			
 			
 			result = GetControlKind(viewUnderMouse, &controlKind);
-			if ((kConstantsRegistry_ApplicationCreatorSignature == controlKind.signature) &&
+			if ((AppResources_ReturnCreatorCode() == controlKind.signature) &&
 				(kConstantsRegistry_ControlKindTerminalView == controlKind.kind))
 			{
 				// for terminal views, it is possible to determine whether or not
@@ -5353,7 +5353,7 @@ setCursorInWindow	(WindowRef		inWindow,
 				UInt32				actualSize = 0;
 				
 				
-				result = GetControlProperty(viewUnderMouse, kConstantsRegistry_ControlPropertyCreator,
+				result = GetControlProperty(viewUnderMouse, AppResources_ReturnCreatorCode(),
 											kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
 											sizeof(view), &actualSize, &view);
 				if (noErr == result)

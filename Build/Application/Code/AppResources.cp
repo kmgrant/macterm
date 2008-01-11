@@ -403,6 +403,34 @@ AppResources_ReturnBundleForNIBs ()
 
 
 /*!
+Returns the four-character code representing the application,
+used with many system APIs as a quick way to produce a value
+that is reasonably unique compared to other applications.
+
+(3.1)
+*/
+UInt32
+AppResources_ReturnCreatorCode ()
+{
+	static UInt32	gCreatorCode = 0;
+	
+	
+	// only need to look it up once, then remember it
+	if (0 == gCreatorCode)
+	{
+		CFBundleRef		infoBundle = AppResources_ReturnBundleForInfo();
+		UInt32			typeCode = 0;
+		
+		
+		assert(nullptr != infoBundle);
+		CFBundleGetPackageInfo(infoBundle, &typeCode, &gCreatorCode);
+		assert(0 != gCreatorCode);
+	}
+	return gCreatorCode;
+}// ReturnCreatorCode
+
+
+/*!
 To determine a resource file’s reference number
 given its resource file descriptor, use this
 method.

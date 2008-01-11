@@ -3,7 +3,7 @@
 	TerminalBackground.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -43,6 +43,7 @@
 #include <Console.h>
 
 // MacTelnet includes
+#include "AppResources.h"
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "ContextualMenuBuilder.h"
@@ -203,7 +204,7 @@ TerminalBackground_CreateHIView		(WindowRef		inParentWindow,
 				
 				// the event handlers for this class of HIObject will attach a custom
 				// control property to the new view, containing the TerminalViewRef
-				result = GetControlProperty(outHIViewRef, kConstantsRegistry_ControlPropertyCreator,
+				result = GetControlProperty(outHIViewRef, AppResources_ReturnCreatorCode(),
 											kConstantsRegistry_ControlPropertyTypeTerminalBackgroundData,
 											sizeof(result), &actualSize, &result);
 				if (noErr == result)
@@ -565,7 +566,7 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 							// IMPORTANT: Set a property with the MyTerminalBackgroundPtr, so that code
 							// invoking HIObjectCreate() has a reasonable way to get this value.
 							result = SetControlProperty(superclassHIObjectAsHIView,
-														kConstantsRegistry_ControlPropertyCreator,
+														AppResources_ReturnCreatorCode(),
 														kConstantsRegistry_ControlPropertyTypeTerminalBackgroundData,
 														sizeof(ptr), &ptr);
 						}

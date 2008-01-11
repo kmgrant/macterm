@@ -3,7 +3,7 @@
 	Clipboard.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1552,7 +1552,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 								
 								
 								if (noErr != GetControlProperty
-												(control, kConstantsRegistry_ControlPropertyCreator,
+												(control, AppResources_ReturnCreatorCode(),
 													kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
 													sizeof(dragHighlight), &actualSize,
 													&dragHighlight))
@@ -1666,7 +1666,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 								
 								
 								if (noErr != GetControlProperty
-												(control, kConstantsRegistry_ControlPropertyCreator,
+												(control, AppResources_ReturnCreatorCode(),
 													kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
 													sizeof(dragHighlight), &actualSize,
 													&dragHighlight))
@@ -1759,7 +1759,7 @@ receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 						Boolean		showHighlight = (kEventControlDragWithin == kEventKind);
 						
 						
-						result = SetControlProperty(view, kConstantsRegistry_ControlPropertyCreator,
+						result = SetControlProperty(view, AppResources_ReturnCreatorCode(),
 													kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
 													sizeof(showHighlight), &showHighlight);
 						// change the cursor, for additional visual feedback

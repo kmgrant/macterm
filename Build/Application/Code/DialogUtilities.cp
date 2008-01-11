@@ -328,7 +328,7 @@ DebugSelectControlHierarchyDumpFile		(WindowRef		inForWindow)
 		
 		Alert_ReportOSStatus(error = FileSelectionDialogs_PutFile
 										(prompt, title, fileDefaultName,
-											kConstantsRegistry_ApplicationCreatorSignature, 'TEXT',
+											AppResources_ReturnCreatorCode(), 'TEXT',
 											kPreferences_NavPrefKeyGenericSaveFile,
 											kNavDefaultNavDlogOptions | kNavDontAddTranslateItems,
 											EventLoop_HandleNavigationUpdate, &reply, &file));

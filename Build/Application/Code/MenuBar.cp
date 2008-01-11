@@ -1255,7 +1255,7 @@ buildMenuBar ()
 			
 			
 			error = IconManager_MakeIconRefFromBundleFile(icon, CFSTR("IconForScriptsMenu"),
-															kConstantsRegistry_ApplicationCreatorSignature,
+															AppResources_ReturnCreatorCode(),
 															kConstantsRegistry_IconServicesIconMenuTitleScripts);
 			if (noErr == error)
 			{

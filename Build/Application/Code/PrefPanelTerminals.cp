@@ -128,7 +128,7 @@ PrefPanelTerminals_New ()
 			CFRelease(nameCFString), nameCFString = nullptr;
 		}
 		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTerminalsIconFilenameNoExtension(),
-										kConstantsRegistry_ApplicationCreatorSignature,
+										AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_IconServicesIconPrefPanelTerminals);
 		Panel_SetImplementation(result, dataPtr);
 		dataPtr->panel = result;

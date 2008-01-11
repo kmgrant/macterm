@@ -657,7 +657,7 @@ TerminalView_NewHIViewBased		(TerminalScreenRef		inScreenDataSource,
 					
 					// the event handlers for this class of HIObject will attach a custom
 					// property to the new view, containing the TerminalViewRef
-					error = GetControlProperty(contentHIView, kConstantsRegistry_ControlPropertyCreator,
+					error = GetControlProperty(contentHIView, AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
 												sizeof(result), &actualSize, &result);
 					if (noErr == error)
@@ -1516,7 +1516,7 @@ TerminalView_ReturnUserFocusTerminalView ()
 			
 			// if this control really is a Terminal View, it should have
 			// the view reference attached as a control property
-			error = GetControlProperty(focusView, kConstantsRegistry_ControlPropertyCreator,
+			error = GetControlProperty(focusView, AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
 										sizeof(result), &actualSize, &result);
 			if (noErr != error) result = nullptr;
@@ -2186,7 +2186,7 @@ TerminalView_SetDragHighlight	(HIViewRef		inView,
 	// set a property so that the view drawing routine understands
 	// when it should include a drag highlight
 	// TEMPORARY: this error is ignored, perhaps this function should return an error
-	(OSStatus)SetControlProperty(inView, kConstantsRegistry_ControlPropertyCreator,
+	(OSStatus)SetControlProperty(inView, AppResources_ReturnCreatorCode(),
 									kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
 									sizeof(showHighlight), &showHighlight);
 	
@@ -6129,7 +6129,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 							// IMPORTANT: Set a property with the TerminalViewRef, so that code
 							// invoking HIObjectCreate() has a reasonable way to get this value.
 							result = SetControlProperty(superclassHIObjectAsHIView,
-														kConstantsRegistry_ControlPropertyCreator,
+														AppResources_ReturnCreatorCode(),
 														kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
 														sizeof(ref), &ref);
 						}
@@ -6794,7 +6794,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							UInt32		actualSize = 0;
 							
 							
-							if (noErr != GetControlProperty(view, kConstantsRegistry_ControlPropertyCreator,
+							if (noErr != GetControlProperty(view, AppResources_ReturnCreatorCode(),
 															kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
 															sizeof(dragHighlight), &actualSize,
 															&dragHighlight))
@@ -6890,7 +6890,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							UInt32		actualSize = 0;
 							
 							
-							if (noErr != GetControlProperty(view, kConstantsRegistry_ControlPropertyCreator,
+							if (noErr != GetControlProperty(view, AppResources_ReturnCreatorCode(),
 															kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
 															sizeof(dragHighlight), &actualSize,
 															&dragHighlight))
@@ -7113,7 +7113,7 @@ receiveTerminalViewGetData	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRe
 												typePtr, kindPtr);
 								if (noErr == result)
 								{
-									kindPtr->signature = kConstantsRegistry_ApplicationCreatorSignature;
+									kindPtr->signature = AppResources_ReturnCreatorCode();
 									kindPtr->kind = kConstantsRegistry_ControlKindTerminalView;
 								}
 							}

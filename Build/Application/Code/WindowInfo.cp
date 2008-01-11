@@ -43,6 +43,7 @@
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
+#include "AppResources.h"
 #include "ConstantsRegistry.h"
 
 
@@ -800,7 +801,7 @@ WindowInfo_ReturnFromWindow		(HIWindowRef	inWindow)
 		OSStatus	error = noErr;
 		
 		
-		error = GetWindowProperty(inWindow, kConstantsRegistry_WindowPropertyCreator,
+		error = GetWindowProperty(inWindow, AppResources_ReturnCreatorCode(),
 									kConstantsRegistry_WindowPropertyTypeWindowInfoRef,
 									sizeof(result), nullptr/* actual size */, &result);
 		if (error != noErr)
@@ -970,7 +971,7 @@ WindowInfo_SetForWindow	(HIWindowRef		inWindow,
 	OSStatus	error = noErr;
 	
 	
-	error = SetWindowProperty(inWindow, kConstantsRegistry_WindowPropertyCreator,
+	error = SetWindowProperty(inWindow, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_WindowPropertyTypeWindowInfoRef,
 								sizeof(inWindowInfoRef), &inWindowInfoRef);
 	assert(error == noErr);

@@ -3,7 +3,7 @@
 	AddressDialog.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -301,7 +301,7 @@ addressList						()
 		OSStatus	error = noErr;
 		
 		
-		error = SetControlProperty(dataBrowserAddresses, kConstantsRegistry_ControlPropertyCreator,
+		error = SetControlProperty(dataBrowserAddresses, AppResources_ReturnCreatorCode(),
 									kConstantsRegistry_ControlPropertyTypeAddressDialog,
 									sizeof(this->selfRef), &this->selfRef);
 		assert_noerr(error);
@@ -614,7 +614,7 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 	UInt32				actualSize = 0;
 	
 	
-	error = GetControlProperty(inDataBrowser, kConstantsRegistry_ControlPropertyCreator,
+	error = GetControlProperty(inDataBrowser, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeAddressDialog,
 								sizeof(ref), &actualSize, &ref);
 	assert_noerr(error);

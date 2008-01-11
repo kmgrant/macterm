@@ -3,7 +3,7 @@
 	MacroManager.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -56,6 +56,7 @@
 #include "StringResources.h"
 
 // MacTelnet includes
+#include "AppResources.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
@@ -416,7 +417,7 @@ Macros_ExportToText		(MacroSet						inSet,
 			
 			Alert_ReportOSStatus(error = FileSelectionDialogs_PutFile
 											(prompt, title, fileDefaultName,
-												kConstantsRegistry_ApplicationCreatorSignature,
+												AppResources_ReturnCreatorCode(),
 												kApplicationFileTypeMacroSet,
 												kPreferences_NavPrefKeyMacroStuff,
 												kNavDefaultNavDlogOptions | kNavDontAddTranslateItems,
@@ -435,7 +436,7 @@ Macros_ExportToText		(MacroSet						inSet,
 		
 		
 		// try to create the file; if this fails with a “duplicate file name” error, then the file already exists
-		if ((error = FSpCreate(fileSpecPtr, kConstantsRegistry_ApplicationCreatorSignature,
+		if ((error = FSpCreate(fileSpecPtr, AppResources_ReturnCreatorCode(),
 								kApplicationFileTypeMacroSet, GetScriptManagerVariable(smSysScript))) == dupFNErr)
 		{
 			exists = true;
@@ -539,7 +540,7 @@ Macros_ImportFromText	(MacroSet						inSet,
 			
 			Alert_ReportOSStatus(error = FileSelectionDialogs_GetFile
 											(prompt, title,
-												kConstantsRegistry_ApplicationCreatorSignature,
+												AppResources_ReturnCreatorCode(),
 												kPreferences_NavPrefKeyMacroStuff,
 												kNavDefaultNavDlogOptions | kNavDontAddTranslateItems,
 												1, types, EventLoop_HandleNavigationUpdate, &chosenFile,

@@ -670,7 +670,7 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 		NumToString(dataPtr->result, numString);
 		StringUtilities_PMetaSetDefaults();
 		StringUtilities_PBuild(string, numString, EMPTY_PSTRING, EMPTY_PSTRING, EMPTY_PSTRING);
-		Alert_DebugSendStringToSelf(string, 'KevG', '?WrL');
+		Alert_DebugSendStringToSelf(string, AppResources_ReturnCreatorCode(), '?WrL');
 	}
 #endif
 	

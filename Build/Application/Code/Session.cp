@@ -3,7 +3,7 @@
 	Session.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1178,7 +1178,7 @@ Session_DisplaySaveDialog	(SessionRef		inRef)
 		dialogOptions.modality = kWindowModalityWindowModal;
 	}
 	error = NavCreatePutFileDialog(&dialogOptions, kApplicationFileTypeSessionDescription,
-									kConstantsRegistry_ApplicationCreatorSignature,
+									AppResources_ReturnCreatorCode(),
 									NewNavEventUPP(navigationSaveDialogEvent),
 									inRef/* client data */, &navigationServicesDialog);
 	
@@ -4770,7 +4770,7 @@ createSessionStateActiveIcon ()
 		(AppResources_ReturnSessionStatusActiveIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconSessionStatusActive,
 												&iconFile, &result))
 		{
@@ -4800,7 +4800,7 @@ createSessionStateDeadIcon ()
 		(AppResources_ReturnSessionStatusDeadIconFilenameNoExtension(),
 			CFSTR("icns")/* type */, iconFile))
 	{
-		if (noErr != RegisterIconRefFromFSRef(kConstantsRegistry_ApplicationCreatorSignature,
+		if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_IconServicesIconSessionStatusDead,
 												&iconFile, &result))
 		{
@@ -5720,7 +5720,7 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 				
 				
 				error = FileSelectionDialogs_CreateOrFindUserSaveFile
-						(reply, kConstantsRegistry_ApplicationCreatorSignature,
+						(reply, AppResources_ReturnCreatorCode(),
 							kApplicationFileTypeSessionDescription,
 							saveFile, temporaryFile);
 				if (error == noErr)

@@ -3,7 +3,7 @@
 	ColorBox.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -141,7 +141,7 @@ ColorBox_AttachToBevelButton	(HIViewRef			inoutBevelButton,
 			}
 			
 			// attach data to view
-			result = SetControlProperty(inoutBevelButton, kConstantsRegistry_ControlPropertyCreator,
+			result = SetControlProperty(inoutBevelButton, AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_ControlPropertyTypeColorBoxData,
 										sizeof(dataPtr), &dataPtr);
 		}
@@ -169,7 +169,7 @@ ColorBox_DetachFromBevelButton		(HIViewRef		inView)
 	UInt32				actualSize = 0;
 	
 	
-	error = GetControlProperty(inView, kConstantsRegistry_ControlPropertyCreator,
+	error = GetControlProperty(inView, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeColorBoxData,
 								sizeof(dataPtr), &actualSize, &dataPtr);
 	assert_noerr(error);
@@ -201,7 +201,7 @@ ColorBox_GetColor	(HIViewRef		inView,
 	UInt32				actualSize = 0;
 	
 	
-	error = GetControlProperty(inView, kConstantsRegistry_ControlPropertyCreator,
+	error = GetControlProperty(inView, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeColorBoxData,
 								sizeof(dataPtr), &actualSize, &dataPtr);
 	assert_noerr(error);
@@ -228,7 +228,7 @@ ColorBox_SetColor	(HIViewRef			inView,
 	UInt32				actualSize = 0;
 	
 	
-	error = GetControlProperty(inView, kConstantsRegistry_ControlPropertyCreator,
+	error = GetControlProperty(inView, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeColorBoxData,
 								sizeof(dataPtr), &actualSize, &dataPtr);
 	assert_noerr(error);
@@ -262,7 +262,7 @@ ColorBox_SetColorChangeNotifyProc	(HIViewRef						inView,
 	UInt32				actualSize = 0;
 	
 	
-	error = GetControlProperty(inView, kConstantsRegistry_ControlPropertyCreator,
+	error = GetControlProperty(inView, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeColorBoxData,
 								sizeof(dataPtr), &actualSize, &dataPtr);
 	assert_noerr(error);
@@ -300,7 +300,7 @@ ColorBox_UserSetColor	(HIViewRef		inView)
 	Boolean				result = false;
 	
 	
-	error = GetControlProperty(inView, kConstantsRegistry_ControlPropertyCreator,
+	error = GetControlProperty(inView, AppResources_ReturnCreatorCode(),
 								kConstantsRegistry_ControlPropertyTypeColorBoxData,
 								sizeof(dataPtr), &actualSize, &dataPtr);
 	assert_noerr(error);

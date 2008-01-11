@@ -3,7 +3,7 @@
 	AboutBox.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -187,7 +187,7 @@ AboutBox_Init ()
 	// create an application icon and put it where it’s supposed to be
 	gAboutBoxApplicationIcon = StatusIcon_New(gStandardAboutBoxWindow);
 	StatusIcon_AddStageFromIconRef(gAboutBoxApplicationIcon, 'AppI', AppResources_ReturnBundleIconFilenameNoExtension(),
-									kConstantsRegistry_ApplicationCreatorSignature,
+									AppResources_ReturnCreatorCode(),
 									kConstantsRegistry_IconServicesIconApplication/* icon type */,
 									0L/* ticks of delay in animation - N/A */);
 	
