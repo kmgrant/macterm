@@ -108,6 +108,7 @@ static HIViewID const	idMyBevelButtonBoldBackground		= { FOUR_CHAR_CODE('BBkg'),
 static HIViewID const	idMyBevelButtonBlinkingText			= { FOUR_CHAR_CODE('BlTx'), 0/* ID */ };
 static HIViewID const	idMyBevelButtonBlinkingBackground	= { FOUR_CHAR_CODE('BlBk'), 0/* ID */ };
 static HIViewID const	idMyUserPaneSampleTerminalView		= { FOUR_CHAR_CODE('Smpl'), 0/* ID */ };
+static HIViewID const	idMyHelpTextSampleTerminalView		= { FOUR_CHAR_CODE('HSmp'), 0/* ID */ };
 static HIViewID const	idMyBevelButtonANSINormalBlack		= { FOUR_CHAR_CODE('Cblk'), 0/* ID */ };
 static HIViewID const	idMyBevelButtonANSINormalRed		= { FOUR_CHAR_CODE('Cred'), 0/* ID */ };
 static HIViewID const	idMyBevelButtonANSINormalGreen		= { FOUR_CHAR_CODE('Cgrn'), 0/* ID */ };
@@ -124,46 +125,62 @@ static HIViewID const	idMyBevelButtonANSIBoldBlue			= { FOUR_CHAR_CODE('CBlu'), 
 static HIViewID const	idMyBevelButtonANSIBoldMagenta		= { FOUR_CHAR_CODE('CMag'), 0/* ID */ };
 static HIViewID const	idMyBevelButtonANSIBoldCyan			= { FOUR_CHAR_CODE('CCyn'), 0/* ID */ };
 static HIViewID const	idMyBevelButtonANSIBoldWhite		= { FOUR_CHAR_CODE('CWht'), 0/* ID */ };
+static HIViewID const	idMyHelpTextANSIColors				= { FOUR_CHAR_CODE('HANS'), 0/* ID */ };
 
 #pragma mark Types
 
 /*!
 Implements the “ANSI Colors” tab.
 */
-struct My_FormatsTabANSIColors
+struct My_FormatsTabANSIColors:
+public HIViewWrap
 {
-	My_FormatsTabANSIColors		(HIWindowRef, HIViewRef);
-	
-	HIViewWrap				pane;
-	CarbonEventHandlerWrap	buttonCommandsHandler;		//!< invoked when a button is clicked
+	My_FormatsTabANSIColors		(HIWindowRef);
 
 protected:
 	HIViewWrap
-	createContainerView		(HIWindowRef) const;
+	createPaneView		(HIWindowRef) const;
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	//! you should prefer setCFTypeRef(), which is clearer
+	inline CFRetainRelease&
+	operator =	(CFRetainRelease const&);
+	
+private:
+	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a button is clicked
+	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
 
 /*!
 Implements the “Normal” tab.
 */
-struct My_FormatsTabNormal
+struct My_FormatsTabNormal:
+public HIViewWrap
 {
-	My_FormatsTabNormal		(HIWindowRef, HIViewRef);
+	My_FormatsTabNormal		(HIWindowRef);
 	~My_FormatsTabNormal	();
-	
-	TerminalScreenRef	sampleTerminalScreen;
-	HIViewWrap			pane;
 
 protected:
 	HIViewWrap
-	createContainerView		(HIWindowRef, TerminalScreenRef) const;
+	createPaneView		(HIWindowRef, TerminalScreenRef) const;
+	
+	HIViewRef
+	createSampleTerminalHIView	(HIWindowRef, TerminalScreenRef) const;
 	
 	TerminalScreenRef
 	createSampleTerminalScreen () const;
 	
-	HIViewRef
-	createSampleTerminalHIView	(HIWindowRef, TerminalScreenRef) const;
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	//! you should prefer setCFTypeRef(), which is clearer
+	inline CFRetainRelease&
+	operator =	(CFRetainRelease const&);
 
 private:
+	CommonEventHandlers_HIViewResizer				_containerResizer;
 	CommonEventHandlers_NumericalFieldArrowsRef		_fontSizeArrowsHandler;
 };
 
@@ -172,18 +189,23 @@ Implements the entire panel user interface.
 */
 struct My_FormatsPanelUI
 {
-	My_FormatsPanelUI	(HIWindowRef, HIViewRef);
-	
-	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
-	HIViewWrap							tabView;
-	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a tab is clicked
+	My_FormatsPanelUI	(Panel_Ref, HIWindowRef);
 	
 	My_FormatsTabNormal			normalTab;
 	My_FormatsTabANSIColors		colorsTab;
+	HIViewWrap					tabView;
+	HIViewWrap					mainView;
 
 protected:
 	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef) const;
+	
+	HIViewWrap
 	createTabsView	(HIWindowRef) const;
+
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;	//!< invoked when the panel is resized
+	CarbonEventHandlerWrap				_viewClickHandler;	//!< invoked when a tab is clicked
 };
 typedef My_FormatsPanelUI*		My_FormatsPanelUIPtr;
 
@@ -203,22 +225,22 @@ typedef My_FormatsPanelData*	My_FormatsPanelDataPtr;
 #pragma mark Internal Method Prototypes
 
 static void				colorBoxChangeNotify			(HIViewRef, RGBColor const*, void const*);
-static void				createPanelViews				(Panel_Ref, WindowRef);
 static void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
 static void				disposePanel					(Panel_Ref, void*);
 static SInt32			panelChanged					(Panel_Ref, Panel_Message, void*);
 static pascal OSStatus	receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
 static void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
-static void				setUpMainTabs					(My_FormatsPanelUIPtr);
 static void				showTabPane						(My_FormatsPanelUIPtr, UInt16);
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	Float32		gIdealWidth = 0.0;
-	Float32		gIdealHeight = 0.0;
+	Float32		gIdealPanelWidth = 0.0;
+	Float32		gIdealPanelHeight = 0.0;
+	Float32		gMaximumTabPaneWidth = 0.0;
+	Float32		gMaximumTabPaneHeight = 0.0;
 }
 
 
@@ -286,26 +308,112 @@ Initializes a My_FormatsPanelUI structure.
 (3.1)
 */
 My_FormatsPanelUI::
-My_FormatsPanelUI	(HIWindowRef	inOwningWindow,
-					 HIViewRef		inContainer)
+My_FormatsPanelUI	(Panel_Ref		inPanel,
+					 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-containerResizer	(inContainer, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
-									kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-						deltaSizePanelContainerHIView, this/* context */),
+normalTab			(inOwningWindow),
+colorsTab			(inOwningWindow),
 tabView				(createTabsView(inOwningWindow)
-						<< HIViewWrap_AssertExists
-						<< HIViewWrap_EmbedIn(inContainer)),
-viewClickHandler	(GetControlEventTarget(this->tabView), receiveViewHit,
+						<< HIViewWrap_AssertExists),
+mainView			(createContainerView(inPanel, inOwningWindow)
+						<< HIViewWrap_AssertExists),
+_containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+								kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
+						deltaSizePanelContainerHIView, this/* context */),
+_viewClickHandler	(GetControlEventTarget(this->tabView), receiveViewHit,
 						CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
-						this/* user data */),
-normalTab			(inOwningWindow, this->tabView),
-colorsTab			(inOwningWindow, this->tabView)
+						this/* user data */)
 {
-	assert(containerResizer.isInstalled());
-	assert(tabView.exists());
-	assert(viewClickHandler.isInstalled());
+	assert(_containerResizer.isInstalled());
+	assert(_viewClickHandler.isInstalled());
 }// My_FormatsPanelUI 2-argument constructor
+
+
+/*!
+Constructs the container for the panel.  Assumes that
+the tabs view already exists.
+
+(3.1)
+*/
+HIViewWrap
+My_FormatsPanelUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+const
+{
+	assert(this->tabView.exists());
+	assert(0 != gMaximumTabPaneWidth);
+	assert(0 != gMaximumTabPaneHeight);
+	
+	HIViewRef	result = nullptr;
+	OSStatus	error = noErr;
+	
+	
+	// create the container
+	{
+		Rect	containerBounds;
+		
+		
+		SetRect(&containerBounds, 0, 0, 0, 0);
+		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &result);
+		assert_noerr(error);
+		Panel_SetContainerView(inPanel, result);
+		SetControlVisibility(result, false/* visible */, false/* draw */);
+	}
+	
+	// calculate the ideal size
+	{
+		Point		tabFrameTopLeft;
+		Point		tabFrameWidthHeight;
+		Point		tabPaneTopLeft;
+		Point		tabPaneBottomRight;
+		
+		
+		// calculate initial frame and pane offsets (ignore width/height)
+		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
+		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
+		
+		gIdealPanelWidth = tabFrameTopLeft.h + tabPaneTopLeft.h + gMaximumTabPaneWidth +
+							tabPaneBottomRight.h + tabFrameTopLeft.h/* right is same as left */;
+		gIdealPanelHeight = tabFrameTopLeft.v + tabPaneTopLeft.v + gMaximumTabPaneHeight +
+							tabPaneBottomRight.v + tabFrameTopLeft.v/* bottom is same as top */;
+		
+		// make the container big enough for the tabs
+		{
+			HIRect		containerFrame = CGRectMake(0, 0, gIdealPanelWidth, gIdealPanelHeight);
+			
+			
+			error = HIViewSetFrame(result, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// recalculate the frame, this time the width and height will be correct
+		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
+		
+		// make the tabs match the ideal frame, because the size
+		// and position of NIB views is used to size subviews
+		// and subview resizing deltas are derived directly from
+		// changes to the container view size
+		{
+			HIRect		containerFrame = CGRectMake(tabFrameTopLeft.h, tabFrameTopLeft.v,
+													tabFrameWidthHeight.h, tabFrameWidthHeight.v);
+			
+			
+			error = HIViewSetFrame(this->tabView, &containerFrame);
+			assert_noerr(error);
+		}
+	}
+	
+	// embed the tabs in the content pane; done at this stage
+	// (after positioning the tabs) just in case the origin
+	// of the container is not (0, 0); this prevents the tabs
+	// from having to know where they will end up in the window
+	error = HIViewAddSubview(result, this->tabView);
+	assert_noerr(error);
+	
+	return result;
+}// My_FormatsPanelUI::createContainerView
 
 
 /*!
@@ -318,6 +426,9 @@ My_FormatsPanelUI::
 createTabsView	(HIWindowRef	inOwningWindow)
 const
 {
+	assert(this->normalTab.exists());
+	assert(this->colorsTab.exists());
+	
 	HIViewRef				result = nullptr;
 	Rect					containerBounds;
 	ControlTabEntry			tabInfo[NUMBER_OF_FORMATS_TABPANES];
@@ -343,6 +454,61 @@ const
 		if (nullptr != tabInfo[i].name) CFRelease(tabInfo[i].name), tabInfo[i].name = nullptr;
 	}
 	
+	// calculate the largest area required for all tabs, and keep this as the ideal size
+	{
+		Rect		normalTabSize;
+		Rect		colorsTabSize;
+		Point		tabPaneTopLeft;
+		Point		tabPaneBottomRight;
+		
+		
+		// determine sizes of tabs from NIBs
+		GetControlBounds(this->normalTab, &normalTabSize);
+		GetControlBounds(this->colorsTab, &colorsTabSize);
+		
+		// also include pane margin in panel size
+		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
+		
+		// find the widest tab and the highest tab
+		gMaximumTabPaneWidth = std::max(normalTabSize.right - normalTabSize.left,
+										colorsTabSize.right - colorsTabSize.left);
+		gMaximumTabPaneHeight = std::max(normalTabSize.bottom - normalTabSize.top,
+											colorsTabSize.bottom - colorsTabSize.top);
+		
+		// make every tab pane match the ideal pane size
+		{
+			HIRect		containerFrame = CGRectMake(tabPaneTopLeft.h, tabPaneTopLeft.v,
+													gMaximumTabPaneWidth, gMaximumTabPaneHeight);
+			
+			
+			error = HIViewSetFrame(this->normalTab, &containerFrame);
+			assert_noerr(error);
+			error = HIViewSetFrame(this->colorsTab, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// make the tabs big enough for any of the panes
+		{
+			HIRect		containerFrame = CGRectMake(0, 0,
+													tabPaneTopLeft.h + gMaximumTabPaneWidth + tabPaneBottomRight.h,
+													tabPaneTopLeft.v + gMaximumTabPaneHeight + tabPaneBottomRight.v);
+			
+			
+			error = HIViewSetFrame(result, &containerFrame);
+			assert_noerr(error);
+		}
+		
+		// embed every tab pane in the tabs view; done at this stage
+		// so that the subsequent move of the tab frame (later) will
+		// also offset the embedded panes; if embedding is done too
+		// soon, then the panes have to know too much about where
+		// they will physically reside within the window content area
+		error = HIViewAddSubview(result, this->normalTab);
+		assert_noerr(error);
+		error = HIViewAddSubview(result, this->colorsTab);
+		assert_noerr(error);
+	}
+	
 	return result;
 }// My_FormatsPanelUI::createTabsView
 
@@ -353,20 +519,21 @@ Initializes a My_FormatsTabANSIColors structure.
 (3.1)
 */
 My_FormatsTabANSIColors::
-My_FormatsTabANSIColors		(HIWindowRef	inOwningWindow,
-							 HIViewRef		inTabsView)
+My_FormatsTabANSIColors		(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-pane					(createContainerView(inOwningWindow)
-							<< HIViewWrap_AssertExists
-							<< HIViewWrap_EmbedIn(inTabsView)),
-buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+HIViewWrap				(createPaneView(inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
-							this/* user data */)
+							this/* user data */),
+_containerResizer		(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_FormatsTabANSIColors::deltaSize, this/* context */)
 {
-	assert(this->pane.exists());
-	assert(this->buttonCommandsHandler.isInstalled());
-}// My_FormatsTabANSIColors 2-argument constructor
+	assert(exists());
+	assert(_buttonCommandsHandler.isInstalled());
+	assert(_containerResizer.isInstalled());
+}// My_FormatsTabANSIColors 1-argument constructor
 
 
 /*!
@@ -377,7 +544,7 @@ the sub-views that belong in its hierarchy.
 */
 HIViewWrap
 My_FormatsTabANSIColors::
-createContainerView		(HIWindowRef	inOwningWindow)
+createPaneView		(HIWindowRef	inOwningWindow)
 const
 {
 	HIViewRef					result = nullptr;
@@ -424,8 +591,60 @@ const
 		}
 	}
 	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
 	return result;
-}// My_FormatsTabANSIColors::createContainerView
+}// My_FormatsTabANSIColors::createPaneView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+My_FormatsTabANSIColors::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
+	//My_FormatsTabANSIColors*	dataPtr = REINTERPRET_CAST(inContext, My_FormatsTabANSIColors*);
+	
+	HIViewWrap					viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyHelpTextANSIColors, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+}// My_FormatsTabANSIColors::deltaSize
+
+
+/*!
+Exists so the superclass assignment operator is
+not hidden by an implicit assignment operator
+definition.
+
+(3.1)
+*/
+CFRetainRelease&
+My_FormatsTabANSIColors::
+operator =	(CFRetainRelease const&		inCopy)
+{
+	return HIViewWrap::operator =(inCopy);
+}// My_FormatsTabANSIColors::operator =
 
 
 /*!
@@ -434,17 +653,18 @@ Initializes a My_FormatsTabNormal structure.
 (3.1)
 */
 My_FormatsTabNormal::
-My_FormatsTabNormal		(HIWindowRef	inOwningWindow,
-						 HIViewRef		inTabsView)
+My_FormatsTabNormal		(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-sampleTerminalScreen	(createSampleTerminalScreen()),
-pane					(createContainerView(inOwningWindow, sampleTerminalScreen)
-							<< HIViewWrap_AssertExists
-							<< HIViewWrap_EmbedIn(inTabsView)),
+HIViewWrap				(createPaneView(inOwningWindow, createSampleTerminalScreen())
+							<< HIViewWrap_AssertExists),
+_containerResizer		(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+								kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
+							My_FormatsTabNormal::deltaSize, this/* context */),
 _fontSizeArrowsHandler	(nullptr) // set later
 {
-	assert(this->pane.exists());
+	assert(exists());
+	assert(_containerResizer.isInstalled());
 	
 	// make the little arrows control change the font size
 	{
@@ -481,15 +701,15 @@ the sub-views that belong in its hierarchy.
 */
 HIViewWrap
 My_FormatsTabNormal::
-createContainerView		(HIWindowRef		inOwningWindow,
-						 TerminalScreenRef	inSampleTerminalScreen)
+createPaneView		(HIWindowRef		inOwningWindow,
+					 TerminalScreenRef	inSampleTerminalScreen)
 const
 {
 	HIViewRef					result = nullptr;
-	HIViewRef					sampleContainerForSizing = nullptr;
 	std::vector< HIViewRef >	viewList;
 	Rect						dummy;
 	Rect						idealContainerBounds;
+	HIRect						sampleViewFrame;
 	OSStatus					error = noErr;
 	
 	
@@ -503,6 +723,17 @@ const
 			(CFSTR("PrefPanelFormats"), CFSTR("Normal"), inOwningWindow,
 					result/* parent */, viewList, idealContainerBounds);
 	assert_noerr(error);
+	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
 	
 	// augment the push buttons with the color box drawing handler, property and notifier;
 	// TEMPORARY: in the future, this should probably be an HIView subclass of a button
@@ -530,26 +761,23 @@ const
 		std::vector< HIViewRef >::const_iterator	toView = viewList.end();
 		
 		
+		// find the boundaries of the sample area; then throw it away
 		toView = std::find_if(viewList.begin(), viewList.end(),
 								DialogUtilities_HIViewIDEqualTo(idMyUserPaneSampleTerminalView));
 		assert(viewList.end() != toView);
-		sampleContainerForSizing = *toView; // used only to find boundaries
+		error = HIViewGetFrame(*toView, &sampleViewFrame);
+		assert_noerr(error);
+		DisposeControl(*toView);
 	}
 	
 	// use the original user pane only to define the boundaries of the new terminal view
 	{
 		HIViewRef	terminalView = createSampleTerminalHIView(inOwningWindow, inSampleTerminalScreen);
-		Rect		viewBounds;
-		HIRect		floatViewBounds;
 		
 		
 		error = HIViewAddSubview(result, terminalView);
 		assert_noerr(error);
-		GetControlBounds(sampleContainerForSizing, &viewBounds);
-		DisposeControl(sampleContainerForSizing), sampleContainerForSizing = nullptr;
-		floatViewBounds = CGRectMake(viewBounds.left, viewBounds.top, viewBounds.right - viewBounds.left,
-										viewBounds.bottom - viewBounds.top);
-		error = HIViewSetFrame(terminalView, &floatViewBounds);
+		error = HIViewSetFrame(terminalView, &sampleViewFrame);
 		assert_noerr(error);
 	}
 	
@@ -559,35 +787,12 @@ const
 		MenuRef			fontMenu = MenuBar_ReturnFontMenu();
 		
 		
-		SetControlPopupMenuHandle(popupMenuFont, fontMenu);
+		error = SetControlData(popupMenuFont, kControlEntireControl, kControlPopupButtonMenuRefTag, sizeof(fontMenu), &fontMenu);
+		assert_noerr(error);
 	}
 	
 	return result;
-}// My_FormatsTabNormal::createContainerView
-
-
-/*!
-Constructs the data storage and emulator for the
-sample terminal screen view.
-
-(3.1)
-*/
-TerminalScreenRef
-My_FormatsTabNormal::
-createSampleTerminalScreen ()
-const
-{
-	Terminal_Result			screenCreationError = kTerminal_ResultOK;
-	TerminalScreenRef		result = nullptr;
-	
-	
-	screenCreationError = Terminal_NewScreen(0/* number of scrollback rows */, 3/* number of rows */, 80/* number of columns */,
-												false/* force save */, &result);
-	assert(kTerminal_ResultOK == screenCreationError);
-	assert(nullptr != result);
-	
-	return result;
-}// createSampleTerminalScreen
+}// My_FormatsTabNormal::createPaneView
 
 
 /*!
@@ -635,17 +840,86 @@ const
 	{
 		// assumes VT100
 		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
-										"normal \033[1mbold\033[0m \033[3mitalic\033[3m \033[6minverse\033[3m\n"); // LOCALIZE THIS
+										"\033[2J\033[H"); // clear screen, home cursor
 		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
-										"\033[4munderline\033[0m \033[5mblinking\033[5m\n"); // LOCALIZE THIS
+										"normal \033[1mbold\033[0m \033[3mitalic\033[0m \033[6minverse\033[0m\015\012"); // LOCALIZE THIS
 		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
-										"selected\n"); // LOCALIZE THIS
+										"\033[4munderline\033[0m \033[5mblinking\033[0m\015\012"); // LOCALIZE THIS
+		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
+										"selected\015\012"); // LOCALIZE THIS
 		// the range selected here should be as long as the length of the word “selected” above
 		TerminalView_SelectVirtualRange(terminalView, std::make_pair(std::make_pair(0, 2), std::make_pair(7, 2)));
 	}
 	
 	return result;
-}// createSampleTerminalScreen
+}// My_FormatsTabNormal::createSampleTerminalHIView
+
+
+/*!
+Constructs the data storage and emulator for the
+sample terminal screen view.
+
+(3.1)
+*/
+TerminalScreenRef
+My_FormatsTabNormal::
+createSampleTerminalScreen ()
+const
+{
+	Terminal_Result			screenCreationError = kTerminal_ResultOK;
+	TerminalScreenRef		result = nullptr;
+	
+	
+	screenCreationError = Terminal_NewScreen(0/* number of scrollback rows */, 3/* number of rows */, 80/* number of columns */,
+												false/* force save */, &result);
+	assert(kTerminal_ResultOK == screenCreationError);
+	assert(nullptr != result);
+	
+	return result;
+}// My_FormatsTabNormal::createSampleTerminalScreen
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+My_FormatsTabNormal::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		inDeltaY,
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const		kPanelWindow = HIViewGetWindow(inContainer);
+	//My_FormatsTabNormal*	dataPtr = REINTERPRET_CAST(inContext, My_FormatsTabNormal*);
+	
+	HIViewWrap				viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyPopupMenuFont, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyUserPaneSampleTerminalView, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+	viewWrap = HIViewWrap(idMyHelpTextSampleTerminalView, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+}// My_FormatsTabNormal::deltaSize
+
+
+/*!
+Exists so the superclass assignment operator is
+not hidden by an implicit assignment operator
+definition.
+
+(3.1)
+*/
+CFRetainRelease&
+My_FormatsTabNormal::
+operator =	(CFRetainRelease const&		inCopy)
+{
+	return HIViewWrap::operator =(inCopy);
+}// My_FormatsTabNormal::operator =
 
 
 /*!
@@ -676,76 +950,6 @@ colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
 
 
 /*!
-Creates the views that belong in the “Formats” panel, and
-attaches them to the specified owning window in the proper
-embedding hierarchy.  The specified panel’s descriptor must
-be "kConstantsRegistry_PrefPanelDescriptorFormats".
-
-The views are not arranged or sized.
-
-(3.1)
-*/
-static void
-createPanelViews	(Panel_Ref		inPanel,
-					 WindowRef		inOwningWindow)
-{
-	HIViewRef				container = nullptr;
-	My_FormatsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_FormatsPanelDataPtr);
-	My_FormatsPanelUIPtr	interfacePtr = nullptr;
-	OSStatus				error = noErr;
-	
-	
-	// create a container view, and attach it to the panel
-	{
-		Rect	containerBounds;
-		
-		
-		SetRect(&containerBounds, 0, 0, 0, 0);
-		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &container);
-		assert_noerr(error);
-		Panel_SetContainerView(inPanel, container);
-		SetControlVisibility(container, false/* visible */, false/* draw */);
-	}
-	
-	// create the rest of the panel user interface
-	dataPtr->interfacePtr = new My_FormatsPanelUI(inOwningWindow, container);
-	assert(nullptr != dataPtr->interfacePtr);
-	interfacePtr = dataPtr->interfacePtr;
-	
-	// calculate the largest area required for all tabs, and keep this as the ideal size
-	{
-		NIBWindow	normalTab(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelFormats"), CFSTR("Normal"));
-		NIBWindow	colorsTab(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelFormats"), CFSTR("ANSI"));
-		Rect		normalTabSize;
-		Rect		colorsTabSize;
-		Point		tabFrameTopLeft;
-		Point		tabFrameWidthHeight;
-		Point		tabPaneTopLeft;
-		Point		tabPaneBottomRight;
-		
-		
-		// determine sizes of tabs from NIBs
-		normalTab << NIBLoader_AssertWindowExists;
-		colorsTab << NIBLoader_AssertWindowExists;
-		GetWindowBounds(normalTab, kWindowContentRgn, &normalTabSize);
-		GetWindowBounds(colorsTab, kWindowContentRgn, &colorsTabSize);
-		
-		// also include pane margin in panel size
-		Panel_CalculateTabFrame(container, &tabFrameTopLeft, &tabFrameWidthHeight);
-		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
-		
-		// find the widest tab and the highest tab
-		gIdealWidth = std::max(normalTabSize.right - normalTabSize.left,
-								colorsTabSize.right - colorsTabSize.left);
-		gIdealWidth += (tabFrameTopLeft.h + tabPaneTopLeft.h + tabPaneBottomRight.h + tabFrameTopLeft.h/* same as left */);
-		gIdealHeight = std::max(normalTabSize.bottom - normalTabSize.top,
-								colorsTabSize.bottom - colorsTabSize.top);
-		gIdealHeight += (tabFrameTopLeft.v + tabPaneTopLeft.v + tabPaneBottomRight.v + tabFrameTopLeft.v/* same as top */);
-	}
-}// createPanelViews
-
-
-/*!
 Adjusts the views in the “Formats” preference panel
 to match the specified change in dimensions of its
 container.
@@ -753,46 +957,23 @@ container.
 (3.1)
 */
 static void
-deltaSizePanelContainerHIView	(HIViewRef		inView,
+deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
 								 void*			inContext)
 {
 	if ((0 != inDeltaX) || (0 != inDeltaY))
 	{
-		HIWindowRef				kPanelWindow = GetControlOwner(inView);
+		//HIWindowRef				kPanelWindow = HIViewGetWindow(inView);
 		My_FormatsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inContext, My_FormatsPanelUIPtr);
 		assert(nullptr != interfacePtr);
-		HIViewWrap				viewWrap;
-		UInt16					chosenTabIndex = STATIC_CAST(GetControl32BitValue(interfacePtr->tabView), UInt16);
 		
 		
-		setUpMainTabs(interfacePtr);
-		//(viewWrap = interfacePtr->tabView)
-		//	<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-		//	;
+		interfacePtr->tabView << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
 		
-		if (kMy_TabIndexFormatNormal == chosenTabIndex)
-		{
-			// resize the Options tab pane, and its views
-			viewWrap.setCFTypeRef(interfacePtr->normalTab.pane);
-			viewWrap
-				<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-				;
-			
-			viewWrap.setCFTypeRef(HIViewWrap(idMyUserPaneSampleTerminalView, kPanelWindow));
-			viewWrap
-				<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta-Y */)
-				;
-		}
-		else if (kMy_TabIndexFormatANSIColors == chosenTabIndex)
-		{
-			// resize the Colors tab pane, and its views
-			viewWrap.setCFTypeRef(interfacePtr->colorsTab.pane);
-			viewWrap
-				<< HIViewWrap_DeltaSize(inDeltaX, inDeltaY)
-				;
-		}
+		// due to event handlers, this will automatically resize subviews too
+		interfacePtr->normalTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+		interfacePtr->colorsTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
 	}
 }// deltaSizePanelContainerHIView
 
@@ -842,7 +1023,9 @@ panelChanged	(Panel_Ref		inPanel,
 			WindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
 			
 			
-			createPanelViews(inPanel, *windowPtr);
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_FormatsPanelUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
 			showTabPane(panelDataPtr->interfacePtr, 1/* tab index */);
 		}
 		break;
@@ -883,10 +1066,10 @@ panelChanged	(Panel_Ref		inPanel,
 			HISize&		newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
 			
 			
-			if ((0 != gIdealWidth) && (0 != gIdealHeight))
+			if ((0 != gIdealPanelWidth) && (0 != gIdealPanelHeight))
 			{
-				newLimits.width = gIdealWidth;
-				newLimits.height = gIdealHeight;
+				newLimits.width = gIdealPanelWidth;
+				newLimits.height = gIdealPanelHeight;
 				result = kPanel_ResponseSizeProvided;
 			}
 		}
@@ -974,7 +1157,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					Alert_SetParamsFor(box, kAlert_StyleOKCancel);
 					Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
 					Alert_SetType(box, kAlertCautionAlert);
-					Alert_MakeWindowModal(box, GetControlOwner(dataPtr->pane), false/* is window close alert */,
+					Alert_MakeWindowModal(box, HIViewGetWindow(*dataPtr), false/* is window close alert */,
 											resetANSIWarningCloseNotifyProc, dataPtr/* user data */);
 					Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
 				}
@@ -1004,7 +1187,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			#if 1
 				{
 					UInt32		commandID = 0;
-					HIViewRef	subView = HIViewGetFirstSubview(dataPtr->pane);
+					HIViewRef	subView = HIViewGetFirstSubview(*dataPtr);
 					
 					
 					while (nullptr != subView)
@@ -1108,28 +1291,6 @@ resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 
 
 /*!
-Sizes and arranges the main tab view.
-
-(3.1)
-*/
-static void
-setUpMainTabs	(My_FormatsPanelUIPtr	inInterfacePtr)
-{
-	HIPoint		tabFrameTopLeft;
-	HISize		tabFrameWidthHeight;
-	HIRect		newFrame;
-	OSStatus	error = noErr;
-	
-	
-	Panel_CalculateTabFrame(gIdealWidth, gIdealHeight, tabFrameTopLeft, tabFrameWidthHeight);
-	newFrame.origin = tabFrameTopLeft;
-	newFrame.size = tabFrameWidthHeight;
-	error = HIViewSetFrame(inInterfacePtr->tabView, &newFrame);
-	assert_noerr(error);
-}// setUpMainTabs
-
-
-/*!
 Sizes and arranges views in the currently-selected
 tab pane of the specified “Formats” panel to fit the
 dimensions of the panel’s container.
@@ -1146,13 +1307,13 @@ showTabPane		(My_FormatsPanelUIPtr	inUIPtr,
 	
 	if (kMy_TabIndexFormatNormal == inTabIndex)
 	{
-		selectedTabPane = inUIPtr->normalTab.pane;
-		assert_noerr(HIViewSetVisible(inUIPtr->colorsTab.pane, false/* visible */));
+		selectedTabPane = inUIPtr->normalTab;
+		assert_noerr(HIViewSetVisible(inUIPtr->colorsTab, false/* visible */));
 	}
 	else if (kMy_TabIndexFormatANSIColors == inTabIndex)
 	{
-		selectedTabPane = inUIPtr->colorsTab.pane;
-		assert_noerr(HIViewSetVisible(inUIPtr->normalTab.pane, false/* visible */));
+		selectedTabPane = inUIPtr->colorsTab;
+		assert_noerr(HIViewSetVisible(inUIPtr->normalTab, false/* visible */));
 	}
 	else
 	{
