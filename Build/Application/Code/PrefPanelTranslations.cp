@@ -46,6 +46,7 @@
 #include <DialogAdjust.h>
 #include <HIViewWrap.h>
 #include <HIViewWrapManip.h>
+#include <IconManager.h>
 #include <Localization.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
@@ -79,7 +80,12 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-// TBD
+static HIViewID const	idMyDataBrowserBaseTranslationTable		= { FOUR_CHAR_CODE('Tran'), 0/* ID */ };
+static HIViewID const	idMyLabelExceptions						= { FOUR_CHAR_CODE('XLbl'), 0/* ID */ };
+static HIViewID const	idMyDataBrowserExceptions				= { FOUR_CHAR_CODE('Xcpt'), 0/* ID */ };
+static HIViewID const	idMyButtonSpecialCharacters				= { FOUR_CHAR_CODE('SplC'), 0/* ID */ };
+static HIViewID const	idMyButtonAddException					= { FOUR_CHAR_CODE('AddX'), 0/* ID */ };
+static HIViewID const	idMyButtonRemoveException				= { FOUR_CHAR_CODE('DelX'), 0/* ID */ };
 
 #pragma mark Types
 
@@ -87,10 +93,10 @@ In addition, they MUST be unique across all panels.
 Implements the user interface of the panel - only
 created when the panel directs for this to happen.
 */
-struct MyTranslationsPanelUI
+struct My_TranslationsPanelUI
 {
 public:
-	MyTranslationsPanelUI	(Panel_Ref, HIWindowRef);
+	My_TranslationsPanelUI	(Panel_Ref, HIWindowRef);
 	
 	HIViewWrap							mainView;
 	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
@@ -100,20 +106,20 @@ protected:
 	HIViewWrap
 	createContainerView		(Panel_Ref, HIWindowRef) const;
 };
-typedef MyTranslationsPanelUI*		MyTranslationsPanelUIPtr;
+typedef My_TranslationsPanelUI*		My_TranslationsPanelUIPtr;
 
 /*!
 Contains the panel reference and its user interface
 (once the UI is constructed).
 */
-struct MyTranslationsPanelData
+struct My_TranslationsPanelData
 {
-	MyTranslationsPanelData ();
+	My_TranslationsPanelData ();
 	
-	Panel_Ref				panel;			//!< the panel this data is for
-	MyTranslationsPanelUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Panel_Ref					panel;			//!< the panel this data is for
+	My_TranslationsPanelUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
 };
-typedef MyTranslationsPanelData*	MyTranslationsPanelDataPtr;
+typedef My_TranslationsPanelData*	My_TranslationsPanelDataPtr;
 
 #pragma mark Internal Method Prototypes
 
@@ -152,8 +158,8 @@ PrefPanelTranslations_New ()
 	
 	if (result != nullptr)
 	{
-		MyTranslationsPanelDataPtr	dataPtr = new MyTranslationsPanelData;
-		CFStringRef					nameCFString = nullptr;
+		My_TranslationsPanelDataPtr		dataPtr = new My_TranslationsPanelData;
+		CFStringRef						nameCFString = nullptr;
 		
 		
 		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTranslations);
@@ -175,41 +181,42 @@ PrefPanelTranslations_New ()
 #pragma mark Internal Methods
 
 /*!
-Initializes a MyTranslationsPanelData structure.
+Initializes a My_TranslationsPanelData structure.
 
 (3.1)
 */
-MyTranslationsPanelData::
-MyTranslationsPanelData ()
+My_TranslationsPanelData::
+My_TranslationsPanelData ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 panel(nullptr),
 interfacePtr(nullptr)
 {
-}// MyTranslationsPanelData default constructor
+}// My_TranslationsPanelData default constructor
 
 
 /*!
-Initializes a MyTranslationsPanelUI structure.
+Initializes a My_TranslationsPanelUI structure.
 
 (3.1)
 */
-MyTranslationsPanelUI::
-MyTranslationsPanelUI	(Panel_Ref		inPanel,
+My_TranslationsPanelUI::
+My_TranslationsPanelUI	(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 mainView			(createContainerView(inPanel, inOwningWindow)
 						<< HIViewWrap_AssertExists),
-containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+								kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
 						deltaSizePanelContainerHIView, this/* context */),
-viewClickHandler	(GetControlEventTarget(this->mainView), receiveViewHit,
+viewClickHandler	(CarbonEventUtilities_ReturnViewTarget(this->mainView), receiveViewHit,
 						CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
 						this/* user data */)
 {
 	assert(containerResizer.isInstalled());
 	assert(viewClickHandler.isInstalled());
-}// MyTranslationsPanelUI 2-argument constructor
+}// My_TranslationsPanelUI 2-argument constructor
 
 
 /*!
@@ -219,7 +226,7 @@ sub-view hierarchy.  The container is returned.
 (3.1)
 */
 HIViewWrap
-MyTranslationsPanelUI::
+My_TranslationsPanelUI::
 createContainerView		(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
 const
@@ -243,12 +250,10 @@ const
 	}
 	
 	// create HIViews for the panel based on the NIB
-#if 0
 	error = DialogUtilities_CreateControlsBasedOnWindowNIB
 			(CFSTR("PrefPanels"), CFSTR("Translations"), inOwningWindow,
 				result, viewList, idealContainerBounds);
 	assert_noerr(error);
-#endif
 	
 	// calculate the ideal size
 	gIdealPanelWidth = idealContainerBounds.right - idealContainerBounds.left;
@@ -267,10 +272,56 @@ const
 		assert_noerr(error);
 	}
 	
+	// add "+" and "-" icons to the add and remove buttons
+	{
+		IconManagerIconRef		buttonIcon = nullptr;
+		
+		
+		buttonIcon = IconManager_NewIcon();
+		if (nullptr != buttonIcon)
+		{
+			HIViewWrap		addButton(idMyButtonAddException, inOwningWindow);
+			
+			
+			if (noErr == IconManager_MakeIconRefFromBundleFile
+							(buttonIcon, AppResources_ReturnItemAddIconFilenameNoExtension(),
+								AppResources_ReturnCreatorCode(),
+								kConstantsRegistry_IconServicesIconItemAdd))
+			{
+				if (noErr == IconManager_SetButtonIcon(addButton, buttonIcon))
+				{
+					// once the icon is set successfully, the equivalent text title can be removed
+					(OSStatus)SetControlTitleWithCFString(addButton, CFSTR(""));
+				}
+			}
+			IconManager_DisposeIcon(&buttonIcon);
+		}
+		
+		buttonIcon = IconManager_NewIcon();
+		if (nullptr != buttonIcon)
+		{
+			HIViewWrap		removeButton(idMyButtonRemoveException, inOwningWindow);
+			
+			
+			if (noErr == IconManager_MakeIconRefFromBundleFile
+							(buttonIcon, AppResources_ReturnItemRemoveIconFilenameNoExtension(),
+								AppResources_ReturnCreatorCode(),
+								kConstantsRegistry_IconServicesIconItemRemove))
+			{
+				if (noErr == IconManager_SetButtonIcon(removeButton, buttonIcon))
+				{
+					// once the icon is set successfully, the equivalent text title can be removed
+					(OSStatus)SetControlTitleWithCFString(removeButton, CFSTR(""));
+				}
+			}
+			IconManager_DisposeIcon(&buttonIcon);
+		}
+	}
+	
 	// initialize views - UNIMPLEMENTED
 	
 	return result;
-}// MyTranslationsPanelUI::createContainerView
+}// My_TranslationsPanelUI::createContainerView
 
 
 /*!
@@ -282,19 +333,27 @@ specified change in dimensions of a panel’s container.
 static void
 deltaSizePanelContainerHIView	(HIViewRef		inView,
 								 Float32		inDeltaX,
-								 Float32		UNUSED_ARGUMENT(inDeltaY),
+								 Float32		inDeltaY,
 								 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIWindowRef				kPanelWindow = GetControlOwner(inView);
-	//TranslationsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), TranslationsPanelDataPtr);
+	HIWindowRef				kPanelWindow = HIViewGetWindow(inView);
+	//My_TranslationsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_TranslationsPanelDataPtr);
 	HIViewWrap				viewWrap;
 	
 	
-	//viewWrap.setCFTypeRef(HIViewWrap(idMyXYZ, kPanelWindow));
-	//viewWrap
-	//	<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */)
-	//	;
-	// INCOMPLETE
+	viewWrap = HIViewWrap(idMyDataBrowserBaseTranslationTable, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY / 2.0);
+	viewWrap = HIViewWrap(idMyLabelExceptions, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY / 2.0);
+	viewWrap = HIViewWrap(idMyDataBrowserExceptions, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY / 2.0);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY / 2.0);
+	viewWrap = HIViewWrap(idMyButtonSpecialCharacters, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+	viewWrap = HIViewWrap(idMyButtonAddException, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+	viewWrap = HIViewWrap(idMyButtonRemoveException, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 }// deltaSizePanelContainerHIView
 
 
@@ -310,7 +369,7 @@ static void
 disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 				 void*		inDataPtr)
 {
-	MyTranslationsPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, MyTranslationsPanelDataPtr);
+	My_TranslationsPanelDataPtr		dataPtr = REINTERPRET_CAST(inDataPtr, My_TranslationsPanelDataPtr);
 	
 	
 	// destroy UI, if present
@@ -341,12 +400,12 @@ panelChanged	(Panel_Ref		inPanel,
 	{
 	case kPanel_MessageCreateViews: // specification of the window containing the panel - create controls using this window
 		{
-			MyTranslationsPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																			MyTranslationsPanelDataPtr);
+			My_TranslationsPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_TranslationsPanelDataPtr);
 			HIWindowRef const*				windowPtr = REINTERPRET_CAST(inDataPtr, HIWindowRef*);
 			
 			
-			panelDataPtr->interfacePtr = new MyTranslationsPanelUI(inPanel, *windowPtr);
+			panelDataPtr->interfacePtr = new My_TranslationsPanelUI(inPanel, *windowPtr);
 			assert(nullptr != panelDataPtr->interfacePtr);
 		}
 		break;
@@ -378,6 +437,10 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
 	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after control creation)
 		{
 			HISize&		newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
@@ -395,6 +458,15 @@ panelChanged	(Panel_Ref		inPanel,
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate control sizes
 		{
 			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			
+			
+			// UNIMPLEMENTED
 		}
 		break;
 	
@@ -427,7 +499,7 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 void*					inMyTranslationsPanelUIPtr)
 {
 	OSStatus					result = eventNotHandledErr;
-	MyTranslationsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inMyTranslationsPanelUIPtr, MyTranslationsPanelUIPtr);
+	My_TranslationsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inMyTranslationsPanelUIPtr, My_TranslationsPanelUIPtr);
 	assert(nullptr != interfacePtr);
 	UInt32 const				kEventClass = GetEventClass(inEvent);
 	UInt32 const				kEventKind = GetEventKind(inEvent);
