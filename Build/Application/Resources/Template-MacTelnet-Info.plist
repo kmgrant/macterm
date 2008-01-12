@@ -29,6 +29,10 @@
 			<string>Editor</string>
 			<key>LSTypeIsPackage</key>
 			<false/>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.mactelnet.macros</string>
+			</array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -51,6 +55,10 @@
 			<string>Editor</string>
 			<key>LSTypeIsPackage</key>
 			<false/>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>com.mactelnet.session</string>
+			</array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -69,25 +77,10 @@
 			<string>Editor</string>
 			<key>LSTypeIsPackage</key>
 			<true/>
-		</dict>
-		<dict>
-			<key>CFBundleTypeExtensions</key>
+			<key>LSItemContentTypes</key>
 			<array>
-				<string>command</string>
-				<string>tool</string>
+				<string>com.mactelnet.workspace</string>
 			</array>
-			<key>CFBundleTypeIconFile</key>
-			<string>IconForCommand.icns</string>
-			<key>CFBundleTypeMIMETypes</key>
-			<array>
-				<string>text/plain</string>
-			</array>
-			<key>CFBundleTypeName</key>
-			<string>runnable shell script</string>
-			<key>CFBundleTypeRole</key>
-			<string>Viewer</string>
-			<key>LSTypeIsPackage</key>
-			<false/>
 		</dict>
 		<dict>
 			<key>CFBundleTypeExtensions</key>
@@ -102,6 +95,33 @@
 			</array>
 			<key>CFBundleTypeName</key>
 			<string>window arrangement in Terminal</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSTypeIsPackage</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>CFBundleTypeExtensions</key>
+			<array>
+				<string>bash</string>
+				<string>command</string>
+				<string>csh</string>
+				<string>pl</string>
+				<string>py</string>
+				<string>sh</string>
+				<string>tcl</string>
+				<string>tcsh</string>
+				<string>tool</string>
+				<string>zsh</string>
+			</array>
+			<key>CFBundleTypeIconFile</key>
+			<string>IconForCommand.icns</string>
+			<key>CFBundleTypeMIMETypes</key>
+			<array>
+				<string>text/plain</string>
+			</array>
+			<key>CFBundleTypeName</key>
+			<string>script</string>
 			<key>CFBundleTypeRole</key>
 			<string>Viewer</string>
 			<key>LSTypeIsPackage</key>
@@ -205,6 +225,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%.%MY_ALPHA_BETA%.%MY_BUILD_NUMBER%</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>10.3.9</string>
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>MyHomePageURL</key>
@@ -257,7 +279,7 @@
 			<string>com.mactelnet.macros</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
-				<key>com.apple.macos.ostype</key>
+				<key>com.apple.ostype</key>
 				<string>TEXT</string>
 				<key>public.filename-extension</key>
 				<array>
@@ -280,7 +302,7 @@
 			<string>com.mactelnet.session</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
-				<key>com.apple.macos.ostype</key>
+				<key>com.apple.ostype</key>
 				<string>CONF</string>
 				<key>public.filename-extension</key>
 				<array>
@@ -303,7 +325,7 @@
 			<string>com.mactelnet.workspace</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
-				<key>com.apple.macos.ostype</key>
+				<key>com.apple.ostype</key>
 				<string>WSPC</string>
 				<key>public.filename-extension</key>
 				<array>

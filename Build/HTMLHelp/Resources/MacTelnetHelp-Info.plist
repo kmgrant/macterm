@@ -8,6 +8,8 @@
 	<string>MacTelnet</string>
 	<key>CFBundleHelpTOCFile</key>
 	<string>index.html</string>
+	<key>CFAppleHelpAnchor</key>
+	<string>index</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.mactelnet.MacTelnetHelp</string>
 	<key>CFBundleInfoDictionaryVersion</key>
