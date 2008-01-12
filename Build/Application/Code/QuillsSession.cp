@@ -3,7 +3,7 @@
 	QuillsSession.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -62,6 +62,9 @@ public std::unary_function< std::string, char const* >
 	}
 };
 
+typedef std::pair< Quills::FunctionReturnVoidArg1VoidPtrArg2CharPtr, void* >	MyFileHandlerPythonObjectPair;
+typedef std::map< std::string, MyFileHandlerPythonObjectPair >					MyFileHandlerPythonObjectPairByExtension;
+
 typedef std::pair< Quills::FunctionReturnVoidArg1VoidPtrArg2CharPtr, void* >	MyURLHandlerPythonObjectPair;
 typedef std::map< std::string, MyURLHandlerPythonObjectPair >					MyURLHandlerPythonObjectPairBySchema;
 
@@ -71,12 +74,16 @@ typedef std::map< std::string, MyURLHandlerPythonObjectPair >					MyURLHandlerPy
 #pragma mark Variables
 namespace {
 
-Quills::FunctionReturnVoidArg1VoidPtr	gSessionOpenedCallbackInvoker = nullptr;
-void*									gSessionOpenedPythonCallback = nullptr;
-MyURLHandlerPythonObjectPairBySchema&	gURLOpenCallbackInvokerPythonObjectPairsBySchema ()
-										{
-											static MyURLHandlerPythonObjectPairBySchema x; return x;
-										}
+Quills::FunctionReturnVoidArg1VoidPtr		gSessionOpenedCallbackInvoker = nullptr;
+void*										gSessionOpenedPythonCallback = nullptr;
+MyFileHandlerPythonObjectPairByExtension&	gFileOpenCallbackInvokerPythonObjectPairsByExtension ()
+											{
+												static MyFileHandlerPythonObjectPairByExtension x; return x;
+											}
+MyURLHandlerPythonObjectPairBySchema&		gURLOpenCallbackInvokerPythonObjectPairsBySchema ()
+											{
+												static MyURLHandlerPythonObjectPairBySchema x; return x;
+											}
 
 
 } // anonymous namespace
@@ -123,6 +130,61 @@ See header or "pydoc" for Python docstrings.
 (3.1)
 */
 void
+Session::handle_file	(std::string	inPathname)
+{
+	std::string::size_type const	kIndexOfExtension = inPathname.find_last_of('.');
+	
+	
+	if (inPathname.npos != kIndexOfExtension)
+	{
+		std::string		extensionName(inPathname.substr(kIndexOfExtension + 1/* skip dot */, inPathname.npos));
+		
+		
+		if (gFileOpenCallbackInvokerPythonObjectPairsByExtension().end() !=
+			gFileOpenCallbackInvokerPythonObjectPairsByExtension().find(extensionName))
+		{
+			// a Python handler has been installed for this schema type
+			MyFileHandlerPythonObjectPair const&	pairRef = gFileOpenCallbackInvokerPythonObjectPairsByExtension()[extensionName];
+			char*									mutablePathCopy = new char[1 + inPathname.size()];
+			
+			
+			// make a copy of the argument, since scripting languages
+			// do not distinguish mutable and immutable strings
+			mutablePathCopy[inPathname.size()] = '\0';
+			std::copy(inPathname.begin(), inPathname.end(), mutablePathCopy);
+			
+			// call handler
+			(*(pairRef.first))(pairRef.second, mutablePathCopy);
+			
+			delete [] mutablePathCopy;
+		}
+		else
+		{
+			// no Python handler is installed for this schema type; use the default handler
+			inPathname = "file://" + inPathname;
+			
+			CFStringRef		urlCFString = CFStringCreateWithCString(kCFAllocatorDefault, inPathname.c_str(),
+																	kCFStringEncodingUTF8);
+			
+			
+			if (nullptr != urlCFString)
+			{
+				// TEMPORARY: could (should?) throw exceptions, translated by SWIG
+				// into scripting language exceptions, if an error occurs here
+				(OSStatus)URL_ParseCFString(urlCFString);
+				CFRelease(urlCFString), urlCFString = nullptr;
+			}
+		}
+	}
+}// handle_file
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+void
 Session::handle_url		(std::string	inURL)
 {
 	std::string::size_type const	kIndexOfColon = inURL.find_first_of(':');
@@ -142,7 +204,7 @@ Session::handle_url		(std::string	inURL)
 			
 			
 			// make a copy of the argument, since scripting languages
-			// may do not distinguish mutable and immutable strings
+			// do not distinguish mutable and immutable strings
 			mutableURLCopy[inURL.size()] = '\0';
 			std::copy(inURL.begin(), inURL.end(), mutableURLCopy);
 			
@@ -178,6 +240,21 @@ See header or "pydoc" for Python docstrings.
 (3.1)
 */
 void
+Session::_on_fileopen_ext_call_py	(FunctionReturnVoidArg1VoidPtrArg2CharPtr	inRoutine,
+									 void*										inPythonFunctionObject,
+									 std::string								inExtension)
+{
+	// there is one callback for each extension, so add/overwrite only the given extension’s callback
+	gFileOpenCallbackInvokerPythonObjectPairsByExtension()[inExtension] = std::make_pair(inRoutine, inPythonFunctionObject);
+}// _on_fileopen_ext_call_py
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+void
 Session::_on_new_call_py	(FunctionReturnVoidArg1VoidPtr	inRoutine,
 							 void*							inPythonFunctionObject)
 {
@@ -199,6 +276,23 @@ Session::_on_urlopen_call_py	(FunctionReturnVoidArg1VoidPtrArg2CharPtr	inRoutine
 	// there is one callback for each schema type, so add/overwrite only the given schema’s callback
 	gURLOpenCallbackInvokerPythonObjectPairsBySchema()[inSchema] = std::make_pair(inRoutine, inPythonFunctionObject);
 }// _on_urlopen_call_py
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+void
+Session::_stop_fileopen_ext_call_py	(FunctionReturnVoidArg1VoidPtrArg2CharPtr	inRoutine,
+									 std::string								inExtension)
+{
+	// there is one callback for each schema type, so delete only the given schema’s callback
+	if (gFileOpenCallbackInvokerPythonObjectPairsByExtension()[inExtension].first == inRoutine)
+	{
+		gFileOpenCallbackInvokerPythonObjectPairsByExtension().erase(inExtension);
+	}
+}// _stop_fileopen_ext_call_py
 
 
 /*!

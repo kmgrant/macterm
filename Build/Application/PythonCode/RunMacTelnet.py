@@ -16,6 +16,7 @@ __version__ = '3.1.0'
 
 import os
 
+import com_mactelnet_HandleFile as HandleFile
 import com_mactelnet_HandleURL as HandleURL
 try:
 	from Quills import Base, Events, Session
@@ -75,6 +76,16 @@ Session.on_urlopen_call(HandleURL.sftp, 'sftp')
 Session.on_urlopen_call(HandleURL.ssh, 'ssh')
 Session.on_urlopen_call(HandleURL.telnet, 'telnet')
 Session.on_urlopen_call(HandleURL.x_man_page, 'x-man-page')
+Session.on_fileopen_call(HandleFile.script, 'bash')
+Session.on_fileopen_call(HandleFile.script, 'command')
+Session.on_fileopen_call(HandleFile.script, 'csh')
+Session.on_fileopen_call(HandleFile.script, 'pl')
+Session.on_fileopen_call(HandleFile.script, 'py')
+Session.on_fileopen_call(HandleFile.script, 'sh')
+Session.on_fileopen_call(HandleFile.script, 'tcl')
+Session.on_fileopen_call(HandleFile.script, 'tcsh')
+Session.on_fileopen_call(HandleFile.script, 'tool')
+Session.on_fileopen_call(HandleFile.script, 'zsh')
 
 # banner
 print "MacTelnet: Full initialization complete."

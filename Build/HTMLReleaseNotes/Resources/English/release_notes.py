@@ -76,6 +76,9 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080111': [
+		'Added Session.on_fileopen_call(func, extension) to Quills, allowing Python functions to respond to file open requests by type.',
+		'Added Session.stop_fileopen_call(func, extension) to Quills, to mirror Session.on_fileopen_call().',
+		'Now any common scripting extension (like ".py" and ".sh") can be opened by MacTelnet.',
 		'Preferences window Formats pane now has correctly sized tab content.',
 		'Preferences window Translations pane is now visible, though incomplete.',
 	],

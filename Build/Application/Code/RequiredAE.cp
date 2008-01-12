@@ -69,6 +69,7 @@
 #include "ObjectClassesAE.h"
 #include "Preferences.h"
 #include "PrefsWindow.h"
+#include "QuillsSession.h"
 #include "RecordAE.h"
 #include "RequiredAE.h"
 #include "Session.h"
@@ -352,147 +353,189 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 {
 	OSErr const		result = noErr; // errors are ALWAYS returned via the reply record
 	OSStatus		error = noErr;
-	FSSpec			file;
 	AEDescList		docList;
-	long			numberOfItemsInList = 0L;
-	Size			actualSize = 0;
-	AEKeyword		returnedKeyword;
-	DescType		returnedType;
-	FileInfo		fileInfo;
 	
 	
 	if ((error = AEGetParamDesc(inAppleEventPtr, keyDirectObject, typeAEList, &docList)) == noErr)
 	{
 		// check for missing parameters
-		if ((error = AppleEventUtilities_RequiredParametersError(inAppleEventPtr)) == noErr)
+		error = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
+		if (noErr == error)
 		{
+			long		numberOfItemsInList = 0L;
+			
+			
 			// count the number of descriptor records in the list
 			if ((error = AECountItems(&docList, &numberOfItemsInList)) == noErr)
 			{
-				UInt16		setNumber = 0; // cumulative track of how many macro sets have been imported
-				UInt16		macrosImportedSuccessfully = 0;
-				long		itemIndex = 0L;
+				LSItemInfoRecord	fileInfo;
+				FSRef				fileRef;
+				UInt16				setNumber = 0; // cumulative track of how many macro sets have been imported
+				UInt16				macrosImportedSuccessfully = 0;
+				AEKeyword			returnedKeyword = '----';
+				DescType			returnedType = '----';
+				Size				actualSize = 0;
+				long				itemIndex = 0L;
 				
 				
 				for (itemIndex = 1; itemIndex <= numberOfItemsInList; ++itemIndex)
 				{
-					error = AEGetNthPtr(&docList, itemIndex, typeFSS, &returnedKeyword, &returnedType,
-										(Ptr)&file, sizeof(file), &actualSize);
-					if (error == noErr)
+					error = AEGetNthPtr(&docList, itemIndex, typeFSRef, &returnedKeyword, &returnedType,
+										&fileRef, sizeof(fileRef), &actualSize);
+					if (noErr == error)
 					{
-						FSpGetFInfo(&file, (FInfo*)&fileInfo); // make sure itÕs a data file
-						if (StringUtilities_PEndsWith(file.name, "\p.command") ||
-							StringUtilities_PEndsWith(file.name, "\p.tool"))
+						FSSpec			fileSpec;
+						HFSUniStr255	nameBuffer;
+						
+						
+						error = FSGetCatalogInfo(&fileRef, kFSCatInfoNone, nullptr/* catalog info */,
+													&nameBuffer, &fileSpec, nullptr/* parent directory */);
+						if (noErr == error)
 						{
-							// it appears to be a shell script; run it
-							Str255		path;
+							CFRetainRelease		fileNameCFString = CFStringCreateWithCharacters
+																	(kCFAllocatorDefault, nameBuffer.unicode,
+																		nameBuffer.length);
 							
 							
-							error = FileUtilities_GetPOSIXPathnameFromFSSpec(&file, path, false/* is directory */);
-							if (error != noErr)
+							if (fileNameCFString.exists())
 							{
-								// TEMPORARY; this is an inappropriate response, since
-								// it may not be the user that initiated this request;
-								// really, an error must be attached/returned in the event
-								Sound_StandardAlert();
-							}
-							else
-							{
-								char const*		pathCString = StringUtilities_PToCInPlace(path);
+								size_t const	kBufferSize = 1024;
+								UInt8*			pathBuffer = new UInt8[kBufferSize];
 								
 								
-								SessionFactory_NewSessionFromCommandFile(nullptr/* existing terminal window to use */,
-																			pathCString);
-							}
-						}
-						else if (StringUtilities_PEndsWith(file.name, "\p.txt"))
-						{
-							// it appears to be a text file; run the userÕs preferred editor on it
-							Str255		path;
-							
-							
-							error = FileUtilities_GetPOSIXPathnameFromFSSpec(&file, path, false/* is directory */);
-							if (error != noErr)
-							{
-								// TEMPORARY; this is an inappropriate response, since
-								// it may not be the user that initiated this request;
-								// really, an error must be attached/returned in the event
-								Sound_StandardAlert();
-							}
-							else
-							{
-								char const*		args[] =
-												{
-													getenv("EDITOR"),
-													StringUtilities_PToCInPlace(path),
-													nullptr/* terminator */
-												};
-								
-								
-								if ((args[1] == nullptr) || (0 == CPP_STD::strcmp(args[1], "")))
+								error = LSCopyItemInfoForRef(&fileRef, kLSRequestTypeCreator, &fileInfo);
+								if (noErr != error)
 								{
-									// no editor preference found; use the default
-									args[0] = "/usr/bin/vi";
+									bzero(&fileInfo, sizeof(fileInfo));
+									error = noErr;
 								}
-								SessionFactory_NewSessionArbitraryCommand(nullptr/* existing terminal window to use */,
-																			args/* arguments */);
-							}
-						}
-						else if (StringUtilities_PEndsWith(file.name, "\p.term"))
-						{
-							// it appears to be a Terminal XML property list file; parse it
-							Str255		path;
-							
-							
-							error = FileUtilities_GetPOSIXPathnameFromFSSpec(&file, path, false/* is directory */);
-							if (error != noErr)
-							{
-								// TEMPORARY; this is an inappropriate response, since
-								// it may not be the user that initiated this request;
-								// really, an error must be attached/returned in the event
-								Sound_StandardAlert();
-							}
-							else
-							{
-								char const*		pathCString = StringUtilities_PToCInPlace(path);
-								
-								
-								SessionFactory_NewSessionFromTerminalFile(nullptr/* existing terminal window to use */,
-																			pathCString);
-							}
-						}
-						else if ((fileInfo.fileCreator == 'ToyS' || fileInfo.fileType == 'osas') ||
-									StringUtilities_PEndsWith(file.name, "\p.scpt"))
-						{
-							// it appears to be a script; run it
-							AppleEventUtilities_ExecuteScriptFile(&file, true/* notify user of errors */);
-						}
-						else if ((fileInfo.fileCreator == AppResources_ReturnCreatorCode() &&
-										fileInfo.fileType == kApplicationFileTypeSessionDescription) ||
-									StringUtilities_PEndsWith(file.name, "\p.session"))
-						{
-							// read a configuration set
-							SessionDescription_ReadFromFile(&file);
-						}
-						else if ((//fileInfo.fileCreator == AppResources_ReturnCreatorCode() &&
-										fileInfo.fileType == kApplicationFileTypeMacroSet) ||
-									StringUtilities_PEndsWith(file.name, "\p.macros"))
-						{
-							// read a macro set, replacing the next set if there is more than one
-							UInt16		preservedActiveSetNumber = Macros_ReturnActiveSetNumber();
-							
-							
-							// no more than the maximum number of macro sets can be simultaneously imported
-							if (++setNumber <= MACRO_SET_COUNT)
-							{
-								MacroManager_InvocationMethod		mode = kMacroManager_InvocationMethodCommandDigit;
-								
-								
-								Macros_SetActiveSetNumber(setNumber);
-								macrosImportedSuccessfully += Macros_ImportFromText
-																(Macros_ReturnActiveSet(), &file, &mode);
-								Macros_SetMode(mode);
-								Macros_SetActiveSetNumber(preservedActiveSetNumber);
+							#if 1
+								// pass the file to Python and see if any handlers are installed to open it;
+								// in the future this may pass much more information to Quills, so that more
+								// sophisticated handling decisions can be made
+								{
+									// it appears to be a text file; run the userÕs preferred editor on it
+									error = FSRefMakePath(&fileRef, pathBuffer, kBufferSize);
+									if (error != noErr)
+									{
+										// TEMPORARY; this is an inappropriate response, since
+										// it may not be the user that initiated this request;
+										// really, an error must be attached/returned in the event
+										Sound_StandardAlert();
+									}
+									else
+									{
+										Quills::Session::handle_file(REINTERPRET_CAST(pathBuffer, char const*));
+									}
+								}
+							#else
+								if (CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".command")) ||
+									CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".tool")))
+								{
+									// it appears to be a shell script; run it
+									error = FSRefMakePath(&fileRef, pathBuffer, kBufferSize);
+									if (error != noErr)
+									{
+										// TEMPORARY; this is an inappropriate response, since
+										// it may not be the user that initiated this request;
+										// really, an error must be attached/returned in the event
+										Sound_StandardAlert();
+									}
+									else
+									{
+										char const* const	kPathCString = REINTERPRET_CAST(pathBuffer, char const*);
+										
+										
+										SessionFactory_NewSessionFromCommandFile(nullptr/* existing terminal window to use */,
+																					kPathCString);
+									}
+								}
+								else if (CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".txt")))
+								{
+									// it appears to be a text file; run the userÕs preferred editor on it
+									error = FSRefMakePath(&fileRef, pathBuffer, kBufferSize);
+									if (error != noErr)
+									{
+										// TEMPORARY; this is an inappropriate response, since
+										// it may not be the user that initiated this request;
+										// really, an error must be attached/returned in the event
+										Sound_StandardAlert();
+									}
+									else
+									{
+										char const*		args[] =
+														{
+															getenv("EDITOR"),
+															REINTERPRET_CAST(pathBuffer, char const*),
+															nullptr/* terminator */
+														};
+										
+										
+										if ((args[1] == nullptr) || (0 == CPP_STD::strcmp(args[1], "")))
+										{
+											// no editor preference found; use the default
+											args[0] = "/usr/bin/vi";
+										}
+										SessionFactory_NewSessionArbitraryCommand(nullptr/* existing terminal window to use */,
+																					args/* arguments */);
+									}
+								}
+								else if (CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".term")))
+								{
+									// it appears to be a Terminal XML property list file; parse it
+									error = FSRefMakePath(&fileRef, pathBuffer, kBufferSize);
+									if (error != noErr)
+									{
+										// TEMPORARY; this is an inappropriate response, since
+										// it may not be the user that initiated this request;
+										// really, an error must be attached/returned in the event
+										Sound_StandardAlert();
+									}
+									else
+									{
+										char const* const	kPathCString = REINTERPRET_CAST(pathBuffer, char const*);
+										
+										
+										SessionFactory_NewSessionFromTerminalFile(nullptr/* existing terminal window to use */,
+																					kPathCString);
+									}
+								}
+								else if ((fileInfo.creator == 'ToyS' || fileInfo.filetype == 'osas') ||
+											CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".scpt")))
+								{
+									// it appears to be a script; run it
+									AppleEventUtilities_ExecuteScriptFile(&fileSpec, true/* notify user of errors */);
+								}
+								else if ((fileInfo.creator == AppResources_ReturnCreatorCode() &&
+												fileInfo.filetype == kApplicationFileTypeSessionDescription) ||
+											CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".session")))
+								{
+									// read a configuration set
+									SessionDescription_ReadFromFile(&fileSpec);
+								}
+								else if ((//fileInfo.creator == AppResources_ReturnCreatorCode() &&
+												fileInfo.filetype == kApplicationFileTypeMacroSet) ||
+											CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".macros")))
+								{
+									// read a macro set, replacing the next set if there is more than one
+									UInt16		preservedActiveSetNumber = Macros_ReturnActiveSetNumber();
+									
+									
+									// no more than the maximum number of macro sets can be simultaneously imported
+									if (++setNumber <= MACRO_SET_COUNT)
+									{
+										MacroManager_InvocationMethod		mode = kMacroManager_InvocationMethodCommandDigit;
+										
+										
+										Macros_SetActiveSetNumber(setNumber);
+										macrosImportedSuccessfully += Macros_ImportFromText
+																		(Macros_ReturnActiveSet(), &fileSpec, &mode);
+										Macros_SetMode(mode);
+										Macros_SetActiveSetNumber(preservedActiveSetNumber);
+									}
+								}
+							#endif
+								delete [] pathBuffer;
 							}
 						}
 					}
