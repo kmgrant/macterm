@@ -1958,78 +1958,10 @@ createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 						 Preferences_ContextRef		inFontInfoOrNull)
 {
 	TerminalWindowRef		result = nullptr;
-	Preferences_Result		preferencesResult = kPreferences_ResultOK;
-	UInt16					columns = 0;
-	UInt16					rows = 0;
-	UInt16					scrollbackRows = 0;
-	TerminalWindow_Flags	flags = kTerminalWindow_FlagTextWraps;
 	
-	
-	// get defaults if no contexts provided; if these cannot be found
-	// for some reason, that’s fine because defaults are set in case
-	// of errors later on
-	if (nullptr == inTerminalInfoOrNull)
-	{
-		preferencesResult = Preferences_GetDefaultContext(&inTerminalInfoOrNull, kPreferences_ClassTerminal);
-	}
-	if (nullptr == inFontInfoOrNull)
-	{
-		preferencesResult = Preferences_GetDefaultContext(&inFontInfoOrNull, kPreferences_ClassFormat);
-	}
-	
-	// determine flags using the relevant user preferences
-	{
-		size_t		actualSize = 0L;
-		Boolean		headersCollapsed = false;
-		
-		
-		unless (Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
-									&headersCollapsed, &actualSize) ==
-				kPreferences_ResultOK)
-		{
-			headersCollapsed = false; // assume headers aren’t collapsed, if preference can’t be found
-		}
-		
-		unless (headersCollapsed) flags |= kTerminalWindow_FlagShowToolbar;
-	}
-	
-	{
-		Boolean		flag = false;
-		
-		
-		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalLineWrap,
-														sizeof(flag), &flag);
-		if (preferencesResult != kPreferences_ResultOK) flag = false;
-		if (flag) flags |= kTerminalWindow_FlagTextWraps;
-	}
-	
-	// read various dimension preferences
-	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenColumns,
-													sizeof(columns), &columns);
-	if (preferencesResult != kPreferences_ResultOK) columns = 80; // arbitrary
-	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenRows,
-													sizeof(rows), &rows);
-	if (preferencesResult != kPreferences_ResultOK) rows = 24; // arbitrary
-	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenScrollbackRows,
-													sizeof(scrollbackRows), &scrollbackRows);
-	if (preferencesResult != kPreferences_ResultOK) scrollbackRows = 200; // arbitrary
 	
 	// create a new terminal window to house the session
-	result = TerminalWindow_New(columns, rows, scrollbackRows, flags);
-	if (nullptr != result)
-	{
-		Str255		fontName;
-		UInt16		fontSize = 0;
-		
-		
-		if ((kPreferences_ResultOK ==
-				Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontName, sizeof(fontName), fontName)) &&
-			(kPreferences_ResultOK ==
-				Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontSize, sizeof(fontSize), &fontSize)))
-		{
-			TerminalWindow_SetFontAndSize(result, fontName, fontSize);
-		}
-	}
+	result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull);
 	
 	if (nullptr != result) startTrackingTerminalWindow(result);
 	return result;

@@ -140,18 +140,13 @@ typedef Registrar< TerminalWindowRef, TerminalWindowRefTracker >	TerminalWindowR
 
 struct TerminalWindow
 {
-	TerminalWindow  (UInt16					inCountMaximumViewableColumns,
-					 UInt16					inCountMaximumViewableRows,
-					 UInt16					inCountScrollbackBufferRows,
-					 TerminalWindow_Flags	inFlags);
+	TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef);
 	~TerminalWindow ();
 	
 	TerminalWindowRefRegistrar	refValidator;				// ensures this reference is recognized as a valid one
 	TerminalWindowRef			selfRef;					// redundant reference to self, for convenience
 	
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this terminal data
-	
-	TerminalWindow_Flags		flags;						// flags used to construct the window
 	
 	HIWindowRef					window;						// the Mac OS window reference for the terminal window
 	CFRetainRelease				tab;						// the Mac OS window reference (if any) for the sister window acting as a tab
@@ -354,24 +349,26 @@ specifications.  If any problems occur, nullptr is
 returned; otherwise, a reference to the new terminal
 window is returned.
 
+Either context can be "nullptr" if you want to rely
+on defaults.  These contexts only determine initial
+settings; future changes to the preferences will not
+affect the terminal window.
+
 In general, you should NOT create terminal windows this
 way; use the Session Factory module.
 
 (3.0)
 */
 TerminalWindowRef
-TerminalWindow_New  (UInt16					inCountMaximumViewableColumns,
-					 UInt16					inCountMaximumViewableRows,
-					 UInt16					inCountScrollbackBufferRows,
-					 TerminalWindow_Flags	inFlags)
+TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
+					 Preferences_ContextRef		inFontInfoOrNull)
 {
 	TerminalWindowRef	result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new TerminalWindow(inCountMaximumViewableColumns, inCountMaximumViewableRows,
-														inCountScrollbackBufferRows, inFlags), TerminalWindowRef);
+		result = REINTERPRET_CAST(new TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull), TerminalWindowRef);
 	}
 	catch (std::bad_alloc)
 	{
@@ -1618,17 +1615,14 @@ Constructor.  See TerminalWindow_New().
 (3.0)
 */
 TerminalWindow::
-TerminalWindow  (UInt16					inCountMaximumViewableColumns,
-				 UInt16					inCountMaximumViewableRows,
-				 UInt16					inCountScrollbackBufferRows,
-				 TerminalWindow_Flags	inFlags)
+TerminalWindow  (Preferences_ContextRef		inTerminalInfoOrNull,
+				 Preferences_ContextRef		inFontInfoOrNull)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs()),
 selfRef(REINTERPRET_CAST(this, TerminalWindowRef)),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorTerminalWindowChanges)),
-flags(inFlags),
 window(createWindow()),
 tab(),
 tabDragHandlerPtr(nullptr),
@@ -1680,10 +1674,40 @@ allScreens(),
 allViews(),
 installedActions()
 {
-	TerminalScreenRef	newScreen = nullptr;
-	TerminalViewRef		newView = nullptr;
-	Boolean				forceSave = ((inFlags & kTerminalWindow_FlagSaveLinesThatScrollOffTop) != 0);
+	TerminalScreenRef		newScreen = nullptr;
+	TerminalViewRef			newView = nullptr;
+	UInt16					columns = 0;
+	UInt16					rows = 0;
+	UInt16					scrollbackRows = 0;
+	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
+	
+	// get defaults if no contexts provided; if these cannot be found
+	// for some reason, thatÕs fine because defaults are set in case
+	// of errors later on
+	if (nullptr == inTerminalInfoOrNull)
+	{
+		preferencesResult = Preferences_GetDefaultContext(&inTerminalInfoOrNull, kPreferences_ClassTerminal);
+		assert(kPreferences_ResultOK == preferencesResult);
+		assert(nullptr != inTerminalInfoOrNull);
+	}
+	if (nullptr == inFontInfoOrNull)
+	{
+		preferencesResult = Preferences_GetDefaultContext(&inFontInfoOrNull, kPreferences_ClassFormat);
+		assert(kPreferences_ResultOK == preferencesResult);
+		assert(nullptr != inFontInfoOrNull);
+	}
+	
+	// copy size defaults from preferences
+	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenColumns,
+													sizeof(columns), &columns);
+	if (kPreferences_ResultOK != preferencesResult) columns = 80; // arbitrary
+	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenRows,
+													sizeof(rows), &rows);
+	if (kPreferences_ResultOK != preferencesResult) rows = 24; // arbitrary
+	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenScrollbackRows,
+													sizeof(scrollbackRows), &scrollbackRows);
+	if (kPreferences_ResultOK != preferencesResult) scrollbackRows = 200; // arbitrary
 	
 	// set up Window Info; it is important to do this right away
 	// because this is relied upon by other code to find the
@@ -1718,38 +1742,26 @@ installedActions()
 	
 	// create controls
 	{
-		Preferences_ContextRef	formatPreferencesContext = nullptr;
-		Terminal_Result			terminalError = kTerminal_ResultOK;
-		Str255					fontName;
-		SInt16					fontSize = 0;
+		Terminal_Result		terminalError = kTerminal_ResultOK;
+		Str255				fontName;
+		SInt16				fontSize = 0;
+		Boolean				forceSave = false;
 		
 		
 		// copy font defaults from preferences
-		if (kPreferences_ResultOK == Preferences_GetDefaultContext(&formatPreferencesContext, kPreferences_ClassFormat))
-		{
-			if (kPreferences_ResultOK != Preferences_ContextGetData(formatPreferencesContext, kPreferences_TagFontName,
-																	sizeof(fontName), fontName))
-			{
-				// error - set default
-				PLstrcpy(fontName, "\pMonaco");
-			}
-			
-			if (kPreferences_ResultOK != Preferences_ContextGetData(formatPreferencesContext, kPreferences_TagFontSize,
-																	sizeof(fontSize), &fontSize))
-			{
-				// error - set default
-				fontSize = 12;
-			}
-		}
-		else
-		{
-			// some preferences problem; set defaults here for now
-			PLstrcpy(fontName, "\pMonaco");
-			fontSize = 12;
-		}
+		preferencesResult = Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontName,
+														sizeof(fontName), fontName);
+		if (kPreferences_ResultOK != preferencesResult) PLstrcpy(fontName, "\pMonaco"); // arbitrary
+		preferencesResult = Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontSize,
+														sizeof(fontSize), &fontSize);
+		if (kPreferences_ResultOK != preferencesResult) fontSize = 12; // arbitrary
 		
-		terminalError = Terminal_NewScreen(inCountScrollbackBufferRows, inCountMaximumViewableRows, inCountMaximumViewableColumns,
-											forceSave, &newScreen);
+		// other defaults...
+		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalClearSavesLines,
+														sizeof(forceSave), &forceSave);
+		if (kPreferences_ResultOK != preferencesResult) forceSave = true; // arbitrary
+		
+		terminalError = Terminal_NewScreen(scrollbackRows, rows, columns, forceSave, &newScreen);
 		if (terminalError == kTerminal_ResultOK)
 		{
 			newView = TerminalView_NewHIViewBased(newScreen, this->window, fontName, fontSize);
@@ -1845,8 +1857,7 @@ installedActions()
 		
 		
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
-											inCountMaximumViewableColumns, inCountMaximumViewableRows,
-											true/* include insets */, &screenWidth, &screenHeight);
+											columns, rows, true/* include insets */, &screenWidth, &screenHeight);
 		setStandardState(this, screenWidth, screenHeight, true/* resize window */);
 	}
 	
@@ -1994,11 +2005,21 @@ installedActions()
 	// put the toolbar in the window
 	{
 		OSStatus	error = noErr;
+		size_t		actualSize = 0L;
+		Boolean		headersCollapsed = false;
 		
 		
 		error = SetWindowToolbar(this->window, this->toolbar);
 		assert_noerr(error);
-		if (inFlags & kTerminalWindow_FlagShowToolbar)
+		
+		// also show the toolbar, unless the user preference to collapse is set
+		unless (Preferences_GetData(kPreferences_TagHeadersCollapsed, sizeof(headersCollapsed),
+									&headersCollapsed, &actualSize) ==
+				kPreferences_ResultOK)
+		{
+			headersCollapsed = false; // assume headers arenÕt collapsed, if preference canÕt be found
+		}
+		unless (headersCollapsed)
 		{
 			error = ShowHideWindowToolbar(this->window, true/* show */, false/* animate */);
 			assert_noerr(error);
@@ -2010,11 +2031,19 @@ installedActions()
 	(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(this->window, true/* enabled */);
 	
 	// finish by applying any desired attributes to the screen
-	if (inFlags & kTerminalWindow_FlagTextWraps)
 	{
-		Terminal_EmulatorProcessCString(newScreen, "\033[?7h"); // turn on autowrap
+		Boolean		flag = false;
+		
+		
+		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalLineWrap,
+														sizeof(flag), &flag);
+		if (preferencesResult != kPreferences_ResultOK) flag = false;
+		if (flag)
+		{
+			Terminal_EmulatorProcessCString(newScreen, "\033[?7h"); // turn on autowrap
+		}
 	}
-}// TerminalWindow 4-argument constructor
+}// TerminalWindow 2-argument constructor
 
 
 /*!

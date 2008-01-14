@@ -14,7 +14,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -52,6 +52,7 @@
 #include "ListenerModel.h"
 
 // MacTelnet includes
+#include "Preferences.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalViewRef.typedef.h"
 
@@ -89,14 +90,6 @@ enum TerminalWindow_Change
 																		//!  has changed (context: TerminalWindowRef)
 };
 
-typedef UInt32 TerminalWindow_Flags;
-enum
-{
-	kTerminalWindow_FlagSaveLinesThatScrollOffTop = (1 << 0),	//!< save or trash scrolled screen rows?
-	kTerminalWindow_FlagShowToolbar = (1 << 1),					//!< window header initially visible?
-	kTerminalWindow_FlagTextWraps = (1 << 2)					//!< wrap mode initially enabled?
-};
-
 /*!
 Unique descriptors for collections of terminal views.  For example,
 these might be used to describe the collection of views for a single
@@ -128,10 +121,8 @@ typedef struct OpaqueTerminalWindow*	TerminalWindowRef;
 
 // DO NOT CREATE TERMINAL WINDOWS THIS WAY (USE SessionFactory METHODS, INSTEAD)
 TerminalWindowRef
-	TerminalWindow_New								(UInt16						inCountMaximumViewableColumns,
-													 UInt16						inCountMaximumViewableRows,
-													 UInt16						inCountScrollbackBufferRows,
-													 TerminalWindow_Flags		inFlags);
+	TerminalWindow_New								(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
+													 Preferences_ContextRef		inFontInfoOrNull = nullptr);
 
 void
 	TerminalWindow_Dispose							(TerminalWindowRef*			inoutRefPtr);
