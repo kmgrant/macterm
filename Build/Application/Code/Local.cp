@@ -485,9 +485,24 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		struct termios	terminalControl;
 		
 		
-		// set the answer-back message; this value works, but eventually this
-		// needs to get the string from a MacTelnet terminal preference
-		setenv("TERM", "vt100", true/* overwrite */);
+		// set the answer-back message
+		{
+			CFStringRef		answerBackCFString = Terminal_EmulatorReturnName(inContainer);
+			
+			
+			if (nullptr != answerBackCFString)
+			{
+				size_t const	kAnswerBackSize = CFStringGetLength(answerBackCFString) + 1/* terminator */;
+				char*			answerBackCString = new char[kAnswerBackSize];
+				
+				
+				if (CFStringGetCString(answerBackCFString, answerBackCString, kAnswerBackSize, kCFStringEncodingASCII))
+				{
+					(int)setenv("TERM", answerBackCString, true/* overwrite */);
+				}
+				delete [] answerBackCString;
+			}
+		}
 		
 		// TEMPORARY - the UNIX structures are filled in with defaults that work,
 		//             but eventually MacTelnet has to map user preferences, etc.

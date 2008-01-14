@@ -1743,6 +1743,8 @@ installedActions()
 	// create controls
 	{
 		Terminal_Result		terminalError = kTerminal_ResultOK;
+		Terminal_Emulator	emulationType = kTerminal_EmulatorVT102;
+		CFStringRef			answerBackCFString = nullptr;
 		Str255				fontName;
 		SInt16				fontSize = 0;
 		Boolean				forceSave = false;
@@ -1760,8 +1762,13 @@ installedActions()
 		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalClearSavesLines,
 														sizeof(forceSave), &forceSave);
 		if (kPreferences_ResultOK != preferencesResult) forceSave = true; // arbitrary
+		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalEmulatorType,
+														sizeof(emulationType), &emulationType);
+		if (kPreferences_ResultOK != preferencesResult) emulationType = kTerminal_EmulatorVT102; // arbitrary
+		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalAnswerBackMessage,
+														sizeof(answerBackCFString), &answerBackCFString);
 		
-		terminalError = Terminal_NewScreen(scrollbackRows, rows, columns, forceSave, &newScreen);
+		terminalError = Terminal_NewScreen(emulationType, answerBackCFString, scrollbackRows, rows, columns, forceSave, &newScreen);
 		if (terminalError == kTerminal_ResultOK)
 		{
 			newView = TerminalView_NewHIViewBased(newScreen, this->window, fontName, fontSize);

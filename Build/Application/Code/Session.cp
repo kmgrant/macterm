@@ -1637,14 +1637,10 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				
 				// terminal type
 				{
-					char	answerBackMessage[256];
-					
-					
-					Session_TerminalGetAnswerBackMessage(inRef, answerBackMessage, sizeof(answerBackMessage));
-					stringValue = CFStringCreateWithCString(kCFAllocatorDefault, answerBackMessage,
-															GetApplicationTextEncoding());
+					Session_TerminalCopyAnswerBackMessage(inRef, stringValue);
 					saveError = SessionDescription_SetStringData
 								(saveFileMemoryModel, kSessionDescription_StringTypeAnswerBack, stringValue);
+					CFRelease(stringValue), stringValue = nullptr;
 				}
 				
 				// keyboard mapping info
@@ -3596,48 +3592,37 @@ request.  For example, a VT100 terminal might return
 the message "vt100", or the name of some other
 compatible terminal.
 
+Call CFRelease() on the returned string when you are
+finished with it.
+
 \retval kSession_ResultOK
 if there are no errors
 
 \retval kSession_ResultInvalidReference
-if the specified session is unrecognized
+if the specified session is unrecognized or if the
+answerback message could not be found
 
-\retval kSession_ResultParameterError
-if "outAnswerBackBufferPtr" is nullptr
-
-\retval kSession_ResultInsufficientBufferSpace
-if "inAnswerBackBufferSize" is too small
-
-(3.0)
+(3.1)
 */
 Session_Result
-Session_TerminalGetAnswerBackMessage	(SessionRef		inRef,
-										 char*			outAnswerBackBufferPtr,
-										 size_t			inAnswerBackBufferSize)
+Session_TerminalCopyAnswerBackMessage	(SessionRef		inRef,
+										 CFStringRef&	outAnswerBack)
 {
 	Session_Result		result = kSession_ResultOK;
 	
 	
-	if (inRef == nullptr) result = kSession_ResultInvalidReference;
-	else if (outAnswerBackBufferPtr == nullptr) result = kSession_ResultParameterError;
+	if (nullptr == inRef) result = kSession_ResultInvalidReference;
 	else
 	{
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
-		if (STATIC_CAST(inAnswerBackBufferSize, size_t) < sizeof(ptr->dataPtr->terminal.answerBack))
-		{
-			result = kSession_ResultInsufficientBufferSpace;
-		}
-		else
-		{
-			// return a copy of the answer-back message
-			CPP_STD::strcpy(outAnswerBackBufferPtr, ptr->dataPtr->terminal.answerBack);
-		}
+		outAnswerBack = Terminal_EmulatorReturnName(ptr->dataPtr->vs);
+		if (nullptr != outAnswerBack) CFRetain(outAnswerBack);
 	}
 	
 	return result;
-}// TerminalGetAnswerBackMessage
+}// TerminalCopyAnswerBackMessage
 
 
 /*!
@@ -4409,7 +4394,6 @@ kblen			(0),
 // parsedat initialized below
 parseIndex		(0),
 controlKey		(),
-terminal		(),
 TEK				(),
 mainProcess		()
 {

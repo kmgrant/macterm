@@ -870,8 +870,8 @@ const
 	TerminalScreenRef		result = nullptr;
 	
 	
-	screenCreationError = Terminal_NewScreen(0/* number of scrollback rows */, 3/* number of rows */, 80/* number of columns */,
-												false/* force save */, &result);
+	screenCreationError = Terminal_NewScreen(kTerminal_EmulatorVT100, CFSTR("vt100"), 0/* number of scrollback rows */, 3/* number of rows */,
+												80/* number of columns */, false/* force save */, &result);
 	assert(kTerminal_ResultOK == screenCreationError);
 	assert(nullptr != result);
 	

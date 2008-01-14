@@ -263,7 +263,7 @@ enum
 	kPreferences_TagMapArrowsForEMACS					= FOUR_CHAR_CODE('mapE'),	//!< data: "Boolean"
 	kPreferences_TagMapKeypadTopRowForVT220				= FOUR_CHAR_CODE('mapK'),	//!< data: "Boolean"
 	kPreferences_TagPageKeysControlLocalTerminal		= FOUR_CHAR_CODE('pgtm'),	//!< data: "Boolean"
-	kPreferences_TagTerminalAnswerBackMessage			= FOUR_CHAR_CODE('ansb'),	//!< data: "Str255"
+	kPreferences_TagTerminalAnswerBackMessage			= FOUR_CHAR_CODE('ansb'),	//!< data: "CFStringRef"
 	kPreferences_TagTerminalClearSavesLines				= FOUR_CHAR_CODE('clsv'),	//!< data: "Boolean"
 	kPreferences_TagTerminalEmulatorType				= FOUR_CHAR_CODE('emul'),	//!< data: "Terminal_Emulator", a "kTerminal_Emulator..." constant
 	kPreferences_TagTerminalLineWrap					= FOUR_CHAR_CODE('wrap'),	//!< data: "Boolean"

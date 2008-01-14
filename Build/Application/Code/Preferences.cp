@@ -4435,7 +4435,7 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 	case kPreferences_TagTerminalAnswerBackMessage:
 		outKeyName = CFSTR("terminal-emulator-answerback");
 		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Str255);
+		outNonDictionaryValueSize = sizeof(CFStringRef);
 		outClass = kPreferences_ClassTerminal;
 		break;
 	
@@ -5314,16 +5314,11 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							StringPtr const		data = REINTERPRET_CAST(outDataPtr, StringPtr);
+							CFStringRef*	storedValuePtr = REINTERPRET_CAST(outDataPtr, CFStringRef*);
 							
 							
-							if (false == CFStringGetPascalString(valueCFString, data, inDataSize, kCFStringEncodingMacRoman))
-							{
-								// failed; make default string
-								PLstrcpy(data, "\pvt100");
-								result = kPreferences_ResultBadVersionDataNotAvailable;
-							}
-							CFRelease(valueCFString), valueCFString = nullptr;
+							*storedValuePtr = valueCFString;
+							// do not release because the string is returned
 						}
 					}
 					break;
@@ -5343,22 +5338,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							Terminal_Emulator*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Terminal_Emulator*);
 							
 							
-							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("dumb"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kTerminal_EmulatorDumb;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("vt100"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kTerminal_EmulatorVT100;
-							}
-							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("vt220"), kCFCompareCaseInsensitive))
-							{
-								*storedValuePtr = kTerminal_EmulatorVT220;
-							}
-							else
-							{
-								result = kPreferences_ResultBadVersionDataNotAvailable;
-							}
+							*storedValuePtr = Terminal_EmulatorReturnForName(valueCFString);
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
 					}
@@ -6975,18 +6955,11 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagTerminalAnswerBackMessage:
 				{
-					ConstStringPtr const	data = REINTERPRET_CAST(inDataPtr, ConstStringPtr);
-					CFStringRef				fontNameCFString = nullptr;
+					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
 					
 					
-					fontNameCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, data, kCFStringEncodingMacRoman);
-					if (nullptr == fontNameCFString) result = kPreferences_ResultGenericFailure;
-					else
-					{
-						assert(typeCFStringRef == keyValueType);
-						inContextPtr->addString(keyName, (data) ? fontNameCFString : CFSTR(""));
-						CFRelease(fontNameCFString), fontNameCFString = nullptr;
-					}
+					assert(typeCFStringRef == keyValueType);
+					inContextPtr->addString(keyName, *data);
 				}
 				break;
 			
@@ -7004,23 +6977,14 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				if (inDataSize >= sizeof(Terminal_Emulator))
 				{
 					Terminal_Emulator const		data = *(REINTERPRET_CAST(inDataPtr, Terminal_Emulator const*));
+					CFRetainRelease				nameCFString = Terminal_EmulatorReturnDefaultName(data);
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					switch (data)
+					if (false == nameCFString.exists()) result = kPreferences_ResultGenericFailure;
+					else
 					{
-					case kTerminal_EmulatorDumb:
-						inContextPtr->addString(keyName, CFSTR("dumb"));
-						break;
-					
-					case kTerminal_EmulatorVT220:
-						inContextPtr->addString(keyName, CFSTR("vt220"));
-						break;
-					
-					case kTerminal_EmulatorVT100:
-					default:
-						inContextPtr->addString(keyName, CFSTR("vt100"));
-						break;
+						inContextPtr->addString(keyName, nameCFString.returnCFStringRef());
 					}
 				}
 				break;

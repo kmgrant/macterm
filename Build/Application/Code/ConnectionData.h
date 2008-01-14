@@ -128,14 +128,6 @@ struct ConnectionData
 							pad;				// unused
 	} controlKey;
 	
-	struct TermInfo
-	{
-		TermInfo (): emulation(0) { bzero(answerBack, sizeof(answerBack)); }
-		
-		SInt16					emulation;		// virtual terminal emulation type
-		char					answerBack[32];	// message to send when server sends TERMTYPE option
-	} terminal;
-	
 	struct TEKInfo
 	{
 		TEKInfo (): pageLocation(kTektronixPageLocationNewWindowClear),

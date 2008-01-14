@@ -485,9 +485,8 @@ SInt16
 //@{
 
 Session_Result
-	Session_TerminalGetAnswerBackMessage	(SessionRef							inRef,
-											 char*								outAnswerBackBufferPtr,
-											 size_t								inAnswerBackBufferSize);
+	Session_TerminalCopyAnswerBackMessage	(SessionRef							inRef,
+											 CFStringRef&						outAnswerBack);
 
 void
 	Session_TerminalWrite					(SessionRef							inRef,

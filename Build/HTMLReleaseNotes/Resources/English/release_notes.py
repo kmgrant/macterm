@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080114',
     '20080111',
     '20080103',
     '20080101',
@@ -75,6 +76,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080114': [
+		'Fixed print dialog display when Media Copy (line printing) sequences are sent by applications in VT102 terminals.',
+		'The TERM variable is now properly initialized to match answerback preferences, instead of always using "vt100".',
+	],
 	'20080111': [
 		'Added Session.on_fileopen_call(func, extension) to Quills, allowing Python functions to respond to file open requests by type.',
 		'Added Session.stop_fileopen_call(func, extension) to Quills, to mirror Session.on_fileopen_call().',

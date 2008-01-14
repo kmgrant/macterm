@@ -545,6 +545,7 @@ EditTerminal	(Preferences_Class		inClass,
 			if (preferencesResult != kPreferences_ResultOK) fontSize = 12; // arbitrary
 			SetDialogItemNumericalText(dialog, TermFontSize, fontSize);
 		}
+	#if 0
 		{
 			Str255		answerBack;
 			
@@ -554,6 +555,7 @@ EditTerminal	(Preferences_Class		inClass,
 			if (preferencesResult != kPreferences_ResultOK) PLstrcpy(answerBack, "\pvt100"); // arbitrary
 			SetDialogItemControlText(dialog, TermAnswerback, answerBack);
 		}
+	#endif
 		
 		// pre-select the appropriate font in the menu
 		{
@@ -1037,6 +1039,7 @@ EditTerminal	(Preferences_Class		inClass,
 				}
 			}
 			
+		#if 0
 			{
 				GetDialogItemControlText(dialog, TermAnswerback, scratchPstring);
 				if (PLstrlen(scratchPstring) > 63) scratchPstring[0] = 63;
@@ -1047,6 +1050,7 @@ EditTerminal	(Preferences_Class		inClass,
 					// error...
 				}
 			}
+		#endif
 			
 			(Preferences_Result)Preferences_ContextSave(preferencesContext);
 			

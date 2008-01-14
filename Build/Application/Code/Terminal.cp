@@ -88,204 +88,110 @@
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
 	/*!
-	All possible states the emulator’s character parser can be in.
-	The list starts with generic states that simply document sequences
-	of characters, so that the “descript” states can be aliases for
-	them.  This approach makes it easier to see overlap (conflicts)
-	between emulators, and also lets each code base use the name most
-	natural for it: i.e. when determining the next logical state it
-	may make sense to use generic names, but when acting on a state
-	transition it would be helpful to use the descript name.
+	A parser state represents a recent history of input that limits
+	what can happen next (based on future input).
 	
-	IMPORTANT:	This reflects the PARSER ONLY, so DUPLICATES MAKE SENSE.
-				This must be combined with any internal flags set in
-				terminal data structures (e.g. to know whether a VT100
-				is in ANSI or VT52 mode) to understand what should
-				actually happen when the parser is in any given state.
-				See "My_EmulatorStateTransitionProcPtr".
+	The list below contains generic names, however the same values
+	are often used to define aliases in specific terminal classes
+	(like My_VT100).  This ties a terminal-specific state to a
+	generic one, allowing the default parser to do most of the state
+	determination/transition work on behalf of all terminals!
 	*/
-	namespace My_Parser
+	typedef UInt32 My_ParserState;
+	enum
 	{
-		enum State
-		{
-			// generic states - these are automatically handled by the default state determinant based on the data stream
-			kStateSeenNull						= FOUR_CHAR_CODE('Ctl@'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlA					= FOUR_CHAR_CODE('CtlA'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlB					= FOUR_CHAR_CODE('CtlB'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlC					= FOUR_CHAR_CODE('CtlC'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlD					= FOUR_CHAR_CODE('CtlD'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlE					= FOUR_CHAR_CODE('CtlE'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlF					= FOUR_CHAR_CODE('CtlF'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlG					= FOUR_CHAR_CODE('CtlG'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlH					= FOUR_CHAR_CODE('CtlH'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlI					= FOUR_CHAR_CODE('CtlI'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlJ					= FOUR_CHAR_CODE('CtlJ'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlK					= FOUR_CHAR_CODE('CtlK'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlL					= FOUR_CHAR_CODE('CtlL'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlM					= FOUR_CHAR_CODE('CtlM'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlN					= FOUR_CHAR_CODE('CtlN'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlO					= FOUR_CHAR_CODE('CtlO'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlP					= FOUR_CHAR_CODE('CtlP'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlQ					= FOUR_CHAR_CODE('CtlQ'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlR					= FOUR_CHAR_CODE('CtlR'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlS					= FOUR_CHAR_CODE('CtlS'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlT					= FOUR_CHAR_CODE('CtlT'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlU					= FOUR_CHAR_CODE('CtlU'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlV					= FOUR_CHAR_CODE('CtlV'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlW					= FOUR_CHAR_CODE('CtlW'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlX					= FOUR_CHAR_CODE('CtlX'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlY					= FOUR_CHAR_CODE('CtlY'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenControlZ					= FOUR_CHAR_CODE('CtlZ'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESC						= FOUR_CHAR_CODE('cESC'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracket			= FOUR_CHAR_CODE('ESC['),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParams	= FOUR_CHAR_CODE('E[;;'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsA	= FOUR_CHAR_CODE('E[;A'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsB	= FOUR_CHAR_CODE('E[;B'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsc	= FOUR_CHAR_CODE('E[;c'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsC	= FOUR_CHAR_CODE('E[;C'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsD	= FOUR_CHAR_CODE('E[;D'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsf	= FOUR_CHAR_CODE('E[;f'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsg	= FOUR_CHAR_CODE('E[;g'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsh	= FOUR_CHAR_CODE('E[;h'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsH	= FOUR_CHAR_CODE('E[;H'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsJ	= FOUR_CHAR_CODE('E[;J'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsK	= FOUR_CHAR_CODE('E[;K'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsl	= FOUR_CHAR_CODE('E[;l'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsm	= FOUR_CHAR_CODE('E[;m'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsn	= FOUR_CHAR_CODE('E[;n'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsq	= FOUR_CHAR_CODE('E[;q'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsr	= FOUR_CHAR_CODE('E[;r'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftSqBracketParamsx	= FOUR_CHAR_CODE('E[;x'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftParen				= FOUR_CHAR_CODE('ESC('),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftParenA				= FOUR_CHAR_CODE('ES(A'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftParenB				= FOUR_CHAR_CODE('ES(B'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftParen0				= FOUR_CHAR_CODE('ES(0'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftParen1				= FOUR_CHAR_CODE('ES(1'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLeftParen2				= FOUR_CHAR_CODE('ES(2'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCRightParen				= FOUR_CHAR_CODE('ESC)'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCRightParenA			= FOUR_CHAR_CODE('ES)A'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCRightParenB			= FOUR_CHAR_CODE('ES)B'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCRightParen0			= FOUR_CHAR_CODE('ES)0'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCRightParen1			= FOUR_CHAR_CODE('ES)1'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCRightParen2			= FOUR_CHAR_CODE('ES)2'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCA						= FOUR_CHAR_CODE('ESCA'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCB						= FOUR_CHAR_CODE('ESCB'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCC						= FOUR_CHAR_CODE('ESCC'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCc						= FOUR_CHAR_CODE('ESCc'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCD						= FOUR_CHAR_CODE('ESCD'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCE						= FOUR_CHAR_CODE('ESCE'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCF						= FOUR_CHAR_CODE('ESCF'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCG						= FOUR_CHAR_CODE('ESCG'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCH						= FOUR_CHAR_CODE('ESCH'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCI						= FOUR_CHAR_CODE('ESCI'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCJ						= FOUR_CHAR_CODE('ESCJ'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCK						= FOUR_CHAR_CODE('ESCK'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCM						= FOUR_CHAR_CODE('ESCM'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCY						= FOUR_CHAR_CODE('ESCY'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCZ						= FOUR_CHAR_CODE('ESCZ'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESC7						= FOUR_CHAR_CODE('ESC7'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESC8						= FOUR_CHAR_CODE('ESC8'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCPound					= FOUR_CHAR_CODE('ESC#'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCPound3					= FOUR_CHAR_CODE('ES#3'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCPound4					= FOUR_CHAR_CODE('ES#4'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCPound5					= FOUR_CHAR_CODE('ES#5'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCPound6					= FOUR_CHAR_CODE('ES#6'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCPound8					= FOUR_CHAR_CODE('ES#8'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCEquals					= FOUR_CHAR_CODE('ESC='),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCLessThan				= FOUR_CHAR_CODE('ESC<'),	//!< generic state used to define emulator-specific states, below
-			kStateSeenESCGreaterThan			= FOUR_CHAR_CODE('ESC>'),	//!< generic state used to define emulator-specific states, below
-			
-			// key states
-			kStateInitial				= FOUR_CHAR_CODE('init'),				//!< the very first state, no characters have yet been entered
-			kStateEcho					= FOUR_CHAR_CODE('echo'),				//!< no sense could be made of the input, so let it fall through to display
-			
-			// VT100 immediates (in order of the corresponding control character’s ASCII code)
-			kStateVT100ControlENQ		= FOUR_CHAR_CODE('VAns'),				//!< transmit answerback message
-			kStateVT100ControlBEL		= FOUR_CHAR_CODE('VBel'),				//!< audio event
-			kStateVT100ControlBS		= FOUR_CHAR_CODE('VBks'),				//!< move cursor left if possible
-			kStateVT100ControlHT		= FOUR_CHAR_CODE('VTab'),				//!< move cursor right to tab stop, or margin
-			kStateVT100ControlLFVTFF	= FOUR_CHAR_CODE('VLnF'),				//!< newline or line feed, depending on LNM
-			kStateVT100ControlCR		= FOUR_CHAR_CODE('VCRt'),				//!< move cursor down and to left margin
-			kStateVT100ControlSO		= FOUR_CHAR_CODE('VShO'),				//!< shift out to G1 character set
-			kStateVT100ControlSI		= FOUR_CHAR_CODE('VShI'),				//!< shift in to G0 character set
-			kStateVT100ControlXON		= FOUR_CHAR_CODE('VXON'),				//!< resume transmission
-			kStateVT100ControlXOFF		= FOUR_CHAR_CODE('VXOF'),				//!< suspend transmission
-			kStateVT100ControlCANSUB	= FOUR_CHAR_CODE('VCAN'),				//!< terminate control seq. with error char.
-			
-			// VT100 sequences in VT52 compatibility mode (in the order they appear in the manual) - see VT100 manual for full details
-			kStateVT52CU				= kStateSeenESCA,				//!< cursor up
-			kStateVT52CD 				= kStateSeenESCB,				//!< cursor down
-			kStateVT52CR 				= kStateSeenESCC,				//!< cursor right
-			kStateVT52CL 				= kStateSeenESCD,				//!< cursor left
-			kStateVT52NGM				= kStateSeenESCF,				//!< enter graphics mode
-			kStateVT52XGM				= kStateSeenESCG,				//!< exit graphics mode
-			kStateVT52CH				= kStateSeenESCH,				//!< cursor home
-			kStateVT52RLF				= kStateSeenESCI,				//!< reverse line feed
-			kStateVT52EES				= kStateSeenESCJ,				//!< erase to end of screen
-			kStateVT52EEL				= kStateSeenESCK,				//!< erase to end of line
-			kStateVT52DCA				= kStateSeenESCY,				//!< direct cursor address
-			kStateVT52DCAY				= FOUR_CHAR_CODE('DCAY'),		//!< direct cursor address, seen first follow-up character (Y)
-			kStateVT52DCAX				= FOUR_CHAR_CODE('DCAX'),		//!< direct cursor address, seen second follow-up character (X)
-			kStateVT52ID				= kStateSeenESCZ,				//!< identify terminal
-			kStateVT52NAKM				= kStateSeenESCEquals,			//!< enter alternate keypad mode
-			kStateVT52XAKM				= kStateSeenESCGreaterThan,	//!< exit alternate keypad mode
-			kStateVT52ANSI				= kStateSeenESCLessThan,		//!< enter ANSI mode
-			
-			// VT100 sequences (in the order they appear in the manual) - see VT100 manual for full details
-			kStateVT100CSI				= kStateSeenESCLeftSqBracket,	//!< control sequence inducer
-			kStateVT100CSIParamScan		= kStateSeenESCLeftSqBracketParams,	//!< state of accumulating parameters
-			kStateVT100CUB				= kStateSeenESCLeftSqBracketParamsD,	//!< cursor backward
-			kStateVT100CUD				= kStateSeenESCLeftSqBracketParamsB,	//!< cursor down
-			kStateVT100CUF				= kStateSeenESCLeftSqBracketParamsC,	//!< cursor forward
-			kStateVT100CUP				= kStateSeenESCLeftSqBracketParamsH,	//!< cursor position
-			kStateVT100CUU				= kStateSeenESCLeftSqBracketParamsA,	//!< cursor up
-			kStateVT100DA				= kStateSeenESCLeftSqBracketParamsc,	//!< device attributes
-			kStateVT100DECALN			= kStateSeenESCPound8,			//!< screen alignment display
-			kStateVT100DECANM			= FOUR_CHAR_CODE('VANM'),				//!< ANSI/VT52 mode
-			kStateVT100DECARM			= FOUR_CHAR_CODE('VARM'),				//!< auto repeat mode
-			kStateVT100DECAWM			= FOUR_CHAR_CODE('VAWM'),				//!< auto wrap mode
-			kStateVT100DECCKM			= FOUR_CHAR_CODE('VCKM'),				//!< cursor keys mode
-			kStateVT100DECCOLM			= FOUR_CHAR_CODE('VCLM'),				//!< column mode
-			kStateVT100DECDHLT			= kStateSeenESCPound3,			//!< double height line, top half
-			kStateVT100DECDHLB			= kStateSeenESCPound4,			//!< double height line, bottom half
-			kStateVT100DECDWL			= kStateSeenESCPound6,			//!< double width line
-			kStateVT100DECID			= kStateSeenESCZ,				//!< identify terminal
-			kStateVT100DECKPAM			= kStateSeenESCEquals,			//!< keypad application mode
-			kStateVT100DECKPNM			= kStateSeenESCGreaterThan,	//!< keypad numeric mode
-			kStateVT100DECLL			= kStateSeenESCLeftSqBracketParamsq,	//!< load LEDs (keyboard lights)
-			kStateVT100DECOM			= FOUR_CHAR_CODE('VOM '),				//!< origin mode
-			kStateVT100DECRC			= kStateSeenESC8,				//!< restore cursor
-			kStateVT100DECREPTPARM		= FOUR_CHAR_CODE('VRPM'),				//!< report terminal parameters
-			kStateVT100DECREQTPARM		= kStateSeenESCLeftSqBracketParamsx,	//!< request terminal parameters
-			kStateVT100DECSC			= kStateSeenESC7,				//!< save cursor
-			kStateVT100DECSTBM			= kStateSeenESCLeftSqBracketParamsr,	//!< set top and bottom margins
-			kStateVT100DECSWL			= kStateSeenESCPound5,			//!< single width line
-			kStateVT100DECTST			= FOUR_CHAR_CODE('VTST'),				//!< invoke confidence test
-			kStateVT100DSR				= kStateSeenESCLeftSqBracketParamsn,	//!< device status report
-			kStateVT100ED 				= kStateSeenESCLeftSqBracketParamsJ,	//!< erase in display
-			kStateVT100EL 				= kStateSeenESCLeftSqBracketParamsK,	//!< erase in line
-			kStateVT100HTS				= kStateSeenESCH,				//!< horizontal tabulation set
-			kStateVT100HVP				= kStateSeenESCLeftSqBracketParamsf,	//!< horizontal and vertical position
-			kStateVT100IND				= kStateSeenESCD,				//!< index
-			kStateVT100NEL				= kStateSeenESCE,				//!< next line
-			kStateVT100RI				= kStateSeenESCM,				//!< reverse index
-			kStateVT100RIS				= kStateSeenESCc,				//!< reset to initial state
-			kStateVT100RM				= kStateSeenESCLeftSqBracketParamsl,	//!< reset mode
-			kStateVT100SCSG0UK			= kStateSeenESCLeftParenA,		//!< select character set for G0, U.K.
-			kStateVT100SCSG0ASCII		= kStateSeenESCLeftParenB,		//!< select character set for G0, ASCII
-			kStateVT100SCSG0SG			= kStateSeenESCLeftParen0,		//!< select character set for G0, special graphics
-			kStateVT100SCSG0ACRStd		= kStateSeenESCLeftParen1,		//!< select character set for G0, alternate character ROM standard set
-			kStateVT100SCSG0ACRSG		= kStateSeenESCLeftParen2,		//!< select character set for G0, alternate character ROM special graphics
-			kStateVT100SCSG1UK			= kStateSeenESCRightParenA,	//!< select character set for G0, U.K.
-			kStateVT100SCSG1ASCII		= kStateSeenESCRightParenB,	//!< select character set for G0, ASCII
-			kStateVT100SCSG1SG			= kStateSeenESCRightParen0,	//!< select character set for G0, special graphics
-			kStateVT100SCSG1ACRStd		= kStateSeenESCRightParen1,	//!< select character set for G0, alternate character ROM standard set
-			kStateVT100SCSG1ACRSG		= kStateSeenESCRightParen2,	//!< select character set for G0, alternate character ROM special graphics
-			kStateVT100SGR				= kStateSeenESCLeftSqBracketParamsm,	//!< select graphic rendition
-			kStateVT100SM				= kStateSeenESCLeftSqBracketParamsh,	//!< set mode
-			kStateVT100TBC				= kStateSeenESCLeftSqBracketParamsg	//!< tabulation clear
-		};
-	} // namespace My_Parser
+		// key states
+		kMy_ParserStateInitial						= 'init',	//!< the very first state, no characters have yet been entered
+		kMy_ParserStateEcho							= 'echo',	//!< no sense could be made of the input, so let it fall through to display
+		
+		// generic states - these are automatically handled by the default state determinant based on the data stream
+		kMy_ParserStateSeenNull						= 'Ctl@',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlA					= 'CtlA',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlB					= 'CtlB',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlC					= 'CtlC',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlD					= 'CtlD',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlE					= 'CtlE',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlF					= 'CtlF',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlG					= 'CtlG',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlH					= 'CtlH',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlI					= 'CtlI',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlJ					= 'CtlJ',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlK					= 'CtlK',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlL					= 'CtlL',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlM					= 'CtlM',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlN					= 'CtlN',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlO					= 'CtlO',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlP					= 'CtlP',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlQ					= 'CtlQ',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlR					= 'CtlR',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlS					= 'CtlS',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlT					= 'CtlT',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlU					= 'CtlU',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlV					= 'CtlV',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlW					= 'CtlW',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlX					= 'CtlX',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlY					= 'CtlY',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenControlZ					= 'CtlZ',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESC						= 'cESC',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracket			= 'ESC[',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParams	= 'E[;;',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsA	= 'E[;A',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsB	= 'E[;B',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsc	= 'E[;c',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsC	= 'E[;C',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsD	= 'E[;D',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsf	= 'E[;f',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsg	= 'E[;g',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsh	= 'E[;h',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsH	= 'E[;H',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsJ	= 'E[;J',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsK	= 'E[;K',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsi	= 'E[;i',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsl	= 'E[;l',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsm	= 'E[;m',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsn	= 'E[;n',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsq	= 'E[;q',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsr	= 'E[;r',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftParenB			= 'ES(B',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftParen0			= 'ES(0',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftParen1			= 'ES(1',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftParen2			= 'ES(2',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCRightParen			= 'ESC)',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCRightParenA			= 'ES)A',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCRightParenB			= 'ES)B',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCRightParen0			= 'ES)0',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCRightParen1			= 'ES)1',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCRightParen2			= 'ES)2',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCA						= 'ESCA',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCB						= 'ESCB',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCC						= 'ESCC',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCc						= 'ESCc',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCD						= 'ESCD',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCE						= 'ESCE',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCF						= 'ESCF',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCG						= 'ESCG',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCH						= 'ESCH',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCI						= 'ESCI',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCJ						= 'ESCJ',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCK						= 'ESCK',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCM						= 'ESCM',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCY						= 'ESCY',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCZ						= 'ESCZ',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESC7						= 'ESC7',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESC8						= 'ESC8',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCPound					= 'ESC#',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCPound3				= 'ES#3',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCPound4				= 'ES#4',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCPound5				= 'ES#5',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCPound6				= 'ES#6',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCPound8				= 'ES#8',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCEquals				= 'ESC=',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLessThan				= 'ESC<',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCGreaterThan			= 'ESC>',	//!< generic state used to define emulator-specific states, below
+	};
 	
 	UInt16 const					kNumberOfScrollbackRowsToAllocateAtOnce = 100;
 	TerminalTextAttributes const	kTerminalTextAttributesAllOff = 0L;
@@ -378,16 +284,16 @@ that you always set the state precisely on each call.
 typedef UInt32 (*My_EmulatorStateDeterminantProcPtr)	(My_ScreenBuffer*		inDataPtr,
 														 UInt8 const*			inBuffer,
 														 UInt32					inLength,
-														 My_Parser::State		inCurrentState,
-														 My_Parser::State&		outNewState,
+														 My_ParserState			inCurrentState,
+														 My_ParserState&		outNewState,
 														 Boolean&				outInterrupt);
 static inline UInt32
 invokeEmulatorStateDeterminantProc	(My_EmulatorStateDeterminantProcPtr		inProc,
 									 My_ScreenBuffer*						inDataPtr,
 									 UInt8 const*							inBuffer,
 									 UInt32									inLength,
-									 My_Parser::State						inCurrentState,
-									 My_Parser::State&						outNewState,
+									 My_ParserState							inCurrentState,
+									 My_ParserState&						outNewState,
 									 Boolean&								outInterrupt)
 {
 	return (*inProc)(inDataPtr, inBuffer, inLength, inCurrentState, outNewState, outInterrupt);
@@ -405,18 +311,18 @@ The number of characters read is returned; this is generally
 0, but may be more if you use look-ahead to absorb data (e.g.
 the echo state).
 */
-typedef UInt32 (*My_EmulatorStateTransitionProcPtr)	(My_ScreenBuffer*		inDataPtr,
-													 UInt8 const*			inBuffer,
-													 UInt32					inLength,
-													 My_Parser::State		inNewState,
-													 My_Parser::State		inPreviousState);
+typedef UInt32 (*My_EmulatorStateTransitionProcPtr)	(My_ScreenBuffer*	inDataPtr,
+													 UInt8 const*		inBuffer,
+													 UInt32				inLength,
+													 My_ParserState		inNewState,
+													 My_ParserState		inPreviousState);
 static inline UInt32
 invokeEmulatorStateTransitionProc	(My_EmulatorStateTransitionProcPtr	inProc,
 									 My_ScreenBuffer*					inDataPtr,
 									 UInt8 const*						inBuffer,
 									 UInt32								inLength,
-									 My_Parser::State					inNewState,
-									 My_Parser::State					inPreviousState)
+									 My_ParserState						inNewState,
+									 My_ParserState						inPreviousState)
 {
 	return (*inProc)(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
 }
@@ -607,7 +513,7 @@ typedef My_LineIterator*	My_LineIteratorPtr;
 struct My_ScreenBuffer
 {
 public:
-	My_ScreenBuffer	(SInt16, SInt16, SInt16, Boolean);
+	My_ScreenBuffer	(Terminal_Emulator, CFStringRef, SInt16, SInt16, SInt16, Boolean);
 	~My_ScreenBuffer ();
 	
 	SessionRef							listeningSession;			//!< may be nullptr; the currently attached session, where certain terminal reports are sent
@@ -619,6 +525,7 @@ public:
 	
 	ListenerModel_Ref					changeListenerModel;		//!< registry of listeners for various terminal events
 	Terminal_Emulator					emulation;					//!< VT100, VT220, etc.
+	CFRetainRelease						answerBackCFString;			//!< similar to "emulation", but can be an arbitrary string
 	My_EmulatorStateDeterminantProcPtr	stateDeterminant;			//!< figures out what the next state should be
 	My_EmulatorStateTransitionProcPtr	transitionHandler;			//!< handles new parser states, driving the terminal; varies based on the emulator
 	
@@ -739,13 +646,176 @@ public:
 		SInt16						cursorY;		//!< previous value of corresponding value in "current" structure
 	} previous;
 	
-	My_Parser::State		currentState;				//!< state the terminal input parser is in now
+	My_ParserState			currentState;				//!< state the terminal input parser is in now
 	UInt16					parserStateRepetitions;		//!< to guard against looping; counts repetitions of same state
 	
 	TerminalScreenRef		selfRef;					//!< opaque reference that would resolve to a pointer to this structure
 };
 typedef My_ScreenBuffer*			My_ScreenBufferPtr;
 typedef My_ScreenBuffer const*		My_ScreenBufferConstPtr;
+
+/*!
+Manages state determination and transition for conditions
+that no emulator knows how to deal with.  Also used to
+handle extremely common things like echoing printable
+characters.
+*/
+class My_DefaultEmulator
+{
+public:
+	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
+};
+
+/*!
+Manages state determination and transition for the VT100
+terminal emulator while in ANSI mode.  The VT52 subclass
+handles sequences specific to VT52 mode.
+*/
+class My_VT100
+{
+public:
+	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
+	
+	class VT52
+	{
+		friend class My_VT100;
+		
+	public:
+		static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+		static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
+	
+	protected:
+		// The names of these constants use the same mnemonics from
+		// the programming manual of the original terminal.
+		enum State
+		{
+			// VT100 sequences in VT52 compatibility mode (in the order they appear in the manual) - see VT100 manual for full details
+			kStateCU		= kMy_ParserStateSeenESCA,				//!< cursor up
+			kStateCD		= kMy_ParserStateSeenESCB,				//!< cursor down
+			kStateCR 		= kMy_ParserStateSeenESCC,				//!< cursor right
+			kStateCL 		= kMy_ParserStateSeenESCD,				//!< cursor left
+			kStateNGM		= kMy_ParserStateSeenESCF,				//!< enter graphics mode
+			kStateXGM		= kMy_ParserStateSeenESCG,				//!< exit graphics mode
+			kStateCH		= kMy_ParserStateSeenESCH,				//!< cursor home
+			kStateRLF		= kMy_ParserStateSeenESCI,				//!< reverse line feed
+			kStateEES		= kMy_ParserStateSeenESCJ,				//!< erase to end of screen
+			kStateEEL		= kMy_ParserStateSeenESCK,				//!< erase to end of line
+			kStateDCA		= kMy_ParserStateSeenESCY,				//!< direct cursor address
+			kStateDCAY		= 'DCAY',								//!< direct cursor address, seen first follow-up character (Y)
+			kStateDCAX		= 'DCAX',								//!< direct cursor address, seen second follow-up character (X)
+			kStateID		= kMy_ParserStateSeenESCZ,				//!< identify terminal
+			kStateNAKM		= kMy_ParserStateSeenESCEquals,			//!< enter alternate keypad mode
+			kStateXAKM		= kMy_ParserStateSeenESCGreaterThan,	//!< exit alternate keypad mode
+			kStateANSI		= kMy_ParserStateSeenESCLessThan,		//!< enter ANSI mode
+		};
+	};
+
+protected:
+	// The names of these constants use the same mnemonics from
+	// the programming manual of the original terminal.
+	enum State
+	{
+		// VT100 immediates (in order of the corresponding control character’s ASCII code)
+		kStateControlENQ		= 'VAns',				//!< transmit answerback message
+		kStateControlBEL		= 'VBel',				//!< audio event
+		kStateControlBS			= 'VBks',				//!< move cursor left if possible
+		kStateControlHT			= 'VTab',				//!< move cursor right to tab stop, or margin
+		kStateControlLFVTFF		= 'VLnF',				//!< newline or line feed, depending on LNM
+		kStateControlCR			= 'VCRt',				//!< move cursor down and to left margin
+		kStateControlSO			= 'VShO',				//!< shift out to G1 character set
+		kStateControlSI			= 'VShI',				//!< shift in to G0 character set
+		kStateControlXON		= 'VXON',				//!< resume transmission
+		kStateControlXOFF		= 'VXOF',				//!< suspend transmission
+		kStateControlCANSUB		= 'VCAN',				//!< terminate control seq. with error char.
+		
+		// VT100 sequences (in the order they appear in the manual) - see VT100 manual for full details
+		kStateCSI				= kMy_ParserStateSeenESCLeftSqBracket,	//!< control sequence inducer
+		kStateCSIParamScan		= kMy_ParserStateSeenESCLeftSqBracketParams,	//!< state of accumulating parameters
+		kStateCUB				= kMy_ParserStateSeenESCLeftSqBracketParamsD,	//!< cursor backward
+		kStateCUD				= kMy_ParserStateSeenESCLeftSqBracketParamsB,	//!< cursor down
+		kStateCUF				= kMy_ParserStateSeenESCLeftSqBracketParamsC,	//!< cursor forward
+		kStateCUP				= kMy_ParserStateSeenESCLeftSqBracketParamsH,	//!< cursor position
+		kStateCUU				= kMy_ParserStateSeenESCLeftSqBracketParamsA,	//!< cursor up
+		kStateDA				= kMy_ParserStateSeenESCLeftSqBracketParamsc,	//!< device attributes
+		kStateDECALN			= kMy_ParserStateSeenESCPound8,			//!< screen alignment display
+		kStateDECANM			= 'VANM',				//!< ANSI/VT52 mode
+		kStateDECARM			= 'VARM',				//!< auto repeat mode
+		kStateDECAWM			= 'VAWM',				//!< auto wrap mode
+		kStateDECCKM			= 'VCKM',				//!< cursor keys mode
+		kStateDECCOLM			= 'VCLM',				//!< column mode
+		kStateDECDHLT			= kMy_ParserStateSeenESCPound3,			//!< double height line, top half
+		kStateDECDHLB			= kMy_ParserStateSeenESCPound4,			//!< double height line, bottom half
+		kStateDECDWL			= kMy_ParserStateSeenESCPound6,			//!< double width line
+		kStateDECID				= kMy_ParserStateSeenESCZ,				//!< identify terminal
+		kStateDECKPAM			= kMy_ParserStateSeenESCEquals,			//!< keypad application mode
+		kStateDECKPNM			= kMy_ParserStateSeenESCGreaterThan,	//!< keypad numeric mode
+		kStateDECLL				= kMy_ParserStateSeenESCLeftSqBracketParamsq,	//!< load LEDs (keyboard lights)
+		kStateDECOM				= 'VOM ',				//!< origin mode
+		kStateDECRC				= kMy_ParserStateSeenESC8,				//!< restore cursor
+		kStateDECREPTPARM		= 'VRPM',				//!< report terminal parameters
+		kStateDECREQTPARM		= kMy_ParserStateSeenESCLeftSqBracketParamsx,	//!< request terminal parameters
+		kStateDECSC				= kMy_ParserStateSeenESC7,				//!< save cursor
+		kStateDECSTBM			= kMy_ParserStateSeenESCLeftSqBracketParamsr,	//!< set top and bottom margins
+		kStateDECSWL			= kMy_ParserStateSeenESCPound5,			//!< single width line
+		kStateDECTST			= 'VTST',				//!< invoke confidence test
+		kStateDSR				= kMy_ParserStateSeenESCLeftSqBracketParamsn,	//!< device status report
+		kStateED 				= kMy_ParserStateSeenESCLeftSqBracketParamsJ,	//!< erase in display
+		kStateEL 				= kMy_ParserStateSeenESCLeftSqBracketParamsK,	//!< erase in line
+		kStateHTS				= kMy_ParserStateSeenESCH,				//!< horizontal tabulation set
+		kStateHVP				= kMy_ParserStateSeenESCLeftSqBracketParamsf,	//!< horizontal and vertical position
+		kStateIND				= kMy_ParserStateSeenESCD,				//!< index
+		kStateNEL				= kMy_ParserStateSeenESCE,				//!< next line
+		kStateRI				= kMy_ParserStateSeenESCM,				//!< reverse index
+		kStateRIS				= kMy_ParserStateSeenESCc,				//!< reset to initial state
+		kStateRM				= kMy_ParserStateSeenESCLeftSqBracketParamsl,	//!< reset mode
+		kStateSCSG0UK			= kMy_ParserStateSeenESCLeftParenA,		//!< select character set for G0, U.K.
+		kStateSCSG0ASCII		= kMy_ParserStateSeenESCLeftParenB,		//!< select character set for G0, ASCII
+		kStateSCSG0SG			= kMy_ParserStateSeenESCLeftParen0,		//!< select character set for G0, special graphics
+		kStateSCSG0ACRStd		= kMy_ParserStateSeenESCLeftParen1,		//!< select character set for G0, alternate character ROM standard set
+		kStateSCSG0ACRSG		= kMy_ParserStateSeenESCLeftParen2,		//!< select character set for G0, alternate character ROM special graphics
+		kStateSCSG1UK			= kMy_ParserStateSeenESCRightParenA,	//!< select character set for G0, U.K.
+		kStateSCSG1ASCII		= kMy_ParserStateSeenESCRightParenB,	//!< select character set for G0, ASCII
+		kStateSCSG1SG			= kMy_ParserStateSeenESCRightParen0,	//!< select character set for G0, special graphics
+		kStateSCSG1ACRStd		= kMy_ParserStateSeenESCRightParen1,	//!< select character set for G0, alternate character ROM standard set
+		kStateSCSG1ACRSG		= kMy_ParserStateSeenESCRightParen2,	//!< select character set for G0, alternate character ROM special graphics
+		kStateSGR				= kMy_ParserStateSeenESCLeftSqBracketParamsm,	//!< select graphic rendition
+		kStateSM				= kMy_ParserStateSeenESCLeftSqBracketParamsh,	//!< set mode
+		kStateTBC				= kMy_ParserStateSeenESCLeftSqBracketParamsg,	//!< tabulation clear
+	};
+};
+
+/*!
+Manages state determination and transition for the VT102
+terminal emulator.
+*/
+class My_VT102:
+public My_VT100
+{
+public:
+	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
+
+protected:
+	// The names of these constants use the same mnemonics from
+	// the programming manual of the original terminal.
+	enum State
+	{
+		kStateMC		= kMy_ParserStateSeenESCLeftSqBracketParamsi	//!< media copy (printer access)
+	};
+};
+
+/*!
+Manages state determination and transition for the VT220
+terminal emulator.
+*/
+class My_VT220
+{
+public:
+	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
+};
 
 #pragma mark Internal Method Prototypes
 
@@ -782,27 +852,7 @@ static void						cursorRestore							(My_ScreenBufferPtr);
 static void						cursorSave								(My_ScreenBufferPtr);
 static void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
 static void						echoData								(My_ScreenBufferPtr, UInt8 const*, UInt32);
-static UInt32					emulatorANSIBBSStateDeterminant			(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State&, Boolean&);
-static UInt32					emulatorANSIBBSStateTransition			(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State);
 static void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SInt32);
-static UInt32					emulatorStandardStateDeterminant		(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State&, Boolean&);
-static UInt32					emulatorStandardStateTransition			(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State);
-static UInt32					emulatorVT100StateDeterminant			(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State&, Boolean&);
-static UInt32					emulatorVT100StateTransition			(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State);
-static UInt32					emulatorVT100VT52StateDeterminant		(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State&, Boolean&);
-static UInt32					emulatorVT100VT52StateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State);
-static UInt32					emulatorVT220StateDeterminant			(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State&, Boolean&);
-static UInt32					emulatorVT220StateTransition			(My_ScreenBufferPtr, UInt8 const*, UInt32,
-																		 My_Parser::State, My_Parser::State);
 static void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
 static Terminal_Result			forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
 																		 My_ScreenLineOperationProcPtr, void*);
@@ -887,129 +937,6 @@ static dest_char_seq_iter		whitespaceSensitiveCopy					(src_char_seq_const_iter,
 #pragma mark Public Methods
 
 /*!
-Constructor.  See Terminal_NewScreen().
-
-Throws a Terminal_Result if any problems occur.
-
-(3.0)
-*/
-My_ScreenBuffer::
-My_ScreenBuffer	(SInt16		inLineCountScrollbackBuffer,
-				 SInt16		inLineCountVisibleRows,
-				 SInt16		inMaximumColumnCount,
-				 Boolean	inForceLineSaving)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-listeningSession(nullptr),
-speaker(nullptr),
-windowTitleCFString(),
-iconTitleCFString(),
-changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
-emulation(kTerminal_EmulatorDumb),
-stateDeterminant(/*tmp*/emulatorVT100StateDeterminant/*emulatorStandardStateDeterminant*/),
-transitionHandler(/*tmp*/emulatorVT100StateTransition/*emulatorStandardStateTransition*/),
-scrollbackBuffer(),
-screenBuffer(),
-tabSettings(),
-captureFileRefNum(0),
-bellDisabled(false),
-cursorVisible(true),
-reverseVideo(false),
-windowMinimized(false),
-vtG0(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOff),
-vtG1(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOn),
-visibleBoundary(0, 0, inMaximumColumnCount - 1, inLineCountVisibleRows - 1),
-scrollingRegion(0, 0), // reset below...
-// text elements - not initialized
-litLEDs(kMy_LEDBitsAllOff),
-mayNeedToSaveToScrollback(false),
-saveToScrollbackOnClear(true),
-reportOnlyOnRequest(false),
-modeANSIEnabled(true),
-modeApplicationKeys(false),
-modeAutoWrap(false),
-modeCursorKeys(false),
-modeInsertNotReplace(false),
-modeNewLineOption(false),
-modeOriginRedefined(false),
-printing(inMaximumColumnCount),
-// speech elements - not initialized
-// current elements - not initialized
-// previous elements - not initialized
-currentState(My_Parser::kStateInitial),
-parserStateRepetitions(0),
-selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
-// TEMPORARY: initialize other members here...
-{
-	initializeParserStateStack(this);
-	
-	this->text.visibleScreen.numberOfColumnsAllocated = Terminal_ReturnAllocatedColumnCount(); // always allocate max columns
-	
-	this->current.cursorX = 0; // initialized because moveCursor() depends on prior values...
-	this->current.cursorY = 0; // initialized because moveCursor() depends on prior values...
-	
-	// now “append” the desired number of main screen lines, which will have
-	// the effect of allocating a screen buffer of the right size
-	unless (insertNewLines(this, inLineCountVisibleRows, true/* append only */))
-	{
-		throw kTerminal_ResultNotEnoughMemory;
-	}
-	assert(!this->screenBuffer.empty());
-	
-	try
-	{
-		// it is important to make the list a multiple of the tab stop distance;
-		// see tabStopInitialize() to see why this is the case
-		this->tabSettings.resize(this->text.visibleScreen.numberOfColumnsAllocated +
-									(this->text.visibleScreen.numberOfColumnsAllocated % kMy_TabStop));
-		tabStopInitialize(this);
-	}
-	catch (std::bad_alloc)
- 	{
-		throw kTerminal_ResultNotEnoughMemory;
-	}
-	
-	this->current.characterSetInfoPtr = &this->vtG0; // by definition, G0 is active initially
-	this->text.scrollback.numberOfRowsPermitted = inLineCountScrollbackBuffer;
-	this->text.scrollback.enabled = ((inForceLineSaving) || (inLineCountScrollbackBuffer > 0));
-	this->text.visibleScreen.numberOfColumnsPermitted = inMaximumColumnCount;
-	this->current.attributeBits = 0;
-	this->previous.attributeBits = kInvalidTerminalTextAttributes; /* initially no saved attribute */
-	this->currentEscapeSeqParamEndIndex = 0;
-	
-	// speech setup
-	this->speech.mode = kTerminal_SpeechModeSpeakAlways;
-	this->speech.buffer[0] = '\0'; // initially empty
-	
-	// IMPORTANT: Within constructors, calls to routines expecting a *self reference* should be
-	//            *last*; otherwise, there’s no telling whether or not the data that the routine
-	//            requires will have been properly initialized yet.
-	
-	moveCursor(this, 0, 0);
-	
-	this->scrollingRegion.firstRow = 0; // initialized because setScrollingRegionTop() depends on prior values...
-	setScrollingRegionTop(this, 0);
-	this->scrollingRegion.lastRow = inLineCountVisibleRows - 1; // initialized because setScrollingRegionBottom() depends on prior values...
-	setScrollingRegionBottom(this, inLineCountVisibleRows - 1);
-	
-	this->speaker = TerminalSpeaker_New(REINTERPRET_CAST(this, TerminalScreenRef));
-}// My_ScreenBuffer 4-argument constructor
-
-
-/*!
-Destructor.  See Terminal_DisposeScreen().
-
-(1.1)
-*/
-My_ScreenBuffer::
-~My_ScreenBuffer ()
-{
-	TerminalSpeaker_Dispose(&this->speaker);
-	ListenerModel_Dispose(&this->changeListenerModel);
-}// My_ScreenBuffer destructor
-
-
-/*!
 Creates a new terminal screen and initial view according
 to the given specifications.
 
@@ -1031,7 +958,9 @@ if there is a serious problem creating the screen
 (3.0)
 */
 Terminal_Result
-Terminal_NewScreen	(SInt16					inLineCountScrollbackBuffer,
+Terminal_NewScreen	(Terminal_Emulator		inEmulation,
+					 CFStringRef			inAnswerBack,
+					 SInt16					inLineCountScrollbackBuffer,
 					 SInt16					inLineCountVisibleRows,
 					 SInt16					inMaximumColumnCount,
 					 Boolean				inForceLineSaving,
@@ -1045,7 +974,8 @@ Terminal_NewScreen	(SInt16					inLineCountScrollbackBuffer,
 	{
 		try
 		{
-			*outScreenPtr = REINTERPRET_CAST(new My_ScreenBuffer(inLineCountScrollbackBuffer, inLineCountVisibleRows,
+			*outScreenPtr = REINTERPRET_CAST(new My_ScreenBuffer(inEmulation, inAnswerBack,
+																	inLineCountScrollbackBuffer, inLineCountVisibleRows,
 																	inMaximumColumnCount, inForceLineSaving),
 												TerminalScreenRef);
 		}
@@ -2199,9 +2129,9 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			// function is called)
 			for (register UInt32 i = inLength; i > 0; )
 			{
-				My_Parser::State	currentState = dataPtr->currentState;
-				My_Parser::State	nextState = currentState;
-				Boolean				isInterrupt = false;
+				My_ParserState	currentState = dataPtr->currentState;
+				My_ParserState	nextState = currentState;
+				Boolean			isInterrupt = false;
 				
 				
 				// find a new state, which may or may not interrupt the
@@ -2223,14 +2153,14 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					// exclude the echo data, because this is the one state
 					// that can be expected to remain for a long period of
 					// time (e.g. long strings of printable text)
-					if (nextState != My_Parser::kStateEcho)
+					if (nextState != kMy_ParserStateEcho)
 					{
 						++dataPtr->parserStateRepetitions;
 						if (dataPtr->parserStateRepetitions > 100/* arbitrary */)
 						{
 							Console_WriteHorizontalRule();
 							Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", currentState);
-							if (My_Parser::kStateInitial == currentState)
+							if (kMy_ParserStateInitial == currentState)
 							{
 								// if somehow stuck oddly in the initial state, assume
 								// the trigger character is responsible and simply
@@ -2242,7 +2172,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 							else
 							{
 								Console_WriteLine("FORCING a return to the initial state");
-								nextState = My_Parser::kStateInitial;
+								nextState = kMy_ParserStateInitial;
 							}
 							Console_WriteHorizontalRule();
 							dataPtr->parserStateRepetitions = 0;
@@ -2278,6 +2208,179 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 
 
 /*!
+Returns the default name for the given emulation type,
+suitable for use in a TERM environment variable or
+answer-back message.  For example, "vt100" is the name
+of kTerminal_EmulatorVT100.
+
+The string is not retained, so do not release it.
+
+See also Terminal_EmulatorReturnForName(), the reverse
+of this routine, and Terminal_EmulatorReturnName(), which
+returns whatever a screen is using.
+
+(3.1)
+*/
+CFStringRef
+Terminal_EmulatorReturnDefaultName		(Terminal_Emulator	inEmulationType)
+{
+	CFStringRef		result = nullptr;
+	
+	
+	// IMPORTANT: This should be the inverse of Terminal_EmulatorReturnForName().
+	switch (inEmulationType)
+	{
+	case kTerminal_EmulatorANSIBBS:
+		result = CFSTR("ansi-bbs");
+		break;
+	
+	case kTerminal_EmulatorANSISCO:
+		result = CFSTR("ansi-sco");
+		break;
+	
+	case kTerminal_EmulatorDumb:
+		result = CFSTR("dumb");
+		break;
+	
+	case kTerminal_EmulatorVT100:
+		result = CFSTR("vt100");
+		break;
+	
+	case kTerminal_EmulatorVT102:
+		result = CFSTR("vt102");
+		break;
+	
+	case kTerminal_EmulatorVT220:
+		result = CFSTR("vt220");
+		break;
+	
+	case kTerminal_EmulatorVT320:
+		result = CFSTR("vt320");
+		break;
+	
+	case kTerminal_EmulatorVT420:
+		result = CFSTR("vt420");
+		break;
+	
+	case kTerminal_EmulatorXTermColor:
+		result = CFSTR("xterm-color");
+		break;
+	
+	case kTerminal_EmulatorXTermOriginal:
+		result = CFSTR("xterm");
+		break;
+	
+	default:
+		// ???
+		assert(false);
+		result = CFSTR("UNKNOWN");
+		break;
+	}
+	
+	return result;
+}// EmulatorReturnDefaultName
+
+
+/*!
+Returns the emulation type for the given name, if any
+(otherwise, chooses a reasonable value).  For example,
+"vt100" corresponds to kTerminal_EmulatorVT100.
+
+See also EmulatorReturnDefaultName().
+
+(3.1)
+*/
+Terminal_Emulator
+Terminal_EmulatorReturnForName		(CFStringRef	inName)
+{
+	Terminal_Emulator	result = kTerminal_EmulatorVT100;
+	
+	
+	// IMPORTANT: This should be the inverse of EmulatorReturnDefaultName().
+	if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("ansi-bbs"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorANSIBBS;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("ansi-sco"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorANSISCO;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("dumb"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorDumb;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt100"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorVT100;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt102"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorVT102;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt220"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorVT220;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt320"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorVT320;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("vt420"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorVT420;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("xterm"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorXTermOriginal;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("xterm-color"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorXTermColor;
+	}
+	else
+	{
+		// ???
+		assert(false);
+	}
+	
+	return result;
+}// EmulatorReturnForName
+
+
+/*!
+Returns the current name (often called the answer-back
+message) for the emulator being used by the given screen.
+This value really could be anything; it is typically used
+to set a TERM environment variable for communication
+about terminal type with a running process.  If the
+process does not directly support a MacTelnet emulator,
+but supports something mostly compatible, this routine
+may return the name of the compatible terminal.
+
+The string is not retained, so do not release it.
+
+See also EmulatorReturnDefaultName(), which always
+returns a specific name for a supported emulator.
+
+(3.1)
+*/
+CFStringRef
+Terminal_EmulatorReturnName		(TerminalScreenRef	inRef)
+{
+	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
+	CFStringRef				result = nullptr;
+	
+	
+	if (dataPtr != nullptr)
+	{
+		result = dataPtr->answerBackCFString.returnCFStringRef();
+	}
+	
+	return result;
+}// EmulatorReturnName
+
+
+/*!
 Changes the kind of terminal a virtual terminal
 will emulate.
 
@@ -2293,23 +2396,23 @@ Terminal_EmulatorSet	(TerminalScreenRef	inRef,
 	if (dataPtr != nullptr) dataPtr->emulation = inEmulationType;
 	switch (inEmulationType)
 	{
-	case kTerminal_EmulatorANSIBBS:
-		dataPtr->stateDeterminant = emulatorVT100StateDeterminant;
-		dataPtr->transitionHandler = emulatorVT100StateTransition;
+	case kTerminal_EmulatorVT100:
+		dataPtr->stateDeterminant = My_VT100::stateDeterminant;
+		dataPtr->transitionHandler = My_VT100::stateTransition;
 		break;
 	
-	case kTerminal_EmulatorVT100:
 	case kTerminal_EmulatorVT102:
-		dataPtr->stateDeterminant = emulatorVT100StateDeterminant;
-		dataPtr->transitionHandler = emulatorVT100StateTransition;
+		dataPtr->stateDeterminant = My_VT102::stateDeterminant;
+		dataPtr->transitionHandler = My_VT102::stateTransition;
 		break;
 	
 	case kTerminal_EmulatorVT220:
-		dataPtr->stateDeterminant = emulatorVT220StateDeterminant;
-		dataPtr->transitionHandler = emulatorVT220StateTransition;
+		dataPtr->stateDeterminant = My_VT220::stateDeterminant;
+		dataPtr->transitionHandler = My_VT220::stateTransition;
 		break;
 	
 	case kTerminal_EmulatorDumb:
+	case kTerminal_EmulatorANSIBBS: // UNIMPLEMENTED
 	case kTerminal_EmulatorANSISCO: // UNIMPLEMENTED
 	case kTerminal_EmulatorVT320: // UNIMPLEMENTED
 	case kTerminal_EmulatorVT420: // UNIMPLEMENTED
@@ -2317,8 +2420,8 @@ Terminal_EmulatorSet	(TerminalScreenRef	inRef,
 	case kTerminal_EmulatorXTermColor: // UNIMPLEMENTED
 	default:
 		// ???
-		dataPtr->stateDeterminant = emulatorStandardStateDeterminant;
-		dataPtr->transitionHandler = emulatorStandardStateTransition;
+		dataPtr->stateDeterminant = My_DefaultEmulator::stateDeterminant;
+		dataPtr->transitionHandler = My_DefaultEmulator::stateTransition;
 		break;
 	}
 }// EmulatorSet
@@ -3883,6 +3986,1826 @@ Terminal_WindowIsToBeMinimized	(TerminalScreenRef	inRef)
 
 
 #pragma mark Internal Methods
+
+/*!
+Constructor.  See Terminal_NewScreen().
+
+Throws a Terminal_Result if any problems occur.
+
+(3.0)
+*/
+My_ScreenBuffer::
+My_ScreenBuffer	(Terminal_Emulator	inEmulation,
+				 CFStringRef		inAnswerBack,
+				 SInt16				inLineCountScrollbackBuffer,
+				 SInt16				inLineCountVisibleRows,
+				 SInt16				inMaximumColumnCount,
+				 Boolean			inForceLineSaving)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+listeningSession(nullptr),
+speaker(nullptr),
+windowTitleCFString(),
+iconTitleCFString(),
+changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
+emulation(inEmulation),
+answerBackCFString(inAnswerBack),
+stateDeterminant(/*tmp*/My_VT102::stateDeterminant/*My_DefaultEmulator::StateDeterminant*/),
+transitionHandler(/*tmp*/My_VT102::stateTransition/*My_DefaultEmulator::StateTransition*/),
+scrollbackBuffer(),
+screenBuffer(),
+tabSettings(),
+captureFileRefNum(0),
+bellDisabled(false),
+cursorVisible(true),
+reverseVideo(false),
+windowMinimized(false),
+vtG0(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOff),
+vtG1(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOn),
+visibleBoundary(0, 0, inMaximumColumnCount - 1, inLineCountVisibleRows - 1),
+scrollingRegion(0, 0), // reset below...
+// text elements - not initialized
+litLEDs(kMy_LEDBitsAllOff),
+mayNeedToSaveToScrollback(false),
+saveToScrollbackOnClear(true),
+reportOnlyOnRequest(false),
+modeANSIEnabled(true),
+modeApplicationKeys(false),
+modeAutoWrap(false),
+modeCursorKeys(false),
+modeInsertNotReplace(false),
+modeNewLineOption(false),
+modeOriginRedefined(false),
+printing(inMaximumColumnCount),
+// speech elements - not initialized
+// current elements - not initialized
+// previous elements - not initialized
+currentState(kMy_ParserStateInitial),
+parserStateRepetitions(0),
+selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
+// TEMPORARY: initialize other members here...
+{
+	initializeParserStateStack(this);
+	
+	this->text.visibleScreen.numberOfColumnsAllocated = Terminal_ReturnAllocatedColumnCount(); // always allocate max columns
+	
+	this->current.cursorX = 0; // initialized because moveCursor() depends on prior values...
+	this->current.cursorY = 0; // initialized because moveCursor() depends on prior values...
+	
+	// now “append” the desired number of main screen lines, which will have
+	// the effect of allocating a screen buffer of the right size
+	unless (insertNewLines(this, inLineCountVisibleRows, true/* append only */))
+	{
+		throw kTerminal_ResultNotEnoughMemory;
+	}
+	assert(!this->screenBuffer.empty());
+	
+	try
+	{
+		// it is important to make the list a multiple of the tab stop distance;
+		// see tabStopInitialize() to see why this is the case
+		this->tabSettings.resize(this->text.visibleScreen.numberOfColumnsAllocated +
+									(this->text.visibleScreen.numberOfColumnsAllocated % kMy_TabStop));
+		tabStopInitialize(this);
+	}
+	catch (std::bad_alloc)
+ 	{
+		throw kTerminal_ResultNotEnoughMemory;
+	}
+	
+	this->current.characterSetInfoPtr = &this->vtG0; // by definition, G0 is active initially
+	this->text.scrollback.numberOfRowsPermitted = inLineCountScrollbackBuffer;
+	this->text.scrollback.enabled = ((inForceLineSaving) || (inLineCountScrollbackBuffer > 0));
+	this->text.visibleScreen.numberOfColumnsPermitted = inMaximumColumnCount;
+	this->current.attributeBits = 0;
+	this->previous.attributeBits = kInvalidTerminalTextAttributes; /* initially no saved attribute */
+	this->currentEscapeSeqParamEndIndex = 0;
+	
+	// speech setup
+	this->speech.mode = kTerminal_SpeechModeSpeakAlways;
+	this->speech.buffer[0] = '\0'; // initially empty
+	
+	// IMPORTANT: Within constructors, calls to routines expecting a *self reference* should be
+	//            *last*; otherwise, there’s no telling whether or not the data that the routine
+	//            requires will have been properly initialized yet.
+	
+	moveCursor(this, 0, 0);
+	
+	this->scrollingRegion.firstRow = 0; // initialized because setScrollingRegionTop() depends on prior values...
+	setScrollingRegionTop(this, 0);
+	this->scrollingRegion.lastRow = inLineCountVisibleRows - 1; // initialized because setScrollingRegionBottom() depends on prior values...
+	setScrollingRegionBottom(this, inLineCountVisibleRows - 1);
+	
+	this->speaker = TerminalSpeaker_New(REINTERPRET_CAST(this, TerminalScreenRef));
+}// My_ScreenBuffer 4-argument constructor
+
+
+/*!
+Destructor.  See Terminal_DisposeScreen().
+
+(1.1)
+*/
+My_ScreenBuffer::
+~My_ScreenBuffer ()
+{
+	TerminalSpeaker_Dispose(&this->speaker);
+	ListenerModel_Dispose(&this->changeListenerModel);
+}// My_ScreenBuffer destructor
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+default states based on the characters of the given buffer.
+
+This routine can be used to automatically handle a huge
+variety of state transitions for your specific terminal
+type.  It understands a lot of common encoding schemes,
+so you need only define your emulator-specific states to
+have generic values (like "kMy_ParserStateSeenESCA") and
+let your emulator-specific state determinant use this
+routine as a fallback for MOST input values!
+
+When this routine - based on the data stream alone - sees
+a pattern it recognizes, it chooses the next generic
+state that matches the pattern.  If your emulator-specific
+state matches that generic state, you will see this in
+your code as a transition to your emulator-specific state
+and can therefore react in an emulator-specific way within
+your state transition callback.
+
+IMPORTANT:	Even if this routine can handle a sequence
+			applicable to your terminal type, it will do
+			so entirely on a raw data basis.  This will
+			sometimes not be enough.  Ensure this routine
+			is the *fallback*, not the primary, in your
+			emulator-specific state determinant so that
+			you can override how any state is handled.
+
+(3.1)
+*/
+UInt32
+My_DefaultEmulator::
+stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inCurrentState,
+					 My_ParserState&		outNextState,
+					 Boolean&				UNUSED_ARGUMENT(outInterrupt))
+{
+	assert(inLength > 0);
+	UInt8 const				kTriggerChar = *inBuffer; // for convenience; usually only first character matters
+	// if no specific next state seems appropriate, the character will either
+	// be printed (if possible) or be re-evaluated from the initial state
+	My_ParserState const	kDefaultNextState = std::isprint(kTriggerChar) ? kMy_ParserStateEcho : kMy_ParserStateInitial;
+	UInt32					result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	// by default, the state does not change
+	outNextState = inCurrentState;
+	
+	switch (inCurrentState)
+	{
+	case kMy_ParserStateInitial:
+	case kMy_ParserStateEcho:
+		outNextState = kDefaultNextState;
+		result = 0; // do not absorb the unknown
+		break;
+	
+	case kMy_ParserStateSeenESC:
+		switch (kTriggerChar)
+		{
+		case '[':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracket;
+			break;
+		
+		case '(':
+			outNextState = kMy_ParserStateSeenESCLeftParen;
+			break;
+		
+		case ')':
+			outNextState = kMy_ParserStateSeenESCRightParen;
+			break;
+		
+		case 'A':
+			outNextState = kMy_ParserStateSeenESCA;
+			break;
+		
+		case 'B':
+			outNextState = kMy_ParserStateSeenESCB;
+			break;
+		
+		case 'C':
+			outNextState = kMy_ParserStateSeenESCC;
+			break;
+		
+		case 'c':
+			outNextState = kMy_ParserStateSeenESCc;
+			break;
+		
+		case 'D':
+			outNextState = kMy_ParserStateSeenESCD;
+			break;
+		
+		case 'E':
+			outNextState = kMy_ParserStateSeenESCE;
+			break;
+		
+		case 'F':
+			outNextState = kMy_ParserStateSeenESCF;
+			break;
+		
+		case 'G':
+			outNextState = kMy_ParserStateSeenESCG;
+			break;
+		
+		case 'H':
+			outNextState = kMy_ParserStateSeenESCH;
+			break;
+		
+		case 'I':
+			outNextState = kMy_ParserStateSeenESCI;
+			break;
+		
+		case 'J':
+			outNextState = kMy_ParserStateSeenESCJ;
+			break;
+		
+		case 'K':
+			outNextState = kMy_ParserStateSeenESCK;
+			break;
+		
+		case 'M':
+			outNextState = kMy_ParserStateSeenESCM;
+			break;
+		
+		case 'Y':
+			outNextState = kMy_ParserStateSeenESCY;
+			break;
+		
+		case 'Z':
+			outNextState = kMy_ParserStateSeenESCZ;
+			break;
+		
+		case '7':
+			outNextState = kMy_ParserStateSeenESC7;
+			break;
+		
+		case '8':
+			outNextState = kMy_ParserStateSeenESC8;
+			break;
+		
+		case '#':
+			outNextState = kMy_ParserStateSeenESCPound;
+			break;
+		
+		case '=':
+			outNextState = kMy_ParserStateSeenESCEquals;
+			break;
+		
+		case '<':
+			outNextState = kMy_ParserStateSeenESCLessThan;
+			break;
+		
+		case '>':
+			outNextState = kMy_ParserStateSeenESCGreaterThan;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape", kTriggerChar);
+			outNextState = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCLeftSqBracket:
+		// immediately begin parsing parameters, but do not absorb these characters
+		outNextState = kMy_ParserStateSeenESCLeftSqBracketParams;
+		result = 0; // do not absorb the unknown
+		break;
+	
+	case kMy_ParserStateSeenESCLeftSqBracketParams:
+		switch (kTriggerChar)
+		{
+		case 'A':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsA;
+			break;
+		
+		case 'B':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsB;
+			break;
+		
+		case 'c':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsc;
+			break;
+		
+		case 'C':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsC;
+			break;
+		
+		case 'D':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsD;
+			break;
+		
+		case 'f':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsf;
+			break;
+		
+		case 'g':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsg;
+			break;
+		
+		case 'h':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsh;
+			break;
+		
+		case 'H':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsH;
+			break;
+		
+		case 'J':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
+			break;
+		
+		case 'K':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsK;
+			break;
+		
+		case 'l':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsl;
+			break;
+		
+		case 'm':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsm;
+			break;
+		
+		case 'n':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsn;
+			break;
+		
+		case 'q':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsq;
+			break;
+		
+		case 'r':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsr;
+			break;
+		
+		case 'x':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsx;
+			break;
+		
+		default:
+			// continue looking for parameters until a known terminator is found
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParams;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCLeftParen:
+		switch (kTriggerChar)
+		{
+		case 'A':
+			outNextState = kMy_ParserStateSeenESCLeftParenA;
+			break;
+		
+		case 'B':
+			outNextState = kMy_ParserStateSeenESCLeftParenB;
+			break;
+		
+		case '0':
+			outNextState = kMy_ParserStateSeenESCLeftParen0;
+			break;
+		
+		case '1':
+			outNextState = kMy_ParserStateSeenESCLeftParen1;
+			break;
+		
+		case '2':
+			outNextState = kMy_ParserStateSeenESCLeftParen2;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-(", kTriggerChar);
+			outNextState = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCRightParen:
+		switch (kTriggerChar)
+		{
+		case 'A':
+			outNextState = kMy_ParserStateSeenESCRightParenA;
+			break;
+		
+		case 'B':
+			outNextState = kMy_ParserStateSeenESCRightParenB;
+			break;
+		
+		case '0':
+			outNextState = kMy_ParserStateSeenESCRightParen0;
+			break;
+		
+		case '1':
+			outNextState = kMy_ParserStateSeenESCRightParen1;
+			break;
+		
+		case '2':
+			outNextState = kMy_ParserStateSeenESCRightParen2;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-)", kTriggerChar);
+			outNextState = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	case kMy_ParserStateSeenESCPound:
+		switch (kTriggerChar)
+		{
+		case '3':
+			outNextState = kMy_ParserStateSeenESCPound3;
+			break;
+		
+		case '4':
+			outNextState = kMy_ParserStateSeenESCPound4;
+			break;
+		
+		case '5':
+			outNextState = kMy_ParserStateSeenESCPound5;
+			break;
+		
+		case '6':
+			outNextState = kMy_ParserStateSeenESCPound6;
+			break;
+		
+		case '8':
+			outNextState = kMy_ParserStateSeenESCPound8;
+			break;
+		
+		default:
+			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-#", kTriggerChar);
+			outNextState = kDefaultNextState;
+			result = 0; // do not absorb the unknown
+			break;
+		}
+		break;
+	
+	default:
+		// unknown state!
+		//Console_WriteValueCharacter("WARNING, terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
+		outNextState = kDefaultNextState;
+		result = 0; // do not absorb the unknown
+		break;
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< default in state", inCurrentState);
+	//Console_WriteValueFourChars(">>>     default proposes state", outNextState);
+	//Console_WriteValueCharacter("        default bases this at least on character", *inBuffer);
+	
+	return result;
+}// My_DefaultEmulator::stateDeterminant
+
+
+/*!
+Every "My_EmulatorStateTransitionProcPtr" callback should
+default to the result of invoking this routine with its
+arguments.  This allows special states to be handled
+regardless of the emulator, such as the echo state.
+
+(3.1)
+*/
+UInt32
+My_DefaultEmulator::
+stateTransition		(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inNewState,
+					 My_ParserState			UNUSED_ARGUMENT(inPreviousState))
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< standard handler transition from state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     standard handler transition to state  ", inNewState);
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inNewState)
+	{
+	case kMy_ParserStateEcho:
+		// echo state, where characters are simply taken at face value
+		{
+			UInt8 const*	bufferIterator = inBuffer;
+			
+			
+			// suck up a contiguous block of “printable” characters
+			while ((result < inLength) && (std::isprint(*bufferIterator)))
+			{
+				++bufferIterator;
+				++result;
+			}
+			
+			// send the data wherever it needs to go
+			echoData(inDataPtr, inBuffer, result);
+			// 3.0 - test speech (this implementation will be greatly enhanced in the near future
+			unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
+			{
+				Boolean		doSpeak = false;
+				
+				
+				switch (inDataPtr->speech.mode)
+				{
+				case kTerminal_SpeechModeSpeakAlways:
+					doSpeak = true;
+					break;
+				
+				case kTerminal_SpeechModeSpeakWhenActive:
+					//doSpeak = IsWindowHilited(the screen window);
+					break;
+				
+				case kTerminal_SpeechModeSpeakWhenInactive:
+					//doSpeak = !IsWindowHilited(the screen window);
+					break;
+				
+				default:
+					doSpeak = false;
+					break;
+				}
+				
+				if (doSpeak)
+				{
+					TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
+					
+					
+					// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
+					//             this really should be changed to use speech callbacks instead
+					do
+					{
+						// stop and speak when a new line is found, or
+						// when there is just no more room for characters
+						speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
+					} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		//Console_WriteValueFourChars("WARNING, no known actions associated with new terminal state", inNewState);
+		// the trigger character would also be skipped in this case
+		break;
+	}
+	
+	return result;
+}// My_DefaultEmulator::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+VT100-specific states based on the characters of the given
+buffer.
+
+(3.1)
+*/
+UInt32
+My_VT100::
+stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inCurrentState,
+					 My_ParserState&		outNextState,
+					 Boolean&				outInterrupt)
+{
+	assert(inLength > 0);
+	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	Boolean		isControlCharacter = true;
+	
+	
+	// see if the given character is a control character; if so,
+	// it will not contribute to the current sequence and may
+	// even reset the parser
+	switch (*inBuffer)
+	{
+	case '\000':
+		// ignore this character for the purposes of sequencing
+		outNextState = inCurrentState;
+		break;
+	
+	case '\005':
+		// send answer-back message
+		outNextState = kStateControlENQ;
+		break;
+	
+	case '\007':
+		// audio event
+		outNextState = kStateControlBEL;
+		break;
+	
+	case '\010':
+		// backspace
+		outNextState = kStateControlBS;
+		break;
+	
+	case '\011':
+		// horizontal tab
+		outNextState = kStateControlHT;
+		break;
+	
+	case '\012':
+	case '\013':
+	case '\014':
+		// line feed
+		// all of these are interpreted the same for VT100
+		outNextState = kStateControlLFVTFF;
+		break;
+	
+	case '\015':
+		// carriage return
+		outNextState = kStateControlCR;
+		break;
+	
+	case '\016':
+		// shift out
+		outNextState = kStateControlSO;
+		break;
+	
+	case '\017':
+		// shift in
+		outNextState = kStateControlSI;
+		break;
+	
+	case '\021':
+		// resume transmission
+		outNextState = kStateControlXON;
+		break;
+	
+	case '\023':
+		// suspend transmission
+		outNextState = kStateControlXOFF;
+		break;
+	
+	case '\030':
+	case '\032':
+		// abort control sequence (if any) and emit error character
+		outNextState = kStateControlCANSUB;
+		break;
+	
+	case '\177': // DEL
+		// ignore this character for the purposes of sequencing
+		outNextState = inCurrentState;
+		break;
+	
+	default:
+		isControlCharacter = false;
+		break;
+	}
+	
+	// all control characters are interrupt-class: they should
+	// cause actions, but not “corrupt” any partially completed
+	// sequence that may have come before them, i.e. the caller
+	// should revert to the state preceding the control character
+	if (isControlCharacter)
+	{
+		outInterrupt = true;
+	}
+	
+	// if no interrupt has occurred, use the current state and
+	// the available data to determine the next logical state
+	if (false == isControlCharacter)
+	{
+		switch (inCurrentState)
+		{
+		case kStateCSI:
+			outNextState = kStateCSIParamScan;
+			result = 0; // absorb nothing
+			break;
+		
+		case kStateCSIParamScan:
+			// look for a terminating character (anything not legal in a parameter)
+			switch (*inBuffer)
+			{
+			case 'A':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsA;
+				break;
+			
+			case 'B':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsB;
+				break;
+			
+			case 'c':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsc;
+				break;
+			
+			case 'C':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsC;
+				break;
+			
+			case 'D':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsD;
+				break;
+			
+			case 'f':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsf;
+				break;
+			
+			case 'g':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsg;
+				break;
+			
+			case 'h':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsh;
+				break;
+			
+			case 'H':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsH;
+				break;
+			
+			case 'J':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
+				break;
+			
+			case 'K':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsK;
+				break;
+			
+			case 'l':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsl;
+				break;
+			
+			case 'm':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsm;
+				break;
+			
+			case 'n':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsn;
+				break;
+			
+			case 'q':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsq;
+				break;
+			
+			case 'r':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsr;
+				break;
+			
+			case 'x':
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsx;
+				break;
+			
+			// continue scanning as long as characters are LEGAL in a parameter sequence
+			// (the set below should be consistent with vt100ReadCSIParameters())
+			case '0':
+			case '1':
+			case '2':
+			case '3':
+			case '4':
+			case '5':
+			case '6':
+			case '7':
+			case '8':
+			case '9':
+			case ';':
+			case '?':
+				outNextState = kStateCSIParamScan;
+				break;
+			
+			default:
+				// this is unexpected data; choose a new state
+				Console_WriteValueCharacter("warning, VT100 in CSI parameter mode did not expect character", *inBuffer);
+				result = My_DefaultEmulator::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+																outNextState, outInterrupt);
+				break;
+			}
+			break;
+		
+		default:
+			if (*inBuffer == '\033')
+			{
+				// this character forces any partial sequence that came before it to be ignored
+				outNextState = kMy_ParserStateSeenESC;
+			}
+			else
+			{
+				result = My_DefaultEmulator::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+																outNextState, outInterrupt);
+			}
+			break;
+		}
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT100 in state", inCurrentState);
+	//Console_WriteValueFourChars(">>>     VT100 proposes state", outNextState);
+	//Console_WriteValueCharacter("        VT100 bases this at least on character", *inBuffer);
+	
+	return result;
+}// My_VT100::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that responds
+to VT100-specific (ANSI mode) state changes.
+
+See also My_VT100::VT52::stateTransition(), which should
+ONLY be called when the emulator is in VT52 mode.
+
+IMPORTANT:	This emulator should ONLY be called when the
+			emulator is in ANSI mode, *or* if the VT52
+			emulator has been called first (which,
+			incidentally, defaults to calling this one).
+			This code filters out VT52 codes, however
+			some codes overlap and do DIFFERENT THINGS
+			in ANSI mode.
+
+(3.1)
+*/
+UInt32
+My_VT100::
+stateTransition		(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inNewState,
+					 My_ParserState			inPreviousState)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT100 ANSI transition from state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     VT100 ANSI transition to state  ", inNewState);
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inNewState)
+	{
+	case kStateControlENQ:
+		// send answer-back message
+		// UNIMPLEMENTED
+		Console_WriteLine("request to send answer-back message; unimplemented");
+		break;
+	
+	case kStateControlBEL:
+		// audio event
+		unless (inDataPtr->bellDisabled)
+		{
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeAudioEvent, inDataPtr->selfRef/* context */);
+		}
+		break;
+	
+	case kStateControlBS:
+		// backspace
+		if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
+		else moveCursorLeftToEdge(inDataPtr); // do not extend past margin
+		break;
+	
+	case kStateControlHT:
+		// horizontal tab
+		moveCursorRightToNextTabStop(inDataPtr);
+		Terminal_FileCaptureWriteData(inDataPtr->selfRef, inBuffer, 1);
+		break;
+	
+	case kStateControlLFVTFF:
+		// line feed
+		// all of these are interpreted the same for VT100;
+		// if LNM was received, this is a regular line feed,
+		// otherwise it is actually a new-line operation
+		moveCursorDownOrScroll(inDataPtr);
+	#if 0
+		if (inDataPtr->modeNewLineOption)
+		{
+			moveCursorLeftToEdge(inDataPtr);
+		}
+	#endif
+		break;
+	
+	case kStateControlCR:
+		// carriage return
+		moveCursorLeftToEdge(inDataPtr);
+	#if 0
+		if (inDataPtr->modeNewLineOption)
+		{
+			moveCursorDownOrScroll(inDataPtr);
+		}
+	#endif
+		Terminal_FileCaptureWriteData(inDataPtr->selfRef, inBuffer, 1);
+		break;
+	
+	case kStateControlSO:
+		// shift out
+		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG1;
+		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		{
+			// set attribute
+			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
+		}
+		else
+		{
+			// clear attribute
+			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
+		}
+		break;
+	
+	case kStateControlSI:
+		// shift in
+		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
+		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
+		{
+			// set attribute
+			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
+		}
+		else
+		{
+			// clear attribute
+			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
+		}
+		break;
+	
+	case kStateControlXON:
+		// resume transmission
+		// UNIMPLEMENTED
+		Console_WriteLine("request to resume transmission; unimplemented");
+		break;
+	
+	case kStateControlXOFF:
+		// suspend transmission
+		// UNIMPLEMENTED
+		Console_WriteLine("request to suspend transmission (except for XON/XOFF); unimplemented");
+		break;
+	
+	case kStateControlCANSUB:
+		// abort control sequence (if any) and emit error character
+		{
+			UInt8	errorChar[] = { '?' };
+			
+			
+			echoData(inDataPtr, errorChar, 1/* length */);
+		}
+		break;
+	
+	case kStateCSI:
+		// each new CSI means a blank slate for parameters
+		clearEscapeSequenceParameters(inDataPtr);
+		break;
+	
+	case kStateCSIParamScan:
+		// continue to accumulate parameters (this could require multiple passes)
+		result += vt100ReadCSIParameters(inDataPtr, inBuffer, inLength);
+		break;
+	
+	case kStateCUB:
+		vt100CursorBackward(inDataPtr);
+		break;
+	
+	case kStateCUD:
+		vt100CursorDown(inDataPtr);
+		break;
+	
+	case kStateCUF:
+		vt100CursorForward(inDataPtr);
+		break;
+	
+	case kStateCUU:
+		vt100CursorUp(inDataPtr);
+		break;
+	
+	case kStateCUP:
+	case kStateHVP:
+		// absolute cursor positioning
+		{
+			SInt16				newX = (inDataPtr->currentEscapeSeqParamValues[1] != -1)
+										? inDataPtr->currentEscapeSeqParamValues[1] - 1
+										: 0/* default is home */;
+			My_ScreenRowIndex	newY = (inDataPtr->currentEscapeSeqParamValues[0] != -1)
+										? inDataPtr->currentEscapeSeqParamValues[0] - 1
+										: 0/* default is home */;
+			
+			
+			// in origin mode, offset according to the scrolling region
+			if (inDataPtr->modeOriginRedefined) newY += inDataPtr->scrollingRegion.firstRow;
+			
+			// constrain the value and then change it safely
+			if (newX < 0) newX = 0;
+			if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+			{
+				newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
+			}
+			//if (newY < 0) newY = 0;
+			if (newY >= inDataPtr->screenBuffer.size())
+			{
+				newY = inDataPtr->screenBuffer.size() - 1;
+			}
+			moveCursor(inDataPtr, newX, newY);
+		}
+		break;
+	
+	case kStateDA:
+		vt100DeviceAttributes(inDataPtr);
+		break;
+	
+	case kStateDECALN:
+		vt100AlignmentDisplay(inDataPtr);
+		break;
+	
+	case kStateDECANM:
+		break;
+	
+	case kStateDECARM:
+		break;
+	
+	case kStateDECAWM:
+		break;
+	
+	case kStateDECCKM:
+		break;
+	
+	case kStateDECCOLM:
+		break;
+	
+	case kStateDECDHLT:
+		{
+			My_ScreenBufferLineList::iterator	cursorLineIterator;
+			
+			
+			locateCursorLine(inDataPtr, cursorLineIterator);
+			
+			// check line-global attributes; if this line was single-width,
+			// clear out the entire right half of the line
+			eraseRightHalfOfLine(inDataPtr, *cursorLineIterator);
+			
+			// set attributes global to the line, which means that there is
+			// no option for any character to lack the attribute on this line
+			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, kTerminalTextAttributeDoubleHeightTop/* set */,
+										kMaskTerminalTextAttributeDoubleText/* clear */);
+			
+			// VT100 manual specifies that a cursor in the right half of
+			// the normal screen width should be stuck at the half-way point
+			moveCursorLeftToHalf(inDataPtr);
+		}
+		break;
+	
+	case kStateDECDHLB:
+		{
+			My_ScreenBufferLineList::iterator	cursorLineIterator;
+			
+			
+			locateCursorLine(inDataPtr, cursorLineIterator);
+			
+			// check line-global attributes; if this line was single-width,
+			// clear out the entire right half of the line
+			eraseRightHalfOfLine(inDataPtr, *cursorLineIterator);
+			
+			// set attributes global to the line, which means that there is
+			// no option for any character to lack the attribute on this line
+			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, kTerminalTextAttributeDoubleHeightBottom/* set */,
+										kMaskTerminalTextAttributeDoubleText/* clear */);
+			
+			// VT100 manual specifies that a cursor in the right half of
+			// the normal screen width should be stuck at the half-way point
+			moveCursorLeftToHalf(inDataPtr);
+		}
+		break;
+	
+	case kStateDECDWL:
+		{
+			My_ScreenBufferLineList::iterator	cursorLineIterator;
+			
+			
+			locateCursorLine(inDataPtr, cursorLineIterator);
+			
+			// check line-global attributes; if this line was single-width,
+			// clear out the entire right half of the line
+			eraseRightHalfOfLine(inDataPtr, *cursorLineIterator);
+			
+			// set attributes global to the line, which means that there is
+			// no option for any character to lack the attribute on this line
+			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, kTerminalTextAttributeDoubleWidth/* set */,
+										kMaskTerminalTextAttributeDoubleText/* clear */);
+			
+			// VT100 manual specifies that a cursor in the right half of
+			// the normal screen width should be stuck at the half-way point
+			moveCursorLeftToHalf(inDataPtr);
+		}
+		break;
+	
+	case kStateDECID:
+		vt100DeviceAttributes(inDataPtr);
+		break;
+	
+	case kStateDECKPAM:
+		inDataPtr->modeApplicationKeys = true; // enter alternate keypad mode (use application key sequences) of VT100
+		break;
+	
+	case kStateDECKPNM:
+		inDataPtr->modeApplicationKeys = false; // exit alternate keypad mode (restore regular keypad characters) of VT100
+		break;
+	
+	case kStateDECLL:
+		vt100LoadLEDs(inDataPtr);
+		break;
+	
+	case kStateDECOM:
+		break;
+	
+	case kStateDECRC:
+		cursorRestore(inDataPtr);
+		break;
+	
+	case kStateDECREPTPARM:
+		// a parameter report has been received
+		// IGNORED
+		break;
+	
+	case kStateDECREQTPARM:
+		// a request for parameters has been made; send a response
+		vt100ReportTerminalParameters(inDataPtr);
+		break;
+	
+	case kStateDECSC:
+		cursorSave(inDataPtr);
+		break;
+	
+	case kStateDECSTBM:
+		vt100SetTopAndBottomMargins(inDataPtr);
+		break;
+	
+	case kStateDECSWL:
+		{
+			My_ScreenBufferLineList::iterator	cursorLineIterator;
+			
+			
+			locateCursorLine(inDataPtr, cursorLineIterator);
+			
+			// set attributes global to the line, which means that there is
+			// no option for any character to lack the attribute on this line
+			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, 0/* set */,
+										kMaskTerminalTextAttributeDoubleText/* clear */);
+		}
+		break;
+	
+	case kStateDECTST:
+		break;
+	
+	case kStateDSR:
+		vt100DeviceStatusReport(inDataPtr);
+		break;
+	
+	case kStateED:
+		vt100EraseInDisplay(inDataPtr);
+		break;
+	
+	case kStateEL:
+		vt100EraseInLine(inDataPtr);
+		break;
+	
+	case kStateHTS:
+		// set tab at current position
+		inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabSet;
+		break;
+	
+	//case kStateHVP:
+	//see above
+	
+	case kStateIND:
+		moveCursorDownOrScroll(inDataPtr);
+		break;
+	
+	case kStateNEL:
+		moveCursorLeftToEdge(inDataPtr);
+		moveCursorDownOrScroll(inDataPtr);
+		break;
+	
+	case kStateRI:
+		moveCursorUpOrScroll(inDataPtr);
+		break;
+	
+	case kStateRIS:
+		resetTerminal(inDataPtr);
+		break;
+	
+	case kStateRM:
+		vt100ModeSetReset(inDataPtr, false/* set */);
+		break;
+	
+	case kStateSCSG0UK:
+	case kStateSCSG1UK:
+		{
+			// U.K. character set, normal ROM, no graphics
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
+			
+			
+			if (kStateSCSG1UK == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
+			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
+			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
+			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+		}
+		break;
+	
+	case kStateSCSG0ASCII:
+	case kStateSCSG1ASCII:
+		{
+			// U.S. character set, normal ROM, no graphics
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
+			
+			
+			if (kStateSCSG1ASCII == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
+			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
+			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
+			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+		}
+		break;
+	
+	case kStateSCSG0SG:
+	case kStateSCSG1SG:
+		{
+			// normal ROM, graphics mode
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
+			
+			
+			if (kStateSCSG1SG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
+			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
+			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
+		}
+		break;
+	
+	case kStateSCSG0ACRStd:
+	case kStateSCSG1ACRStd:
+		{
+			// alternate ROM, no graphics
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
+			
+			
+			if (kStateSCSG1ACRStd == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
+			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
+			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+		}
+		break;
+	
+	case kStateSCSG0ACRSG:
+	case kStateSCSG1ACRSG:
+		{
+			// normal ROM, graphics mode
+			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
+			
+			
+			if (kStateSCSG1ACRSG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
+			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
+			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
+			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
+		}
+		break;
+	
+	case kStateSGR:
+		// ANSI colors and other character attributes
+		{
+			SInt16		i = 0;
+			
+			
+			while (i <= inDataPtr->currentEscapeSeqParamEndIndex)
+			{
+				SInt16		p = 0;
+				
+				
+				if (inDataPtr->currentEscapeSeqParamValues[inDataPtr->currentEscapeSeqParamEndIndex] < 0)
+				{
+					inDataPtr->currentEscapeSeqParamValues[inDataPtr->currentEscapeSeqParamEndIndex] = 0;
+				}
+				
+				p = inDataPtr->currentEscapeSeqParamValues[i];
+				
+				// Note that a real VT100 will only understand 0-7 here.
+				// Other values are basically recognized because they are
+				// compatible with VT100 and are very often used (ANSI
+				// colors in particular).
+				if (p == 0) inDataPtr->current.attributeBits &= 0xFFFF0000; // all style bits off
+				else if (p < 9) inDataPtr->current.attributeBits |= styleOfVTParameter(p); // set attribute
+				else if (p == 10) { /* set normal font - unsupported */ }
+				else if (p == 11) { /* set alternate font - unsupported */ }
+				else if (p == 12) { /* set alternate font, shifting by 128 - unsupported */ }
+				else if (p == 22) inDataPtr->current.attributeBits &= ~styleOfVTParameter(1); // clear bold (oddball - 22, not 21)
+				else if ((p > 22) && (p < 29)) inDataPtr->current.attributeBits &= ~styleOfVTParameter(p - 20); // clear attribute
+				else
+				{
+					if ((p >= 30) && (p < 38))
+					{
+						inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x0700) | ((p - 30) << 8) | 0x0800;
+					}
+					else if ((p >= 40) && (p < 48))
+					{
+						inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x7000) | ((p - 40) << 12) | 0x8000;
+					}
+				}
+				++i;
+			}
+		}
+		break;
+	
+	case kStateSM:
+		vt100ModeSetReset(inDataPtr, true/* set */);
+		break;
+	
+	case kStateTBC:
+		if (3 == inDataPtr->currentEscapeSeqParamValues[0])
+		{
+			// clear all tabs
+			tabStopClearAll(inDataPtr);
+		}
+		else if (0 >= inDataPtr->currentEscapeSeqParamValues[0])
+		{
+			// clear tab at current position
+			inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabClear;
+		}
+		else
+		{
+			// invalid (do nothing)
+		}
+		break;
+	
+	// ignore all VT100/VT52 sequences that are invalid within this ANSI-mode parser
+	case My_VT100::VT52::kStateCU:
+	case My_VT100::VT52::kStateCD:
+	case My_VT100::VT52::kStateCR:
+	//case My_VT100::VT52::kStateCL: // this conflicts with a valid VT100 ANSI mode value above
+	case My_VT100::VT52::kStateNGM:
+	case My_VT100::VT52::kStateXGM:
+	//case My_VT100::VT52::kStateCH: // this conflicts with a valid VT100 ANSI mode value above
+	case My_VT100::VT52::kStateRLF:
+	case My_VT100::VT52::kStateEES:
+	case My_VT100::VT52::kStateEEL:
+	case My_VT100::VT52::kStateDCA:
+	//case My_VT100::VT52::kStateID: // this conflicts with a valid VT100 ANSI mode value above
+	//case My_VT100::VT52::kStateNAKM: // this conflicts with a valid VT100 ANSI mode value above
+	//case My_VT100::VT52::kStateXAKM: // this conflicts with a valid VT100 ANSI mode value above
+	case My_VT100::VT52::kStateANSI:
+		break;
+	
+	default:
+		result = My_DefaultEmulator::stateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
+		break;
+	}
+	
+	return result;
+}// My_VT100::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+VT52-specific states based on the characters of the given
+buffer.
+
+(3.1)
+*/
+UInt32
+My_VT100::VT52::
+stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inCurrentState,
+					 My_ParserState&		outNextState,
+					 Boolean&				outInterrupt)
+{
+	assert(inLength > 0);
+	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	switch (inCurrentState)
+	{
+	case kMy_ParserStateSeenESC:
+		switch (*inBuffer)
+		{
+		case 'A':
+			outNextState = kMy_ParserStateSeenESCA;
+			break;
+		
+		case 'B':
+			outNextState = kMy_ParserStateSeenESCB;
+			break;
+		
+		case 'C':
+			outNextState = kMy_ParserStateSeenESCC;
+			break;
+		
+		case 'D':
+			outNextState = kMy_ParserStateSeenESCD;
+			break;
+		
+		case 'F':
+			outNextState = kMy_ParserStateSeenESCF;
+			break;
+		
+		case 'G':
+			outNextState = kMy_ParserStateSeenESCG;
+			break;
+		
+		case 'H':
+			outNextState = kMy_ParserStateSeenESCH;
+			break;
+		
+		case 'I':
+			outNextState = kMy_ParserStateSeenESCI;
+			break;
+		
+		case 'J':
+			outNextState = kMy_ParserStateSeenESCJ;
+			break;
+		
+		case 'K':
+			outNextState = kMy_ParserStateSeenESCK;
+			break;
+		
+		case 'Y':
+			outNextState = kMy_ParserStateSeenESCY;
+			break;
+		
+		case 'Z':
+			outNextState = kMy_ParserStateSeenESCZ;
+			break;
+		
+		case '=':
+			outNextState = kMy_ParserStateSeenESCEquals;
+			break;
+		
+		case '>':
+			outNextState = kMy_ParserStateSeenESCGreaterThan;
+			break;
+		
+		case '<':
+			outNextState = kMy_ParserStateSeenESCLessThan;
+			break;
+		
+		default:
+			// this is unexpected data; choose a new state
+			Console_WriteValueCharacter("warning, VT52 did not expect an ESC to be followed by character", *inBuffer);
+			result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+												outNextState, outInterrupt);
+			break;
+		}
+		break;
+	
+	case kStateDCA:
+		// the 2 characters after a VT52 DCA are the coordinates (Y first)
+		outNextState = kStateDCAY;
+		result = 0; // absorb nothing
+		break;
+	
+	case kStateDCAY:
+		// the 2 characters after a VT52 DCA are the coordinates (Y first)
+		outNextState = kStateDCAX;
+		result = 0; // absorb nothing
+		break;
+	
+	default:
+		result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+											outNextState, outInterrupt);
+		break;
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT100 in VT52 mode in state", inCurrentState);
+	//Console_WriteValueFourChars(">>>     VT100 in VT52 mode proposes state", outNextState);
+	//Console_WriteValueCharacter("        VT100 in VT52 mode bases this at least on character", *inBuffer);
+	
+	return result;
+}// My_VT100::VT52::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that
+responds to VT100-specific (VT52 mode) state changes.
+
+(3.1)
+*/
+UInt32
+My_VT100::VT52::
+stateTransition		(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inNewState,
+					 My_ParserState			inPreviousState)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT100 VT52 transition from state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     VT100 VT52 transition to state  ", inNewState);
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inNewState)
+	{
+	case kStateCU:
+		vt100CursorUp_vt52(inDataPtr);
+		break;
+	
+	case kStateCD:
+		vt100CursorDown_vt52(inDataPtr);
+		break;
+	
+	case kStateCR:
+		vt100CursorForward_vt52(inDataPtr);
+		break;
+	
+	case kStateCL:
+		vt100CursorBackward_vt52(inDataPtr);
+		break;
+	
+	case kStateNGM:
+		// enter graphics mode - unimplemented
+		break;
+	
+	case kStateXGM:
+		// exit graphics mode - unimplemented
+		break;
+	
+	case kStateCH:
+		moveCursor(inDataPtr, 0, 0); // home cursor in VT52 compatibility mode of VT100
+		break;
+	
+	case kStateRLF:
+		moveCursorUpOrScroll(inDataPtr); // reverse line feed in VT52 compatibility mode of VT100
+		break;
+	
+	case kStateEES:
+		bufferEraseFromCursorToEnd(inDataPtr); // erase to end of screen, in VT52 compatibility mode of VT100
+		break;
+	
+	case kStateEEL:
+		bufferEraseFromCursorColumnToLineEnd(inDataPtr); // erase to end of line, in VT52 compatibility mode of VT100
+		break;
+	
+	case kStateDCA:
+		// direct cursor address in VT52 compatibility mode of VT100;
+		// new cursor position is encoded as the next two characters
+		// (vertical first, then horizontal) offset by the octal
+		// value 037 (equal to decimal 31); this is handled by 2
+		// other states, "DCAY" and "DCAX" (below)
+		break;
+	
+	case kStateDCAY:
+		// VT52 DCA, first character (Y + 31)
+		{
+			My_ScreenRowIndex	newY = 0;
+			
+			
+			newY = *inBuffer - 32/* - 31 - 1 to convert from one-based to zero-based */;
+			++result;
+			
+			// constrain the value and then change it safely
+			//if (newY < 0) newY = 0;
+			if (newY >= inDataPtr->screenBuffer.size())
+			{
+				newY = inDataPtr->screenBuffer.size() - 1;
+			}
+			moveCursorY(inDataPtr, newY);
+		}
+		break;
+	
+	case kStateDCAX:
+		// VT52 DCA, second character (X + 31)
+		{
+			SInt16		newX = 0;
+			
+			
+			newX = *inBuffer - 32/* - 31 - 1 to convert from one-based to zero-based */;
+			++result;
+			
+			// constrain the value and then change it safely
+			if (newX < 0) newX = 0;
+			if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+			{
+				newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
+			}
+			moveCursorX(inDataPtr, newX);
+		}
+		break;
+	
+	case kStateID:
+		vt100Identify_vt52(inDataPtr);
+		break;
+	
+	case kStateNAKM:
+		inDataPtr->modeApplicationKeys = true; // enter alternate keypad mode (use application key sequences) in VT52 compatibility mode of VT100
+		break;
+	
+	case kStateXAKM:
+		inDataPtr->modeApplicationKeys = false; // exit alternate keypad mode (restore regular keypad characters) in VT52 compatibility mode of VT100
+		break;
+	
+	case kStateANSI:
+		vt100ANSIMode(inDataPtr);
+		break;
+	
+	// ignore all VT100 sequences that are invalid in VT52 mode
+	// NONE?
+	//case :
+	//	break;
+	
+	default:
+		// other state transitions should still basically be handled as if in VT100 ANSI
+		// (NOTE: this switch should filter out any ANSI mode states that are supposed to
+		// be ignored while in VT52 mode!)
+		result = My_VT100::stateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
+		break;
+	}
+	
+	return result;
+}// My_VT100::VT52::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+VT102-specific states based on the characters of the given
+buffer.
+
+Since a VT102 is very similar to a VT100, the vast majority
+of state analysis is done by the VT100 routine.
+
+(3.1)
+*/
+UInt32
+My_VT102::
+stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inCurrentState,
+					 My_ParserState&		outNextState,
+					 Boolean&				outInterrupt)
+{
+	assert(inLength > 0);
+	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	// if no interrupt has occurred, use the current state and
+	// the available data to determine the next logical state
+	switch (inCurrentState)
+	{
+	case My_VT100::kStateCSIParamScan:
+		// look for a terminating character (anything not legal in a parameter)
+		switch (*inBuffer)
+		{
+		case 'i':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsi;
+			break;
+		
+		default:
+			result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+												outNextState, outInterrupt);
+			break;
+		}
+		break;
+	
+	default:
+		result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+											outNextState, outInterrupt);
+		break;
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT102 in state", inCurrentState);
+	//Console_WriteValueFourChars(">>>     VT102 proposes state", outNextState);
+	//Console_WriteValueCharacter("        VT102 bases this at least on character", *inBuffer);
+	
+	return result;
+}// My_VT102::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that
+responds to VT102-specific state changes.
+
+(3.1)
+*/
+UInt32
+My_VT102::
+stateTransition		(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inNewState,
+					 My_ParserState			inPreviousState)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT102 transition from state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     VT102 transition to state  ", inNewState);
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inNewState)
+	{
+	case kStateMC:
+		if (inDataPtr->currentEscapeSeqParamValues[inDataPtr->currentEscapeSeqParamEndIndex] == 5)
+		{
+			TelnetPrinting_Begin(&inDataPtr->printing);
+		}
+		else if (inDataPtr->currentEscapeSeqParamValues[inDataPtr->currentEscapeSeqParamEndIndex] == 4)
+		{
+			TelnetPrinting_End(&inDataPtr->printing);
+		}
+		else
+		{
+			Console_WriteLine("warning, VT102 media copy did not recognize the given parameters");
+		}
+		break;
+	
+	default:
+		// other state transitions should still basically be handled as if in VT100 ANSI
+		result = My_VT100::stateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
+		break;
+	}
+	
+	return result;
+}// My_VT102::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+VT220-specific states based on the characters of the given
+buffer.
+
+(3.1)
+*/
+UInt32
+My_VT220::
+stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inCurrentState,
+					 My_ParserState&		outNextState,
+					 Boolean&				outInterrupt)
+{
+	assert(inLength > 0);
+	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	// see if the given character is a control character; if so,
+	// it will not contribute to the current sequence and may
+	// even reset the parser
+	switch (*inBuffer)
+	{
+	default:
+		result = My_VT102::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+											outNextState, outInterrupt);
+		break;
+	}
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT220 in state", inCurrentState);
+	//Console_WriteValueFourChars(">>>     VT220 proposes state", outNextState);
+	//Console_WriteValueCharacter("        VT220 bases this at least on character", *inBuffer);
+	
+	return result;
+}// My_VT220::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that
+responds to VT220-specific state changes.
+
+(3.1)
+*/
+UInt32
+My_VT220::
+stateTransition		(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inNewState,
+					 My_ParserState			inPreviousState)
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< VT220 transition from state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     VT220 transition to state  ", inNewState);
+	
+	// decide what to do based on the proposed transition
+	// INCOMPLETE
+	switch (inNewState)
+	{
+	default:
+		// other state transitions should still basically be handled as if in VT100
+		result = My_VT102::stateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
+		break;
+	}
+	
+	return result;
+}// My_VT220::stateTransition
+
 
 /*!
 A method of standard My_ScreenLineOperationProcPtr form,
@@ -6012,1596 +7935,6 @@ ShortCut:
 
 
 /*!
-A standard "My_EmulatorStateDeterminantProcPtr" that sets
-default states based on the characters of the given buffer.
-
-This routine can be used to automatically handle a huge
-variety of state transitions for your specific terminal
-type.  It understands a lot of common encoding schemes,
-so you need only define your emulator-specific states to
-have generic values (like "kStateSeenESCA") and let your
-emulator-specific state determinant use this routine as a
-fallback for MOST input values!
-
-When this routine - based on the data stream alone - sees
-a pattern it recognizes, it chooses the next generic
-state that matches the pattern.  If your emulator-specific
-state matches that generic state, you will see this in
-your code as a transition to your emulator-specific state
-and can therefore react in an emulator-specific way within
-your state transition callback.
-
-IMPORTANT:	Even if this routine can handle a sequence
-			applicable to your terminal type, it will do
-			so entirely on a raw data basis.  This will
-			sometimes not be enough.  Ensure this routine
-			is the *fallback*, not the primary, in your
-			emulator-specific state determinant so that
-			you can override how any state is handled.
-
-(3.1)
-*/
-static UInt32
-emulatorStandardStateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
-									 UInt8 const*			inBuffer,
-									 UInt32					inLength,
-									 My_Parser::State		inCurrentState,
-									 My_Parser::State&		outNextState,
-									 Boolean&				UNUSED_ARGUMENT(outInterrupt))
-{
-	using namespace My_Parser;
-	
-	assert(inLength > 0);
-	UInt8 const				kTriggerChar = *inBuffer; // for convenience; usually only first character matters
-	// if no specific next state seems appropriate, the character will either
-	// be printed (if possible) or be re-evaluated from the initial state
-	My_Parser::State const	kDefaultNextState = std::isprint(kTriggerChar) ? kStateEcho : kStateInitial;
-	UInt32					result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
-	
-	
-	// by default, the state does not change
-	outNextState = inCurrentState;
-	
-	switch (inCurrentState)
-	{
-	case kStateInitial:
-	case kStateEcho:
-		outNextState = kDefaultNextState;
-		result = 0; // do not absorb the unknown
-		break;
-	
-	case kStateSeenESC:
-		switch (kTriggerChar)
-		{
-		case '[':
-			outNextState = kStateSeenESCLeftSqBracket;
-			break;
-		
-		case '(':
-			outNextState = kStateSeenESCLeftParen;
-			break;
-		
-		case ')':
-			outNextState = kStateSeenESCRightParen;
-			break;
-		
-		case 'A':
-			outNextState = kStateSeenESCA;
-			break;
-		
-		case 'B':
-			outNextState = kStateSeenESCB;
-			break;
-		
-		case 'C':
-			outNextState = kStateSeenESCC;
-			break;
-		
-		case 'c':
-			outNextState = kStateSeenESCc;
-			break;
-		
-		case 'D':
-			outNextState = kStateSeenESCD;
-			break;
-		
-		case 'E':
-			outNextState = kStateSeenESCE;
-			break;
-		
-		case 'F':
-			outNextState = kStateSeenESCF;
-			break;
-		
-		case 'G':
-			outNextState = kStateSeenESCG;
-			break;
-		
-		case 'H':
-			outNextState = kStateSeenESCH;
-			break;
-		
-		case 'I':
-			outNextState = kStateSeenESCI;
-			break;
-		
-		case 'J':
-			outNextState = kStateSeenESCJ;
-			break;
-		
-		case 'K':
-			outNextState = kStateSeenESCK;
-			break;
-		
-		case 'M':
-			outNextState = kStateSeenESCM;
-			break;
-		
-		case 'Y':
-			outNextState = kStateSeenESCY;
-			break;
-		
-		case 'Z':
-			outNextState = kStateSeenESCZ;
-			break;
-		
-		case '7':
-			outNextState = kStateSeenESC7;
-			break;
-		
-		case '8':
-			outNextState = kStateSeenESC8;
-			break;
-		
-		case '#':
-			outNextState = kStateSeenESCPound;
-			break;
-		
-		case '=':
-			outNextState = kStateSeenESCEquals;
-			break;
-		
-		case '<':
-			outNextState = kStateSeenESCLessThan;
-			break;
-		
-		case '>':
-			outNextState = kStateSeenESCGreaterThan;
-			break;
-		
-		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape", kTriggerChar);
-			outNextState = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kStateSeenESCLeftSqBracket:
-		// immediately begin parsing parameters, but do not absorb these characters
-		outNextState = kStateSeenESCLeftSqBracketParams;
-		result = 0; // do not absorb the unknown
-		break;
-	
-	case kStateSeenESCLeftSqBracketParams:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			outNextState = kStateSeenESCLeftSqBracketParamsA;
-			break;
-		
-		case 'B':
-			outNextState = kStateSeenESCLeftSqBracketParamsB;
-			break;
-		
-		case 'c':
-			outNextState = kStateSeenESCLeftSqBracketParamsc;
-			break;
-		
-		case 'C':
-			outNextState = kStateSeenESCLeftSqBracketParamsC;
-			break;
-		
-		case 'D':
-			outNextState = kStateSeenESCLeftSqBracketParamsD;
-			break;
-		
-		case 'f':
-			outNextState = kStateSeenESCLeftSqBracketParamsf;
-			break;
-		
-		case 'g':
-			outNextState = kStateSeenESCLeftSqBracketParamsg;
-			break;
-		
-		case 'h':
-			outNextState = kStateSeenESCLeftSqBracketParamsh;
-			break;
-		
-		case 'H':
-			outNextState = kStateSeenESCLeftSqBracketParamsH;
-			break;
-		
-		case 'J':
-			outNextState = kStateSeenESCLeftSqBracketParamsJ;
-			break;
-		
-		case 'K':
-			outNextState = kStateSeenESCLeftSqBracketParamsK;
-			break;
-		
-		case 'l':
-			outNextState = kStateSeenESCLeftSqBracketParamsl;
-			break;
-		
-		case 'm':
-			outNextState = kStateSeenESCLeftSqBracketParamsm;
-			break;
-		
-		case 'n':
-			outNextState = kStateSeenESCLeftSqBracketParamsn;
-			break;
-		
-		case 'q':
-			outNextState = kStateSeenESCLeftSqBracketParamsq;
-			break;
-		
-		case 'r':
-			outNextState = kStateSeenESCLeftSqBracketParamsr;
-			break;
-		
-		case 'x':
-			outNextState = kStateSeenESCLeftSqBracketParamsx;
-			break;
-		
-		default:
-			// continue looking for parameters until a known terminator is found
-			outNextState = kStateSeenESCLeftSqBracketParams;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kStateSeenESCLeftParen:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			outNextState = kStateSeenESCLeftParenA;
-			break;
-		
-		case 'B':
-			outNextState = kStateSeenESCLeftParenB;
-			break;
-		
-		case '0':
-			outNextState = kStateSeenESCLeftParen0;
-			break;
-		
-		case '1':
-			outNextState = kStateSeenESCLeftParen1;
-			break;
-		
-		case '2':
-			outNextState = kStateSeenESCLeftParen2;
-			break;
-		
-		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-(", kTriggerChar);
-			outNextState = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kStateSeenESCRightParen:
-		switch (kTriggerChar)
-		{
-		case 'A':
-			outNextState = kStateSeenESCRightParenA;
-			break;
-		
-		case 'B':
-			outNextState = kStateSeenESCRightParenB;
-			break;
-		
-		case '0':
-			outNextState = kStateSeenESCRightParen0;
-			break;
-		
-		case '1':
-			outNextState = kStateSeenESCRightParen1;
-			break;
-		
-		case '2':
-			outNextState = kStateSeenESCRightParen2;
-			break;
-		
-		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-)", kTriggerChar);
-			outNextState = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	case kStateSeenESCPound:
-		switch (kTriggerChar)
-		{
-		case '3':
-			outNextState = kStateSeenESCPound3;
-			break;
-		
-		case '4':
-			outNextState = kStateSeenESCPound4;
-			break;
-		
-		case '5':
-			outNextState = kStateSeenESCPound5;
-			break;
-		
-		case '6':
-			outNextState = kStateSeenESCPound6;
-			break;
-		
-		case '8':
-			outNextState = kStateSeenESCPound8;
-			break;
-		
-		default:
-			//Console_WriteValueCharacter("WARNING, terminal received unknown character following escape-#", kTriggerChar);
-			outNextState = kDefaultNextState;
-			result = 0; // do not absorb the unknown
-			break;
-		}
-		break;
-	
-	default:
-		// unknown state!
-		//Console_WriteValueCharacter("WARNING, terminal entered unknown state; choosing a valid state based on character", kTriggerChar);
-		outNextState = kDefaultNextState;
-		result = 0; // do not absorb the unknown
-		break;
-	}
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< default in state", inCurrentState);
-	//Console_WriteValueFourChars(">>>     default proposes state", outNextState);
-	//Console_WriteValueCharacter("        default bases this at least on character", *inBuffer);
-	
-	return result;
-}// emulatorStandardStateDeterminant
-
-
-/*!
-Every "My_EmulatorStateTransitionProcPtr" callback should
-default to the result of invoking this routine with its
-arguments.  This allows special states to be handled
-regardless of the emulator, such as the echo state.
-
-(3.1)
-*/
-static UInt32
-emulatorStandardStateTransition		(My_ScreenBufferPtr		inDataPtr,
-									 UInt8 const*			inBuffer,
-									 UInt32					inLength,
-									 My_Parser::State		inNewState,
-									 My_Parser::State		UNUSED_ARGUMENT(inPreviousState))
-{
-	using namespace My_Parser;
-	
-	UInt32		result = 0; // usually, no characters are consumed at the transition stage
-	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< standard handler transition from state", inPreviousState);
-	//Console_WriteValueFourChars(">>>     standard handler transition to state  ", inNewState);
-	
-	// decide what to do based on the proposed transition
-	// INCOMPLETE
-	switch (inNewState)
-	{
-	case kStateEcho:
-		// echo state, where characters are simply taken at face value
-		{
-			UInt8 const*	bufferIterator = inBuffer;
-			
-			
-			// suck up a contiguous block of “printable” characters
-			while ((result < inLength) && (std::isprint(*bufferIterator)))
-			{
-				++bufferIterator;
-				++result;
-			}
-			
-			// send the data wherever it needs to go
-			echoData(inDataPtr, inBuffer, result);
-			// 3.0 - test speech (this implementation will be greatly enhanced in the near future
-			unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
-			{
-				Boolean		doSpeak = false;
-				
-				
-				switch (inDataPtr->speech.mode)
-				{
-				case kTerminal_SpeechModeSpeakAlways:
-					doSpeak = true;
-					break;
-				
-				case kTerminal_SpeechModeSpeakWhenActive:
-					//doSpeak = IsWindowHilited(the screen window);
-					break;
-				
-				case kTerminal_SpeechModeSpeakWhenInactive:
-					//doSpeak = !IsWindowHilited(the screen window);
-					break;
-				
-				default:
-					doSpeak = false;
-					break;
-				}
-				
-				if (doSpeak)
-				{
-					TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
-					
-					
-					// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
-					//             this really should be changed to use speech callbacks instead
-					do
-					{
-						// stop and speak when a new line is found, or
-						// when there is just no more room for characters
-						speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
-					} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
-				}
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		//Console_WriteValueFourChars("WARNING, no known actions associated with new terminal state", inNewState);
-		// the trigger character would also be skipped in this case
-		break;
-	}
-	
-	return result;
-}// emulatorStandardStateTransition
-
-
-/*!
-A standard "My_EmulatorStateDeterminantProcPtr" that sets
-VT100-specific states based on the characters of the given
-buffer.
-
-(3.1)
-*/
-static UInt32
-emulatorVT100StateDeterminant	(My_ScreenBufferPtr		inDataPtr,
-								 UInt8 const*			inBuffer,
-								 UInt32					inLength,
-								 My_Parser::State		inCurrentState,
-								 My_Parser::State&		outNextState,
-								 Boolean&				outInterrupt)
-{
-	using namespace My_Parser;
-	
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
-	Boolean		isControlCharacter = true;
-	
-	
-	// see if the given character is a control character; if so,
-	// it will not contribute to the current sequence and may
-	// even reset the parser
-	switch (*inBuffer)
-	{
-	case '\000':
-		// ignore this character for the purposes of sequencing
-		outNextState = inCurrentState;
-		break;
-	
-	case '\005':
-		// send answer-back message
-		outNextState = kStateVT100ControlENQ;
-		break;
-	
-	case '\007':
-		// audio event
-		outNextState = kStateVT100ControlBEL;
-		break;
-	
-	case '\010':
-		// backspace
-		outNextState = kStateVT100ControlBS;
-		break;
-	
-	case '\011':
-		// horizontal tab
-		outNextState = kStateVT100ControlHT;
-		break;
-	
-	case '\012':
-	case '\013':
-	case '\014':
-		// line feed
-		// all of these are interpreted the same for VT100
-		outNextState = kStateVT100ControlLFVTFF;
-		break;
-	
-	case '\015':
-		// carriage return
-		outNextState = kStateVT100ControlCR;
-		break;
-	
-	case '\016':
-		// shift out
-		outNextState = kStateVT100ControlSO;
-		break;
-	
-	case '\017':
-		// shift in
-		outNextState = kStateVT100ControlSI;
-		break;
-	
-	case '\021':
-		// resume transmission
-		outNextState = kStateVT100ControlXON;
-		break;
-	
-	case '\023':
-		// suspend transmission
-		outNextState = kStateVT100ControlXOFF;
-		break;
-	
-	case '\030':
-	case '\032':
-		// abort control sequence (if any) and emit error character
-		outNextState = kStateVT100ControlCANSUB;
-		break;
-	
-	case '\177': // DEL
-		// ignore this character for the purposes of sequencing
-		outNextState = inCurrentState;
-		break;
-	
-	default:
-		isControlCharacter = false;
-		break;
-	}
-	
-	// all control characters are interrupt-class: they should
-	// cause actions, but not “corrupt” any partially completed
-	// sequence that may have come before them, i.e. the caller
-	// should revert to the state preceding the control character
-	if (isControlCharacter)
-	{
-		outInterrupt = true;
-	}
-	
-	// if no interrupt has occurred, use the current state and
-	// the available data to determine the next logical state
-	if (false == isControlCharacter)
-	{
-		switch (inCurrentState)
-		{
-		case kStateVT100CSI:
-			outNextState = kStateVT100CSIParamScan;
-			result = 0; // absorb nothing
-			break;
-		
-		case kStateVT100CSIParamScan:
-			// look for a terminating character (anything not legal in a parameter)
-			switch (*inBuffer)
-			{
-			case 'A':
-				outNextState = kStateSeenESCLeftSqBracketParamsA;
-				break;
-			
-			case 'B':
-				outNextState = kStateSeenESCLeftSqBracketParamsB;
-				break;
-			
-			case 'c':
-				outNextState = kStateSeenESCLeftSqBracketParamsc;
-				break;
-			
-			case 'C':
-				outNextState = kStateSeenESCLeftSqBracketParamsC;
-				break;
-			
-			case 'D':
-				outNextState = kStateSeenESCLeftSqBracketParamsD;
-				break;
-			
-			case 'f':
-				outNextState = kStateSeenESCLeftSqBracketParamsf;
-				break;
-			
-			case 'g':
-				outNextState = kStateSeenESCLeftSqBracketParamsg;
-				break;
-			
-			case 'h':
-				outNextState = kStateSeenESCLeftSqBracketParamsh;
-				break;
-			
-			case 'H':
-				outNextState = kStateSeenESCLeftSqBracketParamsH;
-				break;
-			
-			case 'J':
-				outNextState = kStateSeenESCLeftSqBracketParamsJ;
-				break;
-			
-			case 'K':
-				outNextState = kStateSeenESCLeftSqBracketParamsK;
-				break;
-			
-			case 'l':
-				outNextState = kStateSeenESCLeftSqBracketParamsl;
-				break;
-			
-			case 'm':
-				outNextState = kStateSeenESCLeftSqBracketParamsm;
-				break;
-			
-			case 'n':
-				outNextState = kStateSeenESCLeftSqBracketParamsn;
-				break;
-			
-			case 'q':
-				outNextState = kStateSeenESCLeftSqBracketParamsq;
-				break;
-			
-			case 'r':
-				outNextState = kStateSeenESCLeftSqBracketParamsr;
-				break;
-			
-			case 'x':
-				outNextState = kStateSeenESCLeftSqBracketParamsx;
-				break;
-			
-			// continue scanning as long as characters are LEGAL in a parameter sequence
-			// (the set below should be consistent with vt100ReadCSIParameters())
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case ';':
-			case '?':
-				outNextState = kStateVT100CSIParamScan;
-				break;
-			
-			default:
-				// this is unexpected data; choose a new state
-				Console_WriteValueCharacter("warning, VT100 in CSI parameter mode did not expect character", *inBuffer);
-				result = emulatorStandardStateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
-															outNextState, outInterrupt);
-				break;
-			}
-			break;
-		
-		default:
-			if (*inBuffer == '\033')
-			{
-				// this character forces any partial sequence that came before it to be ignored
-				outNextState = kStateSeenESC;
-			}
-			else
-			{
-				result = emulatorStandardStateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
-															outNextState, outInterrupt);
-			}
-			break;
-		}
-	}
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT100 in state", inCurrentState);
-	//Console_WriteValueFourChars(">>>     VT100 proposes state", outNextState);
-	//Console_WriteValueCharacter("        VT100 bases this at least on character", *inBuffer);
-	
-	return result;
-}// emulatorVT100StateDeterminant
-
-
-/*!
-A standard "My_EmulatorStateTransitionProcPtr" that responds
-to VT100-specific (ANSI mode) state changes.
-
-See also emulatorVT100VT52StateTransition(), which should
-ONLY be called when the emulator is in VT52 mode.
-
-IMPORTANT:	This emulator should ONLY be called when the
-			emulator is in ANSI mode, *or* if the VT52
-			emulator has been called first (which,
-			incidentally, defaults to calling this one).
-			This code filters out VT52 codes, however
-			some codes overlap and do DIFFERENT THINGS
-			in ANSI mode.
-
-(3.1)
-*/
-static UInt32
-emulatorVT100StateTransition	(My_ScreenBufferPtr		inDataPtr,
-								 UInt8 const*			inBuffer,
-								 UInt32					inLength,
-								 My_Parser::State		inNewState,
-								 My_Parser::State		inPreviousState)
-{
-	using namespace My_Parser;
-	
-	UInt32		result = 0; // usually, no characters are consumed at the transition stage
-	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT100 ANSI transition from state", inPreviousState);
-	//Console_WriteValueFourChars(">>>     VT100 ANSI transition to state  ", inNewState);
-	
-	// decide what to do based on the proposed transition
-	// INCOMPLETE
-	switch (inNewState)
-	{
-	case kStateVT100ControlENQ:
-		// send answer-back message
-		// UNIMPLEMENTED
-		Console_WriteLine("request to send answer-back message; unimplemented");
-		break;
-	
-	case kStateVT100ControlBEL:
-		// audio event
-		unless (inDataPtr->bellDisabled)
-		{
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeAudioEvent, inDataPtr->selfRef/* context */);
-		}
-		break;
-	
-	case kStateVT100ControlBS:
-		// backspace
-		if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
-		else moveCursorLeftToEdge(inDataPtr); // do not extend past margin
-		break;
-	
-	case kStateVT100ControlHT:
-		// horizontal tab
-		moveCursorRightToNextTabStop(inDataPtr);
-		Terminal_FileCaptureWriteData(inDataPtr->selfRef, inBuffer, 1);
-		break;
-	
-	case kStateVT100ControlLFVTFF:
-		// line feed
-		// all of these are interpreted the same for VT100;
-		// if LNM was received, this is a regular line feed,
-		// otherwise it is actually a new-line operation
-		moveCursorDownOrScroll(inDataPtr);
-	#if 0
-		if (inDataPtr->modeNewLineOption)
-		{
-			moveCursorLeftToEdge(inDataPtr);
-		}
-	#endif
-		break;
-	
-	case kStateVT100ControlCR:
-		// carriage return
-		moveCursorLeftToEdge(inDataPtr);
-	#if 0
-		if (inDataPtr->modeNewLineOption)
-		{
-			moveCursorDownOrScroll(inDataPtr);
-		}
-	#endif
-		Terminal_FileCaptureWriteData(inDataPtr->selfRef, inBuffer, 1);
-		break;
-	
-	case kStateVT100ControlSO:
-		// shift out
-		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG1;
-		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
-		{
-			// set attribute
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
-		}
-		else
-		{
-			// clear attribute
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
-		}
-		break;
-	
-	case kStateVT100ControlSI:
-		// shift in
-		inDataPtr->current.characterSetInfoPtr = &inDataPtr->vtG0;
-		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
-		{
-			// set attribute
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
-		}
-		else
-		{
-			// clear attribute
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
-		}
-		break;
-	
-	case kStateVT100ControlXON:
-		// resume transmission
-		// UNIMPLEMENTED
-		Console_WriteLine("request to resume transmission; unimplemented");
-		break;
-	
-	case kStateVT100ControlXOFF:
-		// suspend transmission
-		// UNIMPLEMENTED
-		Console_WriteLine("request to suspend transmission (except for XON/XOFF); unimplemented");
-		break;
-	
-	case kStateVT100ControlCANSUB:
-		// abort control sequence (if any) and emit error character
-		{
-			UInt8	errorChar[] = { '?' };
-			
-			
-			echoData(inDataPtr, errorChar, 1/* length */);
-		}
-		break;
-	
-	case kStateVT100CSI:
-		// each new CSI means a blank slate for parameters
-		clearEscapeSequenceParameters(inDataPtr);
-		break;
-	
-	case kStateVT100CSIParamScan:
-		// continue to accumulate parameters (this could require multiple passes)
-		result += vt100ReadCSIParameters(inDataPtr, inBuffer, inLength);
-		break;
-	
-	case kStateVT100CUB:
-		vt100CursorBackward(inDataPtr);
-		break;
-	
-	case kStateVT100CUD:
-		vt100CursorDown(inDataPtr);
-		break;
-	
-	case kStateVT100CUF:
-		vt100CursorForward(inDataPtr);
-		break;
-	
-	case kStateVT100CUU:
-		vt100CursorUp(inDataPtr);
-		break;
-	
-	case kStateVT100CUP:
-	case kStateVT100HVP:
-		// absolute cursor positioning
-		{
-			SInt16				newX = (inDataPtr->currentEscapeSeqParamValues[1] != -1)
-										? inDataPtr->currentEscapeSeqParamValues[1] - 1
-										: 0/* default is home */;
-			My_ScreenRowIndex	newY = (inDataPtr->currentEscapeSeqParamValues[0] != -1)
-										? inDataPtr->currentEscapeSeqParamValues[0] - 1
-										: 0/* default is home */;
-			
-			
-			// in origin mode, offset according to the scrolling region
-			if (inDataPtr->modeOriginRedefined) newY += inDataPtr->scrollingRegion.firstRow;
-			
-			// constrain the value and then change it safely
-			if (newX < 0) newX = 0;
-			if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
-			{
-				newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
-			}
-			//if (newY < 0) newY = 0;
-			if (newY >= inDataPtr->screenBuffer.size())
-			{
-				newY = inDataPtr->screenBuffer.size() - 1;
-			}
-			moveCursor(inDataPtr, newX, newY);
-		}
-		break;
-	
-	case kStateVT100DA:
-		vt100DeviceAttributes(inDataPtr);
-		break;
-	
-	case kStateVT100DECALN:
-		vt100AlignmentDisplay(inDataPtr);
-		break;
-	
-	case kStateVT100DECANM:
-		break;
-	
-	case kStateVT100DECARM:
-		break;
-	
-	case kStateVT100DECAWM:
-		break;
-	
-	case kStateVT100DECCKM:
-		break;
-	
-	case kStateVT100DECCOLM:
-		break;
-	
-	case kStateVT100DECDHLT:
-		{
-			My_ScreenBufferLineList::iterator	cursorLineIterator;
-			
-			
-			locateCursorLine(inDataPtr, cursorLineIterator);
-			
-			// check line-global attributes; if this line was single-width,
-			// clear out the entire right half of the line
-			eraseRightHalfOfLine(inDataPtr, *cursorLineIterator);
-			
-			// set attributes global to the line, which means that there is
-			// no option for any character to lack the attribute on this line
-			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, kTerminalTextAttributeDoubleHeightTop/* set */,
-										kMaskTerminalTextAttributeDoubleText/* clear */);
-			
-			// VT100 manual specifies that a cursor in the right half of
-			// the normal screen width should be stuck at the half-way point
-			moveCursorLeftToHalf(inDataPtr);
-		}
-		break;
-	
-	case kStateVT100DECDHLB:
-		{
-			My_ScreenBufferLineList::iterator	cursorLineIterator;
-			
-			
-			locateCursorLine(inDataPtr, cursorLineIterator);
-			
-			// check line-global attributes; if this line was single-width,
-			// clear out the entire right half of the line
-			eraseRightHalfOfLine(inDataPtr, *cursorLineIterator);
-			
-			// set attributes global to the line, which means that there is
-			// no option for any character to lack the attribute on this line
-			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, kTerminalTextAttributeDoubleHeightBottom/* set */,
-										kMaskTerminalTextAttributeDoubleText/* clear */);
-			
-			// VT100 manual specifies that a cursor in the right half of
-			// the normal screen width should be stuck at the half-way point
-			moveCursorLeftToHalf(inDataPtr);
-		}
-		break;
-	
-	case kStateVT100DECDWL:
-		{
-			My_ScreenBufferLineList::iterator	cursorLineIterator;
-			
-			
-			locateCursorLine(inDataPtr, cursorLineIterator);
-			
-			// check line-global attributes; if this line was single-width,
-			// clear out the entire right half of the line
-			eraseRightHalfOfLine(inDataPtr, *cursorLineIterator);
-			
-			// set attributes global to the line, which means that there is
-			// no option for any character to lack the attribute on this line
-			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, kTerminalTextAttributeDoubleWidth/* set */,
-										kMaskTerminalTextAttributeDoubleText/* clear */);
-			
-			// VT100 manual specifies that a cursor in the right half of
-			// the normal screen width should be stuck at the half-way point
-			moveCursorLeftToHalf(inDataPtr);
-		}
-		break;
-	
-	case kStateVT100DECID:
-		vt100DeviceAttributes(inDataPtr);
-		break;
-	
-	case kStateVT100DECKPAM:
-		inDataPtr->modeApplicationKeys = true; // enter alternate keypad mode (use application key sequences) of VT100
-		break;
-	
-	case kStateVT100DECKPNM:
-		inDataPtr->modeApplicationKeys = false; // exit alternate keypad mode (restore regular keypad characters) of VT100
-		break;
-	
-	case kStateVT100DECLL:
-		vt100LoadLEDs(inDataPtr);
-		break;
-	
-	case kStateVT100DECOM:
-		break;
-	
-	case kStateVT100DECRC:
-		cursorRestore(inDataPtr);
-		break;
-	
-	case kStateVT100DECREPTPARM:
-		// a parameter report has been received
-		// IGNORED
-		break;
-	
-	case kStateVT100DECREQTPARM:
-		// a request for parameters has been made; send a response
-		vt100ReportTerminalParameters(inDataPtr);
-		break;
-	
-	case kStateVT100DECSC:
-		cursorSave(inDataPtr);
-		break;
-	
-	case kStateVT100DECSTBM:
-		vt100SetTopAndBottomMargins(inDataPtr);
-		break;
-	
-	case kStateVT100DECSWL:
-		{
-			My_ScreenBufferLineList::iterator	cursorLineIterator;
-			
-			
-			locateCursorLine(inDataPtr, cursorLineIterator);
-			
-			// set attributes global to the line, which means that there is
-			// no option for any character to lack the attribute on this line
-			changeLineGlobalAttributes(inDataPtr, *cursorLineIterator, 0/* set */,
-										kMaskTerminalTextAttributeDoubleText/* clear */);
-		}
-		break;
-	
-	case kStateVT100DECTST:
-		break;
-	
-	case kStateVT100DSR:
-		vt100DeviceStatusReport(inDataPtr);
-		break;
-	
-	case kStateVT100ED:
-		vt100EraseInDisplay(inDataPtr);
-		break;
-	
-	case kStateVT100EL:
-		vt100EraseInLine(inDataPtr);
-		break;
-	
-	case kStateVT100HTS:
-		// set tab at current position
-		inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabSet;
-		break;
-	
-	//case kStateVT100HVP:
-	//see above
-	
-	case kStateVT100IND:
-		moveCursorDownOrScroll(inDataPtr);
-		break;
-	
-	case kStateVT100NEL:
-		moveCursorLeftToEdge(inDataPtr);
-		moveCursorDownOrScroll(inDataPtr);
-		break;
-	
-	case kStateVT100RI:
-		moveCursorUpOrScroll(inDataPtr);
-		break;
-	
-	case kStateVT100RIS:
-		break;
-	
-	case kStateVT100RM:
-		vt100ModeSetReset(inDataPtr, false/* set */);
-		break;
-	
-	case kStateVT100SCSG0UK:
-	case kStateVT100SCSG1UK:
-		{
-			// U.K. character set, normal ROM, no graphics
-			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
-			
-			
-			if (kStateVT100SCSG1UK == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
-			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
-			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
-			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
-		}
-		break;
-	
-	case kStateVT100SCSG0ASCII:
-	case kStateVT100SCSG1ASCII:
-		{
-			// U.S. character set, normal ROM, no graphics
-			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
-			
-			
-			if (kStateVT100SCSG1ASCII == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
-			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
-			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
-			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
-		}
-		break;
-	
-	case kStateVT100SCSG0SG:
-	case kStateVT100SCSG1SG:
-		{
-			// normal ROM, graphics mode
-			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
-			
-			
-			if (kStateVT100SCSG1SG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
-			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
-			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
-		}
-		break;
-	
-	case kStateVT100SCSG0ACRStd:
-	case kStateVT100SCSG1ACRStd:
-		{
-			// alternate ROM, no graphics
-			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
-			
-			
-			if (kStateVT100SCSG1ACRStd == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
-			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
-			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
-		}
-		break;
-	
-	case kStateVT100SCSG0ACRSG:
-	case kStateVT100SCSG1ACRSG:
-		{
-			// normal ROM, graphics mode
-			My_CharacterSetInfoPtr		targetCharacterSetPtr = &inDataPtr->vtG0;
-			
-			
-			if (kStateVT100SCSG1ACRSG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
-			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
-			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
-		}
-		break;
-	
-	case kStateVT100SGR:
-		// ANSI colors and other character attributes
-		{
-			SInt16		i = 0;
-			
-			
-			while (i <= inDataPtr->currentEscapeSeqParamEndIndex)
-			{
-				SInt16		p = 0;
-				
-				
-				if (inDataPtr->currentEscapeSeqParamValues[inDataPtr->currentEscapeSeqParamEndIndex] < 0)
-				{
-					inDataPtr->currentEscapeSeqParamValues[inDataPtr->currentEscapeSeqParamEndIndex] = 0;
-				}
-				
-				p = inDataPtr->currentEscapeSeqParamValues[i];
-				
-				// Note that a real VT100 will only understand 0-7 here.
-				// Other values are basically recognized because they are
-				// compatible with VT100 and are very often used (ANSI
-				// colors in particular).
-				if (p == 0) inDataPtr->current.attributeBits &= 0xFFFF0000; // all style bits off
-				else if (p < 9) inDataPtr->current.attributeBits |= styleOfVTParameter(p); // set attribute
-				else if (p == 10) { /* set normal font - unsupported */ }
-				else if (p == 11) { /* set alternate font - unsupported */ }
-				else if (p == 12) { /* set alternate font, shifting by 128 - unsupported */ }
-				else if (p == 22) inDataPtr->current.attributeBits &= ~styleOfVTParameter(1); // clear bold (oddball - 22, not 21)
-				else if ((p > 22) && (p < 29)) inDataPtr->current.attributeBits &= ~styleOfVTParameter(p - 20); // clear attribute
-				else
-				{
-					if ((p >= 30) && (p < 38))
-					{
-						inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x0700) | ((p - 30) << 8) | 0x0800;
-					}
-					else if ((p >= 40) && (p < 48))
-					{
-						inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x7000) | ((p - 40) << 12) | 0x8000;
-					}
-				}
-				++i;
-			}
-		}
-		break;
-	
-	case kStateVT100SM:
-		vt100ModeSetReset(inDataPtr, true/* set */);
-		break;
-	
-	case kStateVT100TBC:
-		if (3 == inDataPtr->currentEscapeSeqParamValues[0])
-		{
-			// clear all tabs
-			tabStopClearAll(inDataPtr);
-		}
-		else if (0 >= inDataPtr->currentEscapeSeqParamValues[0])
-		{
-			// clear tab at current position
-			inDataPtr->tabSettings[inDataPtr->current.cursorX] = kMy_TabClear;
-		}
-		else
-		{
-			// invalid (do nothing)
-		}
-		break;
-	
-	// ignore all VT100/VT52 sequences that are invalid within this ANSI-mode parser
-	case kStateVT52CU:
-	case kStateVT52CD:
-	case kStateVT52CR:
-	//case kStateVT52CL: // this conflicts with a valid VT100 ANSI mode value above
-	case kStateVT52NGM:
-	case kStateVT52XGM:
-	//case kStateVT52CH: // this conflicts with a valid VT100 ANSI mode value above
-	case kStateVT52RLF:
-	case kStateVT52EES:
-	case kStateVT52EEL:
-	case kStateVT52DCA:
-	//case kStateVT52ID: // this conflicts with a valid VT100 ANSI mode value above
-	//case kStateVT52NAKM: // this conflicts with a valid VT100 ANSI mode value above
-	//case kStateVT52XAKM: // this conflicts with a valid VT100 ANSI mode value above
-	case kStateVT52ANSI:
-		break;
-	
-	default:
-		result = emulatorStandardStateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
-		break;
-	}
-	
-	return result;
-}// emulatorVT100StateTransition
-
-
-/*!
-A standard "My_EmulatorStateDeterminantProcPtr" that sets
-VT52-specific states based on the characters of the given
-buffer.
-
-(3.1)
-*/
-static UInt32
-emulatorVT100VT52StateDeterminant	(My_ScreenBufferPtr		inDataPtr,
-									 UInt8 const*			inBuffer,
-									 UInt32					inLength,
-									 My_Parser::State		inCurrentState,
-									 My_Parser::State&		outNextState,
-									 Boolean&				outInterrupt)
-{
-	using namespace My_Parser;
-	
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
-	
-	
-	switch (inCurrentState)
-	{
-	case kStateSeenESC:
-		switch (*inBuffer)
-		{
-		case 'A':
-			outNextState = kStateSeenESCA;
-			break;
-		
-		case 'B':
-			outNextState = kStateSeenESCB;
-			break;
-		
-		case 'C':
-			outNextState = kStateSeenESCC;
-			break;
-		
-		case 'D':
-			outNextState = kStateSeenESCD;
-			break;
-		
-		case 'F':
-			outNextState = kStateSeenESCF;
-			break;
-		
-		case 'G':
-			outNextState = kStateSeenESCG;
-			break;
-		
-		case 'H':
-			outNextState = kStateSeenESCH;
-			break;
-		
-		case 'I':
-			outNextState = kStateSeenESCI;
-			break;
-		
-		case 'J':
-			outNextState = kStateSeenESCJ;
-			break;
-		
-		case 'K':
-			outNextState = kStateSeenESCK;
-			break;
-		
-		case 'Y':
-			outNextState = kStateSeenESCY;
-			break;
-		
-		case 'Z':
-			outNextState = kStateSeenESCZ;
-			break;
-		
-		case '=':
-			outNextState = kStateSeenESCEquals;
-			break;
-		
-		case '>':
-			outNextState = kStateSeenESCGreaterThan;
-			break;
-		
-		case '<':
-			outNextState = kStateSeenESCLessThan;
-			break;
-		
-		default:
-			// this is unexpected data; choose a new state
-			Console_WriteValueCharacter("warning, VT52 did not expect an ESC to be followed by character", *inBuffer);
-			result = emulatorVT100StateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
-													outNextState, outInterrupt);
-			break;
-		}
-		break;
-	
-	case kStateVT52DCA:
-		// the 2 characters after a VT52 DCA are the coordinates (Y first)
-		outNextState = kStateVT52DCAY;
-		result = 0; // absorb nothing
-		break;
-	
-	case kStateVT52DCAY:
-		// the 2 characters after a VT52 DCA are the coordinates (Y first)
-		outNextState = kStateVT52DCAX;
-		result = 0; // absorb nothing
-		break;
-	
-	default:
-		result = emulatorVT100StateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
-												outNextState, outInterrupt);
-		break;
-	}
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT100 in VT52 mode in state", inCurrentState);
-	//Console_WriteValueFourChars(">>>     VT100 in VT52 mode proposes state", outNextState);
-	//Console_WriteValueCharacter("        VT100 in VT52 mode bases this at least on character", *inBuffer);
-	
-	return result;
-}// emulatorVT100VT52StateDeterminant
-
-
-/*!
-A standard "My_EmulatorStateTransitionProcPtr" that
-responds to VT100-specific (VT52 mode) state changes.
-
-(3.1)
-*/
-static UInt32
-emulatorVT100VT52StateTransition	(My_ScreenBufferPtr		inDataPtr,
-									 UInt8 const*			inBuffer,
-									 UInt32					inLength,
-									 My_Parser::State		inNewState,
-									 My_Parser::State		inPreviousState)
-{
-	using namespace My_Parser;
-	
-	UInt32		result = 0; // usually, no characters are consumed at the transition stage
-	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT100 VT52 transition from state", inPreviousState);
-	//Console_WriteValueFourChars(">>>     VT100 VT52 transition to state  ", inNewState);
-	
-	// decide what to do based on the proposed transition
-	// INCOMPLETE
-	switch (inNewState)
-	{
-	case kStateVT52CU:
-		vt100CursorUp_vt52(inDataPtr);
-		break;
-	
-	case kStateVT52CD:
-		vt100CursorDown_vt52(inDataPtr);
-		break;
-	
-	case kStateVT52CR:
-		vt100CursorForward_vt52(inDataPtr);
-		break;
-	
-	case kStateVT52CL:
-		vt100CursorBackward_vt52(inDataPtr);
-		break;
-	
-	case kStateVT52NGM:
-		// enter graphics mode - unimplemented
-		break;
-	
-	case kStateVT52XGM:
-		// exit graphics mode - unimplemented
-		break;
-	
-	case kStateVT52CH:
-		moveCursor(inDataPtr, 0, 0); // home cursor in VT52 compatibility mode of VT100
-		break;
-	
-	case kStateVT52RLF:
-		moveCursorUpOrScroll(inDataPtr); // reverse line feed in VT52 compatibility mode of VT100
-		break;
-	
-	case kStateVT52EES:
-		bufferEraseFromCursorToEnd(inDataPtr); // erase to end of screen, in VT52 compatibility mode of VT100
-		break;
-	
-	case kStateVT52EEL:
-		bufferEraseFromCursorColumnToLineEnd(inDataPtr); // erase to end of line, in VT52 compatibility mode of VT100
-		break;
-	
-	case kStateVT52DCA:
-		// direct cursor address in VT52 compatibility mode of VT100;
-		// new cursor position is encoded as the next two characters
-		// (vertical first, then horizontal) offset by the octal
-		// value 037 (equal to decimal 31); this is handled by 2
-		// other states, "kStateVT52DCAY" and "kStateVT52DCAX" (below)
-		break;
-	
-	case kStateVT52DCAY:
-		// VT52 DCA, first character (Y + 31)
-		{
-			My_ScreenRowIndex	newY = 0;
-			
-			
-			newY = *inBuffer - 32/* - 31 - 1 to convert from one-based to zero-based */;
-			++result;
-			
-			// constrain the value and then change it safely
-			//if (newY < 0) newY = 0;
-			if (newY >= inDataPtr->screenBuffer.size())
-			{
-				newY = inDataPtr->screenBuffer.size() - 1;
-			}
-			moveCursorY(inDataPtr, newY);
-		}
-		break;
-	
-	case kStateVT52DCAX:
-		// VT52 DCA, second character (X + 31)
-		{
-			SInt16		newX = 0;
-			
-			
-			newX = *inBuffer - 32/* - 31 - 1 to convert from one-based to zero-based */;
-			++result;
-			
-			// constrain the value and then change it safely
-			if (newX < 0) newX = 0;
-			if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
-			{
-				newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
-			}
-			moveCursorX(inDataPtr, newX);
-		}
-		break;
-	
-	case kStateVT52ID:
-		vt100Identify_vt52(inDataPtr);
-		break;
-	
-	case kStateVT52NAKM:
-		inDataPtr->modeApplicationKeys = true; // enter alternate keypad mode (use application key sequences) in VT52 compatibility mode of VT100
-		break;
-	
-	case kStateVT52XAKM:
-		inDataPtr->modeApplicationKeys = false; // exit alternate keypad mode (restore regular keypad characters) in VT52 compatibility mode of VT100
-		break;
-	
-	case kStateVT52ANSI:
-		vt100ANSIMode(inDataPtr);
-		break;
-	
-	// ignore all VT100 sequences that are invalid in VT52 mode
-	// NONE?
-	//case :
-	//	break;
-	
-	default:
-		// other state transitions should still basically be handled as if in VT100 ANSI
-		// (NOTE: this switch should filter out any ANSI mode states that are supposed to
-		// be ignored while in VT52 mode!)
-		result = emulatorVT100StateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
-		break;
-	}
-	
-	return result;
-}// emulatorVT100VT52StateTransition
-
-
-/*!
-A standard "My_EmulatorStateDeterminantProcPtr" that sets
-VT220-specific states based on the characters of the given
-buffer.
-
-(3.1)
-*/
-static UInt32
-emulatorVT220StateDeterminant	(My_ScreenBufferPtr		inDataPtr,
-								 UInt8 const*			inBuffer,
-								 UInt32					inLength,
-								 My_Parser::State		inCurrentState,
-								 My_Parser::State&		outNextState,
-								 Boolean&				outInterrupt)
-{
-	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
-	
-	
-	// see if the given character is a control character; if so,
-	// it will not contribute to the current sequence and may
-	// even reset the parser
-	switch (*inBuffer)
-	{
-	default:
-		result = emulatorVT100StateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
-												outNextState, outInterrupt);
-		break;
-	}
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT220 in state", inCurrentState);
-	//Console_WriteValueFourChars(">>>     VT220 proposes state", outNextState);
-	//Console_WriteValueCharacter("        VT220 bases this at least on character", *inBuffer);
-	
-	return result;
-}// emulatorVT220StateDeterminant
-
-
-/*!
-A standard "My_EmulatorStateTransitionProcPtr" that
-responds to VT220-specific state changes.
-
-(3.1)
-*/
-static UInt32
-emulatorVT220StateTransition	(My_ScreenBufferPtr		inDataPtr,
-								 UInt8 const*			inBuffer,
-								 UInt32					inLength,
-								 My_Parser::State		inNewState,
-								 My_Parser::State		inPreviousState)
-{
-	UInt32		result = 0; // usually, no characters are consumed at the transition stage
-	
-	
-	// debug
-	//Console_WriteValueFourChars("    <<< VT220 transition from state", inPreviousState);
-	//Console_WriteValueFourChars(">>>     VT220 transition to state  ", inNewState);
-	
-	// decide what to do based on the proposed transition
-	// INCOMPLETE
-	switch (inNewState)
-	{
-	default:
-		// other state transitions should still basically be handled as if in VT100
-		result = emulatorVT100StateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
-		break;
-	}
-	
-	return result;
-}// emulatorVT220StateTransition
-
-
-/*!
 Erases the characters from the halfway point on the
 screen to the right edge of the specified line,
 clearing all attributes.  NO update events are sent.
@@ -7790,7 +8123,7 @@ type).
 static void
 initializeParserStateStack	(My_ScreenBufferPtr		inDataPtr)
 {
-	inDataPtr->currentState = My_Parser::kStateInitial;
+	inDataPtr->currentState = kMy_ParserStateInitial;
 }// initializeParserStateStack
 
 
@@ -8942,8 +9275,11 @@ static void
 vt100ANSIMode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = true;
-	inDataPtr->stateDeterminant = emulatorVT100StateDeterminant;
-	inDataPtr->transitionHandler = emulatorVT100StateTransition;
+	// TEMPORARY: this will change to a mechanism that ensures the
+	// proper function is reset here based on the actual terminal type;
+	// for now, choose the “highest” terminal
+	inDataPtr->stateDeterminant = My_VT102::stateDeterminant;
+	inDataPtr->transitionHandler = My_VT102::stateTransition;
 	initializeParserStateStack(inDataPtr);
 }// vt100ANSIMode
 
@@ -9718,8 +10054,8 @@ static void
 vt100VT52Mode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = false;
-	inDataPtr->stateDeterminant = emulatorVT100VT52StateDeterminant;
-	inDataPtr->transitionHandler = emulatorVT100VT52StateTransition;
+	inDataPtr->stateDeterminant = My_VT100::VT52::stateDeterminant;
+	inDataPtr->transitionHandler = My_VT100::VT52::stateTransition;
 	initializeParserStateStack(inDataPtr);
 }// vt100VT52Mode
 

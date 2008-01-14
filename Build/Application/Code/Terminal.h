@@ -315,7 +315,9 @@ Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
 //@{
 
 Terminal_Result
-	Terminal_NewScreen						(SInt16						inLineCountScrollBackBuffer,
+	Terminal_NewScreen						(Terminal_Emulator			inEmulation,
+											 CFStringRef				inAnswerBack,
+											 SInt16						inLineCountScrollBackBuffer,
 											 SInt16						inLineCountVisibleRows,
 											 SInt16						inMaximumColumnCount,
 											 Boolean					inForceLineSaving,
@@ -534,6 +536,15 @@ Boolean
 // DEPRECATED
 Boolean
 	Terminal_EmulatorIsVT220				(TerminalScreenRef			inScreen);
+
+CFStringRef
+	Terminal_EmulatorReturnDefaultName		(Terminal_Emulator			inEmulator);
+
+Terminal_Emulator
+	Terminal_EmulatorReturnForName			(CFStringRef				inName);
+
+CFStringRef
+	Terminal_EmulatorReturnName				(TerminalScreenRef			inScreen);
 
 void
 	Terminal_EmulatorSet					(TerminalScreenRef			inScreen,

@@ -241,8 +241,8 @@ CommandLine_Init ()
 				}
 			}
 		}
-		terminalError = Terminal_NewScreen(0/* number of scrollback rows */, 1/* number of rows */, 132/* number of columns */,
-											false/* force save */, &gCommandLineTerminalScreen);
+		terminalError = Terminal_NewScreen(kTerminal_EmulatorVT100, CFSTR("vt100"), 0/* number of scrollback rows */, 1/* number of rows */,
+											132/* number of columns */, false/* force save */, &gCommandLineTerminalScreen);
 		if (kTerminal_ResultOK == terminalError)
 		{
 			gCommandLineTerminalView = TerminalView_NewHIViewBased
