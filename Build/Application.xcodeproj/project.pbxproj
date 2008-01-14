@@ -1707,6 +1707,7 @@
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
+				OBJROOT = _Generated;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1720,6 +1721,7 @@
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
 				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
+				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
@@ -1867,6 +1869,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET_i386 = 10.5;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.5;
+				OBJROOT = _Generated;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1880,6 +1883,7 @@
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
 				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
+				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
@@ -2001,6 +2005,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
 				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
+				OBJROOT = _Generated;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -2014,6 +2019,7 @@
 				PREBINDING = NO;
 				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
 				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
+				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",

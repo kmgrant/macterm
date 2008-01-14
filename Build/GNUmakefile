@@ -28,9 +28,11 @@ help:
 
 # temporary files (subdirectories created)
 SYMROOT=$(CURDIR)/_Generated
+OBJROOT=$(CURDIR)/_Generated
 
 XCODE_ENV := \
-	SYMROOT=$(SYMROOT)
+	SYMROOT=$(SYMROOT) \
+	OBJROOT=$(SYMROOT)
 
 # tools
 COPY=/bin/cp
@@ -66,8 +68,10 @@ SRC_APP_BUILD_TOP_PANTHER := $(SYMROOT)/ForPantherDebug
 SRC_APP_CODE_TOP := $(SRC_APP_PROJ_TOP)/Code
 SRC_APP_PYCODE_TOP := $(SRC_APP_PROJ_TOP)/PythonCode
 SRC_APP_RESOURCES_TOP := $(SRC_APP_PROJ_TOP)/Resources
-SRC_BUGREPORTER_TOP := $(SYMROOT)/ForDebugging/BugReporter.app
-SRC_PREFSCONVERTER_TOP := $(SYMROOT)/ForDebugging/PrefsConverter.app
+SRC_BUGREPORTER_BUILD_TOP := $(SYMROOT)/ForDebugging
+SRC_BUGREPORTER_TOP := $(SRC_BUGREPORTER_BUILD_TOP)/BugReporter.app
+SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/ForDebugging
+SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTelnet.framework
 SRC_QUILLS_TOP_TIGER := $(SRC_APP_BUILD_TOP_TIGER)/Quills.framework
 SRC_QUILLS_TOP_PANTHER := $(SRC_APP_BUILD_TOP_PANTHER)/Quills.framework
@@ -485,6 +489,7 @@ debug:
 	$(MAKE) install-frameworks
 	$(MAKE) install-executables
 	$(MAKE) install-resources
+	@echo
 	@echo "Build complete."
 
 .PHONY: clean
@@ -492,12 +497,19 @@ clean:
 	$(MAKE) clean-resources
 	$(MAKE) clean-executables
 	$(MAKE) clean-frameworks
+	$(RM) $(DEST_APP_TOP)/PkgInfo
+	$(RM) $(DEST_APP_TOP)/Info.plist
+	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP)
+	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP)
 	-$(RMDIR) $(SRC_APP_BUILD_TOP_LEOPARD)
 	-$(RMDIR) $(SRC_APP_BUILD_TOP_TIGER)
 	-$(RMDIR) $(SRC_APP_BUILD_TOP_PANTHER)
-	$(RM) $(DEST_APP_TOP)/Info.plist
 	-$(RMDIR) $(DEST_APP_TOP)
 	-$(RMDIR) $(dir $(DEST_APP_TOP))
+	@echo
+	@echo "NOTE: Useful Xcode intermediate files in '$(SYMROOT)'"
+	@echo "(such as code indices) have not been removed."
+	@echo
 	@echo "Clean complete."
 
 FORCE:
