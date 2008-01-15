@@ -14,10 +14,6 @@
 	file into its Core Foundation Preferences data, if none exists when
 	MacTelnet is first run.
 	
-	IMPORTANT:	This is currently synchronized manually with the
-				routine readPreferencesDictionary() in Preferences.cp.
-				If you add keys here, check that routine as well.
-	
 	These preferences keys can sometimes be reused to set per-Favorite
 	values, e.g. in the "favorite-sessions" array.  Note that currently
 	the set of keys recognized for a given kind of array is limited,
