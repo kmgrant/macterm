@@ -431,6 +431,32 @@ TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 
 
 /*!
+Determines if the specified mouse (or drag) event is hitting
+any part of the given terminal window.
+
+(3.1)
+*/
+Boolean
+TerminalWindow_EventInside	(TerminalWindowRef	inRef,
+							 EventRef			inMouseEvent)
+{
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	HIViewRef					hitView = nullptr;
+	OSStatus					error = noErr;
+	Boolean						result = false;
+	
+	
+	error = HIViewGetViewForMouseEvent(HIViewGetRoot(ptr->window), inMouseEvent, &hitView);
+	if (noErr == error)
+	{
+		result = true;
+	}
+	
+	return result;
+}// EventInside
+
+
+/*!
 Determines if a Mac OS window has a terminal window
 reference.
 
@@ -748,49 +774,6 @@ TerminalWindow_IsObscured	(TerminalWindowRef	inRef)
 	result = ptr->isObscured;
 	return result;
 }// IsObscured
-
-
-/*!
-Determines if the specified point, in local coordinates,
-is within any Terminal View of the specified window.
-
-Note that local coordinates are relative to the content
-view of the window, not relative to the structure region.
-
-(3.0)
-*/
-Boolean
-TerminalWindow_PtInView		(TerminalWindowRef	inRef,
-							 Point				inLocalPoint)
-{
-	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
-	HIViewRef					contentView = nullptr;
-	OSStatus					error = noErr;
-	Boolean						result = false;
-	
-	
-	error = HIViewFindByID(HIViewGetRoot(ptr->window), kHIViewWindowContentID, &contentView);
-	if (noErr == error)
-	{
-		HIPoint		contentRelativePoint = CGPointMake(inLocalPoint.h, inLocalPoint.v);
-		HIViewRef	hitView = nullptr;
-		
-		
-		error = HIViewGetSubviewHit(contentView, &contentRelativePoint, true/* deep */, &hitView);
-		if (noErr == error)
-		{
-			TerminalViewList::const_iterator	viewIterator;
-			
-			
-			for (viewIterator = ptr->allViews.begin();
-					((false == result) && (viewIterator != ptr->allViews.end())); ++viewIterator)
-			{
-				if (TerminalView_ReturnContainerHIView(*viewIterator) == hitView) result = true;
-			}
-		}
-	}
-	return result;
-}// PtInView
 
 
 /*!

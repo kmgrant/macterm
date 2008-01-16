@@ -6740,7 +6740,7 @@ See receiveTerminalViewDragDrop().
 */
 static OSStatus
 sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				UNUSED_ARGUMENT(inEvent),
+					 EventRef				inEvent,
 					 SessionRef				inRef,
 					 HIViewRef				inHIView,
 					 DragRef				inDrag)
@@ -6768,7 +6768,7 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		}
 		
 		// is the drop in the terminal area?
-		if (TerminalWindow_PtInView(terminalWindow, mouseLocation))
+		if (TerminalWindow_EventInside(terminalWindow, inEvent))
 		{
 			Handle		textToInsert = nullptr;
 			Boolean		cursorMovesPriorToDrops = false;

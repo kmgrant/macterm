@@ -132,6 +132,10 @@ void
 //!\name Terminal Window Information
 //@{
 
+Boolean
+	TerminalWindow_EventInside						(TerminalWindowRef			inRef,
+													 EventRef					inMouseEvent);
+
 void
 	TerminalWindow_GetFontAndSize					(TerminalWindowRef			inRef,
 													 StringPtr					outFontFamilyNameOrNull,
@@ -164,10 +168,6 @@ TerminalWindow_Result
 
 Boolean
 	TerminalWindow_IsObscured						(TerminalWindowRef			inRef);
-
-Boolean
-	TerminalWindow_PtInView							(TerminalWindowRef			inRef,
-													 Point						inGlobalPoint);
 
 UInt16
 	TerminalWindow_ReturnScreenCount				(TerminalWindowRef			inRef);
