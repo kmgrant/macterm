@@ -108,6 +108,7 @@ private:
 
 // callback support
 #if SWIG
+%extend Session {
 %feature("docstring",
 "Register a Python function to be called (with a single string\n\
 argument) every time an open is requested for a file with the\n\
@@ -132,12 +133,33 @@ Generally your handler constructs a Session object with a command\n\
 that is appropriate for the file, although you could do something\n\
 else.\n\
 ") on_fileopen_call;
-
+	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
+	// "CallPythonStringReturnVoid" is defined in Quills.i
+	static void
+	on_fileopen_call	(PyObject*		inPythonFunction,
+						 std::string	extension = "")
+	{
+		if (extension != "")
+		{
+			Quills::Session::_on_fileopen_ext_call_py(CallPythonStringReturnVoid, reinterpret_cast< void* >(inPythonFunction),
+														extension);
+			Py_INCREF(inPythonFunction);
+		}
+	}
+	
 %feature("docstring",
 "Register a Python function to be called (with no arguments)\n\
 every single time a session is created.\n\
 ") on_new_call;
-
+	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
+	// "CallPythonVoidReturnVoid" is defined in Quills.i
+	static void
+	on_new_call	(PyObject*	inPythonFunction)
+	{
+		Quills::Session::_on_new_call_py(CallPythonVoidReturnVoid, reinterpret_cast< void* >(inPythonFunction));
+		Py_INCREF(inPythonFunction);
+	}
+	
 %feature("docstring",
 "Register a Python function to be called (with a single string\n\
 argument) every single time an open is requested for a URL\n\
@@ -155,50 +177,6 @@ is appropriate for the URL, although you could do something\n\
 else: for instance, using Python's built-in 'webbrowser' or\n\
 'urllib' modules.\n\
 ") on_urlopen_call;
-
-%feature("docstring",
-"Prevent a Python function from being called when opens are\n\
-requested for files with the given attribute.  Only one of the\n\
-attributes (keyword parameters) should be given.  This would be\n\
-to undo the effects of a previous call to on_fileopen_call().\n\
-") stop_fileopen_call;
-
-%feature("docstring",
-"Prevent a Python function from being called when sessions are\n\
-created.  This would be to undo the effects of a previous call\n\
-to on_new_call().\n\
-") stop_new_call;
-
-%feature("docstring",
-"Prevent a Python function from being called when URL opens are\n\
-requested.  This would be to undo the effects of a previous\n\
-call to on_urlopen_call().\n\
-") stop_urlopen_call;
-
-%extend Session {
-	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
-	// "CallPythonStringReturnVoid" is defined in Quills.i
-	static void
-	on_fileopen_call	(PyObject*		inPythonFunction,
-						 std::string	extension = "")
-	{
-		if (extension != "")
-		{
-			Quills::Session::_on_fileopen_ext_call_py(CallPythonStringReturnVoid, reinterpret_cast< void* >(inPythonFunction),
-														extension);
-			Py_INCREF(inPythonFunction);
-		}
-	}
-	
-	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
-	// "CallPythonVoidReturnVoid" is defined in Quills.i
-	static void
-	on_new_call	(PyObject*	inPythonFunction)
-	{
-		Quills::Session::_on_new_call_py(CallPythonVoidReturnVoid, reinterpret_cast< void* >(inPythonFunction));
-		Py_INCREF(inPythonFunction);
-	}
-	
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonStringReturnVoid" is defined in Quills.i
 	static void
@@ -210,6 +188,12 @@ call to on_urlopen_call().\n\
 		Py_INCREF(inPythonFunction);
 	}
 	
+%feature("docstring",
+"Prevent a Python function from being called when opens are\n\
+requested for files with the given attribute.  Only one of the\n\
+attributes (keyword parameters) should be given.  This would be\n\
+to undo the effects of a previous call to on_fileopen_call().\n\
+") stop_fileopen_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonStringReturnVoid" is defined in Quills.i
 	static void
@@ -223,6 +207,11 @@ call to on_urlopen_call().\n\
 		}
 	}
 	
+%feature("docstring",
+"Prevent a Python function from being called when sessions are\n\
+created.  This would be to undo the effects of a previous call\n\
+to on_new_call().\n\
+") stop_new_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonVoidReturnVoid" is defined in Quills.i
 	static void
@@ -232,6 +221,11 @@ call to on_urlopen_call().\n\
 		Py_DECREF(inPythonFunction);
 	}
 	
+%feature("docstring",
+"Prevent a Python function from being called when URL opens are\n\
+requested.  This would be to undo the effects of a previous\n\
+call to on_urlopen_call().\n\
+") stop_urlopen_call;
 	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
 	// "CallPythonStringReturnVoid" is defined in Quills.i
 	static void
