@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080120',
     '20080115',
     '20080111',
     '20080103',
@@ -76,6 +77,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080120': [
+		'Implemented the special editing modes of the VT102 (delete character, insert line, delete line).',
+	],
 	'20080115': [
 		'Fixed drag and drop of text into terminal windows.',
 		'Fixed print dialog display when Media Copy (line printing) sequences are sent by applications in VT102 terminals.',

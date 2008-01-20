@@ -148,8 +148,11 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		kMy_ParserStateSeenESCLeftSqBracketParamsK	= 'E[;K',	//!< generic state used to define emulator-specific states, below
 		kMy_ParserStateSeenESCLeftSqBracketParamsi	= 'E[;i',	//!< generic state used to define emulator-specific states, below
 		kMy_ParserStateSeenESCLeftSqBracketParamsl	= 'E[;l',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsL	= 'E[;L',	//!< generic state used to define emulator-specific states, below
 		kMy_ParserStateSeenESCLeftSqBracketParamsm	= 'E[;m',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsM	= 'E[;M',	//!< generic state used to define emulator-specific states, below
 		kMy_ParserStateSeenESCLeftSqBracketParamsn	= 'E[;n',	//!< generic state used to define emulator-specific states, below
+		kMy_ParserStateSeenESCLeftSqBracketParamsP	= 'E[;P',	//!< generic state used to define emulator-specific states, below
 		kMy_ParserStateSeenESCLeftSqBracketParamsq	= 'E[;q',	//!< generic state used to define emulator-specific states, below
 		kMy_ParserStateSeenESCLeftSqBracketParamsr	= 'E[;r',	//!< generic state used to define emulator-specific states, below
 		kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
@@ -495,16 +498,12 @@ struct My_LineIterator
 {
 	My_ScreenBufferLineList&				sourceList;				//!< the list that this iterator is pointing into
 	My_ScreenBufferLineList::iterator		rowIterator;			//!< points into one of the buffer queues
-	My_ScreenBufferLineList::size_type		distanceToBeginning;	//!< helps guard against moving iterators too far back
-	My_ScreenBufferLineList::size_type		distanceToEnd;			//!< helps guard against moving iterators too far forward
 	
 	My_LineIterator		(My_ScreenBufferLineList&				inSourceList,
 						 My_ScreenBufferLineList::iterator		inRowIterator)
 	:
 	sourceList(inSourceList),
-	rowIterator(inRowIterator),
-	distanceToBeginning(std::distance(inSourceList.begin(), inRowIterator)),
-	distanceToEnd(std::distance(inRowIterator, inSourceList.end()))
+	rowIterator(inRowIterator)
 	{
 	}
 };
@@ -794,6 +793,10 @@ class My_VT102:
 public My_VT100
 {
 public:
+	static void		deleteCharacters	(My_ScreenBufferPtr);
+	static void		deleteLines			(My_ScreenBufferPtr);
+	static void		insertLines			(My_ScreenBufferPtr);
+	static void		loadLEDs			(My_ScreenBufferPtr);
 	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 
@@ -802,7 +805,10 @@ protected:
 	// the programming manual of the original terminal.
 	enum State
 	{
-		kStateMC		= kMy_ParserStateSeenESCLeftSqBracketParamsi	//!< media copy (printer access)
+		kStateDCH		= kMy_ParserStateSeenESCLeftSqBracketParamsP,	//!< delete characters on the cursor line
+		kStateDL		= kMy_ParserStateSeenESCLeftSqBracketParamsM,	//!< delete lines, including cursor line
+		kStateIL		= kMy_ParserStateSeenESCLeftSqBracketParamsL,	//!< insert lines below cursor line
+		kStateMC		= kMy_ParserStateSeenESCLeftSqBracketParamsi,	//!< media copy (printer access)
 	};
 };
 
@@ -4091,9 +4097,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	
 	moveCursor(this, 0, 0);
 	
-	this->scrollingRegion.firstRow = 0; // initialized because setScrollingRegionTop() depends on prior values...
 	setScrollingRegionTop(this, 0);
-	this->scrollingRegion.lastRow = inLineCountVisibleRows - 1; // initialized because setScrollingRegionBottom() depends on prior values...
 	setScrollingRegionBottom(this, inLineCountVisibleRows - 1);
 	
 	this->speaker = TerminalSpeaker_New(REINTERPRET_CAST(this, TerminalScreenRef));
@@ -4323,6 +4327,10 @@ stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsH;
 			break;
 		
+		case 'i':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsi;
+			break;
+		
 		case 'J':
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsJ;
 			break;
@@ -4335,12 +4343,24 @@ stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsl;
 			break;
 		
+		case 'L':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsL;
+			break;
+		
 		case 'm':
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsm;
 			break;
 		
+		case 'M':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsM;
+			break;
+		
 		case 'n':
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsn;
+			break;
+		
+		case 'P':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsP;
 			break;
 		
 		case 'q':
@@ -5626,6 +5646,125 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
+Handles the VT102 'DCH' sequence.  See the VT102
+manual for complete details.
+
+(3.1)
+*/
+void
+My_VT102::
+deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		i = 0;
+	UInt16		totalChars = 0;
+	
+	
+	for (i = 0; i <= inDataPtr->currentEscapeSeqParamEndIndex; ++i)
+	{
+		//if (inDataPtr->currentEscapeSeqParamValues[i] < 1) ++totalChars; // the manual does not say that anything happens for value 0
+		if (inDataPtr->currentEscapeSeqParamValues[i] > 0)
+		{
+			totalChars += inDataPtr->currentEscapeSeqParamValues[i];
+		}
+	}
+	bufferRemoveCharactersAtCursorColumn(inDataPtr, totalChars);
+}// deleteCharacters
+
+
+/*!
+Handles the VT102 'DL' sequence.  See the VT102
+manual for complete details.
+
+(3.1)
+*/
+void
+My_VT102::
+deleteLines		(My_ScreenBufferPtr		inDataPtr)
+{
+	// do nothing if the cursor is outside the scrolling region
+	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
+		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
+	{
+		My_ScreenBufferLineList::iterator	lineIterator;
+		SInt16								i = 0;
+		UInt16								totalLines = 0;
+		
+		
+		locateCursorLine(inDataPtr, lineIterator);
+		for (i = 0; i <= inDataPtr->currentEscapeSeqParamEndIndex; ++i)
+		{
+			if (inDataPtr->currentEscapeSeqParamValues[i] > 0)
+			{
+				totalLines += inDataPtr->currentEscapeSeqParamValues[i];
+			}
+		}
+		bufferRemoveLines(inDataPtr, totalLines, lineIterator);
+	}
+}// deleteLines
+
+
+/*!
+Handles the VT102 'IL' sequence.  See the VT102
+manual for complete details.
+
+(3.1)
+*/
+void
+My_VT102::
+insertLines		(My_ScreenBufferPtr		inDataPtr)
+{
+	// do nothing if the cursor is outside the scrolling region
+	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
+		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
+	{
+		My_ScreenBufferLineList::iterator	lineIterator;
+		SInt16								i = 0;
+		UInt16								totalLines = 0;
+		
+		
+		locateCursorLine(inDataPtr, lineIterator);
+		for (i = 0; i <= inDataPtr->currentEscapeSeqParamEndIndex; ++i)
+		{
+			if (inDataPtr->currentEscapeSeqParamValues[i] > 0)
+			{
+				totalLines += inDataPtr->currentEscapeSeqParamValues[i];
+			}
+		}
+		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator);
+	}
+}// insertLines
+
+
+/*!
+Handles the VT102 'DECLL' sequence.  See the VT102
+manual for complete details.  Unlike VT100, the VT102
+has only a single LED.
+
+(3.1)
+*/
+inline void
+My_VT102::
+loadLEDs	(My_ScreenBufferPtr		inDataPtr)
+{
+	SInt16		i = 0;
+	
+	
+	for (i = 0; i <= inDataPtr->currentEscapeSeqParamEndIndex; ++i)
+	{
+		// a parameter of 1 means ÒLED 1 onÓ, 0 means ÒLED 1 offÓ
+		if (0 == inDataPtr->currentEscapeSeqParamValues[i])
+		{
+			highlightLED(inDataPtr, 0/* 0 means Òall offÓ */);
+		}
+		else if (1 == inDataPtr->currentEscapeSeqParamValues[i])
+		{
+			highlightLED(inDataPtr, 1/* LED # */);
+		}
+	}
+}// loadLEDs
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 VT102-specific states based on the characters of the given
 buffer.
@@ -5658,6 +5797,18 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 		{
 		case 'i':
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsi;
+			break;
+		
+		case 'L':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsL;
+			break;
+		
+		case 'M':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsM;
+			break;
+		
+		case 'P':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsP;
 			break;
 		
 		default:
@@ -5707,6 +5858,22 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	// INCOMPLETE
 	switch (inNewState)
 	{
+	case kStateDCH:
+		deleteCharacters(inDataPtr);
+		break;
+	
+	case kStateDECLL:
+		loadLEDs(inDataPtr);
+		break;
+	
+	case kStateDL:
+		deleteLines(inDataPtr);
+		break;
+	
+	case kStateIL:
+		insertLines(inDataPtr);
+		break;
+	
 	case kStateMC:
 		if (inDataPtr->currentEscapeSeqParamValues[inDataPtr->currentEscapeSeqParamEndIndex] == 5)
 		{
@@ -6262,13 +6429,16 @@ bufferInsertBlanksAtCursorColumn	(My_ScreenBufferPtr	inDataPtr,
 
 
 /*!
-Inserts the specified number of blank lines, scrolling
-the remaining ones down and dropping any that fall off
-the end of the scrolling region.  The display is updated.
+Inserts the specified number of blank lines, scrolling the
+remaining ones down and dropping any that fall off the end
+of the scrolling region.  The display is updated.
 
 See also bufferRemoveLines().
 
 NOTE:   You cannot use this to alter the scrollback.
+
+WARNING:	The specified line MUST be part of the terminal
+			scrolling region.
 
 (3.0)
 */
@@ -6277,38 +6447,46 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 						 UInt16									inNumberOfLines,
 						 My_ScreenBufferLineList::iterator&		inInsertionLine)
 {
-	//Console_WriteValue("bufferInsertBlankLines: count", inNumberOfLines);
+	My_ScreenBufferLineList::iterator	scrollingRegionBegin;
+	My_ScreenBufferLineList::iterator	scrollingRegionEnd;
 	
-	// ÒinsertÓ by moving the specified number of lines to the
-	// beginning of the insertion region, and then clearing them out
+	
+	locateScrollingRegion(inDataPtr, scrollingRegionBegin, scrollingRegionEnd);
+	if (0 != inNumberOfLines)
 	{
-		My_ScreenBufferLineList::iterator	pastLastKeptLine;
-		My_ScreenBufferLineList::iterator	scrollingRegionBegin;
-		My_ScreenBufferLineList::iterator	scrollingRegionEnd;
+		// the row index MUST be calculated immediately, since inserting lines into the
+		// buffer might make it impossible to find this at the end (where this index is
+		// actually needed)
+		My_ScreenRowIndex const						kFirstInsertedRow = std::distance(inDataPtr->screenBuffer.begin(), inInsertionLine);
+		My_ScreenRowIndex const						kLinesUntilEnd = std::distance(inInsertionLine, scrollingRegionEnd);
+		My_ScreenRowIndex const						kMostLines = std::min(STATIC_CAST(inNumberOfLines, My_ScreenRowIndex), kLinesUntilEnd);
+		My_ScreenBufferLineList::size_type const	kBufferSize = inDataPtr->screenBuffer.size();
+		My_ScreenBufferLineList::iterator			pastLastKeptLine;
 		
 		
-		locateScrollingRegion(inDataPtr, scrollingRegionBegin, scrollingRegionEnd);
+		// insert blank lines
+		// INCOMPLETE - copy attributes of insertion line for new lines
+		inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, My_ScreenBufferLine());
 		
+		// delete last lines
 		pastLastKeptLine = scrollingRegionEnd;
-		std::advance(pastLastKeptLine, -inNumberOfLines);
-		std::rotate(inInsertionLine, pastLastKeptLine, scrollingRegionEnd);
-		std::uninitialized_fill_n(scrollingRegionBegin, inNumberOfLines, My_ScreenBufferLine());
-	}
-	
-	// add all the lines from the current line to the end
-	// of the scrolling region to the text-change region;
-	// this should trigger things like Terminal View updates
-	//Console_WriteLine("text changed event: insert blank lines");
-	{
-		Terminal_RangeDescription	range;
+		std::advance(pastLastKeptLine, -STATIC_CAST(kMostLines, SInt16));
+		inDataPtr->screenBuffer.erase(pastLastKeptLine, scrollingRegionEnd);
 		
+		assert(kBufferSize == inDataPtr->screenBuffer.size());
 		
-		range.screen = inDataPtr->selfRef;
-		range.firstRow = std::distance(inDataPtr->screenBuffer.begin(), inInsertionLine);
-		range.firstColumn = 0;
-		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-		range.rowCount = inDataPtr->scrollingRegion.lastRow - range.firstRow + 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		// redraw the area
+		{
+			Terminal_RangeDescription	range;
+			
+			
+			range.screen = inDataPtr->selfRef;
+			range.firstRow = kFirstInsertedRow;
+			range.firstColumn = 0;
+			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+			range.rowCount = inDataPtr->scrollingRegion.lastRow - range.firstRow + 1;
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		}
 	}
 }// bufferInsertBlankLines
 
@@ -6351,11 +6529,14 @@ static void
 bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 										 SInt16					inNumberOfCharactersToDelete)
 {
+	UInt16								numCharsToRemove = inNumberOfCharactersToDelete;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_TextVector::iterator				textIterator;
+	My_TextVector::iterator				firstCharDeletedIterator;
+	My_TextVector::iterator				firstCharPreservedIterator;
 	My_TextVector::iterator				firstCharPastDeletedRangeIterator;
-	My_TextAttributesList::iterator		attrIterator;
+	My_TextAttributesList::iterator		firstAttrDeletedIterator;
+	My_TextAttributesList::iterator		firstAttrPreservedIterator;
 	My_TextAttributesList::iterator		firstAttrPastDeletedRangeIterator;
 	My_ScreenBufferLineList::iterator	cursorLineIterator;
 	
@@ -6364,25 +6545,39 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	cursorWrapIfNecessaryGetLocation(inDataPtr, &postWrapCursorX, &postWrapCursorY);
 	locateCursorLine(inDataPtr, cursorLineIterator);
 	
+	// since the caller cannot know for sure if the cursor wrapped,
+	// do bounds-checking between the screen edge and new location
+	if ((postWrapCursorX + numCharsToRemove) >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+	{
+		numCharsToRemove = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - postWrapCursorX;
+	}
+	
 	// find cursor position
-	attrIterator = cursorLineIterator->attributeVector.begin();
-	std::advance(attrIterator, 1 + postWrapCursorX);
-	firstAttrPastDeletedRangeIterator = attrIterator;
-	std::advance(firstAttrPastDeletedRangeIterator, inNumberOfCharactersToDelete);
-	textIterator = cursorLineIterator->textVector.begin();
-	std::advance(textIterator, 1 + postWrapCursorX);
-	firstCharPastDeletedRangeIterator = textIterator;
-	std::advance(firstCharPastDeletedRangeIterator, inNumberOfCharactersToDelete);
+	firstAttrDeletedIterator = cursorLineIterator->attributeVector.begin();
+	std::advance(firstAttrDeletedIterator, postWrapCursorX);
+	firstAttrPreservedIterator = firstAttrDeletedIterator;
+	std::advance(firstAttrPreservedIterator, numCharsToRemove);
+	firstCharDeletedIterator = cursorLineIterator->textVector.begin();
+	std::advance(firstCharDeletedIterator, postWrapCursorX);
+	firstCharPreservedIterator = firstCharDeletedIterator;
+	std::advance(firstCharPreservedIterator, numCharsToRemove);
 	
 	// copy text from end range to the earlier range; note that this is safe
 	// only because the destination range begins earlier than the source
-	std::copy(attrIterator, cursorLineIterator->attributeVector.end(), firstAttrPastDeletedRangeIterator);
-	std::copy(textIterator, cursorLineIterator->textVector.end(), firstCharPastDeletedRangeIterator);
+	std::copy(firstAttrPreservedIterator, cursorLineIterator->attributeVector.end(), firstAttrDeletedIterator);
+	std::copy(firstCharPreservedIterator, cursorLineIterator->textVector.end(), firstCharDeletedIterator);
 	
-	// put blanks in the revealed space at the end
-	std::fill(firstAttrPastDeletedRangeIterator, cursorLineIterator->attributeVector.end(),
-				cursorLineIterator->globalAttributes);
-	std::fill(firstCharPastDeletedRangeIterator, cursorLineIterator->textVector.end(), ' ');
+	// put blanks in the revealed space at the end; the VT102 specification
+	// says that the blank attributes are copied from the last character
+	// (TEMPORARY - may eventually need a function parameter to decide how
+	// this is done, but currently-supported terminals are fine with it)
+	firstAttrDeletedIterator = cursorLineIterator->attributeVector.end();
+	std::advance(firstAttrDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
+	std::fill(firstAttrDeletedIterator, cursorLineIterator->attributeVector.end(),
+				cursorLineIterator->attributeVector[inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1]);
+	firstCharDeletedIterator = cursorLineIterator->textVector.end();
+	std::advance(firstCharDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
+	std::fill(firstCharDeletedIterator, cursorLineIterator->textVector.end(), ' ');
 	
 	// add the entire line from the cursor to the end
 	// to the text-change region; this would trigger
@@ -6404,12 +6599,15 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 
 /*!
 Deletes lines from the screen buffer, scrolling up the
-remainder and inserting new blank lines at the bottom
-of the scrolling region.  The display is updated.
+remainder and inserting new blank lines at the bottom of
+the scrolling region.  The display is updated.
 
 See also bufferInsertBlankLines().
 
 NOTE:   You cannot use this to alter the scrollback.
+
+WARNING:	The specified line MUST be part of the terminal
+			scrolling region.
 
 (3.0)
 */
@@ -6418,35 +6616,46 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 					 UInt16									inNumberOfLines,
 					 My_ScreenBufferLineList::iterator&		inFirstDeletionLine)
 {
-	// ÒremoveÓ by clearing out the specified number of lines at the
-	// top and then moving them to the end of the scrolling region
-	{
-		My_ScreenBufferLineList::iterator	pastLastDeletionLine = inFirstDeletionLine;
-		My_ScreenBufferLineList::iterator	scrollingRegionBegin;
-		My_ScreenBufferLineList::iterator	scrollingRegionEnd;
-		
-		
-		locateScrollingRegion(inDataPtr, scrollingRegionBegin, scrollingRegionEnd);
-		
-		std::advance(pastLastDeletionLine, inNumberOfLines);
-		std::uninitialized_fill_n(inFirstDeletionLine, inNumberOfLines, My_ScreenBufferLine());
-		std::rotate(inFirstDeletionLine, pastLastDeletionLine, scrollingRegionEnd);
-	}
+	My_ScreenBufferLineList::iterator	scrollingRegionBegin;
+	My_ScreenBufferLineList::iterator	scrollingRegionEnd;
 	
-	// add all the lines from the current line to the end
-	// of the scrolling region to the text-change region;
-	// this should trigger things like Terminal View updates
-	//Console_WriteLine("text changed event: remove lines");
+	
+	locateScrollingRegion(inDataPtr, scrollingRegionBegin, scrollingRegionEnd);
+	if (0 != inNumberOfLines)
 	{
-		Terminal_RangeDescription	range;
+		// the row index MUST be calculated immediately, since removing lines from the
+		// buffer might make it impossible to find this at the end (where this index
+		// is actually needed)
+		My_ScreenRowIndex const						kFirstDeletedRow = std::distance(inDataPtr->screenBuffer.begin(), inFirstDeletionLine);
+		My_ScreenRowIndex const						kLinesUntilEnd = std::distance(inFirstDeletionLine, scrollingRegionEnd);
+		My_ScreenRowIndex const						kMostLines = std::min(STATIC_CAST(inNumberOfLines, My_ScreenRowIndex), kLinesUntilEnd);
+		My_ScreenBufferLineList::size_type const	kBufferSize = inDataPtr->screenBuffer.size();
+		My_ScreenBufferLineList::iterator			pastLastDeletionLine;
 		
 		
-		range.screen = inDataPtr->selfRef;
-		range.firstRow = std::distance(inDataPtr->screenBuffer.begin(), inFirstDeletionLine);
-		range.firstColumn = 0;
-		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-		range.rowCount = inDataPtr->scrollingRegion.lastRow - range.firstRow + 1;
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		// insert blank lines
+		// INCOMPLETE - copy attributes of last line for new lines
+		inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, My_ScreenBufferLine());
+		
+		// delete first lines
+		pastLastDeletionLine = inFirstDeletionLine;
+		std::advance(pastLastDeletionLine, kMostLines);
+		inDataPtr->screenBuffer.erase(inFirstDeletionLine, pastLastDeletionLine);
+		
+		assert(kBufferSize == inDataPtr->screenBuffer.size());
+		
+		// redraw the area
+		{
+			Terminal_RangeDescription	range;
+			
+			
+			range.screen = inDataPtr->selfRef;
+			range.firstRow = kFirstDeletedRow;
+			range.firstColumn = 0;
+			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+			range.rowCount = inDataPtr->scrollingRegion.lastRow - range.firstRow + 1;
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
+		}
 	}
 }// bufferRemoveLines
 
@@ -8335,6 +8544,7 @@ locateScrollingRegion	(My_ScreenBufferPtr						inDataPtr,
 						 My_ScreenBufferLineList::iterator&		outPastBottomLine)
 {
 	//assert(inDataPtr->scrollingRegion.firstRow >= 0);
+	assert(inDataPtr->scrollingRegion.lastRow >= inDataPtr->scrollingRegion.firstRow);
 	assert(inDataPtr->scrollingRegion.lastRow <= inDataPtr->screenBuffer.size());
 	assert(inDataPtr->screenBuffer.size() >= (inDataPtr->scrollingRegion.lastRow - inDataPtr->scrollingRegion.firstRow));
 	
@@ -9102,6 +9312,7 @@ setScrollingRegionBottom	(My_ScreenBufferPtr		inDataPtr,
 							 UInt16					inNewBottomRow)
 {
 	inDataPtr->scrollingRegion.lastRow = inNewBottomRow;
+	assert(inDataPtr->scrollingRegion.lastRow < inDataPtr->screenBuffer.size());
 }// setScrollingRegionBottom
 
 
