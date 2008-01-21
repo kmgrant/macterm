@@ -6124,41 +6124,63 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
 			if (noErr == result)
 			{
+				HIWindowRef		originalWindow = GetFrontWindowOfClass(kDocumentWindowClass, true/* must be showing */);
 				HIWindowRef		oldWindow = GetUserFocusWindow();
 				HIWindowRef		newWindow = HIViewGetWindow(view);
 				
 				
-				// do not allow certain combinations of window to steal focus
-				if (nullptr != oldWindow)
+				if (newWindow != oldWindow)
 				{
 					OSStatus		error = noErr;
 					WindowModality	oldWindowModality = kWindowModalityNone;
-					HIWindowRef		blockedWindow = nullptr;
+					HIWindowRef		oldParentWindow = nullptr;
 					
 					
-					// most modal states should disable all focus-follows-mouse...
-					error = GetWindowModality(oldWindow, &oldWindowModality, &blockedWindow);
-					if (kWindowModalityNone != oldWindowModality)
+					error = GetWindowModality(oldWindow, &oldWindowModality, &oldParentWindow);
+					if (newWindow != oldParentWindow)
 					{
-						focusFollowsMouse = false;
-						
-						// ...however, an open sheet in one window can still allow
-						// focus to switch to another window, as long as it is not
-						// the window beneath the current sheet
-						if ((kWindowModalityWindowModal == oldWindowModality) &&
-							(blockedWindow != newWindow))
+						// only allow focus switching if the active window is a terminal
+						// or a sheet on top of a terminal
+						if (((nullptr != oldWindow) && TerminalWindow_ExistsFor(oldWindow)) ||
+							((nullptr != oldParentWindow) && TerminalWindow_ExistsFor(oldParentWindow)))
 						{
-							focusFollowsMouse = true;
+							HIWindowRef		newBlockingWindow = nullptr;
+							
+							
+							if (HIWindowIsDocumentModalTarget(newWindow, &newBlockingWindow))
+							{
+								// the target has a sheet; the OS does not allow a background
+								// sheet to become focused separately, so avoid switching unless
+								// the request came from a window that had no sheet to begin
+								// with (indicating a return to an already-frontmost sheet)
+								if ((nullptr == oldParentWindow) &&
+									(newWindow == originalWindow))
+								{
+									// the target has a sheet and the source did not, so it should be
+									// possible to focus the sheet instead of the target frame
+									HiliteWindow(newWindow, true); // but fix the parent frame anyway
+									newWindow = newBlockingWindow;
+								}
+								else
+								{
+									focusFollowsMouse = false;
+								}
+							}
+						}
+						else
+						{
+							focusFollowsMouse = false;
+						}
+						
+						if (focusFollowsMouse)
+						{
+							// highlight and focus, but do not bring to front, the view and its window
+							if (nullptr != oldWindow) HiliteWindow(oldWindow, false);
+							if (nullptr != oldParentWindow) HiliteWindow(oldParentWindow, false);
+							HiliteWindow(newWindow, true);
+							SetUserFocusWindow(newWindow);
 						}
 					}
-				}
-				
-				if (focusFollowsMouse)
-				{
-					// highlight and focus, but do not bring to front, the view and its window
-					if (nullptr != oldWindow) HiliteWindow(oldWindow, false);
-					HiliteWindow(newWindow, true);
-					SetUserFocusWindow(newWindow);
 				}
 			}
 		}

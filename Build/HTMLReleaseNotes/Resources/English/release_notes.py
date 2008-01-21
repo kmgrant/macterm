@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080121',
     '20080120',
     '20080115',
     '20080111',
@@ -77,6 +78,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080121': [
+		'Robustness improvements to the focus-follows-mouse feature, particularly with sheets and non-terminal windows.',
+	],
 	'20080120': [
 		'Implemented the special editing modes of the VT102 (delete character, insert line, delete line).',
 		'Improved some rendering in the Clipboard window.',
