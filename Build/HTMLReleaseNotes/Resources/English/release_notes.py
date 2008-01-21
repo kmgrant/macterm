@@ -80,6 +80,7 @@ notes_by_version = {
 	'20080120': [
 		'Implemented the special editing modes of the VT102 (delete character, insert line, delete line).',
 		'Improved some rendering in the Clipboard window.',
+		'MacTelnet Help updated with some terminal emulator information.',
 	],
 	'20080115': [
 		'Fixed drag and drop of text into terminal windows.',
