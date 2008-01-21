@@ -87,7 +87,7 @@ static OSStatus			drawPictureFromDataAndOffset	(Rect const*, Ptr, long);
 static pascal void		getPICTData						(void*, short);
 static void				getValidScrapType				(ResType*);
 static PicHandle		graphicToPICT					(short);
-static void				handleNewSize					(WindowRef, Float32, Float32, void*);
+static void				handleNewSize					(HIWindowRef, Float32, Float32, void*);
 static Boolean			mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				pictureToScrap					(Handle);
 static pascal OSStatus	receiveClipboardContentDraw		(EventHandlerCallRef, EventRef, void*);
@@ -98,25 +98,25 @@ static UInt32			returnFlavorCount				();
 static void				setDataTypeInformation			();
 static void				setScalingInformation			();
 static void				setSuspended					(Boolean);
-static void				setUpControls					(WindowRef);
+static void				setUpControls					(HIWindowRef);
 static void				textToScrap						(Handle);
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	WindowRef								gClipboardWindow = nullptr;
+	HIWindowRef								gClipboardWindow = nullptr;
 	WindowInfo_Ref							gClipboardWindowInfo = nullptr;
-	ControlRef								//gClipboardScrollBarH = nullptr,
-											//gClipboardScrollBarV = nullptr,
-											gClipboardFooterPlacard = nullptr,
-											gClipboardFooterPlacardText = nullptr,
-											gClipboardContentUserPane = nullptr,
-											gClipboardWindowHeader = nullptr,
-											gClipboardWindowHeaderText = nullptr;
-	Boolean									gIsSuspended = false,
-											gIsShowing = false,
-											gIsDataScaled = false;
+	//HIViewRef								gClipboardScrollBarH = nullptr;
+	//HIViewRef								gClipboardScrollBarV = nullptr;
+	HIViewRef								gClipboardFooterPlacard = nullptr;
+	HIViewRef								gClipboardFooterPlacardText = nullptr;
+	HIViewRef								gClipboardContentUserPane = nullptr;
+	HIViewRef								gClipboardWindowHeader = nullptr;
+	HIViewRef								gClipboardWindowHeaderText = nullptr;
+	Boolean									gIsSuspended = false;
+	Boolean									gIsShowing = false;
+	Boolean									gIsDataScaled = false;
 	SInt16									gScaledPercentage = 100;
 	Ptr										gScrapDataPtr = nullptr;
 	long									gCurrentOffset = 0L;
@@ -153,9 +153,9 @@ the controls is here.
 void
 Clipboard_Init ()
 {
-	WindowRef	clipboardWindow = nullptr;
-	Rect		rect;
-	OSStatus	error = noErr;
+	HIWindowRef		clipboardWindow = nullptr;
+	Rect			rect;
+	OSStatus		error = noErr;
 	
 	
 	gGetPICTDataUPP = NewQDGetPicUPP(getPICTData);
@@ -165,7 +165,6 @@ Clipboard_Init ()
 								CFSTR("Clipboard"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
 	
 	gClipboardWindow = clipboardWindow;
-	(OSStatus)SetThemeWindowBackground(clipboardWindow, kThemeBrushFinderWindowBackground, false);
 	
 	// content area (displays clipboard data if possible)
 	SetRect(&rect, 0, 0, 0, 0);
@@ -775,7 +774,7 @@ Returns the Mac OS window pointer for the clipboard window.
 
 (3.0)
 */
-WindowRef
+HIWindowRef
 Clipboard_ReturnWindow ()
 {
 	return gClipboardWindow;
@@ -790,7 +789,7 @@ Shows or hides the clipboard.
 void
 Clipboard_SetWindowVisible	(Boolean	inIsVisible)
 {
-	WindowRef		clipboard = Clipboard_ReturnWindow();
+	HIWindowRef		clipboard = Clipboard_ReturnWindow();
 	
 	
 	gIsShowing = inIsVisible;
@@ -1191,6 +1190,10 @@ drawPictureFromDataAndOffset	(Rect const*	inDrawingRect,
 			gSavedProcsPtr = GetPortGrafProcs(currentPort);
 			SetPortGrafProcs(currentPort, &gMyColorProcs);
 			
+			// convert to view-relative rectangle
+			SetRect(&drawingBounds, 0, 0, drawingBounds.right - drawingBounds.left,
+					drawingBounds.bottom - drawingBounds.top);
+			
 			// draw the picture
 			DrawPicture(tempPict, &drawingBounds);
 			
@@ -1413,7 +1416,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 	assert(kEventClass == kEventClassControl);
 	assert(kEventKind == kEventControlDraw);
 	{
-		ControlRef		control = nullptr;
+		HIViewRef		control = nullptr;
 		
 		
 		// get the target control
@@ -1424,6 +1427,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 		{
 			//ControlPartCode		partCode = 0;
 			CGrafPtr			drawingPort = nullptr;
+			CGContextRef		drawingContext = nullptr;
 			CGrafPtr			oldPort = nullptr;
 			GDHandle			oldDevice = nullptr;
 			
@@ -1444,6 +1448,11 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 				result = noErr;
 			}
 			
+			// determine the context to draw in with Core Graphics
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
+															drawingContext);
+			assert_noerr(result);
+			
 			// if all information can be found, proceed with drawing
 			if (result == noErr)
 			{
@@ -1454,14 +1463,6 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 				
 				SetPort(drawingPort);
 				GetControlBounds(control, &controlRect);
-				
-				// set up the control background and foreground colors
-				(OSStatus)SetUpControlBackground(control, colorDepth, isColorDevice);
-				
-				// account for Aqua drawing outside the control boundaries
-				//InsetRect(&controlRect, -2, -2);
-				EraseRect(&controlRect);
-				//InsetRect(&controlRect, 2, 2);
 				
 				// determine and describe what is currently on the clipboard
 				setDataTypeInformation();
@@ -1478,10 +1479,12 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 				{
 					OSStatus	error = noErr;
 					Rect		clipboardContentRect;
+					HIRect		contentBounds;
 					RgnHandle	preservedClippingRegion = Memory_NewRegion();
 					
 					
 					GetControlBounds(control, &clipboardContentRect);
+					HIViewGetBounds(control, &contentBounds);
 					if (preservedClippingRegion != nullptr) GetClip(preservedClippingRegion);
 					
 					// determine what is currently on the clipboard
@@ -1531,17 +1534,6 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 								}
 							}
 							
-							// only do this if scroll bars are implemented
-							//{
-							//	SInt32		scrollBarSize;
-							//	
-							//	
-							//	(OSStatus)GetThemeMetric(kThemeMetricScrollBarWidth, &scrollBarSize);
-							//	clipArea.right -= scrollBarSize; // only needed if scroll bars are implemented
-							//	clipArea.bottom -= scrollBarSize; // only needed if scroll bars are implemented
-							//}
-							ClipRect(&clipArea);
-							
 							// initially assume the data is not scaled
 							gIsDataScaled = false;
 							
@@ -1562,13 +1554,13 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 								
 								if (dragHighlight)
 								{
-									DragAndDrop_ShowHighlightBackground(drawingPort, &clipArea);
+									DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
 									// frame is drawn at the end, after any content
 								}
 								else
 								{
-									DragAndDrop_HideHighlightBackground(drawingPort, &clipArea);
-									DragAndDrop_HideHighlightFrame(drawingPort, &clipArea);
+									DragAndDrop_HideHighlightBackground(drawingContext, contentBounds);
+									DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
 								}
 							}
 							
@@ -1580,54 +1572,10 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 							
 							case kScrapFlavorTypeText:
 							case kScrapFlavorTypeUnicode:
-								// use the default terminalÕs monospaced font for drawing text
+								// NOTE: Ideally this is displayed in monospaced text, but no theme font
+								// has this property.  It will be better to transition to an HITextView
+								// in the future.  (TEMPORARY)
 								{
-									Preferences_Result			prefsResult = kPreferences_ResultOK;
-									Preferences_ContextRef		prefsContext = nullptr;
-									
-									
-									prefsResult = Preferences_GetDefaultContext(&prefsContext, kPreferences_ClassFormat);
-									if (prefsResult == kPreferences_ResultOK)
-									{
-										Str255		fontName;
-										SInt16		fontSize = 0;
-										size_t		actualSize = 0;
-										
-										
-										// find default terminal font family
-										prefsResult = Preferences_ContextGetData
-														(prefsContext, kPreferences_TagFontName, sizeof(fontName),
-															fontName, &actualSize);
-										if (prefsResult == kPreferences_ResultOK)
-										{
-											TextFontByName(fontName);
-										}
-										
-										// find default terminal font size
-										prefsResult = Preferences_ContextGetData
-														(prefsContext, kPreferences_TagFontSize, sizeof(fontSize),
-															&fontSize, &actualSize);
-										if (prefsResult == kPreferences_ResultOK)
-										{
-											TextSize(fontSize);
-										}
-									}
-								}
-								
-								// use an appropriate theme color - since icon labels show up on
-								// Finder window backgrounds, that color should work here
-								{
-									ColorPenState		state;
-									
-									
-									ColorUtilities_PreserveColorAndPenState(&state);
-									ColorUtilities_NormalizeColorAndPen();
-									error = SetThemeTextColor(kThemeTextColorIconLabel, colorDepth, isColorDevice);
-									ColorUtilities_RestoreColorAndPenState(&state);
-								}
-								
-								{
-									// draw anti-aliased text on Mac OS X
 									CFStringRef		stringRef = nullptr;
 									
 									
@@ -1646,9 +1594,17 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 									}
 									if (stringRef != nullptr)
 									{
-										error = DrawThemeTextBox(stringRef, kThemeCurrentPortFont, kThemeStateActive,
-																	false/* wrap to width */, &clipArea, teJustLeft,
-																	nullptr/* context */);
+										HIThemeTextInfo		textInfo;
+										
+										
+										bzero(&textInfo, sizeof(textInfo));
+										textInfo.version = 0;
+										textInfo.state = kThemeStateActive;
+										textInfo.fontID = kThemeSmallSystemFont;
+										textInfo.horizontalFlushness = kHIThemeTextHorizontalFlushLeft;
+										textInfo.verticalFlushness = kHIThemeTextVerticalFlushTop;
+										error = HIThemeDrawTextBox(stringRef, &contentBounds, &textInfo, drawingContext,
+																	kHIThemeOrientationNormal);
 										CFRelease(stringRef);
 									}
 								}
@@ -1676,7 +1632,7 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 								
 								if (dragHighlight)
 								{
-									DragAndDrop_ShowHighlightFrame(drawingPort, &clipArea);
+									DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
 								}
 							}
 						}
@@ -1771,11 +1727,7 @@ receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 						{
 							Cursors_UseArrow();
 						}
-					#if 1 // NON-COMPOSITING
-						DrawOneControl(view);
-					#else // COMPOSITING
 						(OSStatus)HIViewSetNeedsDisplay(view, true);
-					#endif
 					}
 					break;
 				
@@ -1805,11 +1757,7 @@ receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 																*textToCopy);
 									
 									// force a view update, as obviously it is now out of date
-								#if 1 // NON-COMPOSITING
-									DrawOneControl(view);
-								#else // COMPOSITING
 									(OSStatus)HIViewSetNeedsDisplay(view, true);
-								#endif
 								}
 							}
 							
@@ -2184,7 +2132,7 @@ try to render the Clipboard when in the background).
 static void
 setSuspended	(Boolean	inIsSuspended)
 {
-	WindowRef		clipboard = Clipboard_ReturnWindow();
+	HIWindowRef		clipboard = Clipboard_ReturnWindow();
 	
 	
 	gIsSuspended = inIsSuspended;
@@ -2204,7 +2152,7 @@ to be done once.
 (3.0)
 */
 static void
-setUpControls	(WindowRef		inWindow)
+setUpControls	(HIWindowRef	inWindow)
 {
 	Rect		clipboardContentRect;
 	SInt32		scrollBarSize = 0L;

@@ -6785,7 +6785,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// draw or erase focus ring
 						if (viewPtr->screen.focusRingEnabled)
 						{
-							(OSStatus)DrawThemeFocusRect(&bounds, isFocused);
+							(OSStatus)HIThemeDrawFocusRect(&floatBounds, isFocused, drawingContext, kHIThemeOrientationNormal);
 						}
 						
 						// perform any necessary rendering for drags
