@@ -10216,25 +10216,15 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	{
 		// parameter is the line number of the new last line of the scrolling region; the
 		// input is 1-based but internally it is a zero-based array index, so subtract one
-		setScrollingRegionBottom(inDataPtr, inDataPtr->currentEscapeSeqParamValues[1] - 1);
-	}
-	
-	// ensure the region is not outside the maximum range
-	//if (inDataPtr->scrollingRegion.firstRow < 0)
-	//{
-	//	setScrollingRegionTop(inDataPtr, 0);
-	//}
-	if (inDataPtr->scrollingRegion.firstRow >= inDataPtr->screenBuffer.size())
-	{
-		setScrollingRegionTop(inDataPtr, inDataPtr->screenBuffer.size() - 1);
-	}
-	if (inDataPtr->scrollingRegion.lastRow < 1)
-	{
-		setScrollingRegionBottom(inDataPtr, inDataPtr->screenBuffer.size() - 1);
-	}
-	if (inDataPtr->scrollingRegion.lastRow >= inDataPtr->screenBuffer.size())
-	{
-		setScrollingRegionBottom(inDataPtr, inDataPtr->screenBuffer.size() - 1);
+		UInt16		newValue = inDataPtr->currentEscapeSeqParamValues[1] - 1;
+		
+		
+		if (newValue >= inDataPtr->screenBuffer.size())
+		{
+			Console_WriteLine("warning, emulator was given a scrolling region bottom row that is too large; truncating");
+			newValue = inDataPtr->screenBuffer.size() - 1;
+		}
+		setScrollingRegionBottom(inDataPtr, newValue);
 	}
 	
 	// VT100 requires that the range be 2 lines minimum

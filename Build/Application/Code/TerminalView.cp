@@ -253,6 +253,7 @@ struct TerminalView
 		SInt16			currentRenderedLine;		// only defined while drawing; the row that is currently being drawn
 		Boolean			currentRenderBlinking;		// only defined while drawing; if true, at least one section is blinking
 		Boolean			currentRenderDragColors;	// only defined while drawing; if true, drag highlight text colors are used
+		CGContextRef	currentRenderContext;		// only defined while drawing; if not nullptr, the context from the view draw event
 		SInt16			viewWidthInPixels;			// size of window view (window could be smaller than the screen size);
 		SInt16			viewHeightInPixels;			//   always identical to the current dimensions of the content view
 		SInt16			maxViewWidthInPixels;		// size of bottommost screenful (regardless of window size);
@@ -314,15 +315,15 @@ static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTi
 static OSStatus			createWindowColorPalette		(TerminalViewPtr);
 static Boolean			cursorBlinks					(TerminalViewPtr);
 static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
-static void				drawRowSection					(TerminalViewPtr, SInt16, SInt16, TerminalTextAttributes,
+static void				drawRowSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, TerminalTextAttributes,
 														 char const*);
-static Boolean			drawSection						(TerminalViewPtr, UInt16, UInt16, UInt16, UInt16);
+static Boolean			drawSection						(TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
 static void				drawTerminalScreenRunOp			(TerminalScreenRef, char const*, UInt16, Terminal_LineRef,
 														 UInt16, TerminalTextAttributes, void*);
-static void				drawTerminalText				(TerminalViewPtr, Rect const*, char const*, SInt32,
+static void				drawTerminalText				(TerminalViewPtr, CGContextRef, Rect const*, char const*, SInt32,
 														 TerminalTextAttributes);
-static void				drawVTGraphicsGlyph				(TerminalViewPtr, Rect const*, char, Boolean);
-static void				eraseSection					(TerminalViewPtr, SInt16, SInt16, Boolean);
+static void				drawVTGraphicsGlyph				(TerminalViewPtr, CGContextRef, Rect const*, char, Boolean);
+static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, Boolean);
 static void				eventNotifyForView				(TerminalViewConstPtr, TerminalView_Event, void*);
 static Terminal_LineRef	findRowIterator					(TerminalViewPtr, UInt16);
 static Boolean			findVirtualCellFromLocalPoint	(TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
@@ -2629,6 +2630,7 @@ initialize		(TerminalScreenRef	inScreenDataSource,
 	this->screen.isReverseVideo = 0;
 	this->screen.cursor.currentState = kMyCursorStateVisible;
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
+	this->screen.currentRenderContext = nullptr;
 	
 	// set up font and character set information
 	PLstrcpy(this->text.font.familyName, inFontFamilyName);
@@ -3449,6 +3451,7 @@ is more efficient to do the port setup elsewhere.
 */
 static void
 drawRowSection	(TerminalViewPtr			inTerminalViewPtr,
+				 CGContextRef				inDrawingContext,
 				 SInt16						inZeroBasedStartingColumnNumber,
 				 SInt16						inCharacterCount,
 				 TerminalTextAttributes		inAttributes,
@@ -3477,7 +3480,7 @@ drawRowSection	(TerminalViewPtr			inTerminalViewPtr,
 		Console_WriteValueFloat4("warning, attempt to draw empty row section",
 									rect.left, rect.top, rect.right, rect.bottom);
 	}
-	drawTerminalText(inTerminalViewPtr, &rect, inTextBufferPtr, inCharacterCount, inAttributes);
+	drawTerminalText(inTerminalViewPtr, inDrawingContext, &rect, inTextBufferPtr, inCharacterCount, inAttributes);
 }// drawRowSection
 
 
@@ -3503,6 +3506,7 @@ IMPORTANT:	The QuickDraw port state is not saved or
 */
 static Boolean
 drawSection		(TerminalViewPtr	inTerminalViewPtr,
+				 CGContextRef		inDrawingContext,
 				 UInt16				UNUSED_ARGUMENT(inZeroBasedLeftmostColumnToDraw),
 				 UInt16				inZeroBasedTopmostRowToDraw,
 				 UInt16				UNUSED_ARGUMENT(inZeroBasedPastTheRightmostColumnToDraw),
@@ -3564,6 +3568,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 				// buffer does not know; the work-around is to set a numeric field in the
 				// view structure, and change it as lines are iterated over (the rendering
 				// routine consults this field to figure out where to draw terminal text)
+				inTerminalViewPtr->screen.currentRenderContext = inDrawingContext;
 				for (inTerminalViewPtr->screen.currentRenderedLine = inZeroBasedTopmostRowToDraw;
 						inTerminalViewPtr->screen.currentRenderedLine < inZeroBasedPastTheBottommostRowToDraw;
 						++(inTerminalViewPtr->screen.currentRenderedLine))
@@ -3648,8 +3653,9 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 			}
 		}
 		
-		// reset this, it shouldnÕt have significance outside the above loop
+		// reset these, they shouldnÕt have significance outside the above loop
 		inTerminalViewPtr->screen.currentRenderedLine = -1;
+		inTerminalViewPtr->screen.currentRenderContext = nullptr;
 		
 		// now restore the graphics port completely to its original state
 		if (oldClipRegion != nullptr)
@@ -3697,12 +3703,12 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	
 	// erase and redraw the current rendering line, but only the
 	// specified range (starting column and character count)
-	eraseSection(viewPtr, inZeroBasedStartColumnNumber,
+	eraseSection(viewPtr, viewPtr->screen.currentRenderContext, inZeroBasedStartColumnNumber,
 					inZeroBasedStartColumnNumber + inLineTextBufferLength, debug);
 	if ((nullptr != inLineTextBufferOrNull) && (0 != inLineTextBufferLength))
 	{
-		drawRowSection(viewPtr, inZeroBasedStartColumnNumber, inLineTextBufferLength/* number of characters */,
-						inAttributes, inLineTextBufferOrNull);
+		drawRowSection(viewPtr, viewPtr->screen.currentRenderContext, inZeroBasedStartColumnNumber,
+						inLineTextBufferLength/* number of characters */, inAttributes, inLineTextBufferOrNull);
 	}
 	
 	// since blinking forces frequent redraws, do not do it more
@@ -3739,7 +3745,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 
 /*!
 Draws the specified text using the given attributes,
-at the current pen location of the current graphics
+at the current pen location of the specified graphics
 port.  The pen location should match the baseline of
 the font.
 
@@ -3750,6 +3756,7 @@ is in a visible state, it is drawn automatically.
 */
 static void
 drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
+					 CGContextRef				inDrawingContext,
 					 Rect const*				inBoundaries,
 					 char const*				inTextBufferPtr,
 					 SInt32						inCharacterCount,
@@ -3814,7 +3821,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 			{
 				// draw a graphics character
-				drawVTGraphicsGlyph(inTerminalViewPtr, inBoundaries, inTextBufferPtr[i], true/* is double width */);
+				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], true/* is double width */);
 			}
 			else
 			{
@@ -3839,7 +3846,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 			{
 				// draw a graphics character
-				drawVTGraphicsGlyph(inTerminalViewPtr, inBoundaries, inTextBufferPtr[i], false/* is double width */);
+				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], false/* is double width */);
 			}
 			else
 			{
@@ -3877,7 +3884,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 Renders a special graphics character at the current
 pen location, assuming the pen is at the baseline of
 where a font character would be inserted.  All other
-text-related aspects of the current port are used to
+text-related aspects of the specified port are used to
 affect graphics (such as the presence of a bold face).
 
 Due to the difficulty of creating vector-based fonts
@@ -3892,6 +3899,7 @@ based ones prescribed by the standard VT font.
 */
 static void
 drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
+						 CGContextRef		inDrawingContext,
 						 Rect const*		inBoundaries,
 						 char				inASCII,
 						 Boolean			inIsDoubleWidth)
@@ -4266,6 +4274,7 @@ setup elsewhere.
 */
 static void
 eraseSection	(TerminalViewPtr	inTerminalViewPtr,
+				 CGContextRef		inDrawingContext,
 				 SInt16				inLeftmostColumnToErase,
 				 SInt16				inRightmostColumnToErase,
 				 Boolean			inDebug)
@@ -5571,21 +5580,20 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 		// (which primarily consist of full-width highlighting), the entire
 		// width in the given row range is redrawn
 		{
-			CGrafPtr	oldPort = nullptr;
-			GDHandle	oldDevice = nullptr;
+			UInt16 const	kFirstChar = (inTerminalViewPtr->text.selection.isRectangular)
+											? orderedRange.first.first
+											: 0;
+			UInt16 const	kPastLastChar = (inTerminalViewPtr->text.selection.isRectangular)
+											? orderedRange.second.first
+											: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 			
 			
-			GetGWorld(&oldPort, &oldDevice);
-			(Boolean)drawSection(inTerminalViewPtr,
-									(inTerminalViewPtr->text.selection.isRectangular)
-									? orderedRange.first.first
-									: 0,
-									orderedRange.first.second,
-									(inTerminalViewPtr->text.selection.isRectangular)
-									? orderedRange.second.first
-									: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref),
-									orderedRange.second.second);
-			SetGWorld(oldPort, oldDevice);
+			for (UInt16 rowIndex = orderedRange.first.second;
+					rowIndex < orderedRange.second.second; ++rowIndex)
+			{
+				invalidateRowSection(inTerminalViewPtr, rowIndex,
+										kFirstChar, kPastLastChar - kFirstChar/* count */);
+			}
 		}
 	}
 }// highlightVirtualRange
@@ -6842,7 +6850,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								}
 								
 								// draw the window text
-								(Boolean)drawSection(viewPtr, startColumn - viewPtr->screen.leftVisibleEdgeInColumns,
+								(Boolean)drawSection(viewPtr, drawingContext, startColumn - viewPtr->screen.leftVisibleEdgeInColumns,
 														startRow - viewPtr->screen.topVisibleEdgeInRows,
 														pastTheEndColumn - viewPtr->screen.leftVisibleEdgeInColumns,
 														pastTheEndRow - viewPtr->screen.topVisibleEdgeInRows);
