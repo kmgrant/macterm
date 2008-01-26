@@ -10,7 +10,7 @@
 /*###############################################################
 
 	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -37,11 +37,29 @@
 #ifndef __MEMORYBLOCKLOCKER__
 #define __MEMORYBLOCKLOCKER__
 
-// library includes
-#include <CollectionWrap.h>
+// pseudo-standard-C++ includes
+#if __MWERKS__
+#   include <hash_map>
+#   define hash_map_namespace Metrowerks
+#elif (__GNUC__ > 3)
+#   include <ext/hash_map>
+#   define hash_map_namespace __gnu_cxx
+#elif (__GNUC__ == 3)
+#   include <ext/hash_map>
+#   define hash_map_namespace __gnu_cxx
+#elif (__GNUC__ < 3)
+#   include <hash_map>
+#   define hash_map_namespace
+#else
+#   include <hash_map>
+#   define hash_map_namespace
+#endif
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
+
+// library includes
+#include <MemoryBlockReferenceTracker.template.h> // for _AddrToLongHasher
 
 
 
@@ -50,7 +68,7 @@
 /*!
 Generic interface defining a locking mechanism for memory blocks.
 Whether static or relocatable, these basic functions can be used
-to convert from “stable” reference types to potentially mutable
+to convert from ‚Äústable‚Äù reference types to potentially mutable
 pointer types, invoking all necessary Memory Manager calls.  This
 class is a repository containing lock counts for as many references
 of the same type as you wish.  To add a reference, simply try to
@@ -65,7 +83,7 @@ public:
 	virtual
 	~MemoryBlockLocker		();
 	
-	//! stabilizes the specified reference’s mutable memory block and returns a pointer to its stable location
+	//! stabilizes the specified reference‚Äôs mutable memory block and returns a pointer to its stable location
 	//! (or "null", on error)
 	virtual structure_type*
 	acquireLock				(structure_reference_type			inReference) = 0;
@@ -74,7 +92,7 @@ public:
 	inline void
 	clear					();
 	
-	//! determines if there are any locks on the specified reference’s memory block
+	//! determines if there are any locks on the specified reference‚Äôs memory block
 	inline bool
 	isLocked				(structure_reference_type			inReference) const;
 	
@@ -104,17 +122,9 @@ protected:
 	incrementLockCount		(structure_reference_type			inReference);
 
 private:
-	enum
-	{
-		kMyCollectionTagLockCount = FOUR_CHAR_CODE('Lck#')	//!< where lock counts are found in the private
-															//!  Collection variable
-	};
-	
-	//! converts a structure reference into a 32-bit unique ID for a collection item
-	inline SInt32
-	returnReferenceCollectionID		(structure_reference_type	inReference) const;
-	
-	CollectionWrap		_collectionObject;	//!< repository for reference lock count information
+	typedef hash_map_namespace::hash_map< structure_reference_type, UInt16,
+											_AddrToLongHasher< structure_reference_type > >		CountMapType;
+	CountMapType	_mapObject;		//!< repository for reference lock count information
 };
 
 
@@ -184,7 +194,7 @@ void
 MemoryBlockLocker< structure_reference_type, structure_type >::
 clear ()
 {
-	EmptyCollection(_collectionObject.returnCollection());
+	_mapObject.clear();
 }// clear
 
 
@@ -193,35 +203,19 @@ UInt16
 MemoryBlockLocker< structure_reference_type, structure_type >::
 decrementLockCount	(structure_reference_type	inReference)
 {
-	UInt16		result = 0;
-	UInt16		oldLockCount = returnLockCount(inReference);
+	UInt16								result = 0;
+	typename CountMapType::iterator		toCount = _mapObject.find(inReference);
 	
 	
-	assert(oldLockCount > 0);
+	if (_mapObject.end() != toCount)
 	{
-		// decrement existing count
-		UInt16 const	newLockCount = oldLockCount - 1;
-		OSStatus		error = noErr;
-		Collection		collection = _collectionObject.returnCollection(); // for convenience only
-		
-		
-		// if the same tag and ID of an existing item is used, the following “add” call
-		// will implicitly *replace* the previous item, effectively updating its value
-		error = AddCollectionItem(collection, kMyCollectionTagLockCount, returnReferenceCollectionID(inReference),
-									sizeof(newLockCount), &newLockCount);
-		
-		// delete the lock if the count reaches zero
-		if ((error == noErr) && (newLockCount == 0))
+		--(toCount->second);
+		result = toCount->second;
+		if (0 == result)
 		{
-			// the only error currently defined for the following is "collectionItemNotFoundErr",
-			// which indicates invalid input; there isn’t really anything that can be done about that
-			error = RemoveCollectionItem(collection, kMyCollectionTagLockCount, returnReferenceCollectionID(inReference));
+			// delete the item when the count reaches zero
+			_mapObject.erase(toCount);
 		}
-		
-		// underscore failure by returning an unchanged number of locks
-		assert(error == noErr);
-		if (error != noErr) result = oldLockCount;
-		else result = newLockCount;
 	}
 	return result;
 }// decrementLockCount
@@ -232,27 +226,22 @@ UInt16
 MemoryBlockLocker< structure_reference_type, structure_type >::
 incrementLockCount	(structure_reference_type	inReference)
 {
-	UInt16		result = 0;
-	UInt16		oldLockCount = returnLockCount(inReference);
+	UInt16								result = 0;
+	typename CountMapType::iterator		toCount = _mapObject.find(inReference);
 	
 	
+	// add the item if it is not present
+	if (_mapObject.end() == toCount)
 	{
-		// increment existing count
-		UInt16 const	newLockCount = oldLockCount + 1;
-		OSStatus		error = noErr;
-		Collection		collection = _collectionObject.returnCollection(); // for convenience only
-		
-		
-		// if the same tag and ID of an existing item is used, the following “add” call
-		// will implicitly *replace* the previous item, effectively updating its value
-		error = AddCollectionItem(collection, kMyCollectionTagLockCount, returnReferenceCollectionID(inReference),
-									sizeof(newLockCount), &newLockCount);
-		
-		// underscore failure by returning an unchanged number of locks
-		assert(error == noErr);
-		if (error != noErr) result = oldLockCount;
-		else result = newLockCount;
+		_mapObject[inReference] = 0;
+		toCount = _mapObject.find(inReference);
 	}
+	
+	assert(_mapObject.end() != toCount);
+	
+	++(toCount->second);
+	result = toCount->second;
+	
 	return result;
 }// incrementLockCount
 
@@ -265,11 +254,7 @@ const
 {
 	// if any lock count is currently stored in the collection for
 	// the given reference, then that reference is considered locked
-	return (GetCollectionItemInfo(_collectionObject.returnCollection(), kMyCollectionTagLockCount,
-									returnReferenceCollectionID(inReference),
-									REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
-									REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
-									REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*)) == noErr);
+	return (_mapObject.end() != _mapObject.find(inReference));
 }// isLocked
 
 
@@ -279,33 +264,16 @@ MemoryBlockLocker< structure_reference_type, structure_type >::
 returnLockCount		(structure_reference_type	inReference)
 const
 {
-	UInt16		result = 0;
-	OSStatus	error = GetCollectionItem(_collectionObject.returnCollection(), kMyCollectionTagLockCount,
-											returnReferenceCollectionID(inReference),
-											REINTERPRET_CAST(kCollectionDontWantSize, SInt32*), &result);
+	UInt16									result = 0;
+	typename CountMapType::const_iterator	toCount = _mapObject.find(inReference);
 	
 	
-	if (error == collectionItemNotFoundErr)
+	if (_mapObject.end() != toCount)
 	{
-		// if the item isn’t found, that’s okay...after all,
-		// this may be the first time the reference has been
-		// used with this locker - technically it has 0 locks
-		result = 0;
-		error = noErr;
+		result = toCount->second;
 	}
-	assert(error == noErr);
 	return result;
 }// returnLockCount
-
-
-template < typename structure_reference_type, typename structure_type >
-SInt32
-MemoryBlockLocker< structure_reference_type, structure_type >::
-returnReferenceCollectionID		(structure_reference_type	inReference)
-const
-{
-	return REINTERPRET_CAST(inReference, SInt32);
-}// returnReferenceCollectionID
 
 
 template < typename structure_reference_type, typename structure_type >
