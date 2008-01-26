@@ -1241,6 +1241,21 @@ buildMenuBar ()
 		assert_noerr(error);
 	}
 	
+	// the AppleDockMenu Info.plist entry does not seem to
+	// work anymore, so set the menu manually
+	{
+		NIBLoader	menuFile(AppResources_ReturnBundleForNIBs(), CFSTR("MenuForDockIcon"));
+		assert(menuFile.isLoaded());
+		MenuRef		dockMenu = nullptr;
+		OSStatus	error = noErr;
+		
+		
+		error = CreateMenuFromNib(menuFile.returnNIB(), CFSTR("DockMenu"), &dockMenu);
+		assert_noerr(error);
+		error = SetApplicationDockTileMenu(dockMenu);
+		//assert_noerr(error); // this is not critical enough to care about if it fails
+	}
+	
 	// apply the appropriate key equivalents to New commands
 	setNewCommand(gNewCommandShortcutEffect);
 	

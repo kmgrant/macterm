@@ -82,6 +82,7 @@ notes_by_version = {
 	'20080126': [
 		'Terminal view rendering speed now improved slightly in general, and noticeably during text selection.',
 		'Fixed a possible crash in debug mode when setting the scroll region.',
+		'Fixed Dock menu.',
 	],
 	'20080121': [
 		'Robustness improvements to the focus-follows-mouse feature, particularly with sheets and non-terminal windows.',
