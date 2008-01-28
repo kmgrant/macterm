@@ -41,8 +41,15 @@
 
 // library includes
 #include <Console.h>
+#include <SoundSystem.h>
+
+// resource includes
+#include "GeneralResources.h"
 
 // MacTelnet includes
+#include "AppleEventUtilities.h"
+#include "AppResources.h"
+#include "MacroManager.h"
 #include "SessionFactory.h"
 #include "QuillsSession.h"
 #include "URL.h"
@@ -160,19 +167,71 @@ Session::handle_file	(std::string	inPathname)
 		}
 		else
 		{
-			// no Python handler is installed for this schema type; use the default handler
-			inPathname = "file://" + inPathname;
+			LSItemInfoRecord	fileInfo;
+			FSRef				fileRef;
+			FSSpec				fileSpec;
+			OSStatus			error = noErr;
 			
-			CFStringRef		urlCFString = CFStringCreateWithCString(kCFAllocatorDefault, inPathname.c_str(),
-																	kCFStringEncodingUTF8);
 			
-			
-			if (nullptr != urlCFString)
+			error = FSPathMakeRef(REINTERPRET_CAST(inPathname.c_str(), UInt8 const*), &fileRef, nullptr/* is a directory */);
+			if (noErr == error)
 			{
-				// TEMPORARY: could (should?) throw exceptions, translated by SWIG
-				// into scripting language exceptions, if an error occurs here
-				(OSStatus)URL_ParseCFString(urlCFString);
-				CFRelease(urlCFString), urlCFString = nullptr;
+				error = LSCopyItemInfoForRef(&fileRef, kLSRequestTypeCreator, &fileInfo);
+				if (noErr == error)
+				{
+					HFSUniStr255	nameBuffer;
+					
+					
+					error = FSGetCatalogInfo(&fileRef, kFSCatInfoNone, nullptr/* catalog info */,
+												&nameBuffer, &fileSpec, nullptr/* parent directory */);
+				}
+			}
+			
+			if ((fileInfo.creator == 'ToyS' || fileInfo.filetype == 'osas') ||
+						(extensionName == ".scpt"))
+			{
+				// it appears to be a script; run it
+				AppleEventUtilities_ExecuteScriptFile(&fileSpec, true/* notify user of errors */);
+			}
+			else if ((fileInfo.creator == AppResources_ReturnCreatorCode() &&
+							fileInfo.filetype == kApplicationFileTypeSessionDescription) ||
+						(extensionName == ".session"))
+			{
+				// read a configuration set
+				SessionDescription_ReadFromFile(&fileSpec);
+			}
+			else if ((//fileInfo.creator == AppResources_ReturnCreatorCode() &&
+							fileInfo.filetype == kApplicationFileTypeMacroSet) ||
+						(extensionName == ".macros"))
+			{
+				MacroManager_InvocationMethod		mode = kMacroManager_InvocationMethodCommandDigit;
+				
+				
+				(Boolean)Macros_ImportFromText(Macros_ReturnActiveSet(), &fileSpec, &mode);
+				Macros_SetMode(mode);
+			}
+			else if (extensionName == ".term")
+			{
+				// it appears to be a Terminal XML property list file; parse it
+				SessionFactory_NewSessionFromTerminalFile(nullptr/* existing terminal window to use */,
+															inPathname.c_str());
+			}
+			else
+			{
+				// no Python handler is installed for this file; use the default handler
+				inPathname = "file://" + inPathname;
+				
+				CFStringRef		urlCFString = CFStringCreateWithCString(kCFAllocatorDefault, inPathname.c_str(),
+																		kCFStringEncodingUTF8);
+				
+				
+				if (nullptr != urlCFString)
+				{
+					// TEMPORARY: could (should?) throw exceptions, translated by SWIG
+					// into scripting language exceptions, if an error occurs here
+					(OSStatus)URL_ParseCFString(urlCFString);
+					CFRelease(urlCFString), urlCFString = nullptr;
+				}
 			}
 		}
 	}

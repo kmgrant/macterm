@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080128',
     '20080126',
     '20080121',
     '20080120',
@@ -79,6 +80,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080128': [
+		'Fixed file-opens for extensions that are not scripts, namely macros and session files!',
+	],
 	'20080126': [
 		'Terminal view rendering speed now improved slightly in general, and noticeably during text selection.',
 		'Fixed a possible crash in debug mode when setting the scroll region.',
