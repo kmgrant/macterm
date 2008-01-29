@@ -1245,29 +1245,32 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 																		TerminateAlertInfoPtr);
 	Rect					originalStructureBounds;
 	Rect					centeredStructureBounds;
+	OSStatus				error = noErr;
 	Boolean					isModal = inForceModalDialog;
 	
 	
-	// for modal dialogs, first move the window to the center of the
-	// screen (so the user can see which window is being referred to);
-	// also remember its original location, in case the user cancels;
-	// do this only if more than one window is open, for a single window
-	// it should be clear what the alert is referring to!
-	if ((inForceModalDialog) && (SessionFactory_ReturnCount() > 1))
+	// TEMPORARY - this should really take into account whether the quit event is interactive
+	error = GetWindowBounds(window, kWindowStructureRgn, &originalStructureBounds);
+	if (noErr == error)
 	{
-		SInt16 const	kOffsetFromCenterV = -130; // in pixels; arbitrary
-		SInt16 const	kAbsoluteMinimumV = 30; // in pixels; arbitrary
-		Rect			availablePositioningBounds;
-		OSStatus		error = noErr;
-		
-		
-		// TEMPORARY - this should really take into account whether the quit event is interactive
-		RegionUtilities_GetPositioningBounds(window, &availablePositioningBounds);
-		error = GetWindowBounds(window, kWindowStructureRgn, &originalStructureBounds);
-		if (noErr == error)
+		// for modal dialogs, first move the window to the center of the
+		// screen (so the user can see which window is being referred to);
+		// also remember its original location, in case the user cancels;
+		// but quell the animation if this window should be closed without
+		// warning (so-called active unstable) or if only one window is
+		// open that would cause an alert to be displayed
+		if ((inForceModalDialog) &&
+			(false == Session_StateIsActiveUnstable(inRef)) &&
+			((SessionFactory_ReturnCount() - SessionFactory_ReturnStateCount(kSession_StateActiveUnstable)) > 1))
 		{
+			SInt16 const	kOffsetFromCenterV = -130; // in pixels; arbitrary
+			SInt16 const	kAbsoluteMinimumV = 30; // in pixels; arbitrary
+			Rect			availablePositioningBounds;
+			
+			
 			// center the window on the screen, but slightly offset toward the top half;
 			// do not allow the window to go off of the screen, however
+			RegionUtilities_GetPositioningBounds(window, &availablePositioningBounds);
 			centeredStructureBounds = originalStructureBounds;
 			CenterRectIn(&centeredStructureBounds, &availablePositioningBounds);
 			centeredStructureBounds.top += kOffsetFromCenterV;

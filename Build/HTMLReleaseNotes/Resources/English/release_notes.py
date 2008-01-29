@@ -81,6 +81,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080128': [
+		'Window slide-animation during the review for Quit is now turned off for recently opened sessions, since they do not display alerts.',
 		'Fixed file-opens for extensions that are not scripts, namely macros and session files!',
 		'Added Terminal.dumb_strings_init(func) to Quills, allowing Python functions to define how a dumb terminal renders each character.',
 	],
