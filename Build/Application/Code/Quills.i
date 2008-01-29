@@ -55,6 +55,45 @@ CallPythonStringReturnVoid	(void*	inPythonFunctionObject,
 %}
 #endif
 
+// enable callbacks that take a single string argument and return a string
+#ifdef SWIGPYTHON
+%{
+static std::string
+CallPythonStringReturnString	(void*	inPythonFunctionObject,
+								 char*	inoutString)
+{
+	PyObject*		pythonDef = NULL;
+	PyObject*		arguments = NULL;	
+	PyObject*		pythonResult = NULL;
+	std::string		result;
+	
+	
+	pythonDef = reinterpret_cast< PyObject* >(inPythonFunctionObject);
+	arguments = Py_BuildValue("(s)", inoutString);
+	assert(NULL != arguments);
+	pythonResult = PyEval_CallObject(pythonDef, arguments); // call Python
+	Py_DECREF(arguments), arguments = NULL;
+	if (NULL != pythonResult)
+	{
+		char const*		stringPtr = NULL;
+		
+		
+		if (false == PyString_CheckExact(pythonResult))
+		{
+			PyErr_SetString(PyExc_TypeError, "Callback did not return a string");
+			return NULL;
+		}
+		
+		stringPtr = PyString_AsString(pythonResult);
+		result = stringPtr;
+	}
+	Py_XDECREF(pythonResult), pythonResult = NULL;
+	
+	return result;
+}
+%}
+#endif
+
 // enable callbacks that take no arguments and return nothing
 #ifdef SWIGPYTHON
 %{

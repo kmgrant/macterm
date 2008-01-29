@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -42,10 +42,50 @@
 #include <string>
 #include <vector>
 
+// MacTelnet includes
+#include "QuillsCallbacks.typedef.h"
+#include "Terminal.h"
+
 
 
 #pragma mark Public Methods
 namespace Quills {
+
+class Terminal
+{
+};
+
+// callback support
+#if SWIG
+%extend Terminal {
+%feature("docstring",
+"Determine an appropriate dumb-terminal rendering for every\n\
+character code, by repeatedly calling the specified function.\n\
+\n\
+The function is called once for each character, and should\n\
+return the string appropriate for rendering that character in\n\
+a dumb terminal.\n\
+") dumb_strings_init;
+	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
+	// "CallPythonStringReturnString" is defined in Quills.i
+	static void
+	dumb_strings_init	(PyObject*		inPythonFunction)
+	{
+		std::string		descriptionString;
+		char			buffer[2];
+		
+		
+		// call the routine for every character code
+		for (UInt16 i = 0; i <= UCHAR_MAX; ++i)
+		{
+			buffer[0] = STATIC_CAST(i, char);
+			buffer[1] = '\0';
+			descriptionString = CallPythonStringReturnString(reinterpret_cast< void* >(inPythonFunction), buffer);
+			Terminal_SetDumbTerminalRendering(i, descriptionString.c_str());
+		}
+	}
+}
+#endif
 
 class BasicPalette
 {

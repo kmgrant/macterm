@@ -14,12 +14,12 @@ __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '24 August 2006'
 __version__ = '3.1.0'
 
-import os
+import os, string
 
 import com_mactelnet_HandleFile as HandleFile
 import com_mactelnet_HandleURL as HandleURL
 try:
-	from Quills import Base, Events, Session
+	from Quills import Base, Events, Session, Terminal
 except ImportError, err:
 	import sys, os
 	print >>sys.stderr, "Unable to import Quills."
@@ -43,6 +43,7 @@ except ImportError, err:
 #os.system("pydoc Quills.Events")
 #os.system("pydoc Quills.Prefs")
 #os.system("pydoc Quills.Session")
+#os.system("pydoc Quills.Terminal")
 
 
 
@@ -86,6 +87,22 @@ Session.on_fileopen_call(HandleFile.script, 'tcl')
 Session.on_fileopen_call(HandleFile.script, 'tcsh')
 Session.on_fileopen_call(HandleFile.script, 'tool')
 Session.on_fileopen_call(HandleFile.script, 'zsh')
+
+def get_dumb_rendering( char_utf8 ):
+	"""Return the string that dumb terminals should use to
+	render the specified character.  The idea is for EVERY
+	character to have a visible representation, whereas
+	with normal terminals many invisible characters have
+	special meaning.
+	
+	"""
+	result = "<?>"
+	if char_utf8 in string.printable: result = char_utf8
+	elif ord(char_utf8) < ord('@'): result = "^%c" % chr(ord('@') + ord(char_utf8))
+	#elif char_utf8 == chr(27): return "<ESC>"
+	else: result = "<%c>" % ord(char_utf8)
+	return result
+Terminal.dumb_strings_init(get_dumb_rendering)
 
 # banner
 print "MacTelnet: Full initialization complete."

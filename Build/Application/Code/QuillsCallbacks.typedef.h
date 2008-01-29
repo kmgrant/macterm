@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,6 +36,9 @@
 #ifndef __QUILLSCALLBACKS_TYPEDEF__
 #define __QUILLSCALLBACKS_TYPEDEF__
 
+// standard-C++ includes
+#include <string>
+
 
 
 #pragma mark Types
@@ -45,6 +48,7 @@ namespace Quills {
 // storing an object and is irrelevant from a Python signature
 // point of view (i.e. a single "void*" argument is like taking
 // no Python arguments at all)
+typedef std::string (*FunctionReturnStringArg1VoidPtrArg2CharPtr) (void*, char*);
 typedef void (*FunctionReturnVoidArg1VoidPtrArg2CharPtr) (void*, char*);
 typedef void (*FunctionReturnVoidArg1VoidPtr) (void*);
 

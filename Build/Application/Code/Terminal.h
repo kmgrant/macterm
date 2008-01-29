@@ -584,6 +584,10 @@ void
 											 Boolean					inIsEnabled);
 
 void
+	Terminal_SetDumbTerminalRendering		(UTF8Char					inCharacter,
+											 char const*				inDescription);
+
+void
 	Terminal_SetLineWrapEnabled				(TerminalScreenRef			inScreen,
 											 Boolean					inIsEnabled);
 

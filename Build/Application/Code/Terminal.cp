@@ -35,13 +35,13 @@
 #include <cctype>
 #include <cstdio>
 #include <cstring>
-#include <sstream>
-#include <string>
 
 // standard-C++ includes
 #include <algorithm>
 #include <iterator>
 #include <list>
+#include <map>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -366,6 +366,8 @@ invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 
 #pragma mark Types
 
+typedef std::map< UTF8Char, std::string >		My_PrintableByUTF8Char;
+
 typedef std::vector< char >						My_TabStopList;
 typedef std::vector< TerminalTextAttributes >   My_TextAttributesList;
 
@@ -667,6 +669,18 @@ public:
 };
 
 /*!
+Manages state determination and transition for a terminal
+that does nothing but echo human-readable versions of every
+character it receives.
+*/
+class My_DumbTerminal
+{
+public:
+	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
+};
+
+/*!
 Manages state determination and transition for the VT100
 terminal emulator while in ANSI mode.  The VT52 subclass
 handles sequences specific to VT52 mode.
@@ -937,6 +951,13 @@ template < typename src_char_seq_const_iter, typename src_char_seq_size_t,
 static dest_char_seq_iter		whitespaceSensitiveCopy					(src_char_seq_const_iter, src_char_seq_size_t,
 																		 dest_char_seq_iter, dest_char_seq_size_t,
 																		 dest_char_seq_size_t*, src_char_seq_size_t);
+
+#pragma mark Variables
+
+namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+{
+	My_PrintableByUTF8Char&		gDumbTerminalRenderings ()	{ static My_PrintableByUTF8Char x; return x; }
+}
 
 
 
@@ -2418,6 +2439,11 @@ Terminal_EmulatorSet	(TerminalScreenRef	inRef,
 		break;
 	
 	case kTerminal_EmulatorDumb:
+		dataPtr->stateDeterminant = My_DumbTerminal::stateDeterminant;
+		dataPtr->transitionHandler = My_DumbTerminal::stateTransition;
+		Terminal_SetLineWrapEnabled(inRef, true);
+		break;
+	
 	case kTerminal_EmulatorANSIBBS: // UNIMPLEMENTED
 	case kTerminal_EmulatorANSISCO: // UNIMPLEMENTED
 	case kTerminal_EmulatorVT320: // UNIMPLEMENTED
@@ -3561,6 +3587,25 @@ Terminal_SetBellEnabled		(TerminalScreenRef	inRef,
 
 
 /*!
+Sets the string that will be printed by a dumb terminal
+(kTerminal_EmulatorDumb) when the specified character is
+to be displayed.
+
+Normally, any character that is considered “printable”
+should be echoed as-is, so this is the default behavior
+if no mapping has been given for a printable character.
+
+(3.1)
+*/
+void
+Terminal_SetDumbTerminalRendering	(UTF8Char		inCharacter,
+									 char const*	inDescription)
+{
+	gDumbTerminalRenderings()[inCharacter] = inDescription;
+}// SetDumbTerminalRendering
+
+
+/*!
 Specifies whether the given terminal automatically moves
 the cursor to the beginning of the next line (and inserts
 text there) when an attempt to write past the limit of the
@@ -4587,6 +4632,105 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	
 	return result;
 }// My_DefaultEmulator::stateTransition
+
+
+/*!
+A standard "My_EmulatorStateDeterminantProcPtr" that sets
+dumb-terminal states based on the characters of the given
+buffer.
+
+(3.1)
+*/
+UInt32
+My_DumbTerminal::
+stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
+					 UInt8 const*			UNUSED_ARGUMENT(inBuffer),
+					 UInt32					inLength,
+					 My_ParserState			UNUSED_ARGUMENT(inCurrentState),
+					 My_ParserState&		outNextState,
+					 Boolean&				UNUSED_ARGUMENT(outInterrupt))
+{
+	assert(inLength > 0);
+	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	
+	
+	// dumb terminals echo everything
+	outNextState = kMy_ParserStateEcho;
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< dumb terminal in state", inCurrentState);
+	//Console_WriteValueFourChars(">>>     dumb terminal proposes state", outNextState);
+	//Console_WriteValueCharacter("        dumb terminal bases this at least on character", *inBuffer);
+	
+	return result;
+}// My_DumbTerminal::stateDeterminant
+
+
+/*!
+A standard "My_EmulatorStateTransitionProcPtr" that responds
+to dumb terminal state changes.
+
+(3.1)
+*/
+UInt32
+My_DumbTerminal::
+stateTransition		(My_ScreenBufferPtr		inDataPtr,
+					 UInt8 const*			inBuffer,
+					 UInt32					inLength,
+					 My_ParserState			inNewState,
+					 My_ParserState			UNUSED_ARGUMENT(inPreviousState))
+{
+	UInt32		result = 0; // usually, no characters are consumed at the transition stage
+	
+	
+	// debug
+	//Console_WriteValueFourChars("    <<< dumb terminal transition from state", inPreviousState);
+	//Console_WriteValueFourChars(">>>     dumb terminal transition to state  ", inNewState);
+	
+	// decide what to do based on the proposed transition
+	switch (inNewState)
+	{
+	case kMy_ParserStateEcho:
+		// determine a human-readable description for each character, and print it
+		{
+			UInt8 const*		bufferIterator = inBuffer;
+			std::ostringstream	humanReadableStream;
+			
+			
+			// suck up a contiguous block of “non-printable” characters
+			while (result < inLength)
+			{
+				if (gDumbTerminalRenderings().end() != gDumbTerminalRenderings().find(*bufferIterator))
+				{
+					// print whatever was registered as the proper rendering
+					humanReadableStream << gDumbTerminalRenderings()[*bufferIterator];
+				}
+				else
+				{
+					// print the ASCII code, e.g. 200 becomes "<200>"
+					humanReadableStream << "<" << STATIC_CAST(*bufferIterator, UInt32) << ">";
+				}
+				++bufferIterator;
+				++result;
+			}
+			
+			// send the data wherever it needs to go
+			{
+				std::string		humanReadable = humanReadableStream.str();
+				
+				
+				echoData(inDataPtr, REINTERPRET_CAST(humanReadable.c_str(), UInt8 const*), humanReadable.size());
+			}
+		}
+		break;
+	
+	default:
+		Console_WriteValueFourChars("warning, dumb terminal cannot transition to unexpected state", inNewState);
+		break;
+	}
+	
+	return result;
+}// My_DumbTerminal::stateTransition
 
 
 /*!

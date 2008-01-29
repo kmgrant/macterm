@@ -82,6 +82,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080128': [
 		'Fixed file-opens for extensions that are not scripts, namely macros and session files!',
+		'Added Terminal.dumb_strings_init(func) to Quills, allowing Python functions to define how a dumb terminal renders each character.',
 	],
 	'20080126': [
 		'Terminal view rendering speed now improved slightly in general, and noticeably during text selection.',
