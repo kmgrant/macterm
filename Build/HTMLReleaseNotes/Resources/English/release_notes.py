@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080129',
     '20080128',
     '20080126',
     '20080121',
@@ -80,6 +81,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080129': [
+		'The Quit warning is no longer displayed if every terminal window was recently opened.',
+	],
 	'20080128': [
 		'Window slide-animation during the review for Quit is now turned off for recently opened sessions, since they do not display alerts.',
 		'Fixed file-opens for extensions that are not scripts, namely macros and session files!',

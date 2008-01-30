@@ -1023,7 +1023,8 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 {
 	OSStatus	result = noErr;
 	SInt16		itemHit = kAlertStdAlertOKButton; // if only 1 session is open, the user “Reviews” it
-	SInt32		sessionCount = SessionFactory_ReturnCount();
+	SInt32		sessionCount = SessionFactory_ReturnCount() -
+								SessionFactory_ReturnStateCount(kSession_StateActiveUnstable); // ignore recently-opened windows
 	Boolean		doQuit = false;
 	
 	
