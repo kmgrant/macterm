@@ -271,6 +271,9 @@ void
 //@{
 
 void
+	TerminalView_DisplaySaveSelectedTextUI		(TerminalViewRef				inView);
+
+void
 	TerminalView_FlashSelection					(TerminalViewRef				inView);
 
 void
@@ -295,10 +298,6 @@ RgnHandle
 
 size_t
 	TerminalView_ReturnSelectedTextSize			(TerminalViewRef				inView);
-
-Boolean
-	TerminalView_SaveSelectedText				(TerminalViewRef				inView,
-												 FSSpec const*					inFileDestinationOrNull);
 
 void
 	TerminalView_SelectEntireBuffer				(TerminalViewRef				inView);

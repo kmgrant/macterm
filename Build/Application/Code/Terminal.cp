@@ -2566,64 +2566,6 @@ Terminal_FileCaptureInProgress	(TerminalScreenRef		inRef)
 
 
 /*!
-Presents a dialog box asking the user to specify
-the file where captured data should be sent.  If
-the user does not cancel and no error occurs,
-"true" is returned, otherwise, "false" is returned.
-
-(3.0)
-*/
-Boolean
-Terminal_FileCaptureSaveDialog		(FSSpec*	outFSSpecPtr)
-{
-	Boolean		result = false;
-	
-	
-	if (outFSSpecPtr != nullptr)
-	{
-		Str255			fileDefaultName,
-						prompt,
-						title;
-		OSStatus		error = noErr;
-		Str32			numString;
-		static SInt16	captureNumber = 0;
-		
-		
-		// LOCALIZE THIS WITH STRING SUBSTITUTION (AND USER PREFERENCE?)
-		NumToString(++captureNumber, numString);
-		PLstrcpy(fileDefaultName, "\puntitled");
-		fileDefaultName[++(fileDefaultName[0])] = ' ';
-		PLstrcat(fileDefaultName, numString);
-		
-		GetIndString(prompt, rStringsNavigationServices, siNavPromptSaveCapturedText);
-		GetIndString(title, rStringsNavigationServices, siNavDialogTitleSaveCapturedText);
-		
-		{
-			NavReplyRecord		reply;
-			OSType				captureFileCreator;
-			size_t				actualSize = 0L;
-			
-			
-			// get the user’s Capture File Creator preference, if possible
-			unless (Preferences_GetData(kPreferences_TagCaptureFileCreator, sizeof(captureFileCreator),
-										&captureFileCreator, &actualSize) == kPreferences_ResultOK)
-			{
-				captureFileCreator = 'ttxt'; // default to SimpleText if a preference can’t be found
-			}
-			
-			Alert_ReportOSStatus(error = FileSelectionDialogs_PutFile
-											(prompt, title, fileDefaultName,
-												captureFileCreator, 'TEXT', kPreferences_NavPrefKeyGenericSaveFile,
-												kNavDefaultNavDlogOptions | kNavDontAddTranslateItems,
-												EventLoop_HandleNavigationUpdate, &reply, outFSSpecPtr));
-			result = ((error == noErr) && (reply.validRecord));
-		}
-	}
-	return result;
-}// FileCaptureSaveDialog
-
-
-/*!
 Writes the specified text to the capture file of the
 specified screen.
 

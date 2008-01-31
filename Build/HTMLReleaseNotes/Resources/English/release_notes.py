@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080130',
     '20080129',
     '20080128',
     '20080126',
@@ -81,6 +82,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080130': [
+		'Save Selected Text interface has been modernized, displaying a sheet and using Unicode.',
+	],
 	'20080129': [
 		'The Quit warning is no longer displayed if every terminal window was recently opened.',
 	],

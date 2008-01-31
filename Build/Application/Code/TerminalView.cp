@@ -50,6 +50,7 @@
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <Cursors.h>
+#include <FileSelectionDialogs.h>
 #include <HIViewWrap.h>
 #include <ListenerModel.h>
 #include <Localization.h>
@@ -351,6 +352,7 @@ static Boolean			isMonospacedFont				(FMFontFamily);
 static void				localToScreen					(TerminalViewPtr, SInt16*, SInt16*);
 static void				localToScreenRect				(TerminalViewPtr, Rect*);
 static Boolean			mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+static pascal void		navigationFileCaptureDialogEvent(NavEventCallbackMessage, NavCBRecPtr, void*);
 static void				offsetLeftVisibleEdge			(TerminalViewPtr, SInt16);
 static void				offsetTopVisibleEdge			(TerminalViewPtr, SInt16);
 static void				preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -700,6 +702,61 @@ TerminalView_DeleteScrollback	(TerminalViewRef	inView)
 	Terminal_DeleteAllSavedLines(viewPtr->screen.ref);
     eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
 }// DeleteScrollback
+
+
+/*!
+Displays a dialog allowing the user to choose a destination
+file, and then writes all selected text from the specified
+view to that file.  If no text is selected, no user interface
+appears.
+
+This call returns immediately.  The save will only occur when
+the user eventually commits the sheet that appears.  The user
+can also cancel the operation.
+
+A future version of this function could allow flags to be
+specified to affect the capture ÒrulesÓ (e.g. whether or not
+to substitute tabs for consecutive spaces).
+
+(3.1)
+*/
+void
+TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
+{
+	if (TerminalView_TextSelectionExists(inView))
+	{
+		NavDialogCreationOptions	dialogOptions;
+		NavDialogRef				navigationServicesDialog = nullptr;
+		TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+		OSStatus					error = noErr;
+		
+		
+		error = NavGetDefaultDialogCreationOptions(&dialogOptions);
+		if (noErr == error)
+		{
+			// this call sets most of the options up front (parent window, etc.)
+			dialogOptions.optionFlags |= kNavDontAddTranslateItems;
+			Localization_GetCurrentApplicationNameAsCFString(&dialogOptions.clientName);
+			dialogOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
+			dialogOptions.parentWindow = viewPtr->window.ref;
+			
+			// now set things specific to this instance
+			(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
+			(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptCaptureToFile, dialogOptions.message);
+			dialogOptions.modality = kWindowModalityWindowModal;
+		}
+		error = NavCreatePutFileDialog(&dialogOptions, 'TEXT'/* type */, 'ttxt'/* creator (TextEdit) */,
+										NewNavEventUPP(navigationFileCaptureDialogEvent), inView/* client data */,
+										&navigationServicesDialog);
+		Alert_ReportOSStatus(error);
+		if (noErr == error)
+		{
+			// display the dialog; it is a sheet, so this will return immediately
+			// and the dialog will close whenever the user is actually done with it
+			error = NavDialogRun(navigationServicesDialog);
+		}
+	}
+}// DisplaySaveSelectedTextUI
   
   
 /*!
@@ -1577,123 +1634,6 @@ TerminalView_ReverseVideo	(TerminalViewRef	inView,
 		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
 	}
 }// ReverseVideo
-
-
-/*!
-Captures all selected text from the specified screen to
-a file (has no effect if no text is selected).  This
-routine can save text to a separate file even if a
-file capture is already in progress for the specified
-screen.
-
-If you donÕt specify a file to use for the capture, the
-user is prompted for one.  If the capture succeeds,
-"true" is returned; otherwise, "false" is returned.
-
-A future version of this function could allow flags to
-be specified to affect the capture ÒrulesÓ (e.g. whether
-or not to substitute tabs for consecutive spaces).
-
-(3.0)
-*/
-Boolean
-TerminalView_SaveSelectedText	(TerminalViewRef	inView,
-								 FSSpec const*		inFileDestinationOrNull)
-{
-	Handle		textHandle = nullptr;
-	Boolean		result = false;
-	
-	
-	textHandle = TerminalView_ReturnSelectedTextAsNewHandle(inView, 0/* spaces equal to one tab, or zero for no substitution */,
-															0/* flags */);
-	if (textHandle != nullptr)
-	{
-		FSSpec			captureFile;
-		OSStatus		error = noErr;
-		Boolean			good = false;
-		
-		
-		// solicit a file unless provided with one
-		if (inFileDestinationOrNull == nullptr) good = Terminal_FileCaptureSaveDialog(&captureFile);
-		else
-		{
-			error = FSMakeFSSpec(inFileDestinationOrNull->vRefNum, inFileDestinationOrNull->parID, inFileDestinationOrNull->name, &captureFile);
-			good = ((error == noErr) || (error == fnfErr));
-		}
-		
-		if (good)
-		{
-			OSType		captureFileCreator;
-			size_t		actualSize = 0L;
-			
-			
-			// get the userÕs Capture File Creator preference, if possible
-			unless (Preferences_GetData(kPreferences_TagCaptureFileCreator, sizeof(captureFileCreator),
-										&captureFileCreator, &actualSize) == kPreferences_ResultOK)
-			{
-				captureFileCreator = 'ttxt'; // default to SimpleText if a preference canÕt be found
-			}
-			
-			error = FSpCreate(&captureFile, captureFileCreator, 'TEXT', GetScriptManagerVariable(smSysScript));
-			if (error == dupFNErr)
-			{
-				// if the specified file already exists, try to delete it; if the delete fails, use a similar file name
-				Console_WriteLine("text file already exists - attempting to delete");
-				if (FSpDelete(&captureFile) == noErr)
-				{
-					error = FSpCreate(&captureFile, captureFileCreator, 'TEXT', GetScriptManagerVariable(smSysScript));
-				}
-				else
-				{
-					Console_WriteLine("text file deletion failed - using a similar file name");
-					error = FileUtilities_PersistentCreate(&captureFile, captureFileCreator, 'TEXT', GetScriptManagerVariable(smSysScript));
-				}
-			}
-			
-			if (error != noErr)
-			{
-				// TEMPORARY - display alert to user, probably
-				Console_WriteValue("unable to create file, OS error", error);
-			}
-			else
-			{
-				SInt16		fileRefNum = -1;
-				
-				
-				error = FSpOpenDF(&captureFile, fsRdWrPerm, &fileRefNum);
-				if (error != noErr)
-				{
-					// TEMPORARY - display alert to user, probably
-					Console_WriteValue("unable to open file, OS error", error);
-				}
-				else
-				{
-					SInt32		total = GetHandleSize(textHandle);
-					SInt32		byteCountInToWriteOutLeft = 0;
-					
-					
-					SetEOF(fileRefNum, (long)0);
-					
-					// write text to the file; as long as bytes remain and no error
-					// has occurred, data remains to be written and should be written
-					byteCountInToWriteOutLeft = total;
-					while ((total > 0) && (error == noErr))
-					{
-						error = FSWrite(fileRefNum, &byteCountInToWriteOutLeft/* in: byte count to write, out: bytes remaining */,
-										*textHandle);
-						total -= byteCountInToWriteOutLeft;
-						byteCountInToWriteOutLeft = total; // prepare for next loop
-					}
-					FSClose(fileRefNum), fileRefNum = -1;
-					
-					result = true;
-				}
-			}
-		}
-	}
-	
-	return result;
-}// SaveSelectedText
 
 
 /*!
@@ -5812,6 +5752,120 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	}
 	return result;
 }// mainEventLoopEvent
+
+
+/*!
+Invoked by the Mac OS whenever something interesting happens
+in a Navigation Services file-capture-save-dialog attached to
+a terminal viewÕs window.
+
+(3.1)
+*/
+static pascal void
+navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
+								 	 NavCBRecPtr				inParameters,
+								 	 void*						inTerminalViewRef)
+{
+	TerminalViewRef		view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
+	
+	
+	switch (inMessage)
+	{
+	case kNavCBUserAction:
+		if (kNavUserActionSaveAs == inParameters->userAction)
+		{
+			NavReplyRecord		reply;
+			OSStatus			error = noErr;
+			
+			
+			// save file
+			error = NavDialogGetReply(inParameters->context/* dialog */, &reply);
+			if ((noErr == error) && (reply.validRecord))
+			{
+				FSRef	saveFile;
+				FSRef	temporaryFile;
+				OSType	captureFileCreator = 'ttxt';
+				size_t	actualSize = 0L;
+				
+				
+				// get the userÕs Capture File Creator preference, if possible
+				unless (Preferences_GetData(kPreferences_TagCaptureFileCreator,
+											sizeof(captureFileCreator), &captureFileCreator, &actualSize) ==
+						kPreferences_ResultOK)
+				{
+					captureFileCreator = 'ttxt'; // default to SimpleText if a preference canÕt be found
+				}
+				
+				// create a temporary file for ÒsafeÓ saving, in addition to the userÕs requested file
+				error = FileSelectionDialogs_CreateOrFindUserSaveFile
+						(reply, captureFileCreator, 'TEXT', saveFile, temporaryFile);
+				if (error == noErr)
+				{
+					Handle		textHandle = nullptr;
+					Boolean		result = false;
+					
+					
+					textHandle = TerminalView_ReturnSelectedTextAsNewHandle(view, 0/* spaces equal to one tab, or zero for no substitution */,
+																			0/* flags */);
+					if (nullptr != textHandle)
+					{
+						SInt16		fileRefNum = -1;
+						
+						
+						// open file for overwrite
+						error = FSOpenFork(&temporaryFile, 0/* name length */, nullptr/* name (implied from structure) */,
+											fsWrPerm, &fileRefNum);
+						if (noErr == error)
+						{
+							SInt32		total = GetHandleSize(textHandle);
+							ByteCount	byteCountToWrite = 0;
+							ByteCount	byteCountLeft = 0;
+							
+							
+							// overwrite existing files
+							error = FSSetForkSize(fileRefNum, fsFromStart, 0);
+							assert_noerr(error);
+							
+							// write text to the file; as long as bytes remain and no error
+							// has occurred, data remains to be written and should be written
+							byteCountToWrite = total;
+							while ((total > 0) && (noErr == error))
+							{
+								error = FSWriteFork(fileRefNum, fsFromMark, 0/* offset */,
+													byteCountToWrite, *textHandle, &byteCountLeft);
+								total -= byteCountLeft;
+								byteCountToWrite = total; // prepare for next loop
+							}
+							
+							error = FSClose(fileRefNum), fileRefNum = -1;
+							
+							// finally, ÒswapÓ the new file into the right place on disk
+							error = FSExchangeObjects(&temporaryFile, &saveFile);
+							if (noErr == error)
+							{
+								(OSStatus)FSDeleteObject(&temporaryFile);
+							}
+							
+							result = true;
+						}
+					}
+				}
+			}
+			Alert_ReportOSStatus(error);
+			error = FileSelectionDialogs_CompleteSave(&reply);
+		}
+		break;
+	
+	case kNavCBTerminate:
+		// clean up
+		NavDialogDispose(inParameters->context);
+		break;
+	
+	default:
+		// not handled
+		break;
+	}
+}// navigationFileCaptureDialogEvent
 
 
 /*!

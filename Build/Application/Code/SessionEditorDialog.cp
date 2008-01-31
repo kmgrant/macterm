@@ -587,7 +587,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 					}
 					else choose = true;
 					
-					if ((choose) && Terminal_FileCaptureSaveDialog(&pendingCaptureFile))
+					//if ((choose) && Terminal_FileCaptureSaveDialog(&pendingCaptureFile))
 					{
 						// show path to file in the dialog box
 						Str255		string;

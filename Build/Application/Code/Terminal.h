@@ -634,9 +634,6 @@ SInt16
 Boolean
 	Terminal_FileCaptureInProgress			(TerminalScreenRef			inScreen);
 
-Boolean
-	Terminal_FileCaptureSaveDialog			(FSSpec*					outFSSpecPtr);
-
 void
 	Terminal_FileCaptureWriteData			(TerminalScreenRef			inScreen,
 											 UInt8 const*				inBuffer,

@@ -428,7 +428,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandSaveText:
-			(Boolean)TerminalView_SaveSelectedText(activeView, nullptr/* file spec.; nullptr allows user to select */);
+			TerminalView_DisplaySaveSelectedTextUI(activeView);
 			break;
 		
 		case kCommandImportMacroSet:
