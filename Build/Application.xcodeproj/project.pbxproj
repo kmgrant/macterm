@@ -12,6 +12,22 @@
 		0A377E630D38806B001F3573 /* com_mactelnet_HandleFile.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* com_mactelnet_HandleFile.py */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
+		0A9B317F0D538E2800C1616D /* TextDataFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B317E0D538E2800C1616D /* TextDataFile.h */; };
+		0A9B31810D538E3C00C1616D /* StringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31800D538E3C00C1616D /* StringUtilities.h */; };
+		0A9B31830D538E4400C1616D /* SoundSystem.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31820D538E4400C1616D /* SoundSystem.h */; };
+		0A9B31850D538E4D00C1616D /* Undoables.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31840D538E4D00C1616D /* Undoables.h */; };
+		0A9B31870D538E5B00C1616D /* CFDictionaryManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */; };
+		0A9B31890D538E6300C1616D /* CFKeyValueInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */; };
+		0A9B318B0D538E6F00C1616D /* Cursors.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B318A0D538E6F00C1616D /* Cursors.h */; };
+		0A9B318D0D538E8600C1616D /* FlagManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B318C0D538E8600C1616D /* FlagManager.h */; };
+		0A9B318F0D538EAB00C1616D /* ListenerModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B318E0D538EAB00C1616D /* ListenerModel.h */; };
+		0A9B31930D538EE400C1616D /* MemoryBlocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31920D538EE400C1616D /* MemoryBlocks.h */; };
+		0A9B31990D538EF000C1616D /* MemoryBlockHandleLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */; };
+		0A9B319A0D538EF000C1616D /* MemoryBlockLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31950D538EF000C1616D /* MemoryBlockLocker.template.h */; };
+		0A9B319B0D538EF000C1616D /* MemoryBlockPtrLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31960D538EF000C1616D /* MemoryBlockPtrLocker.template.h */; };
+		0A9B319C0D538EF000C1616D /* MemoryBlockReferenceLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */; };
+		0A9B319D0D538EF000C1616D /* MemoryBlockReferenceTracker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */; };
+		0A9B319F0D538EFA00C1616D /* Releases.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B319E0D538EFA00C1616D /* Releases.h */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADC0A8C0BA000AFF37A /* UniversalPrint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE09055432A400ACDF3A /* UniversalPrint.cp */; };
@@ -222,7 +238,7 @@
 		0A4603C00554376100ACDF3A /* Clipboard.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Clipboard.h; path = Application/Code/Clipboard.h; sourceTree = SOURCE_ROOT; };
 		0A4603C10554376100ACDF3A /* CoercionsAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CoercionsAE.h; path = Application/Code/CoercionsAE.h; sourceTree = "<group>"; };
 		0A4603C40554376100ACDF3A /* ColorBox.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ColorBox.h; path = Application/Code/ColorBox.h; sourceTree = SOURCE_ROOT; };
-		0A4603C50554376100ACDF3A /* ColorUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ColorUtilities.h; path = Application/Code/ColorUtilities.h; sourceTree = SOURCE_ROOT; };
+		0A4603C50554376100ACDF3A /* ColorUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ColorUtilities.h; path = Shared/Code/ColorUtilities.h; sourceTree = "<group>"; };
 		0A4603C60554376100ACDF3A /* CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CommandLine.h; path = Application/Code/CommandLine.h; sourceTree = SOURCE_ROOT; };
 		0A4603C70554376100ACDF3A /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = Application/Code/Commands.h; sourceTree = SOURCE_ROOT; };
 		0A4603C80554376100ACDF3A /* Configure.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Configure.h; path = Application/Code/Configure.h; sourceTree = SOURCE_ROOT; };
@@ -230,17 +246,17 @@
 		0A4603CA0554376100ACDF3A /* ConnectionData.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ConnectionData.h; path = Application/Code/ConnectionData.h; sourceTree = SOURCE_ROOT; };
 		0A4603CB0554376100ACDF3A /* Console.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Console.h; path = Shared/Code/Console.h; sourceTree = "<group>"; };
 		0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ConstantsRegistry.h; path = Application/Code/ConstantsRegistry.h; sourceTree = SOURCE_ROOT; };
-		0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ContextSensitiveMenu.h; path = Application/Code/ContextSensitiveMenu.h; sourceTree = SOURCE_ROOT; };
+		0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ContextSensitiveMenu.h; path = Shared/Code/ContextSensitiveMenu.h; sourceTree = "<group>"; };
 		0A4603CF0554376100ACDF3A /* ContextualMenuBuilder.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ContextualMenuBuilder.h; path = Application/Code/ContextualMenuBuilder.h; sourceTree = SOURCE_ROOT; };
 		0A4603D20554376100ACDF3A /* CoreSuiteAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CoreSuiteAE.h; path = Application/Code/CoreSuiteAE.h; sourceTree = "<group>"; };
-		0A4603D30554376100ACDF3A /* Cursors.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Cursors.h; path = Application/Code/Cursors.h; sourceTree = SOURCE_ROOT; };
+		0A4603D30554376100ACDF3A /* Cursors.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Cursors.h; path = Shared/Code/Cursors.h; sourceTree = "<group>"; };
 		0A4603D40554376100ACDF3A /* DataAccessAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DataAccessAE.h; path = Application/Code/DataAccessAE.h; sourceTree = "<group>"; };
-		0A4603D50554376100ACDF3A /* DialogAdjust.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DialogAdjust.h; path = Application/Code/DialogAdjust.h; sourceTree = SOURCE_ROOT; };
+		0A4603D50554376100ACDF3A /* DialogAdjust.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DialogAdjust.h; path = Shared/Code/DialogAdjust.h; sourceTree = "<group>"; };
 		0A4603D70554376100ACDF3A /* DialogTransitions.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DialogTransitions.h; path = Application/Code/DialogTransitions.h; sourceTree = SOURCE_ROOT; };
 		0A4603D80554376100ACDF3A /* DialogUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DialogUtilities.h; path = Application/Code/DialogUtilities.h; sourceTree = SOURCE_ROOT; };
 		0A4603D90554376100ACDF3A /* DNR.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DNR.h; path = Application/Code/DNR.h; sourceTree = SOURCE_ROOT; };
 		0A4603DA0554376100ACDF3A /* DragAndDrop.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DragAndDrop.h; path = Application/Code/DragAndDrop.h; sourceTree = SOURCE_ROOT; };
-		0A4603DB0554376100ACDF3A /* Embedding.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Embedding.h; path = Application/Code/Embedding.h; sourceTree = SOURCE_ROOT; };
+		0A4603DB0554376100ACDF3A /* Embedding.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Embedding.h; path = Shared/Code/Embedding.h; sourceTree = "<group>"; };
 		0A4603DC0554376100ACDF3A /* ErrorAlerts.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ErrorAlerts.h; path = Application/Code/ErrorAlerts.h; sourceTree = SOURCE_ROOT; };
 		0A4603DD0554376100ACDF3A /* EventInfoControlScope.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = EventInfoControlScope.h; path = Application/Code/EventInfoControlScope.h; sourceTree = SOURCE_ROOT; };
 		0A4603DF0554376100ACDF3A /* EventInfoWindowScope.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = EventInfoWindowScope.h; path = Application/Code/EventInfoWindowScope.h; sourceTree = SOURCE_ROOT; };
@@ -314,7 +330,7 @@
 		0A4604430554376100ACDF3A /* Terminology.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Terminology.h; path = Application/Code/Terminology.h; sourceTree = SOURCE_ROOT; };
 		0A4604470554376100ACDF3A /* TextTranslation.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TextTranslation.h; path = Application/Code/TextTranslation.h; sourceTree = SOURCE_ROOT; };
 		0A4604480554376100ACDF3A /* ThreadEntryPoints.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ThreadEntryPoints.h; path = Application/Code/ThreadEntryPoints.h; sourceTree = SOURCE_ROOT; };
-		0A4604510554376100ACDF3A /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Application/Code/Undoables.h; sourceTree = SOURCE_ROOT; };
+		0A4604510554376100ACDF3A /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Shared/Code/Undoables.h; sourceTree = "<group>"; };
 		0A4604520554376100ACDF3A /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
 		0A4604540554376100ACDF3A /* URL.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = URL.h; path = Application/Code/URL.h; sourceTree = SOURCE_ROOT; };
 		0A4604550554376100ACDF3A /* URLAccessAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = URLAccessAE.h; path = Application/Code/URLAccessAE.h; sourceTree = "<group>"; };
@@ -336,23 +352,23 @@
 		0A46FDBC055432A400ACDF3A /* Clipboard.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Clipboard.cp; path = Application/Code/Clipboard.cp; sourceTree = "<group>"; };
 		0A46FDBD055432A400ACDF3A /* CoercionsAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CoercionsAE.cp; path = Application/Code/CoercionsAE.cp; sourceTree = "<group>"; };
 		0A46FDC0055432A400ACDF3A /* ColorBox.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ColorBox.cp; path = Application/Code/ColorBox.cp; sourceTree = "<group>"; };
-		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Application/Code/ColorUtilities.cp; sourceTree = "<group>"; };
+		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Shared/Code/ColorUtilities.cp; sourceTree = "<group>"; };
 		0A46FDC2055432A400ACDF3A /* CommandLine.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CommandLine.cp; path = Application/Code/CommandLine.cp; sourceTree = "<group>"; };
 		0A46FDC3055432A400ACDF3A /* Commands.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Commands.cp; path = Application/Code/Commands.cp; sourceTree = "<group>"; };
 		0A46FDC4055432A400ACDF3A /* Configure.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Configure.cp; path = Application/Code/Configure.cp; sourceTree = "<group>"; };
 		0A46FDC5055432A400ACDF3A /* ConnectionAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ConnectionAE.cp; path = Application/Code/ConnectionAE.cp; sourceTree = "<group>"; };
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
-		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContextSensitiveMenu.cp; path = Application/Code/ContextSensitiveMenu.cp; sourceTree = "<group>"; };
+		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContextSensitiveMenu.cp; path = Shared/Code/ContextSensitiveMenu.cp; sourceTree = "<group>"; };
 		0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContextualMenuBuilder.cp; path = Application/Code/ContextualMenuBuilder.cp; sourceTree = "<group>"; };
 		0A46FDCB055432A400ACDF3A /* CoreSuiteAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CoreSuiteAE.cp; path = Application/Code/CoreSuiteAE.cp; sourceTree = "<group>"; };
-		0A46FDCC055432A400ACDF3A /* Cursors.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Cursors.cp; path = Application/Code/Cursors.cp; sourceTree = "<group>"; };
+		0A46FDCC055432A400ACDF3A /* Cursors.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Cursors.cp; path = Shared/Code/Cursors.cp; sourceTree = "<group>"; };
 		0A46FDCD055432A400ACDF3A /* DataAccessAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DataAccessAE.cp; path = Application/Code/DataAccessAE.cp; sourceTree = "<group>"; };
-		0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogAdjust.cp; path = Application/Code/DialogAdjust.cp; sourceTree = "<group>"; };
+		0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogAdjust.cp; path = Shared/Code/DialogAdjust.cp; sourceTree = "<group>"; };
 		0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogTransitions.cp; path = Application/Code/DialogTransitions.cp; sourceTree = "<group>"; };
 		0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DialogUtilities.cp; path = Application/Code/DialogUtilities.cp; sourceTree = "<group>"; };
 		0A46FDD1055432A400ACDF3A /* DNR.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DNR.cp; path = Application/Code/DNR.cp; sourceTree = "<group>"; };
 		0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DragAndDrop.cp; path = Application/Code/DragAndDrop.cp; sourceTree = "<group>"; };
-		0A46FDD3055432A400ACDF3A /* Embedding.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Embedding.cp; path = Application/Code/Embedding.cp; sourceTree = "<group>"; };
+		0A46FDD3055432A400ACDF3A /* Embedding.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Embedding.cp; path = Shared/Code/Embedding.cp; sourceTree = "<group>"; };
 		0A46FDD4055432A400ACDF3A /* ErrorAlerts.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ErrorAlerts.cp; path = Application/Code/ErrorAlerts.cp; sourceTree = "<group>"; };
 		0A46FDD5055432A400ACDF3A /* EventLoop.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = EventLoop.cp; path = Application/Code/EventLoop.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDD6055432A400ACDF3A /* FileUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileUtilities.cp; path = Application/Code/FileUtilities.cp; sourceTree = SOURCE_ROOT; };
@@ -375,15 +391,15 @@
 		0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InternetPrefs.cp; path = Application/Code/InternetPrefs.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDEB055432A400ACDF3A /* InternetServices.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InternetServices.cp; path = Application/Code/InternetServices.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDEC055432A400ACDF3A /* Keypads.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Keypads.cp; path = Application/Code/Keypads.cp; sourceTree = SOURCE_ROOT; };
-		0A46FDF2055432A400ACDF3A /* ListUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ListUtilities.cp; path = Application/Code/ListUtilities.cp; sourceTree = SOURCE_ROOT; };
+		0A46FDF2055432A400ACDF3A /* ListUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ListUtilities.cp; path = Shared/Code/ListUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF3055432A400ACDF3A /* Local.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Local.cp; path = Application/Code/Local.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDF4055432A400ACDF3A /* Localization.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Localization.cp; path = Application/Code/Localization.cp; sourceTree = SOURCE_ROOT; };
-		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Application/Code/MacHelpUtilities.cp; sourceTree = SOURCE_ROOT; };
+		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF6055432A400ACDF3A /* RegionUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RegionUtilities.cp; path = Application/Code/RegionUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF8055432A400ACDF3A /* MacroSetupWindow.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MacroSetupWindow.cp; path = Application/Code/MacroSetupWindow.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = Application/Code/MainEntryPoint.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDFB055432A400ACDF3A /* MenuBar.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MenuBar.cp; path = Application/Code/MenuBar.cp; sourceTree = SOURCE_ROOT; };
-		0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileSelectionDialogs.cp; path = Application/Code/FileSelectionDialogs.cp; sourceTree = "<group>"; };
+		0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileSelectionDialogs.cp; path = Shared/Code/FileSelectionDialogs.cp; sourceTree = "<group>"; };
 		0A46FDFE055432A400ACDF3A /* NetEvents.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NetEvents.cp; path = Application/Code/NetEvents.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDFF055432A400ACDF3A /* Network.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Network.cp; path = Application/Code/Network.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE00055432A400ACDF3A /* NewSessionDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NewSessionDialog.cp; path = Application/Code/NewSessionDialog.cp; sourceTree = SOURCE_ROOT; };
@@ -405,7 +421,7 @@
 		0A46FE16055432A400ACDF3A /* SessionEditorDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SessionEditorDialog.cp; path = Application/Code/SessionEditorDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE17055432A400ACDF3A /* SessionFactory.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SessionFactory.cp; path = Application/Code/SessionFactory.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE18055432A400ACDF3A /* SizeDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SizeDialog.cp; path = Application/Code/SizeDialog.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE19055432A400ACDF3A /* SoundSystem.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SoundSystem.cp; path = Application/Code/SoundSystem.cp; sourceTree = "<group>"; };
+		0A46FE19055432A400ACDF3A /* SoundSystem.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SoundSystem.cp; path = Shared/Code/SoundSystem.cp; sourceTree = "<group>"; };
 		0A46FE1A055432A400ACDF3A /* SplashScreenDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SplashScreenDialog.cp; path = Application/Code/SplashScreenDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE1C055432A400ACDF3A /* StatusIcon.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StatusIcon.cp; path = Application/Code/StatusIcon.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE1E055432A400ACDF3A /* TektronixMacPictureOutput.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixMacPictureOutput.cp; path = Application/Code/TektronixMacPictureOutput.cp; sourceTree = SOURCE_ROOT; };
@@ -421,7 +437,7 @@
 		0A46FE29055432A400ACDF3A /* TerminalWindow.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalWindow.cp; path = Application/Code/TerminalWindow.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE2D055432A400ACDF3A /* TextTranslation.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TextTranslation.cp; path = Application/Code/TextTranslation.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE2E055432A400ACDF3A /* ThreadEntryPoints.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ThreadEntryPoints.cp; path = Application/Code/ThreadEntryPoints.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE36055432A400ACDF3A /* Undoables.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Undoables.cp; path = Application/Code/Undoables.cp; sourceTree = SOURCE_ROOT; };
+		0A46FE36055432A400ACDF3A /* Undoables.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Undoables.cp; path = Shared/Code/Undoables.cp; sourceTree = "<group>"; };
 		0A46FE38055432A400ACDF3A /* URL.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = URL.cp; path = Application/Code/URL.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE39055432A400ACDF3A /* URLAccessAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = URLAccessAE.cp; path = Application/Code/URLAccessAE.cp; sourceTree = "<group>"; };
 		0A46FE3A055432A400ACDF3A /* VirtualDevice.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = VirtualDevice.cp; path = Application/Code/VirtualDevice.cp; sourceTree = SOURCE_ROOT; };
@@ -448,7 +464,7 @@
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
-		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Application/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
+		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6E225906CF42F0004AC0A4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskPasswordDialog.nib; sourceTree = "<group>"; };
 		0A719D23055D95ED009B0A88 /* InterfaceLibAppResources.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = InterfaceLibAppResources.r; path = Application/Resources/InterfaceLibAppResources.r; sourceTree = "<group>"; };
 		0A719D26055D95ED009B0A88 /* FormatDialog.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = FormatDialog.r; path = Application/Resources/FormatDialog.r; sourceTree = "<group>"; };
@@ -490,6 +506,22 @@
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
 		0A9841C7083457A4002E1BCE /* TerminalBackground.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalBackground.h; path = Application/Code/TerminalBackground.h; sourceTree = "<group>"; };
 		0A9AF64E0AF5A50500E7DF18 /* PyMacTelnet.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PyMacTelnet.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0A9B317E0D538E2800C1616D /* TextDataFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextDataFile.h; path = Shared/Code/TextDataFile.h; sourceTree = "<group>"; };
+		0A9B31800D538E3C00C1616D /* StringUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StringUtilities.h; path = Shared/Code/StringUtilities.h; sourceTree = "<group>"; };
+		0A9B31820D538E4400C1616D /* SoundSystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SoundSystem.h; path = Shared/Code/SoundSystem.h; sourceTree = "<group>"; };
+		0A9B31840D538E4D00C1616D /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Shared/Code/Undoables.h; sourceTree = "<group>"; };
+		0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFDictionaryManager.h; path = Shared/Code/CFDictionaryManager.h; sourceTree = "<group>"; };
+		0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFKeyValueInterface.h; path = Shared/Code/CFKeyValueInterface.h; sourceTree = "<group>"; };
+		0A9B318A0D538E6F00C1616D /* Cursors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Cursors.h; path = Shared/Code/Cursors.h; sourceTree = "<group>"; };
+		0A9B318C0D538E8600C1616D /* FlagManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FlagManager.h; path = Shared/Code/FlagManager.h; sourceTree = "<group>"; };
+		0A9B318E0D538EAB00C1616D /* ListenerModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListenerModel.h; path = Shared/Code/ListenerModel.h; sourceTree = "<group>"; };
+		0A9B31920D538EE400C1616D /* MemoryBlocks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlocks.h; path = Shared/Code/MemoryBlocks.h; sourceTree = "<group>"; };
+		0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockHandleLocker.template.h; path = Shared/Code/MemoryBlockHandleLocker.template.h; sourceTree = "<group>"; };
+		0A9B31950D538EF000C1616D /* MemoryBlockLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockLocker.template.h; path = Shared/Code/MemoryBlockLocker.template.h; sourceTree = "<group>"; };
+		0A9B31960D538EF000C1616D /* MemoryBlockPtrLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockPtrLocker.template.h; path = Shared/Code/MemoryBlockPtrLocker.template.h; sourceTree = "<group>"; };
+		0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceLocker.template.h; path = Shared/Code/MemoryBlockReferenceLocker.template.h; sourceTree = "<group>"; };
+		0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceTracker.template.h; path = Shared/Code/MemoryBlockReferenceTracker.template.h; sourceTree = "<group>"; };
+		0A9B319E0D538EFA00C1616D /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
 		0A9CC37A06DC470D00DCD12E /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanels.nib; sourceTree = "<group>"; };
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
@@ -518,9 +550,8 @@
 		0ACA57C50AEADC5C00B5F482 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/GenericDialog.nib; sourceTree = "<group>"; };
 		0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GenericDialog.cp; path = Application/Code/GenericDialog.cp; sourceTree = "<group>"; };
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
-		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Application/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
-		0ACDD8B10ABD13B200040553 /* SoundSystem.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SoundSystem.h; path = Application/Code/SoundSystem.h; sourceTree = "<group>"; };
-		0ACDD91C0ABD163700040553 /* ListUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ListUtilities.h; path = Application/Code/ListUtilities.h; sourceTree = "<group>"; };
+		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
+		0ACDD91C0ABD163700040553 /* ListUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ListUtilities.h; path = Shared/Code/ListUtilities.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.interfacer; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
@@ -595,21 +626,52 @@
 			children = (
 				0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */,
 				0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */,
+				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */,
+				0A46FDCC055432A400ACDF3A /* Cursors.cp */,
+				0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */,
+				0A46FDD3055432A400ACDF3A /* Embedding.cp */,
+				0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */,
 				0A33CD0007FAC07A00248DDF /* FlagManager.cp */,
 				0A66CA4B0887467000FD616C /* HIViewWrap.cp */,
 				0A33CCF607FAC04200248DDF /* ListenerModel.cp */,
+				0A46FDF2055432A400ACDF3A /* ListUtilities.cp */,
+				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
 				0A33CD0307FAC08800248DDF /* Releases.cp */,
+				0A46FE19055432A400ACDF3A /* SoundSystem.cp */,
 				0A33CCFC07FAC06200248DDF /* StringUtilities.cp */,
 				0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */,
+				0A46FE36055432A400ACDF3A /* Undoables.cp */,
 				0A46FE09055432A400ACDF3A /* UniversalPrint.cp */,
 				0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */,
 				0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */,
+				0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */,
+				0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */,
+				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
+				0A9B318A0D538E6F00C1616D /* Cursors.h */,
+				0A4603D50554376100ACDF3A /* DialogAdjust.h */,
+				0A4603DB0554376100ACDF3A /* Embedding.h */,
+				0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */,
+				0A9B318C0D538E8600C1616D /* FlagManager.h */,
 				0A66CA450887464200FD616C /* HIViewWrap.h */,
 				0A66CA950887505200FD616C /* HIViewWrap.fwd.h */,
 				0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */,
+				0A9B318E0D538EAB00C1616D /* ListenerModel.h */,
+				0ACDD91C0ABD163700040553 /* ListUtilities.h */,
+				0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */,
+				0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */,
+				0A9B31950D538EF000C1616D /* MemoryBlockLocker.template.h */,
+				0A9B31960D538EF000C1616D /* MemoryBlockPtrLocker.template.h */,
+				0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */,
+				0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */,
+				0A9B31920D538EE400C1616D /* MemoryBlocks.h */,
 				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
+				0A9B319E0D538EFA00C1616D /* Releases.h */,
+				0A9B31820D538E4400C1616D /* SoundSystem.h */,
+				0A9B31800D538E3C00C1616D /* StringUtilities.h */,
+				0A9B317E0D538E2800C1616D /* TextDataFile.h */,
+				0A9B31840D538E4D00C1616D /* Undoables.h */,
 				0A4604520554376100ACDF3A /* UniversalDefines.h */,
 				0A46041A0554376100ACDF3A /* UniversalPrint.h */,
 			);
@@ -638,19 +700,14 @@
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
 				0A46FDC4055432A400ACDF3A /* Configure.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
-				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */,
 				0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */,
-				0A46FDCC055432A400ACDF3A /* Cursors.cp */,
-				0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */,
 				0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */,
 				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
 				0A46FDD1055432A400ACDF3A /* DNR.cp */,
 				0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */,
 				0A82CE13069A374C0047E652 /* DuplicateDialog.cp */,
-				0A46FDD3055432A400ACDF3A /* Embedding.cp */,
 				0A46FDD4055432A400ACDF3A /* ErrorAlerts.cp */,
 				0A46FDD5055432A400ACDF3A /* EventLoop.cp */,
-				0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */,
 				0A46FDD6055432A400ACDF3A /* FileUtilities.cp */,
 				0A46FDD7055432A400ACDF3A /* FindDialog.cp */,
 				0A46FDDA055432A400ACDF3A /* Folder.cp */,
@@ -666,10 +723,8 @@
 				0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */,
 				0A46FDEB055432A400ACDF3A /* InternetServices.cp */,
 				0A46FDEC055432A400ACDF3A /* Keypads.cp */,
-				0A46FDF2055432A400ACDF3A /* ListUtilities.cp */,
 				0A46FDF3055432A400ACDF3A /* Local.cp */,
 				0A46FDF4055432A400ACDF3A /* Localization.cp */,
-				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A03DBC7063F6BA400C38B78 /* MacroManager.cp */,
 				0A46FDF8055432A400ACDF3A /* MacroSetupWindow.cp */,
 				0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */,
@@ -689,7 +744,6 @@
 				0A46FE16055432A400ACDF3A /* SessionEditorDialog.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.cp */,
 				0A46FE18055432A400ACDF3A /* SizeDialog.cp */,
-				0A46FE19055432A400ACDF3A /* SoundSystem.cp */,
 				0AABEA3D05A1211400F15EF2 /* SpecialKeySequencesDialog.cp */,
 				0A46FE1A055432A400ACDF3A /* SplashScreenDialog.cp */,
 				0A46FE1C055432A400ACDF3A /* StatusIcon.cp */,
@@ -708,7 +762,6 @@
 				0A46FE2D055432A400ACDF3A /* TextTranslation.cp */,
 				0A46FE2E055432A400ACDF3A /* ThreadEntryPoints.cp */,
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
-				0A46FE36055432A400ACDF3A /* Undoables.cp */,
 				0A46FE38055432A400ACDF3A /* URL.cp */,
 				0A46FE3A055432A400ACDF3A /* VirtualDevice.cp */,
 				0A46FE3B055432A400ACDF3A /* WindowInfo.cp */,
@@ -730,21 +783,17 @@
 				0A4603CA0554376100ACDF3A /* ConnectionData.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
-				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
 				0A4603CF0554376100ACDF3A /* ContextualMenuBuilder.h */,
 				0A4603D30554376100ACDF3A /* Cursors.h */,
-				0A4603D50554376100ACDF3A /* DialogAdjust.h */,
 				0A4603D70554376100ACDF3A /* DialogTransitions.h */,
 				0A4603D80554376100ACDF3A /* DialogUtilities.h */,
 				0A4603D90554376100ACDF3A /* DNR.h */,
 				0A4603DA0554376100ACDF3A /* DragAndDrop.h */,
 				0A82CE16069A3A030047E652 /* DuplicateDialog.h */,
-				0A4603DB0554376100ACDF3A /* Embedding.h */,
 				0A4603DC0554376100ACDF3A /* ErrorAlerts.h */,
 				0A4603DD0554376100ACDF3A /* EventInfoControlScope.h */,
 				0A4603DF0554376100ACDF3A /* EventInfoWindowScope.h */,
 				0A4603E00554376100ACDF3A /* EventLoop.h */,
-				0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */,
 				0A4603E10554376100ACDF3A /* FileUtilities.h */,
 				0A4603E20554376100ACDF3A /* FindDialog.h */,
 				0A4603E50554376100ACDF3A /* Folder.h */,
@@ -758,10 +807,8 @@
 				0A4603F50554376100ACDF3A /* InternetPrefs.h */,
 				0A4603F60554376100ACDF3A /* InternetServices.h */,
 				0A4603F70554376100ACDF3A /* Keypads.h */,
-				0ACDD91C0ABD163700040553 /* ListUtilities.h */,
 				0A4603FD0554376100ACDF3A /* Local.h */,
 				0A4603FE0554376100ACDF3A /* Localization.h */,
-				0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */,
 				0A03DBC9063F6BCC00C38B78 /* MacroManager.h */,
 				0A4604000554376100ACDF3A /* MacroSetupWindow.h */,
 				0A4604020554376100ACDF3A /* MainEntryPoint.h */,
@@ -782,7 +829,6 @@
 				0A4604280554376100ACDF3A /* SessionFactory.h */,
 				0A4604290554376100ACDF3A /* SessionRef.typedef.h */,
 				0A46042A0554376100ACDF3A /* SizeDialog.h */,
-				0ACDD8B10ABD13B200040553 /* SoundSystem.h */,
 				0AABEA0B05A1203200F15EF2 /* SpecialKeySequencesDialog.h */,
 				0A46042C0554376100ACDF3A /* SplashScreenDialog.h */,
 				0A46042E0554376100ACDF3A /* StatusIcon.h */,
@@ -1081,6 +1127,22 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0A9B317F0D538E2800C1616D /* TextDataFile.h in Headers */,
+				0A9B31810D538E3C00C1616D /* StringUtilities.h in Headers */,
+				0A9B31830D538E4400C1616D /* SoundSystem.h in Headers */,
+				0A9B31850D538E4D00C1616D /* Undoables.h in Headers */,
+				0A9B31870D538E5B00C1616D /* CFDictionaryManager.h in Headers */,
+				0A9B31890D538E6300C1616D /* CFKeyValueInterface.h in Headers */,
+				0A9B318B0D538E6F00C1616D /* Cursors.h in Headers */,
+				0A9B318D0D538E8600C1616D /* FlagManager.h in Headers */,
+				0A9B318F0D538EAB00C1616D /* ListenerModel.h in Headers */,
+				0A9B31930D538EE400C1616D /* MemoryBlocks.h in Headers */,
+				0A9B31990D538EF000C1616D /* MemoryBlockHandleLocker.template.h in Headers */,
+				0A9B319A0D538EF000C1616D /* MemoryBlockLocker.template.h in Headers */,
+				0A9B319B0D538EF000C1616D /* MemoryBlockPtrLocker.template.h in Headers */,
+				0A9B319C0D538EF000C1616D /* MemoryBlockReferenceLocker.template.h in Headers */,
+				0A9B319D0D538EF000C1616D /* MemoryBlockReferenceTracker.template.h in Headers */,
+				0A9B319F0D538EFA00C1616D /* Releases.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
