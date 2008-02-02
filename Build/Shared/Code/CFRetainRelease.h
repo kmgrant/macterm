@@ -839,6 +839,28 @@ setCFMutableDictionaryRef	(CFMutableDictionaryRef		inNewType,
 
 
 /*!
+Use this instead of setCFTypeRef() when the embedded
+type is a mutable Core Foundation string.  This is
+necessary because CFTypeRef is a constant.
+
+(2.0)
+*/
+void
+CFRetainRelease::
+setCFMutableStringRef	(CFMutableStringRef		inNewType,
+						 bool					inIsAlreadyRetained)
+{
+	if (nullptr != _typeAs._constant.unspecified) CFRelease(_typeAs._constant.unspecified);
+	_typeAs._modifiable.string = inNewType;
+	if ((nullptr != _typeAs._constant.unspecified) &&
+		(false == inIsAlreadyRetained))
+	{
+		CFRetain(_typeAs._constant.unspecified);
+	}
+}// setCFMutableStringRef
+
+
+/*!
 Calls CFRelease() on the reference kept by this
 class instance, if any, and replaces it with the
 given reference.  CFRetain() is then called on
