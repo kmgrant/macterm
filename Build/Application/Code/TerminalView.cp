@@ -5094,8 +5094,9 @@ getSelectedTextSize		(TerminalViewPtr	inTerminalViewPtr)
 	{
 		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
 		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
+		// for rectangular selections, the size also includes space for one new-line per row
 		UInt16 const				kRowWidth = (inTerminalViewPtr->text.selection.isRectangular)
-												? INTEGER_ABSOLUTE(kSelectionPastEnd.first - kSelectionStart.first)
+												? INTEGER_ABSOLUTE(kSelectionPastEnd.first - kSelectionStart.first + 1/* size of new-line */)
 												: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 		
 		
@@ -5302,7 +5303,6 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 	
 	if (inClickCount == 2)
 	{
-		char const* const			kEndOfLineSequence = "\015";
 		SInt16 const				kNumberOfSpacesPerTab = 0; // zero means Òdo not substitute tabsÓ
 		Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
 		Terminal_TextCopyFlags		flags = 0L;
@@ -5315,11 +5315,11 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 		// double-click - select a word; or, do intelligent double-click
 		// based on the character underneath the cursor
 		if (kTerminal_ResultOK ==
-			Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
-								inTerminalViewPtr->text.selection.range.first.first,
-								inTerminalViewPtr->text.selection.range.first.first,
-								theChar, 1L/* maximum characters to return */, nullptr/* actual length */, kEndOfLineSequence,
-								kNumberOfSpacesPerTab, flags))
+			Terminal_CopyLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+									inTerminalViewPtr->text.selection.range.first.first,
+									inTerminalViewPtr->text.selection.range.first.first,
+									theChar, 1L/* maximum characters to return */, nullptr/* actual length */,
+									kNumberOfSpacesPerTab))
 		{
 			SInt32		actualLength = 0L;
 			Boolean		foundEnd = false;
@@ -5356,10 +5356,10 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 					
 					// copy a single character and examine it
 					if (kTerminal_ResultOK ==
-						Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
-											selectionPastEnd.first, selectionPastEnd.first,
-											theChar, 1L/* maximum characters to return */, &actualLength, kEndOfLineSequence,
-											kNumberOfSpacesPerTab, flags))
+						Terminal_CopyLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+												selectionPastEnd.first, selectionPastEnd.first,
+												theChar, 1L/* maximum characters to return */, &actualLength,
+												kNumberOfSpacesPerTab))
 					{
 						foundEnd = ((actualLength == 0) || CPP_STD::isspace(*theChar));
 						unless (foundEnd)
@@ -5383,10 +5383,10 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 				
 				// copy a single character and examine it
 				if (kTerminal_ResultOK ==
-					Terminal_CopyRange(inTerminalViewPtr->screen.ref, lineIterator, 1/* number of rows */,
-										selectionStart.first, selectionStart.first,
-										theChar, 1L/* maximum characters to return */, &actualLength, kEndOfLineSequence,
-										kNumberOfSpacesPerTab, flags))
+					Terminal_CopyLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+											selectionStart.first, selectionStart.first,
+											theChar, 1L/* maximum characters to return */, &actualLength,
+											kNumberOfSpacesPerTab))
 				{
 					foundEnd = ((actualLength == 0) || CPP_STD::isspace(*theChar));
 				}

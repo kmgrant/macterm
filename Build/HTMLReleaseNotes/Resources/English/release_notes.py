@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080203',
     '20080202',
     '20080130',
     '20080129',
@@ -83,6 +84,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080203': [
+		'Fixed truncation of the last line of text when copying or dragging rectangular selections.',
+	],
 	'20080202': [
 		'Find will now properly highlight matching text.',
 		'Find will now highlight *every* match, anywhere in your terminal screen or scrollback, instead of just the first one.',
