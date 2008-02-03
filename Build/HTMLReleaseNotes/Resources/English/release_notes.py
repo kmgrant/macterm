@@ -88,6 +88,8 @@ notes_by_version = {
 		'Find will now highlight *every* match, anywhere in your terminal screen or scrollback, instead of just the first one.',
 		'Find dialog now searches live, as you type or change search options!',
 		'Find dialog now disappears immediately when the Search button finds a match; sheet animation is bypassed.',
+		'Find dialog search history menu no longer has a fixed size.',
+		'Fixed a possible crash after several uses of the Find dialog.',
 	],
 	'20080130': [
 		'Save Selected Text interface has been modernized, displaying a sheet and using Unicode.',

@@ -44,6 +44,7 @@
 #include <AlertMessages.h>
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
+#include <CFUtilities.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <DialogAdjust.h>
@@ -104,14 +105,8 @@ static HIViewID const		idMyArrowsSearchProgress	= { kSignatureMyArrowsSearchProg
 static HIViewID const		idMyCheckBoxCaseSensitive	= { kSignatureMyCheckBoxCaseSensitive,		0/* ID */ };
 static HIViewID const		idMyCheckBoxOldestFirst		= { kSignatureMyCheckBoxOldestFirst,		0/* ID */ };
 
-enum
-{
-	kMy_KeywordHistorySize = 5
-};
-
 #pragma mark Types
 
-typedef std::vector< CFStringRef >					KeywordHistoryList;
 typedef std::vector< Terminal_RangeDescription >	My_TerminalRangeList;
 
 struct My_FindDialog
@@ -143,7 +138,7 @@ struct My_FindDialog
 	EventHandlerRef							historyMenuCommandHandler;	//!< invoked when a dialog button is clicked
 	CommonEventHandlers_WindowResizer		windowResizeHandler;		//!< invoked when a window has been resized
 	MenuRef									keywordHistoryMenuRef;		//!< history menu
-	KeywordHistoryList						keywordHistory;				//!< contents of history menu
+	CFRetainRelease							keywordHistory;				//!< contents of history menu (CFMutableArrayRef)
 };
 typedef My_FindDialog*		My_FindDialogPtr;
 
@@ -225,17 +220,8 @@ historyMenuCommandUPP		(nullptr),
 historyMenuCommandHandler	(nullptr),
 windowResizeHandler			(),
 keywordHistoryMenuRef		(nullptr),
-keywordHistory				(kMy_KeywordHistorySize)
+keywordHistory				(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks))
 {
-	// initialize keyword history
-	{
-		register SInt16		i = 0;
-		
-		
-		for (i = 0; i < kMy_KeywordHistorySize; ++i) this->keywordHistory[i] = nullptr;
-	}
-	addToHistory(this, CFSTR(""));
-	
 	// history menu setup
 	{
 		OSStatus	error = noErr;
@@ -335,14 +321,6 @@ Destructor.  See FindDialog_Dispose().
 My_FindDialog::
 ~My_FindDialog ()
 {
-	register SInt16		i = 0;
-	
-	
-	for (i = 0; i < kMy_KeywordHistorySize; ++i)
-	{
-		if (nullptr != this->keywordHistory[i]) CFRelease(this->keywordHistory[i]), this->keywordHistory[i] = nullptr;
-	}
-	
 	// clean up the Help System
 	HelpSystem_SetWindowKeyPhrase(this->dialogWindow, kHelpSystem_KeyPhraseDefault);
 	
@@ -525,9 +503,8 @@ FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		inDialogThatClosed)
 
 /*!
 Adds the specified command line to the history buffer,
-shifting all commands back one (and therefore destroying
-the oldest one) and resetting the history pointer.  The
-given string reference is retained.
+shifting all commands back one.  The given string reference
+is retained.
 
 (3.0)
 */
@@ -535,20 +512,9 @@ static void
 addToHistory	(My_FindDialogPtr	inPtr,
 				 CFStringRef		inText)
 {
-	register SInt16		i = 0;
-	SInt16 const		kLastItem = kMy_KeywordHistorySize - 1;
-	
-	
-	if (nullptr != inPtr->keywordHistory[kLastItem]) CFRelease(&inPtr->keywordHistory[kLastItem]), inPtr->keywordHistory[kLastItem] = nullptr;
-	for (i = kLastItem; i > 0; --i) inPtr->keywordHistory[i] = inPtr->keywordHistory[i - 1];
-	inPtr->keywordHistory[0] = inText, CFRetain(inText);
-	DeleteMenuItems(inPtr->keywordHistoryMenuRef, 1/* first item */,
-					CountMenuItems(inPtr->keywordHistoryMenuRef)/* number of items to delete */);
-	for (i = 0; i <= kLastItem; ++i)
-	{
-		AppendMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, inPtr->keywordHistory[i], 0/* attributes */,
-										0/* command ID */, nullptr/* new itemÕs index */);
-	}
+	CFArrayInsertValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0, inText);
+	InsertMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, inText, 0/* after which index */,
+									kMenuItemAttrIgnoreMeta/* attributes */, 0/* command ID */);
 }// addToHistory
 
 
@@ -926,10 +892,12 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			assert(commandInfo.menu.menuRef == ptr->keywordHistoryMenuRef);
 			assert(commandInfo.menu.menuItemIndex >= 1);
 			{
-				CFStringRef		command = ptr->keywordHistory[commandInfo.menu.menuItemIndex - 1];
+				CFStringRef		historyString = CFUtilities_StringCast
+												(CFArrayGetValueAtIndex(ptr->keywordHistory.returnCFMutableArrayRef(),
+																		commandInfo.menu.menuItemIndex - 1));
 				
 				
-				SetControlTextWithCFString(ptr->fieldKeywords, (nullptr == command) ? CFSTR("") : command);
+				SetControlTextWithCFString(ptr->fieldKeywords, (nullptr != historyString) ? historyString : CFSTR(""));
 			}
 		}
 	}
