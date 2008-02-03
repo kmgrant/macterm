@@ -62,7 +62,7 @@ build-%:
 	perl -pi -e 's/LAST_UPDATED_MM/$(shell date +"%m")/'  "$(strip $(DEST))/pad.plist"
 	perl -pi -e 's/LAST_UPDATED_DD/$(shell date +"%d")/'  "$(strip $(DEST))/pad.plist"
 	perl -pi -e 's/LAST_UPDATED_YYYY/$(shell date +"%Y")/'  "$(strip $(DEST))/pad.plist"
-	perl -pi -e "s/RELEASE_NOTES_ONE_STRING/$(shell $(GENERATOR_SUB) plain_text $(MAJOR_MINOR_SUB))/"  "$(strip $(DEST))/pad.plist"
+	perl -pi -e "s|RELEASE_NOTES_ONE_STRING|$(shell $(GENERATOR_SUB) plain_text $(MAJOR_MINOR_SUB))|"  "$(strip $(DEST))/pad.plist"
 	$(end_target)
 
 clean-%:
