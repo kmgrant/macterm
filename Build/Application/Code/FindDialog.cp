@@ -87,7 +87,7 @@ enum
 	kSignatureMyLabelSearchKeywords		= FOUR_CHAR_CODE('KLbl'),
 	kSignatureMyFieldSearchKeywords		= FOUR_CHAR_CODE('KeyW'),
 	kSignatureMyKeywordHistoryMenu		= FOUR_CHAR_CODE('HMnu'),
-	kSignatureMyTextNotFound			= FOUR_CHAR_CODE('NotF'),
+	kSignatureMyTextStatus				= FOUR_CHAR_CODE('Stat'),
 	kSignatureMyIconNotFound			= FOUR_CHAR_CODE('Icon'),
 	kSignatureMyArrowsSearchProgress	= FOUR_CHAR_CODE('Prog'),
 	kSignatureMyCheckBoxCaseSensitive	= FOUR_CHAR_CODE('XCsS'),
@@ -99,7 +99,7 @@ static HIViewID const		idMyButtonHelp				= { kSignatureMyButtonHelp,					0/* ID 
 static HIViewID const		idMyLabelSearchKeywords		= { kSignatureMyLabelSearchKeywords,		0/* ID */ };
 static HIViewID const		idMyFieldSearchKeywords		= { kSignatureMyFieldSearchKeywords,		0/* ID */ };
 static HIViewID const		idMyKeywordHistoryMenu		= { kSignatureMyKeywordHistoryMenu,			0/* ID */ };
-static HIViewID const		idMyTextNotFound			= { kSignatureMyTextNotFound,				0/* ID */ };
+static HIViewID const		idMyTextStatus				= { kSignatureMyTextStatus,					0/* ID */ };
 static HIViewID const		idMyIconNotFound			= { kSignatureMyIconNotFound,				0/* ID */ };
 static HIViewID const		idMyArrowsSearchProgress	= { kSignatureMyArrowsSearchProgress,		0/* ID */ };
 static HIViewID const		idMyCheckBoxCaseSensitive	= { kSignatureMyCheckBoxCaseSensitive,		0/* ID */ };
@@ -124,7 +124,7 @@ struct My_FindDialog
 	HIViewWrap								labelKeywords;				//!< the label for the keyword text field
 	HIViewWrap								fieldKeywords;				//!< the text field containing search keywords
 	HIViewWrap								popUpMenuKeywordHistory;	//!< pop-up menu showing previous searches
-	HIViewWrap								textNotFound;				//!< message stating that queried text was not found
+	HIViewWrap								textStatus;					//!< message stating the results of the search
 	HIViewWrap								iconNotFound;				//!< icon that appears when text was not found
 	HIViewWrap								arrowsSearchProgress;		//!< the progress indicator during searches
 	HIViewWrap								checkboxCaseSensitive;		//!< checkbox indicating whether ÒsimilarÓ letters match
@@ -196,7 +196,7 @@ fieldKeywords				(dialogWindow.returnHIViewWithID(idMyFieldSearchKeywords)
 								<< HIViewWrap_AssertExists),
 popUpMenuKeywordHistory		(dialogWindow.returnHIViewWithID(idMyKeywordHistoryMenu)
 								<< HIViewWrap_AssertExists),
-textNotFound				(dialogWindow.returnHIViewWithID(idMyTextNotFound)
+textStatus					(dialogWindow.returnHIViewWithID(idMyTextStatus)
 								<< HIViewWrap_AssertExists),
 iconNotFound				(dialogWindow.returnHIViewWithID(idMyIconNotFound)
 								<< HIViewWrap_AssertExists),
@@ -275,10 +275,12 @@ keywordHistory				(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no s
 	SetControl32BitValue(this->checkboxCaseSensitive, (inFlags & kFindDialog_OptionCaseSensitivity) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
 	SetControl32BitValue(this->checkboxOldestLinesFirst, (inFlags & kFindDialog_OptionOldestLinesFirst) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
 	
-	// initially hide the arrows and the error message
-	(OSStatus)SetControlVisibility(this->textNotFound, false/* visible */, false/* draw */);
+	// initially hide the arrows and the error icon
 	(OSStatus)SetControlVisibility(this->iconNotFound, false/* visible */, false/* draw */);
 	(OSStatus)SetControlVisibility(this->arrowsSearchProgress, false/* visible */, false/* draw */);
+	
+	// initially clear the status area
+	SetControlTextWithCFString(this->textStatus, CFSTR(""));
 	
 	// install a callback that handles history menu item selections
 	{
@@ -512,9 +514,12 @@ static void
 addToHistory	(My_FindDialogPtr	inPtr,
 				 CFStringRef		inText)
 {
-	CFArrayInsertValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0, inText);
-	InsertMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, inText, 0/* after which index */,
-									kMenuItemAttrIgnoreMeta/* attributes */, 0/* command ID */);
+	if (nullptr != inText)
+	{
+		CFArrayInsertValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0, inText);
+		InsertMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, inText, 0/* after which index */,
+										kMenuItemAttrIgnoreMeta/* attributes */, 0/* command ID */);
+	}
 }// addToHistory
 
 
@@ -573,11 +578,9 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 			}
 			else
 			{
-				// show an error message and select all of the text in the keywords field for easy replacement
-				SetControlVisibility(inPtr->textNotFound, true/* visible */, true/* draw */);
-				SetControlVisibility(inPtr->iconNotFound, true/* visible */, true/* draw */);
 				result = true; // pretend the OK button was NOT clicked, so the modal dialog stays open
 				
+				// select all of the text in the keywords field for easy replacement of the failed query
 				(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
 				(OSStatus)HIViewAdvanceFocus(inPtr->fieldKeywords, 0/* modifiers */);
 			}
@@ -594,7 +597,23 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 		break;
 	
 	case kSignatureMyButtonCancel:
-		// user cancelled - close the dialog with an appropriate transition for cancelling
+		// user cancelled - restore to any previous search
+		if (CFArrayGetCount(inPtr->keywordHistory.returnCFMutableArrayRef()) > 0)
+		{
+			CFStringRef				historyString = CFUtilities_StringCast
+													(CFArrayGetValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0));
+			My_TerminalRangeList	unusedResults;
+			
+			
+			SetControlTextWithCFString(inPtr->fieldKeywords, (nullptr != historyString) ? historyString : CFSTR(""));
+			initiateSearch(inPtr, unusedResults);
+		}
+		else
+		{
+			TerminalView_FindNothing(TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow));
+		}
+		
+		// close the dialog with an appropriate transition for cancelling
 		(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
 		HideSheetWindow(inPtr->dialogWindow);
 		
@@ -656,7 +675,7 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 			// controls which are resized horizontally
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->labelKeywords, truncDeltaX);
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->fieldKeywords, truncDeltaX);
-			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->textNotFound, truncDeltaX);
+			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->textStatus, truncDeltaX);
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->checkboxCaseSensitive, truncDeltaX);
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->checkboxOldestLinesFirst, truncDeltaX);
 		}
@@ -675,24 +694,33 @@ static Boolean
 initiateSearch	(My_FindDialogPtr		inPtr,
 				 My_TerminalRangeList&	inoutSearchResults)
 {
-	TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
-	Boolean				result = false;
+	TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
+	TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
+	Terminal_SearchFlags	flags = 0;
+	Terminal_Result			searchStatus = kTerminal_ResultOK;
+	CFStringRef				searchQueryCFString = nullptr;
+	Boolean					result = false;
 	
 	
-	// remove highlighting from any previous searches and put the sheet in progress mode
-	TerminalView_FindNothing(view);
-	DeactivateControl(inPtr->buttonSearch);
-	SetControlVisibility(inPtr->arrowsSearchProgress, true/* visible */, true/* draw */);
-	
-	// initiate synchronous (should be asynchronous!) search - unimplemented
+	// initiate synchronous (should be asynchronous!) search
+	GetControlTextAsCFString(inPtr->fieldKeywords, searchQueryCFString);
+	if ((nullptr == searchQueryCFString) || (0 == CFStringGetLength(searchQueryCFString)))
 	{
-		TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
-		Terminal_SearchFlags	flags = 0;
-		Terminal_Result			searchStatus = kTerminal_ResultOK;
-		CFStringRef				searchQueryCFString = nullptr;
+		// clear status area, avoid search
+		SetControlTextWithCFString(inPtr->textStatus, CFSTR(""));
+	}
+	else
+	{
+		// remove highlighting from any previous searches
+		TerminalView_FindNothing(view);
 		
+		// put the sheet in progress mode
+		DeactivateControl(inPtr->buttonSearch);
+		DeactivateControl(inPtr->checkboxCaseSensitive);
+		DeactivateControl(inPtr->checkboxOldestLinesFirst);
+		SetControlVisibility(inPtr->arrowsSearchProgress, true/* visible */, true/* draw */);
 		
-		GetControlTextAsCFString(inPtr->fieldKeywords, searchQueryCFString);
+		// configure search
 		if (GetControlValue(inPtr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue)
 		{
 			flags |= kTerminal_SearchFlagsCaseSensitive;
@@ -701,24 +729,41 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 		{
 			flags |= kTerminal_SearchFlagsSearchBackwards;
 		}
+		
+		// initiate synchronous (should it be asynchronous?) search
 		searchStatus = Terminal_Search(screen, searchQueryCFString, flags, inoutSearchResults);
 		if (kTerminal_ResultOK == searchStatus)
 		{
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			CFStringRef			statusCFString = nullptr;
+			
+			
 			if (inoutSearchResults.empty())
 			{
 				result = false;
 				
-				// show an error message and select all of the text in the keywords field for easy replacement
-				SetControlVisibility(inPtr->textNotFound, true/* visible */, true/* draw */);
+				// show an error icon and message
 				SetControlVisibility(inPtr->iconNotFound, true/* visible */, true/* draw */);
+				stringResult = UIStrings_Copy(kUIStrings_TerminalSearchNothingFound, statusCFString);
 			}
 			else
 			{
 				result = true;
 				
-				// hide the error message
-				SetControlVisibility(inPtr->textNotFound, false/* visible */, true/* draw */);
+				// hide the error icon and display the number of matches
 				SetControlVisibility(inPtr->iconNotFound, false/* visible */, true/* draw */);
+				{
+					CFStringRef		templateCFString = nullptr;
+					
+					
+					stringResult = UIStrings_Copy(kUIStrings_TerminalSearchNumberOfMatches, templateCFString);
+					if (stringResult.ok())
+					{
+						statusCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, templateCFString,
+																	STATIC_CAST(inoutSearchResults.size(), unsigned long));
+						CFRelease(templateCFString), templateCFString = nullptr;
+					}
+				}
 				
 				// highlight search results
 				for (std::vector< Terminal_RangeDescription >::const_iterator toResultRange = inoutSearchResults.begin();
@@ -736,10 +781,20 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 					}
 				}
 			}
+			
+			if (nullptr != statusCFString)
+			{
+				SetControlTextWithCFString(inPtr->textStatus, statusCFString);
+				CFRelease(statusCFString), statusCFString = nullptr;
+			}
 		}
+		
+		// remove modal state
+		SetControlVisibility(inPtr->arrowsSearchProgress, false/* visible */, true/* draw */);
+		ActivateControl(inPtr->buttonSearch);
+		ActivateControl(inPtr->checkboxCaseSensitive);
+		ActivateControl(inPtr->checkboxOldestLinesFirst);
 	}
-	SetControlVisibility(inPtr->arrowsSearchProgress, false/* visible */, false/* draw */);
-	ActivateControl(inPtr->buttonSearch);
 	
 	return result;
 }// initiateSearch
@@ -891,13 +946,16 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			// presumably this is the history menu!
 			assert(commandInfo.menu.menuRef == ptr->keywordHistoryMenuRef);
 			assert(commandInfo.menu.menuItemIndex >= 1);
+			if (CFArrayGetCount(ptr->keywordHistory.returnCFMutableArrayRef()) >= commandInfo.menu.menuItemIndex)
 			{
-				CFStringRef		historyString = CFUtilities_StringCast
-												(CFArrayGetValueAtIndex(ptr->keywordHistory.returnCFMutableArrayRef(),
-																		commandInfo.menu.menuItemIndex - 1));
+				CFStringRef				historyString = CFUtilities_StringCast
+														(CFArrayGetValueAtIndex(ptr->keywordHistory.returnCFMutableArrayRef(),
+																				commandInfo.menu.menuItemIndex - 1));
+				My_TerminalRangeList	unusedResults;
 				
 				
 				SetControlTextWithCFString(ptr->fieldKeywords, (nullptr != historyString) ? historyString : CFSTR(""));
+				initiateSearch(ptr, unusedResults);
 			}
 		}
 	}

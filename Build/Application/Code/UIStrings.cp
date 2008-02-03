@@ -1541,6 +1541,16 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 													CFSTR("kUIStrings_TerminalSuspendOutput"));
 		break;
 	
+	case kUIStrings_TerminalSearchNothingFound:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The text was not found."), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalSearchNothingFound"));
+		break;
+	
+	case kUIStrings_TerminalSearchNumberOfMatches:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Matches: %1$u"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalSearchNumberOfMatches; %1$u will be the number of times the query found a match"));
+		break;
+	
 	default:
 		// ???
 		result = kUIStrings_ResultNoSuchString;

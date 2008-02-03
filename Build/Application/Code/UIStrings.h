@@ -363,7 +363,9 @@ enum UIStrings_TerminalCFString
 	kUIStrings_TerminalBackgroundAccessibilityDescription	= 'ABDs',
 	kUIStrings_TerminalInterruptProcess						= 'Intr',
 	kUIStrings_TerminalResumeOutput							= 'Resu',
-	kUIStrings_TerminalSuspendOutput						= 'Susp'
+	kUIStrings_TerminalSuspendOutput						= 'Susp',
+	kUIStrings_TerminalSearchNothingFound					= 'NotF',
+	kUIStrings_TerminalSearchNumberOfMatches				= 'NumM',
 };
 
 /*!
