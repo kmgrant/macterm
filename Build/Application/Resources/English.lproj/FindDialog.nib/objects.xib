@@ -3,49 +3,6 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="15" name="allObjects">
-    <object class="IBCarbonSearchField" id="206">
-      <ostype name="controlSignature">KeyW</ostype>
-      <string name="viewFrame">52 21 320 22 </string>
-      <string name="bounds">21 52 43 372 </string>
-    </object>
-    <object class="IBCarbonMenu" id="204">
-      <string name="title">BevelMenu</string>
-    </object>
-    <object class="IBCarbonCheckBox" id="188">
-      <ostype name="controlSignature">XOLF</ostype>
-      <ostype name="command">RFnd</ostype>
-      <string name="helpTagText">The oldest lines are those nearest the top of the buffer.</string>
-      <string name="title">Oldest lines first</string>
-      <string name="viewFrame">52 92 320 18 </string>
-      <string name="bounds">92 52 110 372 </string>
-    </object>
-    <object class="IBCarbonButton" id="185">
-      <ostype name="controlSignature">Canc</ostype>
-      <ostype name="command">not!</ostype>
-      <int name="buttonType">2</int>
-      <string name="title">Cancel</string>
-      <string name="viewFrame">229 161 82 20 </string>
-      <string name="bounds">161 229 181 311 </string>
-    </object>
-    <object class="IBCarbonEditText" id="200">
-      <ostype name="controlSignature">Titl</ostype>
-      <boolean name="isUnicode">TRUE</boolean>
-      <string name="viewFrame">92 135212 266 0 </string>
-      <string name="bounds">4140 92 4140 358 </string>
-    </object>
-    <object class="IBCarbonChasingArrows" id="198">
-      <ostype name="controlSignature">Prog</ostype>
-      <string name="helpTagText">A search of this terminal window is in progress.</string>
-      <string name="viewFrame">356 125 16 16 </string>
-      <string name="bounds">125 356 141 372 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="197">
-      <ostype name="controlSignature">Stat</ostype>
-      <string name="title">&lt;status&gt;</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">92 125 256 16 </string>
-      <string name="bounds">125 92 141 348 </string>
-    </object>
     <object class="IBCarbonWindow" id="166">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
@@ -64,8 +21,19 @@
             <string name="viewFrame">52 51 320 13 </string>
             <string name="bounds">51 52 64 372 </string>
           </object>
-          <reference idRef="197"/>
-          <reference idRef="198"/>
+          <object class="IBCarbonStaticText" id="197">
+            <ostype name="controlSignature">Stat</ostype>
+            <string name="title">&lt;status&gt;</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">92 125 256 16 </string>
+            <string name="bounds">125 92 141 348 </string>
+          </object>
+          <object class="IBCarbonChasingArrows" id="198">
+            <ostype name="controlSignature">Prog</ostype>
+            <string name="helpTagText">A search of this terminal window is in progress.</string>
+            <string name="viewFrame">356 125 16 16 </string>
+            <string name="bounds">125 356 141 372 </string>
+          </object>
           <object class="IBCarbonCheckBox" id="187">
             <ostype name="controlSignature">XCsS</ostype>
             <ostype name="command">RFnd</ostype>
@@ -74,16 +42,30 @@
             <string name="viewFrame">52 70 320 18 </string>
             <string name="bounds">70 52 88 372 </string>
           </object>
-          <reference idRef="188"/>
+          <object class="IBCarbonCheckBox" id="188">
+            <ostype name="controlSignature">XOLF</ostype>
+            <ostype name="command">RFnd</ostype>
+            <string name="helpTagText">The oldest lines are those nearest the top of the buffer.</string>
+            <string name="title">Oldest lines first</string>
+            <string name="viewFrame">52 92 320 18 </string>
+            <string name="bounds">92 52 110 372 </string>
+          </object>
           <object class="IBCarbonButton" id="184">
             <ostype name="controlSignature">Find</ostype>
             <ostype name="command">ok  </ostype>
             <int name="buttonType">1</int>
             <string name="title">Go</string>
-            <string name="viewFrame">323 161 82 20 </string>
-            <string name="bounds">161 323 181 405 </string>
+            <string name="viewFrame">335 161 70 20 </string>
+            <string name="bounds">161 335 181 405 </string>
           </object>
-          <reference idRef="185"/>
+          <object class="IBCarbonButton" id="185">
+            <ostype name="controlSignature">Canc</ostype>
+            <ostype name="command">not!</ostype>
+            <int name="buttonType">2</int>
+            <string name="title">Cancel</string>
+            <string name="viewFrame">253 161 70 20 </string>
+            <string name="bounds">161 253 181 323 </string>
+          </object>
           <object class="IBCarbonRoundButton" id="199">
             <ostype name="controlSignature">Help</ostype>
             <ostype name="command">?Ctx</ostype>
@@ -103,7 +85,9 @@
             <int name="menuBehavior">8192</int>
             <int name="selectedItem">-2147483648</int>
             <boolean name="rounded">TRUE</boolean>
-            <reference name="menu" idRef="204"/>
+            <object name="menu" class="IBCarbonMenu" id="204">
+              <string name="title">BevelMenu</string>
+            </object>
             <string name="viewFrame">380 20 32 23 </string>
             <string name="bounds">20 380 43 412 </string>
           </object>
@@ -114,35 +98,51 @@
             <string name="viewFrame">356 125 16 16 </string>
             <string name="bounds">125 356 141 372 </string>
           </object>
-          <reference idRef="206"/>
+          <object class="IBCarbonSearchField" id="206">
+            <ostype name="controlSignature">KeyW</ostype>
+            <string name="viewFrame">52 21 320 22 </string>
+            <string name="bounds">21 52 43 372 </string>
+          </object>
         </array>
         <string name="bounds">0 0 201 425 </string>
       </object>
       <string name="windowRect">295 86 496 511 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
+    <reference idRef="188"/>
+    <reference idRef="185"/>
     <reference idRef="187"/>
     <reference idRef="183"/>
     <reference idRef="205"/>
-    <reference idRef="167"/>
+    <reference idRef="197"/>
+    <reference idRef="204"/>
+    <reference idRef="206"/>
     <reference idRef="203"/>
     <reference idRef="199"/>
+    <reference idRef="198"/>
+    <reference idRef="167"/>
     <reference idRef="184"/>
+    <object class="IBCarbonEditText" id="200">
+      <ostype name="controlSignature">Titl</ostype>
+      <boolean name="isUnicode">TRUE</boolean>
+      <string name="viewFrame">92 -135011 266 0 </string>
+      <string name="bounds">-3939 92 -3939 358 </string>
+    </object>
   </array>
   <array count="15" name="allParents">
-    <reference idRef="167"/>
-    <reference idRef="203"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
     <reference idRef="1"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
-    <reference idRef="166"/>
     <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="203"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="166"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
   </array>
