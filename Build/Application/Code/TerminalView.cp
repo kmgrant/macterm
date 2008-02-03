@@ -36,6 +36,7 @@
 // standard-C includes
 #include <algorithm>
 #include <cctype>
+#include <vector>
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -171,6 +172,8 @@ struct MyPreferenceProxies
 	Boolean		notifyOfBeeps;
 };
 
+typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
+
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
 // be simplified and become more object-oriented in the future.
@@ -295,6 +298,8 @@ struct TerminalView
 			Boolean					exists;			// is any text highlighted anywhere in the window?
 			Boolean					isRectangular;	// is the text selection unattached from the left and right screen edges?
 		} selection;
+		
+		My_CellRangeList	searchResults;	// regions matching the most recent Find results
 	} text;
 	
 	TerminalViewRef		selfRef;				// redundant opaque reference that would resolve to point to this structure
@@ -341,6 +346,7 @@ static void				getScreenOriginFloat			(TerminalViewPtr, Float32&, Float32&);
 static Handle			getSelectedTextAsNewHandle		(TerminalViewPtr, UInt16, TerminalView_TextFlags);
 static RgnHandle		getSelectedTextAsNewRegion		(TerminalViewPtr);
 static size_t			getSelectedTextSize				(TerminalViewPtr);
+static RgnHandle		getVirtualRangeAsNewRegion		(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
 static void				getVirtualVisibleRegion			(TerminalViewPtr, SInt16*, SInt16*, SInt16*, SInt16*);
 static void				handleMultiClick				(TerminalViewPtr, UInt16);
 static void				handleNewViewContainerBounds	(HIViewRef, Float32, Float32, void*);
@@ -757,6 +763,75 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 		}
 	}
 }// DisplaySaveSelectedTextUI
+
+
+/*!
+Removes all highlighted search results ranges.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(3.1)
+*/
+TerminalView_Result
+TerminalView_FindNothing	(TerminalViewRef	inView)
+{
+	TerminalView_Result		result = kTerminalView_ResultOK;
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		for (My_CellRangeList::const_iterator toRange = viewPtr->text.searchResults.begin();
+				toRange != viewPtr->text.searchResults.end(); ++toRange)
+		{
+			highlightVirtualRange(viewPtr, *toRange, false/* is highlighted */, true/* redraw */);
+		}
+		viewPtr->text.searchResults.clear();
+	}
+	return result;
+}// FindNothing
+
+
+/*!
+Highlights the specified range of text as if it were a matching
+word in a set of search results.
+
+Unlike TerminalView_SelectVirtualRange(), this does not replace
+any current selection: it adds the specified range to a group of
+ranges representing all the search results for the view.  To
+remove ranges, use TerminalView_FindNothing().
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(3.1)
+*/
+TerminalView_Result
+TerminalView_FindVirtualRange	(TerminalViewRef				inView,
+								 TerminalView_CellRange const&	inSelection)
+{
+	TerminalView_Result		result = kTerminalView_ResultOK;
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		viewPtr->text.searchResults.push_back(inSelection);
+		assert(false == viewPtr->text.searchResults.empty());
+		highlightVirtualRange(viewPtr, viewPtr->text.searchResults.back(),
+								true/* is highlighted */, true/* redraw */);
+	}
+	return result;
+}// FindVirtualRange
   
   
 /*!
@@ -2374,6 +2449,44 @@ TerminalView_TextSelectionIsRectangular		(TerminalViewRef	inView)
 
 
 /*!
+A utility for converting from the range format used by a
+terminal screen buffer, into the range format used by the
+view for rendering.
+
+Changes to the view will not invalidate the results, but
+any change to the screen buffer (such as scrolling text
+off the end of the scrollback, or clearing it) will
+invalidate these results.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the specified view reference is not valid
+
+(3.1)
+*/
+TerminalView_Result
+TerminalView_TranslateTerminalScreenRange	(TerminalViewRef					inView,
+											 Terminal_RangeDescription const&	inRange,
+											 TerminalView_CellRange&			outRange)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result		result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		outRange.first = TerminalView_Cell(inRange.firstColumn, inRange.firstRow);
+		outRange.second = TerminalView_Cell(inRange.firstColumn + inRange.columnCount,
+											inRange.firstRow + inRange.rowCount);
+	}
+	return result;
+}// TranslateTerminalScreenRange
+
+
+/*!
 Displays an animation that helps the user locate
 the terminal cursor.
 
@@ -2427,6 +2540,53 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView,
 		}
 	}
 }// ZoomToCursor
+
+
+/*!
+Displays an animation that helps the user locate
+search results.  Currently, only the first result
+in the main screen is highlighted.
+
+(3.1)
+*/
+void
+TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if ((viewPtr != nullptr) && (false == viewPtr->text.searchResults.empty()))
+	{
+		RgnHandle	selectionRegion = getVirtualRangeAsNewRegion(viewPtr, viewPtr->text.searchResults.front().first,
+																	viewPtr->text.searchResults.front().second,
+																	false/* is rectangular */);
+		
+		
+		if (selectionRegion != nullptr)
+		{
+			Rect	selectionBounds;
+			HIRect	screenContentFloatBounds;
+			Rect	screenContentBounds;
+			
+			
+			// find global rectangle of selection
+			QDLocalToGlobalRegion(GetWindowPort(viewPtr->window.ref), selectionRegion);
+			GetRegionBounds(selectionRegion, &selectionBounds);
+			
+			// find global rectangle of the screen area
+			(OSStatus)HIViewGetBounds(viewPtr->contentHIView, &screenContentFloatBounds);
+			SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
+					STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
+			screenToLocalRect(viewPtr, &screenContentBounds);
+			QDLocalToGlobalRect(GetWindowPort(viewPtr->window.ref), &screenContentBounds);
+			
+			// animate!
+			(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
+			
+			Memory_DisposeRegion(&selectionRegion);
+		}
+	}
+}// ZoomToSearchResults
 
 
 /*!
@@ -4909,6 +5069,55 @@ Internal version of TerminalView_ReturnSelectedTextAsNewRegion().
 static RgnHandle
 getSelectedTextAsNewRegion		(TerminalViewPtr	inTerminalViewPtr)
 {
+	RgnHandle	result = getVirtualRangeAsNewRegion(inTerminalViewPtr, inTerminalViewPtr->text.selection.range.first,
+													inTerminalViewPtr->text.selection.range.second,
+													inTerminalViewPtr->text.selection.isRectangular);
+	
+	
+	return result;
+}// getSelectedTextAsNewRegion
+
+
+/*!
+Returns the size in bytes of the current selection for
+the specified window, or zero.
+
+(3.1)
+*/
+static size_t
+getSelectedTextSize		(TerminalViewPtr	inTerminalViewPtr)
+{
+    size_t		result = 0L;
+	
+	
+	if (inTerminalViewPtr->text.selection.exists)
+	{
+		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
+		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
+		UInt16 const				kRowWidth = (inTerminalViewPtr->text.selection.isRectangular)
+												? INTEGER_ABSOLUTE(kSelectionPastEnd.first - kSelectionStart.first)
+												: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
+		
+		
+		result = kRowWidth * INTEGER_ABSOLUTE(kSelectionPastEnd.second - kSelectionStart.second);
+	}
+	
+	return result;
+}// getSelectedTextSize
+
+
+/*!
+Returns a new global region locating the specified area of
+the terminal view.  You must dispose of the region yourself.
+
+(3.1)
+*/
+static RgnHandle
+getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
+								 TerminalView_Cell const&	inSelectionStart,
+								 TerminalView_Cell const&	inSelectionPastEnd,
+								 Boolean					inIsRectangular)
+{
 	RgnHandle	result = Memory_NewRegion();
 	
 	
@@ -4925,8 +5134,8 @@ getSelectedTextAsNewRegion		(TerminalViewPtr	inTerminalViewPtr)
 		SetPortWindowPort(inTerminalViewPtr->window.ref);
 		getRegionBounds(inTerminalViewPtr, kTerminalView_RegionCodeScreenInterior, &screenArea);
 		
-		selectionStart = inTerminalViewPtr->text.selection.range.first;
-		selectionPastEnd = inTerminalViewPtr->text.selection.range.second;
+		selectionStart = inSelectionStart;
+		selectionPastEnd = inSelectionPastEnd;
 		
 		// normalize coordinates with respect to visible area of virtual screen
 		{
@@ -4942,7 +5151,7 @@ getSelectedTextAsNewRegion		(TerminalViewPtr	inTerminalViewPtr)
 		}
 		
 		if ((INTEGER_ABSOLUTE(selectionPastEnd.second - selectionStart.second) <= 1) ||
-			(inTerminalViewPtr->text.selection.isRectangular))
+			(inIsRectangular))
 		{
 			// then the area to be highlighted is a rectangle; this simplifies things...
 			Rect	clippedRect;
@@ -5023,35 +5232,7 @@ getSelectedTextAsNewRegion		(TerminalViewPtr	inTerminalViewPtr)
 		SetGWorld(oldPort, oldDevice);
 	}
 	return result;
-}// getSelectedTextAsNewRegion
-
-
-/*!
-Returns the size in bytes of the current selection for
-the specified window, or zero.
-
-(3.1)
-*/
-static size_t
-getSelectedTextSize		(TerminalViewPtr	inTerminalViewPtr)
-{
-    size_t		result = 0L;
-	
-	
-	if (inTerminalViewPtr->text.selection.exists)
-	{
-		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
-		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
-		UInt16 const				kRowWidth = (inTerminalViewPtr->text.selection.isRectangular)
-												? INTEGER_ABSOLUTE(kSelectionPastEnd.first - kSelectionStart.first)
-												: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
-		
-		
-		result = kRowWidth * INTEGER_ABSOLUTE(kSelectionPastEnd.second - kSelectionStart.second);
-	}
-	
-	return result;
-}// getSelectedTextSize
+}// getVirtualRangeAsNewRegion
 
 
 /*!

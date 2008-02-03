@@ -62,6 +62,7 @@
 #include "ListenerModel.h"
 
 // MacTelnet includes
+#include "TerminalRangeDescription.typedef.h"
 #include "TerminalScreenRef.typedef.h"
 
 
@@ -272,6 +273,13 @@ void
 
 void
 	TerminalView_DisplaySaveSelectedTextUI		(TerminalViewRef				inView);
+
+TerminalView_Result
+	TerminalView_FindNothing					(TerminalViewRef				inView);
+
+TerminalView_Result
+	TerminalView_FindVirtualRange				(TerminalViewRef				inView,
+												 TerminalView_CellRange const&	inSelection);
 
 void
 	TerminalView_FlashSelection					(TerminalViewRef				inView);
@@ -495,14 +503,22 @@ void
 //@{
 
 void
-	TerminalView_DeleteScrollback				(TerminalViewRef			inView);
+	TerminalView_DeleteScrollback				(TerminalViewRef					inView);
+
+TerminalView_Result
+	TerminalView_TranslateTerminalScreenRange	(TerminalViewRef					inView,
+												 Terminal_RangeDescription const&	inRange,
+												 TerminalView_CellRange&			outRange);
 
 void
-	TerminalView_ZoomToCursor					(TerminalViewRef			inView,
-												 Boolean					inQuick = false);
+	TerminalView_ZoomToCursor					(TerminalViewRef					inView,
+												 Boolean							inQuick = false);
 
 void
-	TerminalView_ZoomToSelection				(TerminalViewRef			inView);
+	TerminalView_ZoomToSearchResults			(TerminalViewRef					inView);
+
+void
+	TerminalView_ZoomToSelection				(TerminalViewRef					inView);
 
 //@}
 

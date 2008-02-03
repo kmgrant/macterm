@@ -840,6 +840,7 @@ public:
 #pragma mark Internal Method Prototypes
 
 static void						addScreenLineSize						(My_ScreenBufferPtr, My_TextVector const&, UInt16, void*);
+static void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, My_TextVector const&, UInt16, void*);
 static void						appendScreenLineToHandle				(My_ScreenBufferPtr, My_TextVector const&, UInt16, void*);
 static void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
 static void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr);
@@ -876,6 +877,7 @@ static void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SIn
 static void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
 static Terminal_Result			forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
 																		 My_ScreenLineOperationProcPtr, void*);
+static void						getBufferOffsetCell						(My_ScreenBufferPtr, size_t, UInt16, UInt16&, SInt32&);
 static inline My_LineIteratorPtr	getLineIterator						(Terminal_LineRef);
 static My_ScreenBufferPtr		getVirtualScreenData					(TerminalScreenRef);
 static void						highlightLED							(My_ScreenBufferPtr, SInt16);
@@ -886,7 +888,6 @@ static void						locateCursorLine						(My_ScreenBufferPtr, My_ScreenBufferLineL
 static void						locateScrollingRegion					(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&,
 																		 My_ScreenBufferLineList::iterator&);
 static void						locateScrollingRegionTop				(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
-static Boolean					matchingText							(Ptr, char const*, UInt32, Boolean);
 static void						moveCursor								(My_ScreenBufferPtr, SInt16, My_ScreenRowIndex);
 static void						moveCursorDown							(My_ScreenBufferPtr);
 static void						moveCursorDownOrScroll					(My_ScreenBufferPtr);
@@ -909,8 +910,6 @@ static Terminal_EmulatorType	returnTerminalType						(Terminal_Emulator);
 static Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
 static void						saveToScrollback						(My_ScreenBufferPtr);
 static void						scrollTerminalBuffer					(My_ScreenBufferPtr);
-static Boolean					searchBufferForPhrase					(Handle, long, char const*, UInt32, Boolean, Boolean,
-																		 Boolean, long*, long*);
 static void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
 static void						setScrollingRegionBottom				(My_ScreenBufferPtr, UInt16);
 static void						setScrollingRegionTop					(My_ScreenBufferPtr, UInt16);
@@ -1786,10 +1785,10 @@ Terminal_CreateContentsAEDesc	(TerminalScreenRef		inRef,
 								 AEDesc*				outDescPtr)
 {
 	OSStatus	result = noErr;
-	Size		totalSize = 0L;
+	size_t		totalSize = 0L;
 	
 	
-	if (forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider, addScreenLineSize, &totalSize) < 0)
+	if (kTerminal_ResultOK != forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider, addScreenLineSize, &totalSize))
 	{
 		result = memFullErr;
 	}
@@ -1802,7 +1801,8 @@ Terminal_CreateContentsAEDesc	(TerminalScreenRef		inRef,
 		if (handle == nullptr) result = memFullErr;
 		else
 		{
-			if (forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider, appendScreenLineToHandle, &handle) < 0)
+			if (kTerminal_ResultOK != forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider,
+													appendScreenLineToHandle, &handle))
 			{
 				// No data?  Out of memory!
 				result = memFullErr;
@@ -3417,85 +3417,215 @@ Terminal_SaveLinesOnClearIsEnabled		(TerminalScreenRef		inRef)
 
 
 /*!
-Performs a search for the specified string, using
-the given search constraints and starting from
-the current search position for the indicated
-screen.
+Searches the specified terminal screen buffer using the given
+query and flags as a guide, and returns zero or more matches.
+All matching ranges are returned.
 
-Returns "true" only if a match is found in the
-text following the current search pointer.
+This is not guaranteed to be perfectly efficient; in particular,
+currently the internal implementation needs to copy data in order
+to pass it to the scanner.  In the future, if the internal
+storage format is made to match that of the search engine, the
+search may be faster.
 
-(3.0)
+\retval kTerminal_ResultOK
+if no error occurs
+
+\retval kTerminal_ResultInvalidID
+if the given terminal screen reference is invalid
+
+\retval kTerminal_ResultParameterError
+if the query string is invalid or an unrecognized flag is given
+
+\retval kTerminal_ResultNotEnoughMemory
+if the buffer is too large to search
+
+(3.1)
 */
-Boolean
-Terminal_SearchForPhrase	(TerminalScreenRef		inRef,
-							 char const*			inPhraseBuffer,
-							 UInt32					inPhraseBufferLength,
-							 Terminal_SearchFlags	inFlags)
+Terminal_Result
+Terminal_Search		(TerminalScreenRef							inRef,
+					 CFStringRef								inQuery,
+					 Terminal_SearchFlags						inFlags,
+					 std::vector< Terminal_RangeDescription >&	outMatches)
 {
-	UInt16 const		kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
-	UInt16 const		kNumberOfVisibleRows = Terminal_ReturnRowCount(inRef);
-	Terminal_LineRef	scrollbackLineIterator = Terminal_NewScrollbackLineIterator(inRef, 0);
-	Terminal_LineRef	screenLineIterator = Terminal_NewMainScreenLineIterator(inRef, 0);
-	Size				totalSize = 0L;
-	Boolean				result = false;
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	Terminal_Result		result = kTerminal_ResultOK;
 	
 	
-	// TEMPORARY; since the search algorithm currently traverses a
-	// contiguous buffer, one is created; however, it’s hard to imagine
-	// anything less efficient than this!  A future implementation will
-	// probably create index entries for each terminal line, so that the
-	// search algorithm can be rewritten to use the existing buffer and
-	// index and not require the creation of a mega-buffer.
-	if ((forEachLineDo(inRef, scrollbackLineIterator, kNumberOfScrollbackRows, addScreenLineSize, &totalSize) < 0) ||
-		(forEachLineDo(inRef, screenLineIterator, kNumberOfVisibleRows, addScreenLineSize, &totalSize) < 0))
-	{
-		result = false;
-	}
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+	else if (nullptr == inQuery) result = kTerminal_ResultParameterError;
 	else
 	{
-		Handle		handle = nullptr;
+		typedef std::vector< CFStringRef >	BufferList;
+		UInt16 const		kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
+		UInt16 const		kNumberOfVisibleRows = Terminal_ReturnRowCount(inRef);
+		UInt16 const		kNumberOfColumns = Terminal_ReturnAllocatedColumnCount();
+		Terminal_Result		iterationResult = kTerminal_ResultOK;
+		BufferList			buffersToSearch;
+		CFRetainRelease		searchedScrollbackBuffer;
+		CFRetainRelease		searchedScreenBuffer;
+		CFOptionFlags		searchFlags = 0;
+		UInt16				bufferIndex = 0; // 0 for screen, 1 for scrollback
 		
 		
-		handle = Memory_NewHandle(totalSize);
-		if (handle == nullptr) result = false;
-		else
+		// translate given flags to Core Foundation String search flags
+		if (0 == (inFlags & kTerminal_SearchFlagsCaseSensitive)) searchFlags |= kCFCompareCaseInsensitive;
+		if (inFlags & kTerminal_SearchFlagsSearchBackwards) searchFlags |= kCFCompareBackwards;
+		
+		// TEMPORARY; since the search algorithm currently traverses a
+		// contiguous buffer, one is created; however, it’s hard to imagine
+		// anything less efficient than this!  A future implementation will
+		// probably create index entries for each terminal line, so that the
+		// search algorithm can be rewritten to use the existing buffer and
+		// index and not require the creation of a mega-buffer.
 		{
-			// handle “reverse buffer” flag by constructing handle in reverse - unimplemented
+			CFRetainRelease*		retainerPtr = nullptr;
+			UInt16					numberOfRows = 0;
+			size_t					stringSize = 0;
+			CFMutableStringRef		mutableCFString = nullptr;
+			Terminal_LineRef		lineIterator = nullptr;
 			
-			if ((forEachLineDo(inRef, scrollbackLineIterator, kNumberOfScrollbackRows, appendScreenLineToHandle, &handle) < 0) ||
-				(forEachLineDo(inRef, screenLineIterator, kNumberOfVisibleRows, appendScreenLineToHandle, &handle) < 0))
+			
+			//
+			// main screen
+			//
+			
+			// configure; also find the appropriate buffer size and starting iterator
+			retainerPtr = &searchedScreenBuffer;
+			numberOfRows = kNumberOfVisibleRows;
+			stringSize = 0;
+			lineIterator = Terminal_NewMainScreenLineIterator(inRef, 0);
+			
+			// note: this block is generic and the same for scrollback and screen
+			// code here, thanks to the “configuration” section above
+			if (nullptr != lineIterator)
 			{
-				// No data?  Out of memory!
-				result = false;
+				// note that the iterator is not invalidated by this loop
+				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineSize, &stringSize);
+				assert(kTerminal_ResultParameterError != iterationResult);
 			}
-			else
+			if (0 != stringSize)
 			{
-				long	foundStringStartOffset = 0L;
-				long	foundStringEndOffset = 0L;
-				
-				
-				// search the buffer
-				result = searchBufferForPhrase(handle, 0/* offset where searching will start */,
-												inPhraseBuffer, inPhraseBufferLength,
-												((inFlags & kTerminal_SearchFlagsCaseSensitive) != 0),
-												((inFlags & kTerminal_SearchFlagsSearchBackwards) != 0),
-												((inFlags & kTerminal_SearchFlagsWrapAround) != 0),
-												&foundStringStartOffset, &foundStringEndOffset);
-				if (result)
+				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringSize);
+				retainerPtr->setCFMutableStringRef(mutableCFString, true/* is retained */);
+				if (false == retainerPtr->exists())
 				{
-					// select the text that was found
-					// UNIMPLEMENTED
-					Console_WriteValue("starting offset of found string", foundStringStartOffset);
-					Console_WriteValue("ending offset of found string", foundStringEndOffset);
+					result = kTerminal_ResultNotEnoughMemory;
 				}
 				else
 				{
-					// text was not found
-					//Console_WriteLine("string not found");
+					iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, appendScreenLineRawToCFString,
+													mutableCFString);
+					assert(kTerminal_ResultParameterError != iterationResult);
+					if (kTerminal_ResultOK != iterationResult) result = kTerminal_ResultNotEnoughMemory;
+					else
+					{
+						buffersToSearch.push_back(mutableCFString);
+					}
 				}
 			}
-			Memory_DisposeHandle(&handle);
+			Terminal_DisposeLineIterator(&lineIterator);
+			
+			//
+			// scrollback
+			//
+			
+			// configure; also find the appropriate buffer size and starting iterator
+			retainerPtr = &searchedScrollbackBuffer;
+			numberOfRows = kNumberOfScrollbackRows;
+			stringSize = 0;
+			lineIterator = Terminal_NewScrollbackLineIterator(inRef, 0);
+			
+			// note: this block is generic and the same for scrollback and screen
+			// code here, thanks to the “configuration” section above
+			if (nullptr != lineIterator)
+			{
+				// note that the iterator is not invalidated by this loop
+				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineSize, &stringSize);
+				assert(kTerminal_ResultParameterError != iterationResult);
+			}
+			if (0 != stringSize)
+			{
+				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringSize);
+				retainerPtr->setCFMutableStringRef(mutableCFString, true/* is retained */);
+				if (false == retainerPtr->exists())
+				{
+					result = kTerminal_ResultNotEnoughMemory;
+				}
+				else
+				{
+					iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, appendScreenLineRawToCFString,
+													mutableCFString);
+					assert(kTerminal_ResultParameterError != iterationResult);
+					if (kTerminal_ResultOK != iterationResult) result = kTerminal_ResultNotEnoughMemory;
+					else
+					{
+						buffersToSearch.push_back(mutableCFString);
+					}
+				}
+			}
+			Terminal_DisposeLineIterator(&lineIterator);
+		}
+		
+		// search the screen first, then the scrollback (backwards) if it exists
+		bufferIndex = 0;
+		for (BufferList::const_iterator toBuffer = buffersToSearch.begin();
+				toBuffer != buffersToSearch.end(); ++toBuffer, ++bufferIndex)
+		{
+			// find ALL matches
+			CFStringRef const	kBufferToSearch = *toBuffer;
+			Boolean const		kIsScreen = (0 == bufferIndex); // else scrollback
+			CFRetainRelease		resultsArray(CFStringCreateArrayWithFindResults
+												(kCFAllocatorDefault, kBufferToSearch, inQuery,
+													CFRangeMake(0, CFStringGetLength(kBufferToSearch)),
+													searchFlags),
+												true/* already retained */);
+			
+			
+			if (resultsArray.exists())
+			{
+				CFArrayRef const	kResultsArrayRef = resultsArray.returnCFArrayRef();
+				CFIndex const		kNumberOfMatches = CFArrayGetCount(kResultsArrayRef);
+				
+				
+				// return the range of text that was found
+				outMatches.reserve(outMatches.size() + kNumberOfMatches);
+				for (CFIndex i = 0; i < kNumberOfMatches; ++i)
+				{
+					UInt16 const				kEndOfLinePad = 0; // lines are joined without any characters in between (e.g. no new-lines)
+					CFRange const*				toRange = REINTERPRET_CAST(CFArrayGetValueAtIndex(kResultsArrayRef, i),
+																			CFRange const*);
+					UInt16						firstColumn = 0;
+					SInt32						firstRow = 0;
+					UInt16						secondColumn = 0; // in case selection spans rows
+					SInt32						secondRow = 0; // in case selection spans rows
+					Terminal_RangeDescription	textRegion;
+					
+					
+					// translate all results ranges into external form; the
+					// caller understands rows and columns, etc. not offsets
+					// into a giant buffer
+					getBufferOffsetCell(dataPtr, toRange->location, kEndOfLinePad, firstColumn, firstRow);
+					getBufferOffsetCell(dataPtr, toRange->location + toRange->length, kEndOfLinePad, secondColumn, secondRow);
+					if (false == kIsScreen)
+					{
+						// translate scrollback into negative coordinates (zero-based)
+						firstRow = -firstRow - 1;
+						secondRow = -secondRow - 1;
+					}
+					bzero(&textRegion, sizeof(textRegion));
+					textRegion.screen = inRef;
+					textRegion.firstRow = firstRow;
+					textRegion.firstColumn = firstColumn;
+					textRegion.columnCount = toRange->length;
+					textRegion.rowCount = secondRow - firstRow + 1;
+					outMatches.push_back(textRegion);
+				}
+			}
+			else
+			{
+				// text was not found
+				//Console_WriteLine("string not found");
+			}
 		}
 	}
 	
@@ -6064,10 +6194,12 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 A method of standard My_ScreenLineOperationProcPtr form,
 this routine adds the data size of the specified line text
 buffer to an overall sum, pointed to by "inoutSizePtr"
-(assumed to be a Size*).
+(assumed to be a size_t*).
 
 Since this operation never modifies the buffer, "false"
 is always returned.
+
+(3.0)
 */
 static void
 addScreenLineSize		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
@@ -6075,7 +6207,7 @@ addScreenLineSize		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
 						 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
 						 void*					inoutSizePtr)
 {
-	Size*		sumPtr = REINTERPRET_CAST(inoutSizePtr, Size*);
+	size_t*		sumPtr = REINTERPRET_CAST(inoutSizePtr, size_t*);
 	
 	
 	(*sumPtr) += (inLineTextBuffer.size() + 1/* for newline */) * sizeof(char);
@@ -6085,8 +6217,43 @@ addScreenLineSize		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
 /*!
 A method of standard My_ScreenLineOperationProcPtr form,
 this routine adds the data from the specified line text
+buffer to a CFMutableStringRef, pointed to by
+"inoutCFMutableStringRef".
+
+This is a “raw” append; unlike appendScreenLineToHandle(),
+there is no new-line or other delimiter between appended
+lines.
+
+Currently, this routine is somewhat naïve, but in the
+future it will do its best to express the actual rendered
+content of the line in Unicode.
+
+(3.1)
+*/
+static void
+appendScreenLineRawToCFString	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
+								 My_TextVector const&	inLineTextBuffer,
+								 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
+								 void*					inoutCFMutableStringRef)
+{
+	CFMutableStringRef	mutableCFString = REINTERPRET_CAST(inoutCFMutableStringRef, CFMutableStringRef);
+	
+	
+	// TEMPORARY: This is currently done lazily, until the screen buffer is
+	// internally converted to use more a expressive text encoding.
+	CFStringAppendCString(mutableCFString, inLineTextBuffer.c_str(), kCFStringEncodingMacRoman); // TEMPORARY: encoding is unspecified!
+}// appendScreenLineRawToCFString
+
+
+/*!
+A method of standard My_ScreenLineOperationProcPtr form,
+this routine adds the data from the specified line text
 buffer to a handle, pointed to by "inoutHandlePtr"
 (assumed to be a Handle*).
+
+Deprecated; use appendScreenLineToCFString() instead.
+
+(3.0)
 */
 static void
 appendScreenLineToHandle	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
@@ -8328,6 +8495,36 @@ forEachLineDo	(TerminalScreenRef				inRef,
 
 
 /*!
+Given a character offset into a theoretically concatenated
+buffer, returns the row and column that would refer to that
+position.  Assumes each line is exactly the same number of
+characters.
+
+The "inEndOfLinePad" allows you to pretend each line ends
+with zero or more characters (e.g. a new-line sequence), so
+that if your buffer contains new-lines you can include them
+when calculating the proper cell location.
+
+The default results assume the main screen.  If your offset
+is really for the scrollback, simply negate the row number
+and subtract 1 (scrollback rows are represented as negative
+numbers).
+
+(3.1)
+*/
+static void
+getBufferOffsetCell		(My_ScreenBufferPtr		inDataPtr,
+						 size_t					inBufferOffset,
+						 UInt16					inEndOfLinePad,
+						 UInt16&				outColumn,
+						 SInt32&				outRow)
+{
+	outRow = inBufferOffset / (inDataPtr->text.visibleScreen.numberOfColumnsAllocated + inEndOfLinePad);
+	outColumn = inBufferOffset % (inDataPtr->text.visibleScreen.numberOfColumnsAllocated + inEndOfLinePad);
+}// getBufferOffsetCell
+
+
+/*!
 Returns a pointer to the internal structure, given a
 reference to it.
 
@@ -8673,40 +8870,6 @@ locateScrollingRegionTop	(My_ScreenBufferPtr						inDataPtr,
 	outTopLine = inDataPtr->screenBuffer.begin();
 	std::advance(outTopLine, inDataPtr->scrollingRegion.firstRow/* zero-based */);
 }// locateScrollingRegionTop
-
-
-/*!
-Returns "true" only if the specified string is the same
-as the text at the given memory location, taking into
-account the text comparison rules of the current system
-script and (if desired) case sensitivity.
-
-Based directly on the SimpleText text search mechanism.
-
-(3.0)
-*/
-static Boolean
-matchingText	(Ptr			inBufferPtr,
-				 char const*	inPhraseBuffer,
-				 UInt32			inPhraseBufferLength,
-				 Boolean		inIsCaseSensitive)
-{
-	Handle		itl2Table = nullptr;
-	long		offset = 0L,
-				length = 0L;
-	short		script = 0;
-	Boolean		result = false;
-	
-	
-	script = FontToScript(GetSysFont());
-	GetIntlResourceTable(script, smWordSelectTable, &itl2Table, &offset, &length);
-	if (itl2Table != nullptr)
-	{
-		if (inIsCaseSensitive) result = (CompareText(inBufferPtr, inPhraseBuffer, inPhraseBufferLength, inPhraseBufferLength, itl2Table) == 0);
-		else result = (IdenticalText(inBufferPtr, inPhraseBuffer, inPhraseBufferLength, inPhraseBufferLength, itl2Table) == 0);
-	}
-	return result;
-}// matchingText
 
 
 /*!
@@ -9246,121 +9409,6 @@ scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, inDataPtr->selfRef/* context */);
 	}
 }// scrollTerminalBuffer
-
-
-/*!
-Performs a search on the supplied handle, starting at
-the provided offset.  Returns the new selection start
-and end values, and "true" only if the search is
-successful.
-
-Based directly on the SimpleText text search mechanism.
-
-(3.0)
-*/
-static Boolean
-searchBufferForPhrase	(Handle			inBufferHandle,
-						 long			inStartOffset,
-						 char const*	inPhraseBuffer,
-						 UInt32			inPhraseBufferLength,
-						 Boolean		inIsCaseSensitive,
-						 Boolean		inIsBackwards,
-						 Boolean		inIsWraparound,
-						 long*			outFoundStringStartOffset,
-						 long*			outFoundStringEndOffsetOrNull)
-{
-	SInt8		oldHandleState = '\0';
-	long		startOffset = inStartOffset;
-	Ptr			startPtr = nullptr;
-	Ptr			endPtr = nullptr;
-	Ptr			searchPtr = nullptr;
-	Boolean		result = false;
-	
-	
-	oldHandleState = HGetState(inBufferHandle);
-	HLock(inBufferHandle);
-	
-	// back up one when searching backwards, to avoid hitting
-	// the current character
-	if (inIsBackwards)
-	{
-		if (startOffset != 0)
-		{
-			--startOffset;
-		}
-		else
-		{
-			if (inIsWraparound) startOffset = GetHandleSize(inBufferHandle);
-			else return(false);
-		}
-	}
-	
-	// determine the bounds of the search
-	startPtr = (*inBufferHandle) + startOffset;
-	if (inIsWraparound)
-	{
-		if (inIsBackwards)
-		{
-			// go backwards until just after the start, or to the
-			// beginning of the document if the start offset is
-			// already at the end
-			if (startOffset == GetHandleSize(inBufferHandle)) endPtr = *inBufferHandle;
-			else endPtr = startPtr + 1;
-		}
-		else
-		{
-			// go forwards until just before the start, or to the
-			// end of the document if the start offset is already
-			// at the beginning
-			if (startOffset == 0) endPtr = *inBufferHandle + GetHandleSize(inBufferHandle);
-			else endPtr = startPtr - 1;
-		}
-	}
-	else
-	{
-		if (inIsBackwards)
-		{
-			// go back until the beginning of the document is reached
-			endPtr = *inBufferHandle - 1;
-		}
-		else
-		{
-			// go forward until the end of the document is reached
-			endPtr = *inBufferHandle + GetHandleSize(inBufferHandle);
-		}
-	}
-	
-	searchPtr = startPtr;
-	while (searchPtr != endPtr)
-	{
-		short	byteType = 0;
-		
-		
-		byteType = CharacterByteType(startPtr, searchPtr - startPtr, smCurrentScript);
-		
-		if (((byteType == smSingleByte) || (byteType == smFirstByte)) &&
-			matchingText(searchPtr, inPhraseBuffer, inPhraseBufferLength, inIsCaseSensitive))
-		{
-			result = true;
-			*outFoundStringStartOffset = searchPtr - *inBufferHandle;
-			if (outFoundStringEndOffsetOrNull != nullptr) *outFoundStringEndOffsetOrNull = *outFoundStringStartOffset + inPhraseBufferLength;
-			break;
-		}
-		
-		if (inIsBackwards) --searchPtr;
-		else ++searchPtr;
-		
-		if (inIsWraparound)
-		{
-			if (searchPtr < *inBufferHandle) searchPtr = *inBufferHandle + GetHandleSize(inBufferHandle);
-			if (searchPtr > *inBufferHandle + GetHandleSize(inBufferHandle)) searchPtr = *inBufferHandle;
-		}
-	}
-	
-	HSetState(inBufferHandle, oldHandleState);
-	
-	return result;
-}// searchBufferForPhrase
 
 
 /*!

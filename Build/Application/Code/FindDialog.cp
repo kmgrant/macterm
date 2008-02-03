@@ -111,7 +111,8 @@ enum
 
 #pragma mark Types
 
-typedef std::vector< CFStringRef >		KeywordHistoryList;
+typedef std::vector< CFStringRef >					KeywordHistoryList;
+typedef std::vector< Terminal_RangeDescription >	My_TerminalRangeList;
 
 struct My_FindDialog
 {
@@ -136,7 +137,7 @@ struct My_FindDialog
 	HIViewWrap								buttonHelp;					//!< help button
 	
 	FindDialog_CloseNotifyProcPtr			closeNotifyProc;			//!< routine to call when the dialog is dismissed
-	CarbonEventHandlerWrap					buttonHICommandsHandler;	//!< invoked when a dialog button is clicked
+	CarbonEventHandlerWrap					buttonHICommandsHandler;	//!< invoked when a dialog button or checkbox is clicked
 	CarbonEventHandlerWrap					fieldKeyPressHandler;		//!< invoked when a key is pressed while the field is focused
 	EventHandlerUPP							historyMenuCommandUPP;		//!< wrapper for button callback function
 	EventHandlerRef							historyMenuCommandHandler;	//!< invoked when a dialog button is clicked
@@ -153,9 +154,10 @@ typedef MemoryBlockPtrLocker< FindDialog_Ref, My_FindDialog >	My_FindDialogPtrLo
 static void					addToHistory					(My_FindDialogPtr, CFStringRef);
 static Boolean				handleItemHit					(My_FindDialogPtr, HIViewID const&);
 static void					handleNewSize					(WindowRef, Float32, Float32, void*);
+static Boolean				initiateSearch					(My_FindDialogPtr, My_TerminalRangeList&);
+static pascal OSStatus		receiveFieldChanged				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveKeyPress					(EventHandlerCallRef, EventRef, void*);
 
 #pragma mark Variables
 
@@ -216,8 +218,8 @@ closeNotifyProc				(inCloseNotifyProcPtr),
 buttonHICommandsHandler		(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 								this->selfRef/* user data */),
-fieldKeyPressHandler		(CarbonEventUtilities_ReturnViewTarget(this->fieldKeywords), receiveKeyPress,
-								CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard), kEventRawKeyDown),
+fieldKeyPressHandler		(CarbonEventUtilities_ReturnViewTarget(this->fieldKeywords), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 								this->selfRef/* user data */),
 historyMenuCommandUPP		(nullptr),
 historyMenuCommandHandler	(nullptr),
@@ -247,7 +249,7 @@ keywordHistory				(kMy_KeywordHistorySize)
 			IconManagerIconRef		icon = IconManager_NewIcon();
 			
 			
-			if (icon != nullptr)
+			if (nullptr != icon)
 			{
 				if (IconManager_MakeIconRef(icon, kOnSystemDisk, kSystemIconsCreator, kRecentItemsIcon) == noErr)
 				{
@@ -338,7 +340,7 @@ My_FindDialog::
 	
 	for (i = 0; i < kMy_KeywordHistorySize; ++i)
 	{
-		if (this->keywordHistory[i] != nullptr) CFRelease(this->keywordHistory[i]), this->keywordHistory[i] = nullptr;
+		if (nullptr != this->keywordHistory[i]) CFRelease(this->keywordHistory[i]), this->keywordHistory[i] = nullptr;
 	}
 	
 	// clean up the Help System
@@ -415,14 +417,17 @@ FindDialog_Display		(FindDialog_Ref		inDialog)
 	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
 	
 	
-	if (ptr == nullptr) Alert_ReportOSStatus(paramErr);
+	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
 	else
 	{
+		OSStatus	error = noErr;
+		
+		
 		// display the dialog
 		ShowSheetWindow(ptr->dialogWindow, TerminalWindow_ReturnWindow(ptr->terminalWindow));
 		
 		// set keyboard focus
-		(OSStatus)SetKeyboardFocus(ptr->dialogWindow, ptr->fieldKeywords, kControlEditTextPart);
+		error = HIViewAdvanceFocus(ptr->fieldKeywords, 0/* modifiers */);
 		
 		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 	}
@@ -443,7 +448,7 @@ FindDialog_GetSearchString	(FindDialog_Ref		inDialog,
 	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
 	
 	
-	if (ptr != nullptr)
+	if (nullptr != ptr)
 	{
 		GetControlTextAsCFString(ptr->fieldKeywords, outString);
 	}
@@ -468,7 +473,7 @@ FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
 	FindDialog_Options	result = kFindDialog_OptionsAllOff;
 	
 	
-	if (ptr != nullptr)
+	if (nullptr != ptr)
 	{
 		if (GetControlValue(ptr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue) result |= kFindDialog_OptionCaseSensitivity;
 		if (GetControlValue(ptr->checkboxOldestLinesFirst) == kControlCheckBoxCheckedValue) result |= kFindDialog_OptionOldestLinesFirst;
@@ -491,7 +496,7 @@ FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
 	TerminalWindowRef	result = nullptr;
 	
 	
-	if (ptr != nullptr)
+	if (nullptr != ptr)
 	{
 		result = ptr->terminalWindow;
 	}
@@ -534,7 +539,7 @@ addToHistory	(My_FindDialogPtr	inPtr,
 	SInt16 const		kLastItem = kMy_KeywordHistorySize - 1;
 	
 	
-	if (inPtr->keywordHistory[kLastItem] != nullptr) CFRelease(&inPtr->keywordHistory[kLastItem]), inPtr->keywordHistory[kLastItem] = nullptr;
+	if (nullptr != inPtr->keywordHistory[kLastItem]) CFRelease(&inPtr->keywordHistory[kLastItem]), inPtr->keywordHistory[kLastItem] = nullptr;
 	for (i = kLastItem; i > 0; --i) inPtr->keywordHistory[i] = inPtr->keywordHistory[i - 1];
 	inPtr->keywordHistory[0] = inText, CFRetain(inText);
 	DeleteMenuItems(inPtr->keywordHistoryMenuRef, 1/* first item */,
@@ -573,43 +578,29 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 	{
 	case kSignatureMyButtonSearch:
 		{
-			Boolean		foundSomething = false;
+			My_TerminalRangeList	searchResults;
+			Boolean					foundSomething = initiateSearch(inPtr, searchResults);
 			
-			
-			DeactivateControl(inPtr->buttonSearch);
-			SetControlVisibility(inPtr->arrowsSearchProgress, true/* visible */, true/* draw */);
-			// initiate synchronous (should be asynchronous!) search - unimplemented
-			{
-				TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
-				Terminal_SearchFlags	flags = 0;
-				Str255					searchPhrase;
-				
-				
-				GetControlText(inPtr->fieldKeywords, searchPhrase);
-				if (GetControlValue(inPtr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue)
-				{
-					flags |= kTerminal_SearchFlagsCaseSensitive;
-				}
-				unless (GetControlValue(inPtr->checkboxOldestLinesFirst) == kControlCheckBoxCheckedValue)
-				{
-					flags |= kTerminal_SearchFlagsReverseBuffer;
-				}
-				foundSomething = Terminal_SearchForPhrase(screen, (char*)(searchPhrase + 1), PLstrlen(searchPhrase), flags);
-			}
-			SetControlVisibility(inPtr->arrowsSearchProgress, false/* visible */, false/* draw */);
-			ActivateControl(inPtr->buttonSearch);
 			
 			// donÕt close the dialog unless something was found
 			if (foundSomething)
 			{
-				ClearKeyboardFocus(inPtr->dialogWindow);
+				// clear keyboard focus
+				(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
+				
+			#if 0
 				HideSheetWindow(inPtr->dialogWindow);
+			#else
+				// do not animate, hide the sheet immediately
+				if (noErr == DetachSheetWindow(inPtr->dialogWindow)) HideWindow(inPtr->dialogWindow);
+				else HideSheetWindow(inPtr->dialogWindow);
+			#endif
 				
 				// show the user where the text is
-				TerminalView_ZoomToSelection(TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow));
+				TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow));
 				
 				// notify of close
-				if (inPtr->closeNotifyProc != nullptr)
+				if (nullptr != inPtr->closeNotifyProc)
 				{
 					FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
 				}
@@ -620,10 +611,9 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 				SetControlVisibility(inPtr->textNotFound, true/* visible */, true/* draw */);
 				SetControlVisibility(inPtr->iconNotFound, true/* visible */, true/* draw */);
 				result = true; // pretend the OK button was NOT clicked, so the modal dialog stays open
-				{
-					(OSStatus)ClearKeyboardFocus(inPtr->dialogWindow);
-					(OSStatus)SetKeyboardFocus(inPtr->dialogWindow, inPtr->fieldKeywords, kControlEditTextPart);
-				}
+				
+				(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
+				(OSStatus)HIViewAdvanceFocus(inPtr->fieldKeywords, 0/* modifiers */);
 			}
 			
 			// remember this string for later
@@ -639,11 +629,11 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 	
 	case kSignatureMyButtonCancel:
 		// user cancelled - close the dialog with an appropriate transition for cancelling
-		ClearKeyboardFocus(inPtr->dialogWindow);
+		(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
 		HideSheetWindow(inPtr->dialogWindow);
 		
 		// notify of close
-		if (inPtr->closeNotifyProc != nullptr)
+		if (nullptr != inPtr->closeNotifyProc)
 		{
 			FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
 		}
@@ -711,6 +701,123 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 
 
 /*!
+Returns true only if something is found.
+
+(3.1)
+*/
+static Boolean
+initiateSearch	(My_FindDialogPtr		inPtr,
+				 My_TerminalRangeList&	inoutSearchResults)
+{
+	TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
+	Boolean				result = false;
+	
+	
+	// remove highlighting from any previous searches and put the sheet in progress mode
+	TerminalView_FindNothing(view);
+	DeactivateControl(inPtr->buttonSearch);
+	SetControlVisibility(inPtr->arrowsSearchProgress, true/* visible */, true/* draw */);
+	
+	// initiate synchronous (should be asynchronous!) search - unimplemented
+	{
+		TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
+		Terminal_SearchFlags	flags = 0;
+		Terminal_Result			searchStatus = kTerminal_ResultOK;
+		CFStringRef				searchQueryCFString = nullptr;
+		
+		
+		GetControlTextAsCFString(inPtr->fieldKeywords, searchQueryCFString);
+		if (GetControlValue(inPtr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue)
+		{
+			flags |= kTerminal_SearchFlagsCaseSensitive;
+		}
+		unless (GetControlValue(inPtr->checkboxOldestLinesFirst) == kControlCheckBoxCheckedValue)
+		{
+			flags |= kTerminal_SearchFlagsSearchBackwards;
+		}
+		searchStatus = Terminal_Search(screen, searchQueryCFString, flags, inoutSearchResults);
+		if (kTerminal_ResultOK == searchStatus)
+		{
+			if (inoutSearchResults.empty())
+			{
+				result = false;
+				
+				// show an error message and select all of the text in the keywords field for easy replacement
+				SetControlVisibility(inPtr->textNotFound, true/* visible */, true/* draw */);
+				SetControlVisibility(inPtr->iconNotFound, true/* visible */, true/* draw */);
+			}
+			else
+			{
+				result = true;
+				
+				// hide the error message
+				SetControlVisibility(inPtr->textNotFound, false/* visible */, true/* draw */);
+				SetControlVisibility(inPtr->iconNotFound, false/* visible */, true/* draw */);
+				
+				// highlight search results
+				for (std::vector< Terminal_RangeDescription >::const_iterator toResultRange = inoutSearchResults.begin();
+						toResultRange != inoutSearchResults.end(); ++toResultRange)
+				{
+					TerminalView_CellRange		highlightRange;
+					TerminalView_Result			viewResult = kTerminalView_ResultOK;
+					
+					
+					// translate this result range into cell anchors for highlighting
+					viewResult = TerminalView_TranslateTerminalScreenRange(view, *toResultRange, highlightRange);
+					if (kTerminalView_ResultOK == viewResult)
+					{
+						TerminalView_FindVirtualRange(view, highlightRange);
+					}
+				}
+			}
+		}
+	}
+	SetControlVisibility(inPtr->arrowsSearchProgress, false/* visible */, false/* draw */);
+	ActivateControl(inPtr->buttonSearch);
+	
+	return result;
+}// initiateSearch
+
+
+/*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the search field by initiating
+find-as-you-type.
+
+(3.1)
+*/
+static pascal OSStatus
+receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
+					 EventRef				inEvent,
+					 void*					inFindDialogRef)
+{
+	OSStatus			result = eventNotHandledErr;
+	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// initiate find-as-you-type (ignore results for now)
+	{
+		My_TerminalRangeList	unusedResults;
+		
+		
+		initiateSearch(ptr, unusedResults);
+	}
+	
+	return result;
+}// receiveFieldChanged
+
+
+/*!
 Handles "kEventCommandProcess" of "kEventClassCommand"
 for the buttons in window title dialogs.
 
@@ -749,6 +856,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			case kHICommandCancel:
 				if (handleItemHit(ptr, idMyButtonCancel)) result = eventNotHandledErr;
+				break;
+			
+			case kCommandRetrySearch:
+				// retry search (e.g. checkbox affecting search parameters
+				// was hit) so that terminal highlighting is up-to-date
+				{
+					My_TerminalRangeList	unusedResults;
+					
+					
+					initiateSearch(ptr, unusedResults);
+				}
 				break;
 			
 			case kCommandContextSensitiveHelp:
@@ -811,7 +929,7 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 				CFStringRef		command = ptr->keywordHistory[commandInfo.menu.menuItemIndex - 1];
 				
 				
-				SetControlTextWithCFString(ptr->fieldKeywords, (command == nullptr) ? CFSTR("") : command);
+				SetControlTextWithCFString(ptr->fieldKeywords, (nullptr == command) ? CFSTR("") : command);
 			}
 		}
 	}
@@ -819,37 +937,5 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 	gFindDialogPtrLocks().releaseLock(ref, &ptr);
 	return result;
 }// receiveHistoryCommandProcess
-
-
-/*!
-Handles "kEventRawKeyDown" of "kEventClassKeyboard"
-for the search field.  Currently this just hides
-the not-found message, but in the future this will
-also initiate search-as-you-type.
-
-(3.0)
-*/
-static pascal OSStatus
-receiveKeyPress		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inFindDialogRef)
-{
-	OSStatus			result = eventNotHandledErr;
-	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassKeyboard);
-	assert(kEventKind == kEventRawKeyDown);
-	{
-		SetControlVisibility(ptr->textNotFound, false/* visible */, false/* draw */);
-		SetControlVisibility(ptr->iconNotFound, false/* visible */, false/* draw */);
-	}
-	
-	gFindDialogPtrLocks().releaseLock(ref, &ptr);
-	return result;
-}// receiveKeyPress
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

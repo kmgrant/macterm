@@ -18,6 +18,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080202',
     '20080130',
     '20080129',
     '20080128',
@@ -82,6 +83,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080202': [
+		'Find will now properly highlight matching text.',
+		'Find will now highlight *every* match, anywhere in your terminal screen or scrollback, instead of just the first one.',
+		'Find dialog now searches live, as you type or change search options!',
+		'Find dialog now disappears immediately when the Search button finds a match; sheet animation is bypassed.',
+	],
 	'20080130': [
 		'Save Selected Text interface has been modernized, displaying a sheet and using Unicode.',
 	],

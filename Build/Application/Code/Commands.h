@@ -20,7 +20,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -414,6 +414,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPreferencesDuplicateFavorite	'DupC'		// “Preferences” window
 #define kCommandPreferencesRenameFavorite		'RnmC'		// “Preferences” window
 #define kCommandPreferencesDeleteFavorite		kHICommandClear	// “Preferences” window; intentionally the same as the ordinary Delete
+#define kCommandRetrySearch						'RFnd'		// “Find” dialog
 #define kCommandResetANSIColors					'ANSD'		// “Preferences” window
 #define kCommandOpenScriptMenuItemsFolder		'OSMI'		// “Preferences” window
 #define kCommandEditInterruptKey				'SIKy'		// “Special Key Sequences” dialog

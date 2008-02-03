@@ -56,6 +56,9 @@
 #ifndef __TERMINAL__
 #define __TERMINAL__
 
+// standard-C++ includes
+#include <vector>
+
 // library includes
 #include "ListenerModel.h"
 
@@ -63,7 +66,6 @@
 #include "SessionRef.typedef.h"
 #include "TerminalSpeaker.h"
 #include "TerminalTextAttributes.typedef.h"
-#include "TerminalViewRef.typedef.h"
 
 
 
@@ -202,14 +204,16 @@ enum
 
 /*!
 Controls over text-finding behavior.
+
+The terminal is split into main screen and scrollback, and is
+normally searched starting with the main screen (top to bottom)
+and then the scrollback (newest to oldest).
 */
 typedef UInt32 Terminal_SearchFlags;
 enum
 {
 	kTerminal_SearchFlagsCaseSensitive		= (1 << 0),		//!< lowercase and uppercase letters not considered the same?
 	kTerminal_SearchFlagsSearchBackwards	= (1 << 1),		//!< search oldest (topmost, offscreen) rows first?
-	kTerminal_SearchFlagsWrapAround			= (1 << 2),		//!< continue search from top after bottom is hit?
-	kTerminal_SearchFlagsReverseBuffer		= (1 << 3)		//!< search bottommost lines first?
 };
 
 /*!
@@ -237,28 +241,13 @@ enum
 																		//!  new-line appendages in these cases
 };
 
-/*!
-Controls over word-finding behavior.  Currently, none are
-defined, so the value should be set to 0.
-*/
-typedef UInt32 Terminal_WordFlags;
-
 #pragma mark Types
 
 #include "TerminalScreenRef.typedef.h"
 
 typedef struct Terminal_OpaqueLineIterator*		Terminal_LineRef;	//!< efficient access to an arbitrary screen line
 
-struct Terminal_RangeDescription
-{
-	TerminalScreenRef	screen;				//!< the screen for which this text range applies
-	SInt16				firstRow;			//!< zero-based row number where range occurs; 0 is topmost main screen line,
-											//!  a negative line number is in the scrollback buffer
-	UInt16				firstColumn;		//!< zero-based column number where range begins
-	UInt16				columnCount;		//!< number of columns wide the range is; if 0, the range is empty
-	UInt16				rowCount;			//!< number of rows the range covers (it is rectangular, not flush to the edges)
-};
-typedef Terminal_RangeDescription const*	Terminal_RangeDescriptionConstPtr;
+#include "TerminalRangeDescription.typedef.h"
 
 #pragma mark Callbacks
 
@@ -404,21 +393,11 @@ Terminal_Result
 //!\name Buffer Search
 //@{
 
-Boolean
-	Terminal_SearchForPhrase				(TerminalScreenRef			inScreen,
-											 char const*				inPhraseBuffer,
-											 UInt32						inPhraseBufferLength,
-											 Terminal_SearchFlags		inFlags);
-
-Boolean
-	Terminal_SearchForWord					(TerminalScreenRef			inScreen,
-											 SInt16						inZeroBasedStartColumn,
-											 Terminal_LineRef			inRow,
-											 SInt16*					outWordStartColumnPtr,
-											 Terminal_LineRef*			outWordStartRowPtr,
-											 SInt16*					outWordEndColumnPtr,
-											 Terminal_LineRef*			outWordEndRowPtr,
-											 Terminal_WordFlags			inFlags);
+Terminal_Result
+	Terminal_Search							(TerminalScreenRef			inScreen,
+											 CFStringRef				inQuery,
+											 Terminal_SearchFlags		inFlags,
+											 std::vector< Terminal_RangeDescription >&	outMatches);
 
 //@}
 
