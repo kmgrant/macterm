@@ -3863,9 +3863,11 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 					 TerminalTextAttributes		inAttributes)
 {
 	// draw all of the text, but scan for sub-sections that could be ANSI graphics
-	SInt16		terminalFontID = 0;
-	SInt16		terminalFontSize = 0;
-	Style		terminalFontStyle = normal;
+	SInt16			terminalFontID = 0;
+	SInt16			terminalFontSize = 0;
+	Style			terminalFontStyle = normal;
+	char const*		sourceBuffer = inTextBufferPtr; // initially...
+	char*			allocatedBuffer = nullptr;
 	
 	
 	// set up the current graphics port appropriately; the portÕs settings
@@ -3894,6 +3896,12 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 		// fill background appropriately
 		EraseRect(inBoundaries);
 	}
+	else if (STYLE_CONCEALED(inAttributes))
+	{
+		allocatedBuffer = new char[inCharacterCount];
+		CPP_STD::memset(allocatedBuffer, ' ', inCharacterCount);
+		sourceBuffer = allocatedBuffer;
+	}
 	
 	// if bold or large text or graphics are being drawn, do it one character
 	// at a time; bold fonts typically increase the font spacing, and double-
@@ -3921,12 +3929,12 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 			{
 				// draw a graphics character
-				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], true/* is double width */);
+				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, sourceBuffer[i], true/* is double width */);
 			}
 			else
 			{
 				// draw a normal character
-				DrawText(inTextBufferPtr, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+				DrawText(sourceBuffer, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 			}
 			
 			MoveTo(oldPen.h + INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), oldPen.v);
@@ -3946,12 +3954,12 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 			{
 				// draw a graphics character
-				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], false/* is double width */);
+				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, sourceBuffer[i], false/* is double width */);
 			}
 			else
 			{
 				// draw a normal character
-				DrawText(inTextBufferPtr, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+				DrawText(sourceBuffer, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 			}
 			MoveTo(oldPen.h + inTerminalViewPtr->text.font.widthPerCharacter, oldPen.v);
 		}
@@ -3962,7 +3970,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 		// fastest if rendered all at once using a single QuickDraw call, and since there are no
 		// forced font metrics with normal text, this can be a lot simpler (this is also almost
 		// certainly the common case, so itÕs good if this is as efficient as possible)
-		DrawText(inTextBufferPtr, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
+		DrawText(sourceBuffer, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
 	}
 	
 	// draw the cursor if it is in the requested region
@@ -3977,6 +3985,8 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
 		}
 	}
+	
+	if (nullptr != allocatedBuffer) delete [] allocatedBuffer, allocatedBuffer = nullptr;
 }// drawTerminalText
 
 
@@ -8896,10 +8906,6 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		colorRGB.green = 0;
 		colorRGB.blue = 0;
 		RGBForeColor(&colorRGB);
-		colorRGB.red = 40000;
-		colorRGB.green = 40000;
-		colorRGB.blue = 40000;
-		RGBBackColor(&colorRGB);
 	}
 	else
 	{
@@ -8907,9 +8913,8 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		RGBForeColor(&colorRGB);
 	}
 	
-	// set up background color; only do this if not rendering a drag highlight,
-	// and only perform color alterations based on foreground/background when
-	// the background is explicitly set (otherwise, who knows what will happen!)
+	// set up background color; note that in drag highlighting mode,
+	// the background color is preset by the highlight renderer
 	if (false == usingDragHighlightColors)
 	{
 		getScreenPaletteColor(inTerminalViewPtr, STYLE_INVERSE_VIDEO(inAttributes) ? fg : bg, &colorRGB);
