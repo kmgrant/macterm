@@ -1366,8 +1366,14 @@ panelChanged	(Panel_Ref			inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			void*	panelAuxiliaryDataPtr = inDataPtr;
+			void*		panelAuxiliaryDataPtr = inDataPtr;
 			
+			
+			// list here all fields in the panel (only necessary for “passive”
+			// views; buttons, checkboxes, etc. update preferences as they are
+			// changed and trigger commands or other event callbacks)
+			savePreferenceForField(inPanel, HIViewWrap(idMyFieldStackingOriginLeft, Panel_ReturnOwningWindow(inPanel)));
+			savePreferenceForField(inPanel, HIViewWrap(idMyFieldCopyUsingSpacesForTabs, Panel_ReturnOwningWindow(inPanel)));
 			
 			disposePanel(inPanel, panelAuxiliaryDataPtr);
 		}

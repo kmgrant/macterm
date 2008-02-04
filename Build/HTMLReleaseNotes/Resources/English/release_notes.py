@@ -87,6 +87,7 @@ notes_by_version = {
 	'20080203': [
 		'Fixed truncation of the last line of text when copying or dragging rectangular selections.',
 		'Fixed drag highlighting to not reveal text that is marked as "concealed".',
+		'Fixed Preferences window General pane to properly save preferences in text fields (like window stacking origin).',
 	],
 	'20080202': [
 		'Find will now properly highlight matching text.',
