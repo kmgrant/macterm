@@ -57,6 +57,7 @@ It natively runs Unix applications on Mac OS X, however it provides support for 
 	<key>productKeywords</key>
 	<array>
 		<string>terminal</string>
+		<string>shell</string>
 		<string>unix</string>
 		<string>telnet</string>
 		<string>ssh</string>
@@ -74,6 +75,7 @@ It natively runs Unix applications on Mac OS X, however it provides support for 
 	<array>
 		<string>10.3</string>
 		<string>10.4</string>
+		<string>10.5</string>
 	</array>
 	<key>productPageURL</key>
 	<string>http://www.mactelnet.com/</string>
@@ -82,7 +84,7 @@ It natively runs Unix applications on Mac OS X, however it provides support for 
 	<key>productReleaseNotes</key>
 	<string>RELEASE_NOTES_ONE_STRING</string>
 	<key>productRequirements</key>
-	<string>Mac OS X 10.3 or later</string>
+	<string>Mac OS X 10.3.9 or later</string>
 	<key>productReviews</key>
 	<string></string>
 	<key>productVersion</key>
