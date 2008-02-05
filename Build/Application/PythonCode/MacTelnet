@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """The main entry point to MacTelnet.  Yes, a Python interpreter!
 
 This Python script has the same name as the base executable so

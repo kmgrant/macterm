@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """Utility routines that are highly generic.
 
 slash_free_path -- remove all leading and trailing slashes

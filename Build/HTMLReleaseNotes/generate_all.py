@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """Maintains the Check for Updates web pages.
 
 Automatically generates all updates web pages (one per released version) based

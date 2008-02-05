@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """Notes on changes in each MacTelnet release.
 
 Import this module to access its variables, or run it as a script to see the

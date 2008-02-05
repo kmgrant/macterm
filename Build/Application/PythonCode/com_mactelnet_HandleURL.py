@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """Routines to open MacTelnet sessions using information in URLs.
 
 Below, example URLs fully specify all parts, although each type

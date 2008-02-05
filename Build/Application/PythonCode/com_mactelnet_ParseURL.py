@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """Routines to distill various kinds of URLs into components.
 
 Every function returns a dictionary with one or more of the

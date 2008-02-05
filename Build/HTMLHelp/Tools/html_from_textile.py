@@ -1,11 +1,10 @@
 #!/usr/bin/env python
-
-# html_from_textile.py
-#
-# Converts any given Textile input file into HTML.
-#
-# Kevin Grant (kevin@ieee.org)
-# March 7, 2005
+# vim: set fileencoding=UTF-8 :
+"""Converts any given Textile input file into HTML.
+"""
+__author__ = 'Kevin Grant <kevin@ieee.org>'
+__date__ = '5 March 2005'
+__version__ = '1.0'
 
 import os.path
 import sys
@@ -20,7 +19,7 @@ except:
 sys.path.append(os.path.join(dir, 'textile-2.0.10'))
 import textile
 
-if len(sys.argv) < 2: raise 'not enough arguments'
+if len(sys.argv) < 2: raise KeyError('not enough arguments')
 
 file = open(sys.argv[1], 'r')
 if not file: raise 'unable to open', file

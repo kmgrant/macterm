@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """Routines to open MacTelnet sessions using file pathnames.
 """
 __author__ = 'Kevin Grant <kevin@ieee.org>'

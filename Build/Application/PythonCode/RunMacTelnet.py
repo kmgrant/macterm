@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# vim: set fileencoding=UTF-8 :
 """Main entry point to MacTelnet.
 
 The set of routines available from Python is known as the Quills
