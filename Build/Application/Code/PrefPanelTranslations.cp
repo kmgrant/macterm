@@ -64,7 +64,8 @@
 #include "DialogUtilities.h"
 #include "Panel.h"
 #include "Preferences.h"
-#include "PrefPanelKiosk.h"
+#include "PrefPanelTranslations.h"
+#include "TextTranslation.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 
@@ -80,14 +81,37 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyDataBrowserBaseTranslationTable		= { FOUR_CHAR_CODE('Tran'), 0/* ID */ };
-static HIViewID const	idMyLabelExceptions						= { FOUR_CHAR_CODE('XLbl'), 0/* ID */ };
-static HIViewID const	idMyDataBrowserExceptions				= { FOUR_CHAR_CODE('Xcpt'), 0/* ID */ };
-static HIViewID const	idMyButtonSpecialCharacters				= { FOUR_CHAR_CODE('SplC'), 0/* ID */ };
-static HIViewID const	idMyButtonAddException					= { FOUR_CHAR_CODE('AddX'), 0/* ID */ };
-static HIViewID const	idMyButtonRemoveException				= { FOUR_CHAR_CODE('DelX'), 0/* ID */ };
+static HIViewID const	idMyDataBrowserBaseTranslationTable		= { 'Tran', 0/* ID */ };
+static HIViewID const	idMyLabelExceptions						= { 'XLbl', 0/* ID */ };
+static HIViewID const	idMyDataBrowserExceptions				= { 'Xcpt', 0/* ID */ };
+static HIViewID const	idMyButtonSpecialCharacters				= { 'SplC', 0/* ID */ };
+static HIViewID const	idMyButtonAddException					= { 'AddX', 0/* ID */ };
+static HIViewID const	idMyButtonRemoveException				= { 'DelX', 0/* ID */ };
+
+// The following cannot use any of Apple’s reserved IDs (0 to 1023).
+enum
+{
+	kMy_DataBrowserPropertyIDBaseCharacterSet		= 'Base',
+	kMy_DataBrowserPropertyIDExceptionOriginal		= 'EOrg',
+	kMy_DataBrowserPropertyIDExceptionReplacement	= 'ERpl'
+};
 
 #pragma mark Types
+
+/*!
+Initializes a Data Browser callbacks structure to
+point to appropriate functions in this file for
+handling various tasks.  Creates the necessary UPP
+types, which are destroyed when the instance goes
+away.
+*/
+struct My_TranslationsDataBrowserCallbacks
+{
+	My_TranslationsDataBrowserCallbacks		();
+	~My_TranslationsDataBrowserCallbacks	();
+	
+	DataBrowserCallbacks	listCallbacks;
+};
 
 /*!
 Implements the user interface of the panel - only
@@ -98,9 +122,10 @@ struct My_TranslationsPanelUI
 public:
 	My_TranslationsPanelUI	(Panel_Ref, HIWindowRef);
 	
-	HIViewWrap							mainView;
-	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
-	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a tab is clicked
+	My_TranslationsDataBrowserCallbacks		listCallbacks;
+	HIViewWrap								mainView;
+	CommonEventHandlers_HIViewResizer		containerResizer;	//!< invoked when the panel is resized
+	CarbonEventHandlerWrap					viewClickHandler;	//!< invoked when a tab is clicked
 
 protected:
 	HIViewWrap
@@ -123,10 +148,14 @@ typedef My_TranslationsPanelData*	My_TranslationsPanelDataPtr;
 
 #pragma mark Internal Method Prototypes
 
+static pascal OSStatus	accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+														 DataBrowserItemDataRef, Boolean);
+static pascal Boolean	compareDataBrowserItems			(HIViewRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
 static void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
 static void				disposePanel					(Panel_Ref, void*);
 static SInt32			panelChanged					(Panel_Ref, Panel_Message, void*);
 static pascal OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
+static void				setDataBrowserColumnWidths		(My_TranslationsPanelUIPtr);
 
 #pragma mark Variables
 
@@ -181,6 +210,51 @@ PrefPanelTranslations_New ()
 #pragma mark Internal Methods
 
 /*!
+Initializes a My_TranslationsDataBrowserCallbacks structure.
+
+(3.1)
+*/
+My_TranslationsDataBrowserCallbacks::
+My_TranslationsDataBrowserCallbacks ()
+{
+	// set up all the callbacks needed for the data browser
+	this->listCallbacks.version = kDataBrowserLatestCallbacks;
+	if (noErr != InitDataBrowserCallbacks(&this->listCallbacks))
+	{
+		// fallback
+		bzero(&this->listCallbacks, sizeof(this->listCallbacks));
+		this->listCallbacks.version = kDataBrowserLatestCallbacks;
+	}
+	this->listCallbacks.u.v1.itemDataCallback = NewDataBrowserItemDataUPP(accessDataBrowserItemData);
+	assert(nullptr != this->listCallbacks.u.v1.itemDataCallback);
+	this->listCallbacks.u.v1.itemCompareCallback = NewDataBrowserItemCompareUPP(compareDataBrowserItems);
+	assert(nullptr != this->listCallbacks.u.v1.itemCompareCallback);
+}// My_TranslationsDataBrowserCallbacks default constructor
+
+
+/*!
+Tears down a My_TranslationsDataBrowserCallbacks structure.
+
+(3.1)
+*/
+My_TranslationsDataBrowserCallbacks::
+~My_TranslationsDataBrowserCallbacks ()
+{
+	// dispose callbacks
+	if (nullptr != this->listCallbacks.u.v1.itemDataCallback)
+	{
+		DisposeDataBrowserItemDataUPP(this->listCallbacks.u.v1.itemDataCallback),
+			this->listCallbacks.u.v1.itemDataCallback = nullptr;
+	}
+	if (nullptr != this->listCallbacks.u.v1.itemCompareCallback)
+	{
+		DisposeDataBrowserItemCompareUPP(this->listCallbacks.u.v1.itemCompareCallback),
+			this->listCallbacks.u.v1.itemCompareCallback = nullptr;
+	}
+}// My_TranslationsDataBrowserCallbacks destructor
+
+
+/*!
 Initializes a My_TranslationsPanelData structure.
 
 (3.1)
@@ -205,17 +279,20 @@ My_TranslationsPanelUI	(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-mainView			(createContainerView(inPanel, inOwningWindow)
-						<< HIViewWrap_AssertExists),
-containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
-								kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-						deltaSizePanelContainerHIView, this/* context */),
-viewClickHandler	(CarbonEventUtilities_ReturnViewTarget(this->mainView), receiveViewHit,
-						CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
-						this/* user data */)
+listCallbacks						(),
+mainView							(createContainerView(inPanel, inOwningWindow)
+										<< HIViewWrap_AssertExists),
+containerResizer					(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+										kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
+										deltaSizePanelContainerHIView, this/* context */),
+viewClickHandler					(CarbonEventUtilities_ReturnViewTarget(this->mainView), receiveViewHit,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
+										this/* user data */)
 {
 	assert(containerResizer.isInstalled());
 	assert(viewClickHandler.isInstalled());
+	
+	setDataBrowserColumnWidths(this);
 }// My_TranslationsPanelUI 2-argument constructor
 
 
@@ -249,11 +326,177 @@ const
 		SetControlVisibility(result, false/* visible */, false/* draw */);
 	}
 	
-	// create HIViews for the panel based on the NIB
+	// create most HIViews for the panel based on the NIB
 	error = DialogUtilities_CreateControlsBasedOnWindowNIB
 			(CFSTR("PrefPanels"), CFSTR("Translations"), inOwningWindow,
 				result, viewList, idealContainerBounds);
 	assert_noerr(error);
+	
+	// create the base table list; insert appropriate columns
+	{
+		HIViewWrap							listDummy(idMyDataBrowserBaseTranslationTable, inOwningWindow);
+		HIViewRef							baseTableList = nullptr;
+		DataBrowserTableViewColumnIndex		columnNumber = 0;
+		DataBrowserListViewColumnDesc		columnInfo;
+		Rect								bounds;
+		UIStrings_Result					stringResult = kUIStrings_ResultOK;
+		
+		
+		GetControlBounds(listDummy, &bounds);
+		
+		// NOTE: here, the original variable is being *replaced* with the data browser, as
+		// the original user pane was only needed for size definition
+		error = CreateDataBrowserControl(inOwningWindow, &bounds, kDataBrowserListView, &baseTableList);
+		assert_noerr(error);
+		error = SetControlID(baseTableList, &idMyDataBrowserBaseTranslationTable);
+		assert_noerr(error);
+		
+		bzero(&columnInfo, sizeof(columnInfo));
+		
+		// set defaults for all columns, then override below
+		columnInfo.propertyDesc.propertyID = '----';
+		columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
+		columnInfo.propertyDesc.propertyFlags = kDataBrowserDefaultPropertyFlags | kDataBrowserListViewSortableColumn |
+												kDataBrowserListViewTypeSelectColumn;
+		columnInfo.headerBtnDesc.version = kDataBrowserListViewLatestHeaderDesc;
+		columnInfo.headerBtnDesc.minimumWidth = 200; // arbitrary
+		columnInfo.headerBtnDesc.maximumWidth = 600; // arbitrary
+		columnInfo.headerBtnDesc.titleOffset = 0; // arbitrary
+		columnInfo.headerBtnDesc.titleString = nullptr;
+		columnInfo.headerBtnDesc.initialOrder = 0;
+		columnInfo.headerBtnDesc.btnFontStyle.flags = kControlUseJustMask;
+		columnInfo.headerBtnDesc.btnFontStyle.just = teFlushDefault;
+		columnInfo.headerBtnDesc.btnContentInfo.contentType = kControlContentTextOnly;
+		
+		// create base table column
+		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable,
+										columnInfo.headerBtnDesc.titleString);
+		if (stringResult.ok())
+		{
+			columnInfo.propertyDesc.propertyID = kMy_DataBrowserPropertyIDBaseCharacterSet;
+			error = AddDataBrowserListViewColumn(baseTableList, &columnInfo, columnNumber++);
+			assert_noerr(error);
+			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
+		}
+		
+		// insert as many rows as there are translation tables
+		{
+			UInt16 const	kNumberOfTables = TextTranslation_ReturnCharacterSetCount();
+			
+			
+			error = AddDataBrowserItems(baseTableList, kDataBrowserNoItem/* parent item */, kNumberOfTables, nullptr/* IDs */,
+										kDataBrowserItemNoProperty/* pre-sort property */);
+			assert_noerr(error);
+		}
+		
+		// attach data that would not be specifiable in a NIB
+		error = SetDataBrowserCallbacks(baseTableList, &this->listCallbacks.listCallbacks);
+		assert_noerr(error);
+		
+		// initialize sort column
+		error = SetDataBrowserSortProperty(baseTableList, kMy_DataBrowserPropertyIDBaseCharacterSet);
+		assert_noerr(error);
+		
+		// set other nice things (most can be set in a NIB someday)
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+		if (FlagManager_Test(kFlagOS10_4API))
+		{
+			(OSStatus)DataBrowserChangeAttributes(baseTableList,
+													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
+													0/* attributes to clear */);
+		}
+	#endif
+		(OSStatus)SetDataBrowserListViewUsePlainBackground(baseTableList, false);
+		(OSStatus)SetDataBrowserTableViewHiliteStyle(baseTableList, kDataBrowserTableViewFillHilite);
+		(OSStatus)SetDataBrowserHasScrollBars(baseTableList, false/* horizontal */, true/* vertical */);
+		(OSStatus)SetDataBrowserSelectionFlags(baseTableList, kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
+		
+		error = HIViewAddSubview(result, baseTableList);
+		assert_noerr(error);
+	}
+	
+	// create the exceptions list; insert appropriate columns
+	{
+		HIViewWrap							listDummy(idMyDataBrowserExceptions, inOwningWindow);
+		HIViewRef							exceptionsList = nullptr;
+		DataBrowserTableViewColumnIndex		columnNumber = 0;
+		DataBrowserListViewColumnDesc		columnInfo;
+		Rect								bounds;
+		UIStrings_Result					stringResult = kUIStrings_ResultOK;
+		
+		
+		GetControlBounds(listDummy, &bounds);
+		
+		// NOTE: here, the original variable is being *replaced* with the data browser, as
+		// the original user pane was only needed for size definition
+		error = CreateDataBrowserControl(inOwningWindow, &bounds, kDataBrowserListView, &exceptionsList);
+		assert_noerr(error);
+		error = SetControlID(exceptionsList, &idMyDataBrowserExceptions);
+		assert_noerr(error);
+		
+		bzero(&columnInfo, sizeof(columnInfo));
+		
+		// set defaults for all columns, then override below
+		columnInfo.propertyDesc.propertyID = '----';
+		columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
+		columnInfo.propertyDesc.propertyFlags = kDataBrowserDefaultPropertyFlags | kDataBrowserListViewSortableColumn |
+												kDataBrowserListViewMovableColumn;
+		columnInfo.headerBtnDesc.version = kDataBrowserListViewLatestHeaderDesc;
+		columnInfo.headerBtnDesc.minimumWidth = 100; // arbitrary
+		columnInfo.headerBtnDesc.maximumWidth = 100; // arbitrary
+		columnInfo.headerBtnDesc.titleOffset = 0; // arbitrary
+		columnInfo.headerBtnDesc.titleString = nullptr;
+		columnInfo.headerBtnDesc.initialOrder = 0;
+		columnInfo.headerBtnDesc.btnFontStyle.flags = kControlUseJustMask;
+		columnInfo.headerBtnDesc.btnFontStyle.just = teFlushDefault;
+		columnInfo.headerBtnDesc.btnContentInfo.contentType = kControlContentTextOnly;
+		
+		// create original character column
+		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTranslationsListHeaderOrigChar,
+										columnInfo.headerBtnDesc.titleString);
+		if (stringResult.ok())
+		{
+			columnInfo.propertyDesc.propertyID = kMy_DataBrowserPropertyIDExceptionOriginal;
+			error = AddDataBrowserListViewColumn(exceptionsList, &columnInfo, columnNumber++);
+			assert_noerr(error);
+			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
+		}
+		
+		// create original character column
+		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTranslationsListHeaderReplChar,
+										columnInfo.headerBtnDesc.titleString);
+		if (stringResult.ok())
+		{
+			columnInfo.propertyDesc.propertyID = kMy_DataBrowserPropertyIDExceptionReplacement;
+			error = AddDataBrowserListViewColumn(exceptionsList, &columnInfo, columnNumber++);
+			assert_noerr(error);
+			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
+		}
+				
+		// attach data that would not be specifiable in a NIB
+		error = SetDataBrowserCallbacks(exceptionsList, &this->listCallbacks.listCallbacks);
+		assert_noerr(error);
+		
+		// initialize sort column
+		error = SetDataBrowserSortProperty(exceptionsList, kMy_DataBrowserPropertyIDExceptionOriginal);
+		assert_noerr(error);
+		
+		// set other nice things (most can be set in a NIB someday)
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+		if (FlagManager_Test(kFlagOS10_4API))
+		{
+			(OSStatus)DataBrowserChangeAttributes(exceptionsList,
+													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
+													0/* attributes to clear */);
+		}
+	#endif
+		(OSStatus)SetDataBrowserListViewUsePlainBackground(exceptionsList, false);
+		(OSStatus)SetDataBrowserHasScrollBars(exceptionsList, false/* horizontal */, true/* vertical */);
+		(OSStatus)SetDataBrowserSelectionFlags(exceptionsList, kDataBrowserSelectOnlyOne);
+		
+		error = HIViewAddSubview(result, exceptionsList);
+		assert_noerr(error);
+	}
 	
 	// calculate the ideal size
 	gIdealPanelWidth = idealContainerBounds.right - idealContainerBounds.left;
@@ -325,6 +568,143 @@ const
 
 
 /*!
+A standard DataBrowserItemDataProcPtr, this routine
+responds to requests sent by Mac OS X for data that
+belongs in the specified list.
+
+(3.1)
+*/
+static pascal OSStatus
+accessDataBrowserItemData	(HIViewRef					inDataBrowser,
+							 DataBrowserItemID			inItemID,
+							 DataBrowserPropertyID		inPropertyID,
+							 DataBrowserItemDataRef		inItemData,
+							 Boolean					inSetValue)
+{
+	OSStatus	result = noErr;
+	
+	
+	if (false == inSetValue)
+	{
+		switch (inPropertyID)
+		{
+		case kDataBrowserItemIsEditableProperty:
+			// TEMPORARY - UNIMPLEMENTED
+			result = SetDataBrowserItemDataBooleanValue(inItemData, false/* is editable */);
+			break;
+		
+		case kMy_DataBrowserPropertyIDBaseCharacterSet:
+			// return the text string for the character set name
+			{
+				CFStringEncoding	thisEncoding = TextTranslation_ReturnIndexedCharacterSet(inItemID);
+				CFStringRef			tableNameCFString = nullptr;
+				
+				
+				// LOCALIZE THIS
+				tableNameCFString = CFStringGetNameOfEncoding(thisEncoding);
+				if (nullptr == tableNameCFString) result = resNotFound;
+				else
+				{
+					result = SetDataBrowserItemDataText(inItemData, tableNameCFString);
+				}
+			}
+			break;
+		
+		case kMy_DataBrowserPropertyIDExceptionOriginal:
+			// return the text string for the character
+			// UNIMPLEMENTED
+			result = unimpErr;
+			break;
+		
+		case kMy_DataBrowserPropertyIDExceptionReplacement:
+			// return the text string for the character
+			// UNIMPLEMENTED
+			result = unimpErr;
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	else
+	{
+		switch (inPropertyID)
+		{
+		case kMy_DataBrowserPropertyIDBaseCharacterSet:
+			// read-only
+			result = paramErr;
+			break;
+		
+		case kMy_DataBrowserPropertyIDExceptionOriginal:
+			// read-only
+			result = paramErr;
+			break;
+		
+		case kMy_DataBrowserPropertyIDExceptionReplacement:
+			// user has changed the replacement character
+			{
+				CFStringRef		newCharacter = nullptr;
+				
+				
+				result = GetDataBrowserItemDataText(inItemData, &newCharacter);
+				if (noErr == result)
+				{
+					// UNIMPLEMENTED
+					result = noErr;
+				}
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	
+	return result;
+}// accessDataBrowserItemData
+
+
+/*!
+A standard DataBrowserItemCompareProcPtr, this
+method compares items in the list.
+
+(3.1)
+*/
+static pascal Boolean
+compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
+							 DataBrowserItemID			inItemOne,
+							 DataBrowserItemID			inItemTwo,
+							 DataBrowserPropertyID		inSortProperty)
+{
+	Boolean		result = false;
+	
+	
+	switch (inSortProperty)
+	{
+	case kMy_DataBrowserPropertyIDBaseCharacterSet:
+		result = (inItemOne < inItemTwo);
+		break;
+	
+	case kMy_DataBrowserPropertyIDExceptionOriginal:
+		result = (inItemOne < inItemTwo);
+		break;
+	
+	case kMy_DataBrowserPropertyIDExceptionReplacement:
+		result = (inItemOne < inItemTwo);
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	return result;
+}// compareDataBrowserItems
+
+
+/*!
 Adjusts the views in preference panels to match the
 specified change in dimensions of a panel’s container.
 
@@ -334,11 +714,11 @@ static void
 deltaSizePanelContainerHIView	(HIViewRef		inView,
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
-								 void*			UNUSED_ARGUMENT(inContext))
+								 void*			inContext)
 {
-	HIWindowRef				kPanelWindow = HIViewGetWindow(inView);
-	//My_TranslationsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_TranslationsPanelDataPtr);
-	HIViewWrap				viewWrap;
+	HIWindowRef					kPanelWindow = HIViewGetWindow(inView);
+	My_TranslationsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inContext, My_TranslationsPanelUIPtr);
+	HIViewWrap					viewWrap;
 	
 	
 	viewWrap = HIViewWrap(idMyDataBrowserBaseTranslationTable, kPanelWindow);
@@ -354,6 +734,8 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 	viewWrap = HIViewWrap(idMyButtonRemoveException, kPanelWindow);
 	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+	
+	setDataBrowserColumnWidths(interfacePtr);
 }// deltaSizePanelContainerHIView
 
 
@@ -407,6 +789,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			panelDataPtr->interfacePtr = new My_TranslationsPanelUI(inPanel, *windowPtr);
 			assert(nullptr != panelDataPtr->interfacePtr);
+			setDataBrowserColumnWidths(panelDataPtr->interfacePtr);
 		}
 		break;
 	
@@ -525,5 +908,38 @@ receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveViewHit
+
+
+/*!
+Sets the widths of the data browser columns
+proportionately based on the total width.
+
+(3.1)
+*/
+static void
+setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
+{
+	Rect			containerRect;
+	Rect			scrollBarRect;
+	HIViewWrap		baseTableListContainer(idMyDataBrowserBaseTranslationTable, HIViewGetWindow(inInterfacePtr->mainView));
+	assert(baseTableListContainer.exists());
+	
+	
+	(OSStatus)GetControlBounds(baseTableListContainer, &containerRect);
+	
+	// set column widths proportionately
+	{
+		UInt16		kAvailableWidth = (containerRect.right - containerRect.left) - 16/* scroll bar width */;
+		Float32		calculatedWidth = 0;
+		UInt16		totalWidthSoFar = 0;
+		
+		
+		// give all remaining space to the base table column
+		calculatedWidth = kAvailableWidth - totalWidthSoFar;
+		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+					(baseTableListContainer, kMy_DataBrowserPropertyIDBaseCharacterSet,
+						STATIC_CAST(calculatedWidth, UInt16));
+	}
+}// setDataBrowserColumnWidths
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

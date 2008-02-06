@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080205',
     '20080203',
     '20080202',
     '20080130',
@@ -85,6 +86,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080205': [
+		'Preferences window Translation pane now actually shows lists for the base character set and exceptions.',
+	],
 	'20080203': [
 		'Fixed truncation of the last line of text when copying or dragging rectangular selections.',
 		'Fixed drag highlighting to not reveal text that is marked as "concealed".',

@@ -93,7 +93,10 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowSessionsControlKeysTabName		= 'SsnC',
 	kUIStrings_PreferencesWindowSessionsVectorGraphicsTabName	= 'SsnV',
 	kUIStrings_PreferencesWindowTerminalsCategoryName			= 'TrmT',
-	kUIStrings_PreferencesWindowTranslationsCategoryName		= 'TrnT'
+	kUIStrings_PreferencesWindowTranslationsCategoryName		= 'TrnT',
+	kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable	= 'TrnB',
+	kUIStrings_PreferencesWindowTranslationsListHeaderOrigChar	= 'TrnO',
+	kUIStrings_PreferencesWindowTranslationsListHeaderReplChar	= 'TrnR'
 };
 
 

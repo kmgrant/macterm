@@ -2,7 +2,7 @@
 	\brief Lists methods for character translation (i.e. between
 	what the user sees and what is transmitted on the network).
 	
-	Written by Roland MŒnsson (Lund University Computing Center,
+	Written by Roland MÃ¥nsson (Lund University Computing Center,
 	Sweden, roland_m@ldc.lu.se).  Modified by Pascal Maes (UCL/
 	ELEC, Place du Levant, 3, B-1348 Louvain-la-Neuve).  Updated
 	for Text Encoding Converter support, and new API created by
@@ -11,9 +11,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or

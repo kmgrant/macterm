@@ -3,9 +3,9 @@
 	TextTranslation.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -217,7 +217,7 @@ TextTranslation_ConvertBufferToNewHandle	(UInt8*			inText,
 					}
 					else
 					{
-						// flush remaining text from converterÕs internal buffers
+						// flush remaining text from converterâ€™s internal buffers
 						result = TECFlushText(inConverter, (UInt8*)outputBuffer,
 												kOutputBufferSize, &actualOutputLength);
 					}
@@ -256,7 +256,7 @@ would add.
 
 (3.0)
 */
-inline UInt16
+UInt16
 TextTranslation_ReturnCharacterSetCount ()
 {
 	return gTextEncodingInfoList().size();
@@ -272,7 +272,7 @@ used by TextTranslation_AppendConvertersToMenu(),
 so you can use this routine for initializing
 menus that have had encodings appended to them.
 
-If the index canÕt be found, 0 is returned.
+If the index canâ€™t be found, 0 is returned.
 
 (3.0)
 */
@@ -306,7 +306,7 @@ so you can use this routine for handling menu
 item selections from a menu that had encodings
 appended to it.
 
-If the encoding canÕt be found, one is assumed.
+If the encoding canâ€™t be found, one is assumed.
 
 (3.0)
 */
@@ -387,7 +387,7 @@ fillInCharacterSetList ()
 		// find an appropriate name for the menu item
 		encodingName = CFStringGetNameOfEncoding(*availableEncodings);
 		if (nullptr == encodingName) Console_WriteValue("could not get the name of encoding", *availableEncodings);
-		else if (currentBase != oldBase) // do not show duplicate items in the menu
+		else
 		{
 			// add data to list
 			try
