@@ -924,7 +924,7 @@ returnKeyListCopy ()
 const
 {
 	return CFPreferencesCopyKeyList(_targetApplication.returnCFStringRef(), kCFPreferencesCurrentUser,
-									kCFPreferencesCurrentHost);
+									kCFPreferencesAnyHost);
 }// returnKeyListCopy
 
 
