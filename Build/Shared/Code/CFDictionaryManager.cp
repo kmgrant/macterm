@@ -2,7 +2,7 @@
 
 	CFDictionaryManager.cp
 	
-	Data Access Library 1.3
+	Data Access Library 2.0
 	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -277,5 +277,32 @@ const
 	}
 	return result;
 }// returnStringCopy
+
+
+/*!
+Returns the specified key’s value, automatically
+cast into a Core Foundation property list type.
+
+The result is retained and should be released
+when you are finished with it.
+
+(2.0)
+*/
+CFPropertyListRef
+CFDictionaryManager::
+returnValueCopy		(CFStringRef	inKey)
+const
+{
+	CFPropertyListRef	result = nullptr;
+	void const*			voidPointerValue = nullptr;
+	
+	
+	if (CFDictionaryGetValueIfPresent(returnCFDictionaryRef(), inKey, &voidPointerValue))
+	{
+		result = CFUtilities_PropertyListCast(voidPointerValue);
+		if (nullptr != result) CFRetain(result);
+	}
+	return result;
+}// returnValueCopy
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

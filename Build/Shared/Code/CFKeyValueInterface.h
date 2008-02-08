@@ -9,8 +9,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.4
-	© 1998-2008 by Kevin Grant
+	Data Access Library 2.0
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -56,7 +56,7 @@ are stored or retrieved, it is clear where they are.
 class CFKeyValueInterface
 {
 public:
-	//! cleans up an interface parent’s data, and any subclass data
+	//! cleans up an interface parent‚Äôs data, and any subclass data
 	virtual inline
 	~CFKeyValueInterface	();
 	
@@ -95,6 +95,11 @@ public:
 	addString	(CFStringRef	inKey,
 				 CFStringRef	inValue) = 0;
 	
+	//! a primitive in case none of the others is sufficient
+	virtual void
+	addValue	(CFStringRef		inKey,
+				 CFPropertyListRef	inValue) = 0;
+	
 	//! retrieves an array value from the dictionary (use only if the value really is an array!); release it yourself!
 	virtual CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey) const = 0;
@@ -111,6 +116,10 @@ public:
 	virtual SInt16
 	returnInteger	(CFStringRef	inKey) const = 0;
 	
+	//! creates an array of CFStringRef values for each key used in this context
+	virtual CFArrayRef
+	returnKeyListCopy () const = 0;
+	
 	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
 	virtual SInt32
 	returnLong		(CFStringRef	inKey) const = 0;
@@ -118,10 +127,14 @@ public:
 	//! retrieves a string value from the dictionary (use only if the value really is a string!); release it yourself!
 	virtual CFStringRef
 	returnStringCopy	(CFStringRef	inKey) const = 0;
+	
+	//! a primitive in case none of the others is sufficient
+	virtual CFPropertyListRef
+	returnValueCopy		(CFStringRef	inKey) const = 0;
 };
 
 /*!
-“Implements” all CFKeyValueInterface methods by
+‚ÄúImplements‚Äù all CFKeyValueInterface methods by
 assuming another class has those methods available.
 */
 template < typename key_value_interface_delegate >
@@ -180,40 +193,67 @@ public:
 		_delegate.addString(inKey, inValue);
 	}
 	
+	virtual void
+	addValue	(CFStringRef		inKey,
+				 CFPropertyListRef	inValue)
+	{
+		_delegate.addValue(inKey, inValue);
+	}
+	
 	virtual CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey)
+	const
 	{
 		return _delegate.returnArrayCopy(inKey);
 	}
 	
 	virtual Boolean
 	returnFlag		(CFStringRef	inKey)
+	const
 	{
 		return _delegate.returnFlag(inKey);
 	}
 	
 	virtual Float32
 	returnFloat		(CFStringRef	inKey)
+	const
 	{
 		return _delegate.returnFloat(inKey);
 	}
 	
 	virtual SInt16
 	returnInteger	(CFStringRef	inKey)
+	const
 	{
 		return _delegate.returnInteger(inKey);
 	}
 	
+	virtual CFArrayRef
+	returnKeyListCopy ()
+	const
+	{
+		return _delegate.returnKeyListCopy();
+	}
+	
 	virtual SInt32
 	returnLong		(CFStringRef	inKey)
+	const
 	{
 		return _delegate.returnLong(inKey);
 	}
 	
 	virtual CFStringRef
 	returnStringCopy	(CFStringRef	inKey)
+	const
 	{
 		return _delegate.returnStringCopy(inKey);
+	}
+	
+	virtual CFPropertyListRef
+	returnValueCopy		(CFStringRef	inKey)
+	const
+	{
+		return _delegate.returnValueCopy(inKey);
 	}
 
 private:
@@ -266,6 +306,11 @@ public:
 	addString	(CFStringRef	inKey,
 				 CFStringRef	inValue);
 	
+	//! inserts arbitrary value into dictionary
+	inline void
+	addValue	(CFStringRef		inKey,
+				 CFPropertyListRef	inValue);
+	
 	//! retrieves an array value from the dictionary (use only if the value really is an array!)
 	inline CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey) const;
@@ -286,6 +331,10 @@ public:
 	inline SInt16
 	returnInteger	(CFStringRef	inKey) const;
 	
+	//! creates an array of CFStringRef values for each key used in this context
+	inline CFArrayRef
+	returnKeyListCopy () const;
+	
 	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
 	inline SInt32
 	returnLong		(CFStringRef	inKey) const;
@@ -293,6 +342,10 @@ public:
 	//! retrieves a string value from the dictionary (use only if the value really is a string!)
 	inline CFStringRef
 	returnStringCopy	(CFStringRef	inKey) const;
+	
+	//! retrieves an arbitrary value from the dictionary
+	inline CFPropertyListRef
+	returnValueCopy		(CFStringRef	inKey) const;
 	
 	//! changes the managed dictionary
 	inline void
@@ -304,7 +357,7 @@ private:
 
 /*!
 A context specifically for storing defaults.  It
-doesn’t actually manage a dictionary, it uses the
+doesn‚Äôt actually manage a dictionary, it uses the
 Core Foundation Preferences APIs instead; though,
 the consistency of this API compared to that of
 other contexts is useful.
@@ -351,6 +404,11 @@ public:
 	addString	(CFStringRef	inKey,
 				 CFStringRef	inValue);
 	
+	//! inserts arbitrary value into Core Foundation Preferences
+	inline void
+	addValue	(CFStringRef		inKey,
+				 CFPropertyListRef	inValue);
+	
 	//! retrieves an array value from global preferences (use only if the value really is an array!)
 	inline CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey) const;
@@ -367,6 +425,10 @@ public:
 	inline SInt16
 	returnInteger	(CFStringRef	inKey) const;
 	
+	//! creates an array of CFStringRef values for each key used in this context
+	inline CFArrayRef
+	returnKeyListCopy () const;
+	
 	//! retrieves a long integer value from global preferences (use only if the value really is a number!)
 	inline SInt32
 	returnLong		(CFStringRef	inKey) const;
@@ -374,6 +436,10 @@ public:
 	//! retrieves a string value from global preferences (use only if the value really is a string!)
 	inline CFStringRef
 	returnStringCopy	(CFStringRef	inKey) const;
+	
+	//! retrieves an arbitrary value from global preferences
+	inline CFPropertyListRef
+	returnValueCopy		(CFStringRef	inKey) const;
 	
 	//! returns the domain in which preferences are saved
 	inline CFStringRef
@@ -504,6 +570,21 @@ addString	(CFStringRef	inKey,
 
 
 /*!
+Adds or overwrites a key value with a value of any type
+(which is automatically retained by the dictionary).
+
+(2.0)
+*/
+void
+CFKeyValueDictionary::
+addValue	(CFStringRef		inKey,
+			 CFPropertyListRef	inValue)
+{
+	_dataDictionary.addValue(inKey, inValue);
+}// addValue
+
+
+/*!
 Returns the value of the specified key, automatically
 cast to a Core Foundation array type.  Do not use this
 unless you know the value is actually an array!
@@ -581,6 +662,30 @@ const
 
 
 /*!
+Returns the list of CFStringRef values for all keys
+used in this dictionary.
+
+(2.0)
+*/
+CFArrayRef
+CFKeyValueDictionary::
+returnKeyListCopy ()
+const
+{
+	CFDictionaryRef const	kDictionary = _dataDictionary.returnCFDictionaryRef();
+	CFIndex const			kDictSize = CFDictionaryGetCount(kDictionary);
+	void const**			keyList = new void const*[kDictSize];
+	CFArrayRef				result = nullptr;
+	
+	
+	CFDictionaryGetKeysAndValues(_dataDictionary.returnCFDictionaryRef(), keyList, nullptr/* values */);
+	result = CFArrayCreate(kCFAllocatorDefault, keyList, kDictSize, &kCFTypeArrayCallBacks);
+	delete [] keyList, keyList = nullptr;
+	return result;
+}// returnKeyListCopy
+
+
+/*!
 Returns the value of the specified key, automatically
 cast to a long integer type.  Do not use this
 unless you know the value is actually a number!
@@ -610,6 +715,21 @@ const
 {
 	return _dataDictionary.returnStringCopy(inKey);
 }// returnStringCopy
+
+
+/*!
+Returns the value of the specified key, automatically
+cast to a Core Foundation type.
+
+(2.0)
+*/
+CFPropertyListRef
+CFKeyValueDictionary::
+returnValueCopy		(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.returnValueCopy(inKey);
+}// returnValueCopy
 
 
 /*!
@@ -701,6 +821,21 @@ addString	(CFStringRef	inKey,
 
 
 /*!
+Adds or overwrites a key value in the global
+application preferences.
+
+(1.3)
+*/
+void
+CFKeyValuePreferences::
+addValue	(CFStringRef		inKey,
+			 CFPropertyListRef	inValue)
+{
+	CFPreferencesSetAppValue(inKey, inValue, _targetApplication.returnCFStringRef());
+}// addValue
+
+
+/*!
 Returns the array value of the specified key in
 the global application preferences.  Use only if
 you know the value is actually an array!
@@ -778,6 +913,22 @@ const
 
 
 /*!
+Returns the list of CFStringRef values for all keys
+used in this dictionary.
+
+(2.0)
+*/
+CFArrayRef
+CFKeyValuePreferences::
+returnKeyListCopy ()
+const
+{
+	return CFPreferencesCopyKeyList(_targetApplication.returnCFStringRef(), kCFPreferencesCurrentUser,
+									kCFPreferencesCurrentHost);
+}// returnKeyListCopy
+
+
+/*!
 Returns the long integer value of the specified key
 in the global application preferences.  Use only if
 you know the value is actually a number!
@@ -808,6 +959,21 @@ const
 {
 	return CFUtilities_StringCast(CFPreferencesCopyAppValue(inKey, _targetApplication.returnCFStringRef()));
 }// returnStringCopy
+
+
+/*!
+Returns the value of the specified key in the global
+application preferences.
+
+(2.0)
+*/
+CFPropertyListRef
+CFKeyValuePreferences::
+returnValueCopy		(CFStringRef	inKey)
+const
+{
+	return CFPreferencesCopyAppValue(inKey, _targetApplication.returnCFStringRef());
+}// returnValueCopy
 
 
 /*!

@@ -5,8 +5,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.4
-	© 1998-2008 by Kevin Grant
+	Data Access Library 2.0
+	Â© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -85,6 +85,9 @@ public:
 	inline void
 	addString	(CFStringRef, CFStringRef);
 	
+	inline void
+	addValue	(CFStringRef, CFPropertyListRef);
+	
 	CFArrayRef
 	returnArrayCopy	(CFStringRef) const;
 	
@@ -102,6 +105,9 @@ public:
 	
 	CFStringRef
 	returnStringCopy	(CFStringRef) const;
+	
+	CFPropertyListRef
+	returnValueCopy		(CFStringRef) const;
 
 private:
 	CFRetainRelease		_dictionary;
@@ -199,6 +205,21 @@ addString	(CFStringRef	inKey,
 
 
 /*!
+Adds or overwrites a key value with an arbitrary value
+(which is automatically retained by the dictionary).
+
+(2.0)
+*/
+void
+CFDictionaryManager::
+addValue	(CFStringRef		inKey,
+			 CFPropertyListRef	inValue)
+{
+	CFDictionarySetValue(_dictionary.returnCFMutableDictionaryRef(), inKey, inValue);
+}// addValue
+
+
+/*!
 Although the underlying dictionary is mutable, this
 method returns it as an immutable reference, which is
 convenient in some use cases.
@@ -234,7 +255,7 @@ Changes the CFMutableDictionaryRef being managed.
 IMPORTANT:	You should probably only do this once, if
 			at all, after a default construction.  Any
 			past method calls will not affect the new
-			dictionaryÕs contents.
+			dictionaryâ€™s contents.
 
 (1.3)
 */
