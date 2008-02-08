@@ -158,6 +158,9 @@
 		0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059705543D7C00ACDF3A /* System.framework */; };
 		0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059305543D7C00ACDF3A /* ApplicationServices.framework */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */; };
+		0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */; };
+		0ACBC3590D5BBC6800FCF05F /* CocoaBasic.h in Headers */ = {isa = PBXBuildFile; fileRef = 0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */; };
+		0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
@@ -552,6 +555,9 @@
 		0ACA57C50AEADC5C00B5F482 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/GenericDialog.nib; sourceTree = "<group>"; };
 		0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GenericDialog.cp; path = Application/Code/GenericDialog.cp; sourceTree = "<group>"; };
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
+		0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaBasic.mm; path = Shared/Code/CocoaBasic.mm; sourceTree = "<group>"; };
+		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
+		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
 		0ACDD91C0ABD163700040553 /* ListUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ListUtilities.h; path = Shared/Code/ListUtilities.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
@@ -617,6 +623,7 @@
 				0AC6BD970A8C0BB100AFF37A /* QuickTime.framework in Frameworks */,
 				0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */,
 				0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */,
+				0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -628,6 +635,7 @@
 			children = (
 				0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */,
 				0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */,
+				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */,
 				0A46FDCC055432A400ACDF3A /* Cursors.cp */,
 				0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */,
@@ -650,6 +658,7 @@
 				0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */,
 				0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */,
 				0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */,
+				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
 				0A9B318A0D538E6F00C1616D /* Cursors.h */,
 				0A4603D50554376100ACDF3A /* DialogAdjust.h */,
@@ -996,6 +1005,7 @@
 			isa = PBXGroup;
 			children = (
 				0A46059305543D7C00ACDF3A /* ApplicationServices.framework */,
+				0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */,
 				0A46059405543D7C00ACDF3A /* Carbon.framework */,
 				0A46079705543DE400ACDF3A /* CoreFoundation.framework */,
 				0A46059505543D7C00ACDF3A /* CoreServices.framework */,
@@ -1147,6 +1157,7 @@
 				0A9B319D0D538EF000C1616D /* MemoryBlockReferenceTracker.template.h in Headers */,
 				0A9B319F0D538EFA00C1616D /* Releases.h in Headers */,
 				0AAD86E50D54E45F003544E0 /* TerminalRangeDescription.typedef.h in Headers */,
+				0ACBC3590D5BBC6800FCF05F /* CocoaBasic.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1450,6 +1461,7 @@
 				0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */,
 				0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */,
 				0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */,
+				0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

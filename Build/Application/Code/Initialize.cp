@@ -48,6 +48,7 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CocoaBasic.h>
 #include <ColorUtilities.h>
 #include <Console.h>
 #include <Cursors.h>
@@ -136,6 +137,13 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	
 	// initialize memory manager, start up toolbox managers, etc.
 	initMacOSToolbox();
+	{
+		Boolean		cocoaOK = false;
+		
+		
+		cocoaOK = CocoaBasic_ApplicationLoad();
+		assert(cocoaOK);
+	}
 	
 	// on Mac OS X the following call also stops the bouncing of MacTelnet’s Dock icon
 	FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
