@@ -111,6 +111,7 @@ namespace
 	HIViewID const		idMyDataBrowserCollections		= { FOUR_CHAR_CODE('Favs'),			0/* ID */ };
 	HIViewID const		idMyButtonAddCollection			= { FOUR_CHAR_CODE('AddC'),			0/* ID */ };
 	HIViewID const		idMyButtonRemoveCollection		= { FOUR_CHAR_CODE('DelC'),			0/* ID */ };
+	HIViewID const		idMyButtonManipulateCollection	= { FOUR_CHAR_CODE('MnpC'),			0/* ID */ };
 	FourCharCode const	kMyDataBrowserPropertyIDSets	= FOUR_CHAR_CODE('Sets');
 }
 
@@ -120,8 +121,9 @@ struct MyPanelData
 {
 	inline MyPanelData		(Panel_Ref, SInt16);
 	
-	Panel_Ref	panel;					//!< the panel that will be displayed when selected by the user
-	SInt16		listIndex;				//!< row index of panel in the panel choice list
+	Panel_Ref			panel;					//!< the panel that will be displayed when selected by the user
+	SInt16				listIndex;				//!< row index of panel in the panel choice list
+	DataBrowserItemID	recentCollection;		//!< not all panels need this; recent selection in collections drawer
 };
 typedef MyPanelData*		MyPanelDataPtr;
 
@@ -135,6 +137,8 @@ static pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID
 																DataBrowserItemDataRef, Boolean);
 static void					chooseContext					(Preferences_ContextRef);
 static void					choosePanel						(UInt16);
+static Boolean				createCollection				(CFStringRef = nullptr);
+static void					displayCollectionRenameUI		(DataBrowserItemID);
 static void					findBestPanelSize				(HISize const&, HISize&);
 static void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 static void					handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
@@ -148,6 +152,8 @@ static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void
 static pascal OSStatus		receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
 static void					refreshDisplay					();
 static Preferences_Class	returnCurrentPreferencesClass	();
+static DataBrowserItemID	returnCurrentSelection			();
+static OSStatus				selectCollection				(DataBrowserItemID = 0);
 static void					sizePanels						(HISize const&);
 
 // declare the LDEF entry point (itÕs only referred to here, and is implemented in IconListDef.c)
@@ -178,6 +184,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	HIViewRef								gDataBrowserForCollections = nullptr;
 	HIViewRef								gCollectionAddButton = nullptr;
 	HIViewRef								gCollectionRemoveButton = nullptr;
+	HIViewRef								gCollectionManipulateMenuButton = nullptr;
 	SInt16									gPanelChoiceListLastRowIndex = -1;
 	MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
 	CategoryToolbarItems&					gCategoryToolbarItems ()	{ static CategoryToolbarItems x; return x; }
@@ -431,7 +438,8 @@ MyPanelData		(Panel_Ref	inPanel,
 				 SInt16		inListIndex)
 :
 panel(inPanel),
-listIndex(inListIndex)
+listIndex(inListIndex),
+recentCollection(0)
 {
 }// MyPanelData 2-argument constructor
 
@@ -716,8 +724,9 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 					}
 				}
 				
-				// modify the data displayed in the list drawer
+				// modify the data displayed in the list drawer, and select Default
 				rebuildList();
+				(OSStatus)selectCollection();
 				
 				// if the panel is an inspector type, show the collections drawer
 				if (kPanel_ResponseEditTypeInspector == Panel_SendMessageGetEditType(newPanelDataPtr->panel))
@@ -752,6 +761,77 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 		(OSStatus)HIViewSetVisible(nowVisibleContainer, true/* visible */);
 	}
 }// choosePanel
+
+
+/*!
+Creates a new item in the collections list for the
+current preferences class, optionally initializing
+its name.  Returns true only if successful.
+
+(3.1)
+*/
+static Boolean
+createCollection	(CFStringRef	inNameOrNull)
+{
+	// create a data browser item; this is accomplished by
+	// creating and immediately saving a new named context
+	// (a preferences callback elsewhere in this file is
+	// then notified by the Preferences module of the change)
+	Preferences_ContextRef		newContext = Preferences_NewContext
+												(returnCurrentPreferencesClass(), inNameOrNull);
+	Boolean						result = false;
+	
+	
+	if (nullptr != newContext)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextSave(newContext);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext, DataBrowserItemID);
+			
+			
+			// success!
+			Preferences_ReleaseContext(&newContext);
+			result = true;
+			
+			// automatically switch to editing the new item; ignore
+			// errors for now because this is not critical to creating
+			// the actual item
+			selectCollection(kNewItemID);
+			displayCollectionRenameUI(kNewItemID);
+		}
+	}
+	
+	return result;
+}// createCollection
+
+
+/*!
+Focuses the collections drawer and displays an editable
+text area for the specified item.
+
+(3.1)
+*/
+static void
+displayCollectionRenameUI	(DataBrowserItemID		inItemToRename)
+{
+	HIViewRef const		kDrawerRoot = HIViewGetRoot(gDrawerWindow);
+	
+	
+	// focus the drawer
+	(OSStatus)SetUserFocusWindow(gDrawerWindow);
+	
+	// focus the data browser itself
+	(OSStatus)HIViewSetNextFocus(kDrawerRoot, gDataBrowserForCollections);
+	(OSStatus)HIViewAdvanceFocus(kDrawerRoot, 0L/* event modifiers */);
+	
+	// open the new item for editing
+	(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, inItemToRename,
+										kMyDataBrowserPropertyIDSets);
+}// displayCollectionRenameUI
 
 
 /*!
@@ -893,6 +973,7 @@ init ()
 		gDataBrowserForCollections = (drawerWindow.returnHIViewWithID(idMyDataBrowserCollections) << HIViewWrap_AssertExists);
 		gCollectionAddButton = (drawerWindow.returnHIViewWithID(idMyButtonAddCollection) << HIViewWrap_AssertExists);
 		gCollectionRemoveButton = (drawerWindow.returnHIViewWithID(idMyButtonRemoveCollection) << HIViewWrap_AssertExists);
+		gCollectionManipulateMenuButton = (drawerWindow.returnHIViewWithID(idMyButtonManipulateCollection) << HIViewWrap_AssertExists);
 		
 		// set up the data browser
 		{
@@ -912,27 +993,13 @@ init ()
 			// attach data not specified in NIB
 			error = SetDataBrowserCallbacks(gDataBrowserForCollections, &callbacks);
 			assert_noerr(error);
-			
-			// insert data - TEMPORARY
-			{
-				Preferences_Result			prefsResult = kPreferences_ResultOK;
-				Preferences_ContextRef		defaultContext = nullptr;
-				
-				
-				prefsResult = Preferences_GetDefaultContext(&defaultContext, returnCurrentPreferencesClass());
-				if (kPreferences_ResultOK == prefsResult)
-				{
-					DataBrowserItemID	ids[] = { REINTERPRET_CAST(defaultContext, DataBrowserItemID) };
-					
-					
-					(OSStatus)AddDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
-													sizeof(ids) / sizeof(DataBrowserItemID), ids,
-													kMyDataBrowserPropertyIDSets/* pre-sort property */);
-				}
-			}
+			error = SetDataBrowserSelectionFlags(gDataBrowserForCollections,
+													kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
+			assert_noerr(error);
 		}
 		
-		// add "+" and "-" icons to the add and remove buttons
+		// add "+" and "-" icons to the add and remove buttons, and a gear icon
+		// to the contextual menu button
 		{
 			IconManagerIconRef		buttonIcon = nullptr;
 			
@@ -966,6 +1033,23 @@ init ()
 					{
 						// once the icon is set successfully, the equivalent text title can be removed
 						(OSStatus)SetControlTitleWithCFString(gCollectionRemoveButton, CFSTR(""));
+					}
+				}
+				IconManager_DisposeIcon(&buttonIcon);
+			}
+			
+			buttonIcon = IconManager_NewIcon();
+			if (nullptr != buttonIcon)
+			{
+				if (noErr == IconManager_MakeIconRefFromBundleFile
+								(buttonIcon, AppResources_ReturnContextMenuFilenameNoExtension(),
+									AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_IconServicesIconContextMenu))
+				{
+					if (noErr == IconManager_SetButtonIcon(gCollectionManipulateMenuButton, buttonIcon))
+					{
+						// once the icon is set successfully, the equivalent text title can be removed
+						(OSStatus)SetControlTitleWithCFString(gCollectionManipulateMenuButton, CFSTR(""));
 					}
 				}
 				IconManager_DisposeIcon(&buttonIcon);
@@ -1355,6 +1439,9 @@ rebuildList ()
 											sizeof(ids) / sizeof(DataBrowserItemID), ids,
 											kDataBrowserItemNoProperty/* pre-sort property */);
 		}
+		
+		// ensure something is always selected
+		//(OSStatus)selectCollection();
 	}
 }// rebuildList
 
@@ -1403,63 +1490,15 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// creating and immediately saving a new named context
 						// (a preferences callback elsewhere in this file is
 						// then notified by the Preferences module of the change)
-						Preferences_ContextRef		newContext = Preferences_NewContext
-																	(returnCurrentPreferencesClass(),
-																		nullptr/* name, or nullptr for automatic name */);
-						Boolean						isError = false;
+						Boolean		createOK = false;
 						
 						
-						if (nullptr == newContext) isError = true;
-						else
+						createOK = createCollection();
+						if (createOK)
 						{
-							Preferences_Result		prefsResult = kPreferences_ResultOK;
-							
-							
-							prefsResult = Preferences_ContextSave(newContext);
-							if (kPreferences_ResultOK != prefsResult) isError = true;
-							else
-							{
-								DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext,
-																							DataBrowserItemID);
-								
-								
-								// success!
-								Preferences_ReleaseContext(&newContext);
-								result = noErr;
-								
-								// automatically switch to editing the new item; ignore
-								// errors for now because this is not critical to creating
-								// the actual item
-								{
-									DataBrowserItemID	itemList[] = { kNewItemID };
-									
-									
-									(OSStatus)SetDataBrowserSelectedItems
-												(gDataBrowserForCollections, 1/* number of items */, itemList,
-													kDataBrowserItemsAssign);
-								}
-								
-								// attempt to help the user by automatically highlighting
-								// the new item for editing; but if this fails, no big deal
-								{
-									HIViewRef const		kDrawerRoot = HIViewGetRoot(gDrawerWindow);
-									
-									
-									// focus the drawer
-									(OSStatus)SetUserFocusWindow(gDrawerWindow);
-									
-									// focus the data browser itself
-									(OSStatus)HIViewSetNextFocus(kDrawerRoot, gDataBrowserForCollections);
-									(OSStatus)HIViewAdvanceFocus(kDrawerRoot, 0L/* event modifiers */);
-									
-									// open the new item for editing
-									(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, kNewItemID,
-																		kMyDataBrowserPropertyIDSets);
-								}
-							}
+							result = noErr;
 						}
-						
-						if (isError)
+						else
 						{
 							Sound_StandardAlert();
 							result = eventNotHandledErr;
@@ -1473,14 +1512,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// destroying the underlying context (a preferences callback
 						// elsewhere in this file is then notified by the Preferences
 						// module of the change)
-						DataBrowserItemID	selectedID = 0;
-						OSStatus			error = noErr;
+						DataBrowserItemID	selectedID = returnCurrentSelection();
 						Boolean				isError = false;
 						
 						
-						error = GetDataBrowserSelectionAnchor(gDataBrowserForCollections,
-																&selectedID, &selectedID);
-						if (noErr != error) isError = true;
+						if (0 == selectedID) isError = true;
 						else
 						{
 							Preferences_ContextRef		deletedContext = REINTERPRET_CAST(selectedID,
@@ -1499,6 +1535,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								{
 									// success!
 									result = noErr;
+									
+									// select something else...
+									(OSStatus)selectCollection();
 								}
 							}
 						}
@@ -1509,6 +1548,59 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							result = eventNotHandledErr;
 						}
 					}
+					break;
+				
+				case kCommandPreferencesDuplicateFavorite:
+					{
+						// make a copy of the selected data browser item
+						DataBrowserItemID	selectedID = returnCurrentSelection();
+						Boolean				isError = false;
+						
+						
+						if (0 == selectedID) isError = true;
+						else
+						{
+							Preferences_ContextRef		referenceContext = REINTERPRET_CAST(selectedID,
+																							Preferences_ContextRef);
+							
+							
+							if (nullptr == referenceContext) isError = true;
+							else
+							{
+								Preferences_ContextRef	newContext = nullptr;
+								
+								
+								newContext = Preferences_NewCloneContext(referenceContext);
+								if (nullptr == newContext) isError = true;
+								else
+								{
+									DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext,
+																								DataBrowserItemID);
+									
+									
+									// success!
+									result = noErr;
+									
+									// automatically switch to editing the new item; ignore
+									// errors for now because this is not critical to creating
+									// the actual item
+									selectCollection(kNewItemID);
+									displayCollectionRenameUI(kNewItemID);
+								}
+							}
+						}
+						
+						if (isError)
+						{
+							Sound_StandardAlert();
+							result = eventNotHandledErr;
+						}
+					}
+					break;
+				
+				case kCommandPreferencesRenameFavorite:
+					// switch to editing the specified item
+					displayCollectionRenameUI(returnCurrentSelection());
 					break;
 				
 				case kCommandShowHidePrefCollectionsDrawer:
@@ -1638,6 +1730,63 @@ returnCurrentPreferencesClass ()
 	}
 	return result;
 }// returnCurrentPreferencesClass
+
+
+/*!
+Returns the currently-selected item, which is actually
+a Preferences_ContextRef.  The result is zero if the
+selection is not found (but assert this can never
+happen, because a selection should always exist).
+
+(3.1)
+*/
+static DataBrowserItemID
+returnCurrentSelection ()
+{
+	DataBrowserItemID	result = 0;
+	OSStatus			error = noErr;
+	
+	
+	error = GetDataBrowserSelectionAnchor(gDataBrowserForCollections, &result, &result);
+	if (noErr != error) result = 0;
+	
+	return result;
+}// returnCurrentSelection
+
+
+/*!
+Sets the (only one) item currently selected in the collections
+drawer, triggering callbacks to ensure the corresponding panel
+user interface is updated for the new item (see
+monitorDataBrowserItems()).
+
+If the item is zero, then the default is selected.
+
+(3.1)
+*/
+static OSStatus
+selectCollection	(DataBrowserItemID		inNewItem)
+{
+	DataBrowserItemID	itemList[] = { inNewItem };
+	OSStatus			result = noErr;
+	
+	
+	if (0 == inNewItem)
+	{
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
+		Preferences_ContextRef		defaultContext = nullptr;
+		
+		
+		prefsResult = Preferences_GetDefaultContext(&defaultContext, returnCurrentPreferencesClass());
+		assert(kPreferences_ResultOK == prefsResult);
+		itemList[0] = REINTERPRET_CAST(defaultContext, DataBrowserItemID);
+	}
+	
+	result = SetDataBrowserSelectedItems(gDataBrowserForCollections, 1/* number of items */, itemList,
+											kDataBrowserItemsAssign);
+	
+	return result;
+}// selectCollection
 
 
 /*!

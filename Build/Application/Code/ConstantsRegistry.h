@@ -136,6 +136,7 @@ enum
 {
 	// use AppResources_ReturnCreatorCode() to set the creator of these icons
 	kConstantsRegistry_IconServicesIconApplication				= FOUR_CHAR_CODE('AppI'),
+	kConstantsRegistry_IconServicesIconContextMenu				= FOUR_CHAR_CODE('CtxM'),
 	kConstantsRegistry_IconServicesIconFileTypeMacroSet			= FOUR_CHAR_CODE('PMcS'),
 	kConstantsRegistry_IconServicesIconItemAdd					= FOUR_CHAR_CODE('AddI'),
 	kConstantsRegistry_IconServicesIconItemRemove				= FOUR_CHAR_CODE('DelI'),

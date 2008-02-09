@@ -130,7 +130,7 @@ inline CFStringRef
 }
 
 inline CFStringRef
-	AppResources_ReturnBellOnIconFilenameNoExtension						()
+	AppResources_ReturnBellOnIconFilenameNoExtension					()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
 	return CFSTR("IconForBellOn");
@@ -141,6 +141,13 @@ inline CFStringRef
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
 	return CFSTR("IconForBundle");
+}
+
+inline CFStringRef
+	AppResources_ReturnContextMenuFilenameNoExtension					()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForContextMenu");
 }
 
 inline CFStringRef

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080209',
     '20080205',
     '20080203',
     '20080202',
@@ -86,6 +87,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080209': [
+		'Fixed item highlighting in Preferences window collections drawer, so that something is always selected.',
+		'Preferences window collections drawer now contains a contextual menu button with commands for duplicating and renaming items.',
+	],
 	'20080205': [
 		'Preferences window Translation pane now actually shows lists for the base character set and exceptions.',
 	],

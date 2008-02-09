@@ -163,6 +163,14 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 			_implementorPtr->addString(inKey, inValue);
 		}
 		
+		//! inserts arbitrary value into dictionary
+		void
+		addValue	(CFStringRef		inKey,
+					 CFPropertyListRef	inValue)
+		{
+			_implementorPtr->addValue(inKey, inValue);
+		}
+		
 		//! delete this key-value set from application preferences
 		virtual Preferences_Result
 		destroy () NO_METHOD_IMPL = 0;
@@ -203,6 +211,13 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 			return _implementorPtr->returnFloat(inKey);
 		}
 		
+		//! creates an array of CFStringRef values for each key used in this context
+		CFArrayRef
+		returnKeyListCopy () const
+		{
+			return _implementorPtr->returnKeyListCopy();
+		}
+		
 		//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
 		virtual SInt32
 		returnLong		(CFStringRef	inKey) const
@@ -219,6 +234,13 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 		returnStringCopy	(CFStringRef	inKey) const
 		{
 			return _implementorPtr->returnStringCopy(inKey);
+		}
+		
+		//! retrieves an arbitrary value from the dictionary
+		virtual CFPropertyListRef
+		returnValueCopy		(CFStringRef	inKey) const
+		{
+			return _implementorPtr->returnValueCopy(inKey);
 		}
 		
 		//! save changes to this key-value set in the application preferences
@@ -699,6 +721,75 @@ Preferences_NewAlias	(FSSpec const*		inFileSpecificationPtr)
 	}
 	return result;
 }// NewAlias
+
+
+/*!
+Creates a new preferences context that copies the data
+of the specified original context.  The reference is
+automatically retained, but you need to invoke
+Preferences_ReleaseContext() when finished.
+
+The initial name of the new context is a variation on
+the name of the base context.
+
+If any problems occur, nullptr is returned; otherwise,
+a reference to the new context is returned.
+
+WARNING:	Currently, cloning a Default context is
+			na•ve, because it holds global application
+			preferences.  The resulting copy will
+			correctly contain the necessary keys, but
+			will also have many other irrelevant keys
+			that will never be used.
+
+(3.1)
+*/
+Preferences_ContextRef
+Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext)
+{
+	My_ContextInterfacePtr		basePtr = gMyContextPtrLocks().acquireLock(inBaseContext);
+	Preferences_Class			baseClass = kPreferences_ClassGeneral;
+	CFStringRef					nameCFString = nullptr;
+	Preferences_ContextRef		result = nullptr;
+	
+	
+	baseClass = basePtr->returnClass();
+	
+	// INCOMPLETE: Base the new name on the name of the original.
+	// INCOMPLETE: Scan the list of all contexts for the given class
+	// and find a unique name.  For now, just assume one.
+	nameCFString = CFSTR("copy"); // TEMPORARY; LOCALIZE THIS
+	
+	result = Preferences_NewContext(baseClass, nameCFString);
+	if (nullptr != result)
+	{
+		My_ContextInterfacePtr		resultPtr = gMyContextPtrLocks().acquireLock(result);
+		CFRetainRelease				sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
+		CFArrayRef					sourceKeysCFArray = sourceKeys.returnCFArrayRef();
+		
+		
+		if (nullptr != sourceKeysCFArray)
+		{
+			CFIndex const	kNumberOfKeys = CFArrayGetCount(sourceKeysCFArray);
+			
+			
+			for (CFIndex i = 0; i < kNumberOfKeys; ++i)
+			{
+				CFStringRef const	kKeyCFStringRef = CFUtilities_StringCast
+														(CFArrayGetValueAtIndex(sourceKeysCFArray, i));
+				CFRetainRelease		keyValueCFType(basePtr->returnValueCopy(kKeyCFStringRef),
+													true/* is retained */);
+				
+				
+				resultPtr->addValue(kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
+			}
+		}
+		gMyContextPtrLocks().releaseLock(result, &resultPtr);
+	}
+	
+	gMyContextPtrLocks().releaseLock(inBaseContext, &basePtr);
+	return result;
+}// NewCloneContext
 
 
 /*!
@@ -2536,13 +2627,14 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 				// update the preferences list
 				overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesListCFArray);
 				
+				if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
+				{
+			Console_WriteLine("9");
+					result = kPreferences_ResultGenericFailure;
+				}
+				
 				CFRelease(mutableFavoritesListCFArray), mutableFavoritesListCFArray = nullptr;
 			}
-		}
-		if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
-		{
-	Console_WriteLine("9");
-			result = kPreferences_ResultGenericFailure;
 		}
 	Console_WriteValue("save result", result);
 		return result;

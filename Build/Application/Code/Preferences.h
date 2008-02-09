@@ -414,6 +414,9 @@ Preferences_ContextRef
 	Preferences_NewContext					(Preferences_Class					inClass,
 											 CFStringRef						inNameOrNullToAutoGenerateUniqueName = nullptr);
 
+Preferences_ContextRef
+	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext);
+
 // IMPLICITLY DONE WHEN A CONTEXT IS CREATED
 void
 	Preferences_RetainContext				(Preferences_ContextRef				inContext);
