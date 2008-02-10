@@ -187,6 +187,7 @@ private:
 		
 		union
 		{
+			CFTypeRef				unspecified;
 			CFMutableArrayRef		array;
 			CFBundleRef				bundle;
 			CFMutableDictionaryRef	dictionary;
@@ -633,7 +634,7 @@ const
 Convenience method to cast the internal reference
 into a CFArrayRef.  In debug mode, an assertion
 failure will occur if the reference is not really
-a CFArrayRef.
+a CFArrayRef or CFMutableArrayRef.
 
 (1.1)
 */
@@ -642,6 +643,7 @@ CFRetainRelease::
 returnCFArrayRef ()
 const
 {
+	if (_isMutable) return returnCFMutableArrayRef();
 	assert((nullptr == _typeAs._constant.array) || (CFGetTypeID(_typeAs._constant.array) == CFArrayGetTypeID()));
 	return _typeAs._constant.array;
 }// returnCFArrayRef
@@ -669,7 +671,7 @@ const
 Convenience method to cast the internal reference
 into a CFDictionaryRef.  In debug mode, an assertion
 failure will occur if the reference is not really
-a CFDictionaryRef.
+a CFDictionaryRef or CFMutableDictionaryRef.
 
 (1.2)
 */
@@ -678,6 +680,7 @@ CFRetainRelease::
 returnCFDictionaryRef ()
 const
 {
+	if (_isMutable) return returnCFMutableDictionaryRef();
 	assert((nullptr == _typeAs._constant.dictionary) || (CFGetTypeID(_typeAs._constant.dictionary) == CFDictionaryGetTypeID()));
 	return _typeAs._constant.dictionary;
 }// returnCFDictionaryRef
@@ -744,7 +747,7 @@ const
 Convenience method to cast the internal reference
 into a CFStringRef.  In debug mode, an assertion
 failure will occur if the reference is not really
-a CFStringRef.
+a CFStringRef or CFMutableStringRef.
 
 (1.1)
 */
@@ -753,6 +756,7 @@ CFRetainRelease::
 returnCFStringRef ()
 const
 {
+	if (_isMutable) return returnCFMutableStringRef();
 	assert((nullptr == _typeAs._constant.string) || (CFGetTypeID(_typeAs._constant.string) == CFStringGetTypeID()));
 	return _typeAs._constant.string;
 }// returnCFStringRef
@@ -774,6 +778,7 @@ CFRetainRelease::
 returnCFTypeRef ()
 const
 {
+	if (_isMutable) return _typeAs._modifiable.unspecified;
 	return _typeAs._constant.unspecified;
 }// returnCFTypeRef
 
