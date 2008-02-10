@@ -1290,8 +1290,28 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 	switch (inMessage)
 	{
 	case kDataBrowserItemSelected:
-		// update the panel views to match the newly-selected Favorite
-		chooseContext(prefsContext);
+		{
+			DataBrowserTableViewRowIndex	rowIndex = 0;
+			OSStatus						error = noErr;
+			
+			
+			// update the panel views to match the newly-selected Favorite
+			chooseContext(prefsContext);
+			
+			// the Default item is in the first row and cannot be deleted
+			error = GetDataBrowserTableViewItemRow(inDataBrowser, inItemID, &rowIndex);
+			if (noErr == error)
+			{
+				if (0 == rowIndex)
+				{
+					DeactivateControl(gCollectionRemoveButton);
+				}
+				else
+				{
+					ActivateControl(gCollectionRemoveButton);
+				}
+			}
+		}
 		break;
 	
 	default:
