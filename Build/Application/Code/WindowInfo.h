@@ -67,7 +67,7 @@
 typedef FourCharCode WindowInfo_Descriptor;
 enum
 {
-	kWindowInfo_InvalidDescriptor = FOUR_CHAR_CODE('----')
+	kWindowInfo_InvalidDescriptor = '----'
 };
 
 typedef SInt32 WindowInfo_Message;

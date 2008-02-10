@@ -3,7 +3,7 @@
 	AlertMessages.cp
 	
 	Interface Library 1.2
-	© 1998-2007 by Kevin Grant
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -71,17 +71,17 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Dialog" and "Sheet" NIBs from the package "AlertMessages.nib".
 */
-static HIViewID const		idMyButtonDefault			= { FOUR_CHAR_CODE('Dflt'),		0/* ID */ };
-static HIViewID const		idMyButtonCancel			= { FOUR_CHAR_CODE('Canc'),		0/* ID */ };
-static HIViewID const		idMyButtonOther				= { FOUR_CHAR_CODE('Othr'),		0/* ID */ };
-static HIViewID const		idMyButtonHelp				= { FOUR_CHAR_CODE('Help'),		0/* ID */ };
-static HIViewID const		idMyTextTitle				= { FOUR_CHAR_CODE('Titl'),		0/* ID */ };
-static HIViewID const		idMyTextMain				= { FOUR_CHAR_CODE('Main'),		0/* ID */ };
-static HIViewID const		idMyTextHelp				= { FOUR_CHAR_CODE('Smal'),		0/* ID */ };
-static HIViewID const		idMyStopIcon				= { FOUR_CHAR_CODE('Stop'),		0/* ID */ };
-static HIViewID const		idMyNoteIcon				= { FOUR_CHAR_CODE('Note'),		0/* ID */ };
-static HIViewID const		idMyCautionIcon				= { FOUR_CHAR_CODE('Caut'),		0/* ID */ };
-static HIViewID const		idMyApplicationIcon			= { FOUR_CHAR_CODE('AppI'),		0/* ID */ };
+static HIViewID const	idMyButtonDefault		= { 'Dflt', 0/* ID */ };
+static HIViewID const	idMyButtonCancel		= { 'Canc', 0/* ID */ };
+static HIViewID const	idMyButtonOther			= { 'Othr', 0/* ID */ };
+static HIViewID const	idMyButtonHelp			= { 'Help', 0/* ID */ };
+static HIViewID const	idMyTextTitle			= { 'Titl', 0/* ID */ };
+static HIViewID const	idMyTextMain			= { 'Main', 0/* ID */ };
+static HIViewID const	idMyTextHelp			= { 'Smal', 0/* ID */ };
+static HIViewID const	idMyStopIcon			= { 'Stop', 0/* ID */ };
+static HIViewID const	idMyNoteIcon			= { 'Note', 0/* ID */ };
+static HIViewID const	idMyCautionIcon			= { 'Caut', 0/* ID */ };
+static HIViewID const	idMyApplicationIcon		= { 'AppI', 0/* ID */ };
 
 #pragma mark Types
 

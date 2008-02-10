@@ -70,7 +70,7 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyHelpTextScriptsMenu		= { FOUR_CHAR_CODE('HTSM'), 0/* ID */ };
+static HIViewID const	idMyHelpTextScriptsMenu		= { 'HTSM', 0/* ID */ };
 
 #pragma mark Types
 

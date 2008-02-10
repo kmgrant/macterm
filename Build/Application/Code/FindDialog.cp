@@ -81,17 +81,17 @@ the "Dialog" NIB from the package "FindDialog.nib".
 */
 enum
 {
-	kSignatureMyButtonSearch			= FOUR_CHAR_CODE('Find'),
-	kSignatureMyButtonCancel			= FOUR_CHAR_CODE('Canc'),
-	kSignatureMyButtonHelp				= FOUR_CHAR_CODE('Help'),
-	kSignatureMyLabelSearchKeywords		= FOUR_CHAR_CODE('KLbl'),
-	kSignatureMyFieldSearchKeywords		= FOUR_CHAR_CODE('KeyW'),
-	kSignatureMyKeywordHistoryMenu		= FOUR_CHAR_CODE('HMnu'),
-	kSignatureMyTextStatus				= FOUR_CHAR_CODE('Stat'),
-	kSignatureMyIconNotFound			= FOUR_CHAR_CODE('Icon'),
-	kSignatureMyArrowsSearchProgress	= FOUR_CHAR_CODE('Prog'),
-	kSignatureMyCheckBoxCaseSensitive	= FOUR_CHAR_CODE('XCsS'),
-	kSignatureMyCheckBoxOldestFirst		= FOUR_CHAR_CODE('XOLF')
+	kSignatureMyButtonSearch			= 'Find',
+	kSignatureMyButtonCancel			= 'Canc',
+	kSignatureMyButtonHelp				= 'Help',
+	kSignatureMyLabelSearchKeywords		= 'KLbl',
+	kSignatureMyFieldSearchKeywords		= 'KeyW',
+	kSignatureMyKeywordHistoryMenu		= 'HMnu',
+	kSignatureMyTextStatus				= 'Stat',
+	kSignatureMyIconNotFound			= 'Icon',
+	kSignatureMyArrowsSearchProgress	= 'Prog',
+	kSignatureMyCheckBoxCaseSensitive	= 'XCsS',
+	kSignatureMyCheckBoxOldestFirst		= 'XOLF'
 };
 static HIViewID const		idMyButtonSearch			= { kSignatureMyButtonSearch,				0/* ID */ };
 static HIViewID const		idMyButtonCancel			= { kSignatureMyButtonCancel,				0/* ID */ };

@@ -73,7 +73,7 @@
 
 enum
 {
-	kTHPrintResourceType = FOUR_CHAR_CODE('THPr'),
+	kTHPrintResourceType = 'THPr',
 	kTHPrintResourceID = 128
 };
 enum

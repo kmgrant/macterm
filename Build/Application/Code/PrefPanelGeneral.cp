@@ -99,41 +99,41 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyCheckBoxSimplifiedUI					= { FOUR_CHAR_CODE('SUIM'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxDoNotAutoClose					= { FOUR_CHAR_CODE('DACW'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxDoNotDimInactive				= { FOUR_CHAR_CODE('DDBW'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxUseTabsToArrangeWindows			= { FOUR_CHAR_CODE('UTAW'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxInvertSelectedText				= { FOUR_CHAR_CODE('ISel'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxAutoCopySelectedText			= { FOUR_CHAR_CODE('ACST'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxMoveCursorToDropArea			= { FOUR_CHAR_CODE('MCTD'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxMenuKeyEquivalents				= { FOUR_CHAR_CODE('MIKE'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxMapBackquoteToEscape			= { FOUR_CHAR_CODE('MBQE'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxDoNotAutoCreateWindows			= { FOUR_CHAR_CODE('DCNW'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { FOUR_CHAR_CODE('FcFM'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxCursorFlashing					= { FOUR_CHAR_CODE('CurF'), 0/* ID */ };
-static HIViewID const	idMyButtonCursorBlock						= { FOUR_CHAR_CODE('CrBl'), 0/* ID */ };
-static HIViewID const	idMyButtonCursorVerticalBar					= { FOUR_CHAR_CODE('CrVB'), 0/* ID */ };
-static HIViewID const	idMyButtonCursorUnderline					= { FOUR_CHAR_CODE('CrUn'), 0/* ID */ };
-static HIViewID const	idMyButtonCursorBoldVerticalBar				= { FOUR_CHAR_CODE('CrBV'), 0/* ID */ };
-static HIViewID const	idMyButtonCursorBoldUnderline				= { FOUR_CHAR_CODE('CrBU'), 0/* ID */ };
-static HIViewID const	idMyFieldStackingOriginLeft					= { FOUR_CHAR_CODE('WSOL'), 0/* ID */ };
-static HIViewID const	idMyFieldStackingOriginTop					= { FOUR_CHAR_CODE('WSOT'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonResizeAffectsScreenSize		= { FOUR_CHAR_CODE('WRSS'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonResizeAffectsFontSize		= { FOUR_CHAR_CODE('WRFS'), 0/* ID */ };
-static HIViewID const	idMyHelpTextResizeEffect					= { FOUR_CHAR_CODE('HTWR'), 0/* ID */ };
-static HIViewID const	idMyFieldCopyUsingSpacesForTabs				= { FOUR_CHAR_CODE('CUST'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonCommandNDefault				= { FOUR_CHAR_CODE('CNDf'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonCommandNLogInShell			= { FOUR_CHAR_CODE('CNSh'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonCommandNDialog				= { FOUR_CHAR_CODE('CNDg'), 0/* ID */ };
-static HIViewID const	idMyPopUpMenuBellType						= { FOUR_CHAR_CODE('BSnd'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxVisualBell						= { FOUR_CHAR_CODE('VisB'), 0/* ID */ };
-static HIViewID const	idMyHelpTextBellType						= { FOUR_CHAR_CODE('HTBT'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxMarginBell						= { FOUR_CHAR_CODE('MarB'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxNotifyTerminalBeeps				= { FOUR_CHAR_CODE('BelN'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonNotifyDoNothing				= { FOUR_CHAR_CODE('NotN'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonNotifyBadgeDockIcon			= { FOUR_CHAR_CODE('NotD'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonNotifyBounceDockIcon			= { FOUR_CHAR_CODE('NotB'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonNotifyDisplayMessage			= { FOUR_CHAR_CODE('NotM'), 0/* ID */ };
+static HIViewID const	idMyCheckBoxSimplifiedUI					= { 'SUIM', 0/* ID */ };
+static HIViewID const	idMyCheckBoxDoNotAutoClose					= { 'DACW', 0/* ID */ };
+static HIViewID const	idMyCheckBoxDoNotDimInactive				= { 'DDBW', 0/* ID */ };
+static HIViewID const	idMyCheckBoxUseTabsToArrangeWindows			= { 'UTAW', 0/* ID */ };
+static HIViewID const	idMyCheckBoxInvertSelectedText				= { 'ISel', 0/* ID */ };
+static HIViewID const	idMyCheckBoxAutoCopySelectedText			= { 'ACST', 0/* ID */ };
+static HIViewID const	idMyCheckBoxMoveCursorToDropArea			= { 'MCTD', 0/* ID */ };
+static HIViewID const	idMyCheckBoxMenuKeyEquivalents				= { 'MIKE', 0/* ID */ };
+static HIViewID const	idMyCheckBoxMapBackquoteToEscape			= { 'MBQE', 0/* ID */ };
+static HIViewID const	idMyCheckBoxDoNotAutoCreateWindows			= { 'DCNW', 0/* ID */ };
+static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { 'FcFM', 0/* ID */ };
+static HIViewID const	idMyCheckBoxCursorFlashing					= { 'CurF', 0/* ID */ };
+static HIViewID const	idMyButtonCursorBlock						= { 'CrBl', 0/* ID */ };
+static HIViewID const	idMyButtonCursorVerticalBar					= { 'CrVB', 0/* ID */ };
+static HIViewID const	idMyButtonCursorUnderline					= { 'CrUn', 0/* ID */ };
+static HIViewID const	idMyButtonCursorBoldVerticalBar				= { 'CrBV', 0/* ID */ };
+static HIViewID const	idMyButtonCursorBoldUnderline				= { 'CrBU', 0/* ID */ };
+static HIViewID const	idMyFieldStackingOriginLeft					= { 'WSOL', 0/* ID */ };
+static HIViewID const	idMyFieldStackingOriginTop					= { 'WSOT', 0/* ID */ };
+static HIViewID const	idMyRadioButtonResizeAffectsScreenSize		= { 'WRSS', 0/* ID */ };
+static HIViewID const	idMyRadioButtonResizeAffectsFontSize		= { 'WRFS', 0/* ID */ };
+static HIViewID const	idMyHelpTextResizeEffect					= { 'HTWR', 0/* ID */ };
+static HIViewID const	idMyFieldCopyUsingSpacesForTabs				= { 'CUST', 0/* ID */ };
+static HIViewID const	idMyRadioButtonCommandNDefault				= { 'CNDf', 0/* ID */ };
+static HIViewID const	idMyRadioButtonCommandNLogInShell			= { 'CNSh', 0/* ID */ };
+static HIViewID const	idMyRadioButtonCommandNDialog				= { 'CNDg', 0/* ID */ };
+static HIViewID const	idMyPopUpMenuBellType						= { 'BSnd', 0/* ID */ };
+static HIViewID const	idMyCheckBoxVisualBell						= { 'VisB', 0/* ID */ };
+static HIViewID const	idMyHelpTextBellType						= { 'HTBT', 0/* ID */ };
+static HIViewID const	idMyCheckBoxMarginBell						= { 'MarB', 0/* ID */ };
+static HIViewID const	idMyCheckBoxNotifyTerminalBeeps				= { 'BelN', 0/* ID */ };
+static HIViewID const	idMyRadioButtonNotifyDoNothing				= { 'NotN', 0/* ID */ };
+static HIViewID const	idMyRadioButtonNotifyBadgeDockIcon			= { 'NotD', 0/* ID */ };
+static HIViewID const	idMyRadioButtonNotifyBounceDockIcon			= { 'NotB', 0/* ID */ };
+static HIViewID const	idMyRadioButtonNotifyDisplayMessage			= { 'NotM', 0/* ID */ };
 
 #pragma mark Types
 

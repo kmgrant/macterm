@@ -74,20 +74,20 @@ via TerminalWindow_StartMonitoring().
 */
 enum TerminalWindow_Change
 {
-	kTerminalWindow_ChangeIconTitle			= FOUR_CHAR_CODE('NIcT'),	//!< the title of a monitored Terminal WindowÕs
-																		//!  collapsed Dock tile has changed (context:
-																		//!  TerminalWindowRef)
+	kTerminalWindow_ChangeIconTitle			= 'NIcT',	//!< the title of a monitored Terminal WindowÕs
+														//!  collapsed Dock tile has changed (context:
+														//!  TerminalWindowRef)
 	
-	kTerminalWindow_ChangeObscuredState		= FOUR_CHAR_CODE('ShHd'),	//!< a monitored Terminal Window has been
-																		//!  hidden or redisplayed (context:
-																		//!  TerminalWindowRef)
+	kTerminalWindow_ChangeObscuredState		= 'ShHd',	//!< a monitored Terminal Window has been
+														//!  hidden or redisplayed (context:
+														//!  TerminalWindowRef)
 	
-	kTerminalWindow_ChangeScreenDimensions	= FOUR_CHAR_CODE('Size'),	//!< the screen dimensions of a monitored
-																		//!  Terminal Window have changed (context:
-																		//!  TerminalWindowRef)
+	kTerminalWindow_ChangeScreenDimensions	= 'Size',	//!< the screen dimensions of a monitored
+														//!  Terminal Window have changed (context:
+														//!  TerminalWindowRef)
 	
-	kTerminalWindow_ChangeWindowTitle		= FOUR_CHAR_CODE('NWnT')	//!< the title of a monitored Terminal Window
-																		//!  has changed (context: TerminalWindowRef)
+	kTerminalWindow_ChangeWindowTitle		= 'NWnT'	//!< the title of a monitored Terminal Window
+														//!  has changed (context: TerminalWindowRef)
 };
 
 /*!
@@ -97,13 +97,13 @@ tab, or the collection of all views in the entire window, etc.
 */
 enum TerminalWindow_ViewGroup
 {
-	kTerminalWindow_ViewGroupEverything		= FOUR_CHAR_CODE('****'),	//!< contains EVERY view in the window
-	kTerminalWindow_ViewGroupActive			= FOUR_CHAR_CODE('Frnt'),	//!< contains all views in the visible tab
-	kTerminalWindow_ViewGroup1				= FOUR_CHAR_CODE('Tab1'),	//!< contains all views in the first tab
-	kTerminalWindow_ViewGroup2				= FOUR_CHAR_CODE('Tab2'),	//!< contains all views in the second tab
-	kTerminalWindow_ViewGroup3				= FOUR_CHAR_CODE('Tab3'),	//!< contains all views in the third tab
-	kTerminalWindow_ViewGroup4				= FOUR_CHAR_CODE('Tab4'),	//!< contains all views in the fourth tab
-	kTerminalWindow_ViewGroup5				= FOUR_CHAR_CODE('Tab5')	//!< contains all views in the fifth tab
+	kTerminalWindow_ViewGroupEverything		= '****',	//!< contains EVERY view in the window
+	kTerminalWindow_ViewGroupActive			= 'Frnt',	//!< contains all views in the visible tab
+	kTerminalWindow_ViewGroup1				= 'Tab1',	//!< contains all views in the first tab
+	kTerminalWindow_ViewGroup2				= 'Tab2',	//!< contains all views in the second tab
+	kTerminalWindow_ViewGroup3				= 'Tab3',	//!< contains all views in the third tab
+	kTerminalWindow_ViewGroup4				= 'Tab4',	//!< contains all views in the fourth tab
+	kTerminalWindow_ViewGroup5				= 'Tab5'	//!< contains all views in the fifth tab
 };
 
 Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWindow_SetTabWidth() to restore a standard width

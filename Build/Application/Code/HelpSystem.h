@@ -12,7 +12,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -63,20 +63,20 @@ typedef FourCharCode HelpSystem_KeyPhrase;
 enum
 {
 	// identifiers that trigger actions in MacTelnet Help (usually, opening specific pages)
-	kHelpSystem_KeyPhraseDefault		= FOUR_CHAR_CODE('----'), // used to open “nothing in particular”
-	kHelpSystem_KeyPhraseCommandLine	= FOUR_CHAR_CODE('CmdL'),
-	kHelpSystem_KeyPhraseConnections	= FOUR_CHAR_CODE('Cnxn'),
-	kHelpSystem_KeyPhraseDuplicate		= FOUR_CHAR_CODE('Dupl'),
-	kHelpSystem_KeyPhraseFavorites		= FOUR_CHAR_CODE('Favr'),
-	kHelpSystem_KeyPhraseFind			= FOUR_CHAR_CODE('Find'),
-	kHelpSystem_KeyPhraseFormatting		= FOUR_CHAR_CODE('Frmt'),
-	kHelpSystem_KeyPhraseIPAddresses	= FOUR_CHAR_CODE('IPAd'),
-	kHelpSystem_KeyPhraseKioskSetup		= FOUR_CHAR_CODE('Kios'),
-	kHelpSystem_KeyPhraseMacros			= FOUR_CHAR_CODE('Mcro'),
-	kHelpSystem_KeyPhrasePreferences	= FOUR_CHAR_CODE('Pref'),
-	kHelpSystem_KeyPhraseScreenSize		= FOUR_CHAR_CODE('ScSz'),
-	kHelpSystem_KeyPhraseSpecialKeys	= FOUR_CHAR_CODE('Keys'),
-	kHelpSystem_KeyPhraseTerminals		= FOUR_CHAR_CODE('Term')
+	kHelpSystem_KeyPhraseDefault		= '----', // used to open “nothing in particular”
+	kHelpSystem_KeyPhraseCommandLine	= 'CmdL',
+	kHelpSystem_KeyPhraseConnections	= 'Cnxn',
+	kHelpSystem_KeyPhraseDuplicate		= 'Dupl',
+	kHelpSystem_KeyPhraseFavorites		= 'Favr',
+	kHelpSystem_KeyPhraseFind			= 'Find',
+	kHelpSystem_KeyPhraseFormatting		= 'Frmt',
+	kHelpSystem_KeyPhraseIPAddresses	= 'IPAd',
+	kHelpSystem_KeyPhraseKioskSetup		= 'Kios',
+	kHelpSystem_KeyPhraseMacros			= 'Mcro',
+	kHelpSystem_KeyPhrasePreferences	= 'Pref',
+	kHelpSystem_KeyPhraseScreenSize		= 'ScSz',
+	kHelpSystem_KeyPhraseSpecialKeys	= 'Keys',
+	kHelpSystem_KeyPhraseTerminals		= 'Term'
 };
 
 #pragma mark Types

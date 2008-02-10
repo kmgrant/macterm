@@ -99,7 +99,7 @@ namespace
 	The following values MUST agree with the control IDs in
 	the "Window" NIB from the package "PrefsWindow.nib".
 	*/
-	HIViewID const		idMyUserPaneAnyPrefPanel		= { FOUR_CHAR_CODE('Panl'),			0/* ID */ };
+	HIViewID const		idMyUserPaneAnyPrefPanel		= { 'Panl', 0/* ID */ };
 	
 	/*!
 	IMPORTANT
@@ -107,12 +107,12 @@ namespace
 	The following values MUST agree with the control IDs in
 	the "Drawer" NIB from the package "PrefsWindow.nib".
 	*/
-	HIViewID const		idMyStaticTextListTitle			= { FOUR_CHAR_CODE('Titl'),			0/* ID */ };
-	HIViewID const		idMyDataBrowserCollections		= { FOUR_CHAR_CODE('Favs'),			0/* ID */ };
-	HIViewID const		idMyButtonAddCollection			= { FOUR_CHAR_CODE('AddC'),			0/* ID */ };
-	HIViewID const		idMyButtonRemoveCollection		= { FOUR_CHAR_CODE('DelC'),			0/* ID */ };
-	HIViewID const		idMyButtonManipulateCollection	= { FOUR_CHAR_CODE('MnpC'),			0/* ID */ };
-	FourCharCode const	kMyDataBrowserPropertyIDSets	= FOUR_CHAR_CODE('Sets');
+	HIViewID const		idMyStaticTextListTitle			= { 'Titl', 0/* ID */ };
+	HIViewID const		idMyDataBrowserCollections		= { 'Favs', 0/* ID */ };
+	HIViewID const		idMyButtonAddCollection			= { 'AddC', 0/* ID */ };
+	HIViewID const		idMyButtonRemoveCollection		= { 'DelC', 0/* ID */ };
+	HIViewID const		idMyButtonManipulateCollection	= { 'MnpC', 0/* ID */ };
+	FourCharCode const	kMyDataBrowserPropertyIDSets	= 'Sets';
 }
 
 #pragma mark Types

@@ -18,7 +18,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -87,49 +87,49 @@ enum
 	// IMPORTANT:	IF YOU MODIFY THIS LIST, look for uses of "kSession_AllChanges" in Session.cp to ensure
 	//				your new type is handled along with other session changes!
 	
-	kSession_AllChanges					= FOUR_CHAR_CODE('****'),	//!< wildcard to indicate all events (context:
-																	//!  varies)
+	kSession_AllChanges					= '****',	//!< wildcard to indicate all events (context:
+													//!  varies)
 	
-	kSession_ChangeCloseWarningAnswered	= FOUR_CHAR_CODE('!Btn'),	//!< a Òsave changes before closingÓ warning message
-																	//!  was open, and the user finally responded by
-																	//!  clicking a button (context:
-																	//!  SessionCloseWarningButtonInfoPtr)
+	kSession_ChangeCloseWarningAnswered	= '!Btn',	//!< a Òsave changes before closingÓ warning message
+													//!  was open, and the user finally responded by
+													//!  clicking a button (context:
+													//!  SessionCloseWarningButtonInfoPtr)
 	
-	kSession_ChangeDataArrived			= FOUR_CHAR_CODE('Data'),	//!< new data has been inserted for processing via a
-																	//!  call to Session_AppendDataForProcessing(); the
-																	//!  usual response is to invoke Session_ProcessMoreData()
-																	//!  (context: SessionRef)
+	kSession_ChangeDataArrived			= 'Data',	//!< new data has been inserted for processing via a
+													//!  call to Session_AppendDataForProcessing(); the
+													//!  usual response is to invoke Session_ProcessMoreData()
+													//!  (context: SessionRef)
 	
-	kSession_ChangeResourceLocation		= FOUR_CHAR_CODE('SURL'),	//!< the URL of a monitored Session has been updated
-																	//!  (context: SessionRef)
+	kSession_ChangeResourceLocation		= 'SURL',	//!< the URL of a monitored Session has been updated
+													//!  (context: SessionRef)
 	
-	kSession_ChangeSelected				= FOUR_CHAR_CODE('Slct'),	//!< the user has selected the specified session; so, the
-																	//!  associated terminal window should come to the front
-																	//!  (context: SessionRef)
+	kSession_ChangeSelected				= 'Slct',	//!< the user has selected the specified session; so, the
+													//!  associated terminal window should come to the front
+													//!  (context: SessionRef)
 	
-	kSession_ChangeState				= FOUR_CHAR_CODE('Stat'),	//!< the Session_State of a monitored Session has
-																	//!  changed; various Session_StateIs...() APIs can
-																	//!  be used to get the new state (context: SessionRef)
+	kSession_ChangeState				= 'Stat',	//!< the Session_State of a monitored Session has
+													//!  changed; various Session_StateIs...() APIs can
+													//!  be used to get the new state (context: SessionRef)
 	
-	kSession_ChangeStateAttributes		= FOUR_CHAR_CODE('SAtt'),	//!< the Session_StateAttributes of a monitored Session
-																	//!  have changed; use Session_ReturnStateAttributes()
-																	//!  to test attributes (context: SessionRef)
+	kSession_ChangeStateAttributes		= 'SAtt',	//!< the Session_StateAttributes of a monitored Session
+													//!  have changed; use Session_ReturnStateAttributes()
+													//!  to test attributes (context: SessionRef)
 	
-	kSession_ChangeWindowInvalid		= FOUR_CHAR_CODE('WDie'),	//!< the terminal window of a monitored Session is
-																	//!  *about to be* destroyed, and therefore is now
-																	//!  invalid (context: SessionRef)
+	kSession_ChangeWindowInvalid		= 'WDie',	//!< the terminal window of a monitored Session is
+													//!  *about to be* destroyed, and therefore is now
+													//!  invalid (context: SessionRef)
 	
-	kSession_ChangeWindowObscured		= FOUR_CHAR_CODE('Obsc'),	//!< the terminal window of a monitored Session has
-																	//!  been hidden or redisplayed; use the routine
-																	//!  TerminalWindow_IsObscured() to find the new state
-																	//!  (context: SessionRef)
+	kSession_ChangeWindowObscured		= 'Obsc',	//!< the terminal window of a monitored Session has
+													//!  been hidden or redisplayed; use the routine
+													//!  TerminalWindow_IsObscured() to find the new state
+													//!  (context: SessionRef)
 	
-	kSession_ChangeWindowTitle			= FOUR_CHAR_CODE('WTtl'),	//!< the title of the terminal window of a monitored
-																	//!  Session has been updated (context: SessionRef)
+	kSession_ChangeWindowTitle			= 'WTtl',	//!< the title of the terminal window of a monitored
+													//!  Session has been updated (context: SessionRef)
 	
-	kSession_ChangeWindowValid			= FOUR_CHAR_CODE('WNew')	//!< the terminal window of a monitored Session has
-																	//!  been created and therefore is now valid
-																	//!  (context: SessionRef)
+	kSession_ChangeWindowValid			= 'WNew'	//!< the terminal window of a monitored Session has
+													//!  been created and therefore is now valid
+													//!  (context: SessionRef)
 };
 
 /*!
@@ -282,8 +282,8 @@ Note that "Session_PropertyKey" is probably more appropriate.
 */
 enum Session_TelnetOptionStateType
 {
-	kSession_TelnetOptionStateTypeFlowControl	= FOUR_CHAR_CODE('flow'),	//!< data: struct FlowControlState*
-	kSession_TelnetOptionStateTypeLineMode		= FOUR_CHAR_CODE('linm')	//!< data: LineModeStatePtr
+	kSession_TelnetOptionStateTypeFlowControl	= 'flow',	//!< data: struct FlowControlState*
+	kSession_TelnetOptionStateTypeLineMode		= 'linm'	//!< data: LineModeStatePtr
 };
 
 /*!

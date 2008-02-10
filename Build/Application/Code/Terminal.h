@@ -91,40 +91,40 @@ Terminal_StartMonitoring().
 typedef FourCharCode Terminal_Change;
 enum
 {
-	kTerminal_ChangeAudioEvent			= FOUR_CHAR_CODE('Bell'),	//!< terminal bell triggered (context: TerminalScreenRef)
-	kTerminal_ChangeAudioState			= FOUR_CHAR_CODE('BEnD'),	//!< terminal bell enabled or disabled (context: TerminalScreenRef);
-																	//!  use Terminal_BellIsEnabled() to determine the new state
-	kTerminal_ChangeCursorLocation		= FOUR_CHAR_CODE('Curs'),	//!< cursor has moved; new position can be found with
-																	//!  Terminal_CursorGetLocation() (context:
-																	//!  TerminalScreenRef)
-	kTerminal_ChangeCursorState			= FOUR_CHAR_CODE('CurV'),	//!< cursor has been shown or hidden; new state can be
-																	//!  found with Terminal_CursorIsVisible() (context:
-																	//!  TerminalScreenRef)
-	kTerminal_ChangeFileCaptureBegun	= FOUR_CHAR_CODE('CapB'),	//!< file capture started (context: TerminalScreenRef)
-	kTerminal_ChangeFileCaptureEnding	= FOUR_CHAR_CODE('CapE'),	//!< capture about to stop (context: TerminalScreenRef)
-	kTerminal_ChangeLineFeedNewLineMode	= FOUR_CHAR_CODE('LFNL'),	//!< terminal has changed the expected behavior of the
-																	//!  Return key; use Terminal_LineFeedNewLineMode()
-																	//!  to determine the new mode (context: TerminalScreenRef)
-	kTerminal_ChangeNewLEDState			= FOUR_CHAR_CODE('LEDS'),	//!< the state of at least one LED in a monitored
-																	//!  Terminal has changed (context: TerminalScreenRef)
-	kTerminal_ChangeReset				= FOUR_CHAR_CODE('Rset'),	//!< terminal was explicitly reset (context:
-																	//!  TerminalScreenRef)
-	kTerminal_ChangeScrollActivity		= FOUR_CHAR_CODE('^v<>'),	//!< screen size or visible area has changed
-																	//!  (context: TerminalScreenRef)
-	kTerminal_ChangeText				= FOUR_CHAR_CODE('UpdT'),	//!< text has changed, requiring an update (context:
-																	//!  Terminal_RangeDescriptionConstPtr)
-	kTerminal_ChangeVideoMode			= FOUR_CHAR_CODE('RevV'),	//!< terminal has toggled between normal and reverse
-																	//!  video modes; use Terminal_ReverseVideoIsEnabled()
-																	//!  to determine the new mode (context: TerminalScreenRef)
-	kTerminal_ChangeWindowFrameTitle	= FOUR_CHAR_CODE('WinT'),	//!< terminal received a new title meant for its window;
-																	//!  use Terminal_CopyTitleForWindow() to determine title
-																	//!  (context: TerminalScreenRef)
-	kTerminal_ChangeWindowIconTitle		= FOUR_CHAR_CODE('IcnT'),	//!< terminal received a new title meant for its icon;
-																	//!  use Terminal_CopyTitleForIcon() to determine title
-																	//!  (context: TerminalScreenRef)
-	kTerminal_ChangeWindowMinimization	= FOUR_CHAR_CODE('MnmR')	//!< terminal received a request to minimize or restore;
-																	//!  use Terminal_WindowIsToBeMinimized() for more info
-																	//!  (context: TerminalScreenRef)
+	kTerminal_ChangeAudioEvent			= 'Bell',	//!< terminal bell triggered (context: TerminalScreenRef)
+	kTerminal_ChangeAudioState			= 'BEnD',	//!< terminal bell enabled or disabled (context: TerminalScreenRef);
+													//!  use Terminal_BellIsEnabled() to determine the new state
+	kTerminal_ChangeCursorLocation		= 'Curs',	//!< cursor has moved; new position can be found with
+													//!  Terminal_CursorGetLocation() (context:
+													//!  TerminalScreenRef)
+	kTerminal_ChangeCursorState			= 'CurV',	//!< cursor has been shown or hidden; new state can be
+													//!  found with Terminal_CursorIsVisible() (context:
+													//!  TerminalScreenRef)
+	kTerminal_ChangeFileCaptureBegun	= 'CapB',	//!< file capture started (context: TerminalScreenRef)
+	kTerminal_ChangeFileCaptureEnding	= 'CapE',	//!< capture about to stop (context: TerminalScreenRef)
+	kTerminal_ChangeLineFeedNewLineMode	= 'LFNL',	//!< terminal has changed the expected behavior of the
+													//!  Return key; use Terminal_LineFeedNewLineMode()
+													//!  to determine the new mode (context: TerminalScreenRef)
+	kTerminal_ChangeNewLEDState			= 'LEDS',	//!< the state of at least one LED in a monitored
+													//!  Terminal has changed (context: TerminalScreenRef)
+	kTerminal_ChangeReset				= 'Rset',	//!< terminal was explicitly reset (context:
+													//!  TerminalScreenRef)
+	kTerminal_ChangeScrollActivity		= '^v<>',	//!< screen size or visible area has changed
+													//!  (context: TerminalScreenRef)
+	kTerminal_ChangeText				= 'UpdT',	//!< text has changed, requiring an update (context:
+													//!  Terminal_RangeDescriptionConstPtr)
+	kTerminal_ChangeVideoMode			= 'RevV',	//!< terminal has toggled between normal and reverse
+													//!  video modes; use Terminal_ReverseVideoIsEnabled()
+													//!  to determine the new mode (context: TerminalScreenRef)
+	kTerminal_ChangeWindowFrameTitle	= 'WinT',	//!< terminal received a new title meant for its window;
+													//!  use Terminal_CopyTitleForWindow() to determine title
+													//!  (context: TerminalScreenRef)
+	kTerminal_ChangeWindowIconTitle		= 'IcnT',	//!< terminal received a new title meant for its icon;
+													//!  use Terminal_CopyTitleForIcon() to determine title
+													//!  (context: TerminalScreenRef)
+	kTerminal_ChangeWindowMinimization	= 'MnmR'	//!< terminal received a request to minimize or restore;
+													//!  use Terminal_WindowIsToBeMinimized() for more info
+													//!  (context: TerminalScreenRef)
 };
 
 #ifndef REZ

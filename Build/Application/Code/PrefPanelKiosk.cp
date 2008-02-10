@@ -79,13 +79,13 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyHelpTextFullScreenDescription		= { FOUR_CHAR_CODE('FSDs'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxShowMenuBar					= { FOUR_CHAR_CODE('XKSM'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxShowScrollBar				= { FOUR_CHAR_CODE('XKSS'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxAllowForceQuit				= { FOUR_CHAR_CODE('XKFQ'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxSuperfluousEffects			= { FOUR_CHAR_CODE('XKFX'), 0/* ID */ };
-static HIViewID const	idMyHelpTextSuperfluousEffects			= { FOUR_CHAR_CODE('HTSG'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxShowOffSwitchWindow			= { FOUR_CHAR_CODE('XKFW'), 0/* ID */ };
+static HIViewID const	idMyHelpTextFullScreenDescription		= { 'FSDs', 0/* ID */ };
+static HIViewID const	idMyCheckBoxShowMenuBar					= { 'XKSM', 0/* ID */ };
+static HIViewID const	idMyCheckBoxShowScrollBar				= { 'XKSS', 0/* ID */ };
+static HIViewID const	idMyCheckBoxAllowForceQuit				= { 'XKFQ', 0/* ID */ };
+static HIViewID const	idMyCheckBoxSuperfluousEffects			= { 'XKFX', 0/* ID */ };
+static HIViewID const	idMyHelpTextSuperfluousEffects			= { 'HTSG', 0/* ID */ };
+static HIViewID const	idMyCheckBoxShowOffSwitchWindow			= { 'XKFW', 0/* ID */ };
 
 #pragma mark Types
 

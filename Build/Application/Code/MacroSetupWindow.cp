@@ -81,20 +81,20 @@ the "Window" NIB from the package "MacroSetupWindow.nib".
 */
 enum
 {
-	kSignatureMyUserPaneMacroSetList		= FOUR_CHAR_CODE('MLst'),
-	kSignatureMyLabelCurrentMacroSetName	= FOUR_CHAR_CODE('SetN'),
-	kSignatureMyButtonImport				= FOUR_CHAR_CODE('IMcr'),
-	kSignatureMyButtonExport				= FOUR_CHAR_CODE('EMcr'),
-	kSignatureMyAdvancedMacros				= FOUR_CHAR_CODE('AdvM'),
-	kSignatureMyButtonHelp					= FOUR_CHAR_CODE('Help'),
-	kSignatureMyTextGeneralHelp				= FOUR_CHAR_CODE('HTxt'),
-	kSignatureMyLabelAnyMacro				= FOUR_CHAR_CODE('McrK'),
-	kSignatureMyFieldAnyMacro				= FOUR_CHAR_CODE('McrT'),
-	kSignatureMySeparatorForMacros			= FOUR_CHAR_CODE('MSep'),
-	kSignatureMyLabelMacroKeys				= FOUR_CHAR_CODE('MKLb'),
-	kSignatureMySeparatorMacroKeys			= FOUR_CHAR_CODE('MKLS'),
-	kSignatureMyRadioButtonCommandKeys		= FOUR_CHAR_CODE('MKCK'),
-	kSignatureMyRadioButtonFunctionKeys		= FOUR_CHAR_CODE('MKFK')
+	kSignatureMyUserPaneMacroSetList		= 'MLst',
+	kSignatureMyLabelCurrentMacroSetName	= 'SetN',
+	kSignatureMyButtonImport				= 'IMcr',
+	kSignatureMyButtonExport				= 'EMcr',
+	kSignatureMyAdvancedMacros				= 'AdvM',
+	kSignatureMyButtonHelp					= 'Help',
+	kSignatureMyTextGeneralHelp				= 'HTxt',
+	kSignatureMyLabelAnyMacro				= 'McrK',
+	kSignatureMyFieldAnyMacro				= 'McrT',
+	kSignatureMySeparatorForMacros			= 'MSep',
+	kSignatureMyLabelMacroKeys				= 'MKLb',
+	kSignatureMySeparatorMacroKeys			= 'MKLS',
+	kSignatureMyRadioButtonCommandKeys		= 'MKCK',
+	kSignatureMyRadioButtonFunctionKeys		= 'MKFK'
 };
 static HIViewID const		idMyUserPaneMacroSetList		= { kSignatureMyUserPaneMacroSetList,		0/* ID */ };
 static HIViewID const		idMyLabelCurrentMacroSetName	= { kSignatureMyLabelCurrentMacroSetName,	0/* ID */ };

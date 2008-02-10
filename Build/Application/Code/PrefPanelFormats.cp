@@ -98,34 +98,34 @@ the NIBs from the package "PrefPanelsFavorites.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyPopupMenuFont					= { FOUR_CHAR_CODE('Font'), 0/* ID */ };
-static HIViewID const	idMyFieldFontSize					= { FOUR_CHAR_CODE('Size'), 0/* ID */ };
-static HIViewID const	idMyLittleArrowsFontSize			= { FOUR_CHAR_CODE('SzAr'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonNormalText			= { FOUR_CHAR_CODE('NTxt'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonNormalBackground		= { FOUR_CHAR_CODE('NBkg'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonBoldText				= { FOUR_CHAR_CODE('BTxt'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonBoldBackground		= { FOUR_CHAR_CODE('BBkg'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonBlinkingText			= { FOUR_CHAR_CODE('BlTx'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonBlinkingBackground	= { FOUR_CHAR_CODE('BlBk'), 0/* ID */ };
-static HIViewID const	idMyUserPaneSampleTerminalView		= { FOUR_CHAR_CODE('Smpl'), 0/* ID */ };
-static HIViewID const	idMyHelpTextSampleTerminalView		= { FOUR_CHAR_CODE('HSmp'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalBlack		= { FOUR_CHAR_CODE('Cblk'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalRed		= { FOUR_CHAR_CODE('Cred'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalGreen		= { FOUR_CHAR_CODE('Cgrn'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalYellow		= { FOUR_CHAR_CODE('Cyel'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalBlue		= { FOUR_CHAR_CODE('Cblu'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalMagenta	= { FOUR_CHAR_CODE('Cmag'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalCyan		= { FOUR_CHAR_CODE('Ccyn'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalWhite		= { FOUR_CHAR_CODE('Cwht'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldBlack		= { FOUR_CHAR_CODE('CBlk'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldRed			= { FOUR_CHAR_CODE('CRed'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldGreen		= { FOUR_CHAR_CODE('CGrn'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldYellow		= { FOUR_CHAR_CODE('CYel'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldBlue			= { FOUR_CHAR_CODE('CBlu'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldMagenta		= { FOUR_CHAR_CODE('CMag'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldCyan			= { FOUR_CHAR_CODE('CCyn'), 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldWhite		= { FOUR_CHAR_CODE('CWht'), 0/* ID */ };
-static HIViewID const	idMyHelpTextANSIColors				= { FOUR_CHAR_CODE('HANS'), 0/* ID */ };
+static HIViewID const	idMyPopupMenuFont					= { 'Font', 0/* ID */ };
+static HIViewID const	idMyFieldFontSize					= { 'Size', 0/* ID */ };
+static HIViewID const	idMyLittleArrowsFontSize			= { 'SzAr', 0/* ID */ };
+static HIViewID const	idMyBevelButtonNormalText			= { 'NTxt', 0/* ID */ };
+static HIViewID const	idMyBevelButtonNormalBackground		= { 'NBkg', 0/* ID */ };
+static HIViewID const	idMyBevelButtonBoldText				= { 'BTxt', 0/* ID */ };
+static HIViewID const	idMyBevelButtonBoldBackground		= { 'BBkg', 0/* ID */ };
+static HIViewID const	idMyBevelButtonBlinkingText			= { 'BlTx', 0/* ID */ };
+static HIViewID const	idMyBevelButtonBlinkingBackground	= { 'BlBk', 0/* ID */ };
+static HIViewID const	idMyUserPaneSampleTerminalView		= { 'Smpl', 0/* ID */ };
+static HIViewID const	idMyHelpTextSampleTerminalView		= { 'HSmp', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalBlack		= { 'Cblk', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalRed		= { 'Cred', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalGreen		= { 'Cgrn', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalYellow		= { 'Cyel', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalBlue		= { 'Cblu', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalMagenta	= { 'Cmag', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalCyan		= { 'Ccyn', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSINormalWhite		= { 'Cwht', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldBlack		= { 'CBlk', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldRed			= { 'CRed', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldGreen		= { 'CGrn', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldYellow		= { 'CYel', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldBlue			= { 'CBlu', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldMagenta		= { 'CMag', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldCyan			= { 'CCyn', 0/* ID */ };
+static HIViewID const	idMyBevelButtonANSIBoldWhite		= { 'CWht', 0/* ID */ };
+static HIViewID const	idMyHelpTextANSIColors				= { 'HANS', 0/* ID */ };
 
 #pragma mark Types
 

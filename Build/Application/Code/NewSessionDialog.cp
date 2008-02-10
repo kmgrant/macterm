@@ -3,7 +3,7 @@
 	NewSessionDialog.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -100,23 +100,23 @@ The following values MUST agree with the control IDs in the
 */
 enum
 {
-	kSignatureMyHelpTextCommandLine			= FOUR_CHAR_CODE('CmdH'),
-	kSignatureMyFieldCommandLine			= FOUR_CHAR_CODE('CmdL'),
-	kSignatureMyPopUpMenuTerminal			= FOUR_CHAR_CODE('Term'),
-	kSignatureMyArrowsTerminal				= FOUR_CHAR_CODE('TArr'),
-	kSignatureMyHelpTextTerminal			= FOUR_CHAR_CODE('THlp'),
-	kSignatureMySeparatorRemoteSessions		= FOUR_CHAR_CODE('RmSD'),
-	kSignatureMyPopUpMenuProtocol			= FOUR_CHAR_CODE('Prot'),
-	kSignatureMyButtonProtocolOptions		= FOUR_CHAR_CODE('POpt'),
-	kSignatureMyFieldHostName				= FOUR_CHAR_CODE('Host'),
-	kSignatureMyButtonLookUpHostName		= FOUR_CHAR_CODE('Look'),
-	kSignatureMyAsyncArrowsLookUpHostName   = FOUR_CHAR_CODE('Wait'),
-	kSignatureMyFieldPortNumber				= FOUR_CHAR_CODE('Port'),
-	kSignatureMyFieldUserID					= FOUR_CHAR_CODE('User'),
-	kSignatureMySeparatorBottom				= FOUR_CHAR_CODE('BotD'),
-	kSignatureMyButtonHelp					= FOUR_CHAR_CODE('Help'),
-	kSignatureMyButtonGo					= FOUR_CHAR_CODE('GoDo'),
-	kSignatureMyButtonCancel				= FOUR_CHAR_CODE('Canc')
+	kSignatureMyHelpTextCommandLine			= 'CmdH',
+	kSignatureMyFieldCommandLine			= 'CmdL',
+	kSignatureMyPopUpMenuTerminal			= 'Term',
+	kSignatureMyArrowsTerminal				= 'TArr',
+	kSignatureMyHelpTextTerminal			= 'THlp',
+	kSignatureMySeparatorRemoteSessions		= 'RmSD',
+	kSignatureMyPopUpMenuProtocol			= 'Prot',
+	kSignatureMyButtonProtocolOptions		= 'POpt',
+	kSignatureMyFieldHostName				= 'Host',
+	kSignatureMyButtonLookUpHostName		= 'Look',
+	kSignatureMyAsyncArrowsLookUpHostName   = 'Wait',
+	kSignatureMyFieldPortNumber				= 'Port',
+	kSignatureMyFieldUserID					= 'User',
+	kSignatureMySeparatorBottom				= 'BotD',
+	kSignatureMyButtonHelp					= 'Help',
+	kSignatureMyButtonGo					= 'GoDo',
+	kSignatureMyButtonCancel				= 'Canc'
 };
 
 #pragma mark Types

@@ -117,7 +117,7 @@ The following values MUST agree with the control IDs in the
 "DimensionsFloater" and "DimensionsSheet" NIB from the
 package "TerminalWindow.nib".
 */
-static HIViewID const	idMyTextScreenDimensions	= { FOUR_CHAR_CODE('Dims'),		0/* ID */ };
+static HIViewID const	idMyTextScreenDimensions	= { 'Dims', 0/* ID */ };
 
 /*!
 IMPORTANT
@@ -125,7 +125,7 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Tab" NIB from the package "TerminalWindow.nib".
 */
-static HIViewID const	idMyButtonTabTitle			= { FOUR_CHAR_CODE('TTit'),		0/* ID */ };
+static HIViewID const	idMyButtonTabTitle			= { 'TTit', 0/* ID */ };
 
 #pragma mark Types
 

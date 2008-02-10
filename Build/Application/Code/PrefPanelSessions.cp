@@ -102,16 +102,16 @@ the NIBs from the package "PrefPanelSessions.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyButtonLookUpHostName		= { FOUR_CHAR_CODE('Look'), 0/* ID */ };
-static HIViewID const	idMyChasingArrowsDNSWait		= { FOUR_CHAR_CODE('Wait'), 0/* ID */ };
-static HIViewID const	idMyFieldCommandLine			= { FOUR_CHAR_CODE('CmdL'), 0/* ID */ };
-static HIViewID const	idMyFieldHostName				= { FOUR_CHAR_CODE('Host'), 0/* ID */ };
-static HIViewID const	idMyHelpTextCommandLine			= { FOUR_CHAR_CODE('CmdH'), 0/* ID */ };
-static HIViewID const	idMyHelpTextControlKeys			= { FOUR_CHAR_CODE('CtlH'), 0/* ID */ };
-static HIViewID const	idMyStaticTextCaptureFilePath	= { FOUR_CHAR_CODE('CapP'), 0/* ID */ };
-static HIViewID const	idMySeparatorCaptureToFile		= { FOUR_CHAR_CODE('CapD'), 0/* ID */ };
-static HIViewID const	idMySeparatorRemoteSessionsOnly	= { FOUR_CHAR_CODE('RmSD'), 0/* ID */ };
-static HIViewID const	idMySeparatorTerminal			= { FOUR_CHAR_CODE('BotD'), 0/* ID */ };
+static HIViewID const	idMyButtonLookUpHostName		= { 'Look', 0/* ID */ };
+static HIViewID const	idMyChasingArrowsDNSWait		= { 'Wait', 0/* ID */ };
+static HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
+static HIViewID const	idMyFieldHostName				= { 'Host', 0/* ID */ };
+static HIViewID const	idMyHelpTextCommandLine			= { 'CmdH', 0/* ID */ };
+static HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
+static HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
+static HIViewID const	idMySeparatorCaptureToFile		= { 'CapD', 0/* ID */ };
+static HIViewID const	idMySeparatorRemoteSessionsOnly	= { 'RmSD', 0/* ID */ };
+static HIViewID const	idMySeparatorTerminal			= { 'BotD', 0/* ID */ };
 
 #pragma mark Types
 

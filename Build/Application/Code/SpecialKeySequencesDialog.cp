@@ -69,10 +69,10 @@ IMPORTANT
 The following values MUST agree with the view IDs in the
 "Dialog" NIB from the package "SpecialKeySequencesDialog.nib".
 */
-static HIViewID const		idMyButtonHelp					= { FOUR_CHAR_CODE('Help'), 0/* ID */ };
-static HIViewID const		idMyButtonChangeInterruptKey	= { FOUR_CHAR_CODE('Intr'), 0/* ID */ };
-static HIViewID const		idMyButtonChangeSuspendKey		= { FOUR_CHAR_CODE('Susp'), 0/* ID */ };
-static HIViewID const		idMyButtonChangeResumeKey		= { FOUR_CHAR_CODE('Resu'), 0/* ID */ };
+static HIViewID const		idMyButtonHelp					= { 'Help', 0/* ID */ };
+static HIViewID const		idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
+static HIViewID const		idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
+static HIViewID const		idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
 
 #pragma mark Types
 

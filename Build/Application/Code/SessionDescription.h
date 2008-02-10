@@ -15,7 +15,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -68,11 +68,11 @@ enum SessionDescription_Result
 
 enum SessionDescription_ContentType
 {
-	kSessionDescription_ContentTypeCommand				= FOUR_CHAR_CODE('Shll'),	//!< represents local shell
-	kSessionDescription_ContentTypeUnknown				= FOUR_CHAR_CODE('----')	//!< unknown contents, either because the
-																					//!  data model has just been created or
-																					//!  perhaps has been read from a file
-																					//!  created by a future MacTelnet version
+	kSessionDescription_ContentTypeCommand				= 'Shll',	//!< represents local shell
+	kSessionDescription_ContentTypeUnknown				= '----'	//!< unknown contents, either because the
+																	//!  data model has just been created or
+																	//!  perhaps has been read from a file
+																	//!  created by a future MacTelnet version
 };
 
 /*!

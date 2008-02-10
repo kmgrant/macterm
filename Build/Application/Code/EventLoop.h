@@ -31,7 +31,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -94,12 +94,12 @@ to the remaining control event listeners in the queue, for that matter).
 */
 enum EventLoop_ControlEvent
 {
-	kEventLoop_ControlEventClick						= FOUR_CHAR_CODE('ÃCtl'),	//!< mouse is UP in a specific control in an active window
-																					//!  (context: EventInfoControlScope_ClickPtr)
-	kEventLoop_ControlEventKeyPress						= FOUR_CHAR_CODE('KCtl'),	//!< a key has been pressed while a specific control is focused
-																					//!  (context: EventInfoControlScope_KeyPressPtr)
-	kEventLoop_ControlEventTrack						= FOUR_CHAR_CODE('|Ctl')	//!< mouse is DOWN in a specific control in an active window
-																					//!  (context: EventInfoControlScope_ClickPtr)
+	kEventLoop_ControlEventClick						= 'ÃCtl',	//!< mouse is UP in a specific control in an active window
+																	//!  (context: EventInfoControlScope_ClickPtr)
+	kEventLoop_ControlEventKeyPress						= 'KCtl',	//!< a key has been pressed while a specific control is focused
+																	//!  (context: EventInfoControlScope_KeyPressPtr)
+	kEventLoop_ControlEventTrack						= '|Ctl'	//!< mouse is DOWN in a specific control in an active window
+																	//!  (context: EventInfoControlScope_ClickPtr)
 };
 
 /*!
@@ -110,16 +110,16 @@ the remaining window event listeners in the queue, for that matter).
 */
 enum EventLoop_WindowEvent
 {
-	kEventLoop_WindowEventContentTrack					= FOUR_CHAR_CODE('|Win'),	//!< mouse is DOWN in a control in an active window, but has not
-																					//!  been released (context: EventInfoWindowScopeContentClickPtr)
-	kEventLoop_WindowEventKeyPress						= FOUR_CHAR_CODE('KWin'),	//!< a key has been pressed in the active window
-																					//!  (context: EventInfoWindowScopeKeyPressPtr)
-	kEventLoop_WindowEventScrolling						= FOUR_CHAR_CODE('SWin'),	//!< a device with scrolling capabilities such as a mouseÕs
-																					//!  scroll wheel has initiated scrolling either horizontally,
-																					//!  vertically, or in both directions, for the active window
-																					//!  (context: EventInfoWindowScopeScrollPtr)
-	kEventLoop_WindowEventUpdate						= FOUR_CHAR_CODE('UWin')	//!< the specified window needs redrawing (context: 
-																					//!  EventInfoWindowScopeUpdatePtr
+	kEventLoop_WindowEventContentTrack					= '|Win',	//!< mouse is DOWN in a control in an active window, but has not
+																	//!  been released (context: EventInfoWindowScopeContentClickPtr)
+	kEventLoop_WindowEventKeyPress						= 'KWin',	//!< a key has been pressed in the active window
+																	//!  (context: EventInfoWindowScopeKeyPressPtr)
+	kEventLoop_WindowEventScrolling						= 'SWin',	//!< a device with scrolling capabilities such as a mouseÕs
+																	//!  scroll wheel has initiated scrolling either horizontally,
+																	//!  vertically, or in both directions, for the active window
+																	//!  (context: EventInfoWindowScopeScrollPtr)
+	kEventLoop_WindowEventUpdate						= 'UWin'	//!< the specified window needs redrawing (context: 
+																	//!  EventInfoWindowScopeUpdatePtr
 };
 
 /*!
@@ -130,10 +130,10 @@ controls or all windows for a certain kind of event.
 typedef FourCharCode EventLoop_GlobalEvent;
 enum
 {
-	kEventLoop_GlobalEventNewIterationMainLoop			= FOUR_CHAR_CODE('NxtE'),	//!< the event loop has iterated one more time; useful to
-																					//!  perform unusual but periodic tasks (context: nullptr)
-	kEventLoop_GlobalEventSuspendResume					= FOUR_CHAR_CODE('Swch')	//!< the current process is either about to become the active
-																					//!  process, or about to become inactive (context: nullptr)
+	kEventLoop_GlobalEventNewIterationMainLoop			= 'NxtE',	//!< the event loop has iterated one more time; useful to
+																	//!  perform unusual but periodic tasks (context: nullptr)
+	kEventLoop_GlobalEventSuspendResume					= 'Swch'	//!< the current process is either about to become the active
+																	//!  process, or about to become inactive (context: nullptr)
 };
 
 /*!
@@ -142,15 +142,15 @@ Key combination that can be mapped to a control such as button.
 typedef FourCharCode EventLoop_KeyEquivalent;
 enum
 {
-	kEventLoop_KeyEquivalentDefaultButton				= FOUR_CHAR_CODE('RtEn'),	//!< the Return or Enter key (activates default button in a dialog)
-	kEventLoop_KeyEquivalentCancelButton				= FOUR_CHAR_CODE('Esc.'),	//!< the Escape key or command-period (.) combination (Cancel button)
-	kEventLoop_KeyEquivalentFirstLetter					= FOUR_CHAR_CODE('1stL'),	//!< command + the first letter of the button name
-	kEventLoop_KeyEquivalentArbitraryCommandLetter		= FOUR_CHAR_CODE('CK\0\0'),	//!< IMPORTANT: *add* this constant to a Unicode character value, to
-																					//!  set an arbitrary key equivalent (e.g. to get the command-A
-																					//!  sequence, use "kEventLoop_KeyEquivalentArbitraryLetter + 'A'")
-	kEventLoop_KeyEquivalentArbitraryCommandVirtualKey	= FOUR_CHAR_CODE('VK\0\0')	//!< IMPORTANT: *add* this constant to a virtual key code value, to
-																					//!  set an arbitrary key equivalent (e.g. to get the command-delete
-																					//!  sequence, use "kEventLoop_KeyEquivalentArbitraryVirtualKey + 0x33")
+	kEventLoop_KeyEquivalentDefaultButton				= 'RtEn',	//!< the Return or Enter key (activates default button in a dialog)
+	kEventLoop_KeyEquivalentCancelButton				= 'Esc.',	//!< the Escape key or command-period (.) combination (Cancel button)
+	kEventLoop_KeyEquivalentFirstLetter					= '1stL',	//!< command + the first letter of the button name
+	kEventLoop_KeyEquivalentArbitraryCommandLetter		= 'CK\0\0',	//!< IMPORTANT: *add* this constant to a Unicode character value, to
+																	//!  set an arbitrary key equivalent (e.g. to get the command-A
+																	//!  sequence, use "kEventLoop_KeyEquivalentArbitraryLetter + 'A'")
+	kEventLoop_KeyEquivalentArbitraryCommandVirtualKey	= 'VK\0\0'	//!< IMPORTANT: *add* this constant to a virtual key code value, to
+																	//!  set an arbitrary key equivalent (e.g. to get the command-delete
+																	//!  sequence, use "kEventLoop_KeyEquivalentArbitraryVirtualKey + 0x33")
 };
 
 

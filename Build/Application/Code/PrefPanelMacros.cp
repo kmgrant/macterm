@@ -86,36 +86,36 @@ UInt16 const	kMyMaxMacroKeyColumnWidthInPixels = 100; // arbitrary
 
 enum
 {
-	kMacrosFinderListColumnDescriptorInvokeWith	= FOUR_CHAR_CODE('Keys'),
-	kMacrosFinderListColumnDescriptorMacroName	= FOUR_CHAR_CODE('Name'),
-	kMacrosFinderListColumnDescriptorAction		= FOUR_CHAR_CODE('ToDo'),
-	kMacrosFinderListColumnDescriptorContents	= FOUR_CHAR_CODE('Text')
+	kMacrosFinderListColumnDescriptorInvokeWith	= 'Keys',
+	kMacrosFinderListColumnDescriptorMacroName	= 'Name',
+	kMacrosFinderListColumnDescriptorAction		= 'ToDo',
+	kMacrosFinderListColumnDescriptorContents	= 'Text'
 };
 
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
 {
-	kMyDataBrowserPropertyIDInvokeWith			= FOUR_CHAR_CODE('Keys'),
-	kMyDataBrowserPropertyIDMacroName			= FOUR_CHAR_CODE('Name'),
-	kMyDataBrowserPropertyIDAction				= FOUR_CHAR_CODE('ToDo'),
-	kMyDataBrowserPropertyIDContents			= FOUR_CHAR_CODE('Text')
+	kMyDataBrowserPropertyIDInvokeWith			= 'Keys',
+	kMyDataBrowserPropertyIDMacroName			= 'Name',
+	kMyDataBrowserPropertyIDAction				= 'ToDo',
+	kMyDataBrowserPropertyIDContents			= 'Text'
 };
 
 enum
 {
 	// note - comparison functions depend on the fact that the values of these constants are ordered least to greatest
-	kMacrosFinderListRowDescriptorMacro1 = FOUR_CHAR_CODE('Mcr1'),
-	kMacrosFinderListRowDescriptorMacro2 = FOUR_CHAR_CODE('Mcr2'),
-	kMacrosFinderListRowDescriptorMacro3 = FOUR_CHAR_CODE('Mcr3'),
-	kMacrosFinderListRowDescriptorMacro4 = FOUR_CHAR_CODE('Mcr4'),
-	kMacrosFinderListRowDescriptorMacro5 = FOUR_CHAR_CODE('Mcr5'),
-	kMacrosFinderListRowDescriptorMacro6 = FOUR_CHAR_CODE('Mcr6'),
-	kMacrosFinderListRowDescriptorMacro7 = FOUR_CHAR_CODE('Mcr7'),
-	kMacrosFinderListRowDescriptorMacro8 = FOUR_CHAR_CODE('Mcr8'),
-	kMacrosFinderListRowDescriptorMacro9 = FOUR_CHAR_CODE('Mcr9'),
-	kMacrosFinderListRowDescriptorMacro10 = FOUR_CHAR_CODE('McrX'),
-	kMacrosFinderListRowDescriptorMacro11 = FOUR_CHAR_CODE('McrY'),
-	kMacrosFinderListRowDescriptorMacro12 = FOUR_CHAR_CODE('McrZ')
+	kMacrosFinderListRowDescriptorMacro1 = 'Mcr1',
+	kMacrosFinderListRowDescriptorMacro2 = 'Mcr2',
+	kMacrosFinderListRowDescriptorMacro3 = 'Mcr3',
+	kMacrosFinderListRowDescriptorMacro4 = 'Mcr4',
+	kMacrosFinderListRowDescriptorMacro5 = 'Mcr5',
+	kMacrosFinderListRowDescriptorMacro6 = 'Mcr6',
+	kMacrosFinderListRowDescriptorMacro7 = 'Mcr7',
+	kMacrosFinderListRowDescriptorMacro8 = 'Mcr8',
+	kMacrosFinderListRowDescriptorMacro9 = 'Mcr9',
+	kMacrosFinderListRowDescriptorMacro10 = 'McrX',
+	kMacrosFinderListRowDescriptorMacro11 = 'McrY',
+	kMacrosFinderListRowDescriptorMacro12 = 'McrZ'
 };
 
 /*!
@@ -126,13 +126,13 @@ the NIBs from the package "PrefPanelMacros.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyUserPaneMacroSetList				= { FOUR_CHAR_CODE('MLst'), 0/* ID */ };
-static HIViewID const	idMyDataBrowserMacroSetList				= { FOUR_CHAR_CODE('McDB'), 0/* ID */ };
-static HIViewID const	idMyHelpTextMacroMenu					= { FOUR_CHAR_CODE('McMH'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { FOUR_CHAR_CODE('Inv1'), 0/* ID */ };
-static HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { FOUR_CHAR_CODE('Inv2'), 0/* ID */ };
-static HIViewID const	idMyCheckBoxMacrosMenuVisible			= { FOUR_CHAR_CODE('McMn'), 0/* ID */ };
-static HIViewID const	idMyFieldMacrosMenuName					= { FOUR_CHAR_CODE('MMNm'), 0/* ID */ };
+static HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
+static HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
+static HIViewID const	idMyHelpTextMacroMenu					= { 'McMH', 0/* ID */ };
+static HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { 'Inv1', 0/* ID */ };
+static HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { 'Inv2', 0/* ID */ };
+static HIViewID const	idMyCheckBoxMacrosMenuVisible			= { 'McMn', 0/* ID */ };
+static HIViewID const	idMyFieldMacrosMenuName					= { 'MMNm', 0/* ID */ };
 
 #pragma mark Types
 

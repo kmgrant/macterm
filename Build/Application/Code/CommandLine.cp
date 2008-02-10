@@ -3,7 +3,7 @@
 	CommandLine.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -94,12 +94,12 @@ IMPORTANT
 The following values MUST agree with the control IDs in
 the "Window" NIB from the package "CommandLineWindow.nib".
 */
-static HIViewID const	idMyUserPaneCommandLine			= { FOUR_CHAR_CODE('Line'), 0/* ID */ };
-static HIViewID const	idMyTerminalViewCommandLine		= { FOUR_CHAR_CODE('TrmV'), 0/* ID */ };
-static HIViewID const	idMyTextCommandHelp				= { FOUR_CHAR_CODE('Info'), 0/* ID */ };
-static HIViewID const	idMyButtonHelp					= { FOUR_CHAR_CODE('Help'), 0/* ID */ };
-static HIViewID const	idMyMenuHistory					= { FOUR_CHAR_CODE('HMnu'), 0/* ID */ };
-static HIViewID const	idMyLittleArrowsHistory			= { FOUR_CHAR_CODE('Hist'), 0/* ID */ };
+static HIViewID const	idMyUserPaneCommandLine			= { 'Line', 0/* ID */ };
+static HIViewID const	idMyTerminalViewCommandLine		= { 'TrmV', 0/* ID */ };
+static HIViewID const	idMyTextCommandHelp				= { 'Info', 0/* ID */ };
+static HIViewID const	idMyButtonHelp					= { 'Help', 0/* ID */ };
+static HIViewID const	idMyMenuHistory					= { 'HMnu', 0/* ID */ };
+static HIViewID const	idMyLittleArrowsHistory			= { 'Hist', 0/* ID */ };
 
 enum
 {

@@ -69,11 +69,11 @@ the "Dialog" NIB from the package "DuplicateDialog.nib".
 */
 enum
 {
-	kSignatureMyButtonCreate			= FOUR_CHAR_CODE('Crea'),
-	kSignatureMyButtonCancel			= FOUR_CHAR_CODE('Canc'),
-	kSignatureMyButtonHelp				= FOUR_CHAR_CODE('Help'),
-	kSignatureMyLabelNewName			= FOUR_CHAR_CODE('TLbl'),
-	kSignatureMyFieldNewName			= FOUR_CHAR_CODE('Titl')
+	kSignatureMyButtonCreate			= 'Crea',
+	kSignatureMyButtonCancel			= 'Canc',
+	kSignatureMyButtonHelp				= 'Help',
+	kSignatureMyLabelNewName			= 'TLbl',
+	kSignatureMyFieldNewName			= 'Titl'
 };
 static HIViewID const		idMyButtonCreate	= { kSignatureMyButtonCreate,   0/* ID */ };
 static HIViewID const		idMyButtonCancel	= { kSignatureMyButtonCancel,   0/* ID */ };

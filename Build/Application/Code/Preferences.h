@@ -116,13 +116,13 @@ enum
 {
 	// All of the four-character codes for classes are listed
 	// alphabetically by code, and must be unique. 
-	kPreferences_ClassGeneral	= FOUR_CHAR_CODE('appl'),
-	kPreferences_ClassFormat	= FOUR_CHAR_CODE('text'),	//!< use with Preferences_NewContext()
-	kPreferences_ClassMacroSet	= FOUR_CHAR_CODE('mcro'),	//!< use with Preferences_NewContext()
-	kPreferences_ClassSession	= FOUR_CHAR_CODE('sess'),	//!< use with Preferences_NewContext()
-	kPreferences_ClassTerminal	= FOUR_CHAR_CODE('term'),	//!< use with Preferences_NewContext()
-	kPreferences_ClassWindow	= FOUR_CHAR_CODE('wind')	//!< use only Preferences_SetWindowArrangementData() and
-															//!  Preferences_ArrangeWindow() with this class
+	kPreferences_ClassGeneral	= 'appl',
+	kPreferences_ClassFormat	= 'text',	//!< use with Preferences_NewContext()
+	kPreferences_ClassMacroSet	= 'mcro',	//!< use with Preferences_NewContext()
+	kPreferences_ClassSession	= 'sess',	//!< use with Preferences_NewContext()
+	kPreferences_ClassTerminal	= 'term',	//!< use with Preferences_NewContext()
+	kPreferences_ClassWindow	= 'wind'	//!< use only Preferences_SetWindowArrangementData() and
+											//!  Preferences_ArrangeWindow() with this class
 };
 
 /*!
@@ -144,32 +144,32 @@ Tags for use with kPreferences_ClassFormat.
 */
 enum
 {
-	kPreferences_TagFontName							= FOUR_CHAR_CODE('font'),	//!< data: "Str255"
-	kPreferences_TagFontSize							= FOUR_CHAR_CODE('fsiz'),	//!< data: "SInt16"
-	kPreferences_TagTerminalColorMatteBackground		= FOUR_CHAR_CODE('mtte'),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBlinkingForeground		= FOUR_CHAR_CODE('c*fg'),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBlinkingBackground		= FOUR_CHAR_CODE('c*bg'),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBoldForeground			= FOUR_CHAR_CODE('cbfg'),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBoldBackground			= FOUR_CHAR_CODE('cbbg'),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorNormalForeground		= FOUR_CHAR_CODE('cnfg'),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorNormalBackground		= FOUR_CHAR_CODE('cnbg'),	//!< data: "RGBColor"
+	kPreferences_TagFontName							= 'font',	//!< data: "Str255"
+	kPreferences_TagFontSize							= 'fsiz',	//!< data: "SInt16"
+	kPreferences_TagTerminalColorMatteBackground		= 'mtte',	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBlinkingForeground		= 'c*fg',	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBlinkingBackground		= 'c*bg',	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBoldForeground			= 'cbfg',	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBoldBackground			= 'cbbg',	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorNormalForeground		= 'cnfg',	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorNormalBackground		= 'cnbg',	//!< data: "RGBColor"
 	// NOTE: These match menu command IDs for convenience in color menus.
-	kPreferences_TagTerminalColorANSIBlack				= FOUR_CHAR_CODE(kCommandColorBlack),				//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIRed				= FOUR_CHAR_CODE(kCommandColorRed),					//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIGreen				= FOUR_CHAR_CODE(kCommandColorGreen),				//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIYellow				= FOUR_CHAR_CODE(kCommandColorYellow),				//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIBlue				= FOUR_CHAR_CODE(kCommandColorBlue),				//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIMagenta			= FOUR_CHAR_CODE(kCommandColorMagenta),				//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSICyan				= FOUR_CHAR_CODE(kCommandColorCyan),				//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIWhite				= FOUR_CHAR_CODE(kCommandColorWhite),				//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIBlackBold			= FOUR_CHAR_CODE(kCommandColorBlackEmphasized),		//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIRedBold			= FOUR_CHAR_CODE(kCommandColorRedEmphasized),		//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIGreenBold			= FOUR_CHAR_CODE(kCommandColorGreenEmphasized),		//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIYellowBold			= FOUR_CHAR_CODE(kCommandColorYellowEmphasized),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIBlueBold			= FOUR_CHAR_CODE(kCommandColorBlueEmphasized),		//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIMagentaBold		= FOUR_CHAR_CODE(kCommandColorMagentaEmphasized),	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSICyanBold			= FOUR_CHAR_CODE(kCommandColorCyanEmphasized),		//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIWhiteBold			= FOUR_CHAR_CODE(kCommandColorWhiteEmphasized)		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIBlack				= kCommandColorBlack,				//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIRed				= kCommandColorRed,					//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIGreen				= kCommandColorGreen,				//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIYellow				= kCommandColorYellow,				//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIBlue				= kCommandColorBlue,				//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIMagenta			= kCommandColorMagenta,				//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSICyan				= kCommandColorCyan,				//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIWhite				= kCommandColorWhite,				//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIBlackBold			= kCommandColorBlackEmphasized,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIRedBold			= kCommandColorRedEmphasized,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIGreenBold			= kCommandColorGreenEmphasized,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIYellowBold			= kCommandColorYellowEmphasized,	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIBlueBold			= kCommandColorBlueEmphasized,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIMagentaBold		= kCommandColorMagentaEmphasized,	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSICyanBold			= kCommandColorCyanEmphasized,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIWhiteBold			= kCommandColorWhiteEmphasized		//!< data: "RGBColor"
 };
 
 /*!
@@ -177,42 +177,42 @@ Tags for use with kPreferences_ClassGeneral.
 */
 enum
 {
-	kPreferences_TagArrangeWindowsUsingTabs				= FOUR_CHAR_CODE('tabs'),	//!< data: "Boolean"
-	kPreferences_TagCaptureFileCreator					= FOUR_CHAR_CODE('cpfc'),	//!< data: "OSType"
-	kPreferences_TagCopySelectedText					= FOUR_CHAR_CODE('cpsl'),	//!< data: "Boolean"
-	kPreferences_TagCopyTableThreshold					= FOUR_CHAR_CODE('ctth'),	//!< data: "UInt16", the number of spaces per tab
-	kPreferences_TagCursorBlinks						= FOUR_CHAR_CODE('curf'),	//!< data: "Boolean"
-	kPreferences_TagCursorMovesPriorToDrops				= FOUR_CHAR_CODE('curm'),	//!< data: "Boolean"
-	kPreferences_TagDontAutoClose						= FOUR_CHAR_CODE('wdga'),	//!< data: "Boolean"
-	kPreferences_TagDontAutoNewOnApplicationReopen		= FOUR_CHAR_CODE('nonu'),	//!< data: "Boolean"
-	kPreferences_TagDontDimBackgroundScreens			= FOUR_CHAR_CODE('wddb'),	//!< data: "Boolean"
-	kPreferences_TagDynamicResizing						= FOUR_CHAR_CODE('dynr'),	//!< data: "Boolean"
-	kPreferences_TagFocusFollowsMouse					= FOUR_CHAR_CODE('fcfm'),	//!< data: "Boolean"
-	kPreferences_TagInfoWindowColumnOrdering			= FOUR_CHAR_CODE('sico'),	//!< data: "CFArrayRef" (of CFStrings)
-	kPreferences_TagHeadersCollapsed					= FOUR_CHAR_CODE('hdcl'),	//!< data: "Boolean"
-	kPreferences_TagKioskAllowsForceQuit				= FOUR_CHAR_CODE('kafq'),	//!< data: "Boolean"
-	kPreferences_TagKioskShowsMenuBar					= FOUR_CHAR_CODE('kmnb'),	//!< data: "Boolean"
-	kPreferences_TagKioskShowsOffSwitch					= FOUR_CHAR_CODE('koff'),	//!< data: "Boolean"
-	kPreferences_TagKioskShowsScrollBar					= FOUR_CHAR_CODE('kscr'),	//!< data: "Boolean"
-	kPreferences_TagKioskUsesSuperfluousEffects			= FOUR_CHAR_CODE('kewl'),	//!< data: "Boolean"
-	kPreferences_TagMapBackquote						= FOUR_CHAR_CODE('map`'),	//!< data: "Boolean"
-	kPreferences_TagMarginBell							= FOUR_CHAR_CODE('marb'),	//!< data: "Boolean"
-	kPreferences_TagMenuItemKeys						= FOUR_CHAR_CODE('mkey'),	//!< data: "Boolean"
-	kPreferences_TagNewCommandShortcutEffect			= FOUR_CHAR_CODE('new?'),	//!< data: "UInt32", a "kCommand..." constant
-	kPreferences_TagNotification						= FOUR_CHAR_CODE('noti'),	//!< data: "SInt16", a "kAlert_Notify..." constant
-	kPreferences_TagNotifyOfBeeps						= FOUR_CHAR_CODE('bnot'),	//!< data: "Boolean"
-	kPreferences_TagPureInverse							= FOUR_CHAR_CODE('pinv'),	//!< data: "Boolean"
-	kPreferences_TagSimplifiedUserInterface				= FOUR_CHAR_CODE('simp'),	//!< data: "Boolean"
-	kPreferences_TagTerminalCursorType					= FOUR_CHAR_CODE('curs'),	//!< data: "TerminalView_CursorType"
-	kPreferences_TagTerminalResizeAffectsFontSize		= FOUR_CHAR_CODE('rszf'),	//!< data: "Boolean"
-	kPreferences_TagVisualBell							= FOUR_CHAR_CODE('visb'),	//!< data: "Boolean"
-	kPreferences_TagWasClipboardShowing					= FOUR_CHAR_CODE('wvcl'),	//!< data: "Boolean"
-	kPreferences_TagWasCommandLineShowing				= FOUR_CHAR_CODE('wvcm'),	//!< data: "Boolean"
-	kPreferences_TagWasControlKeypadShowing				= FOUR_CHAR_CODE('wvck'),	//!< data: "Boolean"
-	kPreferences_TagWasFunctionKeypadShowing			= FOUR_CHAR_CODE('wvfk'),	//!< data: "Boolean"
-	kPreferences_TagWasSessionInfoShowing				= FOUR_CHAR_CODE('wvsi'),	//!< data: "Boolean"
-	kPreferences_TagWasVT220KeypadShowing				= FOUR_CHAR_CODE('wvvk'),	//!< data: "Boolean"
-	kPreferences_TagWindowStackingOrigin				= FOUR_CHAR_CODE('wino')	//!< data: "Point"
+	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
+	kPreferences_TagCaptureFileCreator					= 'cpfc',	//!< data: "OSType"
+	kPreferences_TagCopySelectedText					= 'cpsl',	//!< data: "Boolean"
+	kPreferences_TagCopyTableThreshold					= 'ctth',	//!< data: "UInt16", the number of spaces per tab
+	kPreferences_TagCursorBlinks						= 'curf',	//!< data: "Boolean"
+	kPreferences_TagCursorMovesPriorToDrops				= 'curm',	//!< data: "Boolean"
+	kPreferences_TagDontAutoClose						= 'wdga',	//!< data: "Boolean"
+	kPreferences_TagDontAutoNewOnApplicationReopen		= 'nonu',	//!< data: "Boolean"
+	kPreferences_TagDontDimBackgroundScreens			= 'wddb',	//!< data: "Boolean"
+	kPreferences_TagDynamicResizing						= 'dynr',	//!< data: "Boolean"
+	kPreferences_TagFocusFollowsMouse					= 'fcfm',	//!< data: "Boolean"
+	kPreferences_TagInfoWindowColumnOrdering			= 'sico',	//!< data: "CFArrayRef" (of CFStrings)
+	kPreferences_TagHeadersCollapsed					= 'hdcl',	//!< data: "Boolean"
+	kPreferences_TagKioskAllowsForceQuit				= 'kafq',	//!< data: "Boolean"
+	kPreferences_TagKioskShowsMenuBar					= 'kmnb',	//!< data: "Boolean"
+	kPreferences_TagKioskShowsOffSwitch					= 'koff',	//!< data: "Boolean"
+	kPreferences_TagKioskShowsScrollBar					= 'kscr',	//!< data: "Boolean"
+	kPreferences_TagKioskUsesSuperfluousEffects			= 'kewl',	//!< data: "Boolean"
+	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
+	kPreferences_TagMarginBell							= 'marb',	//!< data: "Boolean"
+	kPreferences_TagMenuItemKeys						= 'mkey',	//!< data: "Boolean"
+	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "UInt32", a "kCommand..." constant
+	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify..." constant
+	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
+	kPreferences_TagPureInverse							= 'pinv',	//!< data: "Boolean"
+	kPreferences_TagSimplifiedUserInterface				= 'simp',	//!< data: "Boolean"
+	kPreferences_TagTerminalCursorType					= 'curs',	//!< data: "TerminalView_CursorType"
+	kPreferences_TagTerminalResizeAffectsFontSize		= 'rszf',	//!< data: "Boolean"
+	kPreferences_TagVisualBell							= 'visb',	//!< data: "Boolean"
+	kPreferences_TagWasClipboardShowing					= 'wvcl',	//!< data: "Boolean"
+	kPreferences_TagWasCommandLineShowing				= 'wvcm',	//!< data: "Boolean"
+	kPreferences_TagWasControlKeypadShowing				= 'wvck',	//!< data: "Boolean"
+	kPreferences_TagWasFunctionKeypadShowing			= 'wvfk',	//!< data: "Boolean"
+	kPreferences_TagWasSessionInfoShowing				= 'wvsi',	//!< data: "Boolean"
+	kPreferences_TagWasVT220KeypadShowing				= 'wvvk',	//!< data: "Boolean"
+	kPreferences_TagWindowStackingOrigin				= 'wino'	//!< data: "Point"
 };
 
 /*!
@@ -220,7 +220,7 @@ Tags for use with kPreferences_ClassMacroSet.
 */
 enum
 {
-	kPreferences_TagMacrosMenuVisible					= FOUR_CHAR_CODE('mmnu')	//!< data: "Boolean"
+	kPreferences_TagMacrosMenuVisible					= 'mmnu'	//!< data: "Boolean"
 };
 
 /*!
@@ -228,28 +228,28 @@ Tags for use with kPreferences_ClassSession.
 */
 enum
 {
-	kPreferences_TagAssociatedTerminalFavorite			= FOUR_CHAR_CODE('term'),	//!< data: "CFStringRef" (a kPreferences_ClassTerminal context name)
-	kPreferences_TagAutoCaptureToFile					= FOUR_CHAR_CODE('capt'),	//!< data: "Boolean"
-	kPreferences_TagCaptureFileAlias					= FOUR_CHAR_CODE('cfil'),	//!< data: "Preferences_AliasID"
-	kPreferences_TagCommandLine							= FOUR_CHAR_CODE('cmdl'),	//!< data: "CFArrayRef" (of CFStrings)
-	kPreferences_TagDataReadBufferSize					= FOUR_CHAR_CODE('rdbf'),	//!< data: "SInt16"
-	kPreferences_TagKeyInterruptProcess					= FOUR_CHAR_CODE('kint'),	//!< data: "char" (actual non-printable ASCII control character)
-	kPreferences_TagKeyResumeOutput						= FOUR_CHAR_CODE('kres'),	//!< data: "char" (actual non-printable ASCII control character)
-	kPreferences_TagKeySuspendOutput					= FOUR_CHAR_CODE('ksus'),	//!< data: "char" (actual non-printable ASCII control character)
-	kPreferences_TagLineModeEnabled						= FOUR_CHAR_CODE('linm'),	//!< data: "Boolean"
-	kPreferences_TagLocalEchoEnabled					= FOUR_CHAR_CODE('echo'),	//!< data: "Boolean"
-	kPreferences_TagLocalEchoHalfDuplex					= FOUR_CHAR_CODE('lehd'),	//!< data: "Boolean"
-	kPreferences_TagMapCarriageReturnToCRNull			= FOUR_CHAR_CODE('crnl'),	//!< data: "Boolean"
-	kPreferences_TagMapDeleteToBackspace				= FOUR_CHAR_CODE('delb'),	//!< data: "Boolean"
-	kPreferences_TagPasteBlockSize						= FOUR_CHAR_CODE('pblk'),	//!< data: "SInt16"
-	kPreferences_TagPasteMethod							= FOUR_CHAR_CODE('pstm'),	//!< data: a "kClipboard_PasteMethodÉ" constant
-	kPreferences_TagServerHost							= FOUR_CHAR_CODE('host'),	//!< data: "CFStringRef" (domain name or IP address)
-	kPreferences_TagServerPort							= FOUR_CHAR_CODE('port'),	//!< data: "SInt16"
-	kPreferences_TagServerProtocol						= FOUR_CHAR_CODE('prcl'),	//!< data: "Session_Protocol"
-	kPreferences_TagTektronixMode						= FOUR_CHAR_CODE('tekm'),	//!< data: a "kTektronixModeÉ" constant (see tekdefs.h)
-	kPreferences_TagTektronixPAGEClearsScreen			= FOUR_CHAR_CODE('tkpc'),	//!< data: "Boolean"
-	kPreferences_TagTextEncoding						= FOUR_CHAR_CODE('tenc'),	//!< data: "TextEncoding"
-	kPreferences_TagTextTranslationTable				= FOUR_CHAR_CODE('xlat'),	//!< data: "CFStringRef" (a translation table name)
+	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a kPreferences_ClassTerminal context name)
+	kPreferences_TagAutoCaptureToFile					= 'capt',	//!< data: "Boolean"
+	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "Preferences_AliasID"
+	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
+	kPreferences_TagDataReadBufferSize					= 'rdbf',	//!< data: "SInt16"
+	kPreferences_TagKeyInterruptProcess					= 'kint',	//!< data: "char" (actual non-printable ASCII control character)
+	kPreferences_TagKeyResumeOutput						= 'kres',	//!< data: "char" (actual non-printable ASCII control character)
+	kPreferences_TagKeySuspendOutput					= 'ksus',	//!< data: "char" (actual non-printable ASCII control character)
+	kPreferences_TagLineModeEnabled						= 'linm',	//!< data: "Boolean"
+	kPreferences_TagLocalEchoEnabled					= 'echo',	//!< data: "Boolean"
+	kPreferences_TagLocalEchoHalfDuplex					= 'lehd',	//!< data: "Boolean"
+	kPreferences_TagMapCarriageReturnToCRNull			= 'crnl',	//!< data: "Boolean"
+	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
+	kPreferences_TagPasteBlockSize						= 'pblk',	//!< data: "SInt16"
+	kPreferences_TagPasteMethod							= 'pstm',	//!< data: a "kClipboard_PasteMethodÉ" constant
+	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
+	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
+	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
+	kPreferences_TagTektronixMode						= 'tekm',	//!< data: a "kTektronixModeÉ" constant (see tekdefs.h)
+	kPreferences_TagTektronixPAGEClearsScreen			= 'tkpc',	//!< data: "Boolean"
+	kPreferences_TagTextEncoding						= 'tenc',	//!< data: "TextEncoding"
+	kPreferences_TagTextTranslationTable				= 'xlat',	//!< data: "CFStringRef" (a translation table name)
 };
 
 /*!
@@ -257,25 +257,25 @@ Tags for use with kPreferences_ClassTerminal.
 */
 enum
 {
-	kPreferences_TagANSIColorsEnabled					= FOUR_CHAR_CODE('ansc'),	//!< data: "Boolean"
-	kPreferences_TagDataReceiveDoNotStripHighBit		= FOUR_CHAR_CODE('8bit'),	//!< data: "Boolean"
-	kPreferences_TagEMACSMetaKey						= FOUR_CHAR_CODE('meta'),	//!< data: "Session_EMACSMetaKey"
-	kPreferences_TagMapArrowsForEMACS					= FOUR_CHAR_CODE('mapE'),	//!< data: "Boolean"
-	kPreferences_TagMapKeypadTopRowForVT220				= FOUR_CHAR_CODE('mapK'),	//!< data: "Boolean"
-	kPreferences_TagPageKeysControlLocalTerminal		= FOUR_CHAR_CODE('pgtm'),	//!< data: "Boolean"
-	kPreferences_TagTerminalAnswerBackMessage			= FOUR_CHAR_CODE('ansb'),	//!< data: "CFStringRef"
-	kPreferences_TagTerminalClearSavesLines				= FOUR_CHAR_CODE('clsv'),	//!< data: "Boolean"
-	kPreferences_TagTerminalEmulatorType				= FOUR_CHAR_CODE('emul'),	//!< data: "Terminal_Emulator", a "kTerminal_Emulator..." constant
-	kPreferences_TagTerminalLineWrap					= FOUR_CHAR_CODE('wrap'),	//!< data: "Boolean"
-	kPreferences_TagTerminalPaddingLeft					= FOUR_CHAR_CODE('padl'),	//!< data: "Float32"
-	kPreferences_TagTerminalPaddingRight				= FOUR_CHAR_CODE('padr'),	//!< data: "Float32"
-	kPreferences_TagTerminalPaddingTop					= FOUR_CHAR_CODE('padt'),	//!< data: "Float32"
-	kPreferences_TagTerminalPaddingBottom				= FOUR_CHAR_CODE('padb'),	//!< data: "Float32"
-	kPreferences_TagTerminalScreenColumns				= FOUR_CHAR_CODE('scol'),	//!< data: "UInt16"
-	kPreferences_TagTerminalScreenRows					= FOUR_CHAR_CODE('srow'),	//!< data: "UInt16"
-	kPreferences_TagTerminalScreenScrollbackRows		= FOUR_CHAR_CODE('scrb'),	//!< data: "UInt16"
-	kPreferences_TagTerminalScrollDelay					= FOUR_CHAR_CODE('scrd'),	//!< data: "EventTime" in MILLISECONDS
-	kPreferences_TagXTermSequencesEnabled				= FOUR_CHAR_CODE('xtrm')	//!< data: "Boolean"
+	kPreferences_TagANSIColorsEnabled					= 'ansc',	//!< data: "Boolean"
+	kPreferences_TagDataReceiveDoNotStripHighBit		= '8bit',	//!< data: "Boolean"
+	kPreferences_TagEMACSMetaKey						= 'meta',	//!< data: "Session_EMACSMetaKey"
+	kPreferences_TagMapArrowsForEMACS					= 'mapE',	//!< data: "Boolean"
+	kPreferences_TagMapKeypadTopRowForVT220				= 'mapK',	//!< data: "Boolean"
+	kPreferences_TagPageKeysControlLocalTerminal		= 'pgtm',	//!< data: "Boolean"
+	kPreferences_TagTerminalAnswerBackMessage			= 'ansb',	//!< data: "CFStringRef"
+	kPreferences_TagTerminalClearSavesLines				= 'clsv',	//!< data: "Boolean"
+	kPreferences_TagTerminalEmulatorType				= 'emul',	//!< data: "Terminal_Emulator", a "kTerminal_Emulator..." constant
+	kPreferences_TagTerminalLineWrap					= 'wrap',	//!< data: "Boolean"
+	kPreferences_TagTerminalPaddingLeft					= 'padl',	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingRight				= 'padr',	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingTop					= 'padt',	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingBottom				= 'padb',	//!< data: "Float32"
+	kPreferences_TagTerminalScreenColumns				= 'scol',	//!< data: "UInt16"
+	kPreferences_TagTerminalScreenRows					= 'srow',	//!< data: "UInt16"
+	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt16"
+	kPreferences_TagTerminalScrollDelay					= 'scrd',	//!< data: "EventTime" in MILLISECONDS
+	kPreferences_TagXTermSequencesEnabled				= 'xtrm'	//!< data: "Boolean"
 };
 
 /*!
@@ -283,13 +283,13 @@ Tags for use with the special window preference APIs.
 */
 enum
 {
-	kPreferences_WindowTagCommandLine					= FOUR_CHAR_CODE('Wcml'),
-	kPreferences_WindowTagControlKeypad					= FOUR_CHAR_CODE('Wctk'),
-	kPreferences_WindowTagFunctionKeypad				= FOUR_CHAR_CODE('Wfnk'),
-	kPreferences_WindowTagMacroSetup					= FOUR_CHAR_CODE('Wmcs'),
-	kPreferences_WindowTagPreferences					= FOUR_CHAR_CODE('Wprf'),
-	kPreferences_WindowTagSessionInfo					= FOUR_CHAR_CODE('Winf'),
-	kPreferences_WindowTagVT220Keypad					= FOUR_CHAR_CODE('Wvtk')
+	kPreferences_WindowTagCommandLine					= 'Wcml',
+	kPreferences_WindowTagControlKeypad					= 'Wctk',
+	kPreferences_WindowTagFunctionKeypad				= 'Wfnk',
+	kPreferences_WindowTagMacroSetup					= 'Wmcs',
+	kPreferences_WindowTagPreferences					= 'Wprf',
+	kPreferences_WindowTagSessionInfo					= 'Winf',
+	kPreferences_WindowTagVT220Keypad					= 'Wvtk'
 };
 
 /*!

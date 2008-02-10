@@ -76,15 +76,15 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Dialog" NIB from the package "SizeDialog.nib".
 */
-static HIViewID const	idMyLabelWidth					= { FOUR_CHAR_CODE('WLbl'), 0/* ID */ };
-static HIViewID const	idMyFieldWidth					= { FOUR_CHAR_CODE('WFld'), 0/* ID */ };
-static HIViewID const	idMyArrowsWidth					= { FOUR_CHAR_CODE('WArr'), 0/* ID */ };
-static HIViewID const	idMyLabelHeight					= { FOUR_CHAR_CODE('HLbl'), 0/* ID */ };
-static HIViewID const	idMyFieldHeight					= { FOUR_CHAR_CODE('HFld'), 0/* ID */ };
-static HIViewID const	idMyArrowsHeight				= { FOUR_CHAR_CODE('HArr'), 0/* ID */ };
-static HIViewID const	idMyButtonHelp					= { FOUR_CHAR_CODE('Help'), 0/* ID */ };
-static HIViewID const	idMyButtonResize				= { FOUR_CHAR_CODE('Rsiz'), 0/* ID */ };
-static HIViewID const	idMyButtonCancel				= { FOUR_CHAR_CODE('Canc'), 0/* ID */ };
+static HIViewID const	idMyLabelWidth			= { 'WLbl', 0/* ID */ };
+static HIViewID const	idMyFieldWidth			= { 'WFld', 0/* ID */ };
+static HIViewID const	idMyArrowsWidth			= { 'WArr', 0/* ID */ };
+static HIViewID const	idMyLabelHeight			= { 'HLbl', 0/* ID */ };
+static HIViewID const	idMyFieldHeight			= { 'HFld', 0/* ID */ };
+static HIViewID const	idMyArrowsHeight		= { 'HArr', 0/* ID */ };
+static HIViewID const	idMyButtonHelp			= { 'Help', 0/* ID */ };
+static HIViewID const	idMyButtonResize		= { 'Rsiz', 0/* ID */ };
+static HIViewID const	idMyButtonCancel		= { 'Canc', 0/* ID */ };
 
 enum
 {

@@ -75,25 +75,15 @@ IMPORTANT
 The following values MUST agree with the control IDs in
 the "Dialog" NIB from the package "AboutBox.nib".
 */
-enum
-{
-	kSignatureMyUserPaneAppIcon			= FOUR_CHAR_CODE('Icon'),
-	kSignatureMyTextAppName				= FOUR_CHAR_CODE('Name'),
-	kSignatureMyTextAppVersion			= FOUR_CHAR_CODE('Vers'),
-	kSignatureMyTextAppDescription		= FOUR_CHAR_CODE('Desc'),
-	kSignatureMyTextAppCopyrightLine1	= FOUR_CHAR_CODE('Cpy1'),
-	kSignatureMyTextAppCopyrightLine2	= FOUR_CHAR_CODE('Cpy2'),
-	kSignatureMyTextAppCopyrightLine3	= FOUR_CHAR_CODE('Cpy3')
-};
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	HIViewID const		idMyUserPaneAppIcon			= { kSignatureMyUserPaneAppIcon,			0/* ID */ };
-	HIViewID const		idMyTextAppName				= { kSignatureMyTextAppName,				0/* ID */ };
-	HIViewID const		idMyTextAppVersion			= { kSignatureMyTextAppVersion,				0/* ID */ };
-	HIViewID const		idMyTextAppDescription  	= { kSignatureMyTextAppDescription,			0/* ID */ };
-	HIViewID const		idMyTextAppCopyrightLine1	= { kSignatureMyTextAppCopyrightLine1,		0/* ID */ };
-	HIViewID const		idMyTextAppCopyrightLine2	= { kSignatureMyTextAppCopyrightLine2,		0/* ID */ };
-	HIViewID const		idMyTextAppCopyrightLine3	= { kSignatureMyTextAppCopyrightLine3,		0/* ID */ };
+	HIViewID const		idMyUserPaneAppIcon			= { 'Icon', 0/* ID */ };
+	HIViewID const		idMyTextAppName				= { 'Name', 0/* ID */ };
+	HIViewID const		idMyTextAppVersion			= { 'Vers', 0/* ID */ };
+	HIViewID const		idMyTextAppDescription  	= { 'Desc', 0/* ID */ };
+	HIViewID const		idMyTextAppCopyrightLine1	= { 'Cpy1', 0/* ID */ };
+	HIViewID const		idMyTextAppCopyrightLine2	= { 'Cpy2', 0/* ID */ };
+	HIViewID const		idMyTextAppCopyrightLine3	= { 'Cpy3', 0/* ID */ };
 }
 
 #pragma mark Internal Method Prototypes

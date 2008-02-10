@@ -3,7 +3,7 @@
 	InfoWindow.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -83,10 +83,10 @@
 // They also cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
 {
-	kMyDataBrowserPropertyIDWindow			= FOUR_CHAR_CODE('Wind'),
-	kMyDataBrowserPropertyIDResource		= FOUR_CHAR_CODE('Rsrc'),
-	kMyDataBrowserPropertyIDStatus			= FOUR_CHAR_CODE('Stat'),
-	kMyDataBrowserPropertyIDCreationTime	= FOUR_CHAR_CODE('Open')
+	kMyDataBrowserPropertyIDWindow			= 'Wind',
+	kMyDataBrowserPropertyIDResource		= 'Rsrc',
+	kMyDataBrowserPropertyIDStatus			= 'Stat',
+	kMyDataBrowserPropertyIDCreationTime	= 'Open'
 };
 
 #pragma mark Types
@@ -263,7 +263,7 @@ InfoWindow_Init	()
 		
 		
 		// find data browser (created in NIB)
-		id.signature = FOUR_CHAR_CODE('List'); // MUST match InfoWindow.nib!
+		id.signature = 'List'; // MUST match InfoWindow.nib!
 		id.id = 0;
 		error = GetControlByID(sessionStatusWindow, &id, &gSessionStatusDataBrowser);
 		assert_noerr(error);

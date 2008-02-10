@@ -2,7 +2,7 @@
 	\brief An implementation of the listener pattern.
 	
 	This module allows you to write generic code that notifies
-	a potentially anonymous list of “listeners” (callback
+	a potentially anonymous list of ‚Äúlisteners‚Äù (callback
 	functions) when specific events take place.  You can use a
 	single model to register many, many unique event types,
 	each of which can have a unique list of callbacks.
@@ -16,7 +16,7 @@
 /*###############################################################
 
 	Data Access Library 1.3
-	© 1998-2007 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -66,7 +66,7 @@ User-defined identifier to help distinguish models.
 typedef FourCharCode	ListenerModel_Descriptor;
 enum
 {
-	kListenerModel_InvalidDescriptor = FOUR_CHAR_CODE('----')
+	kListenerModel_InvalidDescriptor = '----'
 };
 
 /*!

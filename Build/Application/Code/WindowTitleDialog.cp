@@ -72,11 +72,11 @@ the "Dialog" NIB from the package "WindowTitleDialog.nib".
 */
 enum
 {
-	kSignatureMyButtonRename			= FOUR_CHAR_CODE('Renm'),
-	kSignatureMyButtonCancel			= FOUR_CHAR_CODE('Canc'),
-	kSignatureMyButtonHelp				= FOUR_CHAR_CODE('Help'),
-	kSignatureMyLabelWindowTitle		= FOUR_CHAR_CODE('TLbl'),
-	kSignatureMyFieldWindowTitle		= FOUR_CHAR_CODE('Titl')
+	kSignatureMyButtonRename		= 'Renm',
+	kSignatureMyButtonCancel		= 'Canc',
+	kSignatureMyButtonHelp			= 'Help',
+	kSignatureMyLabelWindowTitle	= 'TLbl',
+	kSignatureMyFieldWindowTitle	= 'Titl'
 };
 static HIViewID const		idMyButtonRename			= { kSignatureMyButtonRename,			0/* ID */ };
 static HIViewID const		idMyButtonCancel			= { kSignatureMyButtonCancel,			0/* ID */ };

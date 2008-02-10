@@ -70,11 +70,11 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Dialog" NIB from the package "AddressDialog.nib".
 */
-static HIViewID const	idMyStaticTextMainMessage		= { FOUR_CHAR_CODE('Main'), 0/* ID */ };
-static HIViewID const	idMyDataBrowserAddresses		= { FOUR_CHAR_CODE('ALst'), 0/* ID */ };
-static HIViewID const	idMyButtonHelp					= { FOUR_CHAR_CODE('Help'), 0/* ID */ };
-static HIViewID const	idMyButtonDone					= { FOUR_CHAR_CODE('Done'), 0/* ID */ };
-static HIViewID const	idMyButtonCopyToClipboard		= { FOUR_CHAR_CODE('Copy'), 0/* ID */ };
+static HIViewID const	idMyStaticTextMainMessage		= { 'Main', 0/* ID */ };
+static HIViewID const	idMyDataBrowserAddresses		= { 'ALst', 0/* ID */ };
+static HIViewID const	idMyButtonHelp					= { 'Help', 0/* ID */ };
+static HIViewID const	idMyButtonDone					= { 'Done', 0/* ID */ };
+static HIViewID const	idMyButtonCopyToClipboard		= { 'Copy', 0/* ID */ };
 
 /*!
 The following MUST match what is in AddressDialog.nib!
@@ -82,7 +82,7 @@ They also cannot use any of Apple’s reserved IDs (0 to 1023).
 */
 enum
 {
-	kMy_DataBrowserPropertyIDAddress		= FOUR_CHAR_CODE('Addr')
+	kMy_DataBrowserPropertyIDAddress		= 'Addr'
 };
 
 #pragma mark Types

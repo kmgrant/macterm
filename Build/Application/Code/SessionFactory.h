@@ -17,7 +17,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -74,7 +74,7 @@ Setting changes that MacTelnet allows other modules to
 typedef FourCharCode SessionFactory_Change;
 enum
 {
-	kSessionFactory_ChangeNewSessionCount		= FOUR_CHAR_CODE('cxn#')	//!< context: reserved
+	kSessionFactory_ChangeNewSessionCount	= 'cxn#'	//!< context: reserved
 };
 
 /*!
@@ -85,7 +85,7 @@ using indexing (such as, Òthe first session whose...Ó).
 typedef FourCharCode SessionFactory_List;
 enum
 {
-	kSessionFactory_ListInCreationOrder		= FOUR_CHAR_CODE('cron')	//!< in order of creation time, session 0 is earliest
+	kSessionFactory_ListInCreationOrder		= 'cron'	//!< in order of creation time, session 0 is earliest
 };
 
 /*!

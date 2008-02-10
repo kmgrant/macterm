@@ -151,12 +151,12 @@ size changes to whatever size makes the content best fit the area.
 */
 enum TerminalView_DisplayMode
 {
-	kTerminalView_DisplayModeNormal		= FOUR_CHAR_CODE('Norm'),   //!< underlying terminal screenÕs dimensions are altered to
-																	//!  best suit the pixel dimensions of the view, when resized;
-																	//!  the terminal view font size is unchanged
-	kTerminalView_DisplayModeZoom		= FOUR_CHAR_CODE('Zoom')	//!< font size of text in view is altered to make the current
-																	//!  rows and columns best fill the screen area, when resized;
-																	//!  the underlying terminal screenÕs dimensions are unchanged
+	kTerminalView_DisplayModeNormal		= 'Norm',   //!< underlying terminal screenÕs dimensions are altered to
+													//!  best suit the pixel dimensions of the view, when resized;
+													//!  the terminal view font size is unchanged
+	kTerminalView_DisplayModeZoom		= 'Zoom'	//!< font size of text in view is altered to make the current
+													//!  rows and columns best fill the screen area, when resized;
+													//!  the underlying terminal screenÕs dimensions are unchanged
 };
 
 /*!
@@ -165,10 +165,10 @@ receive notification of.
 */
 enum TerminalView_Event
 {
-	kTerminalView_EventFontSizeChanged	= FOUR_CHAR_CODE('FSiz'),	//!< the font size used for drawing text has been altered
-																	//!  (context: TerminalViewRef)
-	kTerminalView_EventScrolling		= FOUR_CHAR_CODE('Scrl')	//!< the visible part of the terminal view has changed
-																	//!  (context: TerminalViewRef)
+	kTerminalView_EventFontSizeChanged	= 'FSiz',	//!< the font size used for drawing text has been altered
+													//!  (context: TerminalViewRef)
+	kTerminalView_EventScrolling		= 'Scrl'	//!< the visible part of the terminal view has changed
+													//!  (context: TerminalViewRef)
 };
 
 /*!

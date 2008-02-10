@@ -72,12 +72,12 @@ enum
 
 enum Macros_Change
 {
-	kMacros_ChangeActiveSetPlanned	= FOUR_CHAR_CODE('Plan'),	//!< the active macro set will change (context: nullptr)
-	kMacros_ChangeActiveSet			= FOUR_CHAR_CODE('Actv'),	//!< the active macro set has changed (context: nullptr)
-	kMacros_ChangeContents			= FOUR_CHAR_CODE('Text'),	//!< the contents of some macro has changed (context:
-																//!  MacroDescriptorPtr)
-	kMacros_ChangeMode				= FOUR_CHAR_CODE('Mode')	//!< the macro invocation mode has changed (context:
-																//!  MacroManager_InvocationMethod*)
+	kMacros_ChangeActiveSetPlanned	= 'Plan',	//!< the active macro set will change (context: nullptr)
+	kMacros_ChangeActiveSet			= 'Actv',	//!< the active macro set has changed (context: nullptr)
+	kMacros_ChangeContents			= 'Text',	//!< the contents of some macro has changed (context:
+												//!  MacroDescriptorPtr)
+	kMacros_ChangeMode				= 'Mode'	//!< the macro invocation mode has changed (context:
+												//!  MacroManager_InvocationMethod*)
 };
 
 enum

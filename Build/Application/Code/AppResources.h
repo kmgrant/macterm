@@ -69,7 +69,7 @@ typedef OSStatus AppResources_Result;
 typedef FourCharCode AppResources_FileID;
 enum
 {
-	kAppResources_FileIDPreferences		= FOUR_CHAR_CODE('TRFP')
+	kAppResources_FileIDPreferences = 'TRFP'
 };
 
 
