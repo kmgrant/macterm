@@ -5570,43 +5570,46 @@ stackWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
 				// TransitionWindow() requires the structure region, but the “location” is
 				// that of the content region; so, it is necessary to figure out both what
 				// the new structure origin will be, and the dimensions of that region.
+				// This may fail if the window is not visible anymore.
 				error = GetWindowBounds(window, kWindowContentRgn, &contentBounds);
-				assert_noerr(error);
-				error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
-				assert_noerr(error);
-				SetRect(&structureBounds, windowLocation.h - (contentBounds.left - structureBounds.left),
-						windowLocation.v - (contentBounds.top - structureBounds.top),
-						windowLocation.h - (contentBounds.left - structureBounds.left) +
-							(structureBounds.right - structureBounds.left),
-						windowLocation.v - (contentBounds.top - structureBounds.top) +
-							(structureBounds.bottom - structureBounds.top));
-				if (FlagManager_Test(kFlagOS10_3API))
+				if (noErr == error)
 				{
-					HIRect						floatBounds = CGRectMake(structureBounds.left, structureBounds.top,
-																			structureBounds.right - structureBounds.left,
-																			structureBounds.bottom - structureBounds.top);
-					TransitionWindowOptions		transitionOptions;
-					
-					
-					// transition asynchronously for minimum interruption to the user
-					bzero(&transitionOptions, sizeof(transitionOptions));
-					transitionOptions.version = 0;
-					if (TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
-													&floatBounds, true/* asynchronous */, &transitionOptions)
-						!= noErr)
+					error = GetWindowBounds(window, kWindowStructureRgn, &structureBounds);
+					assert_noerr(error);
+					SetRect(&structureBounds, windowLocation.h - (contentBounds.left - structureBounds.left),
+							windowLocation.v - (contentBounds.top - structureBounds.top),
+							windowLocation.h - (contentBounds.left - structureBounds.left) +
+								(structureBounds.right - structureBounds.left),
+							windowLocation.v - (contentBounds.top - structureBounds.top) +
+								(structureBounds.bottom - structureBounds.top));
+					if (FlagManager_Test(kFlagOS10_3API))
 					{
-						// on error, just move the window
-						MoveWindow(window, windowLocation.h, windowLocation.v, false/* activate */);
+						HIRect						floatBounds = CGRectMake(structureBounds.left, structureBounds.top,
+																				structureBounds.right - structureBounds.left,
+																				structureBounds.bottom - structureBounds.top);
+						TransitionWindowOptions		transitionOptions;
+						
+						
+						// transition asynchronously for minimum interruption to the user
+						bzero(&transitionOptions, sizeof(transitionOptions));
+						transitionOptions.version = 0;
+						if (TransitionWindowWithOptions(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction,
+														&floatBounds, true/* asynchronous */, &transitionOptions)
+							!= noErr)
+						{
+							// on error, just move the window
+							MoveWindow(window, windowLocation.h, windowLocation.v, false/* activate */);
+						}
 					}
-				}
-				else
-				{
-					// on 10.2 and earlier, no special options are available
-					if (TransitionWindow(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction, &structureBounds)
-						!= noErr)
+					else
 					{
-						// on error, just move the window
-						MoveWindow(window, windowLocation.h, windowLocation.v, false/* activate */);
+						// on 10.2 and earlier, no special options are available
+						if (TransitionWindow(window, kWindowSlideTransitionEffect, kWindowMoveTransitionAction, &structureBounds)
+							!= noErr)
+						{
+							// on error, just move the window
+							MoveWindow(window, windowLocation.h, windowLocation.v, false/* activate */);
+						}
 					}
 				}
 			}
