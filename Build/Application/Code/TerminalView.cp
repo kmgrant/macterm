@@ -6424,11 +6424,8 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 			}
 			else
 			{
-				TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-				
-				
-				Console_WriteValueAddress("request to destroy HIObject implementation", viewPtr);
-				delete viewPtr;
+				Console_WriteValueAddress("request to destroy HIObject implementation", view);
+				delete REINTERPRET_CAST(view, TerminalViewPtr);
 				result = noErr;
 			}
 			break;
