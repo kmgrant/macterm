@@ -3,9 +3,9 @@
 	TerminalView.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -123,11 +123,11 @@ enum
 	//kTerminalView_ContentPartLineN			= <value in range>,	//!< draw line with this number
 	kTerminalView_ContentPartLastLine		= 120,				//!< the largest line number that can be explicitly drawn
 	kTerminalView_ContentPartText			= 121,				//!< draw a focus ring around terminal text area
-	kTerminalView_ContentPartCursor			= 122,				//!< draw cursor (this part canÕt be hit or focused)
-	kTerminalView_ContentPartCursorGhost	= 123,				//!< draw cursor outline (also canÕt be hit or focused)
+	kTerminalView_ContentPartCursor			= 122,				//!< draw cursor (this part canâ€™t be hit or focused)
+	kTerminalView_ContentPartCursorGhost	= 123,				//!< draw cursor outline (also canâ€™t be hit or focused)
 	
 	/*!
-	Use these constants when referring to the user focus, so that you donÕt
+	Use these constants when referring to the user focus, so that you donâ€™t
 	have to depend on the control type.  For this to work, you have to use an
 	"HIViewRef" returned by TerminalView_ReturnUserFocusHIView() and set your
 	corresponding "HIViewPartCode" to one of the following.
@@ -237,8 +237,8 @@ struct TerminalView
 		
 		struct
 		{
-			Rect				bounds;			// the rectangle of the cursorÕs visible region, relative to the content pane!!!
-			Rect				ghostBounds;	// the exact view-relative rectangle of a dragged cursorÕs outline region
+			Rect				bounds;			// the rectangle of the cursorâ€™s visible region, relative to the content pane!!!
+			Rect				ghostBounds;	// the exact view-relative rectangle of a dragged cursorâ€™s outline region
 			MyCursorState		currentState;	// whether the cursor is visible
 			MyCursorState		ghostState;		// whether the cursor ghost is visible
 			EventLoopTimerRef	flashTimer;		// timer to flash the terminal cursor regularly
@@ -277,7 +277,7 @@ struct TerminalView
 		{
 			Boolean			isMonospaced;	// whether every character in the font is the same width (expected to be true)
 			Str255			familyName;		// font name (as might appear in a Font menu)
-			TextEncoding	encoding;		// specification of fontÕs character set
+			TextEncoding	encoding;		// specification of fontâ€™s character set
 			struct Metrics
 			{
 				SInt16		ascent;			// number of pixels highest character extends above the base line
@@ -322,13 +322,13 @@ static OSStatus			createWindowColorPalette		(TerminalViewPtr);
 static Boolean			cursorBlinks					(TerminalViewPtr);
 static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 static void				drawRowSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, TerminalTextAttributes,
-														 char const*);
+														 UniChar const*);
 static Boolean			drawSection						(TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
-static void				drawTerminalScreenRunOp			(TerminalScreenRef, char const*, UInt16, Terminal_LineRef,
+static void				drawTerminalScreenRunOp			(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
 														 UInt16, TerminalTextAttributes, void*);
-static void				drawTerminalText				(TerminalViewPtr, CGContextRef, Rect const*, char const*, SInt32,
+static void				drawTerminalText				(TerminalViewPtr, CGContextRef, Rect const*, UniChar const*, CFIndex,
 														 TerminalTextAttributes);
-static void				drawVTGraphicsGlyph				(TerminalViewPtr, CGContextRef, Rect const*, char, Boolean);
+static void				drawVTGraphicsGlyph				(TerminalViewPtr, CGContextRef, Rect const*, UniChar, Boolean);
 static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, Boolean);
 static void				eventNotifyForView				(TerminalViewConstPtr, TerminalView_Event, void*);
 static Terminal_LineRef	findRowIterator					(TerminalViewPtr, UInt16);
@@ -413,8 +413,8 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	Boolean						gApplicationIsSuspended = false;
 	Boolean						gTerminalViewInitialized = false;
 	TerminalViewPtrLocker&		gTerminalViewPtrLocks ()				{ static TerminalViewPtrLocker x; return x; }
-	std::map< char, UInt8 >&	gASCIIToVT52GraphicsCharacterMap ()		{ static std::map< char, UInt8 > x; return x; }
-	std::map< char, UInt8 >&	gASCIIToVT100GraphicsCharacterMap ()	{ static std::map< char, UInt8 > x; return x; }
+	std::map< UniChar, UInt8 >&	gUnicodeToVT52GraphicsCharacterMap ()	{ static std::map< UniChar, UInt8 > x; return x; }
+	std::map< UniChar, UInt8 >&	gUnicodeToVT100GraphicsCharacterMap ()	{ static std::map< UniChar, UInt8 > x; return x; }
 	DragSendDataUPP				gTerminalViewDragSendUPP ()				{ static DragSendDataUPP x = NewDragSendDataUPP(supplyTextSelectionToDrag); return x; }
 	RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = Memory_NewRegion(); assert(nullptr != x); return x; }
 }
@@ -429,7 +429,7 @@ The bits that these accessors refer to are documented in
 
 IMPORTANT: Attribute bits are also manipulated in Terminal.cp.  Do not
            re-arrange bits here without also verifying that they are set
-           correctly during the emulatorÕs parsing loop.
+           correctly during the emulatorâ€™s parsing loop.
 */
 static inline Boolean STYLE_BOLD						(TerminalTextAttributes x) { return ((x & 0x00000001) != 0); }
 static inline Boolean STYLE_ITALIC						(TerminalTextAttributes x) { return ((x & 0x00000004) != 0); }
@@ -503,31 +503,29 @@ TerminalView_Init ()
 	}
 	
 	// set up mappings between VT graphics ASCII characters and special
-	// symbols not part of ASCII; note that Macintosh fonts DO contain
-	// these characters, so they are placed directly in this source file;
-	// but NOTE the source fileÕs text encoding (presumably Mac Roman),
-	// because this is assumed elsewhere when translating to the userÕs
-	// actual terminal font
+	// symbols to Mac Roman (what is currently used for rendering);
+	// (TEMPORARY: this mapping will not be necessary once the renderer
+	// and backing store both use Unicode directly)
 	{
 		UInt16		mappingCount = 0;
 		
 		
 		mappingCount = 0;
-		gASCIIToVT52GraphicsCharacterMap()['f'] = '¡'; ++mappingCount; // degrees
-		gASCIIToVT52GraphicsCharacterMap()['g'] = '±'; ++mappingCount; // plus or minus
-		gASCIIToVT52GraphicsCharacterMap()['j'] = 'Ö'; ++mappingCount; // division
-		gASCIIToVT52GraphicsCharacterMap()['~'] = '¦'; ++mappingCount; // paragraph
-		assert(gASCIIToVT52GraphicsCharacterMap().size() == mappingCount); // MUST MATCH NUMBER OF CREATED MAP ENTRIES ABOVE
+		gUnicodeToVT52GraphicsCharacterMap()['f'] = '\x00a1'; ++mappingCount; // degrees
+		gUnicodeToVT52GraphicsCharacterMap()['g'] = '\x00b1'; ++mappingCount; // plus or minus
+		gUnicodeToVT52GraphicsCharacterMap()['j'] = '\x00d6'; ++mappingCount; // division
+		gUnicodeToVT52GraphicsCharacterMap()['~'] = '\x00a6'; ++mappingCount; // paragraph/pilcrow
+		assert(gUnicodeToVT52GraphicsCharacterMap().size() == mappingCount); // MUST MATCH NUMBER OF CREATED MAP ENTRIES ABOVE
 		mappingCount = 0;
-		gASCIIToVT100GraphicsCharacterMap()['`'] = '×'; ++mappingCount; // filled diamond (hollow for now)
-		gASCIIToVT100GraphicsCharacterMap()['f'] = '¡'; ++mappingCount; // degrees
-		gASCIIToVT100GraphicsCharacterMap()['g'] = '±'; ++mappingCount; // plus or minus
-		gASCIIToVT100GraphicsCharacterMap()['y'] = '²'; ++mappingCount; // less than or equal to
-		gASCIIToVT100GraphicsCharacterMap()['z'] = '³'; ++mappingCount; // greater than or equal to
-		gASCIIToVT100GraphicsCharacterMap()['{'] = '¹'; ++mappingCount; // pi
-		gASCIIToVT100GraphicsCharacterMap()['|'] = '­'; ++mappingCount; // not equal to
-		gASCIIToVT100GraphicsCharacterMap()['}'] = '£'; ++mappingCount; // British pounds (currency) symbol
-		assert(gASCIIToVT100GraphicsCharacterMap().size() == mappingCount); // MUST MATCH NUMBER OF CREATED MAP ENTRIES ABOVE
+		gUnicodeToVT100GraphicsCharacterMap()['`'] = '\x00d7'; ++mappingCount; // filled diamond; using hollow (lozenge) for now, Unicode 0x2666 is better
+		gUnicodeToVT100GraphicsCharacterMap()['f'] = '\x00a1'; ++mappingCount; // degrees
+		gUnicodeToVT100GraphicsCharacterMap()['g'] = '\x00b1'; ++mappingCount; // plus or minus
+		gUnicodeToVT100GraphicsCharacterMap()['y'] = '\x00b2'; ++mappingCount; // less than or equal to
+		gUnicodeToVT100GraphicsCharacterMap()['z'] = '\x00b3'; ++mappingCount; // greater than or equal to
+		gUnicodeToVT100GraphicsCharacterMap()['{'] = '\x00b9'; ++mappingCount; // pi
+		gUnicodeToVT100GraphicsCharacterMap()['|'] = '\x00ad'; ++mappingCount; // not equal to
+		gUnicodeToVT100GraphicsCharacterMap()['}'] = '\x00a3'; ++mappingCount; // British pounds (currency) symbol
+		assert(gUnicodeToVT100GraphicsCharacterMap().size() == mappingCount); // MUST MATCH NUMBER OF CREATED MAP ENTRIES ABOVE
 	}
 	
 	// set up a callback to receive interesting events
@@ -721,7 +719,7 @@ the user eventually commits the sheet that appears.  The user
 can also cancel the operation.
 
 A future version of this function could allow flags to be
-specified to affect the capture ÒrulesÓ (e.g. whether or not
+specified to affect the capture â€œrulesâ€ (e.g. whether or not
 to substitute tabs for consecutive spaces).
 
 (3.1)
@@ -881,13 +879,13 @@ TerminalView_FlashSelection		(TerminalViewRef	inView)
 
 
 /*!
-Changes the focus of the specified viewÕs owning
-window to be the given viewÕs container.
+Changes the focus of the specified viewâ€™s owning
+window to be the given viewâ€™s container.
 
 This is ONLY AN ADORNMENT; a Terminal View has no
 ability to process keystrokes on its own.  However, a
 controlling module such as Session might compare a
-windowÕs currently-focused view with the result of
+windowâ€™s currently-focused view with the result of
 TerminalView_ReturnUserFocusHIView() to see whether
 keyboard input should go to the specified view.
 
@@ -1008,7 +1006,7 @@ TerminalView_GetFontAndSize		(TerminalViewRef	inView,
 
 
 /*!
-Retrieves the viewÕs best dimensions in pixels,
+Retrieves the viewâ€™s best dimensions in pixels,
 optionally including the insets (margins), given
 the current font metrics and screen dimensions.
 Returns true only if successful.
@@ -1053,7 +1051,7 @@ TerminalView_GetIdealSize	(TerminalViewRef	inView,
 
 /*!
 Returns the screen insets.  These are the pixel offsets
-from the edges of the maximum Òviewable areaÓ that define
+from the edges of the maximum â€œviewable areaâ€ that define
 the padding between the absolute edge of the screen and
 the outer rows and columns of text.  Without insets, the
 text would be flush against the edges of the screen, which
@@ -1077,9 +1075,9 @@ void
 TerminalView_GetInsets	(Point*		outTopLeftInsetOrNull,
 						 Point*		outBottomRightInsetOrNull)
 {
-	// NOTE: Insets shouldnÕt be TOO large (i.e. comparable to the size of a character),
+	// NOTE: Insets shouldnâ€™t be TOO large (i.e. comparable to the size of a character),
 	//       because then the user might mistake the padding for an empty row or column.
-	//       Also, itÕs generally more aesthetically pleasing if the width is larger
+	//       Also, itâ€™s generally more aesthetically pleasing if the width is larger
 	//       than the height.
 	if (outTopLeftInsetOrNull != nullptr) SetPt(outTopLeftInsetOrNull, 6, 5);
 	if (outBottomRightInsetOrNull != nullptr) SetPt(outBottomRightInsetOrNull, 6, 5);
@@ -1159,7 +1157,7 @@ TerminalView_GetRange	(TerminalViewRef			inView,
 
 
 /*!
-Causes the computer to speak the specified terminalÕs
+Causes the computer to speak the specified terminalâ€™s
 text selection, using the speech channel of that
 same terminal.  You can therefore interrupt this
 speech using the normal mechanisms for interrupting
@@ -1276,7 +1274,7 @@ number of rows and columns.  You may optionally
 include the insets (margins) in the calculations -
 no margins means the screen size is a precise
 multiple of the width and height of a character in
-the screenÕs font.
+the screenâ€™s font.
 
 The inverse of this routine is
 TerminalView_GetTheoreticalScreenDimensions().
@@ -1335,7 +1333,7 @@ window, use this method and pass a value of "true"
 for the second parameter.  To reset text selections
 to normal, pass "false".
 
-IMPORTANT:	All of MacTelnetÕs functions, including
+IMPORTANT:	All of MacTelnetâ€™s functions, including
 			updating the terminal text selection of a
 			window, rely on this flag.  Thus, you
 			should ensure a text selection is *empty*
@@ -1386,7 +1384,7 @@ TerminalView_MoveCursorWithArrowKeys	(TerminalViewRef	inView,
 
 /*!
 If the user has the cursor flashing preference set, this
-routine will hide the specified terminal screenÕs cursor.
+routine will hide the specified terminal screenâ€™s cursor.
 This helps to avoid drawing glitches prior to scrolling.
 
 (3.0)
@@ -1403,7 +1401,7 @@ TerminalView_ObscureCursor	(TerminalViewRef	inView)
 
 /*!
 Determines whether a point in the coordinate
-system of a windowÕs graphics port is in the
+system of a windowâ€™s graphics port is in the
 boundaries of the highlighted text in that
 window (if any).
 
@@ -1474,7 +1472,7 @@ position a screen anywhere in a window and the
 contents of the screen (embedded in the container)
 will move with it.
 
-To resize a screenÕs view area, use a routine like
+To resize a screenâ€™s view area, use a routine like
 HIViewSetFrame() - Carbon Event handlers are installed
 such that embedded views are properly resized when you
 do that.
@@ -1558,7 +1556,7 @@ TerminalView_ReturnSelectedTextAsNewHandle	(TerminalViewRef			inView,
 
 /*!
 Returns a region in coordinates LOCAL to the given
-viewÕs window, describing the highlighted text.
+viewâ€™s window, describing the highlighted text.
 You must destroy this region yourself!
 
 (2.6)
@@ -1937,7 +1935,7 @@ TerminalView_ScrollRowsTowardTopEdge	(TerminalViewRef	inView,
 
 /*!
 Scrolls the contents of the terminal view as if the user
-clicked the ÒhomeÓ key on an extended keyboard - conveniently
+clicked the â€œhomeâ€ key on an extended keyboard - conveniently
 scrolling rows downward to show the very topmost row in the
 screen area.
 
@@ -1966,7 +1964,7 @@ TerminalView_ScrollToBeginning	(TerminalViewRef	inView)
 
 /*!
 Scrolls the contents of the terminal view as if the user
-clicked the ÒendÓ key on an extended keyboard - conveniently
+clicked the â€œendâ€ key on an extended keyboard - conveniently
 scrolling rows upward to show the very bottommost row in the
 screen area.
 
@@ -2075,7 +2073,7 @@ In MacTelnet 3.0, the exact characters selected depends
 on the current selection mode: in normal mode, the
 specified anchors mark the first and last characters of
 a Macintosh-style selection range.  However, if the new
-Òrectangular text selectionÓ mode is being used, the
+â€œrectangular text selectionâ€ mode is being used, the
 width of each line of the selected region is the same,
 equal to the difference between the horizontal coordinates
 of the given points.
@@ -2275,7 +2273,7 @@ TerminalView_SetFocusRingDisplayed	(TerminalViewRef	inView,
 
 
 /*!
-Sets the font and size for the specified screenÕs text.
+Sets the font and size for the specified screenâ€™s text.
 Pass nullptr if the font name should be ignored (and
 therefore not changed).  Pass 0 if the font size should
 not be changed.
@@ -2363,7 +2361,7 @@ TerminalView_StartMonitoring	(TerminalViewRef			inView,
 		OSStatus	error = noErr;
 		
 		
-		// add a listener to the specified targetÕs listener model for the given event
+		// add a listener to the specified targetâ€™s listener model for the given event
 		error = ListenerModel_AddListenerForEvent(viewPtr->changeListenerModel, inForWhatEvent, inListener);
 		if (error != noErr) result = kTerminalView_ResultParameterError;
 	}
@@ -2400,7 +2398,7 @@ TerminalView_StopMonitoring		(TerminalViewRef			inView,
 	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
 	else
 	{
-		// remove a listener from the specified targetÕs listener model for the given event
+		// remove a listener from the specified targetâ€™s listener model for the given event
 		ListenerModel_RemoveListenerForEvent(viewPtr->changeListenerModel, inForWhatEvent, inListener);
 	}
 	return result;
@@ -2526,7 +2524,7 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView,
 			InsetRect(&outsetCursorBounds, -20/* arbitrary */, -20/* arbitrary */);
 			if (false == inQuick)
 			{
-				// unless in ÒquickÓ mode, be a little more obvious
+				// unless in â€œquickâ€ mode, be a little more obvious
 				// by zooming first from the screen edges to the cursor
 			#if 0
 				(OSStatus)ZoomRects(&outsetCursorBounds, &globalCursorBounds, 10/* steps, arbitrary */, kZoomAccelerate);
@@ -2771,7 +2769,7 @@ initialize		(TerminalScreenRef	inScreenDataSource,
 		
 		// since no extra rendering, etc. is required, make this a mere ALIAS
 		// for the background view; this is so that code intending to operate
-		// on the ÒentireÓ view can clearly indicate this by referring to the
+		// on the â€œentireâ€ view can clearly indicate this by referring to the
 		// encompassing pane instead of some specific pane that might change
 		this->encompassingHIView = this->backgroundHIView;
 		
@@ -2954,7 +2952,7 @@ addRowSectionToDirtyRegion	(TerminalViewPtr	inTerminalViewPtr,
 /*!
 Changes the blinking text colors of a terminal view.
 This very efficient and simple animation scheme
-allows text to Òreally blinkÓ, because this routine
+allows text to â€œreally blinkâ€, because this routine
 is called regularly by a timer.
 
 Timers that draw must save and restore the current
@@ -3043,7 +3041,7 @@ terminal screen that would fit 4 screen cells.  Normally
 text is sized to fit one cell, but double-width and double-
 height text fills 4 cells.
 
-Returns the double font size.  The ÒofficialÓ double size
+Returns the double font size.  The â€œofficialâ€ double size
 of the specified terminal is NOT changed.
 
 (3.0)
@@ -3208,7 +3206,7 @@ contentHIViewIdleTimer	(EventLoopTimerRef			UNUSED_ARGUMENT(inTimer),
 Creates a new color palette and initializes its
 colors using terminal preferences.
 
-In order to succeed, the specified viewÕs self-
+In order to succeed, the specified viewâ€™s self-
 reference must be valid.
 
 Returns "noErr" only if the palette is created
@@ -3258,7 +3256,7 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				//
-				// get the userÕs preferred ANSI colors
+				// get the userâ€™s preferred ANSI colors
 				//
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIBlack;
@@ -3393,7 +3391,7 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 													&inTerminalViewPtr->window.palette.animationTimer);
 					inTerminalViewPtr->window.palette.animationTimerIsActive = false;
 					
-					// use terminal default preferences (stored in preferences file) to set up windowÕs colors
+					// use terminal default preferences (stored in preferences file) to set up windowâ€™s colors
 					{
 						Preferences_ContextRef		formatPreferencesContext = nullptr;
 						
@@ -3469,10 +3467,10 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 
 
 /*!
-Returns "true" only if the specified screenÕs cursor
+Returns "true" only if the specified screenâ€™s cursor
 should be blinking.  Currently, this preference is
 global, so either all screen cursors blink or all
-donÕt; however, for future flexibility, this routine
+donâ€™t; however, for future flexibility, this routine
 takes a specific screen as a parameter.
 
 (3.0)
@@ -3555,13 +3553,13 @@ drawRowSection	(TerminalViewPtr			inTerminalViewPtr,
 				 SInt16						inZeroBasedStartingColumnNumber,
 				 SInt16						inCharacterCount,
 				 TerminalTextAttributes		inAttributes,
-				 char const*				inTextBufferPtr)
+				 UniChar const*				inTextBufferPtr)
 {
 	Rect	rect;
 	
 	
 	// for better performance on Mac OS X, make the intended drawing area
-	// part of the QuickDraw portÕs dirty region
+	// part of the QuickDraw portâ€™s dirty region
 	addRowSectionToDirtyRegion(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
 								inZeroBasedStartingColumnNumber, inCharacterCount);
 	
@@ -3729,7 +3727,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 									// IMPORTANT:		The source rectangle is relative to the origin of the
 									//				pixel map, whereas the destination is relative to the
 									//				graphics port.  So, although the source and destination
-									//				come from the ÒsameÓ place, the source is offset by the
+									//				come from the â€œsameâ€ place, the source is offset by the
 									//				port origin.
 									Rect	pixelMapBounds;
 									
@@ -3753,7 +3751,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 			}
 		}
 		
-		// reset these, they shouldnÕt have significance outside the above loop
+		// reset these, they shouldnâ€™t have significance outside the above loop
 		inTerminalViewPtr->screen.currentRenderedLine = -1;
 		inTerminalViewPtr->screen.currentRenderContext = nullptr;
 		
@@ -3786,7 +3784,7 @@ Terminal_ForEachLikeAttributeRunDo().
 */
 static void
 drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
-							 char const*				inLineTextBufferOrNull,
+							 UniChar const*				inLineTextBufferOrNull,
 							 UInt16						inLineTextBufferLength,
 							 Terminal_LineRef			UNUSED_ARGUMENT(inRow),
 							 UInt16						inZeroBasedStartColumnNumber,
@@ -3858,135 +3856,137 @@ static void
 drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 					 CGContextRef				inDrawingContext,
 					 Rect const*				inBoundaries,
-					 char const*				inTextBufferPtr,
-					 SInt32						inCharacterCount,
+					 UniChar const*				inTextBufferPtr,
+					 CFIndex					inCharacterCount,
 					 TerminalTextAttributes		inAttributes)
 {
-	// draw all of the text, but scan for sub-sections that could be ANSI graphics
-	SInt16			terminalFontID = 0;
-	SInt16			terminalFontSize = 0;
-	Style			terminalFontStyle = normal;
-	char const*		sourceBuffer = inTextBufferPtr; // initially...
-	char*			allocatedBuffer = nullptr;
+	// TEMPORARY: Unicode imaging is not supported yet, so the data
+	// must first be converted into Mac Roman so QuickDraw can use it
+	CFRetainRelease		oldMacRomanBufferCFString(CFStringCreateWithCharacters
+													(kCFAllocatorDefault, inTextBufferPtr, inCharacterCount),
+													true/* is retained */);
+	char const*			oldMacRomanBufferForQuickDraw = CFStringGetCStringPtr(oldMacRomanBufferCFString.returnCFStringRef(),
+																				kCFStringEncodingMacRoman);
 	
 	
-	// set up the current graphics port appropriately; the portÕs settings
-	// subsequently determine EVERYTHING: the font, style, color, and even
-	// whether or not the text should be drawn double-width or as VT graphics
-	// glyphs (this is because pseudo-font-sizes and other tricks are used
-	// to communicate terminal mode information through the QuickDraw port)
-	useTerminalTextAttributes(inTerminalViewPtr, inAttributes);
-	
-	// get current font information (used to determine what the text should
-	// look like - including Òpseudo-fontÓ and Òpseudo-font-sizeÓ values
-	// indicating VT graphics or double-width text, etc.
+	if (nullptr != oldMacRomanBufferForQuickDraw)
 	{
-		CGrafPtr	currentPort = nullptr;
-		GDHandle	currentDevice = nullptr;
+		// draw all of the text, but scan for sub-sections that could be ANSI graphics
+		SInt16				terminalFontID = 0;
+		SInt16				terminalFontSize = 0;
+		Style				terminalFontStyle = normal;
 		
 		
-		GetGWorld(&currentPort, &currentDevice);
-		terminalFontID = GetPortTextFont(currentPort);
-		terminalFontSize = GetPortTextSize(currentPort);
-		terminalFontStyle = GetPortTextFace(currentPort);
-	}
-	
-	if (false == inTerminalViewPtr->screen.currentRenderDragColors)
-	{
-		// fill background appropriately
-		EraseRect(inBoundaries);
-	}
-	else if (STYLE_CONCEALED(inAttributes))
-	{
-		allocatedBuffer = new char[inCharacterCount];
-		CPP_STD::memset(allocatedBuffer, ' ', inCharacterCount);
-		sourceBuffer = allocatedBuffer;
-	}
-	
-	// if bold or large text or graphics are being drawn, do it one character
-	// at a time; bold fonts typically increase the font spacing, and double-
-	// sized text needs to occupy twice the normal font spacing, so a regular
-	// DrawText() wonÕt work; instead, each character must be drawn
-	// individually, allowing MacTelnet to correct the pen location after
-	// each character *as if* a normal character were just rendered (this
-	// ensures that everything remains aligned with text in the same column)
-	if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
-	{
-		// top half of double-sized text; this is not rendered, but the pen should move double the distance anyway
-		Move(inCharacterCount * INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), 0);
-	}
-	else if (terminalFontSize == inTerminalViewPtr->text.font.doubleMetrics.size)
-	{
-		// bottom half of double-sized text; force the text to use
-		// twice the normal font metrics
-		register SInt16		i = 0;
-		Point				oldPen;
+		// set up the current graphics port appropriately; the portâ€™s settings
+		// subsequently determine EVERYTHING: the font, style, color, and even
+		// whether or not the text should be drawn double-width or as VT graphics
+		// glyphs (this is because pseudo-font-sizes and other tricks are used
+		// to communicate terminal mode information through the QuickDraw port)
+		useTerminalTextAttributes(inTerminalViewPtr, inAttributes);
 		
-		
-		for (i = 0; i < inCharacterCount; ++i)
+		// get current font information (used to determine what the text should
+		// look like - including â€œpseudo-fontâ€ and â€œpseudo-font-sizeâ€ values
+		// indicating VT graphics or double-width text, etc.
 		{
-			GetPen(&oldPen);
-			if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
-			{
-				// draw a graphics character
-				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, sourceBuffer[i], true/* is double width */);
-			}
-			else
-			{
-				// draw a normal character
-				DrawText(sourceBuffer, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-			}
+			CGrafPtr	currentPort = nullptr;
+			GDHandle	currentDevice = nullptr;
 			
-			MoveTo(oldPen.h + INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), oldPen.v);
+			
+			GetGWorld(&currentPort, &currentDevice);
+			terminalFontID = GetPortTextFont(currentPort);
+			terminalFontSize = GetPortTextSize(currentPort);
+			terminalFontStyle = GetPortTextFace(currentPort);
 		}
-	}
-	else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
-				!inTerminalViewPtr->text.font.isMonospaced)
-	{
-		// proportional font, or bold; force the text to use monospaced font metrics
-		register SInt16		i = 0;
-		Point				oldPen;
 		
-		
-		for (i = 0; i < inCharacterCount; ++i)
+		if (false == inTerminalViewPtr->screen.currentRenderDragColors)
 		{
-			GetPen(&oldPen);
-			if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
-			{
-				// draw a graphics character
-				drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, sourceBuffer[i], false/* is double width */);
-			}
-			else
-			{
-				// draw a normal character
-				DrawText(sourceBuffer, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-			}
-			MoveTo(oldPen.h + inTerminalViewPtr->text.font.widthPerCharacter, oldPen.v);
+			// fill background appropriately
+			EraseRect(inBoundaries);
 		}
-	}
-	else
-	{
-		// *completely* normal text (no special style, size, or character set); this is probably
-		// fastest if rendered all at once using a single QuickDraw call, and since there are no
-		// forced font metrics with normal text, this can be a lot simpler (this is also almost
-		// certainly the common case, so itÕs good if this is as efficient as possible)
-		DrawText(sourceBuffer, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
-	}
-	
-	// draw the cursor if it is in the requested region
-	{
-		Rect	intersection;
 		
-		
-		if (SectRect(inBoundaries, &inTerminalViewPtr->screen.cursor.bounds, &intersection) &&
-			(kMyCursorStateVisible == inTerminalViewPtr->screen.cursor.currentState))
+		// if bold or large text or graphics are being drawn, do it one character
+		// at a time; bold fonts typically increase the font spacing, and double-
+		// sized text needs to occupy twice the normal font spacing, so a regular
+		// DrawText() wonâ€™t work; instead, each character must be drawn
+		// individually, allowing MacTelnet to correct the pen location after
+		// each character *as if* a normal character were just rendered (this
+		// ensures that everything remains aligned with text in the same column)
+		if (terminalFontSize == kArbitraryDoubleWidthDoubleHeightPseudoFontSize)
 		{
-			RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
-			(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
+			// top half of double-sized text; this is not rendered, but the pen should move double the distance anyway
+			Move(inCharacterCount * INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), 0);
+		}
+		else if (terminalFontSize == inTerminalViewPtr->text.font.doubleMetrics.size)
+		{
+			// bottom half of double-sized text; force the text to use
+			// twice the normal font metrics
+			register SInt16		i = 0;
+			Point				oldPen;
+			
+			
+			for (i = 0; i < inCharacterCount; ++i)
+			{
+				GetPen(&oldPen);
+				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
+				{
+					// draw a graphics character
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], true/* is double width */);
+				}
+				else
+				{
+					// draw a normal character
+					DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+				}
+				
+				MoveTo(oldPen.h + INTEGER_DOUBLED(inTerminalViewPtr->text.font.widthPerCharacter), oldPen.v);
+			}
+		}
+		else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
+					!inTerminalViewPtr->text.font.isMonospaced)
+		{
+			// proportional font, or bold; force the text to use monospaced font metrics
+			register SInt16		i = 0;
+			Point				oldPen;
+			
+			
+			for (i = 0; i < inCharacterCount; ++i)
+			{
+				GetPen(&oldPen);
+				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
+				{
+					// draw a graphics character
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], false/* is double width */);
+				}
+				else
+				{
+					// draw a normal character
+					DrawText(oldMacRomanBufferForQuickDraw, i/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+				}
+				MoveTo(oldPen.h + inTerminalViewPtr->text.font.widthPerCharacter, oldPen.v);
+			}
+		}
+		else
+		{
+			// *completely* normal text (no special style, size, or character set); this is probably
+			// fastest if rendered all at once using a single QuickDraw call, and since there are no
+			// forced font metrics with normal text, this can be a lot simpler (this is also almost
+			// certainly the common case, so itâ€™s good if this is as efficient as possible)
+			DrawText(oldMacRomanBufferForQuickDraw, 0/* offset */, inCharacterCount); // draw text using current font, size, color, etc.
+		}
+		
+		// draw the cursor if it is in the requested region
+		{
+			Rect	intersection;
+			
+			
+			if (SectRect(inBoundaries, &inTerminalViewPtr->screen.cursor.bounds, &intersection) &&
+				(kMyCursorStateVisible == inTerminalViewPtr->screen.cursor.currentState))
+			{
+				RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
+				(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
+			}
 		}
 	}
-	
-	if (nullptr != allocatedBuffer) delete [] allocatedBuffer, allocatedBuffer = nullptr;
 }// drawTerminalText
 
 
@@ -4011,7 +4011,7 @@ static void
 drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 						 CGContextRef		inDrawingContext,
 						 Rect const*		inBoundaries,
-						 char				inASCII,
+						 UniChar			inUnicode,
 						 Boolean			inIsDoubleWidth)
 {
 	Rect		cellRect;
@@ -4035,8 +4035,8 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 		preservedFontID = GetPortTextFont(currentPort);
 	}
 	
-	// Since a Òpseudo-fontÓ is used to indicate VT graphics mode,
-	// the current portÕs font will NOT be correct for normal text.
+	// Since a â€œpseudo-fontâ€ is used to indicate VT graphics mode,
+	// the current portâ€™s font will NOT be correct for normal text.
 	// Many VT graphics glyphs and ALL non-graphics characters must
 	// be drawn as regular text, so here the port font is temporarily
 	// restored in case DrawText() must be called.  However, since
@@ -4068,297 +4068,227 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 	SetPt(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
 			cellTop + INTEGER_HALVED(cellBottom - cellTop));
 	
-	switch (inASCII)
+	if (gUnicodeToVT100GraphicsCharacterMap().end() !=
+		gUnicodeToVT100GraphicsCharacterMap().find(inUnicode))
 	{
-	case '`': // filled diamond
-	case 'f': // degrees
-	case 'g': // plus or minus
-	case 'y': // less than or equal to
-	case 'z': // greater than or equal to
-	case '{': // pi
-	case '|': // not equal to
-	case '}': // British pounds (currency) symbol
-		// similar characters exist in Macintosh fonts, so just draw this one nice and anti-aliased;
-		// of course, the user may not be using the same kind of font as this source file is using
-		// (presumed to be Mac Roman); therefore, text translation is attempted and, failing that, a
-		// manual, ÒuglyÓ rendering is done - that is, without the use of any available font
+		// this is in Mac Roman encoding
+		UInt8	buffer[] = { gUnicodeToVT100GraphicsCharacterMap()[inUnicode] };
+		
+		
+		DrawText(buffer, 0/* offset */, sizeof(buffer)); // draw text using current font, size, color, etc.
+	}
+	else
+	{
+		switch (inUnicode)
 		{
-			//OSStatus	error = noErr;
-			//Handle		textHandle = nullptr;
-			
-			
-		#if 0
-			// not working right now
-			if (inTerminalViewPtr->text.converterFromMacRoman != nullptr)
+		case 'a': // checkerboard
 			{
-				// translator is available; translate the Mac Roman character
-				// into whichever character or sequence of characters in the
-				// current font will render the EXPECTED Mac Roman character
-				UInt8	buffer = gASCIIToVT100GraphicsCharacterMap()[inASCII];
+				PenState	penState;
+				Pattern		checkerPat = { { 0x33, 0x33, 0xCC, 0xCC, 0x33, 0x33, 0xCC, 0xCC } }; // â€œfatâ€ checkboard pattern
 				
 				
-				error = TextTranslation_ConvertBufferToNewHandle(&buffer, sizeof(buffer),
-																	inTerminalViewPtr->text.converterFromMacRoman, &textHandle);
-				if (error != noErr) textHandle = nullptr;
+				GetPenState(&penState);
+				PenPat(&checkerPat);
+				PaintRect(&cellRect);
+				SetPenState(&penState);
 			}
-			else
+			break;
+		
+		case 'b': // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+			// draw horizontal line
+			MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+			LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+			// draw top part of arrowhead
+			LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
+					cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			// draw bottom part of arrowhead
+			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+			LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
+					cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+			// draw end line
+			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			LineTo(cellRight - lineWidth/* break from adjacent characters */, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+			break;
+		
+		case 'c': // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+			// draw vertical line
+			MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
+			LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+			// draw top part of arrowhead
+			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+			// draw bottom part of arrowhead
+			MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+			// draw lines across arrow
+			MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellCenter.v);
+			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellCenter.v);
+			break;
+		
+		case 'd': // carriage return (international symbol is an arrow pointing right to left)
+			// draw horizontal line
+			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+			LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+			// draw top part of arrowhead
+			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+					cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			// draw bottom part of arrowhead
+			MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+					cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+			break;
+		
+		case 'e': // line feed (international symbol is an arrow pointing top to bottom)
+			// draw vertical line
+			MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
+			LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+			// draw top part of arrowhead
+			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+			// draw bottom part of arrowhead
+			MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+			break;
+		
+		case 'h': // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+			// draw vertical component
+			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop);
+			LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+			// draw horizontal component
+			LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+			// draw top part of arrowhead
+			LineTo(cellCenter.h, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			// draw bottom part of arrowhead
+			MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+			LineTo(cellCenter.h, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+			break;
+		
+		case 'i': // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+			// draw vertical line
+			MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
+			LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+			// draw top part of arrowhead
+			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+			// draw bottom part of arrowhead
+			MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+			// draw end line
+			MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellBottom - lineHeight/* break from adjacent characters */);
+			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+					cellBottom - lineHeight/* break from adjacent characters */);
+			break;
+		
+		case 'j': // hook mid-top to mid-left
+			MoveTo(cellLeft, cellCenter.v);
+			LineTo(cellCenter.h, cellCenter.v);
+			LineTo(cellCenter.h, cellTop);
+			break;
+		
+		case 'k': // hook mid-left to mid-bottom
+			MoveTo(cellLeft, cellCenter.v);
+			LineTo(cellCenter.h, cellCenter.v);
+			LineTo(cellCenter.h, cellBottom);
+			break;
+		
+		case 'l': // hook mid-right to mid-bottom
+			MoveTo(cellRight, cellCenter.v);
+			LineTo(cellCenter.h, cellCenter.v);
+			LineTo(cellCenter.h, cellBottom);
+			break;
+		
+		case 'm': // hook mid-top to mid-right
+			MoveTo(cellCenter.h, cellTop);
+			LineTo(cellCenter.h, cellCenter.v);
+			LineTo(cellRight, cellCenter.v);
+			break;
+		
+		case 'n': // cross
+			MoveTo(cellCenter.h, cellTop);
+			LineTo(cellCenter.h, cellBottom);
+			MoveTo(cellLeft, cellCenter.v);
+			LineTo(cellRight, cellCenter.v);
+			break;
+		
+		case 'o': // top line
+			MoveTo(cellLeft, cellTop);
+			LineTo(cellRight, cellTop);
+			break;
+		
+		case 'p': // line between top and middle regions
+			MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			LineTo(cellRight, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+			break;
+		
+		case 'q': // middle line
+			MoveTo(cellLeft, cellCenter.v);
+			LineTo(cellRight, cellCenter.v);
+			break;
+		
+		case 'r': // line between middle and bottom regions
+			MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
+			LineTo(cellRight, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
+			break;
+		
+		case 's': // bottom line
+			MoveTo(cellLeft, cellBottom - lineHeight);
+			LineTo(cellRight, cellBottom - lineHeight);
+			break;
+		
+		case 't': // cross minus the left piece
+			MoveTo(cellCenter.h, cellTop);
+			LineTo(cellCenter.h, cellBottom);
+			MoveTo(cellCenter.h, cellCenter.v);
+			LineTo(cellRight, cellCenter.v);
+			break;
+		
+		case 'u': // cross minus the right piece
+			MoveTo(cellCenter.h, cellTop);
+			LineTo(cellCenter.h, cellBottom);
+			MoveTo(cellLeft, cellCenter.v);
+			LineTo(cellCenter.h, cellCenter.v);
+			break;
+		
+		case 'v': // cross minus the bottom piece
+			MoveTo(cellCenter.h, cellTop);
+			LineTo(cellCenter.h, cellCenter.v);
+			MoveTo(cellLeft, cellCenter.v);
+			LineTo(cellRight, cellCenter.v);
+			break;
+		
+		case 'w': // cross minus the top piece
+			MoveTo(cellCenter.h, cellCenter.v);
+			LineTo(cellCenter.h, cellBottom);
+			MoveTo(cellLeft, cellCenter.v);
+			LineTo(cellRight, cellCenter.v);
+			break;
+		
+		case 'x': // vertical line
+			MoveTo(cellCenter.h, cellTop);
+			LineTo(cellCenter.h, cellBottom);
+			break;
+		
+		case '~': // centered dot
+			MoveTo(cellCenter.h, cellCenter.v);
+			Line(0, 0);
+			break;
+		
+		default:
+			// non-graphics character
 			{
-				// canÕt translate text...that means the rendering will be
-				// incorrect, but there isnÕt much choice!
-				textHandle = nullptr;
-			}
-		#endif
-			
-			//if (textHandle != nullptr)
-			if (1)
-			{
-				// okay, it was possible to translate the desired Mac Roman
-				// character into the current font...so display it!
-				char	buffer[] = { gASCIIToVT100GraphicsCharacterMap()[inASCII] };
+				// this is in Mac Roman encoding
+				UInt8	text[] = { STATIC_CAST(inUnicode, UInt8) };
 				
 				
-				//DrawText(*textHandle, 0/* offset */, GetHandleSize(textHandle)); // draw text using current font, size, color, etc.
-				DrawText(buffer, 0/* offset */, sizeof(buffer)); // draw text using current font, size, color, etc.
-				//Memory_DisposeHandle(&textHandle);
+				DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
 			}
-			else
-			{
-				// something went wrong when trying to render the proper
-				// Mac Roman character using the current font; now, either a
-				// different font must be used or the character must be
-				// rendered in some manual way (e.g. not using fonts)
-				switch (inASCII)
-				{
-				case '`': // filled diamond
-					{
-						// draws a filled diamond, although QuickDraw makes this look kinda crappy
-						PolyHandle		diamondPolygon = OpenPoly();
-						
-						
-						MoveTo(cellLeft, cellCenter.v);
-						LineTo(cellCenter.h, cellTop);
-						LineTo(cellRight, cellCenter.v);
-						LineTo(cellCenter.h, cellBottom);
-						ClosePoly();
-						PaintPoly(diamondPolygon);
-					}
-					break;
-				
-				default:
-					// UNIMPLEMENTED - MacTelnet just fails for most characters but
-					// there is probably a more elegant way to handle these problems
-					break;
-				}
-			}
+			break;
 		}
-		break;
-	
-	case 'a': // checkerboard
-		{
-			PenState	penState;
-			Pattern		checkerPat = { { 0x33, 0x33, 0xCC, 0xCC, 0x33, 0x33, 0xCC, 0xCC } }; // ÒfatÓ checkboard pattern
-			
-			
-			GetPenState(&penState);
-			PenPat(&checkerPat);
-			PaintRect(&cellRect);
-			SetPenState(&penState);
-		}
-		break;
-	
-	case 'b': // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
-		// draw horizontal line
-		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw top part of arrowhead
-		LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
-				cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		// draw bottom part of arrowhead
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
-				cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw end line
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 'c': // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
-		// draw vertical line
-		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw bottom part of arrowhead
-		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw lines across arrow
-		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellCenter.v);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellCenter.v);
-		break;
-	
-	case 'd': // carriage return (international symbol is an arrow pointing right to left)
-		// draw horizontal line
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		// draw bottom part of arrowhead
-		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 'e': // line feed (international symbol is an arrow pointing top to bottom)
-		// draw vertical line
-		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw bottom part of arrowhead
-		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 'h': // new line (international symbol is an arrow that hooks from mid-top to mid-left)
-		// draw vertical component
-		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop);
-		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw horizontal component
-		LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		// draw top part of arrowhead
-		LineTo(cellCenter.h, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		// draw bottom part of arrowhead
-		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-		break;
-	
-	case 'i': // vertical tab (international symbol is a down-pointing arrow with a terminating line)
-		// draw vertical line
-		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		// draw top part of arrowhead
-		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw bottom part of arrowhead
-		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-		// draw end line
-		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellBottom - lineHeight/* break from adjacent characters */);
-		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-				cellBottom - lineHeight/* break from adjacent characters */);
-		break;
-	
-	case 'j': // hook mid-top to mid-left
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellTop);
-		break;
-	
-	case 'k': // hook mid-left to mid-bottom
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom);
-		break;
-	
-	case 'l': // hook mid-right to mid-bottom
-		MoveTo(cellRight, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom);
-		break;
-	
-	case 'm': // hook mid-top to mid-right
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
-		break;
-	
-	case 'n': // cross
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
-		break;
-	
-	case 'o': // top line
-		MoveTo(cellLeft, cellTop);
-		LineTo(cellRight, cellTop);
-		break;
-	
-	case 'p': // line between top and middle regions
-		MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		break;
-	
-	case 'q': // middle line
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
-		break;
-	
-	case 'r': // line between middle and bottom regions
-		MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
-		LineTo(cellRight, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
-		break;
-	
-	case 's': // bottom line
-		MoveTo(cellLeft, cellBottom - lineHeight);
-		LineTo(cellRight, cellBottom - lineHeight);
-		break;
-	
-	case 't': // cross minus the left piece
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
-		MoveTo(cellCenter.h, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
-		break;
-	
-	case 'u': // cross minus the right piece
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellCenter.h, cellCenter.v);
-		break;
-	
-	case 'v': // cross minus the bottom piece
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellCenter.v);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
-		break;
-	
-	case 'w': // cross minus the top piece
-		MoveTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom);
-		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
-		break;
-	
-	case 'x': // vertical line
-		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
-		break;
-	
-	case '~': // centered dot
-		MoveTo(cellCenter.h, cellCenter.v);
-		Line(0, 0);
-		break;
-	
-	default:
-		// non-graphics character
-		{
-			char	text[] = { inASCII };
-			
-			
-			DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-		}
-		break;
 	}
 	
 	// restore font
@@ -4403,7 +4333,7 @@ eraseSection	(TerminalViewPtr	inTerminalViewPtr,
 		colorDepth = ColorUtilities_ReturnCurrentDepth(currentPort);
 		isColor = IsPortColor(currentPort);
 		
-		// determine the lineÕs rectangle (e.g. taking into account double-sized text)
+		// determine the lineâ€™s rectangle (e.g. taking into account double-sized text)
 		widthPerCharacter = getRowCharacterWidth(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine);
 		SetRect(&rect, inLeftmostColumnToErase * widthPerCharacter,
 						inTerminalViewPtr->screen.currentRenderedLine * inTerminalViewPtr->text.font.heightPerCharacter,
@@ -4454,7 +4384,7 @@ eventNotifyForView	(TerminalViewConstPtr	inPtr,
 					 TerminalView_Event		inEvent,
 					 void*					inContextPtr)
 {
-	// invoke listener callback routines appropriately, from the specified viewÕs listener model
+	// invoke listener callback routines appropriately, from the specified viewâ€™s listener model
 	ListenerModel_NotifyListenersOfEvent(inPtr->changeListenerModel, inEvent, inContextPtr);
 }// eventNotifyForView
 
@@ -4681,7 +4611,7 @@ the other boundaries depend on the font and font size.
 This routine respects the top-half-double-height and
 bottom-half-double-height row global attributes, such
 that a double-size line is twice as big as a normal
-lineÕs boundaries.
+lineâ€™s boundaries.
 
 To convert this to coordinates local to the window,
 use screenToLocalRect().
@@ -4780,7 +4710,7 @@ other boundaries depend on the font and font size.
 This routine respects the top-half-double-height and
 bottom-half-double-height row global attributes, such
 that a double-size line is twice as big as a normal
-lineÕs boundaries.
+lineâ€™s boundaries.
 
 To convert this to coordinates local to the window,
 use screenToLocalRect().
@@ -4800,7 +4730,7 @@ getRowSectionBounds		(TerminalViewPtr	inTerminalViewPtr,
 	// first find the row bounds, as this defines two of the resulting edges
 	getRowBounds(inTerminalViewPtr, inZeroBasedRowIndex, outBoundsPtr);
 	
-	// now set the rectangleÕs left and right edges based on the requested column range
+	// now set the rectangleâ€™s left and right edges based on the requested column range
 	outBoundsPtr->left = inZeroBasedStartingColumnNumber * widthPerCharacter;
 	outBoundsPtr->right = (inZeroBasedStartingColumnNumber + inCharacterCount) * widthPerCharacter;
 }// getRowSectionBounds
@@ -4847,7 +4777,7 @@ getScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
-Returns the entry indices, into the specified screenÕs
+Returns the entry indices, into the specified screenâ€™s
 window palette, of the correct foreground and background
 colors for the specified text style attributes.
 
@@ -4872,7 +4802,7 @@ getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 	else
 	{
 		// the blinking text color is favored because MacTelnet 3.0 has
-		// ÒrealÓ bold text; therefore, if some text happens to be both
+		// â€œrealâ€ bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
 		// the text will still be recognizeable as boldface
 		if (STYLE_BLINKING(inAttributes)) fg = kTerminalView_ColorIndexBlinkingText;
@@ -4889,7 +4819,7 @@ getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 	else
 	{
 		// the blinking text color is favored because MacTelnet 3.0 has
-		// ÒrealÓ bold text; therefore, if some text happens to be both
+		// â€œrealâ€ bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
 		// the text will still be recognizeable as boldface
 		if (STYLE_BLINKING(inAttributes)) bg = kTerminalView_ColorIndexBlinkingBackground;
@@ -4897,14 +4827,14 @@ getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 		else bg = kTerminalView_ColorIndexNormalBackground;
 	}
 	
-	if (STYLE_CONCEALED(inAttributes)) fg = bg; // make ÒinvisibleÓ by using same colors for everything
+	if (STYLE_CONCEALED(inAttributes)) fg = bg; // make â€œinvisibleâ€ by using same colors for everything
 	if (outForeColorEntryPtr != nullptr) *outForeColorEntryPtr = fg;
 	if (outBackColorEntryPtr != nullptr) *outBackColorEntryPtr = bg;
 }// getScreenColorEntries
 
 
 /*!
-Returns a color from a screen windowÕs palette, given
+Returns a color from a screen windowâ€™s palette, given
 an external color specifier.
 
 (3.0)
@@ -5169,7 +5099,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 			Rect	selectionBounds;
 			
 			
-			// make the points the Òright way aroundÓ, in case the first point is
+			// make the points the â€œright way aroundâ€, in case the first point is
 			// technically to the right of or below the second point
 			sortAnchors(selectionStart, selectionPastEnd, true/* is a rectangular selection */);
 			
@@ -5198,7 +5128,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 				Rect	partialSelectionBounds;
 				
 				
-				// make the points the Òright way aroundÓ, in case the first point is
+				// make the points the â€œright way aroundâ€, in case the first point is
 				// technically to the right of or below the second point
 				sortAnchors(selectionStart, selectionPastEnd, false/* is a rectangular selection */);
 				
@@ -5253,7 +5183,7 @@ specified screen.
 
 A negative value for the row implies a cross-over into
 the scrollback buffer; 0 is the topmost row of the
-ÒmainÓ screen.
+â€œmainâ€ screen.
 
 (3.0)
 */
@@ -5313,7 +5243,7 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 	
 	if (inClickCount == 2)
 	{
-		SInt16 const				kNumberOfSpacesPerTab = 0; // zero means Òdo not substitute tabsÓ
+		SInt16 const				kNumberOfSpacesPerTab = 0; // zero means â€œdo not substitute tabsâ€
 		Terminal_LineRef			lineIterator = findRowIterator(inTerminalViewPtr, selectionStart.second);
 		Terminal_TextCopyFlags		flags = 0L;
 		char						theChar[5];
@@ -5482,7 +5412,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	Point					insetsBottomRight;
 	
 	
-	// get viewÕs boundaries, synchronize background picture with that size
+	// get viewâ€™s boundaries, synchronize background picture with that size
 	HIViewGetFrame(inHIView, &terminalViewBounds);
 	HIViewSetFrame(viewPtr->backgroundHIView, &terminalViewBounds);
 	
@@ -5630,7 +5560,7 @@ IMPORTANT:	This changes ONLY the appearance of the text,
 			it has no effect on important internal state
 			that remembers what is selected, etc.  In
 			general, you should invoke other routines to
-			change the selection ÒproperlyÓ (like
+			change the selection â€œproperlyâ€ (like
 			TerminalView_SelectVirtualRange()), and let
 			those routines use this method as a helper
 			to alter text rendering.
@@ -5654,7 +5584,7 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 	TerminalView_CellRange		orderedRange = inRange;
 	
 	
-	// require beginning point to be ÒearlierÓ than the end point; swap points if not
+	// require beginning point to be â€œearlierâ€ than the end point; swap points if not
 	sortAnchors(orderedRange.first, orderedRange.second, inTerminalViewPtr->text.selection.isRectangular);
 	
 	// modify selection attributes
@@ -5678,7 +5608,7 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 	
 	if (inRedraw)
 	{
-		// perform a boundary check, since drawSection() doesnÕt do one
+		// perform a boundary check, since drawSection() doesnâ€™t do one
 		{
 			SInt16		startColumn = 0;
 			SInt16		pastTheEndColumn = 0;
@@ -5770,7 +5700,7 @@ invalidateRowSection	(TerminalViewPtr	inTerminalViewPtr,
 
 /*!
 Marks the entire screen area for the specified
-screen as part of its windowÕs update region
+screen as part of its windowâ€™s update region
 (effectively causing the screen to be redrawn).
 
 (3.0)
@@ -5817,7 +5747,7 @@ isMonospacedFont	(FMFontFamily	inFontID)
 				thePreferredFontFamily = theSizeAndFontFamily >> 16; // high word is font family 
 				result = (thePreferredFontFamily == inFontID);
 			}
-			else result = false; // this fontÕs script isnÕt enabled
+			else result = false; // this fontâ€™s script isnâ€™t enabled
 		}
 		else doRomanTest = true;
 	}
@@ -5948,7 +5878,7 @@ mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 /*!
 Invoked by the Mac OS whenever something interesting happens
 in a Navigation Services file-capture-save-dialog attached to
-a terminal viewÕs window.
+a terminal viewâ€™s window.
 
 (3.1)
 */
@@ -5979,15 +5909,15 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				size_t	actualSize = 0L;
 				
 				
-				// get the userÕs Capture File Creator preference, if possible
+				// get the userâ€™s Capture File Creator preference, if possible
 				unless (Preferences_GetData(kPreferences_TagCaptureFileCreator,
 											sizeof(captureFileCreator), &captureFileCreator, &actualSize) ==
 						kPreferences_ResultOK)
 				{
-					captureFileCreator = 'ttxt'; // default to SimpleText if a preference canÕt be found
+					captureFileCreator = 'ttxt'; // default to SimpleText if a preference canâ€™t be found
 				}
 				
-				// create a temporary file for ÒsafeÓ saving, in addition to the userÕs requested file
+				// create a temporary file for â€œsafeâ€ saving, in addition to the userâ€™s requested file
 				error = FileSelectionDialogs_CreateOrFindUserSaveFile
 						(reply, captureFileCreator, 'TEXT', saveFile, temporaryFile);
 				if (error == noErr)
@@ -6030,7 +5960,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 							
 							error = FSClose(fileRefNum), fileRefNum = -1;
 							
-							// finally, ÒswapÓ the new file into the right place on disk
+							// finally, â€œswapâ€ the new file into the right place on disk
 							error = FSExchangeObjects(&temporaryFile, &saveFile);
 							if (noErr == error)
 							{
@@ -6159,7 +6089,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									&gPreferenceProxies.cursorBlinks, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			gPreferenceProxies.cursorBlinks = false; // assume a value, if preference canÕt be found
+			gPreferenceProxies.cursorBlinks = false; // assume a value, if preference canâ€™t be found
 		}
 		break;
 	
@@ -6169,7 +6099,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									&gPreferenceProxies.dontDimTerminals, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			gPreferenceProxies.dontDimTerminals = false; // assume a value, if preference canÕt be found
+			gPreferenceProxies.dontDimTerminals = false; // assume a value, if preference canâ€™t be found
 		}
 		break;
 	
@@ -6179,7 +6109,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									&gPreferenceProxies.notifyOfBeeps, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			gPreferenceProxies.notifyOfBeeps = false; // assume a value, if preference canÕt be found
+			gPreferenceProxies.notifyOfBeeps = false; // assume a value, if preference canâ€™t be found
 		}
 		break;
 	
@@ -6189,7 +6119,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									&gPreferenceProxies.invertSelections, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			gPreferenceProxies.invertSelections = false; // assume a value, if preference canÕt be found
+			gPreferenceProxies.invertSelections = false; // assume a value, if preference canâ€™t be found
 		}
 		break;
 	
@@ -6259,7 +6189,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 										&resizeAffectsFont, &actualSize) ==
 					kPreferences_ResultOK)
 			{
-				resizeAffectsFont = false; // assume a value, if preference canÕt be found
+				resizeAffectsFont = false; // assume a value, if preference canâ€™t be found
 			}
 			(TerminalView_Result)TerminalView_SetDisplayMode(view, (resizeAffectsFont)
 																	? kTerminalView_DisplayModeZoom
@@ -6318,7 +6248,7 @@ recalculateCachedDimensions		(TerminalViewPtr	inTerminalViewPtr)
 
 /*!
 Handles standard events for the HIObject of a terminal
-viewÕs text area.
+viewâ€™s text area.
 
 IMPORTANT:	You cannot simply add cases here to handle new
 			events...see TerminalView_Init() for the registry
@@ -6689,7 +6619,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 				// BEFORE the call to CallNextEventHandler().
 				//
 				// The drag-and-drop bit is set here, however views themselves do NOT install
-				// drag handlers currently.  They are considered ÒdumbÓ; their intelligence
+				// drag handlers currently.  They are considered â€œdumbâ€; their intelligence
 				// is added by the Session module, which attaches them to (for instance) a
 				// running Unix process.  The Session module installs events on views that
 				// handle keyboard input and drag-and-drop, however the drag and focus features
@@ -7849,7 +7779,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 
 /*!
 Receives notification whenever a monitored terminal
-screen bufferÕs video mode changes, and responds by
+screen bufferâ€™s video mode changes, and responds by
 reversing the video of the terminal view to match.
 
 (3.0)
@@ -7870,8 +7800,8 @@ receiveVideoModeChange	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 /*!
-Marks the specified terminal windowÕs contents as
-ÒdirtyÓ so that they are redrawn the next time an
+Marks the specified terminal windowâ€™s contents as
+â€œdirtyâ€ so that they are redrawn the next time an
 update event is handled.
 
 (3.0)
@@ -7909,7 +7839,7 @@ releaseRowIterator  (TerminalViewPtr	UNUSED_ARGUMENT(inTerminalViewPtr),
 
 /*!
 Returns an approximation of how many characters are
-represented by this terminal viewÕs text area.
+represented by this terminal viewâ€™s text area.
 
 (3.1)
 */
@@ -7928,7 +7858,7 @@ returnNumberOfCharacters	(TerminalViewPtr	inTerminalViewPtr)
 
 /*!
 Receives notification whenever a monitored terminal
-screen bufferÕs text changes, and responds by
+screen bufferâ€™s text changes, and responds by
 invalidating the appropriate part of the view IF
 the changed area is actually visible.  Also responds
 to scroll activity by recalculating the total size
@@ -7988,7 +7918,7 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 /*!
 Receives notification whenever a monitored terminal
-screenÕs cursor is moved to a new row or column or
+screenâ€™s cursor is moved to a new row or column or
 changes visibility, and responds by invalidating the
 current cursor rectangle.  If the cursor is moving,
 its rectangle is then changed and invalidated again.
@@ -8127,8 +8057,8 @@ setBlinkingTimerActive	(TerminalViewPtr	inTerminalViewPtr,
 
 
 /*!
-Hides or shows the cursor ÒghostÓ in the specified
-screen.  The ghost cursor is stale (it doesnÕt flash),
+Hides or shows the cursor â€œghostâ€ in the specified
+screen.  The ghost cursor is stale (it doesnâ€™t flash),
 it is used for indicating the possible new location of
 the actual terminal cursor during drags.
 
@@ -8201,7 +8131,7 @@ setCursorVisibility		(TerminalViewPtr	inTerminalViewPtr,
 
 
 /*!
-Sets the font and size for the specified screenÕs text.
+Sets the font and size for the specified screenâ€™s text.
 Pass nullptr if the font name should be ignored (and
 therefore not changed).  Pass 0 if the font size should
 not be changed.
@@ -8244,7 +8174,7 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 		}
 		if (TECCreateConverter(&inViewPtr->text.converterFromMacRoman,
 								// the following encoding must match the font used to write this source file,
-								// because the assumption is that the ÒcorrectÓ characters are in this font
+								// because the assumption is that the â€œcorrectâ€ characters are in this font
 								// and must be translated into whatever font the user actually has selected
 								kTheMacRomanTextEncoding,
 								inViewPtr->text.font.encoding) != noErr)
@@ -8328,7 +8258,7 @@ setPortScreenPort	(TerminalViewPtr	inTerminalViewPtr)
 /*!
 Changes a color the user perceives is in use; these are
 stored internally in the view data structure.  Also
-updates the palette automatically, so you donÕt have to
+updates the palette automatically, so you donâ€™t have to
 call setScreenPaletteColor() too.
 
 (3.0)
@@ -8383,12 +8313,12 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 		//       terminal window is moved.
 		if (GetWindowGreatestAreaDevice(inTerminalViewPtr->window.ref, kWindowContentRgn, &device, nullptr/* rectangle */) != noErr)
 		{
-			// if this canÕt be found, just assume the main monitor
+			// if this canâ€™t be found, just assume the main monitor
 			device = GetMainDevice();
 		}
 		
 		// create enough intermediate colors to make a reasonably
-		// smooth ÒpulsingÓ effect as text blinks; the last color
+		// smooth â€œpulsingâ€ effect as text blinks; the last color
 		// in the sequence matches the base foreground color, just
 		// for simplicity in the animation code
 		i = kNumberOfBlinkingColorStages - 1;
@@ -8407,7 +8337,7 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
-Copies a color into a screen windowÕs palette, given
+Copies a color into a screen windowâ€™s palette, given
 information on which color it should replace.
 
 Do not use this routine to change the colors a user
@@ -8466,7 +8396,7 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
 									&terminalCursorType, &actualSize) == kPreferences_ResultOK)
 		{
-			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference canÕt be found
+			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference canâ€™t be found
 		}
 	}
 	
@@ -8513,7 +8443,7 @@ wherever the terminal view happens to be.
 
 The ghost cursor is used during drags to indicate where
 the cursor would go, but is not indicative of the
-cursorÕs actual position.
+cursorâ€™s actual position.
 
 NOTE:	This routine currently anchors the cursor at the
 		edges of the screen, when in fact the better
@@ -8540,7 +8470,7 @@ setUpCursorGhost	(TerminalViewPtr	inTerminalViewPtr,
 		
 		
 		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
-		// cursor is visible - put it where itÕs supposed to be
+		// cursor is visible - put it where itâ€™s supposed to be
 		setUpCursorBounds(inTerminalViewPtr, newColumnRow.first, newColumnRow.second, &inTerminalViewPtr->screen.cursor.ghostBounds);
 	}
 	else
@@ -8614,7 +8544,7 @@ setUpScreenFontMetrics	(TerminalViewPtr	inTerminalViewPtr)
 	
 
 /*!
-Ensures that the first point given is ÒsoonerÓ in a
+Ensures that the first point given is â€œsoonerâ€ in a
 left-to-right localization than the 2nd point.  In
 other words, the two points are swapped if necessary
 to meet this condition.
@@ -8717,10 +8647,10 @@ supplyTextSelectionToDrag	(FlavorType		inType,
 Responds to a mouse-down event in a session window by
 changing the cursor to an I-beam and creating or
 extending the text selection of the specified window
-based on the userÕs use of the mouse and modifier keys.
+based on the userâ€™s use of the mouse and modifier keys.
 The window also scrolls if the user moves the mouse out
-of the boundaries of the windowÕs content area.  Make
-sure that the Òis text selectedÓ flag has a value of 1
+of the boundaries of the windowâ€™s content area.  Make
+sure that the â€œis text selectedâ€ flag has a value of 1
 when using this routine -- otherwise, autoscrolling
 screws up drawing of the text selection.
 
@@ -8770,7 +8700,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 				sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
 							inTerminalViewPtr->text.selection.isRectangular);
 			}
-			startNewSelection = false;	// in this case, DONÕT cancel the selection; shift-drag means ÒcontinueÓ
+			startNewSelection = false;	// in this case, DONâ€™T cancel the selection; shift-drag means â€œcontinueâ€
 		}
 	}
 	
@@ -8858,7 +8788,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(copySelectedText),
 									&copySelectedText, &actualSize) == kPreferences_ResultOK)
 		{
-			copySelectedText = false; // assume text isnÕt automatically copied, if preference canÕt be found
+			copySelectedText = false; // assume text isnâ€™t automatically copied, if preference canâ€™t be found
 		}
 		
 		if (copySelectedText) Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodTable);
@@ -8870,7 +8800,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 Sets the QuickDraw background color and pattern settings
 (and ONLY those settings) of the current port, based on
 the requested attributes and the active state of the
-terminalÕs container view.
+terminalâ€™s container view.
 
 If "inUseForegroundColor" is set to "true", the appropriate
 text color will also be set up; otherwise, only the
@@ -8920,7 +8850,7 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		getScreenPaletteColor(inTerminalViewPtr, STYLE_INVERSE_VIDEO(inAttributes) ? fg : bg, &colorRGB);
 		RGBBackColor(&colorRGB);
 		
-		// ÒdarkenÓ the colors if text is selected, but only in the foreground;
+		// â€œdarkenâ€ the colors if text is selected, but only in the foreground;
 		// in the background, the view renders an outline of the selection, so
 		// selected text should NOT have any special appearance in that case
 		if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
@@ -8938,7 +8868,7 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 			// dim screen
 			UseInactiveColors();
 			
-			// for text that is not selected, do an ÒiPhotoesqueÓ selection where
+			// for text that is not selected, do an â€œiPhotoesqueâ€ selection where
 			// the selection appears darker than its surrounding text; this also
 			// causes the selection to look dark (appropriate because it is draggable)
 			unless ((!inTerminalViewPtr->text.selection.exists) || (gPreferenceProxies.invertSelections))
@@ -8948,7 +8878,7 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		}
 		
 		// finally, check the foreground and background colors; do not allow
-		// them to be identical unless ÒconcealedÓ is the style (e.g. perhaps
+		// them to be identical unless â€œconcealedâ€ is the style (e.g. perhaps
 		// text is ANSI white and the background is white; that's invisible!)
 		unless (STYLE_CONCEALED(inAttributes))
 		{
@@ -9007,7 +8937,7 @@ IMPORTANT:	This is ONLY for use by drawTerminalText(),
 			where normal QuickDraw calls could render
 			terminal text as expected.  Use only the
 			drawTerminalText() method for rendering text
-			and graphics, thatÕs what itÕs there for!
+			and graphics, thatâ€™s what itâ€™s there for!
 
 (3.0)
 */
@@ -9032,12 +8962,12 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 		// a specific ID that tells the renderer to do graphics.
 		// The font is not actually used, it is just a marker so
 		// that the renderer knows it is in graphics mode.  In most
-		// cases, the terminalÕs regular font is used instead.
+		// cases, the terminalâ€™s regular font is used instead.
 		if (STYLE_USE_VT_GRAPHICS(inAttributes)) TextFont(kArbitraryVTGraphicsPseudoFontID);
 		else TextFontByName(inTerminalViewPtr->text.font.familyName);
 		
-		// set text size, examining Òdouble sizeÓ bits
-		// NOTE: thereÕs no real reason this should have to be checked
+		// set text size, examining â€œdouble sizeâ€ bits
+		// NOTE: thereâ€™s no real reason this should have to be checked
 		//       here, EVERY time text is rendered; it could eventually
 		//       be set somewhere else, e.g. whenever the attribute bits
 		//       or font size change, a rendering size could be updated
@@ -9085,7 +9015,7 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 			{
 				TextFace(fontFace | bold);
 				
-				// VT graphics use the pen size when rendering, so that should be ÒboldedÓ as well
+				// VT graphics use the pen size when rendering, so that should be â€œboldedâ€ as well
 				{
 					PenState	penState;
 					
@@ -9152,10 +9082,10 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 /*!
 This method handles bell signals in specific terminal
 windows.  If the user has global bell sounding turned
-off (Òvisual bellÓ), no bell is heard, but the window
+off (â€œvisual bellâ€), no bell is heard, but the window
 is flashed.  If the specified window is not in front
 at the time this method is invoked, the window will
-flash regardless of the Òvisual bellÓ setting.  If
+flash regardless of the â€œvisual bellâ€ setting.  If
 MacTelnet is suspended when the bell occurs, and the
 user has notification preferences set, MacTelnet will
 post a notification event.
@@ -9190,7 +9120,7 @@ visualBell	(TerminalViewRef	inView)
 								&visualPreference, &actualSize) ==
 			kPreferences_ResultOK)
 	{
-		visualPreference = false; // assume audible bell, if preference canÕt be found
+		visualPreference = false; // assume audible bell, if preference canâ€™t be found
 	}
 	visual = (visualPreference || (!IsWindowHilited(viewPtr->window.ref)));
 	

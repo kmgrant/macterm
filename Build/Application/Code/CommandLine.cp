@@ -909,17 +909,15 @@ getTextAsCFString ()
 	lineIterator = Terminal_NewMainScreenLineIterator(gCommandLineTerminalScreen, 0/* row */);
 	if (nullptr != lineIterator)
 	{
-		char const*		startPtr = nullptr;
-		char const*		pastEndPtr = nullptr;
+		UniChar const*	startPtr = nullptr;
+		UniChar const*	pastEndPtr = nullptr;
 		
 		
 		getResult = Terminal_GetLine(gCommandLineTerminalScreen, lineIterator/* which row */,
 										startPtr, pastEndPtr);
 		if (kTerminal_ResultOK == getResult)
 		{
-			result = CFStringCreateWithBytes(kCFAllocatorDefault, REINTERPRET_CAST(startPtr, UInt8 const*),
-												pastEndPtr - startPtr, kTextEncodingMacRoman/* TEMPORARY */,
-												false/* is external representation */);
+			result = CFStringCreateWithCharacters(kCFAllocatorDefault, startPtr, pastEndPtr - startPtr);
 		}
 		Terminal_DisposeLineIterator(&lineIterator);
 	}

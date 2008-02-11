@@ -34,6 +34,7 @@
 // standard-C includes
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 // standard-C++ includes
@@ -245,8 +246,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Callbacks
 
-struct My_ScreenBuffer;						// declared here because the callback declarations use it (defined later)
-typedef std::string		My_TextVector;		// defined here because the callback declarations use it
+struct My_ScreenBuffer;		// declared here because the callback declarations use it (defined later)
 
 /*!
 Emulator State Determinant Routine
@@ -351,13 +351,13 @@ you changed the text.  Otherwise, return "false" if you
 leave the text alone.
 */
 typedef void (*My_ScreenLineOperationProcPtr)	(My_ScreenBuffer*		inScreen,
-												 My_TextVector const&	inLineTextBuffer,
+												 CFMutableStringRef		inLineTextBuffer,
 												 UInt16					inZeroBasedRowNumberOrNegativeForScrollbackRow,
 												 void*					inContextPtr);
 static inline void
 invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 								 My_ScreenBuffer*				inScreen,
-								 My_TextVector const&			inLineTextBuffer,
+								 CFMutableStringRef				inLineTextBuffer,
 								 UInt16							inZeroBasedRowNumberRelativeToStartOfIterationRange,
 								 void*							inContextPtr)
 {
@@ -366,6 +366,7 @@ invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 
 #pragma mark Types
 
+typedef UniChar*								My_TextVector;
 typedef std::map< UTF8Char, std::string >		My_PrintableByUTF8Char;
 
 typedef std::vector< char >						My_TabStopList;
@@ -426,33 +427,29 @@ NOTE:	Traditionally NCSA Telnet has used bits to
 */
 struct My_ScreenBufferLine
 {
-	My_TextVector				textVector;			//!< where characters exist
+	My_TextVector				textVectorBegin;	//!< where characters exist
+	My_TextVector				textVectorEnd;		//!< for convenience; past-the-end of this buffer
+	size_t						textVectorSize;		//!< for convenience; size of buffer
+	CFRetainRelease				textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
+													//!  so the buffer can be manipulated directly if desired
 	My_TextAttributesList		attributeVector;	//!< where character attributes exist
 	TerminalTextAttributes		globalAttributes;   //!< attributes that apply to every character (e.g. double-sized text)
 	
-	My_ScreenBufferLine ()
-	:
-	textVector(kMy_NumberOfCharactersPerLineMaximum, ' '),
-	attributeVector(kMy_NumberOfCharactersPerLineMaximum),
-	globalAttributes(kTerminalTextAttributesAllOff)
-	{
-		structureInitialize();
-	}
+	My_ScreenBufferLine ();
+	~My_ScreenBufferLine ();
+	
+	My_ScreenBufferLine (My_ScreenBufferLine const&);
+	
+	My_ScreenBufferLine&
+	operator = (My_ScreenBufferLine const&);
 	
 	bool
-	operator == (My_ScreenBufferLine const&  inLine)
-	const
-	{
-		return (&inLine == this);
-	}
+	operator == (My_ScreenBufferLine const&  inLine) const;
 	
 	void
-	structureInitialize ()
-	{
-		std::fill(textVector.begin(), textVector.end(), ' ');
-		std::fill(attributeVector.begin(), attributeVector.end(), kTerminalTextAttributesAllOff);
-		globalAttributes = kTerminalTextAttributesAllOff;
-	}
+	structureInitialize ();
+
+private:
 };
 typedef std::list< My_ScreenBufferLine >		My_ScreenBufferLineList;
 typedef My_ScreenBufferLineList::size_type		My_ScreenRowIndex;
@@ -839,9 +836,8 @@ public:
 
 #pragma mark Internal Method Prototypes
 
-static void						addScreenLineSize						(My_ScreenBufferPtr, My_TextVector const&, UInt16, void*);
-static void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, My_TextVector const&, UInt16, void*);
-static void						appendScreenLineToHandle				(My_ScreenBufferPtr, My_TextVector const&, UInt16, void*);
+static void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
+static void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 static void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
 static void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr);
 static void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr);
@@ -1501,22 +1497,23 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 	else if (iteratorPtr == nullptr) result = kTerminal_ResultInvalidIterator;
 	else
 	{
-		UInt16		endColumn = (inZeroBasedEndColumnOrNegativeForLastColumn < 0)
-									? iteratorPtr->rowIterator->textVector.size() - 1
-									: inZeroBasedEndColumnOrNegativeForLastColumn;
+		CFIndex const	kTextVectorSize = CFStringGetLength(iteratorPtr->rowIterator->textCFString.returnCFMutableStringRef());
+		UInt16			endColumn = (inZeroBasedEndColumnOrNegativeForLastColumn < 0)
+										? kTextVectorSize - 1
+										: inZeroBasedEndColumnOrNegativeForLastColumn;
 		
 		
-		if (endColumn >= iteratorPtr->rowIterator->textVector.size())
+		if (endColumn >= kTextVectorSize)
 		{
 			result = kTerminal_ResultParameterError;
 		}
 		else
 		{
-			My_TextVector::iterator		textStartIter;
-			SInt32						copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
+			My_TextVector	textStartIter = nullptr;
+			SInt32			copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
 			
 			
-			textStartIter = iteratorPtr->rowIterator->textVector.begin();
+			textStartIter = iteratorPtr->rowIterator->textVectorBegin;
 			std::advance(textStartIter, inZeroBasedStartColumn);
 			(char*)whitespaceSensitiveCopy(textStartIter, copyLength, outBuffer, copyLength,
 											&copyLength/* returned actual length */,
@@ -1669,10 +1666,10 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 				// copy another line into the output buffer, replacing
 				// spaces with tabs as needed, omitting trailing whitespace
 				{
-					My_TextVector::iterator		textStartIter;
+					My_TextVector	textStartIter = nullptr;
 					
 					
-					textStartIter = currentLine->textVector.begin();
+					textStartIter = currentLine->textVectorBegin;
 					std::advance(textStartIter, currentX);
 					destPtr = whitespaceSensitiveCopy(textStartIter, lineLength/* source length */,
 														destPtr/* destination start */,
@@ -1785,31 +1782,36 @@ Terminal_CreateContentsAEDesc	(TerminalScreenRef		inRef,
 								 AEDesc*				outDescPtr)
 {
 	OSStatus	result = noErr;
-	size_t		totalSize = 0L;
+	CFIndex		totalLength = 0L;
 	
 	
-	if (kTerminal_ResultOK != forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider, addScreenLineSize, &totalSize))
+	if (kTerminal_ResultOK != forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider, addScreenLineLength, &totalLength))
 	{
 		result = memFullErr;
 	}
 	else
 	{
-		Handle		handle = nullptr;
+		UniChar*			buffer = new UniChar[totalLength];
+		CFRetainRelease		mutableCFString(CFStringCreateMutableWithExternalCharactersNoCopy
+											(kCFAllocatorDefault, buffer, totalLength, totalLength/* capacity */,
+												kCFAllocatorNull/* reallocator */),
+											true/* is retained */);
 		
 		
-		handle = Memory_NewHandle(totalSize);
-		if (handle == nullptr) result = memFullErr;
+		if (false == mutableCFString.exists()) result = memFullErr;
 		else
 		{
 			if (kTerminal_ResultOK != forEachLineDo(inRef, inStartRow, inNumberOfRowsToConsider,
-													appendScreenLineToHandle, &handle))
+													appendScreenLineRawToCFString, mutableCFString.returnCFMutableStringRef()))
 			{
 				// No data?  Out of memory!
 				result = memFullErr;
 			}
-			else result = AECreateDesc(typeChar, (Ptr)*handle, GetHandleSize(handle), outDescPtr);
-			Memory_DisposeHandle(&handle);
+			else result = AECreateDesc(typeUnicodeText, buffer,
+										CFStringGetLength(mutableCFString.returnCFMutableStringRef()) * sizeof(UniChar),
+										outDescPtr);
 		}
+		delete [] buffer;
 	}
 	
 	return result;
@@ -2676,20 +2678,20 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 	{
 		// need to search line for style chunks
 		My_ScreenBufferLineList::iterator		lineIterator = iteratorPtr->rowIterator;
-		My_TextVector::iterator					textIterator;
+		My_TextVector							textIterator = nullptr;
 		My_TextAttributesList::const_iterator	attrIterator = lineIterator->attributeVector.begin();
 		TerminalTextAttributes					previousAttributes = 0;
 		TerminalTextAttributes					currentAttributes = 0;
 		SInt16									runStartCharacterIndex = 0;
 		SInt16									characterIndex = 0;
-		My_TextVector::difference_type			styleRunLength = 0;
+		size_t									styleRunLength = 0;
 		
 		
 	#if 0
 		// DEBUGGING ONLY: if you suspect a bug in the incremental loop below,
 		// try asking the entire line to be drawn without formatting, first
-		InvokeScreenRunOperationProc(inDoWhat, inRef, lineIterator->textVector.c_str()/* starting point */,
-										lineIterator->textVector.size()/* length */,
+		InvokeScreenRunOperationProc(inDoWhat, inRef, lineIterator->textVectorBegin/* starting point */,
+										lineIterator->textVectorSize/* length */,
 										inStartRow, 0/* zero-based start column */,
 										lineIterator->globalAttributes, inContextPtr);
 	#endif
@@ -2697,16 +2699,16 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		// TEMPORARY - HIGHLY inefficient to search here, need to change this into a cache
 		//             (in fact, attribute bit arrays can probably be completely replaced by
 		//             style runs at some point in the future)
-		assert(lineIterator->textVector.c_str() != nullptr);
-		for (textIterator = lineIterator->textVector.begin(),
+		assert(nullptr != lineIterator->textVectorBegin);
+		for (textIterator = lineIterator->textVectorBegin,
 					attrIterator = lineIterator->attributeVector.begin();
-				(textIterator != lineIterator->textVector.end()) &&
+				(textIterator != lineIterator->textVectorEnd) &&
 					(attrIterator != lineIterator->attributeVector.end());
 				++textIterator, ++attrIterator, ++characterIndex)
 		{
 			currentAttributes = *attrIterator;
 			if ((currentAttributes != previousAttributes) ||
-				(characterIndex == STATIC_CAST(lineIterator->textVector.size() - 1, SInt16)) ||
+				(characterIndex == STATIC_CAST(lineIterator->textVectorSize - 1, SInt16)) ||
 				(characterIndex == STATIC_CAST(lineIterator->attributeVector.size() - 1, SInt16)))
 			{
 				styleRunLength = characterIndex - runStartCharacterIndex;
@@ -2714,7 +2716,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 				// found new style run; so handle the previous run
 				if (styleRunLength > 0)
 				{
-					Terminal_InvokeScreenRunProc(inDoWhat, inRef, lineIterator->textVector.c_str() + runStartCharacterIndex/* starting point */,
+					Terminal_InvokeScreenRunProc(inDoWhat, inRef, lineIterator->textVectorBegin + runStartCharacterIndex/* starting point */,
 													styleRunLength/* length */, inStartRow,
 													runStartCharacterIndex/* zero-based start column */,
 													previousAttributes | lineIterator->globalAttributes, inContextPtr);
@@ -2727,9 +2729,9 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 		}
 		
 		// ask that the remainder of the line be handled as if it were blank
-		if (textIterator != lineIterator->textVector.end())
+		if (textIterator != lineIterator->textVectorEnd)
 		{
-			styleRunLength = std::distance(textIterator, lineIterator->textVector.end());
+			styleRunLength = std::distance(textIterator, lineIterator->textVectorEnd);
 			
 			// found new style run; so handle the previous run
 			if (styleRunLength > 0)
@@ -2802,8 +2804,8 @@ if the specified row reference is invalid
 Terminal_Result
 Terminal_GetLine	(TerminalScreenRef		inScreen,
 					 Terminal_LineRef		inRow,
-					 char const*&			outPossibleReferenceStart,
-					 char const*&			outPossibleReferencePastEnd)
+					 UniChar const*&		outPossibleReferenceStart,
+					 UniChar const*&		outPossibleReferencePastEnd)
 {
 	return Terminal_GetLineRange(inScreen, inRow, 0/* first column */, -1/* last column; negative means “very end” */,
 									outPossibleReferenceStart, outPossibleReferencePastEnd);
@@ -2851,8 +2853,8 @@ Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 						 Terminal_LineRef		inRow,
 						 UInt16					inZeroBasedStartColumn,
 						 SInt16					inZeroBasedPastEndColumnOrNegativeForLastColumn,
-						 char const*&			outReferenceStart,
-						 char const*&			outReferencePastEnd)
+						 UniChar const*&		outReferenceStart,
+						 UniChar const*&		outReferencePastEnd)
 {
 	Terminal_Result			result = kTerminal_ResultParameterError;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
@@ -2867,18 +2869,18 @@ Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 	else
 	{
 		UInt16 const	kPastEndColumn = (inZeroBasedPastEndColumnOrNegativeForLastColumn < 0)
-											? iteratorPtr->rowIterator->textVector.size()
+											? iteratorPtr->rowIterator->textVectorSize
 											: inZeroBasedPastEndColumnOrNegativeForLastColumn;
 		
 		
-		if (kPastEndColumn > iteratorPtr->rowIterator->textVector.size())
+		if (kPastEndColumn > iteratorPtr->rowIterator->textVectorSize)
 		{
 			result = kTerminal_ResultParameterError;
 		}
 		else
 		{
-			outReferenceStart = iteratorPtr->rowIterator->textVector.c_str() + inZeroBasedStartColumn;
-			outReferencePastEnd = iteratorPtr->rowIterator->textVector.c_str() + kPastEndColumn;
+			outReferenceStart = iteratorPtr->rowIterator->textVectorBegin + inZeroBasedStartColumn;
+			outReferencePastEnd = iteratorPtr->rowIterator->textVectorBegin + kPastEndColumn;
 			result = kTerminal_ResultOK;
 		}
 	}
@@ -3458,7 +3460,6 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		typedef std::vector< CFStringRef >	BufferList;
 		UInt16 const		kNumberOfScrollbackRows = Terminal_ReturnInvisibleRowCount(inRef);
 		UInt16 const		kNumberOfVisibleRows = Terminal_ReturnRowCount(inRef);
-		UInt16 const		kNumberOfColumns = Terminal_ReturnAllocatedColumnCount();
 		Terminal_Result		iterationResult = kTerminal_ResultOK;
 		BufferList			buffersToSearch;
 		CFRetainRelease		searchedScrollbackBuffer;
@@ -3480,7 +3481,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		{
 			CFRetainRelease*		retainerPtr = nullptr;
 			UInt16					numberOfRows = 0;
-			size_t					stringSize = 0;
+			CFIndex					stringLength = 0;
 			CFMutableStringRef		mutableCFString = nullptr;
 			Terminal_LineRef		lineIterator = nullptr;
 			
@@ -3492,7 +3493,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			// configure; also find the appropriate buffer size and starting iterator
 			retainerPtr = &searchedScreenBuffer;
 			numberOfRows = kNumberOfVisibleRows;
-			stringSize = 0;
+			stringLength = 0;
 			lineIterator = Terminal_NewMainScreenLineIterator(inRef, 0);
 			
 			// note: this block is generic and the same for scrollback and screen
@@ -3500,12 +3501,12 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			if (nullptr != lineIterator)
 			{
 				// note that the iterator is not invalidated by this loop
-				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineSize, &stringSize);
+				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineLength, &stringLength);
 				assert(kTerminal_ResultParameterError != iterationResult);
 			}
-			if (0 != stringSize)
+			if (0 != stringLength)
 			{
-				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringSize);
+				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringLength);
 				retainerPtr->setCFMutableStringRef(mutableCFString, true/* is retained */);
 				if (false == retainerPtr->exists())
 				{
@@ -3532,7 +3533,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			// configure; also find the appropriate buffer size and starting iterator
 			retainerPtr = &searchedScrollbackBuffer;
 			numberOfRows = kNumberOfScrollbackRows;
-			stringSize = 0;
+			stringLength = 0;
 			lineIterator = Terminal_NewScrollbackLineIterator(inRef, 0);
 			
 			// note: this block is generic and the same for scrollback and screen
@@ -3540,12 +3541,12 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			if (nullptr != lineIterator)
 			{
 				// note that the iterator is not invalidated by this loop
-				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineSize, &stringSize);
+				iterationResult = forEachLineDo(inRef, lineIterator, numberOfRows, addScreenLineLength, &stringLength);
 				assert(kTerminal_ResultParameterError != iterationResult);
 			}
-			if (0 != stringSize)
+			if (0 != stringLength)
 			{
-				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringSize);
+				mutableCFString = CFStringCreateMutable(kCFAllocatorDefault, stringLength);
 				retainerPtr->setCFMutableStringRef(mutableCFString, true/* is retained */);
 				if (false == retainerPtr->exists())
 				{
@@ -4232,6 +4233,124 @@ My_ScreenBuffer::
 	TerminalSpeaker_Dispose(&this->speaker);
 	ListenerModel_Dispose(&this->changeListenerModel);
 }// My_ScreenBuffer destructor
+
+
+/*!
+Creates a new screen buffer line.
+
+(3.1)
+*/
+My_ScreenBufferLine::
+My_ScreenBufferLine ()
+:
+textVectorBegin(REINTERPRET_CAST(std::malloc(kMy_NumberOfCharactersPerLineMaximum * sizeof(UniChar)), UniChar*)),
+textVectorEnd(textVectorBegin + kMy_NumberOfCharactersPerLineMaximum),
+textVectorSize(textVectorEnd - textVectorBegin),
+textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
+				(kCFAllocatorDefault, textVectorBegin, kMy_NumberOfCharactersPerLineMaximum,
+					kMy_NumberOfCharactersPerLineMaximum/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
+				true/* is retained */),
+attributeVector(kMy_NumberOfCharactersPerLineMaximum),
+globalAttributes(kTerminalTextAttributesAllOff)
+{
+	assert(textCFString.exists());
+	structureInitialize();
+}// My_ScreenBufferLine constructor
+
+
+/*!
+Creates a new screen buffer line by copying an
+existing one.
+
+(3.1)
+*/
+My_ScreenBufferLine::
+My_ScreenBufferLine	(My_ScreenBufferLine const&		inCopy)
+:
+textVectorBegin(REINTERPRET_CAST(std::malloc(kMy_NumberOfCharactersPerLineMaximum * sizeof(UniChar)), UniChar*)),
+textVectorEnd(textVectorBegin + kMy_NumberOfCharactersPerLineMaximum),
+textVectorSize(textVectorEnd - textVectorBegin),
+textCFString(CFStringCreateMutableWithExternalCharactersNoCopy
+				(kCFAllocatorDefault, textVectorBegin, kMy_NumberOfCharactersPerLineMaximum,
+					kMy_NumberOfCharactersPerLineMaximum/* capacity */, kCFAllocatorMalloc/* reallocator/deallocator */),
+				true/* is retained */),
+attributeVector(inCopy.attributeVector),
+globalAttributes(inCopy.globalAttributes)
+{
+	assert(textCFString.exists());
+	
+	// it is important for the local CFMutableStringRef to have its own
+	// internal buffer, which is why it was allocated separately and
+	// is being copied directly below
+	std::copy(inCopy.textVectorBegin, inCopy.textVectorEnd, this->textVectorBegin);
+}// My_ScreenBufferLine copy constructor
+
+
+/*!
+Disposes of a screen buffer line.
+
+(3.1)
+*/
+My_ScreenBufferLine::
+~My_ScreenBufferLine ()
+{
+}// My_ScreenBufferLine destructor
+
+
+/*!
+Reinitializes a screen buffer line from a
+different one.
+
+(3.1)
+*/
+My_ScreenBufferLine&
+My_ScreenBufferLine::
+operator =	(My_ScreenBufferLine const&		inCopy)
+{
+	if (this != &inCopy)
+	{
+		this->attributeVector = inCopy.attributeVector;
+		this->globalAttributes = inCopy.globalAttributes;
+		
+		// since the CFMutableStringRef uses the internal buffer, overwriting
+		// the buffer contents will implicitly update the CFStringRef as well;
+		// also, since the lines are all the same size, there is no need to
+		// copy the start/end and size information
+		std::copy(inCopy.textVectorBegin, inCopy.textVectorEnd, this->textVectorBegin);
+	}
+	return *this;
+}// My_ScreenBufferLine::operator =
+
+
+/*!
+Returns true only if the specified line is considered
+equal to this line.
+
+(3.1)
+*/
+bool
+My_ScreenBufferLine::
+operator == (My_ScreenBufferLine const&  inLine)
+const
+{
+	return (&inLine == this);
+}// My_ScreenBufferLine::operator ==
+
+
+/*!
+Resets a line to its initial state (clearing all text and
+removing attribute bits).
+
+(3.1)
+*/
+void
+My_ScreenBufferLine::
+structureInitialize ()
+{
+	std::fill(textVectorBegin, textVectorEnd, ' ');
+	std::fill(attributeVector.begin(), attributeVector.end(), kTerminalTextAttributesAllOff);
+	globalAttributes = kTerminalTextAttributesAllOff;
+}// My_ScreenBufferLine::structureInitialize
 
 
 /*!
@@ -6192,9 +6311,9 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 
 /*!
 A method of standard My_ScreenLineOperationProcPtr form,
-this routine adds the data size of the specified line text
-buffer to an overall sum, pointed to by "inoutSizePtr"
-(assumed to be a size_t*).
+this routine adds the length of the specified line of
+text to an overall sum, pointed to by "inoutLengthPtr"
+(assumed to be a CFIndex*).
 
 Since this operation never modifies the buffer, "false"
 is always returned.
@@ -6202,16 +6321,16 @@ is always returned.
 (3.0)
 */
 static void
-addScreenLineSize		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
-						 My_TextVector const&	inLineTextBuffer,
+addScreenLineLength		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
+						 CFMutableStringRef		inLineTextBuffer,
 						 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
-						 void*					inoutSizePtr)
+						 void*					inoutLengthPtr)
 {
-	size_t*		sumPtr = REINTERPRET_CAST(inoutSizePtr, size_t*);
+	CFIndex*	sumPtr = REINTERPRET_CAST(inoutLengthPtr, CFIndex*);
 	
 	
-	(*sumPtr) += (inLineTextBuffer.size() + 1/* for newline */) * sizeof(char);
-}// addScreenLineSize
+	(*sumPtr) += (CFStringGetLength(inLineTextBuffer) + 1/* for newline */);
+}// addScreenLineLength
 
 
 /*!
@@ -6220,9 +6339,8 @@ this routine adds the data from the specified line text
 buffer to a CFMutableStringRef, pointed to by
 "inoutCFMutableStringRef".
 
-This is a “raw” append; unlike appendScreenLineToHandle(),
-there is no new-line or other delimiter between appended
-lines.
+This is a “raw” append, there is no new-line or other
+delimiter between appended lines.
 
 Currently, this routine is somewhat naïve, but in the
 future it will do its best to express the actual rendered
@@ -6232,42 +6350,15 @@ content of the line in Unicode.
 */
 static void
 appendScreenLineRawToCFString	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
-								 My_TextVector const&	inLineTextBuffer,
+								 CFMutableStringRef		inLineTextBuffer,
 								 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
 								 void*					inoutCFMutableStringRef)
 {
 	CFMutableStringRef	mutableCFString = REINTERPRET_CAST(inoutCFMutableStringRef, CFMutableStringRef);
 	
 	
-	// TEMPORARY: This is currently done lazily, until the screen buffer is
-	// internally converted to use more a expressive text encoding.
-	CFStringAppendCString(mutableCFString, inLineTextBuffer.c_str(), kCFStringEncodingMacRoman); // TEMPORARY: encoding is unspecified!
+	CFStringAppend(mutableCFString, inLineTextBuffer);
 }// appendScreenLineRawToCFString
-
-
-/*!
-A method of standard My_ScreenLineOperationProcPtr form,
-this routine adds the data from the specified line text
-buffer to a handle, pointed to by "inoutHandlePtr"
-(assumed to be a Handle*).
-
-Deprecated; use appendScreenLineToCFString() instead.
-
-(3.0)
-*/
-static void
-appendScreenLineToHandle	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
-							 My_TextVector const&	inLineTextBuffer,
-							 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
-							 void*					inoutHandlePtr)
-{
-	Handle const*	handlePtr = REINTERPRET_CAST(inoutHandlePtr, Handle const*);
-	char const		newline = '\n';
-	
-	
-	PtrAndHand(inLineTextBuffer.c_str(), *handlePtr, inLineTextBuffer.size());
-	PtrAndHand(&newline, *handlePtr, sizeof(newline));
-}// appendScreenLineToHandle
 
 
 /*!
@@ -6279,7 +6370,7 @@ position to the end of the line.
 static void
 bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
 {
-	My_TextVector::iterator				textIterator;
+	My_TextVector						textIterator = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
 	My_ScreenBufferLineList::iterator	cursorLineIterator;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
@@ -6304,11 +6395,11 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
 	// clear out screen line
 	attrIterator = cursorLineIterator->attributeVector.begin();
 	std::advance(attrIterator, postWrapCursorX);
-	textIterator = cursorLineIterator->textVector.begin();
+	textIterator = cursorLineIterator->textVectorBegin;
 	std::advance(textIterator, postWrapCursorX);
 	std::fill(attrIterator, cursorLineIterator->attributeVector.end(),
 				cursorLineIterator->globalAttributes);
-	std::fill(textIterator, cursorLineIterator->textVector.end(), ' ');
+	std::fill(textIterator, cursorLineIterator->textVectorEnd, ' ');
 	
 	// add the remainder of the row to the text-change region;
 	// this should trigger things like Terminal View updates
@@ -6473,7 +6564,7 @@ bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr  inDataPtr)
 	locateCursorLine(inDataPtr, cursorLineIterator);
 	std::fill_n(cursorLineIterator->attributeVector.begin(), fillLength,
 				cursorLineIterator->globalAttributes);
-	std::fill_n(cursorLineIterator->textVector.begin(), fillLength, ' ');
+	std::fill_n(cursorLineIterator->textVectorBegin, fillLength, ' ');
 	
 	// add the first part of the row to the text-change region;
 	// this should trigger things like Terminal View updates
@@ -6529,7 +6620,7 @@ bufferEraseLineWithUpdate		(My_ScreenBufferPtr		inDataPtr,
 	std::fill(cursorLineIterator->attributeVector.begin(),
 				cursorLineIterator->attributeVector.end(),
 				cursorLineIterator->globalAttributes);
-	std::fill(cursorLineIterator->textVector.begin(), cursorLineIterator->textVector.end(), ' ');
+	std::fill(cursorLineIterator->textVectorBegin, cursorLineIterator->textVectorEnd, ' ');
 	
 	// add the entire row contents to the text-change region;
 	// this should trigger things like Terminal View updates
@@ -6629,7 +6720,7 @@ bufferEraseWithoutUpdate	(My_ScreenBufferPtr		inDataPtr)
 	{
 		std::fill(lineIterator->attributeVector.begin(), lineIterator->attributeVector.end(),
 					kTerminalTextAttributesAllOff);
-		std::fill(lineIterator->textVector.begin(), lineIterator->textVector.end(), ' ');
+		std::fill(lineIterator->textVectorBegin, lineIterator->textVectorEnd, ' ');
 	}
 }// bufferEraseWithoutUpdate
 
@@ -6648,8 +6739,8 @@ bufferInsertBlanksAtCursorColumn	(My_ScreenBufferPtr	inDataPtr,
 {
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_TextVector::iterator				textIterator;
-	My_TextVector::iterator				firstCharPastInsertedRangeIterator;
+	My_TextVector						textIterator = nullptr;
+	My_TextVector						firstCharPastInsertedRangeIterator = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
 	My_TextAttributesList::iterator		firstAttrPastInsertedRangeIterator;
 	My_ScreenBufferLineList::iterator	cursorLineIterator;
@@ -6664,7 +6755,7 @@ bufferInsertBlanksAtCursorColumn	(My_ScreenBufferPtr	inDataPtr,
 	std::advance(attrIterator, 1 + postWrapCursorX);
 	firstAttrPastInsertedRangeIterator = attrIterator;
 	std::advance(firstAttrPastInsertedRangeIterator, inNumberOfBlankCharactersToInsert);
-	textIterator = cursorLineIterator->textVector.begin();
+	textIterator = cursorLineIterator->textVectorBegin;
 	std::advance(textIterator, 1 + postWrapCursorX);
 	firstCharPastInsertedRangeIterator = textIterator;
 	std::advance(firstCharPastInsertedRangeIterator, inNumberOfBlankCharactersToInsert);
@@ -6673,7 +6764,7 @@ bufferInsertBlanksAtCursorColumn	(My_ScreenBufferPtr	inDataPtr,
 	// that this is safe only because the destination range begins later than
 	// the source
 	std::copy_backward(attrIterator, firstAttrPastInsertedRangeIterator, cursorLineIterator->attributeVector.end());
-	std::copy_backward(textIterator, firstCharPastInsertedRangeIterator, cursorLineIterator->textVector.end());
+	std::copy_backward(textIterator, firstCharPastInsertedRangeIterator, cursorLineIterator->textVectorEnd);
 	
 	// put blanks in the inserted space somewhere in the middle
 	std::fill(attrIterator, firstAttrPastInsertedRangeIterator, cursorLineIterator->globalAttributes);
@@ -6762,7 +6853,7 @@ bufferLineFill	(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 				 TerminalTextAttributes		inFillAttributes,
 				 Boolean					inUpdateLineGlobalAttributesAlso)
 {
-	std::fill(inRow.textVector.begin(), inRow.textVector.end(), inFillCharacter);
+	std::fill(inRow.textVectorBegin, inRow.textVectorEnd, inFillCharacter);
 	std::fill(inRow.attributeVector.begin(), inRow.attributeVector.end(), inFillAttributes);
 	if (inUpdateLineGlobalAttributesAlso)
 	{
@@ -6785,9 +6876,8 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	UInt16								numCharsToRemove = inNumberOfCharactersToDelete;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_TextVector::iterator				firstCharDeletedIterator;
-	My_TextVector::iterator				firstCharPreservedIterator;
-	My_TextVector::iterator				firstCharPastDeletedRangeIterator;
+	My_TextVector						firstCharDeletedIterator = nullptr;
+	My_TextVector						firstCharPreservedIterator = nullptr;
 	My_TextAttributesList::iterator		firstAttrDeletedIterator;
 	My_TextAttributesList::iterator		firstAttrPreservedIterator;
 	My_TextAttributesList::iterator		firstAttrPastDeletedRangeIterator;
@@ -6810,7 +6900,7 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	std::advance(firstAttrDeletedIterator, postWrapCursorX);
 	firstAttrPreservedIterator = firstAttrDeletedIterator;
 	std::advance(firstAttrPreservedIterator, numCharsToRemove);
-	firstCharDeletedIterator = cursorLineIterator->textVector.begin();
+	firstCharDeletedIterator = cursorLineIterator->textVectorBegin;
 	std::advance(firstCharDeletedIterator, postWrapCursorX);
 	firstCharPreservedIterator = firstCharDeletedIterator;
 	std::advance(firstCharPreservedIterator, numCharsToRemove);
@@ -6818,7 +6908,7 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	// copy text from end range to the earlier range; note that this is safe
 	// only because the destination range begins earlier than the source
 	std::copy(firstAttrPreservedIterator, cursorLineIterator->attributeVector.end(), firstAttrDeletedIterator);
-	std::copy(firstCharPreservedIterator, cursorLineIterator->textVector.end(), firstCharDeletedIterator);
+	std::copy(firstCharPreservedIterator, cursorLineIterator->textVectorEnd, firstCharDeletedIterator);
 	
 	// put blanks in the revealed space at the end; the VT102 specification
 	// says that the blank attributes are copied from the last character
@@ -6828,9 +6918,9 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	std::advance(firstAttrDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
 	std::fill(firstAttrDeletedIterator, cursorLineIterator->attributeVector.end(),
 				cursorLineIterator->attributeVector[inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1]);
-	firstCharDeletedIterator = cursorLineIterator->textVector.end();
+	firstCharDeletedIterator = cursorLineIterator->textVectorEnd;
 	std::advance(firstCharDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
-	std::fill(firstCharDeletedIterator, cursorLineIterator->textVector.end(), ' ');
+	std::fill(firstCharDeletedIterator, cursorLineIterator->textVectorEnd, ' ');
 	
 	// add the entire line from the cursor to the end
 	// to the text-change region; this would trigger
@@ -7151,7 +7241,7 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 			{
 				bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 			}
-			cursorLineIterator->textVector[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *bufferIterator);
+			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *bufferIterator);
 			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = inDataPtr->current.attributeBits;
 			if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
 			{
@@ -7376,8 +7466,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 		}// end if vt220
 		
 		{
-			char*								startPtr = nullptr;
-			My_TextVector::iterator				startIterator;
+			UniChar*							startPtr = nullptr;
+			My_TextVector						startIterator = nullptr;
 			TerminalTextAttributes				attrib = 0;
 			register SInt16						preWriteCursorX = 0;
 			SInt16								extra = 0;
@@ -7417,8 +7507,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					}
 				}
 				
-				startPtr = &(cursorLineIterator->textVector[inDataPtr->current.cursorX]);
-				startIterator = cursorLineIterator->textVector.begin();
+				startPtr = cursorLineIterator->textVectorBegin + inDataPtr->current.cursorX;
+				startIterator = cursorLineIterator->textVectorBegin;
 				std::advance(startIterator, inDataPtr->current.cursorX);
 				preWriteCursorX = inDataPtr->current.cursorX;
 				while ((ctr > 0) &&
@@ -7431,7 +7521,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					{
 						bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 					}
-					cursorLineIterator->textVector[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c);
+					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c);
 					cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = attrib;
 					++c;
 					--ctr;
@@ -8412,16 +8502,16 @@ eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 						 My_ScreenBufferLine&	inRow)
 {
 	SInt16								midColumn = INTEGER_HALVED(inDataPtr->text.visibleScreen.numberOfColumnsPermitted);
-	My_TextVector::iterator				textIterator;
+	My_TextVector						textIterator = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
 	
 	
 	// clear from halfway point to end of line
-	textIterator = inRow.textVector.begin();
+	textIterator = inRow.textVectorBegin;
 	std::advance(textIterator, midColumn);
 	attrIterator = inRow.attributeVector.begin();
 	std::advance(attrIterator, midColumn);
-	std::fill(textIterator, inRow.textVector.end(), ' ');
+	std::fill(textIterator, inRow.textVectorEnd, ' ');
 	std::fill(attrIterator, inRow.attributeVector.end(), inRow.globalAttributes);
 }// eraseRightHalfOfLine
 
@@ -8487,7 +8577,8 @@ forEachLineDo	(TerminalScreenRef				inRef,
 				((lineNumber < inNumberOfRowsToConsider) && (iteratorPtr->rowIterator != iteratorPtr->sourceList.end()));
 				++lineIterator, ++lineNumber)
 		{
-			invokeScreenLineOperationProc(inDoWhat, screenPtr, lineIterator->textVector.c_str(), lineNumber, inContextPtr);
+			invokeScreenLineOperationProc(inDoWhat, screenPtr, lineIterator->textCFString.returnCFMutableStringRef(),
+											lineNumber, inContextPtr);
 		}
 	}
 	return result;

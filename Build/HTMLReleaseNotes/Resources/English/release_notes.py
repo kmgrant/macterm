@@ -19,7 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20080209',
+    '20080210',
     '20080205',
     '20080203',
     '20080202',
@@ -87,10 +87,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-	'20080209': [
+	'20080210': [
 		'Fixed item highlighting in Preferences window collections drawer, so that something is always selected.',
 		'Preferences window collections drawer now contains a contextual menu button with commands for duplicating and renaming items.',
 		'Preferences window collections drawer "-" button is no longer enabled for items that cannot be deleted.',
+		'Terminal backing store can now use Unicode, which will enable better text and rendering support.',
 	],
 	'20080205': [
 		'Preferences window Translation pane now actually shows lists for the base character set and exceptions.',
