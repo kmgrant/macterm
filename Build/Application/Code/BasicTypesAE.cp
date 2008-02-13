@@ -3,7 +3,7 @@
 	BasicTypesAE.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2002 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -133,6 +133,24 @@ BasicTypesAE_CreateFileOrFolderDesc		(FSSpec const*	inFSSpecPtr,
 	
 	
 	result = AECreateDesc(typeFSS, inFSSpecPtr, sizeof(FSSpec), outDescPtr);
+	return result;
+}// CreateFileOrFolderDesc
+
+
+/*!
+Creates an Apple Event descriptor “wrapper” for a
+new-style file system specification record.
+
+(3.1)
+*/
+OSStatus
+BasicTypesAE_CreateFileOrFolderDesc		(FSRef const&	inFSRef,
+										 AEDesc*		outDescPtr)
+{
+	OSStatus	result = noErr;
+	
+	
+	result = AECreateDesc(typeFSRef, &inFSRef, sizeof(inFSRef), outDescPtr);
 	return result;
 }// CreateFileOrFolderDesc
 

@@ -396,21 +396,14 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandOpenScriptMenuItemsFolder:
 			{
-				FSSpec		folderSpec;
+				FSRef		folderRef;
 				OSStatus	error = noErr;
 				
 				
-				error = Folder_GetFSSpec(kFolder_RefScriptsMenuItems, &folderSpec);
+				error = Folder_GetFSRef(kFolder_RefScriptsMenuItems, folderRef);
 				if (noErr == error)
 				{
-					FSRef	folderRef;
-					
-					
-					error = FSpMakeFSRef(&folderSpec, &folderRef);
-					if (noErr == error)
-					{
-						error = LSOpenFSRef(&folderRef, nullptr/* launched item */);
-					}
+					error = LSOpenFSRef(&folderRef, nullptr/* launched item */);
 				}
 				if (noErr != error)
 				{

@@ -433,12 +433,11 @@ accessPropertyOfClassApplication	(ObjectClassesAE_TokenPtr   inTokenPtr,
 			Console_WriteLine("user Scripts Menu Items folder");
 			if (inPropertyAccessMechanism == kPropertyAccessObtain)
 			{
-				FSSpec		folder;
+				FSRef	folder;
 				
 				
-				result = Folder_GetFSSpec(kFolder_RefScriptsMenuItems, &folder);
-				if (result == noErr) result = FSMakeFSSpec(folder.vRefNum, folder.parID, folder.name, &folder);
-				if (result == noErr) BasicTypesAE_CreateFileOrFolderDesc(&folder, inoutDataDescriptor);
+				result = Folder_GetFSRef(kFolder_RefScriptsMenuItems, folder);
+				if (result == noErr) BasicTypesAE_CreateFileOrFolderDesc(folder, inoutDataDescriptor);
 			}
 			else result = errAEEventNotHandled;
 			break;
@@ -447,12 +446,11 @@ accessPropertyOfClassApplication	(ObjectClassesAE_TokenPtr   inTokenPtr,
 			Console_WriteLine("user Startup Items folder");
 			if (inPropertyAccessMechanism == kPropertyAccessObtain)
 			{
-				FSSpec		folder;
+				FSRef	folder;
 				
 				
-				result = Folder_GetFSSpec(kFolder_RefStartupItems, &folder);
-				if (result == noErr) result = FSMakeFSSpec(folder.vRefNum, folder.parID, folder.name, &folder);
-				if (result == noErr) BasicTypesAE_CreateFileOrFolderDesc(&folder, inoutDataDescriptor);
+				result = Folder_GetFSRef(kFolder_RefStartupItems, folder);
+				if (result == noErr) BasicTypesAE_CreateFileOrFolderDesc(folder, inoutDataDescriptor);
 			}
 			else result = errAEEventNotHandled;
 			break;
