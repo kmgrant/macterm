@@ -151,6 +151,7 @@ static void					rebuildList						();
 static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
 static void					refreshDisplay					();
+static void					removeCollectionRenameUI		();
 static Preferences_Class	returnCurrentPreferencesClass	();
 static DataBrowserItemID	returnCurrentSelection			();
 static OSStatus				selectCollection				(DataBrowserItemID = 0);
@@ -509,17 +510,24 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				result = GetDataBrowserItemDataText(inItemData, &newName);
 				if (noErr == result)
 				{
-					Preferences_Result		prefsResult = kPreferences_ResultOK;
-					
-					
-					prefsResult = Preferences_ContextRename(context, newName);
-					if (kPreferences_ResultOK != prefsResult)
+					if (nullptr == newName)
 					{
 						result = paramErr;
 					}
 					else
 					{
-						result = noErr;
+						Preferences_Result		prefsResult = kPreferences_ResultOK;
+						
+						
+						prefsResult = Preferences_ContextRename(context, newName);
+						if (kPreferences_ResultOK != prefsResult)
+						{
+							result = paramErr;
+						}
+						else
+						{
+							result = noErr;
+						}
 					}
 				}
 			}
@@ -1549,6 +1557,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								Preferences_Result		prefsResult = kPreferences_ResultOK;
 								
 								
+								// first end any editing session...it appears the data browser
+								// can crash if the user happens to delete the item being renamed
+								removeCollectionRenameUI();
+								
 								prefsResult = Preferences_ContextDeleteSaved(deletedContext);
 								if (kPreferences_ResultOK != prefsResult) isError = true;
 								else
@@ -1709,6 +1721,18 @@ refreshDisplay ()
 										kDataBrowserItemNoProperty/* pre-sort property */,
 										kMyDataBrowserPropertyIDSets);
 }// refreshDisplay
+
+
+/*!
+Removes any editable text area in the collections list.
+
+(3.1)
+*/
+static void
+removeCollectionRenameUI ()
+{
+	(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, kDataBrowserNoItem, kDataBrowserItemNoProperty);
+}// removeCollectionRenameUI
 
 
 /*!

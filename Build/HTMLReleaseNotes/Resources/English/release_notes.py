@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080212',
     '20080210',
     '20080205',
     '20080203',
@@ -87,6 +88,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080212': [
+		'Fixed a possible crash if an item being renamed was deleted with the "-" button in the Preferences window collections drawer.',
+	],
 	'20080210': [
 		'Fixed a possible crash when quitting.',
 		'Fixed item highlighting in Preferences window collections drawer, so that something is always selected.',
