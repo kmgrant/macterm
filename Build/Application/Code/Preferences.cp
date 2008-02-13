@@ -1751,32 +1751,23 @@ Preferences_CreateOrFindFiles ()
 	if (result == kPreferences_ResultOK)
 	{
 		// create the MacTelnet Preferences folder and important sub-folders
-		FSSpec		unusedFolderSpec;
+		FSRef		unusedFolderRef;
 		
 		
 		// create the MacTelnet Application Support folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefApplicationSupport, &unusedFolderSpec);
+		Folder_GetFSRef(kFolder_RefApplicationSupport, unusedFolderRef);
 		
 		// create the MacTelnet Preferences folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefPreferences, &unusedFolderSpec);
+		Folder_GetFSRef(kFolder_RefPreferences, unusedFolderRef);
 		
 		// create the Recent Sessions folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefRecentSessions, &unusedFolderSpec);
+		Folder_GetFSRef(kFolder_RefRecentSessions, unusedFolderRef);
 		
 		// create the Favorites folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefFavorites, &unusedFolderSpec);
+		Folder_GetFSRef(kFolder_RefFavorites, unusedFolderRef);
 		
 		// create the Macro Sets Favorites folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefUserMacroFavorites, &unusedFolderSpec);
-		
-		// create the Proxy Favorites folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefUserProxyFavorites, &unusedFolderSpec);
-		
-		// create the Session Favorites folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefUserSessionFavorites, &unusedFolderSpec);
-		
-		// create the Terminal Favorites folder (no effect if it already exists); the resultant FSSpec is ignored
-		Folder_GetFSSpec(kFolder_RefUserTerminalFavorites, &unusedFolderSpec);
+		Folder_GetFSRef(kFolder_RefUserMacroFavorites, unusedFolderRef);
 		
 		// other setup
 		{

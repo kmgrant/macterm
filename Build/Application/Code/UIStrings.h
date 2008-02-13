@@ -463,11 +463,20 @@ UIStrings_Result
 	UIStrings_CopyRandom				(UIStrings_StringClass							inWhichStringClass,
 										 CFStringRef&									outString);
 
+// CALLS FSCreateFileUnicode() or FSCreateDirectoryUnicode()
+OSStatus
+	UIStrings_CreateFileOrDirectory		(FSRef const&									inParentRef,
+										 UIStrings_FileOrFolderCFString					inWhichString,
+										 FSRef&											outFSRef,
+										 UInt32*										outNewDirIDOrNullForFile = nullptr,
+										 FSCatalogInfoBitmap							inWhichInfo = kFSCatInfoNone,
+										 FSCatalogInfo const*							inInfoOrNull = nullptr);
+
 // CALLS FSMakeFSRefUnicode()
 OSStatus
-	UIStrings_MakeFSRef					(FSRef const*									inParentRefPtr,
+	UIStrings_MakeFSRef					(FSRef const&									inParentRef,
 										 UIStrings_FileOrFolderCFString					inWhichString,
-										 FSRef*											outFSRefPtr);
+										 FSRef&											outFSRef);
 
 // CALLS FSMakeFSSpec()
 OSStatus

@@ -1830,15 +1830,147 @@ UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 
 /*!
 Locates the specified file or folder name and calls
+FSMakeFSRefUnicode() with the given parent directory.  The
+result is an FSRef with a copy of the given file name string.
+
+Note that unlike UIStrings_MakeFSSpec(), this routine cannot be
+used to refer to nonexistent files and folders.
+
+\retval noErr
+if the FSSpec is created successfully
+
+\retval paramErr
+if no file name with the given ID exists
+
+\retval (other)
+if an OS error occurred (for example, the file/folder does not
+actually exist on disk)
+
+(3.1)
+*/
+OSStatus
+UIStrings_CreateFileOrDirectory		(FSRef const&						inParentRef,
+									 UIStrings_FileOrFolderCFString		inWhichString,
+									 FSRef&								outFSRef,
+									 UInt32*							outNewDirIDOrNullForFile,
+									 FSCatalogInfoBitmap				inWhichInfo,
+									 FSCatalogInfo const*				inInfoOrNull)
+{
+	CFStringRef			nameCFString = nullptr;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	OSStatus			result = noErr;
+	
+	
+	stringResult = UIStrings_Copy(inWhichString, nameCFString);
+	
+	// if the string was obtained, call FSMakeFSSpec
+	if (stringResult.ok())
+	{
+		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString);
+		UniChar*			buffer = new UniChar[kBufferSize];
+		
+		
+		CFStringGetCharacters(nameCFString, CFRangeMake(0, kBufferSize), buffer);
+		
+		// does it already exist?
+		result = FSMakeFSRefUnicode(&inParentRef, kBufferSize, buffer,
+									CFStringGetSmallestEncoding(nameCFString), &outFSRef);
+		if (noErr != result)
+		{
+			if (nullptr != outNewDirIDOrNullForFile)
+			{
+				// create a directory
+				result = FSCreateDirectoryUnicode(&inParentRef, kBufferSize, buffer, inWhichInfo, inInfoOrNull,
+													&outFSRef, nullptr/* old-style specification record */,
+													outNewDirIDOrNullForFile);
+			}
+			else
+			{
+				// create a file
+				result = FSCreateFileUnicode(&inParentRef, kBufferSize, buffer, inWhichInfo, inInfoOrNull,
+												&outFSRef, nullptr/* old-style specification record */);
+			}
+		}
+		
+		delete [] buffer, buffer = nullptr;
+		CFRelease(nameCFString), nameCFString = nullptr;
+	}
+	else
+	{
+		result = paramErr;
+	}
+	
+	return result;
+}// CreateFileOrDirectory
+
+
+/*!
+Locates the specified file or folder name and calls
+FSMakeFSRefUnicode() with the given parent directory.  The result
+is an FSRef with a copy of the given file name string.
+
+Note that unlike UIStrings_MakeFSSpec(), this routine cannot be
+used to refer to nonexistent files and folders.  If your initial
+filename is nonexistent, UIStrings_CreateFileOrDirectory() can be
+used to create the object and return a valid record.
+
+\retval noErr
+if the FSSpec is created successfully
+
+\retval paramErr
+if no file name with the given ID exists
+
+\retval (other)
+if an OS error occurred (for example, the file/folder does not
+actually exist on disk)
+
+(3.1)
+*/
+OSStatus
+UIStrings_MakeFSRef		(FSRef const&						inParentRef,
+						 UIStrings_FileOrFolderCFString		inWhichString,
+						 FSRef&								outFSRef)
+{
+	CFStringRef			nameCFString = nullptr;
+	UIStrings_Result	stringResult = kUIStrings_ResultOK;
+	OSStatus			result = noErr;
+	
+	
+	stringResult = UIStrings_Copy(inWhichString, nameCFString);
+	
+	// if the string was obtained, call FSMakeFSSpec
+	if (stringResult.ok())
+	{
+		UniCharCount const	kBufferSize = CFStringGetLength(nameCFString);
+		UniChar*			buffer = new UniChar[kBufferSize];
+		
+		
+		CFStringGetCharacters(nameCFString, CFRangeMake(0, kBufferSize), buffer);
+		result = FSMakeFSRefUnicode(&inParentRef, kBufferSize, buffer,
+									CFStringGetSmallestEncoding(nameCFString), &outFSRef);
+		
+		delete [] buffer, buffer = nullptr;
+		CFRelease(nameCFString), nameCFString = nullptr;
+	}
+	else
+	{
+		result = paramErr;
+	}
+	
+	return result;
+}// MakeFSRef
+
+
+/*!
+Locates the specified file or folder name and calls
 FSMakeFSSpec() with the given volume and directory
 ID information.  The result is an FSSpec with a
 Pascal string copy of the given file name string
 (unless FSMakeFSSpec() does any further munging).
 
 IMPORTANT: This routine is essentially unfriendly to
-           localization.  A future routine (probably
-           named UIStrings_MakeFSRef()) will be able
-		   to handle Unicode filenames.
+           localization.  UIStrings_MakeFSRef() is
+		   preferred.
 
 \retval noErr
 if the FSSpec is created successfully
