@@ -56,12 +56,10 @@ public:
 #if SWIG
 %feature("kwargs") Session;
 %feature("docstring",
-"Create a new session with a terminal window, and run a Unix\n\
-command line in it.  The session remains active until it is\n\
+"Create a new session with a terminal window, change to a\n\
+specific directory (if 'cwd' is not empty) and run a Unix\n\
+command line.  The session remains active until it is\n\
 terminated by the user or the command finishes.\n\
-\n\
-If the given directory is not empty, the child process changes\n\
-to that directory before the given command is invoked.\n\
 ") Session;
 #endif
 	Session	(std::vector< std::string >		argv,
@@ -71,8 +69,11 @@ to that directory before the given command is invoked.\n\
 %feature("docstring",
 "Either invoke a Python callback to handle the specified file,\n\
 or trigger the default MacTelnet handler if no Python callback\n\
-is available for that type of file.  Currently, file type is\n\
-determined only using the extension of the pathname.\n\
+is available.  Callbacks registered via on_fileopen_call() are\n\
+considered.\n\
+\n\
+Currently, file type is determined only using the extension of\n\
+the pathname.\n\
 \n\
 This function returns nothing and is asynchronous; you can,\n\
 however, use a routine like on_new_call() to be notified of\n\
@@ -85,7 +86,8 @@ new sessions when they appear.\n\
 %feature("docstring",
 "Either invoke a Python callback to handle the specified URL,\n\
 or trigger the default MacTelnet handler if no Python callback\n\
-is available for the schema (e.g. 'http') of the given URL.\n\
+is available.  Callbacks registered via on_urlopen_call() are\n\
+considered.\n\
 \n\
 This function returns nothing and is asynchronous; you can,\n\
 however, use a routine like on_new_call() to be notified of\n\
@@ -110,16 +112,20 @@ private:
 #if SWIG
 %extend Session {
 %feature("docstring",
-"Register a Python function to be called (with a single string\n\
-argument) every time an open is requested for a file with the\n\
-given attribute.  Only one of the attributes (keyword parameters)\n\
-should be specified.  If you want the same handler to be called\n\
-for multiple attributes, you must currently call this routine\n\
-once for each attribute.\n\
+"Register a Python function to be called, with a single string\n\
+argument, every time an open is requested for a file with the\n\
+given attribute.\n\
+\n\
+Specify only one attribute (keyword parameter) at a time.  You\n\
+can use the same callback function, just register it more than\n\
+once and provide a different attribute for each call.\n\
 \n\
 Currently, the only supported attribute is 'extension', which\n\
-refers to the file name ending without a dot (.); for example,\n\
-'txt' for text or 'sh' or Bourne shell.\n\
+refers to the end of the filename without a dot (.).  Examples\n\
+include 'txt' for text, and 'sh' for Bourne shell.  Note that the\n\
+Finder obeys extension mappings in the 'Info.plist' file of the\n\
+application bundle, so you may wish to update that file when\n\
+adding new handlers.\n\
 \n\
 You cannot register more than one Python function for the same\n\
 attribute.  Registering a Python function for an attribute that\n\
@@ -161,19 +167,20 @@ every single time a session is created.\n\
 	}
 	
 %feature("docstring",
-"Register a Python function to be called (with a single string\n\
-argument) every single time an open is requested for a URL\n\
-whose schema (e.g. 'http') matches the schema given as the\n\
-argument to on_urlopen_call().  You cannot register more than\n\
-one Python function for a particular URL schema.  Registering\n\
-a Python function for a schema that MacTelnet natively handles\n\
-will override the default MacTelnet implementation.\n\
+"Register a Python function to be called, with a single string\n\
+argument, every time an open is requested for a URL whose schema\n\
+(e.g. 'http') matches the schema given as the argument to\n\
+on_urlopen_call().  You cannot register more than one Python\n\
+function for a particular URL schema.  Registering a Python\n\
+function for a schema that MacTelnet natively handles will\n\
+override the default MacTelnet implementation.\n\
 \n\
 Your handler is given a single argument, the URL string, which\n\
 you must decompose yourself (but note that Python has built-in\n\
-libraries such as the 'urlparse' module, to help).  Generally\n\
-your handler constructs a Session object with a command that\n\
-is appropriate for the URL, although you could do something\n\
+libraries such as the 'urlparse' module, to help, and the default\n\
+MacTelnet parsers are also available in a Python module).\n\
+Generally your handler constructs a Session object with a command\n\
+that is appropriate for the URL, although you could do something\n\
 else: for instance, using Python's built-in 'webbrowser' or\n\
 'urllib' modules.\n\
 ") on_urlopen_call;
