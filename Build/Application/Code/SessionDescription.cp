@@ -96,7 +96,7 @@
 
 #pragma mark Types
 
-struct SessionFile
+struct My_SessionFile
 {
 	SessionDescription_ContentType		fileType;			//!< determines valid part of union below
 	
@@ -139,24 +139,25 @@ struct SessionFile
 	
 	SessionDescription_Ref		selfRef;	//!< convenient opaque reference back to this structure
 };
-typedef SessionFile const*	SessionFileConstPtr;
-typedef SessionFile*		SessionFilePtr;
+typedef My_SessionFile const*	My_SessionFileConstPtr;
+typedef My_SessionFile*			My_SessionFilePtr;
 
-typedef MemoryBlockPtrLocker< SessionDescription_Ref, SessionFile >		SessionFilePtrLocker;
-typedef MemoryBlockReferenceLocker< SessionDescription_Ref, SessionFile >	SessionFileReferenceLocker;
+typedef MemoryBlockPtrLocker< SessionDescription_Ref, My_SessionFile >			My_SessionFilePtrLocker;
+typedef LockAcquireRelease< SessionDescription_Ref, My_SessionFile >			My_SessionFileAutoLocker;
+typedef MemoryBlockReferenceLocker< SessionDescription_Ref, My_SessionFile >	My_SessionFileReferenceLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	SessionFilePtrLocker&		gSessionFilePtrLocks ()	{ static SessionFilePtrLocker x; return x; }
-	SessionFileReferenceLocker&	gSessionFileRefLocks ()	{ static SessionFileReferenceLocker x; return x; }
+	My_SessionFilePtrLocker&		gSessionFilePtrLocks ()	{ static My_SessionFilePtrLocker x; return x; }
+	My_SessionFileReferenceLocker&	gSessionFileRefLocks ()	{ static My_SessionFileReferenceLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
 
-static OSStatus		overwriteFile		(SInt16, SessionFileConstPtr);
-static Boolean		parseFile			(SInt16, SessionFilePtr);
+static OSStatus		overwriteFile		(SInt16, My_SessionFileConstPtr);
+static Boolean		parseFile			(SInt16, My_SessionFilePtr);
 
 #pragma mark Functors
 
@@ -238,19 +239,18 @@ from an existing file on disk.
 SessionDescription_Ref
 SessionDescription_New	(SessionDescription_ContentType		inIntendedContents)
 {
-	SessionDescription_Ref	result = REINTERPRET_CAST(Memory_NewPtr(sizeof(SessionFile)),
+	SessionDescription_Ref	result = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_SessionFile)),
 														SessionDescription_Ref);
 	
 	
 	if (result != nullptr)
 	{
-		SessionFilePtr		ptr = gSessionFilePtrLocks().acquireLock(result);
+		My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), result);
 		
 		
 		SessionDescription_Retain(result);
 		ptr->selfRef = result;
 		ptr->fileType = inIntendedContents;
-		gSessionFilePtrLocks().releaseLock(result, &ptr);
 	}
 	return result;
 }// New
@@ -279,12 +279,11 @@ SessionDescription_NewFromFile	(SInt16								inFileReferenceNumber,
 	
 	if (result != nullptr)
 	{
-		SessionFilePtr		ptr = gSessionFilePtrLocks().acquireLock(result);
+		My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), result);
 		
 		
 		parseFile(inFileReferenceNumber, ptr);
 		*outFileTypePtr = ptr->fileType;
-		gSessionFilePtrLocks().releaseLock(result, &ptr);
 	}
 	return result;
 }// NewFromFile
@@ -325,104 +324,105 @@ SessionDescription_Release	(SessionDescription_Ref*	inoutRefPtr)
 	gSessionFileRefLocks().releaseLock(*inoutRefPtr);
 	unless (gSessionFileRefLocks().isLocked(*inoutRefPtr))
 	{
-		SessionFilePtr		ptr = gSessionFilePtrLocks().acquireLock(*inoutRefPtr);
-		
-		
-		// release data used by all file types
-		if (ptr->windowName != nullptr)
 		{
-			CFRelease(ptr->windowName), ptr->windowName = nullptr;
-		}
-		if (ptr->colorTextNormalPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorTextNormalPtr, Ptr*));
-		}
-		if (ptr->colorBackgroundNormalPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorBackgroundNormalPtr, Ptr*));
-		}
-		if (ptr->colorTextBoldPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorTextBoldPtr, Ptr*));
-		}
-		if (ptr->colorBackgroundBoldPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorBackgroundBoldPtr, Ptr*));
-		}
-		if (ptr->colorTextBlinkingPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorTextBlinkingPtr, Ptr*));
-		}
-		if (ptr->colorBackgroundBlinkingPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorBackgroundBlinkingPtr, Ptr*));
-		}
-		if (ptr->invisibleLineCountPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->invisibleLineCountPtr, Ptr*));
-		}
-		if (ptr->visibleColumnCountPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->visibleColumnCountPtr, Ptr*));
-		}
-		if (ptr->visibleLineCountPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->visibleLineCountPtr, Ptr*));
-		}
-		if (ptr->windowPositionHPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->windowPositionHPtr, Ptr*));
-		}
-		if (ptr->windowPositionVPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->windowPositionVPtr, Ptr*));
-		}
-		if (ptr->fontSizePtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->fontSizePtr, Ptr*));
-		}
-		if (ptr->isFTPPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->isFTPPtr, Ptr*));
-		}
-		if (ptr->isTEKPageInSameWindowPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->isTEKPageInSameWindowPtr, Ptr*));
-		}
-		if (ptr->isBerkeleyCRPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->isBerkeleyCRPtr, Ptr*));
-		}
-		if (ptr->isAuthenticationEnabledPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->isAuthenticationEnabledPtr, Ptr*));
-		}
-		if (ptr->isEncryptionEnabledPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->isEncryptionEnabledPtr, Ptr*));
-		}
-		if (ptr->isPageUpPageDownRemappingPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->isPageUpPageDownRemappingPtr, Ptr*));
-		}
-		if (ptr->isKeypadMappingToPFKeysPtr != nullptr)
-		{
-			Memory_DisposePtr(REINTERPRET_CAST(&ptr->isKeypadMappingToPFKeysPtr, Ptr*));
-		}
-		
-		// check the file type to see which type-specific data to free
-		if (ptr->fileType == kSessionDescription_ContentTypeCommand)
-		{
-			if (nullptr != ptr->variable.local.command)
+			My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), *inoutRefPtr);
+			
+			
+			// release data used by all file types
+			if (ptr->windowName != nullptr)
 			{
-				CFRelease(ptr->variable.local.command), ptr->variable.local.command = nullptr;
+				CFRelease(ptr->windowName), ptr->windowName = nullptr;
+			}
+			if (ptr->colorTextNormalPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorTextNormalPtr, Ptr*));
+			}
+			if (ptr->colorBackgroundNormalPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorBackgroundNormalPtr, Ptr*));
+			}
+			if (ptr->colorTextBoldPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorTextBoldPtr, Ptr*));
+			}
+			if (ptr->colorBackgroundBoldPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorBackgroundBoldPtr, Ptr*));
+			}
+			if (ptr->colorTextBlinkingPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorTextBlinkingPtr, Ptr*));
+			}
+			if (ptr->colorBackgroundBlinkingPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->colorBackgroundBlinkingPtr, Ptr*));
+			}
+			if (ptr->invisibleLineCountPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->invisibleLineCountPtr, Ptr*));
+			}
+			if (ptr->visibleColumnCountPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->visibleColumnCountPtr, Ptr*));
+			}
+			if (ptr->visibleLineCountPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->visibleLineCountPtr, Ptr*));
+			}
+			if (ptr->windowPositionHPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->windowPositionHPtr, Ptr*));
+			}
+			if (ptr->windowPositionVPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->windowPositionVPtr, Ptr*));
+			}
+			if (ptr->fontSizePtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->fontSizePtr, Ptr*));
+			}
+			if (ptr->isFTPPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->isFTPPtr, Ptr*));
+			}
+			if (ptr->isTEKPageInSameWindowPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->isTEKPageInSameWindowPtr, Ptr*));
+			}
+			if (ptr->isBerkeleyCRPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->isBerkeleyCRPtr, Ptr*));
+			}
+			if (ptr->isAuthenticationEnabledPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->isAuthenticationEnabledPtr, Ptr*));
+			}
+			if (ptr->isEncryptionEnabledPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->isEncryptionEnabledPtr, Ptr*));
+			}
+			if (ptr->isPageUpPageDownRemappingPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->isPageUpPageDownRemappingPtr, Ptr*));
+			}
+			if (ptr->isKeypadMappingToPFKeysPtr != nullptr)
+			{
+				Memory_DisposePtr(REINTERPRET_CAST(&ptr->isKeypadMappingToPFKeysPtr, Ptr*));
+			}
+			
+			// check the file type to see which type-specific data to free
+			if (ptr->fileType == kSessionDescription_ContentTypeCommand)
+			{
+				if (nullptr != ptr->variable.local.command)
+				{
+					CFRelease(ptr->variable.local.command), ptr->variable.local.command = nullptr;
+				}
+			}
+			else
+			{
+				// ???
 			}
 		}
-		else
-		{
-			// ???
-		}
-		gSessionFilePtrLocks().releaseLock(*inoutRefPtr, &ptr);
 		Memory_DisposePtr(REINTERPRET_CAST(inoutRefPtr, Ptr*));
 	}
 }// Release
@@ -451,7 +451,7 @@ SessionDescription_GetBooleanData	(SessionDescription_Ref				inRef,
 									 Boolean&							outFlag)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	
 	
 	switch (inType)
@@ -481,7 +481,6 @@ SessionDescription_GetBooleanData	(SessionDescription_Ref				inRef,
 		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// GetBooleanData
 
@@ -509,7 +508,7 @@ SessionDescription_GetIntegerData	(SessionDescription_Ref				inRef,
 									 SInt32&							outNumber)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	
 	
 	switch (inType)
@@ -549,7 +548,6 @@ SessionDescription_GetIntegerData	(SessionDescription_Ref				inRef,
 		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// GetIntegerData
 
@@ -577,7 +575,7 @@ SessionDescription_GetRGBColorData	(SessionDescription_Ref				inRef,
 									 RGBColor&							outColor)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	
 	
 	switch (inType)
@@ -617,7 +615,6 @@ SessionDescription_GetRGBColorData	(SessionDescription_Ref				inRef,
 		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// GetRGBColorData
 
@@ -649,7 +646,7 @@ SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 									 CFStringRef&					outString)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	
 	
 	switch (inType)
@@ -686,7 +683,6 @@ SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 		result = kSessionDescription_ResultDataUnavailable;
 		break;
 	}
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// GetStringData
 
@@ -796,12 +792,11 @@ SessionDescription_Save		(SessionDescription_Ref		inRef,
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
 	OSStatus					error = noErr;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	
 	
 	error = overwriteFile(inFileReferenceNumber, ptr);
 	if (error != noErr) result = kSessionDescription_ResultFileError;
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// Save
 
@@ -832,7 +827,7 @@ SessionDescription_SetBooleanData	(SessionDescription_Ref				inRef,
 									 Boolean							inFlag)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	Boolean**					flagPtrPtr = nullptr;
 	
 	
@@ -872,7 +867,6 @@ SessionDescription_SetBooleanData	(SessionDescription_Ref				inRef,
 		else **flagPtrPtr = inFlag;
 	}
 	
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// SetBooleanData
 
@@ -908,7 +902,7 @@ SessionDescription_SetIntegerData	(SessionDescription_Ref				inRef,
 									 Boolean							inValidateBeforeStoring)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	SInt32**					numberPtrPtr = nullptr;
 	
 	
@@ -956,7 +950,6 @@ SessionDescription_SetIntegerData	(SessionDescription_Ref				inRef,
 		else **numberPtrPtr = inNumber;
 	}
 	
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// SetIntegerData
 
@@ -987,7 +980,7 @@ SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 									 RGBColor const&					inColor)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	RGBColor**					colorPtrPtr = nullptr;
 	
 	
@@ -1035,7 +1028,6 @@ SessionDescription_SetRGBColorData	(SessionDescription_Ref				inRef,
 		else **colorPtrPtr = inColor;
 	}
 	
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// SetRGBColorData
 
@@ -1071,7 +1063,7 @@ SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 									 Boolean						inValidateBeforeStoring)
 {
 	SessionDescription_Result	result = kSessionDescription_ResultOK;
-	SessionFilePtr				ptr = gSessionFilePtrLocks().acquireLock(inRef);
+	My_SessionFileAutoLocker	ptr(gSessionFilePtrLocks(), inRef);
 	
 	
 	switch (inType)
@@ -1118,7 +1110,6 @@ SessionDescription_SetStringData	(SessionDescription_Ref			inRef,
 		result = kSessionDescription_ResultUnknownType;
 		break;
 	}
-	gSessionFilePtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// SetStringData
 
@@ -1137,8 +1128,8 @@ completely.
 (3.0)
 */
 OSStatus
-overwriteFile	(SInt16					inFileReferenceNumber,
-				 SessionFileConstPtr	inoutDataPtr)
+overwriteFile	(SInt16						inFileReferenceNumber,
+				 My_SessionFileConstPtr		inoutDataPtr)
 {
 	TextDataFile_Ref	writer = TextDataFile_New(inFileReferenceNumber);
 	OSStatus			result = noErr;
@@ -1382,7 +1373,7 @@ errors.
 */
 static Boolean
 parseFile	(SInt16				inFileReferenceNumber,
-			 SessionFilePtr		inoutDataPtr)
+			 My_SessionFilePtr	inoutDataPtr)
 {
 	TextDataFile_Ref	file = TextDataFile_New(inFileReferenceNumber);
 	Boolean				result = false;

@@ -3,7 +3,7 @@
 	CommonEventHandlers.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -81,24 +81,24 @@ public:
 /*!
 This structure is used for CommonEventHandlers_InstallNumericalFieldArrowsHandler().
 */
-struct MyNumericalFieldArrowsHandler
+struct My_NumericalFieldArrowsHandler
 {
 	ControlRef			field;						//!< the editable text control whose value is changed by the arrows
 	EventHandlerRef		controlHitEventHandlerRef;	//!< reference retained so handler can be removed later
 	EventHandlerUPP		controlHitEventHandlerUPP;	//!< reference retained so handler can be disposed later
 };
-typedef struct MyNumericalFieldArrowsHandler*	MyNumericalFieldArrowsHandlerPtr;
+typedef struct My_NumericalFieldArrowsHandler*		My_NumericalFieldArrowsHandlerPtr;
 
 /*!
 This structure is used for CommonEventHandlers_InstallPopUpMenuArrowsHandler().
 */
-struct MyPopUpMenuArrowsHandler
+struct My_PopUpMenuArrowsHandler
 {
 	ControlRef			popUpMenu;					//!< the pop-up menu control whose value is changed by the arrows
 	EventHandlerRef		controlHitEventHandlerRef;	//!< reference retained so handler can be removed later
 	EventHandlerUPP		controlHitEventHandlerUPP;	//!< reference retained so handler can be disposed later
 };
-typedef struct MyPopUpMenuArrowsHandler*	MyPopUpMenuArrowsHandlerPtr;
+typedef struct My_PopUpMenuArrowsHandler*		My_PopUpMenuArrowsHandlerPtr;
 
 /*!
 This structure is used for CommonEventHandlers_WindowResizer::install().
@@ -125,16 +125,18 @@ public:
 	CarbonEventHandlerWrap						resizeEventHandler;		//!< what the system invokes when resize events occur
 };
 
-typedef MemoryBlockPtrLocker< CommonEventHandlers_NumericalFieldArrowsRef, MyNumericalFieldArrowsHandler >	MyNumericalFieldArrowsHandlerPtrLocker;
+typedef MemoryBlockPtrLocker< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerPtrLocker;
+typedef LockAcquireRelease< CommonEventHandlers_NumericalFieldArrowsRef, My_NumericalFieldArrowsHandler >	My_NumericalFieldArrowsHandlerAutoLocker;
 
-typedef MemoryBlockPtrLocker< CommonEventHandlers_PopUpMenuArrowsRef, MyPopUpMenuArrowsHandler >	MyPopUpMenuArrowsHandlerPtrLocker;
+typedef MemoryBlockPtrLocker< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >	My_PopUpMenuArrowsHandlerPtrLocker;
+typedef LockAcquireRelease< CommonEventHandlers_PopUpMenuArrowsRef, My_PopUpMenuArrowsHandler >		My_PopUpMenuArrowsHandlerAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	MyNumericalFieldArrowsHandlerPtrLocker&	gMyNumericalFieldArrowsHandlerPtrLocks ()	{ static MyNumericalFieldArrowsHandlerPtrLocker x; return x; }
-	MyPopUpMenuArrowsHandlerPtrLocker&	gMyPopUpMenuArrowsHandlerPtrLocks ()	{ static MyPopUpMenuArrowsHandlerPtrLocker x; return x; }
+	My_NumericalFieldArrowsHandlerPtrLocker&	gMyNumericalFieldArrowsHandlerPtrLocks ()	{ static My_NumericalFieldArrowsHandlerPtrLocker x; return x; }
+	My_PopUpMenuArrowsHandlerPtrLocker&		gMyPopUpMenuArrowsHandlerPtrLocks ()	{ static My_PopUpMenuArrowsHandlerPtrLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
@@ -508,11 +510,11 @@ CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhich
 	if (nullptr == outHandlerPtr) result = memPCErr;
 	else
 	{
-		*outHandlerPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(MyNumericalFieldArrowsHandler)), CommonEventHandlers_NumericalFieldArrowsRef);
+		*outHandlerPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_NumericalFieldArrowsHandler)), CommonEventHandlers_NumericalFieldArrowsRef);
 		if (nullptr == *outHandlerPtr) result = memFullErr;
 		else
 		{
-			MyNumericalFieldArrowsHandlerPtr	ptr = gMyNumericalFieldArrowsHandlerPtrLocks().acquireLock(*outHandlerPtr);
+			My_NumericalFieldArrowsHandlerAutoLocker	ptr(gMyNumericalFieldArrowsHandlerPtrLocks(), *outHandlerPtr);
 			
 			
 			// initialize the handler structure so appropriate information
@@ -555,8 +557,6 @@ CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhich
 				}
 			}
 		#endif
-			
-			gMyNumericalFieldArrowsHandlerPtrLocks().releaseLock(*outHandlerPtr, &ptr);
 		}
 	}
 	return result;
@@ -599,11 +599,11 @@ CommonEventHandlers_InstallPopUpMenuArrows	(ControlRef									inForWhichArrows,
 	if (nullptr == outHandlerPtr) result = memPCErr;
 	else
 	{
-		*outHandlerPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(MyPopUpMenuArrowsHandler)), CommonEventHandlers_PopUpMenuArrowsRef);
+		*outHandlerPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_PopUpMenuArrowsHandler)), CommonEventHandlers_PopUpMenuArrowsRef);
 		if (nullptr == *outHandlerPtr) result = memFullErr;
 		else
 		{
-			MyPopUpMenuArrowsHandlerPtr		ptr = gMyPopUpMenuArrowsHandlerPtrLocks().acquireLock(*outHandlerPtr);
+			My_PopUpMenuArrowsHandlerAutoLocker		ptr(gMyPopUpMenuArrowsHandlerPtrLocks(), *outHandlerPtr);
 			
 			
 			// initialize the handler structure so appropriate information
@@ -646,8 +646,6 @@ CommonEventHandlers_InstallPopUpMenuArrows	(ControlRef									inForWhichArrows,
 				}
 			}
 		#endif
-			
-			gMyPopUpMenuArrowsHandlerPtrLocks().releaseLock(*outHandlerPtr, &ptr);
 		}
 	}
 	return result;
@@ -679,12 +677,13 @@ CommonEventHandlers_RemoveNumericalFieldArrows	(CommonEventHandlers_NumericalFie
 	if (nullptr == inoutHandlerToDisposePtr) result = memPCErr;
 	else
 	{
-		MyNumericalFieldArrowsHandlerPtr	ptr = gMyNumericalFieldArrowsHandlerPtrLocks().acquireLock(*inoutHandlerToDisposePtr);
-		
-		
-		result = RemoveEventHandler(ptr->controlHitEventHandlerRef);
-		DisposeEventHandlerUPP(ptr->controlHitEventHandlerUPP);
-		gMyNumericalFieldArrowsHandlerPtrLocks().releaseLock(*inoutHandlerToDisposePtr, &ptr);
+		{
+			My_NumericalFieldArrowsHandlerAutoLocker	ptr(gMyNumericalFieldArrowsHandlerPtrLocks(), *inoutHandlerToDisposePtr);
+			
+			
+			result = RemoveEventHandler(ptr->controlHitEventHandlerRef);
+			DisposeEventHandlerUPP(ptr->controlHitEventHandlerUPP);
+		}
 		Memory_DisposePtr(REINTERPRET_CAST(inoutHandlerToDisposePtr, Ptr*));
 	}
 	
@@ -717,12 +716,13 @@ CommonEventHandlers_RemovePopUpMenuArrows	(CommonEventHandlers_PopUpMenuArrowsRe
 	if (nullptr == inoutHandlerToDisposePtr) result = memPCErr;
 	else
 	{
-		MyPopUpMenuArrowsHandlerPtr		ptr = gMyPopUpMenuArrowsHandlerPtrLocks().acquireLock(*inoutHandlerToDisposePtr);
-		
-		
-		result = RemoveEventHandler(ptr->controlHitEventHandlerRef);
-		DisposeEventHandlerUPP(ptr->controlHitEventHandlerUPP);
-		gMyPopUpMenuArrowsHandlerPtrLocks().releaseLock(*inoutHandlerToDisposePtr, &ptr);
+		{
+			My_PopUpMenuArrowsHandlerAutoLocker		ptr(gMyPopUpMenuArrowsHandlerPtrLocks(), *inoutHandlerToDisposePtr);
+			
+			
+			result = RemoveEventHandler(ptr->controlHitEventHandlerRef);
+			DisposeEventHandlerUPP(ptr->controlHitEventHandlerUPP);
+		}
 		Memory_DisposePtr(REINTERPRET_CAST(inoutHandlerToDisposePtr, Ptr*));
 	}
 	
@@ -746,7 +746,7 @@ receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 {
 	OSStatus										result = eventNotHandledErr;
 	CommonEventHandlers_NumericalFieldArrowsRef		ref = REINTERPRET_CAST(inNumericalFieldArrowsHandlerRef, CommonEventHandlers_NumericalFieldArrowsRef);
-	MyNumericalFieldArrowsHandlerPtr				ptr = gMyNumericalFieldArrowsHandlerPtrLocks().acquireLock(ref);
+	My_NumericalFieldArrowsHandlerAutoLocker		ptr(gMyNumericalFieldArrowsHandlerPtrLocks(), ref);
 	UInt32 const									kEventClass = GetEventClass(inEvent);
 	UInt32 const									kEventKind = GetEventKind(inEvent);
 	
@@ -805,8 +805,6 @@ receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 			}
 		}
 	}
-	
-	gMyNumericalFieldArrowsHandlerPtrLocks().releaseLock(ref, &ptr);
 	return result;
 }// receiveArrowHitForNumericalField
 
@@ -825,7 +823,7 @@ receiveArrowHitForPopUpMenu		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 {
 	OSStatus									result = eventNotHandledErr;
 	CommonEventHandlers_PopUpMenuArrowsRef		ref = REINTERPRET_CAST(inPopUpMenuArrowsHandlerRef, CommonEventHandlers_PopUpMenuArrowsRef);
-	MyPopUpMenuArrowsHandlerPtr					ptr = gMyPopUpMenuArrowsHandlerPtrLocks().acquireLock(ref);
+	My_PopUpMenuArrowsHandlerAutoLocker			ptr(gMyPopUpMenuArrowsHandlerPtrLocks(), ref);
 	UInt32 const								kEventClass = GetEventClass(inEvent);
 	UInt32 const								kEventKind = GetEventKind(inEvent);
 	
@@ -878,8 +876,6 @@ receiveArrowHitForPopUpMenu		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			}
 		}
 	}
-	
-	gMyPopUpMenuArrowsHandlerPtrLocks().releaseLock(ref, &ptr);
 	return result;
 }// receiveArrowHitForPopUpMenu
 

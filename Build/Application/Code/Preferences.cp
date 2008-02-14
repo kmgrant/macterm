@@ -264,6 +264,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	typedef My_ContextInterface*		My_ContextInterfacePtr;
 	
 	typedef MemoryBlockPtrLocker< Preferences_ContextRef, My_ContextInterface >			My_ContextPtrLocker;
+	typedef LockAcquireRelease< Preferences_ContextRef, My_ContextInterface >			My_ContextAutoLocker;
 	typedef MemoryBlockReferenceLocker< Preferences_ContextRef, My_ContextInterface >	My_ContextReferenceLocker;
 	
 	/*!
@@ -747,7 +748,7 @@ WARNING:	Currently, cloning a Default context is
 Preferences_ContextRef
 Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext)
 {
-	My_ContextInterfacePtr		basePtr = gMyContextPtrLocks().acquireLock(inBaseContext);
+	My_ContextAutoLocker		basePtr(gMyContextPtrLocks(), inBaseContext);
 	Preferences_Class			baseClass = kPreferences_ClassGeneral;
 	CFStringRef					nameCFString = nullptr;
 	Preferences_ContextRef		result = nullptr;
@@ -763,9 +764,9 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext)
 	result = Preferences_NewContext(baseClass, nameCFString);
 	if (nullptr != result)
 	{
-		My_ContextInterfacePtr		resultPtr = gMyContextPtrLocks().acquireLock(result);
-		CFRetainRelease				sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
-		CFArrayRef					sourceKeysCFArray = sourceKeys.returnCFArrayRef();
+		My_ContextAutoLocker	resultPtr(gMyContextPtrLocks(), result);
+		CFRetainRelease			sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
+		CFArrayRef				sourceKeysCFArray = sourceKeys.returnCFArrayRef();
 		
 		
 		if (nullptr != sourceKeysCFArray)
@@ -784,10 +785,7 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext)
 				resultPtr->addValue(kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
 			}
 		}
-		gMyContextPtrLocks().releaseLock(result, &resultPtr);
 	}
-	
-	gMyContextPtrLocks().releaseLock(inBaseContext, &basePtr);
 	return result;
 }// NewCloneContext
 
@@ -1334,8 +1332,8 @@ if an unexpected error occurred while searching for names
 Preferences_Result
 Preferences_ContextDeleteSaved	(Preferences_ContextRef		inContext)
 {
-	Preferences_Result			result = kPreferences_ResultOK;
-	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
+	Preferences_Result		result = kPreferences_ResultOK;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 	
 	
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
@@ -1355,8 +1353,6 @@ Preferences_ContextDeleteSaved	(Preferences_ContextRef		inContext)
 			changeNotify(kPreferences_ChangeNumberOfContexts);
 		}
 	}
-	
-	gMyContextPtrLocks().releaseLock(inContext, &ptr);
 	return result;
 }// ContextDeleteSaved
 
@@ -1408,7 +1404,7 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 	result = assertInitialized();
 	if (result == kPreferences_ResultOK)
 	{
-		My_ContextInterfacePtr	ptr = gMyContextPtrLocks().acquireLock(inContext);
+		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 		
 		
 		switch (ptr->returnClass())
@@ -1439,7 +1435,6 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 			result = kPreferences_ResultUnknownTagOrClass;
 			break;
 		}
-		gMyContextPtrLocks().releaseLock(inContext, &ptr);
 	}
 	return result;
 }// ContextGetData
@@ -1464,8 +1459,8 @@ Preferences_Result
 Preferences_ContextGetName	(Preferences_ContextRef		inContext,
 							 CFStringRef&				outName)
 {
-	Preferences_Result			result = kPreferences_ResultOK;
-	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
+	Preferences_Result		result = kPreferences_ResultOK;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 	
 	
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
@@ -1474,8 +1469,6 @@ Preferences_ContextGetName	(Preferences_ContextRef		inContext,
 		outName = ptr->returnName();
 		if (nullptr == outName) result = kPreferences_ResultUnknownName;
 	}
-	
-	gMyContextPtrLocks().releaseLock(inContext, &ptr);
 	return result;
 }// ContextGetName
 
@@ -1497,8 +1490,8 @@ Preferences_Result
 Preferences_ContextRename	(Preferences_ContextRef		inContext,
 							 CFStringRef				inNewName)
 {
-	Preferences_Result			result = kPreferences_ResultOK;
-	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
+	Preferences_Result		result = kPreferences_ResultOK;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 	
 	
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
@@ -1511,8 +1504,6 @@ Preferences_ContextRename	(Preferences_ContextRef		inContext,
 			changeNotify(kPreferences_ChangeContextName, inContext);
 		}
 	}
-	
-	gMyContextPtrLocks().releaseLock(inContext, &ptr);
 	return result;
 }// ContextRename
 
@@ -1535,8 +1526,8 @@ if preferences could not be fully saved for any reason
 Preferences_Result
 Preferences_ContextSave		(Preferences_ContextRef		inContext)
 {
-	Preferences_Result			result = kPreferences_ResultOK;
-	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
+	Preferences_Result		result = kPreferences_ResultOK;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 	
 	
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
@@ -1552,8 +1543,6 @@ Preferences_ContextSave		(Preferences_ContextRef		inContext)
 			Preferences_RetainContext(inContext);
 		}
 	}
-	
-	gMyContextPtrLocks().releaseLock(inContext, &ptr);
 	return result;
 }// ContextSave
 
@@ -1585,8 +1574,8 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 							 size_t						inDataSize,
 							 void const*				inDataPtr)
 {
-	Preferences_Result			result = kPreferences_ResultOK;
-	My_ContextInterfacePtr		ptr = gMyContextPtrLocks().acquireLock(inContext);
+	Preferences_Result		result = kPreferences_ResultOK;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 	
 	
 	switch (ptr->returnClass())
@@ -1616,8 +1605,6 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 		result = kPreferences_ResultUnknownTagOrClass;
 		break;
 	}
-	
-	gMyContextPtrLocks().releaseLock(inContext, &ptr);
 	return result;
 }// ContextSetData
 

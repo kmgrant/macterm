@@ -3,7 +3,7 @@
 	TextDataFile.cp
 	
 	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -45,7 +45,7 @@
 
 #pragma mark Types
 
-struct TextDataFile
+struct My_TextDataFile
 {
 	TextDataFile_LineEndingStyle	lineEndings;	//!< what character constitutes an end-of-line
 	
@@ -54,17 +54,17 @@ struct TextDataFile
 		SInt16			refNum;			//!< reference number of open file
 	} file;
 };
-typedef struct TextDataFile		TextDataFile;
-typedef TextDataFile*			TextDataFilePtr;
-typedef TextDataFilePtr*		TextDataFileHandle;
+typedef My_TextDataFile*		My_TextDataFilePtr;
+typedef My_TextDataFilePtr*		My_TextDataFileHandle;
 
-typedef MemoryBlockHandleLocker< TextDataFile_Ref, TextDataFile >	TextDataFileHandleLocker;
+typedef MemoryBlockHandleLocker< TextDataFile_Ref, My_TextDataFile >	My_TextDataFileHandleLocker;
+typedef LockAcquireRelease< TextDataFile_Ref, My_TextDataFile >			My_TextDataFileHandleAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	TextDataFileHandleLocker&	gTextDataFileHandleLocks ()	{ static TextDataFileHandleLocker x; return x; }
+	My_TextDataFileHandleLocker&	gTextDataFileHandleLocks ()	{ static My_TextDataFileHandleLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
@@ -101,11 +101,10 @@ TextDataFile_New	(SInt16							inFileReferenceNumber,
 	TextDataFile_Ref	result = nullptr;
 	
 	
-	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(TextDataFile)), TextDataFile_Ref);
+	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_TextDataFile)), TextDataFile_Ref);
 	if (result != nullptr)
 	{
-		TextDataFilePtr		ptr = gTextDataFileHandleLocks().acquireLock(result);
-		OSStatus			error = noErr;
+		My_TextDataFileHandleAutoLocker		ptr(gTextDataFileHandleLocks(), result);
 		
 		
 		if (ptr != nullptr)
@@ -113,8 +112,6 @@ TextDataFile_New	(SInt16							inFileReferenceNumber,
 			ptr->file.refNum = inFileReferenceNumber;
 			ptr->lineEndings = guessLineEndingStyle(ptr->file.refNum);
 		}
-		gTextDataFileHandleLocks().releaseLock(result, &ptr);
-		if (error != noErr) TextDataFile_Dispose(&result);
 	}
 	return result;
 }// New
@@ -133,12 +130,12 @@ TextDataFile_Dispose	(TextDataFile_Ref*	inoutRefPtr)
 {
 	if (inoutRefPtr != nullptr)
 	{
-		TextDataFilePtr		ptr = gTextDataFileHandleLocks().acquireLock(*inoutRefPtr);
-		
-		
-		ptr->file.refNum = -1;
-		gTextDataFileHandleLocks().releaseLock(*inoutRefPtr, &ptr);
-		
+		{
+			My_TextDataFileHandleAutoLocker		ptr(gTextDataFileHandleLocks(), *inoutRefPtr);
+			
+			
+			ptr->file.refNum = -1;
+		}
 		Memory_DisposeHandle(REINTERPRET_CAST(inoutRefPtr, Handle*));
 	}
 }// Dispose
@@ -166,8 +163,8 @@ Boolean
 TextDataFile_AddComment		(TextDataFile_Ref	inRef,
 							 char const*		inCommentTextPtr)
 {
-	TextDataFilePtr		ptr = gTextDataFileHandleLocks().acquireLock(inRef);
-	Boolean				result = false;
+	My_TextDataFileHandleAutoLocker		ptr(gTextDataFileHandleLocks(), inRef);
+	Boolean								result = false;
 	
 	
 	if ((ptr != nullptr) && (inCommentTextPtr != nullptr))
@@ -201,7 +198,6 @@ TextDataFile_AddComment		(TextDataFile_Ref	inRef,
 			}
 		}
 	}
-	gTextDataFileHandleLocks().releaseLock(inRef, &ptr);
 	return result;
 }// AddComment
 
@@ -232,8 +228,8 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 							 char const*					inValue,
 							 TextDataFile_ValueBrackets		inBrackets)
 {
-	TextDataFilePtr		ptr = gTextDataFileHandleLocks().acquireLock(inRef);
-	Boolean				result = false;
+	My_TextDataFileHandleAutoLocker		ptr(gTextDataFileHandleLocks(), inRef);
+	Boolean								result = false;
 	
 	
 	if (ptr != nullptr)
@@ -345,7 +341,6 @@ TextDataFile_AddNameValue	(TextDataFile_Ref				inRef,
 			}
 		}
 	}
-	gTextDataFileHandleLocks().releaseLock(inRef, &ptr);
 	return result;
 }// AddNameValue
 
@@ -536,8 +531,8 @@ TextDataFile_GetNextNameValue	(TextDataFile_Ref	inRef,
 								 SInt16				inValueLength,
 								 Boolean			inStripBrackets)
 {
-	TextDataFilePtr		ptr = gTextDataFileHandleLocks().acquireLock(inRef);
-	Boolean				result = false;
+	My_TextDataFileHandleAutoLocker		ptr(gTextDataFileHandleLocks(), inRef);
+	Boolean								result = false;
 	
 	
 	if (ptr != nullptr)
@@ -571,7 +566,6 @@ TextDataFile_GetNextNameValue	(TextDataFile_Ref	inRef,
 			result = true;
 		}
 	}
-	gTextDataFileHandleLocks().releaseLock(inRef, &ptr);
 	return result;
 }// GetNextNameValue
 
@@ -589,8 +583,8 @@ If the reset succeeds, "true" is returned; otherwise,
 Boolean
 TextDataFile_ResetPointer	(TextDataFile_Ref	inRef)
 {
-	TextDataFilePtr		ptr = gTextDataFileHandleLocks().acquireLock(inRef);
-	Boolean				result = false;
+	My_TextDataFileHandleAutoLocker		ptr(gTextDataFileHandleLocks(), inRef);
+	Boolean								result = false;
 	
 	
 	if (ptr != nullptr)
@@ -602,7 +596,6 @@ TextDataFile_ResetPointer	(TextDataFile_Ref	inRef)
 			result = true;
 		}
 	}
-	gTextDataFileHandleLocks().releaseLock(inRef, &ptr);
 	return result;
 }// ResetPointer
 

@@ -114,6 +114,7 @@ typedef My_FormatDialog*		My_FormatDialogPtr;
 typedef My_FormatDialogPtr*		My_FormatDialogHandle;
 
 typedef MemoryBlockHandleLocker< FormatDialog_Ref, My_FormatDialog >	My_FormatDialogHandleLocker;
+typedef LockAcquireRelease< FormatDialog_Ref, My_FormatDialog >			My_FormatDialogAutoLocker;
 
 #pragma mark Variables
 
@@ -163,7 +164,7 @@ FormatDialog_New	(FormatDialog_SetupDataConstPtr		inSetupDataPtr,
 	
 	if (result != nullptr)
 	{
-		My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(result);
+		My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), result);
 		
 		
 		Cursors_DeferredUseWatch(30); // if it takes more than half a second to initialize, show the watch cursor
@@ -287,7 +288,6 @@ FormatDialog_New	(FormatDialog_SetupDataConstPtr		inSetupDataPtr,
 			}
 			WindowInfo_SetForDialog(ptr->dialog, ptr->windowInfo);
 		}
-		gFormatDialogHandleLocks().releaseLock(result, &ptr);
 	}
 	return result;
 }// New
@@ -310,25 +310,26 @@ FormatDialog_Dispose	(FormatDialog_Ref*	inoutDialogPtr)
 	}
 	else
 	{
-		My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(*inoutDialogPtr);
-		
-		
-		// clean up the Help System
-		HelpSystem_SetWindowKeyPhrase(GetDialogWindow(ptr->dialog), kHelpSystem_KeyPhraseDefault);
-		
-		// release all memory occupied by the dialog
-		//ColorBox_DetachFromUserPaneDialogItem(ptr->dialog, iFormatForegroundColorBox);
-		//ColorBox_DetachFromUserPaneDialogItem(ptr->dialog, iFormatBackgroundColorBox);
-		WindowInfo_Dispose(ptr->windowInfo);
-		DisposeDialog(ptr->dialog), ptr->dialog = nullptr;
-		EventLoop_StopMonitoringWindow(kEventLoop_WindowEventContentTrack, GetDialogWindow(ptr->dialog),
-										ptr->mainEventListener);
-		EventLoop_StopMonitoringWindow(kEventLoop_WindowEventKeyPress, GetDialogWindow(ptr->dialog),
-										ptr->mainEventListener);
-		EventLoop_StopMonitoringWindow(kEventLoop_WindowEventUpdate, GetDialogWindow(ptr->dialog),
-										ptr->mainEventListener);
-		ListenerModel_ReleaseListener(&ptr->mainEventListener);
-		gFormatDialogHandleLocks().releaseLock(*inoutDialogPtr, &ptr);
+		{
+			My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), *inoutDialogPtr);
+			
+			
+			// clean up the Help System
+			HelpSystem_SetWindowKeyPhrase(GetDialogWindow(ptr->dialog), kHelpSystem_KeyPhraseDefault);
+			
+			// release all memory occupied by the dialog
+			//ColorBox_DetachFromUserPaneDialogItem(ptr->dialog, iFormatForegroundColorBox);
+			//ColorBox_DetachFromUserPaneDialogItem(ptr->dialog, iFormatBackgroundColorBox);
+			WindowInfo_Dispose(ptr->windowInfo);
+			DisposeDialog(ptr->dialog), ptr->dialog = nullptr;
+			EventLoop_StopMonitoringWindow(kEventLoop_WindowEventContentTrack, GetDialogWindow(ptr->dialog),
+											ptr->mainEventListener);
+			EventLoop_StopMonitoringWindow(kEventLoop_WindowEventKeyPress, GetDialogWindow(ptr->dialog),
+											ptr->mainEventListener);
+			EventLoop_StopMonitoringWindow(kEventLoop_WindowEventUpdate, GetDialogWindow(ptr->dialog),
+											ptr->mainEventListener);
+			ListenerModel_ReleaseListener(&ptr->mainEventListener);
+		}
 		Memory_DisposeHandle(REINTERPRET_CAST(inoutDialogPtr, Handle*));
 	}
 }// Dispose
@@ -345,7 +346,7 @@ returned.
 void
 FormatDialog_Display	(FormatDialog_Ref	inDialog)
 {
-	My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
+	My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), inDialog);
 	
 	
 	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
@@ -363,7 +364,6 @@ FormatDialog_Display	(FormatDialog_Ref	inDialog)
 		// set the focus
 		FocusDialogItem(ptr->dialog, iFormatEditSizeField);
 	}
-	gFormatDialogHandleLocks().releaseLock(inDialog, &ptr);
 }// Display
 
 
@@ -381,8 +381,8 @@ Boolean
 FormatDialog_GetContents	(FormatDialog_Ref			inDialog,
 							 FormatDialog_SetupDataPtr	outSetupDataPtr)
 {
-	My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
-	Boolean					result = false;
+	My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), inDialog);
+	Boolean						result = false;
 	
 	
 	if (ptr != nullptr)
@@ -390,7 +390,6 @@ FormatDialog_GetContents	(FormatDialog_Ref			inDialog,
 		*outSetupDataPtr = ptr->setupData;
 		result = true;
 	}
-	gFormatDialogHandleLocks().releaseLock(inDialog, &ptr);
 	return result;
 }// GetContents
 
@@ -408,15 +407,14 @@ Returns nullptr if any problems occur.
 HIWindowRef
 FormatDialog_ReturnParentWindow		(FormatDialog_Ref	inDialog)
 {
-	My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(inDialog);
-	HIWindowRef				result = nullptr;
+	My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), inDialog);
+	HIWindowRef					result = nullptr;
 	
 	
 	if (ptr != nullptr)
 	{
 		result = ptr->screenWindow;
 	}
-	gFormatDialogHandleLocks().releaseLock(inDialog, &ptr);
 	return result;
 }// ReturnParentWindow
 
@@ -1054,9 +1052,9 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (ref != nullptr)
 			{
-				My_FormatDialogPtr	ptr = gFormatDialogHandleLocks().acquireLock(ref);
-				DialogRef			dialogHit = nullptr;
-				DialogItemIndex		itemHit = 0;
+				My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), ref);
+				DialogRef					dialogHit = nullptr;
+				DialogItemIndex				itemHit = 0;
 				
 				
 				gCurrentEventFormatDialogPtr = ptr;
@@ -1067,7 +1065,6 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					handleItemHit(ptr, &itemHit);
 				}
 				result = true;
-				gFormatDialogHandleLocks().releaseLock(ref, &ptr);
 			}
 		}
 		break;
@@ -1082,9 +1079,9 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (ref != nullptr)
 			{
-				My_FormatDialogPtr	ptr = gFormatDialogHandleLocks().acquireLock(ref);
-				DialogRef			dialogHit = nullptr;
-				DialogItemIndex		itemHit = 0;
+				My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), ref);
+				DialogRef					dialogHit = nullptr;
+				DialogItemIndex				itemHit = 0;
 				
 				
 				gCurrentEventFormatDialogPtr = ptr;
@@ -1095,7 +1092,6 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					handleItemHit(ptr, &itemHit);
 				}
 				result = true;
-				gFormatDialogHandleLocks().releaseLock(ref, &ptr);
 			}
 		}
 		break;
@@ -1109,14 +1105,13 @@ mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (ref != nullptr)
 			{
-				My_FormatDialogPtr		ptr = gFormatDialogHandleLocks().acquireLock(ref);
+				My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), ref);
 				
 				
 				BeginUpdate(updateInfoPtr->window);
 				UpdateDialog(ptr->dialog, updateInfoPtr->visibleRegion);
 				EndUpdate(updateInfoPtr->window);
 				result = true;
-				gFormatDialogHandleLocks().releaseLock(ref, &ptr);
 			}
 		}
 		break;

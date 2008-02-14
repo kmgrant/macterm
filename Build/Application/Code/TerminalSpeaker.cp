@@ -58,40 +58,41 @@
 
 #pragma mark Types
 
-struct TerminalSpeakerSpeechHandler
+struct My_TerminalSpeakerSpeechHandler
 {
-	TerminalSpeakerSpeechHandler ();
+	My_TerminalSpeakerSpeechHandler ();
 	
-	void		initializeBuffer	(Str255&	inoutBuffer);
+	void	initializeBuffer	(Str255&);
 	
-	Boolean					enabled;		//!< will the computer speak incoming text from this terminal?
-	SpeechChannel			channel;		//!< where text is spoken
-	Str255					buffer;			//!< place to hold text that has not yet been spoken
+	Boolean			enabled;	//!< will the computer speak incoming text from this terminal?
+	SpeechChannel	channel;	//!< where text is spoken
+	Str255			buffer;		//!< place to hold text that has not yet been spoken
 };
 
-struct TerminalSpeaker
+struct My_TerminalSpeaker
 {
-	TerminalSpeaker	(TerminalScreenRef);
-	~TerminalSpeaker ();
+	My_TerminalSpeaker	(TerminalScreenRef);
+	~My_TerminalSpeaker ();
 	
-	TerminalScreenRef				screen;					//!< source of terminal screen data
-	Boolean							isEnabled;				//!< if true, this speaker can emit sound; otherwise, no sound generation APIs work
-	Boolean							isPaused;				//!< if true, sound playback is suspended partway through
-	ListenerModel_ListenerRef		bellHandler;			//!< invoked by a terminal screen buffer when it encounters a bell signal
-	TerminalSpeakerSpeechHandler	speech;					//!< information on speech synthesis
-	TerminalSpeaker_Ref				selfRef;				//!< redundant opaque reference that would resolve to point to this structure
+	TerminalScreenRef					screen;					//!< source of terminal screen data
+	Boolean								isEnabled;				//!< if true, this speaker can emit sound; otherwise, no sound generation APIs work
+	Boolean								isPaused;				//!< if true, sound playback is suspended partway through
+	ListenerModel_ListenerRef			bellHandler;			//!< invoked by a terminal screen buffer when it encounters a bell signal
+	My_TerminalSpeakerSpeechHandler		speech;					//!< information on speech synthesis
+	TerminalSpeaker_Ref					selfRef;				//!< redundant opaque reference that would resolve to point to this structure
 };
-typedef TerminalSpeaker*		TerminalSpeakerPtr;
-typedef TerminalSpeaker const*	TerminalSpeakerConstPtr;
+typedef My_TerminalSpeaker*			My_TerminalSpeakerPtr;
+typedef My_TerminalSpeaker const*	My_TerminalSpeakerConstPtr;
 
-typedef MemoryBlockPtrLocker< TerminalSpeaker_Ref, TerminalSpeaker >	TerminalSpeakerPtrLocker;
+typedef MemoryBlockPtrLocker< TerminalSpeaker_Ref, My_TerminalSpeaker >		My_TerminalSpeakerPtrLocker;
+typedef LockAcquireRelease< TerminalSpeaker_Ref, My_TerminalSpeaker >		My_TerminalSpeakerAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	TerminalSpeakerPtrLocker&	gTerminalSpeakerPtrLocks ()	{ static TerminalSpeakerPtrLocker x; return x; }
-	Boolean						gTerminalSoundsOff = false;		//!< global flag that can nix all sound if set
+	My_TerminalSpeakerPtrLocker&	gTerminalSpeakerPtrLocks ()	{ static My_TerminalSpeakerPtrLocker x; return x; }
+	Boolean							gTerminalSoundsOff = false;		//!< global flag that can nix all sound if set
 }
 
 #pragma mark Internal Method Prototypes
@@ -119,7 +120,7 @@ TerminalSpeaker_New		(TerminalScreenRef		inScreenDataSource)
 	
 	try
 	{
-		result = REINTERPRET_CAST(new TerminalSpeaker(inScreenDataSource), TerminalSpeaker_Ref);
+		result = REINTERPRET_CAST(new My_TerminalSpeaker(inScreenDataSource), TerminalSpeaker_Ref);
 	}
 	catch (std::exception const&	inException)
 	{
@@ -147,12 +148,7 @@ TerminalSpeaker_Dispose   (TerminalSpeaker_Ref*		inoutRefPtr)
 	}
 	else
 	{
-		TerminalSpeakerPtr		ptr = gTerminalSpeakerPtrLocks().acquireLock(*inoutRefPtr);
-		
-		
-		delete ptr;
-		gTerminalSpeakerPtrLocks().releaseLock(*inoutRefPtr, &ptr);
-		*inoutRefPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_TerminalSpeakerPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -184,12 +180,11 @@ do so.
 Boolean
 TerminalSpeaker_IsMuted		(TerminalSpeaker_Ref	inSpeaker)
 {
-	TerminalSpeakerPtr	ptr = gTerminalSpeakerPtrLocks().acquireLock(inSpeaker);
-	Boolean				result = false;
+	My_TerminalSpeakerAutoLocker	ptr(gTerminalSpeakerPtrLocks(), inSpeaker);
+	Boolean							result = false;
 	
 	
 	result = ptr->isEnabled;
-	gTerminalSpeakerPtrLocks().releaseLock(inSpeaker, &ptr);
 	return result;
 }// IsMuted
 
@@ -204,12 +199,11 @@ using TerminalSpeaker_SetPaused().
 Boolean
 TerminalSpeaker_IsPaused	(TerminalSpeaker_Ref	inSpeaker)
 {
-	TerminalSpeakerPtr	ptr = gTerminalSpeakerPtrLocks().acquireLock(inSpeaker);
-	Boolean				result = false;
+	My_TerminalSpeakerAutoLocker	ptr(gTerminalSpeakerPtrLocks(), inSpeaker);
+	Boolean							result = false;
 	
 	
 	result = ptr->isPaused;
-	gTerminalSpeakerPtrLocks().releaseLock(inSpeaker, &ptr);
 	return result;
 }// IsPaused
 
@@ -241,11 +235,10 @@ void
 TerminalSpeaker_SetMuted	(TerminalSpeaker_Ref	inSpeaker,
 							 Boolean				inTurnOffSpeaker)
 {
-	TerminalSpeakerPtr		ptr = gTerminalSpeakerPtrLocks().acquireLock(inSpeaker);
+	My_TerminalSpeakerAutoLocker	ptr(gTerminalSpeakerPtrLocks(), inSpeaker);
 	
 	
 	ptr->isEnabled = !inTurnOffSpeaker;
-	gTerminalSpeakerPtrLocks().releaseLock(inSpeaker, &ptr);
 }// SetMuted
 
 
@@ -259,7 +252,7 @@ void
 TerminalSpeaker_SetPaused	(TerminalSpeaker_Ref	inSpeaker,
 							 Boolean				inInterruptSoundPlayback)
 {
-	TerminalSpeakerPtr		ptr = gTerminalSpeakerPtrLocks().acquireLock(inSpeaker);
+	My_TerminalSpeakerAutoLocker	ptr(gTerminalSpeakerPtrLocks(), inSpeaker);
 	
 	
 	ptr->isPaused = inInterruptSoundPlayback;
@@ -271,7 +264,6 @@ TerminalSpeaker_SetPaused	(TerminalSpeaker_Ref	inSpeaker,
 	{
 		(OSStatus)ContinueSpeech(ptr->speech.channel);
 	}
-	gTerminalSpeakerPtrLocks().releaseLock(inSpeaker, &ptr);
 }// SetPaused
 
 
@@ -323,8 +315,8 @@ TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref	inSpeaker,
 											 void const*			inBuffer,
 											 Size					inBufferSize)
 {
-	TerminalSpeakerPtr			ptr = gTerminalSpeakerPtrLocks().acquireLock(inSpeaker);
-	TerminalSpeaker_Result		result = kTerminalSpeaker_ResultOK;
+	My_TerminalSpeakerAutoLocker	ptr(gTerminalSpeakerPtrLocks(), inSpeaker);
+	TerminalSpeaker_Result			result = kTerminalSpeaker_ResultOK;
 	
 	
 	if (ptr != nullptr)
@@ -346,7 +338,6 @@ TerminalSpeaker_SynthesizeSpeechFromBuffer	(TerminalSpeaker_Ref	inSpeaker,
 			}
 		}
 	}
-	gTerminalSpeakerPtrLocks().releaseLock(inSpeaker, &ptr);
 	return result;
 }// SynthesizeSpeechFromBuffer
 
@@ -358,8 +349,8 @@ Creates and initializes a buffer for processing speech.
 
 (3.0)
 */
-TerminalSpeakerSpeechHandler::
-TerminalSpeakerSpeechHandler ()
+My_TerminalSpeakerSpeechHandler::
+My_TerminalSpeakerSpeechHandler ()
 :
 enabled(false),
 channel(nullptr),
@@ -370,7 +361,7 @@ buffer()
 	
 	//if (noErr != error) throw std::runtime_error("cannot create speech channel");
 	initializeBuffer(this->buffer);
-}// TerminalSpeakerSpeechHandler default constructor
+}// My_TerminalSpeakerSpeechHandler default constructor
 
 
 /*!
@@ -379,7 +370,7 @@ Initializes the specified buffer and returns it.
 (3.1)
 */
 void
-TerminalSpeakerSpeechHandler::
+My_TerminalSpeakerSpeechHandler::
 initializeBuffer	(Str255&	inoutBuffer)
 {
 	PLstrcpy(inoutBuffer, "\p");
@@ -393,8 +384,8 @@ returned, or a negative value if any problems occur.
 
 (3.0)
 */
-TerminalSpeaker::
-TerminalSpeaker		(TerminalScreenRef		inScreenDataSource)
+My_TerminalSpeaker::
+My_TerminalSpeaker	(TerminalScreenRef		inScreenDataSource)
 :
 screen(inScreenDataSource),
 isEnabled(true),
@@ -406,7 +397,7 @@ selfRef(REINTERPRET_CAST(this, TerminalSpeaker_Ref))
 	// ask to be notified of terminal bells
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeText, this->bellHandler);
-}// TerminalSpeaker one-argument constructor
+}// My_TerminalSpeaker one-argument constructor
 
 
 /*!
@@ -415,8 +406,8 @@ freeing all resources allocated by that routine.
 
 (3.0)
 */
-TerminalSpeaker::
-~TerminalSpeaker ()
+My_TerminalSpeaker::
+~My_TerminalSpeaker ()
 {
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeText, this->bellHandler);
@@ -425,7 +416,7 @@ TerminalSpeaker::
 	{
 		(OSStatus)DisposeSpeechChannel(this->speech.channel), this->speech.channel = nullptr;
 	}
-}// TerminalSpeaker destructor
+}// My_TerminalSpeaker destructor
 
 
 /*!

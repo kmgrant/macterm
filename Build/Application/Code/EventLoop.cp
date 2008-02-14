@@ -85,100 +85,94 @@
 
 #pragma mark Constants
 
-typedef UInt32 MouseRegionType;
-enum
-{
-	kMouseRegionTypeNowhere = 0,
-	kMouseRegionTypeTerminalTextSelection = 1,
-	kMouseRegionTypeTerminalScreen = 2,
-	kMouseRegionTypeGraphicsScreen = 3
-};
-
 /*!
-Information stored in the control event info collection.
+Information stored in the view event info collection.
 */
-typedef SInt32 MyControlEventInfoType;
+typedef SInt32 My_ViewEventInfoType;
 enum
 {
-	kMyControlEventInfoTypeEventTargetRef		= 'cetg'		// data: MyControlEventTargetRef
+	kMy_ViewEventInfoTypeEventTargetRef			= 'cetg'		// data: My_ViewEventTargetRef
 };
 
 /*!
 Information stored in the window event info collection.
 */
-typedef SInt32 MyWindowEventInfoType;
+typedef SInt32 My_WindowEventInfoType;
 enum
 {
-	kMyWindowEventInfoTypeEventTargetRef		= 'wetg'		// data: MyWindowEventTargetRef
+	kMy_WindowEventInfoTypeEventTargetRef		= 'wetg'		// data: My_WindowEventTargetRef
 };
 
 #pragma mark Types
 
-typedef std::map< EventLoop_KeyEquivalent, ControlRef >		EventLoopKeyEquivalentToControlMap;
+typedef std::map< EventLoop_KeyEquivalent, HIViewRef >		EventLoopKeyEquivalentToControlMap;
 
-struct MyControlEventTarget
+struct My_ViewEventTarget
 {
-	ControlRef			control;
+	HIViewRef			control;
 	ListenerModel_Ref	listenerModel;
 };
-typedef MyControlEventTarget*					MyControlEventTargetPtr;
-typedef MyControlEventTarget const*				MyControlEventTargetConstPtr;
-typedef MyControlEventTarget**					MyControlEventTargetHandle;
-typedef struct OpaqueMyControlEventTarget**		MyControlEventTargetRef;
+typedef My_ViewEventTarget*						My_ViewEventTargetPtr;
+typedef My_ViewEventTarget const*				My_ViewEventTargetConstPtr;
+typedef My_ViewEventTarget**					My_ViewEventTargetHandle;
+typedef struct My_OpaqueViewEventTarget**		My_ViewEventTargetRef;
 
-typedef MemoryBlockHandleLocker< MyControlEventTargetRef, MyControlEventTarget >	MyControlEventTargetHandleLocker;
+typedef MemoryBlockHandleLocker< My_ViewEventTargetRef, My_ViewEventTarget >	My_ViewEventTargetHandleLocker;
+typedef LockAcquireRelease< My_ViewEventTargetRef, My_ViewEventTarget >			My_ViewEventTargetAutoLocker;
 
-struct MyGlobalEventTarget
+struct My_GlobalEventTarget
 {
 	ListenerModel_Ref	listenerModel;
 };
-typedef MyGlobalEventTarget*				MyGlobalEventTargetPtr;
-typedef MyGlobalEventTarget const*			MyGlobalEventTargetConstPtr;
-typedef MyGlobalEventTarget**				MyGlobalEventTargetHandle;
-typedef struct OpaqueMyGlobalEventTarget**	MyGlobalEventTargetRef;
+typedef My_GlobalEventTarget*				My_GlobalEventTargetPtr;
+typedef My_GlobalEventTarget const*			My_GlobalEventTargetConstPtr;
+typedef My_GlobalEventTarget**				My_GlobalEventTargetHandle;
+typedef struct OpaqueMy_GlobalEventTarget**	My_GlobalEventTargetRef;
 
-typedef MemoryBlockHandleLocker< MyGlobalEventTargetRef, MyGlobalEventTarget >		MyGlobalEventTargetHandleLocker;
+typedef MemoryBlockHandleLocker< My_GlobalEventTargetRef, My_GlobalEventTarget >	My_GlobalEventTargetHandleLocker;
+typedef LockAcquireRelease< My_GlobalEventTargetRef, My_GlobalEventTarget >			My_GlobalEventTargetAutoLocker;
 
-struct MyWindowEventTarget
+struct My_WindowEventTarget
 {
-	WindowRef							window;
+	HIWindowRef							window;
 	ListenerModel_Ref					listenerModel;
 	EventLoopKeyEquivalentToControlMap	keyEquivalentsToControls;
-	ControlRef							defaultButton;
-	ControlRef							cancelButton;
+	HIViewRef							defaultButton;
+	HIViewRef							cancelButton;
 };
-typedef MyWindowEventTarget*				MyWindowEventTargetPtr;
-typedef MyWindowEventTarget const*			MyWindowEventTargetConstPtr;
-typedef MyWindowEventTarget**				MyWindowEventTargetHandle;
-typedef struct OpaqueMyWindowEventTarget**	MyWindowEventTargetRef;
+typedef My_WindowEventTarget*				My_WindowEventTargetPtr;
+typedef My_WindowEventTarget const*			My_WindowEventTargetConstPtr;
+typedef My_WindowEventTarget**				My_WindowEventTargetHandle;
+typedef struct My_OpaqueWindowEventTarget**	My_WindowEventTargetRef;
 
-typedef MemoryBlockPtrLocker< MyWindowEventTargetRef, MyWindowEventTarget >		MyWindowEventTargetPtrLocker;
+typedef MemoryBlockPtrLocker< My_WindowEventTargetRef, My_WindowEventTarget >	My_WindowEventTargetPtrLocker;
+typedef LockAcquireRelease< My_WindowEventTargetRef, My_WindowEventTarget >		My_WindowEventTargetAutoLocker;
 
 #pragma mark Internal Method Prototypes
 
 static EventLoop_KeyEquivalent	createKeyboardEquivalent		(SInt16, SInt16, Boolean);
-static void						disposeControlEventTarget		(MyControlEventTargetRef*);
-static void						disposeGlobalEventTarget		(MyGlobalEventTargetRef*);
-static void						disposeWindowEventTarget		(MyWindowEventTargetRef*);
+static void						disposeGlobalEventTarget		(My_GlobalEventTargetRef*);
+static void						disposeViewEventTarget			(My_ViewEventTargetRef*);
+static void						disposeWindowEventTarget		(My_WindowEventTargetRef*);
 static void						eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
-static Boolean					eventNotifyForControl			(EventLoop_ControlEvent, ControlRef, void*);
-static Boolean					eventNotifyForWindow			(EventLoop_WindowEvent, WindowRef, void*);
-static Boolean					eventTargetExistsForControl		(ControlRef);
-static Boolean					eventTargetExistsForWindow		(WindowRef);
-static MyControlEventTargetRef	findControlEventTarget			(ControlRef);
-static MyWindowEventTargetRef	findWindowEventTarget			(WindowRef);
+static Boolean					eventNotifyForControl			(EventLoop_ControlEvent, HIViewRef, void*);
+static Boolean					eventNotifyForWindow			(EventLoop_WindowEvent, HIWindowRef, void*);
+static Boolean					eventTargetExistsForControl		(HIViewRef);
+static Boolean					eventTargetExistsForWindow		(HIWindowRef);
+static My_ViewEventTargetRef	findViewEventTarget				(HIViewRef);
+static My_WindowEventTargetRef	findWindowEventTarget			(HIWindowRef);
 static Boolean					handleActivate					(EventRecord*, Boolean);
 static Boolean					handleKeyDown					(EventRecord*);
 static Boolean					handleUpdate					(EventRecord*);
-static Boolean					isAnyListenerForControlEvent	(ControlRef, EventLoop_ControlEvent);
-static Boolean					isAnyListenerForWindowEvent		(WindowRef, EventLoop_WindowEvent);
-static Boolean					isCancelButton					(ControlRef);
-static Boolean					isDefaultButton					(ControlRef);
-static ControlRef				matchesKeyboardEquivalent		(WindowRef, SInt16, SInt16, Boolean);
-static ControlRef				matchesKeyboardEquivalent		(WindowRef, EventLoop_KeyEquivalent);
-static MyControlEventTargetRef	newControlEventTarget			(ControlRef);
-static MyGlobalEventTargetRef	newGlobalEventTarget			();
-static MyWindowEventTargetRef	newStandardWindowEventTarget	(WindowRef);
+static Boolean					isAnyListenerForViewEvent		(HIViewRef, EventLoop_ControlEvent);
+static Boolean					isAnyListenerForWindowEvent		(HIWindowRef, EventLoop_WindowEvent);
+static Boolean					isCancelButton					(HIViewRef);
+static Boolean					isDefaultButton					(HIViewRef);
+static HIViewRef				matchesKeyboardEquivalent		(HIWindowRef, SInt16, SInt16, Boolean);
+static HIViewRef				matchesKeyboardEquivalent		(HIWindowRef, EventLoop_KeyEquivalent);
+static My_GlobalEventTargetRef	newGlobalEventTarget			();
+static My_WindowEventTargetRef	newStandardWindowEventTarget	(HIWindowRef);
+static My_ViewEventTargetRef	newViewEventTarget				(HIViewRef);
 static pascal OSStatus			receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
@@ -192,15 +186,15 @@ static pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, voi
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	MyGlobalEventTargetRef				gGlobalEventTarget = nullptr;
-	Collection							gControlEventInfo = nullptr,
-										gWindowEventInfo = nullptr;
+	My_GlobalEventTargetRef				gGlobalEventTarget = nullptr;
+	Collection							gViewEventInfo = nullptr;
+	Collection							gWindowEventInfo = nullptr;
 	SInt16								gHaveInstalledNotification = 0;
 	UInt32								gTicksWaitNextEvent = 0L;
 	NMRec*								gBeepNotificationPtr = nullptr;
-	MyControlEventTargetHandleLocker&	gControlEventTargetHandleLocks ()	{ static MyControlEventTargetHandleLocker x; return x; }
-	MyGlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static MyGlobalEventTargetHandleLocker x; return x; }
-	MyWindowEventTargetPtrLocker&		gWindowEventTargetPtrLocks ()		{ static MyWindowEventTargetPtrLocker x; return x; }
+	My_ViewEventTargetHandleLocker&		gViewEventTargetHandleLocks ()		{ static My_ViewEventTargetHandleLocker x; return x; }
+	My_GlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static My_GlobalEventTargetHandleLocker x; return x; }
+	My_WindowEventTargetPtrLocker&		gWindowEventTargetPtrLocks ()		{ static My_WindowEventTargetPtrLocker x; return x; }
 	CarbonEventHandlerWrap				gCarbonEventHICommandHandler(GetApplicationEventTarget(),
 																		receiveHICommand,
 																		CarbonEventSetInClass
@@ -290,7 +284,7 @@ EventLoop_Init ()
 	
 	// create listener models to handle event notifications
 	gGlobalEventTarget = newGlobalEventTarget();
-	gControlEventInfo = NewCollection();
+	gViewEventInfo = NewCollection();
 	gWindowEventInfo = NewCollection();
 	
 	// the update-status handler for Preferences does not appear to be
@@ -321,9 +315,9 @@ EventLoop_Done ()
 	
 	// destroy any control event targets that were allocated
 	{
-		MyControlEventTargetRef		eventTarget = nullptr;
+		My_ViewEventTargetRef		eventTarget = nullptr;
 		SInt32						itemCount = CountTaggedCollectionItems
-												(gControlEventInfo, kMyControlEventInfoTypeEventTargetRef);
+												(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef);
 		SInt32						itemSizeActualSize = sizeof(eventTarget);
 		register SInt32				i = 0;
 		OSStatus					error = noErr;
@@ -331,26 +325,26 @@ EventLoop_Done ()
 		
 		for (i = 1; i <= itemCount; ++i)
 		{
-			error = GetTaggedCollectionItem(gControlEventInfo, kMyControlEventInfoTypeEventTargetRef, i,
+			error = GetTaggedCollectionItem(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, i,
 											&itemSizeActualSize, &eventTarget);
-			if (error == noErr) disposeControlEventTarget(&eventTarget);
+			if (error == noErr) disposeViewEventTarget(&eventTarget);
 		}
 	}
-	DisposeCollection(gControlEventInfo), gControlEventInfo = nullptr;
+	DisposeCollection(gViewEventInfo), gViewEventInfo = nullptr;
 	
 	// destroy any window event targets that were allocated
 	{
-		MyWindowEventTargetRef	eventTarget = nullptr;
-		SInt32					itemCount = CountTaggedCollectionItems
-											(gWindowEventInfo, kMyWindowEventInfoTypeEventTargetRef);
-		SInt32					itemSizeActualSize = sizeof(eventTarget);
-		register SInt32			i = 0;
-		OSStatus				error = noErr;
+		My_WindowEventTargetRef		eventTarget = nullptr;
+		SInt32						itemCount = CountTaggedCollectionItems
+												(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef);
+		SInt32						itemSizeActualSize = sizeof(eventTarget);
+		register SInt32				i = 0;
+		OSStatus					error = noErr;
 		
 		
 		for (i = 1; i <= itemCount; ++i)
 		{
-			error = GetTaggedCollectionItem(gWindowEventInfo, kMyWindowEventInfoTypeEventTargetRef, i,
+			error = GetTaggedCollectionItem(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, i,
 											&itemSizeActualSize, &eventTarget);
 			if (error == noErr) disposeWindowEventTarget(&eventTarget);
 		}
@@ -499,7 +493,7 @@ in (ideal state, user state).
 (3.0)
 */
 void
-EventLoop_HandleZoomEvent	(WindowRef		inWindow)
+EventLoop_HandleZoomEvent	(HIWindowRef	inWindow)
 {
 	OSStatus	error = noErr;
 	EventRef	zoomEvent = nullptr;
@@ -678,16 +672,16 @@ registered.
 (3.0)
 */
 Boolean
-EventLoop_RegisterButtonClickKey	(ControlRef					inButton,
+EventLoop_RegisterButtonClickKey	(HIViewRef					inButton,
 									 EventLoop_KeyEquivalent	inKeyEquivalent)
 {
-	Boolean					result = false;
-	MyWindowEventTargetRef	ref = findWindowEventTarget(GetControlOwner(inButton));
+	Boolean						result = false;
+	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inButton));
 	
 	
 	if (ref != nullptr)
 	{
-		MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 		
 		
 		// set a mapping between the given key equivalent and the given button
@@ -749,7 +743,6 @@ EventLoop_RegisterButtonClickKey	(ControlRef					inButton,
 		{
 			// not enough memory?!?!?
 		}
-		gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 	}
 	
 	return result;
@@ -783,10 +776,10 @@ modal dialog box.
 
 (3.0)
 */
-WindowRef
+HIWindowRef
 EventLoop_ReturnRealFrontNonDialogWindow ()
 {
-	WindowRef	result = FrontNonFloatingWindow();
+	HIWindowRef		result = FrontNonFloatingWindow();
 	
 	
 	return result;
@@ -799,7 +792,7 @@ non-floating window.
 
 (3.0)
 */
-WindowRef
+HIWindowRef
 EventLoop_ReturnRealFrontWindow ()
 {
 	return ActiveNonFloatingWindow();
@@ -828,7 +821,7 @@ dialog box.
 (3.0)
 */
 void
-EventLoop_SelectBehindDialogWindows		(WindowRef		inWindow)
+EventLoop_SelectBehindDialogWindows		(HIWindowRef	inWindow)
 {
 	SelectWindow(inWindow);
 }// SelectBehindDialogWindows
@@ -844,7 +837,7 @@ window.
 (3.0)
 */
 void
-EventLoop_SelectOverRealFrontWindow		(WindowRef		inWindow)
+EventLoop_SelectOverRealFrontWindow		(HIWindowRef	inWindow)
 {
 	// I give up, dammit; it’s too hard to prevent
 	// activate events from occurring on Mac OS 8/9.
@@ -874,14 +867,13 @@ EventLoop_Result
 EventLoop_StartMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 							 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_Result		result = noErr;
-	MyGlobalEventTargetPtr	ptr = gGlobalEventTargetHandleLocks().acquireLock(gGlobalEventTarget);
+	EventLoop_Result				result = noErr;
+	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
 	
 	
 	// add a listener to the specified target’s listener model for the given event
 	result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 	if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
-	gGlobalEventTargetHandleLocks().releaseLock(gGlobalEventTarget, &ptr);
 	
 	return result;
 }// StartMonitoring
@@ -920,7 +912,7 @@ callbacks)
 */
 EventLoop_Result
 EventLoop_StartMonitoringControl	(EventLoop_ControlEvent		inForWhatEvent,
-									 ControlRef					inForWhichControlOrNullToReceiveEventsForAllControls,
+									 HIViewRef					inForWhichControlOrNullToReceiveEventsForAllControls,
 									 ListenerModel_ListenerRef	inListener)
 {
 	EventLoop_Result	result = noErr;
@@ -934,18 +926,17 @@ EventLoop_StartMonitoringControl	(EventLoop_ControlEvent		inForWhatEvent,
 	else
 	{
 		// monitor specific control
-		MyControlEventTargetRef		ref = findControlEventTarget(inForWhichControlOrNullToReceiveEventsForAllControls);
+		My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControlOrNullToReceiveEventsForAllControls);
 		
 		
 		if (ref != nullptr)
 		{
-			MyControlEventTargetPtr		ptr = gControlEventTargetHandleLocks().acquireLock(ref);
+			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
 			
 			
 			// add a listener to the specified target’s listener model for the given event
 			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
-			gControlEventTargetHandleLocks().releaseLock(ref, &ptr);
 		}
 	}
 	return result;
@@ -984,7 +975,7 @@ callbacks)
 */
 EventLoop_Result
 EventLoop_StartMonitoringWindow		(EventLoop_WindowEvent		inForWhatEvent,
-									 WindowRef					inForWhichWindowOrNullToReceiveEventsForAllWindows,
+									 HIWindowRef				inForWhichWindowOrNullToReceiveEventsForAllWindows,
 									 ListenerModel_ListenerRef	inListener)
 {
 	EventLoop_Result	result = noErr;
@@ -998,18 +989,17 @@ EventLoop_StartMonitoringWindow		(EventLoop_WindowEvent		inForWhatEvent,
 	else
 	{
 		// monitor specific window
-		MyWindowEventTargetRef	ref = findWindowEventTarget(inForWhichWindowOrNullToReceiveEventsForAllWindows);
+		My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindowOrNullToReceiveEventsForAllWindows);
 		
 		
 		if (ref != nullptr)
 		{
-			MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 			
 			
 			// add a listener to the specified target’s listener model for the given event
 			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
-			gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 		}
 	}
 	return result;
@@ -1029,13 +1019,12 @@ EventLoop_Result
 EventLoop_StopMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 							 ListenerModel_ListenerRef	inListener)
 {
-	EventLoop_Result		result = noErr;
-	MyGlobalEventTargetPtr	ptr = gGlobalEventTargetHandleLocks().acquireLock(gGlobalEventTarget);
+	EventLoop_Result				result = noErr;
+	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
 	
 	
 	// remove a listener from the specified target’s listener model for the given event
 	ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-	gGlobalEventTargetHandleLocks().releaseLock(gGlobalEventTarget, &ptr);
 	
 	return result;
 }// StopMonitoring
@@ -1054,7 +1043,7 @@ always; no errors are currently defined
 */
 EventLoop_Result
 EventLoop_StopMonitoringControl		(EventLoop_ControlEvent		inForWhatEvent,
-									 ControlRef					inForWhichControlOrNullToStopReceivingEventsForAllControls,
+									 HIViewRef					inForWhichControlOrNullToStopReceivingEventsForAllControls,
 									 ListenerModel_ListenerRef	inListener)
 {
 	EventLoop_Result	result = noErr;
@@ -1068,17 +1057,16 @@ EventLoop_StopMonitoringControl		(EventLoop_ControlEvent		inForWhatEvent,
 	else
 	{
 		// ignore specific control
-		MyControlEventTargetRef		ref = findControlEventTarget(inForWhichControlOrNullToStopReceivingEventsForAllControls);
+		My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControlOrNullToStopReceivingEventsForAllControls);
 		
 		
 		if (ref != nullptr)
 		{
-			MyControlEventTargetPtr		ptr = gControlEventTargetHandleLocks().acquireLock(ref);
+			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
 			
 			
 			// remove a listener from the specified target’s listener model for the given event
 			ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-			gControlEventTargetHandleLocks().releaseLock(ref, &ptr);
 		}
 	}
 	return result;
@@ -1098,7 +1086,7 @@ always; no errors are currently defined
 */
 EventLoop_Result
 EventLoop_StopMonitoringWindow	(EventLoop_WindowEvent		inForWhatEvent,
-								 WindowRef					inForWhichWindowOrNullToStopReceivingEventsForAllWindows,
+								 HIWindowRef				inForWhichWindowOrNullToStopReceivingEventsForAllWindows,
 								 ListenerModel_ListenerRef	inListener)
 {
 	EventLoop_Result	result = noErr;
@@ -1112,17 +1100,16 @@ EventLoop_StopMonitoringWindow	(EventLoop_WindowEvent		inForWhatEvent,
 	else
 	{
 		// ignore specific window
-		MyWindowEventTargetRef	ref = findWindowEventTarget(inForWhichWindowOrNullToStopReceivingEventsForAllWindows);
+		My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindowOrNullToStopReceivingEventsForAllWindows);
 		
 		
 		if (ref != nullptr)
 		{
-			MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 			
 			
 			// remove a listener from the specified target’s listener model for the given event
 			ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-			gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 		}
 	}
 	return result;
@@ -1156,16 +1143,16 @@ unregistered.
 (3.0)
 */
 Boolean
-EventLoop_UnregisterButtonClickKey	(ControlRef					inButton,
+EventLoop_UnregisterButtonClickKey	(HIViewRef					inButton,
 									 EventLoop_KeyEquivalent	inKeyEquivalent)
 {
-	Boolean					result = false;
-	MyWindowEventTargetRef	ref = findWindowEventTarget(GetControlOwner(inButton));
+	Boolean						result = false;
+	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inButton));
 	
 	
 	if (ref != nullptr)
 	{
-		MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 		
 		
 		// remove the mapping between the given key equivalent and the given button
@@ -1174,7 +1161,6 @@ EventLoop_UnregisterButtonClickKey	(ControlRef					inButton,
 			ptr->keyEquivalentsToControls.erase(ptr->keyEquivalentsToControls.find(inKeyEquivalent));
 			result = (ptr->keyEquivalentsToControls.find(inKeyEquivalent) == ptr->keyEquivalentsToControls.end());
 		}
-		gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 	}
 	
 	return result;
@@ -1274,27 +1260,28 @@ createKeyboardEquivalent	(SInt16		inCharacterCode,
 
 /*!
 Destroys an event target reference created with the
-newControlEventTarget() routine.
+newViewEventTarget() routine.
 
 (3.0)
 */
 static void
-disposeControlEventTarget	(MyControlEventTargetRef*		inoutRefPtr)
+disposeViewEventTarget	(My_ViewEventTargetRef*		inoutRefPtr)
 {
 	if (inoutRefPtr != nullptr)
 	{
-		MyControlEventTargetPtr		ptr = gControlEventTargetHandleLocks().acquireLock(*inoutRefPtr);
-		
-		
-		if (ptr != nullptr)
 		{
-			// dispose of data members
-			ListenerModel_Dispose(&ptr->listenerModel);
+			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), *inoutRefPtr);
+			
+			
+			if (ptr != nullptr)
+			{
+				// dispose of data members
+				ListenerModel_Dispose(&ptr->listenerModel);
+			}
 		}
-		gControlEventTargetHandleLocks().releaseLock(*inoutRefPtr, &ptr);
 		Memory_DisposeHandle(REINTERPRET_CAST(inoutRefPtr, Handle*));
 	}
-}// disposeControlEventTarget
+}// disposeViewEventTarget
 
 
 /*!
@@ -1304,19 +1291,20 @@ newGlobalEventTarget() routine.
 (3.0)
 */
 static void
-disposeGlobalEventTarget	(MyGlobalEventTargetRef*		inoutRefPtr)
+disposeGlobalEventTarget	(My_GlobalEventTargetRef*	inoutRefPtr)
 {
 	if (inoutRefPtr != nullptr)
 	{
-		MyGlobalEventTargetPtr	ptr = gGlobalEventTargetHandleLocks().acquireLock(*inoutRefPtr);
-		
-		
-		if (ptr != nullptr)
 		{
-			// dispose of data members
-			ListenerModel_Dispose(&ptr->listenerModel);
+			My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), *inoutRefPtr);
+			
+			
+			if (ptr != nullptr)
+			{
+				// dispose of data members
+				ListenerModel_Dispose(&ptr->listenerModel);
+			}
 		}
-		gGlobalEventTargetHandleLocks().releaseLock(*inoutRefPtr, &ptr);
 		Memory_DisposeHandle(REINTERPRET_CAST(inoutRefPtr, Handle*));
 	}
 }// disposeGlobalEventTarget
@@ -1329,20 +1317,21 @@ newWindowEventTarget() routine.
 (3.0)
 */
 static void
-disposeWindowEventTarget	(MyWindowEventTargetRef*		inoutRefPtr)
+disposeWindowEventTarget	(My_WindowEventTargetRef*	inoutRefPtr)
 {
 	if (inoutRefPtr != nullptr)
 	{
-		MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(*inoutRefPtr);
-		
-		
-		if (ptr != nullptr)
 		{
-			// dispose of data members
-			ListenerModel_Dispose(&ptr->listenerModel);
+			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), *inoutRefPtr);
+			
+			
+			if (ptr != nullptr)
+			{
+				// dispose of data members
+				ListenerModel_Dispose(&ptr->listenerModel);
+			}
 		}
-		gWindowEventTargetPtrLocks().releaseLock(*inoutRefPtr, &ptr);
-		delete *(REINTERPRET_CAST(inoutRefPtr, MyWindowEventTargetPtr*)), *inoutRefPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_WindowEventTargetPtr*)), *inoutRefPtr = nullptr;
 	}
 }// disposeWindowEventTarget
 
@@ -1363,12 +1352,11 @@ static void
 eventNotifyGlobal	(EventLoop_GlobalEvent	inEventThatOccurred,
 					 void*					inContextPtr)
 {
-	MyGlobalEventTargetPtr	ptr = gGlobalEventTargetHandleLocks().acquireLock(gGlobalEventTarget);
+	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
 	
 	
 	// invoke listener callback routines appropriately
 	ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inContextPtr);
-	gGlobalEventTargetHandleLocks().releaseLock(gGlobalEventTarget, &ptr);
 }// eventNotifyGlobal
 
 
@@ -1392,22 +1380,21 @@ IMPORTANT:	The context must make sense for the
 */
 static Boolean
 eventNotifyForControl	(EventLoop_ControlEvent		inEventThatOccurred,
-						 ControlRef					inForWhichControl,
+						 HIViewRef					inForWhichControl,
 						 void*						inoutContextPtr)
 {
-	MyControlEventTargetRef		ref = findControlEventTarget(inForWhichControl);
-	Boolean						result = false;
+	My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControl);
+	Boolean					result = false;
 	
 	
 	if (ref != nullptr)
 	{
-		MyControlEventTargetPtr		ptr = gControlEventTargetHandleLocks().acquireLock(ref);
+		My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
 		
 		
 		// invoke listener callback routines appropriately, from the specified control’s event target
 		ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inoutContextPtr,
 												REINTERPRET_CAST(&result, Boolean*));
-		gControlEventTargetHandleLocks().releaseLock(ref, &ptr);
 	}
 	
 	// also notify callbacks that don’t care which control it is
@@ -1434,22 +1421,21 @@ IMPORTANT:	The context must make sense for the
 */
 static Boolean
 eventNotifyForWindow	(EventLoop_WindowEvent	inEventThatOccurred,
-						 WindowRef				inForWhichWindow,
+						 HIWindowRef			inForWhichWindow,
 						 void*					inoutContextPtr)
 {
-	MyWindowEventTargetRef	ref = findWindowEventTarget(inForWhichWindow);
-	Boolean					result = false;
+	My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindow);
+	Boolean						result = false;
 	
 	
 	if (ref != nullptr)
 	{
-		MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 		
 		
 		// invoke listener callback routines appropriately, from the specified window’s event target
 		ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inoutContextPtr,
 												REINTERPRET_CAST(&result, Boolean*));
-		gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 	}
 	
 	// also notify callbacks that don’t care which window it is
@@ -1478,7 +1464,7 @@ to figure out what to do in response to an event).
 (3.0)
 */
 static Boolean
-eventTargetExistsForControl		(ControlRef		inForWhichControl)
+eventTargetExistsForControl		(HIViewRef		inForWhichControl)
 {
 	Boolean		result = false;
 	SInt32		uniqueID = REINTERPRET_CAST(inForWhichControl, SInt32);
@@ -1489,7 +1475,7 @@ eventTargetExistsForControl		(ControlRef		inForWhichControl)
 		OSStatus		error = noErr;
 		
 		
-		error = GetCollectionItemInfo(gControlEventInfo, kMyControlEventInfoTypeEventTargetRef, uniqueID,
+		error = GetCollectionItemInfo(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
 										REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
 										REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
 										REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*));
@@ -1529,7 +1515,7 @@ eventTargetExistsForWindow		(WindowRef		inForWhichWindow)
 		OSStatus	error = noErr;
 		
 		
-		error = GetCollectionItemInfo(gWindowEventInfo, kMyWindowEventInfoTypeEventTargetRef, uniqueID,
+		error = GetCollectionItemInfo(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
 										REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
 										REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
 										REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*));
@@ -1547,23 +1533,23 @@ for particular controls in windows.
 
 (3.0)
 */
-static MyControlEventTargetRef
-findControlEventTarget		(ControlRef		inForWhichControl)
+static My_ViewEventTargetRef
+findViewEventTarget		(HIViewRef		inForWhichControl)
 {
-	MyControlEventTargetRef		result = nullptr;
-	SInt32						uniqueID = REINTERPRET_CAST(inForWhichControl, SInt32);
-	OSStatus					error = noErr;
+	My_ViewEventTargetRef	result = nullptr;
+	SInt32					uniqueID = REINTERPRET_CAST(inForWhichControl, SInt32);
+	OSStatus				error = noErr;
 		
 		
-	if (GetCollectionItemInfo(gControlEventInfo, kMyControlEventInfoTypeEventTargetRef, uniqueID,
+	if (GetCollectionItemInfo(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
 								REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
 								REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
 								REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*)) ==
 		collectionItemNotFoundErr)
 	{
 		// no target exists for this control - create one
-		result = newControlEventTarget(inForWhichControl);
-		error = AddCollectionItem(gControlEventInfo, kMyControlEventInfoTypeEventTargetRef, uniqueID,
+		result = newViewEventTarget(inForWhichControl);
+		error = AddCollectionItem(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
 									sizeof(result), &result);
 		if (error != noErr)
 		{
@@ -1578,7 +1564,7 @@ findControlEventTarget		(ControlRef		inForWhichControl)
 		
 		
 		// a target already exists for this control - return it
-		error = GetCollectionItem(gControlEventInfo, kMyControlEventInfoTypeEventTargetRef, uniqueID,
+		error = GetCollectionItem(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
 									&itemSizeActualSize, &result);
 		if (error != noErr)
 		{
@@ -1588,7 +1574,7 @@ findControlEventTarget		(ControlRef		inForWhichControl)
 		}
 	}
 	return result;
-}// findControlEventTarget
+}// findViewEventTarget
 
 
 /*!
@@ -1599,15 +1585,15 @@ for particular windows.
 
 (3.0)
 */
-static MyWindowEventTargetRef
+static My_WindowEventTargetRef
 findWindowEventTarget	(WindowRef		inForWhichWindow)
 {
-	MyWindowEventTargetRef		result = nullptr;
+	My_WindowEventTargetRef		result = nullptr;
 	SInt32						uniqueID = REINTERPRET_CAST(inForWhichWindow, SInt32);
 	OSStatus					error = noErr;
 	
 	
-	if (GetCollectionItemInfo(gWindowEventInfo, kMyWindowEventInfoTypeEventTargetRef, uniqueID,
+	if (GetCollectionItemInfo(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
 								REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
 								REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
 								REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*)) ==
@@ -1615,7 +1601,7 @@ findWindowEventTarget	(WindowRef		inForWhichWindow)
 	{
 		// no target exists for this window - create one
 		result = newStandardWindowEventTarget(inForWhichWindow);
-		error = AddCollectionItem(gWindowEventInfo, kMyWindowEventInfoTypeEventTargetRef, uniqueID,
+		error = AddCollectionItem(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
 									sizeof(result), &result);
 		if (error != noErr)
 		{
@@ -1630,7 +1616,7 @@ findWindowEventTarget	(WindowRef		inForWhichWindow)
 		
 		
 		// a target already exists for this window - return it
-		error = GetCollectionItem(gWindowEventInfo, kMyWindowEventInfoTypeEventTargetRef, uniqueID,
+		error = GetCollectionItem(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
 									&itemSizeActualSize, &result);
 		if (error != noErr)
 		{
@@ -1693,7 +1679,7 @@ handleKeyDown	(EventRecord*	inoutEventPtr)
 	unless (result)
 	{
 		EventInfoWindowScope_KeyPress	keyPressInfo;
-		ControlRef						keyEquivalentControl = nullptr;
+		HIViewRef						keyEquivalentControl = nullptr;
 		Boolean							someHandlerAbsorbedEvent = false;
 		
 		
@@ -1754,7 +1740,7 @@ handleKeyDown	(EventRecord*	inoutEventPtr)
 			// control key presses, and yet still find out about key
 			// events when you need to (for example, in text fields
 			// where a Return key press initiates an action).
-			ControlRef		focusControl = nullptr;
+			HIViewRef		focusControl = nullptr;
 			OSStatus		error = noErr;
 			
 			
@@ -1762,7 +1748,7 @@ handleKeyDown	(EventRecord*	inoutEventPtr)
 			if ((error == noErr) && (focusControl != nullptr))
 			{
 				// fire off key press events
-				if (isAnyListenerForControlEvent(focusControl, kEventLoop_ControlEventKeyPress))
+				if (isAnyListenerForViewEvent(focusControl, kEventLoop_ControlEventKeyPress))
 				{
 					EventInfoControlScope_KeyPress		controlKeyPressInfo;
 					
@@ -1928,28 +1914,27 @@ if you should handle the event yourself.
 (3.0)
 */
 static Boolean
-isAnyListenerForControlEvent	(ControlRef					inForWhichControl,
-								 EventLoop_ControlEvent		inForWhichEvent)
+isAnyListenerForViewEvent	(HIViewRef					inForWhichControl,
+							 EventLoop_ControlEvent		inForWhichEvent)
 {
 	Boolean		result = eventTargetExistsForControl(inForWhichControl);
 	
 	
 	if (result)
 	{
-		MyControlEventTargetRef		ref = findControlEventTarget(inForWhichControl);
+		My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControl);
 		
 		
 		if (ref != nullptr)
 		{
-			MyControlEventTargetPtr		ptr = gControlEventTargetHandleLocks().acquireLock(ref);
+			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
 			
 			
 			result = ListenerModel_IsAnyListenerForEvent(ptr->listenerModel, inForWhichEvent);
-			gControlEventTargetHandleLocks().releaseLock(ref, &ptr);
 		}
 	}
 	return result;
-}// isAnyListenerForControlEvent
+}// isAnyListenerForViewEvent
 
 
 /*!
@@ -1970,16 +1955,15 @@ isAnyListenerForWindowEvent		(WindowRef					inForWhichWindow,
 	
 	if (result)
 	{
-		MyWindowEventTargetRef	ref = findWindowEventTarget(inForWhichWindow);
+		My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindow);
 		
 		
 		if (ref != nullptr)
 		{
-			MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 			
 			
 			result = ListenerModel_IsAnyListenerForEvent(ptr->listenerModel, inForWhichEvent);
-			gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 		}
 	}
 	return result;
@@ -1994,19 +1978,18 @@ its window.
 (3.0)
 */
 static Boolean
-isCancelButton		(ControlRef		inControl)
+isCancelButton		(HIViewRef		inControl)
 {
-	Boolean					result = false;
-	MyWindowEventTargetRef	ref = findWindowEventTarget(GetControlOwner(inControl));
+	Boolean						result = false;
+	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inControl));
 	
 	
 	if (ref != nullptr)
 	{
-		MyWindowEventTargetConstPtr		ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 		
 		
 		result = (ptr->cancelButton == inControl);
-		gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 	}
 	return result;
 }// isCancelButton
@@ -2020,19 +2003,18 @@ its window.
 (3.0)
 */
 static Boolean
-isDefaultButton		(ControlRef		inControl)
+isDefaultButton		(HIViewRef		inControl)
 {
-	Boolean					result = false;
-	MyWindowEventTargetRef	ref = findWindowEventTarget(GetControlOwner(inControl));
+	Boolean						result = false;
+	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inControl));
 	
 	
 	if (ref != nullptr)
 	{
-		MyWindowEventTargetConstPtr		ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 		
 		
 		result = (ptr->defaultButton == inControl);
-		gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 	}
 	return result;
 }// isDefaultButton
@@ -2046,7 +2028,7 @@ keys are held down.
 
 (3.0)
 */
-static inline ControlRef
+static inline HIViewRef
 matchesKeyboardEquivalent	(WindowRef	inWindow,
 							 SInt16		inCharacterCode,
 							 SInt16		inVirtualKeyCode,
@@ -2063,17 +2045,17 @@ mapping for a control.
 
 (3.0)
 */
-static ControlRef
+static HIViewRef
 matchesKeyboardEquivalent	(WindowRef					inWindow,
 							 EventLoop_KeyEquivalent	inKeyEquivalent)
 {
-	MyWindowEventTargetRef	ref = findWindowEventTarget(inWindow);
-	ControlRef				result = nullptr;
+	My_WindowEventTargetRef		ref = findWindowEventTarget(inWindow);
+	HIViewRef					result = nullptr;
 	
 	
 	if (ref != nullptr)
 	{
-		MyWindowEventTargetPtr								ptr = gWindowEventTargetPtrLocks().acquireLock(ref);
+		My_WindowEventTargetAutoLocker						ptr(gWindowEventTargetPtrLocks(), ref);
 		EventLoopKeyEquivalentToControlMap::const_iterator	keyEquivalentToControlIterator;
 		
 		
@@ -2083,7 +2065,6 @@ matchesKeyboardEquivalent	(WindowRef					inWindow,
 		{
 			result = keyEquivalentToControlIterator->second;
 		}
-		gWindowEventTargetPtrLocks().releaseLock(ref, &ptr);
 	}
 	
 	return result;
@@ -2096,29 +2077,28 @@ control.  Control events have higher priority than
 standard windows, but lower priority than floating
 windows.
 
-Dispose of this with disposeControlEventTarget().
+Dispose of this with disposeViewEventTarget().
 
 (3.0)
 */
-static MyControlEventTargetRef
-newControlEventTarget	(ControlRef		inForWhichControl)
+static My_ViewEventTargetRef
+newViewEventTarget	(HIViewRef		inForWhichControl)
 {
-	MyControlEventTargetRef		result = REINTERPRET_CAST(Memory_NewHandle(sizeof(MyControlEventTarget)),
-															MyControlEventTargetRef);
+	My_ViewEventTargetRef	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_ViewEventTarget)),
+														My_ViewEventTargetRef);
 	
 	
 	if (result != nullptr)
 	{
-		MyControlEventTargetPtr		ptr = gControlEventTargetHandleLocks().acquireLock(result);
+		My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), result);
 		
 		
 		ptr->control = inForWhichControl;
 		ptr->listenerModel = ListenerModel_New(kListenerModel_StyleLogicalOR,
 												kConstantsRegistry_ListenerModelDescriptorEventTargetForControl);
-		gControlEventTargetHandleLocks().releaseLock(result, &ptr);
 	}
 	return result;
-}// newControlEventTarget
+}// newViewEventTarget
 
 
 /*!
@@ -2128,21 +2108,20 @@ this with disposeGlobalEventTarget().
 
 (3.0)
 */
-static MyGlobalEventTargetRef
+static My_GlobalEventTargetRef
 newGlobalEventTarget ()
 {
-	MyGlobalEventTargetRef	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(MyGlobalEventTarget)),
-														MyGlobalEventTargetRef);
+	My_GlobalEventTargetRef		result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_GlobalEventTarget)),
+															My_GlobalEventTargetRef);
 	
 	
 	if (result != nullptr)
 	{
-		MyGlobalEventTargetPtr	ptr = gGlobalEventTargetHandleLocks().acquireLock(result);
+		My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), result);
 		
 		
 		ptr->listenerModel = ListenerModel_New(kListenerModel_StyleLogicalOR,
 												kConstantsRegistry_ListenerModelDescriptorEventTargetGlobal);
-		gGlobalEventTargetHandleLocks().releaseLock(result, &ptr);
 	}
 	return result;
 }// newGlobalEventTarget
@@ -2157,15 +2136,15 @@ Dispose of this with disposeWindowEventTarget().
 
 (3.0)
 */
-static MyWindowEventTargetRef
-newStandardWindowEventTarget	(WindowRef		inForWhichWindow)
+static My_WindowEventTargetRef
+newStandardWindowEventTarget	(HIWindowRef	inForWhichWindow)
 {
-	MyWindowEventTargetRef	result = REINTERPRET_CAST(new MyWindowEventTarget, MyWindowEventTargetRef);
+	My_WindowEventTargetRef		result = REINTERPRET_CAST(new My_WindowEventTarget, My_WindowEventTargetRef);
 	
 	
 	if (result != nullptr)
 	{
-		MyWindowEventTargetPtr	ptr = gWindowEventTargetPtrLocks().acquireLock(result);
+		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), result);
 		
 		
 		ptr->window = inForWhichWindow;
@@ -2173,7 +2152,6 @@ newStandardWindowEventTarget	(WindowRef		inForWhichWindow)
 												kConstantsRegistry_ListenerModelDescriptorEventTargetForWindow);
 		ptr->defaultButton = nullptr;
 		ptr->cancelButton = nullptr;
-		gWindowEventTargetPtrLocks().releaseLock(result, &ptr);
 	}
 	return result;
 }// newStandardWindowEventTarget
@@ -2401,7 +2379,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kHICommandCustomizeToolbar:
 					{
 						// set the item state for the “Show Toolbar” item
-						WindowRef		window = GetUserFocusWindow();
+						HIWindowRef		window = GetUserFocusWindow();
 						HIToolbarRef	targetToolbar = nullptr;
 						OptionBits		toolbarAttributes = 0;
 						OSStatus		error = (nullptr == window)

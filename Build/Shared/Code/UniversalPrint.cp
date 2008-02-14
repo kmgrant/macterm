@@ -3,7 +3,7 @@
 	UniversalPrint.cp
 	
 	Universal Printing Library 1.1
-	© 1998-2006 by Kevin Grant
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -48,7 +48,7 @@
 
 #pragma mark Types
 
-struct MyUniversalPrintRecord
+struct My_UniversalPrintRecord
 {
 	OSStatus			lastResult;			// error code from last Print Manager / Carbon Print Manager call
 #if TARGET_API_MAC_OS8
@@ -68,10 +68,11 @@ struct MyUniversalPrintRecord
 	UniversalPrint_SheetDoneProcPtr	sheetDoneProc;	// possible memory optimization (future)
 #endif
 };
-typedef MyUniversalPrintRecord*			MyUniversalPrintRecordPtr;
-typedef MyUniversalPrintRecordPtr*		MyUniversalPrintRecordHandle;
+typedef My_UniversalPrintRecord*		My_UniversalPrintRecordPtr;
+typedef My_UniversalPrintRecordPtr*		My_UniversalPrintRecordHandle;
 
-typedef MemoryBlockHandleLocker< UniversalPrint_ContextRef, MyUniversalPrintRecord >	MyUniversalPrintRecordHandleLocker;
+typedef MemoryBlockHandleLocker< UniversalPrint_ContextRef, My_UniversalPrintRecord >	My_UniversalPrintRecordHandleLocker;
+typedef LockAcquireRelease< UniversalPrint_ContextRef, My_UniversalPrintRecord >		My_UniversalPrintRecordAutoLocker;
 
 #pragma mark Variables
 
@@ -81,7 +82,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 #if TARGET_API_MAC_CARBON
 	PMSheetDoneUPP			gSheetDoneUPP = nullptr;
 #endif
-	MyUniversalPrintRecordHandleLocker&	gUniversalPrintRecordHandleLocks()		{ static MyUniversalPrintRecordHandleLocker x; return x; }
+	My_UniversalPrintRecordHandleLocker&	gUniversalPrintRecordHandleLocks()		{ static My_UniversalPrintRecordHandleLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
@@ -170,12 +171,12 @@ Mac OS 8 or Mac OS X!
 UniversalPrint_ContextRef
 UniversalPrint_NewContext ()
 {
-	UniversalPrint_ContextRef	result = (UniversalPrint_ContextRef)NewHandle(sizeof(MyUniversalPrintRecord));
+	UniversalPrint_ContextRef	result = (UniversalPrint_ContextRef)NewHandle(sizeof(My_UniversalPrintRecord));
 	
 	
 	if (result != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(result);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), result);
 		
 		
 		ptr->lastResult = noErr;
@@ -197,8 +198,6 @@ UniversalPrint_NewContext ()
 		ptr->idleUPP = nullptr;
 		ptr->sheetDoneProc = nullptr;
 	#endif
-		
-		gUniversalPrintRecordHandleLocks().releaseLock(result, &ptr);
 	}
 	return result;
 }// NewContext
@@ -218,17 +217,18 @@ UniversalPrint_DisposeContext	(UniversalPrint_ContextRef*		inoutRefPtr)
 {
 	if (inoutRefPtr != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(*inoutRefPtr);
-		
-		
-	#if TARGET_API_MAC_OS8
-		DisposeHandle((Handle)ptr->recordHandle), ptr->recordHandle = nullptr;
-	#else
-		(OSStatus)PMRelease(ptr->settings), ptr->settings = nullptr;
-		(OSStatus)PMRelease(ptr->pageFormat), ptr->pageFormat = nullptr;
-		if (ptr->idleUPP != nullptr) DisposePMIdleUPP(ptr->idleUPP), ptr->idleUPP = nullptr;
-	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(*inoutRefPtr, &ptr);
+		{
+			My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), *inoutRefPtr);
+			
+			
+		#if TARGET_API_MAC_OS8
+			DisposeHandle((Handle)ptr->recordHandle), ptr->recordHandle = nullptr;
+		#else
+			(OSStatus)PMRelease(ptr->settings), ptr->settings = nullptr;
+			(OSStatus)PMRelease(ptr->pageFormat), ptr->pageFormat = nullptr;
+			if (ptr->idleUPP != nullptr) DisposePMIdleUPP(ptr->idleUPP), ptr->idleUPP = nullptr;
+		#endif
+		}
 		DisposeHandle((Handle)*inoutRefPtr), *inoutRefPtr = nullptr;
 	}
 }// DisposeContext
@@ -253,7 +253,7 @@ UniversalPrint_BeginDocument	(UniversalPrint_ContextRef		inRef)
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -262,7 +262,6 @@ UniversalPrint_BeginDocument	(UniversalPrint_ContextRef		inRef)
 	#else
 		ptr->lastResult = PMSessionBeginDocument(ptr->session, ptr->settings, ptr->pageFormat);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// BeginDocument
 
@@ -289,7 +288,7 @@ UniversalPrint_BeginPage	(UniversalPrint_ContextRef		inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -317,7 +316,6 @@ UniversalPrint_BeginPage	(UniversalPrint_ContextRef		inRef,
 			ptr->lastResult = PMSessionBeginPage(ptr->session, ptr->pageFormat, boundsPtr);
 		}
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// BeginPage
 
@@ -343,14 +341,13 @@ UniversalPrint_Cancel		(UniversalPrint_ContextRef		inRef)
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		ptr->lastResult = noErr;
 	#if TARGET_API_MAC_OS8
 		(*(ptr->recordHandle))->prJob.fFromUsr = true;
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// Cancel
 
@@ -389,7 +386,7 @@ UniversalPrint_CopyFromSaved	(UniversalPrint_ContextRef			inRef,
 {
 	if ((inRef != nullptr) && (inArchitectureSpecificDataPtr != nullptr))
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		switch (inArchitectureSpecificDataPtr->architecture)
@@ -436,7 +433,6 @@ UniversalPrint_CopyFromSaved	(UniversalPrint_ContextRef			inRef,
 			ptr->lastResult = cfragArchitectureErr;
 			break;
 		}
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// CopyFromSaved
 
@@ -470,7 +466,7 @@ UniversalPrint_CopyToSaved	(UniversalPrint_ContextRef			inRef,
 {
 	if ((inRef != nullptr) && (inoutArchitectureSpecificDataPtr != nullptr))
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		switch (inoutArchitectureSpecificDataPtr->architecture)
@@ -530,7 +526,6 @@ UniversalPrint_CopyToSaved	(UniversalPrint_ContextRef			inRef,
 			ptr->lastResult = cfragArchitectureErr;
 			break;
 		}
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// CopyToSaved
 
@@ -555,7 +550,7 @@ UniversalPrint_DefaultSaved		(UniversalPrint_ContextRef			inRef,
 {
 	if ((inRef != nullptr) && (inoutArchitectureSpecificDataPtr != nullptr))
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		switch (inoutArchitectureSpecificDataPtr->architecture)
@@ -634,7 +629,6 @@ UniversalPrint_DefaultSaved		(UniversalPrint_ContextRef			inRef,
 			ptr->lastResult = cfragArchitectureErr;
 			break;
 		}
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// DefaultSaved
 
@@ -654,7 +648,7 @@ UniversalPrint_EndDocument	(UniversalPrint_ContextRef		inRef)
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -663,7 +657,6 @@ UniversalPrint_EndDocument	(UniversalPrint_ContextRef		inRef)
 	#else
 		ptr->lastResult = PMSessionEndDocument(ptr->session);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// EndDocument
 
@@ -683,7 +676,7 @@ UniversalPrint_EndPage	(UniversalPrint_ContextRef		inRef)
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -692,7 +685,6 @@ UniversalPrint_EndPage	(UniversalPrint_ContextRef		inRef)
 	#else
 		ptr->lastResult = PMSessionEndPage(ptr->session);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// EndPage
 
@@ -712,7 +704,7 @@ UniversalPrint_GetDeviceResolution	(UniversalPrint_ContextRef	inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -729,7 +721,6 @@ UniversalPrint_GetDeviceResolution	(UniversalPrint_ContextRef	inRef,
 			*outHorizontalResolution = STATIC_CAST(resolution.hRes, SInt16);
 		}
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// GetDeviceResolution
 
@@ -749,7 +740,7 @@ UniversalPrint_GetPageBounds	(UniversalPrint_ContextRef		inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -765,7 +756,6 @@ UniversalPrint_GetPageBounds	(UniversalPrint_ContextRef		inRef,
 					STATIC_CAST(preciseBounds.right, SInt16), STATIC_CAST(preciseBounds.bottom, SInt16));
 		}
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// GetPageBounds
 
@@ -785,7 +775,7 @@ UniversalPrint_GetPaperBounds	(UniversalPrint_ContextRef		inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -801,7 +791,6 @@ UniversalPrint_GetPaperBounds	(UniversalPrint_ContextRef		inRef,
 					STATIC_CAST(preciseBounds.right, SInt16), STATIC_CAST(preciseBounds.bottom, SInt16));
 		}
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// GetPaperBounds
 
@@ -838,7 +827,7 @@ UniversalPrint_JobDialogDisplay		(UniversalPrint_ContextRef		inRef)
 	
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		// set initial values for the print dialog box
@@ -850,7 +839,6 @@ UniversalPrint_JobDialogDisplay		(UniversalPrint_ContextRef		inRef)
 	#else
 		ptr->lastResult = PMSessionPrintDialog(ptr->session, ptr->settings, ptr->pageFormat, &result);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 	
 	return result;
@@ -878,12 +866,11 @@ UniversalPrint_MakeCarbonPrintData	(UniversalPrint_ContextRef	inRef,
 {
 	if ((inRef != nullptr) && (outPrintSettingsPtr != nullptr) && (outPageFormatPtr != nullptr))
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		ptr->lastResult = PMCopyPrintSettings(ptr->settings, *outPrintSettingsPtr);
 		if (ptr->lastResult == noErr) ptr->lastResult = PMCopyPageFormat(ptr->pageFormat, *outPageFormatPtr);
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// MakeCarbonPrintData
 #endif
@@ -911,7 +898,7 @@ UniversalPrint_MakeTraditionalPrintData		(UniversalPrint_ContextRef	inRef,
 {
 	if ((inRef != nullptr) && (outTHPrintPtr != nullptr))
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -926,7 +913,6 @@ UniversalPrint_MakeTraditionalPrintData		(UniversalPrint_ContextRef	inRef,
 	#else
 		ptr->lastResult = PMSessionMakeOldPrintRecord(ptr->session, ptr->settings, ptr->pageFormat, outTHPrintPtr);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// MakeTraditionalPrintData
 
@@ -954,7 +940,7 @@ UniversalPrint_PageSetupDialogDisplay		(UniversalPrint_ContextRef		inRef)
 	
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -963,7 +949,6 @@ UniversalPrint_PageSetupDialogDisplay		(UniversalPrint_ContextRef		inRef)
 	#else
 		ptr->lastResult = PMSessionPageSetupDialog(ptr->session, ptr->pageFormat, &result);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 	
 	return result;
@@ -992,7 +977,7 @@ UniversalPrint_PageSetupSheetDisplay	(UniversalPrint_ContextRef			inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		ptr->lastResult = PMSessionUseSheets(ptr->session, inParentWindow, gSheetDoneUPP);
@@ -1001,7 +986,6 @@ UniversalPrint_PageSetupSheetDisplay	(UniversalPrint_ContextRef			inRef,
 			ptr->sheetDoneProc = inProcPtr;
 			ptr->lastResult = PMSessionPageSetupDialogInit(ptr->session, ptr->pageFormat, &ptr->pageSetupDialog);
 		}
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// PageSetupSheetDisplay
 #endif
@@ -1062,11 +1046,10 @@ UniversalPrint_ReturnLastResult		(UniversalPrint_ContextRef		inRef)
 	
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		result = ptr->lastResult;
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 	else result = memPCErr;
 	
@@ -1104,7 +1087,7 @@ UniversalPrint_SetIdleProc	(UniversalPrint_ContextRef		inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -1115,7 +1098,6 @@ UniversalPrint_SetIdleProc	(UniversalPrint_ContextRef		inRef,
 		ptr->idleUPP = NewPMIdleUPP(inProcPtr);
 		ptr->lastResult = PMSessionSetIdleProc(ptr->session, ptr->idleUPP);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// SetIdleProc
 
@@ -1136,7 +1118,7 @@ UniversalPrint_SetNumberOfCopies	(UniversalPrint_ContextRef	inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -1145,7 +1127,6 @@ UniversalPrint_SetNumberOfCopies	(UniversalPrint_ContextRef	inRef,
 	#else
 		ptr->lastResult = PMSetCopies(ptr->settings, inNumberOfCopies, inLock);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// SetNumberOfCopies
 
@@ -1166,7 +1147,7 @@ UniversalPrint_SetPageRange	(UniversalPrint_ContextRef	inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -1176,7 +1157,6 @@ UniversalPrint_SetPageRange	(UniversalPrint_ContextRef	inRef,
 	#else
 		ptr->lastResult = PMSetPageRange(ptr->settings, inFirstPage, inLastPage);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// SetPageRange
 
@@ -1216,12 +1196,11 @@ UniversalPrint_TakeCarbonPrintData	(UniversalPrint_ContextRef	inRef,
 {
 	if (inRef != nullptr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 		ptr->lastResult = PMCopyPrintSettings(inPrintSettingsToUse, ptr->settings);
 		if (ptr->lastResult == noErr) ptr->lastResult = PMCopyPageFormat(inPageFormatToUse, ptr->pageFormat);
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// TakeCarbonPrintData
 #endif
@@ -1256,7 +1235,7 @@ UniversalPrint_TakeTraditionalPrintData		(UniversalPrint_ContextRef	inRef,
 {
 	if ((inRef != nullptr) && (IsHandleValid(inTHPrintToUse)))
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(inRef);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), inRef);
 		
 		
 	#if TARGET_API_MAC_OS8
@@ -1271,7 +1250,6 @@ UniversalPrint_TakeTraditionalPrintData		(UniversalPrint_ContextRef	inRef,
 		ptr->lastResult = PMSessionConvertOldPrintRecord(ptr->session, inTHPrintToUse, &ptr->settings,
 															&ptr->pageFormat);
 	#endif
-		gUniversalPrintRecordHandleLocks().releaseLock(inRef, &ptr);
 	}
 }// TakeTraditionalPrintData
 
@@ -1362,11 +1340,10 @@ sheetDone	(PMPrintSession		inPrintSession,
 	// the UniversalPrint_ContextRef is attached as keyed data in the print session
 	if (PMSessionGetDataFromSession(inPrintSession, CFSTR(KEY_UNIVERSALPRINTCONTEXTREF), (CFTypeRef*)&ref) == noErr)
 	{
-		MyUniversalPrintRecordPtr	ptr = gUniversalPrintRecordHandleLocks().acquireLock(ref);
+		My_UniversalPrintRecordAutoLocker	ptr(gUniversalPrintRecordHandleLocks(), ref);
 		
 		
 		UniversalPrint_InvokeSheetDoneProc(ptr->sheetDoneProc, ref, inParentWindow, inDialogAccepted);
-		gUniversalPrintRecordHandleLocks().releaseLock(ref, &ptr);
 	}
 }// sheetDone
 #endif

@@ -102,13 +102,12 @@ struct My_DuplicateDialog
 typedef My_DuplicateDialog*		My_DuplicateDialogPtr;
 
 typedef MemoryBlockPtrLocker< DuplicateDialog_Ref, My_DuplicateDialog >		My_DuplicateDialogPtrLocker;
+typedef LockAcquireRelease< DuplicateDialog_Ref, My_DuplicateDialog >		My_DuplicateDialogAutoLocker;
 
 #pragma mark Internal Method Prototypes
 
 static Boolean				handleItemHit			(My_DuplicateDialogPtr, HIViewID const&);
-
 static void					handleNewSize			(WindowRef, Float32, Float32, void*);
-
 static pascal OSStatus		receiveHICommand		(EventHandlerCallRef, EventRef, void*);
 
 #pragma mark Variables
@@ -139,7 +138,7 @@ DuplicateDialog_New		(DuplicateDialog_CloseNotifyProcPtr		inCloseNotifyProcPtr,
 	
 	if (result != nullptr)
 	{
-		My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(result);
+		My_DuplicateDialogAutoLocker	ptr(gDuplicateDialogPtrLocks(), result);
 		
 		
 		// load the NIB containing this dialog (automatically finds the right localization)
@@ -209,8 +208,6 @@ DuplicateDialog_New		(DuplicateDialog_CloseNotifyProcPtr		inCloseNotifyProcPtr,
 												currentBounds.bottom - currentBounds.top/* maximum height */);
 			assert(ptr->windowResizeHandler.isInstalled());
 		}
-		
-		gDuplicateDialogPtrLocks().releaseLock(result, &ptr);
 	}
 	
 	return result;
@@ -229,19 +226,20 @@ DuplicateDialog_Dispose		(DuplicateDialog_Ref*	inoutDialogPtr)
 {
 	if (inoutDialogPtr != nullptr)
 	{
-		My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(*inoutDialogPtr);
+		{
+			My_DuplicateDialogAutoLocker	ptr(gDuplicateDialogPtrLocks(), *inoutDialogPtr);
+			
+			
+			// clean up the Help System
+			HelpSystem_SetWindowKeyPhrase(ptr->dialogWindow, kHelpSystem_KeyPhraseDefault);
+			
+			// release all memory occupied by the dialog
+			RemoveEventHandler(ptr->buttonHICommandsHandler);
+			DisposeEventHandlerUPP(ptr->buttonHICommandsUPP);
+			DisposeWindow(ptr->dialogWindow);
+		}
 		
-		
-		// clean up the Help System
-		HelpSystem_SetWindowKeyPhrase(ptr->dialogWindow, kHelpSystem_KeyPhraseDefault);
-		
-		// release all memory occupied by the dialog
-		RemoveEventHandler(ptr->buttonHICommandsHandler);
-		DisposeEventHandlerUPP(ptr->buttonHICommandsUPP);
-		DisposeWindow(ptr->dialogWindow);
-		delete ptr;
-		gDuplicateDialogPtrLocks().releaseLock(*inoutDialogPtr, &ptr);
-		*inoutDialogPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutDialogPtr, My_DuplicateDialogPtr*)), *inoutDialogPtr = nullptr;
 	}
 }// Dispose
 
@@ -258,7 +256,7 @@ void
 DuplicateDialog_Display		(DuplicateDialog_Ref	inDialog,
 							 WindowRef				inParentWindow)
 {
-	My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(inDialog);
+	My_DuplicateDialogAutoLocker	ptr(gDuplicateDialogPtrLocks(), inDialog);
 	
 	
 	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
@@ -272,7 +270,6 @@ DuplicateDialog_Display		(DuplicateDialog_Ref	inDialog,
 		
 		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 	}
-	gDuplicateDialogPtrLocks().releaseLock(inDialog, &ptr);
 }// Display
 
 
@@ -286,14 +283,13 @@ void
 DuplicateDialog_GetNameString	(DuplicateDialog_Ref	inDialog,
 								 CFStringRef&			outString)
 {
-	My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(inDialog);
+	My_DuplicateDialogAutoLocker	ptr(gDuplicateDialogPtrLocks(), inDialog);
 	
 	
 	if (ptr != nullptr)
 	{
 		GetControlTextAsCFString(ptr->fieldNewName, outString);
 	}
-	gDuplicateDialogPtrLocks().releaseLock(inDialog, &ptr);
 }// GetNameString
 
 
@@ -391,10 +387,10 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 	// only horizontal changes are significant to this dialog
 	if (inDeltaX)
 	{
-		DuplicateDialog_Ref		ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialog_Ref);
-		My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(ref);
-		SInt32					truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
-		SInt32					truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
+		DuplicateDialog_Ref				ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialog_Ref);
+		My_DuplicateDialogAutoLocker	ptr(gDuplicateDialogPtrLocks(), ref);
+		SInt32							truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
+		SInt32							truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
 		
 		
 		DialogAdjust_BeginControlAdjustment(ptr->dialogWindow);
@@ -415,7 +411,6 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->fieldNewName, truncDeltaX);
 		}
 		DialogAdjust_EndAdjustment(truncDeltaX, truncDeltaY); // moves and resizes controls properly
-		gDuplicateDialogPtrLocks().releaseLock(ref, &ptr);
 	}
 }// handleNewSize
 
@@ -431,11 +426,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inDuplicateDialogRef)
 {
-	OSStatus				result = eventNotHandledErr;
-	DuplicateDialog_Ref		ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialog_Ref);
-	My_DuplicateDialogPtr	ptr = gDuplicateDialogPtrLocks().acquireLock(ref);
-	UInt32 const			kEventClass = GetEventClass(inEvent);
-	UInt32 const			kEventKind = GetEventKind(inEvent);
+	OSStatus						result = eventNotHandledErr;
+	DuplicateDialog_Ref				ref = REINTERPRET_CAST(inDuplicateDialogRef, DuplicateDialog_Ref);
+	My_DuplicateDialogAutoLocker	ptr(gDuplicateDialogPtrLocks(), ref);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -475,7 +470,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		}
 	}
 	
-	gDuplicateDialogPtrLocks().releaseLock(ref, &ptr);
 	return result;
 }// receiveHICommand
 

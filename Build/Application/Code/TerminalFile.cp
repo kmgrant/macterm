@@ -3,7 +3,7 @@
 	TerminalFile.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -116,20 +116,21 @@
 
 #pragma mark Types
 
-struct TerminalFile
+struct My_TerminalFile
 {
 	CFPropertyListRef	propertyList;
 };
-typedef TerminalFile const*		TerminalFileConstPtr;
-typedef TerminalFile*			TerminalFilePtr;
+typedef My_TerminalFile const*	My_TerminalFileConstPtr;
+typedef My_TerminalFile*		My_TerminalFilePtr;
 
-typedef MemoryBlockPtrLocker< TerminalFileRef, TerminalFile >	TerminalFilePtrLocker;
+typedef MemoryBlockPtrLocker< TerminalFileRef, My_TerminalFile >	My_TerminalFilePtrLocker;
+typedef LockAcquireRelease< TerminalFileRef, My_TerminalFile >		My_TerminalFileAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	TerminalFilePtrLocker&	gTerminalFilePtrLocks ()	{ static TerminalFilePtrLocker x; return x; }
+	My_TerminalFilePtrLocker&	gTerminalFilePtrLocks ()	{ static My_TerminalFilePtrLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
@@ -183,7 +184,7 @@ TerminalFile_NewFromFile	(CFURLRef			inFileURL,
 		}
 		else
 		{
-			*outTermFile = REINTERPRET_CAST(CFAllocatorAllocate(kCFAllocatorDefault, sizeof(TerminalFile), 
+			*outTermFile = REINTERPRET_CAST(CFAllocatorAllocate(kCFAllocatorDefault, sizeof(My_TerminalFile), 
 																0/* hint flags */), TerminalFileRef);
 			
 			if (*outTermFile == nullptr)
@@ -192,8 +193,8 @@ TerminalFile_NewFromFile	(CFURLRef			inFileURL,
 			}
 			else
 			{
-				TerminalFilePtr		ptr = gTerminalFilePtrLocks().acquireLock(*outTermFile);
-				CFStringRef			errorString = nullptr;
+				My_TerminalFileAutoLocker	ptr(gTerminalFilePtrLocks(), *outTermFile);
+				CFStringRef					errorString = nullptr;
 				
 				
 				ptr->propertyList = CFPropertyListCreateFromXMLData(kCFAllocatorDefault, fileData,
@@ -204,7 +205,6 @@ TerminalFile_NewFromFile	(CFURLRef			inFileURL,
 					CFRelease(errorString), errorString = nullptr;
 					result = kTerminalFile_ResultInvalidFileType;
 				}
-				gTerminalFilePtrLocks().releaseLock(*outTermFile, &ptr);
 			}
 		}
 		
@@ -234,16 +234,16 @@ TerminalFile_Dispose	(TerminalFileRef*	inoutTermFilePtr)
 	}
 	else
 	{
-		TerminalFilePtr		ptr = gTerminalFilePtrLocks().acquireLock(*inoutTermFilePtr);
-		
-		
-		// dispose of all members
-		CFRelease(ptr->propertyList), ptr->propertyList = nullptr;
-		gTerminalFilePtrLocks().releaseLock(*inoutTermFilePtr, &ptr);
+		{
+			My_TerminalFileAutoLocker	ptr(gTerminalFilePtrLocks(), *inoutTermFilePtr);
+			
+			
+			// dispose of all members
+			CFRelease(ptr->propertyList), ptr->propertyList = nullptr;
+		}
 		
 		// now dispose of the structure itself
-		CFAllocatorDeallocate(kCFAllocatorDefault, *inoutTermFilePtr);
-		*inoutTermFilePtr = nullptr;
+		CFAllocatorDeallocate(kCFAllocatorDefault, *inoutTermFilePtr), *inoutTermFilePtr = nullptr;
 	}
 }// Dispose
 
@@ -268,11 +268,11 @@ TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 							 TerminalFile_AttributeTag const	inTagArray[],
 							 TerminalFile_AttributeValuePtr		outValueArray[])
 {
-	TerminalFilePtr			ptr = gTerminalFilePtrLocks().acquireLock(inTermFile);
-	TerminalFile_Result		result = kTerminalFile_ResultOK;
-	CFRetainRelease			mainDictionary(ptr->propertyList);
-	CFDictionaryRef			windowSettings = nullptr;
-	CFArrayRef				windowSettingsArray = nullptr;
+	My_TerminalFileAutoLocker	ptr(gTerminalFilePtrLocks(), inTermFile);
+	TerminalFile_Result			result = kTerminalFile_ResultOK;
+	CFRetainRelease				mainDictionary(ptr->propertyList);
+	CFDictionaryRef				windowSettings = nullptr;
+	CFArrayRef					windowSettingsArray = nullptr;
 	
 	
 	switch (inSettingsType)
@@ -592,7 +592,6 @@ TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 		break;
 	}
 	
-	gTerminalFilePtrLocks().releaseLock(inTermFile, &ptr);
 	return result;
 }// GetAttributes
 
@@ -610,11 +609,11 @@ CFIndex
 TerminalFile_ReturnSettingsCount	(TerminalFileRef			inTermFile,
 									 TerminalFile_SettingsType	inSettingsType)
 {
-	TerminalFilePtr		ptr = gTerminalFilePtrLocks().acquireLock(inTermFile);
-	CFDictionaryRef		mainDictionary = nullptr;
-	CFStringRef			settingsKey = nullptr;
-	CFArrayRef			settingsArray = nullptr;
-	CFIndex				result = 0;
+	My_TerminalFileAutoLocker	ptr(gTerminalFilePtrLocks(), inTermFile);
+	CFDictionaryRef				mainDictionary = nullptr;
+	CFStringRef					settingsKey = nullptr;
+	CFArrayRef					settingsArray = nullptr;
+	CFIndex						result = 0;
 	
 	
 	mainDictionary = CFUtilities_DictionaryCast(ptr->propertyList);
@@ -643,7 +642,6 @@ TerminalFile_ReturnSettingsCount	(TerminalFileRef			inTermFile,
 	
 	CFRelease(mainDictionary), mainDictionary = nullptr;
 	
-	gTerminalFilePtrLocks().releaseLock(inTermFile, &ptr);
 	return result;
 }// ReturnSettingsCount
 
@@ -657,11 +655,11 @@ Terminal file.
 TerminalFile_Version
 TerminalFile_ReturnVersion		(TerminalFileRef	inTermFile)
 {
-	TerminalFilePtr			ptr = gTerminalFilePtrLocks().acquireLock(inTermFile);
-	CFDictionaryRef			mainDictionary = nullptr;
-	CFDictionaryRef			windowSettings = nullptr;
-	CFArrayRef				settingsArray = nullptr;
-	TerminalFile_Version	result = kTerminalFile_VersionUnknown;
+	My_TerminalFileAutoLocker	ptr(gTerminalFilePtrLocks(), inTermFile);
+	CFDictionaryRef				mainDictionary = nullptr;
+	CFDictionaryRef				windowSettings = nullptr;
+	CFArrayRef					settingsArray = nullptr;
+	TerminalFile_Version		result = kTerminalFile_VersionUnknown;
 	
 	
 	mainDictionary = CFUtilities_DictionaryCast(ptr->propertyList);
@@ -691,7 +689,6 @@ TerminalFile_ReturnVersion		(TerminalFileRef	inTermFile)
 	
 	CFRelease(mainDictionary), mainDictionary = nullptr;
 	
-	gTerminalFilePtrLocks().releaseLock(inTermFile, &ptr);
 	return result;
 }// ReturnVersion
 

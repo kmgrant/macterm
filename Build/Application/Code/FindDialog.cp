@@ -143,6 +143,7 @@ struct My_FindDialog
 typedef My_FindDialog*		My_FindDialogPtr;
 
 typedef MemoryBlockPtrLocker< FindDialog_Ref, My_FindDialog >	My_FindDialogPtrLocker;
+typedef LockAcquireRelease< FindDialog_Ref, My_FindDialog >		My_FindDialogAutoLocker;
 
 #pragma mark Internal Method Prototypes
 
@@ -374,12 +375,7 @@ FindDialog_Dispose   (FindDialog_Ref*	inoutRefPtr)
 	}
 	else
 	{
-		My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(*inoutRefPtr);
-		
-		
-		delete ptr;
-		gFindDialogPtrLocks().releaseLock(*inoutRefPtr, &ptr);
-		*inoutRefPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_FindDialogPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -394,7 +390,7 @@ in the dialog, its disposal callback is invoked.
 void
 FindDialog_Display		(FindDialog_Ref		inDialog)
 {
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
 	
 	
 	if (nullptr == ptr) Alert_ReportOSStatus(paramErr);
@@ -411,7 +407,6 @@ FindDialog_Display		(FindDialog_Ref		inDialog)
 		
 		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 	}
-	gFindDialogPtrLocks().releaseLock(inDialog, &ptr);
 }// Display
 
 
@@ -425,14 +420,13 @@ void
 FindDialog_GetSearchString	(FindDialog_Ref		inDialog,
 							 CFStringRef&		outString)
 {
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
 	
 	
 	if (nullptr != ptr)
 	{
 		GetControlTextAsCFString(ptr->fieldKeywords, outString);
 	}
-	gFindDialogPtrLocks().releaseLock(inDialog, &ptr);
 }// GetSearchString
 
 
@@ -449,8 +443,8 @@ result will be "kFindDialog_OptionsAllOff".
 FindDialog_Options
 FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
 {
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
-	FindDialog_Options	result = kFindDialog_OptionsAllOff;
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
+	FindDialog_Options			result = kFindDialog_OptionsAllOff;
 	
 	
 	if (nullptr != ptr)
@@ -458,7 +452,6 @@ FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
 		if (GetControlValue(ptr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue) result |= kFindDialog_OptionCaseSensitivity;
 		if (GetControlValue(ptr->checkboxOldestLinesFirst) == kControlCheckBoxCheckedValue) result |= kFindDialog_OptionOldestLinesFirst;
 	}
-	gFindDialogPtrLocks().releaseLock(inDialog, &ptr);
 	return result;
 }// ReturnOptions
 
@@ -472,15 +465,14 @@ dialog is attached to.
 TerminalWindowRef
 FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
 {
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(inDialog);
-	TerminalWindowRef	result = nullptr;
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), inDialog);
+	TerminalWindowRef			result = nullptr;
 	
 	
 	if (nullptr != ptr)
 	{
 		result = ptr->terminalWindow;
 	}
-	gFindDialogPtrLocks().releaseLock(inDialog, &ptr);
 	return result;
 }// ReturnTerminalWindow
 
@@ -650,10 +642,10 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 	// only horizontal changes are significant to this dialog
 	if (inDeltaX)
 	{
-		FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
-		My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-		SInt32				truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
-		SInt32				truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
+		FindDialog_Ref				ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+		My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+		SInt32						truncDeltaX = STATIC_CAST(inDeltaX, SInt32);
+		SInt32						truncDeltaY = STATIC_CAST(inDeltaY, SInt32);
 		
 		
 		DialogAdjust_BeginControlAdjustment(ptr->dialogWindow);
@@ -680,7 +672,6 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->checkboxOldestLinesFirst, truncDeltaX);
 		}
 		DialogAdjust_EndAdjustment(truncDeltaX, truncDeltaY); // moves and resizes controls properly
-		gFindDialogPtrLocks().releaseLock(ref, &ptr);
 	}
 }// handleNewSize
 
@@ -812,11 +803,11 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
 {
-	OSStatus			result = eventNotHandledErr;
-	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus					result = eventNotHandledErr;
+	FindDialog_Ref				ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassTextInput);
@@ -849,11 +840,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
 {
-	OSStatus			result = eventNotHandledErr;
-	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus					result = eventNotHandledErr;
+	FindDialog_Ref				ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -903,8 +894,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			}
 		}
 	}
-	
-	gFindDialogPtrLocks().releaseLock(ref, &ptr);
 	return result;
 }// receiveHICommand
 
@@ -924,11 +913,11 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 								 EventRef				inEvent,
 								 void*					inFindDialogRef)
 {
-	OSStatus			result = eventNotHandledErr;
-	FindDialog_Ref		ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
-	My_FindDialogPtr	ptr = gFindDialogPtrLocks().acquireLock(ref);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus					result = eventNotHandledErr;
+	FindDialog_Ref				ref = REINTERPRET_CAST(inFindDialogRef, FindDialog_Ref);
+	My_FindDialogAutoLocker		ptr(gFindDialogPtrLocks(), ref);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -959,8 +948,6 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			}
 		}
 	}
-	
-	gFindDialogPtrLocks().releaseLock(ref, &ptr);
 	return result;
 }// receiveHistoryCommandProcess
 

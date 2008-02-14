@@ -80,6 +80,7 @@ typedef struct My_WindowInfo	My_WindowInfo;
 typedef struct My_WindowInfo*	My_WindowInfoPtr;
 
 typedef MemoryBlockHandleLocker< WindowInfo_Ref, My_WindowInfo >	My_WindowInfoHandleLocker;
+typedef LockAcquireRelease< WindowInfo_Ref, My_WindowInfo >			My_WindowInfoAutoLocker;
 
 #pragma mark Variables
 
@@ -154,7 +155,7 @@ reference.
 void
 WindowInfo_Init		(WindowInfo_Ref		inoutWindowInfoRef)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inoutWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inoutWindowInfoRef);
 	
 	
 	windowInfoPtr->windowDescriptor = kWindowInfo_InvalidDescriptor;
@@ -171,7 +172,6 @@ WindowInfo_Init		(WindowInfo_Ref		inoutWindowInfoRef)
 	windowInfoPtr->resizeNotifyMethod = nullptr;
 	windowInfoPtr->resizeNotifyMethodData = 0L;
 	windowInfoPtr->auxiliaryDataPtr = nullptr;
-	gWindowInfoHandleLocks.releaseLock(inoutWindowInfoRef, &windowInfoPtr);
 }// Init
 
 
@@ -187,12 +187,11 @@ WindowInfo_GetWindowMaximumDimensions	(WindowInfo_Ref		inWindowInfoRef,
 {
 	if (outMaximumSizePtr != nullptr)
 	{
-		My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+		My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 		
 		
 		SetPt(outMaximumSizePtr, windowInfoPtr->sizeLimitRect.asShorts.maximumWidth,
 							windowInfoPtr->sizeLimitRect.asShorts.maximumHeight);
-		gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	}
 }// GetWindowMaximumDimensions
 
@@ -209,12 +208,11 @@ WindowInfo_GetWindowMinimumDimensions	(WindowInfo_Ref		inWindowInfoRef,
 {
 	if (outMinimumSizePtr != nullptr)
 	{
-		My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+		My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 		
 		
 		SetPt(outMinimumSizePtr, windowInfoPtr->sizeLimitRect.asShorts.minimumWidth,
 							windowInfoPtr->sizeLimitRect.asShorts.minimumHeight);
-		gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	}
 }// GetWindowMinimumDimensions
 
@@ -231,12 +229,11 @@ YouÕre welcome.
 Rect*
 WindowInfo_ReturnWindowResizeLimits		(WindowInfo_Ref		inWindowInfoRef)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
-	Rect*				result = nullptr;
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
+	Rect*						result = nullptr;
 	
 	
 	result = &windowInfoPtr->sizeLimitRect.asRect;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
 }// ReturnWindowResizeLimits
 
@@ -270,10 +267,10 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 	if (windowInfoRef == nullptr) Sound_StandardAlert();
 	else
 	{
-		My_WindowInfoPtr	ptr = gWindowInfoHandleLocks.acquireLock(windowInfoRef);
-		long				growResult = 0L;
-		Rect				contentRect;
-		Boolean				smallWindow = false;
+		My_WindowInfoAutoLocker		ptr(gWindowInfoHandleLocks, windowInfoRef);
+		long						growResult = 0L;
+		Rect						contentRect;
+		Boolean						smallWindow = false;
 		
 		
 		// Obtain the ÒcurrentÓ size of the window, so when it
@@ -610,7 +607,6 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 				}
 			}
 		}
-		gWindowInfoHandleLocks.releaseLock(windowInfoRef, &ptr);
 	}
 	
 	return result;
@@ -630,12 +626,11 @@ kind.
 Boolean
 WindowInfo_IsPotentialDropTarget	(WindowInfo_Ref		inWindowInfoRef)
 {
-	Boolean				result = false;
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	Boolean						result = false;
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) result = (windowInfoPtr->isPotentialDropTarget);
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
 }// IsPotentialDropTarget
 
@@ -652,12 +647,11 @@ WindowInfo_SetWindowFloating().
 Boolean
 WindowInfo_IsWindowFloating	(WindowInfo_Ref		inWindowInfoRef)
 {
-	Boolean				result = false;
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	Boolean						result = false;
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) result = (windowInfoPtr->isFloatingWindow);
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
 }// IsWindowFloating
 
@@ -683,18 +677,18 @@ WindowInfo_NotifyWindowOfContextualMenu	(HIWindowRef	inWindow,
 										 Point			inGlobalMouse)
 {
 	WindowInfo_Ref		windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
-	My_WindowInfoPtr	windowInfoPtr = nullptr;
 	
 	
 	if (windowInfoRef != nullptr)
 	{
-		windowInfoPtr = gWindowInfoHandleLocks.acquireLock(windowInfoRef);
+		My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, windowInfoRef);
+		
+		
 		if (windowInfoPtr->contextualMenuNotifyMethod != nullptr)
 		{
 			WindowInfo_InvokeContextualMenuProc(windowInfoPtr->contextualMenuNotifyMethod,
 												inWindow, inGlobalMouse, nullptr/* tmp */, 0/* tmp*/);
 		}
-		gWindowInfoHandleLocks.releaseLock(windowInfoRef, &windowInfoPtr);
 	}
 }// NotifyWindowOfContextualMenu
 
@@ -721,19 +715,19 @@ WindowInfo_NotifyWindowOfResize		(HIWindowRef	inWindow,
 									 SInt32			inDeltaSizeY)
 {
 	WindowInfo_Ref		windowInfoRef = WindowInfo_ReturnFromWindow(inWindow);
-	My_WindowInfoPtr	windowInfoPtr = nullptr;
 	
 	
 	if (windowInfoRef != nullptr)
 	{
-		windowInfoPtr = gWindowInfoHandleLocks.acquireLock(windowInfoRef);
+		My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, windowInfoRef);
+		
+		
 		if (windowInfoPtr->resizeNotifyMethod != nullptr)
 		{
 			WindowInfo_InvokeResizeResponderProc(windowInfoPtr->resizeNotifyMethod,
 												inWindow, inDeltaSizeX, inDeltaSizeY,
 												windowInfoPtr->resizeNotifyMethodData);
 		}
-		gWindowInfoHandleLocks.releaseLock(windowInfoRef, &windowInfoPtr);
 	}
 }// NotifyWindowOfResize
 
@@ -749,12 +743,11 @@ pass a nullptr reference to this method!
 void*
 WindowInfo_ReturnAuxiliaryDataPtr	(WindowInfo_Ref		inWindowInfoRef)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
-	void*				result = nullptr;
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
+	void*						result = nullptr;
 	
 	
 	result = windowInfoPtr->auxiliaryDataPtr;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
 }// ReturnAuxiliaryDataPtr
 
@@ -824,12 +817,11 @@ this method!
 WindowInfo_Descriptor
 WindowInfo_ReturnWindowDescriptor	(WindowInfo_Ref		inWindowInfoRef)
 {
-	WindowInfo_Descriptor	result = kWindowInfo_InvalidDescriptor;
-	My_WindowInfoPtr		windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	WindowInfo_Descriptor		result = kWindowInfo_InvalidDescriptor;
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) result = (windowInfoPtr->windowDescriptor);
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 	return result;
 }// ReturnWindowDescriptor
 
@@ -847,11 +839,10 @@ void
 WindowInfo_SetAuxiliaryDataPtr	(WindowInfo_Ref		inWindowInfoRef,
 								 void*				inAuxiliaryDataPtr)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	windowInfoPtr->auxiliaryDataPtr = inAuxiliaryDataPtr;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 }// SetAuxiliaryDataPtr
 
 
@@ -875,14 +866,13 @@ WindowInfo_SetDynamicResizing		(WindowInfo_Ref		inWindowFeaturesRefOrNullToSetGl
 {
 	if (inWindowFeaturesRefOrNullToSetGlobalFlag != nullptr)
 	{
-		My_WindowInfoPtr	ptr = gWindowInfoHandleLocks.acquireLock(inWindowFeaturesRefOrNullToSetGlobalFlag);
+		My_WindowInfoAutoLocker		ptr(gWindowInfoHandleLocks, inWindowFeaturesRefOrNullToSetGlobalFlag);
 		
 		
 		if (ptr != nullptr)
 		{
 			ptr->noDynamicResize = !inLiveResizeEnabled;
 		}
-		gWindowInfoHandleLocks.releaseLock(inWindowFeaturesRefOrNullToSetGlobalFlag, &ptr);
 	}
 	else
 	{
@@ -904,11 +894,10 @@ void
 WindowInfo_SetWindowFloating	(WindowInfo_Ref		inWindowInfoRef,
 								 Boolean			inIsFloating)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) windowInfoPtr->isFloatingWindow = inIsFloating;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 }// SetWindowFloating
 
 
@@ -924,11 +913,10 @@ void
 WindowInfo_SetWindowPotentialDropTarget		(WindowInfo_Ref		inWindowInfoRef,
 											 Boolean			inIsPotentialDropTarget)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	if (windowInfoPtr != nullptr) windowInfoPtr->isPotentialDropTarget = inIsPotentialDropTarget;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 }// SetWindowPotentialDropTarget
 
 
@@ -993,11 +981,10 @@ void
 WindowInfo_SetWindowContextualMenuResponder	(WindowInfo_Ref						inWindowInfoRef,
 											 WindowInfo_ContextualMenuProcPtr	inNewProc)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	windowInfoPtr->contextualMenuNotifyMethod = inNewProc;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 }// SetWindowContextualMenuResponder
 
 
@@ -1012,11 +999,10 @@ void
 WindowInfo_SetWindowDescriptor	(WindowInfo_Ref			inWindowInfoRef,
 								 WindowInfo_Descriptor	inNewWindowDescriptor)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	windowInfoPtr->windowDescriptor = inNewWindowDescriptor;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 }// SetWindowDescriptor
 
 
@@ -1036,14 +1022,13 @@ WindowInfo_SetWindowResizeLimits	(WindowInfo_Ref		inWindowInfoRef,
 									 SInt16				inMaximumHeight,
 									 SInt16				inMaximumWidth)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	windowInfoPtr->sizeLimitRect.asShorts.minimumHeight = inMinimumHeight;
 	windowInfoPtr->sizeLimitRect.asShorts.minimumWidth = inMinimumWidth;
 	windowInfoPtr->sizeLimitRect.asShorts.maximumHeight = inMaximumHeight;
 	windowInfoPtr->sizeLimitRect.asShorts.maximumWidth = inMaximumWidth;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 }// SetWindowResizeLimits
 
 
@@ -1062,11 +1047,10 @@ WindowInfo_SetWindowResizeResponder	(WindowInfo_Ref						inWindowInfoRef,
 									 WindowInfo_ResizeResponderProcPtr	inNewProc,
 									 SInt32								inData)
 {
-	My_WindowInfoPtr	windowInfoPtr = gWindowInfoHandleLocks.acquireLock(inWindowInfoRef);
+	My_WindowInfoAutoLocker		windowInfoPtr(gWindowInfoHandleLocks, inWindowInfoRef);
 	
 	
 	windowInfoPtr->resizeNotifyMethod = inNewProc;
 	windowInfoPtr->resizeNotifyMethodData = inData;
-	gWindowInfoHandleLocks.releaseLock(inWindowInfoRef, &windowInfoPtr);
 }// SetWindowResizeResponder
 

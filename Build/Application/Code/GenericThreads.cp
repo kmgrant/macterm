@@ -3,7 +3,7 @@
 	GenericThreads.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -58,7 +58,7 @@ enum
 
 #pragma mark Types
 
-struct GenericThread
+struct My_GenericThread
 {
 	GenericThreadDescriptor		descriptor;
 	ThreadID					threadID;
@@ -66,19 +66,20 @@ struct GenericThread
 	void*						terminationRoutineArgument;
 	voidPtr						result;
 };
-typedef GenericThread*		GenericThreadPtr;
-typedef GenericThreadPtr*	GenericThreadHandle;
+typedef My_GenericThread*		My_GenericThreadPtr;
+typedef My_GenericThreadPtr*	My_GenericThreadHandle;
 
-typedef std::map< ThreadID, GenericThreadRef >						ThreadIDToGenericThreadRefMap;
-typedef MemoryBlockHandleLocker< GenericThreadRef, GenericThread >	ThreadHandleLocker;
+typedef std::map< ThreadID, GenericThreadRef >							My_ThreadIDToGenericThreadRefMap;
+typedef MemoryBlockHandleLocker< GenericThreadRef, My_GenericThread >	My_ThreadHandleLocker;
+typedef LockAcquireRelease< GenericThreadRef, My_GenericThread >		My_ThreadAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	ThreadIDToGenericThreadRefMap&	gThreadMap ()			{ static ThreadIDToGenericThreadRefMap x; return x; }
-	ThreadHandleLocker&				gThreadHandleLocks ()	{ static ThreadHandleLocker x; return x; }
-	ThreadTerminationUPP			gThreadTerminationUPP = nullptr;
+	My_ThreadIDToGenericThreadRefMap&	gThreadMap ()			{ static My_ThreadIDToGenericThreadRefMap x; return x; }
+	My_ThreadHandleLocker&				gThreadHandleLocks ()	{ static My_ThreadHandleLocker x; return x; }
+	ThreadTerminationUPP				gThreadTerminationUPP = nullptr;
 }
 
 #pragma mark Internal Method Prototypes
@@ -158,9 +159,9 @@ GenericThreads_Done ()
 {
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		ThreadID								threadID = 0;
-		void**									threadResultPtr;
-		ThreadIDToGenericThreadRefMap::iterator	threadIDHandlePairIterator;
+		ThreadID									threadID = 0;
+		void**										threadResultPtr;
+		My_ThreadIDToGenericThreadRefMap::iterator	threadIDHandlePairIterator;
 		
 		
 		for (threadIDHandlePairIterator = gThreadMap().begin();
@@ -348,8 +349,7 @@ GenericThreads_ReturnByDescriptor	(GenericThreadDescriptor	inThreadDescriptor)
 	
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		GenericThreadPtr								threadPtr = nullptr;
-		ThreadIDToGenericThreadRefMap::const_iterator	threadIDHandlePairIterator;
+		My_ThreadIDToGenericThreadRefMap::const_iterator	threadIDHandlePairIterator;
 		
 		
 		// look for the thread with the given descriptor in the list
@@ -357,15 +357,19 @@ GenericThreads_ReturnByDescriptor	(GenericThreadDescriptor	inThreadDescriptor)
 				threadIDHandlePairIterator != gThreadMap().end(); ++threadIDHandlePairIterator)
 		{
 			result = threadIDHandlePairIterator->second;
-			threadPtr = gThreadHandleLocks().acquireLock(result);
-			if (threadPtr == nullptr) threadIDHandlePairIterator = gThreadMap().end(); // problem - stop here
-			else
+			
 			{
-				if (threadPtr->descriptor == inThreadDescriptor)
+				My_ThreadAutoLocker		threadPtr(gThreadHandleLocks(), result);
+				
+				
+				if (threadPtr == nullptr) threadIDHandlePairIterator = gThreadMap().end(); // problem - stop here
+				else
 				{
-					threadIDHandlePairIterator = gThreadMap().end(); // got it - stop here
+					if (threadPtr->descriptor == inThreadDescriptor)
+					{
+						threadIDHandlePairIterator = gThreadMap().end(); // got it - stop here
+					}
 				}
-				gThreadHandleLocks().releaseLock(result, &threadPtr);
 			}
 		}
 	}
@@ -388,8 +392,8 @@ IMPORTANT:	This routine is implementation-dependent, and as such more
 GenericThreadRef
 GenericThreads_ReturnByThreadManagerID		(ThreadID	inThreadID)
 {
-	GenericThreadRef								result = REINTERPRET_CAST(0x87654321, GenericThreadRef);
-	ThreadIDToGenericThreadRefMap::const_iterator	threadIDHandlePairIterator;
+	GenericThreadRef									result = REINTERPRET_CAST(0x87654321, GenericThreadRef);
+	My_ThreadIDToGenericThreadRefMap::const_iterator	threadIDHandlePairIterator;
 	
 	
 	// look for the thread with the given ID in the list
@@ -440,11 +444,10 @@ GenericThreads_ReturnDescriptorOf	(GenericThreadRef	inThread)
 	
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		GenericThreadPtr	threadPtr = gThreadHandleLocks().acquireLock(inThread);
+		My_ThreadAutoLocker		threadPtr(gThreadHandleLocks(), inThread);
 		
 		
 		if (threadPtr != nullptr) result = threadPtr->descriptor;
-		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
 }// ReturnDescriptorOf
@@ -471,11 +474,10 @@ GenericThreads_ReturnResultOf	(GenericThreadRef	inThread)
 	
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		GenericThreadPtr	threadPtr = gThreadHandleLocks().acquireLock(inThread);
+		My_ThreadAutoLocker		threadPtr(gThreadHandleLocks(), inThread);
 		
 		
 		if (threadPtr != nullptr) result = threadPtr->result;
-		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
 }// ReturnResultOf
@@ -499,11 +501,10 @@ GenericThreads_ReturnStackOf	(GenericThreadRef	inThread)
 	
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		GenericThreadPtr	threadPtr = gThreadHandleLocks().acquireLock(inThread);
+		My_ThreadAutoLocker		threadPtr(gThreadHandleLocks(), inThread);
 		
 		
 		if (threadPtr != nullptr) (OSStatus)ThreadCurrentStackSpace(threadPtr->threadID, &result);
-		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
 }// ReturnStackOf
@@ -534,11 +535,10 @@ GenericThreads_ReturnThreadManagerID	(GenericThreadRef	inThread)
 	
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		GenericThreadPtr	threadPtr = gThreadHandleLocks().acquireLock(inThread);
+		My_ThreadAutoLocker		threadPtr(gThreadHandleLocks(), inThread);
 		
 		
 		if (threadPtr != nullptr) result = threadPtr->threadID;
-		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 	return result;
 }// ReturnThreadManagerID
@@ -563,7 +563,7 @@ GenericThreads_WhenTerminatedInvoke	(GenericThreadRef			inThread,
 {
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		GenericThreadPtr	threadPtr = gThreadHandleLocks().acquireLock(inThread);
+		My_ThreadAutoLocker		threadPtr(gThreadHandleLocks(), inThread);
 		
 		
 		if (threadPtr != nullptr)
@@ -571,7 +571,6 @@ GenericThreads_WhenTerminatedInvoke	(GenericThreadRef			inThread,
 			threadPtr->terminationRoutine = inProc;
 			threadPtr->terminationRoutineArgument = inProcArgument;
 		}
-		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 }// WhenTerminatedInvoke
 
@@ -599,11 +598,10 @@ GenericThreads_YieldTo		(GenericThreadRef		inThread)
 {
 	if (FlagManager_Test(kFlagThreadManager))
 	{
-		GenericThreadPtr	threadPtr = gThreadHandleLocks().acquireLock(inThread);
+		My_ThreadAutoLocker		threadPtr(gThreadHandleLocks(), inThread);
 		
 		
 		if (threadPtr != nullptr) (OSStatus)YieldToThread(threadPtr->threadID);
-		gThreadHandleLocks().releaseLock(inThread, &threadPtr);
 	}
 }// YieldTo
 
@@ -648,17 +646,16 @@ newThreadListEntry		(ThreadID					inForWhichThreadID,
 	
 	
 	// create global space to store the data and results for this thread
-	*outNewThreadPtr = REINTERPRET_CAST(Memory_NewHandle(sizeof(GenericThread)), GenericThreadRef);
+	*outNewThreadPtr = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_GenericThread)), GenericThreadRef);
 	if (*outNewThreadPtr == nullptr) result = memFullErr;
 	else
 	{
-		GenericThreadPtr	ptr = gThreadHandleLocks().acquireLock(*outNewThreadPtr);
+		My_ThreadAutoLocker		ptr(gThreadHandleLocks(), *outNewThreadPtr);
 		
 		
 		ptr->descriptor = inDescriptorOfNewThread;
 		ptr->result = inWhereToPutReturnValueOrNull;
 		ptr->threadID = inForWhichThreadID;
-		gThreadHandleLocks().releaseLock(*outNewThreadPtr, &ptr);
 		
 		gThreadMap()[inForWhichThreadID] = *outNewThreadPtr;
 		assert(gThreadMap().find(inForWhichThreadID) != gThreadMap().end());
@@ -684,19 +681,20 @@ threadTerminationRoutine	(ThreadID	inWhichThreadTerminated,
 	
 	if (ref != nullptr)
 	{
-		GenericThreadPtr	ptr = gThreadHandleLocks().acquireLock(ref);
-		
-		
-		if (ptr != nullptr)
 		{
-			// invoke the user-specified termination function, if any
-			if (ptr->terminationRoutine != nullptr)
-			{
-				(*ptr->terminationRoutine)(inWhichThreadTerminated, ptr->terminationRoutineArgument);
-			}
+			My_ThreadAutoLocker		ptr(gThreadHandleLocks(), ref);
 			
+			
+			if (ptr != nullptr)
+			{
+				// invoke the user-specified termination function, if any
+				if (ptr->terminationRoutine != nullptr)
+				{
+					(*ptr->terminationRoutine)(inWhichThreadTerminated, ptr->terminationRoutineArgument);
+				}
+				
+			}
 		}
-		gThreadHandleLocks().releaseLock(ref, &ptr);
 		Memory_DisposeHandle(REINTERPRET_CAST(&ref, Handle*));
 	}
 }// threadTerminationRoutine

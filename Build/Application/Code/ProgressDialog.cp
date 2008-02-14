@@ -81,6 +81,7 @@ typedef My_ProgressDialog const*	My_ProgressDialogConstPtr;
 typedef My_ProgressDialog*			My_ProgressDialogPtr;
 
 typedef MemoryBlockPtrLocker< ProgressDialog_Ref, My_ProgressDialog >	My_ProgressDialogPtrLocker;
+typedef LockAcquireRelease< ProgressDialog_Ref, My_ProgressDialog >		My_ProgressDialogAutoLocker;
 
 #pragma mark Internal Method Prototypes
 
@@ -157,14 +158,13 @@ its own window.
 void
 ProgressDialog_Display	(ProgressDialog_Ref		inRef)
 {
-	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogAutoLocker		ptr(gProgressDialogPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
 	{
 		ShowWindow(ptr->dialogWindow);
 	}
-	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 }// Display
 
 
@@ -178,15 +178,14 @@ occur, nullptr is returned.
 HIWindowRef
 ProgressDialog_ReturnWindow		(ProgressDialog_Ref		inRef)
 {
-	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
-	HIWindowRef				result = nullptr;
+	My_ProgressDialogAutoLocker		ptr(gProgressDialogPtrLocks(), inRef);
+	HIWindowRef						result = nullptr;
 	
 	
 	if (ptr != nullptr)
 	{
 		result = ptr->dialogWindow;
 	}
-	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// ReturnWindow
 
@@ -201,14 +200,13 @@ void
 ProgressDialog_SetProgressPercentFull	(ProgressDialog_Ref		inRef,
 										 SInt8					inPercentage)
 {
-	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogAutoLocker		ptr(gProgressDialogPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
 	{
 		SetControl32BitValue(ptr->progressBar, inPercentage);
 	}
-	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 }// SetProgressPercentFull
 
 
@@ -224,7 +222,7 @@ void
 ProgressDialog_SetProgressIndicator		(ProgressDialog_Ref			inRef,
 										 ProgressDialog_Indicator	inIndicatorType)
 {
-	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogAutoLocker		ptr(gProgressDialogPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
@@ -245,7 +243,6 @@ ProgressDialog_SetProgressIndicator		(ProgressDialog_Ref			inRef,
 		(OSStatus)SetControlData(ptr->progressBar, kControlIndicatorPart, kControlProgressBarIndeterminateTag,
 									sizeof(isIndeterminate), &isIndeterminate);
 	}
-	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 }// SetProgressIndicator
 
 
@@ -258,14 +255,13 @@ void
 ProgressDialog_SetStatus	(ProgressDialog_Ref		inRef,
 							 CFStringRef			inStatusText)
 {
-	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogAutoLocker		ptr(gProgressDialogPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
 	{
 		SetControlTextWithCFString(ptr->textProgressMessage, inStatusText);
 	}
-	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 }// SetStatus
 
 
@@ -278,14 +274,13 @@ void
 ProgressDialog_SetTitle		(ProgressDialog_Ref		inRef,
 							 CFStringRef			inTitleText)
 {
-	My_ProgressDialogPtr	ptr = gProgressDialogPtrLocks().acquireLock(inRef);
+	My_ProgressDialogAutoLocker		ptr(gProgressDialogPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
 	{
 		(OSStatus)SetWindowTitleWithCFString(ptr->dialogWindow, inTitleText);
 	}
-	gProgressDialogPtrLocks().releaseLock(inRef, &ptr);
 }// SetTitle
 
 

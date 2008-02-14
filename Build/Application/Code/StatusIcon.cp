@@ -3,7 +3,7 @@
 	StatusIcon.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -91,6 +91,7 @@ typedef StatusIcon const*	StatusIconConstPtr;
 typedef StatusIcon*			StatusIconPtr;
 
 typedef MemoryBlockPtrLocker< StatusIconRef, StatusIcon >	StatusIconPtrLocker;
+typedef LockAcquireRelease< StatusIconRef, StatusIcon >		My_StatusIconAutoLocker;
 
 #pragma mark Internal Method Prototypes
 
@@ -175,10 +176,10 @@ StatusIcon_New		(WindowRef		inOwningWindow)
 	
 	if (result != nullptr)
 	{
-		StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(result);
-		ControlRef		control = nullptr;
-		Rect			bounds;
-		OSStatus		error = noErr;
+		My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), result);
+		ControlRef					control = nullptr;
+		Rect						bounds;
+		OSStatus					error = noErr;
 		
 		
 		ptr->descriptorOfCurrentAnimationStage = kInvalidStatusIconAnimationStageDescriptor;
@@ -209,8 +210,6 @@ StatusIcon_New		(WindowRef		inOwningWindow)
 		ptr->animate = false;
 		ptr->dimWhenInactive = true;
 		ptr->focusRing = false;
-		
-		gStatusIconPtrLocks().releaseLock(result, &ptr);
 	}
 	return result;
 }// New
@@ -235,24 +234,24 @@ StatusIcon_Dispose		(StatusIconRef*		inoutRefPtr)
 {
 	if (inoutRefPtr != nullptr)
 	{
-		StatusIconPtr						ptr = gStatusIconPtrLocks().acquireLock(*inoutRefPtr);
-		IconAnimationStagePtr				stagePtr = nullptr;
-		IconAnimationStageList::iterator	animationStageIterator;
-		
-		
-		(OSStatus)RemoveEventLoopTimer(ptr->idleTimer), ptr->idleTimer = nullptr;
-		DisposeEventLoopTimerUPP(ptr->idleUPP), ptr->idleUPP = nullptr;
-		DisposeControlUserPaneDrawUPP(ptr->drawUPP), ptr->drawUPP = nullptr;
-		DisposeControlUserPaneHitTestUPP(ptr->hitTestUPP), ptr->hitTestUPP = nullptr;
-		DisposeControlUserPaneTrackingUPP(ptr->trackingUPP), ptr->trackingUPP = nullptr;
-		for (animationStageIterator = ptr->iconAnimationStages.begin();
-					animationStageIterator != ptr->iconAnimationStages.end(); ++animationStageIterator)
 		{
-			stagePtr = *animationStageIterator;
-			disposeAnimationStage(&stagePtr);
+			My_StatusIconAutoLocker				ptr(gStatusIconPtrLocks(), *inoutRefPtr);
+			IconAnimationStagePtr				stagePtr = nullptr;
+			IconAnimationStageList::iterator	animationStageIterator;
+			
+			
+			(OSStatus)RemoveEventLoopTimer(ptr->idleTimer), ptr->idleTimer = nullptr;
+			DisposeEventLoopTimerUPP(ptr->idleUPP), ptr->idleUPP = nullptr;
+			DisposeControlUserPaneDrawUPP(ptr->drawUPP), ptr->drawUPP = nullptr;
+			DisposeControlUserPaneHitTestUPP(ptr->hitTestUPP), ptr->hitTestUPP = nullptr;
+			DisposeControlUserPaneTrackingUPP(ptr->trackingUPP), ptr->trackingUPP = nullptr;
+			for (animationStageIterator = ptr->iconAnimationStages.begin();
+						animationStageIterator != ptr->iconAnimationStages.end(); ++animationStageIterator)
+			{
+				stagePtr = *animationStageIterator;
+				disposeAnimationStage(&stagePtr);
+			}
 		}
-		
-		gStatusIconPtrLocks().releaseLock(*inoutRefPtr, &ptr);
 		delete *(REINTERPRET_CAST(inoutRefPtr, StatusIconPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
@@ -283,7 +282,7 @@ StatusIcon_AddStageFromIconRef	(StatusIconRef						inRef,
 								 OSType								inType,
 								 UInt32								inAnimationDelayInTicks)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
@@ -294,7 +293,6 @@ StatusIcon_AddStageFromIconRef	(StatusIconRef						inRef,
 			Console_WriteLine("warning, unable to add icon reference as animation frame");
 		}
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 }// AddStageFromIconRef
 
 
@@ -326,7 +324,7 @@ StatusIcon_AddStageFromIconSuite	(StatusIconRef						inRef,
 									 SInt16								inIconSuiteResourceID,
 									 UInt32								inAnimationDelayInTicks)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
@@ -337,7 +335,6 @@ StatusIcon_AddStageFromIconSuite	(StatusIconRef						inRef,
 			Console_WriteLine("warning, unable to add icon suite as animation frame");
 		}
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 }// AddStageFromIconSuite
 
 
@@ -369,7 +366,7 @@ StatusIcon_AddStageFromOldColorIcon		(StatusIconRef						inRef,
 										 SInt16								inIconResourceID,
 										 UInt32								inAnimationDelayInTicks)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
@@ -380,7 +377,6 @@ StatusIcon_AddStageFromOldColorIcon		(StatusIconRef						inRef,
 			Console_WriteLine("warning, unable to add old color icon as animation frame");
 		}
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 }// AddStageFromOldColorIcon
 
 
@@ -393,15 +389,14 @@ for a status icon.
 Boolean
 StatusIcon_IsAnimating		(StatusIconRef		inRef)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
-	Boolean			result = false;
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
+	Boolean						result = false;
 	
 	
 	if (ptr != nullptr)
 	{
 		result = ptr->animate;
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// IsAnimating
 
@@ -416,15 +411,14 @@ order to display the icon in a window!
 HIViewRef
 StatusIcon_ReturnContainerView		(StatusIconRef		inRef)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
-	HIViewRef		result = nullptr;
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
+	HIViewRef					result = nullptr;
 	
 	
 	if (ptr != nullptr)
 	{
 		result = ptr->userPane;
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 	return result;
 }// ReturnContainerView
 
@@ -440,14 +434,13 @@ void
 StatusIcon_SetDimWhenInactive	(StatusIconRef	inRef,
 								 Boolean		inIconShouldDimWhenInactive)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
 	{
 		ptr->dimWhenInactive = inIconShouldDimWhenInactive;
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 }// SetDimWhenInactive
 
 
@@ -470,7 +463,7 @@ StatusIcon_SetDoAnimate		(StatusIconRef	inRef,
 							 Boolean		inIconShouldAnimate,
 							 Boolean		inResetStages)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
@@ -478,7 +471,6 @@ StatusIcon_SetDoAnimate		(StatusIconRef	inRef,
 		ptr->animate = inIconShouldAnimate;
 		if (inResetStages) resetAnimationStage(ptr);
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 }// SetDoAnimate
 
 
@@ -495,14 +487,13 @@ void
 StatusIcon_SetFocus		(StatusIconRef	inRef,
 						 Boolean		inFocusRing)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
 	{
 		ptr->focusRing = inFocusRing;
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 }// SetFocus
 
 
@@ -519,7 +510,7 @@ void
 StatusIcon_SetNextCell	(StatusIconRef						inRef,
 						 StatusIconAnimationStageDescriptor	inDescriptor)
 {
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(inRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), inRef);
 	
 	
 	if (ptr != nullptr)
@@ -535,7 +526,6 @@ StatusIcon_SetNextCell	(StatusIconRef						inRef,
 			ptr->descriptorOfCurrentAnimationStage = inDescriptor;
 		}
 	}
-	gStatusIconPtrLocks().releaseLock(inRef, &ptr);
 }// SetNextCell
 
 
@@ -598,8 +588,8 @@ static pascal void
 iconIdle	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 			 void*				inStatusIconRef)
 {
-	StatusIconRef	ref = REINTERPRET_CAST(inStatusIconRef, StatusIconRef);
-	StatusIconPtr	ptr = gStatusIconPtrLocks().acquireLock(ref);
+	StatusIconRef				ref = REINTERPRET_CAST(inStatusIconRef, StatusIconRef);
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), ref);
 	
 	
 	if (ptr != nullptr)
@@ -641,7 +631,6 @@ iconIdle	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 			}
 		}
 	}
-	gStatusIconPtrLocks().releaseLock(ref, &ptr);
 }// iconIdle
 
 
@@ -667,7 +656,7 @@ iconUserPaneDeviceLoop		(short				inColorDepth,
 	
 	if (ref != nullptr)
 	{
-		StatusIconPtr		ptr = gStatusIconPtrLocks().acquireLock(ref);
+		My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), ref);
 		
 		
 		if (ptr != nullptr)
@@ -715,7 +704,6 @@ iconUserPaneDeviceLoop		(short				inColorDepth,
 				(OSStatus)IconManager_PlotIcon(stagePtr->icon, &controlBounds, kAlignAbsoluteCenter, iconTransform);
 			}
 		}
-		gStatusIconPtrLocks().releaseLock(ref, &ptr);
 	}
 }// iconUserPaneDeviceLoop
 
@@ -788,11 +776,10 @@ iconUserPaneTracker		(ControlRef			inControl,
 						 Point				inLocalMouse,
 						 ControlActionUPP	UNUSED_ARGUMENT(inIgnoredActionUPP))
 {
-	ControlPartCode		result = kControlPartCodeStatusIconVoid;
-	StatusIconPtr		ptr = nullptr;
+	ControlPartCode				result = kControlPartCodeStatusIconVoid;
+	My_StatusIconAutoLocker		ptr(gStatusIconPtrLocks(), REINTERPRET_CAST(GetControlReference(inControl), StatusIconRef));
 	
 	
-	ptr = gStatusIconPtrLocks().acquireLock(REINTERPRET_CAST(GetControlReference(inControl), StatusIconRef));
 	if (ptr != nullptr)
 	{
 		MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
@@ -845,8 +832,6 @@ iconUserPaneTracker		(ControlRef			inControl,
 		SetGWorld(oldPort, oldDevice);
 		HiliteControl(inControl, kControlPartCodeStatusIconVoid);
 	}
-	gStatusIconPtrLocks().releaseLock(REINTERPRET_CAST(GetControlReference(inControl), StatusIconRef), &ptr);
-	
 	return result;
 }// iconUserPaneTracker
 

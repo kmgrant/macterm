@@ -3,7 +3,7 @@
 	VirtualDevice.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -49,22 +49,22 @@ enum
 
 #pragma mark Types
 
-struct VDevice
+struct My_VirtualDevice
 {
 	GWorldPtr		whichWorld;		//!< GDevice created off-screen
 	CTabHandle		colorTable;		//!< graphics worldÕs color table
 	Rect			bounds;			//!< boundary rectangle for virtual device
 };
-typedef struct VDevice		VDevice;
-typedef VDevice*			VDevicePtr;
+typedef My_VirtualDevice*	My_VirtualDevicePtr;
 
-typedef MemoryBlockPtrLocker< VirtualDevice_Ref, VDevice >	VDevicePtrLocker;
+typedef MemoryBlockPtrLocker< VirtualDevice_Ref, My_VirtualDevice >		My_VirtualDevicePtrLocker;
+typedef LockAcquireRelease< VirtualDevice_Ref, My_VirtualDevice >		My_VirtualDeviceAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	VDevicePtrLocker&	gVDevicePtrLocks ()		{ static VDevicePtrLocker x; return x; }
+	My_VirtualDevicePtrLocker&	gVDevicePtrLocks ()		{ static My_VirtualDevicePtrLocker x; return x; }
 }
 
 #pragma mark Internal Method Prototypes
@@ -112,7 +112,7 @@ VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 	if (inoutVirtualDeviceRefPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
-		*inoutVirtualDeviceRefPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(VDevice)),
+		*inoutVirtualDeviceRefPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_VirtualDevice)),
 														VirtualDevice_Ref);
 		if (*inoutVirtualDeviceRefPtr == nullptr)
 		{
@@ -120,9 +120,9 @@ VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 		}
 		else
 		{
-			VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(*inoutVirtualDeviceRefPtr);
-			CGrafPtr		oldPort = nullptr;
-			GDHandle		oldDevice = nullptr;
+			My_VirtualDeviceAutoLocker	ptr(gVDevicePtrLocks(), *inoutVirtualDeviceRefPtr);
+			CGrafPtr					oldPort = nullptr;
+			GDHandle					oldDevice = nullptr;
 			
 			
 			GetGWorld(&oldPort, &oldDevice); // save old settings
@@ -197,7 +197,6 @@ VirtualDevice_New	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr,
 					result = kVirtualDevice_ResultInsufficientMemory;
 				}
 			}
-			gVDevicePtrLocks().releaseLock(*inoutVirtualDeviceRefPtr, &ptr);
 		}
 	}
 	
@@ -222,18 +221,16 @@ VirtualDevice_Dispose	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr)
 {
 	if (inoutVirtualDeviceRefPtr != nullptr)
 	{
-		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(*inoutVirtualDeviceRefPtr);
-		
-		
-		if (ptr != nullptr)
 		{
+			My_VirtualDeviceAutoLocker	ptr(gVDevicePtrLocks(), *inoutVirtualDeviceRefPtr);
+			
+			
 			if (ptr->colorTable != nullptr)
 			{
 				Memory_DisposeHandle(REINTERPRET_CAST(&ptr->colorTable, Handle*));
 			}
 			if (ptr->whichWorld != nullptr) DisposeGWorld(ptr->whichWorld), ptr->whichWorld = nullptr;
 		}
-		gVDevicePtrLocks().releaseLock(*inoutVirtualDeviceRefPtr, &ptr);
 		Memory_DisposePtr(REINTERPRET_CAST(inoutVirtualDeviceRefPtr, Ptr*));
 	}
 }// Dispose
@@ -258,7 +255,7 @@ VirtualDevice_GetBitMapForCopyBits	(VirtualDevice_Ref	inVirtualDeviceRef,
 	if (outBitMapPtrPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
-		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
+		My_VirtualDeviceAutoLocker	ptr(gVDevicePtrLocks(), inVirtualDeviceRef);
 		
 		
 		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
@@ -266,7 +263,6 @@ VirtualDevice_GetBitMapForCopyBits	(VirtualDevice_Ref	inVirtualDeviceRef,
 		{
 			*outBitMapPtrPtr = GetPortBitMapForCopyBits(ptr->whichWorld);
 		}
-		gVDevicePtrLocks().releaseLock(inVirtualDeviceRef, &ptr);
 	}
 	
 	return result;
@@ -290,7 +286,7 @@ VirtualDevice_GetBounds		(VirtualDevice_Ref	inVirtualDeviceRef,
 	if (outRectPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
-		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
+		My_VirtualDeviceAutoLocker	ptr(gVDevicePtrLocks(), inVirtualDeviceRef);
 		
 		
 		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
@@ -299,7 +295,6 @@ VirtualDevice_GetBounds		(VirtualDevice_Ref	inVirtualDeviceRef,
 			SetRect(outRectPtr,
 					ptr->bounds.left, ptr->bounds.top, ptr->bounds.right, ptr->bounds.bottom);
 		}
-		gVDevicePtrLocks().releaseLock(inVirtualDeviceRef, &ptr);
 	}
 	
 	return result;
@@ -321,7 +316,7 @@ VirtualDevice_GetGraphicsWorld	(VirtualDevice_Ref	inVirtualDeviceRef,
 	if (outGWorldPtrPtr == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
-		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
+		My_VirtualDeviceAutoLocker	ptr(gVDevicePtrLocks(), inVirtualDeviceRef);
 		
 		
 		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
@@ -329,7 +324,6 @@ VirtualDevice_GetGraphicsWorld	(VirtualDevice_Ref	inVirtualDeviceRef,
 		{
 			*outGWorldPtrPtr = ptr->whichWorld;
 		}
-		gVDevicePtrLocks().releaseLock(inVirtualDeviceRef, &ptr);
 	}
 	
 	return result;
@@ -352,7 +346,7 @@ VirtualDevice_GetPixelMap	(VirtualDevice_Ref	inVirtualDeviceRef,
 	if (outPixMapHandle == nullptr) result = kVirtualDevice_ResultPointerCheck;
 	else
 	{
-		VDevicePtr		ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
+		My_VirtualDeviceAutoLocker	ptr(gVDevicePtrLocks(), inVirtualDeviceRef);
 		
 		
 		if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
@@ -360,7 +354,6 @@ VirtualDevice_GetPixelMap	(VirtualDevice_Ref	inVirtualDeviceRef,
 		{
 			*outPixMapHandle = GetPortPixMap(ptr->whichWorld);
 		}
-		gVDevicePtrLocks().releaseLock(inVirtualDeviceRef, &ptr);
 	}
 	
 	return result;
@@ -376,8 +369,8 @@ VirtualDevice_Result
 VirtualDevice_SetColorTable		(VirtualDevice_Ref	inVirtualDeviceRef,
 								 PaletteHandle		inPaletteToUseForColorTable)
 {
-	VirtualDevice_Result	result = kVirtualDevice_ResultOK;
-	VDevicePtr				ptr = gVDevicePtrLocks().acquireLock(inVirtualDeviceRef);
+	VirtualDevice_Result		result = kVirtualDevice_ResultOK;
+	My_VirtualDeviceAutoLocker	ptr(gVDevicePtrLocks(), inVirtualDeviceRef);
 	
 	
 	if (ptr == nullptr) result = kVirtualDevice_ResultPointerCheck;
@@ -411,7 +404,6 @@ VirtualDevice_SetColorTable		(VirtualDevice_Ref	inVirtualDeviceRef,
 		}
 	}
 	
-	gVDevicePtrLocks().releaseLock(inVirtualDeviceRef, &ptr);
 	return result;
 }// SetColorTable
 

@@ -122,6 +122,7 @@ public:
 typedef My_AlertMessage*	My_AlertMessagePtr;
 
 typedef MemoryBlockPtrLocker< InterfaceLibAlertRef, My_AlertMessage >	My_AlertPtrLocker;
+typedef LockAcquireRelease< InterfaceLibAlertRef, My_AlertMessage >		My_AlertAutoLocker;
 
 #pragma mark Variables
 
@@ -244,12 +245,7 @@ Alert_Dispose	(InterfaceLibAlertRef*		inoutAlert)
 {
 	if (nullptr != inoutAlert)
 	{
-		My_AlertMessagePtr		ptr = gAlertPtrLocks().acquireLock(*inoutAlert);
-		
-		
-		delete ptr;
-		gAlertPtrLocks().releaseLock(*inoutAlert, &ptr);
-		*inoutAlert = nullptr;
+		delete *(REINTERPRET_CAST(inoutAlert, My_AlertMessagePtr*)), *inoutAlert = nullptr;
 	}
 }// Dispose
 
@@ -458,7 +454,7 @@ Alert_Display	(InterfaceLibAlertRef	inAlert)
 	// only attempt to display an alert if the module was properly initialized
 	if (gIsInited)
 	{
-		My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+		My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 		
 		
 		result = backgroundNotification();
@@ -473,7 +469,6 @@ Alert_Display	(InterfaceLibAlertRef	inAlert)
 		//								&alertPtr->params, &alertPtr->itemHit, &someDialog);
 	#endif
 		Embedding_RestoreFrontmostWindow();
-		gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 	}
 	else
 	{
@@ -496,11 +491,10 @@ void
 Alert_HitItem	(InterfaceLibAlertRef	inAlert,
 				 SInt16					inItemIndex)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	handleItemHit(alertPtr, inItemIndex);
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// HitItem
 
 
@@ -517,12 +511,11 @@ indicates the help button.  If the alert times out
 SInt16
 Alert_ItemHit	(InterfaceLibAlertRef	inAlert)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	SInt16					result = kAlertStdAlertOtherButton;
 	
 	
 	if (nullptr != alertPtr) result = alertPtr->itemHit;
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 	return result;
 }// ItemHit
 
@@ -554,7 +547,7 @@ Alert_MakeModeless		(InterfaceLibAlertRef				inAlert,
 						 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 						 void*								inCloseNotifyProcUserData)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -563,7 +556,6 @@ Alert_MakeModeless		(InterfaceLibAlertRef				inAlert,
 		alertPtr->sheetCloseNotifier = inCloseNotifyProcPtr;
 		alertPtr->sheetCloseNotifierUserData = inCloseNotifyProcUserData;
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// MakeModeless
 
 
@@ -597,7 +589,7 @@ Alert_MakeWindowModal	(InterfaceLibAlertRef				inAlert,
 						 AlertMessages_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 						 void*								inCloseNotifyProcUserData)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -608,7 +600,6 @@ Alert_MakeWindowModal	(InterfaceLibAlertRef				inAlert,
 		alertPtr->sheetCloseNotifier = inCloseNotifyProcPtr;
 		alertPtr->sheetCloseNotifierUserData = inCloseNotifyProcUserData;
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// MakeWindowModal
 
 
@@ -795,7 +786,7 @@ Alert_SetButtonText		(InterfaceLibAlertRef	inAlert,
 						 short					inWhichButton,
 						 CFStringRef			inNewText)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -833,8 +824,6 @@ Alert_SetButtonText		(InterfaceLibAlertRef	inAlert,
 			CFRelease(*stringPtr);
 		}
 		*stringPtr = inNewText;
-		
-		gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 	}
 }// SetButtonText
 
@@ -852,14 +841,13 @@ void
 Alert_SetHelpButton		(InterfaceLibAlertRef	inAlert,
 						 Boolean				inIsHelpButton)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
 	{
 		alertPtr->params.helpButton = inIsHelpButton;
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// SetHelpButton
 
 
@@ -892,14 +880,13 @@ void
 Alert_SetMovable	(InterfaceLibAlertRef	inAlert,
 					 Boolean				inIsMovable)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
 	{
 		alertPtr->params.movable = inIsMovable;
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// SetMovable
 
 
@@ -960,7 +947,7 @@ void
 Alert_SetParamsFor	(InterfaceLibAlertRef	inAlert,
 					 short					inAlertStyle)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	CFStringRef				tempCFString = nullptr;
 	
 	
@@ -1094,7 +1081,6 @@ Alert_SetParamsFor	(InterfaceLibAlertRef	inAlert,
 			break;
 		}
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// SetParamsFor
 
 
@@ -1112,7 +1098,7 @@ Alert_SetText	(InterfaceLibAlertRef	inAlert,
 				 ConstStringPtr			inDialogText,
 				 ConstStringPtr			inHelpText)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -1122,7 +1108,6 @@ Alert_SetText	(InterfaceLibAlertRef	inAlert,
 		alertPtr->helpTextCFString.setCFTypeRef(CFStringCreateWithPascalString
 												(kCFAllocatorDefault, inHelpText, kCFStringEncodingMacRoman));
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// SetText
 
 
@@ -1138,7 +1123,7 @@ Alert_SetTextCFStrings	(InterfaceLibAlertRef	inAlert,
 						 CFStringRef			inDialogText,
 						 CFStringRef			inHelpText)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
@@ -1146,7 +1131,6 @@ Alert_SetTextCFStrings	(InterfaceLibAlertRef	inAlert,
 		alertPtr->dialogTextCFString.setCFTypeRef(inDialogText);
 		alertPtr->helpTextCFString.setCFTypeRef(inHelpText);
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// SetTextCFStrings
 
 
@@ -1165,14 +1149,13 @@ void
 Alert_SetTitleCFString	(InterfaceLibAlertRef	inAlert,
 						 CFStringRef			inNewTitle)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
 	{
 		alertPtr->titleCFString.setCFTypeRef(inNewTitle);
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// SetTitle
 
 
@@ -1186,14 +1169,13 @@ void
 Alert_SetType	(InterfaceLibAlertRef		inAlert,
 				 AlertType					inNewType)
 {
-	My_AlertMessagePtr		alertPtr = gAlertPtrLocks().acquireLock(inAlert);
+	My_AlertAutoLocker		alertPtr(gAlertPtrLocks(), inAlert);
 	
 	
 	if (nullptr != alertPtr)
 	{
 		alertPtr->alertType = inNewType;
 	}
-	gAlertPtrLocks().releaseLock(inAlert, &alertPtr);
 }// SetType
 
 

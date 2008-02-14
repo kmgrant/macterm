@@ -3,7 +3,7 @@
 	Workspace.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -52,29 +52,30 @@
 
 #pragma mark Types
 
-typedef std::vector< CFRetainRelease >	WorkspaceWindowList;
+typedef std::vector< CFRetainRelease >	My_WorkspaceWindowList;
 
-struct Workspace
+struct My_Workspace
 {
 public:
-	Workspace();
-	~Workspace();
+	My_Workspace();
+	~My_Workspace();
 	
 	WindowGroupRef			windowGroup;	//!< Mac OS window group used to constrain window activation, etc.
-	WorkspaceWindowList		contents;		//!< the list of windows in this workspace
+	My_WorkspaceWindowList	contents;		//!< the list of windows in this workspace
 	Boolean					isObscured;		//!< whether all windows in this workspace are forced to hide but may technically be visible
 	Workspace_Ref			selfRef;		//!< redundant reference to self, for convenience
 };
-typedef Workspace*			WorkspacePtr;
-typedef Workspace const*	WorkspaceConstPtr;
+typedef My_Workspace*			My_WorkspacePtr;
+typedef My_Workspace const*		My_WorkspaceConstPtr;
 
-typedef MemoryBlockPtrLocker< Workspace_Ref, Workspace >	WorkspacePtrLocker;
+typedef MemoryBlockPtrLocker< Workspace_Ref, My_Workspace >		My_WorkspacePtrLocker;
+typedef LockAcquireRelease< Workspace_Ref, My_Workspace >		My_WorkspaceAutoLocker;
 
 #pragma mark Variables
 
 namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
 {
-	WorkspacePtrLocker&		gWorkspacePtrLocks ()	{ static WorkspacePtrLocker x; return x; }
+	My_WorkspacePtrLocker&		gWorkspacePtrLocks ()	{ static My_WorkspacePtrLocker x; return x; }
 }
 
 #pragma mark Functors
@@ -127,53 +128,6 @@ private:
 #pragma mark Public Methods
 
 /*!
-Constructor.  See Workspace_New().
-
-(3.0)
-*/
-Workspace::
-Workspace()
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-windowGroup(nullptr),
-contents(),
-isObscured(false),
-selfRef(REINTERPRET_CAST(this, Workspace_Ref))
-{
-	OSStatus	error = noErr;
-	
-	
-	error = CreateWindowGroup(kWindowGroupAttrSelectAsLayer |
-								kWindowGroupAttrMoveTogether |
-								kWindowGroupAttrHideOnCollapse,
-								&this->windowGroup);
-	assert_noerr(error);
-	
-	// fix the window level so they are below menus, alerts, etc.
-	error = SetWindowGroupParent(this->windowGroup,
-									GetWindowGroupOfClass(kDocumentWindowClass));
-	assert_noerr(error);
-	error = RetainWindowGroup(this->windowGroup);
-	assert_noerr(error);
-}// Workspace default constructor
-
-
-/*!
-Constructor.  See Workspace_New().
-
-(3.0)
-*/
-Workspace::
-~Workspace()
-{
-	if (nullptr != windowGroup)
-	{
-		(OSStatus)ReleaseWindowGroup(this->windowGroup), this->windowGroup = nullptr;
-	}
-}// Workspace default constructor
-
-
-/*!
 Constructs a new terminal window workspace.  To destroy
 the workspace later, use Workspace_Dispose().
 
@@ -189,7 +143,7 @@ Workspace_New ()
 	
 	try
 	{
-		result = REINTERPRET_CAST(new Workspace, Workspace_Ref);
+		result = REINTERPRET_CAST(new My_Workspace, Workspace_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -216,12 +170,7 @@ Workspace_Dispose	(Workspace_Ref*		inoutRefPtr)
 	}
 	else
 	{
-		WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(*inoutRefPtr);
-		
-		
-		delete ptr;
-		gWorkspacePtrLocks().releaseLock(*inoutRefPtr, &ptr);
-		*inoutRefPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_WorkspacePtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -243,8 +192,8 @@ void
 Workspace_AddWindow		(Workspace_Ref	inWorkspace,
 						 HIWindowRef	inWindowToAdd)
 {
-	WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(inWorkspace);
-	OSStatus		error = noErr;
+	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
+	OSStatus				error = noErr;
 	
 	
 	// if there are windows in this workspace, relocate the new window
@@ -267,7 +216,6 @@ Workspace_AddWindow		(Workspace_Ref	inWorkspace,
 	assert_noerr(error);
 	
 	ptr->contents.push_back(inWindowToAdd);
-	gWorkspacePtrLocks().releaseLock(inWorkspace, &ptr);
 }// AddWindow
 
 
@@ -283,11 +231,10 @@ To obscure a workspace, use Workspace_SetObscured().
 Boolean
 Workspace_IsObscured	(Workspace_Ref	inWorkspace)
 {
-	WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(inWorkspace);
-	Boolean			result = ptr->isObscured;
+	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
+	Boolean					result = ptr->isObscured;
 	
 	
-	gWorkspacePtrLocks().releaseLock(inWorkspace, &ptr);
 	return result;
 }// IsObscured
 
@@ -306,7 +253,7 @@ void
 Workspace_RemoveWindow	(Workspace_Ref	inWorkspace,
 						 HIWindowRef	inWindowToRemove)
 {
-	WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(inWorkspace);
+	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
 	
 	
 	// put the window back into the normal group of document windows
@@ -316,7 +263,6 @@ Workspace_RemoveWindow	(Workspace_Ref	inWorkspace,
 						ptr->contents.end());
 	assert(ptr->contents.end() == std::find(ptr->contents.begin(), ptr->contents.end(),
 											inWindowToRemove));
-	gWorkspacePtrLocks().releaseLock(inWorkspace, &ptr);
 }// RemoveWindow
 
 
@@ -331,15 +277,14 @@ is invalid.
 UInt16
 Workspace_ReturnWindowCount		(Workspace_Ref	inWorkspace)
 {
-	WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(inWorkspace);
-	UInt16			result = kWorkspace_WindowIndexInfinity;
+	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
+	UInt16					result = kWorkspace_WindowIndexInfinity;
 	
 	
 	if (nullptr != ptr)
 	{
 		result = ptr->contents.size();
 	}
-	gWorkspacePtrLocks().releaseLock(inWorkspace, &ptr);
 	return result;
 }// ReturnWindowCount
 
@@ -361,8 +306,8 @@ HIWindowRef
 Workspace_ReturnWindowWithZeroBasedIndex	(Workspace_Ref	inWorkspace,
 											 UInt16			inIndex)
 {
-	WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(inWorkspace);
-	HIWindowRef		result = nullptr;
+	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
+	HIWindowRef				result = nullptr;
 	
 	
 	if (nullptr != ptr)
@@ -373,7 +318,6 @@ Workspace_ReturnWindowWithZeroBasedIndex	(Workspace_Ref	inWorkspace,
 										HIWindowRef);
 		}
 	}
-	gWorkspacePtrLocks().releaseLock(inWorkspace, &ptr);
 	return result;
 }// ReturnWindowWithZeroBasedIndex
 
@@ -397,13 +341,13 @@ UInt16
 Workspace_ReturnZeroBasedIndexOfWindow	(Workspace_Ref	inWorkspace,
 										 HIWindowRef	inWindowToFind)
 {
-	WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(inWorkspace);
-	UInt16			result = kWorkspace_WindowIndexInfinity;
+	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
+	UInt16					result = kWorkspace_WindowIndexInfinity;
 	
 	
 	if (nullptr != ptr)
 	{
-		WorkspaceWindowList::const_iterator		toWindowRetainer;
+		My_WorkspaceWindowList::const_iterator	toWindowRetainer;
 		UInt16									i = 0;
 		Boolean									windowFound = false;
 		
@@ -421,7 +365,6 @@ Workspace_ReturnZeroBasedIndexOfWindow	(Workspace_Ref	inWorkspace,
 			}
 		}
 	}
-	gWorkspacePtrLocks().releaseLock(inWorkspace, &ptr);
 	return result;
 }// ReturnZeroBasedIndexOfWindow
 
@@ -445,12 +388,60 @@ void
 Workspace_SetObscured	(Workspace_Ref	inWorkspace,
 						 Boolean		inIsHidden)
 {
-	WorkspacePtr	ptr = gWorkspacePtrLocks().acquireLock(inWorkspace);
+	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
 	
 	
 	std::for_each(ptr->contents.begin(), ptr->contents.end(), windowObscurer(inIsHidden));
 	ptr->isObscured = inIsHidden;
-	gWorkspacePtrLocks().releaseLock(inWorkspace, &ptr);
 }// SetObscured
+
+
+#pragma mark Internal Methods
+
+/*!
+Constructor.  See Workspace_New().
+
+(3.0)
+*/
+My_Workspace::
+My_Workspace()
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+windowGroup(nullptr),
+contents(),
+isObscured(false),
+selfRef(REINTERPRET_CAST(this, Workspace_Ref))
+{
+	OSStatus	error = noErr;
+	
+	
+	error = CreateWindowGroup(kWindowGroupAttrSelectAsLayer |
+								kWindowGroupAttrMoveTogether |
+								kWindowGroupAttrHideOnCollapse,
+								&this->windowGroup);
+	assert_noerr(error);
+	
+	// fix the window level so they are below menus, alerts, etc.
+	error = SetWindowGroupParent(this->windowGroup,
+									GetWindowGroupOfClass(kDocumentWindowClass));
+	assert_noerr(error);
+	error = RetainWindowGroup(this->windowGroup);
+	assert_noerr(error);
+}// My_Workspace default constructor
+
+
+/*!
+Constructor.  See Workspace_New().
+
+(3.0)
+*/
+My_Workspace::
+~My_Workspace()
+{
+	if (nullptr != windowGroup)
+	{
+		(OSStatus)ReleaseWindowGroup(this->windowGroup), this->windowGroup = nullptr;
+	}
+}// My_Workspace default constructor
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
