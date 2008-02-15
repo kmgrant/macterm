@@ -86,6 +86,7 @@ static HIViewID const	idMyCheckBoxAllowForceQuit				= { 'XKFQ', 0/* ID */ };
 static HIViewID const	idMyCheckBoxSuperfluousEffects			= { 'XKFX', 0/* ID */ };
 static HIViewID const	idMyHelpTextSuperfluousEffects			= { 'HTSG', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowOffSwitchWindow			= { 'XKFW', 0/* ID */ };
+static HIViewID const	idMyHelpTextDisableKiosk				= { 'HTDK', 0/* ID */ };
 
 #pragma mark Types
 
@@ -361,6 +362,10 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */)
 		;
 	viewWrap.setCFTypeRef(HIViewWrap(idMyHelpTextSuperfluousEffects, kPanelWindow));
+	viewWrap
+		<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */)
+		;
+	viewWrap.setCFTypeRef(HIViewWrap(idMyHelpTextDisableKiosk, kPanelWindow));
 	viewWrap
 		<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */)
 		;
