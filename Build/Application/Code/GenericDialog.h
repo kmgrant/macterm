@@ -1,4 +1,4 @@
-/*!	\file Generic.h
+/*!	\file GenericDialog.h
 	\brief Allows a user interface that is both a panel
 	and a dialog to be displayed as a modal dialog or
 	sheet.
@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -41,7 +41,8 @@
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
-#include "TerminalWindow.h"
+#include "HelpSystem.h"
+#include "Panel.h"
 
 
 
@@ -76,8 +77,10 @@ GenericDialog_InvokeCloseNotifyProc		(GenericDialog_CloseNotifyProcPtr	inUserRou
 #pragma mark Public Methods
 
 GenericDialog_Ref
-	GenericDialog_New							(TerminalWindowRef					inTerminalWindow,
-												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr);
+	GenericDialog_New							(HIWindowRef						inParentWindow,
+												 Panel_Ref							inHostedPanel,
+												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);
 
 void
 	GenericDialog_Dispose						(GenericDialog_Ref*					inoutDialogPtr);
@@ -85,8 +88,11 @@ void
 void
 	GenericDialog_Display						(GenericDialog_Ref					inDialog);
 
-TerminalWindowRef
-	GenericDialog_ReturnTerminalWindow			(GenericDialog_Ref					inDialog);
+Panel_Ref
+	GenericDialog_ReturnHostedPanel				(GenericDialog_Ref					inDialog);
+
+HIWindowRef
+	GenericDialog_ReturnParentWindow			(GenericDialog_Ref					inDialog);
 
 void
 	GenericDialog_StandardCloseNotifyProc		(GenericDialog_Ref					inDialogThatClosed,

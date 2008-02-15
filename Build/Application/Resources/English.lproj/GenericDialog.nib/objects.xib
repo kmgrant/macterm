@@ -1,138 +1,140 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
   <array count="12" name="allObjects">
+    <object class="IBCarbonButton" id="189">
+      <ostype name="controlSignature">Canc</ostype>
+      <ostype name="command">not!</ostype>
+      <int name="buttonType">2</int>
+      <string name="title">Cancel</string>
+      <string name="viewFrame">181 60 69 20 </string>
+      <string name="bounds">60 181 80 250 </string>
+    </object>
+    <object class="IBCarbonRootControl" id="193">
+      <string name="viewFrame">0 0 351 100 </string>
+      <array count="4" name="subviews">
+        <object class="IBCarbonButton" id="195">
+          <ostype name="controlSignature">Okay</ostype>
+          <ostype name="command">ok  </ostype>
+          <int name="buttonType">1</int>
+          <string name="title">OK</string>
+          <string name="viewFrame">262 60 69 20 </string>
+          <string name="bounds">60 262 80 331 </string>
+        </object>
+        <object class="IBCarbonButton" id="196">
+          <ostype name="controlSignature">Canc</ostype>
+          <ostype name="command">not!</ostype>
+          <int name="buttonType">2</int>
+          <string name="title">Cancel</string>
+          <string name="viewFrame">181 60 69 20 </string>
+          <string name="bounds">60 181 80 250 </string>
+        </object>
+        <object class="IBCarbonRoundButton" id="197">
+          <ostype name="controlSignature">Help</ostype>
+          <ostype name="command">?Ctx</ostype>
+          <string name="viewFrame">20 62 21 18 </string>
+          <string name="bounds">62 20 80 41 </string>
+          <int name="contentType">132</int>
+          <int name="iconCreator">1835098995</int>
+          <int name="iconType">1751477360</int>
+        </object>
+        <object class="IBCarbonUserPane" id="194">
+          <ostype name="controlSignature">Panl</ostype>
+          <int name="featureBits">2</int>
+          <string name="viewFrame">0 0 351 48 </string>
+          <string name="bounds">0 0 48 351 </string>
+        </object>
+      </array>
+      <string name="bounds">0 0 100 351 </string>
+    </object>
+    <object class="IBCarbonWindow" id="192">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="doesNotCycle">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="carbonWindowClass">11</int>
+      <string name="title"></string>
+      <reference name="rootControl" idRef="193"/>
+      <string name="windowRect">222 106 322 457 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <reference idRef="195"/>
+    <object class="IBCarbonButton" id="188">
+      <ostype name="controlSignature">Okay</ostype>
+      <ostype name="command">ok  </ostype>
+      <int name="buttonType">1</int>
+      <string name="title">OK</string>
+      <string name="viewFrame">262 60 69 20 </string>
+      <string name="bounds">60 262 80 331 </string>
+    </object>
     <object class="IBCarbonWindow" id="166">
-      <string name="windowRect">202 86 302 437 </string>
+      <boolean name="hasCloseBox">TRUE</boolean>
+      <boolean name="hasHorizontalZoom">TRUE</boolean>
+      <boolean name="hasVerticalZoom">TRUE</boolean>
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="doesNotCycle">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="carbonWindowClass">4</int>
       <string name="title"></string>
       <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="bounds">0 0 100 351 </string>
         <string name="viewFrame">0 0 351 100 </string>
         <array count="4" name="subviews">
-          <object class="IBCarbonButton" id="188">
-            <string name="bounds">60 262 80 331 </string>
-            <string name="viewFrame">262 60 69 20 </string>
-            <ostype name="controlSignature">Okay</ostype>
-            <string name="title">OK</string>
-            <ostype name="command">ok  </ostype>
-            <int name="buttonType">1</int>
-          </object>
-          <object class="IBCarbonButton" id="189">
-            <string name="bounds">60 181 80 250 </string>
-            <string name="viewFrame">181 60 69 20 </string>
-            <ostype name="controlSignature">Canc</ostype>
-            <string name="title">Cancel</string>
-            <ostype name="command">not!</ostype>
-            <int name="buttonType">2</int>
-          </object>
+          <reference idRef="188"/>
+          <reference idRef="189"/>
           <object class="IBCarbonRoundButton" id="190">
-            <string name="bounds">62 20 80 41 </string>
-            <string name="viewFrame">20 62 21 18 </string>
             <ostype name="controlSignature">Help</ostype>
             <ostype name="command">?Ctx</ostype>
+            <string name="viewFrame">20 62 21 18 </string>
+            <string name="bounds">62 20 80 41 </string>
             <int name="contentType">132</int>
+            <int name="iconCreator">1835098995</int>
             <int name="iconType">1751477360</int>
           </object>
           <object class="IBCarbonUserPane" id="191">
-            <string name="bounds">20 20 48 331 </string>
-            <string name="viewFrame">20 20 311 28 </string>
             <ostype name="controlSignature">Panl</ostype>
             <int name="featureBits">2</int>
+            <string name="viewFrame">0 0 351 48 </string>
+            <string name="bounds">0 0 48 351 </string>
           </object>
         </array>
-      </object>
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="liveResize">TRUE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <int name="carbonWindowClass">4</int>
-      <boolean name="doesNotCycle">TRUE</boolean>
-      <boolean name="inWindowMenu">FALSE</boolean>
-    </object>
-    <reference idRef="167"/>
-    <reference idRef="188"/>
-    <reference idRef="189"/>
-    <reference idRef="190"/>
-    <reference idRef="191"/>
-    <object class="IBCarbonWindow" id="192">
-      <string name="windowRect">222 106 322 457 </string>
-      <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="193">
         <string name="bounds">0 0 100 351 </string>
-        <string name="viewFrame">0 0 351 100 </string>
-        <array count="4" name="subviews">
-          <object class="IBCarbonButton" id="195">
-            <string name="bounds">60 262 80 331 </string>
-            <string name="viewFrame">262 60 69 20 </string>
-            <ostype name="controlSignature">Okay</ostype>
-            <string name="title">OK</string>
-            <ostype name="command">ok  </ostype>
-            <int name="buttonType">1</int>
-          </object>
-          <object class="IBCarbonButton" id="196">
-            <string name="bounds">60 181 80 250 </string>
-            <string name="viewFrame">181 60 69 20 </string>
-            <ostype name="controlSignature">Canc</ostype>
-            <string name="title">Cancel</string>
-            <ostype name="command">not!</ostype>
-            <int name="buttonType">2</int>
-          </object>
-          <object class="IBCarbonRoundButton" id="197">
-            <string name="bounds">62 20 80 41 </string>
-            <string name="viewFrame">20 62 21 18 </string>
-            <ostype name="controlSignature">Help</ostype>
-            <ostype name="command">?Ctx</ostype>
-            <int name="contentType">132</int>
-            <int name="iconType">1751477360</int>
-          </object>
-          <object class="IBCarbonUserPane" id="194">
-            <string name="bounds">20 20 48 331 </string>
-            <string name="viewFrame">20 20 311 28 </string>
-            <ostype name="controlSignature">Panl</ostype>
-            <int name="featureBits">2</int>
-          </object>
-        </array>
       </object>
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="liveResize">TRUE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <int name="carbonWindowClass">11</int>
-      <boolean name="doesNotCycle">TRUE</boolean>
-      <boolean name="inWindowMenu">FALSE</boolean>
+      <string name="windowRect">202 86 302 437 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="193"/>
-    <reference idRef="194"/>
-    <reference idRef="195"/>
-    <reference idRef="196"/>
     <reference idRef="197"/>
+    <reference idRef="191"/>
+    <reference idRef="190"/>
+    <reference idRef="196"/>
+    <reference idRef="194"/>
+    <reference idRef="167"/>
   </array>
   <array count="12" name="allParents">
-    <reference idRef="1"/>
-    <reference idRef="166"/>
     <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="1"/>
     <reference idRef="192"/>
+    <reference idRef="1"/>
+    <reference idRef="193"/>
+    <reference idRef="167"/>
+    <reference idRef="1"/>
+    <reference idRef="193"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
     <reference idRef="193"/>
     <reference idRef="193"/>
-    <reference idRef="193"/>
-    <reference idRef="193"/>
+    <reference idRef="166"/>
   </array>
-  <dictionary count="4" name="nameTable">
+  <dictionary count="3" name="nameTable">
     <string>Dialog</string>
     <reference idRef="166"/>
     <string>File&apos;s Owner</string>
     <reference idRef="1"/>
-    <string>NSCustomView111</string>
-    <reference idRef="197"/>
     <string>Sheet</string>
     <reference idRef="192"/>
   </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
   <unsigned_int name="nextObjectID">198</unsigned_int>
 </object>
