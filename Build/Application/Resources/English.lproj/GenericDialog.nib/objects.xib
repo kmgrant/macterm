@@ -3,14 +3,6 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="12" name="allObjects">
-    <object class="IBCarbonButton" id="189">
-      <ostype name="controlSignature">Canc</ostype>
-      <ostype name="command">not!</ostype>
-      <int name="buttonType">2</int>
-      <string name="title">Cancel</string>
-      <string name="viewFrame">181 60 69 20 </string>
-      <string name="bounds">60 181 80 250 </string>
-    </object>
     <object class="IBCarbonRootControl" id="193">
       <string name="viewFrame">0 0 351 100 </string>
       <array count="4" name="subviews">
@@ -48,32 +40,13 @@
       </array>
       <string name="bounds">0 0 100 351 </string>
     </object>
-    <object class="IBCarbonWindow" id="192">
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="liveResize">TRUE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <boolean name="doesNotCycle">TRUE</boolean>
-      <boolean name="inWindowMenu">FALSE</boolean>
-      <int name="carbonWindowClass">11</int>
-      <string name="title"></string>
-      <reference name="rootControl" idRef="193"/>
-      <string name="windowRect">222 106 322 457 </string>
-      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
-    </object>
-    <reference idRef="195"/>
-    <object class="IBCarbonButton" id="188">
-      <ostype name="controlSignature">Okay</ostype>
-      <ostype name="command">ok  </ostype>
-      <int name="buttonType">1</int>
-      <string name="title">OK</string>
-      <string name="viewFrame">262 60 69 20 </string>
-      <string name="bounds">60 262 80 331 </string>
-    </object>
+    <reference idRef="197"/>
     <object class="IBCarbonWindow" id="166">
-      <boolean name="hasCloseBox">TRUE</boolean>
       <boolean name="hasHorizontalZoom">TRUE</boolean>
       <boolean name="hasVerticalZoom">TRUE</boolean>
       <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
       <boolean name="compositing">TRUE</boolean>
       <boolean name="doesNotCycle">TRUE</boolean>
@@ -83,8 +56,22 @@
       <object name="rootControl" class="IBCarbonRootControl" id="167">
         <string name="viewFrame">0 0 351 100 </string>
         <array count="4" name="subviews">
-          <reference idRef="188"/>
-          <reference idRef="189"/>
+          <object class="IBCarbonButton" id="188">
+            <ostype name="controlSignature">Okay</ostype>
+            <ostype name="command">ok  </ostype>
+            <int name="buttonType">1</int>
+            <string name="title">OK</string>
+            <string name="viewFrame">262 60 69 20 </string>
+            <string name="bounds">60 262 80 331 </string>
+          </object>
+          <object class="IBCarbonButton" id="189">
+            <ostype name="controlSignature">Canc</ostype>
+            <ostype name="command">not!</ostype>
+            <int name="buttonType">2</int>
+            <string name="title">Cancel</string>
+            <string name="viewFrame">181 60 69 20 </string>
+            <string name="bounds">60 181 80 250 </string>
+          </object>
           <object class="IBCarbonRoundButton" id="190">
             <ostype name="controlSignature">Help</ostype>
             <ostype name="command">?Ctx</ostype>
@@ -106,26 +93,40 @@
       <string name="windowRect">202 86 302 437 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="197"/>
-    <reference idRef="191"/>
-    <reference idRef="190"/>
     <reference idRef="196"/>
-    <reference idRef="194"/>
+    <reference idRef="189"/>
+    <object class="IBCarbonWindow" id="192">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="doesNotCycle">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="carbonWindowClass">11</int>
+      <string name="title"></string>
+      <reference name="rootControl" idRef="193"/>
+      <string name="windowRect">222 106 322 457 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <reference idRef="191"/>
     <reference idRef="167"/>
+    <reference idRef="195"/>
+    <reference idRef="188"/>
+    <reference idRef="190"/>
+    <reference idRef="194"/>
   </array>
   <array count="12" name="allParents">
-    <reference idRef="167"/>
     <reference idRef="192"/>
+    <reference idRef="193"/>
     <reference idRef="1"/>
     <reference idRef="193"/>
     <reference idRef="167"/>
     <reference idRef="1"/>
-    <reference idRef="193"/>
     <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="193"/>
-    <reference idRef="193"/>
     <reference idRef="166"/>
+    <reference idRef="193"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="193"/>
   </array>
   <dictionary count="3" name="nameTable">
     <string>Dialog</string>

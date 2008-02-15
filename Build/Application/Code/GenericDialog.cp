@@ -98,6 +98,7 @@ struct My_GenericDialog
 	// IMPORTANT: DATA MEMBER ORDER HAS A CRITICAL EFFECT ON CONSTRUCTOR CODE EXECUTION ORDER.  DO NOT CHANGE!!!
 	GenericDialog_Ref						selfRef;						//!< identical to address of structure, but typed as ref
 	HIWindowRef								parentWindow;					//!< the terminal window for which this dialog applies
+	Boolean									isModal;						//!< if false, the dialog is a sheet
 	Panel_Ref								hostedPanel;					//!< the panel implementing the primary user interface
 	HISize									panelIdealSize;					//!< the dimensions most appropriate for displaying the UI
 	NIBWindow								dialogWindow;					//!< acts as the Mac OS window for the dialog
@@ -136,6 +137,9 @@ static pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*
 /*!
 This method is used to create a dialog box.  It creates
 the dialog box invisibly, and sets up dialog views.
+
+If "inParentWindow" is nullptr, the window is automatically
+made application-modal; otherwise, it is a sheet.
 
 (3.1)
 */
@@ -191,7 +195,10 @@ GenericDialog_Dispose	(GenericDialog_Ref*	inoutRefPtr)
 
 
 /*!
-Displays a sheet on a terminal window, and returns immediately.
+Displays the dialog.  If the dialog is modal, this call will
+block until the dialog is finished.  Otherwise, a sheet will
+appear over the parent window and this call will return
+immediately.
 
 IMPORTANT:	Invoking this routine means it is no longer your
 			responsibility to call GenericDialog_Dispose():
@@ -221,9 +228,18 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 		assert_noerr(error);
 		
 		// display the dialog
-		ShowSheetWindow(ptr->dialogWindow, ptr->parentWindow);
-		
-		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
+		if (ptr->isModal)
+		{
+			// handle events
+			ShowWindow(ptr->dialogWindow);
+			error = RunAppModalLoopForWindow(ptr->dialogWindow);
+			assert_noerr(error);
+		}
+		else
+		{
+			ShowSheetWindow(ptr->dialogWindow, ptr->parentWindow);
+			// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
+		}
 	}
 }// Display
 
@@ -300,10 +316,11 @@ My_GenericDialog	(HIWindowRef						inParentWindow,
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
 parentWindow					(inParentWindow),
+isModal							(nullptr == inParentWindow),
 hostedPanel						(inHostedPanel),
 panelIdealSize					(CGSizeMake(0, 0)), // set later
 dialogWindow					(NIBWindow(AppResources_ReturnBundleForNIBs(),
-											CFSTR("GenericDialog"), CFSTR("Sheet"))
+											CFSTR("GenericDialog"), (this->isModal) ? CFSTR("Dialog") : CFSTR("Sheet"))
 									<< NIBLoader_AssertWindowExists),
 userPaneForMargins				(dialogWindow.returnHIViewWithID(idMyUserPanePanelMargins)
 									<< HIViewWrap_AssertExists),
@@ -450,7 +467,15 @@ handleItemHit	(My_GenericDialogPtr	inPtr,
 	{
 		// user accepted - close the dialog with an appropriate transition for acceptance
 		Panel_SendMessageNewVisibility(inPtr->hostedPanel, false/* visible */);
-		HideSheetWindow(inPtr->dialogWindow);
+		if (inPtr->isModal)
+		{
+			(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
+			HideWindow(inPtr->dialogWindow);
+		}
+		else
+		{
+			HideSheetWindow(inPtr->dialogWindow);
+		}
 		
 		// notify of close
 		if (nullptr != inPtr->closeNotifyProc)
@@ -462,7 +487,15 @@ handleItemHit	(My_GenericDialogPtr	inPtr,
 	{
 		// user cancelled - close the dialog with an appropriate transition for cancelling
 		Panel_SendMessageNewVisibility(inPtr->hostedPanel, false/* visible */);
-		HideSheetWindow(inPtr->dialogWindow);
+		if (inPtr->isModal)
+		{
+			(OSStatus)QuitAppModalLoopForWindow(inPtr->dialogWindow);
+			HideWindow(inPtr->dialogWindow);
+		}
+		else
+		{
+			HideSheetWindow(inPtr->dialogWindow);
+		}
 		
 		// notify of close
 		if (nullptr != inPtr->closeNotifyProc)
