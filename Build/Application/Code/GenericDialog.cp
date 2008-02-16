@@ -424,6 +424,19 @@ contextualHelpSetup				(this->dialogWindow, inHelpButtonAction)
 	SizeWindow(this->dialogWindow, STATIC_CAST(windowInitialSize.width, SInt16),
 				STATIC_CAST(windowInitialSize.height, SInt16), true/* update */);
 	
+	// positioning is not done in the NIB because an arbitrarily-sized panel is
+	// added programmatically, and affects the size (and centering) of the window
+	if (this->isModal)
+	{
+		HIWindowRef const	kAnchorWindow = GetUserFocusWindow();
+		
+		
+		(OSStatus)RepositionWindow(this->dialogWindow, kAnchorWindow,
+									(nullptr == kAnchorWindow)
+										? kWindowCenterOnMainScreen
+										: kWindowCenterOnParentWindowScreen);
+	}
+	
 	// ensure other handlers were installed
 	assert(buttonHICommandsHandler.isInstalled());
 }// My_GenericDialog 4-argument constructor
