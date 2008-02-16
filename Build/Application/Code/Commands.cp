@@ -628,7 +628,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				startEnd.second = std::make_pair(Terminal_ReturnColumnCount(activeScreen),
 													Terminal_ReturnRowCount(activeScreen));
 				TerminalView_SelectVirtualRange(activeView, startEnd);
-				UniversalPrint_SetMode(kUniversalPrint_ModeOneCopy);
+				UniversalPrint_SetMode(kUniversalPrint_ModeNormal);
 				TelnetPrinting_PrintSelection();
 				
 				// clear the full screen selection, restoring any previous selection

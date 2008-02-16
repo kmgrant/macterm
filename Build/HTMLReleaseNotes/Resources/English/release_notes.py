@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080216',
     '20080212',
     '20080210',
     '20080205',
@@ -88,6 +89,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080216': [
+		'The Print Screen command is no longer instantaneous, it displays a dialog (allowing export to PDF, among other print options).',
+	],
 	'20080212': [
 		'Fixed a possible crash if an item being renamed was deleted with the "-" button in the Preferences window collections drawer.',
 	],
