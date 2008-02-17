@@ -344,6 +344,25 @@ Panel_GetTabPaneInsets	(Point*		outTabPaneTopLeft,
 
 
 /*!
+Use within a "Panel_ChangeProcPtr" callback; sends the received
+message to another panel.  This may be useful if one panel acts
+as a container/supervisor for other panels.
+
+(3.1)
+*/
+SInt32
+Panel_PropagateMessage		(Panel_Ref		inRef,
+							 Panel_Message	inMessage,
+							 void*			inDataPtr)
+{
+	PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
+	
+	
+	return panelChanged(ptr, inMessage, inDataPtr);
+}// PropagateMessage
+
+
+/*!
 Returns a pointer to auxiliary data you previously set
 with Panel_SetImplementation().
 

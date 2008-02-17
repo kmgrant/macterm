@@ -233,6 +233,11 @@ void
 	Panel_GetTabPaneInsets				(Point*						outTabPaneTopLeft,
 										 Point*						outTabPaneBottomRight);
 
+SInt32
+	Panel_PropagateMessage				(Panel_Ref					inRef,
+										 Panel_Message				inMessage,
+										 void*						inDataPtr);
+
 OSStatus
 	Panel_SetButtonIcon					(HIViewRef					inView,
 										 Panel_Ref					inRef);

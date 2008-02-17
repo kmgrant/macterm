@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */; };
 		0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A26DD900CCF09D400768AD8 /* AddressDialog.cp */; };
+		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
+		0A2890DF0D68019E0017D99E /* GenericPanelTabs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */; };
 		0A377E630D38806B001F3573 /* com_mactelnet_HandleFile.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* com_mactelnet_HandleFile.py */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
@@ -217,6 +219,8 @@
 		0A22A019059FBF0300A0BB56 /* IconForScriptsMenu.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForScriptsMenu.icns; path = Application/Resources/IconForScriptsMenu.icns; sourceTree = "<group>"; };
 		0A26DD900CCF09D400768AD8 /* AddressDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AddressDialog.cp; path = Application/Code/AddressDialog.cp; sourceTree = "<group>"; };
 		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
+		0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenericPanelTabs.cp; path = Application/Code/GenericPanelTabs.cp; sourceTree = "<group>"; };
+		0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericPanelTabs.h; path = Application/Code/GenericPanelTabs.h; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ListenerModel.cp; path = Shared/Code/ListenerModel.cp; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
 		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
@@ -724,6 +728,7 @@
 				0A46FDDA055432A400ACDF3A /* Folder.cp */,
 				0A46FDDB055432A400ACDF3A /* FormatDialog.cp */,
 				0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */,
+				0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */,
 				0A46FDDC055432A400ACDF3A /* GenericThreads.cp */,
 				0A46FDE1055432A400ACDF3A /* HelpSystem.cp */,
 				0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */,
@@ -810,6 +815,7 @@
 				0A4603E50554376100ACDF3A /* Folder.h */,
 				0A4603E60554376100ACDF3A /* FormatDialog.h */,
 				0ACA57D40AEADDF300B5F482 /* GenericDialog.h */,
+				0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */,
 				0A4603E80554376100ACDF3A /* GenericThreads.h */,
 				0A4603ED0554376100ACDF3A /* HelpSystem.h */,
 				0A4603F00554376100ACDF3A /* IconManager.h */,
@@ -1158,6 +1164,7 @@
 				0A9B319F0D538EFA00C1616D /* Releases.h in Headers */,
 				0AAD86E50D54E45F003544E0 /* TerminalRangeDescription.typedef.h in Headers */,
 				0ACBC3590D5BBC6800FCF05F /* CocoaBasic.h in Headers */,
+				0A2890DF0D68019E0017D99E /* GenericPanelTabs.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1462,6 +1469,7 @@
 				0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */,
 				0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */,
 				0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */,
+				0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
