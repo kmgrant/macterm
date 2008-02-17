@@ -2003,10 +2003,13 @@ Preferences_ListenForChanges	(ListenerModel_ListenerRef	inListener,
 	
 	switch (inForWhatChange)
 	{
-	// if you change the list below, also check the preference-setting
+	// If you change the list below, also check the preference-setting
 	// code to make sure that the tag values checked here REALLY DO
-	// trigger callback invocations!
+	// trigger callback invocations!  Also keep this in sync with
+	// Preferences_StopListeningForChanges() and the comments in
+	// "Preferences.h".
 	case kPreferences_TagArrangeWindowsUsingTabs:
+	case kPreferences_TagBellSound:
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagMacrosMenuVisible:
@@ -2217,7 +2220,10 @@ Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 	
 	switch (inForWhatChange)
 	{
+	// Keep this in sync with Preferences_ListenForChanges() and the
+	// comments in "Preferences.h".
 	case kPreferences_TagArrangeWindowsUsingTabs:
+	case kPreferences_TagBellSound:
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
 	case kPreferences_TagMacrosMenuVisible:
@@ -3525,6 +3531,27 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
+				case kPreferences_TagBellSound:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							CFStringRef* const	data = REINTERPRET_CAST(outDataPtr, CFStringRef*);
+							
+							
+							*data = valueCFString;
+							// do not release because the string is returned
+						}
+					}
+					break;
+				
 				case kPreferences_TagCaptureFileCreator:
 					assert(typeCFStringRef == keyValueType);
 					{
@@ -4150,6 +4177,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outKeyValueType = typeNetEvents_CFBooleanRef;
 		outNonDictionaryValueSize = sizeof(Boolean);
 		outClass = kPreferences_ClassSession;
+		break;
+	
+	case kPreferences_TagBellSound:
+		outKeyName = CFSTR("terminal-when-bell-sound-basename");
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(CFStringRef);
+		outClass = kPreferences_ClassGeneral;
 		break;
 	
 	case kPreferences_TagCaptureFileAlias:
@@ -6046,6 +6080,17 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagBellSound:
+				{
+					CFStringRef const	data = *(REINTERPRET_CAST(inDataPtr, CFStringRef const*));
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					setMacTelnetPreference(keyName, data);
+					changeNotify(inDataPreferenceTag);
+				}
+				break;
+			
 			case kPreferences_TagCaptureFileCreator:
 				{
 					OSType const	data = *(REINTERPRET_CAST(inDataPtr, OSType const*));
@@ -6365,6 +6410,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? CFSTR("visual") : CFSTR("audio"));
+					changeNotify(inDataPreferenceTag);
 				}
 				break;
 			

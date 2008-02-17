@@ -3,7 +3,7 @@
 */
 /*###############################################################
 
-	Simple Cocoa Wrappers Library
+	Simple Cocoa Wrappers Library 1.0
 	© 2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
@@ -38,10 +38,16 @@
 #pragma mark Public Methods
 
 Boolean
-	CocoaBasic_ApplicationLoad				(void);
+	CocoaBasic_ApplicationLoad				();
 
 void
-	CocoaBasic_SoundPlay					(CFURLRef);
+	CocoaBasic_PlaySoundByName				(CFStringRef);
+
+void
+	CocoaBasic_PlaySoundFile				(CFURLRef);
+
+CFArrayRef
+	CocoaBasic_ReturnUserSoundNames			();
 
 #endif
 

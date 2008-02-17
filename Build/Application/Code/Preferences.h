@@ -178,6 +178,7 @@ Tags for use with kPreferences_ClassGeneral.
 enum
 {
 	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
+	kPreferences_TagBellSound							= 'bsnd',	//!< data: "CFStringRef" ("off", or the basename of sound file in a Sounds library folder)
 	kPreferences_TagCaptureFileCreator					= 'cpfc',	//!< data: "OSType"
 	kPreferences_TagCopySelectedText					= 'cpsl',	//!< data: "Boolean"
 	kPreferences_TagCopyTableThreshold					= 'ctth',	//!< data: "UInt16", the number of spaces per tab
@@ -343,6 +344,7 @@ changes to those preferences.  For efficiency, most changes
 do NOT trigger events: only the following tags are supported
 with notifiers:
 - kPreferences_TagArrangeWindowsUsingTabs
+- kPreferences_TagBellSound
 - kPreferences_TagCursorBlinks
 - kPreferences_TagDontDimBackgroundScreens
 - kPreferences_TagFocusFollowsMouse

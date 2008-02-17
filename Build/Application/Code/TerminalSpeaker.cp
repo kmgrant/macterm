@@ -38,6 +38,8 @@
 #include <ApplicationServices/ApplicationServices.h>
 
 // library includes
+#include <CFRetainRelease.h>
+#include <CocoaBasic.h>
 #include <Console.h>
 #include <ListenerModel.h>
 #include <MemoryBlockPtrLocker.template.h>
@@ -50,6 +52,7 @@
 // MacTelnet includes
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
+#include "Preferences.h"
 #include "Terminal.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalSpeaker.h"
@@ -78,6 +81,7 @@ struct My_TerminalSpeaker
 	Boolean								isEnabled;				//!< if true, this speaker can emit sound; otherwise, no sound generation APIs work
 	Boolean								isPaused;				//!< if true, sound playback is suspended partway through
 	ListenerModel_ListenerRef			bellHandler;			//!< invoked by a terminal screen buffer when it encounters a bell signal
+	ListenerModel_ListenerRef			preferencesHandler;		//!< invoked when an important user preference is changed
 	My_TerminalSpeakerSpeechHandler		speech;					//!< information on speech synthesis
 	TerminalSpeaker_Ref					selfRef;				//!< redundant opaque reference that would resolve to point to this structure
 };
@@ -93,11 +97,15 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 {
 	My_TerminalSpeakerPtrLocker&	gTerminalSpeakerPtrLocks ()	{ static My_TerminalSpeakerPtrLocker x; return x; }
 	Boolean							gTerminalSoundsOff = false;		//!< global flag that can nix all sound if set
+	Boolean							gTerminalBellOff = false;		//!< global flag that mutes bell sounds but not speech
+	Boolean							gTerminalSoundDefault = true;	//!< global flag that ignores any custom sound file and uses the system alert
+	CFRetainRelease					gCurrentBellSoundName;			//!< CFStringRef containing current sound file basename (or empty string)
 }
 
 #pragma mark Internal Method Prototypes
 
-static void		audioEvent		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+static void		audioEvent			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+static void		preferenceChanged	(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 
 
 
@@ -184,7 +192,7 @@ TerminalSpeaker_IsMuted		(TerminalSpeaker_Ref	inSpeaker)
 	Boolean							result = false;
 	
 	
-	result = ptr->isEnabled;
+	result = (false == ptr->isEnabled);
 	return result;
 }// IsMuted
 
@@ -283,10 +291,16 @@ if any problems occurred
 void
 TerminalSpeaker_SoundBell	(TerminalSpeaker_Ref	inSpeaker)
 {
-	unless ((gTerminalSoundsOff) || TerminalSpeaker_IsMuted(inSpeaker))
+	unless ((gTerminalSoundsOff) || (gTerminalBellOff) || TerminalSpeaker_IsMuted(inSpeaker))
 	{
-		// UNIMPLEMENTED - add back the ability to play a custom sound file
-		Sound_StandardAlert();
+		if ((gTerminalSoundDefault) || (false == gCurrentBellSoundName.exists()))
+		{
+			Sound_StandardAlert();
+		}
+		else
+		{
+			CocoaBasic_PlaySoundByName(gCurrentBellSoundName.returnCFStringRef());
+		}
 	}
 }// SoundBell
 
@@ -391,12 +405,14 @@ screen(inScreenDataSource),
 isEnabled(true),
 isPaused(false),
 bellHandler(ListenerModel_NewStandardListener(audioEvent, this/* context, as TerminalSpeaker_Ref */)),
+preferencesHandler(ListenerModel_NewStandardListener(preferenceChanged, this/* context, as TerminalSpeaker_Ref */)),
 speech(),
 selfRef(REINTERPRET_CAST(this, TerminalSpeaker_Ref))
 {
 	// ask to be notified of terminal bells
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeText, this->bellHandler);
+	(Preferences_Result)Preferences_ListenForChanges(this->preferencesHandler, kPreferences_TagBellSound, true/* notify of initial value */);
 }// My_TerminalSpeaker one-argument constructor
 
 
@@ -412,6 +428,8 @@ My_TerminalSpeaker::
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeText, this->bellHandler);
 	ListenerModel_ReleaseListener(&this->bellHandler);
+	(Preferences_Result)Preferences_StopListeningForChanges(this->preferencesHandler, kPreferences_TagBellSound);
+	ListenerModel_ReleaseListener(&this->preferencesHandler);
 	if (nullptr != this->speech.channel)
 	{
 		(OSStatus)DisposeSpeechChannel(this->speech.channel), this->speech.channel = nullptr;
@@ -518,5 +536,66 @@ audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// audioEvent
+
+
+/*!
+Invoked whenever a monitored preference value is changed
+(see TerminalSpeaker_New() to see which preferences are
+monitored).  This routine responds by ensuring that internal
+variables are up to date for the changed preference.
+
+(3.1)
+*/
+static void
+preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+					 ListenerModel_Event	inPreferenceTagThatChanged,
+					 void*					UNUSED_ARGUMENT(inEventContextPtr),
+					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
+{
+	size_t	actualSize = 0L;
+	
+	
+	switch (inPreferenceTagThatChanged)
+	{
+	case kPreferences_TagBellSound:
+		{
+			CFStringRef		soundNameCFString = nullptr;
+			
+			
+			// update global variable with current preference value; fall back to the
+			// system alert sound if the returned string is either unavailable or empty
+			if (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagBellSound, sizeof(soundNameCFString),
+									&soundNameCFString, &actualSize))
+			{
+				// see "Preferences.h"; the value "off" has special meaning
+				if (kCFCompareEqualTo == CFStringCompare(soundNameCFString, CFSTR("off"), kCFCompareCaseInsensitive))
+				{
+					gCurrentBellSoundName.clear();
+					gTerminalSoundDefault = false;
+					gTerminalBellOff = true;
+				}
+				else
+				{
+					gCurrentBellSoundName = soundNameCFString;
+					gTerminalSoundDefault = (0 == CFStringGetLength(soundNameCFString));
+					gTerminalBellOff = false;
+				}
+				CFRelease(soundNameCFString), soundNameCFString = nullptr;
+			}
+			else
+			{
+				gCurrentBellSoundName.clear();
+				gTerminalSoundDefault = true;
+				gTerminalBellOff = false;
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// preferenceChanged
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

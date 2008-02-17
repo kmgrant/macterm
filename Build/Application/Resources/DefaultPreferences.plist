@@ -779,6 +779,8 @@
 	<string>None</string>
 	<key>terminal-when-bell</key>
 	<string>audio</string>
+	<key>terminal-when-bell-sound-basename</key>
+	<string></string>
 	<key>terminal-when-bell-in-background</key>
 	<string>ignore</string>
 	<key>terminal-when-cursor-near-right-margin</key>

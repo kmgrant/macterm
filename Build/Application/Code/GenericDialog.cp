@@ -63,6 +63,7 @@
 #include "AppResources.h"
 #include "Commands.h"
 #include "DialogUtilities.h"
+#include "EventLoop.h"
 #include "GenericDialog.h"
 #include "HelpSystem.h"
 #include "Session.h"
@@ -232,6 +233,7 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 		{
 			// handle events
 			ShowWindow(ptr->dialogWindow);
+			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
 			error = RunAppModalLoopForWindow(ptr->dialogWindow);
 			assert_noerr(error);
 		}

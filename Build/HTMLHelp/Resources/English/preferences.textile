@@ -162,10 +162,13 @@ h4. Terminal Bell
 
 h5. Sound
 
-When a terminal audio event occurs, you can have MacTelnet play
-the standard system beep (set up in System Preferences under
-Sound).  Or, you can select any other sound file.  Finally, you
-can turn off sound completely.
+When a terminal audio event occurs, you can have MacTelnet ignore
+it, or play the standard system beep, or any other library sound.
+
+The set of sounds in the menu is defined the first time the
+Preferences window opens, based on the contents of any Sounds
+folders found in /System/Library, /Library, or the Library folder
+of your Home folder.
 
 Note that sound can also be controlled in individual terminals by
 using the "Bell" command in the Terminal menu (or the

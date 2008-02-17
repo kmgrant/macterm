@@ -9127,12 +9127,6 @@ visualBell	(TerminalViewRef	inView)
 		QDFlushPortBuffer(GetWindowPort(viewPtr->window.ref), nullptr/* region */);
 	}
 	
-	unless (visualPreference)
-	{
-		// TEMPORARY - this is supposed to rely only on the Terminal Speaker module!
-		Sound_StandardAlert();
-	}
-	
 	// Mac OS 8 asynchronous sounds mean that a sound generates
 	// very little delay, therefore a standard visual delay of 8
 	// ticks should be enforced even if a beep was emitted.

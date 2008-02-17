@@ -90,6 +90,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080216': [
+		'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notification tab.',
 		'The Print Screen command is no longer instantaneous, it displays a dialog (allowing export to PDF, among other print options).',
 	],
 	'20080212': [
@@ -421,6 +422,7 @@ notes_by_version = {
         'Session Info window columns can be moved or resized, ordering is implicitly saved.',
         'Terminal emulation core rewritten from scratch!',
 		'Terminal maximum width increased to 256 columns.',
+		'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notification tab.',
 		'Terminal inactivity notification is now available, allowing you to watch for sessions that become idle.',
         'Terminal window toolbars now use the standard Mac OS X implementation.',
         'Terminal window toolbar LED icon artwork has been significantly improved.',

@@ -45,6 +45,8 @@
 #include <AlertMessages.h>
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
+#include <CFUtilities.h>
+#include <CocoaBasic.h>
 #include <ColorUtilities.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
@@ -55,6 +57,7 @@
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 #include <RegionUtilities.h>
+#include <SoundSystem.h>
 
 // resource includes
 #include "ControlResources.h"
@@ -643,9 +646,71 @@ const
 			notifyOfBeeps = false; // assume default, if preference can’t be found
 		}
 		
-		//if (bell sound)
-		//{ set up menu }
-		// UNIMPLEMENTED
+		// add all user sounds to the list of library sounds
+		// (INCOMPLETE: should reinitialize this if it changes on disk)
+		{
+			CFArrayRef const	kSoundsListRef = CocoaBasic_ReturnUserSoundNames();
+			CFRetainRelease		kSoundsList(kSoundsListRef, true/* is retained */);
+			HIViewWrap			soundsPopUpMenuButton(idMyPopUpMenuBellType, inOwningWindow);
+			MenuRef				soundsMenu = GetControlPopupMenuRef(soundsPopUpMenuButton);
+			MenuItemIndex		insertBelowIndex = 0;
+			CFStringRef			userPreferredSoundName = nullptr;
+			Boolean				releaseUserPreferredSoundName = true;
+			
+			
+			// determine user preferred sound, to initialize the menu selection
+			unless (Preferences_GetData(kPreferences_TagBellSound, sizeof(userPreferredSoundName),
+										&userPreferredSoundName, &actualSize) ==
+					kPreferences_ResultOK)
+			{
+				userPreferredSoundName = CFSTR(""); // assume default, if preference can’t be found
+				releaseUserPreferredSoundName = false;
+			}
+			
+			// add every library sound to the menu
+			if (noErr == GetIndMenuItemWithCommandID(soundsMenu, kCommandPrefBellSystemAlert, 1/* which instance to return */,
+														nullptr/* menu */, &insertBelowIndex))
+			{
+				CFIndex const	kSoundCount = CFArrayGetCount(kSoundsListRef);
+				
+				
+				SetControl32BitMaximum(soundsPopUpMenuButton, CountMenuItems(soundsMenu) + kSoundCount);
+				for (CFIndex i = 0; i < kSoundCount; ++i)
+				{
+					CFStringRef		soundName = CFUtilities_StringCast(CFArrayGetValueAtIndex(kSoundsListRef, i));
+					
+					
+					if (noErr == AppendMenuItemTextWithCFString(soundsMenu, soundName, kMenuItemAttrIgnoreMeta,
+																kCommandPrefBellLibrarySound, nullptr/* new item ID */))
+					{
+						// if this is the saved user preference, select the item initially
+						if (kCFCompareEqualTo == CFStringCompare(soundName, userPreferredSoundName, kCFCompareCaseInsensitive))
+						{
+							SetControl32BitValue(soundsPopUpMenuButton, insertBelowIndex + i + 1/* one-based */);
+						}
+					}
+				}
+			}
+			
+			// if the sound is "off", select that item instead (see "Preferences.h", the
+			// "off" value is specially recognized)
+			if (kCFCompareEqualTo == CFStringCompare(userPreferredSoundName, CFSTR("off"), kCFCompareCaseInsensitive))
+			{
+				MenuItemIndex	offIndex = 0;
+				
+				
+				if (noErr == GetIndMenuItemWithCommandID(soundsMenu, kCommandPrefBellOff, 1/* which instance to return */,
+															nullptr/* menu */, &offIndex))
+				{
+					SetControl32BitValue(soundsPopUpMenuButton, offIndex);
+				}
+			}
+			
+			if ((releaseUserPreferredSoundName) && (nullptr != userPreferredSoundName))
+			{
+				CFRelease(userPreferredSoundName), userPreferredSoundName = nullptr;
+			}
+		}
 		
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxVisualBell, inOwningWindow), BooleanToCheckBoxValue(visualBell));
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxMarginBell, inOwningWindow), BooleanToCheckBoxValue(marginBell));
@@ -1512,6 +1577,50 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					Preferences_SetData(kPreferences_TagTerminalCursorType, sizeof(cursorType), &cursorType);
 				}
+				break;
+			
+			case kCommandPrefBellOff:
+				// do not “handle” the event so the pop-up menu is updated, etc.
+				{
+					CFStringRef		offCFString = CFSTR("off"); // see "Preferences.h"; this value is specially recognized
+					
+					
+					Preferences_SetData(kPreferences_TagBellSound, sizeof(offCFString), &offCFString);
+				}
+				result = eventNotHandledErr;
+				break;
+			
+			case kCommandPrefBellSystemAlert:
+				// play the system alert sound for the user, but do not “handle”
+				// the event so the pop-up menu is updated, etc.
+				Sound_StandardAlert();
+				{
+					CFStringRef		emptyCFString = CFSTR("");
+					
+					
+					Preferences_SetData(kPreferences_TagBellSound, sizeof(emptyCFString), &emptyCFString);
+				}
+				result = eventNotHandledErr;
+				break;
+			
+			case kCommandPrefBellLibrarySound:
+				// play the indicated sound for the user, but do not “handle”
+				// the event so the pop-up menu is updated, etc.
+				if (received.attributes & kHICommandFromMenu)
+				{
+					CFStringRef		itemTextCFString = nullptr;
+					
+					
+					if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
+															received.source.menu.menuItemIndex,
+															&itemTextCFString))
+					{
+						CocoaBasic_PlaySoundByName(itemTextCFString);
+						Preferences_SetData(kPreferences_TagBellSound, sizeof(itemTextCFString), &itemTextCFString);
+						CFRelease(itemTextCFString), itemTextCFString = nullptr;
+					}
+				}
+				result = eventNotHandledErr;
 				break;
 			
 			default:
