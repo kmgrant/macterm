@@ -95,6 +95,7 @@ CocoaBasic_PlaySoundByName	(CFStringRef	inName)
 	My_AutoPool		_;
 	
 	
+	[[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] stop];
 	[[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] play];
 }
 
