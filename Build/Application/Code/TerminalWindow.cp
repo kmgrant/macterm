@@ -83,11 +83,9 @@ extern "C"
 #include "EventLoop.h"
 #include "FindDialog.h"
 #include "FormatDialog.h"
-#include "GenericDialog.h"
 #include "GenericThreads.h"
 #include "HelpSystem.h"
 #include "Preferences.h"
-#include "PrefPanelKiosk.h"
 #include "SessionFactory.h"
 #include "SizeDialog.h"
 #include "Terminal.h"
@@ -3817,14 +3815,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandFormat:
 					{
-					#if 1
-						GenericDialog_Ref		dialog = nullptr;
-						
-						
-						dialog = GenericDialog_New(nullptr/*TerminalWindow_ReturnWindow(terminalWindow)*/,
-													PrefPanelKiosk_New(), GenericDialog_StandardCloseNotifyProc);
-						GenericDialog_Display(dialog);
-					#else
 						// display a format customization dialog
 						TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
 						FormatDialog_SetupData	setupData;
@@ -3882,7 +3872,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						FormatDialog_Display(dialog); // automatically disposed when the user clicks a button
 						
 						result = noErr;
-					#endif
 					}
 					break;
 				
