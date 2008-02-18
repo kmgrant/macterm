@@ -1399,15 +1399,19 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 							 size_t*					outActualSizePtrOrNull)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0;
+	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = assertInitialized();
-	if (result == kPreferences_ResultOK)
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	if (kPreferences_ResultOK == result)
 	{
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 		
 		
-		switch (ptr->returnClass())
+		switch (dataClass)
 		{
 		case kPreferences_ClassFormat:
 			result = getFormatPreference(ptr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
@@ -1575,35 +1579,45 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 							 void const*				inDataPtr)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
-	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0;
+	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
-	switch (ptr->returnClass())
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	if (kPreferences_ResultOK == result)
 	{
-	case kPreferences_ClassFormat:
-		result = setFormatPreference(ptr, inDataPreferenceTag, STATIC_CAST(inDataSize, size_t), inDataPtr);
-		break;
-	
-	case kPreferences_ClassGeneral:
-		result = setGeneralPreference(ptr, inDataPreferenceTag, STATIC_CAST(inDataSize, size_t), inDataPtr);
-		break;
-	
-	case kPreferences_ClassMacroSet:
-		result = setMacroSetPreference(ptr, inDataPreferenceTag, STATIC_CAST(inDataSize, size_t), inDataPtr);
-		break;
-	
-	case kPreferences_ClassSession:
-		result = setSessionPreference(ptr, inDataPreferenceTag, STATIC_CAST(inDataSize, size_t), inDataPtr);
-		break;
-	
-	case kPreferences_ClassTerminal:
-		result = setTerminalPreference(ptr, inDataPreferenceTag, STATIC_CAST(inDataSize, size_t), inDataPtr);
-		break;
-	
-	case kPreferences_ClassWindow:
-	default:
-		result = kPreferences_ResultUnknownTagOrClass;
-		break;
+		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+		
+		
+		switch (dataClass)
+		{
+		case kPreferences_ClassFormat:
+			result = setFormatPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
+		case kPreferences_ClassGeneral:
+			result = setGeneralPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
+		case kPreferences_ClassMacroSet:
+			result = setMacroSetPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
+		case kPreferences_ClassSession:
+			result = setSessionPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
+		case kPreferences_ClassTerminal:
+			result = setTerminalPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
+		case kPreferences_ClassWindow:
+		default:
+			result = kPreferences_ResultUnknownTagOrClass;
+			break;
+		}
 	}
 	return result;
 }// ContextSetData
@@ -5875,7 +5889,7 @@ readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 	// preferences property list; they are identical in format and even use
 	// the same key names
 	CFIndex const	kDictLength = CFDictionaryGetCount(inPreferenceDictionary);
-	size_t			i = 0;
+	CFIndex			i = 0;
 	void const*		keyValue = nullptr;
 	void const**	keys = new void const*[kDictLength];
 	OSStatus		result = noErr;
