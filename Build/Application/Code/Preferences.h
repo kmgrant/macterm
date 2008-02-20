@@ -409,6 +409,14 @@ Preferences_Result
 
 //@}
 
+//!\name Module Tests
+//@{
+
+void
+	Preferences_RunTests					();
+
+//@}
+
 //!\name Creating, Retaining and Releasing Preferences Contexts
 //@{
 

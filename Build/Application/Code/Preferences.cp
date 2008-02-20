@@ -76,374 +76,391 @@
 
 
 #pragma mark Types
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+/*!
+Information about a file on disk.  This is a typical
+way to store information about files within preferences,
+since files can still be found even if the user renames
+them or moves them, etc.
+*/
+struct My_AliasInfo
 {
-	/*!
-	Information about a file on disk.  This is a typical
-	way to store information about files within preferences,
-	since files can still be found even if the user renames
-	them or moves them, etc.
-	*/
-	struct My_AliasInfo
+	AliasHandle				alias;
+	Preferences_AliasID		resourceID;
+	Boolean					wasChanged;
+	Boolean					isResource;
+};
+typedef My_AliasInfo const*		My_AliasInfoConstPtr;
+typedef My_AliasInfo*			My_AliasInfoPtr;
+
+/*!
+Keeps track of all aliases in memory.
+*/
+typedef std::vector< My_AliasInfoPtr >	My_AliasInfoList;
+
+/*!
+Provides uniform access to context information no
+matter how it is really stored.
+*/
+class My_ContextInterface
+{
+public:
+	//! inserts array value into dictionary
+	void
+	addArray	(CFStringRef	inKey,
+				 CFArrayRef		inValue)
 	{
-		AliasHandle				alias;
-		Preferences_AliasID		resourceID;
-		Boolean					wasChanged;
-		Boolean					isResource;
-	};
-	typedef My_AliasInfo const*		My_AliasInfoConstPtr;
-	typedef My_AliasInfo*			My_AliasInfoPtr;
+		_implementorPtr->addArray(inKey, inValue);
+	}
 	
-	/*!
-	Keeps track of all aliases in memory.
-	*/
-	typedef std::vector< My_AliasInfoPtr >	My_AliasInfoList;
-	
-	/*!
-	Provides uniform access to context information no
-	matter how it is really stored.
-	*/
-	class My_ContextInterface
+	//! inserts data value into dictionary
+	void
+	addData		(CFStringRef	inKey,
+				 CFDataRef		inValue)
 	{
-	public:
-		//! inserts array value into dictionary
-		void
-		addArray	(CFStringRef	inKey,
-					 CFArrayRef		inValue)
-		{
-			_implementorPtr->addArray(inKey, inValue);
-		}
-		
-		//! inserts data value into dictionary
-		void
-		addData		(CFStringRef	inKey,
-					 CFDataRef		inValue)
-		{
-			_implementorPtr->addData(inKey, inValue);
-		}
-		
-		//! inserts true/false value into dictionary
-		void
-		addFlag		(CFStringRef	inKey,
-					 Boolean		inValue)
-		{
-			_implementorPtr->addFlag(inKey, inValue);
-		}
-		
-		//! inserts floating-point value into dictionary
-		void
-		addFloat	(CFStringRef	inKey,
-					 Float32		inValue)
-		{
-			_implementorPtr->addFloat(inKey, inValue);
-		}
-		
-		//! inserts short integer value into dictionary
-		void
-		addInteger	(CFStringRef	inKey,
-					 SInt16			inValue)
-		{
-			_implementorPtr->addInteger(inKey, inValue);
-		}
-		
-		//! inserts short integer value into dictionary
-		void
-		addLong		(CFStringRef	inKey,
-					 SInt32			inValue)
-		{
-			_implementorPtr->addLong(inKey, inValue);
-		}
-		
-		//! inserts string value into dictionary
-		void
-		addString	(CFStringRef	inKey,
-					 CFStringRef	inValue)
-		{
-			_implementorPtr->addString(inKey, inValue);
-		}
-		
-		//! inserts arbitrary value into dictionary
-		void
-		addValue	(CFStringRef		inKey,
-					 CFPropertyListRef	inValue)
-		{
-			_implementorPtr->addValue(inKey, inValue);
-		}
-		
-		//! delete this key-value set from application preferences
-		virtual Preferences_Result
-		destroy () NO_METHOD_IMPL = 0;
-		
-		//! alter the name under which this is saved; useful in UI elements
-		virtual Preferences_Result
-		rename	(CFStringRef) NO_METHOD_IMPL = 0;
-		
-		//! retrieves an array value from the dictionary (use only if the value really is an array!)
-		virtual CFArrayRef
-		returnArrayCopy		(CFStringRef	inKey) const
-		{
-			return _implementorPtr->returnArrayCopy(inKey);
-		}
-		
-		//! the category of this context
-		inline Preferences_Class
-		returnClass () const;
-		
-		//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
-		virtual Boolean
-		returnFlag		(CFStringRef	inKey) const
-		{
-			return _implementorPtr->returnFlag(inKey);
-		}
-		
-		//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
-		virtual SInt16
-		returnInteger	(CFStringRef	inKey) const
-		{
-			return _implementorPtr->returnInteger(inKey);
-		}
-		
-		//! retrieves a floating-point value from the dictionary (use only if the value really is a number!)
-		virtual Float32
-		returnFloat		(CFStringRef	inKey) const
-		{
-			return _implementorPtr->returnFloat(inKey);
-		}
-		
-		//! creates an array of CFStringRef values for each key used in this context
-		CFArrayRef
-		returnKeyListCopy () const
-		{
-			return _implementorPtr->returnKeyListCopy();
-		}
-		
-		//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
-		virtual SInt32
-		returnLong		(CFStringRef	inKey) const
-		{
-			return _implementorPtr->returnLong(inKey);
-		}
-		
-		//! the name under which this is saved; useful in UI elements
-		virtual CFStringRef
-		returnName () const = 0;
-		
-		//! retrieves a string value from the dictionary (use only if the value really is a string!)
-		virtual CFStringRef
-		returnStringCopy	(CFStringRef	inKey) const
-		{
-			return _implementorPtr->returnStringCopy(inKey);
-		}
-		
-		//! retrieves an arbitrary value from the dictionary
-		virtual CFPropertyListRef
-		returnValueCopy		(CFStringRef	inKey) const
-		{
-			return _implementorPtr->returnValueCopy(inKey);
-		}
-		
-		//! save changes to this key-value set in the application preferences
-		virtual Preferences_Result
-		save () NO_METHOD_IMPL = 0;
+		_implementorPtr->addData(inKey, inValue);
+	}
 	
-	protected:
-		My_ContextInterface	(Preferences_Class);
-		
-		virtual
-		~My_ContextInterface ();
-		
-		void
-		setImplementor	(CFKeyValueInterface*);
-	
-	private:
-		Preferences_Class		_preferencesClass;
-		CFKeyValueInterface*	_implementorPtr;
-	};
-	typedef My_ContextInterface const*	My_ContextInterfaceConstPtr;
-	typedef My_ContextInterface*		My_ContextInterfacePtr;
-	
-	typedef MemoryBlockPtrLocker< Preferences_ContextRef, My_ContextInterface >			My_ContextPtrLocker;
-	typedef LockAcquireRelease< Preferences_ContextRef, My_ContextInterface >			My_ContextAutoLocker;
-	typedef MemoryBlockReferenceLocker< Preferences_ContextRef, My_ContextInterface >	My_ContextReferenceLocker;
-	
-	/*!
-	A context specifically for storing in a CFDictionary.
-	*/
-	class My_ContextCFDictionary:
-	public My_ContextInterface
+	//! inserts true/false value into dictionary
+	void
+	addFlag		(CFStringRef	inKey,
+				 Boolean		inValue)
 	{
-	public:
-		My_ContextCFDictionary	(Preferences_Class, CFStringRef);
-		
-		//! delete keys in this dictionary, and their values, from application preferences
-		Preferences_Result
-		destroy ();
-		
-		//! alter the name under which this is saved; useful in UI elements
-		Preferences_Result
-		rename	(CFStringRef);
-		
-		//! the name under which this is saved; useful in UI elements
-		CFStringRef
-		returnName () const;
-		
-		//! save changes to this dictionary in the application preferences
-		Preferences_Result
-		save ();
+		_implementorPtr->addFlag(inKey, inValue);
+	}
 	
-	protected:
-		CFMutableDictionaryRef
-		createClassDictionary	(Preferences_Class, CFStringRef);
-	
-	private:
-		CFRetainRelease			_contextName;	//!< CFStringRef; a display name for this context
-		CFKeyValueDictionary	_dictionary;	//!< handles key value lookups
-	};
-	typedef My_ContextCFDictionary const*	My_ContextCFDictionaryConstPtr;
-	typedef My_ContextCFDictionary*			My_ContextCFDictionaryPtr;
-	
-	/*!
-	Keeps track of all named contexts in memory.
-	*/
-	typedef std::vector< My_ContextCFDictionaryPtr >	My_DictionaryContextList;
-	
-	/*!
-	A context specifically for storing defaults.  It
-	doesn’t actually manage a dictionary, it uses the
-	Core Foundation Preferences APIs instead; though,
-	the consistency of this API compared to that of
-	other contexts is useful.
-	*/
-	class My_ContextDefault:
-	public My_ContextInterface
+	//! inserts floating-point value into dictionary
+	void
+	addFloat	(CFStringRef	inKey,
+				 Float32		inValue)
 	{
-	public:
-		My_ContextDefault	(Preferences_Class	inClass);
-		
-		//! remove values for all keys in this dictionary from application preferences
-		Preferences_Result
-		destroy ();
-		
-		//! has no effect; a default context cannot be renamed
-		Preferences_Result
-		rename	(CFStringRef);
-		
-		//! the name under which this is saved; useful in UI elements
-		CFStringRef
-		returnName () const;
-		
-		//! synchronize application’s Core Foundation preferences
-		Preferences_Result
-		save ();
+		_implementorPtr->addFloat(inKey, inValue);
+	}
 	
-	protected:
-	
-	private:
-		CFRetainRelease			_contextName;	//!< CFStringRef; a display name for this context
-		CFKeyValuePreferences	_dictionary;	//!< handles key value lookups
-	};
-	typedef My_ContextDefault const*	My_ContextDefaultConstPtr;
-	typedef My_ContextDefault*			My_ContextDefaultPtr;
-	
-	/*!
-	Implicitly-saved location and size information for a
-	window.  Used to remember the user’s preferred
-	window arrangement.
-	*/
-	struct MyWindowArrangement
+	//! inserts short integer value into dictionary
+	void
+	addInteger	(CFStringRef	inKey,
+				 SInt16			inValue)
 	{
-		MyWindowArrangement		(SInt16		inX = 0,
-								 SInt16		inY = 0,
-								 SInt16		inWidth = 0,
-								 SInt16		inHeight = 0)
-		:
-		x(inX),
-		y(inY),
-		width(inWidth),
-		height(inHeight)
-		{
-		}
-		
-		SInt16		x;			//!< window content region location, left edge
-		SInt16		y;			//!< window content region location, top edge
-		SInt16		width;		//!< window content region size, horizontally
-		SInt16		height;		//!< window content region size, vertically
-	};
-}
+		_implementorPtr->addInteger(inKey, inValue);
+	}
+	
+	//! inserts short integer value into dictionary
+	void
+	addLong		(CFStringRef	inKey,
+				 SInt32			inValue)
+	{
+		_implementorPtr->addLong(inKey, inValue);
+	}
+	
+	//! inserts string value into dictionary
+	void
+	addString	(CFStringRef	inKey,
+				 CFStringRef	inValue)
+	{
+		_implementorPtr->addString(inKey, inValue);
+	}
+	
+	//! inserts arbitrary value into dictionary
+	void
+	addValue	(CFStringRef		inKey,
+				 CFPropertyListRef	inValue)
+	{
+		_implementorPtr->addValue(inKey, inValue);
+	}
+	
+	//! delete this key-value set from application preferences
+	virtual Preferences_Result
+	destroy () NO_METHOD_IMPL = 0;
+	
+	//! alter the name under which this is saved; useful in UI elements
+	virtual Preferences_Result
+	rename	(CFStringRef) NO_METHOD_IMPL = 0;
+	
+	//! retrieves an array value from the dictionary (use only if the value really is an array!)
+	virtual CFArrayRef
+	returnArrayCopy		(CFStringRef	inKey) const
+	{
+		return _implementorPtr->returnArrayCopy(inKey);
+	}
+	
+	//! the category of this context
+	inline Preferences_Class
+	returnClass () const;
+	
+	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
+	virtual Boolean
+	returnFlag		(CFStringRef	inKey) const
+	{
+		return _implementorPtr->returnFlag(inKey);
+	}
+	
+	//! retrieves a short integer value from the dictionary (use only if the value really is a number!)
+	virtual SInt16
+	returnInteger	(CFStringRef	inKey) const
+	{
+		return _implementorPtr->returnInteger(inKey);
+	}
+	
+	//! retrieves a floating-point value from the dictionary (use only if the value really is a number!)
+	virtual Float32
+	returnFloat		(CFStringRef	inKey) const
+	{
+		return _implementorPtr->returnFloat(inKey);
+	}
+	
+	//! creates an array of CFStringRef values for each key used in this context
+	CFArrayRef
+	returnKeyListCopy () const
+	{
+		return _implementorPtr->returnKeyListCopy();
+	}
+	
+	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
+	virtual SInt32
+	returnLong		(CFStringRef	inKey) const
+	{
+		return _implementorPtr->returnLong(inKey);
+	}
+	
+	//! the name under which this is saved; useful in UI elements
+	virtual CFStringRef
+	returnName () const = 0;
+	
+	//! retrieves a string value from the dictionary (use only if the value really is a string!)
+	virtual CFStringRef
+	returnStringCopy	(CFStringRef	inKey) const
+	{
+		return _implementorPtr->returnStringCopy(inKey);
+	}
+	
+	//! retrieves an arbitrary value from the dictionary
+	virtual CFPropertyListRef
+	returnValueCopy		(CFStringRef	inKey) const
+	{
+		return _implementorPtr->returnValueCopy(inKey);
+	}
+	
+	//! save changes to this key-value set in the application preferences
+	virtual Preferences_Result
+	save () NO_METHOD_IMPL = 0;
+	
+	//! test routine
+	static Boolean
+	unitTest	(My_ContextInterface*);
+
+protected:
+	My_ContextInterface	(Preferences_Class);
+	
+	virtual
+	~My_ContextInterface ();
+	
+	void
+	setImplementor	(CFKeyValueInterface*);
+
+private:
+	Preferences_Class		_preferencesClass;
+	CFKeyValueInterface*	_implementorPtr;
+};
+typedef My_ContextInterface const*	My_ContextInterfaceConstPtr;
+typedef My_ContextInterface*		My_ContextInterfacePtr;
+
+typedef MemoryBlockPtrLocker< Preferences_ContextRef, My_ContextInterface >			My_ContextPtrLocker;
+typedef LockAcquireRelease< Preferences_ContextRef, My_ContextInterface >			My_ContextAutoLocker;
+typedef MemoryBlockReferenceLocker< Preferences_ContextRef, My_ContextInterface >	My_ContextReferenceLocker;
+
+/*!
+A context specifically for storing in a CFDictionary.
+*/
+class My_ContextCFDictionary:
+public My_ContextInterface
+{
+public:
+	My_ContextCFDictionary	(Preferences_Class, CFStringRef);
+	
+	//! delete keys in this dictionary, and their values, from application preferences
+	Preferences_Result
+	destroy ();
+	
+	//! alter the name under which this is saved; useful in UI elements
+	Preferences_Result
+	rename	(CFStringRef);
+	
+	//! the name under which this is saved; useful in UI elements
+	CFStringRef
+	returnName () const;
+	
+	//! save changes to this dictionary in the application preferences
+	Preferences_Result
+	save ();
+	
+	//! test routine
+	static Boolean
+	unitTest ();
+
+protected:
+	CFMutableDictionaryRef
+	createClassDictionary	(Preferences_Class, CFStringRef);
+
+private:
+	CFRetainRelease			_contextName;	//!< CFStringRef; a display name for this context
+	CFKeyValueDictionary	_dictionary;	//!< handles key value lookups
+};
+typedef My_ContextCFDictionary const*	My_ContextCFDictionaryConstPtr;
+typedef My_ContextCFDictionary*			My_ContextCFDictionaryPtr;
+
+/*!
+Keeps track of all named contexts in memory.
+*/
+typedef std::vector< My_ContextCFDictionaryPtr >	My_DictionaryContextList;
+
+/*!
+A context specifically for storing defaults.  It
+doesn’t actually manage a dictionary, it uses the
+Core Foundation Preferences APIs instead; though,
+the consistency of this API compared to that of
+other contexts is useful.
+*/
+class My_ContextDefault:
+public My_ContextInterface
+{
+public:
+	My_ContextDefault	(Preferences_Class	inClass);
+	
+	//! remove values for all keys in this dictionary from application preferences
+	Preferences_Result
+	destroy ();
+	
+	//! has no effect; a default context cannot be renamed
+	Preferences_Result
+	rename	(CFStringRef);
+	
+	//! the name under which this is saved; useful in UI elements
+	CFStringRef
+	returnName () const;
+	
+	//! synchronize application’s Core Foundation preferences
+	Preferences_Result
+	save ();
+	
+	//! test routine
+	static Boolean
+	unitTest ();
+
+protected:
+
+private:
+	CFRetainRelease			_contextName;	//!< CFStringRef; a display name for this context
+	CFKeyValuePreferences	_dictionary;	//!< handles key value lookups
+};
+typedef My_ContextDefault const*	My_ContextDefaultConstPtr;
+typedef My_ContextDefault*			My_ContextDefaultPtr;
+
+/*!
+Implicitly-saved location and size information for a
+window.  Used to remember the user’s preferred
+window arrangement.
+*/
+struct MyWindowArrangement
+{
+	MyWindowArrangement		(SInt16		inX = 0,
+							 SInt16		inY = 0,
+							 SInt16		inWidth = 0,
+							 SInt16		inHeight = 0)
+	:
+	x(inX),
+	y(inY),
+	width(inWidth),
+	height(inHeight)
+	{
+	}
+	
+	SInt16		x;			//!< window content region location, left edge
+	SInt16		y;			//!< window content region location, top edge
+	SInt16		width;		//!< window content region size, horizontally
+	SInt16		height;		//!< window content region size, vertically
+};
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	ListenerModel_Ref			gPreferenceEventListenerModel = nullptr;
-	Boolean						gHaveRunConverter = false;
-	Boolean						gInitialized = false;
-	My_AliasInfoList&			gAliasList ()	{ static My_AliasInfoList x; return x; }
-	My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
-	My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
-	My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassGeneral); return x; }
-	My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassFormat); return x; }
-	My_DictionaryContextList&	gFormatNamedContexts ()		{ static My_DictionaryContextList x; return x; }
-	My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassMacroSet); return x; }
-	My_DictionaryContextList&	gMacroSetNamedContexts ()	{ static My_DictionaryContextList x; return x; }
-	My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassSession); return x; }
-	My_DictionaryContextList&	gSessionNamedContexts ()	{ static My_DictionaryContextList x; return x; }
-	My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTerminal); return x; }
-	My_DictionaryContextList&	gTerminalNamedContexts ()	{ static My_DictionaryContextList x; return x; }
-}
+ListenerModel_Ref			gPreferenceEventListenerModel = nullptr;
+Boolean						gHaveRunConverter = false;
+Boolean						gInitialized = false;
+My_AliasInfoList&			gAliasList ()	{ static My_AliasInfoList x; return x; }
+My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
+My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
+My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassGeneral); return x; }
+My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassFormat); return x; }
+My_DictionaryContextList&	gFormatNamedContexts ()		{ static My_DictionaryContextList x; return x; }
+My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassMacroSet); return x; }
+My_DictionaryContextList&	gMacroSetNamedContexts ()	{ static My_DictionaryContextList x; return x; }
+My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassSession); return x; }
+My_DictionaryContextList&	gSessionNamedContexts ()	{ static My_DictionaryContextList x; return x; }
+My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTerminal); return x; }
+My_DictionaryContextList&	gTerminalNamedContexts ()	{ static My_DictionaryContextList x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Preferences_Result		assertInitialized				();
-static void						changeNotify					(Preferences_Change,
+Preferences_Result		assertInitialized						();
+void					changeNotify							(Preferences_Change,
 																 Preferences_ContextRef = nullptr, Boolean = false);
-static Boolean					convertCFArrayToRGBColor		(CFArrayRef, RGBColor*);
-static Boolean					convertRGBColorToCFArray		(RGBColor const*, CFArrayRef&);
-static Preferences_Result		copyClassDictionaryByName		(Preferences_Class, CFStringRef,
-																	CFMutableDictionaryRef&, Boolean = false);
-static Preferences_Result		copyClassDictionaryCFArray		(Preferences_Class, CFArrayRef&);
-static Preferences_Result		createAllPreferencesContextsFromDisk	();
-static CFDictionaryRef			createDefaultPrefDictionary		();
-static void						deleteAliasData					(My_AliasInfoPtr*);
-static void						deleteAllAliasNodes				();
-static My_AliasInfoPtr			findAlias						(Preferences_AliasID);
-static Boolean					findAliasOnDisk					(Preferences_AliasID, AliasHandle*);
-static Boolean					getDefaultContext				(Preferences_Class, My_ContextInterfacePtr&);
-static Preferences_Result		getFormatPreference				(My_ContextInterfaceConstPtr, Preferences_Tag,
-																	size_t, void*, size_t*);
-static Preferences_Result		getGeneralPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
-																	size_t, void*, size_t*);
-static Boolean					getListOfContexts				(Preferences_Class, My_DictionaryContextList*&);
-static Preferences_Result		getMacroSetPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
-																	size_t, void*, size_t*);
-static Boolean					getNamedContext					(Preferences_Class, CFStringRef,
-																	My_ContextInterfacePtr&);
-static Preferences_Result		getPreferenceDataInfo			(Preferences_Tag, CFStringRef&, FourCharCode&,
-																	size_t&, Preferences_Class&);
-static Preferences_Result		getSessionPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
-																	size_t, void*, size_t*);
-static Preferences_Result		getTerminalPreference			(My_ContextInterfaceConstPtr, Preferences_Tag,
-																	size_t, void*, size_t*);
-static Boolean					getWindowPreferences			(Preferences_Tag, MyWindowArrangement&);
-static OSStatus					initPreferences					(Boolean);
-static Preferences_Result		overwriteClassDictionaryCFArray	(Preferences_Class, CFArrayRef);
-static void						readMacTelnetCoordPreference	(CFStringRef, SInt16&, SInt16&);
-static void						readMacTelnetArrayPreference	(CFStringRef, CFArrayRef&);
-static OSStatus					readPreferencesDictionary		(CFDictionaryRef, Boolean);
-static OSStatus					setAliasChanged					(My_AliasInfoPtr);
-static Preferences_Result		setFormatPreference				(My_ContextInterfacePtr, Preferences_Tag,
-																	size_t, void const*);
-static Preferences_Result		setGeneralPreference			(My_ContextInterfacePtr, Preferences_Tag,
-																	size_t, void const*);
-static Preferences_Result		setMacroSetPreference			(My_ContextInterfacePtr, Preferences_Tag,
-																	size_t, void const*);
-static Boolean					setMacTelnetCoordPreference		(CFStringRef, SInt16, SInt16);
-static void						setMacTelnetPreference			(CFStringRef, CFPropertyListRef);
-static Preferences_Result		setSessionPreference			(My_ContextInterfacePtr, Preferences_Tag,
-																	size_t, void const*);
-static Preferences_Result		setTerminalPreference			(My_ContextInterfacePtr, Preferences_Tag,
-																	size_t, void const*);
+Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
+Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
+Preferences_Result		copyClassDictionaryByName				(Preferences_Class, CFStringRef,
+																 CFMutableDictionaryRef&, Boolean = false);
+Preferences_Result		copyClassDictionaryCFArray				(Preferences_Class, CFArrayRef&);
+Preferences_Result		createAllPreferencesContextsFromDisk	();
+CFDictionaryRef			createDefaultPrefDictionary				();
+void					deleteAliasData							(My_AliasInfoPtr*);
+void					deleteAllAliasNodes						();
+My_AliasInfoPtr			findAlias								(Preferences_AliasID);
+Boolean					findAliasOnDisk							(Preferences_AliasID, AliasHandle*);
+Boolean					getDefaultContext						(Preferences_Class, My_ContextInterfacePtr&);
+Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 size_t, void*, size_t*);
+Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 size_t, void*, size_t*);
+Boolean					getListOfContexts						(Preferences_Class, My_DictionaryContextList*&);
+Preferences_Result		getMacroSetPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 size_t, void*, size_t*);
+Boolean					getNamedContext							(Preferences_Class, CFStringRef,
+																 My_ContextInterfacePtr&);
+Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, CFStringRef&, FourCharCode&,
+																 size_t&, Preferences_Class&);
+Preferences_Result		getSessionPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 size_t, void*, size_t*);
+Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 size_t, void*, size_t*);
+Boolean					getWindowPreferences					(Preferences_Tag, MyWindowArrangement&);
+OSStatus				initPreferences							(Boolean);
+Preferences_Result		overwriteClassDictionaryCFArray			(Preferences_Class, CFArrayRef);
+void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
+void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
+OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
+OSStatus				setAliasChanged							(My_AliasInfoPtr);
+Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preferences_Tag,
+																 size_t, void const*);
+Preferences_Result		setGeneralPreference					(My_ContextInterfacePtr, Preferences_Tag,
+																 size_t, void const*);
+Preferences_Result		setMacroSetPreference					(My_ContextInterfacePtr, Preferences_Tag,
+																 size_t, void const*);
+Boolean					setMacTelnetCoordPreference				(CFStringRef, SInt16, SInt16);
+void					setMacTelnetPreference					(CFStringRef, CFPropertyListRef);
+Preferences_Result		setSessionPreference					(My_ContextInterfacePtr, Preferences_Tag,
+																 size_t, void const*);
+Preferences_Result		setTerminalPreference					(My_ContextInterfacePtr, Preferences_Tag,
+																 size_t, void const*);
+Boolean					unitTest000_Begin						();
+Boolean					unitTest001_Begin						();
+
+} // anonymous namespace
 
 
 
@@ -678,6 +695,30 @@ Preferences_Done ()
 		gInitialized = false;
 	}
 }// Done
+
+
+/*!
+A unit test for this module.  This should always
+be run before a release, after any substantial
+changes are made, or if you suspect bugs!  It
+should also be EXPANDED as new functionality is
+proposed (ideally, a test is written before the
+functionality is added).
+
+(3.1)
+*/
+void
+Preferences_RunTests ()
+{
+	UInt16		totalTests = 0;
+	UInt16		failedTests = 0;
+	
+	
+	++totalTests; if (false == unitTest000_Begin()) ++failedTests;
+	++totalTests; if (false == unitTest001_Begin()) ++failedTests;
+	
+	Console_WriteUnitTestReport("Preferences", failedTests, totalTests);
+}// RunTests
 
 
 /*!
@@ -2269,471 +2310,719 @@ Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 
 
 #pragma mark Internal Methods
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+/*!
+Constructor.  Used only by subclasses.
+
+(3.1)
+*/
+My_ContextInterface::
+My_ContextInterface		(Preferences_Class		inClass)
+:
+_preferencesClass(inClass),
+_implementorPtr(nullptr)
 {
-	/*!
-	Constructor.  Used only by subclasses.
+}// My_ContextInterface 1-argument constructor
+
+
+/*!
+Destructor.  Used only by subclasses.
+
+(3.1)
+*/
+My_ContextInterface::
+~My_ContextInterface ()
+{
+}// My_ContextInterface destructor
+
+
+/*!
+Returns a constant indicating the category to which
+this context belongs.  The category generally
+indicates what preference keys should be used.
+
+(3.1)
+*/
+Preferences_Class
+My_ContextInterface::
+returnClass ()
+const
+{
+	return _preferencesClass;
+}// My_ContextInterface::returnClass
+
+
+/*!
+Specifies the delegate instance supporting the
+CFKeyValueInterface API that will be asked to perform
+all functions.  You MUST set this before using any of
+the other methods of this class!
+*/
+void
+My_ContextInterface::
+setImplementor	(CFKeyValueInterface*	inImplementorPtr)
+{
+	_implementorPtr = inImplementorPtr;
+}// My_ContextInterface::setImplementor
+
+
+/*!
+Tests a subclass instance that claims to support this
+interface properly.  Returns true only if successful.
+Information on failures is printed to the console.
+
+(3.1)
+*/
+Boolean
+My_ContextInterface::
+unitTest	(My_ContextInterface*	inTestObjectPtr)
+{
+	Boolean		result = true;
 	
-	(3.1)
-	*/
-	My_ContextInterface::
-	My_ContextInterface		(Preferences_Class		inClass)
-	:
-	_preferencesClass(inClass),
-	_implementorPtr(nullptr)
+	
+	// array values
 	{
-	}// My_ContextInterface 1-argument constructor
-	
-	
-	/*!
-	Destructor.  Used only by subclasses.
-	
-	(3.1)
-	*/
-	My_ContextInterface::
-	~My_ContextInterface ()
-	{
-	}// My_ContextInterface destructor
-	
-	
-	/*!
-	Returns a constant indicating the category to which
-	this context belongs.  The category generally
-	indicates what preference keys should be used.
-	
-	(3.1)
-	*/
-	Preferences_Class
-	My_ContextInterface::
-	returnClass ()
-	const
-	{
-		return _preferencesClass;
-	}// returnClass
-	
-	
-	/*!
-	Specifies the delegate instance supporting the
-	CFKeyValueInterface API that will be asked to perform
-	all functions.  You MUST set this before using any of
-	the other methods of this class!
-	*/
-	void
-	My_ContextInterface::
-	setImplementor	(CFKeyValueInterface*	inImplementorPtr)
-	{
-		_implementorPtr = inImplementorPtr;
-	}// setImplementor
-	
-	
-	/*!
-	Constructor.  See Preferences_NewContext().
-	
-	(3.1)
-	*/
-	My_ContextCFDictionary::
-	My_ContextCFDictionary	(Preferences_Class	inClass,
-							 CFStringRef		inNameOrNull)
-	:
-	My_ContextInterface(inClass),
-	_contextName(inNameOrNull),
-	_dictionary(createClassDictionary(inClass, inNameOrNull))
-	{
-		// the createClassDictionary() method retains the result,
-		// but so does the internal CFRetainRelease object; so,
-		// release the initial retain (and the object will still
-		// hold one retain count)
-		CFRelease(_dictionary.returnDictionary());
-		
-		setImplementor(&_dictionary);
-	}// My_ContextCFDictionary 2-argument constructor
-	
-	
-	/*!
-	Constructor.  See Preferences_NewContext().
-	
-	(3.1)
-	*/
-	CFMutableDictionaryRef
-	My_ContextCFDictionary::
-	createClassDictionary	(Preferences_Class	inClass,
-							 CFStringRef		inNameOrNull)
-	{
-		Preferences_Result			error = kPreferences_ResultOK;
-		CFMutableDictionaryRef		result = nullptr;
+		CFStringRef			values[] = { CFSTR("__test_1__"), CFSTR("__test_2__") };
+		CFRetainRelease		testArray(CFArrayCreate(kCFAllocatorDefault, REINTERPRET_CAST(values, void const**),
+													sizeof(values) / sizeof(CFStringRef),
+													&kCFTypeArrayCallBacks), true/* is retained */);
+		CFRetainRelease		copiedArray;
 		
 		
-		error = copyClassDictionaryByName(inClass, inNameOrNull, result);
+		result &= Console_Assert("test array exists", testArray.exists());
+		result &= Console_Assert("test array is the right size", 2 == CFArrayGetCount(testArray.returnCFArrayRef()));
+		inTestObjectPtr->addArray(CFSTR("__test_array_key__"), testArray.returnCFArrayRef());
+		copiedArray = inTestObjectPtr->returnArrayCopy(CFSTR("__test_array_key__"));
+		result &= Console_Assert("returned array exists", copiedArray.exists());
+		result &= Console_Assert("returned array is the right size", 2 == CFArrayGetCount(copiedArray.returnCFArrayRef()));
+	}
+	
+	// data values
+	{
+		char const* const	kData = "my test string";
+		size_t const		kDataSize = (1 + std::strlen(kData)) * sizeof(char);
+		CFRetainRelease		testData(CFDataCreate(kCFAllocatorDefault, REINTERPRET_CAST(kData, UInt8 const*),
+													kDataSize), true/* is retained */);
+		CFDataRef			testDataRef = REINTERPRET_CAST(testData.returnCFTypeRef(), CFDataRef);
+		CFRetainRelease		copiedValue;
+		
+		
+		result &= Console_Assert("test data exists", testData.exists());
+		result &= Console_Assert("test data is the right size", STATIC_CAST(kDataSize, CFIndex) == CFDataGetLength(testDataRef));
+		inTestObjectPtr->addData(CFSTR("__test_data_key__"), REINTERPRET_CAST(testData.returnCFTypeRef(), CFDataRef));
+		copiedValue = inTestObjectPtr->returnValueCopy(CFSTR("__test_data_key__"));
+		result &= Console_Assert("returned data exists", copiedValue.exists());
+		result &= Console_Assert("returned data is the right size",
+									STATIC_CAST(kDataSize, CFIndex) == CFDataGetLength(REINTERPRET_CAST
+																						(copiedValue.returnCFTypeRef(), CFDataRef)));
+	}
+	
+	// flag (Boolean) values
+	{
+		Boolean const	kFlag1 = true;
+		Boolean const	kFlag2 = true;
+		
+		
+		inTestObjectPtr->addFlag(CFSTR("__test_flag_key_1__"), kFlag1);
+		result &= Console_Assert("returned flag is true", kFlag1 == inTestObjectPtr->returnFlag(CFSTR("__test_flag_key_1__")));
+		inTestObjectPtr->addFlag(CFSTR("__test_flag_key_2__"), kFlag2);
+		result &= Console_Assert("returned flag is false", kFlag2 == inTestObjectPtr->returnFlag(CFSTR("__test_flag_key_2__")));
+		result &= Console_Assert("nonexistent flag is false", false == inTestObjectPtr->returnFlag(CFSTR("flag does not exist")));
+	}
+	
+	// floating-point values
+	{
+		Float32 const	kFloat1 = 0;
+		Float32 const	kFloat2 = 1;
+		Float32 const	kFloat3 = -36.4;
+		Float32 const	kFloat4 = 5312.79195;
+		Float32 const	kTolerance = 0.1; // for fuzzy equality
+		Float32			returnedFloat = 0.0;
+		
+		
+		inTestObjectPtr->addFloat(CFSTR("__test_float_key_1__"), kFloat1);
+		inTestObjectPtr->addFloat(CFSTR("__test_float_key_2__"), kFloat2);
+		inTestObjectPtr->addFloat(CFSTR("__test_float_key_3__"), kFloat3);
+		returnedFloat = inTestObjectPtr->returnFloat(CFSTR("__test_float_key_1__"));
+		result &= Console_Assert("returned float is close to zero",
+									(returnedFloat > (kFloat1 - kTolerance)) && (returnedFloat < (kFloat1 + kTolerance)));
+		returnedFloat = inTestObjectPtr->returnFloat(CFSTR("__test_float_key_2__"));
+		result &= Console_Assert("returned float is close to 1",
+									(returnedFloat > (kFloat2 - kTolerance)) && (returnedFloat < (kFloat2 + kTolerance)));
+		returnedFloat = inTestObjectPtr->returnFloat(CFSTR("__test_float_key_3__"));
+		result &= Console_Assert("returned float is close to -36.4",
+									(returnedFloat > (kFloat3 - kTolerance)) && (returnedFloat < (kFloat3 + kTolerance)));
+		inTestObjectPtr->addFloat(CFSTR("__test_float_key_4__"), kFloat4);
+		returnedFloat = inTestObjectPtr->returnFloat(CFSTR("__test_float_key_4__"));
+		result &= Console_Assert("returned float is close to 5312.79195",
+									(returnedFloat > (kFloat4 - kTolerance)) && (returnedFloat < (kFloat4 + kTolerance)));
+		result &= Console_Assert("nonexistent float is exactly zero", 0 == inTestObjectPtr->returnFloat(CFSTR("float does not exist")));
+	}
+	
+	// integer values
+	{
+		SInt16 const	kInteger1 = 0;
+		SInt16 const	kInteger2 = 1;
+		SInt16 const	kInteger3 = -77;
+		SInt16 const	kInteger4 = 16122;
+		SInt16			returnedInteger = 0;
+		
+		
+		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_1__"), kInteger1);
+		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_2__"), kInteger2);
+		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_3__"), kInteger3);
+		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_int_key_1__"));
+		result &= Console_Assert("returned integer is zero", returnedInteger == kInteger1);
+		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_integer_key_2__"));
+		result &= Console_Assert("returned integer is 1", returnedInteger == kInteger2);
+		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_integer_key_3__"));
+		result &= Console_Assert("returned integer is -77", returnedInteger == kInteger3);
+		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_4__"), kInteger4);
+		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_integer_key_4__"));
+		result &= Console_Assert("returned integer is 16122", returnedInteger == kInteger4);
+		result &= Console_Assert("nonexistent integer is exactly zero", 0 == inTestObjectPtr->returnInteger(CFSTR("integer does not exist")));
+	}
+	
+	// long integer values
+	{
+		SInt32 const	kInteger1 = 0L;
+		SInt32 const	kInteger2 = 1L;
+		SInt32 const	kInteger3 = -9124152L;
+		SInt32 const	kInteger4 = 161124507L;
+		SInt32			returnedInteger = 0;
+		
+		
+		inTestObjectPtr->addLong(CFSTR("__test_long_key_1__"), kInteger1);
+		inTestObjectPtr->addLong(CFSTR("__test_long_key_2__"), kInteger2);
+		inTestObjectPtr->addLong(CFSTR("__test_long_key_3__"), kInteger3);
+		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_int_key_1__"));
+		result &= Console_Assert("returned long integer is zero", returnedInteger == kInteger1);
+		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_long_key_2__"));
+		result &= Console_Assert("returned long integer is 1", returnedInteger == kInteger2);
+		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_long_key_3__"));
+		result &= Console_Assert("returned long integer is -9124152", returnedInteger == kInteger3);
+		inTestObjectPtr->addLong(CFSTR("__test_long_key_4__"), kInteger4);
+		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_long_key_4__"));
+		result &= Console_Assert("returned long integer is 161124507", returnedInteger == kInteger4);
+		result &= Console_Assert("nonexistent long integer is exactly zero", 0 == inTestObjectPtr->returnLong(CFSTR("long does not exist")));
+	}
+	
+	// string values
+	{
+		CFStringRef			kString1 = CFSTR("my first test string");
+		CFStringRef			kString2 = CFSTR("This is a somewhat more interesting test string.  Hopefully it still works!");
+		CFRetainRelease		copiedString;
+		
+		
+		inTestObjectPtr->addString(CFSTR("__test_string_key_1__"), kString1);
+		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_1__"));
+		result &= Console_Assert("returned string 1 exists", copiedString.exists());
+		result &= Console_Assert("returned string 1 is correct",
+									kCFCompareEqualTo == CFStringCompare(copiedString.returnCFStringRef(), kString1, 0/* options */));
+		inTestObjectPtr->addString(CFSTR("__test_string_key_2__"), kString2);
+		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_2__"));
+		result &= Console_Assert("returned string 2 exists", copiedString.exists());
+		result &= Console_Assert("returned string 2 is correct",
+									kCFCompareEqualTo == CFStringCompare(copiedString.returnCFStringRef(), kString2, 0/* options */));
+	}
+	
+	return result;
+}// My_ContextInterface::unitTest
+
+
+/*!
+Constructor.  See Preferences_NewContext().
+
+(3.1)
+*/
+My_ContextCFDictionary::
+My_ContextCFDictionary	(Preferences_Class	inClass,
+						 CFStringRef		inNameOrNull)
+:
+My_ContextInterface(inClass),
+_contextName(inNameOrNull),
+_dictionary(createClassDictionary(inClass, inNameOrNull))
+{
+	// the createClassDictionary() method retains the result,
+	// but so does the internal CFRetainRelease object; so,
+	// release the initial retain (and the object will still
+	// hold one retain count)
+	CFRelease(_dictionary.returnDictionary());
+	
+	setImplementor(&_dictionary);
+}// My_ContextCFDictionary 2-argument constructor
+
+
+/*!
+Constructor.  See Preferences_NewContext().
+
+(3.1)
+*/
+CFMutableDictionaryRef
+My_ContextCFDictionary::
+createClassDictionary	(Preferences_Class	inClass,
+						 CFStringRef		inNameOrNull)
+{
+	Preferences_Result			error = kPreferences_ResultOK;
+	CFMutableDictionaryRef		result = nullptr;
+	
+	
+	error = copyClassDictionaryByName(inClass, inNameOrNull, result);
+	if (kPreferences_ResultOK != error)
+	{
+		// if a Unicode name cannot be found, default to the
+		// string backup before failing completely
+		error = copyClassDictionaryByName(inClass, inNameOrNull, result, true/* use string */);
 		if (kPreferences_ResultOK != error)
 		{
-			// if a Unicode name cannot be found, default to the
-			// string backup before failing completely
-			error = copyClassDictionaryByName(inClass, inNameOrNull, result, true/* use string */);
+			result = nullptr;
+			if (kPreferences_ResultUnknownName == error)
+			{
+				// if the name is simply unknown, the dictionary does not exist; create one!
+				result = CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity */,
+																&kCFTypeDictionaryKeyCallBacks,
+																&kCFTypeDictionaryValueCallBacks);
+				if (nullptr == result) error = kPreferences_ResultCannotCreateContext;
+				else error = kPreferences_ResultOK;
+			}
+			
 			if (kPreferences_ResultOK != error)
 			{
-				result = nullptr;
-				if (kPreferences_ResultUnknownName == error)
-				{
-					// if the name is simply unknown, the dictionary does not exist; create one!
-					result = CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity */,
-																	&kCFTypeDictionaryKeyCallBacks,
-																	&kCFTypeDictionaryValueCallBacks);
-					if (nullptr == result) error = kPreferences_ResultCannotCreateContext;
-					else error = kPreferences_ResultOK;
-				}
-				
-				if (kPreferences_ResultOK != error)
-				{
-					throw std::logic_error("unable to construct data dictionary for given class and context name");
-				}
+				throw std::logic_error("unable to construct data dictionary for given class and context name");
 			}
 		}
-		
-		// retain internally...
-		CFRetain(result);
-		
-		// ...then release the copy that has been made
-		if (nullptr != result) CFRelease(result);
-		
-		return result;
-	}// My_ContextCFDictionary::createClassDictionary()
+	}
+	
+	// retain internally...
+	CFRetain(result);
+	
+	// ...then release the copy that has been made
+	if (nullptr != result) CFRelease(result);
+	
+	return result;
+}// My_ContextCFDictionary::createClassDictionary()
+
+
+/*!
+Removes the entire dictionary represented by this
+context from a list in application preferences.
+Does not affect other contexts or global preferences.
+Effects become permanent the next time preferences
+are synchronized.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultGenericFailure
+if preferences could not be removed for any reason
+
+(3.1)
+*/
+Preferences_Result
+My_ContextCFDictionary::
+destroy ()
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFArrayRef				favoritesListCFArray = nullptr;
 	
 	
-	/*!
-	Removes the entire dictionary represented by this
-	context from a list in application preferences.
-	Does not affect other contexts or global preferences.
-	Effects become permanent the next time preferences
-	are synchronized.
+	// figure out which MacTelnet preferences key holds the
+	// relevant list of Favorites dictionaries
+	(Preferences_Result)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
 	
-	\retval kPreferences_ResultOK
-	if no error occurred
-	
-	\retval kPreferences_ResultGenericFailure
-	if preferences could not be removed for any reason
-	
-	(3.1)
-	*/
-	Preferences_Result
-	My_ContextCFDictionary::
-	destroy ()
+	if (nullptr != favoritesListCFArray)
 	{
-		Preferences_Result		result = kPreferences_ResultOK;
-		CFArrayRef				favoritesListCFArray = nullptr;
+		CFMutableArrayRef	mutableFavoritesListCFArray = nullptr;
 		
 		
-		// figure out which MacTelnet preferences key holds the
-		// relevant list of Favorites dictionaries
-		(Preferences_Result)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
-		
-		if (nullptr != favoritesListCFArray)
+		// if found, iterate over the list of dictionaries and find the "name"
+		// key in each one (this is an external representation of a Unicode
+		// CFString, which is stored as a CFData; convert it back to a string);
+		// then delete that entry from the array, and save the modified array
+		// as the new favorites list for this context
+		CFArrayCreateMutableCopy(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
+									favoritesListCFArray);
+		if (nullptr != mutableFavoritesListCFArray)
 		{
-			CFMutableArrayRef	mutableFavoritesListCFArray = nullptr;
+			CFIndex const		kArraySize = CFArrayGetCount(mutableFavoritesListCFArray);
+			CFIndex				i = 0;
+			CFDictionaryRef		dataCFDictionary = nullptr;
+			CFDataRef			externalStringRepresentationCFData = nullptr;
+			CFStringRef			newCFString = nullptr;
+			Boolean				found = false;
 			
 			
-			// if found, iterate over the list of dictionaries and find the "name"
-			// key in each one (this is an external representation of a Unicode
-			// CFString, which is stored as a CFData; convert it back to a string);
-			// then delete that entry from the array, and save the modified array
-			// as the new favorites list for this context
-			CFArrayCreateMutableCopy(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
-										favoritesListCFArray);
-			if (nullptr != mutableFavoritesListCFArray)
+			for (i = 0; ((!found) && (i < kArraySize)); ++i)
 			{
-				CFIndex const		kArraySize = CFArrayGetCount(mutableFavoritesListCFArray);
-				CFIndex				i = 0;
-				CFDictionaryRef		dataCFDictionary = nullptr;
-				CFDataRef			externalStringRepresentationCFData = nullptr;
-				CFStringRef			newCFString = nullptr;
-				Boolean				found = false;
-				
-				
-				for (i = 0; ((!found) && (i < kArraySize)); ++i)
+				dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex
+																(mutableFavoritesListCFArray, i));
+				if (nullptr != dataCFDictionary)
 				{
-					dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex
-																	(mutableFavoritesListCFArray, i));
-					if (nullptr != dataCFDictionary)
+					externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
+					if (nullptr == externalStringRepresentationCFData)
 					{
-						externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
-						if (nullptr == externalStringRepresentationCFData)
+						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
+					}
+					else
+					{
+						newCFString = CFStringCreateFromExternalRepresentation
+										(kCFAllocatorDefault, externalStringRepresentationCFData,
+											kCFStringEncodingUnicode);
+						if (nullptr == newCFString)
 						{
-							result = kPreferences_ResultOneOrMoreNamesNotAvailable;
-						}
-						else
-						{
-							newCFString = CFStringCreateFromExternalRepresentation
-											(kCFAllocatorDefault, externalStringRepresentationCFData,
-												kCFStringEncodingUnicode);
-							if (nullptr == newCFString)
+							if (kCFCompareEqualTo ==
+								CFStringCompare(this->returnName(), newCFString, 0/* flags */))
 							{
-								if (kCFCompareEqualTo ==
-									CFStringCompare(this->returnName(), newCFString, 0/* flags */))
-								{
-									// delete this entry from the array
-									CFArrayRemoveValueAtIndex(mutableFavoritesListCFArray, i);
-									result = kPreferences_ResultOK;
-									found = true;
-								}
-								CFRelease(newCFString), newCFString = nullptr;
+								// delete this entry from the array
+								CFArrayRemoveValueAtIndex(mutableFavoritesListCFArray, i);
+								result = kPreferences_ResultOK;
+								found = true;
 							}
-							CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
+							CFRelease(newCFString), newCFString = nullptr;
 						}
+						CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
 					}
 				}
-				
-				// update the preferences list
-				overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesListCFArray);
-				
-				CFRelease(mutableFavoritesListCFArray), mutableFavoritesListCFArray = nullptr;
 			}
+			
+			// update the preferences list
+			overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesListCFArray);
+			
+			CFRelease(mutableFavoritesListCFArray), mutableFavoritesListCFArray = nullptr;
 		}
-		
-		return result;
-	}// destroy
+	}
+	
+	return result;
+}// My_ContextCFDictionary::destroy
+
+
+/*!
+Changes the name of this context.  This is often
+used in user interface elements.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultGenericFailure
+if rename did not occur for any reason
+
+(3.1)
+*/
+Preferences_Result
+My_ContextCFDictionary::
+rename	(CFStringRef	inNewName)
+{
+	_contextName.setCFTypeRef(inNewName);
+	return kPreferences_ResultOK;
+}// My_ContextCFDictionary::rename
+
+
+/*!
+Returns the name of this context.  This is often
+used in user interface elements.
+
+(3.1)
+*/
+CFStringRef
+My_ContextCFDictionary::
+returnName ()
+const
+{
+	return _contextName.returnCFStringRef();
+}// My_ContextCFDictionary::returnName
+
+
+/*!
+Saves changes to the dictionary controlled by this
+instance, overwriting any previously-saved dictionary
+for the same name.  Has the side effect of synchronizing
+any other modified application-wide preferences (but
+will not save preferences from other contexts).
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultGenericFailure
+if preferences could not be fully saved for any reason
+
+(3.1)
+*/
+Preferences_Result
+My_ContextCFDictionary::
+save ()
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFArrayRef				favoritesListCFArray = nullptr;
 	
 	
-	/*!
-	Changes the name of this context.  This is often
-	used in user interface elements.
-	
-	\retval kPreferences_ResultOK
-	if no error occurred
-	
-	\retval kPreferences_ResultGenericFailure
-	if rename did not occur for any reason
-	
-	(3.1)
-	*/
-	Preferences_Result
-	My_ContextCFDictionary::
-	rename	(CFStringRef	inNewName)
+Console_WriteValueCFString("saving, name", this->returnName());
+CFShow(_dictionary.returnDictionary());
+	// figure out which MacTelnet preferences key holds the
+	// relevant list of Favorites dictionaries
+	result = copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
+	if (nullptr == favoritesListCFArray) result = kPreferences_ResultGenericFailure;
+	else if (kPreferences_ResultOK == result)
 	{
-		_contextName.setCFTypeRef(inNewName);
-		return kPreferences_ResultOK;
-	}// rename
-	
-	
-	/*!
-	Returns the name of this context.  This is often
-	used in user interface elements.
-	
-	(3.1)
-	*/
-	CFStringRef
-	My_ContextCFDictionary::
-	returnName ()
-	const
-	{
-		return _contextName.returnCFStringRef();
-	}// returnName
-	
-	
-	/*!
-	Saves changes to the dictionary controlled by this
-	instance, overwriting any previously-saved dictionary
-	for the same name.  Has the side effect of synchronizing
-	any other modified application-wide preferences (but
-	will not save preferences from other contexts).
-	
-	\retval kPreferences_ResultOK
-	if no error occurred
-	
-	\retval kPreferences_ResultGenericFailure
-	if preferences could not be fully saved for any reason
-	
-	(3.1)
-	*/
-	Preferences_Result
-	My_ContextCFDictionary::
-	save ()
-	{
-		Preferences_Result		result = kPreferences_ResultOK;
-		CFArrayRef				favoritesListCFArray = nullptr;
+Console_WriteLine("0");
+		CFMutableArrayRef	mutableFavoritesListCFArray = nullptr;
 		
 		
-	Console_WriteValueCFString("saving, name", this->returnName());
-	Console_WriteValueFourChars("saving, class", this->returnClass());
-	CFShow(_dictionary.returnDictionary());
-		// figure out which MacTelnet preferences key holds the
-		// relevant list of Favorites dictionaries
-		(Preferences_Result)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
-		if (nullptr == favoritesListCFArray) result = kPreferences_ResultGenericFailure;
-		else
+		// if found, iterate over the list of dictionaries and find the "name"
+		// key in each one (this is an external representation of a Unicode
+		// CFString, which is stored as a CFData; convert it back to a string);
+		// then replace that entry in the array, and save the modified array
+		// as the new favorites list for this context
+		mutableFavoritesListCFArray = CFArrayCreateMutableCopy
+										(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
+											favoritesListCFArray);
+		if (nullptr != mutableFavoritesListCFArray)
 		{
-	Console_WriteLine("0");
-			CFMutableArrayRef	mutableFavoritesListCFArray = nullptr;
+Console_WriteLine("1");
+			CFIndex const		kArraySize = CFArrayGetCount(mutableFavoritesListCFArray);
+			CFIndex				i = 0;
+			CFDictionaryRef		dataCFDictionary = nullptr;
+			CFDataRef			externalStringRepresentationCFData = nullptr;
+			CFStringRef			newCFString = nullptr;
+			Boolean				found = false;
 			
 			
-			// if found, iterate over the list of dictionaries and find the "name"
-			// key in each one (this is an external representation of a Unicode
-			// CFString, which is stored as a CFData; convert it back to a string);
-			// then replace that entry in the array, and save the modified array
-			// as the new favorites list for this context
-			CFArrayCreateMutableCopy(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
-										favoritesListCFArray);
-			if (nullptr != mutableFavoritesListCFArray)
+			for (i = 0; ((!found) && (i < kArraySize)); ++i)
 			{
-	Console_WriteLine("1");
-				CFIndex const		kArraySize = CFArrayGetCount(mutableFavoritesListCFArray);
-				CFIndex				i = 0;
-				CFDictionaryRef		dataCFDictionary = nullptr;
-				CFDataRef			externalStringRepresentationCFData = nullptr;
-				CFStringRef			newCFString = nullptr;
-				Boolean				found = false;
-				
-				
-				for (i = 0; ((!found) && (i < kArraySize)); ++i)
+Console_WriteLine("2");
+				dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex
+																(mutableFavoritesListCFArray, i));
+				if (nullptr != dataCFDictionary)
 				{
-	Console_WriteLine("2l");
-					dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex
-																	(mutableFavoritesListCFArray, i));
-					if (nullptr != dataCFDictionary)
+Console_WriteLine("3");
+					externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
+					if (nullptr == externalStringRepresentationCFData)
 					{
-	Console_WriteLine("3");
-						externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
-						if (nullptr == externalStringRepresentationCFData)
+Console_WriteLine("4");
+						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
+					}
+					else
+					{
+Console_WriteLine("5");
+						newCFString = CFStringCreateFromExternalRepresentation
+										(kCFAllocatorDefault, externalStringRepresentationCFData,
+											kCFStringEncodingUnicode);
+						if (nullptr == newCFString)
 						{
-	Console_WriteLine("4");
-							result = kPreferences_ResultOneOrMoreNamesNotAvailable;
-						}
-						else
-						{
-	Console_WriteLine("5");
-							newCFString = CFStringCreateFromExternalRepresentation
-											(kCFAllocatorDefault, externalStringRepresentationCFData,
-												kCFStringEncodingUnicode);
-							if (nullptr == newCFString)
+							if (kCFCompareEqualTo ==
+								CFStringCompare(this->returnName(), newCFString, 0/* flags */))
 							{
-								if (kCFCompareEqualTo ==
-									CFStringCompare(this->returnName(), newCFString, 0/* flags */))
-								{
-									// replace this entry in the array
-									CFArraySetValueAtIndex(mutableFavoritesListCFArray, i,
-															_dictionary.returnDictionary());
-									result = kPreferences_ResultOK;
-									found = true;
-								}
-								CFRelease(newCFString), newCFString = nullptr;
+								// replace this entry in the array
+								CFArraySetValueAtIndex(mutableFavoritesListCFArray, i,
+														_dictionary.returnDictionary());
+								result = kPreferences_ResultOK;
+								found = true;
 							}
-							CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
+							CFRelease(newCFString), newCFString = nullptr;
 						}
+						CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
 					}
 				}
-				
-	Console_WriteLine("7");
-				// update the preferences list
-				overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesListCFArray);
-				
-				if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
-				{
-			Console_WriteLine("9");
-					result = kPreferences_ResultGenericFailure;
-				}
-				
-				CFRelease(mutableFavoritesListCFArray), mutableFavoritesListCFArray = nullptr;
 			}
+			
+Console_WriteLine("7");
+			// update the preferences list
+			overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesListCFArray);
+			
+			if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
+			{
+		Console_WriteLine("9");
+				result = kPreferences_ResultGenericFailure;
+			}
+			
+			CFRelease(mutableFavoritesListCFArray), mutableFavoritesListCFArray = nullptr;
 		}
-	Console_WriteValue("save result", result);
-		return result;
-	}// save
+	}
+Console_WriteValue("save result", result);
+	return result;
+}// My_ContextCFDictionary::save
+
+
+/*!
+Tests this class.  Returns true only if successful.
+Information on failures is printed to the console.
+
+(3.1)
+*/
+Boolean
+My_ContextCFDictionary::
+unitTest ()
+{
+	Boolean						result = true;
+	My_ContextCFDictionary*		testObjectPtr = new My_ContextCFDictionary
+													(kPreferences_ClassGeneral, CFSTR("__test__"));
+	CFArrayRef					keyListCFArray = nullptr;
 	
 	
-	/*!
-	Constructor.  See Preferences_GetDefaultContext().
+	result &= Console_Assert("class is set correctly",
+								kPreferences_ClassGeneral == testObjectPtr->returnClass());
+	result &= Console_Assert("name is set correctly",
+								kCFCompareEqualTo == CFStringCompare
+														(CFSTR("__test__"), testObjectPtr->returnName(),
+															0/* options */));
 	
-	(3.1)
-	*/
-	My_ContextDefault::
-	My_ContextDefault	(Preferences_Class	inClass)
-	:
-	My_ContextInterface(inClass),
-	_contextName(CFSTR("Default")/* TEMPORARY - LOCALIZE  THIS */),
-	_dictionary()
+	testObjectPtr->rename(CFSTR("__test_renamed__"));
+	result &= Console_Assert("rename worked",
+								kCFCompareEqualTo == CFStringCompare
+														(CFSTR("__test_renamed__"), testObjectPtr->returnName(),
+															0/* options */));
+	
+	keyListCFArray = testObjectPtr->returnKeyListCopy();
+	result &= Console_Assert("key list exists", nullptr != keyListCFArray);
+	result &= Console_Assert("key list is initially empty",
+								0 == CFArrayGetCount(keyListCFArray));
+	
+	result &= My_ContextInterface::unitTest(testObjectPtr);
+	
+	CFRelease(keyListCFArray), keyListCFArray = nullptr;
+	delete testObjectPtr, testObjectPtr = nullptr;
+	
+	return result;
+}// My_ContextCFDictionary::unitTest
+
+
+/*!
+Constructor.  See Preferences_GetDefaultContext().
+
+(3.1)
+*/
+My_ContextDefault::
+My_ContextDefault	(Preferences_Class	inClass)
+:
+My_ContextInterface(inClass),
+_contextName(CFSTR("Default")/* TEMPORARY - LOCALIZE  THIS */),
+_dictionary()
+{
+	setImplementor(&_dictionary);
+}// My_ContextDefault 1-argument constructor
+
+
+/*!
+Has no effect, a default context cannot be destroyed.
+
+\retval kPreferences_ResultGenericFailure
+always
+
+(3.1)
+*/
+Preferences_Result
+My_ContextDefault::
+destroy ()
+{
+	// NO-OP
+	return kPreferences_ResultGenericFailure;
+}// My_ContextDefault::destroy
+
+
+/*!
+Has no effect, a default context cannot be renamed.
+
+\retval kPreferences_ResultGenericFailure
+always
+
+(3.1)
+*/
+Preferences_Result
+My_ContextDefault::
+rename	(CFStringRef	UNUSED_ARGUMENT(inNewName))
+{
+	// NO-OP
+	return kPreferences_ResultGenericFailure;
+}// My_ContextDefault::rename
+
+
+/*!
+Returns the name of this context.  This is often
+used in user interface elements.  Note that a default
+context always has the same name.
+
+(3.1)
+*/
+CFStringRef
+My_ContextDefault::
+returnName ()
+const
+{
+	return _contextName.returnCFStringRef();
+}// My_ContextDefault::returnName
+
+
+/*!
+Saves any in-memory preferences data model changes to
+disk, and updates the in-memory model with any new
+settings on disk.  Has the side effect of synchronizing
+any other modified application-wide preferences (but
+will not save contextual preferences).
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultGenericFailure
+if preferences could not be fully saved for any reason
+
+(3.1)
+*/
+Preferences_Result
+My_ContextDefault::
+save ()
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	
+	
+	if (false == CFPreferencesAppSynchronize(_dictionary.returnTargetApplication()))
 	{
-		setImplementor(&_dictionary);
-	}// My_ContextDefault 1-argument constructor
+		result = kPreferences_ResultGenericFailure;
+	}
+	return result;
+}// My_ContextDefault::save
+
+
+/*!
+Tests this class.  Returns true only if successful.
+Information on failures is printed to the console.
+
+(3.1)
+*/
+Boolean
+My_ContextDefault::
+unitTest ()
+{
+	Boolean				result = true;
+	My_ContextDefault*	testObjectPtr = new My_ContextDefault(kPreferences_ClassGeneral);
+	CFArrayRef			keyListCFArray = nullptr;
 	
 	
-	/*!
-	Has no effect, a default context cannot be destroyed.
+	result &= Console_Assert("class is set correctly",
+								kPreferences_ClassGeneral == testObjectPtr->returnClass());
+	result &= Console_Assert("name is set correctly",
+								kCFCompareEqualTo == CFStringCompare
+														(CFSTR("Default"), testObjectPtr->returnName(),
+															0/* options */));
 	
-	\retval kPreferences_ResultGenericFailure
-	always
+	// a Default context is not allowed to be renamed
+	testObjectPtr->rename(CFSTR("__test_renamed__"));
+	result &= Console_Assert("rename correctly fails",
+								kCFCompareEqualTo != CFStringCompare
+														(CFSTR("__test_renamed__"), testObjectPtr->returnName(),
+															0/* options */));
 	
-	(3.1)
-	*/
-	Preferences_Result
-	My_ContextDefault::
-	destroy ()
-	{
-		// NO-OP
-		return kPreferences_ResultGenericFailure;
-	}// destroy
+	keyListCFArray = testObjectPtr->returnKeyListCopy();
+	result &= Console_Assert("key list exists", nullptr != keyListCFArray);
+	result &= Console_Assert("key list is initially populated (based on CFPreferences)",
+								0 != CFArrayGetCount(keyListCFArray));
 	
+	result &= My_ContextInterface::unitTest(testObjectPtr);
 	
-	/*!
-	Has no effect, a default context cannot be renamed.
+	CFRelease(keyListCFArray), keyListCFArray = nullptr;
+	delete testObjectPtr, testObjectPtr = nullptr;
 	
-	\retval kPreferences_ResultGenericFailure
-	always
-	
-	(3.1)
-	*/
-	Preferences_Result
-	My_ContextDefault::
-	rename	(CFStringRef	UNUSED_ARGUMENT(inNewName))
-	{
-		// NO-OP
-		return kPreferences_ResultGenericFailure;
-	}// rename
-	
-	
-	/*!
-	Returns the name of this context.  This is often
-	used in user interface elements.  Note that a default
-	context always has the same name.
-	
-	(3.1)
-	*/
-	CFStringRef
-	My_ContextDefault::
-	returnName ()
-	const
-	{
-		return _contextName.returnCFStringRef();
-	}// returnName
-	
-	
-	/*!
-	Saves any in-memory preferences data model changes to
-	disk, and updates the in-memory model with any new
-	settings on disk.  Has the side effect of synchronizing
-	any other modified application-wide preferences (but
-	will not save contextual preferences).
-	
-	\retval kPreferences_ResultOK
-	if no error occurred
-	
-	\retval kPreferences_ResultGenericFailure
-	if preferences could not be fully saved for any reason
-	
-	(3.1)
-	*/
-	Preferences_Result
-	My_ContextDefault::
-	save ()
-	{
-		Preferences_Result		result = kPreferences_ResultOK;
-		
-		
-		if (false == CFPreferencesAppSynchronize(_dictionary.returnTargetApplication()))
-		{
-			result = kPreferences_ResultGenericFailure;
-		}
-		return result;
-	}// save
-}
+	return result;
+}// My_ContextDefault::unitTest
 
 
 /*!
@@ -2743,7 +3032,7 @@ needs to be called, it is called.
 
 (3.0)
 */
-static Preferences_Result
+Preferences_Result
 assertInitialized ()
 {
 	Preferences_Result		result = kPreferences_ResultOK; // kPreferences_ResultNotInitialized?
@@ -2761,7 +3050,7 @@ listener.
 
 (3.0)
 */
-static void
+void
 changeNotify	(Preferences_Change			inWhatChanged,
 				 Preferences_ContextRef		inContextOrNull,
 				 Boolean					inIsInitialValue)
@@ -2784,7 +3073,7 @@ Returns "true" only if successful.
 
 (3.1)
 */
-static Boolean
+Boolean
 convertCFArrayToRGBColor	(CFArrayRef		inArray,
 							 RGBColor*		outColorPtr)
 {
@@ -2836,7 +3125,7 @@ Returns "true" only if successful.
 
 (3.1)
 */
-static Boolean
+Boolean
 convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 							 CFArrayRef&		outNewCFArray)
 {
@@ -2910,7 +3199,7 @@ if no matching dictionary could be found
 
 (3.1)
 */
-static Preferences_Result
+Preferences_Result
 copyClassDictionaryByName	(Preferences_Class			inClass,
 							 CFStringRef				inName,
 							 CFMutableDictionaryRef&	outNewCFDictionary,
@@ -2925,9 +3214,7 @@ copyClassDictionaryByName	(Preferences_Class			inClass,
 	
 	// figure out which MacTelnet preferences key holds the
 	// relevant list of Favorites dictionaries
-Console_WriteLine("<1>");
 	copyClassDictionaryCFArray(inClass, favoritesListCFArray);
-Console_WriteLine("<2>");
 	
 	// if found, iterate over the list of dictionaries and find the "name"
 	// key in each one (this is an external representation of a Unicode
@@ -2936,7 +3223,6 @@ Console_WriteLine("<2>");
 	{
 Console_WriteLine("<3>");
 		CFIndex const		kArraySize = CFArrayGetCount(favoritesListCFArray);
-Console_WriteLine("<4>");
 		CFIndex				i = 0;
 		CFDictionaryRef		dataCFDictionary = nullptr;
 		CFDataRef			externalStringRepresentationCFData = nullptr;
@@ -3030,7 +3316,7 @@ See also overwriteClassDictionaryCFArray().
 
 (3.1)
 */
-static Preferences_Result
+Preferences_Result
 copyClassDictionaryCFArray	(Preferences_Class		inClass,
 							 CFArrayRef&			outCFArrayOfCFDictionaries)
 {
@@ -3046,18 +3332,22 @@ copyClassDictionaryCFArray	(Preferences_Class		inClass,
 	case kPreferences_ClassGeneral:
 	case kPreferences_ClassWindow:
 		// not applicable
+		result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case kPreferences_ClassFormat:
 		readMacTelnetArrayPreference(CFSTR("favorite-styles"), outCFArrayOfCFDictionaries);
+		if (nullptr == outCFArrayOfCFDictionaries) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case kPreferences_ClassSession:
 		readMacTelnetArrayPreference(CFSTR("favorite-sessions"), outCFArrayOfCFDictionaries);
+		if (nullptr == outCFArrayOfCFDictionaries) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	case kPreferences_ClassTerminal:
 		readMacTelnetArrayPreference(CFSTR("favorite-terminals"), outCFArrayOfCFDictionaries);
+		if (nullptr == outCFArrayOfCFDictionaries) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
 	default:
@@ -3082,7 +3372,7 @@ IMPORTANT:	Only do this once, preferably at startup.
 
 (3.1)
 */
-static Preferences_Result
+Preferences_Result
 createAllPreferencesContextsFromDisk ()
 {
 	typedef std::vector< Preferences_Class >	PrefClassList;
@@ -3141,7 +3431,7 @@ Returns nullptr if unsuccessful for any reason.
 
 (3.0)
 */
-static CFDictionaryRef
+CFDictionaryRef
 createDefaultPrefDictionary ()
 {
 	CFDictionaryRef		result = nullptr;
@@ -3197,7 +3487,7 @@ Disposes of memory used for the given alias structure.
 
 (3.0)
 */
-static void
+void
 deleteAliasData		(My_AliasInfoPtr*	inoutAliasDataPtr)
 {
 	if ((nullptr != inoutAliasDataPtr) && (nullptr != *inoutAliasDataPtr))
@@ -3225,7 +3515,7 @@ up the memory used by them.
 
 (3.0)
 */
-static void
+void
 deleteAllAliasNodes ()
 {
 	My_AliasInfoPtr				dataPtr = nullptr;
@@ -3249,7 +3539,7 @@ there is no match.
 
 (3.0)
 */
-static My_AliasInfoPtr
+My_AliasInfoPtr
 findAlias		(Preferences_AliasID	inAliasID)
 {
 	My_AliasInfoPtr				result = nullptr;
@@ -3286,7 +3576,7 @@ output alias handle should then be considered invalid
 
 (3.0)
 */
-static Boolean
+Boolean
 findAliasOnDisk		(Preferences_AliasID	inAliasID,
 					 AliasHandle*			outAliasPtr)
 {
@@ -3314,7 +3604,7 @@ the specified class.  Returns true unless this fails.
 
 (3.1)
 */
-static Boolean
+Boolean
 getDefaultContext	(Preferences_Class			inClass,
 					 My_ContextInterfacePtr&	outContextPtr)
 {
@@ -3371,7 +3661,7 @@ if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -3518,7 +3808,7 @@ if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -3985,7 +4275,7 @@ IMPORTANT:	This list will only contain contexts created
 
 (3.1)
 */
-static Boolean
+Boolean
 getListOfContexts	(Preferences_Class				inClass,
 					 My_DictionaryContextList*&		outListPtr)
 {
@@ -4039,7 +4329,7 @@ if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 getMacroSetPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -4097,7 +4387,7 @@ IMPORTANT:	There will be only one context per class and
 
 (3.1)
 */
-static Boolean
+Boolean
 getNamedContext		(Preferences_Class			inClass,
 					 CFStringRef				inName,
 					 My_ContextInterfacePtr&	outContextPtr)
@@ -4150,7 +4440,7 @@ if the given preference tag is not valid
 
 (3.1)
 */
-static Preferences_Result
+Preferences_Result
 getPreferenceDataInfo	(Preferences_Tag		inTag,
 						 CFStringRef&			outKeyName,
 						 FourCharCode&			outKeyValueType,
@@ -4912,7 +5202,7 @@ if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -5291,7 +5581,7 @@ if the given preference tag is not valid
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						 Preferences_Tag				inDataPreferenceTag,
 						 size_t							inDataSize,
@@ -5568,7 +5858,7 @@ indicates no preference at all (or, not applicable).
 
 (3.1)
 */
-static Boolean
+Boolean
 getWindowPreferences	(Preferences_Tag		inWindowPreferenceTag,
 						 MyWindowArrangement&	inoutWindowPrefs)
 {
@@ -5643,7 +5933,7 @@ if some component could not be set up properly
 
 (2.6)
 */
-static OSStatus
+OSStatus
 initPreferences		(Boolean	inIsBrandNew)
 {
 	CFDictionaryRef		defaultPrefDictionary = createDefaultPrefDictionary();
@@ -5688,7 +5978,7 @@ if the given preference class is unknown or does not have an array value
 
 (3.1)
 */
-static Preferences_Result
+Preferences_Result
 overwriteClassDictionaryCFArray	(Preferences_Class	inClass,
 								 CFArrayRef			inCFArrayOfCFDictionaries)
 {
@@ -5724,7 +6014,7 @@ overwriteClassDictionaryCFArray	(Preferences_Class	inClass,
 
 /*!
 Reads MacTelnet’s XML preferences as requested.
-Also prints to standard output information abozut
+Also prints to standard output information about
 the data being read (if debugging is enabled).
 
 The resultant Core Foundation type must be released
@@ -5735,7 +6025,7 @@ IMPORTANT:	Do not use for keys that do not really
 
 (3.1)
 */
-static void
+void
 readMacTelnetArrayPreference	(CFStringRef	inKey,
 								 CFArrayRef&	outValue)
 {
@@ -5823,7 +6113,7 @@ Zeroes are returned for nonexistent values.
 
 (3.1)
 */
-static void
+void
 readMacTelnetCoordPreference	(CFStringRef	inKey,
 								 SInt16&		outX,
 								 SInt16&		outY)
@@ -5881,7 +6171,7 @@ currently always returned; there is no way to detect errors
 
 (3.0)
 */
-static OSStatus
+OSStatus
 readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 							 Boolean			inMerge)
 {
@@ -5942,7 +6232,7 @@ be returned.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 setAliasChanged		(My_AliasInfoPtr	inoutAliasDataPtr)
 {
 	OSStatus		result = noErr;
@@ -5971,7 +6261,7 @@ for each one).
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
@@ -6061,7 +6351,7 @@ for comments on what data format is expected for each one).
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
@@ -6543,7 +6833,7 @@ one).
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 setMacroSetPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
@@ -6598,7 +6888,7 @@ necessary Core Foundation types.
 
 (3.1)
 */
-static Boolean
+Boolean
 setMacTelnetCoordPreference		(CFStringRef	inKey,
 								 SInt16			inX,
 								 SInt16			inY)
@@ -6643,7 +6933,7 @@ the data being written (if debugging is enabled).
 
 (3.1)
 */
-static void
+void
 setMacTelnetPreference	(CFStringRef		inKey,
 						 CFPropertyListRef	inValue)
 {
@@ -6727,7 +7017,7 @@ for each one).
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
@@ -6966,7 +7256,7 @@ comments on what data format is expected for each one.
 
 (3.0)
 */
-static Preferences_Result	
+Preferences_Result	
 setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 						 Preferences_Tag			inDataPreferenceTag,
 						 size_t						inDataSize,
@@ -7186,5 +7476,52 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 	
 	return result;
 }// setTerminalPreference
+
+} // anonymous namespace
+
+
+#pragma mark Internal Methods: Unit Tests
+namespace {
+
+/*!
+Tests the CFDictionary context interface.
+
+Returns "true" if ALL assertions pass; "false" is
+returned if any fail, however messagess should be
+printed for ALL assertion failures regardless.
+
+(3.1)
+*/
+Boolean
+unitTest000_Begin ()
+{
+	Boolean		result = true;
+	
+	
+	result = My_ContextCFDictionary::unitTest();
+	return result;
+}// unitTest000_Begin
+
+
+/*!
+Tests the CFPreferences (defaults) context interface.
+
+Returns "true" if ALL assertions pass; "false" is
+returned if any fail, however messagess should be
+printed for ALL assertion failures regardless.
+
+(3.1)
+*/
+Boolean
+unitTest001_Begin ()
+{
+	Boolean		result = true;
+	
+	
+	result = My_ContextDefault::unitTest();
+	return result;
+}// unitTest001_Begin
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

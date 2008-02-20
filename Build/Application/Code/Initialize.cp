@@ -125,7 +125,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	
 	
 //#define RUN_MODULE_TESTS (defined DEBUG)
-#define RUN_MODULE_TESTS 1
+#define RUN_MODULE_TESTS 0
 	
 	Console_Init();
 #if RUN_MODULE_TESTS
@@ -507,6 +507,9 @@ initApplicationCore ()
 	
 	// ensure preferences folders exist, then set up macro preferences
 	(Preferences_Result)Preferences_CreateOrFindFiles();
+#if RUN_MODULE_TESTS
+	Preferences_RunTests();
+#endif
 	Macros_Init();
 	
 	// initialize some other flags
