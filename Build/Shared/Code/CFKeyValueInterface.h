@@ -317,7 +317,7 @@ public:
 	
 	//! return the managed dictionary
 	inline CFMutableDictionaryRef
-	returnDictionary ();
+	returnDictionary () const;
 	
 	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
 	inline Boolean
@@ -608,6 +608,7 @@ Returns the dictionary managed by this instance.
 CFMutableDictionaryRef
 CFKeyValueDictionary::
 returnDictionary ()
+const
 {
 	return _dataDictionary.returnCFMutableDictionaryRef();
 }// returnDictionary
