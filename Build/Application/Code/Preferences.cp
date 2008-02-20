@@ -226,7 +226,7 @@ public:
 	
 	//! the name under which this is saved; useful in UI elements
 	virtual CFStringRef
-	returnName () const = 0;
+	returnName () const NO_METHOD_IMPL = 0;
 	
 	//! retrieves a string value from the dictionary (use only if the value really is a string!)
 	virtual CFStringRef
@@ -277,7 +277,73 @@ class My_ContextCFDictionary:
 public My_ContextInterface
 {
 public:
-	My_ContextCFDictionary	(Preferences_Class, CFStringRef);
+	My_ContextCFDictionary	(Preferences_Class, CFMutableDictionaryRef = nullptr);
+	
+	//!\name New Methods In This Class
+	//@{
+	
+	//! returns the CFMutableDictionaryRef being managed (do not edit it yourself)
+	CFMutableDictionaryRef
+	returnDictionary () const;
+	
+	//! test routine
+	static Boolean
+	unitTest ();
+	
+	//@}
+	
+	//!\name My_ContextInterface Methods
+	//@{
+	
+	//! has no effect because this context never saves anything to disk
+	Preferences_Result
+	destroy ();
+	
+	//! not allowed for this type of context
+	Preferences_Result
+	rename	(CFStringRef);
+	
+	//! always an empty string
+	CFStringRef
+	returnName () const;
+	
+	//! not allowed for this type of context
+	Preferences_Result
+	save ();
+	
+	//@}
+
+protected:
+	CFMutableDictionaryRef
+	createDictionary ();
+
+private:
+	CFKeyValueDictionary	_dictionary;	//!< handles key value lookups
+};
+typedef My_ContextCFDictionary const*	My_ContextCFDictionaryConstPtr;
+typedef My_ContextCFDictionary*			My_ContextCFDictionaryPtr;
+
+/*!
+A context for storing data in a CFDictionary that will
+ultimately be saved in Favorites under Preferences.
+*/
+class My_ContextFavorite:
+public My_ContextCFDictionary
+{
+public:
+	My_ContextFavorite	(Preferences_Class, CFStringRef);
+	
+	//!\name New Methods In This Class
+	//@{
+	
+	//! test routine
+	static Boolean
+	unitTest ();
+	
+	//@}
+	
+	//!\name My_ContextInterface Methods
+	//@{
 	
 	//! delete keys in this dictionary, and their values, from application preferences
 	Preferences_Result
@@ -295,25 +361,22 @@ public:
 	Preferences_Result
 	save ();
 	
-	//! test routine
-	static Boolean
-	unitTest ();
+	//@}
 
 protected:
 	CFMutableDictionaryRef
 	createClassDictionary	(Preferences_Class, CFStringRef);
 
 private:
-	CFRetainRelease			_contextName;	//!< CFStringRef; a display name for this context
-	CFKeyValueDictionary	_dictionary;	//!< handles key value lookups
+	CFRetainRelease		_contextName;	//!< CFStringRef; a display name for this context
 };
-typedef My_ContextCFDictionary const*	My_ContextCFDictionaryConstPtr;
-typedef My_ContextCFDictionary*			My_ContextCFDictionaryPtr;
+typedef My_ContextFavorite const*	My_ContextFavoriteConstPtr;
+typedef My_ContextFavorite*			My_ContextFavoritePtr;
 
 /*!
 Keeps track of all named contexts in memory.
 */
-typedef std::vector< My_ContextCFDictionaryPtr >	My_DictionaryContextList;
+typedef std::vector< My_ContextFavoritePtr >	My_FavoriteContextList;
 
 /*!
 A context specifically for storing defaults.  It
@@ -395,13 +458,13 @@ My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; retu
 My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
 My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassGeneral); return x; }
 My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassFormat); return x; }
-My_DictionaryContextList&	gFormatNamedContexts ()		{ static My_DictionaryContextList x; return x; }
+My_FavoriteContextList&		gFormatNamedContexts ()		{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassMacroSet); return x; }
-My_DictionaryContextList&	gMacroSetNamedContexts ()	{ static My_DictionaryContextList x; return x; }
+My_FavoriteContextList&		gMacroSetNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassSession); return x; }
-My_DictionaryContextList&	gSessionNamedContexts ()	{ static My_DictionaryContextList x; return x; }
+My_FavoriteContextList&		gSessionNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTerminal); return x; }
-My_DictionaryContextList&	gTerminalNamedContexts ()	{ static My_DictionaryContextList x; return x; }
+My_FavoriteContextList&		gTerminalNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 
 } // anonymous namespace
 
@@ -427,7 +490,7 @@ Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Prefe
 																 size_t, void*, size_t*);
 Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
-Boolean					getListOfContexts						(Preferences_Class, My_DictionaryContextList*&);
+Boolean					getListOfContexts						(Preferences_Class, My_FavoriteContextList*&);
 Preferences_Result		getMacroSetPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Boolean					getNamedContext							(Preferences_Class, CFStringRef,
@@ -459,6 +522,7 @@ Preferences_Result		setTerminalPreference					(My_ContextInterfacePtr, Preferenc
 																 size_t, void const*);
 Boolean					unitTest000_Begin						();
 Boolean					unitTest001_Begin						();
+Boolean					unitTest002_Begin						();
 
 } // anonymous namespace
 
@@ -716,6 +780,7 @@ Preferences_RunTests ()
 	
 	++totalTests; if (false == unitTest000_Begin()) ++failedTests;
 	++totalTests; if (false == unitTest001_Begin()) ++failedTests;
+	++totalTests; if (false == unitTest002_Begin()) ++failedTests;
 	
 	Console_WriteUnitTestReport("Preferences", failedTests, totalTests);
 }// RunTests
@@ -832,6 +897,52 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext)
 
 
 /*!
+Creates a new preferences context in the given class that
+is isolated, not part of the ordinary list of contexts
+stored in user preferences.  The reference is automatically
+retained, but you need to invoke Preferences_ReleaseContext()
+when finished.
+
+Since the context is isolated it does not need a name, it is
+not registered in the list of known contexts, and creating it
+does not trigger any notifications (for example, there is no
+kPreferences_ChangeNumberOfContexts event).
+
+If any problems occur, nullptr is returned; otherwise, a
+reference to the new context is returned.
+
+(3.1)
+*/
+Preferences_ContextRef
+Preferences_NewDetachedContext	(Preferences_Class		inClass)
+{
+	Preferences_ContextRef		result = nullptr;
+	
+	
+	try
+	{
+		My_ContextInterfacePtr		contextPtr = nullptr;
+		My_ContextCFDictionaryPtr	newDictionary = new My_ContextCFDictionary(inClass);
+		
+		
+		contextPtr = newDictionary;
+		
+		if (nullptr != contextPtr)
+		{
+			result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
+			Preferences_RetainContext(result);
+		}
+	}
+	catch (std::exception const&	inException)
+	{
+		Console_WriteLine(inException.what());
+		result = nullptr;
+	}
+	return result;
+}// NewDetachedContext
+
+
+/*!
 Creates a new preferences context according to the
 given specifications, or returns an existing one that
 matches.  The reference is automatically retained, but
@@ -881,13 +992,13 @@ Preferences_NewContext	(Preferences_Class		inClass,
 		
 		if (false == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr))
 		{
-			My_DictionaryContextList*	listPtr = nullptr;
+			My_FavoriteContextList*		listPtr = nullptr;
 			
 			
 			if (getListOfContexts(inClass, listPtr))
 			{
-				My_ContextCFDictionaryPtr	newDictionary = new My_ContextCFDictionary
-																(inClass, inNameOrNullToAutoGenerateUniqueName);
+				My_ContextFavoritePtr	newDictionary = new My_ContextFavorite
+															(inClass, inNameOrNullToAutoGenerateUniqueName);
 				
 				
 				contextPtr = newDictionary;
@@ -1042,9 +1153,9 @@ Preferences_RetainContext	(Preferences_ContextRef		inRef)
 
 /*!
 Releases one lock on the specified context created with
-Preferences_NewContext(), and deletes the context *if*
-no other locks remain.  Your copy of the reference is
-set to nullptr.
+Preferences_NewContext() or similar routines, and deletes
+the context *if* no other locks remain.  Your copy of the
+reference is set to nullptr.
 
 (3.1)
 */
@@ -1057,7 +1168,7 @@ Preferences_ReleaseContext	(Preferences_ContextRef*	inoutRefPtr)
 		unless (gMyContextRefLocks().isLocked(*inoutRefPtr))
 		{
 			My_ContextCFDictionaryPtr	ptr = REINTERPRET_CAST(*inoutRefPtr, My_ContextCFDictionaryPtr);
-			My_DictionaryContextList*	listPtr = nullptr;
+			My_FavoriteContextList*		listPtr = nullptr;
 			
 			
 			if (getListOfContexts(ptr->returnClass(), listPtr))
@@ -1862,7 +1973,7 @@ Preferences_GetContextsInClass	(Preferences_Class							inClass,
 	prefsResult = Preferences_GetDefaultContext(&defaultContext, inClass);
 	if (kPreferences_ResultOK == prefsResult)
 	{
-		My_DictionaryContextList*	listPtr = nullptr;
+		My_FavoriteContextList*		listPtr = nullptr;
 		
 		
 		outContextsList.push_back(defaultContext);
@@ -1871,7 +1982,7 @@ Preferences_GetContextsInClass	(Preferences_Class							inClass,
 		
 		if (getListOfContexts(inClass, listPtr))
 		{
-			My_DictionaryContextList::const_iterator	toContextPtr = listPtr->begin();
+			My_FavoriteContextList::const_iterator		toContextPtr = listPtr->begin();
 			
 			
 			for (; toContextPtr != listPtr->end(); ++toContextPtr)
@@ -2532,26 +2643,181 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 
 
 /*!
-Constructor.  See Preferences_NewContext().
+Constructor.  See Preferences_NewDetachedContext().
 
 (3.1)
 */
 My_ContextCFDictionary::
-My_ContextCFDictionary	(Preferences_Class	inClass,
-						 CFStringRef		inNameOrNull)
+My_ContextCFDictionary	(Preferences_Class			inClass,
+						 CFMutableDictionaryRef		inDictionaryOrNull)
 :
 My_ContextInterface(inClass),
-_contextName(inNameOrNull),
-_dictionary(createClassDictionary(inClass, inNameOrNull))
+_dictionary(inDictionaryOrNull)
 {
-	// the createClassDictionary() method retains the result,
-	// but so does the internal CFRetainRelease object; so,
-	// release the initial retain (and the object will still
-	// hold one retain count)
-	CFRelease(_dictionary.returnDictionary());
+	if (nullptr == _dictionary.returnDictionary())
+	{
+		CFRetainRelease		newDictionary(createDictionary(), true/* is retained */);
+		
+		
+		_dictionary.setDictionary(newDictionary.returnCFMutableDictionaryRef());
+	}
+	
+	if (nullptr == _dictionary.returnDictionary())
+	{
+		throw std::runtime_error("unable to construct data dictionary");
+	}
 	
 	setImplementor(&_dictionary);
 }// My_ContextCFDictionary 2-argument constructor
+
+
+/*!
+Creates an empty, infinitely-expandable dictionary for
+containing Core Foundation types.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultGenericFailure
+if the dictionary could not be created for any reason
+
+(3.1)
+*/
+CFMutableDictionaryRef
+My_ContextCFDictionary::
+createDictionary ()
+{
+	Preferences_Result			error = kPreferences_ResultOK;
+	CFMutableDictionaryRef		result = nullptr;
+	
+	
+	result = CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity */,
+										&kCFTypeDictionaryKeyCallBacks,
+										&kCFTypeDictionaryValueCallBacks);
+	if (nullptr == result) error = kPreferences_ResultGenericFailure;
+	else error = kPreferences_ResultOK;
+	
+	return result;
+}// My_ContextCFDictionary::createDictionary
+
+
+/*!
+Since this type of context does not save anything to disk,
+there is never anything to destroy, so this has no effect.
+
+\retval kPreferences_ResultOK
+always
+
+(3.1)
+*/
+Preferences_Result
+My_ContextCFDictionary::
+destroy ()
+{
+	return kPreferences_ResultOK;
+}// My_ContextCFDictionary::destroy
+
+
+/*!
+Always fails because this type of context does not have
+a name.
+
+\retval kPreferences_ResultGenericFailure
+always
+
+(3.1)
+*/
+Preferences_Result
+My_ContextCFDictionary::
+rename	(CFStringRef	UNUSED_ARGUMENT(inNewName))
+{
+	return kPreferences_ResultGenericFailure;
+}// My_ContextCFDictionary::rename
+
+
+/*!
+Returns the dictionary being manipulated.  You should not
+directly change this dictionary.
+
+(3.1)
+*/
+CFMutableDictionaryRef
+My_ContextCFDictionary::
+returnDictionary ()
+const
+{
+	return _dictionary.returnDictionary();
+}// My_ContextCFDictionary::returnDictionary
+
+
+/*!
+Returns an empty string (these contexts are unnamed).
+
+(3.1)
+*/
+CFStringRef
+My_ContextCFDictionary::
+returnName ()
+const
+{
+	return CFSTR("");
+}// My_ContextCFDictionary::returnName
+
+
+/*!
+Returns an error because dictionary-based contexts are
+maintained only in memory; there is nowhere to save them.
+
+\retval kPreferences_ResultGenericFailure
+always
+
+(3.1)
+*/
+Preferences_Result
+My_ContextCFDictionary::
+save ()
+{
+	return kPreferences_ResultGenericFailure;
+}// My_ContextCFDictionary::save
+
+
+/*!
+Tests this class.  Returns true only if successful.
+Information on failures is printed to the console.
+
+(3.1)
+*/
+Boolean
+My_ContextCFDictionary::
+unitTest ()
+{
+	Boolean						result = true;
+	My_ContextCFDictionary*		testObjectPtr = new My_ContextCFDictionary(kPreferences_ClassGeneral);
+	CFArrayRef					keyListCFArray = nullptr;
+	
+	
+	result &= Console_Assert("class is set correctly",
+								kPreferences_ClassGeneral == testObjectPtr->returnClass());
+	result &= Console_Assert("name is set correctly",
+								kCFCompareEqualTo == CFStringCompare
+														(CFSTR(""), testObjectPtr->returnName(),
+															0/* options */));
+	
+	result &= Console_Assert("rename correctly failed",
+								kPreferences_ResultGenericFailure == testObjectPtr->rename(CFSTR("__test_rename__")));
+	
+	keyListCFArray = testObjectPtr->returnKeyListCopy();
+	result &= Console_Assert("key list exists", nullptr != keyListCFArray);
+	result &= Console_Assert("key list is initially empty",
+								0 == CFArrayGetCount(keyListCFArray));
+	
+	result &= My_ContextInterface::unitTest(testObjectPtr);
+	
+	CFRelease(keyListCFArray), keyListCFArray = nullptr;
+	delete testObjectPtr, testObjectPtr = nullptr;
+	
+	return result;
+}// My_ContextCFDictionary::unitTest
 
 
 /*!
@@ -2559,8 +2825,29 @@ Constructor.  See Preferences_NewContext().
 
 (3.1)
 */
+My_ContextFavorite::
+My_ContextFavorite	(Preferences_Class	inClass,
+					 CFStringRef		inNameOrNull)
+:
+My_ContextCFDictionary(inClass, createClassDictionary(inClass, inNameOrNull)),
+_contextName(inNameOrNull)
+{
+	// the parent retains the created dictionary, so
+	// release the copy made by createClassDictionary()
+	if (nullptr != returnDictionary()) CFRelease(returnDictionary());
+}// My_ContextFavorite 2-argument constructor
+
+
+/*!
+Returns a new dictionary for the context with the specified
+name and class.  If preferences already exist, the dictionary
+is initialized with their values; otherwise, the dictionary
+is empty.
+
+(3.1)
+*/
 CFMutableDictionaryRef
-My_ContextCFDictionary::
+My_ContextFavorite::
 createClassDictionary	(Preferences_Class	inClass,
 						 CFStringRef		inNameOrNull)
 {
@@ -2580,28 +2867,19 @@ createClassDictionary	(Preferences_Class	inClass,
 			if (kPreferences_ResultUnknownName == error)
 			{
 				// if the name is simply unknown, the dictionary does not exist; create one!
-				result = CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity */,
-																&kCFTypeDictionaryKeyCallBacks,
-																&kCFTypeDictionaryValueCallBacks);
-				if (nullptr == result) error = kPreferences_ResultCannotCreateContext;
-				else error = kPreferences_ResultOK;
+				result = createDictionary();
+				error = (nullptr == result) ? kPreferences_ResultGenericFailure : kPreferences_ResultOK;
 			}
 			
 			if (kPreferences_ResultOK != error)
 			{
-				throw std::logic_error("unable to construct data dictionary for given class and context name");
+				throw std::runtime_error("unable to construct data dictionary for given class and context name");
 			}
 		}
 	}
 	
-	// retain internally...
-	CFRetain(result);
-	
-	// ...then release the copy that has been made
-	if (nullptr != result) CFRelease(result);
-	
 	return result;
-}// My_ContextCFDictionary::createClassDictionary()
+}// My_ContextFavorite::createClassDictionary
 
 
 /*!
@@ -2620,7 +2898,7 @@ if preferences could not be removed for any reason
 (3.1)
 */
 Preferences_Result
-My_ContextCFDictionary::
+My_ContextFavorite::
 destroy ()
 {
 	Preferences_Result		result = kPreferences_ResultOK;
@@ -2694,7 +2972,7 @@ destroy ()
 	}
 	
 	return result;
-}// My_ContextCFDictionary::destroy
+}// My_ContextFavorite::destroy
 
 
 /*!
@@ -2710,12 +2988,12 @@ if rename did not occur for any reason
 (3.1)
 */
 Preferences_Result
-My_ContextCFDictionary::
+My_ContextFavorite::
 rename	(CFStringRef	inNewName)
 {
 	_contextName.setCFTypeRef(inNewName);
 	return kPreferences_ResultOK;
-}// My_ContextCFDictionary::rename
+}// My_ContextFavorite::rename
 
 
 /*!
@@ -2725,12 +3003,12 @@ used in user interface elements.
 (3.1)
 */
 CFStringRef
-My_ContextCFDictionary::
+My_ContextFavorite::
 returnName ()
 const
 {
 	return _contextName.returnCFStringRef();
-}// My_ContextCFDictionary::returnName
+}// My_ContextFavorite::returnName
 
 
 /*!
@@ -2749,7 +3027,7 @@ if preferences could not be fully saved for any reason
 (3.1)
 */
 Preferences_Result
-My_ContextCFDictionary::
+My_ContextFavorite::
 save ()
 {
 	Preferences_Result		result = kPreferences_ResultOK;
@@ -2757,7 +3035,7 @@ save ()
 	
 	
 Console_WriteValueCFString("saving, name", this->returnName());
-CFShow(_dictionary.returnDictionary());
+CFShow(returnDictionary());
 	// figure out which MacTelnet preferences key holds the
 	// relevant list of Favorites dictionaries
 	result = copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
@@ -2813,8 +3091,7 @@ Console_WriteLine("5");
 								CFStringCompare(this->returnName(), newCFString, 0/* flags */))
 							{
 								// replace this entry in the array
-								CFArraySetValueAtIndex(mutableFavoritesListCFArray, i,
-														_dictionary.returnDictionary());
+								CFArraySetValueAtIndex(mutableFavoritesListCFArray, i, returnDictionary());
 								result = kPreferences_ResultOK;
 								found = true;
 							}
@@ -2840,7 +3117,7 @@ Console_WriteLine("7");
 	}
 Console_WriteValue("save result", result);
 	return result;
-}// My_ContextCFDictionary::save
+}// My_ContextFavorite::save
 
 
 /*!
@@ -2850,13 +3127,13 @@ Information on failures is printed to the console.
 (3.1)
 */
 Boolean
-My_ContextCFDictionary::
+My_ContextFavorite::
 unitTest ()
 {
-	Boolean						result = true;
-	My_ContextCFDictionary*		testObjectPtr = new My_ContextCFDictionary
-													(kPreferences_ClassGeneral, CFSTR("__test__"));
-	CFArrayRef					keyListCFArray = nullptr;
+	Boolean					result = true;
+	My_ContextFavorite*		testObjectPtr = new My_ContextFavorite
+												(kPreferences_ClassGeneral, CFSTR("__test__"));
+	CFArrayRef				keyListCFArray = nullptr;
 	
 	
 	result &= Console_Assert("class is set correctly",
@@ -2883,7 +3160,7 @@ unitTest ()
 	delete testObjectPtr, testObjectPtr = nullptr;
 	
 	return result;
-}// My_ContextCFDictionary::unitTest
+}// My_ContextFavorite::unitTest
 
 
 /*!
@@ -4277,7 +4554,7 @@ IMPORTANT:	This list will only contain contexts created
 */
 Boolean
 getListOfContexts	(Preferences_Class				inClass,
-					 My_DictionaryContextList*&		outListPtr)
+					 My_FavoriteContextList*&		outListPtr)
 {
 	Boolean		result = true;
 	
@@ -4393,13 +4670,13 @@ getNamedContext		(Preferences_Class			inClass,
 					 My_ContextInterfacePtr&	outContextPtr)
 {
 	Boolean						result = false;
-	My_DictionaryContextList*	listPtr = nullptr;
+	My_FavoriteContextList*		listPtr = nullptr;
 	
 	
 	outContextPtr = nullptr;
 	if (getListOfContexts(inClass, listPtr))
 	{
-		My_DictionaryContextList::const_iterator	toContextPtr = std::find_if
+		My_FavoriteContextList::const_iterator		toContextPtr = std::find_if
 																	(listPtr->begin(), listPtr->end(),
 																		contextNameEqualTo(inName));
 		
@@ -7521,6 +7798,26 @@ unitTest001_Begin ()
 	result = My_ContextDefault::unitTest();
 	return result;
 }// unitTest001_Begin
+
+
+/*!
+Tests the preferences-based CFDictionary context.
+
+Returns "true" if ALL assertions pass; "false" is
+returned if any fail, however messagess should be
+printed for ALL assertion failures regardless.
+
+(3.1)
+*/
+Boolean
+unitTest002_Begin ()
+{
+	Boolean		result = true;
+	
+	
+	result = My_ContextFavorite::unitTest();
+	return result;
+}// unitTest002_Begin
 
 } // anonymous namespace
 

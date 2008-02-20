@@ -427,6 +427,9 @@ Preferences_ContextRef
 Preferences_ContextRef
 	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext);
 
+Preferences_ContextRef
+	Preferences_NewDetachedContext			(Preferences_Class					inClass);
+
 // IMPLICITLY DONE WHEN A CONTEXT IS CREATED
 void
 	Preferences_RetainContext				(Preferences_ContextRef				inContext);
