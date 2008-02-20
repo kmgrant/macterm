@@ -520,7 +520,7 @@ CFKeyValueDictionary::
 addFloat	(CFStringRef	inKey,
 			 Float32		inValue)
 {
-	_dataDictionary.addFlag(inKey, inValue);
+	_dataDictionary.addFloat(inKey, inValue);
 }// addFloat
 
 
