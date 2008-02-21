@@ -92,6 +92,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080220': [
 		'Fixed presentation of Custom Format dialog.',
+		'MacTelnet Help has received several minor corrections and other edits.',
 	],
 	'20080216': [
 		'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notification tab.',

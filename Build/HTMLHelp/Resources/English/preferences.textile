@@ -14,6 +14,8 @@ MacTelnet Preferences window.  To access any of the settings
 mentioned here, start by choosing the "Preferences..." item in
 the MacTelnet menu.
 
+* General:"#general"
+
 h2(#general). General
 
 h3(#generaloptions). Options
@@ -206,11 +208,11 @@ your attention.
 
 h2(#sessions). Sessions
 
-You can create more than one set of preferences in this category.
-When you select Sessions, a drawer appears showing all the
-collections you have.  Simply choose a name from the list in the
-drawer and then edit settings in the main Preferences window for
-that collection.
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply choose
+a name from the list in the drawer, and then edit that
+collection's settings in the main Preferences window.
 
 Sessions define how MacTelnet accesses a resource (a local or
 remote terminal application), as well as other settings like key
@@ -218,13 +220,17 @@ mappings and the TEK graphics mode.  These are a little like
 Bookmarks from your web browser, in that they allow you to easily
 return to the things you use frequently.
 
+Note that MacTelnet also supports saving sessions to files with
+File >> Save As, though those files do not save as many details
+as Preferences do.
+
 h2(#macros). Macros
 
-You can create more than one set of preferences in this category.
-When you select Macros, a drawer appears showing all the macro
-sets you have.  Simply choose a name from the list in the drawer
-and then edit settings in the main Preferences window for that
-macro set.
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply choose
+a name from the list in the drawer, and then edit that
+collection's settings in the main Preferences window.
 
 All macro sets use the same key equivalents, so only one set can
 be available at a time.  When a terminal window is active, use
@@ -254,6 +260,13 @@ you swap macro sets with the Map menu.
 
 h3. Editing
 
+Use Window >> Show Macro Editor to display an older interface
+for editing macros, currently the most reliable.  (Eventually the
+Preferences window will be the only editing method.)
+
+Macros in the Preferences window can be edited directly in their
+list.
+
 A macro contains only plain text.  To edit, click on its content
 portion in the list, and then hover until an edit box appears.
 Hit Return or Enter when finished editing.
@@ -274,7 +287,8 @@ content of macros, representing additional characters:
 |<. \0nn|<{padding-left:0.5em}. arbitrary ASCII in octal; e.g. "\004" is ^D|
 
 bq. To see the octal versions of all ASCII characters, look at
-<a href="x-man-page://ascii">x-man-page://ascii</a> (opens a MacTelnet window and runs "man ascii").
+<a href="x-man-page://ascii">x-man-page://ascii</a> (opens a MacTelnet window and runs
+"man ascii").
 
 MacTelnet also recognizes codes that represent information to be
 inserted at the time a macro is actually used:
@@ -284,15 +298,15 @@ inserted at the time a macro is actually used:
 
 h2(#translations). Translations
 
-You can create more than one set of preferences in this category.
-When you select Translations, a drawer appears showing all the
-collections you have.  Simply choose a name from the list in the
-drawer and then edit settings in the main Preferences window for
-that collection.
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply choose
+a name from the list in the drawer, and then edit that
+collection's settings in the main Preferences window.
 
-A translation table eessentially allows the terminal to display
-text the way it is supposed to, according to what an application
-in a terminal expects.
+A translation table essentially allows the terminal to display text
+the way it is supposed to, according to what an application in a
+terminal expects.
 
 The Map menu allows you to choose any of these translation tables
 while sessions are running.
@@ -318,29 +332,29 @@ pounds.
 
 h2(#terminals). Terminals
 
-You can create more than one set of preferences in this category.
-When you select Terminals, a drawer appears showing all the
-collections you have.  Simply choose a name from the list in the
-drawer and then edit settings in the main Preferences window for
-that collection.
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply choose
+a name from the list in the drawer, and then edit that
+collection's settings in the main Preferences window.
 
 Terminals decide somewhat technical aspects of a window, such as
-the emulation type.  Usually, you set up one or more of these
-with the help of an administrator or the documentation for your
-terminal application, so that MacTelnet behaves correctly when
-you access that terminal application.  When you create a custom
-or Favorite session, you can associate a Terminal Favorite with
-it, ensuring these important settings are always made for you.
+the emulation type.  Usually, you set up one or more of these with
+the help of an administrator or application documentation, so that
+MacTelnet behaves correctly when you use an application in a
+terminal window.  Custom and Favorite sessions can associate a
+Terminal Favorite with them, ensuring that these important settings
+are always made for you.
 
 h2(#formats). Formats
 
-You can create more than one set of preferences in this category.
-When you select Formats, a drawer appears showing all the formats
-you have.  Simply choose a name from the list in the drawer and
-then edit settings in the main Preferences window for that
-format.
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply choose
+a name from the list in the drawer, and then edit that
+collection's settings in the main Preferences window.
 
-Formats are collects of fonts, font sizes, colors, and more, that
+Formats are collections of fonts, font sizes, colors, and more, that
 decide how your terminal windows look.  You can use the View menu
 to quickly change a window's format to one of the Favorites you
 specify in Preferences, or to make customizations local to the
@@ -372,8 +386,8 @@ In addition, a Terminal Favorite can disable them.
 h2(#macros). Full Screen
 
 Settings that control "kiosk mode", the Full Screen command in
-the View menu.  You can use these preferences to create a more
-complete kiosk (by hiding the menu bar, for example).
+the MacTelnet application menu.  You can use these preferences to
+create a more complete kiosk (by hiding the menu bar, for example).
 
 h3. Options
 
@@ -413,9 +427,8 @@ h5. Superfluous graphical effects
 
 In full screen mode, MacTelnet has significantly more screen
 resolution and therefore has more options for rendering terminals
-in interesting ways!  If you do not want kiosks to look
-significantly different from normal terminal windows, disable
-this option.
+in interesting ways!  If you do not want kiosks to look much
+different from normal terminal windows, disable this option.
 
 h4. Deactivation
 
