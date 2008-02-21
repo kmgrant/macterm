@@ -187,6 +187,7 @@ struct TerminalWindow
 	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
 	CommonEventHandlers_WindowResizer	windowResizeHandler;			// responds to changes in the window size
 	CommonEventHandlers_WindowResizer	tabDrawerWindowResizeHandler;	// responds to changes in the tab drawer size
+	CarbonEventHandlerWrap		mouseWheelHandler;						// responds to scroll wheel events
 	EventHandlerUPP				commandUPP;								// wrapper for command callback
 	EventHandlerRef				commandHandler;							// invoked whenever a terminal window command is executed
 	EventHandlerUPP				windowClickActivationUPP;				// wrapper for window background clicks callback
@@ -201,7 +202,6 @@ struct TerminalWindow
 	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal windowÕs grow box is clicked
 	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
 	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
-	ListenerModel_ListenerRef	mainEventLoopEventListener;				// responds to events in this window
 	ListenerModel_ListenerRef	sessionStateChangeEventListener;		// responds to changes in a session
 	ListenerModel_ListenerRef	terminalStateChangeEventListener;		// responds to changes in a terminal
 	ListenerModel_ListenerRef	terminalViewEventListener;				// responds to changes in a terminal view
@@ -295,9 +295,9 @@ static void					handlePendingUpdates			();
 static void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
 static void					installUndoFullScreenChanges	(TerminalWindowRef);
 static void					installUndoScreenDimensionChanges	(TerminalWindowRef);
-static Boolean				mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static pascal OSStatus		receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+static pascal OSStatus		receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
@@ -1633,6 +1633,9 @@ baseTitleString(),
 scrollProcUPP(nullptr), // reset below
 windowResizeHandler(),
 tabDrawerWindowResizeHandler(),
+mouseWheelHandler(GetApplicationEventTarget(), receiveMouseWheelEvent,
+					CarbonEventSetInClass(CarbonEventClass(kEventClassMouse), kEventMouseWheelMoved),
+					this->selfRef/* user data */),
 commandUPP(nullptr),
 commandHandler(nullptr),
 windowClickActivationUPP(nullptr),
@@ -1645,7 +1648,6 @@ growBoxClickUPP(nullptr),
 growBoxClickHandler(nullptr),
 toolbarEventUPP(nullptr),
 toolbarEventHandler(nullptr),
-mainEventLoopEventListener(nullptr),
 sessionStateChangeEventListener(nullptr),
 terminalStateChangeEventListener(nullptr),
 terminalViewEventListener(nullptr),
@@ -1852,10 +1854,6 @@ installedActions()
 		error = SetWindowBounds(this->window, kWindowContentRgn, &windowRect);
 		assert_noerr(error);
 	}
-	
-	// set up window event handling stuff
-	this->mainEventLoopEventListener = ListenerModel_NewBooleanListener(mainEventLoopEvent);
-	EventLoop_StartMonitoringWindow(kEventLoop_WindowEventScrolling, this->window, this->mainEventLoopEventListener);
 	
 	// set up callbacks to receive various state change notifications
 	this->sessionStateChangeEventListener = ListenerModel_NewStandardListener(sessionStateChanged, this->selfRef/* context */);
@@ -2106,10 +2104,6 @@ TerminalWindow::
 		}
 		KillControls(this->window);
 	}
-	
-	// disable event callbacks
-	EventLoop_StopMonitoringWindow(kEventLoop_WindowEventScrolling, this->window, this->mainEventLoopEventListener);
-	ListenerModel_ReleaseListener(&this->mainEventLoopEventListener);
 	
 	// perform other clean-up
 	if (gTopLeftCorners != nullptr) --((*gTopLeftCorners)[this->staggerPositionIndex]); // one less window at this position
@@ -3380,70 +3374,6 @@ installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 
 
 /*!
-Invoked whenever a monitored event from the main event loop
-occurs (see TerminalWindow_New() to see which events are
-monitored).  This routine responds appropriately to each
-event (e.g. showing or hiding the toolbar when a toolbar
-state change event is received).
-
-The result is "true" only if the event is to be absorbed
-(preventing anything else from seeing it).
-
-(3.0)
-*/
-static Boolean
-mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-					 ListenerModel_Event	inEventThatOccurred,
-					 void*					inEventContextPtr,
-					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
-{
-	Boolean		result = true;
-	
-	
-	switch (inEventThatOccurred)
-	{
-	case kEventLoop_WindowEventScrolling:
-		// if the window that needs updating is a terminal window, respond to the scroll event
-		{
-			EventInfoWindowScope_ScrollPtr	scrollInfoPtr = REINTERPRET_CAST(inEventContextPtr,
-																				EventInfoWindowScope_ScrollPtr);
-			
-			
-			if ((scrollInfoPtr != nullptr) && TerminalWindow_ExistsFor(scrollInfoPtr->window))
-			{
-				TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow(scrollInfoPtr->window);
-				
-				
-				if (terminalWindow != nullptr)
-				{
-					TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-					
-					
-					if (scrollInfoPtr->vertical.affected)
-					{
-						HIViewRef		control = ptr->controls.scrollBarV;
-						
-						
-						// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
-						InvokeControlActionUPP(control, scrollInfoPtr->vertical.scrollBarPartCode, GetControlAction(control));
-						InvokeControlActionUPP(control, scrollInfoPtr->vertical.scrollBarPartCode, GetControlAction(control));
-						InvokeControlActionUPP(control, scrollInfoPtr->vertical.scrollBarPartCode, GetControlAction(control));
-						result = true;
-					}
-				}
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	return result;
-}// mainEventLoopEvent
-
-
-/*!
 Handles "kEventControlClick" of "kEventClassControl"
 for a terminal windowÕs grow box.
 
@@ -3910,6 +3840,102 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveHICommand
+
+
+/*!
+Handles "kEventMouseWheelMoved" of "kEventClassMouse".
+
+Invoked by Mac OS X whenever a mouse with a scrolling
+function is used on the frontmost window.
+
+(3.1)
+*/
+static pascal OSStatus
+receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+						 EventRef				inEvent,
+						 void*					UNUSED_ARGUMENT(inUserData))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassMouse);
+	assert(kEventKind == kEventMouseWheelMoved);
+	{
+		EventMouseWheelAxis		axis = kEventMouseWheelAxisY;
+		
+		
+		// find out which way the mouse wheel moved
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelAxis, typeMouseWheelAxis, axis);
+		
+		// if the axis information was found, continue
+		if (noErr == result)
+		{
+			if (kEventMouseWheelAxisY != axis) result = eventNotHandledErr;
+			else
+			{
+				SInt32		delta = 0;
+				UInt32		modifiers = 0;
+				
+				
+				// determine modifier keys pressed during scroll
+				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
+				result = noErr; // ignore modifier key parameter if absent
+				
+				// determine how far the mouse wheel was scrolled
+				// and in which direction; negative means up/left,
+				// positive means down/right
+				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeLongInteger, delta);
+				
+				// if all information can be found, proceed with scrolling
+				if (noErr == result)
+				{
+					HIWindowRef		targetWindow = nullptr;
+					
+					
+					if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamWindowRef, typeWindowRef, targetWindow))
+					{
+						// cannot find information (implies Mac OS X 10.0.x) - fine, assume frontmost window
+						targetWindow = EventLoop_ReturnRealFrontWindow();
+					}
+					
+					if (TerminalWindow_ExistsFor(targetWindow))
+					{
+						TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
+						
+						
+						if (nullptr == terminalWindow) result = eventNotHandledErr;
+						else
+						{
+							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+							HIViewRef					scrollBar = ptr->controls.scrollBarV;
+							HIViewPartCode				hitPart = (delta > 0)
+																? (modifiers & optionKey)
+																	? kControlPageUpPart
+																	: kControlUpButtonPart
+																: (modifiers & optionKey)
+																	? kControlPageDownPart
+																	: kControlDownButtonPart;
+							
+							
+							// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
+							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+							result = noErr;
+						}
+					}
+					else
+					{
+						result = eventNotHandledErr;
+					}
+				}
+			}
+		}
+	}
+	return result;
+}// receiveMouseWheelEvent
 
 
 /*!

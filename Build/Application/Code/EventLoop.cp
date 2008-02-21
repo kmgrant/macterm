@@ -175,7 +175,6 @@ static My_WindowEventTargetRef	newStandardWindowEventTarget	(HIWindowRef);
 static My_ViewEventTargetRef	newViewEventTarget				(HIViewRef);
 static pascal OSStatus			receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus			receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			receiveServicePerformEvent		(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 static pascal OSStatus			receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
@@ -211,30 +210,20 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 																				kEventRawKeyModifiersChanged),
 																		nullptr/* user data */);
 	Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
-	CarbonEventHandlerWrap				gCarbonEventMouseWheelHandler(GetApplicationEventTarget(),
-																		receiveMouseWheelEvent,
-																		CarbonEventSetInClass
-																			(CarbonEventClass(kEventClassMouse),
-																				kEventMouseWheelMoved),
-																		nullptr/* user data */);
-#if 0
-	// donÕt check for errors, itÕs not critical if this handler is installed
-	Console_Assertion					_3(gCarbonEventMouseWheelHandler.isInstalled(), __FILE__, __LINE__);
-#endif
 	CarbonEventHandlerWrap				gCarbonEventServiceHandler(GetApplicationEventTarget(),
 																	receiveServicePerformEvent,
 																	CarbonEventSetInClass
 																		(CarbonEventClass(kEventClassService),
 																			kEventServicePerform),
 																	nullptr/* user data */);
-	Console_Assertion					_4(gCarbonEventServiceHandler.isInstalled(), __FILE__, __LINE__);
+	Console_Assertion					_3(gCarbonEventServiceHandler.isInstalled(), __FILE__, __LINE__);
 	CarbonEventHandlerWrap				gCarbonEventSwitchHandler(GetApplicationEventTarget(),
 																	receiveApplicationSwitch,
 																	CarbonEventSetInClass
 																		(CarbonEventClass(kEventClassApplication),
 																			kEventAppActivated, kEventAppDeactivated),
 																	nullptr/* user data */);
-	Console_Assertion					_5(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
+	Console_Assertion					_4(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
 	EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
 	EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
 }
@@ -1829,70 +1818,51 @@ handleUpdate	(EventRecord*		inoutEventPtr)
 		WindowInfo_Ref		windowInfoRef = nullptr;
 		
 		
-		if (isAnyListenerForWindowEvent(windowToUpdate, kEventLoop_WindowEventUpdate))
+		// scan for known windows
+		windowInfoRef = WindowInfo_ReturnFromWindow(windowToUpdate);
+		if (windowInfoRef != nullptr)
 		{
-			EventInfoWindowScope_Update		updateInfo;
+			WindowInfo_Descriptor	windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
 			
 			
-			// notify listeners of update events that a window needs updating;
-			// as soon as a listener absorbs the event, no remaining listeners
-			// are notified
-			updateInfo.window = windowToUpdate;
-			updateInfo.visibleRegion = visibleRegion;
-			updateInfo.drawingPort = drawingPort;
-			updateInfo.drawingDevice = drawingDevice;
-			eventNotifyForWindow(kEventLoop_WindowEventUpdate, updateInfo.window,
-									REINTERPRET_CAST(&updateInfo, void*)/* context */);
-		}
-		else
-		{
-			// scan for known windows
-			windowInfoRef = WindowInfo_ReturnFromWindow(windowToUpdate);
-			if (windowInfoRef != nullptr)
+			switch (windowDescriptor)
 			{
-				WindowInfo_Descriptor	windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowInfoRef);
-				
-				
-				switch (windowDescriptor)
-				{
-				case kConstantsRegistry_WindowDescriptorFormat:
-				case kConstantsRegistry_WindowDescriptorNameNewFavorite:
-				case kConstantsRegistry_WindowDescriptorSessionEditor:
-					// IMPORTANT - it is only safe to call DrawDialog() on a known MacTelnet dialog
-					BeginUpdate(windowToUpdate);
-					UpdateDialog(GetDialogFromWindow(windowToUpdate), visibleRegion);
-					EndUpdate(windowToUpdate);
-					result = true;
-					break;
-				
-				default:
-					break;
-				}
+			case kConstantsRegistry_WindowDescriptorNameNewFavorite:
+			case kConstantsRegistry_WindowDescriptorSessionEditor:
+				// IMPORTANT - it is only safe to call DrawDialog() on a known MacTelnet dialog
+				BeginUpdate(windowToUpdate);
+				UpdateDialog(GetDialogFromWindow(windowToUpdate), visibleRegion);
+				EndUpdate(windowToUpdate);
+				result = true;
+				break;
+			
+			default:
+				break;
 			}
-			
-			unless (result)
+		}
+		
+		unless (result)
+		{
+			switch (GetWindowKind(windowToUpdate))
 			{
-				switch (GetWindowKind(windowToUpdate))
-				{
-				case WIN_ICRG: // an Interactive Color Raster Graphics window
-					if (MacRGupdate(windowToUpdate)) {/* error */}
-					result = true;
-					break;
-					
-				case WIN_TEK: // a Tektronix display
-					if (RGupdate(windowToUpdate) == 0) TekDisable(RGgetVG(windowToUpdate));
-					else {/* error */}
-					result = true;
-					break;
+			case WIN_ICRG: // an Interactive Color Raster Graphics window
+				if (MacRGupdate(windowToUpdate)) {/* error */}
+				result = true;
+				break;
 				
-				default:
-					// redraw content controls; for any modern window, this is sufficient
-					BeginUpdate(windowToUpdate);
-					UpdateControls(windowToUpdate, visibleRegion);
-					EndUpdate(windowToUpdate);
-					result = true;
-					break;
-				}
+			case WIN_TEK: // a Tektronix display
+				if (RGupdate(windowToUpdate) == 0) TekDisable(RGgetVG(windowToUpdate));
+				else {/* error */}
+				result = true;
+				break;
+			
+			default:
+				// redraw content controls; for any modern window, this is sufficient
+				BeginUpdate(windowToUpdate);
+				UpdateControls(windowToUpdate, visibleRegion);
+				EndUpdate(windowToUpdate);
+				result = true;
+				break;
 			}
 		}
 	}
@@ -2522,102 +2492,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveHICommand
-
-
-/*!
-Handles "kEventMouseWheelMoved" of "kEventClassMouse".
-
-Invoked by Mac OS X whenever a mouse with a scrolling
-function is used on the frontmost window.  (On Mac OS 9,
-support for mouse wheels is automatic.)
-
-(3.0)
-*/
-static pascal OSStatus
-receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inUserData))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent),
-					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassMouse);
-	assert(kEventKind == kEventMouseWheelMoved);
-	{
-		EventMouseWheelAxis		axis = kEventMouseWheelAxisY;
-		
-		
-		// find out which way the mouse wheel moved
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelAxis, typeMouseWheelAxis, axis);
-		
-		// if the axis information was found, continue
-		if (result == noErr)
-		{
-			SInt32		delta = 0;
-			UInt32		modifiers = 0;
-			
-			
-			// determine modifier keys pressed during scroll
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-			result = noErr; // ignore modifier key parameter if absent
-			
-			// determine how far the mouse wheel was scrolled
-			// and in which direction; negative means up/left,
-			// positive means down/right
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeLongInteger, delta);
-			
-			// if all information can be found, proceed with scrolling
-			if (result == noErr)
-			{
-				EventInfoWindowScope_Scroll		scrollInfo;
-				
-				
-				// simply construct an internal Òwindow scrollingÓ event and
-				// send it to all listeners who care to know about it
-				if (GetEventParameter(inEvent, kEventParamWindowRef, typeWindowRef,
-										nullptr/* actual type */, sizeof(scrollInfo.window),
-										nullptr/* actual size */, &scrollInfo.window) != noErr)
-				{
-					// cannot find information (implies Mac OS X 10.0.x) - fine, assume frontmost window
-					scrollInfo.window = EventLoop_ReturnRealFrontWindow();
-				}
-				scrollInfo.horizontal.affected = (axis == kEventMouseWheelAxisX);
-				scrollInfo.vertical.affected = (axis == kEventMouseWheelAxisY);
-				if (scrollInfo.horizontal.affected)
-				{
-					if (delta > 0)
-					{
-						scrollInfo.horizontal.scrollBarPartCode = (modifiers & optionKey)
-																	? kControlPageUpPart : kControlUpButtonPart;
-					}
-					else
-					{
-						scrollInfo.horizontal.scrollBarPartCode = (modifiers & optionKey)
-																	? kControlPageDownPart : kControlDownButtonPart;
-					}
-				}
-				if (scrollInfo.vertical.affected)
-				{
-					if (delta > 0)
-					{
-						scrollInfo.vertical.scrollBarPartCode = (modifiers & optionKey)
-																	? kControlPageUpPart : kControlUpButtonPart;
-					}
-					else
-					{
-						scrollInfo.vertical.scrollBarPartCode = (modifiers & optionKey)
-																	? kControlPageDownPart : kControlDownButtonPart;
-					}
-				}
-				eventNotifyForWindow(kEventLoop_WindowEventScrolling, scrollInfo.window, &scrollInfo);
-				result = noErr;
-			}
-		}
-	}
-	return result;
-}// receiveMouseWheelEvent
 
 
 /*!

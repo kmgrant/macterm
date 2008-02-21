@@ -4,11 +4,13 @@
 	
 	Defined in a separate file to better-organize the data and
 	to reduce the number of files depending on one header.
+	
+	Obsolete on Mac OS X.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -50,19 +52,6 @@
 Data structure providing the context for event
 handlers notified about the following:
 
-kEventLoop_WindowEventContentTrack
-*/
-struct EventInfoWindowScope_ContentClick
-{
-	WindowRef			window;				//!< which active windowÕs content region was touched
-	EventRecord			event;				//!< information on the click
-};
-typedef EventInfoWindowScope_ContentClick*		EventInfoWindowScope_ContentClickPtr;
-
-/*!
-Data structure providing the context for event
-handlers notified about the following:
-
 kEventLoop_WindowEventKeyPress
 */
 struct EventInfoWindowScope_KeyPress
@@ -77,47 +66,6 @@ struct EventInfoWindowScope_KeyPress
 	Boolean				shiftDown;			//!< the state of the Shift modifier key
 };
 typedef EventInfoWindowScope_KeyPress*		EventInfoWindowScope_KeyPressPtr;
-
-/*!
-Data structure providing the context for event
-handlers notified about the following:
-
-kEventLoop_WindowEventScrolling
-*/
-struct EventInfoWindowScope_Scroll
-{
-	WindowRef			window;				//!< which window contains the scroll bar control(s)
-	
-	// a scroll event might be bi-directional, so check the "affected" flags in each structure
-	
-	struct
-	{
-		ControlPartCode		scrollBarPartCode;	//!< information on the scroll direction
-		Boolean				affected;			//!< was the event for this type of scroll bar?
-	} horizontal;
-	
-	struct
-	{
-		ControlPartCode		scrollBarPartCode;	//!< information on the scroll direction
-		Boolean				affected;			//!< was the event for this type of scroll bar?
-	} vertical;
-};
-typedef EventInfoWindowScope_Scroll*	EventInfoWindowScope_ScrollPtr;
-
-/*!
-Data structure providing the context for event
-handlers notified about the following:
-
-kEventLoop_WindowEventUpdate
-*/
-struct EventInfoWindowScope_Update
-{
-	WindowRef			window;				//!< the window to update
-	RgnHandle			visibleRegion;		//!< the part of the window that is visible
-	CGrafPtr			drawingPort;		//!< the graphics port where update drawing should be done
-	GDHandle			drawingDevice;		//!< the device whose characteristics should influence drawing
-};
-typedef EventInfoWindowScope_Update*	EventInfoWindowScope_UpdatePtr;
 
 #endif
 
