@@ -77,7 +77,7 @@ GenericDialog_InvokeCloseNotifyProc		(GenericDialog_CloseNotifyProcPtr	inUserRou
 #pragma mark Public Methods
 
 GenericDialog_Ref
-	GenericDialog_New							(HIWindowRef						inParentWindow,
+	GenericDialog_New							(HIWindowRef						inParentWindowOrNullForModalDialog,
 												 Panel_Ref							inHostedPanel,
 												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);

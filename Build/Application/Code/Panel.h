@@ -54,6 +54,9 @@
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
+// MacTelnet includes
+#include "Console.h"
+
 
 
 #pragma mark Constants

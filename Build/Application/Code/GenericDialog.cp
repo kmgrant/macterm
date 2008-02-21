@@ -139,13 +139,14 @@ static pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*
 This method is used to create a dialog box.  It creates
 the dialog box invisibly, and sets up dialog views.
 
-If "inParentWindow" is nullptr, the window is automatically
-made application-modal; otherwise, it is a sheet.
+If "inParentWindowOrNullForModalDialog" is nullptr, the
+window is automatically made application-modal; otherwise,
+it is a sheet.
 
 (3.1)
 */
 GenericDialog_Ref
-GenericDialog_New	(HIWindowRef						inParentWindow,
+GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 					 Panel_Ref							inHostedPanel,
 					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 					 HelpSystem_KeyPhrase				inHelpButtonAction)
@@ -155,7 +156,7 @@ GenericDialog_New	(HIWindowRef						inParentWindow,
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_GenericDialog(inParentWindow, inHostedPanel,
+		result = REINTERPRET_CAST(new My_GenericDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
 									inCloseNotifyProcPtr, inHelpButtonAction), GenericDialog_Ref);
 	}
 	catch (std::bad_alloc)
@@ -310,15 +311,15 @@ forces good object design.
 (3.1)
 */
 My_GenericDialog::
-My_GenericDialog	(HIWindowRef						inParentWindow,
+My_GenericDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
 					 Panel_Ref							inHostedPanel,
 					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 					 HelpSystem_KeyPhrase				inHelpButtonAction)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
-parentWindow					(inParentWindow),
-isModal							(nullptr == inParentWindow),
+parentWindow					(inParentWindowOrNullForModalDialog),
+isModal							(nullptr == inParentWindowOrNullForModalDialog),
 hostedPanel						(inHostedPanel),
 panelIdealSize					(CGSizeMake(0, 0)), // set later
 dialogWindow					(NIBWindow(AppResources_ReturnBundleForNIBs(),
