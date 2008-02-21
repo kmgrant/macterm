@@ -315,7 +315,6 @@ static void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
 static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 static void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void					terminalViewScrolled			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void		updateScreenFormatDialogCloseNotifyProc		(FormatDialog_Ref, Boolean);
 static void		updateScreenSizeDialogCloseNotifyProc		(SizeDialog_Ref, Boolean);
 static void					updateScrollBars				(TerminalWindowPtr);
 
@@ -1728,20 +1727,10 @@ installedActions()
 		Terminal_Result		terminalError = kTerminal_ResultOK;
 		Terminal_Emulator	emulationType = kTerminal_EmulatorVT102;
 		CFStringRef			answerBackCFString = nullptr;
-		Str255				fontName;
-		SInt16				fontSize = 0;
 		Boolean				forceSave = false;
 		
 		
-		// copy font defaults from preferences
-		preferencesResult = Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontName,
-														sizeof(fontName), fontName);
-		if (kPreferences_ResultOK != preferencesResult) PLstrcpy(fontName, "\pMonaco"); // arbitrary
-		preferencesResult = Preferences_ContextGetData(inFontInfoOrNull, kPreferences_TagFontSize,
-														sizeof(fontSize), &fontSize);
-		if (kPreferences_ResultOK != preferencesResult) fontSize = 12; // arbitrary
-		
-		// other defaults...
+		// find some defaults...
 		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalClearSavesLines,
 														sizeof(forceSave), &forceSave);
 		if (kPreferences_ResultOK != preferencesResult) forceSave = true; // arbitrary
@@ -1754,7 +1743,7 @@ installedActions()
 		terminalError = Terminal_NewScreen(emulationType, answerBackCFString, scrollbackRows, rows, columns, forceSave, &newScreen);
 		if (terminalError == kTerminal_ResultOK)
 		{
-			newView = TerminalView_NewHIViewBased(newScreen, this->window, fontName, fontSize);
+			newView = TerminalView_NewHIViewBased(newScreen, this->window, inFontInfoOrNull);
 			if (newView != nullptr)
 			{
 				OSStatus	error = noErr;
@@ -3816,59 +3805,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormat:
 					{
 						// display a format customization dialog
-						TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-						FormatDialog_SetupData	setupData;
-						FormatDialog_Ref		dialog = nullptr;
-						SInt16					arrayIndex = 0;
+						FormatDialog_Ref	dialog = nullptr;
 						
-						
-						// initialize structure with data of frontmost session window - incomplete
-						{
-							arrayIndex = kFormatDialog_IndexNormalText;
-							TerminalWindow_GetFontAndSize(terminalWindow, setupData.format[arrayIndex].font.familyName,
-															&setupData.format[arrayIndex].font.size);
-							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexNormalText,
-															&setupData.format[arrayIndex].colors.foreground);
-							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexNormalBackground,
-															&setupData.format[arrayIndex].colors.background);
-							setupData.format[arrayIndex].options = 0;
-							if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
-							{
-								// do not allow font size changes when in zoom mode
-								setupData.format[arrayIndex].options |= kFormatDialog_FormatOptionDisableFontSizeItems;
-							}
-							
-							arrayIndex = kFormatDialog_IndexBoldText; // incomplete
-							TerminalWindow_GetFontAndSize(terminalWindow, setupData.format[arrayIndex].font.familyName,
-															&setupData.format[arrayIndex].font.size);
-							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBoldText,
-															&setupData.format[arrayIndex].colors.foreground);
-							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBoldBackground,
-															&setupData.format[arrayIndex].colors.background);
-							setupData.format[arrayIndex].options = kFormatDialog_FormatOptionDisableFontItems;
-							//if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
-							{
-								// currently, font size from “normal” is shared by all styles, so this is never active
-								setupData.format[arrayIndex].options |= kFormatDialog_FormatOptionDisableFontSizeItems;
-							}
-							
-							arrayIndex = kFormatDialog_IndexBlinkingText;
-							TerminalWindow_GetFontAndSize(terminalWindow, setupData.format[arrayIndex].font.familyName,
-															&setupData.format[arrayIndex].font.size);
-							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingText,
-															&setupData.format[arrayIndex].colors.foreground);
-							(Boolean)TerminalView_GetColor(view, kTerminalView_ColorIndexBlinkingBackground,
-															&setupData.format[arrayIndex].colors.background);
-							setupData.format[arrayIndex].options = kFormatDialog_FormatOptionDisableFontItems;
-							//if (TerminalView_ReturnDisplayMode(view) == kTerminalView_DisplayModeZoom)
-							{
-								// currently, font size from “normal” is shared by all styles, so this is never active
-								setupData.format[arrayIndex].options |= kFormatDialog_FormatOptionDisableFontSizeItems;
-							}
-						}
 						
 						// display the sheet
-						dialog = FormatDialog_New(&setupData, updateScreenFormatDialogCloseNotifyProc);
+						dialog = FormatDialog_New(GetUserFocusWindow(),
+													nullptr/* context; TEMPORARY, get this from the active terminal window */,
+													GenericDialog_StandardCloseNotifyProc);
 						FormatDialog_Display(dialog); // automatically disposed when the user clicks a button
 						
 						result = noErr;
@@ -5836,66 +5779,6 @@ terminalViewScrolled	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 	}
 }// terminalViewScrolled
-
-
-/*!
-Responds to a close of the Format dialog box by
-updating the terminal area of the parent window
-to reflect changes to fonts and colors, and
-translating text if a new character set is now
-being used.
-
-(3.0)
-*/
-static void
-updateScreenFormatDialogCloseNotifyProc		(FormatDialog_Ref	inDialogThatClosed,
-											 Boolean			inOKButtonPressed)
-{
-	if (inOKButtonPressed)
-	{
-		// update the screen window to reflect the user’s changes
-		FormatDialog_SetupData	setupData;
-		WindowRef				screenWindow = FormatDialog_ReturnParentWindow(inDialogThatClosed);
-		
-		
-		if (FormatDialog_GetContents(inDialogThatClosed, &setupData) && (nullptr != screenWindow))
-		{
-			TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(screenWindow);
-			//TerminalScreenRef	screen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-			TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
-			SInt16				arrayIndex = 0;
-			
-			
-			arrayIndex = kFormatDialog_IndexNormalText;
-			TerminalView_SetColor(view, kTerminalView_ColorIndexNormalText,
-									&setupData.format[arrayIndex].colors.foreground);
-			TerminalView_SetColor(view, kTerminalView_ColorIndexNormalBackground,
-									&setupData.format[arrayIndex].colors.background);
-			arrayIndex = kFormatDialog_IndexBoldText;
-			TerminalView_SetColor(view, kTerminalView_ColorIndexBoldText,
-									&setupData.format[arrayIndex].colors.foreground);
-			TerminalView_SetColor(view, kTerminalView_ColorIndexBoldBackground,
-									&setupData.format[arrayIndex].colors.background);
-			arrayIndex = kFormatDialog_IndexBlinkingText;
-			TerminalView_SetColor(view, kTerminalView_ColorIndexBlinkingText,
-									&setupData.format[arrayIndex].colors.foreground);
-			TerminalView_SetColor(view, kTerminalView_ColorIndexBlinkingBackground,
-									&setupData.format[arrayIndex].colors.background);
-			arrayIndex = kFormatDialog_IndexNormalText;
-			TerminalWindow_SetFontAndSize(TerminalWindow_ReturnFromWindow(screenWindow),
-											setupData.format[arrayIndex].font.familyName,
-											setupData.format[arrayIndex].font.size);
-		#if 0
-			// translate screen and scrollback buffer to use new table;
-			// hmmm, that seems expensive...maybe character set should
-			// be an attribute of an entire line of text, one that is
-			// allowed to vary from line to line
-		#endif
-			RegionUtilities_RedrawWindowOnNextUpdate(screenWindow);
-		}
-	}
-	FormatDialog_Dispose(&inDialogThatClosed);
-}// updateScreenFormatDialogCloseNotifyProc
 
 
 /*!

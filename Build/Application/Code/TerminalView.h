@@ -62,6 +62,7 @@
 #include "ListenerModel.h"
 
 // MacTelnet includes
+#include "Preferences.h"
 #include "TerminalRangeDescription.typedef.h"
 #include "TerminalScreenRef.typedef.h"
 
@@ -229,8 +230,7 @@ void
 TerminalViewRef
 	TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
 									 HIWindowRef				inOwningWindow,
-									 ConstStringPtr				inFontFamilyNameOrNull,
-									 UInt16						inFontSizeOrZero);
+									 Preferences_ContextRef		inFormatOrNull = nullptr);
 
 //@}
 

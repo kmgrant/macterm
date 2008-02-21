@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080220',
     '20080216',
     '20080212',
     '20080210',
@@ -89,6 +90,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080220': [
+		'Fixed presentation of Custom Format dialog.',
+	],
 	'20080216': [
 		'Terminal bell sound can once again be arbitrary.  See Preferences window, General pane, Notification tab.',
 		'The Print Screen command is no longer instantaneous, it displays a dialog (allowing export to PDF, among other print options).',

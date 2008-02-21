@@ -179,14 +179,11 @@ typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
 // be simplified and become more object-oriented in the future.
 struct TerminalView
 {
-	TerminalView	(HIViewRef		inSuperclassViewInstance);
+	TerminalView	(HIViewRef);
 	~TerminalView();
 	
 	void
-	initialize		(TerminalScreenRef	inScreenDataSource,
-					 HIWindowRef		inOwningWindow,
-					 ConstStringPtr		inFontFamilyName,
-					 UInt16				inFontSize);
+	initialize		(TerminalScreenRef, HIWindowRef, Preferences_ContextRef);
 	
 	ListenerModel_Ref	changeListenerModel;	// listeners for various types of changes to this data
 	TerminalView_DisplayMode	displayMode;	// how the content fills the display area
@@ -610,10 +607,9 @@ IMPORTANT:	As with all APIs in this module, you must have
 (3.1)
 */
 TerminalViewRef
-TerminalView_NewHIViewBased		(TerminalScreenRef		inScreenDataSource,
-								 HIWindowRef			inOwningWindow,
-								 ConstStringPtr			inFontFamilyNameOrNull,
-								 UInt16					inFontSizeOrZero)
+TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
+								 HIWindowRef				inOwningWindow,
+								 Preferences_ContextRef		inFormatOrNull)
 {
 	TerminalViewRef		result = nullptr;
 	HIViewRef			contentHIView = nullptr;
@@ -640,18 +636,12 @@ TerminalView_NewHIViewBased		(TerminalScreenRef		inScreenDataSource,
 				Boolean		keepView = false; // used to tell when everything succeeds
 				
 				
-				// optional - set font family
-				if (inFontFamilyNameOrNull != nullptr)
+				// optional - set format
+				if (nullptr != inFormatOrNull)
 				{
-					error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalFontFamilyMacRoman,
-												typeNetEvents_FontFamilyPString, sizeof(Str255), inFontFamilyNameOrNull);
-				}
-				
-				// optional - set font size
-				if (inFontSizeOrZero != 0)
-				{
-					error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalFontSize,
-												typeNetEvents_FontSize, sizeof(inFontSizeOrZero), &inFontSizeOrZero);
+					error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalFormatPreferences,
+												typeNetEvents_PreferencesContextRef, sizeof(inFormatOrNull), &inFormatOrNull);
+					if (noErr != error) Console_WriteValue("warning, failed to use given format with new view, error", error);
 				}
 				
 				// now construct!
@@ -2671,10 +2661,9 @@ receiveTerminalHIObjectEvents().
 */
 void
 TerminalView::
-initialize		(TerminalScreenRef	inScreenDataSource,
-				 HIWindowRef		inOwningWindow,
-				 ConstStringPtr		inFontFamilyName,
-				 UInt16				inFontSize)
+initialize		(TerminalScreenRef			inScreenDataSource,
+				 HIWindowRef				inOwningWindow,
+				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
 	
@@ -2730,22 +2719,37 @@ initialize		(TerminalScreenRef	inScreenDataSource,
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
 	this->screen.currentRenderContext = nullptr;
 	
-	// set up font and character set information
-	PLstrcpy(this->text.font.familyName, inFontFamilyName);
-	if (Localization_GetFontTextEncoding(this->text.font.familyName, &this->text.font.encoding) != noErr)
+	// copy font defaults
 	{
-		// not really accurate, but what can really be done here?
-		this->text.font.encoding = kTheMacRomanTextEncoding;
+		Preferences_Result	preferencesResult = kPreferences_ResultOK;
+		Str255				fontName;
+		SInt16				fontSize = 0;
+		
+		
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontName,
+														sizeof(fontName), fontName);
+		if (kPreferences_ResultOK != preferencesResult) PLstrcpy(fontName, "\pMonaco"); // arbitrary
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontSize,
+														sizeof(fontSize), &fontSize);
+		if (kPreferences_ResultOK != preferencesResult) fontSize = 12; // arbitrary
+		
+		// set up font and character set information
+		PLstrcpy(this->text.font.familyName, fontName);
+		if (Localization_GetFontTextEncoding(this->text.font.familyName, &this->text.font.encoding) != noErr)
+		{
+			// not really accurate, but what can really be done here?
+			this->text.font.encoding = kTheMacRomanTextEncoding;
+		}
+		if (TECCreateConverter(&this->text.converterFromMacRoman, kTheMacRomanTextEncoding,
+								this->text.font.encoding) != noErr)
+		{
+			// failed to make converter
+			this->text.converterFromMacRoman = nullptr;
+		}
+		
+		// set font size to automatically fill in initial font metrics, etc.
+		setFontAndSize(this, fontName, fontSize);
 	}
-	if (TECCreateConverter(&this->text.converterFromMacRoman, kTheMacRomanTextEncoding,
-							this->text.font.encoding) != noErr)
-	{
-		// failed to make converter
-		this->text.converterFromMacRoman = nullptr;
-	}
-	
-	// set font size to automatically fill in initial font metrics, etc.
-	setFontAndSize(this, inFontFamilyName, inFontSize);
 	
 	// create the color palette - 14 screen colors (8 ANSI, 6 others)
 	assert_noerr(createWindowColorPalette(this));
@@ -6366,29 +6370,24 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 								result = HIViewAddSubview(contentView, viewPtr->contentHIView);
 								if (noErr == result)
 								{
-									Str255		viewFontName;
-									UInt16		viewFontSize = 0;
+									Preferences_ContextRef		viewFormat = nullptr;
 									
 									
-									// get the terminal font; if not found, use the default
+									// get the terminal format; if not found, use the default
 									result = CarbonEventUtilities_GetEventParameter
-												(inEvent, kEventParamNetEvents_TerminalFontFamilyMacRoman,
-													typeNetEvents_FontFamilyPString, viewFontName);
+												(inEvent, kEventParamNetEvents_TerminalFormatPreferences,
+													typeNetEvents_PreferencesContextRef, viewFormat);
 									if (noErr != result)
 									{
 										// set default
-										PLstrcpy(viewFontName, "\pMonaco"); // TEMPORARY
-										result = noErr; // ignore
-									}
-									
-									// get the terminal font size; if not found, use the default
-									result = CarbonEventUtilities_GetEventParameter
-												(inEvent, kEventParamNetEvents_TerminalFontSize,
-													typeNetEvents_FontSize, viewFontSize);
-									if (noErr != result)
-									{
-										// set default
-										viewFontSize = 12; // TEMPORARY
+										Preferences_Result		prefsResult = kPreferences_ResultOK;
+										
+										
+										prefsResult = Preferences_GetDefaultContext(&viewFormat, kPreferences_ClassFormat);
+										if (kPreferences_ResultOK != prefsResult)
+										{
+											Console_WriteLine("warning, failed to find default context for new view");
+										}
 										result = noErr; // ignore
 									}
 									
@@ -6397,7 +6396,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 									{
 										assert(nullptr != initialDataSource);
 										assert(IsValidWindowRef(owningWindow));
-										viewPtr->initialize(initialDataSource, owningWindow, viewFontName, viewFontSize);
+										viewPtr->initialize(initialDataSource, owningWindow, viewFormat);
 										result = noErr;
 									}
 									catch (std::exception)

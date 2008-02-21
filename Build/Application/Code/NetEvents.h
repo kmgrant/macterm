@@ -45,8 +45,7 @@ Custom Carbon Event data types.
 enum
 {
 	typeNetEvents_EventQueueRef			= 'TEQ&',	//!< "EventQueueRef"
-	typeNetEvents_FontFamilyPString		= 'TFFP',	//!< "Str255"; font name expressed as a Pascal string
-	typeNetEvents_FontSize				= 'TFSz',	//!< "UInt16*"; size in points (e.g. 12)
+	typeNetEvents_PreferencesContextRef	= 'TTSR',	//!< "Preferences_ContextRef"
 	typeNetEvents_SessionRef			= 'TSn&',	//!< "SessionRef"
 	typeNetEvents_SessionState			= 'TSSt',	//!< "Session_State"
 	typeNetEvents_StructHostEntPtr		= 'TSHE',	//!< "struct hostent*"
@@ -71,8 +70,7 @@ enum
 	kEventParamNetEvents_SessionDataSize			= 'PSDS',	//!< size of data buffer given in "kEventParamNetEvents_SessionData"
 																//!  (data: typeUInt32)
 	kEventParamNetEvents_TerminalDataSource			= 'PTDS',	//!< where terminal data comes from (data: typeNetEvents_TerminalScreenRef)
-	kEventParamNetEvents_TerminalFontFamilyMacRoman	= 'PTFR',	//!< Pascal string name for font family (data: typeNetEvents_FontFamilyPString)
-	kEventParamNetEvents_TerminalFontSize			= 'PTFS'	//!< what point size the text should be (data: typeNetEvents_FontSize)
+	kEventParamNetEvents_TerminalFormatPreferences	= 'PTFP'	//!< format settings for font, size, etc. (data: typeNetEvents_PreferencesContextRef)
 };
 
 //!\name Domain Name System Carbon Events

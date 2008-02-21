@@ -205,7 +205,6 @@ CommandLine_Init ()
 	// create the terminal view
 	{
 		Terminal_Result		terminalError = kTerminal_ResultOK;
-		Str255				fontName;
 		Rect				bounds;
 		HIRect				floatBounds;
 		
@@ -219,34 +218,51 @@ CommandLine_Init ()
 		DisposeControl(gCommandLineTerminalViewContainer), gCommandLineTerminalViewContainer.clear();
 		floatBounds = CGRectMake(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
 		
-		// use the default terminal’s font for the command line window, because the font is fixed-width
-		{
-			Preferences_Result			prefsResult = kPreferences_ResultOK;
-			Preferences_ContextRef		prefsContext = nullptr;
-			
-			
-			prefsResult = Preferences_GetDefaultContext(&prefsContext, kPreferences_ClassFormat);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				size_t	actualSize = 0;
-				
-				
-				// find default terminal font family
-				prefsResult = Preferences_ContextGetData(prefsContext, kPreferences_TagFontName,
-															sizeof(fontName), fontName, &actualSize);
-				if (kPreferences_ResultOK != prefsResult)
-				{
-					// if unable to find a preference, choose some default
-					PLstrcpy(fontName, "\pMonaco");
-				}
-			}
-		}
 		terminalError = Terminal_NewScreen(kTerminal_EmulatorVT100, CFSTR("vt100"), 0/* number of scrollback rows */, 1/* number of rows */,
 											132/* number of columns */, false/* force save */, &gCommandLineTerminalScreen);
 		if (kTerminal_ResultOK == terminalError)
 		{
+			Preferences_ContextRef	terminalFormat = Preferences_NewDetachedContext(kPreferences_ClassFormat);
+			Preferences_Result		prefsResult = kPreferences_ResultOK;
+			
+			
+			// use the default terminal’s font for the command line window, because the font is fixed-width
+			{
+				Preferences_ContextRef		defaultContext = nullptr;
+				Str255						fontName;
+				
+				
+				prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					size_t	actualSize = 0;
+					
+					
+					// find default terminal font family
+					prefsResult = Preferences_ContextGetData(defaultContext, kPreferences_TagFontName,
+																sizeof(fontName), fontName, &actualSize);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						// if unable to find a preference, choose some default
+						PLstrcpy(fontName, "\pMonaco");
+					}
+				}
+				prefsResult = Preferences_ContextSetData(terminalFormat, kPreferences_TagFontName,
+															sizeof(fontName), fontName);
+			}
+			
+			// arbitrary font size (for now)
+			{
+				SInt16 const	kFontSize = 14;
+				
+				
+				prefsResult = Preferences_ContextSetData(terminalFormat, kPreferences_TagFontSize,
+															sizeof(kFontSize), &kFontSize);
+			}
+			
+			// create the view and arrange it
 			gCommandLineTerminalView = TerminalView_NewHIViewBased
-										(gCommandLineTerminalScreen, gCommandLineWindow, fontName, 14/* font size */);
+										(gCommandLineTerminalScreen, gCommandLineWindow, terminalFormat);
 			assert(nullptr != gCommandLineTerminalView);
 			// NOTE: this variable is being reused, as its original user pane is no longer needed
 			gCommandLineTerminalViewContainer.setCFTypeRef(TerminalView_ReturnContainerHIView(gCommandLineTerminalView));
@@ -255,6 +271,8 @@ CommandLine_Init ()
 			HIViewSetFrame(gCommandLineTerminalViewContainer, &floatBounds);
 			gCommandLineTerminalViewFocus.setCFTypeRef(TerminalView_ReturnUserFocusHIView(gCommandLineTerminalView));
 			assert(gCommandLineTerminalViewFocus.exists());
+			
+			if (nullptr != terminalFormat) Preferences_ReleaseContext(&terminalFormat);
 		}
 	}
 	

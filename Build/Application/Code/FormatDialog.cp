@@ -31,306 +31,101 @@
 
 #include "UniversalDefines.h"
 
-// standard-C includes
-#include <climits>
-
 // Mac includes
-#include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
 // library includes
 #include <AlertMessages.h>
-#include <Console.h>
-#include <Cursors.h>
-#include <DialogAdjust.h>
-#include <ListUtilities.h>
-#include <Localization.h>
-#include <MemoryBlockHandleLocker.template.h>
-#include <MemoryBlocks.h>
-#include <RegionUtilities.h>
-#include <SoundSystem.h>
-#include <WindowInfo.h>
-
-// resource includes
-#include "DialogResources.h"
-#include "StringResources.h"
-#include "FormatDialog.r"
+#include <MemoryBlockPtrLocker.template.h>
 
 // MacTelnet includes
-#include "ColorBox.h"
-#include "ConstantsRegistry.h"
-#include "DialogTransitions.h"
-#include "DialogUtilities.h"
-#include "EventInfoWindowScope.h"
-#include "EventLoop.h"
 #include "FormatDialog.h"
-#include "HelpSystem.h"
-#include "MenuBar.h"
-#include "TextTranslation.h"
+#include "GenericDialog.h"
+#include "PrefPanelFormats.h"
 
 
-
-#pragma mark Constants
-
-enum
-{
-	// dialog item indices
-	iFormatOKButton = 1,
-	iFormatCancelButton = 2,
-	iFormatAppleGuideButton = 3,
-	iFormatEditMenuPrimaryGroup = 4,
-	iFormatEditMenuFontItemsPane = 5,
-	iFormatEditMenuFontSizeItemsPane = 6,
-	iFormatEditSizeLabel = 7,
-	iFormatEditSizeField = 8,
-	iFormatEditSizeArrows = 9,
-	iFormatEditSizePopUpMenu = 10,
-	iFormatEditCharacterSetList = 11,
-	iFormatEditFontPopUpMenu = 12,
-	iFormatEditMenuForeColorItemsPane = 13,
-	iFormatForegroundColorBox = 14,
-	iFormatForegroundColorLabel = 15,
-	iFormatEditMenuBackColorItemsPane = 16,
-	iFormatBackgroundColorBox = 17,
-	iFormatBackgroundColorLabel = 18
-};
 
 #pragma mark Types
+namespace {
 
 struct My_FormatDialog
-{	
-	SInt16							oldPanelIndex;				// previously displayed panel
-	Boolean							isCustomSizeMenuItemAdded;	// does the size pop-up menu contain a custom size?
-	HIWindowRef						screenWindow;				// the terminal window for which this dialog applies
-	MenuRef							characterSetMenu;			// menu containing character set names
-	FormatDialog_SetupData			setupData;					// running values for colors, fonts, etc.
-	DialogRef						dialog;						// the Mac OS dialog reference
-	WindowInfo_Ref					windowInfo;					// auxiliary data for the dialog
-	FormatDialog_CloseNotifyProcPtr	closeNotifyProc;			// routine to call when the dialog is dismissed
-	ListenerModel_ListenerRef		mainEventListener;			// listener for global application events
-	FormatDialog_Ref				selfRef;					// identical to address of structure, but typed as ref
+{
+	My_FormatDialog		(HIWindowRef, Preferences_ContextRef, GenericDialog_CloseNotifyProcPtr);
+	
+	~My_FormatDialog	();
+	
+	FormatDialog_Ref		selfRef;			// identical to address of structure, but typed as ref
+	Boolean					wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
+	Preferences_ContextRef	dataModel;			// data used to initialize the dialog, and store any changes made
+	GenericDialog_Ref		genericDialog;		// handles most of the work
 };
 typedef My_FormatDialog*		My_FormatDialogPtr;
 typedef My_FormatDialogPtr*		My_FormatDialogHandle;
 
-typedef MemoryBlockHandleLocker< FormatDialog_Ref, My_FormatDialog >	My_FormatDialogHandleLocker;
-typedef LockAcquireRelease< FormatDialog_Ref, My_FormatDialog >			My_FormatDialogAutoLocker;
+typedef MemoryBlockPtrLocker< FormatDialog_Ref, My_FormatDialog >	My_FormatDialogPtrLocker;
+typedef LockAcquireRelease< FormatDialog_Ref, My_FormatDialog >		My_FormatDialogAutoLocker;
+
+}// anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_FormatDialogPtr				gCurrentEventFormatDialogPtr = nullptr;	// used ONLY when necessary, to pass info to callbacks
-	My_FormatDialogHandleLocker&	gFormatDialogHandleLocks()  { static My_FormatDialogHandleLocker x; return x; }
-}
+My_FormatDialogPtrLocker&	gFormatDialogPtrLocks()  { static My_FormatDialogPtrLocker x; return x; }
+
+}// anonymous namespace
 
 #pragma mark Internal Method Prototypes
-
-static void				checkSizeMenuSize			(My_FormatDialogPtr, MenuRef, SInt16);
-static Boolean			customSizeMenuSize			(My_FormatDialogPtr, MenuRef, SInt16);
-static void				disableItemGroupsAsNeeded	(My_FormatDialogPtr, FormatDialog_FormatOptions);
-static void				fontUpdate					(My_FormatDialogPtr);
-static pascal Boolean	formatDialogEventFilter		(DialogRef, EventRecord*, short*);
-static ListHandle		getCharacterSetList			(My_FormatDialogPtr);
-static MenuRef			getFontMenu					(My_FormatDialogPtr);
-static MenuRef			getSizeMenu					(My_FormatDialogPtr);
-static void				handleItemHit				(My_FormatDialogPtr, DialogItemIndex*);
-static pascal void		handleNewSize				(HIWindowRef, SInt32, SInt32, SInt32);
-static Boolean			mainEventLoopEvent			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				setFormatFromItems			(My_FormatDialogPtr, FormatDialog_SetupDataPtr, UInt16);
-static void				setItemsForFormat			(My_FormatDialogPtr, FormatDialog_SetupDataPtr, UInt16);
-static void				setSizeField				(My_FormatDialogPtr, SInt16);
-static void				setUpSizeMenuForFont		(MenuRef, ConstStringPtr);
 
 
 
 #pragma mark Public Methods
 
 /*!
-This method is used to initialize the Format dialog
-box.  It creates the dialog box invisibly, and uses
-the specified data to set up the corresponding
-controls in the dialog box.  Do not pass nullptr for
-"inSetupDataPtr".
+Creates a new Format Dialog.  This functions very much like the
+Preferences panel, except it is in a modal dialog and any changes
+are restricted to the specified preferences context.
 
-(3.0)
+(3.1)
 */
 FormatDialog_Ref
-FormatDialog_New	(FormatDialog_SetupDataConstPtr		inSetupDataPtr,
-					 FormatDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+FormatDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
+					 Preferences_ContextRef				inoutData,
+					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
 {
-	FormatDialog_Ref	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_FormatDialog)), FormatDialog_Ref);
+	FormatDialog_Ref	result = nullptr;
 	
 	
-	if (result != nullptr)
+	try
 	{
-		My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), result);
-		
-		
-		Cursors_DeferredUseWatch(30); // if it takes more than half a second to initialize, show the watch cursor
-		
-		// initialize data
-		ptr->screenWindow = EventLoop_ReturnRealFrontWindow();
-		GetNewDialogWithWindowInfo(kDialogIDFormat, &ptr->dialog, &ptr->windowInfo);
-		ptr->closeNotifyProc = inCloseNotifyProcPtr;
-		ptr->setupData = *inSetupDataPtr;
-		ptr->oldPanelIndex = kFormatDialog_IndexNormalText;
-		ptr->isCustomSizeMenuItemAdded = false;
-		ptr->selfRef = result;
-		
-		// set up the Help System
-		HelpSystem_SetWindowKeyPhrase(GetDialogWindow(ptr->dialog), kHelpSystem_KeyPhraseFormatting);
-		
-		if (ptr->dialog != nullptr)
-		{
-			// install a notification routine in the main event loop, to find out when dialog events occur
-			ptr->mainEventListener = ListenerModel_NewBooleanListener(mainEventLoopEvent, result/* context */);
-			EventLoop_StartMonitoringWindow(kEventLoop_WindowEventContentTrack, GetDialogWindow(ptr->dialog),
-											ptr->mainEventListener);
-			EventLoop_StartMonitoringWindow(kEventLoop_WindowEventKeyPress, GetDialogWindow(ptr->dialog),
-											ptr->mainEventListener);
-			EventLoop_StartMonitoringWindow(kEventLoop_WindowEventUpdate, GetDialogWindow(ptr->dialog),
-											ptr->mainEventListener);
-			
-			// since resources can’t set resizability automatically, add this attribute manually here
-			(OSStatus)ChangeWindowAttributes(GetDialogWindow(ptr->dialog),
-												kWindowResizableAttribute/* set these attributes */,
-												0/* clear these attributes */);
-			
-			// adjust the OK and Cancel buttons so they are big enough for their titles
-			SetDialogDefaultItem(ptr->dialog, iFormatOKButton);
-			SetDialogCancelItem(ptr->dialog, iFormatCancelButton);
-			(UInt16)Localization_AdjustDialogButtons(ptr->dialog, true/* OK */, true/* Cancel */);
-			Localization_AdjustHelpButtonItem(ptr->dialog, iFormatAppleGuideButton);
-			
-			// set the static text controls (auto-sizing them) and the bottom checkbox (not changing its size)
-			{
-				ControlRef		control = nullptr;
-				Str255			text;
-				
-				
-				GetDialogItemAsControl(ptr->dialog, iFormatEditSizeLabel, &control);
-				GetIndString(text, rStringsMiscellaneousStaticText, siStaticTextFormatSizeLabel);
-				(UInt16)Localization_SetUpSingleLineTextControl(control, text,
-																false/* is a checkbox or radio button */);
-				
-				GetDialogItemAsControl(ptr->dialog, iFormatForegroundColorLabel, &control);
-				GetIndString(text, rStringsMiscellaneousStaticText, siStaticTextFormatForegroundColor);
-				(UInt16)Localization_SetUpSingleLineTextControl(control, text,
-																false/* is a checkbox or radio button */);
-				
-				GetDialogItemAsControl(ptr->dialog, iFormatBackgroundColorLabel, &control);
-				GetIndString(text, rStringsMiscellaneousStaticText, siStaticTextFormatBackgroundColor);
-				(UInt16)Localization_SetUpSingleLineTextControl(control, text,
-																false/* is a checkbox or radio button */);
-			}
-			
-			// fill in the items of the Character Set list
-			{
-				ListHandle		list = nullptr;
-				Cell			cell = { 0, 0 };
-				
-				
-				ListUtilities_GetDialogItemListHandle(ptr->dialog, iFormatEditCharacterSetList, &list);
-				
-				// specify how the list can be used
-				SetListFlags(list, lDoVAutoscroll);
-				SetListSelectionFlags(list, lOnlyOne | lNoDisjoint | lNoExtend | lUseSense);
-				
-				// Add Character Sets and highlight the first one.
-				// IMPORTANT: A lot of code assumes this list contains
-				//            ONLY character sets, no additional items.
-				//!TMP!TextTranslation_AppendCharacterSetsToList(list);
-				LSetSelect(true/* highlight */, cell, list);
-			}
-			
-			// create the two color boxes
-			//ColorBox_AttachToUserPaneDialogItem(ptr->dialog, iFormatForegroundColorBox, nullptr/* initial color */);
-			//ColorBox_AttachToUserPaneDialogItem(ptr->dialog, iFormatBackgroundColorBox, nullptr/* initial color */);
-			
-			// prevent the user from typing non-digits into the Font Size field
-			{
-				ControlRef				sizeField = nullptr;
-				ControlKeyFilterUPP		upp = NumericalLimiterKeyFilterUPP();
-				
-				
-				GetDialogItemAsControl(ptr->dialog, iFormatEditSizeField, &sizeField);
-				(OSStatus)SetControlData(sizeField, kControlNoPart, kControlKeyFilterTag,
-											sizeof(upp), &upp);
-			}
-			
-			// set up the little arrows control so it can span the font size range
-			{
-				ControlRef		littleArrows = nullptr;
-				
-				
-				GetDialogItemAsControl(ptr->dialog, iFormatEditSizeArrows, &littleArrows);
-				SetControl32BitMaximum(littleArrows, SHRT_MAX);
-				SetControl32BitMinimum(littleArrows, 0);
-			}
-			
-			// initialize the controls based on the default set
-			setItemsForFormat(ptr, &ptr->setupData, 0);
-			fontUpdate(ptr);
-			
-			// set up the Window Info information
-			{
-				WindowInfo_ResizeResponderProcPtr	resizeProc = handleNewSize;
-				
-				
-				WindowInfo_SetWindowDescriptor(ptr->windowInfo, kConstantsRegistry_WindowDescriptorFormat);
-				WindowInfo_SetWindowResizeLimits(ptr->windowInfo,
-													FORMAT_DIALOG_HT/* minimum height */,
-													FORMAT_DIALOG_WD/* minimum width */,
-													FORMAT_DIALOG_HT + 200/* arbitrary maximum height */,
-													FORMAT_DIALOG_WD + 50/* arbitrary maximum width */);
-				WindowInfo_SetWindowResizeResponder(ptr->windowInfo, resizeProc, 0L);
-			}
-			WindowInfo_SetForDialog(ptr->dialog, ptr->windowInfo);
-		}
+		result = REINTERPRET_CAST(new My_FormatDialog(inParentWindowOrNullForModalDialog,
+														inoutData, inCloseNotifyProcPtr), FormatDialog_Ref);
+	}
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
 	}
 	return result;
 }// New
 
 
 /*!
-Call this method to destroy a formatting dialog
-box, and to fill in the data structure provided to
-FormatDialog_New() to contain the user’s changes.
+Destroys the dialog box and its associated data structures.
+On return, your copy of the dialog reference is set to
+nullptr.
 
-(3.0)
+(3.1)
 */
 void
-FormatDialog_Dispose	(FormatDialog_Ref*	inoutDialogPtr)
+FormatDialog_Dispose	(FormatDialog_Ref*	inoutRefPtr)
 {
-	if (gFormatDialogHandleLocks().isLocked(*inoutDialogPtr))
+	if (gFormatDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
 		Console_WriteValue("warning, attempt to dispose of locked format dialog; outstanding locks",
-							gFormatDialogHandleLocks().returnLockCount(*inoutDialogPtr));
+							gFormatDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{
-		{
-			My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), *inoutDialogPtr);
-			
-			
-			// clean up the Help System
-			HelpSystem_SetWindowKeyPhrase(GetDialogWindow(ptr->dialog), kHelpSystem_KeyPhraseDefault);
-			
-			// release all memory occupied by the dialog
-			//ColorBox_DetachFromUserPaneDialogItem(ptr->dialog, iFormatForegroundColorBox);
-			//ColorBox_DetachFromUserPaneDialogItem(ptr->dialog, iFormatBackgroundColorBox);
-			WindowInfo_Dispose(ptr->windowInfo);
-			DisposeDialog(ptr->dialog), ptr->dialog = nullptr;
-			EventLoop_StopMonitoringWindow(kEventLoop_WindowEventContentTrack, GetDialogWindow(ptr->dialog),
-											ptr->mainEventListener);
-			EventLoop_StopMonitoringWindow(kEventLoop_WindowEventKeyPress, GetDialogWindow(ptr->dialog),
-											ptr->mainEventListener);
-			EventLoop_StopMonitoringWindow(kEventLoop_WindowEventUpdate, GetDialogWindow(ptr->dialog),
-											ptr->mainEventListener);
-			ListenerModel_ReleaseListener(&ptr->mainEventListener);
-		}
-		Memory_DisposeHandle(REINTERPRET_CAST(inoutDialogPtr, Handle*));
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_FormatDialogPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -346,979 +141,53 @@ returned.
 void
 FormatDialog_Display	(FormatDialog_Ref	inDialog)
 {
-	My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), inDialog);
+	My_FormatDialogAutoLocker	ptr(gFormatDialogPtrLocks(), inDialog);
 	
 	
 	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
 	else
 	{
-		// define this only for debugging; this lets you dump the dialog’s
-		// control embedding hierarchy to a file, before it is displayed
-	#if 0
-		DebugSelectControlHierarchyDumpFile(GetDialogWindow(ptr->dialog));
-	#endif
-		
-		// display the dialog
-		DialogTransitions_DisplaySheet(GetDialogWindow(ptr->dialog), ptr->screenWindow, true/* opaque */);
-		
-		// set the focus
-		FocusDialogItem(ptr->dialog, iFormatEditSizeField);
+		ptr->wasDisplayed = true;
+		GenericDialog_Display(ptr->genericDialog);
 	}
 }// Display
-
-
-/*!
-Fills in a data structure representing the current
-display in the dialog box.  You usually use this in
-a custom close notification method to figure out
-what the user’s preferences are.
-
-Returns "true" only if the data could be found.
-
-(3.0)
-*/
-Boolean
-FormatDialog_GetContents	(FormatDialog_Ref			inDialog,
-							 FormatDialog_SetupDataPtr	outSetupDataPtr)
-{
-	My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), inDialog);
-	Boolean						result = false;
-	
-	
-	if (ptr != nullptr)
-	{
-		*outSetupDataPtr = ptr->setupData;
-		result = true;
-	}
-	return result;
-}// GetContents
-
-
-/*!
-Fills in a data structure representing the current
-display in the dialog box.  You usually use this in
-a custom close notification method to figure out
-what the user’s preferences are.
-
-Returns nullptr if any problems occur.
-
-(3.0)
-*/
-HIWindowRef
-FormatDialog_ReturnParentWindow		(FormatDialog_Ref	inDialog)
-{
-	My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), inDialog);
-	HIWindowRef					result = nullptr;
-	
-	
-	if (ptr != nullptr)
-	{
-		result = ptr->screenWindow;
-	}
-	return result;
-}// ReturnParentWindow
-
-
-/*!
-If you only need a close notification procedure
-for the purpose of disposing of the Format Dialog
-reference (and don’t otherwise care when a Format
-Dialog closes), you can pass this standard routine
-to FormatDialog_New() as your notification procedure.
-
-(3.0)
-*/
-void
-FormatDialog_StandardCloseNotifyProc	(FormatDialog_Ref	inDialogThatClosed,
-										 Boolean			UNUSED_ARGUMENT(inOKButtonPressed))
-{
-	FormatDialog_Dispose(&inDialogThatClosed);
-}// StandardCloseNotifyProc
 
 
 #pragma mark Internal Methods
 
 /*!
-To find the item in the Size pop-up menu that
-corresponds to the given size and automatically
-make that the current value of the pop-up menu
-(“checking” that size in the menu), use this
-method.
+Constructor.  See FormatDialog_New().
 
-(3.0)
+(3.1)
 */
-static void
-checkSizeMenuSize	(My_FormatDialogPtr		inPtr,
-					 MenuRef				inStandardSizeMenu,
-					 SInt16					inSize)
+My_FormatDialog::
+My_FormatDialog		(HIWindowRef						inParentWindowOrNullForModalDialog,
+					 Preferences_ContextRef				inoutData,
+					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+selfRef				(REINTERPRET_CAST(this, FormatDialog_Ref)),
+wasDisplayed		(false),
+dataModel			(inoutData),
+genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, PrefPanelFormats_New(),
+										inCloseNotifyProcPtr, kHelpSystem_KeyPhraseFormatting))
 {
-	register SInt16 	i = 0;
-	SInt32				itemFontSize = 0L;
-	Str255 				itemString;
-	
-	
-	for (i = 1; i <= CountMenuItems(inStandardSizeMenu); i++)
-	{
-		GetMenuItemText(inStandardSizeMenu, i, itemString);
-		StringToNum(itemString, &itemFontSize);
-		if (itemFontSize == inSize)
-		{
-			SetDialogItemValue(inPtr->dialog, iFormatEditSizePopUpMenu, i);
-			break;
-		}
-	}
-}// checkSizeMenuSize
+	Preferences_RetainContext(this->dataModel);
+}// My_FormatDialog 2-argument constructor
 
 
 /*!
-To add or remove a custom size item from a Size
-menu, use this method.  Pass 0 as the size to
-remove any custom item (has no effect if a
-custom item is not there).  If a custom item is
-already in place, the new size you specify will
-replace the custom size.  This routine will
-automatically check the numerical values in the
-Size menu you provide, and if any of them
-matches the given size, no custom item is added
-and any existing custom item is automatically
-removed.
+Destructor.  See GenericDialog_Dispose().
 
-If a custom item is in the menu when this
-routine is finished, "true" is returned; if not,
-"false" is returned.
-
-IMPORTANT:	This method may not produce the
-			expected results if you change your
-			Size menu outside of the control of
-			this routine.
-
-(3.0)
+(3.1)
 */
-static Boolean
-customSizeMenuSize	(My_FormatDialogPtr		inPtr,
-					 MenuRef				inStandardSizeMenu,
-					 SInt16					inCustomSizeOrZero)
+My_FormatDialog::
+~My_FormatDialog ()
 {
-	SInt16 			i = 0;
-	SInt32			itemFontSize = 0L;
-	Str255 			itemString;
-	ControlRef		sizeMenuButton = nullptr;
-	Boolean			result = false;
+	Preferences_ReleaseContext(&this->dataModel);
 	
-	
-	// get the size pop-up menu button, because its “maximum” must change when items are added or removed
-	(OSStatus)GetDialogItemAsControl(inPtr->dialog, iFormatEditSizePopUpMenu, &sizeMenuButton);
-	
-	if (inPtr->isCustomSizeMenuItemAdded)
-	{
-		// delete last two appended items (the divider and custom size)
-		DeleteMenuItem(inStandardSizeMenu, CountMenuItems(inStandardSizeMenu));
-		DeleteMenuItem(inStandardSizeMenu, CountMenuItems(inStandardSizeMenu));
-		SetControl32BitMaximum(sizeMenuButton, GetControlMaximum(sizeMenuButton) - 2);
-		inPtr->isCustomSizeMenuItemAdded = false;
-	}
-	
-	if (inCustomSizeOrZero)
-	{
-		// check Size menu for a number identical to the given size
-		inPtr->isCustomSizeMenuItemAdded = true;
-		for (i = 1; i <= CountMenuItems(inStandardSizeMenu); i++)
-		{
-			GetMenuItemText(inStandardSizeMenu, i, itemString);
-			StringToNum(itemString, &itemFontSize);
-			if (itemFontSize == inCustomSizeOrZero) inPtr->isCustomSizeMenuItemAdded = false;
-		}
-	}
-	else
-	{
-		inPtr->isCustomSizeMenuItemAdded = false;
-	}
-	
-	if (inPtr->isCustomSizeMenuItemAdded)
-	{
-		NumToString(inCustomSizeOrZero, itemString);
-		AppendMenu(inStandardSizeMenu, "\p(-");
-		AppendMenu(inStandardSizeMenu, itemString);
-		SetControl32BitMaximum(sizeMenuButton, GetControlMaximum(sizeMenuButton) + 2);
-	}
-	result = inPtr->isCustomSizeMenuItemAdded;
-	
-	return result;
-}// customSizeMenuSize
-
-
-/*!
-To disable portions of the formatting controls based on format
-dialog options, use this method.  You can individually disable
-groups of controls related to setting the font, the font size,
-the foreground color, and the background color.
-
-IMPORTANT:	Any group that you do not explicitly identify as
-			being disabled will become enabled after calling
-			this routine.  To enable all item groups, mask off
-			"kFormatDialog_FormatOptionMaskDisableAllItems" in
-			the given format options.
-
-(3.0)
-*/
-static void
-disableItemGroupsAsNeeded	(My_FormatDialogPtr				inPtr,
-							 FormatDialog_FormatOptions		inBasedOnTheseOptions)
-{
-	// initially enable everything
-	ActivateDialogItem(inPtr->dialog, iFormatEditMenuFontItemsPane);
-	ActivateDialogItem(inPtr->dialog, iFormatEditMenuFontSizeItemsPane);
-	ActivateDialogItem(inPtr->dialog, iFormatEditMenuForeColorItemsPane);
-	ActivateDialogItem(inPtr->dialog, iFormatEditMenuBackColorItemsPane);
-	
-	// now disable whatever was requested by the options
-	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableFontItems)
-	{
-		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuFontItemsPane);
-	}
-	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableFontSizeItems)
-	{
-		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuFontSizeItemsPane);
-	}
-	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableForeColorItems)
-	{
-		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuForeColorItemsPane);
-	}
-	if (inBasedOnTheseOptions & kFormatDialog_FormatOptionDisableBackColorItems)
-	{
-		DeactivateDialogItem(inPtr->dialog, iFormatEditMenuBackColorItemsPane);
-	}
-}// disableItemGroupsAsNeeded
-
-
-/*!
-To make the Font pop-up menu button use the font
-of its current selection, use this method.  As a
-convenience, this routine also invokes the
-getSizeMenu() method, to make sure it is up to
-date.
-
-(3.0)
-*/
-static void
-fontUpdate	(My_FormatDialogPtr		inPtr)
-{
-	ControlFontStyleRec		styleRecord;
-	ControlRef				fontMenuButton = nullptr;
-	MenuRef					fontMenu = getFontMenu(inPtr);
-	SInt16					fontID = 0;
-	SInt16					value = 0;
-	Str255					itemText;
-	
-	
-	(OSStatus)GetDialogItemAsControl(inPtr->dialog, iFormatEditFontPopUpMenu, &fontMenuButton);
-	value = GetControlValue(fontMenuButton);
-	
-	GetMenuItemText(fontMenu, value, itemText);
-#if TARGET_API_MAC_OS8
-	GetFNum(itemText, &fontID);
-#else
-	fontID = FMGetFontFamilyFromName(itemText);
-#endif
-	styleRecord.flags = kControlUseFontMask;
-	styleRecord.font = fontID;
-	(OSStatus)SetControlFontStyle(fontMenuButton, &styleRecord);
-	DrawOneControl(fontMenuButton);
-	
-	setUpSizeMenuForFont(getSizeMenu(inPtr), itemText);
-}// fontUpdate
-
-
-/*!
-Handles special key events in the Format dialog box.
-
-IMPORTANT:	The global variable "gCurrentEventFormatDialogPtr"
-			must always be set prior to invoking this routine.
-
-(3.0)
-*/
-static pascal Boolean
-formatDialogEventFilter		(DialogRef		inDialog,
-							 EventRecord*	inoutEventPtr,
-							 short*			outItemIndex)
-{
-	Boolean		result = pascal_false,
-				isButtonAndShouldFlash = false; // simplifies handling of multiple key-to-button maps
-	
-	
-	// this rigamorole is necessary to distinguish between up-arrow and down-arrow clicks!
-	if (inoutEventPtr->what == mouseDown)
-	{
-		GrafPtr				oldPort = nullptr;
-		Point				localMouse = inoutEventPtr->where;
-		ControlRef			controlHit = nullptr;
-		ControlRef			arrows = nullptr;
-		ControlRef			sizeMenuControl = nullptr;
-		ControlPartCode		part = kControlNoPart;
-		
-		
-		GetPort(&oldPort);
-		SetPortWindowPort(GetDialogWindow(inDialog));
-		GlobalToLocal(&localMouse);
-		controlHit = FindControlUnderMouse(localMouse, GetDialogWindow(inDialog), &part);
-		GetDialogItemAsControl(inDialog, iFormatEditSizeArrows, &arrows);
-		GetDialogItemAsControl(inDialog, iFormatEditSizePopUpMenu, &sizeMenuControl);
-		if (controlHit == sizeMenuControl)
-		{
-			// ensure menu is updated prior to display, but don’t otherwise intercept the event
-			setSizeField(gCurrentEventFormatDialogPtr, 0);
-		}
-		else if (controlHit == arrows)
-		{
-			// ensure arrow value is updated prior to use
-			setSizeField(gCurrentEventFormatDialogPtr, 0);
-			
-			// determine which arrow was clicked, and update controls
-			part = HandleControlClick(controlHit, localMouse, inoutEventPtr->modifiers, (ControlActionUPP)nullptr);
-			switch (part)
-			{
-			case kControlUpButtonPart:
-			case kControlDownButtonPart:
-				{
-					SInt16		fontSize = 0;
-					
-					
-					// change arrows value...
-					fontSize = GetControlValue(arrows);
-					if ((part == kControlUpButtonPart) && (fontSize < GetControlMaximum(arrows)))
-					{
-						fontSize++;
-					}
-					else if ((part == kControlDownButtonPart) && (fontSize > GetControlMinimum(arrows)))
-					{
-						fontSize--;
-					}
-					setSizeField(gCurrentEventFormatDialogPtr, fontSize);
-				}
-				result = pascal_true;
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-		SetPort(oldPort);
-	}
-	
-	if (!result) result = (StandardDialogEventFilter(inDialog, inoutEventPtr, outItemIndex));
-	else if (isButtonAndShouldFlash) FlashButton(inDialog, *outItemIndex);
-	
-	return result;
-}// formatDialogEventFilter
-
-
-/*!
-To acquire a handle to the list displaying all the
-available Character Sets, use this convenient method.
-
-(3.0)
-*/
-static ListHandle
-getCharacterSetList		(My_FormatDialogPtr		inPtr)
-{
-	ListHandle		result = nullptr;
-	
-	
-	ListUtilities_GetDialogItemListHandle(inPtr->dialog, iFormatEditCharacterSetList, &result);
-	return result;
-}// getCharacterSetMenu
-
-
-/*!
-To acquire a handle to the menu from the Font
-pop-up menu button, use this convenient method.
-
-(3.0)
-*/
-static MenuRef
-getFontMenu		(My_FormatDialogPtr		inPtr)
-{
-	MenuRef			result = nullptr;
-	ControlRef		fontMenuButton = nullptr;
-	Size			actualSize = 0L;
-	
-	
-	GetDialogItemAsControl(inPtr->dialog, iFormatEditFontPopUpMenu, &fontMenuButton);
-	(OSStatus)GetControlData(fontMenuButton, kControlMenuPart,
-								kControlPopupButtonMenuHandleTag,
-								sizeof(result), (Ptr)&result, &actualSize);
-	return result;
-}// getFontMenu
-
-
-/*!
-To acquire a handle to the menu from the Size
-pop-up menu button, use this convenient method.
-
-(3.0)
-*/
-static MenuRef
-getSizeMenu		(My_FormatDialogPtr		inPtr)
-{
-	MenuRef			result = nullptr;
-	ControlRef		sizeMenuButton = nullptr;
-	Size			actualSize = 0L;
-	
-	
-	GetDialogItemAsControl(inPtr->dialog, iFormatEditSizePopUpMenu, &sizeMenuButton);
-	(OSStatus)GetControlData(sizeMenuButton, kControlMenuPart,
-								kControlPopupButtonMenuHandleTag,
-								sizeof(result), (Ptr)&result, &actualSize);
-	return result;
-}// getSizeMenu
-
-
-/*!
-Responds to control selections in the dialog box.
-If a button is pressed, the window is closed and
-the close notifier routine is called; otherwise,
-an adjustment is made to the display.
-
-(3.0)
-*/
-static void
-handleItemHit	(My_FormatDialogPtr		inPtr,
-				 DialogItemIndex*		inoutItemIndexPtr)
-{
-	switch (*inoutItemIndexPtr)
-	{
-	case iFormatOKButton:
-		// undo any “damage” to this menu
-		(Boolean)customSizeMenuSize(inPtr, getSizeMenu(inPtr), 0);
-		
-		// get the information from the dialog and then kill it
-		setFormatFromItems(inPtr, &inPtr->setupData, inPtr->oldPanelIndex);
-		DialogTransitions_CloseSheet(GetDialogWindow(inPtr->dialog), inPtr->screenWindow);
-		
-		// notify of close
-		if (inPtr->closeNotifyProc != nullptr)
-		{
-			FormatDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, true/* OK pressed */);
-		}
-		break;
-	
-	case iFormatCancelButton:
-		// user cancelled - close the dialog with an appropriate transition for cancelling
-		DialogTransitions_CloseSheet(GetDialogWindow(inPtr->dialog), inPtr->screenWindow);
-		
-		// notify of close
-		if (inPtr->closeNotifyProc != nullptr)
-		{
-			FormatDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef, false/* OK pressed */);
-		}
-		break;
-	
-	case iFormatAppleGuideButton:
-		HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseFormatting);
-		break;
-	
-	case iFormatEditMenuPrimaryGroup:
-		{
-			SInt16		value = GetDialogItemValue(inPtr->dialog, iFormatEditMenuPrimaryGroup);
-			
-			
-			switch (--value) // indices are zero-based, item numbers are one-based
-			{
-			case kFormatDialog_IndexNormalText:
-			case kFormatDialog_IndexBoldText:
-			case kFormatDialog_IndexBlinkingText:
-				if (value != inPtr->oldPanelIndex)
-				{
-					setFormatFromItems(inPtr, &inPtr->setupData, inPtr->oldPanelIndex); // save old
-					setItemsForFormat(inPtr, &inPtr->setupData, value); // draw new
-					inPtr->oldPanelIndex = value;
-				}
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-		}
-		break;
-	
-	case iFormatEditCharacterSetList:
-		// update the keyboard script to match the selected encoding, unless
-		// the user says not to synchronize the key script with the font
-		unless (GetScriptManagerVariable(smGenFlags) & smfDisableKeyScriptSyncMask)
-		{
-			Cell			selectedCell = { 0, 0 };
-			TextEncoding	encoding = kTextEncodingMacRoman;
-			ScriptCode		scriptCode = smRoman;
-			OSStatus		error = noErr;
-			
-			
-			LGetSelect(true/* get nearest */, &selectedCell/* on input, cell to start at; on output, selected cell */,
-						getCharacterSetList(inPtr));
-			encoding = TextTranslation_ReturnIndexedCharacterSet(1 + selectedCell.v/* one-based set index */);
-			error = RevertTextEncodingToScriptInfo(encoding, &scriptCode, nullptr/* language */, nullptr/* region */);
-			if (error == noErr) KeyScript(scriptCode);
-			else KeyScript(smKeySysScript); // on error, revert to the default script
-		}
-		break;
-	
-	case iFormatEditFontPopUpMenu:
-		fontUpdate(inPtr);
-		break;
-	
-	case iFormatEditSizeArrows:
-		// necessarily handled in the event filter
-		break;
-	
-	case iFormatEditSizePopUpMenu:
-		{
-			SInt16		value = GetDialogItemValue(inPtr->dialog, iFormatEditSizePopUpMenu);
-			
-			
-			switch (value)
-			{
-			default:
-				// simply copy the menu item text to the text field
-				{
-					Str255			itemText;
-					MenuRef			sizeMenu = nullptr;
-					ControlRef		sizeMenuButton = nullptr;
-					Size			actualSize = 0L;
-					
-					
-					GetDialogItemAsControl(inPtr->dialog, iFormatEditSizePopUpMenu, &sizeMenuButton);
-					if (GetControlData(sizeMenuButton, kControlMenuPart,
-										kControlPopupButtonMenuHandleTag,
-										sizeof(sizeMenu), (Ptr)&sizeMenu, &actualSize) == noErr)
-					{
-						SInt32		fontSize = 0L;
-						
-						
-						GetMenuItemText(sizeMenu, value, itemText);
-						StringToNum(itemText, &fontSize);
-						setSizeField(inPtr, fontSize);
-					}
-				}
-				break;
-			}
-		}
-		break;
-	
-	case iFormatForegroundColorBox:
-	case iFormatBackgroundColorBox:
-		{
-			ControlRef		control = nullptr;
-			
-			
-			(OSStatus)GetDialogItemAsControl(inPtr->dialog, *inoutItemIndexPtr, &control);
-			ColorBox_UserSetColor(control);
-		}
-		break;
-	
-	default:
-		break;
-	}
-}// handleItemHit
-
-
-/*!
-This method moves and resizes controls in response to
-a resize of the “Format” movable modal dialog box.
-
-(3.0)
-*/
-static pascal void
-handleNewSize		(HIWindowRef	inWindow,
-					 SInt32			inDeltaSizeX,
-					 SInt32			inDeltaSizeY,
-					 SInt32			UNUSED_ARGUMENT(inData))
-{
-	DialogAdjust_BeginDialogItemAdjustment(GetDialogFromWindow(inWindow));
-	{
-		SInt32		amountH = 0L;
-		
-		
-		if ((inDeltaSizeX) || (inDeltaSizeY))
-		{
-			// controls which are moved horizontally
-			if (Localization_IsLeftToRight())
-			{
-				DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveH, iFormatOKButton, inDeltaSizeX);
-				DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveH, iFormatCancelButton, inDeltaSizeX);
-			}
-			else
-			{
-				DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveH, iFormatAppleGuideButton, inDeltaSizeX);
-			}
-			amountH = INTEGER_HALVED(inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveH, iFormatEditSizePopUpMenu, amountH);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveH, iFormatEditSizeArrows, amountH);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveH, iFormatForegroundColorLabel, amountH);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveH, iFormatBackgroundColorLabel, amountH);
-			
-			// controls which are moved vertically
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveV, iFormatOKButton, inDeltaSizeY);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveV, iFormatCancelButton, inDeltaSizeY);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveV, iFormatAppleGuideButton, inDeltaSizeY);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveV, iFormatEditMenuBackColorItemsPane, inDeltaSizeY);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveV, iFormatEditMenuForeColorItemsPane, inDeltaSizeY);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveV, iFormatEditMenuFontSizeItemsPane, inDeltaSizeY);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentMoveV, iFormatEditFontPopUpMenu, inDeltaSizeY);
-			
-			// controls which are resized horizontally and vertically
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditMenuFontItemsPane, inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeV, iFormatEditMenuFontItemsPane, inDeltaSizeY);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditCharacterSetList, inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeV, iFormatEditCharacterSetList, inDeltaSizeY);
-			
-			// controls which are resized horizontally
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditMenuPrimaryGroup, inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditMenuFontSizeItemsPane, inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditMenuForeColorItemsPane, inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditMenuBackColorItemsPane, inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditFontPopUpMenu, inDeltaSizeX);
-			amountH = INTEGER_HALVED(inDeltaSizeX);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatEditSizeField, amountH);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatForegroundColorBox, amountH);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatForegroundColorLabel, amountH);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatBackgroundColorBox, amountH);
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeH, iFormatBackgroundColorLabel, amountH);
-			
-			// controls which are resized vertically
-			DialogAdjust_AddDialogItem(kDialogItemAdjustmentResizeV, iFormatEditMenuPrimaryGroup, inDeltaSizeY);
-		}
-	}
-	DialogAdjust_EndAdjustment(inDeltaSizeX, inDeltaSizeY); // moves and resizes controls properly
-	
-	// remove keyboard focus to avoid glitch when resizing list
-	(OSStatus)ClearKeyboardFocus(inWindow);
-	
-	// resize selection rectangle to match new list boundaries
-	{
-		ControlRef		listBox = nullptr;
-		
-		
-		if (GetDialogItemAsControl(GetDialogFromWindow(inWindow), iFormatEditCharacterSetList, &listBox) == noErr)
-		{
-			ListHandle		list = nullptr;
-			
-			
-			ListUtilities_SynchronizeListBoundsWithControlBounds(listBox);
-			ListUtilities_GetControlListHandle(listBox, &list);
-			{
-				Point		newCellDimensions;
-				Rect		listBounds;
-				
-				
-				GetControlBounds(listBox, &listBounds);
-				SetPt(&newCellDimensions, listBounds.right - listBounds.left, 18);
-				LSetDrawingMode(false, list);
-				LCellSize(newCellDimensions, list);
-				LSetDrawingMode(true, list);
-				RegionUtilities_RedrawControlOnNextUpdate(listBox);
-			}
-		}
-	}
-}// handleNewSize
-
-
-/*!
-Processes events from the main event loop, used when
-the Format Dialog is actually window-modal (a sheet)
-and not a modal dialog.  Mac OS X only.
-
-(3.0)
-*/
-static Boolean
-mainEventLoopEvent		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-						 ListenerModel_Event	inEventThatOccurred,
-						 void*					inEventContextPtr,
-						 void*					inListenerContextPtr)
-{
-	FormatDialog_Ref	ref = REINTERPRET_CAST(inListenerContextPtr, FormatDialog_Ref);
-	Boolean				result = true;
-	
-	
-	switch (inEventThatOccurred)
-	{
-	case kEventLoop_WindowEventContentTrack:
-		// if the window whose content region was clicked in is a Format Dialog, respond to the click
-		{
-			EventInfoWindowScope_ContentClickPtr	clickInfoPtr = REINTERPRET_CAST
-																	(inEventContextPtr,
-																		EventInfoWindowScope_ContentClickPtr);
-			
-			
-			if (ref != nullptr)
-			{
-				My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), ref);
-				DialogRef					dialogHit = nullptr;
-				DialogItemIndex				itemHit = 0;
-				
-				
-				gCurrentEventFormatDialogPtr = ptr;
-				if (formatDialogEventFilter(ptr->dialog, &clickInfoPtr->event, &itemHit) ||
-					(DialogSelect(&clickInfoPtr->event, &dialogHit, &itemHit) &&
-						(dialogHit == ptr->dialog)))
-				{
-					handleItemHit(ptr, &itemHit);
-				}
-				result = true;
-			}
-		}
-		break;
-	
-	case kEventLoop_WindowEventKeyPress:
-		// if the window containing the keyboard focus is a Format Dialog, respond to the key press
-		{
-			EventInfoWindowScope_KeyPressPtr	keyPressInfoPtr = REINTERPRET_CAST
-																	(inEventContextPtr,
-																		EventInfoWindowScope_KeyPressPtr);
-			
-			
-			if (ref != nullptr)
-			{
-				My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), ref);
-				DialogRef					dialogHit = nullptr;
-				DialogItemIndex				itemHit = 0;
-				
-				
-				gCurrentEventFormatDialogPtr = ptr;
-				if (formatDialogEventFilter(ptr->dialog, &keyPressInfoPtr->event, &itemHit) ||
-					(DialogSelect(&keyPressInfoPtr->event, &dialogHit, &itemHit) &&
-						(dialogHit == ptr->dialog)))
-				{
-					handleItemHit(ptr, &itemHit);
-				}
-				result = true;
-			}
-		}
-		break;
-	
-	case kEventLoop_WindowEventUpdate:
-		// if the window that needs updating is a Format Dialog, react accordingly
-		{
-			EventInfoWindowScope_UpdatePtr	updateInfoPtr = REINTERPRET_CAST
-															(inEventContextPtr, EventInfoWindowScope_UpdatePtr);
-			
-			
-			if (ref != nullptr)
-			{
-				My_FormatDialogAutoLocker	ptr(gFormatDialogHandleLocks(), ref);
-				
-				
-				BeginUpdate(updateInfoPtr->window);
-				UpdateDialog(ptr->dialog, updateInfoPtr->visibleRegion);
-				EndUpdate(updateInfoPtr->window);
-				result = true;
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	return result;
-}// mainEventLoopEvent
-
-
-/*!
-To set up the specified format using the values of
-appropriate controls in the dialog box, use this
-method.
-
-(3.0)
-*/
-static void
-setFormatFromItems		(My_FormatDialogPtr			inPtr,
-						 FormatDialog_SetupDataPtr	inDataPtr,
-						 UInt16						inFormatIndexToUse)
-{
-	Boolean		didSet = true;
-	
-	
-	if (inDataPtr != nullptr)
-	{
-		if (inFormatIndexToUse < kFormatDialog_NumberOfFormats)
-		{
-			RGBColor*		colorPtr = nullptr;
-			ControlRef		control = nullptr;
-			
-			
-			// read colors
-			colorPtr = &inDataPtr->format[inFormatIndexToUse].colors.foreground;
-			GetDialogItemAsControl(inPtr->dialog, iFormatForegroundColorBox, &control);
-			ColorBox_GetColor(control, colorPtr);
-			
-			colorPtr = &inDataPtr->format[inFormatIndexToUse].colors.background;
-			GetDialogItemAsControl(inPtr->dialog, iFormatBackgroundColorBox, &control);
-			ColorBox_GetColor(control, colorPtr);
-			
-			// read font name
-			GetDialogItemAsControl(inPtr->dialog, iFormatEditFontPopUpMenu, &control);
-			GetMenuItemText(getFontMenu(inPtr), GetControlValue(control),
-							inDataPtr->format[inFormatIndexToUse].font.familyName);
-			
-			// read font size
-			{
-				SInt32		number = 0L;
-				
-				
-				GetDialogItemAsControl(inPtr->dialog, iFormatEditSizeField, &control);
-				GetControlNumericalText(control, &number);
-				inDataPtr->format[inFormatIndexToUse].font.size = number;
-			}
-		}
-		else didSet = false;
-	}
-	else didSet = false;
-	
-	if (!didSet) Sound_StandardAlert();
-}// setFormatFromItems
-
-
-/*!
-To set up the values of all controls in the group box
-to use the information in the specified format, use
-this method.
-
-(3.0)
-*/
-static void
-setItemsForFormat	(My_FormatDialogPtr			inPtr,
-					 FormatDialog_SetupDataPtr	inDataPtr,
-					 UInt16						inFormatIndexToUse)
-{
-	Boolean		didSet = true;
-	
-	
-	if (inDataPtr != nullptr)
-	{
-		if (inFormatIndexToUse < kFormatDialog_NumberOfFormats)
-		{
-			ControlRef		control = nullptr;
-			RGBColor*		foreColorPtr = &inDataPtr->format[inFormatIndexToUse].colors.foreground;
-			RGBColor*		backColorPtr = &inDataPtr->format[inFormatIndexToUse].colors.background;
-			StringPtr		fontName = inDataPtr->format[inFormatIndexToUse].font.familyName;
-			SInt16			fontSize = inDataPtr->format[inFormatIndexToUse].font.size;
-			
-			
-			// update foreground color
-			GetDialogItemAsControl(inPtr->dialog, iFormatForegroundColorBox, &control);
-			ColorBox_SetColor(control, foreColorPtr);
-			DrawOneDialogItem(inPtr->dialog, iFormatForegroundColorBox);
-			
-			// update background color
-			GetDialogItemAsControl(inPtr->dialog, iFormatBackgroundColorBox, &control);
-			ColorBox_SetColor(control, backColorPtr);
-			DrawOneDialogItem(inPtr->dialog, iFormatBackgroundColorBox);
-			
-			setSizeField(inPtr, fontSize); // update font size
-			
-			// update character set menu
-			{
-				//MenuItemIndex		index = 0;
-				
-				
-				// - find font text encoding
-				// - find text encoding in menu using TextTranslation_ReturnCharacterSetIndex()
-				//MenuBar_ReturnMenuItemIndexByItemText(getCharacterSetList(inPtr), fontName);
-				//SetDialogItemValue(inPtr->dialog, iFormatEditFontPopUpMenu, index);
-				//DrawOneDialogItem(inPtr->dialog, iFormatEditFontPopUpMenu);
-			}
-			
-			// update font menu
-			{
-				MenuItemIndex		itemIndex = MenuBar_ReturnMenuItemIndexByItemText(getFontMenu(inPtr), fontName);
-				
-				
-				SetDialogItemValue(inPtr->dialog, iFormatEditFontPopUpMenu, itemIndex);
-				DrawOneDialogItem(inPtr->dialog, iFormatEditFontPopUpMenu);
-			}
-			
-			disableItemGroupsAsNeeded(inPtr, inDataPtr->format[inFormatIndexToUse].options);
-			fontUpdate(inPtr);
-		}
-		else didSet = false;
-	}
-	else didSet = false;
-	
-	if (!didSet) Sound_StandardAlert();
-}// setItemsForFormat
-
-
-/*!
-Call this method to update all controls related
-to the font size (such as the size menu and the
-arrows).  Pass 0 for "inNewSize" if you want
-the text field to be left alone (presumably
-because you are responding to the user typing
-something); this causes the current value of
-the text field to be used to update all other
-controls.
-
-(3.0)
-*/
-static void
-setSizeField	(My_FormatDialogPtr		inPtr,
-				 SInt16					inNewSizeOrZero)
-{
-	ControlRef		control = nullptr;
-	SInt32			newSize = inNewSizeOrZero;
-	
-	
-	GetDialogItemAsControl(inPtr->dialog, iFormatEditSizeField, &control);
-	if (newSize != 0)
-	{
-		// set the field to the given size
-		SetControlNumericalText(control, newSize);
-		DrawOneControl(control);
-	}
-	else
-	{
-		// 0 means “read the current field value”
-		GetControlNumericalText(control, &newSize);
-	}
-	GetDialogItemAsControl(inPtr->dialog, iFormatEditSizeArrows, &control);
-	SetControl32BitValue(control, newSize);
-	customSizeMenuSize(inPtr, getSizeMenu(inPtr), newSize);
-	checkSizeMenuSize(inPtr, getSizeMenu(inPtr), newSize); // synchronizes the pop-up menu value
-}// setSizeField
-
-
-/*!
-This method outlines the appropriate menu items
-in the Size menu for the font indicated.
-
-(3.0)
-*/
-static void
-setUpSizeMenuForFont	(MenuRef			inStandardSizeMenu,
-						 ConstStringPtr		inFontName)
-{
-	SInt16 		i = 0,
-				fontID = 0;
-	SInt32		itemFontSize = 0L;
-	Str255 		itemString;
-	
-	
-#if TARGET_API_MAC_OS8
-	GetFNum(inFontName, &fontID);
-#else
-	fontID = FMGetFontFamilyFromName(inFontName);
-#endif
-	
-	// set up Size menu
-	for (i = 1; i <= CountMenuItems(inStandardSizeMenu); i++)
-	{
-		GetMenuItemText(inStandardSizeMenu, i, itemString);
-		StringToNum(itemString, &itemFontSize);
-		
-		if (RealFont(fontID, (short)itemFontSize)) SetItemStyle(inStandardSizeMenu, i, outline);
-		else SetItemStyle(inStandardSizeMenu, i, normal);
-	}
-}// setUpSizeMenuForFont
+	// if the dialog is displayed, then Generic Dialog takes over responsibility to dispose of it
+	if (false == this->wasDisplayed) GenericDialog_Dispose(&this->genericDialog);
+}// My_FormatDialog destructor
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

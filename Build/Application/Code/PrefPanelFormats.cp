@@ -811,8 +811,7 @@ const
 	OSStatus			error = noErr;
 	
 	
-	terminalView = TerminalView_NewHIViewBased(inSampleTerminalScreen, inOwningWindow,
-												"\pMonaco"/* font changes later */, 10/* font size changes later */);
+	terminalView = TerminalView_NewHIViewBased(inSampleTerminalScreen, inOwningWindow);
 	assert(nullptr != terminalView);
 	result = TerminalView_ReturnContainerHIView(terminalView);
 	assert(nullptr != result);
