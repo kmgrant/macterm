@@ -119,6 +119,7 @@ Contains the panel reference and its user interface
 struct My_GenericPanelTabsData
 {
 	My_GenericPanelTabsData		(Panel_Ref, GenericPanelTabs_List const&);
+	~My_GenericPanelTabsData	();
 	
 	Panel_Ref				containerPanel;			//!< the panel this data is for
 	GenericPanelTabs_List	tabPanels;				//!< the panels used for each tab pane
@@ -138,10 +139,13 @@ static void				showTabPane							(My_GenericPanelTabsUIPtr, UInt16);
 #pragma mark Public Methods
 
 /*!
-Creates a new preference panel for the General
-category, initializes it, and returns a reference
-to it.  You must destroy the reference using
-Panel_Dispose() when you are done with it.
+Creates a new preference panel that can contain any number
+of unique panels, represented in a set of tabs.  Destroy the
+panel using Panel_Dispose().
+
+You assign responsibility for the panels to this module, so
+DO NOT call Panel_Dispose() on the tabs yourself; that will
+be done when this container is destroyed.
 
 If any problems occur, nullptr is returned.
 
@@ -187,6 +191,22 @@ interfacePtr(nullptr)
 {
 	if (inTabPanels.size() < 2) throw std::invalid_argument("panel requires at least 2 tabs");
 }// My_GenericPanelTabsData default constructor
+
+
+/*!
+Tears down a My_GenericPanelTabsData structure.
+
+(3.1)
+*/
+My_GenericPanelTabsData::
+~My_GenericPanelTabsData ()
+{
+	for (GenericPanelTabs_List::iterator toPanel = this->tabPanels.begin();
+			toPanel != this->tabPanels.end(); ++toPanel)
+	{
+		Panel_Dispose(&*toPanel);
+	}
+}// My_GenericPanelTabsData destructor
 
 
 /*!
@@ -626,17 +646,19 @@ panelChanged	(Panel_Ref			inPanel,
 		// all-modeless); it does not make sense for them to coexist in the same dialog
 		// if they behave differently
 		{
-			My_GenericPanelTabsDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, My_GenericPanelTabsDataPtr);
-			SInt32						editType = Panel_SendMessageGetEditType(dataPtr->tabPanels[0]);
+			My_GenericPanelTabsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																		My_GenericPanelTabsDataPtr);
+			SInt32						editType = Panel_SendMessageGetEditType(panelDataPtr->tabPanels[0]);
 			
 			
-			for (GenericPanelTabs_List::size_type i = 1; i < dataPtr->tabPanels.size(); ++i)
+			for (GenericPanelTabs_List::size_type i = 1; i < panelDataPtr->tabPanels.size(); ++i)
 			{
-				if (Panel_SendMessageGetEditType(dataPtr->tabPanels[i]) != editType)
+				if (Panel_SendMessageGetEditType(panelDataPtr->tabPanels[i]) != editType)
 				{
 					assert(false && "tab panels do not all report the same edit type");
 				}
 			}
+			result = editType;
 		}
 		break;
 	
