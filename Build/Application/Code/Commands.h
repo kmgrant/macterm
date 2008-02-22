@@ -392,6 +392,8 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandShowAdvancedMacroInformation	'AdvM'		// “Macro Setup” window
 #define kCommandShowHidePrefCollectionsDrawer	'SPCD'		// “Preferences“ window
 #define kCommandDisplayPrefPanelFormats			'SPrF'		// “Preferences“ window
+#define kCommandDisplayPrefPanelFormatsANSI		'SPFA'		// multiple interfaces
+#define kCommandDisplayPrefPanelFormatsNormal	'SPFN'		// multiple interfaces
 #define kCommandDisplayPrefPanelGeneral			'SPrG'		// “Preferences“ window
 #define kCommandDisplayPrefPanelKiosk			'SPrK'		// “Preferences“ window
 #define kCommandDisplayPrefPanelMacros			'SPrM'		// “Preferences“ window
