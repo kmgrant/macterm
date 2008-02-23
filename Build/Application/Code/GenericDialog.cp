@@ -59,6 +59,9 @@
 #include <NIBLoader.h>
 #include <SoundSystem.h>
 
+// resource includes
+#include "SpacingConstants.r"
+
 // MacTelnet includes
 #include "AppResources.h"
 #include "Commands.h"
@@ -84,6 +87,7 @@ static HIViewID const	idMyUserPanePanelMargins	= { 'Panl', 0/* ID */ };
 static HIViewID const	idMyButtonHelp				= { 'Help', 0/* ID */ };
 static HIViewID const	idMyButtonOK				= { 'Okay', 0/* ID */ };
 static HIViewID const	idMyButtonCancel			= { 'Canc', 0/* ID */ };
+static HIViewID const	idMyButtonOther				= { 'Othr', 0/* ID */ };
 
 #pragma mark Types
 
@@ -109,6 +113,7 @@ struct My_GenericDialog
 	HIViewWrap								buttonHelp;						//!< displays context-sensitive help on this dialog
 	HIViewWrap								buttonOK;						//!< accepts the userÕs changes
 	HIViewWrap								buttonCancel;					//!< aborts
+	HIViewWrap								buttonOther;					//!< optional
 	CarbonEventHandlerWrap					buttonHICommandsHandler;		//!< invoked when a dialog button is clicked
 	GenericDialog_CloseNotifyProcPtr		closeNotifyProc;				//!< routine to call when the dialog is dismissed
 	CommonEventHandlers_WindowResizer		windowResizeHandler;			//!< invoked when a window has been resized
@@ -201,6 +206,53 @@ GenericDialog_Dispose	(GenericDialog_Ref*	inoutRefPtr)
 		delete *(REINTERPRET_CAST(inoutRefPtr, My_GenericDialogPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
+
+
+/*!
+Dialogs normally have only an OK and Cancel button; to show a
+third button (automatically sized to fit the specified title),
+use this method.
+
+IMPORTANT:	Currently, only one additional button is supported.
+
+(3.1)
+*/
+void
+GenericDialog_AddButton		(GenericDialog_Ref		inDialog,
+							 CFStringRef			inButtonTitle,
+							 UInt32					inButtonCommandID)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	HIViewRef					referenceButtonView = nullptr;
+	HIRect						buttonFrame;
+	UInt16						buttonWidth = 0;
+	Float32						x = 0;
+	Float32						y = 0;
+	Boolean						isButton2 = true; // always true, for now...
+	OSStatus					error = noErr;
+	
+	
+	// set up the new button
+	error = SetControlTitleWithCFString(ptr->buttonOther, inButtonTitle);
+	assert_noerr(error);
+	error = SetControlCommandID(ptr->buttonOther, inButtonCommandID);
+	assert_noerr(error);
+	buttonWidth = Localization_AutoSizeButtonControl(ptr->buttonOther, 0/* minimum width */);
+	error = HIViewSetVisible(ptr->buttonOther, true);
+	assert_noerr(error);
+	
+	// now determine where the left edge of the button should be (locale-sensitive)
+	referenceButtonView = (isButton2) ? ptr->buttonCancel : ptr->buttonOK;
+	error = HIViewGetFrame(referenceButtonView, &buttonFrame);
+	assert_noerr(error);
+	if (Localization_IsLeftToRight()) x = STATIC_CAST(buttonFrame.origin.x - HSP_BUTTONS - buttonWidth, SInt16);
+	else x = STATIC_CAST(buttonFrame.origin.x + buttonFrame.size.width + HSP_BUTTONS, SInt16);
+	y = buttonFrame.origin.y;
+	
+	// finally, move the button appropriately
+	error = HIViewPlaceInSuperviewAt(ptr->buttonOther, x, y);
+	assert_noerr(error);
+}// AddButton
 
 
 /*!
@@ -342,6 +394,8 @@ buttonHelp						(dialogWindow.returnHIViewWithID(idMyButtonHelp)
 buttonOK						(dialogWindow.returnHIViewWithID(idMyButtonOK)
 									<< HIViewWrap_AssertExists),
 buttonCancel					(dialogWindow.returnHIViewWithID(idMyButtonCancel)
+									<< HIViewWrap_AssertExists),
+buttonOther						(dialogWindow.returnHIViewWithID(idMyButtonOther)
 									<< HIViewWrap_AssertExists),
 buttonHICommandsHandler			(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
@@ -557,7 +611,7 @@ Moves or resizes the dialog views.
 (3.1)
 */
 static void
-handleNewSize	(WindowRef	inWindow,
+handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 				 Float32	inDeltaX,
 				 Float32	inDeltaY,
 				 void*		inGenericDialogRef)
@@ -570,12 +624,14 @@ handleNewSize	(WindowRef	inWindow,
 	{
 		ptr->buttonOK << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
 		ptr->buttonCancel << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
+		ptr->buttonOther << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
 		ptr->buttonHelp << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 	}
 	else
 	{
 		ptr->buttonOK << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 		ptr->buttonCancel << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		ptr->buttonOther << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 		ptr->buttonHelp << HIViewWrap_MoveBy(inDeltaX, inDeltaY);
 	}
 	Panel_Resizer(inDeltaX, inDeltaY, true/* is delta */)(ptr->hostedPanel);

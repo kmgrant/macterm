@@ -87,6 +87,11 @@ void
 	GenericDialog_Dispose						(GenericDialog_Ref*					inoutDialogPtr);
 
 void
+	GenericDialog_AddButton						(GenericDialog_Ref					inDialog,
+												 CFStringRef						inButtonTitle,
+												 UInt32								inButtonCommandID);
+
+void
 	GenericDialog_Display						(GenericDialog_Ref					inDialog);
 
 Panel_Ref
