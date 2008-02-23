@@ -179,6 +179,7 @@ static pascal OSStatus			receiveServicePerformEvent		(EventHandlerCallRef, Event
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 static pascal OSStatus			receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
 #endif
+static pascal OSStatus			receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, void*);
 
 #pragma mark Variables
@@ -224,6 +225,13 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 																			kEventAppActivated, kEventAppDeactivated),
 																	nullptr/* user data */);
 	Console_Assertion					_4(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
+	CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventTarget(),
+																			receiveWindowActivated,
+																			CarbonEventSetInClass
+																				(CarbonEventClass(kEventClassWindow),
+																					kEventWindowActivated),
+																			nullptr/* user data */);
+	Console_Assertion					_5(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
 	EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
 	EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
 }
@@ -2692,6 +2700,34 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	return result;
 }// receiveSheetOpening
 #endif
+
+
+/*!
+Embellishes "kEventWindowActivated" of "kEventClassWindow"
+by resetting the mouse cursor.
+
+(3.1)
+*/
+static pascal OSStatus
+receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+						 EventRef				inEvent,
+						 void*					UNUSED_ARGUMENT(inUserData))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowActivated);
+	
+	Cursors_UseArrow();
+	
+	// IMPORTANT: Do not interfere with this event.
+	result = eventNotHandledErr;
+	
+	return result;
+}// receiveWindowActivated
 
 
 /*!

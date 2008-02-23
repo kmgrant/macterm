@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080223',
     '20080222',
     '20080220',
     '20080216',
@@ -91,6 +92,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080223': [
+		'The mouse pointer shape is now reset when selecting another window, to prevent (for instance) a persistent I-beam.',
+	],
 	'20080222': [
 		'Custom Format dialog and Preferences window Format pane now display proper colors.',
 	],
