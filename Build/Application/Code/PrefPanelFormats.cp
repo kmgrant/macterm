@@ -93,34 +93,35 @@ the NIBs from the package "PrefPanelsFavorites.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyPopupMenuFont					= { 'Font', 0/* ID */ };
-static HIViewID const	idMyFieldFontSize					= { 'Size', 0/* ID */ };
-static HIViewID const	idMyLittleArrowsFontSize			= { 'SzAr', 0/* ID */ };
-static HIViewID const	idMyBevelButtonNormalText			= { 'NTxt', 0/* ID */ };
-static HIViewID const	idMyBevelButtonNormalBackground		= { 'NBkg', 0/* ID */ };
-static HIViewID const	idMyBevelButtonBoldText				= { 'BTxt', 0/* ID */ };
-static HIViewID const	idMyBevelButtonBoldBackground		= { 'BBkg', 0/* ID */ };
-static HIViewID const	idMyBevelButtonBlinkingText			= { 'BlTx', 0/* ID */ };
-static HIViewID const	idMyBevelButtonBlinkingBackground	= { 'BlBk', 0/* ID */ };
-static HIViewID const	idMyUserPaneSampleTerminalView		= { 'Smpl', 0/* ID */ };
-static HIViewID const	idMyHelpTextSampleTerminalView		= { 'HSmp', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalBlack		= { 'Cblk', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalRed		= { 'Cred', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalGreen		= { 'Cgrn', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalYellow		= { 'Cyel', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalBlue		= { 'Cblu', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalMagenta	= { 'Cmag', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalCyan		= { 'Ccyn', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSINormalWhite		= { 'Cwht', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldBlack		= { 'CBlk', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldRed			= { 'CRed', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldGreen		= { 'CGrn', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldYellow		= { 'CYel', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldBlue			= { 'CBlu', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldMagenta		= { 'CMag', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldCyan			= { 'CCyn', 0/* ID */ };
-static HIViewID const	idMyBevelButtonANSIBoldWhite		= { 'CWht', 0/* ID */ };
-static HIViewID const	idMyHelpTextANSIColors				= { 'HANS', 0/* ID */ };
+HIViewID const	idMyPopupMenuFont					= { 'Font', 0/* ID */ };
+HIViewID const	idMyFieldFontSize					= { 'Size', 0/* ID */ };
+HIViewID const	idMyLittleArrowsFontSize			= { 'SzAr', 0/* ID */ };
+HIViewID const	idMyBevelButtonNormalText			= { 'NTxt', 0/* ID */ };
+HIViewID const	idMyBevelButtonNormalBackground		= { 'NBkg', 0/* ID */ };
+HIViewID const	idMyBevelButtonBoldText				= { 'BTxt', 0/* ID */ };
+HIViewID const	idMyBevelButtonBoldBackground		= { 'BBkg', 0/* ID */ };
+HIViewID const	idMyBevelButtonBlinkingText			= { 'BlTx', 0/* ID */ };
+HIViewID const	idMyBevelButtonBlinkingBackground	= { 'BlBk', 0/* ID */ };
+HIViewID const	idMyBevelButtonMatteBackground		= { 'Mtte', 0/* ID */ };
+HIViewID const	idMyUserPaneSampleTerminalView		= { 'Smpl', 0/* ID */ };
+HIViewID const	idMyHelpTextSampleTerminalView		= { 'HSmp', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalBlack		= { 'Cblk', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalRed		= { 'Cred', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalGreen		= { 'Cgrn', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalYellow		= { 'Cyel', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalBlue		= { 'Cblu', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalMagenta	= { 'Cmag', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalCyan		= { 'Ccyn', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalWhite		= { 'Cwht', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldBlack		= { 'CBlk', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldRed			= { 'CRed', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldGreen		= { 'CGrn', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldYellow		= { 'CYel', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldBlue			= { 'CBlu', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldMagenta		= { 'CMag', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldCyan			= { 'CCyn', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSIBoldWhite		= { 'CWht', 0/* ID */ };
+HIViewID const	idMyHelpTextANSIColors				= { 'HANS', 0/* ID */ };
 
 } // anonymous namespace
 
@@ -138,6 +139,9 @@ struct My_FormatsPanelANSIColorsUI
 	Float32			idealWidth;		//!< best size in pixels
 	Float32			idealHeight;	//!< best size in pixels
 	HIViewWrap		mainView;
+	
+	void
+	readPreferences		(Preferences_ContextRef);
 	
 	void
 	resetColors ();
@@ -167,6 +171,9 @@ struct My_FormatsPanelNormalUI
 	Float32			idealWidth;		//!< best size in pixels
 	Float32			idealHeight;	//!< best size in pixels
 	HIViewWrap		mainView;
+	
+	void
+	readPreferences		(Preferences_ContextRef);
 
 protected:
 	HIViewWrap
@@ -220,13 +227,17 @@ typedef My_FormatsPanelNormalData*	My_FormatsPanelNormalDataPtr;
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void				colorBoxANSIChangeNotify		(HIViewRef, RGBColor const*, void const*);
-static void				colorBoxNormalChangeNotify		(HIViewRef, RGBColor const*, void const*);
-static SInt32			panelChangedANSIColors			(Panel_Ref, Panel_Message, void*);
-static SInt32			panelChangedNormal				(Panel_Ref, Panel_Message, void*);
-static pascal OSStatus	receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
+void				colorBoxANSIChangeNotify		(HIViewRef, RGBColor const*, void const*);
+void				colorBoxNormalChangeNotify		(HIViewRef, RGBColor const*, void const*);
+SInt32				panelChangedANSIColors			(Panel_Ref, Panel_Message, void*);
+SInt32				panelChangedNormal				(Panel_Ref, Panel_Message, void*);
+pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
+void				setColorBox						(Preferences_ContextRef, Preferences_Tag, HIViewRef);
+
+} // anonymous namespace
 
 
 
@@ -362,6 +373,7 @@ PrefPanelFormats_NewNormalPane ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a My_FormatsPanelANSIColorsData structure.
@@ -520,6 +532,41 @@ deltaSize	(HIViewRef		inContainer,
 
 
 /*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		
+		
+		// read each color, skipping ones that are not defined
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlack, HIViewWrap(idMyBevelButtonANSINormalBlack, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIRed, HIViewWrap(idMyBevelButtonANSINormalRed, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIGreen, HIViewWrap(idMyBevelButtonANSINormalGreen, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIYellow, HIViewWrap(idMyBevelButtonANSINormalYellow, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlue, HIViewWrap(idMyBevelButtonANSINormalBlue, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIMagenta, HIViewWrap(idMyBevelButtonANSINormalMagenta, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSICyan, HIViewWrap(idMyBevelButtonANSINormalCyan, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIWhite, HIViewWrap(idMyBevelButtonANSINormalWhite, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlackBold, HIViewWrap(idMyBevelButtonANSIBoldBlack, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIRedBold, HIViewWrap(idMyBevelButtonANSIBoldRed, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIGreenBold, HIViewWrap(idMyBevelButtonANSIBoldGreen, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIYellowBold, HIViewWrap(idMyBevelButtonANSIBoldYellow, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlueBold, HIViewWrap(idMyBevelButtonANSIBoldBlue, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIMagentaBold, HIViewWrap(idMyBevelButtonANSIBoldMagenta, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSICyanBold, HIViewWrap(idMyBevelButtonANSIBoldCyan, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIWhiteBold, HIViewWrap(idMyBevelButtonANSIBoldWhite, kOwningWindow));
+	}
+}// My_FormatsPanelNormalUI::readPreferences
+
+
+/*!
 Restores all 16 colors to the values from the
 applicationÕs default preferences.
 
@@ -529,7 +576,15 @@ void
 My_FormatsPanelANSIColorsUI::
 resetColors ()
 {
-	// UNIMPLEMENTED
+	Preferences_ContextRef		defaultFormat = nullptr;
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_GetDefaultContext(&defaultFormat, kPreferences_ClassFormat);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		readPreferences(defaultFormat);
+	}
 }// My_FormatsPanelANSIColorsUI::resetColors
 
 
@@ -665,7 +720,8 @@ createContainerView		(Panel_Ref			inPanel,
 							{
 								idMyBevelButtonNormalText, idMyBevelButtonNormalBackground,
 								idMyBevelButtonBoldText, idMyBevelButtonBoldBackground,
-								idMyBevelButtonBlinkingText, idMyBevelButtonBlinkingBackground
+								idMyBevelButtonBlinkingText, idMyBevelButtonBlinkingBackground,
+								idMyBevelButtonMatteBackground
 							};
 		
 		
@@ -830,6 +886,65 @@ deltaSize	(HIViewRef		inContainer,
 
 
 /*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		
+		
+		// set font
+		{
+			Str255		fontName;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontName, sizeof(fontName),
+														&fontName, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				MenuRef			fontMenu = MenuBar_ReturnFontMenu();
+				MenuItemIndex	fontItem = 0;
+				
+				
+				fontItem = MenuBar_ReturnMenuItemIndexByItemText(fontMenu, fontName);
+				SetControl32BitValue(HIViewWrap(idMyPopupMenuFont, kOwningWindow), fontItem);
+			}
+		}
+		
+		// set font size
+		{
+			SInt16		fontSize = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontSize, sizeof(fontSize),
+														&fontSize, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				SetControlNumericalText(HIViewWrap(idMyFieldFontSize, kOwningWindow), fontSize);
+			}
+		}
+		
+		// read each color, skipping ones that are not defined
+		setColorBox(inSettings, kPreferences_TagTerminalColorNormalForeground, HIViewWrap(idMyBevelButtonNormalText, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorNormalBackground, HIViewWrap(idMyBevelButtonNormalBackground, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorBoldForeground, HIViewWrap(idMyBevelButtonBoldText, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorBoldBackground, HIViewWrap(idMyBevelButtonBoldBackground, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingForeground, HIViewWrap(idMyBevelButtonBlinkingText, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingBackground, HIViewWrap(idMyBevelButtonBlinkingBackground, kOwningWindow));
+		setColorBox(inSettings, kPreferences_TagTerminalColorMatteBackground, HIViewWrap(idMyBevelButtonMatteBackground, kOwningWindow));
+	}
+}// My_FormatsPanelNormalUI::readPreferences
+
+
+/*!
 This routine is invoked whenever the color box value
 is changed.  The panel responds by updating the color
 preferences and updating all open session windows to
@@ -837,7 +952,7 @@ use the new color.
 
 (3.1)
 */
-static void
+void
 colorBoxANSIChangeNotify	(HIViewRef			inColorBoxThatChanged,
 							 RGBColor const*	inNewColor,
 							 void*				inMyFormatsPanelANSIColorsUIPtr)
@@ -872,7 +987,7 @@ use the new color.
 
 (3.1)
 */
-static void
+void
 colorBoxNormalChangeNotify	(HIViewRef			inColorBoxThatChanged,
 							 RGBColor const*	inNewColor,
 							 void*				inMyFormatsPanelNormalUIPtr)
@@ -906,7 +1021,7 @@ PanelChangedProcPtr.)
 
 (3.1)
 */
-static SInt32
+SInt32
 panelChangedANSIColors	(Panel_Ref		inPanel,
 						 Panel_Message	inMessage,
 						 void*			inDataPtr)
@@ -991,6 +1106,7 @@ panelChangedANSIColors	(Panel_Ref		inPanel,
 			
 			
 			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
 		break;
 	
@@ -1018,7 +1134,7 @@ PanelChangedProcPtr.)
 
 (3.1)
 */
-static SInt32
+SInt32
 panelChangedNormal	(Panel_Ref		inPanel,
 					 Panel_Message	inMessage,
 					 void*			inDataPtr)
@@ -1103,6 +1219,7 @@ panelChangedNormal	(Panel_Ref		inPanel,
 			
 			
 			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
 		break;
 	
@@ -1129,7 +1246,7 @@ for the buttons in this panel.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMyFormatsPanelANSIColorsUIPtr)
@@ -1242,7 +1359,7 @@ alert is destroyed.
 
 (3.1)
 */
-static void
+void
 resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 									 SInt16					inItemHit,
 									 void*					inMyFormatsPanelANSIColorsUIPtr)
@@ -1259,5 +1376,33 @@ resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 	// dispose of the alert
 	Alert_StandardCloseNotifyProc(inAlertThatClosed, inItemHit, nullptr/* user data */);
 }// resetANSIWarningCloseNotifyProc
+
+
+/*!
+Updates the specified color box with the value (if any)
+of the specified preference of type RGBColor.
+
+(3.1)
+*/
+void
+setColorBox		(Preferences_ContextRef		inSettings,
+				 Preferences_Tag			inSourceTag,
+				 HIViewRef					inDestinationBox)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	RGBColor				colorValue;
+	size_t					actualSize = 0;
+	
+	
+	// read each color, skipping ones that are not defined
+	prefsResult = Preferences_ContextGetData(inSettings, inSourceTag, sizeof(colorValue),
+												&colorValue, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		ColorBox_SetColor(inDestinationBox, &colorValue);
+	}
+}// setColorBox
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

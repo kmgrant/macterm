@@ -170,7 +170,7 @@ selfRef				(REINTERPRET_CAST(this, FormatDialog_Ref)),
 wasDisplayed		(false),
 dataModel			(inoutData),
 genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, PrefPanelFormats_New(),
-										inCloseNotifyProcPtr, kHelpSystem_KeyPhraseFormatting))
+										inoutData, inCloseNotifyProcPtr, kHelpSystem_KeyPhraseFormatting))
 {
 	Preferences_RetainContext(this->dataModel);
 }// My_FormatDialog 2-argument constructor

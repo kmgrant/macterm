@@ -79,6 +79,7 @@ GenericDialog_InvokeCloseNotifyProc		(GenericDialog_CloseNotifyProcPtr	inUserRou
 GenericDialog_Ref
 	GenericDialog_New							(HIWindowRef						inParentWindowOrNullForModalDialog,
 												 Panel_Ref							inHostedPanel,
+												 void*								inDataSetPtr,
 												 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 												 HelpSystem_KeyPhrase				inHelpButtonAction = kHelpSystem_KeyPhraseDefault);
 

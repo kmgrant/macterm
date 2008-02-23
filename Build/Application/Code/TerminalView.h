@@ -469,6 +469,9 @@ void
 												 StringPtr					outFontFamilyNameOrNull,
 												 UInt16*					outFontSizeOrNull);
 
+Preferences_ContextRef
+	TerminalView_ReturnConfiguration			(TerminalViewRef			inView);
+
 void
 	TerminalView_ReverseVideo					(TerminalViewRef			inView,
 												 Boolean					inReverseVideo);

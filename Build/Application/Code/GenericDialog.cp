@@ -91,6 +91,7 @@ struct My_GenericDialog
 {
 	My_GenericDialog	(HIWindowRef,
 						 Panel_Ref,
+						 void*,
 						 GenericDialog_CloseNotifyProcPtr,
 						 HelpSystem_KeyPhrase);
 	
@@ -101,6 +102,7 @@ struct My_GenericDialog
 	HIWindowRef								parentWindow;					//!< the terminal window for which this dialog applies
 	Boolean									isModal;						//!< if false, the dialog is a sheet
 	Panel_Ref								hostedPanel;					//!< the panel implementing the primary user interface
+	void*									dataSetPtr;						//!< data that is given to the panel; represents what is being edited
 	HISize									panelIdealSize;					//!< the dimensions most appropriate for displaying the UI
 	NIBWindow								dialogWindow;					//!< acts as the Mac OS window for the dialog
 	HIViewWrap								userPaneForMargins;				//!< used to determine location of, and space around, the hosted panel
@@ -139,6 +141,10 @@ static pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*
 This method is used to create a dialog box.  It creates
 the dialog box invisibly, and sets up dialog views.
 
+The format of "inDataSetPtr" is entirely defined by the
+type of panel that the dialog is hosting.  The data is
+passed to the panel with Panel_SendMessageNewDataSet().
+
 If "inParentWindowOrNullForModalDialog" is nullptr, the
 window is automatically made application-modal; otherwise,
 it is a sheet.
@@ -148,6 +154,7 @@ it is a sheet.
 GenericDialog_Ref
 GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 					 Panel_Ref							inHostedPanel,
+					 void*								inDataSetPtr,
 					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 					 HelpSystem_KeyPhrase				inHelpButtonAction)
 {
@@ -157,7 +164,7 @@ GenericDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	try
 	{
 		result = REINTERPRET_CAST(new My_GenericDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
-									inCloseNotifyProcPtr, inHelpButtonAction), GenericDialog_Ref);
+									inDataSetPtr, inCloseNotifyProcPtr, inHelpButtonAction), GenericDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -313,6 +320,7 @@ forces good object design.
 My_GenericDialog::
 My_GenericDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
 					 Panel_Ref							inHostedPanel,
+					 void*								inDataSetPtr,
 					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
 					 HelpSystem_KeyPhrase				inHelpButtonAction)
 :
@@ -321,6 +329,7 @@ selfRef							(REINTERPRET_CAST(this, GenericDialog_Ref)),
 parentWindow					(inParentWindowOrNullForModalDialog),
 isModal							(nullptr == inParentWindowOrNullForModalDialog),
 hostedPanel						(inHostedPanel),
+dataSetPtr						(inDataSetPtr),
 panelIdealSize					(CGSizeMake(0, 0)), // set later
 dialogWindow					(NIBWindow(AppResources_ReturnBundleForNIBs(),
 											CFSTR("GenericDialog"), (this->isModal) ? CFSTR("Dialog") : CFSTR("Sheet"))
@@ -438,6 +447,16 @@ contextualHelpSetup				(this->dialogWindow, inHelpButtonAction)
 									(nullptr == kAnchorWindow)
 										? kWindowCenterOnMainScreen
 										: kWindowCenterOnParentWindowScreen);
+	}
+	
+	// now notify the panel of its data
+	{
+		Panel_DataSetTransition		dataSetTransition;
+		
+		
+		bzero(&dataSetTransition, sizeof(dataSetTransition));
+		dataSetTransition.newDataSet = inDataSetPtr;
+		Panel_SendMessageNewDataSet(inHostedPanel, dataSetTransition);
 	}
 	
 	// ensure other handlers were installed

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080222',
     '20080220',
     '20080216',
     '20080212',
@@ -90,6 +91,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080222': [
+		'Custom Format dialog and Preferences window Format pane now display proper colors.',
+	],
 	'20080220': [
 		'Fixed presentation of Custom Format dialog.',
 		'MacTelnet Help has received several minor corrections and other edits.',

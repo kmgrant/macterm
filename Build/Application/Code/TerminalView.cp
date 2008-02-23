@@ -185,6 +185,7 @@ struct TerminalView
 	void
 	initialize		(TerminalScreenRef, HIWindowRef, Preferences_ContextRef);
 	
+	Preferences_ContextRef	configuration;		// various settings from an external source; not kept up to date, see TerminalView_ReturnConfiguration()
 	ListenerModel_Ref	changeListenerModel;	// listeners for various types of changes to this data
 	TerminalView_DisplayMode	displayMode;	// how the content fills the display area
 	Boolean				isActive;				// true if the HIView is in an active state, false otherwise; kept in sync
@@ -1456,6 +1457,41 @@ TerminalView_PtInSelection	(TerminalViewRef	inView,
 
 
 /*!
+Returns a variety of preferences unique to this view.
+You can use Preferences APIs to access them.
+
+Note that you cannot expect all possible tags to be
+present; be prepared to not find what you look for.
+In addition, tags that are present in one view may
+be absent in another.
+
+NOTE:	The configuration might only be synced up
+		when TerminalView_ReturnConfiguration() is
+		actually called.  For example, if you need
+		access to the configuration more than once,
+		you must call this routine twice *even if*
+		you would end up with the same reference:
+		this is the only way you can be sure the
+		data is not stale.
+
+IMPORTANT:	Do not change settings in the context,
+			because the Terminal View will not stay
+			in sync.
+
+(3.1)
+*/
+Preferences_ContextRef
+TerminalView_ReturnConfiguration	(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+	Preferences_ContextRef		result = viewPtr->configuration;
+	
+	
+	return result;
+}// ReturnConfiguration
+
+
+/*!
 Returns the Mac OS HIView that is the root of the
 specified screen.  With the container, you can safely
 position a screen anywhere in a window and the
@@ -2637,6 +2673,7 @@ TerminalView::
 TerminalView	(HIViewRef		inSuperclassViewInstance)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+configuration(nullptr), // set later
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
@@ -2666,7 +2703,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
-	
+	this->configuration = inFormat;
+	assert(nullptr != this->configuration);
 	this->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 													kConstantsRegistry_ListenerModelDescriptorTerminalViewChanges);
 	
