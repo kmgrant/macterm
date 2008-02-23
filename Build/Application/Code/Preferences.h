@@ -425,7 +425,8 @@ Preferences_ContextRef
 											 CFStringRef						inNameOrNullToAutoGenerateUniqueName = nullptr);
 
 Preferences_ContextRef
-	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext);
+	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext,
+											 Boolean							inForceDetach = false);
 
 Preferences_ContextRef
 	Preferences_NewDetachedContext			(Preferences_Class					inClass);

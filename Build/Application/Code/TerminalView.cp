@@ -6381,12 +6381,17 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 									{
 										// set default
 										Preferences_Result		prefsResult = kPreferences_ResultOK;
+										Preferences_ContextRef	defaultContext = nullptr;
 										
 										
-										prefsResult = Preferences_GetDefaultContext(&viewFormat, kPreferences_ClassFormat);
+										prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
 										if (kPreferences_ResultOK != prefsResult)
 										{
 											Console_WriteLine("warning, failed to find default context for new view");
+										}
+										else
+										{
+											viewFormat = Preferences_NewCloneContext(defaultContext, true/* force detach */);
 										}
 										result = noErr; // ignore
 									}

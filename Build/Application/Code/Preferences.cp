@@ -836,6 +836,16 @@ of the specified original context.  The reference is
 automatically retained, but you need to invoke
 Preferences_ReleaseContext() when finished.
 
+If the specified context is detached (has an empty
+name, meaning it is not tracked globally), its copy is
+also detached.  Otherwise, the copy remains tracked
+unless "inForceDetach" is true.  (Specifying true for
+an already-detached source has no effect.)
+
+Since tracked contexts are named, cloning a tracked
+context will generate a unique name for the copy.
+See Preferences_ContextRename().
+
 The initial name of the new context is a variation on
 the name of the base context.
 
@@ -852,22 +862,34 @@ WARNING:	Currently, cloning a Default context is
 (3.1)
 */
 Preferences_ContextRef
-Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext)
+Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
+								 Boolean					inForceDetach)
 {
 	My_ContextAutoLocker		basePtr(gMyContextPtrLocks(), inBaseContext);
 	Preferences_Class			baseClass = kPreferences_ClassGeneral;
-	CFStringRef					nameCFString = nullptr;
 	Preferences_ContextRef		result = nullptr;
+	Boolean						isDetached = (0 == CFStringGetLength(basePtr->returnName()));
 	
 	
 	baseClass = basePtr->returnClass();
 	
-	// INCOMPLETE: Base the new name on the name of the original.
-	// INCOMPLETE: Scan the list of all contexts for the given class
-	// and find a unique name.  For now, just assume one.
-	nameCFString = CFSTR("copy"); // TEMPORARY; LOCALIZE THIS
+	if ((isDetached) || (inForceDetach))
+	{
+		result = Preferences_NewDetachedContext(baseClass);
+	}
+	else
+	{
+		CFStringRef		nameCFString = nullptr;
+		
+		
+		// INCOMPLETE: Base the new name on the name of the original.
+		// INCOMPLETE: Scan the list of all contexts for the given class
+		// and find a unique name.  For now, just assume one.
+		nameCFString = CFSTR("copy"); // TEMPORARY; LOCALIZE THIS
+		
+		result = Preferences_NewContext(baseClass, nameCFString);
+	}
 	
-	result = Preferences_NewContext(baseClass, nameCFString);
 	if (nullptr != result)
 	{
 		My_ContextAutoLocker	resultPtr(gMyContextPtrLocks(), result);
