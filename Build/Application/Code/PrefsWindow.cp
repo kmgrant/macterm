@@ -1647,6 +1647,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandDisplayPrefPanelSessions:
 				case kCommandDisplayPrefPanelTerminals:
 				case kCommandDisplayPrefPanelTranslations:
+					PrefsWindow_Display();
 					assert(false == gIndicesByCommandID().empty());
 					choosePanel(gIndicesByCommandID()[received.commandID]);
 					result = noErr;
