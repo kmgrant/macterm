@@ -238,6 +238,7 @@ ColorBox_SetColor	(HIViewRef			inView,
 	{
 		dataPtr->displayedColor = *inColorPtr;
 		if (nullptr != dataPtr->notifyProcPtr) (*(dataPtr->notifyProcPtr))(inView, &dataPtr->displayedColor, dataPtr->contextPtr);
+		HIViewSetNeedsDisplay(inView, true);
 	}
 }// SetColor
 
