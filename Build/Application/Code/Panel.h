@@ -149,6 +149,14 @@ kPanel_MessageGetGrowBoxLook
 	boxed appearance, return "kPanel_ResponseGrowBoxOpaque",
 	otherwise return kPanel_ResponseGrowBoxTransparent".
 
+kPanel_MessageGetHelpKeyPhrase
+	Sent each time the panel is displayed to determine the
+	behavior of a dialog help button.  The Help System
+	module uses key phrases identified by codes as a simple
+	way to describe what search should occur when the dialog
+	help button is clicked.  Return 0 to use the default
+	phrase.
+
 kPanel_MessageGetIdealSize
 	Sent AFTER control creation to determine the ideal
 	dimensions of the panel.  This might be used by the
@@ -192,6 +200,7 @@ enum
 	kPanel_MessageGetGrowBoxLook = 'grow',				// data: <- nullptr
 		kPanel_ResponseGrowBoxOpaque = (1U >> 0),			// result code of the above
 		kPanel_ResponseGrowBoxTransparent = (0 >> 0),		// result code of the above
+	kPanel_MessageGetHelpKeyPhrase = 'help',			// data: <- HelpSystem_KeyPhrase
 	kPanel_MessageGetIdealSize = 'idsz',				// data: <- HISize*
 		kPanel_ResponseSizeProvided = (1U >> 0),			// result code of the above
 		kPanel_ResponseSizeNotProvided = (0 >> 0),			// result code of the above
@@ -301,6 +310,9 @@ SInt32
 
 SInt32
 	Panel_SendMessageGetGrowBoxLook		(Panel_Ref					inRef);
+
+SInt32
+	Panel_SendMessageGetHelpKeyPhrase	(Panel_Ref					inRef);
 
 SInt32
 	Panel_SendMessageGetIdealSize		(Panel_Ref					inRef,
