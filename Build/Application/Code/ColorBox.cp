@@ -91,6 +91,9 @@ static pascal OSStatus		receiveColorBoxDraw		(EventHandlerCallRef, EventRef, voi
 /*!
 Assigns a bevel button view the drawing embellishment for
 a color box, and attaches data to it using a property.
+Also provides a simple accessibility description (you may
+wish to replace this with a more precise definition of
+the purpose of your color box).
 
 Be sure to invoke ColorBox_DetachFromBevelButton() when
 you are finished with the color box, to dispose of data
@@ -144,6 +147,27 @@ ColorBox_AttachToBevelButton	(HIViewRef			inoutBevelButton,
 			result = SetControlProperty(inoutBevelButton, AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_ControlPropertyTypeColorBoxData,
 										sizeof(dataPtr), &dataPtr);
+			
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+			// set accessibility relationships, if possible
+			if (FlagManager_Test(kFlagOS10_4API))
+			{
+				CFStringRef		accessibilityDescCFString = nullptr;
+				
+				
+				if (UIStrings_Copy(kUIStrings_ButtonColorBoxAccessibilityDesc, accessibilityDescCFString).ok())
+				{
+					HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(inoutBevelButton, HIObjectRef);
+					OSStatus			error = noErr;
+					
+					
+					error = HIObjectSetAuxiliaryAccessibilityAttribute
+							(kViewObjectRef, 0/* sub-component identifier */,
+								kAXDescriptionAttribute, accessibilityDescCFString);
+					CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+				}
+			}
+		#endif
 		}
 	}
 	catch (std::bad_alloc)
@@ -158,6 +182,10 @@ ColorBox_AttachToBevelButton	(HIViewRef			inoutBevelButton,
 /*!
 Disposes of a bevel button’s drawing routine, initially
 installed using one of the ColorBox_AttachTo...() routines.
+
+The accessibility description is not removed, because this
+routine does not know if you have since replaced the button’s
+accessibility information with something different.
 
 (3.1)
 */

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080224',
     '20080223',
     '20080222',
     '20080220',
@@ -92,6 +93,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080224': [
+		'Added accessibility descriptions for color boxes and the add/remove buttons in the Preferences window.',
+	],
 	'20080223': [
 		'The mouse pointer shape is now reset when selecting another window, to prevent (for instance) a persistent I-beam.',
 		'Very minor tweaks to accessibility descriptions, affecting such things as speech when VoiceOver is on.',

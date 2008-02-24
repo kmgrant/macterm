@@ -366,6 +366,21 @@ UIStrings_Copy	(UIStrings_ButtonCFString	inWhichString,
 													CFSTR("kUIStrings_ButtonHelpAccessibilityDesc; lowercase with minimal punctuation"));
 		break;
 	
+	case kUIStrings_ButtonAddAccessibilityDesc:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("add"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonAddAccessibilityDesc; lowercase with minimal punctuation"));
+		break;
+	
+	case kUIStrings_ButtonRemoveAccessibilityDesc:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("remove"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonRemoveAccessibilityDesc; lowercase with minimal punctuation"));
+		break;
+	
+	case kUIStrings_ButtonColorBoxAccessibilityDesc:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("color"), CFSTR("Buttons"),
+													CFSTR("kUIStrings_ButtonColorBoxAccessibilityDesc; lowercase with minimal punctuation"));
+		break;
+	
 	case kUIStrings_ButtonEditTextArrowsAccessibilityDesc:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("edit text numerical value"), CFSTR("Buttons"),
 													CFSTR("kUIStrings_ButtonEditTextArrowsAccessibilityDesc; lowercase with minimal punctuation"));

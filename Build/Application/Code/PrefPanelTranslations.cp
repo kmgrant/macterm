@@ -561,6 +561,40 @@ const
 		}
 	}
 	
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	// set accessibility relationships, if possible
+	if (FlagManager_Test(kFlagOS10_4API))
+	{
+		CFStringRef		accessibilityDescCFString = nullptr;
+		HIViewWrap		addButton(idMyButtonAddException, inOwningWindow);
+		HIViewWrap		removeButton(idMyButtonRemoveException, inOwningWindow);
+		
+		
+		if (UIStrings_Copy(kUIStrings_ButtonAddAccessibilityDesc, accessibilityDescCFString).ok())
+		{
+			HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(addButton.operator HIViewRef(), HIObjectRef);
+			OSStatus			error = noErr;
+			
+			
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(kViewObjectRef, 0/* sub-component identifier */,
+						kAXDescriptionAttribute, accessibilityDescCFString);
+			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+		}
+		if (UIStrings_Copy(kUIStrings_ButtonRemoveAccessibilityDesc, accessibilityDescCFString).ok())
+		{
+			HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(removeButton.operator HIViewRef(), HIObjectRef);
+			OSStatus			error = noErr;
+			
+			
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(kViewObjectRef, 0/* sub-component identifier */,
+						kAXDescriptionAttribute, accessibilityDescCFString);
+			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+		}
+	}
+#endif
+	
 	// initialize views - UNIMPLEMENTED
 	
 	return result;

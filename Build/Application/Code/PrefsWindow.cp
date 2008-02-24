@@ -1050,6 +1050,38 @@ init ()
 			}
 		}
 		
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+		// set accessibility relationships, if possible
+		if (FlagManager_Test(kFlagOS10_4API))
+		{
+			CFStringRef		accessibilityDescCFString = nullptr;
+			
+			
+			if (UIStrings_Copy(kUIStrings_ButtonAddAccessibilityDesc, accessibilityDescCFString).ok())
+			{
+				HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(gCollectionAddButton, HIObjectRef);
+				OSStatus			error = noErr;
+				
+				
+				error = HIObjectSetAuxiliaryAccessibilityAttribute
+						(kViewObjectRef, 0/* sub-component identifier */,
+							kAXDescriptionAttribute, accessibilityDescCFString);
+				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+			}
+			if (UIStrings_Copy(kUIStrings_ButtonRemoveAccessibilityDesc, accessibilityDescCFString).ok())
+			{
+				HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(gCollectionRemoveButton, HIObjectRef);
+				OSStatus			error = noErr;
+				
+				
+				error = HIObjectSetAuxiliaryAccessibilityAttribute
+						(kViewObjectRef, 0/* sub-component identifier */,
+							kAXDescriptionAttribute, accessibilityDescCFString);
+				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+			}
+		}
+	#endif
+		
 		//
 		// create base controls
 		//

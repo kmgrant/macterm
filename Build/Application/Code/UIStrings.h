@@ -130,8 +130,10 @@ on the fly (such as in alerts).
 */
 enum UIStrings_ButtonCFString
 {
+	kUIStrings_ButtonAddAccessibilityDesc				= 'AdAA',
 	kUIStrings_ButtonCancel								= 'Cncl',
 	kUIStrings_ButtonClose								= 'Clos',
+	kUIStrings_ButtonColorBoxAccessibilityDesc			= 'CBAA',
 	kUIStrings_ButtonContinue							= 'Cont',
 	kUIStrings_ButtonDiscardAll							= 'Disc',
 	kUIStrings_ButtonDontSave							= 'Kill',
@@ -144,6 +146,7 @@ enum UIStrings_ButtonCFString
 	kUIStrings_ButtonOpenMacroEditor					= 'OMcE',
 	kUIStrings_ButtonPasteNormally						= 'Pste',
 	kUIStrings_ButtonPopUpMenuArrowsAccessibilityDesc	= 'MnAA',
+	kUIStrings_ButtonRemoveAccessibilityDesc			= 'RmAA',
 	kUIStrings_ButtonQuit								= 'Quit',
 	kUIStrings_ButtonReviewWithEllipsis					= 'Revu',
 	kUIStrings_ButtonSave								= 'Save',
