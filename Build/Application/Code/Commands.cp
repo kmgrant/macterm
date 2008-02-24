@@ -100,6 +100,7 @@ extern "C"
 
 
 #pragma mark Types
+namespace {
 
 struct ScreenTranslationInfo
 {
@@ -108,29 +109,33 @@ struct ScreenTranslationInfo
 };
 typedef ScreenTranslationInfo*		ScreenTranslationInfoPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void		activateAnotherWindow						(Boolean, Boolean);
-static void		changeNotifyForCommandExecution				(UInt32);
-static void		changeNotifyForCommandPostExecution			(UInt32);
-static Boolean	isAnyListenerForCommandExecution			(UInt32);
-static void		showWindowTerminalWindowOp					(TerminalWindowRef, void*, SInt32, void*);
-static Boolean	translateScreenLine							(TerminalScreenRef, char*, UInt16, UInt16, void*);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void		activateAnotherWindow					(Boolean, Boolean);
+void		changeNotifyForCommandExecution			(UInt32);
+Boolean		isAnyListenerForCommandExecution		(UInt32);
+void		showWindowTerminalWindowOp				(TerminalWindowRef, void*, SInt32, void*);
+Boolean		translateScreenLine						(TerminalScreenRef, char*, UInt16, UInt16, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+ListenerModel_Ref&	gCommandExecutionListenerModel		(Boolean	inDispose = false)
 {
-	ListenerModel_Ref&	gCommandExecutionListenerModel		(Boolean	inDispose = false)
-	{
-		static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleNonEventNotHandledErr,
-														kConstantsRegistry_ListenerModelDescriptorCommandExecution);
-		
-		
-		if (inDispose) ListenerModel_Dispose(&x);
-		return x;
-	}
+	static ListenerModel_Ref x = ListenerModel_New(kListenerModel_StyleNonEventNotHandledErr,
+													kConstantsRegistry_ListenerModelDescriptorCommandExecution);
+	
+	
+	if (inDispose) ListenerModel_Dispose(&x);
+	return x;
 }
+
+} // anonymous namespace
 
 
 
@@ -1929,6 +1934,7 @@ Commands_StopHandlingExecution	(UInt32						inImplementedCommand,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Chooses another window in the window list that is adjacent
@@ -1941,7 +1947,7 @@ activated.
 
 (3.0)
 */
-static void
+void
 activateAnotherWindow	(Boolean	inPreviousInsteadOfNext,
 						 Boolean	inHidePreviousWindow)
 {
@@ -2038,7 +2044,7 @@ in response to the command.
 
 (3.0)
 */
-static void
+void
 changeNotifyForCommandExecution		(UInt32		inCommand)
 {
 	Commands_ExecutionEventContext		context;
@@ -2058,7 +2064,7 @@ needs executing.
 
 (3.0)
 */
-static Boolean
+Boolean
 isAnyListenerForCommandExecution	(UInt32		inCommand)
 {
 	return ListenerModel_IsAnyListenerForEvent(gCommandExecutionListenerModel(), inCommand);
@@ -2071,7 +2077,7 @@ form, redisplays the specified, obscured terminal window.
 
 (3.0)
 */
-static void
+void
 showWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
 								 void*				UNUSED_ARGUMENT(inData1),
 								 SInt32				UNUSED_ARGUMENT(inData2),
@@ -2090,7 +2096,7 @@ screen from one encoding to another.
 Since this operation modifies the buffer, "true" is
 always returned.
 */
-static Boolean
+Boolean
 translateScreenLine		(TerminalScreenRef	inFromWhichScreen,
 						 char*				inoutLineTextBuffer,
 						 UInt16				inLineTextBufferLength,
@@ -2132,5 +2138,7 @@ translateScreenLine		(TerminalScreenRef	inFromWhichScreen,
 	
 	return result;
 }// translateScreenLine
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
