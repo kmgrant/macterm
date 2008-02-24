@@ -155,6 +155,7 @@ static void					removeCollectionRenameUI		();
 static Preferences_Class	returnCurrentPreferencesClass	();
 static DataBrowserItemID	returnCurrentSelection			();
 static OSStatus				selectCollection				(DataBrowserItemID = 0);
+static void					showWindow						();
 static void					sizePanels						(HISize const&);
 
 // declare the LDEF entry point (it’s only referred to here, and is implemented in IconListDef.c)
@@ -360,32 +361,17 @@ PrefsWindow_Done ()
 Use this method to display the preferences window.
 If the window is not yet in memory, it is created.
 
-(3.0)
+(3.1)
 */
 void
 PrefsWindow_Display ()
 {
-	if (nullptr == gPreferencesWindow) init();
-	if (nullptr == gPreferencesWindow) Alert_ReportOSStatus(memPCErr);
-	else
+	showWindow();
+	// if no panel has ever been highlighted, choose the first one
+	assert(false == gPanelList().empty());
+	if (nullptr == gCurrentPanel)
 	{
-		// define this only for debugging; this lets you dump the window’s
-		// control embedding hierarchy to a file, before it is displayed
-	#if 0
-		DebugSelectControlHierarchyDumpFile(gPreferencesWindow);
-	#endif
-		
-		// display the window and handle events
-		unless (IsWindowVisible(gPreferencesWindow)) ShowWindow(gPreferencesWindow);
-		EventLoop_SelectBehindDialogWindows(gPreferencesWindow);
-		Cursors_UseArrow();
-		
-		// if no panel has ever been highlighted, choose the first one
-		assert(false == gPanelList().empty());
-		if (nullptr == gCurrentPanel)
-		{
-			choosePanel(0);
-		}
+		choosePanel(0);
 	}
 }// Display
 
@@ -1647,7 +1633,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandDisplayPrefPanelSessions:
 				case kCommandDisplayPrefPanelTerminals:
 				case kCommandDisplayPrefPanelTranslations:
-					PrefsWindow_Display();
+					showWindow();
 					assert(false == gIndicesByCommandID().empty());
 					choosePanel(gIndicesByCommandID()[received.commandID]);
 					result = noErr;
@@ -1832,6 +1818,31 @@ selectCollection	(DataBrowserItemID		inNewItem)
 	
 	return result;
 }// selectCollection
+
+
+/*!
+Initializes the Preferences module if necessary, and
+displays the Preferences window.
+
+This is a low-level routine used by PrefsWindow_Display();
+you MUST call choosePanel() if this is the first time
+the window is displayed; otherwise, choosing a panel is
+optional.
+
+(3.1)
+*/
+static void
+showWindow ()
+{
+	if (nullptr == gPreferencesWindow) init();
+	if (nullptr == gPreferencesWindow) Alert_ReportOSStatus(memPCErr);
+	else
+	{
+		// display the window and handle events
+		unless (IsWindowVisible(gPreferencesWindow)) ShowWindow(gPreferencesWindow);
+		EventLoop_SelectBehindDialogWindows(gPreferencesWindow);
+	}
+}// showWindow
 
 
 /*!
