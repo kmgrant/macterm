@@ -1532,7 +1532,7 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	switch (inWhichString)
 	{
 	case kUIStrings_TerminalAccessibilityDescription:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("terminal text"), CFSTR("Terminal"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("terminal screen"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalAccessibilityDescription; must be all-lowercase without punctuation"));
 		break;
 	

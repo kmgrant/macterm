@@ -94,6 +94,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080223': [
 		'The mouse pointer shape is now reset when selecting another window, to prevent (for instance) a persistent I-beam.',
+		'Very minor tweaks to accessibility descriptions, affecting such things as speech when VoiceOver is on.',
 	],
 	'20080222': [
 		'Custom Format dialog and Preferences window Format pane now display proper colors.',
