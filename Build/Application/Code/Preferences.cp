@@ -75,6 +75,13 @@
 
 
 
+#pragma mark Constants
+namespace {
+
+CFStringEncoding const		kMy_SavedNameEncoding = kCFStringEncodingUnicode;
+
+} // anonymous namespace
+
 #pragma mark Types
 namespace {
 
@@ -476,8 +483,7 @@ void					changeNotify							(Preferences_Change,
 																 Preferences_ContextRef = nullptr, Boolean = false);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
-Preferences_Result		copyClassDictionaryByName				(Preferences_Class, CFStringRef,
-																 CFMutableDictionaryRef&, Boolean = false);
+Preferences_Result		copyClassDictionaryByName				(Preferences_Class, CFStringRef, CFMutableDictionaryRef&);
 Preferences_Result		copyClassDictionaryCFArray				(Preferences_Class, CFArrayRef&);
 Preferences_Result		createAllPreferencesContextsFromDisk	();
 CFDictionaryRef			createDefaultPrefDictionary				();
@@ -485,6 +491,7 @@ void					deleteAliasData							(My_AliasInfoPtr*);
 void					deleteAllAliasNodes						();
 My_AliasInfoPtr			findAlias								(Preferences_AliasID);
 Boolean					findAliasOnDisk							(Preferences_AliasID, AliasHandle*);
+CFIndex					findDictionaryIndexInArrayByName		(CFArrayRef, CFStringRef);
 Boolean					getDefaultContext						(Preferences_Class, My_ContextInterfacePtr&);
 Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
@@ -1879,7 +1886,7 @@ Preferences_CreateContextNameArray	(Preferences_Class		inClass,
 					{
 						newCFString = CFStringCreateFromExternalRepresentation
 										(kCFAllocatorDefault, externalStringRepresentationCFData,
-											kCFStringEncodingUnicode);
+											kMy_SavedNameEncoding);
 						stringAllocated = true;
 					}
 					
@@ -2690,6 +2697,8 @@ _dictionary(inDictionaryOrNull)
 	}
 	
 	setImplementor(&_dictionary);
+Console_WriteLine("context implemented by");
+CFShow(_dictionary.returnDictionary());
 }// My_ContextCFDictionary 2-argument constructor
 
 
@@ -2880,23 +2889,17 @@ createClassDictionary	(Preferences_Class	inClass,
 	error = copyClassDictionaryByName(inClass, inNameOrNull, result);
 	if (kPreferences_ResultOK != error)
 	{
-		// if a Unicode name cannot be found, default to the
-		// string backup before failing completely
-		error = copyClassDictionaryByName(inClass, inNameOrNull, result, true/* use string */);
+		result = nullptr;
+		if (kPreferences_ResultUnknownName == error)
+		{
+			// if the name is simply unknown, the dictionary does not exist; create one!
+			result = createDictionary();
+			error = (nullptr == result) ? kPreferences_ResultGenericFailure : kPreferences_ResultOK;
+		}
+		
 		if (kPreferences_ResultOK != error)
 		{
-			result = nullptr;
-			if (kPreferences_ResultUnknownName == error)
-			{
-				// if the name is simply unknown, the dictionary does not exist; create one!
-				result = createDictionary();
-				error = (nullptr == result) ? kPreferences_ResultGenericFailure : kPreferences_ResultOK;
-			}
-			
-			if (kPreferences_ResultOK != error)
-			{
-				throw std::runtime_error("unable to construct data dictionary for given class and context name");
-			}
+			throw std::runtime_error("unable to construct data dictionary for given class and context name");
 		}
 	}
 	
@@ -2906,10 +2909,10 @@ createClassDictionary	(Preferences_Class	inClass,
 
 /*!
 Removes the entire dictionary represented by this
-context from a list in application preferences.
-Does not affect other contexts or global preferences.
-Effects become permanent the next time preferences
-are synchronized.
+context from a list in application preferences, but
+does NOT affect what is in memory.  Effects become
+permanent (on disk) the next time preferences are
+synchronized.
 
 \retval kPreferences_ResultOK
 if no error occurred
@@ -2930,66 +2933,33 @@ destroy ()
 	// figure out which MacTelnet preferences key holds the
 	// relevant list of Favorites dictionaries
 	(Preferences_Result)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
-	
 	if (nullptr != favoritesListCFArray)
 	{
-		CFMutableArrayRef	mutableFavoritesListCFArray = nullptr;
+		CFIndex		indexForName = findDictionaryIndexInArrayByName(favoritesListCFArray, this->returnName());
 		
 		
-		// if found, iterate over the list of dictionaries and find the "name"
-		// key in each one (this is an external representation of a Unicode
-		// CFString, which is stored as a CFData; convert it back to a string);
-		// then delete that entry from the array, and save the modified array
-		// as the new favorites list for this context
-		CFArrayCreateMutableCopy(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
-									favoritesListCFArray);
-		if (nullptr != mutableFavoritesListCFArray)
+		if (indexForName >= 0)
 		{
-			CFIndex const		kArraySize = CFArrayGetCount(mutableFavoritesListCFArray);
-			CFIndex				i = 0;
-			CFDictionaryRef		dataCFDictionary = nullptr;
-			CFDataRef			externalStringRepresentationCFData = nullptr;
-			CFStringRef			newCFString = nullptr;
-			Boolean				found = false;
+			// then an entry with this name exists on disk; destroy it!
+			CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
+														(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
+															favoritesListCFArray), true/* is retained */);
 			
 			
-			for (i = 0; ((!found) && (i < kArraySize)); ++i)
+			if (false == mutableFavoritesList.exists()) result = kPreferences_ResultGenericFailure;
+			else
 			{
-				dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex
-																(mutableFavoritesListCFArray, i));
-				if (nullptr != dataCFDictionary)
-				{
-					externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
-					if (nullptr == externalStringRepresentationCFData)
-					{
-						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
-					}
-					else
-					{
-						newCFString = CFStringCreateFromExternalRepresentation
-										(kCFAllocatorDefault, externalStringRepresentationCFData,
-											kCFStringEncodingUnicode);
-						if (nullptr == newCFString)
-						{
-							if (kCFCompareEqualTo ==
-								CFStringCompare(this->returnName(), newCFString, 0/* flags */))
-							{
-								// delete this entry from the array
-								CFArrayRemoveValueAtIndex(mutableFavoritesListCFArray, i);
-								result = kPreferences_ResultOK;
-								found = true;
-							}
-							CFRelease(newCFString), newCFString = nullptr;
-						}
-						CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
-					}
-				}
+				// delete this entry from the array
+				CFArrayRemoveValueAtIndex(mutableFavoritesList.returnCFMutableArrayRef(), indexForName);
+				result = kPreferences_ResultOK;
 			}
 			
 			// update the preferences list
-			overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesListCFArray);
-			
-			CFRelease(mutableFavoritesListCFArray), mutableFavoritesListCFArray = nullptr;
+			overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesList.returnCFMutableArrayRef());
+			if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
+			{
+				result = kPreferences_ResultGenericFailure;
+			}
 		}
 	}
 	
@@ -3057,84 +3027,62 @@ save ()
 	
 	
 Console_WriteValueCFString("saving, name", this->returnName());
-CFShow(returnDictionary());
 	// figure out which MacTelnet preferences key holds the
 	// relevant list of Favorites dictionaries
 	result = copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
 	if (nullptr == favoritesListCFArray) result = kPreferences_ResultGenericFailure;
 	else if (kPreferences_ResultOK == result)
 	{
-Console_WriteLine("0");
-		CFMutableArrayRef	mutableFavoritesListCFArray = nullptr;
+		CFIndex				indexForName = findDictionaryIndexInArrayByName(favoritesListCFArray, this->returnName());
+		CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
+													(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
+														favoritesListCFArray), true/* is retained */);
 		
 		
-		// if found, iterate over the list of dictionaries and find the "name"
-		// key in each one (this is an external representation of a Unicode
-		// CFString, which is stored as a CFData; convert it back to a string);
-		// then replace that entry in the array, and save the modified array
-		// as the new favorites list for this context
-		mutableFavoritesListCFArray = CFArrayCreateMutableCopy
-										(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
-											favoritesListCFArray);
-		if (nullptr != mutableFavoritesListCFArray)
+		// generate or replace the name entry for this collection
 		{
-Console_WriteLine("1");
-			CFIndex const		kArraySize = CFArrayGetCount(mutableFavoritesListCFArray);
-			CFIndex				i = 0;
-			CFDictionaryRef		dataCFDictionary = nullptr;
-			CFDataRef			externalStringRepresentationCFData = nullptr;
-			CFStringRef			newCFString = nullptr;
-			Boolean				found = false;
+			CFRetainRelease		nameCFString(CFStringCreateExternalRepresentation
+												(kCFAllocatorDefault, this->returnName(), kMy_SavedNameEncoding,
+													'?'/* loss byte */), true/* is retained */);
 			
 			
-			for (i = 0; ((!found) && (i < kArraySize)); ++i)
+			if (nameCFString.exists())
 			{
-Console_WriteLine("2");
-				dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex
-																(mutableFavoritesListCFArray, i));
-				if (nullptr != dataCFDictionary)
-				{
-Console_WriteLine("3");
-					externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
-					if (nullptr == externalStringRepresentationCFData)
-					{
-Console_WriteLine("4");
-						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
-					}
-					else
-					{
-Console_WriteLine("5");
-						newCFString = CFStringCreateFromExternalRepresentation
-										(kCFAllocatorDefault, externalStringRepresentationCFData,
-											kCFStringEncodingUnicode);
-						if (nullptr == newCFString)
-						{
-							if (kCFCompareEqualTo ==
-								CFStringCompare(this->returnName(), newCFString, 0/* flags */))
-							{
-								// replace this entry in the array
-								CFArraySetValueAtIndex(mutableFavoritesListCFArray, i, returnDictionary());
-								result = kPreferences_ResultOK;
-								found = true;
-							}
-							CFRelease(newCFString), newCFString = nullptr;
-						}
-						CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
-					}
-				}
+				assert(CFDataGetTypeID() == CFGetTypeID(nameCFString.returnCFTypeRef()));
+				CFDictionarySetValue(this->returnDictionary(), CFSTR("name"), nameCFString.returnCFTypeRef());
 			}
 			
-Console_WriteLine("7");
-			// update the preferences list
-			overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesListCFArray);
-			
-			if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
+			// regardless of whether a Unicode name was stored (which is preferred),
+			// also store a raw string as a backup, just in case and also for
+			// convenience when reading the raw XML in some cases
+			CFDictionarySetValue(this->returnDictionary(), CFSTR("name-string"), this->returnName());
+		}
+		
+		if (false == mutableFavoritesList.exists()) result = kPreferences_ResultGenericFailure;
+		else if (indexForName < 0)
+		{
+			// was not previously saved; create something new!
+			CFArrayAppendValue(mutableFavoritesList.returnCFMutableArrayRef(), this->returnDictionary());
+			if (findDictionaryIndexInArrayByName(favoritesListCFArray, this->returnName()) < 0)
 			{
-		Console_WriteLine("9");
+				result = kPreferences_ResultOK;
+			}
+			else
+			{
 				result = kPreferences_ResultGenericFailure;
 			}
+		}
+		else
+		{
+			// replace this entry in the array
+			CFArraySetValueAtIndex(mutableFavoritesList.returnCFMutableArrayRef(), indexForName, this->returnDictionary());
 			
-			CFRelease(mutableFavoritesListCFArray), mutableFavoritesListCFArray = nullptr;
+			// update the preferences list
+			result = overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesList.returnCFMutableArrayRef());
+			if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
+			{
+				result = kPreferences_ResultGenericFailure;
+			}
 		}
 	}
 Console_WriteValue("save result", result);
@@ -3483,10 +3431,6 @@ convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 Attempts to find a Core Foundation dictionary of settings
 that match the specified class and set name.
 
-If the specified name is NOT localized, you want to do a
-literal match against the string equivalent, and should
-set "inUseStringNameInsteadOfData" to true in that case ONLY.
-
 \retval kPreferences_ResultOK
 if a matching dictionary was found and retrieved successfully
 
@@ -3496,13 +3440,15 @@ if "inClass" is not valid
 \retval kPreferences_ResultUnknownName
 if no matching dictionary could be found
 
+\retval kPreferences_ResultGenericFailure
+other issue
+
 (3.1)
 */
 Preferences_Result
 copyClassDictionaryByName	(Preferences_Class			inClass,
 							 CFStringRef				inName,
-							 CFMutableDictionaryRef&	outNewCFDictionary,
-							 Boolean					inUseStringNameInsteadOfData)
+							 CFMutableDictionaryRef&	outNewCFDictionary)
 {
 	Preferences_Result		result = kPreferences_ResultUnknownName;
 	CFArrayRef				favoritesListCFArray = nullptr;
@@ -3511,86 +3457,31 @@ copyClassDictionaryByName	(Preferences_Class			inClass,
 	// set default value
 	outNewCFDictionary = nullptr;
 	
-	// figure out which MacTelnet preferences key holds the
-	// relevant list of Favorites dictionaries
-	copyClassDictionaryCFArray(inClass, favoritesListCFArray);
-	
-	// if found, iterate over the list of dictionaries and find the "name"
-	// key in each one (this is an external representation of a Unicode
-	// CFString, which is stored as a CFData; convert it back to a string)
-	if (nullptr != favoritesListCFArray)
+	// retrieve the list of Favorites dictionaries
+	result = copyClassDictionaryCFArray(inClass, favoritesListCFArray);
+	if (kPreferences_ResultOK == result)
 	{
-Console_WriteLine("<3>");
-		CFIndex const		kArraySize = CFArrayGetCount(favoritesListCFArray);
-		CFIndex				i = 0;
-		CFDictionaryRef		dataCFDictionary = nullptr;
-		CFDataRef			externalStringRepresentationCFData = nullptr;
-		CFStringRef			newCFString = nullptr;
-		Boolean				found = false;
+		CFIndex		indexForName = findDictionaryIndexInArrayByName(favoritesListCFArray, inName);
 		
 		
-		for (i = 0; ((!found) && (i < kArraySize)); ++i)
+		if (indexForName < 0) result = kPreferences_ResultUnknownName;
+		else
 		{
-Console_WriteLine("<5>");
-			dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex(favoritesListCFArray, i));
-Console_WriteLine("<6>");
-			if (nullptr != dataCFDictionary)
+			CFDictionaryRef const		kDataCFDictionary = CFUtilities_DictionaryCast
+															(CFArrayGetValueAtIndex(favoritesListCFArray, indexForName));
+			
+			
+			if (nullptr == kDataCFDictionary) result = kPreferences_ResultGenericFailure;
+			else
 			{
-Console_WriteLine("<7>");
-				if (inUseStringNameInsteadOfData)
-				{
-					// compare against the embedded string (that may not use
-					// the user’s preferred character set); use this only for
-					// special purposes
-					newCFString = CFUtilities_StringCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name-string")));
-					if (nullptr != newCFString)
-					{
-						if (kCFCompareEqualTo == CFStringCompare(inName, newCFString, 0/* flags */))
-						{
-							outNewCFDictionary = CFDictionaryCreateMutableCopy
-													(kCFAllocatorDefault, 0/* capacity, or 0 for unlimited */,
-														dataCFDictionary);
-							result = kPreferences_ResultOK;
-							found = true;
-						}
-					}
-				}
+				outNewCFDictionary = CFDictionaryCreateMutableCopy
+										(kCFAllocatorDefault, 0/* capacity, or 0 for unlimited */,
+											kDataCFDictionary);
+				if (nullptr == outNewCFDictionary) result = kPreferences_ResultGenericFailure;
 				else
 				{
-					// compare against the localized string; this is typical
-					externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
-					if (nullptr == externalStringRepresentationCFData)
-					{
-						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
-					}
-					else
-					{
-						newCFString = CFStringCreateFromExternalRepresentation
-										(kCFAllocatorDefault, externalStringRepresentationCFData,
-											kCFStringEncodingUnicode);
-						if (nullptr != newCFString)
-						{
-							if (kCFCompareEqualTo == CFStringCompare(inName, newCFString, 0/* flags */))
-							{
-							Console_WriteLine("<8>");
-							CFShow(dataCFDictionary);
-								outNewCFDictionary = CFDictionaryCreateMutableCopy
-														(kCFAllocatorDefault, 0/* capacity, or 0 for unlimited */,
-															dataCFDictionary);
-							Console_WriteLine("<9>");
-								result = kPreferences_ResultOK;
-								found = true;
-							}
-							CFRelease(newCFString), newCFString = nullptr;
-						}
-						CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
-					}
-				}
-				
-				// allow the copy to exist when returning, otherwise release it
-				unless (found)
-				{
-					CFRelease(dataCFDictionary), dataCFDictionary = nullptr;
+					// success!
+					result = kPreferences_ResultOK;
 				}
 			}
 		}
@@ -3895,6 +3786,84 @@ findAliasOnDisk		(Preferences_AliasID	inAliasID,
 	}
 	return result;
 }// findAliasOnDisk
+
+
+/*!
+Collections of preferences are arrays of dictionaries,
+where the "name" (or, barring that, "name-string") key
+is a particular collection’s name; this routine searches
+an array of dictionaries for the dictionary that has the
+given name.
+
+If the dictionary is not found, -1 is returned; otherwise,
+the zero-based index into the array is returned.  This
+index can be used with CFArray APIs.
+
+IMPORTANT:	Make sure this is what you want; arrays are
+			typically searched when reading saved data,
+			whereas getNamedContext() is used to find
+			contexts in memory (that may not yet be
+			saved).
+
+WARNING:	Since preferences arrays can change, use the
+			returned index immediately.
+
+(3.1)
+*/
+CFIndex
+findDictionaryIndexInArrayByName	(CFArrayRef		inArray,
+									 CFStringRef	inName)
+{
+	CFIndex				result = -1;
+	CFIndex const		kArraySize = CFArrayGetCount(inArray);
+	CFIndex				i = 0;
+	CFDictionaryRef		dataCFDictionary = nullptr;
+	CFDataRef			externalStringRepresentationCFData = nullptr;
+	CFStringRef			newCFString = nullptr;
+	Boolean				releaseNameString = false;
+	
+	
+	for (i = 0; ((result < 0) && (i < kArraySize)); ++i)
+	{
+		dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex(inArray, i));
+		if (nullptr != dataCFDictionary)
+		{
+			// in order to support many languages, the "name" field is stored as
+			// Unicode data (string external representation); however, if that
+			// is not available, purely for convenience a "name-string" alternate
+			// is supported, holding a raw string
+			externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
+			if (nullptr != externalStringRepresentationCFData)
+			{
+				// Unicode string was found
+				newCFString = CFStringCreateFromExternalRepresentation
+								(kCFAllocatorDefault, externalStringRepresentationCFData,
+									kCFStringEncodingUnicode);
+				CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
+				releaseNameString = true;
+			}
+			else
+			{
+				// raw string was found
+				newCFString = CFUtilities_StringCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name-string")));
+			}
+			
+			if (nullptr != newCFString)
+			{
+				if (kCFCompareEqualTo == CFStringCompare(inName, newCFString, 0/* flags */))
+				{
+					result = i;
+				}
+			}
+			
+			if (releaseNameString)
+			{
+				CFRelease(newCFString), newCFString = nullptr;
+			}
+		}
+	}
+	return result;
+}// findDictionaryIndexInArrayByName
 
 
 /*!
