@@ -76,7 +76,7 @@ struct MyColorBoxData
 	EventHandlerUPP					uppDraw;			//!< Mac OS wrapper for callback
 	RGBColor						displayedColor;		//!< which color (the ÒvalueÓ) the color box displays
 	ColorBox_ChangeNotifyProcPtr	notifyProcPtr;		//!< routine, if any, to call when the value is changed
-	void const*						contextPtr;			//!< caller-defined context to pass to the notification routine
+	void*							contextPtr;			//!< caller-defined context to pass to the notification routine
 };
 typedef MyColorBoxData*		MyColorBoxDataPtr;
 
@@ -238,7 +238,7 @@ ColorBox_SetColor	(HIViewRef			inView,
 	{
 		dataPtr->displayedColor = *inColorPtr;
 		if (nullptr != dataPtr->notifyProcPtr) (*(dataPtr->notifyProcPtr))(inView, &dataPtr->displayedColor, dataPtr->contextPtr);
-		HIViewSetNeedsDisplay(inView, true);
+		(OSStatus)HIViewSetNeedsDisplay(inView, true);
 	}
 }// SetColor
 
@@ -256,7 +256,7 @@ to the userÕs changes.
 void
 ColorBox_SetColorChangeNotifyProc	(HIViewRef						inView,
 									 ColorBox_ChangeNotifyProcPtr	inNotifyProcPtr,
-									 void const*					inContextPtr)
+									 void*							inContextPtr)
 {
 	OSStatus			error = noErr;
 	MyColorBoxDataPtr	dataPtr = nullptr;
@@ -338,6 +338,7 @@ ColorBox_UserSetColor	(HIViewRef		inView)
 		if ((result) && (nullptr != dataPtr->notifyProcPtr))
 		{
 			(*(dataPtr->notifyProcPtr))(inView, &dataPtr->displayedColor, dataPtr->contextPtr);
+			(OSStatus)HIViewSetNeedsDisplay(inView, true);
 		}
 	}
 	return result;

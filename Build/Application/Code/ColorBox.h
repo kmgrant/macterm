@@ -58,11 +58,11 @@ respond right away to changes).
 */
 typedef void	 (*ColorBox_ChangeNotifyProcPtr)	(HIViewRef			inColorBoxThatWasChanged,
 													 RGBColor const*	inNewColor,
-													 void const*		inContext);
+													 void*				inContext);
 inline void ColorBox_InvokeChangeNotifyProc	(ColorBox_ChangeNotifyProcPtr	inUserRoutine,
 											 HIViewRef						inColorBoxThatWasChanged,
 											 RGBColor const*				inNewColor,
-											 void const*					inContext)
+											 void*							inContext)
 {
 	(*inUserRoutine)(inColorBoxThatWasChanged, inNewColor, inContext);
 }
@@ -105,7 +105,7 @@ Boolean
 void
 	ColorBox_SetColorChangeNotifyProc		(HIViewRef						inView,
 											 ColorBox_ChangeNotifyProcPtr	inNotifyProcPtr,
-											 void const*					inContextPtr);
+											 void*							inContextPtr);
 
 //@}
 
