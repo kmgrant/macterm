@@ -69,7 +69,6 @@ IMPORTANT
 The following values MUST agree with the view IDs in the
 "Dialog" NIB from the package "SpecialKeySequencesDialog.nib".
 */
-static HIViewID const		idMyButtonHelp					= { 'Help', 0/* ID */ };
 static HIViewID const		idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
 static HIViewID const		idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
 static HIViewID const		idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
@@ -87,7 +86,6 @@ struct MySpecialKeysDialog
 	HIViewWrap										buttonInterrupt;	//!< when selected, key clicks modify the Interrupt key
 	HIViewWrap										buttonResume;		//!< when selected, key clicks modify the Resume key
 	HIViewWrap										buttonSuspend;		//!< when selected, key clicks modify the Suspend key
-	HIViewWrap										buttonHelp;			//!< displays context-sensitive help on this dialog
 	CarbonEventHandlerWrap							buttonHICommandsHandler;	//!< invoked when a button is clicked
 	SpecialKeySequencesDialog_CloseNotifyProcPtr	closeNotifyProc;	//!< routine to call when the dialog is dismissed
 	HelpSystem_WindowKeyPhraseSetter				contextualHelpSetup;//!< ensures proper contextual help for this window
@@ -282,9 +280,6 @@ buttonResume					(dialogWindow.returnHIViewWithID(idMyButtonChangeResumeKey)
 									<< HIViewWrap_AssertExists),
 buttonSuspend					(dialogWindow.returnHIViewWithID(idMyButtonChangeSuspendKey)
 									<< HIViewWrap_AssertExists),
-buttonHelp						(dialogWindow.returnHIViewWithID(idMyButtonHelp)
-									<< HIViewWrap_AssertExists
-									<< DialogUtilities_SetUpHelpButton),
 buttonHICommandsHandler			(GetWindowEventTarget(this->dialogWindow), receiveHICommand,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 									this->selfRef/* user data */),

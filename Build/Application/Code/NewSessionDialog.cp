@@ -114,7 +114,6 @@ enum
 	kSignatureMyFieldPortNumber				= 'Port',
 	kSignatureMyFieldUserID					= 'User',
 	kSignatureMySeparatorBottom				= 'BotD',
-	kSignatureMyButtonHelp					= 'Help',
 	kSignatureMyButtonGo					= 'GoDo',
 	kSignatureMyButtonCancel				= 'Canc'
 };
@@ -148,7 +147,6 @@ struct MyNewSessionDialog
 	HIViewWrap								fieldPortNumber;				//!< the port number on which to attempt a connection on the host
 	HIViewWrap								fieldUserID;					//!< the (usually 8-character) login name to use for the server
 	HIViewWrap								separatorBottom;				//!< dividing line above action buttons
-	HIViewWrap								buttonHelp;						//!< displays context-sensitive help on this dialog
 	HIViewWrap								buttonGo;						//!< starts the session according to the userÕs configuration
 	HIViewWrap								buttonCancel;					//!< aborts
 	Session_Protocol						selectedProtocol;				//!< indicates the protocol new remote sessions should use
@@ -371,9 +369,6 @@ fieldUserID						(dialogWindow.returnHIViewWithCode(kSignatureMyFieldUserID)
 									<< HIViewWrap_InstallKeyFilter(NoSpaceLimiter)),
 separatorBottom					(dialogWindow.returnHIViewWithCode(kSignatureMySeparatorBottom)
 									<< HIViewWrap_AssertExists),
-buttonHelp						(dialogWindow.returnHIViewWithCode(kSignatureMyButtonHelp)
-									<< HIViewWrap_AssertExists
-									<< DialogUtilities_SetUpHelpButton),
 buttonGo						(dialogWindow.returnHIViewWithCode(kSignatureMyButtonGo)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_SetActiveState(shouldGoButtonBeActive(this))),
@@ -593,10 +588,6 @@ handleItemHit	(MyNewSessionDialogPtr	inPtr,
 		}
 		break;
 	
-	case kSignatureMyButtonHelp:
-		HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseConnections);
-		break;
-	
 	case kSignatureMyButtonLookUpHostName:
 		if (false == lookup(inPtr))
 		{
@@ -645,10 +636,6 @@ handleNewSize	(WindowRef	inWindow,
 			{
 				DialogAdjust_AddControl(adjustment, ptr->buttonGo, amountH);
 				DialogAdjust_AddControl(adjustment, ptr->buttonCancel, amountH);
-			}
-			else
-			{
-				DialogAdjust_AddControl(adjustment, ptr->buttonHelp, amountH);
 			}
 			
 			// controls which are resized horizontally
@@ -880,15 +867,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// do this outside the auto-locker block so that
 				// all locks are free when disposal is attempted
 				NewSessionDialog_Dispose(&ref);
-				break;
-			
-			case kCommandContextSensitiveHelp:
-				{
-					MyNewSessionDialogAutoLocker	ptr(gNewSessionDialogPtrLocks(), ref);
-					
-					
-					if (handleItemHit(ptr, kSignatureMyButtonHelp)) result = eventNotHandledErr;
-				}
 				break;
 			
 			case kCommandTerminalDefaultFavorite:

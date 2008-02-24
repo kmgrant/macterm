@@ -94,6 +94,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080224': [
+		'Preferences window once again has a help button; but a footer frame was added to give the button a logical place to be.',
 		'Added accessibility descriptions for color boxes and the add/remove buttons in the Preferences window.',
 	],
 	'20080223': [

@@ -90,32 +90,36 @@
 
 
 #pragma mark Constants
+namespace {
 
-namespace
-{
-	/*!
-	IMPORTANT
+/*!
+IMPORTANT
 
-	The following values MUST agree with the control IDs in
-	the "Window" NIB from the package "PrefsWindow.nib".
-	*/
-	HIViewID const		idMyUserPaneAnyPrefPanel		= { 'Panl', 0/* ID */ };
-	
-	/*!
-	IMPORTANT
+The following values MUST agree with the control IDs in
+the "Window" NIB from the package "PrefsWindow.nib".
+*/
+HIViewID const		idMyUserPaneAnyPrefPanel		= { 'Panl', 0/* ID */ };
+HIViewID const		idMyUserPaneFooter				= { 'Foot', 0/* ID */ };
+HIViewID const		idMySeparatorBottom				= { 'BSep', 0/* ID */ };
+HIViewID const		idMyButtonHelp					= { 'Help', 0/* ID */ };
 
-	The following values MUST agree with the control IDs in
-	the "Drawer" NIB from the package "PrefsWindow.nib".
-	*/
-	HIViewID const		idMyStaticTextListTitle			= { 'Titl', 0/* ID */ };
-	HIViewID const		idMyDataBrowserCollections		= { 'Favs', 0/* ID */ };
-	HIViewID const		idMyButtonAddCollection			= { 'AddC', 0/* ID */ };
-	HIViewID const		idMyButtonRemoveCollection		= { 'DelC', 0/* ID */ };
-	HIViewID const		idMyButtonManipulateCollection	= { 'MnpC', 0/* ID */ };
-	FourCharCode const	kMyDataBrowserPropertyIDSets	= 'Sets';
-}
+/*!
+IMPORTANT
+
+The following values MUST agree with the control IDs in
+the "Drawer" NIB from the package "PrefsWindow.nib".
+*/
+HIViewID const		idMyStaticTextListTitle			= { 'Titl', 0/* ID */ };
+HIViewID const		idMyDataBrowserCollections		= { 'Favs', 0/* ID */ };
+HIViewID const		idMyButtonAddCollection			= { 'AddC', 0/* ID */ };
+HIViewID const		idMyButtonRemoveCollection		= { 'DelC', 0/* ID */ };
+HIViewID const		idMyButtonManipulateCollection	= { 'MnpC', 0/* ID */ };
+FourCharCode const	kMyDataBrowserPropertyIDSets	= 'Sets';
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
 
 struct MyPanelData
 {
@@ -131,68 +135,80 @@ typedef std::vector< MyPanelDataPtr >		MyPanelDataList;
 typedef std::vector< HIToolbarItemRef >		CategoryToolbarItems;
 typedef std::map< UInt32, SInt16 >			IndexByCommandID;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
-																DataBrowserItemDataRef, Boolean);
-static void					chooseContext					(Preferences_ContextRef);
-static void					choosePanel						(UInt16);
-static Boolean				createCollection				(CFStringRef = nullptr);
-static void					displayCollectionRenameUI		(DataBrowserItemID);
-static void					findBestPanelSize				(HISize const&, HISize&);
-static void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
-static void					handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
-static void					init							();
-static void					installPanel					(Panel_Ref);
-static pascal void			monitorDataBrowserItems			(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
-static void					newPanelSelector				(Panel_Ref);
-static void					preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void					rebuildList						();
-static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
-static void					refreshDisplay					();
-static void					removeCollectionRenameUI		();
-static Preferences_Class	returnCurrentPreferencesClass	();
-static DataBrowserItemID	returnCurrentSelection			();
-static OSStatus				selectCollection				(DataBrowserItemID = 0);
-static void					showWindow						();
-static void					sizePanels						(HISize const&);
+#pragma mark Internal Method Prototypes
+namespace {
+
+pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+														DataBrowserItemDataRef, Boolean);
+void				chooseContext					(Preferences_ContextRef);
+void				choosePanel						(UInt16);
+Boolean				createCollection				(CFStringRef = nullptr);
+void				displayCollectionRenameUI		(DataBrowserItemID);
+void				findBestPanelSize				(HISize const&, HISize&);
+void				handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
+void				handleNewFooterSize				(HIViewRef, Float32, Float32, void*);
+void				handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
+void				init							();
+void				installPanel					(Panel_Ref);
+pascal void			monitorDataBrowserItems			(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
+void				newPanelSelector				(Panel_Ref);
+void				preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				rebuildList						();
+pascal OSStatus		receiveFooterActiveStateChange	(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveFooterDraw				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
+void				refreshDisplay					();
+void				removeCollectionRenameUI		();
+Preferences_Class	returnCurrentPreferencesClass	();
+DataBrowserItemID	returnCurrentSelection			();
+OSStatus			selectCollection				(DataBrowserItemID = 0);
+void				showWindow						();
+void				sizePanels						(HISize const&);
 
 // declare the LDEF entry point (itÕs only referred to here, and is implemented in IconListDef.c)
 pascal void IconListDef(SInt16, Boolean, Rect*, Cell, SInt16, SInt16, ListHandle);
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Panel_Ref								gCurrentPanel = nullptr;
-	WindowInfo_Ref							gPreferencesWindowInfo = nullptr;
-	WindowRef								gPreferencesWindow = nullptr; // the Mac OS window pointer
-	WindowRef								gDrawerWindow = nullptr; // the Mac OS window pointer
-	CommonEventHandlers_WindowResizer		gPreferencesWindowResizeHandler;
-	CommonEventHandlers_WindowResizer		gDrawerWindowResizeHandler;
-	CarbonEventHandlerWrap					gPrefsCommandHandler(GetApplicationEventTarget(),
-																	receiveHICommand,
-																	CarbonEventSetInClass
-																		(CarbonEventClass(kEventClassCommand),
-																			kEventCommandProcess),
-																	nullptr/* user data */);
-	Console_Assertion						_1(gPrefsCommandHandler.isInstalled(), __FILE__, __LINE__);
-	EventHandlerUPP							gPreferencesWindowClosingUPP = nullptr;
-	EventHandlerRef							gPreferencesWindowClosingHandler = nullptr;
-	ListenerModel_ListenerRef				gPreferenceChangeEventListener = nullptr;
-	HISize									gMaximumWindowSize = CGSizeMake(600, 400); // arbitrary; overridden later
-	HIViewRef								gDataBrowserTitle = nullptr;
-	HIViewRef								gDataBrowserForCollections = nullptr;
-	HIViewRef								gCollectionAddButton = nullptr;
-	HIViewRef								gCollectionRemoveButton = nullptr;
-	HIViewRef								gCollectionManipulateMenuButton = nullptr;
-	SInt16									gPanelChoiceListLastRowIndex = -1;
-	MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
-	CategoryToolbarItems&					gCategoryToolbarItems ()	{ static CategoryToolbarItems x; return x; }
-	IndexByCommandID&						gIndicesByCommandID ()		{ static IndexByCommandID x; return x; }
-	Preferences_ContextRef					gCurrentDataSet = nullptr;
-}
+#pragma mark Variables
+namespace {
+
+Panel_Ref								gCurrentPanel = nullptr;
+WindowInfo_Ref							gPreferencesWindowInfo = nullptr;
+WindowRef								gPreferencesWindow = nullptr; // the Mac OS window pointer
+WindowRef								gDrawerWindow = nullptr; // the Mac OS window pointer
+CommonEventHandlers_HIViewResizer		gPreferencesWindowFooterResizeHandler;
+CommonEventHandlers_WindowResizer		gPreferencesWindowResizeHandler;
+CommonEventHandlers_WindowResizer		gDrawerWindowResizeHandler;
+CarbonEventHandlerWrap					gPrefsCommandHandler(GetApplicationEventTarget(),
+																receiveHICommand,
+																CarbonEventSetInClass
+																	(CarbonEventClass(kEventClassCommand),
+																		kEventCommandProcess),
+																nullptr/* user data */);
+Console_Assertion						_1(gPrefsCommandHandler.isInstalled(), __FILE__, __LINE__);
+CarbonEventHandlerWrap					gPrefsFooterActiveStateHandler;
+CarbonEventHandlerWrap					gPrefsFooterDrawHandler;
+EventHandlerUPP							gPreferencesWindowClosingUPP = nullptr;
+EventHandlerRef							gPreferencesWindowClosingHandler = nullptr;
+ListenerModel_ListenerRef				gPreferenceChangeEventListener = nullptr;
+HISize									gMaximumWindowSize = CGSizeMake(600, 400); // arbitrary; overridden later
+HIViewRef								gDataBrowserTitle = nullptr;
+HIViewRef								gDataBrowserForCollections = nullptr;
+HIViewRef								gCollectionAddButton = nullptr;
+HIViewRef								gCollectionRemoveButton = nullptr;
+HIViewRef								gCollectionManipulateMenuButton = nullptr;
+SInt16									gPanelChoiceListLastRowIndex = -1;
+MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
+CategoryToolbarItems&					gCategoryToolbarItems ()	{ static CategoryToolbarItems x; return x; }
+IndexByCommandID&						gIndicesByCommandID ()		{ static IndexByCommandID x; return x; }
+Preferences_ContextRef					gCurrentDataSet = nullptr;
+Float32									gBottomMargin = 0;
+
+} // anonymous namespace
 
 
 #pragma mark Functors
@@ -414,6 +430,7 @@ PrefsWindow_Remove ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a MyPanelData structure.
@@ -438,7 +455,7 @@ belongs in the specified list.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -540,7 +557,7 @@ nothingÓ event.
 
 (3.1)
 */
-static void
+void
 chooseContext	(Preferences_ContextRef		inContext)
 {
 	Panel_DataSetTransition		setChange;
@@ -564,7 +581,7 @@ WARNING:	No boundary checking is done.  Pass in
 
 (3.1)
 */
-static void
+void
 choosePanel		(UInt16		inZeroBasedPanelNumber)
 {
 	MyPanelDataPtr		newPanelDataPtr = nullptr;
@@ -641,7 +658,8 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 				if (kPanel_ResponseSizeProvided == Panel_SendMessageGetIdealSize(newPanelDataPtr->panel, idealSize))
 				{
 					// the new absolute minimum window size is the size required to fit all panel views
-					gPreferencesWindowResizeHandler.setWindowMinimumSize(idealSize.width, idealSize.height);
+					assert(0 != gBottomMargin);
+					gPreferencesWindowResizeHandler.setWindowMinimumSize(idealSize.width, idealSize.height + gBottomMargin);
 				}
 				else
 				{
@@ -679,6 +697,7 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 						idealSize.width = windowContentBounds.right - windowContentBounds.left;
 						idealSize.height = windowContentBounds.bottom - windowContentBounds.top;
 					}
+					idealSize.height += gBottomMargin;
 					
 					// size container according to limits; due to event handlers,
 					// a resize of the window changes the panel size too
@@ -732,12 +751,18 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 					(OSStatus)CloseDrawer(gDrawerWindow, true/* asynchronously */);
 				}
 				
-				// make the grow box transparent by default, which looks better most of the time;
-				// however, give the panel the option to change this appearance
+				// grow box appearance
 				{
 					HIViewWrap		growBox(kHIViewWindowGrowBoxID, gPreferencesWindow);
 					
 					
+				#if 1
+					// since a footer is now present, panels are no longer abutted to the bottom
+					// of the window, so their grow box preferences are irrelevant
+					(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
+				#else
+					// make the grow box transparent by default, which looks better most of the time;
+					// however, give the panel the option to change this appearance
 					if (kPanel_ResponseGrowBoxOpaque == Panel_SendMessageGetGrowBoxLook(newPanelDataPtr->panel))
 					{
 						(OSStatus)HIGrowBoxViewSetTransparent(growBox, false);
@@ -746,6 +771,17 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 					{
 						(OSStatus)HIGrowBoxViewSetTransparent(growBox, true);
 					}
+				#endif
+				}
+				
+				// help button behavior
+				{
+					SInt32					panelResponse = Panel_SendMessageGetHelpKeyPhrase(newPanelDataPtr->panel);
+					HelpSystem_KeyPhrase	keyPhrase = STATIC_CAST(panelResponse, HelpSystem_KeyPhrase);
+					
+					
+					if (0 == panelResponse) keyPhrase = kHelpSystem_KeyPhrasePreferences;
+					HelpSystem_SetWindowKeyPhrase(gPreferencesWindow, keyPhrase);
 				}
 			}
 		}
@@ -764,7 +800,7 @@ its name.  Returns true only if successful.
 
 (3.1)
 */
-static Boolean
+Boolean
 createCollection	(CFStringRef	inNameOrNull)
 {
 	// create a data browser item; this is accomplished by
@@ -809,7 +845,7 @@ text area for the specified item.
 
 (3.1)
 */
-static void
+void
 displayCollectionRenameUI	(DataBrowserItemID		inItemToRename)
 {
 	HIViewRef const		kDrawerRoot = HIViewGetRoot(gDrawerWindow);
@@ -840,7 +876,7 @@ IMPORTANT:	Invoke this only after all desired panels
 
 (3.1)
 */
-static void
+void
 findBestPanelSize	(HISize const&		inInitialSize,
 					 HISize&			outIdealSize)
 {
@@ -861,7 +897,7 @@ too large.
 
 (3.1)
 */
-static void
+void
 handleNewDrawerWindowSize	(WindowRef		inWindowRef,
 							 Float32		UNUSED_ARGUMENT(inDeltaX),
 							 Float32		UNUSED_ARGUMENT(inDeltaY),
@@ -875,26 +911,64 @@ handleNewDrawerWindowSize	(WindowRef		inWindowRef,
 
 
 /*!
+Rearranges the contents of the footer as it is resized.
+
+(3.1)
+*/
+void
+handleNewFooterSize		(HIViewRef		inView,
+						 Float32		inDeltaX,
+						 Float32		inDeltaY,
+						 void*			UNUSED_ARGUMENT(inContext))
+{
+	if ((0 != inDeltaX) || (0 != inDeltaY))
+	{
+		HIViewWrap		viewWrap;
+		
+		
+		viewWrap = HIViewWrap(idMySeparatorBottom, HIViewGetWindow(inView));
+		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	}
+}// handleNewFooterSize
+
+
+/*!
 This routine is called whenever the window is
 resized, to make sure panels match its new size.
 
 (3.0)
 */
-static void
+void
 handleNewMainWindowSize	(WindowRef		inWindow,
 						 Float32		UNUSED_ARGUMENT(inDeltaX),
-						 Float32		UNUSED_ARGUMENT(inDeltaY),
+						 Float32		inDeltaY,
 						 void*			UNUSED_ARGUMENT(inContext))
 {
-	Rect	windowContentBounds;
+	Rect		windowContentBounds;
+	HIViewWrap	viewWrap;
 	
 	
 	assert(inWindow == gPreferencesWindow);
 	assert_noerr(GetWindowBounds(inWindow, kWindowContentRgn, &windowContentBounds));
 	
+	// resize footer
+	viewWrap = HIViewWrap(idMyUserPaneFooter, inWindow);
+	{
+		HIRect		footerFrame;
+		OSStatus	error = noErr;
+		
+		
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		error = HIViewGetFrame(viewWrap, &footerFrame);
+		assert_noerr(error);
+		footerFrame.size.width = windowContentBounds.right - windowContentBounds.left;
+		error = HIViewSetFrame(viewWrap, &footerFrame);
+		assert_noerr(error);
+	}
+	
 	// resize panels
 	panelResizer	resizer(windowContentBounds.right - windowContentBounds.left,
-							windowContentBounds.bottom - windowContentBounds.top,
+							windowContentBounds.bottom - windowContentBounds.top - gBottomMargin,
 							false/* is delta */);
 	std::for_each(gPanelList().begin(), gPanelList().end(), resizer);
 	
@@ -920,7 +994,7 @@ allocates.
 
 (3.0)
 */
-static void
+void
 init ()
 {
 	NIBWindow	mainWindow(AppResources_ReturnBundleForNIBs(), CFSTR("PrefsWindow"), CFSTR("Window"));
@@ -935,12 +1009,33 @@ init ()
 	
 	if (nullptr != gPreferencesWindow)
 	{
-		HIViewRef	panelUserPane = nullptr;
 		Rect		panelBounds;
 		
 		
+		{
+			HIViewRef	panelUserPane = (mainWindow.returnHIViewWithID(idMyUserPaneAnyPrefPanel) << HIViewWrap_AssertExists);
+			
+			
+			// initialize the panel rectangle based on the NIB definition
+			GetControlBounds(panelUserPane, &panelBounds);
+			
+			// determine how far from the bottom edge the panel user pane is
+			{
+				Rect	windowContentBounds;
+				
+				
+				GetControlBounds(panelUserPane, &panelBounds);
+				GetWindowBounds(gPreferencesWindow, kWindowContentRgn, &windowContentBounds);
+				assert((windowContentBounds.right - windowContentBounds.left) == (panelBounds.right - panelBounds.left));
+				gBottomMargin = (windowContentBounds.bottom - windowContentBounds.top) - (panelBounds.bottom - panelBounds.top);
+			}
+			
+			// since the user pane is only used to define these boundaries, it can be destroyed now
+			CFRelease(panelUserPane), panelUserPane = nullptr;
+		}
+		
 		// set up the Help System
-		HelpSystem_SetWindowKeyPhrase(drawerWindow, kHelpSystem_KeyPhrasePreferences);
+		HelpSystem_SetWindowKeyPhrase(gPreferencesWindow, kHelpSystem_KeyPhrasePreferences);
 		
 		// enable window drag tracking, so the data browser column moves and toolbar item drags work
 		(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(gPreferencesWindow, true);
@@ -962,7 +1057,6 @@ init ()
 		
 		// find references to all NIB-based controls that are needed for any operation
 		// (button clicks, dealing with text or responding to window resizing)
-		panelUserPane = (mainWindow.returnHIViewWithID(idMyUserPaneAnyPrefPanel) << HIViewWrap_AssertExists);
 		gDataBrowserTitle = (drawerWindow.returnHIViewWithID(idMyStaticTextListTitle) << HIViewWrap_AssertExists);
 		gDataBrowserForCollections = (drawerWindow.returnHIViewWithID(idMyDataBrowserCollections) << HIViewWrap_AssertExists);
 		gCollectionAddButton = (drawerWindow.returnHIViewWithID(idMyButtonAddCollection) << HIViewWrap_AssertExists);
@@ -1154,12 +1248,6 @@ init ()
 			}
 		}
 		
-		// initialize the panel rectangle based on the NIB definition
-		GetControlBounds(panelUserPane, &panelBounds);
-		
-		// since the user pane is only used to define these boundaries, it can be destroyed now
-		CFRelease(panelUserPane), panelUserPane = nullptr;
-		
 		// create category panels - call these routines in the order you want their category buttons to appear
 		installPanel(PrefPanelGeneral_New());
 		installPanel(PrefPanelSessions_New());
@@ -1169,6 +1257,28 @@ init ()
 		installPanel(PrefPanelFormats_New());
 		installPanel(PrefPanelKiosk_New());
 		installPanel(PrefPanelScripts_New());
+		
+		// footer callbacks
+		{
+			HIViewWrap		footerView(idMyUserPaneFooter, gPreferencesWindow);
+			
+			
+			// install a callback that responds as the main windowÕs footer is resized
+			gPreferencesWindowFooterResizeHandler.install(footerView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+																		kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
+															handleNewFooterSize, nullptr/* context */);
+			
+			// install a callback to refresh the footer when its state changes
+			gPrefsFooterActiveStateHandler.install(GetControlEventTarget(footerView), receiveFooterActiveStateChange,
+													CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
+																			kEventControlActivate, kEventControlDeactivate),
+													nullptr/* user data */);
+			
+			// install a callback to render the footer background
+			gPrefsFooterDrawHandler.install(GetControlEventTarget(footerView), receiveFooterDraw,
+											CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+											nullptr/* user data */);
+		}
 		
 		// install a callback that responds as the main window is resized
 		{
@@ -1287,7 +1397,7 @@ appear in the toolbar.
 
 (3.0)
 */
-static void
+void
 installPanel	(Panel_Ref		inPanel)
 {
 	newPanelSelector(inPanel);
@@ -1304,7 +1414,7 @@ is used to determine when to update the panel views.
 
 (3.1)
 */
-static pascal void
+pascal void
 monitorDataBrowserItems		(ControlRef						inDataBrowser,
 							 DataBrowserItemID				inItemID,
 							 DataBrowserItemNotification	inMessage)
@@ -1355,7 +1465,7 @@ panel.
 
 (3.0)
 */
-static void
+void
 newPanelSelector	(Panel_Ref		inPanel)
 {
 	MyPanelDataPtr		dataPtr = new MyPanelData(inPanel, ++gPanelChoiceListLastRowIndex);
@@ -1419,7 +1529,7 @@ variables are up to date for the changed preference.
 
 (3.0)
 */
-static void
+void
 preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inPreferenceTagThatChanged,
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -1458,7 +1568,7 @@ in this way.
 
 (3.1)
 */
-static void
+void
 rebuildList ()
 {
 	Preferences_Class const		kCurrentPreferencesClass = returnCurrentPreferencesClass();
@@ -1493,13 +1603,124 @@ rebuildList ()
 
 
 /*!
+Handles "kEventControlActivate" and "kEventControlDeactivate"
+of "kEventClassControl".
+
+Invoked by Mac OS X whenever the footer is activated or dimmed.
+
+(3.1)
+*/
+pascal OSStatus
+receiveFooterActiveStateChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+								 EventRef				inEvent,
+								 void*					UNUSED_ARGUMENT(inContext))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert((kEventKind == kEventControlActivate) || (kEventKind == kEventControlDeactivate));
+	{
+		HIViewRef	viewBeingActivatedOrDeactivated = nullptr;
+		
+		
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef,
+														viewBeingActivatedOrDeactivated);
+		if (noErr == result)
+		{
+			// since inactive and active footers have different appearances, force redraws
+			// when they are activated or deactivated
+			result = HIViewSetNeedsDisplay(viewBeingActivatedOrDeactivated, true);
+		}
+	}
+	return result;
+}// receiveFooterActiveStateChange
+
+
+/*!
+Handles "kEventControlDraw" of "kEventClassControl".
+
+Paints the background of the footer.
+
+(3.1)
+*/
+pascal OSStatus
+receiveFooterDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef					inEvent,
+					 void*						UNUSED_ARGUMENT(inContext))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlDraw);
+	{
+		HIViewRef	footerView = nullptr;
+		
+		
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, footerView);
+		
+		// if the view was found, continue
+		if (noErr == result)
+		{
+			//HIViewPartCode		partCode = 0;
+			CGContextRef		drawingContext = nullptr;
+			
+			
+			// could determine which part (if any) to draw; if none, draw everything
+			// (ignored, not needed)
+			//result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
+			//result = noErr; // ignore part code parameter if absent
+			
+			// determine the context to use for drawing
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef, drawingContext);
+			assert_noerr(result);
+			
+			// if all information can be found, proceed with drawing
+			if (noErr == result)
+			{
+				HIThemeBackgroundDrawInfo	backgroundInfo;
+				HIRect						floatBounds;
+				OSStatus					error = noErr;
+				
+				
+				error = HIViewGetBounds(footerView, &floatBounds);
+				assert_noerr(error);
+				
+				// arbitrarily avoid two pixels off the top to not overrun separator
+				floatBounds.origin.y += 2;
+				floatBounds.size.height -= 2;
+				
+				// reserve this darker colored background for Leopard
+				if (FlagManager_Test(kFlagOS10_5API))
+				{
+					bzero(&backgroundInfo, sizeof(backgroundInfo));
+					backgroundInfo.version = 0;
+					backgroundInfo.state = IsControlActive(footerView) ? kThemeStateActive : kThemeStateInactive;
+					backgroundInfo.kind = kThemeBackgroundMetal;
+					error = HIThemeDrawBackground(&floatBounds, &backgroundInfo, drawingContext, kHIThemeOrientationNormal);
+				}
+			}
+		}
+	}
+	return result;
+}// receiveFooterDraw
+
+
+/*!
 Handles "kEventCommandProcess" of "kEventClassCommand"
 for the preferences toolbar.  Responds by changing
 the currently-displayed panel.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inContextPtr))
@@ -1694,7 +1915,7 @@ for the preferences window.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))
@@ -1732,7 +1953,7 @@ in the application, for example).
 
 (3.1)
 */
-static void
+void
 refreshDisplay ()
 {
 	(OSStatus)UpdateDataBrowserItems(gDataBrowserForCollections, kDataBrowserNoItem/* parent item */,
@@ -1747,7 +1968,7 @@ Removes any editable text area in the collections list.
 
 (3.1)
 */
-static void
+void
 removeCollectionRenameUI ()
 {
 	(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, kDataBrowserNoItem, kDataBrowserItemNoProperty);
@@ -1763,7 +1984,7 @@ collection class will be returned.
 
 (3.1)
 */
-static Preferences_Class
+Preferences_Class
 returnCurrentPreferencesClass ()
 {
 	Preferences_Class	result = kPreferences_ClassGeneral;
@@ -1803,7 +2024,7 @@ happen, because a selection should always exist).
 
 (3.1)
 */
-static DataBrowserItemID
+DataBrowserItemID
 returnCurrentSelection ()
 {
 	DataBrowserItemID	result = 0;
@@ -1827,7 +2048,7 @@ If the item is zero, then the default is selected.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 selectCollection	(DataBrowserItemID		inNewItem)
 {
 	DataBrowserItemID	itemList[] = { inNewItem };
@@ -1863,7 +2084,7 @@ optional.
 
 (3.1)
 */
-static void
+void
 showWindow ()
 {
 	if (nullptr == gPreferencesWindow) init();
@@ -1883,11 +2104,13 @@ This is only intended to be used once, initially.
 
 (3.1)
 */
-static void
+void
 sizePanels	(HISize const&		inInitialSize)
 {
 	std::for_each(gPanelList().begin(), gPanelList().end(),
 					panelResizer(inInitialSize.width, inInitialSize.height, false/* is delta */));
 }// sizePanels
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

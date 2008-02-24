@@ -622,10 +622,8 @@ const
 	// hide the extra buttons
 	HIViewWrap		okayButton(HIViewIDWrap('Okay', 0), inOwningWindow);
 	HIViewWrap		cancelButton(HIViewIDWrap('Canc', 0), inOwningWindow);
-	HIViewWrap		helpButton(HIViewIDWrap('Help', 0), inOwningWindow);
 	okayButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
 	cancelButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
-	if (helpButton.exists()) helpButton << HIViewWrap_SetVisibleState(false);
 	
 	// make the container match the ideal size, because the tabs view
 	// will need this guideline when deciding its largest size
@@ -847,10 +845,8 @@ const
 	// hide the extra buttons
 	HIViewWrap		goButton(HIViewIDWrap('GoDo', 0), inOwningWindow);
 	HIViewWrap		cancelButton(HIViewIDWrap('Canc', 0), inOwningWindow);
-	HIViewWrap		helpButton(HIViewIDWrap('Help', 0), inOwningWindow);
 	goButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
 	cancelButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
-	if (helpButton.exists()) helpButton << HIViewWrap_SetVisibleState(false);
 	
 	// make the container match the ideal size, because the tabs view
 	// will need this guideline when deciding its largest size
