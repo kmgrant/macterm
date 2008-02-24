@@ -229,8 +229,8 @@ typedef My_FormatsPanelNormalData*	My_FormatsPanelNormalDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				colorBoxANSIChangeNotify		(HIViewRef, RGBColor const*, void const*);
-void				colorBoxNormalChangeNotify		(HIViewRef, RGBColor const*, void const*);
+void				colorBoxANSIChangeNotify		(HIViewRef, RGBColor const*, void*);
+void				colorBoxNormalChangeNotify		(HIViewRef, RGBColor const*, void*);
 SInt32				panelChangedANSIColors			(Panel_Ref, Panel_Message, void*);
 SInt32				panelChangedNormal				(Panel_Ref, Panel_Message, void*);
 pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
@@ -487,6 +487,7 @@ createContainerView		(Panel_Ref		inPanel,
 			
 			assert(button.exists());
 			ColorBox_AttachToBevelButton(button);
+			ColorBox_SetColorChangeNotifyProc(button, colorBoxANSIChangeNotify, this/* context */);
 		}
 	}
 	
@@ -732,6 +733,7 @@ createContainerView		(Panel_Ref			inPanel,
 			
 			assert(button.exists());
 			ColorBox_AttachToBevelButton(button);
+			ColorBox_SetColorChangeNotifyProc(button, colorBoxNormalChangeNotify, this/* context */);
 		}
 	}
 	
@@ -966,7 +968,6 @@ colorBoxANSIChangeNotify	(HIViewRef			inColorBoxThatChanged,
 	// command ID matches preferences tag
 	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
 	{
-		(OSStatus)HIViewSetNeedsDisplay(inColorBoxThatChanged, true);
 		if (nullptr != dataPtr->dataModel)
 		{
 			(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, colorID, sizeof(*inNewColor), inNewColor);
@@ -1001,7 +1002,6 @@ colorBoxNormalChangeNotify	(HIViewRef			inColorBoxThatChanged,
 	// command ID matches preferences tag
 	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
 	{
-		(OSStatus)HIViewSetNeedsDisplay(inColorBoxThatChanged, true);
 		if (nullptr != dataPtr->dataModel)
 		{
 			(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, colorID, sizeof(*inNewColor), inNewColor);
