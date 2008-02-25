@@ -84,26 +84,22 @@ enum
 	kSignatureMyButtonSearch			= 'Find',
 	kSignatureMyButtonCancel			= 'Canc',
 	kSignatureMyButtonHelp				= 'Help',
-	kSignatureMyLabelSearchKeywords		= 'KLbl',
 	kSignatureMyFieldSearchKeywords		= 'KeyW',
 	kSignatureMyKeywordHistoryMenu		= 'HMnu',
 	kSignatureMyTextStatus				= 'Stat',
 	kSignatureMyIconNotFound			= 'Icon',
 	kSignatureMyArrowsSearchProgress	= 'Prog',
-	kSignatureMyCheckBoxCaseSensitive	= 'XCsS',
-	kSignatureMyCheckBoxOldestFirst		= 'XOLF'
+	kSignatureMyCheckBoxCaseSensitive	= 'XCsS'
 };
 static HIViewID const		idMyButtonSearch			= { kSignatureMyButtonSearch,				0/* ID */ };
 static HIViewID const		idMyButtonCancel			= { kSignatureMyButtonCancel,				0/* ID */ };
 static HIViewID const		idMyButtonHelp				= { kSignatureMyButtonHelp,					0/* ID */ };
-static HIViewID const		idMyLabelSearchKeywords		= { kSignatureMyLabelSearchKeywords,		0/* ID */ };
 static HIViewID const		idMyFieldSearchKeywords		= { kSignatureMyFieldSearchKeywords,		0/* ID */ };
 static HIViewID const		idMyKeywordHistoryMenu		= { kSignatureMyKeywordHistoryMenu,			0/* ID */ };
 static HIViewID const		idMyTextStatus				= { kSignatureMyTextStatus,					0/* ID */ };
 static HIViewID const		idMyIconNotFound			= { kSignatureMyIconNotFound,				0/* ID */ };
 static HIViewID const		idMyArrowsSearchProgress	= { kSignatureMyArrowsSearchProgress,		0/* ID */ };
 static HIViewID const		idMyCheckBoxCaseSensitive	= { kSignatureMyCheckBoxCaseSensitive,		0/* ID */ };
-static HIViewID const		idMyCheckBoxOldestFirst		= { kSignatureMyCheckBoxOldestFirst,		0/* ID */ };
 
 #pragma mark Types
 
@@ -121,14 +117,12 @@ struct My_FindDialog
 	NIBWindow								dialogWindow;				//!< the dialogÕs window
 	HIViewWrap								buttonSearch;				//!< Search button
 	HIViewWrap								buttonCancel;				//!< Cancel button
-	HIViewWrap								labelKeywords;				//!< the label for the keyword text field
 	HIViewWrap								fieldKeywords;				//!< the text field containing search keywords
 	HIViewWrap								popUpMenuKeywordHistory;	//!< pop-up menu showing previous searches
 	HIViewWrap								textStatus;					//!< message stating the results of the search
 	HIViewWrap								iconNotFound;				//!< icon that appears when text was not found
 	HIViewWrap								arrowsSearchProgress;		//!< the progress indicator during searches
 	HIViewWrap								checkboxCaseSensitive;		//!< checkbox indicating whether ÒsimilarÓ letters match
-	HIViewWrap								checkboxOldestLinesFirst;	//!< checkbox indicating search direction
 	HIViewWrap								buttonHelp;					//!< help button
 	
 	FindDialog_CloseNotifyProcPtr			closeNotifyProc;			//!< routine to call when the dialog is dismissed
@@ -191,8 +185,6 @@ buttonSearch				(dialogWindow.returnHIViewWithID(idMyButtonSearch)
 								<< HIViewWrap_AssertExists),
 buttonCancel				(dialogWindow.returnHIViewWithID(idMyButtonCancel)
 								<< HIViewWrap_AssertExists),
-labelKeywords				(dialogWindow.returnHIViewWithID(idMyLabelSearchKeywords)
-								<< HIViewWrap_AssertExists),
 fieldKeywords				(dialogWindow.returnHIViewWithID(idMyFieldSearchKeywords)
 								<< HIViewWrap_AssertExists),
 popUpMenuKeywordHistory		(dialogWindow.returnHIViewWithID(idMyKeywordHistoryMenu)
@@ -204,8 +196,6 @@ iconNotFound				(dialogWindow.returnHIViewWithID(idMyIconNotFound)
 arrowsSearchProgress		(dialogWindow.returnHIViewWithID(idMyArrowsSearchProgress)
 								<< HIViewWrap_AssertExists),
 checkboxCaseSensitive		(dialogWindow.returnHIViewWithID(idMyCheckBoxCaseSensitive)
-								<< HIViewWrap_AssertExists),
-checkboxOldestLinesFirst	(dialogWindow.returnHIViewWithID(idMyCheckBoxOldestFirst)
 								<< HIViewWrap_AssertExists),
 buttonHelp					(dialogWindow.returnHIViewWithID(idMyButtonHelp)
 								<< HIViewWrap_AssertExists
@@ -274,7 +264,6 @@ keywordHistory				(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no s
 	
 	// initialize checkboxes
 	SetControl32BitValue(this->checkboxCaseSensitive, (inFlags & kFindDialog_OptionCaseSensitivity) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
-	SetControl32BitValue(this->checkboxOldestLinesFirst, (inFlags & kFindDialog_OptionOldestLinesFirst) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
 	
 	// initially hide the arrows and the error icon
 	(OSStatus)SetControlVisibility(this->iconNotFound, false/* visible */, false/* draw */);
@@ -450,7 +439,6 @@ FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
 	if (nullptr != ptr)
 	{
 		if (GetControlValue(ptr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue) result |= kFindDialog_OptionCaseSensitivity;
-		if (GetControlValue(ptr->checkboxOldestLinesFirst) == kControlCheckBoxCheckedValue) result |= kFindDialog_OptionOldestLinesFirst;
 	}
 	return result;
 }// ReturnOptions
@@ -665,11 +653,9 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->arrowsSearchProgress, truncDeltaX);
 			
 			// controls which are resized horizontally
-			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->labelKeywords, truncDeltaX);
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->fieldKeywords, truncDeltaX);
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->textStatus, truncDeltaX);
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->checkboxCaseSensitive, truncDeltaX);
-			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->checkboxOldestLinesFirst, truncDeltaX);
 		}
 		DialogAdjust_EndAdjustment(truncDeltaX, truncDeltaY); // moves and resizes controls properly
 	}
@@ -708,17 +694,12 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 		// put the sheet in progress mode
 		DeactivateControl(inPtr->buttonSearch);
 		DeactivateControl(inPtr->checkboxCaseSensitive);
-		DeactivateControl(inPtr->checkboxOldestLinesFirst);
 		SetControlVisibility(inPtr->arrowsSearchProgress, true/* visible */, true/* draw */);
 		
 		// configure search
 		if (GetControlValue(inPtr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue)
 		{
 			flags |= kTerminal_SearchFlagsCaseSensitive;
-		}
-		unless (GetControlValue(inPtr->checkboxOldestLinesFirst) == kControlCheckBoxCheckedValue)
-		{
-			flags |= kTerminal_SearchFlagsSearchBackwards;
 		}
 		
 		// initiate synchronous (should it be asynchronous?) search
@@ -784,7 +765,6 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 		SetControlVisibility(inPtr->arrowsSearchProgress, false/* visible */, true/* draw */);
 		ActivateControl(inPtr->buttonSearch);
 		ActivateControl(inPtr->checkboxCaseSensitive);
-		ActivateControl(inPtr->checkboxOldestLinesFirst);
 	}
 	
 	return result;

@@ -94,6 +94,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080224': [
+		'Significantly changed the layout of the Find dialog, to increase visibility of the terminal text underneath.',
 		'Menus now correctly display the names of various Preferences collections as they are added.',
 		'Preferences window once again has a help button; but a footer frame was added to give the button a logical place to be.',
 		'Preferences window General pane Options tab now has correct keyboard focus ordering.',
