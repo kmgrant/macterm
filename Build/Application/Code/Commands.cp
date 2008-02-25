@@ -358,42 +358,13 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			(Boolean)URL_OpenInternetLocation(kURL_InternetLocationSourceForgeProject);
 			break;
 		
-		case kCommandNewSessionLoginShell:
-		case kCommandNewSessionShell:
-			{
-				SessionRef		newSession = nullptr;
-				
-				
-				// create a shell
-				if (inCommandID == kCommandNewSessionLoginShell) newSession = SessionFactory_NewSessionLoginShell();
-				else newSession = SessionFactory_NewSessionDefaultShell();
-				
-				// report any errors to the user
-				if (nullptr == newSession)
-				{
-					// UNIMPLEMENTED!!!
-				}
-			}
-			break;
-		
-		case kCommandNewSessionDialog:
-			{
-				Boolean		displayOK = SessionFactory_DisplayUserCustomizationUI();
-				
-				
-				// report any errors to the user
-				if (false == displayOK)
-				{
-					// UNIMPLEMENTED!!!
-				}
-			}
-			break;
-		
-		case kCommandNewSessionDefaultFavorite:
-			{
-				// UNIMPLEMENTED!!!
-			}
-			break;
+		//case kCommandNewSessionLoginShell:
+		//case kCommandNewSessionShell:
+		//case kCommandNewSessionDialog:
+		//case kCommandNewSessionDefaultFavorite:
+		//case kCommandNewSessionByFavoriteName:
+		//	see SessionFactory.cp
+		//	break;
 		
 		case kCommandOpenSession:
 			SessionDescription_Load();

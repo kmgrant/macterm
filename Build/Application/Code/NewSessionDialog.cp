@@ -422,6 +422,7 @@ noLookupInProgress				(true)
 			// add the names of all terminal configurations to the menu
 			(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTerminal, favoritesMenu,
 																		0/* after which item */, 0/* indentation level */,
+																		0/* command ID */,
 																		numberOfTerminalFavorites);
 			
 			// adjust limits appropriately

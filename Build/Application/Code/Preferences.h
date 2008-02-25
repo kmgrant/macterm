@@ -473,6 +473,7 @@ Preferences_Result
 											 MenuRef							inoutMenuRef,
 											 MenuItemIndex						inAfterItemIndex,
 											 UInt32								inInitialIndent,
+											 UInt32								inCommandID,
 											 MenuItemIndex&						outHowManyItemsAdded);
 
 //@}

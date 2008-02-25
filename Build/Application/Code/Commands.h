@@ -119,6 +119,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 
 // Workspace (File) menu
 #define kCommandNewSessionDefaultFavorite		kHICommandNew
+#define kCommandNewSessionByFavoriteName		'NFav'
 #define kCommandNewSessionLoginShell			'NLgS'
 #define kCommandNewSessionShell					'NShS'
 #define kCommandNewSessionDialog				'New…'
@@ -172,6 +173,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandFullScreen						'Full'
 #define kCommandFullScreenModal					'Kios'
 #define kCommandFormatDefault					'FmtD'
+#define kCommandFormatByFavoriteName			'FFav'
 #define kCommandFormat							'Text'
 
 // Terminal menu
@@ -200,7 +202,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandLocalPageUpDown					'LcPg'
 #define kCommandSetKeys							'SetK'
 #define kCommandMacroSetNone					'XMcr'
+#define kCommandMacroSetByFavoriteName			'MFav'
 #define kCommandTranslationTableNone			'XXlt'
+#define kCommandTranslationTableByFavoriteName	'XFav'
 
 // Network menu
 // WARNING: These are referenced by value in the MainMenuNetwork.nib file!
@@ -415,10 +419,10 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPrefBellSystemAlert				'BpBl'		// “Preferences” window
 #define kCommandPrefBellLibrarySound			'BpLb'		// “Preferences” window
 #define kCommandToggleMacrosMenuVisibility		'McMn'		// “Preferences” window
-#define kCommandPreferencesNewFavorite			kHICommandNew	// “Preferences” window; intentionally the same as the ordinary New
+#define kCommandPreferencesNewFavorite			'NewC'		// “Preferences” window
 #define kCommandPreferencesDuplicateFavorite	'DupC'		// “Preferences” window
 #define kCommandPreferencesRenameFavorite		'RnmC'		// “Preferences” window
-#define kCommandPreferencesDeleteFavorite		kHICommandClear	// “Preferences” window; intentionally the same as the ordinary Delete
+#define kCommandPreferencesDeleteFavorite		'DelC'		// “Preferences” window
 #define kCommandRetrySearch						'RFnd'		// “Find” dialog
 #define kCommandResetANSIColors					'ANSD'		// “Preferences” window
 #define kCommandOpenScriptMenuItemsFolder		'OSMI'		// “Preferences” window

@@ -1033,6 +1033,7 @@ Preferences_NewContext	(Preferences_Class		inClass,
 				contextPtr = newDictionary;
 				listPtr->push_back(newDictionary);
 				assert(true == getNamedContext(inClass, inNameOrNullToAutoGenerateUniqueName, contextPtr));
+				changeNotify(kPreferences_ChangeNumberOfContexts);
 			}
 		}
 		
@@ -1040,7 +1041,6 @@ Preferences_NewContext	(Preferences_Class		inClass,
 		{
 			result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
 			Preferences_RetainContext(result);
-			changeNotify(kPreferences_ChangeNumberOfContexts);
 		}
 	}
 	catch (std::exception const&	inException)
@@ -2104,6 +2104,7 @@ Preferences_InsertContextNamesInMenu	(Preferences_Class		inClass,
 										 MenuRef				inoutMenuRef,
 										 MenuItemIndex			inAfterItemIndex,
 										 UInt32					inInitialIndent,
+										 UInt32					inCommandID,
 										 MenuItemIndex&			outHowManyItemsAdded)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
@@ -2126,13 +2127,13 @@ Preferences_InsertContextNamesInMenu	(Preferences_Class		inClass,
 			nameCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(nameCFStringCFArray, i));
 			if (nullptr != nameCFString)
 			{
-				error = InsertMenuItemTextWithCFString(inoutMenuRef, nameCFString, inAfterItemIndex,
+				error = InsertMenuItemTextWithCFString(inoutMenuRef, nameCFString, inAfterItemIndex + i,
 														kMenuItemAttrIgnoreMeta /* attributes */,
-														0/* command ID */);
+														inCommandID/* command ID */);
 				if (noErr == error)
 				{
 					++outHowManyItemsAdded;
-					(OSStatus)SetMenuItemIndent(inoutMenuRef, inAfterItemIndex + 1, inInitialIndent);
+					(OSStatus)SetMenuItemIndent(inoutMenuRef, inAfterItemIndex + outHowManyItemsAdded, inInitialIndent);
 				}
 			}
 		}

@@ -3,7 +3,7 @@
 	SessionFactory.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -45,6 +45,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFUtilities.h>
 #include <Console.h>
@@ -77,55 +78,70 @@
 
 
 #pragma mark Types
+namespace {
 
 typedef std::vector< SessionRef >						SessionList;
 typedef std::vector< TerminalWindowRef >				TerminalWindowList;
 typedef std::multimap< TerminalWindowRef, SessionRef >	TerminalWindowToSessionsMap;
 typedef std::vector< Workspace_Ref >					MyWorkspaceList;
 
-#pragma mark Variables
-
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	ListenerModel_Ref				gSessionFactoryStateChangeListenerModel = nullptr;
-	ListenerModel_Ref				gSessionStateChangeListenerModel = nullptr;
-	ListenerModel_ListenerRef		gSessionChangeListenerRef = nullptr;
-	ListenerModel_ListenerRef		gSessionStateChangeListener = nullptr;
-	EventHandlerUPP					gCarbonEventSessionProcessDataUPP = nullptr;
-	EventHandlerUPP					gCarbonEventSessionSetStateUPP = nullptr;
-	EventHandlerUPP					gCarbonEventWindowFocusUPP = nullptr;
-	EventHandlerRef					gCarbonEventSessionProcessDataHandler = nullptr;
-	EventHandlerRef					gCarbonEventSessionSetStateHandler = nullptr;
-	EventHandlerRef					gCarbonEventWindowFocusHandler = nullptr;
-	SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; return x; }
-	TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
-	MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
-	TerminalWindowToSessionsMap&	gTerminalWindowToSessions()	{ static TerminalWindowToSessionsMap x; return x; }
-}
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static pascal OSStatus			appendDataForProcessing			(EventHandlerCallRef, EventRef, void*);
-static void						changeNotifyGlobal				(SessionFactory_Change, void*);
-static TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
-																 Preferences_ContextRef = nullptr);
-static Boolean					displayTerminalWindow			(TerminalWindowRef);
-static void						forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
-																 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
-static void						forEveryTerminalWindowInListDo	(TerminalWindowList const&,
-																 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
-static void						handleNewSessionDialogClose		(NewSessionDialog_Ref, Boolean);
-static Workspace_Ref			returnActiveWorkspace			();
-static void						sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void						sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static pascal OSStatus			setSessionState					(EventHandlerCallRef, EventRef, void*);
-static void						startTrackingSession			(SessionRef, TerminalWindowRef);
-static void						startTrackingTerminalWindow		(TerminalWindowRef);
-static void						stopTrackingSession				(SessionRef);
-static void						stopTrackingTerminalWindow		(TerminalWindowRef);
-static void						updatePaletteTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
+pascal OSStatus			appendDataForProcessing			(EventHandlerCallRef, EventRef, void*);
+void					changeNotifyGlobal				(SessionFactory_Change, void*);
+TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
+														 Preferences_ContextRef = nullptr);
+Boolean					displayTerminalWindow			(TerminalWindowRef);
+void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
+														 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
+void					forEveryTerminalWindowInListDo	(TerminalWindowList const&,
+														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
+void					handleNewSessionDialogClose		(NewSessionDialog_Ref, Boolean);
+pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+Workspace_Ref			returnActiveWorkspace			();
+void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+pascal OSStatus			setSessionState					(EventHandlerCallRef, EventRef, void*);
+void					startTrackingSession			(SessionRef, TerminalWindowRef);
+void					startTrackingTerminalWindow		(TerminalWindowRef);
+void					stopTrackingSession				(SessionRef);
+void					stopTrackingTerminalWindow		(TerminalWindowRef);
+void					updatePaletteTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
+
+} // anonymous namespace
+
+#pragma mark Variables
+namespace {
+
+ListenerModel_Ref				gSessionFactoryStateChangeListenerModel = nullptr;
+ListenerModel_Ref				gSessionStateChangeListenerModel = nullptr;
+ListenerModel_ListenerRef		gSessionChangeListenerRef = nullptr;
+ListenerModel_ListenerRef		gSessionStateChangeListener = nullptr;
+CarbonEventHandlerWrap			gNewSessionCommandHandler(GetApplicationEventTarget(),
+															receiveHICommand,
+															CarbonEventSetInClass
+																(CarbonEventClass(kEventClassCommand),
+																	kEventCommandProcess),
+															nullptr/* user data */);
+Console_Assertion				_1(gNewSessionCommandHandler.isInstalled(), __FILE__, __LINE__);
+EventHandlerUPP					gCarbonEventSessionProcessDataUPP = nullptr;
+EventHandlerUPP					gCarbonEventSessionSetStateUPP = nullptr;
+EventHandlerUPP					gCarbonEventWindowFocusUPP = nullptr;
+EventHandlerRef					gCarbonEventSessionProcessDataHandler = nullptr;
+EventHandlerRef					gCarbonEventSessionSetStateHandler = nullptr;
+EventHandlerRef					gCarbonEventWindowFocusHandler = nullptr;
+SessionList&					gSessionListSortedByCreationTime ()		{ static SessionList x; return x; }
+TerminalWindowList&				gTerminalWindowListSortedByCreationTime ()	{ static TerminalWindowList x; return x; }
+MyWorkspaceList&				gWorkspaceListSortedByCreationTime ()	{ static MyWorkspaceList x; return x; }
+TerminalWindowToSessionsMap&	gTerminalWindowToSessions()	{ static TerminalWindowToSessionsMap x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Functors
+namespace {
 
 /*!
 Examines every terminal window in the specified workspace
@@ -253,6 +269,8 @@ protected:
 private:
 	TerminalWindowRef	_terminalWindow;
 };
+
+} // anonymous namespace
 
 
 
@@ -1119,9 +1137,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 										 Preferences_ContextRef		inSessionContext)
 {
 	SessionRef				result = nullptr;
-	TerminalWindowRef		terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-												? createTerminalWindow()
-												: inTerminalWindowOrNullToMakeNewWindow;
+	TerminalWindowRef		terminalWindow = inTerminalWindowOrNullToMakeNewWindow;
 	Preferences_ContextRef	associatedTerminalContext = nullptr;
 	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
@@ -1138,12 +1154,16 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		if (kPreferences_ResultOK == preferencesResult)
 		{
 			associatedTerminalContext = Preferences_NewContext(kPreferences_ClassTerminal, associatedTerminalName);
-			if (nullptr != associatedTerminalContext)
-			{
-				// configure terminal
-				// UNIMPLEMENTED
-			}
 		}
+	}
+	
+	if (nullptr == inTerminalWindowOrNullToMakeNewWindow)
+	{
+		terminalWindow = createTerminalWindow(associatedTerminalContext);
+	}
+	else
+	{
+		// reconfigure given window; UNIMPLEMENTED
 	}
 	
 	if (false == displayTerminalWindow(terminalWindow))
@@ -1153,27 +1173,19 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 	}
 	else
 	{
-		CFStringRef		commandCFString = nullptr;
+		CFArrayRef		argumentCFArray = nullptr;
 		
 		
 		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagCommandLine,
-														sizeof(commandCFString), &commandCFString);
+														sizeof(argumentCFArray), &argumentCFArray);
 		if (kPreferences_ResultOK == preferencesResult)
 		{
-			CFArrayRef		argumentCFArray = CFStringCreateArrayBySeparatingStrings
-												(kCFAllocatorDefault, commandCFString, CFSTR(" "));
-			
-			
-			if (nullptr != argumentCFArray)
-			{
-				result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
-																	nullptr/* context */);
-				CFRelease(argumentCFArray), argumentCFArray = nullptr;
-			}
+			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
+																nullptr/* context */);
+			CFRelease(argumentCFArray), argumentCFArray = nullptr;
 		}
 		// INCOMPLETE!!!
 	}
-	
 	return result;
 }// NewSessionUserFavorite
 
@@ -1808,6 +1820,7 @@ SessionFactory_UpdatePalettes	(Preferences_Tag	inColorToChange)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Handles the "kEventNetEvents_SessionDataArrived" event
@@ -1824,7 +1837,7 @@ by retrieving arguments from a Carbon Event.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 appendDataForProcessing		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					UNUSED_ARGUMENT(inUserData))
@@ -1939,7 +1952,7 @@ IMPORTANT:	The context must make sense for the
 
 (3.0)
 */
-static void
+void
 changeNotifyGlobal		(SessionFactory_Change	inWhatChanged,
 						 void*					inContextPtr)
 {
@@ -1953,7 +1966,7 @@ Internal version of SessionFactory_NewTerminalWindowUserFavorite().
 
 (3.0)
 */
-static TerminalWindowRef
+TerminalWindowRef
 createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
 						 Preferences_ContextRef		inFontInfoOrNull)
 {
@@ -1978,7 +1991,7 @@ display for some reason.
 
 (3.0)
 */
-static Boolean
+Boolean
 displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 {
 	WindowRef	window = TerminalWindow_ReturnWindow(inTerminalWindow);
@@ -2077,7 +2090,7 @@ except it operates on the specific list given.
 
 (3.1)
 */
-static void
+void
 forEveryTerminalWindowInListDo	(TerminalWindowList const&					inList,
 								 SessionFactory_TerminalWindowOpProcPtr		inProcPtr,
 								 void*										inData1,
@@ -2105,7 +2118,7 @@ creates if the user Cancels the dialog.
 
 (3.0)
 */
-static void
+void
 handleNewSessionDialogClose		(NewSessionDialog_Ref	inDialogThatClosed,
 								 Boolean				inOKButtonPressed)
 {
@@ -2117,6 +2130,154 @@ handleNewSessionDialogClose		(NewSessionDialog_Ref	inDialogThatClosed,
 
 
 /*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for commands that create new sessions.
+
+(3.1)
+*/
+pascal OSStatus
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					UNUSED_ARGUMENT(inContextPtr))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommand	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (result == noErr)
+		{
+			// don’t claim to have handled any commands not shown below
+			result = eventNotHandledErr;
+			
+			switch (kEventKind)
+			{
+			case kEventCommandProcess:
+				// execute a command selected from a menu
+				switch (received.commandID)
+				{
+				case kCommandNewSessionDefaultFavorite:
+				case kCommandNewSessionByFavoriteName:
+					// this relies on the text of the menu command to use
+					// the right Favorite, so it won’t work without a menu
+					if (received.attributes & kHICommandFromMenu)
+					{
+						Preferences_ContextRef		sessionContext = nullptr;
+						Boolean						releaseContext = true;
+						
+						
+						if (kCommandNewSessionDefaultFavorite == received.commandID)
+						{
+							Preferences_Result		prefsResult = Preferences_GetDefaultContext
+																	(&sessionContext, kPreferences_ClassSession);
+							
+							
+							if (kPreferences_ResultOK != prefsResult) sessionContext = nullptr;
+							releaseContext = false;
+						}
+						else
+						{
+							// extract the name of the Favorite from the menu text;
+							// this command cannot be used unless it comes from a menu
+							CFStringRef		itemTextCFString = nullptr;
+							
+							
+							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef,
+																	received.menu.menuItemIndex, &itemTextCFString))
+							{
+								sessionContext = Preferences_NewContext(kPreferences_ClassSession, itemTextCFString);
+								CFRelease(itemTextCFString), itemTextCFString = nullptr;
+							}
+						}
+						
+						// finally, create the session from the specified context
+						if (nullptr == sessionContext) result = eventNotHandledErr;
+						else
+						{
+							SessionRef		newSession = SessionFactory_NewSessionUserFavorite(nullptr/* terminal window */,
+																								sessionContext);
+							
+							
+							if (nullptr != newSession) result = noErr;
+							else result = eventNotHandledErr;
+						}
+						
+						// report any errors to the user
+						if (noErr != result)
+						{
+							// UNIMPLEMENTED!!!
+							Sound_StandardAlert();
+						}
+						
+						if (releaseContext)
+						{
+							Preferences_ReleaseContext(&sessionContext);
+						}
+					}
+					break;
+				
+				case kCommandNewSessionDialog:
+					{
+						Boolean		displayOK = SessionFactory_DisplayUserCustomizationUI();
+						
+						
+						// report any errors to the user
+						if (displayOK) result = noErr;
+						else
+						{
+							// UNIMPLEMENTED!!!
+							Sound_StandardAlert();
+							result = eventNotHandledErr;
+						}
+					}
+					break;
+				
+				case kCommandNewSessionLoginShell:
+				case kCommandNewSessionShell:
+					{
+						SessionRef		newSession = nullptr;
+						
+						
+						// create a shell
+						if (received.commandID == kCommandNewSessionLoginShell) newSession = SessionFactory_NewSessionLoginShell();
+						else newSession = SessionFactory_NewSessionDefaultShell();
+						
+						// report any errors to the user
+						if (nullptr != newSession) result = noErr;
+						else
+						{
+							// UNIMPLEMENTED!!!
+							result = eventNotHandledErr;
+						}
+					}
+					break;
+				
+				default:
+					break;
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+		}
+	}
+	return result;
+}// receiveHICommand
+
+
+/*!
 Returns the most appropriate workspace for a new terminal
 window.  If no workspaces exist, one is created; otherwise,
 the workspace of the most recently active terminal window
@@ -2124,7 +2285,7 @@ is used.
 
 (3.1)
 */
-static Workspace_Ref
+Workspace_Ref
 returnActiveWorkspace ()
 {
 	Workspace_Ref	result = nullptr;
@@ -2153,7 +2314,7 @@ notifying interested parties.
 
 (3.0)
 */
-static void
+void
 sessionChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inWhatChanged,
 					 void*					inEventContextPtr,
@@ -2170,7 +2331,7 @@ updates the internal list as sessions are destroyed.
 
 (3.1)
 */
-static void
+void
 sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inSessionChange,
 						 void*					inEventContextPtr,
@@ -2227,7 +2388,7 @@ retrieving arguments from a Carbon Event.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 setSessionState		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inUserData))
@@ -2272,7 +2433,7 @@ See also stopTrackingSession().
 
 (3.1)
 */
-static void
+void
 startTrackingSession	(SessionRef				inSession,
 						 TerminalWindowRef		inTerminalWindow)
 {
@@ -2323,7 +2484,7 @@ module.  See also stopTrackingTerminalWindow().
 
 (3.1)
 */
-static void
+void
 startTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 {
 	// append the specified session to the creation-order list
@@ -2339,7 +2500,7 @@ to undo the effects of startTrackingSession().
 
 (3.1)
 */
-static void
+void
 stopTrackingSession		(SessionRef		inSession)
 {
 	Console_WriteLine("SESSION DESTRUCTED");
@@ -2394,7 +2555,7 @@ to undo the effects of startTrackingTerminalWindow().
 
 (3.1)
 */
-static void
+void
 stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 {
 	// remove this window from any workspaces that contain it,
@@ -2424,7 +2585,7 @@ On output, the current port may be changed.
 
 (3.0)
 */
-static void
+void
 updatePaletteTerminalWindowOp	(TerminalWindowRef		inTerminalWindow,
 								 void*					UNUSED_ARGUMENT(inData1),
 								 SInt32					inColorToChange,
@@ -2543,5 +2704,7 @@ updatePaletteTerminalWindowOp	(TerminalWindowRef		inTerminalWindow,
 		}
 	}
 }// updatePaletteTerminalWindowOp
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

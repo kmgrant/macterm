@@ -234,6 +234,10 @@ MenuBar_Init ()
 						(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ListenForChanges
+						(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts,
+							true/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
 	}
 	
 	// set up a callback to receive session count change notifications
@@ -569,78 +573,6 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 	
 	switch (menuID)
 	{
-	case kMenuIDFile:
-		// scan for Favorites in the menu...
-		{
-			CFStringRef		textCFString = nullptr;
-			
-			
-			if (noErr != CopyMenuItemTextAsCFString(inMenu, inMenuItemIndex, &textCFString))
-			{
-				// error while copying string!
-				Sound_StandardAlert();
-			}
-			else
-			{
-				Preferences_ContextRef		sessionContext = Preferences_NewContext
-																(kPreferences_ClassSession, textCFString);
-				
-				
-				if (nullptr == sessionContext)
-				{
-					// error in finding the Favorite
-					Sound_StandardAlert();
-				}
-				else
-				{
-					if (false == SessionFactory_NewSessionUserFavorite
-									(nullptr/* nullptr = create new terminal window */, sessionContext))
-					{
-						// error in attempting to use the Favorite!
-						Sound_StandardAlert();
-					}
-					Preferences_ReleaseContext(&sessionContext);
-				}
-				CFRelease(textCFString), textCFString = nullptr;
-			}
-		}
-		break;
-	
-	case kMenuIDView:
-		{
-			CFStringRef		textCFString = nullptr;
-			
-			
-			if (noErr != CopyMenuItemTextAsCFString(inMenu, inMenuItemIndex, &textCFString))
-			{
-				// error while copying string!
-				Sound_StandardAlert();
-			}
-			else
-			{
-				Preferences_ContextRef		formatContext = Preferences_NewContext
-															(kPreferences_ClassFormat, textCFString);
-				
-				
-				if (nullptr == formatContext)
-				{
-					// error in finding the Favorite
-					Sound_StandardAlert();
-				}
-				else
-				{
-					if (1/* reformat window with this Favorite - unimplemented! */)
-					{
-						// error in attempting to use the Favorite!
-						Sound_StandardAlert();
-					}
-					Preferences_ReleaseContext(&formatContext);
-				}
-				CFRelease(textCFString), textCFString = nullptr;
-			}
-		}
-		break;
-	
 	case kMenuIDWindow:
 		{
 			// find the window corresponding to the selected menu item;
@@ -679,10 +611,6 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 		executeScriptByMenuEvent(inMenu, inMenuItemIndex);
 		break;
 	
-	case kMenuIDEdit:		// assume it’s a MacTelnet-handled editing command (to hell with
-	case kMenuIDSimpleEdit:	// desk accessories, they’re not CARBON-supported anyway)
-	case kMenuIDTerminal:
-	case kMenuIDKeys:
 	default:
 		// In the vast majority of cases, PREFER to use
 		// command IDs exclusively.  Hopefully, all other
@@ -1737,6 +1665,12 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		simplifyMenuBar(gSimplifiedMenuBar);
 		break;
 	
+	case kPreferences_ChangeNumberOfContexts:
+		// regenerate menu items
+		// TEMPORARY: maybe this should be more granulated than it is
+		setUpDynamicMenus();
+		break;
+	
 	default:
 		// ???
 		break;
@@ -2359,6 +2293,7 @@ setUpFormatFavoritesMenu	(MenuRef	inMenu)
 		gNumberOfFormatMenuItemsAdded = 0;
 		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassFormat, inMenu,
 																	defaultIndex, 1/* indentation level */,
+																	kCommandFormatByFavoriteName,
 																	gNumberOfFormatMenuItemsAdded);
 		
 		// also fix the indentation of the Default choice, as this
@@ -2372,6 +2307,21 @@ setUpFormatFavoritesMenu	(MenuRef	inMenu)
 		if (noErr == error)
 		{
 			(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+		}
+		
+		// ensure these items are inactive except for terminal windows
+		for (SInt16 i = 1; i <= gNumberOfFormatMenuItemsAdded; ++i)
+		{
+			MenuItemIndex		itemIndex = 0;
+			
+			
+			error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandFormatByFavoriteName,
+												i/* which matching item to return */,
+												nullptr/* matching menu */, &itemIndex);
+			if (noErr == error)
+			{
+				MenuBar_SetMenuItemStateTrackerProc(inMenu, itemIndex, stateTrackerGenericSessionItems);
+			}
 		}
 	}
 }// setUpFormatFavoritesMenu
@@ -2406,6 +2356,7 @@ setUpMacroSetsMenu	(MenuRef	inMenu)
 		gNumberOfMacroSetMenuItemsAdded = 0;
 		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassMacroSet, inMenu,
 																	defaultIndex, 1/* indentation level */,
+																	kCommandMacroSetByFavoriteName,
 																	gNumberOfMacroSetMenuItemsAdded);
 		
 		// also fix the indentation of the None choice, as this
@@ -2702,6 +2653,7 @@ setUpSessionFavoritesMenu	(MenuRef	inMenu)
 		gNumberOfSessionMenuItemsAdded = 0;
 		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassSession, inMenu,
 																	defaultIndex, 1/* indentation level */,
+																	kCommandNewSessionByFavoriteName,
 																	gNumberOfSessionMenuItemsAdded);
 		
 		// also fix the indentation of the Default choice, as this
@@ -2764,6 +2716,7 @@ setUpTranslationTablesMenu	(MenuRef	inMenu)
 		gNumberOfTranslationTableMenuItemsAdded = 0;
 		//(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslationTable, inMenu,
 		//														defaultIndex, 1/* indentation level */,
+		//														kCommandTranslationTableByFavoriteName,
 		//														gNumberOfTranslationTableMenuItemsAdded);
 		
 		// also fix the indentation of the None choice, as this
@@ -3264,11 +3217,14 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 	case kCommandFullScreen:
 	case kCommandFormat:
 	case kCommandFormatDefault:
+	case kCommandFormatByFavoriteName:
 	case kCommandFullScreenModal:
 	case kCommandTerminalEmulatorSetup:
 	case kCommandJumpScrolling:
 	case kCommandSetKeys:
 	case kCommandMacroSetNone:
+	case kCommandMacroSetByFavoriteName:
+	case kCommandTranslationTableByFavoriteName:
 	case kCommandClearEntireScrollback:
 	case kCommandResetGraphicsCharacters:
 	case kCommandResetTerminal:
