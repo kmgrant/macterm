@@ -90,8 +90,9 @@
 
 
 #pragma mark Constants
+namespace {
 
-#define kInsertMenuAfterAllOthers	0	// for use with InsertMenu (a constant Menus.h REALLY SHOULD HAVE)
+SInt16 const	kInsertMenuAfterAllOthers = 0;	// for use with InsertMenu (a constant Menus.h REALLY SHOULD HAVE)
 
 typedef SInt16 My_WindowMenuMarkType;
 enum
@@ -104,7 +105,10 @@ enum
 	kMy_WindowMenuMarkTypeSessionDead		= 2		// (session reference must be defined)
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 struct MyMenuItemInsertionInfo
 {
@@ -113,78 +117,83 @@ struct MyMenuItemInsertionInfo
 };
 typedef MyMenuItemInsertionInfo const*		MyMenuItemInsertionInfoConstPtr;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr,
-								gSessionStateChangeEventListener = nullptr,
-								gSessionCountChangeEventListener = nullptr,
-								gSessionWindowStateChangeEventListener = nullptr;
-	MenuItemIndex				gNumberOfSessionMenuItemsAdded = 0,
-								gNumberOfFormatMenuItemsAdded = 0,
-								gNumberOfMacroSetMenuItemsAdded = 0,
-								gNumberOfSpecialWindowMenuItemsAdded = 0,
-								gNumberOfTranslationTableMenuItemsAdded = 0,
-								gNumberOfWindowMenuItemsAdded = 0,
-								gNumberOfSpecialScriptMenuItems = 0;
-	Boolean						gUsingTabs = false;
-	Boolean						gSimplifiedMenuBar = false;
-	Boolean						gFontMenusAvailable = false;
-	UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
-}
+#pragma mark Variables
+namespace {
+
+ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
+ListenerModel_ListenerRef	gSessionStateChangeEventListener = nullptr;
+ListenerModel_ListenerRef	gSessionCountChangeEventListener = nullptr;
+ListenerModel_ListenerRef	gSessionWindowStateChangeEventListener = nullptr;
+MenuItemIndex				gNumberOfSessionMenuItemsAdded = 0;
+MenuItemIndex				gNumberOfFormatMenuItemsAdded = 0;
+MenuItemIndex				gNumberOfMacroSetMenuItemsAdded = 0;
+MenuItemIndex				gNumberOfSpecialWindowMenuItemsAdded = 0;
+MenuItemIndex				gNumberOfTranslationTableMenuItemsAdded = 0;
+MenuItemIndex				gNumberOfWindowMenuItemsAdded = 0;
+MenuItemIndex				gNumberOfSpecialScriptMenuItems = 0;
+Boolean						gUsingTabs = false;
+Boolean						gSimplifiedMenuBar = false;
+Boolean						gFontMenusAvailable = false;
+UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Boolean			addWindowMenuItemForSession			(SessionRef, MyMenuItemInsertionInfoConstPtr, CFStringRef);
-static void				addWindowMenuItemSessionOp			(SessionRef, void*, SInt32, void*);
-static void				adjustMenuItem						(MenuRef, MenuItemIndex, UInt32);
-static void				adjustMenuItemByCommandID			(UInt32);
-static Boolean			areSessionRelatedItemsEnabled		();
-static Boolean			areTEKRelatedItemsEnabled			();
-static void 			buildMenuBar						();
-static void				executeScriptByMenuEvent			(MenuRef, MenuItemIndex);
-static MenuItemIndex	getMenuAndMenuItemIndexByCommandID	(UInt32, MenuRef*);
-static void				getMenuItemAdjustmentProc			(MenuRef, MenuItemIndex, MenuCommandStateTrackerProcPtr*);
-static void				getMenusAndMenuItemIndicesByCommandID	(UInt32, MenuRef*, MenuRef*, MenuItemIndex*,
+Boolean				addWindowMenuItemForSession				(SessionRef, MyMenuItemInsertionInfoConstPtr, CFStringRef);
+void				addWindowMenuItemSessionOp				(SessionRef, void*, SInt32, void*);
+void				adjustMenuItem							(MenuRef, MenuItemIndex, UInt32);
+void				adjustMenuItemByCommandID				(UInt32);
+Boolean				areSessionRelatedItemsEnabled			();
+Boolean				areTEKRelatedItemsEnabled				();
+void				buildMenuBar							();
+void				executeScriptByMenuEvent				(MenuRef, MenuItemIndex);
+MenuItemIndex		getMenuAndMenuItemIndexByCommandID		(UInt32, MenuRef*);
+void				getMenuItemAdjustmentProc				(MenuRef, MenuItemIndex, MenuCommandStateTrackerProcPtr*);
+void				getMenusAndMenuItemIndicesByCommandID	(UInt32, MenuRef*, MenuRef*, MenuItemIndex*,
 																MenuItemIndex*);
-static HIWindowRef		getWindowFromWindowMenuItemIndex	(MenuItemIndex);
-static MenuItemIndex	getWindowMenuItemIndexForSession	(SessionRef);
-static void				installMenuItemStateTrackers		();
-static void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				removeMenuItemModifier				(MenuRef, MenuItemIndex);
-static void				removeMenuItemModifiers				(MenuRef);
-static MenuItemIndex	returnFirstWindowItemAnchor			(MenuRef);
-static void				sessionCountChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				sessionStateChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				sessionWindowStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+HIWindowRef			getWindowFromWindowMenuItemIndex		(MenuItemIndex);
+MenuItemIndex		getWindowMenuItemIndexForSession		(SessionRef);
+void				installMenuItemStateTrackers			();
+void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				removeMenuItemModifier					(MenuRef, MenuItemIndex);
+void				removeMenuItemModifiers					(MenuRef);
+MenuItemIndex		returnFirstWindowItemAnchor				(MenuRef);
+void				sessionCountChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				sessionStateChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				sessionWindowStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 #if 0
-static void				setMenuEnabled						(MenuRef, Boolean);
+void				setMenuEnabled							(MenuRef, Boolean);
 #endif
-static void				setMenuItemEnabled					(MenuRef, UInt16, Boolean);
-static inline OSStatus	setMenuItemVisibility				(MenuRef, MenuItemIndex, Boolean);
-static void				setMenusHaveKeyEquivalents			(Boolean, Boolean);
-static void				setNewCommand						(UInt32);
-static void				setUpDynamicMenus					();
-static void				setUpFormatFavoritesMenu			(MenuRef);
-static void				setUpMacroSetsMenu					(MenuRef);
-static void				setUpNotificationsMenu				(MenuRef);
-static void				setUpScreenSizeFavoritesMenu		(MenuRef);
-static void				setUpSessionFavoritesMenu			(MenuRef);
-static void				setUpScriptsMenu					(MenuRef);
-static void				setUpTranslationTablesMenu			(MenuRef);
-static void				setUpWindowMenu						(MenuRef);
-static void				setWindowMenuItemMark				(MenuRef, MenuItemIndex, My_WindowMenuMarkType);
-static void				setWindowMenuItemMarkForSession		(SessionRef, MenuRef = nullptr, MenuItemIndex = 0);
-static void				simplifyMenuBar						(Boolean);
-static Boolean			stateTrackerCheckableItems			(UInt32, MenuRef, MenuItemIndex);
-static Boolean			stateTrackerGenericSessionItems		(UInt32, MenuRef, MenuItemIndex);
-static Boolean			stateTrackerNetSendItems			(UInt32, MenuRef, MenuItemIndex);
-static Boolean			stateTrackerPrintingItems			(UInt32, MenuRef, MenuItemIndex);
-static Boolean			stateTrackerShowHideItems			(UInt32, MenuRef, MenuItemIndex);
-static Boolean			stateTrackerStandardEditItems		(UInt32, MenuRef, MenuItemIndex);
-static Boolean			stateTrackerTEKItems				(UInt32, MenuRef, MenuItemIndex);
-static Boolean			stateTrackerWindowMenuWindowItems	(UInt32, MenuRef, MenuItemIndex);
+void				setMenuItemEnabled						(MenuRef, UInt16, Boolean);
+inline OSStatus		setMenuItemVisibility					(MenuRef, MenuItemIndex, Boolean);
+void				setMenusHaveKeyEquivalents				(Boolean, Boolean);
+void				setNewCommand							(UInt32);
+void				setUpDynamicMenus						();
+void				setUpFormatFavoritesMenu				(MenuRef);
+void				setUpMacroSetsMenu						(MenuRef);
+void				setUpNotificationsMenu					(MenuRef);
+void				setUpScreenSizeFavoritesMenu			(MenuRef);
+void				setUpSessionFavoritesMenu				(MenuRef);
+void				setUpScriptsMenu						(MenuRef);
+void				setUpTranslationTablesMenu				(MenuRef);
+void				setUpWindowMenu							(MenuRef);
+void				setWindowMenuItemMark					(MenuRef, MenuItemIndex, My_WindowMenuMarkType);
+void				setWindowMenuItemMarkForSession			(SessionRef, MenuRef = nullptr, MenuItemIndex = 0);
+void				simplifyMenuBar							(Boolean);
+Boolean				stateTrackerCheckableItems				(UInt32, MenuRef, MenuItemIndex);
+Boolean				stateTrackerGenericSessionItems			(UInt32, MenuRef, MenuItemIndex);
+Boolean				stateTrackerNetSendItems				(UInt32, MenuRef, MenuItemIndex);
+Boolean				stateTrackerPrintingItems				(UInt32, MenuRef, MenuItemIndex);
+Boolean				stateTrackerShowHideItems				(UInt32, MenuRef, MenuItemIndex);
+Boolean				stateTrackerStandardEditItems			(UInt32, MenuRef, MenuItemIndex);
+Boolean				stateTrackerTEKItems					(UInt32, MenuRef, MenuItemIndex);
+Boolean				stateTrackerWindowMenuWindowItems		(UInt32, MenuRef, MenuItemIndex);
+
+} // anonymous namespace
 
 
 
@@ -996,6 +1005,7 @@ MenuBar_SetUpMenuItemState	(UInt32		inCommandID)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Adds a session’s name to the Window menu, arranging so
@@ -1007,7 +1017,7 @@ Returns true only if an item was added.
 
 (3.0)
 */
-static Boolean
+Boolean
 addWindowMenuItemForSession		(SessionRef							inSession,
 								 MyMenuItemInsertionInfoConstPtr	inMenuInfoPtr,
 								 CFStringRef						inWindowName)
@@ -1043,7 +1053,7 @@ form, adds the specified session to the Window menu.
 
 (3.0)
 */
-static void
+void
 addWindowMenuItemSessionOp	(SessionRef		inSession,
 							 void*			inWindowMenuInfoPtr,
 							 SInt32			UNUSED_ARGUMENT(inData2),
@@ -1095,7 +1105,7 @@ not needed any place else.
 
 (3.0)
 */
-static void
+void
 adjustMenuItem	(MenuRef		inMenu,
 				 MenuItemIndex	inItemNumber,
 				 UInt32			inOverridingCommandIDOrZero)
@@ -1143,7 +1153,7 @@ not needed any place else.
 
 (3.0)
 */
-static void
+void
 adjustMenuItemByCommandID	(UInt32		inCommandID)
 {
 	MenuRef			menu1 = nullptr;
@@ -1168,7 +1178,7 @@ session-related menu items should be enabled.
 
 (3.0)
 */
-static Boolean
+Boolean
 areSessionRelatedItemsEnabled ()
 {
 	Boolean		result = false;
@@ -1198,7 +1208,7 @@ TEK-related menu items should be enabled.
 
 (3.0)
 */
-static Boolean
+Boolean
 areTEKRelatedItemsEnabled ()
 {
 	Boolean		result = false;
@@ -1222,7 +1232,7 @@ which menus are submenus of menu items.
 
 (3.0)
 */
-static void
+void
 buildMenuBar ()
 {
 	// Load the NIB containing each menu (automatically finds
@@ -1295,7 +1305,7 @@ of the given item of the given menu, use this method.
 
 (3.0)
 */
-static void
+void
 executeScriptByMenuEvent	(MenuRef		inMenu,
 							 MenuItemIndex	inItemNumber)
 {
@@ -1350,7 +1360,7 @@ WARNING:	This method will only return the menu handle and item
 
 (3.0)
 */
-static MenuItemIndex
+MenuItemIndex
 getMenuAndMenuItemIndexByCommandID	(UInt32		inCommandID,
 									 MenuRef*	outMenu)
 {
@@ -1384,7 +1394,7 @@ information itself.
 
 (3.0)
 */
-static void
+void
 getMenuItemAdjustmentProc	(MenuRef							inMenu,
 							 MenuItemIndex						inItemNumber,
 							 MenuCommandStateTrackerProcPtr*	outProcPtrPtr)
@@ -1429,7 +1439,7 @@ IMPORTANT:	This is the only place in the entire program where menu
 
 (3.0)
 */
-static void
+void
 getMenusAndMenuItemIndicesByCommandID	(UInt32				inCommandID,
 										 MenuRef*			outPrimaryMenu,
 										 MenuRef*			outSecondaryMenu,
@@ -1467,7 +1477,7 @@ from the Window menu.
 
 (3.0)
 */
-static HIWindowRef
+HIWindowRef
 getWindowFromWindowMenuItemIndex	(MenuItemIndex		inIndex)
 {
 	SessionFactory_Result	error = kSessionFactory_ResultOK;
@@ -1489,7 +1499,7 @@ corresponding to the specified session’s window.
 
 (3.0)
 */
-static MenuItemIndex
+MenuItemIndex
 getWindowMenuItemIndexForSession	(SessionRef		inSession)
 {
 	SessionFactory_Result	error = kSessionFactory_ResultOK;
@@ -1529,7 +1539,7 @@ comment, for completeness.
 
 (3.0)
 */
-static void
+void
 installMenuItemStateTrackers ()
 {
 	// Apple
@@ -1668,7 +1678,7 @@ up to date for the changed preference.
 
 (3.0)
 */
-static void
+void
 preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inPreferenceTagThatChanged,
 					 void*					inEventContextPtr,
@@ -1740,7 +1750,7 @@ menu item.
 
 (3.0)
 */
-static inline void
+inline void
 removeMenuItemModifier	(MenuRef		inMenu,
 						 MenuItemIndex	inItemIndex)
 {
@@ -1761,7 +1771,7 @@ for items with special command key fields.
 
 (3.0)
 */
-static void
+void
 removeMenuItemModifiers		(MenuRef	inMenu)
 {
 	register MenuItemIndex	i = 0;
@@ -1780,7 +1790,7 @@ Window menu and the would-be first window item.
 
 (3.1)
 */
-static MenuItemIndex
+MenuItemIndex
 returnFirstWindowItemAnchor		(MenuRef	inWindowMenu)
 {
 	MenuItemIndex	result = 0;
@@ -1808,7 +1818,7 @@ menu is up to date.
 
 (3.0)
 */
-static void
+void
 sessionCountChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inSessionFactorySettingThatChanged,
 						 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -1834,7 +1844,7 @@ up to date for the changed connection state.
 
 (3.0)
 */
-static void
+void
 sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inConnectionSettingThatChanged,
 						 void*					inEventContextPtr,
@@ -1884,7 +1894,7 @@ up to date for the changed session state.
 
 (3.0)
 */
-static void
+void
 sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							 ListenerModel_Event	inSessionSettingThatChanged,
 							 void*					inEventContextPtr,
@@ -1963,7 +1973,7 @@ beyond, if available).
 (3.0)
 */
 #if 0
-static void
+void
 setMenuEnabled	(MenuRef	inMenu,
 				 Boolean	inEnabled)
 {
@@ -1982,7 +1992,7 @@ beyond, if available).
 
 (3.0)
 */
-static inline void
+inline void
 setMenuItemEnabled		(MenuRef		inMenu,
 						 UInt16			inItemNumberOrZero,
 						 Boolean		inEnabled)
@@ -2000,7 +2010,7 @@ hiding whichever of the two is not applicable.
 
 (3.1)
 */
-static inline OSStatus
+inline OSStatus
 setMenuItemVisibility	(MenuRef			inMenu,
 						 MenuItemIndex		inItemNumber,
 						 Boolean			inIsVisible)
@@ -2030,7 +2040,7 @@ the additional parameter is set to "true" only then.
 
 (3.0)
 */
-static void
+void
 setMenusHaveKeyEquivalents	(Boolean	inMenusHaveKeyEquivalents,
 							 Boolean	inVeryFirstCall)
 {
@@ -2096,7 +2106,7 @@ no menu command keys is set.
 
 (3.0)
 */
-static void
+void
 setNewCommand	(UInt32		inCommandNShortcutCommand)
 {
 	size_t		actualSize = 0;
@@ -2306,7 +2316,7 @@ this routine instead of directly calling any of those.
 
 (3.1)
 */
-static void
+void
 setUpDynamicMenus ()
 {
 	setUpSessionFavoritesMenu(GetMenuRef(kMenuIDFile));
@@ -2326,7 +2336,7 @@ a terminal format.
 
 (3.1)
 */
-static void
+void
 setUpFormatFavoritesMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
@@ -2373,7 +2383,7 @@ the active macro set.
 
 (3.1)
 */
-static void
+void
 setUpMacroSetsMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
@@ -2412,7 +2422,7 @@ the current session notification (if any).
 
 (3.1)
 */
-static void
+void
 setUpNotificationsMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
@@ -2450,7 +2460,7 @@ sessions with particular Session Favorite names.
 
 (3.1)
 */
-static void
+void
 setUpScreenSizeFavoritesMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
@@ -2505,7 +2515,7 @@ no changes have been made.
 
 (3.0)
 */
-static void
+void
 setUpScriptsMenu	(MenuRef	inMenu)
 {
 	static Boolean		gScriptsMenuRebuilding = false; // flags to keep things “thread safe”
@@ -2669,7 +2679,7 @@ sessions with particular Session Favorite names.
 
 (3.1)
 */
-static void
+void
 setUpSessionFavoritesMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
@@ -2731,7 +2741,7 @@ the active translation table.
 
 (3.1)
 */
-static void
+void
 setUpTranslationTablesMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
@@ -2770,7 +2780,7 @@ windows and their states.
 
 (3.1)
 */
-static void
+void
 setUpWindowMenu		(MenuRef	inMenu)
 {
 	MenuItemIndex const			kFirstWindowItemIndex = returnFirstWindowItemAnchor(inMenu);
@@ -2835,7 +2845,7 @@ IMPORTANT:	The value of "inSessionOrNull" may only be
 
 (3.0)
 */
-static void
+void
 setWindowMenuItemMark	(MenuRef				inMenu,
 						 MenuItemIndex			inItemIndex,
 						 My_WindowMenuMarkType	inMarkType)
@@ -2956,7 +2966,7 @@ you should provide those parameters to speed things up.
 
 (3.1)
 */
-static void
+void
 setWindowMenuItemMarkForSession		(SessionRef		inSession,
 									 MenuRef		inWindowMenuOrNull,
 									 MenuItemIndex	inItemIndexOrZero)
@@ -3021,7 +3031,7 @@ and easier for novices to use.
 
 (3.0)
 */
-static void
+void
 simplifyMenuBar		(Boolean		inSetToSimplifiedMode)
 {
 	if (inSetToSimplifiedMode)
@@ -3059,7 +3069,7 @@ enabled, and automatically sets its checkmark properly.
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerCheckableItems		(UInt32				inCommandID,
 								 MenuRef			inMenu,
 								 MenuItemIndex		inItemNumber)
@@ -3192,7 +3202,7 @@ session-related checkmarked items.
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerGenericSessionItems		(UInt32				inCommandID,
 									 MenuRef			inMenu,
 									 MenuItemIndex		inItemNumber)
@@ -3309,7 +3319,7 @@ data-sending item should be enabled.
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerNetSendItems	(UInt32				inCommandID,
 							 MenuRef			UNUSED_ARGUMENT(inMenu),
 							 MenuItemIndex		UNUSED_ARGUMENT(inItemNumber))
@@ -3346,7 +3356,7 @@ data-sending item should be enabled.
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerPrintingItems	(UInt32				inCommandID,
 							 MenuRef			UNUSED_ARGUMENT(inMenu),
 							 MenuItemIndex		UNUSED_ARGUMENT(inItemNumber))
@@ -3403,7 +3413,7 @@ should be enabled, and sets its item text appropriately.
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerShowHideItems	(UInt32			inCommandID,
 							 MenuRef		inMenu,
 							 MenuItemIndex	inItemNumber)
@@ -3577,7 +3587,7 @@ whether text is selected, much as Copy does.
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerStandardEditItems	(UInt32			inCommandID,
 								 MenuRef		inMenu,
 								 MenuItemIndex	inItemNumber)
@@ -3746,7 +3756,7 @@ form, determines whether TEK commands should be enabled.
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerTEKItems	(UInt32				inCommandID,
 						 MenuRef			inMenu,
 						 MenuItemIndex		inItemNumber)
@@ -3800,7 +3810,7 @@ MenuBar_SetWindowMenuItemMarkForSession().
 
 (3.0)
 */
-static Boolean
+Boolean
 stateTrackerWindowMenuWindowItems	(UInt32			UNUSED_ARGUMENT(inCommandID),
 									 MenuRef		inMenu,
 									 MenuItemIndex	inItemNumber)
@@ -3834,5 +3844,7 @@ stateTrackerWindowMenuWindowItems	(UInt32			UNUSED_ARGUMENT(inCommandID),
 	
 	return result;
 }// stateTrackerWindowMenuWindowItems
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
