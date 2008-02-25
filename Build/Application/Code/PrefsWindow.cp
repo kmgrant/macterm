@@ -196,11 +196,11 @@ EventHandlerUPP							gPreferencesWindowClosingUPP = nullptr;
 EventHandlerRef							gPreferencesWindowClosingHandler = nullptr;
 ListenerModel_ListenerRef				gPreferenceChangeEventListener = nullptr;
 HISize									gMaximumWindowSize = CGSizeMake(600, 400); // arbitrary; overridden later
-HIViewRef								gDataBrowserTitle = nullptr;
-HIViewRef								gDataBrowserForCollections = nullptr;
-HIViewRef								gCollectionAddButton = nullptr;
-HIViewRef								gCollectionRemoveButton = nullptr;
-HIViewRef								gCollectionManipulateMenuButton = nullptr;
+HIViewWrap								gDataBrowserTitle;
+HIViewWrap								gDataBrowserForCollections;
+HIViewWrap								gCollectionAddButton;
+HIViewWrap								gCollectionRemoveButton;
+HIViewWrap								gCollectionManipulateMenuButton;
 SInt16									gPanelChoiceListLastRowIndex = -1;
 MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
 CategoryToolbarItems&					gCategoryToolbarItems ()	{ static CategoryToolbarItems x; return x; }
@@ -466,7 +466,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 	Preferences_ContextRef	context = REINTERPRET_CAST(inItemID, Preferences_ContextRef);
 	
 	
-	assert(gDataBrowserForCollections == inDataBrowser);
+	assert(gDataBrowserForCollections.operator HIViewRef() == inDataBrowser);
 	if (false == inSetValue)
 	{
 		switch (inPropertyID)
@@ -1035,7 +1035,13 @@ init ()
 		}
 		
 		// set up the Help System
-		HelpSystem_SetWindowKeyPhrase(gPreferencesWindow, kHelpSystem_KeyPhrasePreferences);
+		{
+			HIViewWrap		helpButton(idMyButtonHelp, gPreferencesWindow);
+			
+			
+			DialogUtilities_SetUpHelpButton(helpButton);
+			HelpSystem_SetWindowKeyPhrase(gPreferencesWindow, kHelpSystem_KeyPhrasePreferences);
+		}
 		
 		// enable window drag tracking, so the data browser column moves and toolbar item drags work
 		(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(gPreferencesWindow, true);
@@ -1153,23 +1159,21 @@ init ()
 			
 			if (UIStrings_Copy(kUIStrings_ButtonAddAccessibilityDesc, accessibilityDescCFString).ok())
 			{
-				HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(gCollectionAddButton, HIObjectRef);
-				OSStatus			error = noErr;
+				OSStatus		error = noErr;
 				
 				
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
-						(kViewObjectRef, 0/* sub-component identifier */,
+						(gCollectionAddButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
 			if (UIStrings_Copy(kUIStrings_ButtonRemoveAccessibilityDesc, accessibilityDescCFString).ok())
 			{
-				HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(gCollectionRemoveButton, HIObjectRef);
-				OSStatus			error = noErr;
+				OSStatus		error = noErr;
 				
 				
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
-						(kViewObjectRef, 0/* sub-component identifier */,
+						(gCollectionRemoveButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
@@ -1422,7 +1426,7 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 	Preferences_ContextRef	prefsContext = REINTERPRET_CAST(inItemID, Preferences_ContextRef);
 	
 	
-	assert(gDataBrowserForCollections == inDataBrowser);
+	assert(gDataBrowserForCollections.operator HIViewRef() == inDataBrowser);
 	switch (inMessage)
 	{
 	case kDataBrowserItemSelected:

@@ -95,7 +95,9 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080224': [
 		'Preferences window once again has a help button; but a footer frame was added to give the button a logical place to be.',
+		'Preferences window General pane Options tab now has correct keyboard focus ordering.',
 		'Added accessibility descriptions for color boxes and the add/remove buttons in the Preferences window.',
+		'Added accessibility relationships between certain labels and views (useful with VoiceOver, for instance) in the Preferences window.',
 	],
 	'20080223': [
 		'The mouse pointer shape is now reset when selecting another window, to prevent (for instance) a persistent I-beam.',

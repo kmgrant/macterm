@@ -113,6 +113,7 @@ static HIViewID const	idMyCheckBoxMenuKeyEquivalents				= { 'MIKE', 0/* ID */ };
 static HIViewID const	idMyCheckBoxMapBackquoteToEscape			= { 'MBQE', 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotAutoCreateWindows			= { 'DCNW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { 'FcFM', 0/* ID */ };
+static HIViewID const	idMyLabelTerminalCursor						= { 'LCrs', 0/* ID */ };
 static HIViewID const	idMyCheckBoxCursorFlashing					= { 'CurF', 0/* ID */ };
 static HIViewID const	idMyButtonCursorBlock						= { 'CrBl', 0/* ID */ };
 static HIViewID const	idMyButtonCursorVerticalBar					= { 'CrVB', 0/* ID */ };
@@ -121,6 +122,7 @@ static HIViewID const	idMyButtonCursorBoldVerticalBar				= { 'CrBV', 0/* ID */ }
 static HIViewID const	idMyButtonCursorBoldUnderline				= { 'CrBU', 0/* ID */ };
 static HIViewID const	idMyFieldStackingOriginLeft					= { 'WSOL', 0/* ID */ };
 static HIViewID const	idMyFieldStackingOriginTop					= { 'WSOT', 0/* ID */ };
+static HIViewID const	idMyLabelWindowResizeEffect					= { 'LWRE', 0/* ID */ };
 static HIViewID const	idMyRadioButtonResizeAffectsScreenSize		= { 'WRSS', 0/* ID */ };
 static HIViewID const	idMyRadioButtonResizeAffectsFontSize		= { 'WRFS', 0/* ID */ };
 static HIViewID const	idMyHelpTextResizeEffect					= { 'HTWR', 0/* ID */ };
@@ -128,6 +130,7 @@ static HIViewID const	idMyFieldCopyUsingSpacesForTabs				= { 'CUST', 0/* ID */ }
 static HIViewID const	idMyRadioButtonCommandNDefault				= { 'CNDf', 0/* ID */ };
 static HIViewID const	idMyRadioButtonCommandNLogInShell			= { 'CNSh', 0/* ID */ };
 static HIViewID const	idMyRadioButtonCommandNDialog				= { 'CNDg', 0/* ID */ };
+static HIViewID const	idMyLabelBellType							= { 'LSnd', 0/* ID */ };
 static HIViewID const	idMyPopUpMenuBellType						= { 'BSnd', 0/* ID */ };
 static HIViewID const	idMyCheckBoxVisualBell						= { 'VisB', 0/* ID */ };
 static HIViewID const	idMyHelpTextBellType						= { 'HTBT', 0/* ID */ };
@@ -150,6 +153,9 @@ public:
 	My_GeneralTabNotification	(HIWindowRef);
 
 protected:
+	void
+	assignAccessibilityRelationships ();
+	
 	HIViewWrap
 	createPaneView	(HIWindowRef) const;
 	
@@ -162,6 +168,8 @@ protected:
 
 private:
 	CommonEventHandlers_HIViewResizer	containerResizer;
+	HIViewWrap							labelBell;
+	HIViewWrap							popupMenuBell;
 };
 
 /*!
@@ -200,6 +208,9 @@ public:
 	CarbonEventHandlerWrap		buttonCommandsHandler;		//!< invoked when a button is clicked
 
 protected:
+	void
+	assignAccessibilityRelationships ();
+	
 	HIViewWrap
 	createPaneView	(HIWindowRef) const;
 	
@@ -212,6 +223,11 @@ protected:
 
 private:
 	CommonEventHandlers_HIViewResizer	containerResizer;
+	HIViewWrap							labelCursor;
+	HIViewWrap							checkBoxCursorFlashing;
+	HIViewWrap							labelWindowResizeEffect;
+	HIViewWrap							radioButtonResizeAffectsScreenSize;
+	HIViewWrap							radioButtonResizeAffectsFontSize;
 };
 
 /*!
@@ -571,14 +587,61 @@ My_GeneralTabNotification::
 My_GeneralTabNotification	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-HIViewWrap			(createPaneView(inOwningWindow)
-						<< HIViewWrap_AssertExists),
-containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-						My_GeneralTabNotification::deltaSize, this/* context */)
+HIViewWrap				(createPaneView(inOwningWindow)
+							<< HIViewWrap_AssertExists),
+containerResizer		(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_GeneralTabNotification::deltaSize, this/* context */),
+labelBell				(idMyLabelBellType, HIViewGetWindow(*this)),
+popupMenuBell			(idMyPopUpMenuBellType, HIViewGetWindow(*this))
 {
 	assert(exists());
 	assert(containerResizer.isInstalled());
+	assert(labelBell.exists());
+	assert(popupMenuBell.exists());
+	assignAccessibilityRelationships();
 }// My_GeneralTabNotification 2-argument constructor
+
+
+/*!
+Creates the necessary accessibility objects and assigns
+relationships between things (for example, between
+labels and the things they are labelling).
+
+Since HIViewWrap automatically retains an accessibility
+object, the views used for these relationships are
+stored in this class permanently in order to preserve
+their accessibility information.
+
+(3.1)
+*/
+void
+My_GeneralTabNotification::
+assignAccessibilityRelationships ()
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	// set accessibility relationships, if possible
+	if (FlagManager_Test(kFlagOS10_4API))
+	{
+		OSStatus	error = noErr;
+		
+		
+		// associate the terminal bell menu with its label, and vice-versa
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(this->popupMenuBell.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXTitleUIElementAttribute, this->labelBell.acquireAccessibilityObject());
+		{
+			void const*			values[] = { this->popupMenuBell.acquireAccessibilityObject() };
+			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+																&kCFTypeArrayCallBacks), true/* is retained */);
+			
+			
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(this->labelBell.returnHIObjectRef(), 0/* sub-component identifier */,
+						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
+		}
+	}
+#endif
+}// My_GeneralTabNotification::assignAccessibilityRelationships
 
 
 /*!
@@ -1045,18 +1108,93 @@ My_GeneralTabSpecial::
 My_GeneralTabSpecial	(HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-HIViewWrap				(createPaneView(inOwningWindow)
-							<< HIViewWrap_AssertExists),
-buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
-							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
-							nullptr/* user data */),
-containerResizer		(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-							My_GeneralTabSpecial::deltaSize, this/* context */)
+HIViewWrap							(createPaneView(inOwningWindow)
+										<< HIViewWrap_AssertExists),
+buttonCommandsHandler				(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+										nullptr/* user data */),
+containerResizer					(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+										My_GeneralTabSpecial::deltaSize, this/* context */),
+labelCursor							(idMyLabelTerminalCursor, HIViewGetWindow(*this)),
+checkBoxCursorFlashing				(idMyCheckBoxCursorFlashing, HIViewGetWindow(*this)),
+labelWindowResizeEffect				(idMyLabelWindowResizeEffect, HIViewGetWindow(*this)),
+radioButtonResizeAffectsScreenSize	(idMyRadioButtonResizeAffectsScreenSize, HIViewGetWindow(*this)),
+radioButtonResizeAffectsFontSize	(idMyRadioButtonResizeAffectsFontSize, HIViewGetWindow(*this))
 {
 	assert(exists());
 	assert(buttonCommandsHandler.isInstalled());
 	assert(containerResizer.isInstalled());
+	assert(labelCursor.exists());
+	assert(checkBoxCursorFlashing.exists());
+	assert(labelWindowResizeEffect.exists());
+	assert(radioButtonResizeAffectsScreenSize.exists());
+	assert(radioButtonResizeAffectsFontSize.exists());
+	assignAccessibilityRelationships();
 }// My_GeneralTabSpecial 2-argument constructor
+
+
+/*!
+Creates the necessary accessibility objects and assigns
+relationships between things (for example, between
+labels and the things they are labelling).
+
+Since HIViewWrap automatically retains an accessibility
+object, the views used for these relationships are
+stored in this class permanently in order to preserve
+their accessibility information.
+
+(3.1)
+*/
+void
+My_GeneralTabSpecial::
+assignAccessibilityRelationships ()
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	// set accessibility relationships, if possible
+	if (FlagManager_Test(kFlagOS10_4API))
+	{
+		OSStatus	error = noErr;
+		
+		
+		// associate the cursor buttons with their label, and vice-versa
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(this->checkBoxCursorFlashing.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXTitleUIElementAttribute, this->labelCursor.acquireAccessibilityObject());
+		{
+			void const*			values[] = { this->checkBoxCursorFlashing.acquireAccessibilityObject() };
+			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+																&kCFTypeArrayCallBacks), true/* is retained */);
+			
+			
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(this->labelCursor.returnHIObjectRef(), 0/* sub-component identifier */,
+						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
+		}
+		
+		// associate the window resize effect buttons with their label, and vice-versa
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(this->radioButtonResizeAffectsScreenSize.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(this->radioButtonResizeAffectsFontSize.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXTitleUIElementAttribute, this->labelWindowResizeEffect.acquireAccessibilityObject());
+		{
+			void const*			values[] =
+								{
+									this->radioButtonResizeAffectsScreenSize.acquireAccessibilityObject(),
+									this->radioButtonResizeAffectsFontSize.acquireAccessibilityObject()
+								};
+			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+																&kCFTypeArrayCallBacks), true/* is retained */);
+			
+			
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(this->labelWindowResizeEffect.returnHIObjectRef(), 0/* sub-component identifier */,
+						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
+		}
+	}
+#endif
+}// My_GeneralTabSpecial::assignAccessibilityRelationships
 
 
 /*!

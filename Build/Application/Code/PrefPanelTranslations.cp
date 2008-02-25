@@ -81,8 +81,9 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
+static HIViewID const	idMyLabelBaseTranslationTable			= { 'LBTT', 0/* ID */ };
 static HIViewID const	idMyDataBrowserBaseTranslationTable		= { 'Tran', 0/* ID */ };
-static HIViewID const	idMyLabelExceptions						= { 'XLbl', 0/* ID */ };
+static HIViewID const	idMyLabelExceptions						= { 'LExc', 0/* ID */ };
 static HIViewID const	idMyDataBrowserExceptions				= { 'Xcpt', 0/* ID */ };
 static HIViewID const	idMyButtonSpecialCharacters				= { 'SplC', 0/* ID */ };
 static HIViewID const	idMyButtonAddException					= { 'AddX', 0/* ID */ };
@@ -124,10 +125,17 @@ public:
 	
 	My_TranslationsDataBrowserCallbacks		listCallbacks;
 	HIViewWrap								mainView;
+	HIViewWrap								labelBaseTable;
+	HIViewWrap								dataBrowserBaseTable;
+	HIViewWrap								labelExceptions;
+	HIViewWrap								dataBrowserExceptions;
 	CommonEventHandlers_HIViewResizer		containerResizer;	//!< invoked when the panel is resized
 	CarbonEventHandlerWrap					viewClickHandler;	//!< invoked when a tab is clicked
 
 protected:
+	void
+	assignAccessibilityRelationships ();
+	
 	HIViewWrap
 	createContainerView		(Panel_Ref, HIWindowRef) const;
 };
@@ -279,21 +287,104 @@ My_TranslationsPanelUI	(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-listCallbacks						(),
-mainView							(createContainerView(inPanel, inOwningWindow)
-										<< HIViewWrap_AssertExists),
-containerResizer					(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
-										kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-										deltaSizePanelContainerHIView, this/* context */),
-viewClickHandler					(CarbonEventUtilities_ReturnViewTarget(this->mainView), receiveViewHit,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
-										this/* user data */)
+listCallbacks			(),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+labelBaseTable			(idMyLabelBaseTranslationTable, inOwningWindow),
+dataBrowserBaseTable	(idMyDataBrowserBaseTranslationTable, inOwningWindow),
+labelExceptions			(idMyLabelExceptions, inOwningWindow),
+dataBrowserExceptions	(idMyDataBrowserExceptions, inOwningWindow),
+containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+							kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
+							deltaSizePanelContainerHIView, this/* context */),
+viewClickHandler		(CarbonEventUtilities_ReturnViewTarget(this->mainView), receiveViewHit,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
+							this/* user data */)
 {
+	assert(labelBaseTable.exists());
+	assert(dataBrowserBaseTable.exists());
+	assert(labelExceptions.exists());
+	assert(dataBrowserExceptions.exists());
 	assert(containerResizer.isInstalled());
 	assert(viewClickHandler.isInstalled());
 	
 	setDataBrowserColumnWidths(this);
+	assignAccessibilityRelationships();
 }// My_TranslationsPanelUI 2-argument constructor
+
+
+/*!
+Creates the necessary accessibility objects and assigns
+relationships between things (for example, between
+labels and the things they are labelling).
+
+Since HIViewWrap automatically retains an accessibility
+object, the views used for these relationships are
+stored in this class permanently in order to preserve
+their accessibility information.
+
+(3.1)
+*/
+void
+My_TranslationsPanelUI::
+assignAccessibilityRelationships ()
+{
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	// set accessibility relationships, if possible
+	if (FlagManager_Test(kFlagOS10_4API))
+	{
+		CFStringRef		accessibilityDescCFString = nullptr;
+		HIViewWrap		addButton(idMyButtonAddException, HIViewGetWindow(this->mainView));
+		HIViewWrap		removeButton(idMyButtonRemoveException, HIViewGetWindow(this->mainView));
+		OSStatus		error = noErr;
+		
+		
+		// associate the data browsers with their labels, and vice-versa
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(this->dataBrowserBaseTable.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXTitleUIElementAttribute, this->labelBaseTable.acquireAccessibilityObject());
+		{
+			void const*			values[] = { this->dataBrowserBaseTable.acquireAccessibilityObject() };
+			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+																&kCFTypeArrayCallBacks), true/* is retained */);
+			
+			
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(this->labelBaseTable.returnHIObjectRef(), 0/* sub-component identifier */,
+						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
+		}
+		error = HIObjectSetAuxiliaryAccessibilityAttribute
+				(this->dataBrowserExceptions.returnHIObjectRef(), 0/* sub-component identifier */,
+					kAXTitleUIElementAttribute, this->labelExceptions.acquireAccessibilityObject());
+		{
+			void const*			values[] = { this->dataBrowserExceptions.acquireAccessibilityObject() };
+			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
+																&kCFTypeArrayCallBacks), true/* is retained */);
+			
+			
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(this->labelExceptions.returnHIObjectRef(), 0/* sub-component identifier */,
+						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
+		}
+		
+		// describe the add and remove buttons
+		if (UIStrings_Copy(kUIStrings_ButtonAddAccessibilityDesc, accessibilityDescCFString).ok())
+		{
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(addButton.returnHIObjectRef(), 0/* sub-component identifier */,
+						kAXDescriptionAttribute, accessibilityDescCFString);
+			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+		}
+		if (UIStrings_Copy(kUIStrings_ButtonRemoveAccessibilityDesc, accessibilityDescCFString).ok())
+		{
+			error = HIObjectSetAuxiliaryAccessibilityAttribute
+					(removeButton.returnHIObjectRef(), 0/* sub-component identifier */,
+						kAXDescriptionAttribute, accessibilityDescCFString);
+			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+		}
+	}
+#endif
+}// assignAccessibilityRelationships
 
 
 /*!
@@ -560,40 +651,6 @@ const
 			IconManager_DisposeIcon(&buttonIcon);
 		}
 	}
-	
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	// set accessibility relationships, if possible
-	if (FlagManager_Test(kFlagOS10_4API))
-	{
-		CFStringRef		accessibilityDescCFString = nullptr;
-		HIViewWrap		addButton(idMyButtonAddException, inOwningWindow);
-		HIViewWrap		removeButton(idMyButtonRemoveException, inOwningWindow);
-		
-		
-		if (UIStrings_Copy(kUIStrings_ButtonAddAccessibilityDesc, accessibilityDescCFString).ok())
-		{
-			HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(addButton.operator HIViewRef(), HIObjectRef);
-			OSStatus			error = noErr;
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(kViewObjectRef, 0/* sub-component identifier */,
-						kAXDescriptionAttribute, accessibilityDescCFString);
-			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-		}
-		if (UIStrings_Copy(kUIStrings_ButtonRemoveAccessibilityDesc, accessibilityDescCFString).ok())
-		{
-			HIObjectRef const	kViewObjectRef = REINTERPRET_CAST(removeButton.operator HIViewRef(), HIObjectRef);
-			OSStatus			error = noErr;
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(kViewObjectRef, 0/* sub-component identifier */,
-						kAXDescriptionAttribute, accessibilityDescCFString);
-			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-		}
-	}
-#endif
 	
 	// initialize views - UNIMPLEMENTED
 	
