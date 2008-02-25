@@ -115,6 +115,10 @@ public:
 	inline HIViewWrap&
 	operator <<		(HIViewWrap::manipulator	inManipulator);
 	
+	//! creates or returns existing accessibility object with ID zero (0)
+	inline AXUIElementRef
+	acquireAccessibilityObject ();
+	
 	//! returns true only if the view is valid
 	inline bool
 	exists () const;
@@ -126,6 +130,7 @@ public:
 protected:
 
 private:
+	CFRetainRelease		_accessibilityObject;
 };
 
 
@@ -241,6 +246,26 @@ operator <<		(HIViewWrap::manipulator	inManipulator)
 {
 	return (*inManipulator)(*this);
 }// operator <<
+
+
+AXUIElementRef
+HIViewWrap::
+acquireAccessibilityObject ()
+{
+	AXUIElementRef		result = nullptr;
+	
+	
+	if (_accessibilityObject.exists())
+	{
+		result = REINTERPRET_CAST(_accessibilityObject.returnCFTypeRef(), AXUIElementRef);
+	}
+	else
+	{
+		result = AXUIElementCreateWithHIObjectAndIdentifier(this->returnHIObjectRef(), 0/* sub-part identifier */);
+		_accessibilityObject.setCFTypeRef(result, true/* is retained */);
+	}
+	return result;
+}// acquireAccessibilityObject
 
 
 bool
