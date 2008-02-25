@@ -1454,6 +1454,12 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 		}
 		break;
 	
+	case kDataBrowserEditStopped:
+		// it seems to be possible for the I-beam to persist at times
+		// unless the cursor is explicitly reset here
+		Cursors_UseArrow();
+		break;
+	
 	default:
 		// not all messages are supported
 		break;
