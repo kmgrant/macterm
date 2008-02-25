@@ -1827,6 +1827,10 @@ if "inClass" is not valid
 
 \retval kPreferences_ResultOneOrMoreNamesNotAvailable
 if at least one of the context names could not be retrieved
+(but, the rest of the array will be valid)
+
+\retval kPreferences_ResultGenericFailure
+if any other error occurs
 
 (3.1)
 */
@@ -1834,80 +1838,39 @@ Preferences_Result
 Preferences_CreateContextNameArray	(Preferences_Class		inClass,
 									 CFArrayRef&			outNewArrayOfNewCFStrings)
 {
-	Preferences_Result		result = kPreferences_ResultOK;
-	CFArrayRef				favoritesListCFArray = nullptr;
+	Preferences_Result			result = kPreferences_ResultGenericFailure;
+	My_FavoriteContextList*		listPtr = nullptr;
 	
 	
-	// set default value
-	outNewArrayOfNewCFStrings = nullptr;
-	
-	// figure out which MacTelnet preferences key holds the
-	// relevant list of Favorites dictionaries
-	result = copyClassDictionaryCFArray(inClass, favoritesListCFArray);
-	
-	// if found, iterate over the list of dictionaries and find the "name"
-	// key in each one (this is an external representation of a Unicode
-	// CFString, which is stored as a CFData; convert it back to a string)
-	if (nullptr == favoritesListCFArray)
-	{
-		result = kPreferences_ResultOneOrMoreNamesNotAvailable;
-	}
+	if (false == getListOfContexts(inClass, listPtr)) result = kPreferences_ResultOneOrMoreNamesNotAvailable;
 	else
 	{
-		CFIndex const		kArraySize = CFArrayGetCount(favoritesListCFArray);
-		CFMutableArrayRef	newCFArray = nullptr;
+		CFMutableArrayRef	newArray = CFArrayCreateMutable(kCFAllocatorDefault, listPtr->size(),
+															&kCFTypeArrayCallBacks);
 		
 		
-		newCFArray = CFArrayCreateMutable(kCFAllocatorDefault, kArraySize, &kCFTypeArrayCallBacks);
-		if (nullptr != newCFArray)
+		if (nullptr != newArray)
 		{
-			CFIndex				i = 0;
-			CFDictionaryRef		dataCFDictionary = nullptr;
-			CFDataRef			externalStringRepresentationCFData = nullptr;
-			CFStringRef			newCFString = nullptr;
+			My_FavoriteContextList::const_iterator		toContextPtr = listPtr->begin();
 			
 			
-			for (i = 0; i < kArraySize; ++i)
+			result = kPreferences_ResultOK; // initially...
+			for (CFIndex i = 0; toContextPtr != listPtr->end(); ++toContextPtr)
 			{
-				dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex(favoritesListCFArray, i));
-				if (nullptr != dataCFDictionary)
+				My_ContextCFDictionaryPtr	contextPtr = *toContextPtr;
+				CFStringRef					thisName = contextPtr->returnName();
+				
+				
+				if (nullptr == thisName) result = kPreferences_ResultOneOrMoreNamesNotAvailable;
+				else
 				{
-					Boolean		stringAllocated = false;
-					
-					
-					externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
-					if (nullptr == externalStringRepresentationCFData)
-					{
-						// if a Unicode name cannot be found, default to the
-						// string backup before failing completely
-						newCFString = CFUtilities_StringCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name-string")));
-					}
-					else
-					{
-						newCFString = CFStringCreateFromExternalRepresentation
-										(kCFAllocatorDefault, externalStringRepresentationCFData,
-											kMy_SavedNameEncoding);
-						stringAllocated = true;
-					}
-					
-					if (nullptr == newCFString)
-					{
-						result = kPreferences_ResultOneOrMoreNamesNotAvailable;
-					}
-					else
-					{
-						// success!
-						CFArrayAppendValue(newCFArray, newCFString);
-						if (stringAllocated)
-						{
-							CFRelease(newCFString); // appending to array automatically retains
-						}
-					}
+					CFRetain(thisName);
+					CFArraySetValueAtIndex(newArray, i, thisName);
+					++i;
 				}
 			}
-			outNewArrayOfNewCFStrings = newCFArray;
+			outNewArrayOfNewCFStrings = newArray;
 		}
-		CFRelease(favoritesListCFArray), favoritesListCFArray = nullptr;
 	}
 	
 	return result;
