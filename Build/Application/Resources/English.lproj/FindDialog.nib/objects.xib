@@ -3,16 +3,30 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="13" name="allObjects">
-    <object class="IBCarbonMenu" id="204">
-      <string name="title">BevelMenu</string>
+    <object class="IBCarbonIcon" id="205">
+      <ostype name="controlSignature">Icon</ostype>
+      <int name="contentResID">0</int>
+      <int name="creator">0</int>
+      <string name="viewFrame">225 11 16 16 </string>
+      <string name="bounds">11 225 27 241 </string>
     </object>
-    <object class="IBCarbonButton" id="185">
-      <ostype name="controlSignature">Canc</ostype>
-      <ostype name="command">not!</ostype>
-      <int name="buttonType">2</int>
-      <string name="title">Cancel</string>
-      <string name="viewFrame">444 8 70 20 </string>
-      <string name="bounds">8 444 28 514 </string>
+    <object class="IBCarbonRoundButton" id="199">
+      <ostype name="controlSignature">Help</ostype>
+      <ostype name="command">?Ctx</ostype>
+      <string name="viewFrame">20 12 21 18 </string>
+      <string name="bounds">12 20 30 41 </string>
+      <int name="contentType">132</int>
+      <int name="iconCreator">1835098995</int>
+      <int name="iconType">1751477360</int>
+    </object>
+    <object class="IBCarbonButton" id="184">
+      <ostype name="controlSignature">Find</ostype>
+      <int name="controlSize">1</int>
+      <ostype name="command">ok  </ostype>
+      <int name="buttonType">1</int>
+      <string name="title">✔</string>
+      <string name="viewFrame">713 12 40 17 </string>
+      <string name="bounds">12 713 29 753 </string>
     </object>
     <object class="IBCarbonWindow" id="166">
       <boolean name="receiveUpdates">FALSE</boolean>
@@ -22,52 +36,31 @@
       <int name="themeBrush">53</int>
       <string name="title"></string>
       <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="viewFrame">0 0 616 66 </string>
+        <string name="viewFrame">0 0 773 41 </string>
         <array count="9" name="subviews">
           <object class="IBCarbonStaticText" id="197">
             <ostype name="controlSignature">Stat</ostype>
-            <string name="title">&lt;status&gt;</string>
+            <int name="controlSize">1</int>
+            <string name="title">The text was not found.</string>
             <int name="justification">-1</int>
-            <string name="viewFrame">316 41 256 16 </string>
-            <string name="bounds">41 316 57 572 </string>
+            <string name="viewFrame">53 13 164 13 </string>
+            <string name="bounds">13 53 26 217 </string>
           </object>
           <object class="IBCarbonChasingArrows" id="198">
             <ostype name="controlSignature">Prog</ostype>
             <string name="helpTagText">A search of this terminal window is in progress.</string>
-            <string name="viewFrame">580 41 16 16 </string>
-            <string name="bounds">41 580 57 596 </string>
+            <string name="viewFrame">225 11 16 16 </string>
+            <string name="bounds">11 225 27 241 </string>
           </object>
-          <object class="IBCarbonIcon" id="205">
-            <ostype name="controlSignature">Icon</ostype>
-            <int name="contentResID">0</int>
-            <int name="creator">0</int>
-            <string name="viewFrame">580 41 16 16 </string>
-            <string name="bounds">41 580 57 596 </string>
-          </object>
+          <reference idRef="205"/>
           <object class="IBCarbonSearchField" id="206">
             <ostype name="controlSignature">KeyW</ostype>
-            <string name="viewFrame">53 8 320 22 </string>
-            <string name="bounds">8 53 30 373 </string>
+            <string name="viewFrame">249 9 275 22 </string>
+            <string name="bounds">9 249 31 524 </string>
           </object>
-          <object class="IBCarbonCheckBox" id="187">
-            <ostype name="controlSignature">XCsS</ostype>
-            <ostype name="command">RFnd</ostype>
-            <string name="helpTagText">If checked, capital letters match small letters.</string>
-            <string name="title">Case sensitive</string>
-            <string name="viewFrame">53 40 202 18 </string>
-            <string name="bounds">40 53 58 255 </string>
-          </object>
-          <object class="IBCarbonButton" id="184">
-            <ostype name="controlSignature">Find</ostype>
-            <ostype name="command">ok  </ostype>
-            <int name="buttonType">1</int>
-            <string name="title">Go</string>
-            <string name="viewFrame">526 8 70 20 </string>
-            <string name="bounds">8 526 28 596 </string>
-          </object>
-          <reference idRef="185"/>
           <object class="IBCarbonBevelButton" id="203">
             <ostype name="controlSignature">HMnu</ostype>
+            <int name="controlSize">1</int>
             <string name="helpTagText">Recent command lines.</string>
             <int name="bevelThickness">1</int>
             <int name="contentType">1</int>
@@ -76,54 +69,67 @@
             <int name="menuBehavior">8192</int>
             <int name="selectedItem">-2147483648</int>
             <boolean name="rounded">TRUE</boolean>
-            <reference name="menu" idRef="204"/>
-            <string name="viewFrame">381 7 32 23 </string>
-            <string name="bounds">7 381 30 413 </string>
+            <object name="menu" class="IBCarbonMenu" id="204">
+              <string name="title">BevelMenu</string>
+            </object>
+            <string name="viewFrame">532 10 35 21 </string>
+            <string name="bounds">10 532 31 567 </string>
           </object>
-          <object class="IBCarbonRoundButton" id="199">
-            <ostype name="controlSignature">Help</ostype>
-            <ostype name="command">?Ctx</ostype>
-            <string name="viewFrame">20 9 21 18 </string>
-            <string name="bounds">9 20 27 41 </string>
-            <int name="contentType">132</int>
-            <int name="iconCreator">1835098995</int>
-            <int name="iconType">1751477360</int>
+          <object class="IBCarbonCheckBox" id="187">
+            <ostype name="controlSignature">XIgc</ostype>
+            <int name="controlSize">1</int>
+            <ostype name="command">RFnd</ostype>
+            <string name="helpTagText">If checked, capital letters match small letters.</string>
+            <int name="initialState">1</int>
+            <string name="title">A=a</string>
+            <string name="viewFrame">579 14 78 12 </string>
+            <string name="bounds">14 579 26 657 </string>
           </object>
+          <reference idRef="184"/>
+          <object class="IBCarbonButton" id="185">
+            <ostype name="controlSignature">Canc</ostype>
+            <int name="controlSize">1</int>
+            <ostype name="command">not!</ostype>
+            <int name="buttonType">2</int>
+            <string name="title">✖</string>
+            <string name="viewFrame">665 12 40 17 </string>
+            <string name="bounds">12 665 29 705 </string>
+          </object>
+          <reference idRef="199"/>
         </array>
-        <string name="bounds">0 0 66 616 </string>
+        <string name="bounds">0 0 41 773 </string>
       </object>
-      <string name="windowRect">295 86 361 702 </string>
-      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+      <string name="windowRect">253 360 294 1133 </string>
+      <string name="ScreenRectAtEncodeTime">0 105 1178 1920 </string>
     </object>
-    <reference idRef="206"/>
-    <reference idRef="199"/>
-    <reference idRef="197"/>
-    <reference idRef="203"/>
-    <reference idRef="198"/>
-    <reference idRef="184"/>
+    <reference idRef="185"/>
     <reference idRef="167"/>
+    <reference idRef="203"/>
+    <reference idRef="206"/>
+    <reference idRef="198"/>
+    <reference idRef="187"/>
     <object class="IBCarbonEditText" id="200">
       <ostype name="controlSignature">Titl</ostype>
       <boolean name="isUnicode">TRUE</boolean>
-      <string name="viewFrame">92 -135022 266 0 </string>
-      <string name="bounds">-3950 92 -3950 358 </string>
+      <string name="viewFrame">92 -135041 266 0 </string>
+      <string name="bounds">-3969 92 -3969 358 </string>
     </object>
-    <reference idRef="205"/>
-    <reference idRef="187"/>
+    <reference idRef="204"/>
+    <reference idRef="197"/>
   </array>
   <array count="13" name="allParents">
-    <reference idRef="203"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
     <reference idRef="167"/>
     <reference idRef="1"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
     <reference idRef="167"/>
     <reference idRef="166"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="203"/>
     <reference idRef="167"/>
   </array>
   <dictionary count="2" name="nameTable">

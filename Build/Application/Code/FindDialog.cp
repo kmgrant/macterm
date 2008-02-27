@@ -89,7 +89,7 @@ enum
 	kSignatureMyTextStatus				= 'Stat',
 	kSignatureMyIconNotFound			= 'Icon',
 	kSignatureMyArrowsSearchProgress	= 'Prog',
-	kSignatureMyCheckBoxCaseSensitive	= 'XCsS'
+	kSignatureMyCheckBoxIgnoreCase		= 'XIgc'
 };
 static HIViewID const		idMyButtonSearch			= { kSignatureMyButtonSearch,				0/* ID */ };
 static HIViewID const		idMyButtonCancel			= { kSignatureMyButtonCancel,				0/* ID */ };
@@ -99,7 +99,7 @@ static HIViewID const		idMyKeywordHistoryMenu		= { kSignatureMyKeywordHistoryMen
 static HIViewID const		idMyTextStatus				= { kSignatureMyTextStatus,					0/* ID */ };
 static HIViewID const		idMyIconNotFound			= { kSignatureMyIconNotFound,				0/* ID */ };
 static HIViewID const		idMyArrowsSearchProgress	= { kSignatureMyArrowsSearchProgress,		0/* ID */ };
-static HIViewID const		idMyCheckBoxCaseSensitive	= { kSignatureMyCheckBoxCaseSensitive,		0/* ID */ };
+static HIViewID const		idMyCheckBoxIgnoreCase		= { kSignatureMyCheckBoxIgnoreCase,			0/* ID */ };
 
 #pragma mark Types
 
@@ -122,7 +122,7 @@ struct My_FindDialog
 	HIViewWrap								textStatus;					//!< message stating the results of the search
 	HIViewWrap								iconNotFound;				//!< icon that appears when text was not found
 	HIViewWrap								arrowsSearchProgress;		//!< the progress indicator during searches
-	HIViewWrap								checkboxCaseSensitive;		//!< checkbox indicating whether ÒsimilarÓ letters match
+	HIViewWrap								checkboxIgnoreCase;			//!< checkbox indicating whether ÒsimilarÓ letters match
 	HIViewWrap								buttonHelp;					//!< help button
 	
 	FindDialog_CloseNotifyProcPtr			closeNotifyProc;			//!< routine to call when the dialog is dismissed
@@ -195,7 +195,7 @@ iconNotFound				(dialogWindow.returnHIViewWithID(idMyIconNotFound)
 								<< HIViewWrap_AssertExists),
 arrowsSearchProgress		(dialogWindow.returnHIViewWithID(idMyArrowsSearchProgress)
 								<< HIViewWrap_AssertExists),
-checkboxCaseSensitive		(dialogWindow.returnHIViewWithID(idMyCheckBoxCaseSensitive)
+checkboxIgnoreCase			(dialogWindow.returnHIViewWithID(idMyCheckBoxIgnoreCase)
 								<< HIViewWrap_AssertExists),
 buttonHelp					(dialogWindow.returnHIViewWithID(idMyButtonHelp)
 								<< HIViewWrap_AssertExists
@@ -263,11 +263,14 @@ keywordHistory				(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no s
 	// UNIMPLEMENTED
 	
 	// initialize checkboxes
-	SetControl32BitValue(this->checkboxCaseSensitive, (inFlags & kFindDialog_OptionCaseSensitivity) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(this->checkboxIgnoreCase,
+							(inFlags & kFindDialog_OptionCaseSensitivity)
+								? kControlCheckBoxUncheckedValue
+								: kControlCheckBoxCheckedValue);
 	
 	// initially hide the arrows and the error icon
-	(OSStatus)SetControlVisibility(this->iconNotFound, false/* visible */, false/* draw */);
-	(OSStatus)SetControlVisibility(this->arrowsSearchProgress, false/* visible */, false/* draw */);
+	(OSStatus)HIViewSetVisible(this->iconNotFound, false);
+	(OSStatus)HIViewSetVisible(this->arrowsSearchProgress, false);
 	
 	// initially clear the status area
 	SetControlTextWithCFString(this->textStatus, CFSTR(""));
@@ -438,7 +441,7 @@ FindDialog_ReturnOptions	(FindDialog_Ref		inDialog)
 	
 	if (nullptr != ptr)
 	{
-		if (GetControlValue(ptr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue) result |= kFindDialog_OptionCaseSensitivity;
+		if (GetControl32BitValue(ptr->checkboxIgnoreCase) == kControlCheckBoxUncheckedValue) result |= kFindDialog_OptionCaseSensitivity;
 	}
 	return result;
 }// ReturnOptions
@@ -639,23 +642,13 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 		DialogAdjust_BeginControlAdjustment(ptr->dialogWindow);
 		{
 			// controls which are moved horizontally
-			if (Localization_IsLeftToRight())
-			{
-				DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->buttonSearch, truncDeltaX);
-				DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->buttonCancel, truncDeltaX);
-				DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->popUpMenuKeywordHistory, truncDeltaX);
-			}
-			else
-			{
-				DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->buttonHelp, truncDeltaX);
-			}
-			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->iconNotFound, truncDeltaX);
-			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->arrowsSearchProgress, truncDeltaX);
+			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->buttonSearch, truncDeltaX);
+			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->buttonCancel, truncDeltaX);
+			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->checkboxIgnoreCase, truncDeltaX);
+			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->popUpMenuKeywordHistory, truncDeltaX);
 			
 			// controls which are resized horizontally
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->fieldKeywords, truncDeltaX);
-			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->textStatus, truncDeltaX);
-			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->checkboxCaseSensitive, truncDeltaX);
 		}
 		DialogAdjust_EndAdjustment(truncDeltaX, truncDeltaY); // moves and resizes controls properly
 	}
@@ -693,11 +686,11 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 		
 		// put the sheet in progress mode
 		DeactivateControl(inPtr->buttonSearch);
-		DeactivateControl(inPtr->checkboxCaseSensitive);
-		SetControlVisibility(inPtr->arrowsSearchProgress, true/* visible */, true/* draw */);
+		DeactivateControl(inPtr->checkboxIgnoreCase);
+		HIViewSetVisible(inPtr->arrowsSearchProgress, true);
 		
 		// configure search
-		if (GetControlValue(inPtr->checkboxCaseSensitive) == kControlCheckBoxCheckedValue)
+		if (GetControl32BitValue(inPtr->checkboxIgnoreCase) == kControlCheckBoxUncheckedValue)
 		{
 			flags |= kTerminal_SearchFlagsCaseSensitive;
 		}
@@ -715,7 +708,7 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 				result = false;
 				
 				// show an error icon and message
-				SetControlVisibility(inPtr->iconNotFound, true/* visible */, true/* draw */);
+				HIViewSetVisible(inPtr->iconNotFound, true);
 				stringResult = UIStrings_Copy(kUIStrings_TerminalSearchNothingFound, statusCFString);
 			}
 			else
@@ -723,7 +716,7 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 				result = true;
 				
 				// hide the error icon and display the number of matches
-				SetControlVisibility(inPtr->iconNotFound, false/* visible */, true/* draw */);
+				HIViewSetVisible(inPtr->iconNotFound, false);
 				{
 					CFStringRef		templateCFString = nullptr;
 					
@@ -762,9 +755,9 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 		}
 		
 		// remove modal state
-		SetControlVisibility(inPtr->arrowsSearchProgress, false/* visible */, true/* draw */);
+		HIViewSetVisible(inPtr->arrowsSearchProgress, false);
 		ActivateControl(inPtr->buttonSearch);
-		ActivateControl(inPtr->checkboxCaseSensitive);
+		ActivateControl(inPtr->checkboxIgnoreCase);
 	}
 	
 	return result;

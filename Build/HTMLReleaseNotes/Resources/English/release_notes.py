@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080226',
     '20080224',
     '20080223',
     '20080222',
@@ -93,6 +94,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080226': [
+		'Further tweaks to the Find dialog; it is now about as vertically small as it can be, to show as many results as possible.',
+	],
 	'20080224': [
 		'Significantly changed the layout of the Find dialog, to increase visibility of the terminal text underneath.',
 		'Menus now correctly display the names of various Preferences collections as they are added.',
