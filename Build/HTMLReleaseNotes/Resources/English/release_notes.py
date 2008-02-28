@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080228',
     '20080227',
     '20080226',
     '20080224',
@@ -95,6 +96,14 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080228': [
+		'Terminal view text selections now support shift-down-arrow and shift-up-arrow to extend by one line vertically.',
+		'Terminal view text selections now support shift-left-arrow and shift-right-arrow to extend by one character horizontally (with wrap).',
+		'Terminal view text selections now support shift-command-left-arrow to extend to the beginning of the first selection line.',
+		'Terminal view text selections now support shift-command-right-arrow to extend to the end of the last selection line.',
+		'Terminal view rectangular text selections are also changed intelligently when these new keyboard short-cuts are used.',
+		'The cursor location or cursor line can now be selected simply by using a new extension short-cut while no text selection exists.',
+	],
 	'20080227': [
 		'Even more tweaks to the Find dialog; it is now horizontally much narrower by default, but still resizable.',
 		'Find dialog history menu no longer saves empty or all-whitespace searches.',

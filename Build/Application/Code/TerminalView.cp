@@ -369,6 +369,7 @@ static OSStatus			receiveTerminalViewDraw			(EventHandlerCallRef, EventRef, Term
 static OSStatus			receiveTerminalViewFocus		(EventHandlerCallRef, EventRef, TerminalViewRef);
 static OSStatus			receiveTerminalViewGetData		(EventHandlerCallRef, EventRef, TerminalViewRef);
 static OSStatus			receiveTerminalViewHitTest		(EventHandlerCallRef, EventRef, TerminalViewRef);
+static OSStatus			receiveTerminalViewRawKeyDown	(EventHandlerCallRef, EventRef, TerminalViewRef);
 static OSStatus			receiveTerminalViewRegionRequest(EventHandlerCallRef, EventRef, TerminalViewRef);
 static OSStatus			receiveTerminalViewTrack		(EventHandlerCallRef, EventRef, TerminalViewRef);
 static void				receiveVideoModeChange			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -486,7 +487,9 @@ TerminalView_Init ()
 									{ kEventClassControl, kEventControlTrack },
 									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
 									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
-									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable }
+									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable },
+									{ kEventClassKeyboard, kEventRawKeyDown },
+									{ kEventClassKeyboard, kEventRawKeyRepeat }
 								};
 		OSStatus				error = noErr;
 		
@@ -2009,6 +2012,81 @@ TerminalView_ScrollToEnd	(TerminalViewRef	inView)
 	result = TerminalView_ScrollRowsTowardTopEdge(inView, 32765);
 	return result;
 }// ScrollToEnd
+
+
+/*!
+Sets the selection to be exactly one character, the cell
+of the current cursor location.
+
+This is useful for beginning a completely-keyboard-driven
+text selection.
+
+(3.1)
+*/
+void
+TerminalView_SelectCursorCharacter		(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (viewPtr != nullptr)
+	{
+		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+		UInt16				cursorX = 0;
+		UInt16				cursorY = 0;
+		
+		
+		// find the new cursor region
+		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
+		if (kTerminal_ResultOK == getCursorLocationError)
+		{
+			TerminalView_SelectNothing(inView);
+			
+			viewPtr->text.selection.range.first = std::make_pair(cursorX, cursorY);
+			viewPtr->text.selection.range.second = std::make_pair(cursorX + 1, cursorY + 1);
+			
+			highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
+			viewPtr->text.selection.exists = true;
+		}
+	}
+}// SelectCursorCharacter
+
+
+/*!
+Sets the selection to the line of the current cursor location.
+
+This is useful for beginning a completely-keyboard-driven
+text selection.
+
+(3.1)
+*/
+void
+TerminalView_SelectCursorLine	(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (viewPtr != nullptr)
+	{
+		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+		UInt16				cursorX = 0;
+		UInt16				cursorY = 0;
+		
+		
+		// find the new cursor region
+		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
+		if (kTerminal_ResultOK == getCursorLocationError)
+		{
+			TerminalView_SelectNothing(inView);
+			
+			viewPtr->text.selection.range.first = std::make_pair(0, cursorY);
+			viewPtr->text.selection.range.second = std::make_pair(Terminal_ReturnColumnCount(viewPtr->screen.ref) + 1, cursorY + 1);
+			
+			highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
+			viewPtr->text.selection.exists = true;
+		}
+	}
+}// SelectCursorLine
 
 
 /*!
@@ -6637,6 +6715,20 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 			break;
 		}
 	}
+	else if (kEventClass == kEventClassKeyboard)
+	{
+		switch (kEventKind)
+		{
+		case kEventRawKeyDown:
+		case kEventRawKeyRepeat:
+			result = receiveTerminalViewRawKeyDown(inHandlerCallRef, inEvent, view);
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
 	else
 	{
 		assert(kEventClass == kEventClassControl);
@@ -7416,6 +7508,216 @@ receiveTerminalViewHitTest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 	}
 	return result;
 }// receiveTerminalViewHitTest
+
+
+/*!
+Handles "kEventRawKeyDown" of "kEventClassKeyboard".
+Responds by modifying currently selected text (if any)
+based on keyboard shortcuts that alter selections.
+
+Invoked by Mac OS X whenever the user hits a key.
+
+(3.1)
+*/
+static OSStatus
+receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+								 EventRef				inEvent,
+								 TerminalViewRef		inTerminalViewRef)
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassKeyboard);
+	assert((kEventKind == kEventRawKeyDown) || (kEventKind == kEventRawKeyRepeat));
+	{
+		UInt32		virtualKeyCode = 0;
+		
+		
+		// get the key
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyCode, typeUInt32, virtualKeyCode);
+		
+		// if the key was found, continue
+		if (noErr == result)
+		{
+			UInt32		modifiers = 0;
+			
+			
+			// get modifier key states
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
+			if (noErr == result)
+			{
+				TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
+				Boolean					selectionChanged = false;
+				
+				
+				// ignore Caps Lock and extra keys for the sake of the comparisons below...
+				modifiers &= (cmdKey | shiftKey | optionKey | controlKey);
+				
+				result = eventNotHandledErr; // initially...
+				switch (virtualKeyCode)
+				{
+				case 0x3B:
+				case 0x7B:
+					// left arrow
+					if (modifiers == shiftKey)
+					{
+						if (false == viewPtr->text.selection.exists) TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						else
+						{
+							// shift-left-arrow means “extend selection one character backward”;
+							// this wraps to the previous line, but the wrap column depends on
+							// the style (rectangular or not)
+							if (viewPtr->text.selection.range.first.first > 0)
+							{
+								// back up one character, same line
+								--viewPtr->text.selection.range.first.first;
+							}
+							else
+							{
+								// move to previous line, end
+								if (false == viewPtr->text.selection.isRectangular)
+								{
+									viewPtr->text.selection.range.first.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+								}
+								--viewPtr->text.selection.range.first.second;
+							}
+							selectionChanged = true;
+						}
+						
+						// event is handled
+						result = noErr;
+					}
+					else if (modifiers == (shiftKey | cmdKey))
+					{
+						if (false == viewPtr->text.selection.exists)
+						{
+							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						}
+						
+						// shift-command-left-arrow means “extend selection to beginning of line”
+						viewPtr->text.selection.range.first.first = 0;
+						selectionChanged = true;
+						
+						// event is handled
+						result = noErr;
+					}
+					break;
+				
+				case 0x3C:
+				case 0x7C:
+					// right arrow
+					if (modifiers == shiftKey)
+					{
+						if (false == viewPtr->text.selection.exists) TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						else
+						{
+							// shift-right-arrow means “extend selection one character forward”;
+							// this wraps to the next line, but the wrap column depends on
+							// the style (rectangular or not)
+							if (viewPtr->text.selection.range.second.first < Terminal_ReturnColumnCount(viewPtr->screen.ref))
+							{
+								// go forward one character, same line
+								++viewPtr->text.selection.range.second.first;
+							}
+							else
+							{
+								// move to next line, beginning
+								if (false == viewPtr->text.selection.isRectangular)
+								{
+									viewPtr->text.selection.range.second.first = 0;
+								}
+								++viewPtr->text.selection.range.second.second;
+							}
+							selectionChanged = true;
+						}
+						
+						// event is handled
+						result = noErr;
+					}
+					else if (modifiers == (shiftKey | cmdKey))
+					{
+						if (false == viewPtr->text.selection.exists)
+						{
+							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						}
+						
+						// shift-command-right-arrow means “extend selection to end of line”
+						viewPtr->text.selection.range.second.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+						selectionChanged = true;
+						
+						// event is handled
+						result = noErr;
+					}
+					break;
+				
+				case 0x3E:
+				case 0x7E:
+					// up arrow
+					if (modifiers == shiftKey)
+					{
+						if (false == viewPtr->text.selection.exists)
+						{
+							TerminalView_SelectCursorLine(inTerminalViewRef);
+						}
+						else
+						{
+							// shift-up-arrow means “extend selection one line backward, same column”
+							--viewPtr->text.selection.range.first.second;
+							selectionChanged = true;
+						}
+						
+						// event is handled
+						result = noErr;
+					}
+					break;
+				
+				case 0x3D:
+				case 0x7D:
+					// down arrow
+					if (modifiers == shiftKey)
+					{
+						if (false == viewPtr->text.selection.exists)
+						{
+							TerminalView_SelectCursorLine(inTerminalViewRef);
+						}
+						else
+						{
+							// shift-down-arrow means “extend selection one line forward, same column”
+							++viewPtr->text.selection.range.second.second;
+							selectionChanged = true;
+						}
+						
+						// event is handled
+						result = noErr;
+					}
+					break;
+				
+				default:
+					// do not handle
+					break;
+				}
+				
+				if (selectionChanged)
+				{
+					// TEMPORARY - could adjust this to only invalidate the part that was
+					// actually added/removed
+					highlightCurrentSelection(viewPtr, true/* highlighted */, true/* draw */);
+				}
+			}
+			else
+			{
+				result = eventNotHandledErr;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// receiveTerminalViewRawKeyDown
 
 
 /*!

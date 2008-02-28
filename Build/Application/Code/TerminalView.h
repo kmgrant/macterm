@@ -308,6 +308,12 @@ size_t
 	TerminalView_ReturnSelectedTextSize			(TerminalViewRef				inView);
 
 void
+	TerminalView_SelectCursorCharacter			(TerminalViewRef				inView);
+
+void
+	TerminalView_SelectCursorLine				(TerminalViewRef				inView);
+
+void
 	TerminalView_SelectEntireBuffer				(TerminalViewRef				inView);
 
 void
