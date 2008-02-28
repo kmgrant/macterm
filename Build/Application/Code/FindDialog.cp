@@ -491,6 +491,8 @@ Adds the specified command line to the history buffer,
 shifting all commands back one.  The given string reference
 is retained.
 
+Empty or blank strings are ignored.
+
 (3.0)
 */
 static void
@@ -499,9 +501,22 @@ addToHistory	(My_FindDialogPtr	inPtr,
 {
 	if (nullptr != inText)
 	{
-		CFArrayInsertValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0, inText);
-		InsertMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, inText, 0/* after which index */,
-										kMenuItemAttrIgnoreMeta/* attributes */, 0/* command ID */);
+		CFRetainRelease		mutableCopy(CFStringCreateMutableCopy
+										(kCFAllocatorDefault, CFStringGetLength(inText), inText),
+										true/* is retained */);
+		
+		
+		if (mutableCopy.exists())
+		{
+			// ignore empty or blank strings
+			CFStringTrimWhitespace(mutableCopy.returnCFMutableStringRef());
+			if (CFStringGetLength(mutableCopy.returnCFStringRef()) > 0)
+			{
+				CFArrayInsertValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0, inText);
+				InsertMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, inText, 0/* after which index */,
+												kMenuItemAttrIgnoreMeta/* attributes */, 0/* command ID */);
+			}
+		}
 	}
 }// addToHistory
 

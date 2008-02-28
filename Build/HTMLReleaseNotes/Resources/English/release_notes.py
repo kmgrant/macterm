@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080227',
     '20080226',
     '20080224',
     '20080223',
@@ -94,6 +95,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080227': [
+		'Even more tweaks to the Find dialog; it is now horizontally much narrower by default, but still resizable.',
+		'Find dialog history menu no longer saves empty or all-whitespace searches.',
+		'Fixed help tags in the Find dialog.',
+	],
 	'20080226': [
 		'Further tweaks to the Find dialog; it is now about as vertically small as it can be, to show as many results as possible.',
 	],
