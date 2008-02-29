@@ -35,8 +35,7 @@
 
 
 #pragma mark Types
-namespace
-{
+namespace {
 
 class My_AutoPool
 {
@@ -53,10 +52,11 @@ private:
 } // anonymous namespace
 
 #pragma mark Internal Method prototypes
-namespace
-{
+namespace {
+
 NSString*	findFolder			(short, OSType);
 NSString*	returnPathForFSRef	(FSRef const&);
+
 } // anonymous namespace
 
 
@@ -77,7 +77,7 @@ CocoaBasic_ApplicationLoad ()
 	
 	
 	return loadOK;
-}
+}// ApplicationLoad
 
 
 /*!
@@ -95,9 +95,9 @@ CocoaBasic_PlaySoundByName	(CFStringRef	inName)
 	My_AutoPool		_;
 	
 	
-	[[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] stop];
-	[[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] play];
-}
+	[(NSSound*)[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] stop];
+	[(NSSound*)[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] play];
+}// PlaySoundByName
 
 
 /*!
@@ -112,7 +112,7 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 	
 	
 	[[[[NSSound alloc] initWithContentsOfURL:REINTERPRET_CAST(inFile, NSURL const*) byReference:NO] autorelease] play];
-}
+}// PlaySoundFile
 
 
 /*!
@@ -161,12 +161,11 @@ CocoaBasic_ReturnUserSoundNames ()
 	
 	[result retain];
 	return REINTERPRET_CAST(result, CFArrayRef);
-}
+}// ReturnUserSoundNames
 
 
 #pragma mark Internal Methods
-namespace
-{
+namespace {
 
 My_AutoPool::
 My_AutoPool (): _pool([[NSAutoreleasePool alloc] init])
@@ -235,6 +234,6 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 	return result;
 }// returnPathForFSRef
 
-}// anonymous namespace
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
