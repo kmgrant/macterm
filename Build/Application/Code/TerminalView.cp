@@ -5323,7 +5323,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 		}
 		else
 		{
-			// then the area to be highlighted is irregularly shaped; this is more complex..
+			// then the area to be highlighted is irregularly shaped; this is more complex...
 			RgnHandle	clippedRegion = Memory_NewRegion();
 			
 			
@@ -5342,7 +5342,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 						selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
 						selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
 						inTerminalViewPtr->screen.viewWidthInPixels,
-						selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter);
+						(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter);
 				screenToLocalRect(inTerminalViewPtr, &partialSelectionBounds);
 				SectRect(&partialSelectionBounds, &screenArea, &clippedRect); // clip to constraint rectangle
 				RectRgn(result, &clippedRect);
@@ -5350,7 +5350,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 				// bounds of last (possibly partial) line to be highlighted
 				SetRect(&partialSelectionBounds,
 						0,
-						selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter,
+						(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter,
 						selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
 						selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
 				screenToLocalRect(inTerminalViewPtr, &partialSelectionBounds);
@@ -5363,9 +5363,9 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 					// highlight extends across more than two lines - fill in the space in between
 					SetRect(&partialSelectionBounds,
 							0,
-							selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
+							(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter,
 							inTerminalViewPtr->screen.viewWidthInPixels,
-							selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
+							(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter);
 					screenToLocalRect(inTerminalViewPtr, &partialSelectionBounds);
 					SectRect(&partialSelectionBounds, &screenArea, &clippedRect); // clip to constraint rectangle
 					RectRgn(clippedRegion, &clippedRect);

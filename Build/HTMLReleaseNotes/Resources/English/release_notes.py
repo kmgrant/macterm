@@ -99,6 +99,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080229': [
 		'Fixed "Automatically Copy selected text" preference to also Copy selections from double-clicks, triple-clicks and keyboard selections.',
+		'Fixed the rendering of text selection outlines for such things as inactive windows and drags.',
 	],
 	'20080228': [
 		'Terminal view text selections now support shift-down-arrow and shift-up-arrow to manipulate by one line vertically.',
