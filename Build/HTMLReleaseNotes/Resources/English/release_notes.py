@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080229',
     '20080228',
     '20080227',
     '20080226',
@@ -96,6 +97,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080229': [
+		'Fixed "Automatically Copy selected text" preference to also Copy selections from double-clicks, triple-clicks and keyboard selections.',
+	],
 	'20080228': [
 		'Terminal view text selections now support shift-down-arrow and shift-up-arrow to manipulate by one line vertically.',
 		'Terminal view text selections now support shift-left-arrow and shift-right-arrow to manipulate by one character horizontally (with wrap).',

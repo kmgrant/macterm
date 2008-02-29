@@ -324,6 +324,7 @@ static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, v
 static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
 static void				clipToScreen					(TerminalViewPtr);
 static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTimerMessage, void*);
+static void				copySelectedTextIfUserPreference(TerminalViewPtr);
 static OSStatus			createWindowColorPalette		(TerminalViewPtr);
 static Boolean			cursorBlinks					(TerminalViewPtr);
 static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
@@ -3378,6 +3379,35 @@ contentHIViewIdleTimer	(EventLoopTimerRef			UNUSED_ARGUMENT(inTimer),
 
 
 /*!
+Copies all of the selected text to the clipboard
+under the condition that the user has set the
+preference to automatically copy new selections.
+
+Use this when the user changes the text selection.
+
+(3.1)
+*/
+static void
+copySelectedTextIfUserPreference	(TerminalViewPtr	inTerminalViewPtr)
+{
+	if (inTerminalViewPtr->text.selection.exists)
+	{
+		Boolean		copySelectedText = false;
+		size_t		actualSize = 0L;
+		
+		
+		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(copySelectedText),
+									&copySelectedText, &actualSize) == kPreferences_ResultOK)
+		{
+			copySelectedText = false; // assume text isn’t automatically copied, if preference can’t be found
+		}
+		
+		if (copySelectedText) Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodTable);
+	}
+}// copySelectedTextIfUserPreference
+
+
+/*!
 Creates a new color palette and initializes its
 colors using terminal preferences.
 
@@ -5565,6 +5595,7 @@ handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 	highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
 	inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
 												inTerminalViewPtr->text.selection.range.second);
+	copySelectedTextIfUserPreference(inTerminalViewPtr);
 }// handleMultiClick
 
 
@@ -7849,6 +7880,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					// actually added/removed
 					highlightVirtualRange(viewPtr, oldSelectionRange, false/* highlighted */, true/* draw */);
 					highlightCurrentSelection(viewPtr, true/* highlighted */, true/* draw */);
+					copySelectedTextIfUserPreference(viewPtr);
 				}
 			}
 			else
@@ -9266,20 +9298,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 	
 	inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
 												inTerminalViewPtr->text.selection.range.second);
-	if (inTerminalViewPtr->text.selection.exists)
-	{
-		Boolean		copySelectedText = false;
-		size_t		actualSize = 0L;
-		
-		
-		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(copySelectedText),
-									&copySelectedText, &actualSize) == kPreferences_ResultOK)
-		{
-			copySelectedText = false; // assume text isn’t automatically copied, if preference can’t be found
-		}
-		
-		if (copySelectedText) Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodTable);
-	}
+	copySelectedTextIfUserPreference(inTerminalViewPtr);
 }// trackTextSelection
 
 
