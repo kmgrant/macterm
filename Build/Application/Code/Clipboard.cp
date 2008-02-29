@@ -978,7 +978,6 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 		textToScrap(text);
 		Memory_DisposeHandle(&text);
 	}
-	else Sound_StandardAlert(); // nothing to Copy!
 }// TextToScrap
 
 
