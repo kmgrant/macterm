@@ -2023,11 +2023,57 @@ TerminalView_ScrollToEnd	(TerminalViewRef	inView)
 
 
 /*!
+Sets the selection to be zero or one character, the cell just
+preceding the current cursor location on the current line.
+If the cursor is at the left margin, nothing is selected.
+
+This is useful for beginning a completely-keyboard-driven
+text selection.
+
+See also SelectCursorCharacter().
+
+(3.1)
+*/
+void
+TerminalView_SelectBeforeCursorCharacter	(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (viewPtr != nullptr)
+	{
+		Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+		UInt16				cursorX = 0;
+		UInt16				cursorY = 0;
+		
+		
+		// find the new cursor region
+		getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
+		if (kTerminal_ResultOK == getCursorLocationError)
+		{
+			TerminalView_SelectNothing(inView);
+			
+			if (0 != cursorX)
+			{
+				viewPtr->text.selection.range.first = std::make_pair(cursorX - 1, cursorY);
+				viewPtr->text.selection.range.second = std::make_pair(cursorX, cursorY + 1);
+				
+				highlightCurrentSelection(viewPtr, true/* is highlighted */, true/* redraw */);
+				viewPtr->text.selection.exists = true;
+			}
+		}
+	}
+}// SelectBeforeCursorCharacter
+
+
+/*!
 Sets the selection to be exactly one character, the cell
 of the current cursor location.
 
 This is useful for beginning a completely-keyboard-driven
 text selection.
+
+See also SelectBeforeCursorCharacter().
 
 (3.1)
 */
@@ -7581,7 +7627,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+							TerminalView_SelectBeforeCursorCharacter(inTerminalViewRef);
 						}
 						else
 						{
@@ -7625,7 +7671,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+							TerminalView_SelectBeforeCursorCharacter(inTerminalViewRef);
 						}
 						
 						// shift-command-left-arrow
