@@ -158,6 +158,13 @@ enum MyCursorState
 	kMyCursorStateVisible = 1
 };
 
+enum My_SelectionMode
+{
+	kMy_SelectionModeUnset				= 0,	//!< set to this mode when a text selection is first created, no keyboard action yet
+	kMy_SelectionModeChangeBeginning	= 1,	//!< keyboard actions morph the beginning anchor only
+	kMy_SelectionModeChangeEnd			= 2		//!< keyboard actions morph the end anchor only
+};
+
 // the following is used to specify certain VT graphics glyphs
 TextEncoding const	kTheMacRomanTextEncoding = CreateTextEncoding(kTextEncodingMacRoman/* base */, kMacRomanDefaultVariant,
 																	kTextEncodingDefaultFormat);
@@ -292,9 +299,10 @@ struct TerminalView
 		
 		struct
 		{
-			TerminalView_CellRange	range;			// region of text selection
-			Boolean					exists;			// is any text highlighted anywhere in the window?
-			Boolean					isRectangular;	// is the text selection unattached from the left and right screen edges?
+			TerminalView_CellRange		range;			// region of text selection
+			My_SelectionMode			keyboardMode;	// used for keyboard navigation; determines what is changed by keyboard-select actions
+			Boolean						exists;			// is any text highlighted anywhere in the window?
+			Boolean						isRectangular;	// is the text selection unattached from the left and right screen edges?
 		} selection;
 		
 		My_CellRangeList	searchResults;	// regions matching the most recent Find results
@@ -2815,6 +2823,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->text.selection.range.first.second = 0;
 	this->text.selection.range.second.first = 0;
 	this->text.selection.range.second.second = 0;
+	this->text.selection.keyboardMode = kMy_SelectionModeUnset;
 	this->text.selection.exists = false;
 	this->text.selection.isRectangular = false;
 	this->screen.leftVisibleEdgeInPixels = 0;
@@ -7549,6 +7558,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 			if (noErr == result)
 			{
 				TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
+				TerminalView_CellRange	oldSelectionRange = viewPtr->text.selection.range;
 				Boolean					selectionChanged = false;
 				
 				
@@ -7563,25 +7573,41 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					// left arrow
 					if (modifiers == shiftKey)
 					{
-						if (false == viewPtr->text.selection.exists) TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+							(false == viewPtr->text.selection.exists))
+						{
+							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
+						}
+						
+						if (false == viewPtr->text.selection.exists)
+						{
+							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						}
 						else
 						{
-							// shift-left-arrow means “extend selection one character backward”;
-							// this wraps to the previous line, but the wrap column depends on
+							// shift-left-arrow
+							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																		// deselect the character to the right of the bottom selection anchor
+																		? viewPtr->text.selection.range.second
+																		// extend top selection anchor one character backward
+																		: viewPtr->text.selection.range.first;
+							
+							
+							// this wraps to the next line, but the wrap column depends on
 							// the style (rectangular or not)
-							if (viewPtr->text.selection.range.first.first > 0)
+							if (anchorToChange.first > 0)
 							{
 								// back up one character, same line
-								--viewPtr->text.selection.range.first.first;
+								--anchorToChange.first;
 							}
 							else
 							{
 								// move to previous line, end
 								if (false == viewPtr->text.selection.isRectangular)
 								{
-									viewPtr->text.selection.range.first.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+									anchorToChange.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
 								}
-								--viewPtr->text.selection.range.first.second;
+								--anchorToChange.second;
 							}
 							selectionChanged = true;
 						}
@@ -7591,13 +7617,28 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					}
 					else if (modifiers == (shiftKey | cmdKey))
 					{
+						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+							(false == viewPtr->text.selection.exists))
+						{
+							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
+						}
+						
 						if (false == viewPtr->text.selection.exists)
 						{
 							TerminalView_SelectCursorCharacter(inTerminalViewRef);
 						}
 						
-						// shift-command-left-arrow means “extend selection to beginning of line”
-						viewPtr->text.selection.range.first.first = 0;
+						// shift-command-left-arrow
+						if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+						{
+							// deselect all characters on this line
+							viewPtr->text.selection.range.second.first = 0;
+						}
+						else
+						{
+							// extend selection to beginning of line
+							viewPtr->text.selection.range.first.first = 0;
+						}
 						selectionChanged = true;
 						
 						// event is handled
@@ -7610,25 +7651,41 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					// right arrow
 					if (modifiers == shiftKey)
 					{
-						if (false == viewPtr->text.selection.exists) TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+							(false == viewPtr->text.selection.exists))
+						{
+							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
+						}
+						
+						if (false == viewPtr->text.selection.exists)
+						{
+							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+						}
 						else
 						{
-							// shift-right-arrow means “extend selection one character forward”;
+							// shift-right-arrow
+							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																		// extend bottom selection anchor one character forward
+																		? viewPtr->text.selection.range.second
+																		// deselect the character to the left of the top selection anchor
+																		: viewPtr->text.selection.range.first;
+							
+							
 							// this wraps to the next line, but the wrap column depends on
 							// the style (rectangular or not)
-							if (viewPtr->text.selection.range.second.first < Terminal_ReturnColumnCount(viewPtr->screen.ref))
+							if (anchorToChange.first < Terminal_ReturnColumnCount(viewPtr->screen.ref))
 							{
 								// go forward one character, same line
-								++viewPtr->text.selection.range.second.first;
+								++anchorToChange.first;
 							}
 							else
 							{
 								// move to next line, beginning
 								if (false == viewPtr->text.selection.isRectangular)
 								{
-									viewPtr->text.selection.range.second.first = 0;
+									anchorToChange.first = 0;
 								}
-								++viewPtr->text.selection.range.second.second;
+								++anchorToChange.second;
 							}
 							selectionChanged = true;
 						}
@@ -7638,13 +7695,28 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					}
 					else if (modifiers == (shiftKey | cmdKey))
 					{
+						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+							(false == viewPtr->text.selection.exists))
+						{
+							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
+						}
+						
 						if (false == viewPtr->text.selection.exists)
 						{
 							TerminalView_SelectCursorCharacter(inTerminalViewRef);
 						}
 						
-						// shift-command-right-arrow means “extend selection to end of line”
-						viewPtr->text.selection.range.second.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+						// shift-command-right-arrow
+						if (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+						{
+							// extend selection to end of line
+							viewPtr->text.selection.range.second.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+						}
+						else
+						{
+							// deselect all characters on this line
+							viewPtr->text.selection.range.first.first = Terminal_ReturnColumnCount(viewPtr->screen.ref);
+						}
 						selectionChanged = true;
 						
 						// event is handled
@@ -7657,14 +7729,27 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					// up arrow
 					if (modifiers == shiftKey)
 					{
+						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+							(false == viewPtr->text.selection.exists))
+						{
+							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeBeginning;
+						}
+						
 						if (false == viewPtr->text.selection.exists)
 						{
 							TerminalView_SelectCursorLine(inTerminalViewRef);
 						}
 						else
 						{
-							// shift-up-arrow means “extend selection one line backward, same column”
-							--viewPtr->text.selection.range.first.second;
+							// shift-up-arrow
+							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																		// reduce selection by one line off the bottom
+																		? viewPtr->text.selection.range.second
+																		// extend selection one line backward, same column
+																		: viewPtr->text.selection.range.first;
+							
+							
+							--anchorToChange.second;
 							selectionChanged = true;
 						}
 						
@@ -7678,14 +7763,27 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 					// down arrow
 					if (modifiers == shiftKey)
 					{
+						if ((kMy_SelectionModeUnset == viewPtr->text.selection.keyboardMode) ||
+							(false == viewPtr->text.selection.exists))
+						{
+							viewPtr->text.selection.keyboardMode = kMy_SelectionModeChangeEnd;
+						}
+						
 						if (false == viewPtr->text.selection.exists)
 						{
 							TerminalView_SelectCursorLine(inTerminalViewRef);
 						}
 						else
 						{
-							// shift-down-arrow means “extend selection one line forward, same column”
-							++viewPtr->text.selection.range.second.second;
+							// shift-down-arrow
+							TerminalView_Cell&		anchorToChange = (kMy_SelectionModeChangeEnd == viewPtr->text.selection.keyboardMode)
+																		// extend selection one line forward, same column
+																		? viewPtr->text.selection.range.second
+																		// reduce selection by one line off the top
+																		: viewPtr->text.selection.range.first;
+							
+							
+							++anchorToChange.second;
 							selectionChanged = true;
 						}
 						
@@ -7703,6 +7801,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 				{
 					// TEMPORARY - could adjust this to only invalidate the part that was
 					// actually added/removed
+					highlightVirtualRange(viewPtr, oldSelectionRange, false/* highlighted */, true/* draw */);
 					highlightCurrentSelection(viewPtr, true/* highlighted */, true/* draw */);
 				}
 			}
@@ -7973,6 +8072,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 								
 								
 								// drag until the user releases the mouse, highlighting as the mouse moves
+								viewPtr->text.selection.keyboardMode = kMy_SelectionModeUnset;
 								trackTextSelection(viewPtr, localMouse, currentModifiers, &localMouse, &currentModifiers);
 								
 								// since trackTextSelection() loops on mouse-up, assume the mouse is now up

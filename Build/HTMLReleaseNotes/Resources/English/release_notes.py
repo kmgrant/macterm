@@ -97,10 +97,10 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080228': [
-		'Terminal view text selections now support shift-down-arrow and shift-up-arrow to extend by one line vertically.',
-		'Terminal view text selections now support shift-left-arrow and shift-right-arrow to extend by one character horizontally (with wrap).',
-		'Terminal view text selections now support shift-command-left-arrow to extend to the beginning of the first selection line.',
-		'Terminal view text selections now support shift-command-right-arrow to extend to the end of the last selection line.',
+		'Terminal view text selections now support shift-down-arrow and shift-up-arrow to manipulate by one line vertically.',
+		'Terminal view text selections now support shift-left-arrow and shift-right-arrow to manipulate by one character horizontally (with wrap).',
+		'Terminal view text selections now support shift-command-left-arrow to jump to the beginning of the line.',
+		'Terminal view text selections now support shift-command-right-arrow to jump to the end of the line.',
 		'Terminal view rectangular text selections are also changed intelligently when these new keyboard short-cuts are used.',
 		'The cursor location or cursor line can now be selected simply by using a new extension short-cut while no text selection exists.',
 	],
