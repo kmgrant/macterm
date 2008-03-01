@@ -3,7 +3,7 @@
 	SplashScreenDialog.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,7 +36,11 @@
 #include <QuickTime/ImageCompression.h>
 
 // library includes
+#include <CarbonEventHandlerWrap.template.h>
+#include <CarbonEventUtilities.template.h>
 #include <Console.h>
+#include <HIViewWrap.h>
+#include <NIBLoader.h>
 
 // MacTelnet includes
 #include "AppResources.h"
@@ -48,6 +52,15 @@
 
 
 #pragma mark Constants
+namespace {
+
+/*!
+IMPORTANT
+
+The following values MUST agree with the view IDs in
+the ÒWindowÓ NIB from the package "SplashScreen.nib".
+*/
+HIViewID const	idMyImageSplashScreen		= { 'Pict', 0/* ID */ };
 
 Float32 const	kMinimumSplashScreenAlpha = 0.0;				// between 0 and 1, where 1 is opaque
 Float32 const	kMaximumSplashScreenAlpha = 1.0;				// between 0 and 1, where 1 is opaque
@@ -57,24 +70,30 @@ Float32 const	kSplashScreenFadeOutAlphaDecreaseRate = 0.0167;	// between kMaximu
 																//   (for best results, should be multiple of max.)
 SInt16 const	kSplashScreenBetweenFadeTicks = 120;			// minimum delay between fade-in and fade-out
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	WindowRef			gSplashScreenWindow = nullptr;
-	PicHandle			gSplashScreenPicture = nullptr;
-	EventLoopTimerUPP	gSplashScreenFadeInTimerUPP = nullptr; // procedure that adjusts the splash screenÕs alpha
-	EventLoopTimerUPP	gSplashScreenFadeOutTimerUPP = nullptr; // procedure that adjusts the splash screenÕs alpha
-	EventLoopTimerRef	gSplashScreenFadeInTimer = nullptr; // timer that fires frequently to make a fade effect
-	EventLoopTimerRef	gSplashScreenFadeOutTimer = nullptr; // timer that fires frequently to make a fade effect
-}
+#pragma mark Variables
+namespace {
+
+HIWindowRef				gSplashScreenWindow = nullptr;
+CGImageRef				gSplashScreenPicture = nullptr;
+EventLoopTimerUPP		gSplashScreenFadeInTimerUPP = nullptr; // procedure that adjusts the splash screenÕs alpha
+EventLoopTimerUPP		gSplashScreenFadeOutTimerUPP = nullptr; // procedure that adjusts the splash screenÕs alpha
+EventLoopTimerRef		gSplashScreenFadeInTimer = nullptr; // timer that fires frequently to make a fade effect
+EventLoopTimerRef		gSplashScreenFadeOutTimer = nullptr; // timer that fires frequently to make a fade effect
+CarbonEventHandlerWrap	gSplashScreenRenderer; // draws the picture and text overlay
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void				drawSplashScreen			(WindowRef);
-static pascal void		fadeInSplashScreenTimer		(EventLoopTimerRef, void*);
-static pascal void		fadeOutSplashScreenTimer	(EventLoopTimerRef, void*);
-static void				killSplashScreen			();
+pascal void			fadeInSplashScreenTimer		(EventLoopTimerRef, void*);
+pascal void			fadeOutSplashScreenTimer	(EventLoopTimerRef, void*);
+void				killSplashScreen			();
+pascal OSStatus		receiveSplashScreenDraw		(EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 
 
@@ -93,32 +112,35 @@ SplashScreenDialog_Init ()
 	
 	
 	resourceError = AppResources_GetSplashScreenPicture(gSplashScreenPicture);
-	if ((resourceError == noErr) && (gSplashScreenPicture != nullptr))
+	if ((noErr == resourceError) && (nullptr != gSplashScreenPicture))
 	{
-		Rect		pictureFrame;
-		OSStatus	error = noErr;
+		NIBWindow	splashScreen(AppResources_ReturnBundleForNIBs(), CFSTR("SplashScreen"), CFSTR("Window"));
 		
 		
-		(Rect*)QDGetPictureBounds(gSplashScreenPicture, &pictureFrame);
-		
-		// create an overlay window exactly the same size as the picture
-		error = CreateNewWindow(kOverlayWindowClass,
-								kWindowNoActivatesAttribute |		// do not send activate/deactivate events
-								kWindowNoConstrainAttribute/* |		// do not reposition when Dock moves, etc.
-								kWindowHideOnSuspendAttribute*/,	// hide when MacTelnet is not frontmost
-								&pictureFrame, &gSplashScreenWindow);
-		if (error == noErr)
+		assert(splashScreen.exists());
+		if (splashScreen.exists())
 		{
-			// on Mac OS X 10.2 and later, the Òno clicksÓ attribute is available;
-			// use it, because it is annoying to have the fading-out splash screen
-			// get in the way of clicking on things
-			(OSStatus)ChangeWindowAttributes(gSplashScreenWindow,
-												kWindowIgnoreClicksAttribute/* set these attributes */,
-												kWindowNoShadowAttribute/* clear these attributes */);
+			gSplashScreenWindow = splashScreen;
 			
-			// center window
-			error = RepositionWindow(gSplashScreenWindow, EventLoop_ReturnRealFrontWindow(),
-										kWindowAlertPositionOnMainScreen);
+			// set up the image view
+			{
+				HIViewWrap		splashScreenView(idMyImageSplashScreen, splashScreen);
+				OSStatus		error = noErr;
+				
+				
+				error = HIImageViewSetImage(splashScreenView, gSplashScreenPicture);
+				assert_noerr(error);
+				
+				gSplashScreenRenderer.install(GetControlEventTarget(splashScreenView),
+												receiveSplashScreenDraw,
+												CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
+																		kEventControlDraw),
+												nullptr/* user data */);
+				assert(gSplashScreenRenderer.isInstalled());
+			}
+			
+			// due to resize constraints, this will automatically size the image view inside the window
+			SizeWindow(gSplashScreenWindow, CGImageGetWidth(gSplashScreenPicture), CGImageGetHeight(gSplashScreenPicture), true/* update */);
 		}
 	}
 }// Init
@@ -133,7 +155,7 @@ a fade-out effect that terminates asynchronously.
 void
 SplashScreenDialog_Done ()
 {
-	if (gSplashScreenWindow != nullptr)
+	if (nullptr != gSplashScreenWindow)
 	{
 		// on Mac OS X the splash screen is killed asynchronously,
 		// after a beautiful fade-out effect makes the window invisible
@@ -147,15 +169,15 @@ SplashScreenDialog_Done ()
 										kEventDurationSecond / 60.0/* time between fires - 60 frames a second */,
 										gSplashScreenFadeOutTimerUPP, nullptr/* user data - not used */,
 										&gSplashScreenFadeOutTimer);
-		if (error != noErr)
+		if (noErr != error)
 		{
 			// in the event of a problem, just kill the window
 			killSplashScreen();
 		}
 	}
-	if (gSplashScreenPicture != nullptr)
+	if (nullptr != gSplashScreenPicture)
 	{
-		KillPicture(gSplashScreenPicture);
+		CFRelease(gSplashScreenPicture), gSplashScreenPicture = nullptr;
 	}
 }// Done
 
@@ -168,14 +190,16 @@ Shows the splash screen.
 void
 SplashScreenDialog_Display ()
 {
-	WindowRef	window = nullptr;
+	HIWindowRef		window = nullptr;
 	
 	
 	window = gSplashScreenWindow;
-	if (window != nullptr)
+	if (nullptr != window)
 	{
 		ShowWindow(window);
-		drawSplashScreen(window);
+		// make window transparent initially so it is invisible;
+		// it will be faded in later
+		(OSStatus)SetWindowAlpha(gSplashScreenWindow, 0);
 		EventLoop_SelectBehindDialogWindows(window);
 		
 	#if 1
@@ -201,99 +225,7 @@ SplashScreenDialog_Display ()
 
 
 #pragma mark Internal Methods
-
-/*!
-Draws the contents of the splash screen window.
-
-(3.0)
-*/
-static void
-drawSplashScreen	(WindowRef		UNUSED_ARGUMENT_CARBON(inSplashScreenWindow))
-{
-	// fade in and out the splash screen
-	CGContextRef	graphicsContext = nullptr;
-	Rect			windowBounds;
-	
-	
-	GetPortBounds(GetWindowPort(gSplashScreenWindow), &windowBounds);
-	if (CreateCGContextForPort(GetWindowPort(gSplashScreenWindow), &graphicsContext) == noErr)
-	{
-		CGRect		box;
-		CGImageRef	image = nullptr;
-		PicHandle	maskPicture = nullptr;
-		RGBColor	blackRGB;
-		
-		
-		// use a special routine that combines two QuickDraw pictures
-		// into a Core Graphics image; since in this case no transparency
-		// is desired, the 2nd picture is just a field of black; when
-		// mixed, the results are a completely opaque QuickDraw picture
-		box.origin.x = windowBounds.left;
-		box.origin.y = windowBounds.top;
-		box.size.width = windowBounds.right - windowBounds.left;
-		box.size.height = windowBounds.bottom - windowBounds.top;
-		{
-			maskPicture = OpenPicture(&windowBounds);
-			if (maskPicture != nullptr)
-			{
-				blackRGB.red = blackRGB.green = blackRGB.blue = 0;
-				RGBBackColor(&blackRGB);
-				EraseRect(&windowBounds);
-				ClosePicture();
-				CGContextClearRect(graphicsContext, box);
-				if (Embedding_BuildCGImageFromPictureAndMask(gSplashScreenPicture, maskPicture, &image) == noErr)
-				{
-					CGContextDrawImage(graphicsContext, box, image);
-					CGImageRelease(image);
-					
-					// now overlay a message string; note that the port boundaries are
-					// inverted compared to normal window boundaries, so the text
-					// boundaries are defined oddly to force text to the bottom
-					{
-						CFStringRef			randomBilineCFString = nullptr;
-						
-						
-						if (UIStrings_CopyRandom(kUIStrings_StringClassSplashScreen, randomBilineCFString).ok())
-						{
-							HIThemeTextInfo		textInfo;
-							HIRect				textBounds = CGRectMake(0/* x; arbitrary */, 0/* y; arbitrary */,
-																		windowBounds.right - windowBounds.left/* width */,
-																		40/* height; arbitrary */);
-							
-							
-							bzero(&textInfo, sizeof(textInfo));
-							textInfo.version = 0;
-							textInfo.state = kThemeStateActive;
-							textInfo.fontID = kThemeAlertHeaderFont;
-							textInfo.horizontalFlushness = kHIThemeTextHorizontalFlushCenter;
-							textInfo.verticalFlushness = kHIThemeTextVerticalFlushCenter;
-							textInfo.options = 0;
-							textInfo.truncationPosition = kHIThemeTextTruncationNone;
-							
-						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-							(OSStatus)HIThemeSetFill(kThemeTextColorWhite, nullptr/* info */, graphicsContext,
-														kHIThemeOrientationInverted);
-						#endif
-							(OSStatus)HIThemeDrawTextBox(randomBilineCFString, &textBounds, &textInfo,
-															graphicsContext, kHIThemeOrientationInverted);
-							
-							CFRelease(randomBilineCFString), randomBilineCFString = nullptr;
-						}
-					}
-				}
-				KillPicture(maskPicture), maskPicture = nullptr;
-			}
-		}
-		
-		// make window transparent initially so it is invisible;
-		// it will be faded in later
-		(OSStatus)SetWindowAlpha(gSplashScreenWindow, 0);
-	}
-	
-	CGContextFlush(graphicsContext);
-	CGContextRelease(graphicsContext), graphicsContext = nullptr;
-}// drawSplashScreen
-
+namespace {
 
 /*!
 Adjusts the fade-in of the splash screen window.
@@ -302,7 +234,7 @@ itself.
 
 (3.0)
 */
-static pascal void
+pascal void
 fadeInSplashScreenTimer		(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 							 void*				UNUSED_ARGUMENT(inUnusedData))
 {
@@ -337,7 +269,7 @@ itself and the window will be disposed of.
 
 (3.0)
 */
-static pascal void
+pascal void
 fadeOutSplashScreenTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 							 void*				UNUSED_ARGUMENT(inUnusedData))
 {
@@ -365,13 +297,101 @@ Disposes of the splash screen window.
 
 (3.0)
 */
-static void
+void
 killSplashScreen ()
 {
-	if (gSplashScreenWindow != nullptr)
+	if (nullptr != gSplashScreenWindow)
 	{
 		DisposeWindow(gSplashScreenWindow), gSplashScreenWindow = nullptr;
 	}
 }// killSplashScreen
+
+
+/*!
+Embellishes "kEventControlDraw" of "kEventClassControl".
+
+Invoked by Mac OS X whenever the picture should be drawn.
+Superimposes text on top of the picture.
+
+(3.1)
+*/
+pascal OSStatus
+receiveSplashScreenDraw		(EventHandlerCallRef	inHandlerCallRef,
+							 EventRef				inEvent,
+							 void*					UNUSED_ARGUMENT(inContext))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlDraw);
+	
+	// first call through to the parent handler to get the image background
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	if (noErr == result)
+	{
+		HIViewRef		view = nullptr;
+		
+		
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		
+		// if the view was found, continue
+		if (noErr == result)
+		{
+			CGContextRef	drawingContext = nullptr;
+			
+			
+			// determine the context to use for drawing
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef, drawingContext);
+			if (noErr == result)
+			{
+				CFStringRef		randomBilineCFString = nullptr;
+				HIRect			bounds;
+				
+				
+				// determine boundaries of the content view being drawn
+				HIViewGetBounds(view, &bounds);
+				
+				// overlay a message string; note that the port boundaries are
+				// inverted compared to normal window boundaries, so the text
+				// boundaries are defined oddly to force text to the bottom
+				if (UIStrings_CopyRandom(kUIStrings_StringClassSplashScreen, randomBilineCFString).ok())
+				{
+					HIThemeTextInfo		textInfo;
+					HIRect				textBounds = CGRectMake(0/* x; arbitrary */, bounds.size.height - 34/* y; arbitrary */,
+																bounds.size.width, 32/* height; arbitrary */);
+					
+					
+					bzero(&textInfo, sizeof(textInfo));
+					textInfo.version = 0;
+					textInfo.state = kThemeStateActive;
+					textInfo.fontID = kThemeAlertHeaderFont;
+					textInfo.horizontalFlushness = kHIThemeTextHorizontalFlushCenter;
+					textInfo.verticalFlushness = kHIThemeTextVerticalFlushCenter;
+					textInfo.options = 0;
+					textInfo.truncationPosition = kHIThemeTextTruncationNone;
+					
+				#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+					(OSStatus)HIThemeSetFill(kThemeTextColorWhite, nullptr/* info */, drawingContext,
+												kHIThemeOrientationNormal);
+				#endif
+					(OSStatus)HIThemeDrawTextBox(randomBilineCFString, &textBounds, &textInfo,
+													drawingContext, kHIThemeOrientationNormal);
+					
+					CFRelease(randomBilineCFString), randomBilineCFString = nullptr;
+				}
+				
+				// completely handled
+				result = noErr;
+			}
+		}
+	}
+	return result;
+}// receiveSplashScreenDraw
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

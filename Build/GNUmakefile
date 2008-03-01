@@ -158,7 +158,7 @@ IconForStackWindows.icns \
 IconForTerminal.icns \
 English.lproj/DockTileAttention.pict \
 English.lproj/DockTileAttentionMask.pict \
-English.lproj/SplashScreen.pict
+English.lproj/SplashScreen.png
 APP_RESOURCES_BUNDLES := \
 MacTelnet.help \
 English.lproj/AboutBox.nib \
@@ -186,6 +186,7 @@ English.lproj/PrefPanelTerminals.nib \
 English.lproj/PrefsWindow.nib \
 English.lproj/ProgressDialog.nib \
 English.lproj/SizeDialog.nib \
+English.lproj/SplashScreen.nib \
 English.lproj/TEKWindow.nib \
 English.lproj/TerminalWindow.nib \
 English.lproj/WindowTitleDialog.nib

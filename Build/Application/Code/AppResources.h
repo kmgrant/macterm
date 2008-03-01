@@ -105,7 +105,7 @@ AppResources_Result
 																		 PicHandle&						outMask);
 
 AppResources_Result
-	AppResources_GetSplashScreenPicture									(PicHandle&						outPicture);
+	AppResources_GetSplashScreenPicture									(CGImageRef&					outPicture);
 
 AppResources_Result
 	AppResources_GetToolbarPoofPictures									(UInt16							inZeroBasedAnimationStageIndex,

@@ -1,0 +1,62 @@
+<?xml version="1.0" standalone="yes"?>
+<object class="NSIBObjectData">
+  <object name="rootObject" class="NSCustomObject" id="1">
+  </object>
+  <array count="3" name="allObjects">
+    <object class="IBCarbonImageView" id="5">
+      <ostype name="controlSignature">Pict</ostype>
+      <object name="layoutInfo" class="IBCarbonHILayoutInfo">
+        <int name="bindingTopKind">1</int>
+        <int name="bindingLeftKind">1</int>
+        <int name="bindingBottomKind">2</int>
+        <int name="bindingRightKind">2</int>
+      </object>
+      <float name="alpha">0.000000</float>
+      <boolean name="scaleToFit">TRUE</boolean>
+      <string name="viewFrame">0 0 305 60 </string>
+      <string name="bounds">0 0 60 305 </string>
+    </object>
+    <object class="IBCarbonWindow" id="3">
+      <boolean name="receiveActivates">FALSE</boolean>
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="ignoreClicks">TRUE</boolean>
+      <boolean name="isConstrained">FALSE</boolean>
+      <boolean name="hideOnSuspend">TRUE</boolean>
+      <boolean name="noMetalContentSeparatorKey">TRUE</boolean>
+      <boolean name="doesNotCycle">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="carbonWindowClass">14</int>
+      <int name="windowPosition">7</int>
+      <string name="title">Window</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="4">
+        <string name="viewFrame">0 0 305 60 </string>
+        <array count="1" name="subviews">
+          <reference idRef="5"/>
+        </array>
+        <string name="bounds">0 0 60 305 </string>
+      </object>
+      <string name="windowRect">300 300 360 605 </string>
+      <string name="ScreenRectAtEncodeTime">48 0 1177 1920 </string>
+    </object>
+    <reference idRef="4"/>
+  </array>
+  <array count="3" name="allParents">
+    <reference idRef="4"/>
+    <reference idRef="1"/>
+    <reference idRef="3"/>
+  </array>
+  <dictionary count="2" name="nameTable">
+    <string>File&apos;s Owner</string>
+    <reference idRef="1"/>
+    <string>Window</string>
+    <reference idRef="3"/>
+  </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
+  <unsigned_int name="nextObjectID">6</unsigned_int>
+</object>

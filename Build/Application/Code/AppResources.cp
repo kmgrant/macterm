@@ -50,18 +50,22 @@
 
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	CFRetainRelease&	gApplicationBundle ()	{ static CFRetainRelease x; return x; }
-	SInt16				gResourceFilePreferences = -1;
-}
+CFRetainRelease&	gApplicationBundle ()	{ static CFRetainRelease x; return x; }
+SInt16				gResourceFilePreferences = -1;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static OSStatus		createPictureFromFile		(SInt16, PicHandle&);
-static OSStatus		launchResourceApplication	(CFStringRef);
-static OSStatus		openPictureWithName			(UIStrings_FileOrFolderCFString, SInt16*);
+OSStatus	createImageFromBundleFile	(CFStringRef, CGImageRef&);
+OSStatus		createPictureFromFile		(SInt16, PicHandle&);
+OSStatus		launchResourceApplication	(CFStringRef);
+OSStatus		openPictureWithName			(UIStrings_FileOrFolderCFString, SInt16*);
+
+} // anonymous namespace
 
 
 
@@ -172,36 +176,24 @@ AppResources_GetDockTileAttentionPicture	(PicHandle&		outPicture,
 
 /*!
 Locates and opens the splash screen picture file in
-the Mac OS X application bundle, renders the picture
-in memory using QuickDraw and returns a handle to it.
-Call KillPicture() when finished with the picture.
-
-Note that you cannot have a QuickDraw picture open
-when you invoke this routine.
+the Mac OS X application bundle, returning a new
+CGImage for it.  Use CFRelease() on the image when
+finished.
 
 \retval noErr
 if the picture was created successfully
 
-\retval any Mac OS File Manager error
-if there are problems opening the file (e.g. "fnfErr"
-if the file can’t be found)
+\retval resNotFound
+if the picture could not be created for any reason
 
-(3.0)
+(3.1)
 */
 AppResources_Result
-AppResources_GetSplashScreenPicture		(PicHandle&		outPicture)
+AppResources_GetSplashScreenPicture		(CGImageRef&	outPicture)
 {
-	SInt16					fileRefNum = 0;
-	AppResources_Result		result = openPictureWithName
-										(kUIStrings_FileNameSplashScreenPicture,
-											&fileRefNum);
+	AppResources_Result		result = createImageFromBundleFile(CFSTR("SplashScreen"), outPicture);
 	
 	
-	if (result == noErr)
-	{
-		result = createPictureFromFile(fileRefNum, outPicture);
-		FSClose(fileRefNum);
-	}
 	return result;
 }// GetSplashScreenPicture
 
@@ -526,6 +518,39 @@ AppResources_UseResFile		(AppResources_FileID	inResourceFileType)
 
 
 #pragma mark Internal Methods
+namespace {
+
+/*!
+Creates a new CGImage from a PNG image file in the
+application bundle.
+
+(3.1)
+*/
+OSStatus
+createImageFromBundleFile	(CFStringRef	inPictureFileBasename,
+							 CGImageRef&	outPicture)
+{
+	OSStatus			result = resNotFound;
+	CFRetainRelease		pictureURL(CFBundleCopyResourceURL(AppResources_ReturnApplicationBundle(), inPictureFileBasename,
+															CFSTR("png")/* type */, nullptr/* subpath */), true/* is retained */);
+	
+	
+	if (pictureURL.exists())
+	{
+		CGDataProviderRef	pictureReader = CGDataProviderCreateWithURL(REINTERPRET_CAST(pictureURL.returnCFTypeRef(), CFURLRef));
+		
+		
+		if (nullptr != pictureReader)
+		{
+			outPicture = CGImageCreateWithPNGDataProvider(pictureReader, nullptr/* decode */, false/* interpolate */,
+															kCGRenderingIntentDefault);
+			CFRelease(pictureReader), pictureReader = nullptr;
+			result = noErr;
+		}
+	}
+	return result;
+}// createImageFromBundleFile
+
 
 /*!
 Creates a new QuickDraw picture from a picture
@@ -539,7 +564,7 @@ routine is invoked.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 createPictureFromFile	(SInt16			inFileReferenceNumber,
 						 PicHandle&		outPicture)
 {
@@ -568,7 +593,7 @@ bundle that has the specified name.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 launchResourceApplication	(CFStringRef	inName)
 {
 	OSStatus	result = noErr;
@@ -658,7 +683,7 @@ name, searching the application bundle.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 openPictureWithName		(UIStrings_FileOrFolderCFString		inName,
 						 SInt16*							outFileReferenceNumber)
 {
@@ -693,5 +718,7 @@ openPictureWithName		(UIStrings_FileOrFolderCFString		inName,
 	}
 	return result;
 }// openPictureWithName
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
