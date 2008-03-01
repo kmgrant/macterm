@@ -3,310 +3,55 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="78" name="allObjects">
-    <object class="IBCarbonStaticText" id="1744">
-      <int name="fontStyle">107</int>
-      <string name="title">White:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 230 117 16 </string>
-      <string name="bounds">230 20 246 137 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1726">
-      <int name="fontStyle">107</int>
-      <string name="title">Black:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 20 117 16 </string>
-      <string name="bounds">20 20 36 137 </string>
-    </object>
-    <object class="IBCarbonRootControl" id="1693">
-      <string name="viewFrame">0 0 369 343 </string>
-      <array count="26" name="subviews">
-        <reference idRef="1726"/>
-        <object class="IBCarbonStaticText" id="1734">
-          <int name="fontStyle">107</int>
-          <string name="title">Cyan:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 200 117 16 </string>
-          <string name="bounds">200 20 216 137 </string>
-        </object>
-        <reference idRef="1744"/>
-        <object class="IBCarbonStaticText" id="1722">
-          <int name="fontStyle">107</int>
-          <string name="title">Red:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 50 117 16 </string>
-          <string name="bounds">50 20 66 137 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1727">
-          <int name="fontStyle">107</int>
-          <string name="title">Green:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 80 117 16 </string>
-          <string name="bounds">80 20 96 137 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1694">
-          <int name="fontStyle">107</int>
-          <string name="title">Blue:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 140 117 16 </string>
-          <string name="bounds">140 20 156 137 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1704">
-          <int name="fontStyle">107</int>
-          <string name="title">Magenta:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 170 117 16 </string>
-          <string name="bounds">170 20 186 137 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1716">
-          <int name="fontStyle">107</int>
-          <string name="title">Yellow:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 110 117 16 </string>
-          <string name="bounds">110 20 126 137 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1746">
-          <ostype name="controlSignature">Cblk</ostype>
-          <ostype name="command">Cblk</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 17 47 22 </string>
-          <string name="bounds">17 145 39 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1709">
-          <ostype name="controlSignature">Cred</ostype>
-          <ostype name="command">Cred</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 47 47 22 </string>
-          <string name="bounds">47 145 69 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1718">
-          <ostype name="controlSignature">Cgrn</ostype>
-          <ostype name="command">Cgrn</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 77 47 22 </string>
-          <string name="bounds">77 145 99 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1730">
-          <ostype name="controlSignature">Cyel</ostype>
-          <ostype name="command">Cyel</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 107 47 22 </string>
-          <string name="bounds">107 145 129 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1742">
-          <ostype name="controlSignature">Cblu</ostype>
-          <ostype name="command">Cblu</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 137 47 22 </string>
-          <string name="bounds">137 145 159 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1695">
-          <ostype name="controlSignature">Cmag</ostype>
-          <ostype name="command">Cmag</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 167 47 22 </string>
-          <string name="bounds">167 145 189 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1710">
-          <ostype name="controlSignature">Ccyn</ostype>
-          <ostype name="command">Ccyn</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 197 47 22 </string>
-          <string name="bounds">197 145 219 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1719">
-          <ostype name="controlSignature">Cwht</ostype>
-          <ostype name="command">Cwht</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">145 227 47 22 </string>
-          <string name="bounds">227 145 249 192 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1729">
-          <ostype name="controlSignature">CBlk</ostype>
-          <ostype name="command">CBlk</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 17 47 22 </string>
-          <string name="bounds">17 200 39 247 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1741">
-          <ostype name="controlSignature">CRed</ostype>
-          <ostype name="command">CRed</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 47 47 22 </string>
-          <string name="bounds">47 200 69 247 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1696">
-          <ostype name="controlSignature">CGrn</ostype>
-          <ostype name="command">CGrn</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 77 47 22 </string>
-          <string name="bounds">77 200 99 247 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1708">
-          <ostype name="controlSignature">CYel</ostype>
-          <ostype name="command">CYel</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 107 47 22 </string>
-          <string name="bounds">107 200 129 247 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1721">
-          <ostype name="controlSignature">CBlu</ostype>
-          <ostype name="command">CBlu</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 137 47 22 </string>
-          <string name="bounds">137 200 159 247 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1731">
-          <ostype name="controlSignature">CMag</ostype>
-          <ostype name="command">CMag</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 167 47 22 </string>
-          <string name="bounds">167 200 189 247 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1740">
-          <ostype name="controlSignature">CCyn</ostype>
-          <ostype name="command">CCyn</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 197 47 22 </string>
-          <string name="bounds">197 200 219 247 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1700">
-          <ostype name="controlSignature">CWht</ostype>
-          <ostype name="command">CWht</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">200 227 47 22 </string>
-          <string name="bounds">227 200 249 247 </string>
-        </object>
-        <object class="IBCarbonButton" id="1733">
-          <ostype name="controlSignature">ANSD</ostype>
-          <ostype name="command">ANSD</ostype>
-          <string name="title">Set to Default Colors…</string>
-          <string name="viewFrame">20 303 172 20 </string>
-          <string name="bounds">303 20 323 192 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1998">
-          <ostype name="controlSignature">HANS</ostype>
-          <int name="controlSize">1</int>
-          <string name="title">Choose Normal and Emphasized versions of each color.</string>
-          <string name="viewFrame">145 257 204 26 </string>
-          <string name="bounds">257 145 283 349 </string>
-        </object>
-      </array>
-      <string name="bounds">0 0 343 369 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1725">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 630 47 22 </string>
-      <string name="bounds">630 164 652 211 </string>
-    </object>
-    <object class="IBCarbonEditText" id="1057">
-      <ostype name="controlSignature">Size</ostype>
-      <boolean name="isUnicode">TRUE</boolean>
-      <string name="title">12</string>
-      <string name="viewFrame">113 52 41 16 </string>
-      <string name="bounds">52 113 68 154 </string>
-    </object>
-    <reference idRef="1730"/>
-    <object class="IBCarbonBevelButton" id="1920">
-      <ostype name="controlSignature">BTxt</ostype>
-      <ostype name="command">BTxt</ostype>
+    <object class="IBCarbonBevelButton" id="1731">
+      <ostype name="controlSignature">CMag</ostype>
+      <ostype name="command">CMag</ostype>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
       <int name="textPlacement">3</int>
       <boolean name="rounded">TRUE</boolean>
-      <string name="viewFrame">110 120 47 22 </string>
-      <string name="bounds">120 110 142 157 </string>
+      <string name="viewFrame">215 167 47 22 </string>
+      <string name="bounds">167 215 189 262 </string>
     </object>
-    <reference idRef="1741"/>
-    <reference idRef="1700"/>
-    <reference idRef="1746"/>
-    <object class="IBCarbonMenuItem" id="1034">
-      <string name="title">Monaco</string>
+    <object class="IBCarbonStaticText" id="1748">
+      <string name="title">Normal</string>
+      <string name="viewFrame">112 661 114 16 </string>
+      <string name="bounds">661 112 677 226 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1701">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 540 47 22 </string>
+      <string name="bounds">540 164 562 211 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1727">
+      <int name="fontStyle">107</int>
+      <string name="title">Green:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">50 80 102 16 </string>
+      <string name="bounds">80 50 96 152 </string>
+    </object>
+    <object class="IBCarbonLittleArrows" id="1038">
+      <ostype name="controlSignature">SzAr</ostype>
+      <string name="helpTagText">Adjusts the font size.</string>
+      <int name="initialValue">12</int>
+      <int name="minimumValue">4</int>
+      <string name="viewFrame">215 49 13 22 </string>
+      <string name="bounds">49 215 71 228 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="1695">
+      <ostype name="controlSignature">Cmag</ostype>
+      <ostype name="command">Cmag</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <boolean name="rounded">TRUE</boolean>
+      <string name="viewFrame">160 167 47 22 </string>
+      <string name="bounds">167 160 189 207 </string>
+    </object>
+    <object class="IBCarbonMenuItem" id="1066">
+      <string name="title">11</string>
       <boolean name="checked">TRUE</boolean>
       <boolean name="updateSingleItem">TRUE</boolean>
-    </object>
-    <object class="IBCarbonStaticText" id="1051">
-      <int name="fontStyle">107</int>
-      <string name="title">Bold:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 123 81 16 </string>
-      <string name="bounds">123 20 139 101 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1724">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 420 47 22 </string>
-      <string name="bounds">420 164 442 211 </string>
-    </object>
-    <reference idRef="1733"/>
-    <reference idRef="1719"/>
-    <object class="IBCarbonUserPane" id="1041">
-      <ostype name="controlSignature">Smpl</ostype>
-      <string name="viewFrame">50 233 232 66 </string>
-      <string name="bounds">233 50 299 282 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1747">
-      <string name="title">Cyan:</string>
-      <string name="viewFrame">87 445 75 16 </string>
-      <string name="bounds">445 87 461 162 </string>
-    </object>
-    <reference idRef="1722"/>
-    <reference idRef="1998"/>
-    <object class="IBCarbonBevelButton" id="1918">
-      <ostype name="controlSignature">NTxt</ostype>
-      <ostype name="command">NTxt</ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <boolean name="rounded">TRUE</boolean>
-      <string name="viewFrame">110 90 47 22 </string>
-      <string name="bounds">90 110 112 157 </string>
     </object>
     <object class="IBCarbonBevelButton" id="1921">
       <ostype name="controlSignature">BBkg</ostype>
@@ -315,256 +60,457 @@
       <int name="contentType">0</int>
       <int name="textPlacement">3</int>
       <boolean name="rounded">TRUE</boolean>
-      <string name="viewFrame">165 120 47 22 </string>
-      <string name="bounds">120 165 142 212 </string>
+      <string name="viewFrame">215 120 47 22 </string>
+      <string name="bounds">120 215 142 262 </string>
     </object>
-    <object class="IBCarbonStaticText" id="1037">
-      <ostype name="controlSignature">HSmp</ostype>
-      <int name="controlSize">1</int>
-      <string name="title">Sample</string>
-      <int name="justification">1</int>
-      <string name="viewFrame">50 307 232 16 </string>
-      <string name="bounds">307 50 323 282 </string>
+    <object class="IBCarbonStaticText" id="1734">
+      <int name="fontStyle">107</int>
+      <string name="title">Cyan:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">50 200 102 16 </string>
+      <string name="bounds">200 50 216 152 </string>
     </object>
-    <object class="IBCarbonLittleArrows" id="1038">
-      <ostype name="controlSignature">SzAr</ostype>
-      <string name="helpTagText">Adjusts the font size.</string>
-      <int name="initialValue">12</int>
-      <int name="minimumValue">4</int>
-      <string name="viewFrame">165 49 13 22 </string>
-      <string name="bounds">49 165 71 178 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1739">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 600 47 22 </string>
-      <string name="bounds">600 164 622 211 </string>
-    </object>
-    <object class="IBCarbonRootControl" id="1035">
-      <string name="viewFrame">0 0 332 343 </string>
-      <array count="20" name="subviews">
-        <object class="IBCarbonStaticText" id="1048">
-          <int name="fontStyle">107</int>
-          <string name="title">Font:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 20 82 16 </string>
-          <string name="bounds">20 20 36 102 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1052">
-          <int name="fontStyle">107</int>
-          <string name="title">Size:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 52 81 16 </string>
-          <string name="bounds">52 20 68 101 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1055">
-          <int name="fontStyle">107</int>
-          <string name="title">Normal:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 93 81 16 </string>
-          <string name="bounds">93 20 109 101 </string>
-        </object>
-        <reference idRef="1051"/>
-        <object class="IBCarbonStaticText" id="1044">
-          <int name="fontStyle">107</int>
-          <string name="title">Blinking:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 153 81 16 </string>
-          <string name="bounds">153 20 169 101 </string>
-        </object>
-        <reference idRef="1037"/>
-        <object class="IBCarbonStaticText" id="2000">
-          <int name="fontStyle">107</int>
-          <string name="title">Matte:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 183 81 16 </string>
-          <string name="bounds">183 20 199 101 </string>
-        </object>
-        <object class="IBCarbonPopupButton" id="1061">
-          <ostype name="controlSignature">Font</ostype>
-          <object name="menu" class="IBCarbonMenu" id="1065">
-            <string name="title">Popup:</string>
-            <array count="1" name="items">
-              <reference idRef="1034"/>
-            </array>
-          </object>
-          <string name="viewFrame">110 18 202 20 </string>
-          <string name="bounds">18 110 38 312 </string>
-        </object>
-        <reference idRef="1057"/>
-        <reference idRef="1038"/>
-        <object class="IBCarbonPopupButton" id="1053">
-          <ostype name="controlSignature">SzMn</ostype>
-          <string name="helpTagText">Convenient menu of common sizes.</string>
-          <int name="selectedItem">4</int>
-          <object name="menu" class="IBCarbonMenu" id="1054">
-            <string name="title">Popup:</string>
-            <array count="7" name="items">
-              <object class="IBCarbonMenuItem" id="1040">
-                <string name="title">4</string>
-                <boolean name="updateSingleItem">TRUE</boolean>
-              </object>
-              <object class="IBCarbonMenuItem" id="1033">
-                <string name="title">9</string>
-                <boolean name="updateSingleItem">TRUE</boolean>
-              </object>
-              <object class="IBCarbonMenuItem" id="1050">
-                <string name="title">10</string>
-                <boolean name="updateSingleItem">TRUE</boolean>
-              </object>
-              <object class="IBCarbonMenuItem" id="1066">
-                <string name="title">11</string>
-                <boolean name="checked">TRUE</boolean>
-                <boolean name="updateSingleItem">TRUE</boolean>
-              </object>
-              <object class="IBCarbonMenuItem" id="1039">
-                <string name="title">12</string>
-                <boolean name="updateSingleItem">TRUE</boolean>
-              </object>
-              <object class="IBCarbonMenuItem" id="1064">
-                <string name="title">14</string>
-                <boolean name="updateSingleItem">TRUE</boolean>
-              </object>
-              <object class="IBCarbonMenuItem" id="1049">
-                <string name="title">18</string>
-                <boolean name="updateSingleItem">TRUE</boolean>
-              </object>
-            </array>
-          </object>
-          <string name="viewFrame">186 50 24 20 </string>
-          <string name="bounds">50 186 70 210 </string>
-        </object>
-        <reference idRef="1918"/>
-        <object class="IBCarbonBevelButton" id="1919">
-          <ostype name="controlSignature">NBkg</ostype>
-          <ostype name="command">NBkg</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">165 90 47 22 </string>
-          <string name="bounds">90 165 112 212 </string>
-        </object>
-        <reference idRef="1920"/>
-        <reference idRef="1921"/>
-        <object class="IBCarbonBevelButton" id="1923">
-          <ostype name="controlSignature">BlTx</ostype>
-          <ostype name="command">BlTx</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">110 150 47 22 </string>
-          <string name="bounds">150 110 172 157 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="1925">
-          <ostype name="controlSignature">BlBk</ostype>
-          <ostype name="command">BlBk</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">165 150 47 22 </string>
-          <string name="bounds">150 165 172 212 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="2002">
-          <boolean name="enabled">FALSE</boolean>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">110 180 47 22 </string>
-          <string name="bounds">180 110 202 157 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="2001">
-          <ostype name="controlSignature">Mtte</ostype>
-          <ostype name="command">Mtte</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <boolean name="rounded">TRUE</boolean>
-          <string name="viewFrame">165 180 47 22 </string>
-          <string name="bounds">180 165 202 212 </string>
-        </object>
-        <reference idRef="1041"/>
-      </array>
-      <string name="bounds">0 0 343 332 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1748">
-      <string name="title">Normal</string>
-      <string name="viewFrame">112 661 114 16 </string>
-      <string name="bounds">661 112 677 226 </string>
-    </object>
-    <reference idRef="1049"/>
-    <reference idRef="1923"/>
-    <reference idRef="1708"/>
-    <reference idRef="1704"/>
-    <object class="IBCarbonUserPane" id="1699">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 450 47 22 </string>
-      <string name="bounds">450 164 472 211 </string>
-    </object>
-    <reference idRef="1055"/>
-    <reference idRef="1919"/>
-    <reference idRef="2000"/>
-    <reference idRef="1695"/>
-    <reference idRef="1721"/>
-    <reference idRef="1052"/>
-    <reference idRef="1734"/>
-    <reference idRef="2001"/>
-    <object class="IBCarbonStaticText" id="1743">
-      <string name="title">Yellow:</string>
-      <string name="viewFrame">87 535 75 16 </string>
-      <string name="bounds">535 87 551 162 </string>
-    </object>
-    <reference idRef="1064"/>
-    <object class="IBCarbonStaticText" id="1745">
-      <string name="title">Blue:</string>
-      <string name="viewFrame">87 505 75 16 </string>
-      <string name="bounds">505 87 521 162 </string>
-    </object>
-    <reference idRef="1696"/>
-    <object class="IBCarbonStaticText" id="1735">
-      <string name="title">Black:</string>
-      <string name="viewFrame">87 625 75 16 </string>
-      <string name="bounds">625 87 641 162 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1712">
+    <object class="IBCarbonStaticText" id="1744">
+      <int name="fontStyle">107</int>
       <string name="title">White:</string>
-      <string name="viewFrame">87 415 75 16 </string>
-      <string name="bounds">415 87 431 162 </string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">50 230 102 16 </string>
+      <string name="bounds">230 50 246 152 </string>
     </object>
-    <reference idRef="1727"/>
-    <reference idRef="1718"/>
-    <reference idRef="1694"/>
-    <reference idRef="1925"/>
-    <reference idRef="1065"/>
     <object class="IBCarbonStaticText" id="1697">
       <string name="title">Magenta:</string>
       <string name="viewFrame">87 475 75 16 </string>
       <string name="bounds">475 87 491 162 </string>
     </object>
-    <reference idRef="1039"/>
-    <reference idRef="1716"/>
-    <object class="IBCarbonUserPane" id="1706">
+    <object class="IBCarbonPopupButton" id="1061">
+      <ostype name="controlSignature">Font</ostype>
+      <object name="menu" class="IBCarbonMenu" id="1065">
+        <string name="title">Popup:</string>
+        <array count="1" name="items">
+          <object class="IBCarbonMenuItem" id="1034">
+            <string name="title">Monaco</string>
+            <boolean name="checked">TRUE</boolean>
+            <boolean name="updateSingleItem">TRUE</boolean>
+          </object>
+        </array>
+      </object>
+      <string name="viewFrame">160 18 181 20 </string>
+      <string name="bounds">18 160 38 341 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="1709">
+      <ostype name="controlSignature">Cred</ostype>
+      <ostype name="command">Cred</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <boolean name="rounded">TRUE</boolean>
+      <string name="viewFrame">160 47 47 22 </string>
+      <string name="bounds">47 160 69 207 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="1919">
+      <ostype name="controlSignature">NBkg</ostype>
+      <ostype name="command">NBkg</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <boolean name="rounded">TRUE</boolean>
+      <string name="viewFrame">215 90 47 22 </string>
+      <string name="bounds">90 215 112 262 </string>
+    </object>
+    <object class="IBCarbonWindow" id="1043">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <int name="themeBrush">1</int>
+      <string name="title"></string>
+      <object name="rootControl" class="IBCarbonRootControl" id="1035">
+        <string name="viewFrame">0 0 422 343 </string>
+        <array count="20" name="subviews">
+          <object class="IBCarbonStaticText" id="1048">
+            <int name="fontStyle">107</int>
+            <string name="title">Font:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">50 20 102 16 </string>
+            <string name="bounds">20 50 36 152 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="1052">
+            <int name="fontStyle">107</int>
+            <string name="title">Size:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">50 52 101 16 </string>
+            <string name="bounds">52 50 68 151 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="1055">
+            <int name="fontStyle">107</int>
+            <string name="title">Normal:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">50 93 101 16 </string>
+            <string name="bounds">93 50 109 151 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="1051">
+            <int name="fontStyle">107</int>
+            <string name="title">Bold:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">50 123 101 16 </string>
+            <string name="bounds">123 50 139 151 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="1044">
+            <int name="fontStyle">107</int>
+            <string name="title">Blinking:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">50 153 101 16 </string>
+            <string name="bounds">153 50 169 151 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="1037">
+            <ostype name="controlSignature">HSmp</ostype>
+            <int name="controlSize">1</int>
+            <string name="title">Sample</string>
+            <int name="justification">1</int>
+            <string name="viewFrame">50 307 322 16 </string>
+            <string name="bounds">307 50 323 372 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="2000">
+            <int name="fontStyle">107</int>
+            <string name="title">Matte:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">50 183 101 16 </string>
+            <string name="bounds">183 50 199 151 </string>
+          </object>
+          <reference idRef="1061"/>
+          <object class="IBCarbonEditText" id="1057">
+            <ostype name="controlSignature">Size</ostype>
+            <boolean name="isUnicode">TRUE</boolean>
+            <string name="title">12</string>
+            <string name="viewFrame">163 52 41 16 </string>
+            <string name="bounds">52 163 68 204 </string>
+          </object>
+          <reference idRef="1038"/>
+          <object class="IBCarbonPopupButton" id="1053">
+            <ostype name="controlSignature">SzMn</ostype>
+            <string name="helpTagText">Convenient menu of common sizes.</string>
+            <int name="selectedItem">4</int>
+            <object name="menu" class="IBCarbonMenu" id="1054">
+              <string name="title">Popup:</string>
+              <array count="7" name="items">
+                <object class="IBCarbonMenuItem" id="1040">
+                  <string name="title">4</string>
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                </object>
+                <object class="IBCarbonMenuItem" id="1033">
+                  <string name="title">9</string>
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                </object>
+                <object class="IBCarbonMenuItem" id="1050">
+                  <string name="title">10</string>
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                </object>
+                <reference idRef="1066"/>
+                <object class="IBCarbonMenuItem" id="1039">
+                  <string name="title">12</string>
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                </object>
+                <object class="IBCarbonMenuItem" id="1064">
+                  <string name="title">14</string>
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                </object>
+                <object class="IBCarbonMenuItem" id="1049">
+                  <string name="title">18</string>
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                </object>
+              </array>
+            </object>
+            <string name="viewFrame">236 50 24 20 </string>
+            <string name="bounds">50 236 70 260 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="1918">
+            <ostype name="controlSignature">NTxt</ostype>
+            <ostype name="command">NTxt</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <boolean name="rounded">TRUE</boolean>
+            <string name="viewFrame">160 90 47 22 </string>
+            <string name="bounds">90 160 112 207 </string>
+          </object>
+          <reference idRef="1919"/>
+          <object class="IBCarbonBevelButton" id="1920">
+            <ostype name="controlSignature">BTxt</ostype>
+            <ostype name="command">BTxt</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <boolean name="rounded">TRUE</boolean>
+            <string name="viewFrame">160 120 47 22 </string>
+            <string name="bounds">120 160 142 207 </string>
+          </object>
+          <reference idRef="1921"/>
+          <object class="IBCarbonBevelButton" id="1923">
+            <ostype name="controlSignature">BlTx</ostype>
+            <ostype name="command">BlTx</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <boolean name="rounded">TRUE</boolean>
+            <string name="viewFrame">160 150 47 22 </string>
+            <string name="bounds">150 160 172 207 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="1925">
+            <ostype name="controlSignature">BlBk</ostype>
+            <ostype name="command">BlBk</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <boolean name="rounded">TRUE</boolean>
+            <string name="viewFrame">215 150 47 22 </string>
+            <string name="bounds">150 215 172 262 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="2002">
+            <boolean name="enabled">FALSE</boolean>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <boolean name="rounded">TRUE</boolean>
+            <string name="viewFrame">160 180 47 22 </string>
+            <string name="bounds">180 160 202 207 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="2001">
+            <ostype name="controlSignature">Mtte</ostype>
+            <ostype name="command">Mtte</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <boolean name="rounded">TRUE</boolean>
+            <string name="viewFrame">215 180 47 22 </string>
+            <string name="bounds">180 215 202 262 </string>
+          </object>
+          <object class="IBCarbonUserPane" id="1041">
+            <ostype name="controlSignature">Smpl</ostype>
+            <string name="viewFrame">50 233 322 66 </string>
+            <string name="bounds">233 50 299 372 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 343 422 </string>
+      </object>
+      <string name="windowRect">167 221 510 643 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="1696">
+      <ostype name="controlSignature">CGrn</ostype>
+      <ostype name="command">CGrn</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <boolean name="rounded">TRUE</boolean>
+      <string name="viewFrame">215 77 47 22 </string>
+      <string name="bounds">77 215 99 262 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1998">
+      <ostype name="controlSignature">HANS</ostype>
+      <int name="controlSize">1</int>
+      <string name="title">Choose Normal and Emphasized versions of each color.</string>
+      <string name="viewFrame">160 257 212 26 </string>
+      <string name="bounds">257 160 283 372 </string>
+    </object>
+    <reference idRef="1052"/>
+    <reference idRef="1055"/>
+    <object class="IBCarbonUserPane" id="1739">
       <int name="featureBits">2</int>
-      <string name="viewFrame">164 570 47 22 </string>
-      <string name="bounds">570 164 592 211 </string>
+      <string name="viewFrame">164 600 47 22 </string>
+      <string name="bounds">600 164 622 211 </string>
     </object>
-    <reference idRef="1710"/>
-    <reference idRef="1050"/>
-    <reference idRef="1044"/>
-    <object class="IBCarbonImageWell" id="1063">
-      <string name="viewFrame">-13441 16571 0 0 </string>
-      <string name="bounds">16571 -13441 16571 -13441 </string>
+    <reference idRef="1053"/>
+    <reference idRef="1041"/>
+    <reference idRef="1918"/>
+    <object class="IBCarbonStaticText" id="1726">
+      <int name="fontStyle">107</int>
+      <string name="title">Black:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">50 20 102 16 </string>
+      <string name="bounds">20 50 36 152 </string>
     </object>
-    <reference idRef="1033"/>
-    <reference idRef="1048"/>
+    <object class="IBCarbonStaticText" id="1743">
+      <string name="title">Yellow:</string>
+      <string name="viewFrame">87 535 75 16 </string>
+      <string name="bounds">535 87 551 162 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="1741">
+      <ostype name="controlSignature">CRed</ostype>
+      <ostype name="command">CRed</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <boolean name="rounded">TRUE</boolean>
+      <string name="viewFrame">215 47 47 22 </string>
+      <string name="bounds">47 215 69 262 </string>
+    </object>
     <object class="IBCarbonStaticText" id="1703">
       <string name="title">Red:</string>
       <string name="viewFrame">87 595 75 16 </string>
       <string name="bounds">595 87 611 162 </string>
     </object>
-    <reference idRef="1066"/>
+    <object class="IBCarbonRootControl" id="1693">
+      <string name="viewFrame">0 0 422 343 </string>
+      <array count="26" name="subviews">
+        <reference idRef="1726"/>
+        <reference idRef="1734"/>
+        <reference idRef="1744"/>
+        <object class="IBCarbonStaticText" id="1722">
+          <int name="fontStyle">107</int>
+          <string name="title">Red:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">50 50 102 16 </string>
+          <string name="bounds">50 50 66 152 </string>
+        </object>
+        <reference idRef="1727"/>
+        <object class="IBCarbonStaticText" id="1694">
+          <int name="fontStyle">107</int>
+          <string name="title">Blue:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">50 140 102 16 </string>
+          <string name="bounds">140 50 156 152 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="1704">
+          <int name="fontStyle">107</int>
+          <string name="title">Magenta:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">50 170 102 16 </string>
+          <string name="bounds">170 50 186 152 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="1716">
+          <int name="fontStyle">107</int>
+          <string name="title">Yellow:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">50 110 102 16 </string>
+          <string name="bounds">110 50 126 152 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="1746">
+          <ostype name="controlSignature">Cblk</ostype>
+          <ostype name="command">Cblk</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">160 17 47 22 </string>
+          <string name="bounds">17 160 39 207 </string>
+        </object>
+        <reference idRef="1709"/>
+        <object class="IBCarbonBevelButton" id="1718">
+          <ostype name="controlSignature">Cgrn</ostype>
+          <ostype name="command">Cgrn</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">160 77 47 22 </string>
+          <string name="bounds">77 160 99 207 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="1730">
+          <ostype name="controlSignature">Cyel</ostype>
+          <ostype name="command">Cyel</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">160 107 47 22 </string>
+          <string name="bounds">107 160 129 207 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="1742">
+          <ostype name="controlSignature">Cblu</ostype>
+          <ostype name="command">Cblu</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">160 137 47 22 </string>
+          <string name="bounds">137 160 159 207 </string>
+        </object>
+        <reference idRef="1695"/>
+        <object class="IBCarbonBevelButton" id="1710">
+          <ostype name="controlSignature">Ccyn</ostype>
+          <ostype name="command">Ccyn</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">160 197 47 22 </string>
+          <string name="bounds">197 160 219 207 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="1719">
+          <ostype name="controlSignature">Cwht</ostype>
+          <ostype name="command">Cwht</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">160 227 47 22 </string>
+          <string name="bounds">227 160 249 207 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="1729">
+          <ostype name="controlSignature">CBlk</ostype>
+          <ostype name="command">CBlk</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">215 17 47 22 </string>
+          <string name="bounds">17 215 39 262 </string>
+        </object>
+        <reference idRef="1741"/>
+        <reference idRef="1696"/>
+        <object class="IBCarbonBevelButton" id="1708">
+          <ostype name="controlSignature">CYel</ostype>
+          <ostype name="command">CYel</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">215 107 47 22 </string>
+          <string name="bounds">107 215 129 262 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="1721">
+          <ostype name="controlSignature">CBlu</ostype>
+          <ostype name="command">CBlu</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">215 137 47 22 </string>
+          <string name="bounds">137 215 159 262 </string>
+        </object>
+        <reference idRef="1731"/>
+        <object class="IBCarbonBevelButton" id="1740">
+          <ostype name="controlSignature">CCyn</ostype>
+          <ostype name="command">CCyn</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">215 197 47 22 </string>
+          <string name="bounds">197 215 219 262 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="1700">
+          <ostype name="controlSignature">CWht</ostype>
+          <ostype name="command">CWht</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <boolean name="rounded">TRUE</boolean>
+          <string name="viewFrame">215 227 47 22 </string>
+          <string name="bounds">227 215 249 262 </string>
+        </object>
+        <object class="IBCarbonButton" id="1733">
+          <ostype name="controlSignature">ANSD</ostype>
+          <ostype name="command">ANSD</ostype>
+          <string name="title">Set to Default Colors…</string>
+          <string name="viewFrame">20 303 172 20 </string>
+          <string name="bounds">303 20 323 192 </string>
+        </object>
+        <reference idRef="1998"/>
+      </array>
+      <string name="bounds">0 0 343 422 </string>
+    </object>
+    <reference idRef="1719"/>
+    <reference idRef="1746"/>
     <object class="IBCarbonWindow" id="1692">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
@@ -577,129 +523,183 @@
       <int name="themeBrush">1</int>
       <string name="title"></string>
       <reference name="rootControl" idRef="1693"/>
-      <string name="windowRect">167 575 510 944 </string>
+      <string name="windowRect">167 575 510 997 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <object class="IBCarbonWindow" id="1043">
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <int name="themeBrush">1</int>
-      <string name="title"></string>
-      <reference name="rootControl" idRef="1035"/>
-      <string name="windowRect">167 221 510 553 </string>
-      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1701">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 540 47 22 </string>
-      <string name="bounds">540 164 562 211 </string>
-    </object>
-    <reference idRef="1061"/>
-    <object class="IBCarbonStaticText" id="1698">
-      <string name="title">Green:</string>
-      <string name="viewFrame">87 565 75 16 </string>
-      <string name="bounds">565 87 581 162 </string>
-    </object>
-    <reference idRef="1731"/>
-    <reference idRef="1709"/>
-    <reference idRef="1742"/>
+    <reference idRef="1700"/>
     <object class="IBCarbonUserPane" id="1705">
       <int name="featureBits">2</int>
       <string name="viewFrame">164 480 47 22 </string>
       <string name="bounds">480 164 502 211 </string>
     </object>
+    <reference idRef="1733"/>
+    <object class="IBCarbonUserPane" id="1699">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 450 47 22 </string>
+      <string name="bounds">450 164 472 211 </string>
+    </object>
+    <reference idRef="2000"/>
+    <reference idRef="1037"/>
+    <reference idRef="1064"/>
+    <object class="IBCarbonStaticText" id="1745">
+      <string name="title">Blue:</string>
+      <string name="viewFrame">87 505 75 16 </string>
+      <string name="bounds">505 87 521 162 </string>
+    </object>
+    <reference idRef="1049"/>
+    <object class="IBCarbonUserPane" id="1706">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 570 47 22 </string>
+      <string name="bounds">570 164 592 211 </string>
+    </object>
+    <reference idRef="1923"/>
+    <reference idRef="2001"/>
+    <object class="IBCarbonStaticText" id="1735">
+      <string name="title">Black:</string>
+      <string name="viewFrame">87 625 75 16 </string>
+      <string name="bounds">625 87 641 162 </string>
+    </object>
+    <reference idRef="1740"/>
+    <reference idRef="1044"/>
+    <reference idRef="1718"/>
+    <object class="IBCarbonUserPane" id="1724">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 420 47 22 </string>
+      <string name="bounds">420 164 442 211 </string>
+    </object>
     <reference idRef="1054"/>
-    <reference idRef="1040"/>
+    <reference idRef="1708"/>
+    <reference idRef="1051"/>
+    <reference idRef="1039"/>
+    <reference idRef="1730"/>
+    <reference idRef="1721"/>
+    <object class="IBCarbonStaticText" id="1698">
+      <string name="title">Green:</string>
+      <string name="viewFrame">87 565 75 16 </string>
+      <string name="bounds">565 87 581 162 </string>
+    </object>
+    <reference idRef="1925"/>
+    <reference idRef="1035"/>
+    <reference idRef="1742"/>
+    <reference idRef="1722"/>
+    <reference idRef="2002"/>
+    <reference idRef="1057"/>
+    <reference idRef="1050"/>
+    <reference idRef="1033"/>
+    <reference idRef="1694"/>
+    <reference idRef="1065"/>
+    <reference idRef="1704"/>
+    <reference idRef="1048"/>
+    <object class="IBCarbonStaticText" id="1747">
+      <string name="title">Cyan:</string>
+      <string name="viewFrame">87 445 75 16 </string>
+      <string name="bounds">445 87 461 162 </string>
+    </object>
+    <reference idRef="1729"/>
+    <reference idRef="1716"/>
+    <reference idRef="1920"/>
+    <object class="IBCarbonImageWell" id="1063">
+      <string name="viewFrame">-13441 16571 0 0 </string>
+      <string name="bounds">16571 -13441 16571 -13441 </string>
+    </object>
+    <reference idRef="1034"/>
+    <reference idRef="1710"/>
     <object class="IBCarbonUserPane" id="1736">
       <int name="featureBits">2</int>
       <string name="viewFrame">164 510 47 22 </string>
       <string name="bounds">510 164 532 211 </string>
     </object>
-    <reference idRef="1740"/>
-    <reference idRef="1053"/>
-    <reference idRef="1729"/>
-    <reference idRef="2002"/>
+    <object class="IBCarbonUserPane" id="1725">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 630 47 22 </string>
+      <string name="bounds">630 164 652 211 </string>
+    </object>
+    <reference idRef="1040"/>
+    <object class="IBCarbonStaticText" id="1712">
+      <string name="title">White:</string>
+      <string name="viewFrame">87 415 75 16 </string>
+      <string name="bounds">415 87 431 162 </string>
+    </object>
   </array>
   <array count="78" name="allParents">
     <reference idRef="1693"/>
     <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1693"/>
+    <reference idRef="1054"/>
+    <reference idRef="1035"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1035"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1035"/>
+    <reference idRef="1035"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
     <reference idRef="1692"/>
     <reference idRef="1693"/>
-    <reference idRef="1035"/>
     <reference idRef="1693"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1065"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1035"/>
-    <reference idRef="1035"/>
-    <reference idRef="1035"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1043"/>
-    <reference idRef="1693"/>
-    <reference idRef="1054"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1035"/>
-    <reference idRef="1035"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1054"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1035"/>
-    <reference idRef="1061"/>
-    <reference idRef="1693"/>
-    <reference idRef="1054"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1693"/>
-    <reference idRef="1054"/>
-    <reference idRef="1035"/>
-    <reference idRef="1035"/>
-    <reference idRef="1054"/>
-    <reference idRef="1035"/>
-    <reference idRef="1693"/>
-    <reference idRef="1054"/>
-    <reference idRef="1"/>
     <reference idRef="1"/>
     <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1035"/>
+    <reference idRef="1054"/>
+    <reference idRef="1693"/>
+    <reference idRef="1054"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
     <reference idRef="1035"/>
     <reference idRef="1693"/>
     <reference idRef="1693"/>
-    <reference idRef="1693"/>
+    <reference idRef="1035"/>
     <reference idRef="1693"/>
     <reference idRef="1693"/>
     <reference idRef="1053"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
     <reference idRef="1054"/>
     <reference idRef="1693"/>
     <reference idRef="1693"/>
-    <reference idRef="1035"/>
     <reference idRef="1693"/>
     <reference idRef="1035"/>
+    <reference idRef="1043"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1035"/>
+    <reference idRef="1054"/>
+    <reference idRef="1054"/>
+    <reference idRef="1693"/>
+    <reference idRef="1061"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1035"/>
+    <reference idRef="1035"/>
+    <reference idRef="1065"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1693"/>
+    <reference idRef="1054"/>
+    <reference idRef="1693"/>
   </array>
   <dictionary count="3" name="nameTable">
     <string>ANSI</string>

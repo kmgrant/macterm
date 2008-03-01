@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080301',
     '20080229',
     '20080228',
     '20080227',
@@ -97,6 +98,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080301': [
+		'Preferences window Format pane is now as wide as many other panels, which avoids some resizing and truncation of toolbar icons.',
+	],
 	'20080229': [
 		'Fixed "Automatically Copy selected text" preference to also Copy selections from double-clicks, triple-clicks and keyboard selections.',
 		'Fixed the rendering of text selection outlines for such things as inactive windows and drags.',
