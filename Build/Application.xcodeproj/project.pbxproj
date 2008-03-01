@@ -452,7 +452,6 @@
 		0A46FE3B055432A400ACDF3A /* WindowInfo.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowInfo.cp; path = Application/Code/WindowInfo.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = WindowTitleDialog.cp; path = Application/Code/WindowTitleDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE3D055432A400ACDF3A /* Workspace.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Workspace.cp; path = Application/Code/Workspace.cp; sourceTree = SOURCE_ROOT; };
-		0A4A7837055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/SplashScreen.pict; sourceTree = "<group>"; };
 		0A4A7839055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttentionMask.pict; sourceTree = "<group>"; };
 		0A4A783B055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttention.pict; sourceTree = "<group>"; };
 		0A4A86AC055B3DDF0011CC82 /* ApplicationVersion.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ApplicationVersion.h; path = Application/Resources/ApplicationVersion.h; sourceTree = "<group>"; };
@@ -538,6 +537,8 @@
 		0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalRangeDescription.typedef.h; path = Application/Code/TerminalRangeDescription.typedef.h; sourceTree = "<group>"; };
 		0AB1C50C0CCD608400E3A160 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AddressDialog.nib; sourceTree = "<group>"; };
 		0AB64A94057819E5005702BA /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/InfoWindow.nib; sourceTree = "<group>"; };
+		0AB7773F0D78F53300DE1AF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = English; path = Application/Resources/English.lproj/SplashScreen.png; sourceTree = "<group>"; };
+		0AB777520D78FACB00DE1AF5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/SplashScreen.nib; sourceTree = "<group>"; };
 		0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelSessions.icns; path = Application/Resources/IconForPrefPanelSessions.icns; sourceTree = "<group>"; };
 		0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelTerminals.icns; path = Application/Resources/IconForPrefPanelTerminals.icns; sourceTree = "<group>"; };
 		0ABC0CF80A44FFBD009D07FC /* IconForPrefPanelFormats.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelFormats.icns; path = Application/Resources/IconForPrefPanelFormats.icns; sourceTree = "<group>"; };
@@ -882,7 +883,7 @@
 				0AFF137C0AF4210D006CCA34 /* Resource Headers */,
 				0AFF137B0AF42077006CCA34 /* Rez Input */,
 				0AFF137A0AF42067006CCA34 /* Icons */,
-				0A4A7836055B3D1D0011CC82 /* SplashScreen.pict */,
+				0AB7773E0D78F53300DE1AF5 /* SplashScreen.png */,
 				0A4A7838055B3D1D0011CC82 /* DockTileAttentionMask.pict */,
 				0A4A783A055B3D1D0011CC82 /* DockTileAttention.pict */,
 				0AFF112F0AF4202B006CCA34 /* NIBs */,
@@ -975,6 +976,7 @@
 		0AFF112F0AF4202B006CCA34 /* NIBs */ = {
 			isa = PBXGroup;
 			children = (
+				0AB777510D78FACB00DE1AF5 /* SplashScreen.nib */,
 				0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */,
 				0AC57BC40B1AE73B000F0250 /* MainMenus.nib */,
 				0ADC6B4008739552000A7EFC /* MainMenuHelp.nib */,
@@ -1524,14 +1526,6 @@
 			name = PrefPanelTerminals.nib;
 			sourceTree = "<group>";
 		};
-		0A4A7836055B3D1D0011CC82 /* SplashScreen.pict */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4A7837055B3D1D0011CC82 /* English */,
-			);
-			name = SplashScreen.pict;
-			sourceTree = SOURCE_ROOT;
-		};
 		0A4A7838055B3D1D0011CC82 /* DockTileAttentionMask.pict */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1698,6 +1692,22 @@
 				0AB64A94057819E5005702BA /* English */,
 			);
 			name = InfoWindow.nib;
+			sourceTree = "<group>";
+		};
+		0AB7773E0D78F53300DE1AF5 /* SplashScreen.png */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AB7773F0D78F53300DE1AF5 /* English */,
+			);
+			name = SplashScreen.png;
+			sourceTree = "<group>";
+		};
+		0AB777510D78FACB00DE1AF5 /* SplashScreen.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AB777520D78FACB00DE1AF5 /* English */,
+			);
+			name = SplashScreen.nib;
 			sourceTree = "<group>";
 		};
 		0AC57BC40B1AE73B000F0250 /* MainMenus.nib */ = {
