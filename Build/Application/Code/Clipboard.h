@@ -106,10 +106,10 @@ enum Clipboard_Modifier
 //@{
 
 void
-	Clipboard_Init						();
+	Clipboard_Init			();
 
 void
-	Clipboard_Done						();
+	Clipboard_Done			();
 
 //@}
 
@@ -117,41 +117,60 @@ void
 //@{
 
 OSStatus
-	Clipboard_AEDescToScrap				(AEDesc const*			inDescPtr);
+	Clipboard_AEDescToScrap					(AEDesc const*				inDescPtr);
 
 Boolean
-	Clipboard_Contains					(CFStringRef			inUTI,
-										 CFStringRef&			outConformingItemActualType,
-										 PasteboardItemID&		outConformingItemID,
-										 PasteboardRef			inDataSourceOrNull = nullptr);
+	Clipboard_Contains						(CFStringRef				inUTI,
+											 CFStringRef&				outConformingItemActualType,
+											 PasteboardItemID&			outConformingItemID,
+											 PasteboardRef				inDataSourceOrNull = nullptr);
+
+Boolean
+	Clipboard_ContainsGraphics				(PasteboardRef				inWhatChangedOrNullForPrimaryPasteboard = nullptr);
+
+Boolean
+	Clipboard_ContainsText					(PasteboardRef				inWhatChangedOrNullForPrimaryPasteboard = nullptr);
+
+Boolean
+	Clipboard_CreateCFStringFromPasteboard	(CFStringRef&				outCFString,
+											 CFStringRef&				outUTI,
+											 PasteboardRef				inPasteboardOrNull = nullptr);
+
+Boolean
+	Clipboard_CreateCGImageFromPasteboard	(CGImageRef&				outImage,
+											 CFStringRef&				outUTI,
+											 PasteboardRef				inPasteboardOrNull = nullptr);
 
 OSStatus
-	Clipboard_CreateContentsAEDesc		(AEDesc*				outDescPtr);
+	Clipboard_CreateContentsAEDesc			(AEDesc*					outDescPtr);
 
 void
-	Clipboard_GraphicsToScrap			(short					inDrawingNumber);
+	Clipboard_GraphicsToScrap				(short						inDrawingNumber);
 
 Boolean
-	Clipboard_GetData					(Clipboard_DataConstraint	inConstraint,
-										 CFDataRef&				outData,
-										 CFStringRef&			outConformingItemActualType,
-										 PasteboardItemID&		outConformingItemID,
-										 PasteboardRef			inDataSourceOrNull = nullptr);
+	Clipboard_GetData						(Clipboard_DataConstraint	inConstraint,
+											 CFDataRef&					outData,
+											 CFStringRef&				outConformingItemActualType,
+											 PasteboardItemID&			outConformingItemID,
+											 PasteboardRef				inDataSourceOrNull = nullptr);
 
 PasteboardRef
-	Clipboard_ReturnPrimaryPasteboard	();
+	Clipboard_ReturnPrimaryPasteboard		();
 
 void
-	Clipboard_TextFromScrap				(SessionRef				inSession,
-										 Clipboard_Modifier		inFilter = kClipboard_ModifierNone);
+	Clipboard_SetPasteboardModified			(PasteboardRef				inWhatChangedOrNullForPrimaryPasteboard = nullptr);
 
 void
-	Clipboard_TextToScrap				(TerminalViewRef		inView,
-										 Clipboard_CopyMethod   inHowToCopy);
+	Clipboard_TextFromScrap					(SessionRef					inSession,
+											 Clipboard_Modifier			inFilter = kClipboard_ModifierNone);
 
 void
-	Clipboard_TextType					(TerminalViewRef		inSource,
-										 SessionRef				inTarget);
+	Clipboard_TextToScrap					(TerminalViewRef			inView,
+											 Clipboard_CopyMethod		inHowToCopy);
+
+void
+	Clipboard_TextType						(TerminalViewRef			inSource,
+											 SessionRef					inTarget);
 
 //@}
 
@@ -162,7 +181,7 @@ HIWindowRef
 	Clipboard_ReturnWindow				();
 
 void
-	Clipboard_SetWindowVisible			(Boolean				inIsVisible);
+	Clipboard_SetWindowVisible			(Boolean			inIsVisible);
 
 Boolean
 	Clipboard_WindowIsVisible			();
@@ -173,12 +192,12 @@ Boolean
 //@{
 
 Boolean
-	Clipboard_IsOneLineInBuffer			(UInt8 const*			inTextPtr,
-										 CFIndex				inLength);
+	Clipboard_IsOneLineInBuffer			(UInt8 const*		inTextPtr,
+										 CFIndex			inLength);
 
 Boolean
-	Clipboard_IsOneLineInBuffer			(UInt16 const*			inTextPtr,
-										 CFIndex				inLength);
+	Clipboard_IsOneLineInBuffer			(UInt16 const*		inTextPtr,
+										 CFIndex			inLength);
 
 //@}
 

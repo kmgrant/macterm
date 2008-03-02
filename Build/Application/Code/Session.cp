@@ -296,9 +296,8 @@ typedef LockAcquireRelease< SessionRef, Session >		SessionAutoLocker;
 struct My_PasteAlertInfo
 {
 	// sent to pasteWarningCloseNotifyProc()
-	SessionRef					sessionForPaste;
-	CFRetainRelease				clipboardData;
-	Clipboard_DataConstraint	clipboardDataType;
+	SessionRef			sessionForPaste;
+	CFRetainRelease		clipboardData;
 };
 typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
 
@@ -4114,48 +4113,35 @@ Session_UserInputPaste	(SessionRef		inRef)
 {
 	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
 	My_PasteAlertInfoPtr	pasteAlertInfoPtr = new My_PasteAlertInfo;
+	CFStringRef				pastedCFString = nullptr;
+	CFStringRef				pastedDataUTI = nullptr;
 	Session_Result			result = kSession_ResultOK;
 	
 	
 	pasteAlertInfoPtr->sessionForPaste = inRef;
-	pasteAlertInfoPtr->clipboardDataType = kClipboard_DataConstraintText8Bit;
-	
-	// examine the Clipboard; if the data contains new-lines, warn the user
+	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI))
 	{
-		CFDataRef			clipboardData = nullptr;
-		CFStringRef			actualTypeName = nullptr;
-		PasteboardItemID	itemID;
-		Boolean				displayWarning = false;
+		// examine the Clipboard; if the data contains new-lines, warn the user
+		Boolean		displayWarning = false;
 		
 		
-		// look for both 8-bit and 16-bit text; to save time, the data found for
-		// the multi-line check is passed to the callback for use in the Paste
-		pasteAlertInfoPtr->clipboardDataType = kClipboard_DataConstraintText8Bit;
-		if (Clipboard_GetData(pasteAlertInfoPtr->clipboardDataType, clipboardData, actualTypeName, itemID))
+		pasteAlertInfoPtr->clipboardData = pastedCFString;
+		
+		// determine if this is a multi-line paste
 		{
-			UInt8 const* const		kBufferPtr = CFDataGetBytePtr(clipboardData);
-			CFIndex const			kBufferLength = CFDataGetLength(clipboardData);
+			UniChar const*		bufferPtr = CFStringGetCharactersPtr(pastedCFString);
+			CFIndex				kBufferLength = CFStringGetLength(pastedCFString);
+			UniChar*			allocatedBuffer = nullptr;
 			
 			
-			displayWarning = (false == Clipboard_IsOneLineInBuffer(kBufferPtr, kBufferLength));
-			pasteAlertInfoPtr->clipboardData = clipboardData;
-			CFRelease(clipboardData), clipboardData = nullptr;
-			CFRelease(actualTypeName), actualTypeName = nullptr;
-		}
-		else
-		{
-			pasteAlertInfoPtr->clipboardDataType = kClipboard_DataConstraintText16BitNative;
-			if (Clipboard_GetData(pasteAlertInfoPtr->clipboardDataType, clipboardData, actualTypeName, itemID))
+			if (nullptr == bufferPtr)
 			{
-				UInt16 const* const		kBufferPtr = REINTERPRET_CAST(CFDataGetBytePtr(clipboardData), UInt16 const*);
-				CFIndex const			kBufferLength = CFDataGetLength(clipboardData);
-				
-				
-				displayWarning = (false == Clipboard_IsOneLineInBuffer(kBufferPtr, kBufferLength));
-				pasteAlertInfoPtr->clipboardData = clipboardData;
-				CFRelease(clipboardData), clipboardData = nullptr;
-				CFRelease(actualTypeName), actualTypeName = nullptr;
+				allocatedBuffer = new UniChar[kBufferLength];
+				bufferPtr = allocatedBuffer;
+				CFStringGetCharacters(pastedCFString, CFRangeMake(0, kBufferLength), allocatedBuffer);
 			}
+			displayWarning = (false == Clipboard_IsOneLineInBuffer(bufferPtr, kBufferLength));
+			if (nullptr != allocatedBuffer) delete [] allocatedBuffer, allocatedBuffer = nullptr;
 		}
 		
 		// if text is available, proceed
@@ -4245,6 +4231,8 @@ Session_UserInputPaste	(SessionRef		inRef)
 				Alert_Display(box);
 			}
 		}
+		CFRelease(pastedCFString), pastedCFString = nullptr;
+		CFRelease(pastedDataUTI), pastedDataUTI = nullptr;
 	}
 	
 	return result;
@@ -7227,7 +7215,6 @@ watchNotifyFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 {
 	SessionRef			ref = REINTERPRET_CAST(inSessionRef, SessionRef);
 	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	OSStatus			error = noErr;
 	
 	
 	watchNotifyForSession(ptr, kSession_WatchForInactivity);

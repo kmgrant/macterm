@@ -100,6 +100,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080301': [
 		'Preferences window Format pane is now as wide as many other panels, which avoids some resizing and truncation of toolbar icons.',
+		'Major internal changes to improve handling of clipboard data, and rendering in the Clipboard window.',
 	],
 	'20080229': [
 		'Fixed "Automatically Copy selected text" preference to also Copy selections from double-clicks, triple-clicks and keyboard selections.',

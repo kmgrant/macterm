@@ -33,6 +33,7 @@
 
 // standard-C includes
 #include <climits>
+#include <map>
 
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
@@ -40,6 +41,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFUtilities.h>
 #include <ColorUtilities.h>
@@ -47,6 +49,7 @@
 #include <Cursors.h>
 #include <DialogAdjust.h>
 #include <FlagManager.h>
+#include <HIViewWrap.h>
 #include <ListenerModel.h>
 #include <Localization.h>
 #include <MemoryBlocks.h>
@@ -80,60 +83,74 @@
 
 
 
-#pragma mark Internal Method Prototypes
+#pragma mark Constants
+namespace {
 
-static pascal void		clipboardUpdatesTimer			(EventLoopTimerRef, void*);
-static OSStatus			drawPictureFromDataAndOffset	(Rect const*, Ptr, long);
-static pascal void		getPICTData						(void*, short);
-static void				getValidScrapType				(ResType*);
-static PicHandle		graphicToPICT					(short);
-static void				handleNewSize					(HIWindowRef, Float32, Float32, void*);
-static Boolean			mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				pictureToScrap					(Handle);
-static pascal OSStatus	receiveClipboardContentDraw		(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveClipboardContentDragDrop	(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
-static ResType			returnContentType				();
-static UInt32			returnFlavorCount				();
-static void				setDataTypeInformation			();
-static void				setScalingInformation			();
-static void				setSuspended					(Boolean);
-static void				setUpControls					(HIWindowRef);
-static void				textToScrap						(Handle);
+/*!
+IMPORTANT
+
+The following values MUST agree with the view IDs in
+the “Window” NIB from the package "Clipboard.nib".
+*/
+HIViewID const	idMyLabelDataDescription	= { 'Info', 0/* ID */ };
+HIViewID const	idMyUserPaneDragParent		= { 'Frme', 0/* ID */ };
+HIViewID const	idMyImageData				= { 'Imag', 0/* ID */ };
+
+enum My_Type
+{
+	kMy_TypeUnknown		= 0,	//!< clipboard data is not in a supported form
+	kMy_TypeText		= 1,	//!< clipboard contains some supported form of text
+	kMy_TypeGraphics	= 2,	//!< clipboard contains some supported form of image data
+};
+
+} // anonymous namespace
+
+#pragma mark Types
+namespace {
+
+typedef std::map< PasteboardRef, Boolean >		My_FlagByPasteboard;
+typedef std::map< PasteboardRef, My_Type >		My_TypeByPasteboard;
+
+} // anonymous namespace
+
+#pragma mark Internal Method Prototypes
+namespace {
+
+OSStatus			addCFStringToPasteboard					(CFStringRef, PasteboardRef = nullptr);
+pascal void			clipboardUpdatesTimer					(EventLoopTimerRef, void*);
+OSStatus			createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
+OSStatus			createCGImageFromData					(CFDataRef, CGImageRef&);
+void				disposeImporterImageBuffer				(void*, void const*, size_t);
+PicHandle			graphicToPICT							(short);
+void				handleNewSize							(HIWindowRef, Float32, Float32, void*);
+void				pictureToScrap							(Handle);
+pascal OSStatus		receiveClipboardContentDraw				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveClipboardContentDragDrop			(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveWindowClosing					(EventHandlerCallRef, EventRef, void*);
+void				setDataTypeInformation					(CFStringRef, size_t);
+void				setScalingInformation					(size_t, size_t);
+void				textToScrap								(Handle);
+void				updateClipboard							(PasteboardRef);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	HIWindowRef								gClipboardWindow = nullptr;
-	WindowInfo_Ref							gClipboardWindowInfo = nullptr;
-	//HIViewRef								gClipboardScrollBarH = nullptr;
-	//HIViewRef								gClipboardScrollBarV = nullptr;
-	HIViewRef								gClipboardFooterPlacard = nullptr;
-	HIViewRef								gClipboardFooterPlacardText = nullptr;
-	HIViewRef								gClipboardContentUserPane = nullptr;
-	HIViewRef								gClipboardWindowHeader = nullptr;
-	HIViewRef								gClipboardWindowHeaderText = nullptr;
-	Boolean									gIsSuspended = false;
-	Boolean									gIsShowing = false;
-	Boolean									gIsDataScaled = false;
-	SInt16									gScaledPercentage = 100;
-	Ptr										gScrapDataPtr = nullptr;
-	long									gCurrentOffset = 0L;
-	CQDProcsPtr								gSavedProcsPtr = nullptr;
-	CQDProcs								gMyColorProcs;
-	QDGetPicUPP								gGetPICTDataUPP = nullptr;
-	ListenerModel_ListenerRef				gMainEventLoopEventListener = nullptr;
-	CommonEventHandlers_WindowResizer		gClipboardResizeHandler;
-	EventHandlerUPP							gClipboardWindowClosingUPP = nullptr;
-	EventHandlerRef							gClipboardWindowClosingHandler = nullptr;
-	EventHandlerUPP							gClipboardDrawUPP = nullptr;
-	EventHandlerRef							gClipboardDrawHandler = nullptr;
-	EventHandlerUPP							gClipboardDragDropUPP = nullptr;
-	EventHandlerRef							gClipboardDragDropHandler = nullptr;
-	EventLoopTimerUPP						gClipboardUpdatesTimerUPP = nullptr;
-	EventLoopTimerRef						gClipboardUpdatesTimer = nullptr;
-}
+My_TypeByPasteboard&					gClipboardDataGeneralTypes ()	{ static My_TypeByPasteboard x; return x; }
+HIWindowRef								gClipboardWindow = nullptr;
+WindowInfo_Ref							gClipboardWindowInfo = nullptr;
+Boolean									gIsShowing = false;
+My_FlagByPasteboard&					gClipboardLocalChanges ()	{ static My_FlagByPasteboard x; return x; }
+CFRetainRelease							gCurrentRenderData;
+CommonEventHandlers_WindowResizer		gClipboardResizeHandler;
+CarbonEventHandlerWrap					gClipboardWindowClosingHandler;
+CarbonEventHandlerWrap					gClipboardDrawHandler;
+CarbonEventHandlerWrap					gClipboardDragDropHandler;
+EventLoopTimerUPP						gClipboardUpdatesTimerUPP = nullptr;
+EventLoopTimerRef						gClipboardUpdatesTimer = nullptr;
+
+} // anonymous namespace
 
 
 
@@ -154,11 +171,8 @@ void
 Clipboard_Init ()
 {
 	HIWindowRef		clipboardWindow = nullptr;
-	Rect			rect;
 	OSStatus		error = noErr;
 	
-	
-	gGetPICTDataUPP = NewQDGetPicUPP(getPICTData);
 	
 	// create the clipboard window
 	clipboardWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
@@ -166,101 +180,39 @@ Clipboard_Init ()
 	
 	gClipboardWindow = clipboardWindow;
 	
-	// content area (displays clipboard data if possible)
-	SetRect(&rect, 0, 0, 0, 0);
-	error = CreateUserPaneControl(clipboardWindow, &rect, kControlSupportsEmbedding | kControlSupportsDragAndDrop,
-									&gClipboardContentUserPane);
-	assert_noerr(error);
-	SetControlVisibility(gClipboardContentUserPane, true/* visible */, true/* draw */);
-	
-	// install a callback that paints the clipboard data
-	{
-		EventTypeSpec const		whenControlNeedsDrawing[] =
-								{
-									{ kEventClassControl, kEventControlDraw }
-								};
-		
-		
-		gClipboardDrawUPP = NewEventHandlerUPP(receiveClipboardContentDraw);
-		(OSStatus)HIViewInstallEventHandler(gClipboardContentUserPane, gClipboardDrawUPP,
-											GetEventTypeCount(whenControlNeedsDrawing),
-											whenControlNeedsDrawing, nullptr/* user data */,
-											&gClipboardDrawHandler/* event handler reference */);
-	}
-	
 	// install a callback that responds to drags (which copies dragged data to the clipboard)
 	{
-		EventTypeSpec const		whenDragActivityOccurs[] =
-								{
-									{ kEventClassControl, kEventControlDragEnter },
-									{ kEventClassControl, kEventControlDragWithin },
-									{ kEventClassControl, kEventControlDragLeave },
-									{ kEventClassControl, kEventControlDragReceive }
-								};
+		HIViewWrap		frameView(idMyUserPaneDragParent, clipboardWindow);
 		
 		
-		gClipboardDragDropUPP = NewEventHandlerUPP(receiveClipboardContentDragDrop);
-		(OSStatus)HIViewInstallEventHandler(gClipboardContentUserPane, gClipboardDragDropUPP,
-											GetEventTypeCount(whenDragActivityOccurs),
-											whenDragActivityOccurs, nullptr/* user data */,
-											&gClipboardDragDropHandler/* event handler reference */);
-	}
-	error = SetControlDragTrackingEnabled(gClipboardContentUserPane, true/* is drag enabled */);
-	assert_noerr(error);
-	
-	// scroll bars
-	//gClipboardScrollBarH = GetNewControl(kIDClipboardHorizontalScrollBar, clipboardWindow);
-	//gClipboardScrollBarV = GetNewControl(kIDClipboardVerticalScrollBar, clipboardWindow);
-	
-	// window footer
-	SetRect(&rect, 0, 0, 0, 0);
-	error = CreatePlacardControl(clipboardWindow, &rect, &gClipboardFooterPlacard);
-	assert_noerr(error);
-	SetControlVisibility(gClipboardFooterPlacard, true/* visible */, true/* draw */);
-	
-	// footer text (displays percentage of total view)
-	SetRect(&rect, 0, 0, 0, 0);
-	{
-		ControlFontStyleRec		styleRecord;
-		Style					fontStyle = normal;
-		SInt16					fontSize = 9;
-		SInt16					fontID = 0;
-		
-		
-		fontID = GetScriptVariable(GetScriptManagerVariable(smKeyScript), smScriptAppFond);
-		styleRecord.flags = kControlUseFontMask | kControlUseFaceMask | kControlUseSizeMask;
-		styleRecord.font = fontID;
-		styleRecord.size = fontSize;
-		styleRecord.style = fontStyle;
-		error = CreateStaticTextControl(clipboardWindow, &rect, CFSTR(""), &styleRecord, &gClipboardFooterPlacardText);
+		gClipboardDragDropHandler.install(HIObjectGetEventTarget(frameView.returnHIObjectRef()), receiveClipboardContentDragDrop,
+											CarbonEventSetInClass(CarbonEventClass(kEventClassControl),
+																	kEventControlDragEnter, kEventControlDragWithin,
+																	kEventControlDragLeave, kEventControlDragReceive),
+											nullptr/* user data */);
+		assert(gClipboardDragDropHandler.isInstalled());
+		error = SetControlDragTrackingEnabled(frameView, true/* is drag enabled */);
 		assert_noerr(error);
-		SetControlVisibility(gClipboardFooterPlacardText, true/* visible */, true/* draw */);
 	}
 	
-	// window header
-	SetRect(&rect, 0, 0, 0, 0);
-	error = CreatePlacardControl(clipboardWindow, &rect, &gClipboardWindowHeader);
-	assert_noerr(error);
-	SetControlVisibility(gClipboardWindowHeader, true/* visible */, true/* draw */);
-	
-	// header text (displays content type and size)
-	SetRect(&rect, 0, 0, 0, 0);
+	// install a callback that renders a drag highlight
 	{
-		ControlFontStyleRec		styleRecord;
+		HIViewWrap		frameView(idMyUserPaneDragParent, clipboardWindow);
 		
 		
-		styleRecord.flags = kControlUseThemeFontIDMask;
-		styleRecord.font = kThemeViewsFont;
-		error = CreateStaticTextControl(clipboardWindow, &rect, CFSTR(""), &styleRecord, &gClipboardWindowHeaderText);
-		assert_noerr(error);
-		SetControlVisibility(gClipboardWindowHeaderText, true/* visible */, true/* draw */);
+		gClipboardDrawHandler.install(HIObjectGetEventTarget(frameView.returnHIObjectRef()), receiveClipboardContentDraw,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+										nullptr/* user data */);
+		assert(gClipboardDrawHandler.isInstalled());
 	}
 	
-	// embedding hierarchy
-	//(OSStatus)EmbedControl(gClipboardScrollBarV, gClipboardContentUserPane);
-	//(OSStatus)EmbedControl(gClipboardScrollBarH, gClipboardContentUserPane);
-	(OSStatus)EmbedControl(gClipboardFooterPlacardText, gClipboardFooterPlacard);
-	(OSStatus)EmbedControl(gClipboardWindowHeaderText, gClipboardWindowHeader);
+	// set up image view
+	{
+		HIViewWrap		imageView(idMyImageData, clipboardWindow);
+		
+		
+		HIViewSetVisible(imageView, false); // initially...
+	}
 	
 	// set up the Window Info information
 	gClipboardWindowInfo = WindowInfo_New();
@@ -318,24 +270,11 @@ Clipboard_Init ()
 		assert(gClipboardResizeHandler.isInstalled());
 	}
 	
-	// arrange the controls in the clipboard window
-	setUpControls(clipboardWindow);
-	
 	// install a callback that hides the clipboard instead of destroying it, when it should be closed
-	{
-		EventTypeSpec const		whenWindowClosing[] =
-								{
-									{ kEventClassWindow, kEventWindowClose }
-								};
-		
-		
-		gClipboardWindowClosingUPP = NewEventHandlerUPP(receiveWindowClosing);
-		error = InstallWindowEventHandler(clipboardWindow, gClipboardWindowClosingUPP,
-											GetEventTypeCount(whenWindowClosing),
-											whenWindowClosing, nullptr/* user data */,
-											&gClipboardWindowClosingHandler/* event handler reference */);
-		assert_noerr(error);
-	}
+	gClipboardWindowClosingHandler.install(GetWindowEventTarget(clipboardWindow), receiveWindowClosing,
+											CarbonEventSetInClass(CarbonEventClass(kEventClassWindow), kEventWindowClose),
+											nullptr/* user data */);
+	assert(gClipboardWindowClosingHandler.isInstalled());
 	
 	// install a timer that detects changes to the clipboard
 	{
@@ -343,14 +282,10 @@ Clipboard_Init ()
 		assert(nullptr != gClipboardUpdatesTimerUPP);
 		error = InstallEventLoopTimer(GetCurrentEventLoop(),
 										kEventDurationNoWait/* seconds before timer fires the first time */,
-										kEventDurationSecond * 10.0/* seconds between fires */,
+										kEventDurationSecond * 3.0/* seconds between fires */,
 										gClipboardUpdatesTimerUPP, nullptr/* user data - not used */,
 										&gClipboardUpdatesTimer);
 	}
-	
-	// install a notification routine in the main event loop, to find out when certain events occur
-	gMainEventLoopEventListener = ListenerModel_NewBooleanListener(mainEventLoopEvent);
-	EventLoop_StartMonitoring(kEventLoop_GlobalEventSuspendResume, gMainEventLoopEventListener);
 	
 	// restore the visible state implicitly saved at last Quit
 	{
@@ -370,6 +305,9 @@ Clipboard_Init ()
 	
 	// enable drag-and-drop on the window!
 	(OSStatus)SetAutomaticControlDragTrackingEnabledForWindow(gClipboardWindow, true);
+	
+	// trigger an initial rendering of whatever was on the clipboard at application launch
+	gClipboardLocalChanges()[Clipboard_ReturnPrimaryPasteboard()] = true;
 }// Init
 
 
@@ -394,18 +332,8 @@ Clipboard_Done ()
 	
 	RemoveEventLoopTimer(gClipboardUpdatesTimer), gClipboardUpdatesTimer = nullptr;
 	DisposeEventLoopTimerUPP(gClipboardUpdatesTimerUPP), gClipboardUpdatesTimerUPP = nullptr;
-	RemoveEventHandler(gClipboardDragDropHandler);
-	DisposeEventHandlerUPP(gClipboardDragDropUPP);
-	RemoveEventHandler(gClipboardDrawHandler);
-	DisposeEventHandlerUPP(gClipboardDrawUPP);
-	RemoveEventHandler(gClipboardWindowClosingHandler);
-	DisposeEventHandlerUPP(gClipboardWindowClosingUPP);
-	DisposeWindow(gClipboardWindow); // disposes of the clipboard window *and* all of its controls
-	gClipboardWindow = nullptr;
+	DisposeWindow(gClipboardWindow), gClipboardWindow = nullptr;
 	WindowInfo_Dispose(gClipboardWindowInfo);
-	DisposeQDGetPicUPP(gGetPICTDataUPP), gGetPICTDataUPP = nullptr;
-	EventLoop_StopMonitoring(kEventLoop_GlobalEventSuspendResume, gMainEventLoopEventListener);
-	ListenerModel_ReleaseListener(&gMainEventLoopEventListener);
 }// Done
 
 
@@ -446,6 +374,156 @@ Clipboard_AEDescToScrap		(AEDesc const*		inDescPtr)
 	}
 	return result;
 }// AEDescToScrap
+
+
+/*!
+Returns true only if the specified pasteboard contains text
+that was successfully converted.
+
+You must CFRelease() the UTI string.
+
+This routine is aware of several Unicode variants and other
+common return types, and as a last resort calls upon
+Translation Services.  However, even translation will fail
+if the system does not have a way to handle the required
+conversion (which is to Unicode, from whatever is given).
+
+(3.1)
+*/
+Boolean
+Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
+										 CFStringRef&		outUTI,
+										 PasteboardRef		inPasteboardOrNull)
+{
+	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
+											? Clipboard_ReturnPrimaryPasteboard()
+											: inPasteboardOrNull;
+	PasteboardItemID		itemID = 0;
+	Boolean					result = false;
+	
+	
+	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
+							outUTI, itemID, inPasteboardOrNull))
+	{
+		CFDataRef	textData = nullptr;
+		OSStatus	error = noErr;
+		
+		
+		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
+		if (noErr == error)
+		{
+			// try anything that works, as long as previous translations fail
+			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
+																			kUTTypeUTF16ExternalPlainText)))
+			{
+				outCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
+																		kCFStringEncodingUnicode);
+				result = (nullptr != outCFString);
+			}
+			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
+																			kUTTypeUTF16PlainText)))
+			{
+				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+														CFDataGetLength(textData), kCFStringEncodingUnicode,
+														false/* is external */);
+				result = (nullptr != outCFString);
+			}
+			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
+																			kUTTypeUTF8PlainText)))
+			{
+				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+														CFDataGetLength(textData), kCFStringEncodingUTF8,
+														false/* is external */);
+				result = (nullptr != outCFString);
+			}
+			if ((false == result) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
+			{
+				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+														CFDataGetLength(textData), kCFStringEncodingUTF8,
+														false/* is external */);
+				result = (nullptr != outCFString);
+			}
+			if (false == result)
+			{
+				TranslationRef		translationInfo = nullptr;
+				
+				
+				// don’t give up just yet...attempt to translate this data into something presentable
+				outCFString = nullptr;
+				error = TranslationCreate(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
+											kTranslationDataTranslation, &translationInfo);
+				if (noErr == error)
+				{
+					CFDataRef	translatedData = nullptr;
+					
+					
+					error = TranslationPerformForData(translationInfo, textData, &translatedData);
+					if (noErr == error)
+					{
+						outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(translatedData),
+																CFDataGetLength(translatedData), kCFStringEncodingUnicode,
+																false/* is external */);
+						CFRelease(translatedData), translatedData = nullptr;
+					}
+					CFRelease(translationInfo), translationInfo = nullptr;
+				}
+				
+				if (nullptr == outCFString)
+				{
+					// WARNING: in this case, the encoding cannot be known, so choose to show nothing
+					Console_WriteValueCFString("warning, unknown text encoding and unable to translate", outUTI);
+					outCFString = CFSTR("?");
+					CFRetain(outCFString);	
+				}
+				result = (nullptr != outCFString);
+			}
+			CFRelease(textData), textData = nullptr;
+		}
+	}
+	return result;
+}// CreateCFStringFromPasteboard
+
+
+/*!
+Returns true only if some item on the specified pasteboard
+is an image.
+
+You must CFRelease() the UTI string.
+
+This routine is aware of several image types, and relies on
+QuickTime to handle as many kinds of images as possible.
+
+(3.1)
+*/
+Boolean
+Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
+										 CFStringRef&		outUTI,
+										 PasteboardRef		inPasteboardOrNull)
+{
+	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
+											? Clipboard_ReturnPrimaryPasteboard()
+											: inPasteboardOrNull;
+	PasteboardItemID		itemID = 0;
+	OSStatus				error = noErr;
+	Boolean					result = false;
+	
+	
+	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.image"), kUTTypeImage),
+							outUTI, itemID, inPasteboardOrNull))
+	{
+		CFDataRef	imageData = nullptr;
+		
+		
+		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &imageData);
+		if (noErr == error)
+		{
+			error = createCGImageFromData(imageData, outImage);
+			result = (noErr == error);
+			CFRelease(imageData), imageData = nullptr;
+		}
+	}
+	return result;
+}// CreateCGImageFromPasteboard
 
 
 /*!
@@ -495,7 +573,6 @@ Clipboard_Contains	(CFStringRef			inUTI,
 		PasteboardItemID	itemID = 0;
 		CFArrayRef			flavorArray = nullptr;
 		CFIndex				numberOfFlavors = 0;
-		CFIndex				flavorIndex = 0;
 		
 		
 		error = PasteboardGetItemIdentifier(inDataSourceOrNull, itemIndex, &itemID);
@@ -506,7 +583,7 @@ Clipboard_Contains	(CFStringRef			inUTI,
 		
 		numberOfFlavors = CFArrayGetCount(flavorArray);
 		
-		for (flavorIndex = 0; flavorIndex < numberOfFlavors; ++flavorIndex)
+		for (CFIndex flavorIndex = 0; flavorIndex < numberOfFlavors; ++flavorIndex)
 		{
 			CFStringRef		flavorType = nullptr;
 			Boolean			typeConforms = false;
@@ -520,14 +597,78 @@ Clipboard_Contains	(CFStringRef			inUTI,
 				outConformingItemActualType = flavorType;
 				CFRetain(outConformingItemActualType);
 				outConformingItemID = itemID;
+				break;
 			}
 		}
 		
 		CFRelease(flavorArray), flavorArray = nullptr;
 	}
-	
 	return result;
 }// Contains
+
+
+/*!
+Returns true only if the specified pasteboard contains some
+supported type of image data.
+
+This is determined from a cache that polls the system
+periodically to update the Clipboard window, 
+
+For convenience, if you specify nullptr for the source, then
+Clipboard_ReturnPrimaryPasteboard() is used.
+
+(3.1)
+*/
+Boolean
+Clipboard_ContainsGraphics	(PasteboardRef		inDataSourceOrNull)
+{
+	Boolean		result = false;
+	
+	
+	if (nullptr == inDataSourceOrNull)
+	{
+		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
+	}
+	assert(nullptr != inDataSourceOrNull);
+	
+	if (gClipboardDataGeneralTypes().end() != gClipboardDataGeneralTypes().find(inDataSourceOrNull))
+	{
+		result = (kMy_TypeGraphics == gClipboardDataGeneralTypes()[inDataSourceOrNull]);
+	}
+	return result;
+}// ContainsGraphics
+
+
+/*!
+Returns true only if the specified pasteboard contains some
+supported type of image data.
+
+This is determined from a cache that polls the system
+periodically to update the Clipboard window, 
+
+For convenience, if you specify nullptr for the source, then
+Clipboard_ReturnPrimaryPasteboard() is used.
+
+(3.1)
+*/
+Boolean
+Clipboard_ContainsText	(PasteboardRef		inDataSourceOrNull)
+{
+	Boolean		result = false;
+	
+	
+	if (nullptr == inDataSourceOrNull)
+	{
+		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
+	}
+	assert(nullptr != inDataSourceOrNull);
+	
+	if (gClipboardDataGeneralTypes().end() != gClipboardDataGeneralTypes().find(inDataSourceOrNull))
+	{
+		result = (kMy_TypeText == gClipboardDataGeneralTypes()[inDataSourceOrNull]);
+	}
+	return result;
+}// ContainsText
 
 
 /*!
@@ -538,34 +679,30 @@ containing the data currently on the clipboard
 (3.0)
 */
 OSStatus
-Clipboard_CreateContentsAEDesc		(AEDesc*		outDescPtr)
+Clipboard_CreateContentsAEDesc		(AEDesc*	outDescPtr)
 {
 	OSStatus	result = noErr;
 	
 	
 	if (outDescPtr != nullptr)
 	{
+		CFStringRef		clipboardTextCFString = nullptr;
+		CFStringRef		actualUTI = nullptr;
+		
+		
 		outDescPtr->descriptorType = typeNull;
 		outDescPtr->dataHandle = nullptr;
-		if (returnContentType() == kScrapFlavorTypeText)
+		if (Clipboard_CreateCFStringFromPasteboard(clipboardTextCFString, actualUTI))
 		{
-			Handle				handle = nullptr;
-			long				length = 0L;		// the length of what is on the scrap
-			Boolean				isAnyScrap = false;	// is any text on the clipboard?
-			ScrapRef			currentScrap = nullptr;
-			ScrapFlavorFlags	currentScrapFlags = 0L;
+			CFIndex const	kStringLength = CFStringGetLength(clipboardTextCFString);
+			UniChar*		buffer = new UniChar[kStringLength];
 			
 			
-			(OSStatus)GetCurrentScrap(&currentScrap);
-			
-			isAnyScrap = (GetScrapFlavorFlags(currentScrap, kScrapFlavorTypeText, &currentScrapFlags) == noErr);
-			if (isAnyScrap) // is any text on the clipboard?
-			{
-				(OSStatus)GetScrapFlavorSize(currentScrap, kScrapFlavorTypeText, &length);
-				handle = Memory_NewHandle(length); // for characters
-				(OSStatus)GetScrapFlavorData(currentScrap, kScrapFlavorTypeText, &length, *handle);
-				result = AECreateDesc(typeChar, *handle, GetHandleSize(handle), outDescPtr);
-			}
+			CFStringGetCharacters(clipboardTextCFString, CFRangeMake(0, kStringLength), buffer);
+			result = AECreateDesc(typeUnicodeText, buffer, kStringLength * sizeof(UniChar), outDescPtr);
+			delete [] buffer, buffer = nullptr;
+			CFRelease(clipboardTextCFString), clipboardTextCFString = nullptr;
+			CFRelease(actualUTI), actualUTI = nullptr;
 		}
 	}
 	else result = memPCErr;
@@ -666,7 +803,7 @@ Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
 	}
 	
 	return result;
-}// Clipboard_GetData
+}// GetData
 
 
 /*!
@@ -683,6 +820,8 @@ Clipboard_GraphicsToScrap	(short	inDrawingNumber)
 	picture = graphicToPICT(inDrawingNumber);
 	pictureToScrap((Handle)picture);
 	KillPicture(picture);
+	
+	gClipboardLocalChanges()[Clipboard_ReturnPrimaryPasteboard()] = true;
 }// GraphicsToScrap
 
 
@@ -745,8 +884,14 @@ Clipboard_IsOneLineInBuffer		(UInt16 const*	inTextPtr,
 
 
 /*!
-Returns a reference to the global pasteboard, creating
-that reference if necessary.
+Returns a reference to the global pasteboard, creating that
+reference if necessary.
+
+IMPORTANT:	If you use this reference to change the clipboard
+			contents manually, you have to notify this module of
+			your change with Clipboard_SetPasteboardModified().
+			(Changes made by other applications are detected
+			automatically.)
 
 (3.1)
 */
@@ -779,6 +924,28 @@ Clipboard_ReturnWindow ()
 {
 	return gClipboardWindow;
 }// ReturnWindow
+
+
+/*!
+Although this module can track pasteboard changes made by
+other applications, an oddity is that local changes are
+not trackable.  So if you use a method other than one of
+this module’s APIs to change a pasteboard, and you want
+the Clipboard window to render those changes, you should
+call this routine.
+
+(3.1)
+*/
+void
+Clipboard_SetPasteboardModified		(PasteboardRef		inWhatChangedOrNullForPrimaryPasteboard)
+{
+	PasteboardRef const		kPasteboard = (nullptr == inWhatChangedOrNullForPrimaryPasteboard)
+											? Clipboard_ReturnPrimaryPasteboard()
+											: inWhatChangedOrNullForPrimaryPasteboard;
+	
+	
+	updateClipboard(kPasteboard);
+}// SetPasteboardModified
 
 
 /*!
@@ -817,104 +984,43 @@ void
 Clipboard_TextFromScrap		(SessionRef				inSession,
 							 Clipboard_Modifier		inModifier)
 {
-	CFDataRef			clipboardData = nullptr;
-	CFStringRef			actualTypeName = nullptr;
-	PasteboardItemID	itemID = 0;
+	CFStringRef		clipboardString = nullptr;
+	CFStringRef		actualTypeName = nullptr;
 	
-	
-	// INCOMPLETE - text translation is not handled
 	
 	// IMPORTANT: It may be desirable to allow customization for what
 	//            identifies a line of text.  Currently, this is assumed.
 	
-	if (Clipboard_GetData(kClipboard_DataConstraintText8Bit, clipboardData,
-							actualTypeName, itemID))
+	if (Clipboard_CreateCFStringFromPasteboard(clipboardString, actualTypeName))
 	{
-		// clipboard contains text that can be expressed in 8-bit characters
-		UInt8 const* const		kBufferPtr = CFDataGetBytePtr(clipboardData);
-		CFIndex const			kBufferLength = CFDataGetLength(clipboardData);
-		
-		
 		if (kClipboard_ModifierOneLine == inModifier)
 		{
-			UInt8*		bufferCopy = new UInt8[kBufferLength];
-			CFIndex		bufferLength = 0;
-			UInt8		currentChar = '\0';
+			CFMutableStringRef		mutableBuffer = CFStringCreateMutableCopy
+													(kCFAllocatorDefault, 0/* capacity or 0 for no limit */, clipboardString);
 			
 			
-			// ignore any new-line characters in one-line mode
-			for (CFIndex i = 0; i < kBufferLength; ++i)
+			if (nullptr == mutableBuffer)
 			{
-				currentChar = *(kBufferPtr + i);
-				if (('\r' != currentChar) && ('\n' != currentChar))
-				{
-					bufferCopy[bufferLength] = currentChar;
-					++bufferLength;
-				}
-			}
-			Session_UserInputString(inSession, REINTERPRET_CAST(bufferCopy, char const*),
-									bufferLength, false/* send to scripts */);
-			delete [] bufferCopy, bufferCopy = nullptr;
-		}
-		else
-		{
-			// in 8-bit normal mode it is not necessary to make a copy
-			// and iterate, because nothing is changing
-			assert(kClipboard_ModifierNone == inModifier);
-			Session_UserInputString(inSession, REINTERPRET_CAST(kBufferPtr, char const*),
-									kBufferLength, false/* send to scripts */);
-		}
-		
-		CFRelease(clipboardData), clipboardData = nullptr;
-		CFRelease(actualTypeName), actualTypeName = nullptr;
-	}
-	else if (Clipboard_GetData(kClipboard_DataConstraintText16BitNative, clipboardData,
-								actualTypeName, itemID))
-	{
-		// clipboard contains text that can be expressed in 16-bit characters
-		// in the native byte order, but might still have a byte-order mark
-		CFStringRef		clipboardString = CFStringCreateFromExternalRepresentation
-											(kCFAllocatorDefault, clipboardData, kCFStringEncodingUnicode);
-		
-		
-		if (nullptr == clipboardString)
-		{
-			// conversion error
-			Sound_StandardAlert();
-		}
-		else
-		{
-			if (kClipboard_ModifierOneLine == inModifier)
-			{
-				CFMutableStringRef		mutableBuffer = CFStringCreateMutableCopy
-														(kCFAllocatorDefault, 0/* capacity or 0 for no limit */, clipboardString);
-				
-				
-				if (nullptr == mutableBuffer)
-				{
-					// no memory?
-					Sound_StandardAlert();
-				}
-				else
-				{
-					// ignore any new-line characters in one-line mode
-					(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\r"), CFSTR(""),
-													CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
-					(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR(""),
-													CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
-					Session_UserInputCFString(inSession, mutableBuffer, false/* send to scripts */);
-					CFRelease(mutableBuffer), mutableBuffer = nullptr;
-				}
+				// no memory?
+				Sound_StandardAlert();
 			}
 			else
 			{
-				// send the data unmodified to the session
-				Session_UserInputCFString(inSession, clipboardString, false/* send to scripts */);
+				// ignore any new-line characters in one-line mode
+				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\r"), CFSTR(""),
+												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
+				(CFIndex)CFStringFindAndReplace(mutableBuffer, CFSTR("\n"), CFSTR(""),
+												CFRangeMake(0, CFStringGetLength(mutableBuffer)), 0/* flags */);
+				Session_UserInputCFString(inSession, mutableBuffer, false/* send to scripts */);
+				CFRelease(mutableBuffer), mutableBuffer = nullptr;
 			}
-			CFRelease(clipboardString), clipboardString = nullptr;
 		}
-		
-		CFRelease(clipboardData), clipboardData = nullptr;
+		else
+		{
+			// send the data unmodified to the session
+			Session_UserInputCFString(inSession, clipboardString, false/* send to scripts */);
+		}
+		CFRelease(clipboardString), clipboardString = nullptr;
 		CFRelease(actualTypeName), actualTypeName = nullptr;
 	}
 	else
@@ -947,8 +1053,8 @@ void
 Clipboard_TextToScrap	(TerminalViewRef		inView,
 						 Clipboard_CopyMethod	inHowToCopy)
 {
-	char**		text = nullptr;			// where to store the characters
-	short		tableThreshold = 0;		// zero for normal, nonzero for copy table mode
+	CFStringRef		textToCopy = nullptr;			// where to store the characters
+	short			tableThreshold = 0;		// zero for normal, nonzero for copy table mode
 	
 	
 	if (inHowToCopy & kClipboard_CopyMethodTable)
@@ -970,14 +1076,19 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 		TerminalView_TextFlags	flags = (inHowToCopy & kClipboard_CopyMethodInline) ? kTerminalView_TextFlagInline : 0;
 		
 		
-		text = TerminalView_ReturnSelectedTextAsNewHandle(inView, tableThreshold, flags);
+		textToCopy = TerminalView_ReturnSelectedTextAsNewUnicode(inView, tableThreshold, flags);
 	}
 	
-	if (GetHandleSize(text) > 0)
+	if (nullptr != textToCopy)
 	{
-		textToScrap(text);
-		Memory_DisposeHandle(&text);
+		if (CFStringGetLength(textToCopy) > 0)
+		{
+			(OSStatus)addCFStringToPasteboard(textToCopy);
+		}
+		CFRelease(textToCopy), textToCopy = nullptr;
 	}
+	
+	gClipboardLocalChanges()[Clipboard_ReturnPrimaryPasteboard()] = true;
 }// TextToScrap
 
 
@@ -1029,245 +1140,229 @@ Clipboard_WindowIsVisible ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
-Since there does not appear to be an event that
-can be handled to notice clipboard changes, this
-timer periodically polls the system to figure out
-when the clipboard has changed.  If it does change
-the clipboard window is updated.
+Publishes the specified data to the specified pasteboard
+(or nullptr to use the primary pasteboard).
+
+The string is converted into an external representation
+of Unicode.
+
+\retval noErr
+if the string was added successfully
+
+\retval unicodePartConvertErr
+if there was an error creating an external representation
+
+\retval (other)
+if access to the pasteboard could not be secured
 
 (3.1)
 */
-static pascal void
+OSStatus
+addCFStringToPasteboard		(CFStringRef		inStringToCopy,
+							 PasteboardRef		inPasteboardOrNullForMainClipboard)
+{
+	OSStatus		result = noErr;
+	PasteboardRef	target = (nullptr == inPasteboardOrNullForMainClipboard)
+								? Clipboard_ReturnPrimaryPasteboard()
+								: inPasteboardOrNullForMainClipboard;
+	
+	
+	result = PasteboardClear(target);
+	if (noErr == result)
+	{
+		CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
+												(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUnicode,
+													'?'/* loss byte */);
+		
+		
+		if (nullptr == externalRepresentation) result = unicodePartConvertErr;
+		else
+		{
+			result = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
+												FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"), kUTTypeUTF16ExternalPlainText),
+												externalRepresentation, kPasteboardFlavorNoFlags);
+		}
+	}
+	return result;
+}// addCFStringToPasteboard
+
+
+/*!
+Since there does not appear to be an event that can be handled
+to notice clipboard changes, this timer periodically polls the
+system to figure out when the clipboard has changed.  If it
+does change, the clipboard window is updated.
+
+IMPORTANT:	This CANNOT detect changes that are made by the
+			current application, only changes made by any other
+			application.  (WTF, Apple?)  For a work-around, see
+			Clipboard_SetPasteboardModified().
+
+(3.1)
+*/
+pascal void
 clipboardUpdatesTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 						 void*				UNUSED_ARGUMENT(inUnusedData))
 {
-	if (Clipboard_WindowIsVisible())
+	PasteboardRef const		kPasteboard = Clipboard_ReturnPrimaryPasteboard();
+	PasteboardSyncFlags		flags = PasteboardSynchronize(kPasteboard);
+	
+	
+	// The modification flag ONLY refers to changes made by OTHER applications.
+	// Changes to the local pasteboard by MacTelnet must be tracked separately.
+	if ((flags & kPasteboardModified) ||
+		(gClipboardLocalChanges().end() != gClipboardLocalChanges().find(kPasteboard)))
 	{
-		PasteboardSyncFlags		flags = PasteboardSynchronize(Clipboard_ReturnPrimaryPasteboard());
-		
-		
-		if (flags & kPasteboardModified)
-		{
-			RegionUtilities_RedrawWindowOnNextUpdate(gClipboardWindow);
-		}
+		updateClipboard(kPasteboard);
+		gClipboardLocalChanges().erase(kPasteboard);
 	}
 }// clipboardUpdatesTimer
 
 
 /*!
-This method will render a picture, given its data
-and the desired boundary rectangle.  You provide
-a data handle, which you can then offset from by
-either zero or some other amount to reference the
-correct picture data.
+For an open connection to a graphics importer, creates
+a CGImage out of the data.
 
-The picture is scaled, at its aspect ratio, to
-fit the width and/or the height of the given
-rectangle completely.  The global variable for
-the scaling factor ("gScaledPercentage") is set
-appropriately, and the "gIsDataScaled" flag is
-set to true only if the picture is too large to
-fit its desired rectangle.
-
-(3.0)
+(3.1)
 */
-static OSStatus
-drawPictureFromDataAndOffset	(Rect const*	inDrawingRect,
-								 Ptr			inDataSourcePtr,
-								 long			inSourceOffset)
+OSStatus
+createCGImageFromComponentConnection	(GraphicsImportComponent	inImporter,
+										 CGImageRef&				outImage)
 {
 	OSStatus	result = noErr;
-	PicHandle	tempPict = REINTERPRET_CAST(Memory_NewHandle(sizeof(Picture)), PicHandle);
+	Rect		imageBounds;
 	
 	
-	result = MemError();
-	if (result == noErr)
+	result = GraphicsImportGetNaturalBounds(inImporter, &imageBounds);
+	if (noErr == result)
 	{
-		Rect	drawingBounds = *inDrawingRect;
+		size_t const	kWidth = imageBounds.right - imageBounds.left;
+		size_t const	kHeight = imageBounds.bottom - imageBounds.top;
+		size_t const	kBitsPerComponent = 8;
+		size_t const	kBytesPerPixel = 4;
+		size_t const	kBitsPerPixel = kBitsPerComponent * kBytesPerPixel;
+		size_t const	kRowBytes = kWidth * kBytesPerPixel;
+		size_t const	kImageSize = kHeight * kRowBytes;
+		Ptr				dataPtr = Memory_NewPtr(kImageSize);
 		
 		
-		// calculate the rectangle in which to draw, and then save the
-		// picture header into the temporary handle
+		if (nullptr == dataPtr) result = memFullErr;
+		else
 		{
-			Rect		pictureFrame;
-			PicPtr		picturePtr = nullptr;
-			UInt16		pictureHeight = 0;
-			UInt16		pictureWidth = 0;
-			UInt16		frameHeight = drawingBounds.bottom - drawingBounds.top;
-			UInt16		frameWidth = drawingBounds.right - drawingBounds.left;
+			GWorldPtr	gWorld = nullptr;
+			QDErr		quickDrawError = 0;
 			
 			
-			picturePtr = REINTERPRET_CAST(inDataSourcePtr + inSourceOffset, PicPtr);
-			BlockMoveData(picturePtr, *tempPict, sizeof(Picture));
-			
-			(Rect*)QDGetPictureBounds(tempPict, &pictureFrame);
-			
-			pictureHeight = pictureFrame.bottom - pictureFrame.top;
-			pictureWidth = pictureFrame.right - pictureFrame.left;
-			
-			// if the picture frame will fit in the drawing area, no scaling is required
-			{
-				Rect	rawPictureFrame;
-				Rect	rawDrawingFrame;
-				Rect	junk;
-				
-				
-				SetRect(&rawPictureFrame, 0, 0, pictureWidth, pictureHeight);
-				SetRect(&rawDrawingFrame, 0, 0, frameWidth, frameHeight);
-				UnionRect(&rawDrawingFrame, &rawPictureFrame, &junk);
-				gIsDataScaled = (!EqualRect(&junk, &rawDrawingFrame));
-			}
-			
-			if (gIsDataScaled)
-			{
-				Float32		wf = pictureWidth;
-				Float32		hf = pictureHeight;
-				Float32		ratio = 0.0f;
-				Float32		ratioWidths = 0.0f;
-				Float32		ratioHeights = 0.0f;
-				
-				
-				ratio = wf / hf;
-				wf = frameHeight;
-				hf = pictureHeight;
-				ratioHeights = wf / hf;
-				wf = frameWidth;
-				hf = pictureWidth;
-				ratioWidths = wf / hf;
-				
-				// Make either the width or the height of the picture match the
-				// maximum width of the drawing area.  This is based on which
-				// dimension will fit the drawing area in such a way that the
-				// limit as the other dimension approaches the maximum drawing
-				// size is the maximum drawing size (that is, no clipping occurs).
-				if ((pictureWidth > pictureHeight) && (ratioWidths < ratioHeights))
-				{
-					drawingBounds.right = drawingBounds.left + frameWidth;
-					ratio = frameWidth / ratio;
-					frameHeight = (UInt16)ratio;
-					drawingBounds.bottom = drawingBounds.top + frameHeight;
-					wf = 100 * frameHeight;
-					hf = pictureHeight;
-					ratio = wf / hf;
-					gScaledPercentage = STATIC_CAST(ratio, UInt16);
-				}
-				else
-				{
-					drawingBounds.bottom = drawingBounds.top + frameHeight;
-					ratio = ratio * frameHeight;
-					frameWidth = (UInt16)ratio;
-					drawingBounds.right = drawingBounds.left + frameWidth;
-					wf = 100 * frameWidth;
-					hf = pictureWidth;
-					ratio = wf / hf;
-					gScaledPercentage = STATIC_CAST(ratio, UInt16);
-				}
-			}
+			quickDrawError = NewGWorldFromPtr(&gWorld, kBitsPerPixel, &imageBounds, nullptr/* color table */,
+												nullptr/* device */, 0/* flags */, dataPtr, kRowBytes);
+			if (nullptr == gWorld) result = memFullErr;
 			else
 			{
-				// no changes are necessary
-				drawingBounds.right = drawingBounds.left + pictureWidth;
-				drawingBounds.bottom = drawingBounds.top + pictureHeight;
+				result = GraphicsImportSetGWorld(inImporter, gWorld, GetGWorldDevice(gWorld));
+				
+				
+				if (noErr == result)
+				{
+					result = GraphicsImportDraw(inImporter);
+					if (noErr == result)
+					{
+						CGDataProviderRef	provider = CGDataProviderCreateWithData(nullptr/* info */, dataPtr, kImageSize,
+																					disposeImporterImageBuffer);
+						
+						
+						if (nullptr == provider) result = memFullErr;
+						else
+						{
+							CGColorSpaceRef		colorspace = CGColorSpaceCreateDeviceRGB();
+							
+							
+							if (nullptr == colorspace) result = memFullErr;
+							else
+							{
+								outImage = CGImageCreate(kWidth, kHeight, kBitsPerComponent, kBitsPerPixel, kRowBytes,
+															colorspace, kCGImageAlphaFirst, provider, nullptr/* decode */,
+															false/* interpolate */, kCGRenderingIntentDefault);
+								if (nullptr == outImage) result = memFullErr;
+								else
+								{
+									// success!
+									result = noErr;
+								}
+								CFRelease(colorspace), colorspace = nullptr;
+							}
+							CFRelease(provider), provider = nullptr;
+						}
+					}
+				}
+				DisposeGWorld(gWorld), gWorld = nullptr;
 			}
 		}
-		
-		// store into globals for the GetPicProc in preparation for the draw
-		gScrapDataPtr = inDataSourcePtr;
-		gCurrentOffset = inSourceOffset + sizeof(Picture);
-		
-		// install a GetPic proc
-		{
-			CGrafPtr	currentPort = nullptr;
-			GDHandle	currentDevice = nullptr;
-			
-			
-			GetGWorld(&currentPort, &currentDevice);
-			SetStdCProcs(&gMyColorProcs);
-			gMyColorProcs.getPicProc = gGetPICTDataUPP;
-			gSavedProcsPtr = GetPortGrafProcs(currentPort);
-			SetPortGrafProcs(currentPort, &gMyColorProcs);
-			
-			// convert to view-relative rectangle
-			SetRect(&drawingBounds, 0, 0, drawingBounds.right - drawingBounds.left,
-					drawingBounds.bottom - drawingBounds.top);
-			
-			// draw the picture
-			DrawPicture(tempPict, &drawingBounds);
-			
-			// remove the GetPic proc
-			SetPortGrafProcs(currentPort, gSavedProcsPtr);
-		}
-		
-		// update the bottom text area
-		setScalingInformation();
-		
-		Memory_DisposeHandle(REINTERPRET_CAST(&tempPict, Handle*));
 	}
 	return result;
-}// drawPictureFromHandleAndOffset
+}// createCGImageFromComponentConnection
 
 
 /*!
-This is a replacement for the QuickDraw
-bottleneck routine.
+Uses QuickTime to import image data that was presumably
+suppled by a pasteboard.
 
-(3.0)
+(3.1)
 */
-static pascal void
-getPICTData		(void*		inDataPtr,
-				 short		inByteCount)
-{ 
-	long	longCount = inByteCount;
-	
-	
-	BlockMoveData(gScrapDataPtr + gCurrentOffset, inDataPtr, longCount);
-	gCurrentOffset += longCount;
-}// getPICTData
-
-
-/*!
-This method checks the Scrap for a data type it can
-render.  If none is found, this routine returns a
-scrap type of '----'; otherwise, it returns the type
-and GetScrap() result for the valid scrap type.
-
-(3.0)
-*/
-static void
-getValidScrapType	(ResType*	outScrapType)
+OSStatus
+createCGImageFromData	(CFDataRef		inData,
+						 CGImageRef&	outImage)
 {
-	register SInt16		i = 0;
-	ResType				validScrapTypeResult = '----';
-	ResType				scrapTypes[] = { kScrapFlavorTypeUnicode, kScrapFlavorTypeText, kScrapFlavorTypePicture, '----' };
-	ScrapRef			currentScrap = nullptr;
-	ScrapFlavorFlags	currentScrapFlags = 0L;
+	OSStatus	result = noErr;
+	Handle		pointerDataHandle = Memory_NewHandle(sizeof(PointerDataRefRecord));
 	
 	
-	(OSStatus)GetCurrentScrap(&currentScrap);
-	while (scrapTypes[i] != '----')
+    if (nullptr == pointerDataHandle) result = memFullErr;
+	else
 	{
-		if (GetScrapFlavorFlags(currentScrap, scrapTypes[i], &currentScrapFlags) == noErr)
+		PointerDataRef				pointerDataRef = REINTERPRET_CAST(pointerDataHandle, PointerDataRef);
+		GraphicsImportComponent		importer = nullptr;
+		
+		
+		(**pointerDataRef).data = CONST_CAST(CFDataGetBytePtr(inData), UInt8*);
+		(**pointerDataRef).dataLength = CFDataGetLength(inData);
+		
+		result = GetGraphicsImporterForDataRef(pointerDataHandle, PointerDataHandlerSubType, &importer);
+		if (noErr == result)
 		{
-			// if flags can be obtained with no error, then a scrap of the specified type exists
-			validScrapTypeResult = scrapTypes[i];
-			break;
+			result = createCGImageFromComponentConnection(importer, outImage);
+			CloseComponent(importer);
 		}
-		++i;
+		Memory_DisposeHandle(&pointerDataHandle), pointerDataRef = nullptr;
 	}
-	if (outScrapType != nullptr) *outScrapType = validScrapTypeResult;
-}// getValidScrapType
+	return result;
+}// createCGImageFromData
 
 
 /*!
-Converts the specified drawing into a standard
-Mac OS picture format (PICT) and returns the
-handle to the converted picture.
+Reverses the allocation done by
+createCGImageFromComponentConnection().
+
+(3.1)
+*/
+void
+disposeImporterImageBuffer	(void*			UNUSED_ARGUMENT(inInfo),
+							 void const*	inData,
+							 size_t			UNUSED_ARGUMENT(inSize))
+{
+	DisposePtr(REINTERPRET_CAST(CONST_CAST(inData, void*), Ptr));
+}// disposeImporterImageBuffer
+
+
+/*!
+Converts the specified TEK window drawing into a picture in
+QuickDraw format (PICT), and returns the handle.
 
 (2.6)
 */
-static PicHandle
+PicHandle
 graphicToPICT	(short		inDrawingNumber)
 {
 	short		j = 0;
@@ -1291,77 +1386,20 @@ graphicToPICT	(short		inDrawingNumber)
 
 
 /*!
-This method moves and resizes controls in the clipboard
-window in response to a resize.
+This does not actually do anything, but the mechanism for
+installing the handler allows maximum size to be easily
+enforced.  Resize is automatic through the standard handler
+and settings from the NIB.
 
 (3.0)
 */
-static void
-handleNewSize	(WindowRef		inWindow,
-				 Float32		inDeltaSizeX,
-				 Float32		inDeltaSizeY,
+void
+handleNewSize	(WindowRef		UNUSED_ARGUMENT(inWindow),
+				 Float32		UNUSED_ARGUMENT(inDeltaSizeX),
+				 Float32		UNUSED_ARGUMENT(inDeltaSizeY),
 				 void*			UNUSED_ARGUMENT(inData))
 {
-	SInt32		truncDeltaX = STATIC_CAST(inDeltaSizeX, SInt32);
-	SInt32		truncDeltaY = STATIC_CAST(inDeltaSizeY, SInt32);
-	
-	
-	DialogAdjust_BeginControlAdjustment(inWindow);
-	DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, gClipboardWindowHeader, truncDeltaX);
-	//DialogAdjust_AddControl(kDialogItemAdjustmentMoveV, gClipboardScrollBarH, truncDeltaY);
-	//DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, gClipboardScrollBarV, truncDeltaX);
-	//DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, gClipboardScrollBarH, truncDeltaX);
-	//DialogAdjust_AddControl(kDialogItemAdjustmentResizeV, gClipboardScrollBarV, truncDeltaY);
-	DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, gClipboardFooterPlacard, truncDeltaX);
-	DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, gClipboardFooterPlacardText, truncDeltaX);
-	DialogAdjust_AddControl(kDialogItemAdjustmentMoveV, gClipboardFooterPlacard, truncDeltaY);
-	DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, gClipboardContentUserPane, truncDeltaX);
-	DialogAdjust_AddControl(kDialogItemAdjustmentResizeV, gClipboardContentUserPane, truncDeltaY);
-	DialogAdjust_EndAdjustment(truncDeltaX, truncDeltaY);
 }// handleNewSize
-
-
-/*!
-Invoked whenever a monitored event from the main event
-loop occurs (see Clipboard_Init() to see which events
-are monitored).  This routine responds by ensuring that
-the clipboard state is correct (e.g. hiding the clipboard
-window on suspend events, updating the clipboard contents
-on resume events, etc.).
-
-The result is "true" only if the event is to be absorbed
-(preventing anything else from seeing it).
-
-(3.0)
-*/
-static Boolean
-mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-					 ListenerModel_Event	inEventThatOccurred,
-					 void*					UNUSED_ARGUMENT(inEventContextPtr),
-					 void*					UNUSED_ARGUMENT(inListenerContextPtr))
-{
-	Boolean		result = false;
-	
-	
-	switch (inEventThatOccurred)
-	{
-	case kEventLoop_GlobalEventSuspendResume:
-		// update the clipboard state to match the current suspended state of the application
-		{
-			Boolean		suspended = false;
-			
-			
-			suspended = FlagManager_Test(kFlagSuspended);
-			setSuspended(suspended);
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	return result;
-}// mainEventLoopEvent
 
 
 /*!
@@ -1370,7 +1408,7 @@ to the clipboard.
 
 (3.0)
 */
-static void
+void
 pictureToScrap	(Handle		inPictureData)
 {
 	SInt8	hState = HGetState(inPictureData);
@@ -1395,14 +1433,16 @@ pictureToScrap	(Handle		inPictureData)
 
 
 /*!
-Handles "kEventControlDraw" of "kEventClassControl".
+Embellishes "kEventControlDraw" of "kEventClassControl" by
+rendering clipboard text content, and a drag highlight where
+appropriate.
 
-Invoked by Mac OS X whenever the clipboard contents
+Invoked by Mac OS X whenever the parent user pane contents
 should be redrawn.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					UNUSED_ARGUMENT(inContextPtr))
@@ -1415,37 +1455,18 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 	assert(kEventClass == kEventClassControl);
 	assert(kEventKind == kEventControlDraw);
 	{
-		HIViewRef		control = nullptr;
+		HIViewRef	view = nullptr;
 		
 		
-		// get the target control
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, control);
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
 		
-		// if the control was found, continue
-		if (result == noErr)
+		// if the view was found, continue
+		if (noErr == result)
 		{
-			//ControlPartCode		partCode = 0;
-			CGrafPtr			drawingPort = nullptr;
-			CGContextRef		drawingContext = nullptr;
-			CGrafPtr			oldPort = nullptr;
-			GDHandle			oldDevice = nullptr;
+			CGContextRef	drawingContext = nullptr;
 			
 			
-			GetGWorld(&oldPort, &oldDevice);
-			
-			// could determine which part (if any) to draw; if none, draw everything
-			// (ignored, not needed)
-			//result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
-			//result = noErr; // ignore part code parameter if absent
-			
-			// determine the port to draw in; if none, the current port
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, drawingPort);
-			if (result != noErr)
-			{
-				// use current port
-				drawingPort = oldPort;
-				result = noErr;
-			}
 			
 			// determine the context to draw in with Core Graphics
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
@@ -1453,198 +1474,64 @@ receiveClipboardContentDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 			assert_noerr(result);
 			
 			// if all information can be found, proceed with drawing
-			if (result == noErr)
+			if (noErr == result)
 			{
-				Rect		controlRect;
-				SInt16		colorDepth = ColorUtilities_ReturnCurrentDepth(drawingPort);
-				Boolean		isColorDevice = IsPortColor(drawingPort);
+				OSStatus	error = noErr;
+				HIRect		contentBounds;
+				Boolean		dragHighlight = false;
+				UInt32		actualSize = 0;
 				
 				
-				SetPort(drawingPort);
-				GetControlBounds(control, &controlRect);
+				error = HIViewGetBounds(view, &contentBounds);
+				assert_noerr(error);
 				
-				// determine and describe what is currently on the clipboard
-				setDataTypeInformation();
-				
-				// if the data is scaled, say so; otherwise, remove the footer text completely
-				setScalingInformation();
-				
-				// draw the data on the clipboard
-				// TEMPORARY: drawing code should not do this much work; ideally,
-				// some other event handler asynchronously is told when to update
-				// information such as the type of clipboard data, allowing the
-				// drawing code to merely consult that information rather than
-				// determine it all on the fly
+				// perform any necessary rendering for drags
+				if (noErr != GetControlProperty
+								(view, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
+									sizeof(dragHighlight), &actualSize,
+									&dragHighlight))
 				{
-					OSStatus	error = noErr;
-					Rect		clipboardContentRect;
-					HIRect		contentBounds;
-					RgnHandle	preservedClippingRegion = Memory_NewRegion();
+					dragHighlight = false;
+				}
+				
+				if (dragHighlight)
+				{
+					DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
+					DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
+				}
+				else
+				{
+					DragAndDrop_HideHighlightBackground(drawingContext, contentBounds);
+					DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
+				}
+				
+				// render text, if that is what is on the clipboard
+				if (gCurrentRenderData.exists() && (CFStringGetTypeID() == CFGetTypeID(gCurrentRenderData.returnCFTypeRef())))
+				{
+					HIThemeTextInfo		textInfo;
 					
 					
-					GetControlBounds(control, &clipboardContentRect);
-					HIViewGetBounds(control, &contentBounds);
-					if (preservedClippingRegion != nullptr) GetClip(preservedClippingRegion);
+					bzero(&textInfo, sizeof(textInfo));
+					textInfo.version = 0;
+					textInfo.state = IsControlActive(view) ? kThemeStateActive : kThemeStateInactive;
+					textInfo.fontID = kThemeSystemFont;
+					textInfo.horizontalFlushness = kHIThemeTextHorizontalFlushLeft;
+					textInfo.verticalFlushness = kHIThemeTextVerticalFlushTop;
+					textInfo.options = 0;
+					textInfo.truncationPosition = kHIThemeTextTruncationNone;
+					textInfo.truncationMaxLines = 0;
 					
-					// determine what is currently on the clipboard
-					{
-						ResType		validScrapType = '----';
-						Size		scrapSize = 0L;
-						
-						
-						// figure out the scrap type and offset
-						getValidScrapType(&validScrapType);
-						
-						// now, draw the contents, if a supported type of data is available
-						{
-							Rect	clipArea = clipboardContentRect;
-							Ptr		scrapDataPtr = nullptr;
-							
-							
-							// under Carbon, the scrap handle can’t be accessed; instead, a
-							// handle is created by this block and the scrap is copied into it
-							{
-								ScrapRef	currentScrap = nullptr;
-								
-								
-								if (GetCurrentScrap(&currentScrap) == noErr)
-								{
-									Size	mutableScrapSize = 0;
-									
-									
-									error = GetScrapFlavorSize(currentScrap, validScrapType, &mutableScrapSize);
-									if (error == noErr)
-									{
-										Size const  kBufferSize = mutableScrapSize;
-										
-										
-										scrapDataPtr = Memory_NewPtr(kBufferSize);
-										if (scrapDataPtr != nullptr)
-										{
-											mutableScrapSize = kBufferSize;
-											error = GetScrapFlavorData(currentScrap, validScrapType, &mutableScrapSize, scrapDataPtr);
-											if (error == noErr)
-											{
-												// ensure string length is correct
-												scrapSize = (mutableScrapSize < kBufferSize) ? mutableScrapSize : kBufferSize;
-											}
-										}
-									}
-								}
-							}
-							
-							// initially assume the data is not scaled
-							gIsDataScaled = false;
-							
-							// perform any necessary rendering for drags
-							{
-								Boolean		dragHighlight = false;
-								UInt32		actualSize = 0;
-								
-								
-								if (noErr != GetControlProperty
-												(control, AppResources_ReturnCreatorCode(),
-													kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-													sizeof(dragHighlight), &actualSize,
-													&dragHighlight))
-								{
-									dragHighlight = false;
-								}
-								
-								if (dragHighlight)
-								{
-									DragAndDrop_ShowHighlightBackground(drawingContext, contentBounds);
-									// frame is drawn at the end, after any content
-								}
-								else
-								{
-									DragAndDrop_HideHighlightBackground(drawingContext, contentBounds);
-									DragAndDrop_HideHighlightFrame(drawingContext, contentBounds);
-								}
-							}
-							
-							switch (validScrapType)
-							{
-							case kScrapFlavorTypePicture:
-								drawPictureFromDataAndOffset(&clipArea, scrapDataPtr, 0/* offset */);
-								break;
-							
-							case kScrapFlavorTypeText:
-							case kScrapFlavorTypeUnicode:
-								// NOTE: Ideally this is displayed in monospaced text, but no theme font
-								// has this property.  It will be better to transition to an HITextView
-								// in the future.  (TEMPORARY)
-								{
-									CFStringRef		stringRef = nullptr;
-									
-									
-									if (validScrapType == kScrapFlavorTypeUnicode)
-									{
-										stringRef = CFStringCreateWithCharacters
-													(kCFAllocatorDefault, REINTERPRET_CAST(scrapDataPtr, UniChar const*),
-														scrapSize / sizeof(UniChar)/* number of Unicode characters */);
-									}
-									else
-									{
-										stringRef = CFStringCreateWithBytes
-													(kCFAllocatorDefault, REINTERPRET_CAST(scrapDataPtr, UInt8 const*),
-														scrapSize, CFStringGetSystemEncoding(),
-														false/* is external representation */);
-									}
-									if (stringRef != nullptr)
-									{
-										HIThemeTextInfo		textInfo;
-										
-										
-										bzero(&textInfo, sizeof(textInfo));
-										textInfo.version = 0;
-										textInfo.state = kThemeStateActive;
-										textInfo.fontID = kThemeSmallSystemFont;
-										textInfo.horizontalFlushness = kHIThemeTextHorizontalFlushLeft;
-										textInfo.verticalFlushness = kHIThemeTextVerticalFlushTop;
-										error = HIThemeDrawTextBox(stringRef, &contentBounds, &textInfo, drawingContext,
-																	kHIThemeOrientationNormal);
-										CFRelease(stringRef);
-									}
-								}
-								break;
-							
-							default:
-								break;
-							}
-							Memory_DisposePtr(&scrapDataPtr);
-							
-							// perform any necessary rendering for drags
-							{
-								Boolean		dragHighlight = false;
-								UInt32		actualSize = 0;
-								
-								
-								if (noErr != GetControlProperty
-												(control, AppResources_ReturnCreatorCode(),
-													kConstantsRegistry_ControlPropertyTypeShowDragHighlight,
-													sizeof(dragHighlight), &actualSize,
-													&dragHighlight))
-								{
-									dragHighlight = false;
-								}
-								
-								if (dragHighlight)
-								{
-									DragAndDrop_ShowHighlightFrame(drawingContext, contentBounds);
-								}
-							}
-						}
-						
-						if (preservedClippingRegion != nullptr) SetClip(preservedClippingRegion);
-					}
-					
-					Memory_DisposeRegion(&preservedClippingRegion);
+					error = HIThemeDrawTextBox(gCurrentRenderData.returnCFStringRef(), &contentBounds, &textInfo,
+												drawingContext, kHIThemeOrientationNormal);
+					assert_noerr(error);
+				}
+				else
+				{
+					CGContextSetRGBFillColor(drawingContext, 1.0, 1.0, 1.0, 1.0/* alpha */);
+					CGContextFillRect(drawingContext, contentBounds);
 				}
 			}
-			
-			// restore port
-			SetGWorld(oldPort, oldDevice);
 		}
 	}
 	return result;
@@ -1661,7 +1548,7 @@ drag-and-drop operation.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					UNUSED_ARGUMENT(inContextPtr))
@@ -1789,7 +1676,7 @@ shown (as it always remains in memory).
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))
@@ -1830,73 +1717,27 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-To determine what kind of data is on the
-clipboard, use this method.  If the data
-is something that the clipboard window
-cannot render, '----' is returned.
+Updates a description area in the Clipboard window to
+describe the specified text.
 
-(3.0)
+The size is given in bytes, but is represented in a more
+human-readable form, e.g. "352 K" or "1.2 MB".
+
+(3.1)
 */
-static ResType
-returnContentType ()
-{
-	ResType		result = '----';
-	
-	
-	getValidScrapType(&result);
-	return result;
-}// returnContentType
-
-
-/*!
-Returns the number of data choices from the
-current clipboard.  If this number changes
-during the lifetime of the active program,
-then the clipboard window may need updating.
-
-(3.0)
-*/
-static UInt32
-returnFlavorCount ()
-{
-	UInt32		result = 0L;
-	ScrapRef	scrap = nullptr;
-	
-	
-	if (GetCurrentScrap(&scrap) == noErr)
-	{
-		(OSStatus)GetScrapFlavorCount(scrap, &result);
-	}
-	
-	return result;
-}// returnFlavorCount
-
-
-/*!
-To set up the contents of the top text area of
-the clipboard window, use this method.  The
-text varies based on the presence of data on
-the clipboard, as well as the kind of data and
-its size.
-
-(3.0)
-*/
-static void
-setDataTypeInformation ()
+void
+setDataTypeInformation	(CFStringRef	inUTI,
+						 size_t			inDataSize)
 {
 	UIStrings_Result	stringResult = kUIStrings_ResultOK;
-	ResType				validScrapType = '----';
 	CFStringRef			finalCFString = CFSTR("");
 	Boolean				releaseFinalCFString = false;
 	
 	
-	// figure out the scrap type and offset
-	getValidScrapType(&validScrapType);
-	
 	// the contents of the description depend on whether or not
 	// the clipboard has any data, and if so, the type and size
 	// of that data
-	if (returnFlavorCount() == 0)
+	if (0 == inDataSize)
 	{
 		// clipboard is empty; display a simple description
 		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionEmpty, finalCFString);
@@ -1916,151 +1757,121 @@ setDataTypeInformation ()
 		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionTemplate, descriptionTemplateCFString);
 		if (stringResult.ok())
 		{
-			CFStringRef							contentTypeCFString = CFSTR("");
-			Boolean								releaseContentTypeCFString = false;
-			UIStrings_ClipboardWindowCFString	contentTypeStringCode = kUIStrings_ClipboardWindowContentTypeUnknown;
+			CFStringRef		contentTypeCFString = UTTypeCopyDescription(inUTI);
 			
 			
-			// find a good way to describe what is on the clipboard
-			switch (validScrapType)
+			if (nullptr == contentTypeCFString)
 			{
-			case kScrapFlavorTypePicture:
-				contentTypeStringCode = kUIStrings_ClipboardWindowContentTypePicture;
-				break;
-			
-			case kScrapFlavorTypeUnicode:
-				contentTypeStringCode = kUIStrings_ClipboardWindowContentTypeUnicodeText;
-				break;
-			
-			case kScrapFlavorTypeText:
-				contentTypeStringCode = kUIStrings_ClipboardWindowContentTypeText;
-				break;
-			
-			default:
-				break;
+				stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowContentTypeUnknown, contentTypeCFString);
+				if (false == stringResult.ok())
+				{
+					contentTypeCFString = CFSTR("?");
+					CFRetain(contentTypeCFString);
+				}
 			}
-			stringResult = UIStrings_Copy(contentTypeStringCode, contentTypeCFString);
-			if (stringResult.ok())
-			{
-				// a new string was created, so it must be released later
-				releaseContentTypeCFString = true;
-			}
+			assert(nullptr != contentTypeCFString);
 			
 			// now create the description string
 			{
-				// find scrap size in bytes, but then adjust the value so
-				// the number displayed to the user is not too big and ugly
-				ScrapRef	scrap = nullptr;
-				Size		contentSize = 0L;
-				OSStatus	error = noErr;
+				// adjust the size value so the number displayed to the user is not too big and ugly;
+				// construct a size string, with appropriate units and the word “about”, if necessary
+				CFStringRef							aboutCFString = CFSTR("");
+				CFStringRef							unitsCFString = CFSTR("");
+				UIStrings_ClipboardWindowCFString	unitsStringCode = kUIStrings_ClipboardWindowUnitsBytes;
+				Boolean								releaseAboutCFString = false;
+				Boolean								releaseUnitsCFString = false;
+				Boolean								approximation = false;
+				size_t								contentSize = inDataSize;
 				
 				
-				error = GetCurrentScrap(&scrap);
-				if (noErr == error)
+				if (STATIC_CAST(contentSize, size_t) > INTEGER_MEGABYTES(1))
 				{
-					error = GetScrapFlavorSize(scrap, returnContentType(), &contentSize);
+					approximation = true;
+					contentSize /= INTEGER_MEGABYTES(1);
+					unitsStringCode = kUIStrings_ClipboardWindowUnitsMB;
+				}
+				else if (STATIC_CAST(contentSize, size_t) > INTEGER_KILOBYTES(1))
+				{
+					approximation = true;
+					contentSize /= INTEGER_KILOBYTES(1);
+					unitsStringCode = kUIStrings_ClipboardWindowUnitsK;
+				}
+				else if (contentSize == 1)
+				{
+					unitsStringCode = kUIStrings_ClipboardWindowUnitsByte;
 				}
 				
-				if (noErr == error)
+				// if the size value is not exact, insert a word into the
+				// string; e.g. “about 3 MB”
+				if (approximation)
 				{
-					// construct a size string, with appropriate units and the word “about”, if necessary
-					CFStringRef							aboutCFString = CFSTR("");
-					CFStringRef							unitsCFString = CFSTR("");
-					UIStrings_ClipboardWindowCFString	unitsStringCode = kUIStrings_ClipboardWindowUnitsBytes;
-					Boolean								releaseAboutCFString = false;
-					Boolean								releaseUnitsCFString = false;
-					Boolean								approximation = false;
-					
-					
-					if (STATIC_CAST(contentSize, size_t) > INTEGER_MEGABYTES(1))
-					{
-						approximation = true;
-						contentSize /= INTEGER_MEGABYTES(1);
-						unitsStringCode = kUIStrings_ClipboardWindowUnitsMB;
-					}
-					else if (STATIC_CAST(contentSize, size_t) > INTEGER_KILOBYTES(1))
-					{
-						approximation = true;
-						contentSize /= INTEGER_KILOBYTES(1);
-						unitsStringCode = kUIStrings_ClipboardWindowUnitsK;
-					}
-					else if (contentSize == 1)
-					{
-						unitsStringCode = kUIStrings_ClipboardWindowUnitsByte;
-					}
-					
-					// if the size value is not exact, insert a word into the
-					// string; e.g. “about 3 MB”
-					if (approximation)
-					{
-						stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionApproximately,
-														aboutCFString);
-						if (stringResult.ok())
-						{
-							// a new string was created, so it must be released later
-							releaseAboutCFString = true;
-						}
-					}
-					
-					// based on the determined units, find the proper unit string
-					stringResult = UIStrings_Copy(unitsStringCode, unitsCFString);
+					stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionApproximately,
+													aboutCFString);
 					if (stringResult.ok())
 					{
 						// a new string was created, so it must be released later
-						releaseUnitsCFString = true;
-					}
-					
-				#if 0
-					// debug
-					Console_WriteValueCFString("description template is", descriptionTemplateCFString);
-					Console_WriteValueCFString("determined content type to be", contentTypeCFString);
-					Console_WriteValueCFString("determined approximation to be", aboutCFString);
-					Console_WriteValue("determined size number to be", contentSize);
-					Console_WriteValueCFString("determined size units to be", unitsCFString);
-				#endif
-					
-					// construct a string that contains all the proper substitutions
-					// (see the UIStrings code to ensure the substitution order is right!!!)
-					finalCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
-																descriptionTemplateCFString,
-																contentTypeCFString, aboutCFString,
-																contentSize, unitsCFString);
-					if (nullptr == finalCFString)
-					{
-						Console_WriteLine("unable to create clipboard description string from format");
-						finalCFString = CFSTR("");
-					}
-					
-					if (releaseAboutCFString)
-					{
-						CFRelease(aboutCFString), aboutCFString = nullptr;
-					}
-					if (releaseUnitsCFString)
-					{
-						CFRelease(unitsCFString), unitsCFString = nullptr;
+						releaseAboutCFString = true;
 					}
 				}
+				
+				// based on the determined units, find the proper unit string
+				stringResult = UIStrings_Copy(unitsStringCode, unitsCFString);
+				if (stringResult.ok())
+				{
+					// a new string was created, so it must be released later
+					releaseUnitsCFString = true;
+				}
+				
+			#if 0
+				// debug
+				Console_WriteValueCFString("description template is", descriptionTemplateCFString);
+				Console_WriteValueCFString("determined content type to be", contentTypeCFString);
+				Console_WriteValueCFString("determined approximation to be", aboutCFString);
+				Console_WriteValue("determined size number to be", contentSize);
+				Console_WriteValueCFString("determined size units to be", unitsCFString);
+			#endif
+				
+				// construct a string that contains all the proper substitutions
+				// (see the UIStrings code to ensure the substitution order is right!!!)
+				finalCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
+															descriptionTemplateCFString,
+															contentTypeCFString, aboutCFString,
+															contentSize, unitsCFString);
+				if (nullptr == finalCFString)
+				{
+					Console_WriteLine("unable to create clipboard description string from format");
+					finalCFString = CFSTR("");
+				}
+				
+				if (releaseAboutCFString)
+				{
+					CFRelease(aboutCFString), aboutCFString = nullptr;
+				}
+				if (releaseUnitsCFString)
+				{
+					CFRelease(unitsCFString), unitsCFString = nullptr;
+				}
+				
+				CFShow(finalCFString); // TMP
 			}
 			
-			// if a content type string was created before, free it now
-			if (releaseContentTypeCFString)
-			{
-				CFRelease(contentTypeCFString), contentTypeCFString = nullptr;
-			}
-			
-			// free the template string that was allocated
+			CFRelease(contentTypeCFString), contentTypeCFString = nullptr;
 			CFRelease(descriptionTemplateCFString), descriptionTemplateCFString = nullptr;
 		}
 	}
 	
-	// figure out what font to use for the window header text, and set its size to fit
-	// (this routine also sets the text contained in the control)
-#if 0
-	(UInt16)Localization_SetUpSingleLineTextControl(gClipboardWindowHeaderText, finalCFString,
-													false/* is a checkbox or radio button */);
-#else
-	SetControlTextWithCFString(gClipboardWindowHeaderText, finalCFString);
-#endif
+	// update the window header text
+	{
+		HIViewWrap		descriptionLabel(idMyLabelDataDescription, gClipboardWindow);
+		
+		
+	#if 0
+		(UInt16)Localization_SetUpSingleLineTextControl(descriptionLabel, finalCFString,
+														false/* is a checkbox or radio button */);
+	#else
+		SetControlTextWithCFString(descriptionLabel, finalCFString);
+	#endif
+	}
 	
 	if (releaseFinalCFString)
 	{
@@ -2070,175 +1881,44 @@ setDataTypeInformation ()
 
 
 /*!
-To set up the contents of the bottom text area
-of the clipboard window, use this method.  The
-text is blank unless the clipboard contains a
-picture that has been scaled smaller than its
-actual size.
+Allows the image view to intelligently choose whether or
+not to scale its content.  Pass zeroes if no image is being
+rendered.
 
-(3.0)
+(3.1)
 */
-static void
-setScalingInformation ()
+void
+setScalingInformation	(size_t		inImageWidth,
+						 size_t		inImageHeight)
 {
-	// if the data is scaled, say so; otherwise, remove the footer text completely
-	if (gIsDataScaled)
+	HIViewWrap		imageView(idMyImageData, gClipboardWindow);
+	Boolean			doScale = false;
+	
+	
+	if ((0 != inImageWidth) && (0 != inImageHeight))
 	{
-		UIStrings_Result	stringResult = kUIStrings_ResultOK;
-		CFStringRef			footerCFString = nullptr;
-		CFStringRef			footerTemplateCFString = nullptr;
-		Boolean				releaseFooterCFString = true;
+		// scale only if the image is bigger than its view
+		HIRect		imageBounds;
 		
 		
-		stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDisplaySizePercentage, footerTemplateCFString);
-		if (stringResult.ok())
+		if (noErr == HIViewGetBounds(imageView, &imageBounds))
 		{
-			footerCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* format options */,
-														footerTemplateCFString,
-														gScaledPercentage/* substituted number */);
+			doScale = ((inImageWidth > imageBounds.size.width) ||
+						(inImageHeight > imageBounds.size.height));
 		}
-		else
-		{
-			footerCFString = CFSTR("");
-			releaseFooterCFString = false;
-		}
-		SetControlTextWithCFString(gClipboardFooterPlacardText, footerCFString);
-		
-		if (releaseFooterCFString)
-		{
-			CFRelease(footerCFString), footerCFString = nullptr;
-		}
-		CFRelease(footerTemplateCFString), footerTemplateCFString = nullptr;
 	}
-	else
-	{
-		SetControlTextWithCFString(gClipboardFooterPlacardText, CFSTR(""));
-	}
+	(OSStatus)HIImageViewSetScaleToFit(imageView, doScale);
 }// setScalingInformation
 
 
 /*!
-To set the suspended state of the clipboard,
-call this method.  If the clipboard is suspended,
-it is collapsed, in order to remain on the screen
-without showing any contents (other applications
-could change the contents of the Clipboard
-without MacTelnet’s knowledge, so it should not
-try to render the Clipboard when in the background).
+Copies the specified plain text data to the clipboard.
+
+DEPRECATED, use addCFStringToPasteboard().
 
 (3.0)
 */
-static void
-setSuspended	(Boolean	inIsSuspended)
-{
-	HIWindowRef		clipboard = Clipboard_ReturnWindow();
-	
-	
-	gIsSuspended = inIsSuspended;
-	if (inIsSuspended) HideWindow(clipboard);
-	else if (gIsShowing) ShowWindow(clipboard);
-}// setSuspended
-
-
-/*!
-To set the initial arrangement of the controls
-for the clipboard window, use this method.
-Subsequent resizings will simply add or subtract
-deltas from the initial control rectangles, so
-tbe “initial arrangement” calculation only needs
-to be done once.
-
-(3.0)
-*/
-static void
-setUpControls	(HIWindowRef	inWindow)
-{
-	Rect		clipboardContentRect;
-	SInt32		scrollBarSize = 0L;
-	
-	
-	// get scroll bar height
-	(OSStatus)GetThemeMetric(kThemeMetricScrollBarWidth, &scrollBarSize);
-	
-	// calculate the area at the top that says what is on the clipboard,
-	// and the area that displays the clipboard data
-	{
-		enum
-		{
-			kHeaderTextInsetH = 4, // pixels horizontally inward that the window header text is from the edges of the header
-			kHeaderTextInsetV = 4 // pixels vertically inward that the window header text is from the edges of the header
-		};
-		Rect	topRect;
-		Rect	controlRect;
-		
-		
-		// use this routine to automatically set the proper height for the text
-		Localization_SetUpSingleLineTextControl(gClipboardWindowHeaderText, EMPTY_PSTRING);
-		
-		GetPortBounds(GetWindowPort(inWindow), &topRect);
-		GetControlBounds(gClipboardWindowHeaderText, &controlRect);
-		topRect.bottom = (controlRect.bottom - controlRect.top) + (2 * kHeaderTextInsetV);
-		
-		// resize the window header and its text control
-		InsetRect(&topRect, kHeaderTextInsetH, kHeaderTextInsetV);
-		MoveControl(gClipboardWindowHeaderText, topRect.left, topRect.top);
-		SizeControl(gClipboardWindowHeaderText, topRect.right - topRect.left, topRect.bottom - topRect.top);
-		InsetRect(&topRect, -kHeaderTextInsetH, -kHeaderTextInsetV);
-		MoveControl(gClipboardWindowHeader, topRect.left - 1, topRect.top - 1);
-		SizeControl(gClipboardWindowHeader, topRect.right - topRect.left + 2, topRect.bottom - topRect.top + 2);
-		
-		// calculate the part *not* in the top area
-		clipboardContentRect = topRect;
-		clipboardContentRect.top = topRect.bottom + 1;
-		GetPortBounds(GetWindowPort(inWindow), &topRect); // "topRect" has a new meaning here...
-		clipboardContentRect.bottom = topRect.bottom - scrollBarSize + 1;
-	}
-	
-	// arrange scroll bars
-	//(OSStatus)GetThemeMetric(kThemeMetricScrollBarWidth, &scrollBarSize);
-	//MoveControl(gClipboardScrollBarH, clipboardContentRect.left - 1,
-	//									clipboardContentRect.bottom - scrollBarSize + 1);
-	//SizeControl(gClipboardScrollBarH,
-	//				clipboardContentRect.right - clipboardContentRect.left - scrollBarSize + 1 + 2/* 2 * frame width */,
-	//				scrollBarSize);
-	//MoveControl(gClipboardScrollBarV, clipboardContentRect.right - scrollBarSize + 1,
-	//										clipboardContentRect.top - 1);
-	//SizeControl(gClipboardScrollBarV, scrollBarSize,
-	//				clipboardContentRect.bottom - clipboardContentRect.top - scrollBarSize + 1 + 2/* 2 * frame width */);
-	
-	// arrange other controls
-	{
-		enum
-		{
-			kPlacardTextInsetH = 2, // pixels horizontally inward that the window footer text is from the placard edges
-			kPlacardTextInsetV = 2 // pixels vertically inward that the window footer text is from the placard edges
-		};
-		
-		
-		MoveControl(gClipboardContentUserPane, clipboardContentRect.left, clipboardContentRect.top);
-		SizeControl(gClipboardContentUserPane, clipboardContentRect.right - clipboardContentRect.left,
-						clipboardContentRect.bottom - clipboardContentRect.top);
-		MoveControl(gClipboardFooterPlacard, clipboardContentRect.left - 1, clipboardContentRect.bottom);
-		SizeControl(gClipboardFooterPlacard,
-					clipboardContentRect.right - clipboardContentRect.left - scrollBarSize + 1 + 2, scrollBarSize);
-		InsetRect(&clipboardContentRect, kPlacardTextInsetH, kPlacardTextInsetV);
-		MoveControl(gClipboardFooterPlacardText, clipboardContentRect.left,
-						clipboardContentRect.bottom + 2 * kPlacardTextInsetV);
-		SizeControl(gClipboardFooterPlacardText,
-						clipboardContentRect.right - clipboardContentRect.left - scrollBarSize + 1 + 2,
-						scrollBarSize - 2 * kPlacardTextInsetH);
-		InsetRect(&clipboardContentRect, -kPlacardTextInsetH, -kPlacardTextInsetV);
-	}
-}// setUpControls
-
-
-/*!
-Copies the specified plain text data to the
-clipboard.
-
-(3.0)
-*/
-static void
+void
 textToScrap		(Handle		inTextHandle)
 {
 	(OSStatus)ClearCurrentScrap();
@@ -2255,5 +1935,80 @@ textToScrap		(Handle		inTextHandle)
 		}
 	}
 }// textToScrap
+
+
+/*!
+Copies recognizable data (if any) from the specified
+pasteboard and arranges to update the Clipboard window
+accordingly.  Also updates internal state that enables
+other Clipboard APIs to be relatively fast.
+
+Currently, the Clipboard window is only capable of
+rendering one pasteboard at a time.
+
+IMPORTANT:	This API should be called whenever the
+			pasteboard is changed.
+
+(3.1)
+*/
+void
+updateClipboard		(PasteboardRef		inPasteboard)
+{
+	// display an appropriate renderer
+	HIViewWrap		textView(idMyUserPaneDragParent, gClipboardWindow);
+	HIViewWrap		imageView(idMyImageData, gClipboardWindow);
+	CGImageRef		imageToRender = nullptr;
+	CFStringRef		textToRender = nullptr;
+	CFStringRef		typeIdentifier = nullptr;
+	
+	
+	if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier))
+	{
+		// image
+		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
+		
+		gCurrentRenderData.clear();
+		HIImageViewSetImage(imageView, imageToRender);
+		HIViewSetVisible(imageView, true);
+		HIViewSetNeedsDisplay(imageView, true);
+		
+		setDataTypeInformation(typeIdentifier,
+								CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender));
+		setScalingInformation(CGImageGetWidth(imageToRender), CGImageGetHeight(imageToRender));
+		
+		CFRelease(imageToRender), imageToRender = nullptr;
+		CFRelease(typeIdentifier), typeIdentifier = nullptr;
+	}
+	else if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier))
+	{
+		// text
+		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeText;
+		
+		gCurrentRenderData = textToRender;
+		HIViewSetVisible(imageView, false);
+		HIViewSetNeedsDisplay(textView, true);
+		
+		setDataTypeInformation(typeIdentifier, CFStringGetLength(textToRender) * sizeof(UniChar));
+		setScalingInformation(0, 0);
+		
+		CFRelease(textToRender), textToRender = nullptr;
+		CFRelease(typeIdentifier), typeIdentifier = nullptr;
+	}
+	else
+	{
+		// unknown, or empty
+		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeUnknown;
+		
+		gCurrentRenderData.clear();
+		HIViewSetVisible(imageView, false);
+		HIViewSetNeedsDisplay(textView, true);
+		
+		// TEMPORARY: could determine actual UTI here
+		setDataTypeInformation(nullptr, 0);
+		setScalingInformation(0, 0);
+	}
+}// updateClipboard
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

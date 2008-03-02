@@ -3661,27 +3661,7 @@ stateTrackerStandardEditItems	(UInt32			inCommandID,
 		break;
 	
 	case kCommandPaste:
-		result = areSessionRelatedItemsEnabled() && (!isReadOnly);
-		if (result)
-		{
-		#if TARGET_API_MAC_OS8
-			long	offset = 0L;
-			
-			
-			// there must be text on the clipboard in order for Paste to work
-			result = (GetScrap(0L, kScrapFlavorTypeText, &offset) > 0L);
-		#else
-			ScrapRef			currentScrap = nullptr;
-			ScrapFlavorFlags	currentScrapFlags = 0L;
-			
-			
-			if (GetCurrentScrap(&currentScrap) == noErr)
-			{
-				result = (GetScrapFlavorFlags(currentScrap, kScrapFlavorTypeText, &currentScrapFlags) == noErr);
-			}
-			else result = false;
-		#endif
-		}
+		result = areSessionRelatedItemsEnabled() && (!isReadOnly) && Clipboard_ContainsText();
 		break;
 	
 	case kCommandSelectAll:
