@@ -3352,19 +3352,23 @@ convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 		
 		floatValue = inColorPtr->red;
 		floatValue /= RGBCOLOR_INTENSITY_MAX;
-		componentValues[i++] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+		componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
 		if (nullptr != componentValues[i])
 		{
+			++i;
 			floatValue = inColorPtr->green;
 			floatValue /= RGBCOLOR_INTENSITY_MAX;
-			componentValues[i++] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+			componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
 			if (nullptr != componentValues[i])
 			{
+				++i;
 				floatValue = inColorPtr->blue;
 				floatValue /= RGBCOLOR_INTENSITY_MAX;
-				componentValues[i++] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+				componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
 				if (nullptr != componentValues[i])
 				{
+					++i;
+					
 					// store colors in array
 					outNewCFArray = CFArrayCreate(kCFAllocatorDefault,
 													REINTERPRET_CAST(componentValues, void const**),
@@ -3375,11 +3379,15 @@ convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 						// success!
 						result = true;
 					}
-					CFRelease(componentValues[--i]);
+					
+					--i;
+					CFRelease(componentValues[i]);
 				}
-				CFRelease(componentValues[--i]);
+				--i;
+				CFRelease(componentValues[i]);
 			}
-			CFRelease(componentValues[--i]);
+			--i;
+			CFRelease(componentValues[i]);
 		}
 	}
 	else
@@ -6549,6 +6557,22 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagTerminalColorBoldBackground:
 			case kPreferences_TagTerminalColorNormalForeground:
 			case kPreferences_TagTerminalColorNormalBackground:
+			case kPreferences_TagTerminalColorANSIBlack:
+			case kPreferences_TagTerminalColorANSIRed:
+			case kPreferences_TagTerminalColorANSIGreen:
+			case kPreferences_TagTerminalColorANSIYellow:
+			case kPreferences_TagTerminalColorANSIBlue:
+			case kPreferences_TagTerminalColorANSIMagenta:
+			case kPreferences_TagTerminalColorANSICyan:
+			case kPreferences_TagTerminalColorANSIWhite:
+			case kPreferences_TagTerminalColorANSIBlackBold:
+			case kPreferences_TagTerminalColorANSIRedBold:
+			case kPreferences_TagTerminalColorANSIGreenBold:
+			case kPreferences_TagTerminalColorANSIYellowBold:
+			case kPreferences_TagTerminalColorANSIBlueBold:
+			case kPreferences_TagTerminalColorANSIMagentaBold:
+			case kPreferences_TagTerminalColorANSICyanBold:
+			case kPreferences_TagTerminalColorANSIWhiteBold:
 				{
 					RGBColor const* const	data = REINTERPRET_CAST(inDataPtr, RGBColor const*);
 					CFArrayRef				colorCFArray = nullptr;
