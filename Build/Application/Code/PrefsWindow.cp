@@ -1810,6 +1810,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								// can crash if the user happens to delete the item being renamed
 								removeCollectionRenameUI();
 								
+								// if the deleted context is current, update the global; the
+								// global will be corrected later when a new selection is made
+								if (deletedContext == gCurrentDataSet) gCurrentDataSet = nullptr;
+								
 								prefsResult = Preferences_ContextDeleteSaved(deletedContext);
 								if (kPreferences_ResultOK != prefsResult) isError = true;
 								else
