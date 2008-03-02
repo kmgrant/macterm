@@ -259,7 +259,14 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandShowHelpTags					'STag'
 #define kCommandHideHelpTags					'HTag'
 
-// color box menu
+// color box
+#define kCommandColorMatteBackground			'Mtte'
+#define kCommandColorBlinkingForeground			'BlTx'
+#define kCommandColorBlinkingBackground			'BlBk'
+#define kCommandColorBoldForeground				'BTxt'
+#define kCommandColorBoldBackground				'BBkg'
+#define kCommandColorNormalForeground			'NTxt'
+#define kCommandColorNormalBackground			'NBkg'
 #define kCommandColorBlack						'Cblk'
 #define kCommandColorBlackEmphasized			'CBlk'
 #define kCommandColorRed						'Cred'

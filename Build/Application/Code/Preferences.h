@@ -146,14 +146,14 @@ enum
 {
 	kPreferences_TagFontName							= 'font',	//!< data: "Str255"
 	kPreferences_TagFontSize							= 'fsiz',	//!< data: "SInt16"
-	kPreferences_TagTerminalColorMatteBackground		= 'mtte',	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBlinkingForeground		= 'c*fg',	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBlinkingBackground		= 'c*bg',	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBoldForeground			= 'cbfg',	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorBoldBackground			= 'cbbg',	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorNormalForeground		= 'cnfg',	//!< data: "RGBColor"
-	kPreferences_TagTerminalColorNormalBackground		= 'cnbg',	//!< data: "RGBColor"
-	// NOTE: These match menu command IDs for convenience in color menus.
+	// NOTE: These match menu command IDs for convenience in color boxes.
+	kPreferences_TagTerminalColorMatteBackground		= kCommandColorMatteBackground,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBlinkingForeground		= kCommandColorBlinkingForeground,	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBlinkingBackground		= kCommandColorBlinkingBackground,	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBoldForeground			= kCommandColorBoldForeground,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorBoldBackground			= kCommandColorBoldBackground,		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorNormalForeground		= kCommandColorNormalForeground,	//!< data: "RGBColor"
+	kPreferences_TagTerminalColorNormalBackground		= kCommandColorNormalBackground,	//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSIBlack				= kCommandColorBlack,				//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSIRed				= kCommandColorRed,					//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSIGreen				= kCommandColorGreen,				//!< data: "RGBColor"
