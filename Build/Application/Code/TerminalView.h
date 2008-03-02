@@ -100,29 +100,30 @@ enum
 	kTerminalView_ColorIndexBlinkingBackground		= 5,
 	kTerminalView_ColorIndexBoldText				= 6,
 	kTerminalView_ColorIndexBoldBackground			= 7,
+	kTerminalView_ColorIndexMatteBackground			= 8,
 	// the ORDER of these colors must be the same as the numerical order of the
 	// ANSI standard values (0 = black, 1 = red, etc., 6 = cyan, 7 = white)
-	kTerminalView_ColorIndexNormalANSIBlack			= 8,
-	kTerminalView_ColorIndexNormalANSIRed			= 9,
-	kTerminalView_ColorIndexNormalANSIGreen			= 10,
-	kTerminalView_ColorIndexNormalANSIYellow		= 11,
-	kTerminalView_ColorIndexNormalANSIBlue			= 12,
-	kTerminalView_ColorIndexNormalANSIMagenta		= 13,
-	kTerminalView_ColorIndexNormalANSICyan			= 14,
-	kTerminalView_ColorIndexNormalANSIWhite			= 15,
+	kTerminalView_ColorIndexNormalANSIBlack			= 9,
+	kTerminalView_ColorIndexNormalANSIRed			= 10,
+	kTerminalView_ColorIndexNormalANSIGreen			= 11,
+	kTerminalView_ColorIndexNormalANSIYellow		= 12,
+	kTerminalView_ColorIndexNormalANSIBlue			= 13,
+	kTerminalView_ColorIndexNormalANSIMagenta		= 14,
+	kTerminalView_ColorIndexNormalANSICyan			= 15,
+	kTerminalView_ColorIndexNormalANSIWhite			= 16,
 	// the ORDER of these colors must be the same as the numerical order of the
 	// ANSI standard values (0 = black, 1 = red, etc., 6 = cyan, 7 = white)
-	kTerminalView_ColorIndexEmphasizedANSIBlack		= 16,
-	kTerminalView_ColorIndexEmphasizedANSIRed		= 17,
-	kTerminalView_ColorIndexEmphasizedANSIGreen		= 18,
-	kTerminalView_ColorIndexEmphasizedANSIYellow	= 19,
-	kTerminalView_ColorIndexEmphasizedANSIBlue		= 20,
-	kTerminalView_ColorIndexEmphasizedANSIMagenta	= 21,
-	kTerminalView_ColorIndexEmphasizedANSICyan		= 22,
-	kTerminalView_ColorIndexEmphasizedANSIWhite		= 23,
+	kTerminalView_ColorIndexEmphasizedANSIBlack		= 17,
+	kTerminalView_ColorIndexEmphasizedANSIRed		= 18,
+	kTerminalView_ColorIndexEmphasizedANSIGreen		= 19,
+	kTerminalView_ColorIndexEmphasizedANSIYellow	= 20,
+	kTerminalView_ColorIndexEmphasizedANSIBlue		= 21,
+	kTerminalView_ColorIndexEmphasizedANSIMagenta	= 22,
+	kTerminalView_ColorIndexEmphasizedANSICyan		= 23,
+	kTerminalView_ColorIndexEmphasizedANSIWhite		= 24,
 	// counts of the above constants
 	kTerminalView_ColorCountRequiredEntries			= 2,
-	kTerminalView_ColorCountNonANSIColors			= 6,
+	kTerminalView_ColorCountNonANSIColors			= 7,
 	kTerminalView_ColorCountNormalANSIColors		= 8,
 	kTerminalView_ColorCountEmphasizedANSIColors	= 8,
 	// useful constants
@@ -494,6 +495,10 @@ Boolean
 	TerminalView_SetColor						(TerminalViewRef			inView,
 												 TerminalView_ColorIndex	inColorEntryNumber,
 												 RGBColor const*			inColorPtr);
+
+TerminalView_Result
+	TerminalView_SetConfiguration				(TerminalViewRef			inView,
+												 Preferences_ContextRef		inNewConfiguration);
 
 TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,

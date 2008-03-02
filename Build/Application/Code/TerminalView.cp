@@ -107,7 +107,8 @@ enum
 	kMyBasicColorIndexBoldBackground		= 3,
 	kMyBasicColorIndexBlinkingText			= 4,
 	kMyBasicColorIndexBlinkingBackground	= 5,
-	kMyBasicColorCount						= 6		//!< set to the number of indices in this list
+	kMyBasicColorIndexMatteBackground		= 6,
+	kMyBasicColorCount						= 7		//!< set to the number of indices in this list
 };
 
 enum
@@ -596,6 +597,13 @@ TerminalView_Done ()
 Creates a new HIView hierarchy for a terminal view,
 complete with all the callbacks and data necessary to
 drive it.
+
+The specified Preferences context "inFormatOrNull" is
+retained, and used to read all necessary settings (such
+as colors and the font).  If not provided, a clone of
+the default context is made.  The default context may
+also be used if any one setting is not found.  You can
+change this later with TerminalView_SetConfiguration().
 
 Since this is entirely associated with an HIObject, the
 view automatically goes away whenever the HIView from
@@ -1478,18 +1486,12 @@ present; be prepared to not find what you look for.
 In addition, tags that are present in one view may
 be absent in another.
 
-NOTE:	The configuration might only be synced up
-		when TerminalView_ReturnConfiguration() is
-		actually called.  For example, if you need
-		access to the configuration more than once,
-		you must call this routine twice *even if*
-		you would end up with the same reference:
-		this is the only way you can be sure the
-		data is not stale.
+IMPORTANT:	A terminal view may control its font size
+			automatically in “zoom mode”.  Changes
+			to the size will be ignored while in that
+			mode.
 
-IMPORTANT:	Do not change settings in the context,
-			because the Terminal View will not stay
-			in sync.
+See also TerminalView_SetConfiguration().
 
 (3.1)
 */
@@ -2356,6 +2358,49 @@ TerminalView_SetColor	(TerminalViewRef			inView,
 
 
 /*!
+Changes the Preferences context with which this view is
+synchronized.  See TerminalView_NewHIViewBased() for more
+information.
+
+The specified configuration is retained, and any previous
+one is released.
+
+See also TerminalView_ReturnConfiguration().
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the screen reference is unrecognized
+
+\retval kTerminalView_ResultParameterError
+if the specified configuration is nullptr
+
+(3.1)
+*/
+TerminalView_Result
+TerminalView_SetConfiguration	(TerminalViewRef			inView,
+								 Preferences_ContextRef		inNewConfiguration)
+{
+	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
+	else if (nullptr == inNewConfiguration) result = kTerminalView_ResultParameterError;
+	{
+		if (viewPtr->configuration != inNewConfiguration)
+		{
+			Preferences_ReleaseContext(&viewPtr->configuration);
+		}
+		viewPtr->configuration = inNewConfiguration;
+		Preferences_RetainContext(viewPtr->configuration);
+	}
+	return result;
+}// SetConfiguration
+
+
+/*!
 Changes the current display mode, which is normal by default.
 Query it later with TerminalView_ReturnDisplayMode().
 
@@ -2989,6 +3034,17 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		assert_noerr(TerminalBackground_CreateHIView(inOwningWindow, this->backgroundHIView));
 		error = HIViewSetVisible(this->backgroundHIView, true);
 		assert_noerr(error);
+		
+		// initialize matte color
+		{
+			RGBColor* const		kColorPtr = &this->text.colors[kMyBasicColorIndexMatteBackground];
+			
+			
+			error = SetControlData(this->backgroundHIView, kControlEntireControl,
+									kConstantsRegistry_ControlDataTagTerminalBackgroundColor,
+									sizeof(*kColorPtr), kColorPtr);
+			//assert_noerr(error);
+		}
 		
 		// since no extra rendering, etc. is required, make this a mere ALIAS
 		// for the background view; this is so that code intending to operate
@@ -3694,6 +3750,13 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 																sizeof(colorValue), &colorValue))
 							{
 								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldBackground, &colorValue);
+							}
+							
+							if (kPreferences_ResultOK == Preferences_ContextGetData
+															(formatPreferencesContext, kPreferences_TagTerminalColorMatteBackground,
+																sizeof(colorValue), &colorValue))
+							{
+								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexMatteBackground, &colorValue);
 							}
 						}
 					}
@@ -5018,6 +5081,10 @@ getScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 	
 	case kTerminalView_ColorIndexBlinkingBackground:
 		*outColorPtr = inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingBackground];
+		break;
+	
+	case kTerminalView_ColorIndexMatteBackground:
+		*outColorPtr = inTerminalViewPtr->text.colors[kMyBasicColorIndexMatteBackground];
 		break;
 	
 	case kTerminalView_ColorIndexNormalText:
@@ -8927,34 +8994,78 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 					 TerminalView_ColorIndex	inColorEntryNumber,
 					 RGBColor const*			inColorPtr)
 {
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
 	switch (inColorEntryNumber)
 	{
 	case kTerminalView_ColorIndexNormalBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
-		(OSStatus)SetControlData(inTerminalViewPtr->backgroundHIView, kControlEntireControl,
-									kConstantsRegistry_ControlDataTagTerminalBackgroundColor,
-									sizeof(*inColorPtr), inColorPtr);
+		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
+													kPreferences_TagTerminalColorNormalBackground,
+													sizeof(*inColorPtr), inColorPtr);
+		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBoldText:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBoldText] = *inColorPtr;
+		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
+													kPreferences_TagTerminalColorBoldForeground,
+													sizeof(*inColorPtr), inColorPtr);
+		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBoldBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBoldBackground] = *inColorPtr;
+		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
+													kPreferences_TagTerminalColorBoldBackground,
+													sizeof(*inColorPtr), inColorPtr);
+		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBlinkingText:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingText] = *inColorPtr;
+		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
+													kPreferences_TagTerminalColorBlinkingForeground,
+													sizeof(*inColorPtr), inColorPtr);
+		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBlinkingBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingBackground] = *inColorPtr;
+		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
+													kPreferences_TagTerminalColorBlinkingBackground,
+													sizeof(*inColorPtr), inColorPtr);
+		assert(kPreferences_ResultOK == prefsResult);
+		break;
+	
+	case kTerminalView_ColorIndexMatteBackground:
+		{
+			inTerminalViewPtr->text.colors[kMyBasicColorIndexMatteBackground] = *inColorPtr;
+			if (nullptr != inTerminalViewPtr->backgroundHIView)
+			{
+				OSStatus	error = noErr;
+				
+				
+				error = SetControlData(inTerminalViewPtr->backgroundHIView, kControlEntireControl,
+										kConstantsRegistry_ControlDataTagTerminalBackgroundColor,
+										sizeof(*inColorPtr), inColorPtr);
+				assert_noerr(error);
+			}
+			prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
+														kPreferences_TagTerminalColorMatteBackground,
+														sizeof(*inColorPtr), inColorPtr);
+			assert(kPreferences_ResultOK == prefsResult);
+		}
 		break;
 	
 	case kTerminalView_ColorIndexNormalText:
 	default:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalText] = *inColorPtr;
+		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
+													kPreferences_TagTerminalColorNormalForeground,
+													sizeof(*inColorPtr), inColorPtr);
+		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	}
 	
