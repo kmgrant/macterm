@@ -385,6 +385,7 @@ static void				receiveVideoModeChange			(ListenerModel_Ref, ListenerModel_Event,
 static void				redrawScreensTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
 static void				releaseRowIterator				(TerminalViewPtr, Terminal_LineRef*);
 static SInt32			returnNumberOfCharacters		(TerminalViewPtr);
+static CFStringRef		returnSelectedTextAsNewUnicode	(TerminalViewPtr, UInt16, TerminalView_TextFlags);
 static void				screenBufferChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				screenCursorChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				screenToLocal					(TerminalViewPtr, SInt16*, SInt16*);
@@ -1180,7 +1181,7 @@ TerminalView_GetSelectedTextAsAudio		(TerminalViewRef	inView)
 	
 	if (viewPtr != nullptr)
 	{
-		Handle		textHandle = TerminalView_ReturnSelectedTextAsNewHandle(inView, 0/* space info */, kTerminalView_TextFlagInline);
+		Handle		textHandle = getSelectedTextAsNewHandle(viewPtr, 0/* space info */, kTerminalView_TextFlagInline);
 		
 		
 		if (textHandle != nullptr)
@@ -1549,6 +1550,9 @@ TerminalView_ReturnDisplayMode	(TerminalViewRef	inView)
 
 
 /*!
+DEPRECATED.  Use TerminalView_ReturnSelectedTextAsNewUnicode()
+instead.
+
 Returns the contents of the current selection for
 the specified screen view, allocating a new handle.
 If there is no selection, an empty handle is returned.
@@ -1609,6 +1613,49 @@ TerminalView_ReturnSelectedTextAsNewRegion		(TerminalViewRef	inView)
 	result = getSelectedTextAsNewRegion(viewPtr);
 	return result;
 }// ReturnSelectedTextAsNewRegion
+
+
+/*!
+Returns the contents of the current selection for the
+specified screen view as a Core Foundation string.  If
+there is no selection, an empty string is returned.
+If any problems occur, nullptr is returned.
+
+Use the parameters to this routine to affect how the
+text is returned; for example, you can have the text
+returned inline, or delimited by carriage returns.
+The "inNumberOfSpacesToReplaceWithOneTabOrZero" value
+can be 0 to perform no substitution, or a positive
+integer to indicate how many consecutive spaces are
+to be replaced with a single tab before returning the
+text.
+
+Use CFRelease() to dispose of the data when finished.
+
+IMPORTANT:	Use this kind of routine very judiciously.
+			Copying data is very inefficient and is
+			almost never necessary, particularly for
+			scrollback rows which are immutable.  Use
+			other APIs to access text ranges in ways
+			that do not replicate bytes needlessly.
+
+(3.1)
+*/
+CFStringRef
+TerminalView_ReturnSelectedTextAsNewUnicode	(TerminalViewRef			inView,
+											 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
+											 TerminalView_TextFlags		inFlags)
+{
+    TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	CFStringRef				result = nullptr;
+	
+	
+	if (nullptr != viewPtr)
+	{
+		result = returnSelectedTextAsNewUnicode(viewPtr, inNumberOfSpacesToReplaceWithOneTabOrZero, inFlags);
+	}
+	return result;
+}// ReturnSelectedTextAsNewUnicode
 
 
 /*!
@@ -5129,22 +5176,9 @@ getScreenOriginFloat	(TerminalViewPtr	inTerminalViewPtr,
 
 
 /*!
-Returns the contents of the current selection for
-the specified window, allocating a new handle.  If
-there is no selection, an empty handle is returned.
-If any problems occur, nullptr is returned.
+Internal version of TerminalView_ReturnSelectedTextAsNewHandle().
 
-Use the parameters to this routine to affect how the
-text is returned; for example, you can have the text
-returned inline, or delimited by carriage returns.
-The "inNumberOfSpacesToReplaceWithOneTabOrZero" value
-can be 0 to perform no substitution, or a positive
-integer to indicate how many consecutive spaces are
-to be replaced with a single tab before returning the
-text.
-
-You must dispose of the returned handle yourself,
-using Memory_DisposeHandle().
+DEPRECATED.  Use returnSelectedTextAsNewUnicode() instead.
 
 (3.0)
 */
@@ -8373,6 +8407,112 @@ returnNumberOfCharacters	(TerminalViewPtr	inTerminalViewPtr)
 	
 	return result;
 }// returnNumberOfCharacters
+
+
+/*!
+Internal version of TerminalView_ReturnSelectedTextAsNewUnicode().
+
+IMPORTANT:	Tab substitution is currently not supported.
+
+(3.1)
+*/
+static CFStringRef
+returnSelectedTextAsNewUnicode	(TerminalViewPtr			inTerminalViewPtr,
+								 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
+								 TerminalView_TextFlags		inFlags)
+{
+    CFStringRef		result = nullptr;
+	
+	
+	if (inTerminalViewPtr->text.selection.exists)
+	{
+		TerminalView_Cell const&	kSelectionStart = inTerminalViewPtr->text.selection.range.first;
+		TerminalView_Cell const&	kSelectionPastEnd = inTerminalViewPtr->text.selection.range.second;
+		// TEMPORARY: It is probably easy enough to determine what this size should be in advance,
+		// which would save a lot of reallocations.
+		CFMutableStringRef			resultMutable = CFStringCreateMutable(kCFAllocatorDefault, 0/* size limit */);
+		
+		
+		if (nullptr != resultMutable)
+		{
+			Terminal_LineRef	lineIterator = findRowIterator(inTerminalViewPtr, kSelectionStart.second);
+			Terminal_Result		textGrabResult = kTerminal_ResultOK;
+			
+			
+			// read every line of Unicode characters within this range;
+			// if appropriate, ignore some characters on each line
+			for (CFIndex i = kSelectionStart.second; i < kSelectionPastEnd.second; ++i)
+			{
+				UniChar const*		textBegin = nullptr;
+				UniChar const*		textPastEnd = nullptr;
+				
+				
+				if ((inTerminalViewPtr->text.selection.isRectangular) ||
+					(1 == (kSelectionPastEnd.second - kSelectionStart.second)))
+				{
+					// for rectangular or one-line selections, copy a specific column range
+					textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+															kSelectionStart.first, kSelectionPastEnd.first,
+															textBegin, textPastEnd);
+					assert(kTerminal_ResultOK == textGrabResult);
+				}
+				else
+				{
+					// for standard selections, the first and last lines are different
+					if (i == kSelectionStart.second)
+					{
+						// first line is anchored at the end (LOCALIZE THIS)
+						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+																kSelectionStart.first, -1/* end column */,
+																textBegin, textPastEnd);
+						assert(kTerminal_ResultOK == textGrabResult);
+						
+					}
+					else if (i == (kSelectionPastEnd.second - 1))
+					{
+						// last line is anchored at the beginning (LOCALIZE THIS)
+						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
+																0/* start column */, kSelectionPastEnd.first,
+																textBegin, textPastEnd);
+						assert(kTerminal_ResultOK == textGrabResult);
+					}
+					else
+					{
+						// middle lines span the whole width
+						textGrabResult = Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator,
+															textBegin, textPastEnd);
+						assert(kTerminal_ResultOK == textGrabResult);
+					}
+				}
+				
+				// add the characters for the line...
+				CFStringAppendCharacters(resultMutable, textBegin, textPastEnd - textBegin/* number of characters */);
+				
+				// if requested, add a new-line
+				if (0 == (inFlags & kTerminalView_TextFlagInline))
+				{
+					// do not terminate last line
+					if (i < (kSelectionPastEnd.second - 1))
+					{
+						CFStringAppendCString(resultMutable, "\015", kCFStringEncodingASCII);
+					}
+				}
+				
+				Terminal_LineIteratorAdvance(inTerminalViewPtr->screen.ref, lineIterator, +1);
+			}
+			releaseRowIterator(inTerminalViewPtr, &lineIterator);
+			
+			result = resultMutable;
+		}
+	}
+	else
+	{
+		result = CFSTR("");
+		CFRetain(result);
+	}
+	
+	return result;
+}// returnSelectedTextAsNewUnicode
 
 
 /*!

@@ -2869,7 +2869,7 @@ Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 	else
 	{
 		UInt16 const	kPastEndColumn = (inZeroBasedPastEndColumnOrNegativeForLastColumn < 0)
-											? iteratorPtr->rowIterator->textVectorSize
+											? dataPtr->text.visibleScreen.numberOfColumnsPermitted
 											: inZeroBasedPastEndColumnOrNegativeForLastColumn;
 		
 		
