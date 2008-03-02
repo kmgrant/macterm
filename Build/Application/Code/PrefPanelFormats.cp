@@ -189,6 +189,7 @@ protected:
 	deltaSize	(HIViewRef, Float32, Float32, void*);
 
 private:
+	CarbonEventHandlerWrap							_buttonCommandsHandler;		//!< invoked when a button is clicked
 	CommonEventHandlers_HIViewResizer				_containerResizer;
 	CommonEventHandlers_NumericalFieldArrowsRef		_fontSizeArrowsHandler;
 };
@@ -631,12 +632,16 @@ idealWidth				(0.0),
 idealHeight				(0.0),
 mainView				(createContainerView(inPanel, inOwningWindow, createSampleTerminalScreen())
 							<< HIViewWrap_AssertExists),
+_buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 									kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
 							My_FormatsPanelNormalUI::deltaSize, this/* context */),
 _fontSizeArrowsHandler	(nullptr) // set later
 {
 	assert(this->mainView.exists());
+	assert(_buttonCommandsHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
 	
 	// make the little arrows control change the font size
@@ -968,14 +973,20 @@ colorBoxANSIChangeNotify	(HIViewRef			inColorBoxThatChanged,
 	// command ID matches preferences tag
 	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
 	{
-		if (nullptr != dataPtr->dataModel)
-		{
-			(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, colorID, sizeof(*inNewColor), inNewColor);
-		}
+		Boolean		isOK = false;
+		
+		
+		if (nullptr == dataPtr->dataModel) isOK = false;
 		else
 		{
-			Sound_StandardAlert();
+			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
+																				sizeof(*inNewColor), inNewColor);
+			
+			
+			isOK = (kPreferences_ResultOK == prefsResult);
 		}
+		
+		if (false == isOK) Sound_StandardAlert();
 	}
 }// colorBoxANSIChangeNotify
 
@@ -1002,14 +1013,20 @@ colorBoxNormalChangeNotify	(HIViewRef			inColorBoxThatChanged,
 	// command ID matches preferences tag
 	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
 	{
-		if (nullptr != dataPtr->dataModel)
-		{
-			(Preferences_Result)Preferences_ContextSetData(dataPtr->dataModel, colorID, sizeof(*inNewColor), inNewColor);
-		}
+		Boolean		isOK = false;
+		
+		
+		if (nullptr == dataPtr->dataModel) isOK = false;
 		else
 		{
-			Sound_StandardAlert();
+			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
+																				sizeof(*inNewColor), inNewColor);
+			
+			
+			isOK = (kPreferences_ResultOK == prefsResult);
 		}
+		
+		if (false == isOK) Sound_StandardAlert();
 	}
 }// colorBoxNormalChangeNotify
 
@@ -1105,6 +1122,7 @@ panelChangedANSIColors	(Panel_Ref		inPanel,
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1218,6 +1236,7 @@ panelChangedNormal	(Panel_Ref		inPanel,
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1249,10 +1268,13 @@ for the buttons in this panel.
 pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
-					 void*					inMyFormatsPanelANSIColorsUIPtr)
+					 void*					inMyFormatsPanelUIPtr)
 {
 	OSStatus						result = eventNotHandledErr;
-	My_FormatsPanelANSIColorsUI*	dataPtr = REINTERPRET_CAST(inMyFormatsPanelANSIColorsUIPtr, My_FormatsPanelANSIColorsUI*);
+	// WARNING: More than one UI uses this handler.  The context will
+	// depend on the command ID.
+	My_FormatsPanelANSIColorsUI*	ansiDataPtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelANSIColorsUI*);
+	My_FormatsPanelNormalUI*		normalDataPtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelNormalUI*);
 	UInt32 const					kEventClass = GetEventClass(inEvent);
 	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
@@ -1267,8 +1289,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
 		
 		// if the command information was found, proceed
-		if (noErr == result)
+		if ((noErr == result) && (received.attributes & kHICommandFromControl))
 		{
+			HIViewRef	buttonHit = received.source.control;
+			
+			
+			result = eventNotHandledErr; // initially...
+			
 			switch (received.commandID)
 			{
 			case kCommandResetANSIColors:
@@ -1290,12 +1317,20 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					Alert_SetParamsFor(box, kAlert_StyleOKCancel);
 					Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
 					Alert_SetType(box, kAlertCautionAlert);
-					Alert_MakeWindowModal(box, HIViewGetWindow(dataPtr->mainView), false/* is window close alert */,
-											resetANSIWarningCloseNotifyProc, dataPtr/* user data */);
+					Alert_MakeWindowModal(box, HIViewGetWindow(ansiDataPtr->mainView), false/* is window close alert */,
+											resetANSIWarningCloseNotifyProc, ansiDataPtr/* user data */);
 					Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
 				}
+				result = noErr; // event is handled
 				break;
 			
+			case kCommandColorMatteBackground:
+			case kCommandColorBlinkingForeground:
+			case kCommandColorBlinkingBackground:
+			case kCommandColorBoldForeground:
+			case kCommandColorBoldBackground:
+			case kCommandColorNormalForeground:
+			case kCommandColorNormalBackground:
 			case kCommandColorBlack:
 			case kCommandColorBlackEmphasized:
 			case kCommandColorRed:
@@ -1313,36 +1348,18 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandColorWhite:
 			case kCommandColorWhiteEmphasized:
 				// see which of the color boxes was hit, display a color chooser
-				// and then (if the user accepts a new color) update open windows;
-				// note that this would be easier had Apple passed the view ID
-				// into the event, which is possible on Mac OS X 10.2, but alas I
-				// am using the 10.1 SDK
-			#if 1
-				{
-					UInt32		commandID = 0;
-					HIViewRef	subView = HIViewGetFirstSubview(dataPtr->mainView);
-					
-					
-					while (nullptr != subView)
-					{
-						if ((noErr == GetControlCommandID(subView, &commandID)) &&
-							(received.commandID == commandID))
-						{
-							(Boolean)ColorBox_UserSetColor(subView);
-							break;
-						}
-						subView = HIViewGetNextView(subView);
-					}
-				}
-			#endif
+				// and then (if the user accepts a new color) update open windows
+				(Boolean)ColorBox_UserSetColor(buttonHit);
+				result = noErr; // event is handled
 				break;
 			
 			default:
-				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldn’t be able to select menu commands while the window is open
-				result = eventNotHandledErr;
 				break;
 			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
 		}
 	}
 	

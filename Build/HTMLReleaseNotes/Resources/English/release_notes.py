@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080302',
     '20080301',
     '20080229',
     '20080228',
@@ -98,8 +99,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080302': [
+		'Preferences window Formats pane now correctly updates color preferences.',
+	],
 	'20080301': [
-		'Preferences window Format pane is now as wide as many other panels, which avoids some resizing and truncation of toolbar icons.',
+		'Preferences window Formats pane is now as wide as many other panels, which avoids some resizing and truncation of toolbar icons.',
 		'Major internal changes to improve handling of clipboard data, and rendering in the Clipboard window.',
 	],
 	'20080229': [
@@ -135,7 +139,7 @@ notes_by_version = {
 		'Very minor tweaks to accessibility descriptions, affecting such things as speech when VoiceOver is on.',
 	],
 	'20080222': [
-		'Custom Format dialog and Preferences window Format pane now display proper colors.',
+		'Custom Format dialog and Preferences window Formats pane now display proper colors.',
 	],
 	'20080220': [
 		'Fixed presentation of Custom Format dialog.',
@@ -156,7 +160,7 @@ notes_by_version = {
 		'Terminal backing store can now use Unicode, which will enable better text and rendering support.',
 	],
 	'20080205': [
-		'Preferences window Translation pane now actually shows lists for the base character set and exceptions.',
+		'Preferences window Translations pane now actually shows lists for the base character set and exceptions.',
 	],
 	'20080203': [
 		'Fixed truncation of the last line of text when copying or dragging rectangular selections.',
