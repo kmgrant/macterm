@@ -89,6 +89,9 @@ Session.on_fileopen_call(HandleFile.script, 'tcsh')
 Session.on_fileopen_call(HandleFile.script, 'tool')
 Session.on_fileopen_call(HandleFile.script, 'zsh')
 
+# if desired, override what string is sent after keep-alive timers expire
+#Session.set_keep_alive_transmission(".")
+
 def get_dumb_rendering( char_utf8 ):
 	"""Return the string that dumb terminals should use to
 	render the specified character.  The idea is for EVERY

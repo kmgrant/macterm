@@ -1566,6 +1566,7 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchNothing, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchForActivity, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchForInactivity, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTransmitOnInactivity, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSuspendNetwork, stateTrackerCheckableItems);
 	
 	// Window
@@ -2399,6 +2400,12 @@ setUpNotificationsMenu	(MenuRef	inMenu)
 			if (noErr == error)
 			{
 				(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+				error = GetIndMenuItemWithCommandID(inMenu, kCommandTransmitOnInactivity, 1/* which match to return */,
+													&inMenu, &defaultIndex);
+				if (noErr == error)
+				{
+					(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+				}
 			}
 		}
 	}
@@ -3128,6 +3135,11 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 	case kCommandWatchForInactivity:
 		result = connectionCommandResult;
 		if (nullptr != currentSession) checked = (result) ? Session_WatchIsForInactivity(currentSession) : false;
+		break;
+	
+	case kCommandTransmitOnInactivity:
+		result = connectionCommandResult;
+		if (nullptr != currentSession) checked = (result) ? Session_WatchIsForKeepAlive(currentSession) : false;
 		break;
 	
 	case kCommandSuspendNetwork:

@@ -305,7 +305,10 @@ enum Session_Watch
 {
 	kSession_WatchNothing				= 0,	//!< no basic monitors on data
 	kSession_WatchForPassiveData		= 1,	//!< data has arrived from the running process (not necessarily user-initiated)
-	kSession_WatchForInactivity			= 2		//!< there has been a lack of data for a short period of time
+	kSession_WatchForInactivity			= 2,	//!< there has been a lack of data for a short period of time
+	kSession_WatchForKeepAlive			= 3		//!< similar to inactivity, except the delay is much longer and a string is
+												//!  transmitted to the session once the timer expires (presumably to keep
+												//!  the session from disconnecting)
 };
 
 enum
@@ -698,6 +701,9 @@ Boolean
 
 Boolean
 	Session_WatchIsForInactivity			(SessionRef							inRef);
+
+Boolean
+	Session_WatchIsForKeepAlive				(SessionRef							inRef);
 
 Boolean
 	Session_WatchIsForPassiveData			(SessionRef							inRef);

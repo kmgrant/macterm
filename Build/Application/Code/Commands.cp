@@ -1099,6 +1099,13 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				Session_SetWatch(frontSession, kSession_WatchForInactivity);
 			}
 			break;
+		
+		case kCommandTransmitOnInactivity:
+			if (isSession)
+			{
+				Session_SetWatch(frontSession, kSession_WatchForKeepAlive);
+			}
+			break;
 			
 		case kCommandSuspendNetwork:
 			if (nullptr != frontSession)

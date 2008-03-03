@@ -91,7 +91,7 @@ MyURLHandlerPythonObjectPairBySchema&		gURLOpenCallbackInvokerPythonObjectPairsB
 											{
 												static MyURLHandlerPythonObjectPairBySchema x; return x;
 											}
-
+std::string									gKeepAliveText(" "); // note; to override default, use Python
 
 } // anonymous namespace
 
@@ -289,6 +289,30 @@ Session::handle_url		(std::string	inURL)
 		}
 	}
 }// handle_url
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+std::string
+Session::keep_alive_transmission ()
+{
+	return gKeepAliveText;
+}// keep_alive_transmission
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+void
+Session::set_keep_alive_transmission	(std::string	inText)
+{
+	gKeepAliveText = inText;
+}// set_keep_alive_transmission
 
 
 #pragma mark Internal Methods

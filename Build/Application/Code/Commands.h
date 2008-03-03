@@ -223,6 +223,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandWatchNothing					'WOff'
 #define kCommandWatchForActivity				'Notf'
 #define kCommandWatchForInactivity				'Idle'
+#define kCommandTransmitOnInactivity			'KAlv'
 #define kCommandSuspendNetwork					'Susp'
 
 // Window menu

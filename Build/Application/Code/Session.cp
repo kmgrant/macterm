@@ -85,6 +85,7 @@
 #include "MacroManager.h"
 #include "NetEvents.h"
 #include "Preferences.h"
+#include "QuillsSession.h"
 #include "RasterGraphicsKernel.h"
 #include "RasterGraphicsScreen.h"
 #include "RecordAE.h"
@@ -363,6 +364,7 @@ static void					watchClearForSession				(SessionPtr);
 static void					watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
 static void					watchNotifyForSession				(SessionPtr, Session_Watch);
 static pascal void			watchNotifyFromTimer				(EventLoopTimerRef, void*);
+static void					watchTimerResetForSession			(SessionPtr, Session_Watch);
 static void					windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 
@@ -3114,6 +3116,31 @@ Session_SetWatch	(SessionRef		inRef,
 	
 	
 	ptr->activeWatch = inNewWatch;
+	
+	// for watches requiring timers, create a timer if none exists;
+	// but wait until data arrives to actually set the clock
+	if ((kSession_WatchForInactivity == inNewWatch) ||
+		(kSession_WatchForKeepAlive == inNewWatch))
+	{
+		if (nullptr == ptr->inactivityWatchTimer)
+		{
+			// first time; create the timer
+			OSStatus	error = noErr;
+			
+			
+			ptr->inactivityWatchTimerUPP = NewEventLoopTimerUPP(watchNotifyFromTimer);
+			error = InstallEventLoopTimer(GetCurrentEventLoop(),
+											kEventDurationForever/* start time - do not start yet */,
+											kEventDurationForever/* time between fires - this timer does not repeat */,
+											ptr->inactivityWatchTimerUPP, ptr->selfRef/* user data */,
+											&ptr->inactivityWatchTimer);
+			assert_noerr(error);
+		}
+		
+		// for inactivity timers, start the clock right now (also,
+		// the timer automatically resets as new data arrives)
+		watchTimerResetForSession(ptr, inNewWatch);
+	}
 }// SetWatch
 
 
@@ -4313,6 +4340,27 @@ Session_WatchIsForInactivity	(SessionRef		inRef)
 
 /*!
 Returns "true" only if the specified session is being
+watched for a lack of activity over a longer period of
+time, and will transmit a keep-alive string once that
+time passes.
+
+See Session_SetWatch().
+
+(3.1)
+*/
+Boolean
+Session_WatchIsForKeepAlive		(SessionRef		inRef)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean				result = (kSession_WatchForKeepAlive == ptr->activeWatch);
+	
+	
+	return result;
+}// WatchIsForKeepAlive
+
+
+/*!
+Returns "true" only if the specified session is being
 watched for activity.
 
 See Session_SetWatch().
@@ -4818,35 +4866,14 @@ dataArrived		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (kSession_WatchForPassiveData == ptr->activeWatch)
 				{
+					// data arrived; notify immediately
 					watchNotifyForSession(ptr, ptr->activeWatch);
 				}
-				else if (kSession_WatchForInactivity == ptr->activeWatch)
+				else if ((kSession_WatchForKeepAlive == ptr->activeWatch) ||
+							(kSession_WatchForInactivity == ptr->activeWatch))
 				{
-					// arbitrary length of time during which no data arrives, to label a
-					// session as inactive for the purposes of sending a notification
-					// TEMPORARY - should this be user-configurable?
-					EventTimerInterval const	kTimeBeforeInactive = kEventDurationSecond * 30;
-					OSStatus					error = noErr;
-					
-					
-					// install or reset timer to trigger the no-activity notification when appropriate
-					if (nullptr != ptr->inactivityWatchTimer)
-					{
-						// timer already exists; just reset it
-						error = SetEventLoopTimerNextFireTime(ptr->inactivityWatchTimer, kTimeBeforeInactive);
-						assert_noerr(error);
-					}
-					else
-					{
-						// first time; create the timer
-						ptr->inactivityWatchTimerUPP = NewEventLoopTimerUPP(watchNotifyFromTimer);
-						error = InstallEventLoopTimer(GetCurrentEventLoop(),
-														kTimeBeforeInactive,
-														kEventDurationForever/* time between fires - this timer does not repeat */,
-														ptr->inactivityWatchTimerUPP, ptr->selfRef/* user data */,
-														&ptr->inactivityWatchTimer);
-						assert_noerr(error);
-					}
+					// reset timer, start waiting again
+					watchTimerResetForSession(ptr, ptr->activeWatch);
 				}
 			}
 		}
@@ -7126,8 +7153,10 @@ watchCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
 Displays the global modeless alert for notifications on the
 specified session of the given type.
 
-Automatically does nothing if the specified session is currently
-the user focus and this application is the frontmost process.
+For watches that simply display alerts, this automatically does
+nothing if the specified session is the user focus and this
+application is frontmost.  It presumes that the user does not
+need to see an alert about the window currently being used!
 
 (3.1)
 */
@@ -7135,65 +7164,71 @@ static void
 watchNotifyForSession	(SessionPtr		inPtr,
 						 Session_Watch	inWhatTriggered)
 {
-	if ((SessionFactory_ReturnUserFocusSession() != inPtr->selfRef) ||
-		FlagManager_Test(kFlagSuspended))
+	Boolean		canTrigger = (kSession_WatchForKeepAlive == inWhatTriggered)
+								? true
+								: ((SessionFactory_ReturnUserFocusSession() != inPtr->selfRef) ||
+									FlagManager_Test(kFlagSuspended));
+	
+	
+	if (canTrigger)
 	{
 		// note the change (e.g. can cause icon displays to be updated)
 		changeStateAttributes(inPtr, kSession_StateAttributeNotification/* attributes to set */,
 								0/* attributes to clear */);
 		
 		// create or update the global alert
-		if (nullptr == inPtr->watchBox)
+		switch (inWhatTriggered)
 		{
-			My_WatchAlertInfoPtr	watchAlertInfoPtr = new My_WatchAlertInfo;
-			
-			
-			watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
-			
-			inPtr->watchBox = Alert_New();
-			Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
-			Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
-			
-			// set text
-			switch (inWhatTriggered)
+		case kSession_WatchForPassiveData:
+		case kSession_WatchForInactivity:
 			{
-			case kSession_WatchForPassiveData:
+				My_WatchAlertInfoPtr	watchAlertInfoPtr = new My_WatchAlertInfo;
+				CFStringRef				dialogTextCFString = nullptr;
+				UIStrings_Result		stringResult = kUIStrings_ResultOK;
+				
+				
+				// basic setup
+				watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
+				if (nullptr == inPtr->watchBox)
 				{
-					CFStringRef			dialogTextCFString = nullptr;
-					UIStrings_Result	stringResult = kUIStrings_ResultOK;
-					
-					
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityPrimaryText, dialogTextCFString);
-					if (stringResult.ok())
-					{
-						Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
-						CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
-					}
+					inPtr->watchBox = Alert_New();
+					Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
+					Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
 				}
-				break;
-			
-			case kSession_WatchForInactivity:
+				
+				// set message based on watch type
+				if (kSession_WatchForInactivity == inWhatTriggered)
 				{
-					CFStringRef			dialogTextCFString = nullptr;
-					UIStrings_Result	stringResult = kUIStrings_ResultOK;
-					
-					
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyInactivityPrimaryText, dialogTextCFString);
-					if (stringResult.ok())
-					{
-						Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
-						CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
-					}
 				}
-				break;
-			
-			default:
-				// ???
-				break;
+				else
+				{
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityPrimaryText, dialogTextCFString);
+				}
+				if (stringResult.ok())
+				{
+					Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
+					CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+				}
+				
+				// show the message; it is disposed asynchronously
+				Alert_MakeModeless(inPtr->watchBox, watchCloseNotifyProc, watchAlertInfoPtr/* context */);
+				Alert_Display(inPtr->watchBox);
 			}
-			
-			Alert_MakeModeless(inPtr->watchBox, watchCloseNotifyProc, watchAlertInfoPtr/* context */);
-			Alert_Display(inPtr->watchBox);
+			break;
+		
+		case kSession_WatchForKeepAlive:
+			{
+				std::string		transmission = Quills::Session::keep_alive_transmission();
+				
+				
+				Session_UserInputString(inPtr->selfRef, transmission.c_str(), transmission.size());
+			}
+			break;
+		
+		default:
+			// ???
+			break;
 		}
 	}
 }// watchNotifyForSession
@@ -7217,8 +7252,44 @@ watchNotifyFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
 	
 	
-	watchNotifyForSession(ptr, kSession_WatchForInactivity);
+	watchNotifyForSession(ptr, ptr->activeWatch);
 }// watchNotifyFromTimer
+
+
+/*!
+If a watch is currently active on the specified session and
+the watch is of a type that fires periodically (idle timers),
+this routine will reset the timer.  In other words, do this
+when you want to start waiting for the precise duration of
+the watch (usually, immediately after data arrives or some
+other event indicates the watch should start over).
+
+Has no effect for other kinds of watches.
+
+(3.1)
+*/
+static void
+watchTimerResetForSession	(SessionPtr		inPtr,
+							 Session_Watch	inWatchType)
+{
+	if ((kSession_WatchForKeepAlive == inWatchType) ||
+		(kSession_WatchForInactivity == inWatchType))
+	{
+		// an arbitrary length of dead time must elapse before a session
+		// is considered inactive and triggers a notification
+		// TEMPORARY - should this time be user-configurable?
+		EventTimerInterval const	kTimeBeforeInactive = (kSession_WatchForKeepAlive == inWatchType)
+															? kEventDurationMinute * 10
+															: kEventDurationSecond * 30;
+		OSStatus					error = noErr;
+		
+		
+		// install or reset timer to trigger the no-activity notification when appropriate
+		assert(nullptr != inPtr->inactivityWatchTimer);
+		error = SetEventLoopTimerNextFireTime(inPtr->inactivityWatchTimer, kTimeBeforeInactive);
+		assert_noerr(error);
+	}
+}// watchTimerResetForSession
 
 
 /*!

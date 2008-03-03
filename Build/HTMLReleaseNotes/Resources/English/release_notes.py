@@ -104,6 +104,9 @@ notes_by_version = {
 		'Preferences window Formats pane now uses the system font panel; though only for font name and size settings.',
 		'Any font can now be chosen, but MacTelnet takes a performance hit from forcing monospaced layout on proportional fonts.',
 		'A warning is now displayed in the Format pane if the user chooses a font that will be slow.',
+		'Terminal inactivity notification now supports an additional reaction, "keep alive", which sends text to the server after 10 minutes.',
+		'Added Session.set_keep_alive_transmission(str) to Quills, allowing Python to override what is sent after a keep-alive timer expires.',
+		'Added Session.keep_alive_transmission(str) to Quills, to determine what string is sent to sessions when keep-alive timers expire.',
 	],
 	'20080301': [
 		'Preferences window Formats pane is now as wide as many other panels, which avoids some resizing and truncation of toolbar icons.',

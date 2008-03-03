@@ -96,6 +96,25 @@ new sessions when they appear.\n\
 #endif
 	static void handle_url (std::string		url);
 	
+#if SWIG
+%feature("docstring",
+"Return what set_keep_alive_transmission() sets.\n\
+") keep_alive_transmission;
+#endif
+	static std::string keep_alive_transmission ();
+	
+#if SWIG
+%feature("docstring",
+"Specify the text to send to the server when a long idle timer\n\
+expires on a session that is watching for inactivity.\n\
+\n\
+Probably, this should be a very short string that will not\n\
+interface with whatever happens to be running on the server; a\n\
+single space is typical.\n\
+") set_keep_alive_transmission;
+#endif
+	static void set_keep_alive_transmission	(std::string	text);
+	
 	// only intended for direct use by the SWIG wrapper
 	static void _on_fileopen_ext_call_py (Quills::FunctionReturnVoidArg1VoidPtrArg2CharPtr, void*, std::string);
 	static void _on_new_call_py (Quills::FunctionReturnVoidArg1VoidPtr, void*);
