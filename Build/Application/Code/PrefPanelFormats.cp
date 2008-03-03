@@ -93,16 +93,17 @@ the NIBs from the package "PrefPanelsFavorites.nib".
 
 In addition, they MUST be unique across all panels.
 */
-HIViewID const	idMyPopupMenuFont					= { 'Font', 0/* ID */ };
-HIViewID const	idMyFieldFontSize					= { 'Size', 0/* ID */ };
-HIViewID const	idMyLittleArrowsFontSize			= { 'SzAr', 0/* ID */ };
+HIViewID const	idMyButtonFontName					= { 'Font', 0/* ID */ };
+HIViewID const	idMyButtonFontSize					= { 'Size', 0/* ID */ };
+HIViewID const	idMyStaticTextNonMonospacedWarning	= { 'WMno', 0/* ID */ };
 HIViewID const	idMyBevelButtonNormalText			= { 'NTxt', 0/* ID */ };
 HIViewID const	idMyBevelButtonNormalBackground		= { 'NBkg', 0/* ID */ };
 HIViewID const	idMyBevelButtonBoldText				= { 'BTxt', 0/* ID */ };
 HIViewID const	idMyBevelButtonBoldBackground		= { 'BBkg', 0/* ID */ };
 HIViewID const	idMyBevelButtonBlinkingText			= { 'BlTx', 0/* ID */ };
 HIViewID const	idMyBevelButtonBlinkingBackground	= { 'BlBk', 0/* ID */ };
-HIViewID const	idMyBevelButtonMatteBackground		= { 'Mtte', 0/* ID */ };
+HIViewID const	idMyBevelButtonMatteForeground		= { 'MtTx', 0/* ID */ };
+HIViewID const	idMyBevelButtonMatteBackground		= { 'MtBk', 0/* ID */ };
 HIViewID const	idMyUserPaneSampleTerminalView		= { 'Smpl', 0/* ID */ };
 HIViewID const	idMyHelpTextSampleTerminalView		= { 'HSmp', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSINormalBlack		= { 'Cblk', 0/* ID */ };
@@ -165,7 +166,6 @@ Implements the “Normal” tab.
 struct My_FormatsPanelNormalUI
 {
 	My_FormatsPanelNormalUI		(Panel_Ref, HIWindowRef);
-	~My_FormatsPanelNormalUI	();
 	
 	Panel_Ref		panel;			//!< the panel using this UI
 	Float32			idealWidth;		//!< best size in pixels
@@ -173,7 +173,16 @@ struct My_FormatsPanelNormalUI
 	HIViewWrap		mainView;
 	
 	void
+	loseFocus	();
+	
+	void
 	readPreferences		(Preferences_ContextRef);
+	
+	void
+	setFontName		(StringPtr);
+	
+	void
+	setFontSize		(SInt16);
 
 protected:
 	HIViewWrap
@@ -189,9 +198,10 @@ protected:
 	deltaSize	(HIViewRef, Float32, Float32, void*);
 
 private:
-	CarbonEventHandlerWrap							_buttonCommandsHandler;		//!< invoked when a button is clicked
-	CommonEventHandlers_HIViewResizer				_containerResizer;
-	CommonEventHandlers_NumericalFieldArrowsRef		_fontSizeArrowsHandler;
+	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				_fontPanelHandler;			//!< invoked when font panel events occur
+	CarbonEventHandlerWrap				_windowFocusHandler;		//!< invoked when the window loses keyboard focus
+	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
 typedef My_FormatsPanelNormalUI*	My_FormatsPanelNormalUIPtr;
 
@@ -232,9 +242,12 @@ namespace {
 
 void				colorBoxANSIChangeNotify		(HIViewRef, RGBColor const*, void*);
 void				colorBoxNormalChangeNotify		(HIViewRef, RGBColor const*, void*);
+Boolean				isMonospacedFont				(Str255);
 SInt32				panelChangedANSIColors			(Panel_Ref, Panel_Message, void*);
 SInt32				panelChangedNormal				(Panel_Ref, Panel_Message, void*);
+pascal OSStatus		receiveFontChange				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveWindowFocusChange		(EventHandlerCallRef, EventRef, void*);
 void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
 void				setColorBox						(Preferences_ContextRef, Preferences_Tag, HIViewRef);
 
@@ -635,40 +648,25 @@ mainView				(createContainerView(inPanel, inOwningWindow, createSampleTerminalSc
 _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
+_fontPanelHandler		(GetWindowEventTarget(inOwningWindow), receiveFontChange,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassFont), kEventFontPanelClosed, kEventFontSelection),
+							this/* user data */),
+_windowFocusHandler		(GetWindowEventTarget(inOwningWindow), receiveWindowFocusChange,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassWindow), kEventWindowFocusRelinquish),
+							this/* user data */),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 									kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-							My_FormatsPanelNormalUI::deltaSize, this/* context */),
-_fontSizeArrowsHandler	(nullptr) // set later
+							My_FormatsPanelNormalUI::deltaSize, this/* context */)
 {
 	assert(this->mainView.exists());
 	assert(_buttonCommandsHandler.isInstalled());
+	assert(_fontPanelHandler.isInstalled());
+	assert(_windowFocusHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
 	
-	// make the little arrows control change the font size
-	{
-		HIViewWrap		fieldFontSize(idMyFieldFontSize, inOwningWindow);
-		HIViewWrap		littleArrowsFontSize(idMyLittleArrowsFontSize, inOwningWindow);
-		
-		
-		(OSStatus)CommonEventHandlers_InstallNumericalFieldArrows
-					(littleArrowsFontSize, fieldFontSize, &_fontSizeArrowsHandler);
-	}
+	// this button is not used
+	DeactivateControl(HIViewWrap(idMyBevelButtonMatteForeground, inOwningWindow));
 }// My_FormatsPanelNormalUI 1-argument constructor
-
-
-/*!
-Tears down a My_FormatsPanelNormalUI structure.
-
-(3.1)
-*/
-My_FormatsPanelNormalUI::
-~My_FormatsPanelNormalUI ()
-{
-	if (nullptr != _fontSizeArrowsHandler)
-	{
-		CommonEventHandlers_RemoveNumericalFieldArrows(&_fontSizeArrowsHandler);
-	}
-}// My_FormatsPanelNormalUI destructor
 
 
 /*!
@@ -764,16 +762,6 @@ createContainerView		(Panel_Ref			inPanel,
 		error = HIViewAddSubview(result, terminalView);
 		assert_noerr(error);
 		error = HIViewSetFrame(terminalView, &sampleViewFrame);
-		assert_noerr(error);
-	}
-	
-	// assign the real font menu to the pop-up button
-	{
-		HIViewWrap		popupMenuFont(idMyPopupMenuFont, inOwningWindow);
-		MenuRef			fontMenu = MenuBar_ReturnFontMenu();
-		
-		
-		error = SetControlData(popupMenuFont, kControlEntireControl, kControlPopupButtonMenuRefTag, sizeof(fontMenu), &fontMenu);
 		assert_noerr(error);
 	}
 	
@@ -882,7 +870,9 @@ deltaSize	(HIViewRef		inContainer,
 	HIViewWrap				viewWrap;
 	
 	
-	viewWrap = HIViewWrap(idMyPopupMenuFont, kPanelWindow);
+	viewWrap = HIViewWrap(idMyButtonFontName, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyStaticTextNonMonospacedWarning, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyUserPaneSampleTerminalView, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
@@ -890,6 +880,26 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 }// My_FormatsPanelNormalUI::deltaSize
+
+
+/*!
+Deselects any font buttons that are active, in response to
+a focus-lost event.
+
+(3.1)
+*/
+void
+My_FormatsPanelNormalUI::
+loseFocus ()
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	HIViewWrap			fontNameButton(idMyButtonFontName, kOwningWindow);
+	HIViewWrap			fontSizeButton(idMyButtonFontSize, kOwningWindow);
+	
+	
+	SetControl32BitValue(fontNameButton, kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(fontSizeButton, kControlCheckBoxUncheckedValue);
+}// My_FormatsPanelNormalUI::loseFocus
 
 
 /*!
@@ -917,12 +927,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 														&fontName, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				MenuRef			fontMenu = MenuBar_ReturnFontMenu();
-				MenuItemIndex	fontItem = 0;
-				
-				
-				fontItem = MenuBar_ReturnMenuItemIndexByItemText(fontMenu, fontName);
-				SetControl32BitValue(HIViewWrap(idMyPopupMenuFont, kOwningWindow), fontItem);
+				this->setFontName(fontName);
 			}
 		}
 		
@@ -935,7 +940,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 														&fontSize, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				SetControlNumericalText(HIViewWrap(idMyFieldFontSize, kOwningWindow), fontSize);
+				this->setFontSize(fontSize);
 			}
 		}
 		
@@ -949,6 +954,41 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		setColorBox(inSettings, kPreferences_TagTerminalColorMatteBackground, HIViewWrap(idMyBevelButtonMatteBackground, kOwningWindow));
 	}
 }// My_FormatsPanelNormalUI::readPreferences
+
+
+/*!
+Updates the font size display based on the given setting.
+
+(3.1)
+*/
+void
+My_FormatsPanelNormalUI::
+setFontName		(StringPtr		inFontName)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControlTitle(HIViewWrap(idMyButtonFontName, kOwningWindow), inFontName);
+	HIViewSetVisible(HIViewWrap(idMyStaticTextNonMonospacedWarning, kOwningWindow), false == isMonospacedFont(inFontName));
+}// My_FormatsPanelNormalUI::setFontName
+
+
+/*!
+Updates the font size display based on the given setting.
+
+(3.1)
+*/
+void
+My_FormatsPanelNormalUI::
+setFontSize		(SInt16		inFontSize)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	Str255				sizeString;
+	
+	
+	NumToString(inFontSize, sizeString);
+	SetControlTitle(HIViewWrap(idMyButtonFontSize, kOwningWindow), sizeString);
+}// My_FormatsPanelNormalUI::setFontSize
 
 
 /*!
@@ -1029,6 +1069,58 @@ colorBoxNormalChangeNotify	(HIViewRef			inColorBoxThatChanged,
 		if (false == isOK) Sound_StandardAlert();
 	}
 }// colorBoxNormalChangeNotify
+
+
+/*!
+Determines if a font is monospaced.
+
+(2.6)
+*/
+Boolean
+isMonospacedFont	(Str255		inFontName)
+{
+	Boolean		result = false;
+	Boolean		doRomanTest = false;
+	SInt32		numberOfScriptsEnabled = GetScriptManagerVariable(smEnabled);
+	
+	
+	if (numberOfScriptsEnabled > 1)
+	{
+		ScriptCode		scriptNumber = smRoman;
+		FMFontFamily	fontID = FMGetFontFamilyFromName(inFontName);
+		
+		
+		scriptNumber = FontToScript(fontID);
+		if (scriptNumber != smRoman)
+		{
+			SInt32		thisScriptEnabled = GetScriptVariable(scriptNumber, smScriptEnabled);
+			
+			
+			if (thisScriptEnabled)
+			{
+				// check if this font is the preferred monospaced font for its script
+				SInt32		theSizeAndFontFamily = 0L;
+				SInt16		thePreferredFontFamily = 0;
+				
+				
+				theSizeAndFontFamily = GetScriptVariable(scriptNumber, smScriptMonoFondSize);
+				thePreferredFontFamily = theSizeAndFontFamily >> 16; // high word is font family 
+				result = (thePreferredFontFamily == fontID);
+			}
+			else result = false; // this font’s script isn’t enabled
+		}
+		else doRomanTest = true;
+	}
+	else doRomanTest = true;
+		
+	if (doRomanTest)
+	{
+		TextFontByName(inFontName);
+		result = (CharWidth('W') == CharWidth('.'));
+	}
+	
+	return result;
+}// isMonospacedFont
 
 
 /*!
@@ -1260,6 +1352,98 @@ panelChangedNormal	(Panel_Ref		inPanel,
 
 
 /*!
+Handles "kEventFontPanelClosed" and "kEventFontSelection" of
+"kEventClassFont" for the font and size of the panel.
+
+(3.1)
+*/
+pascal OSStatus
+receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyFormatsPanelUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_FormatsPanelNormalUI*		normalDataPtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelNormalUI*);
+	My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(normalDataPtr->panel),
+																	My_FormatsPanelNormalDataPtr);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassFont);
+	assert((kEventKind == kEventFontPanelClosed) || (kEventKind == kEventFontSelection));
+	switch (kEventKind)
+	{
+	case kEventFontPanelClosed:
+		// user has closed the panel; clear focus
+		normalDataPtr->loseFocus();
+		break;
+	
+	case kEventFontSelection:
+		// user has accepted font changes in some way...update views
+		// and internal preferences
+		{
+			Preferences_Result	prefsResult = kPreferences_ResultOK;
+			FMFontFamily		fontFamily = kInvalidFontFamily;
+			FMFontSize			fontSize = 0;
+			OSStatus			error = noErr;
+			
+			
+			result = noErr; // initially...
+			
+			// determine the font, if possible
+			error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamFMFontFamily, typeFMFontFamily, fontFamily);
+			if (noErr == error)
+			{
+				Str255		fontName;
+				
+				
+				error = FMGetFontFamilyName(fontFamily, fontName);
+				if (noErr != error) result = eventNotHandledErr;
+				else
+				{
+					prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagFontName,
+																sizeof(fontName), fontName);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						result = eventNotHandledErr;
+					}
+					else
+					{
+						// success!
+						normalDataPtr->setFontName(fontName);
+					}
+				}
+			}
+			
+			// determine the font size, if possible
+			error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamFMFontSize, typeFMFontSize, fontSize);
+			if (noErr == error)
+			{
+				prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagFontSize,
+															sizeof(fontSize), &fontSize);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					result = eventNotHandledErr;
+				}
+				else
+				{
+					// success!
+					normalDataPtr->setFontSize(fontSize);
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	return result;
+}// receiveFontChange
+
+
+/*!
 Handles "kEventCommandProcess" of "kEventClassCommand"
 for the buttons in this panel.
 
@@ -1298,6 +1482,62 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			switch (received.commandID)
 			{
+			case kCommandEditFontAndSize:
+				// select the button that was hit, and transmit font information
+				{
+					My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(normalDataPtr->panel),
+																					My_FormatsPanelNormalDataPtr);
+					FontSelectionQDStyle			fontInfo;
+					Str255							fontName;
+					SInt16							fontSize = 0;
+					size_t							actualSize = 0;
+					Preferences_Result				prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontName, sizeof(fontName),
+																fontName, &actualSize);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						// error...pick an arbitrary value
+						PLstrcpy(fontName, "\pMonaco");
+					}
+					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontSize, sizeof(fontSize),
+																&fontSize, &actualSize);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						// error...pick an arbitrary value
+						fontSize = 12;
+					}
+					
+					bzero(&fontInfo, sizeof(fontInfo));
+					fontInfo.version = kFontSelectionQDStyleVersionZero;
+					fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontName);
+					fontInfo.instance.fontStyle = normal;
+					fontInfo.size = fontSize;
+					fontInfo.hasColor = false;
+					// apparently this API can return paramErr even though it
+					// successfully sets the desired font information...
+					(OSStatus)SetFontInfoForSelection(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
+													// NOTE: This API is misdeclared in older headers, the last argument is supposed to
+													// be an event target.  It is bastardized into HIObjectRef form for older compiles.
+													#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+														GetControlEventTarget(buttonHit)
+													#else
+														REINTERPRET_CAST(buttonHit, HIObjectRef)
+													#endif
+													);
+					if (1)
+					{
+						SetControl32BitValue(HIViewWrap(idMyButtonFontName, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
+						SetControl32BitValue(HIViewWrap(idMyButtonFontSize, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
+						if (false == FPIsFontPanelVisible())
+						{
+							result = FPShowHideFontPanel();
+						}
+					}
+				}
+				break;
+			
 			case kCommandResetANSIColors:
 				// check with the user first!
 				{
@@ -1362,9 +1602,49 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			result = eventNotHandledErr;
 		}
 	}
-	
 	return result;
 }// receiveHICommand
+
+
+/*!
+Embellishes "kEventWindowFocusRelinquish" of "kEventClassWindow"
+for font buttons in this panel.
+
+(3.1)
+*/
+pascal OSStatus
+receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+							 EventRef				inEvent,
+							 void*					inMyFormatsPanelUIPtr)
+{
+	OSStatus					result = eventNotHandledErr;
+	My_FormatsPanelNormalUI*	normalDataPtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelNormalUI*);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassWindow);
+	assert(kEventKind == kEventWindowFocusRelinquish);
+	{
+		HIWindowRef		windowLosingFocus = nullptr;
+		
+		
+		// determine the window that is losing focus
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, windowLosingFocus);
+		if (noErr == result)
+		{
+			normalDataPtr->loseFocus();
+			
+			// never completely handle this event
+			result = eventNotHandledErr;
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// receiveWindowFocusChange
 
 
 /*!

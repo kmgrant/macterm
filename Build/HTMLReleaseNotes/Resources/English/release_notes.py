@@ -100,7 +100,10 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080302': [
-		'Preferences window Formats pane now correctly updates color preferences.',
+		'Preferences window Formats pane now correctly updates font and color preferences.',
+		'Preferences window Formats pane now uses the system font panel; though only for font name and size settings.',
+		'Any font can now be chosen, but MacTelnet takes a performance hit from forcing monospaced layout on proportional fonts.',
+		'A warning is now displayed in the Format pane if the user chooses a font that will be slow.',
 	],
 	'20080301': [
 		'Preferences window Formats pane is now as wide as many other panels, which avoids some resizing and truncation of toolbar icons.',
