@@ -625,6 +625,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							ControlButtonContentInfo	contentInfo;
 							ControlBevelThickness		bevelThickness = kControlBevelButtonNormalBevel;
 							ControlBevelButtonBehavior	buttonBehavior = kControlBehaviorPushbutton;
+							ControlButtonTextAlignment	textAlignment = kControlBevelButtonAlignTextCenter;
 							ThemeButtonKind				buttonKind = kThemeMediumBevelButton;
 							Size						actualSize = 0;
 							
@@ -642,6 +643,28 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 																0/* menu ID */, 0/* menu behavior */,
 																kControlBevelButtonMenuOnBottom, &outNewControl);
 							CFRelease(titleCFString), titleCFString = nullptr;
+							
+							// copy alignment
+							if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlBevelButtonTextAlignTag,
+														sizeof(textAlignment), &textAlignment, &actualSize))
+							{
+								(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlBevelButtonTextAlignTag,
+															sizeof(textAlignment), &textAlignment);
+							}
+							
+							// copy font style
+							{
+								ControlFontStyleRec		styleInfo;
+								
+								
+								bzero(&styleInfo, sizeof(styleInfo));
+								if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlFontStyleTag,
+															sizeof(styleInfo), &styleInfo, &actualSize))
+								{
+									(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlFontStyleTag,
+																sizeof(styleInfo), &styleInfo);
+								}
+							}
 							
 							// copy the button kind too
 							if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlBevelButtonKindTag,
