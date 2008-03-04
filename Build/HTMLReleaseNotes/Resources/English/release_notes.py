@@ -102,6 +102,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080303': [
 		'Reverted the default emulator to VT100 (from VT102), pending some important accuracy fixes in VT102.',
+		'Floating command line appearance improvements.',
 	],
 	'20080302': [
 		'Preferences window Formats pane now correctly updates font and color preferences.',

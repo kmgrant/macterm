@@ -48,6 +48,7 @@
 #include <Carbon/Carbon.h>
 
 // library includes
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
 #include <Console.h>
@@ -87,6 +88,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 IMPORTANT
@@ -112,7 +114,10 @@ enum
 	kCommandLineCommandHistorySize = 5
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 typedef std::vector< CFRetainRelease >					CommandHistoryList;
 typedef std::vector< CommandLine_InterpreterProcPtr >	CommandInterpreterList;
@@ -123,55 +128,55 @@ enum My_TerminatorType
 	kMy_TerminatorTypeBackspace	= 2		// append a delete
 };
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	WindowRef								gCommandLineWindow = nullptr;
-	WindowInfo_Ref							gCommandLineWindowInfo = nullptr;
-	TerminalScreenRef						gCommandLineTerminalScreen = nullptr;
-	TerminalViewRef							gCommandLineTerminalView = nullptr;
-	HIViewWrap								gCommandLineTerminalViewFocus = nullptr;
-	HIViewWrap								gCommandLineTerminalViewContainer = nullptr;
-	HIViewWrap								gCommandLineHistoryPopUpMenu = nullptr;
-	HIViewWrap								gCommandLineArrows = nullptr;
-	HIViewWrap								gCommandLineHelpButton = nullptr;
-	HIViewWrap								gCommandLineHelpText = nullptr;
-	MenuRef									gCommandLineHistoryMenuRef = nullptr;
-	CommonEventHandlers_WindowResizer		gCommandLineWindowResizeHandler;
-	EventHandlerUPP							gCommandLineWindowClosingUPP = nullptr;
-	EventHandlerRef							gCommandLineWindowClosingHandler = nullptr;
-	EventHandlerUPP							gCommandLineCursorChangeUPP = nullptr;
-	EventHandlerRef							gCommandLineCursorChangeHandler = nullptr;
-	EventHandlerUPP							gCommandLineTextInputUPP = nullptr;
-	EventHandlerRef							gCommandLineTextInputHandler = nullptr;
-	EventHandlerUPP							gCommandLineHistoryMenuCommandUPP = nullptr;
-	EventHandlerRef							gCommandLineHistoryMenuCommandHandler = nullptr;
-	EventHandlerUPP							gCommandLineHistoryArrowClickUPP = nullptr;
-	EventHandlerRef							gCommandLineHistoryArrowClickHandler = nullptr;
-	CommandInterpreterList&					gCommandLineInterpreterList ()	{ static CommandInterpreterList x; return x; }
-	CommandHistoryList&						gCommandHistory ()				{ static CommandHistoryList x; return x; }
-	SInt16									gCommandHistoryCurrentIndex = -1; // which history command has been displayed via up/down arrow
-}
+#pragma mark Variables
+namespace {
+
+WindowRef								gCommandLineWindow = nullptr;
+WindowInfo_Ref							gCommandLineWindowInfo = nullptr;
+TerminalScreenRef						gCommandLineTerminalScreen = nullptr;
+TerminalViewRef							gCommandLineTerminalView = nullptr;
+HIViewWrap								gCommandLineTerminalViewFocus = nullptr;
+HIViewWrap								gCommandLineTerminalViewContainer = nullptr;
+HIViewWrap								gCommandLineHistoryPopUpMenu = nullptr;
+HIViewWrap								gCommandLineArrows = nullptr;
+HIViewWrap								gCommandLineHelpButton = nullptr;
+HIViewWrap								gCommandLineHelpText = nullptr;
+MenuRef									gCommandLineHistoryMenuRef = nullptr;
+CommonEventHandlers_WindowResizer		gCommandLineWindowResizeHandler;
+CarbonEventHandlerWrap					gCommandLineWindowClosingHandler;
+CarbonEventHandlerWrapGeneric< std::vector< CarbonEventType > >		gCommandLineCursorChangeHandler;
+CarbonEventHandlerWrap					gCommandLineTextInputHandler;
+CarbonEventHandlerWrap					gCommandLineHistoryMenuCommandHandler;
+CarbonEventHandlerWrap					gCommandLineHistoryArrowClickHandler;
+CommandInterpreterList&					gCommandLineInterpreterList ()	{ static CommandInterpreterList x; return x; }
+CommandHistoryList&						gCommandHistory ()				{ static CommandHistoryList x; return x; }
+SInt16									gCommandHistoryCurrentIndex = -1; // which history command has been displayed via up/down arrow
+
+} // anonymous namespace
 
 #pragma mark Internal Prototypes
+namespace {
 
-static void								addToHistory					(CFStringRef);
-static ControlKeyFilterResult			commandLineKeyFilter			(UInt32*);
-static CFStringRef						getTextAsCFString				();
-static void								handleNewSize					(WindowRef, Float32, Float32, void*);
-static Boolean							issueMessageToAllInterpreters	(CommandLine_InterpreterMessage, CFArrayRef,
-																		 void*, CommandLine_InterpreterProcPtr*);
-static inline My_TerminatorType			keyCodeToTerminatorType			(SInt16);
-static Boolean							parseCommandLine				(CFStringRef, My_TerminatorType);
-static Boolean							parseUNIX						(CFArrayRef);
-static pascal OSStatus					receiveHistoryArrowClick		(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus					receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus					receiveTextInput				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus					receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus					receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
-static Boolean							rotateHistory					(SInt16);
-static void								setBilineText					(CFStringRef);
+void							addToHistory					(CFStringRef);
+ControlKeyFilterResult			commandLineKeyFilter			(UInt32*);
+CFStringRef						getTextAsCFString				();
+void							handleNewSize					(WindowRef, Float32, Float32, void*);
+Boolean							issueMessageToAllInterpreters	(CommandLine_InterpreterMessage, CFArrayRef,
+																 void*, CommandLine_InterpreterProcPtr*);
+inline My_TerminatorType		keyCodeToTerminatorType			(SInt16);
+Boolean							parseCommandLine				(CFStringRef, My_TerminatorType);
+Boolean							parseUNIX						(CFArrayRef);
+pascal OSStatus					receiveHistoryArrowClick		(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus					receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus					receiveTextInput				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus					receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus					receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
+Boolean							rotateHistory					(SInt16);
+void							setBilineText					(CFStringRef);
+
+} // anonymous namespace
 
 
 
@@ -260,7 +265,7 @@ CommandLine_Init ()
 															sizeof(kFontSize), &kFontSize);
 			}
 			
-			// create the view and arrange it
+			// create the view
 			gCommandLineTerminalView = TerminalView_NewHIViewBased
 										(gCommandLineTerminalScreen, gCommandLineWindow, terminalFormat);
 			assert(nullptr != gCommandLineTerminalView);
@@ -268,7 +273,24 @@ CommandLine_Init ()
 			gCommandLineTerminalViewContainer.setCFTypeRef(TerminalView_ReturnContainerHIView(gCommandLineTerminalView));
 			assert(gCommandLineTerminalViewContainer.exists());
 			assert_noerr(SetControlID(gCommandLineTerminalViewContainer, &idMyTerminalViewCommandLine));
-			HIViewSetFrame(gCommandLineTerminalViewContainer, &floatBounds);
+			
+			// keep the width specified in the NIB, however choose a height that allows one line
+			// to display in the terminal font; center this vertically in the space from the NIB
+			{
+				SInt16		ignoredWidth = 0;
+				SInt16		height = 0;
+				
+				
+				TerminalView_GetTheoreticalViewSize(gCommandLineTerminalView, 200/* arbitrary - result is ignored */,
+													1/* number of rows */, true/* include insets */, &ignoredWidth, &height);
+				// TEMPORARY: do not offset the origin yet, because the terminal view currently has
+				// known problems rendering its interior if it is moved away from the window origin
+				//floatBounds.origin.y += (floatBounds.size.height - STATIC_CAST(height, Float32)) / 2.0;
+				floatBounds.size.height = height + 2/* yet another hack...sigh...TEMPORARY */;
+				(OSStatus)HIViewSetFrame(gCommandLineTerminalViewContainer, &floatBounds);
+			}
+			
+			// finally, remember this HIView!
 			gCommandLineTerminalViewFocus.setCFTypeRef(TerminalView_ReturnUserFocusHIView(gCommandLineTerminalView));
 			assert(gCommandLineTerminalViewFocus.exists());
 			
@@ -400,84 +422,42 @@ CommandLine_Init ()
 	}
 	
 	// install a callback that hides the command line instead of destroying it, when it should be closed
-	{
-		EventTypeSpec const		whenWindowClosing[] =
-								{
-									{ kEventClassWindow, kEventWindowClose }
-								};
-		
-		
-		gCommandLineWindowClosingUPP = NewEventHandlerUPP(receiveWindowClosing);
-		error = InstallWindowEventHandler(gCommandLineWindow, gCommandLineWindowClosingUPP, GetEventTypeCount(whenWindowClosing),
-											whenWindowClosing, nullptr/* user data */,
-											&gCommandLineWindowClosingHandler/* event handler reference */);
-		assert_noerr(error);
-	}
+	gCommandLineWindowClosingHandler.install(GetWindowEventTarget(gCommandLineWindow), receiveWindowClosing,
+												CarbonEventSetInClass(CarbonEventClass(kEventClassWindow), kEventWindowClose),
+												nullptr/* user data */);
+	assert(gCommandLineWindowClosingHandler.isInstalled());
 	
 	// install a callback that changes the mouse cursor appropriately
 	{
-		EventTypeSpec const		whenCursorChangeRequired[] =
-								{
-									{ kEventClassWindow, kEventWindowCursorChange },
-									{ kEventClassKeyboard, kEventRawKeyModifiersChanged }
-								};
+		std::vector< CarbonEventType >		eventTypes;
 		
 		
-		gCommandLineCursorChangeUPP = NewEventHandlerUPP(receiveWindowCursorChange);
-		error = InstallWindowEventHandler(gCommandLineWindow, gCommandLineCursorChangeUPP, GetEventTypeCount(whenCursorChangeRequired),
-											whenCursorChangeRequired, gCommandLineWindow/* user data */,
-											&gCommandLineCursorChangeHandler/* event handler reference */);
-		assert_noerr(error);
+		eventTypes.push_back(std::make_pair((UInt32)kEventClassWindow, (UInt32)kEventWindowClose));
+		eventTypes.push_back(std::make_pair((UInt32)kEventClassKeyboard, (UInt32)kEventRawKeyModifiersChanged));
+		gCommandLineCursorChangeHandler.install(GetWindowEventTarget(gCommandLineWindow), receiveWindowCursorChange,
+												eventTypes, gCommandLineWindow/* user data */);
+		assert(gCommandLineCursorChangeHandler.isInstalled());
 	}
 	
 #if 1
 	// install a callback that responds to key presses in the terminal view
-	{
-		EventTypeSpec const		whenTextInput[] =
-								{
-									{ kEventClassTextInput, kEventTextInputUnicodeForKeyEvent }
-								};
-		
-		
-		gCommandLineTextInputUPP = NewEventHandlerUPP(receiveTextInput);
-		error = InstallHIObjectEventHandler(gCommandLineTerminalViewFocus.returnHIObjectRef(), gCommandLineTextInputUPP,
-											GetEventTypeCount(whenTextInput), whenTextInput, nullptr/* user data */,
-											&gCommandLineTextInputHandler/* event handler reference */);
-		assert_noerr(error);
-	}
+	gCommandLineTextInputHandler.install(GetControlEventTarget(gCommandLineTerminalViewFocus), receiveTextInput,
+											CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+											nullptr/* user data */);
+	assert(gCommandLineTextInputHandler.isInstalled());
 #endif
 	
 	// install a callback that handles history menu item selections
-	{
-		EventTypeSpec const		whenHistoryMenuItemSelected[] =
-								{
-									{ kEventClassCommand, kEventCommandProcess }
-								};
-		
-		
-		gCommandLineHistoryMenuCommandUPP = NewEventHandlerUPP(receiveHistoryCommandProcess);
-		error = InstallMenuEventHandler(gCommandLineHistoryMenuRef, gCommandLineHistoryMenuCommandUPP,
-										GetEventTypeCount(whenHistoryMenuItemSelected),
-										whenHistoryMenuItemSelected, nullptr/* user data */,
-										&gCommandLineHistoryMenuCommandHandler/* event handler reference */);
-		assert_noerr(error);
-	}
+	gCommandLineHistoryMenuCommandHandler.install(GetMenuEventTarget(gCommandLineHistoryMenuRef), receiveHistoryCommandProcess,
+													CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+													nullptr/* user data */);
+	assert(gCommandLineHistoryMenuCommandHandler.isInstalled());
 	
 	// install a callback that handles history arrow clicks
-	{
-		EventTypeSpec const		whenHistoryArrowClicked[] =
-								{
-									{ kEventClassControl, kEventControlHit }
-								};
-		
-		
-		gCommandLineHistoryArrowClickUPP = NewEventHandlerUPP(receiveHistoryArrowClick);
-		error = InstallHIObjectEventHandler(gCommandLineArrows.returnHIObjectRef(), gCommandLineHistoryArrowClickUPP,
-											GetEventTypeCount(whenHistoryArrowClicked),
-											whenHistoryArrowClicked, nullptr/* user data */,
-											&gCommandLineHistoryArrowClickHandler/* event handler reference */);
-		assert_noerr(error);
-	}
+	gCommandLineHistoryArrowClickHandler.install(GetControlEventTarget(gCommandLineArrows), receiveHistoryArrowClick,
+													CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
+													nullptr/* user data */);
+	assert(gCommandLineHistoryArrowClickHandler.isInstalled());
 	
 #if 0
 	// fix a bug in terminal views that makes their initial rendering wrong
@@ -524,18 +504,6 @@ CommandLine_Done ()
 			(Preferences_Result)Preferences_SetData(kPreferences_TagWasCommandLineShowing,
 													sizeof(Boolean), &windowIsVisible);
 		}
-		
-		// remove event handlers
-		RemoveEventHandler(gCommandLineTextInputHandler);
-		DisposeEventHandlerUPP(gCommandLineTextInputUPP);
-		RemoveEventHandler(gCommandLineWindowClosingHandler);
-		DisposeEventHandlerUPP(gCommandLineWindowClosingUPP);
-		RemoveEventHandler(gCommandLineCursorChangeHandler);
-		DisposeEventHandlerUPP(gCommandLineCursorChangeUPP);
-		RemoveEventHandler(gCommandLineHistoryMenuCommandHandler);
-		DisposeEventHandlerUPP(gCommandLineHistoryMenuCommandUPP);
-		RemoveEventHandler(gCommandLineHistoryArrowClickHandler);
-		DisposeEventHandlerUPP(gCommandLineHistoryArrowClickUPP);
 		
 		DisposeWindow(gCommandLineWindow); // disposes of the command line window *and* all of its controls
 		gCommandLineWindow = nullptr;
@@ -647,6 +615,7 @@ CommandLine_SetTextWithCFString		(CFStringRef	inString)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Adds the specified command line to the history buffer,
@@ -660,7 +629,7 @@ and only add a command if it is not already in the list
 
 (3.0)
 */
-static void
+void
 addToHistory	(CFStringRef	inText)
 {
 	register SInt16		i = 0;
@@ -689,7 +658,7 @@ down arrow keys, he or she can rotate through past commands.
 
 (3.0)
 */
-static ControlKeyFilterResult
+ControlKeyFilterResult
 commandLineKeyFilter	(UInt32*	inoutKeyCode)
 {
 	ControlKeyFilterResult	result = kControlKeyFilterPassKey;
@@ -915,7 +884,7 @@ call CFRelease() on the string yourself.
 
 (3.0)
 */
-static CFStringRef
+CFStringRef
 getTextAsCFString ()
 {
 	CFStringRef			result = nullptr;
@@ -950,7 +919,7 @@ a resize of the floating command line window.
 
 (3.0)
 */
-static void
+void
 handleNewSize	(WindowRef	inWindowRef,
 				 Float32	inDeltaSizeX,
 				 Float32	inDeltaSizeY,
@@ -980,7 +949,7 @@ given message.
 
 (3.0)
 */
-static Boolean
+Boolean
 issueMessageToAllInterpreters	(CommandLine_InterpreterMessage		inMessage,
 								 CFArrayRef							inTokens,
 								 void*								outDataPtr,
@@ -1015,7 +984,7 @@ pressed to trigger the send.
 
 (3.1)
 */
-static inline My_TerminatorType
+inline My_TerminatorType
 keyCodeToTerminatorType		(SInt16		inVirtualKeyCode)
 {
 	My_TerminatorType	result = kMy_TerminatorTypeNewline;
@@ -1052,7 +1021,7 @@ history list and the oldest command is discarded.
 
 (3.0)
 */
-static Boolean
+Boolean
 parseCommandLine	(CFStringRef		inText,
 					 My_TerminatorType	inTerminator)
 {
@@ -1170,7 +1139,7 @@ array is the command name.
 
 (3.0)
 */
-static Boolean
+Boolean
 parseUNIX	(CFArrayRef		argv)
 {
 	Boolean		result = false;
@@ -1203,7 +1172,7 @@ the same as up-arrow or down-arrow key presses.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHistoryArrowClick	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					UNUSED_ARGUMENT(inContext))
@@ -1264,7 +1233,7 @@ pop-up menu’s currently-checked item).
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					UNUSED_ARGUMENT(inContext))
@@ -1314,7 +1283,7 @@ a delete character.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inContext))
@@ -1398,7 +1367,7 @@ or shown (as it always remains in memory).
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inContext))
@@ -1448,7 +1417,7 @@ IMPORTANT:	This is completely generic.  It should move
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inWindowRef)
@@ -1548,7 +1517,7 @@ the history pointer.
 
 (3.0)
 */
-static Boolean
+Boolean
 rotateHistory	(SInt16		inHowFarWhichWay)
 {
 	Boolean		result = false;
@@ -1582,12 +1551,14 @@ using a Core Foundation string reference.
 
 (3.0)
 */
-static void
+void
 setBilineText	(CFStringRef	inContents)
 {
 	// set the control text
 	SetControlTextWithCFString(gCommandLineHelpText, inContents);
 	DrawOneControl(gCommandLineHelpText);
 }// setBilineText
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
