@@ -734,9 +734,9 @@
 	<key>terminal-cursor-shape</key>
 	<string>vertical bar</string>
 	<key>terminal-emulator-answerback</key>
-	<string>vt102</string>
+	<string>vt100</string>
 	<key>terminal-emulator-type</key>
-	<string>vt102</string>
+	<string>vt100</string>
 	<key>terminal-emulator-xterm-enable-color</key>
 	<true/>
 	<key>terminal-emulator-xterm-enable-graphics</key>

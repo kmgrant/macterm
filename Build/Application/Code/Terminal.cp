@@ -4134,8 +4134,8 @@ iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
 emulation(inEmulation),
 answerBackCFString(inAnswerBack),
-stateDeterminant(/*tmp*/My_VT102::stateDeterminant/*My_DefaultEmulator::StateDeterminant*/),
-transitionHandler(/*tmp*/My_VT102::stateTransition/*My_DefaultEmulator::StateTransition*/),
+stateDeterminant(/*tmp*/My_VT100::stateDeterminant/*My_DefaultEmulator::StateDeterminant*/),
+transitionHandler(/*tmp*/My_VT100::stateTransition/*My_DefaultEmulator::StateTransition*/),
 scrollbackBuffer(),
 screenBuffer(),
 tabSettings(),
@@ -9714,8 +9714,8 @@ vt100ANSIMode	(My_ScreenBufferPtr		inDataPtr)
 	// TEMPORARY: this will change to a mechanism that ensures the
 	// proper function is reset here based on the actual terminal type;
 	// for now, choose the ÒhighestÓ terminal
-	inDataPtr->stateDeterminant = My_VT102::stateDeterminant;
-	inDataPtr->transitionHandler = My_VT102::stateTransition;
+	inDataPtr->stateDeterminant = My_VT100::stateDeterminant;
+	inDataPtr->transitionHandler = My_VT100::stateTransition;
 	initializeParserStateStack(inDataPtr);
 }// vt100ANSIMode
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080303',
     '20080302',
     '20080301',
     '20080229',
@@ -99,6 +100,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080303': [
+		'Reverted the default emulator to VT100 (from VT102), pending some important accuracy fixes in VT102.',
+	],
 	'20080302': [
 		'Preferences window Formats pane now correctly updates font and color preferences.',
 		'Preferences window Formats pane now uses the system font panel; though only for font name and size settings.',
