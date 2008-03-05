@@ -59,6 +59,7 @@ extern "C"
 #include <Console.h>
 #include <Cursors.h>
 #include <Embedding.h>
+#include <HIViewWrap.h>
 #include <Localization.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlockReferenceTracker.template.h>
@@ -167,7 +168,6 @@ struct TerminalWindow
 	
 	struct
 	{
-		HIViewRef		root;					// the root of the control embedding hierarchy for this window
 		HIViewRef		scrollBarH;				// scroll bar used to specify which range of columns is visible
 		HIViewRef		scrollBarV;				// scroll bar used to specify which range of rows is visible
 		HIViewRef		textScreenDimensions;   // defined only in the floater window that appears during resizes
@@ -1745,13 +1745,19 @@ installedActions()
 		terminalError = Terminal_NewScreen(emulationType, answerBackCFString, scrollbackRows, rows, columns, forceSave, &newScreen);
 		if (terminalError == kTerminal_ResultOK)
 		{
-			newView = TerminalView_NewHIViewBased(newScreen, this->window, inFontInfoOrNull);
+			newView = TerminalView_NewHIViewBased(newScreen, inFontInfoOrNull);
 			if (newView != nullptr)
 			{
-				OSStatus	error = noErr;
+				HIViewWrap		contentView(kHIViewWindowContentID, this->window);
+				HIViewRef		terminalHIView = TerminalView_ReturnContainerHIView(newView);
+				OSStatus		error = noErr;
 				
 				
-				error = HIViewSetVisible(TerminalView_ReturnContainerHIView(newView), true);
+				assert(contentView.exists());
+				error = HIViewAddSubview(contentView, terminalHIView);
+				assert_noerr(error);
+				
+				error = HIViewSetVisible(terminalHIView, true);
 				assert_noerr(error);
 				
 				// remember the initial screen-to-view and view-to-screen mapping;
@@ -2683,52 +2689,41 @@ the scroll bars and the toolbar.
 static void
 createViews		(TerminalWindowPtr	inPtr)
 {
-	HIViewRef	root = HIViewGetRoot(inPtr->window);
+	HIViewWrap	contentView(kHIViewWindowContentID, inPtr->window);
+	Rect		rect;
+	OSStatus	error = noErr;
 	
 	
-	if (nullptr != root)
-	{
-		HIViewRef	contentView = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		error = HIViewFindByID(root, kHIViewWindowContentID, &contentView);
-		if (noErr == error)
-		{
-			// create scroll bars
-			Rect	rect;
-			
-			
-			// create routine to handle scroll activity
-			inPtr->scrollProcUPP = NewControlActionUPP(scrollProc); // this is disposed via TerminalWindow_Dispose()
-			
-			// create a vertical scroll bar; the resize event handler initializes its size correctly
-			SetRect(&rect, 0, 0, 0, 0);
-			error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-											true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarV);
-			assert_noerr(error);
-			error = SetControlProperty(inPtr->controls.scrollBarV, AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-										sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
-			assert_noerr(error);
-			error = HIViewAddSubview(contentView, inPtr->controls.scrollBarV);
-			assert_noerr(error);
-			
-			// create a horizontal scroll bar; the resize event handler initializes its size correctly
-			SetRect(&rect, 0, 0, 0, 0);
-			error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
-											true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarH);
-			assert_noerr(error);
-			error = SetControlProperty(inPtr->controls.scrollBarH, AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
-										sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
-			assert_noerr(error);
-			error = HIViewAddSubview(contentView, inPtr->controls.scrollBarH);
-			assert_noerr(error);
-			// horizontal scrolling is not supported for now...
-			(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarH, false);
-		}
-	}
+	assert(contentView.exists());
+	
+	// create routine to handle scroll activity
+	inPtr->scrollProcUPP = NewControlActionUPP(scrollProc); // this is disposed via TerminalWindow_Dispose()
+	
+	// create a vertical scroll bar; the resize event handler initializes its size correctly
+	SetRect(&rect, 0, 0, 0, 0);
+	error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
+									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarV);
+	assert_noerr(error);
+	error = SetControlProperty(inPtr->controls.scrollBarV, AppResources_ReturnCreatorCode(),
+								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
+								sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
+	assert_noerr(error);
+	error = HIViewAddSubview(contentView, inPtr->controls.scrollBarV);
+	assert_noerr(error);
+	
+	// create a horizontal scroll bar; the resize event handler initializes its size correctly
+	SetRect(&rect, 0, 0, 0, 0);
+	error = CreateScrollBarControl(inPtr->window, &rect, 0/* value */, 0/* minimum */, 0/* maximum */, 0/* view size */,
+									true/* live tracking */, inPtr->scrollProcUPP, &inPtr->controls.scrollBarH);
+	assert_noerr(error);
+	error = SetControlProperty(inPtr->controls.scrollBarH, AppResources_ReturnCreatorCode(),
+								kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
+								sizeof(inPtr->selfRef), &inPtr->selfRef); // used in scrollProc
+	assert_noerr(error);
+	error = HIViewAddSubview(contentView, inPtr->controls.scrollBarH);
+	assert_noerr(error);
+	// horizontal scrolling is not supported for now...
+	(OSStatus)HIViewSetVisible(inPtr->controls.scrollBarH, false);
 }// createViews
 
 

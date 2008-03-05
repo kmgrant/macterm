@@ -785,7 +785,7 @@ const
 	OSStatus			error = noErr;
 	
 	
-	terminalView = TerminalView_NewHIViewBased(inSampleTerminalScreen, inOwningWindow);
+	terminalView = TerminalView_NewHIViewBased(inSampleTerminalScreen);
 	assert(nullptr != terminalView);
 	result = TerminalView_ReturnContainerHIView(terminalView);
 	assert(nullptr != result);

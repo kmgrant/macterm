@@ -266,13 +266,15 @@ CommandLine_Init ()
 			}
 			
 			// create the view
-			gCommandLineTerminalView = TerminalView_NewHIViewBased
-										(gCommandLineTerminalScreen, gCommandLineWindow, terminalFormat);
+			gCommandLineTerminalView = TerminalView_NewHIViewBased(gCommandLineTerminalScreen, terminalFormat);
 			assert(nullptr != gCommandLineTerminalView);
 			// NOTE: this variable is being reused, as its original user pane is no longer needed
 			gCommandLineTerminalViewContainer.setCFTypeRef(TerminalView_ReturnContainerHIView(gCommandLineTerminalView));
 			assert(gCommandLineTerminalViewContainer.exists());
-			assert_noerr(SetControlID(gCommandLineTerminalViewContainer, &idMyTerminalViewCommandLine));
+			error = SetControlID(gCommandLineTerminalViewContainer, &idMyTerminalViewCommandLine);
+			assert_noerr(error);
+			error = HIViewAddSubview(HIViewWrap(kHIViewWindowContentID, gCommandLineWindow), gCommandLineTerminalViewContainer);
+			assert_noerr(error);
 			
 			// keep the width specified in the NIB, however choose a height that allows one line
 			// to display in the terminal font; center this vertically in the space from the NIB

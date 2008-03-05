@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -65,7 +65,6 @@ enum
 	kEventParamNetEvents_DispatcherQueue			= 'PDQ&',	//!< queue to submit follow-up events to, for 2-way communication
 																//!  (data: typeNetEvents_CarbonEventQueueRef)
 	kEventParamNetEvents_NewSessionState			= 'PSnS',	//!< what to change a session state to (data: typeNetEvents_SessionState)
-	kEventParamNetEvents_ParentWindow				= 'PPrW',	//!< containing window (data: typeWindowRef)
 	kEventParamNetEvents_SessionData				= 'PSnD',	//!< data to process in a session (data: typeVoidPtr)
 	kEventParamNetEvents_SessionDataSize			= 'PSDS',	//!< size of data buffer given in "kEventParamNetEvents_SessionData"
 																//!  (data: typeUInt32)

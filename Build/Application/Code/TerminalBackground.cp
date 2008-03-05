@@ -171,8 +171,7 @@ IMPORTANT:	As with all APIs in this module, you must have
 (3.1)
 */
 OSStatus
-TerminalBackground_CreateHIView		(WindowRef		inParentWindow,
-								 	 HIViewRef&		outHIViewRef)
+TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef)
 {
 	EventRef	initializationEvent = nullptr;
 	OSStatus	result = noErr;
@@ -187,9 +186,9 @@ TerminalBackground_CreateHIView		(WindowRef		inParentWindow,
 	if (noErr == result)
 	{
 		// set the parent window
-		result = SetEventParameter(initializationEvent, kEventParamNetEvents_ParentWindow,
-									typeWindowRef, sizeof(inParentWindow), &inParentWindow);
-		if (noErr == result)
+		//result = SetEventParameter(initializationEvent, kEventParamNetEvents_ParentWindow,
+		//							typeWindowRef, sizeof(inParentWindow), &inParentWindow);
+		//if (noErr == result)
 		{
 			Boolean		keepView = false; // used to tell when everything succeeds
 			
@@ -584,42 +583,8 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			result = CallNextEventHandler(inHandlerCallRef, inEvent);
 			if ((noErr == result) || (eventNotHandledErr == result))
 			{
-				WindowRef	owningWindow = nullptr;
-				
-				
-				// get the parent window
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_ParentWindow,
-																typeWindowRef, owningWindow);
-				if (noErr == result)
-				{
-					assert(IsValidWindowRef(owningWindow));
-					
-					// place the created control in the right window
-					HIViewRef	root = HIViewGetRoot(owningWindow);
-					
-					
-					if (nullptr == root)
-					{
-						result = eventNotHandledErr;
-					}
-					else
-					{
-						HIViewRef	contentView = nullptr;
-						
-						
-						result = HIViewFindByID(root, kHIViewWindowContentID, &contentView);
-						if (noErr == result)
-						{
-							result = HIViewAddSubview(contentView, dataPtr->view);
-							if (noErr == result)
-							{
-								// finally, initialize the view properly
-								// none needed
-								result = noErr;
-							}
-						}
-					}
-				}
+				// no initialization needed
+				result = noErr;
 			}
 			break;
 		

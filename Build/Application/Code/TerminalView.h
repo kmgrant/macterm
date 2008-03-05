@@ -230,7 +230,6 @@ void
 // AUTOMATICALLY DESTROYED WHEN THE VIEW FROM TerminalView_ReturnContainerHIView() GOES AWAY
 TerminalViewRef
 	TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
-									 HIWindowRef				inOwningWindow,
 									 Preferences_ContextRef		inFormatOrNull = nullptr);
 
 //@}

@@ -191,7 +191,7 @@ struct TerminalView
 	~TerminalView();
 	
 	void
-	initialize		(TerminalScreenRef, HIWindowRef, Preferences_ContextRef);
+	initialize		(TerminalScreenRef, Preferences_ContextRef);
 	
 	Preferences_ContextRef	configuration;		// various settings from an external source; not kept up to date, see TerminalView_ReturnConfiguration()
 	ListenerModel_Ref	changeListenerModel;	// listeners for various types of changes to this data
@@ -212,8 +212,6 @@ struct TerminalView
 	
 	struct
 	{
-		HIWindowRef			ref;				// the Mac OS window reference for the terminal window
-		
 		struct
 		{
 			CGDirectPaletteRef	ref;					// colors used for drawing with Core Graphics
@@ -630,7 +628,6 @@ IMPORTANT:	As with all APIs in this module, you must have
 */
 TerminalViewRef
 TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
-								 HIWindowRef				inOwningWindow,
 								 Preferences_ContextRef		inFormatOrNull)
 {
 	TerminalViewRef		result = nullptr;
@@ -650,47 +647,41 @@ TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
 									typeNetEvents_TerminalScreenRef, sizeof(inScreenDataSource), &inScreenDataSource);
 		if (noErr == error)
 		{
-			// set the parent window
-			error = SetEventParameter(initializationEvent, kEventParamNetEvents_ParentWindow,
-										typeWindowRef, sizeof(inOwningWindow), &inOwningWindow);
+			Boolean		keepView = false; // used to tell when everything succeeds
+			
+			
+			// optional - set format
+			if (nullptr != inFormatOrNull)
+			{
+				error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalFormatPreferences,
+											typeNetEvents_PreferencesContextRef, sizeof(inFormatOrNull), &inFormatOrNull);
+				if (noErr != error) Console_WriteValue("warning, failed to use given format with new view, error", error);
+			}
+			
+			// now construct!
+			error = HIObjectCreate(kConstantsRegistry_HIObjectClassIDTerminalTextView, initializationEvent,
+									REINTERPRET_CAST(&contentHIView, HIObjectRef*));
 			if (noErr == error)
 			{
-				Boolean		keepView = false; // used to tell when everything succeeds
+				UInt32		actualSize = 0;
 				
 				
-				// optional - set format
-				if (nullptr != inFormatOrNull)
-				{
-					error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalFormatPreferences,
-												typeNetEvents_PreferencesContextRef, sizeof(inFormatOrNull), &inFormatOrNull);
-					if (noErr != error) Console_WriteValue("warning, failed to use given format with new view, error", error);
-				}
-				
-				// now construct!
-				error = HIObjectCreate(kConstantsRegistry_HIObjectClassIDTerminalTextView, initializationEvent,
-										REINTERPRET_CAST(&contentHIView, HIObjectRef*));
+				// the event handlers for this class of HIObject will attach a custom
+				// property to the new view, containing the TerminalViewRef
+				error = GetControlProperty(contentHIView, AppResources_ReturnCreatorCode(),
+											kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
+											sizeof(result), &actualSize, &result);
 				if (noErr == error)
 				{
-					UInt32		actualSize = 0;
-					
-					
-					// the event handlers for this class of HIObject will attach a custom
-					// property to the new view, containing the TerminalViewRef
-					error = GetControlProperty(contentHIView, AppResources_ReturnCreatorCode(),
-												kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
-												sizeof(result), &actualSize, &result);
-					if (noErr == error)
-					{
-						// success!
-						keepView = true;
-					}
+					// success!
+					keepView = true;
 				}
-				
-				// any errors?
-				unless (keepView)
-				{
-					result = nullptr;
-				}
+			}
+			
+			// any errors?
+			unless (keepView)
+			{
+				result = nullptr;
 			}
 		}
 		
@@ -754,7 +745,7 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 			dialogOptions.optionFlags |= kNavDontAddTranslateItems;
 			Localization_GetCurrentApplicationNameAsCFString(&dialogOptions.clientName);
 			dialogOptions.preferenceKey = kPreferences_NavPrefKeyGenericSaveFile;
-			dialogOptions.parentWindow = viewPtr->window.ref;
+			dialogOptions.parentWindow = HIViewGetWindow(viewPtr->contentHIView);
 			
 			// now set things specific to this instance
 			(UIStrings_Result)UIStrings_Copy(kUIStrings_FileDefaultCaptureFile, dialogOptions.saveFileName);
@@ -907,10 +898,9 @@ void
 TerminalView_FocusForUser	(TerminalViewRef	inView)
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	HIViewWrap				contentView(kHIViewWindowContentID, viewPtr->window.ref);
+	HIViewWrap				contentView(kHIViewWindowContentID, HIViewGetWindow(viewPtr->contentHIView));
 	
 	
-	assert(IsValidWindowRef(viewPtr->window.ref));
 	assert(contentView.exists());
 	HIViewSetNextFocus(contentView, TerminalView_ReturnUserFocusHIView(inView));
 	HIViewAdvanceFocus(contentView, 0/* modifier keys */);
@@ -985,7 +975,7 @@ TerminalView_GetCursorGlobalBounds	(TerminalViewRef	inView,
 		
 		globalCursorBounds = viewPtr->screen.cursor.bounds;
 		screenToLocalRect(viewPtr, &globalCursorBounds);
-		QDLocalToGlobalRect(GetWindowPort(viewPtr->window.ref), &globalCursorBounds);
+		QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &globalCursorBounds);
 		
 		outGlobalBounds = CGRectMake(globalCursorBounds.left, globalCursorBounds.top,
 										globalCursorBounds.right - globalCursorBounds.left,
@@ -1757,8 +1747,8 @@ TerminalView_ReturnWindow	(TerminalViewRef	inView)
 	WindowRef				result = nullptr;
 	
 	
-	result = viewPtr->window.ref;
-	assert(IsValidWindowRef(viewPtr->window.ref));
+	result = HIViewGetWindow(viewPtr->contentHIView);
+	assert(IsValidWindowRef(result));
 	return result;
 }// ReturnWindow
 
@@ -2760,12 +2750,12 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView,
 		SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
 				STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
 		screenToLocalRect(viewPtr, &screenContentBounds);
-		QDLocalToGlobalRect(GetWindowPort(viewPtr->window.ref), &screenContentBounds);
+		QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
 		
 		// find global rectangle of the cursor
 		globalCursorBounds = viewPtr->screen.cursor.bounds;
 		screenToLocalRect(viewPtr, &globalCursorBounds);
-		QDLocalToGlobalRect(GetWindowPort(viewPtr->window.ref), &globalCursorBounds);
+		QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &globalCursorBounds);
 		
 		//Console_WriteValueFloat4("zoom cursor screen bounds", screenBounds.left, screenBounds.top, screenBounds.right, screenBounds.bottom);
 		{
@@ -2819,7 +2809,7 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 			
 			
 			// find global rectangle of selection
-			QDLocalToGlobalRegion(GetWindowPort(viewPtr->window.ref), selectionRegion);
+			QDLocalToGlobalRegion(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), selectionRegion);
 			GetRegionBounds(selectionRegion, &selectionBounds);
 			
 			// find global rectangle of the screen area
@@ -2827,7 +2817,7 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 			SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
 					STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
 			screenToLocalRect(viewPtr, &screenContentBounds);
-			QDLocalToGlobalRect(GetWindowPort(viewPtr->window.ref), &screenContentBounds);
+			QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
 			
 			// animate!
 			(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
@@ -2863,7 +2853,7 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 			
 			
 			// find global rectangle of selection
-			QDLocalToGlobalRegion(GetWindowPort(viewPtr->window.ref), selectionRegion);
+			QDLocalToGlobalRegion(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), selectionRegion);
 			GetRegionBounds(selectionRegion, &selectionBounds);
 			
 			// find global rectangle of the screen area
@@ -2871,7 +2861,7 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 			SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
 					STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
 			screenToLocalRect(viewPtr, &screenContentBounds);
-			QDLocalToGlobalRect(GetWindowPort(viewPtr->window.ref), &screenContentBounds);
+			QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
 			
 			// animate!
 			(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
@@ -2924,7 +2914,6 @@ receiveTerminalHIObjectEvents().
 void
 TerminalView::
 initialize		(TerminalScreenRef			inScreenDataSource,
-				 HIWindowRef				inOwningWindow,
 				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
@@ -2949,10 +2938,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		}
 		this->displayMode = (affectsFontSize) ? kTerminalView_DisplayModeZoom : kTerminalView_DisplayModeNormal;
 	}
-	
-	// redundantly store the window reference in the screen data
-	assert(IsValidWindowRef(inOwningWindow));
-	this->window.ref = inOwningWindow;
 	
 	// retain the screen reference
 	this->screen.ref = inScreenDataSource;
@@ -3031,7 +3016,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		error = HIViewSetVisible(this->contentHIView, true);
 		assert_noerr(error);
 		
-		assert_noerr(TerminalBackground_CreateHIView(inOwningWindow, this->backgroundHIView));
+		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView));
 		error = HIViewSetVisible(this->backgroundHIView, true);
 		assert_noerr(error);
 		
@@ -3330,7 +3315,7 @@ calculateDoubleSize		(TerminalViewPtr	inTerminalViewPtr,
 						 SInt16&			outPointSize,
 						 SInt16&			outAscent)
 {
-	WindowRef		window = inTerminalViewPtr->window.ref;
+	HIWindowRef		window = HIViewGetWindow(inTerminalViewPtr->contentHIView);
 	CGrafPtr		oldPort = nullptr;
 	CGrafPtr		windowPort = nullptr;
 	GDHandle		oldDevice = nullptr;
@@ -3388,7 +3373,7 @@ margin, it only includes the visible screen text area.
 static void
 clipToScreen	(TerminalViewPtr	inTerminalViewPtr)
 {
-	HIViewRef	windowContentView = nullptr;
+	HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView));
 	HIRect		contentFrame;
 	Rect		contentRect;
 	OSStatus	error = noErr;
@@ -3396,8 +3381,7 @@ clipToScreen	(TerminalViewPtr	inTerminalViewPtr)
 	
 	// convert the view location into QuickDraw local coordinates,
 	// which also match the coordinates of the window content view
-	error = HIViewFindByID(HIViewGetRoot(inTerminalViewPtr->window.ref), kHIViewWindowContentID, &windowContentView);
-	assert_noerr(error);
+	assert(windowContentView.exists());
 	error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
 	assert_noerr(error);
 	error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
@@ -3432,7 +3416,7 @@ contentHIViewIdleTimer	(EventLoopTimerRef			UNUSED_ARGUMENT(inTimer),
 	// when user focus returns, start flashing the cursor again
 	case kEventLoopIdleTimerStarted:
 		ptr->screen.cursor.idleFlash = cursorBlinks(ptr) && (!gApplicationIsSuspended) &&
-										(GetUserFocusWindow() == ptr->window.ref);
+										(GetUserFocusWindow() == HIViewGetWindow(ptr->contentHIView));
 		break;
 	
 	// when stopping idle, force the cursor to be visible and
@@ -5227,13 +5211,12 @@ getScreenOriginFloat	(TerminalViewPtr	inTerminalViewPtr,
 						 Float32&			outScreenPositionX,
 						 Float32&			outScreenPositionY)
 {
-	HIViewRef	windowContentView = nullptr;
+	HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView));
 	HIRect		contentFrame;
 	OSStatus	error = noErr;
 	
 	
-	error = HIViewFindByID(HIViewGetRoot(inTerminalViewPtr->window.ref), kHIViewWindowContentID, &windowContentView);
-	assert_noerr(error);
+	assert(windowContentView.exists());
 	error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
 	assert_noerr(error);
 	error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
@@ -5378,7 +5361,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 		
 		
 		GetGWorld(&oldPort, &oldDevice);
-		SetPortWindowPort(inTerminalViewPtr->window.ref);
+		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
 		getRegionBounds(inTerminalViewPtr, kTerminalView_RegionCodeScreenInterior, &screenArea);
 		
 		selectionStart = inSelectionStart;
@@ -5742,7 +5725,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			
 			
 			GetGWorld(&oldPort, &oldDevice);
-			SetPortWindowPort(viewPtr->window.ref);
+			SetPortWindowPort(HIViewGetWindow(viewPtr->contentHIView));
 			Localization_PreservePortFontState(&fontState);
 			
 			TextFontByName(viewPtr->text.font.familyName);
@@ -6646,74 +6629,42 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 																typeNetEvents_TerminalScreenRef, initialDataSource);
 				if (noErr == result)
 				{
-					WindowRef	owningWindow = nullptr;
+					Preferences_ContextRef		viewFormat = nullptr;
 					
 					
-					// get the parent window
-					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_ParentWindow,
-																	typeWindowRef, owningWindow);
-					if (noErr == result)
+					// get the terminal format; if not found, use the default
+					result = CarbonEventUtilities_GetEventParameter
+								(inEvent, kEventParamNetEvents_TerminalFormatPreferences,
+									typeNetEvents_PreferencesContextRef, viewFormat);
+					if (noErr != result)
 					{
-						// place the created view in the right window
-						HIViewRef	root = HIViewGetRoot(owningWindow);
+						// set default
+						Preferences_Result		prefsResult = kPreferences_ResultOK;
+						Preferences_ContextRef	defaultContext = nullptr;
 						
 						
-						if (nullptr == root)
+						prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
+						if (kPreferences_ResultOK != prefsResult)
 						{
-							result = eventNotHandledErr;
+							Console_WriteLine("warning, failed to find default context for new view");
 						}
 						else
 						{
-							HIViewRef	contentView = nullptr;
-							
-							
-							result = HIViewFindByID(root, kHIViewWindowContentID, &contentView);
-							if (noErr == result)
-							{
-								result = HIViewAddSubview(contentView, viewPtr->contentHIView);
-								if (noErr == result)
-								{
-									Preferences_ContextRef		viewFormat = nullptr;
-									
-									
-									// get the terminal format; if not found, use the default
-									result = CarbonEventUtilities_GetEventParameter
-												(inEvent, kEventParamNetEvents_TerminalFormatPreferences,
-													typeNetEvents_PreferencesContextRef, viewFormat);
-									if (noErr != result)
-									{
-										// set default
-										Preferences_Result		prefsResult = kPreferences_ResultOK;
-										Preferences_ContextRef	defaultContext = nullptr;
-										
-										
-										prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
-										if (kPreferences_ResultOK != prefsResult)
-										{
-											Console_WriteLine("warning, failed to find default context for new view");
-										}
-										else
-										{
-											viewFormat = Preferences_NewCloneContext(defaultContext, true/* force detach */);
-										}
-										result = noErr; // ignore
-									}
-									
-									// finally, initialize the view properly
-									try
-									{
-										assert(nullptr != initialDataSource);
-										assert(IsValidWindowRef(owningWindow));
-										viewPtr->initialize(initialDataSource, owningWindow, viewFormat);
-										result = noErr;
-									}
-									catch (std::exception)
-									{
-										result = eventNotHandledErr;
-									}
-								}
-							}
+							viewFormat = Preferences_NewCloneContext(defaultContext, true/* force detach */);
 						}
+						result = noErr; // ignore
+					}
+					
+					// finally, initialize the view properly
+					try
+					{
+						assert(nullptr != initialDataSource);
+						viewPtr->initialize(initialDataSource, viewFormat);
+						result = noErr;
+					}
+					catch (std::exception)
+					{
+						result = eventNotHandledErr;
 					}
 				}
 			}
@@ -7253,7 +7204,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 					Rect		bounds;
 					HIRect		floatBounds;
-					HIPoint		localToViewOffset;
+					HIPoint		localToViewOffset = CGPointMake(0, 0);
 					
 					
 					SetPort(drawingPort);
@@ -7264,8 +7215,15 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					// the view position is also the conversion factor for
 					// translating QuickDraw points to view-local coordinates
-					localToViewOffset.x = -bounds.left;
-					localToViewOffset.y = -bounds.top;
+					{
+						OSStatus	error = noErr;
+						
+						
+						error = HIViewConvertPoint(&localToViewOffset,
+													HIViewWrap(kHIViewWindowContentID, HIViewGetWindow(view)),
+													view);
+						assert_noerr(error);
+					}
 					
 					// translate rectangle into view-local coordinates
 					// (note: "floatBounds" is already view-local)
@@ -8608,6 +8566,7 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	switch (inTerminalChange)
 	{
 	case kTerminal_ChangeText:
+		if (IsValidWindowRef(HIViewGetWindow(viewPtr->contentHIView)))
 		{
 			Terminal_RangeDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
 																				Terminal_RangeDescriptionConstPtr);
@@ -8803,7 +8762,7 @@ setCursorGhostVisibility	(TerminalViewPtr	inTerminalViewPtr,
 		// cursor flashing is done within a thread; after a window closes,
 		// the flashing ought to stop, but to make sure of that the window
 		// must be valid (otherwise drawing occurs in the desktop!)
-		renderCursor = (renderCursor && IsValidWindowRef(inTerminalViewPtr->window.ref));
+		renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
 	}
 	
 	// change state
@@ -8839,7 +8798,7 @@ setCursorVisibility		(TerminalViewPtr	inTerminalViewPtr,
 		// cursor flashing is done within a thread; after a window closes,
 		// the flashing ought to stop, but to make sure of that the window
 		// must be valid (otherwise drawing occurs in the desktop!)
-		renderCursor = (renderCursor && IsValidWindowRef(inTerminalViewPtr->window.ref));
+		renderCursor = (renderCursor && IsValidWindowRef(HIViewGetWindow(inTerminalViewPtr->contentHIView)));
 	}
 	
 	// change state
@@ -8961,7 +8920,7 @@ setPortScreenPort	(TerminalViewPtr	inTerminalViewPtr)
 	else
 	{
 		static TerminalViewPtr	oldViewPtr = nullptr;
-		WindowRef				window = inTerminalViewPtr->window.ref;
+		HIWindowRef				window = HIViewGetWindow(inTerminalViewPtr->contentHIView);
 		
 		
 		if (nullptr == window) result = -4;
@@ -9081,7 +9040,8 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 		// figure out which display has most control over screen content
 		// NOTE: This check should be done separately, probably whenever a
 		//       terminal window is moved.
-		if (GetWindowGreatestAreaDevice(inTerminalViewPtr->window.ref, kWindowContentRgn, &device, nullptr/* rectangle */) != noErr)
+		if (GetWindowGreatestAreaDevice(HIViewGetWindow(inTerminalViewPtr->contentHIView), kWindowContentRgn,
+										&device, nullptr/* rectangle */) != noErr)
 		{
 			// if this can’t be found, just assume the main monitor
 			device = GetMainDevice();
@@ -9487,7 +9447,7 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 	}
 	
 	Cursors_UseIBeam();
-	SetPortWindowPort(inTerminalViewPtr->window.ref);
+	SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
 	
 	// continue tracking until the mouse is released
 	previousClick = std::make_pair(-1, -1);
@@ -9853,6 +9813,7 @@ static void
 visualBell	(TerminalViewRef	inView)
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	HIWindowRef const		kViewWindow = HIViewGetWindow(viewPtr->contentHIView);
 	Boolean					visual = false;				// is visual used?
 	Boolean					visualPreference = false;	// is ONLY visual used?
 	Rect					terminalScreenRect;
@@ -9879,12 +9840,12 @@ visualBell	(TerminalViewRef	inView)
 	{
 		visualPreference = false; // assume audible bell, if preference can’t be found
 	}
-	visual = (visualPreference || (!IsWindowHilited(viewPtr->window.ref)));
+	visual = (visualPreference || (!IsWindowHilited(kViewWindow)));
 	
 	if (visual)
 	{
 		InvertRect(&terminalScreenRect);
-		QDFlushPortBuffer(GetWindowPort(viewPtr->window.ref), nullptr/* region */);
+		QDFlushPortBuffer(GetWindowPort(kViewWindow), nullptr/* region */);
 	}
 	
 	// Mac OS 8 asynchronous sounds mean that a sound generates
@@ -9897,7 +9858,7 @@ visualBell	(TerminalViewRef	inView)
 	if (visual)
 	{
 		InvertRect(&terminalScreenRect);
-		QDFlushPortBuffer(GetWindowPort(viewPtr->window.ref), nullptr/* region */);
+		QDFlushPortBuffer(GetWindowPort(kViewWindow), nullptr/* region */);
 	}
 	
 	SetGWorld(oldPort, oldDevice);

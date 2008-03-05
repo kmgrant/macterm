@@ -62,8 +62,7 @@ void
 //@{
 
 OSStatus
-	TerminalBackground_CreateHIView		(WindowRef		inOwningWindow,
-										 HIViewRef&		outView);
+	TerminalBackground_CreateHIView		(HIViewRef&		outView);
 
 //@}
 
