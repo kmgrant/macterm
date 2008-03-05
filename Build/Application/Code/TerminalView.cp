@@ -136,23 +136,6 @@ enum
 	kTerminalView_UserFocusPaneControlPartCodePrimary		= kTerminalView_ContentPartText
 };
 
-/*!
-Special parts of a terminal view.  Regions are in the coordinate
-system of the view itself, so the top-left corner is NOT affected
-by the placement of a terminal view within a window, nor by the
-position of the window on the display.
-*/
-enum TerminalView_RegionCode
-{
-	kTerminalView_RegionCodeScreenInterior				= 0,	//!< screen rectangle that is mouse-sensitive, containing
-																//!  the visible screen text
-	kTerminalView_RegionCodeScreenBackground			= 1,	//!< the entire screen area, including the content area
-																//!  and a small border region
-	kTerminalView_RegionCodeScreenBackgroundMaximum		= 2		//!< the largest area the screen background can have without
-																//!  changing the font, size, or the number of rows or
-																//!  columns displayed
-};
-
 enum MyCursorState
 {
 	kMyCursorStateInvisible = 0,
@@ -339,7 +322,6 @@ static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, 
 static void				eventNotifyForView				(TerminalViewConstPtr, TerminalView_Event, void*);
 static Terminal_LineRef	findRowIterator					(TerminalViewPtr, UInt16);
 static Boolean			findVirtualCellFromLocalPoint	(TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
-static void				getRegionBounds					(TerminalViewPtr, TerminalView_RegionCode, Rect*);
 static void				getRowBounds					(TerminalViewPtr, UInt16, Rect*);
 static SInt16			getRowCharacterWidth			(TerminalViewPtr, UInt16);
 static void				getRowSectionBounds				(TerminalViewPtr, UInt16, UInt16, SInt16, Rect*);
@@ -3060,7 +3042,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	// once embedded, offset the content pane; this initializes the top-left inset, and
 	// ensures that the offset will remain forever (if the parent view is ever moved,
 	// the child is also offset by the same amount, so the relative position is the same)
-#if 0
+#if 1
 	{
 		Point	insetsTopLeft;
 		Point	insetsBottomRight;
@@ -4855,53 +4837,6 @@ findVirtualCellFromLocalPoint	(TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
-Returns the boundaries of a particular region of
-the indicated screen window.  If the indicated
-region is not rectangular, this method returns
-the tightest bounding rectangle of the region.
-
-(3.0)
-*/
-static void
-getRegionBounds		(TerminalViewPtr			inTerminalViewPtr,
-					 TerminalView_RegionCode	inRegionCode,
-					 Rect*						outBoundsPtr)
-{
-	if (outBoundsPtr != nullptr)
-	{
-		switch (inRegionCode)
-		{
-		case kTerminalView_RegionCodeScreenInterior:
-			GetControlBounds(inTerminalViewPtr->contentHIView, outBoundsPtr);
-			break;
-		
-		case kTerminalView_RegionCodeScreenBackground:
-			GetControlBounds(inTerminalViewPtr->backgroundHIView, outBoundsPtr);
-			break;
-		
-		case kTerminalView_RegionCodeScreenBackgroundMaximum:
-			{
-				Point	topLeftInset;
-				Point   bottomRightInset;
-				
-				
-				TerminalView_GetInsets(&topLeftInset, &bottomRightInset);
-				GetControlBounds(inTerminalViewPtr->backgroundHIView, outBoundsPtr);
-				outBoundsPtr->bottom = outBoundsPtr->top + topLeftInset.v + inTerminalViewPtr->screen.maxViewHeightInPixels +
-										bottomRightInset.v;
-				outBoundsPtr->right = outBoundsPtr->left + topLeftInset.h + inTerminalViewPtr->screen.maxViewWidthInPixels +
-										bottomRightInset.h;
-			}
-			break;
-		
-		default:
-			break;
-		}
-	}
-}// getRegionBounds
-
-
-/*!
 Calculates the boundaries of the given row in pixels
 relative to the SCREEN, so if you passed row 0, the
 top-left corner of the rectangle would be (0, 0), but
@@ -4924,12 +4859,15 @@ getRowBounds	(TerminalViewPtr	inTerminalViewPtr,
 {
 	SInt16				sectionTopEdge = inZeroBasedRowIndex * inTerminalViewPtr->text.font.heightPerCharacter;
 	Terminal_LineRef	rowIterator = nullptr;
+	OSStatus			error = noErr;
+	HIRect				contentFrame;
 	SInt16				topRow = 0;
 	
 	
 	// start with the interior bounds, as this defines two of the edges
-	getRegionBounds(inTerminalViewPtr, kTerminalView_RegionCodeScreenInterior, outBoundsPtr);
-	outBoundsPtr->right = outBoundsPtr->right - outBoundsPtr->left;
+	error = HIViewGetBounds(inTerminalViewPtr->contentHIView, &contentFrame);
+	assert_noerr(error);
+	outBoundsPtr->right = STATIC_CAST(contentFrame.size.width, SInt16);
 	outBoundsPtr->left = 0;
 	
 	// now set the top and bottom edges based on the requested row
@@ -5362,7 +5300,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 		
 		GetGWorld(&oldPort, &oldDevice);
 		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
-		getRegionBounds(inTerminalViewPtr, kTerminalView_RegionCodeScreenInterior, &screenArea);
+		GetControlBounds(inTerminalViewPtr->contentHIView, &screenArea);
 		
 		selectionStart = inSelectionStart;
 		selectionPastEnd = inSelectionPastEnd;
@@ -9829,7 +9767,7 @@ visualBell	(TerminalViewRef	inView)
 	if (viewPtr == nullptr) SetRect(&terminalScreenRect, 0, 0, 0, 0);
 	else
 	{
-		getRegionBounds(viewPtr, kTerminalView_RegionCodeScreenInterior, &terminalScreenRect);
+		GetControlBounds(viewPtr->contentHIView, &terminalScreenRect);
 	}
 	
 	// If the user turned off audible bells, always use a visual;
