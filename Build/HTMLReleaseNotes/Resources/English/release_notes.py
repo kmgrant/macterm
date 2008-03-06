@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080305',
     '20080303',
     '20080302',
     '20080301',
@@ -100,6 +101,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080305': [
+		'New Login Shell (hidden command requiring Option key in File menu) now runs "/usr/bin/login -p -f user" so there is no password prompt.',
+	],
 	'20080303': [
 		'Reverted the default emulator to VT100 (from VT102), pending some important accuracy fixes in VT102.',
 		'Floating command line appearance improvements.',

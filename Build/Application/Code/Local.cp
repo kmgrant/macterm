@@ -406,11 +406,12 @@ Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 
 
 /*!
-Calls Local_SpawnProcess() with "/usr/bin/login",
-which launches the default login shell.
+Calls Local_SpawnProcess() with "/usr/bin/login -p -f $USER",
+which launches the default login shell without requiring
+a password.
 
-See the documentation on Local_SpawnProcess() for
-more on how the working directory is handled.
+See the documentation on Local_SpawnProcess() for more on
+how the working directory is handled.
 
 \return any code that Local_SpawnProcess() can return
 
@@ -423,7 +424,7 @@ Local_SpawnLoginShell	(SessionRef			inUninitializedSession,
 						 char*				outSlaveName,
 						 char const*		inWorkingDirectoryOrNull)
 {
-	char const*		args[] = { "/usr/bin/login", nullptr/* terminator */ };
+	char const*		args[] = { "/usr/bin/login", "-p", "-f", getenv("USER"), nullptr/* terminator */ };
 	
 	
 	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName,
