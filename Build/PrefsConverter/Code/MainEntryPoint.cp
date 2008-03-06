@@ -1728,7 +1728,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	// The preferences version MUST match what is used by the version of
 	// MacTelnet that ships with this preferences converter; it should
 	// be changed here if it is changed in MacTelnet.
-	SInt16 const	kCurrentPrefsVersion = 1;
+	SInt16 const	kCurrentPrefsVersion = 2;
 	CFIndex			diskVersion = 0;
 	Boolean			doConvert = false;
 	Boolean			conversionSuccessful = false;
@@ -1772,63 +1772,18 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	// with the user
 	if (kCurrentPrefsVersion == diskVersion)
 	{
-		// upon further consideration, there should be no user
-		// interaction whatsoever in this case; although MacTelnet
-		// is designed NOT to run this application needlessly, one
-		// can imagine some worst-case glitch where the converter
-		// somehow runs each time MacTelnet is launched regardless;
-		// that should not create “dialog spam” for the user
-	#if 0
-		// tell the user that their preferences are up to date
-		// (in this situation, PrefsConverter should not even
-		// have been run, but perhaps the user did it manually)
-		AlertStdCFStringAlertParamRec	params;
-		CFStringRef						messageText = nullptr;
-		CFStringRef						helpText = nullptr;
-		DialogRef						dialog = nullptr;
-		
-		
-		error = GetStandardAlertDefaultParams(&params, kStdCFStringAlertVersionOne);
-		params.defaultButton = kAlertStdAlertOKButton;
-		params.defaultText = REINTERPRET_CAST(kAlertDefaultOKText, CFStringRef);
-		messageText = CFCopyLocalizedStringFromTable
-						(CFSTR("Your preferences are up to date."),
-							CFSTR("Alerts"), CFSTR("displayed if preferences on disk are the right version"));
-		helpText = CFCopyLocalizedStringFromTable
-					(CFSTR("No conversion is necessary."),
-						CFSTR("Alerts"), CFSTR("displayed if preferences on disk are the right version"));
-		error = CreateStandardAlert(kAlertNoteAlert, messageText, helpText, &params, &dialog);
-		error = RunStandardAlert(dialog, nullptr/* filter */, nullptr/* item hit */);
-	#endif
+		// preferences are identical, nothing to do; if the application
+		// was launched automatically, then it should not have been
+		std::cerr << "MacTelnet Preferences Converter: prefs-version on disk (" << diskVersion << ") is current, nothing to convert" << std::endl;
 		doConvert = false;
 	}
 	else if (diskVersion > kCurrentPrefsVersion)
 	{
-		// warn the user that the preferences on disk are newer
-		// (in this situation, PrefsConverter should not even
-		// have been run, but perhaps the user did it manually);
-		// give the option to convert or quit
-		AlertStdCFStringAlertParamRec	params;
-		CFStringRef						messageText = nullptr;
-		CFStringRef						helpText = nullptr;
-		DialogRef						dialog = nullptr;
-		DialogItemIndex					itemHit = kAlertStdAlertCancelButton;
-		
-		
-		error = GetStandardAlertDefaultParams(&params, kStdCFStringAlertVersionOne);
-		params.defaultButton = kAlertStdAlertOKButton;
-		params.cancelButton = kAlertStdAlertCancelButton;
-		params.defaultText = CFCopyLocalizedStringFromTable(CFSTR("Continue"), CFSTR("Alerts"), CFSTR("button label"));
-		params.cancelText = REINTERPRET_CAST(kAlertDefaultCancelText, CFStringRef);
-		messageText = CFCopyLocalizedStringFromTable
-						(CFSTR("Preferences on disk are from a newer version of the application.  Continue anyway?"),
-							CFSTR("Alerts"), CFSTR("displayed if preferences on disk are from a newer version of MacTelnet"));
-		helpText = CFCopyLocalizedStringFromTable
-					(CFSTR("Unrecognized preferences will be preserved, but will have no effect in this version of MacTelnet."),
-						CFSTR("Alerts"), CFSTR("displayed if preferences on disk are from a newer version of MacTelnet"));
-		error = CreateStandardAlert(kAlertNoteAlert, messageText, helpText, &params, &dialog);
-		error = RunStandardAlert(dialog, nullptr/* filter */, &itemHit);
-		doConvert = (kAlertStdAlertOKButton == itemHit);
+		// preferences are newer, nothing to do; if the application
+		// was launched automatically, then it should not have been
+		std::cerr << "MacTelnet Preferences Converter: prefs-version on disk (" << diskVersion << ") is newer than this converter ("
+					<< kCurrentPrefsVersion << "), unable to convert" << std::endl;
+		doConvert = false;
 	}
 	else
 	{
@@ -1906,6 +1861,10 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		}
 	#endif
 		
+		// This is probably not something the user really needs to see.
+	#if 1
+		std::cerr << "MacTelnet Preferences Converter: conversion successful, new prefs-version is " << kCurrentPrefsVersion << std::endl;
+	#else
 		// display status to the user
 		{
 			// tell the user about the conversions that occurred
@@ -1952,6 +1911,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 				error = RunStandardAlert(dialog, nullptr/* filter */, nullptr/* item hit */);
 			}
 		}
+	#endif
 	}
 	else
 	{
