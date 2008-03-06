@@ -73,12 +73,16 @@ quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + qui
 # when initializing other components
 os.environ["INITIAL_APP_BUNDLE_DIR"] = bundle_dir
 
-# there should be a symlink of this name in the MacOS folder of the
-# MacTelnet application bundle (see the Xcode project); it should
-# generally point to /usr/bin/python; note that the Python interpreter
-# MUST be invoked this way (via the application bundle location) in order
-# for the OS to identify the application as MacTelnet and not Python
-interpreter = os.path.join(macos_dir, "python")
+# the interpreter MUST be invoked from a location physically inside the
+# bundle in order for the system to assign the correct bundle for such
+# things as the application menu and preferences; prior to Leopard, a
+# symlink to /usr/bin/python is sufficient, but guess what: on Leopard
+# that doesn't work, so the mini-executable from the "Build Applet"
+# utility is used on Leopard (named "python2.5")...sigh...
+if sys.version_info[0] > 2 or sys.version_info[1] > 3:
+    interpreter = os.path.join(macos_dir, "python2.5")
+else:
+    interpreter = os.path.join(macos_dir, "python")
 os.environ["PYTHONEXECUTABLE"] = interpreter
 
 # specify where dependent Python and C++ libraries will reside

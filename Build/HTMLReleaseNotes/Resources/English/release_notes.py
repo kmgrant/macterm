@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080306',
     '20080305',
     '20080303',
     '20080302',
@@ -101,6 +102,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080306': [
+		'Finally on Leopard, the application menu is no longer named "Python", and preferences will no longer be saved in the Python domain.',
+	],
 	'20080305': [
 		'New Login Shell (hidden command requiring Option key in File menu) now runs "/usr/bin/login -p -f user" so there is no password prompt.',
 	],
