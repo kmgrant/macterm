@@ -72,6 +72,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 IMPORTANT
@@ -79,29 +80,20 @@ IMPORTANT
 The following values MUST agree with the control IDs in
 the "Dialog" NIB from the package "FindDialog.nib".
 */
-enum
-{
-	kSignatureMyButtonSearch			= 'Find',
-	kSignatureMyButtonCancel			= 'Canc',
-	kSignatureMyButtonHelp				= 'Help',
-	kSignatureMyFieldSearchKeywords		= 'KeyW',
-	kSignatureMyKeywordHistoryMenu		= 'HMnu',
-	kSignatureMyTextStatus				= 'Stat',
-	kSignatureMyIconNotFound			= 'Icon',
-	kSignatureMyArrowsSearchProgress	= 'Prog',
-	kSignatureMyCheckBoxIgnoreCase		= 'XIgc'
-};
-static HIViewID const		idMyButtonSearch			= { kSignatureMyButtonSearch,				0/* ID */ };
-static HIViewID const		idMyButtonCancel			= { kSignatureMyButtonCancel,				0/* ID */ };
-static HIViewID const		idMyButtonHelp				= { kSignatureMyButtonHelp,					0/* ID */ };
-static HIViewID const		idMyFieldSearchKeywords		= { kSignatureMyFieldSearchKeywords,		0/* ID */ };
-static HIViewID const		idMyKeywordHistoryMenu		= { kSignatureMyKeywordHistoryMenu,			0/* ID */ };
-static HIViewID const		idMyTextStatus				= { kSignatureMyTextStatus,					0/* ID */ };
-static HIViewID const		idMyIconNotFound			= { kSignatureMyIconNotFound,				0/* ID */ };
-static HIViewID const		idMyArrowsSearchProgress	= { kSignatureMyArrowsSearchProgress,		0/* ID */ };
-static HIViewID const		idMyCheckBoxIgnoreCase		= { kSignatureMyCheckBoxIgnoreCase,			0/* ID */ };
+HIViewID const		idMyButtonSearch			= { 'Find',		0/* ID */ };
+HIViewID const		idMyButtonCancel			= { 'Canc',		0/* ID */ };
+HIViewID const		idMyButtonHelp				= { 'Help',		0/* ID */ };
+HIViewID const		idMyFieldSearchKeywords		= { 'KeyW',		0/* ID */ };
+HIViewID const		idMyKeywordHistoryMenu		= { 'HMnu',		0/* ID */ };
+HIViewID const		idMyTextStatus				= { 'Stat',		0/* ID */ };
+HIViewID const		idMyIconNotFound			= { 'Icon',		0/* ID */ };
+HIViewID const		idMyArrowsSearchProgress	= { 'Prog',		0/* ID */ };
+HIViewID const		idMyCheckBoxIgnoreCase		= { 'XIgc',		0/* ID */ };
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
 
 typedef std::vector< Terminal_RangeDescription >	My_TerminalRangeList;
 
@@ -139,22 +131,27 @@ typedef My_FindDialog*		My_FindDialogPtr;
 typedef MemoryBlockPtrLocker< FindDialog_Ref, My_FindDialog >	My_FindDialogPtrLocker;
 typedef LockAcquireRelease< FindDialog_Ref, My_FindDialog >		My_FindDialogAutoLocker;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void					addToHistory					(My_FindDialogPtr, CFStringRef);
-static Boolean				handleItemHit					(My_FindDialogPtr, HIViewID const&);
-static void					handleNewSize					(WindowRef, Float32, Float32, void*);
-static Boolean				initiateSearch					(My_FindDialogPtr, My_TerminalRangeList&);
-static pascal OSStatus		receiveFieldChanged				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void				addToHistory					(My_FindDialogPtr, CFStringRef);
+Boolean				handleItemHit					(My_FindDialogPtr, HIViewID const&);
+void				handleNewSize					(WindowRef, Float32, Float32, void*);
+Boolean				initiateSearch					(My_FindDialogPtr);
+pascal OSStatus		receiveFieldChanged				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_FindDialogPtrLocker&		gFindDialogPtrLocks()	{ static My_FindDialogPtrLocker x; return x; }
-}
+My_FindDialogPtrLocker&		gFindDialogPtrLocks()	{ static My_FindDialogPtrLocker x; return x; }
+
+} // anonymous namespace
 
 
 
@@ -485,6 +482,7 @@ FindDialog_StandardCloseNotifyProc		(FindDialog_Ref		inDialogThatClosed)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Adds the specified command line to the history buffer,
@@ -495,7 +493,7 @@ Empty or blank strings are ignored.
 
 (3.0)
 */
-static void
+void
 addToHistory	(My_FindDialogPtr	inPtr,
 				 CFStringRef		inText)
 {
@@ -536,75 +534,63 @@ to be IGNORED.
 
 (3.0)
 */
-static Boolean
+Boolean
 handleItemHit	(My_FindDialogPtr	inPtr,
 				 HIViewID const&	inHIViewID)
 {
-	Boolean		result = false;
+	HIViewIDWrap const	idWrap(inHIViewID);
+	Boolean				result = false;
 	
 	
-	switch (inHIViewID.signature)
+	if (idWrap == idMyButtonSearch)
 	{
-	case kSignatureMyButtonSearch:
+		Boolean		foundSomething = initiateSearch(inPtr);
+		
+		
+		// clear keyboard focus
+		(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
+		
+		if (foundSomething)
 		{
-			My_TerminalRangeList	searchResults;
-			Boolean					foundSomething = initiateSearch(inPtr, searchResults);
+			// do not animate, hide the sheet immediately
+			if (noErr == DetachSheetWindow(inPtr->dialogWindow)) HideWindow(inPtr->dialogWindow);
+			else HideSheetWindow(inPtr->dialogWindow);
 			
-			
-			// donÕt close the dialog unless something was found
-			if (foundSomething)
-			{
-				// clear keyboard focus
-				(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
-				
-			#if 0
-				HideSheetWindow(inPtr->dialogWindow);
-			#else
-				// do not animate, hide the sheet immediately
-				if (noErr == DetachSheetWindow(inPtr->dialogWindow)) HideWindow(inPtr->dialogWindow);
-				else HideSheetWindow(inPtr->dialogWindow);
-			#endif
-				
-				// show the user where the text is
-				TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow));
-				
-				// notify of close
-				if (nullptr != inPtr->closeNotifyProc)
-				{
-					FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
-				}
-			}
-			else
-			{
-				result = true; // pretend the OK button was NOT clicked, so the modal dialog stays open
-				
-				// select all of the text in the keywords field for easy replacement of the failed query
-				(OSStatus)HIViewSetNextFocus(HIViewGetRoot(inPtr->dialogWindow), nullptr);
-				(OSStatus)HIViewAdvanceFocus(inPtr->fieldKeywords, 0/* modifiers */);
-			}
-			
-			// remember this string for later
-			{
-				CFStringRef		newHistoryString = nullptr;
-				
-				
-				FindDialog_GetSearchString(inPtr->selfRef, newHistoryString);
-				addToHistory(inPtr, newHistoryString);
-			}
+			// show the user where the text is
+			TerminalView_ZoomToSearchResults(TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow));
 		}
-		break;
-	
-	case kSignatureMyButtonCancel:
+		else
+		{
+			// no results to highlight, so close normally
+			HideSheetWindow(inPtr->dialogWindow);
+		}
+		
+		// notify of close
+		if (nullptr != inPtr->closeNotifyProc)
+		{
+			FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
+		}
+		
+		// remember this string for later
+		{
+			CFStringRef		newHistoryString = nullptr;
+			
+			
+			FindDialog_GetSearchString(inPtr->selfRef, newHistoryString);
+			addToHistory(inPtr, newHistoryString);
+		}
+	}
+	else if (idWrap == idMyButtonCancel)
+	{
 		// user cancelled - restore to any previous search
 		if (CFArrayGetCount(inPtr->keywordHistory.returnCFMutableArrayRef()) > 0)
 		{
-			CFStringRef				historyString = CFUtilities_StringCast
-													(CFArrayGetValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0));
-			My_TerminalRangeList	unusedResults;
+			CFStringRef		historyString = CFUtilities_StringCast
+											(CFArrayGetValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0));
 			
 			
 			SetControlTextWithCFString(inPtr->fieldKeywords, (nullptr != historyString) ? historyString : CFSTR(""));
-			initiateSearch(inPtr, unusedResults);
+			(Boolean)initiateSearch(inPtr);
 		}
 		else
 		{
@@ -620,14 +606,10 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 		{
 			FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
 		}
-		break;
-	
-	case kSignatureMyButtonHelp:
+	}
+	else if (idWrap == idMyButtonHelp)
+	{
 		HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseFind);
-		break;
-	
-	default:
-		break;
 	}
 	
 	return result;
@@ -639,7 +621,7 @@ Moves or resizes the controls in Find dialogs.
 
 (3.0)
 */
-static void
+void
 handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 				 Float32	inDeltaX,
 				 Float32	inDeltaY,
@@ -675,17 +657,20 @@ Returns true only if something is found.
 
 (3.1)
 */
-static Boolean
-initiateSearch	(My_FindDialogPtr		inPtr,
-				 My_TerminalRangeList&	inoutSearchResults)
+Boolean
+initiateSearch	(My_FindDialogPtr	inPtr)
 {
 	TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
 	TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
+	My_TerminalRangeList	searchResults;
 	Terminal_SearchFlags	flags = 0;
 	Terminal_Result			searchStatus = kTerminal_ResultOK;
 	CFStringRef				searchQueryCFString = nullptr;
 	Boolean					result = false;
 	
+	
+	// remove highlighting from any previous searches
+	TerminalView_FindNothing(view);
 	
 	// initiate synchronous (should be asynchronous!) search
 	GetControlTextAsCFString(inPtr->fieldKeywords, searchQueryCFString);
@@ -696,9 +681,6 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 	}
 	else
 	{
-		// remove highlighting from any previous searches
-		TerminalView_FindNothing(view);
-		
 		// put the sheet in progress mode
 		DeactivateControl(inPtr->buttonSearch);
 		DeactivateControl(inPtr->checkboxIgnoreCase);
@@ -711,14 +693,14 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 		}
 		
 		// initiate synchronous (should it be asynchronous?) search
-		searchStatus = Terminal_Search(screen, searchQueryCFString, flags, inoutSearchResults);
+		searchStatus = Terminal_Search(screen, searchQueryCFString, flags, searchResults);
 		if (kTerminal_ResultOK == searchStatus)
 		{
 			UIStrings_Result	stringResult = kUIStrings_ResultOK;
 			CFStringRef			statusCFString = nullptr;
 			
 			
-			if (inoutSearchResults.empty())
+			if (searchResults.empty())
 			{
 				result = false;
 				
@@ -740,14 +722,14 @@ initiateSearch	(My_FindDialogPtr		inPtr,
 					if (stringResult.ok())
 					{
 						statusCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, templateCFString,
-																	STATIC_CAST(inoutSearchResults.size(), unsigned long));
+																	STATIC_CAST(searchResults.size(), unsigned long));
 						CFRelease(templateCFString), templateCFString = nullptr;
 					}
 				}
 				
 				// highlight search results
-				for (std::vector< Terminal_RangeDescription >::const_iterator toResultRange = inoutSearchResults.begin();
-						toResultRange != inoutSearchResults.end(); ++toResultRange)
+				for (std::vector< Terminal_RangeDescription >::const_iterator toResultRange = searchResults.begin();
+						toResultRange != searchResults.end(); ++toResultRange)
 				{
 					TerminalView_CellRange		highlightRange;
 					TerminalView_Result			viewResult = kTerminalView_ResultOK;
@@ -786,7 +768,7 @@ find-as-you-type.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
@@ -806,12 +788,7 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 	result = CallNextEventHandler(inHandlerCallRef, inEvent);
 	
 	// initiate find-as-you-type (ignore results for now)
-	{
-		My_TerminalRangeList	unusedResults;
-		
-		
-		initiateSearch(ptr, unusedResults);
-	}
+	(Boolean)initiateSearch(ptr);
 	
 	return result;
 }// receiveFieldChanged
@@ -823,7 +800,7 @@ for the buttons in window title dialogs.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
@@ -861,12 +838,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandRetrySearch:
 				// retry search (e.g. checkbox affecting search parameters
 				// was hit) so that terminal highlighting is up-to-date
-				{
-					My_TerminalRangeList	unusedResults;
-					
-					
-					initiateSearch(ptr, unusedResults);
-				}
+				(Boolean)initiateSearch(ptr);
 				break;
 			
 			case kCommandContextSensitiveHelp:
@@ -896,7 +868,7 @@ pop-up menuÕs currently-checked item).
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inFindDialogRef)
@@ -925,18 +897,19 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			assert(commandInfo.menu.menuItemIndex >= 1);
 			if (CFArrayGetCount(ptr->keywordHistory.returnCFMutableArrayRef()) >= commandInfo.menu.menuItemIndex)
 			{
-				CFStringRef				historyString = CFUtilities_StringCast
-														(CFArrayGetValueAtIndex(ptr->keywordHistory.returnCFMutableArrayRef(),
-																				commandInfo.menu.menuItemIndex - 1));
-				My_TerminalRangeList	unusedResults;
+				CFStringRef		historyString = CFUtilities_StringCast
+												(CFArrayGetValueAtIndex(ptr->keywordHistory.returnCFMutableArrayRef(),
+																		commandInfo.menu.menuItemIndex - 1));
 				
 				
 				SetControlTextWithCFString(ptr->fieldKeywords, (nullptr != historyString) ? historyString : CFSTR(""));
-				initiateSearch(ptr, unusedResults);
+				(Boolean)initiateSearch(ptr);
 			}
 		}
 	}
 	return result;
 }// receiveHistoryCommandProcess
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
