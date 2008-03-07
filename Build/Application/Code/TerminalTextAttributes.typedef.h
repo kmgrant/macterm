@@ -102,7 +102,7 @@ some flexibility where it was badly needed.
  |  |  |  |   |  |  |  |   |  |  |  |   |  |
  |  |  |  |   |  |  |  |   |  |  |  |   |  +--------- 18: VT graphics enabled?
  |  |  |  |   |  |  |  |   |  |  |  |   |
- |  |  |  |   |  |  |  |   |  |  |  |   +------------ 19: is high ASCII used anywhere on the line; LINE-GLOBAL
+ |  |  |  |   |  |  |  |   |  |  |  |   +------------ 19: is selected as a search result?
  |  |  |  |   |  |  |  |   |  |  |  |
  |  |  |  |   |  |  |  |   |  |  |  +--- 20: is selected?
  |  |  |  |   |  |  |  |   |  |  |
@@ -141,7 +141,7 @@ enum
 																	//!  text is to be rendered
 	kTerminalTextAttributeVTGraphics		= 0x00040000,			//!< should VT graphics be used? (exact glyphs depend on the current
 																	//!  terminal; for example, graphics are different for VT52 than VT100)
-	kTerminalTextAttributeHighASCII			= 0x00080000,			//!< does any byte on the line require 8 bits, i.e. greater than 127?
+	kTerminalTextAttributeSearchResult		= 0x00080000,			//!< is text highlighted as being part of a search result?
 	kTerminalTextAttributeSelected			= 0x00100000,			//!< is text highlighted as being part of the selection?
 	kMaskTerminalTextAttributeAge			= 0x00E00000			//!< at what stage of decay is the text?
 };

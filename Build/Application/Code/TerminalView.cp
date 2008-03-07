@@ -339,7 +339,7 @@ static void				getVirtualVisibleRegion			(TerminalViewPtr, SInt16*, SInt16*, SIn
 static void				handleMultiClick				(TerminalViewPtr, UInt16);
 static void				handleNewViewContainerBounds	(HIViewRef, Float32, Float32, void*);
 static void				highlightCurrentSelection		(TerminalViewPtr, Boolean, Boolean);
-static void				highlightVirtualRange			(TerminalViewPtr, TerminalView_CellRange const&, Boolean, Boolean);
+static void				highlightVirtualRange			(TerminalViewPtr, TerminalView_CellRange const&, TerminalTextAttributes, Boolean, Boolean);
 static void				invalidateRowSection			(TerminalViewPtr, UInt16, UInt16, UInt16);
 static void				invalidateScreenRectangle		(TerminalViewPtr);
 static Boolean			isMonospacedFont				(FMFontFamily);
@@ -440,6 +440,8 @@ static inline Boolean STYLE_IS_DOUBLE_HEIGHT_BOTTOM		(TerminalTextAttributes x) 
 																								kTerminalTextAttributeDoubleHeightBottom); }
 
 static inline Boolean STYLE_USE_VT_GRAPHICS				(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeVTGraphics) != 0); }
+
+static inline Boolean STYLE_SEARCH_RESULT				(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeSearchResult) != 0); }
 
 static inline Boolean STYLE_SELECTED					(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeSelected) != 0); }
 
@@ -772,7 +774,8 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 		for (My_CellRangeList::const_iterator toRange = viewPtr->text.searchResults.begin();
 				toRange != viewPtr->text.searchResults.end(); ++toRange)
 		{
-			highlightVirtualRange(viewPtr, *toRange, false/* is highlighted */, true/* redraw */);
+			highlightVirtualRange(viewPtr, *toRange, kTerminalTextAttributeSearchResult,
+									false/* is highlighted */, true/* redraw */);
 		}
 		viewPtr->text.searchResults.clear();
 	}
@@ -811,6 +814,7 @@ TerminalView_FindVirtualRange	(TerminalViewRef				inView,
 		viewPtr->text.searchResults.push_back(inSelection);
 		assert(false == viewPtr->text.searchResults.empty());
 		highlightVirtualRange(viewPtr, viewPtr->text.searchResults.back(),
+								kTerminalTextAttributeSearchResult,
 								true/* is highlighted */, true/* redraw */);
 	}
 	return result;
@@ -5771,7 +5775,8 @@ highlightCurrentSelection	(TerminalViewPtr	inTerminalViewPtr,
 								inTerminalViewPtr->text.selection.range.second.first,
 								inTerminalViewPtr->text.selection.range.second.second);
 #endif
-	highlightVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range, inIsHighlighted, inRedraw);
+	highlightVirtualRange(inTerminalViewPtr, inTerminalViewPtr->text.selection.range,
+							kTerminalTextAttributeSelected, inIsHighlighted, inRedraw);
 }// highlightCurrentSelection
 
 
@@ -5806,6 +5811,7 @@ LOCALIZE THIS:	The highlighting scheme should be
 static void
 highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 						 TerminalView_CellRange const&	inRange,
+						 TerminalTextAttributes			inHighlightingStyle,
 						 Boolean						inIsHighlighted,
 						 Boolean						inRedraw)
 {
@@ -5828,8 +5834,8 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 								(inTerminalViewPtr->screen.ref, lineIterator, kNumberOfRows,
 									orderedRange.first.first, orderedRange.second.first,
 									inTerminalViewPtr->text.selection.isRectangular,
-									(inIsHighlighted) ? kTerminalTextAttributeSelected : kNoTerminalTextAttributes/* attributes to set */,
-									(inIsHighlighted) ? kNoTerminalTextAttributes : kTerminalTextAttributeSelected/* attributes to clear */);
+									(inIsHighlighted) ? inHighlightingStyle : kNoTerminalTextAttributes/* attributes to set */,
+									(inIsHighlighted) ? kNoTerminalTextAttributes : inHighlightingStyle/* attributes to clear */);
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 		}
 	}
@@ -7875,7 +7881,8 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 				{
 					// TEMPORARY - could adjust this to only invalidate the part that was
 					// actually added/removed
-					highlightVirtualRange(viewPtr, oldSelectionRange, false/* highlighted */, true/* draw */);
+					highlightVirtualRange(viewPtr, oldSelectionRange, kTerminalTextAttributeSelected,
+											false/* highlighted */, true/* draw */);
 					highlightCurrentSelection(viewPtr, true/* highlighted */, true/* draw */);
 					copySelectedTextIfUserPreference(viewPtr);
 				}
@@ -9532,6 +9539,13 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 			}
 		}
 		
+		// give search results a special appearance
+		if (STYLE_SEARCH_RESULT(inAttributes))
+		{
+			UseSelectionColors();
+			UseLighterColors();
+		}
+		
 		// finally, check the foreground and background colors; do not allow
 		// them to be identical unless “concealed” is the style (e.g. perhaps
 		// text is ANSI white and the background is white; that's invisible!)
@@ -9660,7 +9674,7 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 		}
 		
 		// 3.0 - for a sufficiently large font, allow boldface
-		if (STYLE_BOLD(inAttributes))
+		if (STYLE_BOLD(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
 		{
 			SInt16		fontSize = GetPortTextSize(currentPort);
 			Style		fontFace = GetPortTextFace(currentPort);
@@ -9700,7 +9714,7 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 		}
 		
 		// 3.0 - for a sufficiently large font, allow underlining
-		if (STYLE_UNDERLINE(inAttributes))
+		if (STYLE_UNDERLINE(inAttributes) || STYLE_SEARCH_RESULT(inAttributes))
 		{
 			SInt16		fontSize = GetPortTextSize(currentPort);
 			Style		fontFace = GetPortTextFace(currentPort);

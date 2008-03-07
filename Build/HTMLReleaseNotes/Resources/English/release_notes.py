@@ -105,6 +105,7 @@ notes_by_version = {
 	'20080306': [
 		'Finally on Leopard, the application menu is no longer named "Python", and preferences will no longer be saved in the Python domain.',
 		'The preferences converter no longer displays graphical alerts, although it will print a status line to the console.',
+		'Find dialog search highlighting now has a unique appearance that does not interfere with normal text selection.',
 	],
 	'20080305': [
 		'New Login Shell (hidden command requiring Option key in File menu) now runs "/usr/bin/login -p -f user" so there is no password prompt.',
