@@ -104,6 +104,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080306': [
 		'Finally on Leopard, the application menu is no longer named "Python", and preferences will no longer be saved in the Python domain.',
+		'Fixed bug with files not opening correctly after the application first launched.',
 		'The preferences converter no longer displays graphical alerts, although it will print a status line to the console.',
 		'Find dialog search highlighting now has a unique appearance that does not interfere with normal text selection.',
 		'Find dialog now allows blank queries, so it is possible to remove all previous search highlighting when the dialog is closed.',
