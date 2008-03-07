@@ -190,10 +190,7 @@ StatusIcon_New		(WindowRef		inOwningWindow)
 		SetControlVisibility(control, true/* visible */, true/* draw */);
 		SetControlReference(control, REINTERPRET_CAST(result, SInt32)/* encode StatusIconRef into ref. con. */);
 		ptr->idleUPP = NewEventLoopTimerUPP(iconIdle);
-		error = InstallEventLoopTimer(GetMainEventLoop(), kEventDurationNoWait/* delay before first fire */,
-										kEventDurationSecond/* time between fires */, ptr->idleUPP,
-										result/* context */, &ptr->idleTimer);
-		assert(error == noErr);
+		ptr->idleTimer = nullptr;
 		ptr->drawUPP = NewControlUserPaneDrawUPP(iconUserPaneDraw);
 		error = SetControlData(control, kControlEntireControl, kControlUserPaneDrawProcTag,
 									sizeof(ptr->drawUPP), &ptr->drawUPP);
@@ -240,7 +237,7 @@ StatusIcon_Dispose		(StatusIconRef*		inoutRefPtr)
 			IconAnimationStageList::iterator	animationStageIterator;
 			
 			
-			(OSStatus)RemoveEventLoopTimer(ptr->idleTimer), ptr->idleTimer = nullptr;
+			if (ptr->idleTimer != nullptr) (OSStatus)RemoveEventLoopTimer(ptr->idleTimer), ptr->idleTimer = nullptr;
 			DisposeEventLoopTimerUPP(ptr->idleUPP), ptr->idleUPP = nullptr;
 			DisposeControlUserPaneDrawUPP(ptr->drawUPP), ptr->drawUPP = nullptr;
 			DisposeControlUserPaneHitTestUPP(ptr->hitTestUPP), ptr->hitTestUPP = nullptr;
@@ -470,6 +467,16 @@ StatusIcon_SetDoAnimate		(StatusIconRef	inRef,
 	{
 		ptr->animate = inIconShouldAnimate;
 		if (inResetStages) resetAnimationStage(ptr);
+		if ((ptr->animate) && (ptr->idleTimer != nullptr))
+		{
+			OSStatus	error = noErr;
+			
+			
+			error = InstallEventLoopTimer(GetMainEventLoop(), kEventDurationNoWait/* delay before first fire */,
+											kEventDurationSecond/* time between fires */, ptr->idleUPP,
+											inRef/* context */, &ptr->idleTimer);
+			assert(error == noErr);
+		}
 	}
 }// SetDoAnimate
 
