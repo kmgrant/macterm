@@ -118,6 +118,7 @@ struct My_GenericDialog
 	GenericDialog_CloseNotifyProcPtr		closeNotifyProc;				//!< routine to call when the dialog is dismissed
 	CommonEventHandlers_WindowResizer		windowResizeHandler;			//!< invoked when a window has been resized
 	HelpSystem_WindowKeyPhraseSetter		contextualHelpSetup;			//!< ensures proper contextual help for this window
+	void*									userDataPtr;					//!< optional; external data
 };
 typedef My_GenericDialog*			My_GenericDialogPtr;
 typedef My_GenericDialog const*		My_GenericDialogConstPtr;
@@ -326,6 +327,25 @@ GenericDialog_ReturnHostedPanel		(GenericDialog_Ref	inDialog)
 
 
 /*!
+Returns whatever was set with GenericDialog_SetImplementation,
+or nullptr.
+
+(3.1)
+*/
+void*
+GenericDialog_ReturnImplementation	(GenericDialog_Ref	inDialog)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	void*						result = nullptr;
+	
+	
+	if (nullptr != ptr) result = ptr->userDataPtr;
+	
+	return result;
+}// ReturnImplementation
+
+
+/*!
 Returns a reference to the terminal window being
 customized by a particular dialog.
 
@@ -342,6 +362,23 @@ GenericDialog_ReturnParentWindow	(GenericDialog_Ref	inDialog)
 	
 	return result;
 }// ReturnParentWindow
+
+
+/*!
+Associates arbitrary user data with your dialog.
+Retrieve with GenericDialog_ReturnImplementation().
+
+(3.1)
+*/
+void
+GenericDialog_SetImplementation		(GenericDialog_Ref	inDialog,
+									 void*				inContext)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	ptr->userDataPtr = inContext;
+}// SetImplementation
 
 
 /*!
@@ -402,7 +439,8 @@ buttonHICommandsHandler			(GetWindowEventTarget(this->dialogWindow), receiveHICo
 									this->selfRef/* user data */),
 closeNotifyProc					(inCloseNotifyProcPtr),
 windowResizeHandler				(),
-contextualHelpSetup				(this->dialogWindow, inHelpButtonAction)
+contextualHelpSetup				(this->dialogWindow, inHelpButtonAction),
+userDataPtr						(nullptr)
 {
 	OSStatus	error = noErr;
 	HISize		panelMarginsTopLeft;
@@ -414,8 +452,6 @@ contextualHelpSetup				(this->dialogWindow, inHelpButtonAction)
 	// allow the panel to create its controls by providing a pointer to the containing window
 	Panel_SendMessageCreateViews(this->hostedPanel, this->dialogWindow);
 	Panel_GetContainerView(this->hostedPanel, panelContainer);
-	error = HIViewPlaceInSuperviewAt(panelContainer, panelMarginsTopLeft.width, panelMarginsTopLeft.height);
-	assert_noerr(error);
 	
 	// figure out where the panel should be, and how much space is around it
 	{

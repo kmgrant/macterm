@@ -97,8 +97,15 @@ void
 Panel_Ref
 	GenericDialog_ReturnHostedPanel				(GenericDialog_Ref					inDialog);
 
+void*
+	GenericDialog_ReturnImplementation			(GenericDialog_Ref					inDialog);
+
 HIWindowRef
 	GenericDialog_ReturnParentWindow			(GenericDialog_Ref					inDialog);
+
+void
+	GenericDialog_SetImplementation				(GenericDialog_Ref					inDialog,
+												 void*								inDataPtr);
 
 void
 	GenericDialog_StandardCloseNotifyProc		(GenericDialog_Ref					inDialogThatClosed,
