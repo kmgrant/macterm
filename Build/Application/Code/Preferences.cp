@@ -2146,77 +2146,6 @@ Preferences_InsertContextNamesInMenu	(Preferences_Class		inClass,
 
 
 /*!
-Arranges for a callback to be invoked whenever a user
-preference changes.  The context passed to listeners
-is currently reserved and set to nullptr.
-
-(3.0)
-*/
-Preferences_Result
-Preferences_ListenForChanges	(ListenerModel_ListenerRef	inListener,
-								 Preferences_Change			inForWhatChange,
-								 Boolean					inNotifyOfInitialValue)
-{
-	Preferences_Result		result = kPreferences_ResultBadVersionDataNotAvailable;
-	
-	
-	switch (inForWhatChange)
-	{
-	// If you change the list below, also check the preference-setting
-	// code to make sure that the tag values checked here REALLY DO
-	// trigger callback invocations!  Also keep this in sync with
-	// Preferences_StopListeningForChanges() and the comments in
-	// "Preferences.h".
-	case kPreferences_TagArrangeWindowsUsingTabs:
-	case kPreferences_TagBellSound:
-	case kPreferences_TagCursorBlinks:
-	case kPreferences_TagDontDimBackgroundScreens:
-	case kPreferences_TagMacrosMenuVisible:
-	case kPreferences_TagMapBackquote:
-	case kPreferences_TagMenuItemKeys:
-	case kPreferences_TagNewCommandShortcutEffect:
-	case kPreferences_TagPureInverse:
-	case kPreferences_TagSimplifiedUserInterface:
-	case kPreferences_TagTerminalCursorType:
-	case kPreferences_TagTerminalResizeAffectsFontSize:
-	case kPreferences_TagTerminalScrollDelay:
-	case kPreferences_ChangeContextName:
-	case kPreferences_ChangeNumberOfContexts:
-		result = assertInitialized();
-		if (result == kPreferences_ResultOK)
-		{
-			OSStatus	error = noErr;
-			
-			
-			error = ListenerModel_AddListenerForEvent(gPreferenceEventListenerModel, inForWhatChange,
-														inListener);
-			if (error != noErr)
-			{
-				// should probably define a more specific error type here...
-				result = kPreferences_ResultInsufficientBufferSpace;
-			}
-			
-			// if requested, invoke the callback immediately so that
-			// the receiver can react accordingly given the initial
-			// value of a particular preference
-			if (inNotifyOfInitialValue)
-			{
-				changeNotify(inForWhatChange, nullptr/* context */, true/* is initial value */);
-			}
-		}
-		break;
-	
-	default:
-		// unsupported tag for notifiers
-		result = kPreferences_ResultUnknownTagOrClass;
-		break;
-	}
-	
-	return result;
-}// ListenForChanges
-
-
-/*!
 Saves any in-memory preferences data model changes to
 disk, and updates the in-memory model with any new
 settings on disk.  This includes all contexts that
@@ -2357,6 +2286,76 @@ Preferences_SetWindowArrangementData	(WindowRef			inWindow,
 
 
 /*!
+Arranges for a callback to be invoked whenever a user
+preference changes.  The context passed to listeners
+is currently reserved and set to nullptr.
+
+(3.0)
+*/
+Preferences_Result
+Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
+								 Preferences_Change			inForWhatChange,
+								 Boolean					inNotifyOfInitialValue)
+{
+	Preferences_Result		result = kPreferences_ResultBadVersionDataNotAvailable;
+	
+	
+	switch (inForWhatChange)
+	{
+	// If you change the list below, also check the preference-setting
+	// code to make sure that the tag values checked here REALLY DO
+	// trigger callback invocations!  Also keep this in sync with
+	// Preferences_StopMonitoring() and the comments in "Preferences.h".
+	case kPreferences_TagArrangeWindowsUsingTabs:
+	case kPreferences_TagBellSound:
+	case kPreferences_TagCursorBlinks:
+	case kPreferences_TagDontDimBackgroundScreens:
+	case kPreferences_TagMacrosMenuVisible:
+	case kPreferences_TagMapBackquote:
+	case kPreferences_TagMenuItemKeys:
+	case kPreferences_TagNewCommandShortcutEffect:
+	case kPreferences_TagPureInverse:
+	case kPreferences_TagSimplifiedUserInterface:
+	case kPreferences_TagTerminalCursorType:
+	case kPreferences_TagTerminalResizeAffectsFontSize:
+	case kPreferences_TagTerminalScrollDelay:
+	case kPreferences_ChangeContextName:
+	case kPreferences_ChangeNumberOfContexts:
+		result = assertInitialized();
+		if (result == kPreferences_ResultOK)
+		{
+			OSStatus	error = noErr;
+			
+			
+			error = ListenerModel_AddListenerForEvent(gPreferenceEventListenerModel, inForWhatChange,
+														inListener);
+			if (error != noErr)
+			{
+				// should probably define a more specific error type here...
+				result = kPreferences_ResultInsufficientBufferSpace;
+			}
+			
+			// if requested, invoke the callback immediately so that
+			// the receiver can react accordingly given the initial
+			// value of a particular preference
+			if (inNotifyOfInitialValue)
+			{
+				changeNotify(inForWhatChange, nullptr/* context */, true/* is initial value */);
+			}
+		}
+		break;
+	
+	default:
+		// unsupported tag for notifiers
+		result = kPreferences_ResultUnknownTagOrClass;
+		break;
+	}
+	
+	return result;
+}// StartMonitoring
+
+
+/*!
 Arranges for a callback to no longer be invoked when
 the specified user preference changes.
 
@@ -2371,15 +2370,15 @@ polling solution
 (3.0)
 */
 Preferences_Result
-Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
-										 Preferences_Change			inForWhatChange)
+Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
+							 Preferences_Change			inForWhatChange)
 {
 	Preferences_Result		result = kPreferences_ResultBadVersionDataNotAvailable;
 	
 	
 	switch (inForWhatChange)
 	{
-	// Keep this in sync with Preferences_ListenForChanges() and the
+	// Keep this in sync with Preferences_StartMonitoring() and the
 	// comments in "Preferences.h".
 	case kPreferences_TagArrangeWindowsUsingTabs:
 	case kPreferences_TagBellSound:
@@ -2410,7 +2409,7 @@ Preferences_StopListeningForChanges		(ListenerModel_ListenerRef	inListener,
 	}
 	
 	return result;
-}// StopListeningForChanges
+}// StopMonitoring
 
 
 #pragma mark Internal Methods

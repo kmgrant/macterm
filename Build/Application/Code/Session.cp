@@ -703,10 +703,10 @@ Session_New		(Boolean	inIsReadOnly)
 		// create a callback for preferences, then listen for certain preferences
 		// (this will also initialize the preferences cache values)
 		ptr->preferencesListener = ListenerModel_NewStandardListener(preferenceChanged, result/* context */);
-		Preferences_ListenForChanges(ptr->preferencesListener, kPreferences_TagCursorBlinks,
-										true/* call immediately to initialize */);
-		Preferences_ListenForChanges(ptr->preferencesListener, kPreferences_TagMapBackquote,
-										true/* call immediately to initialize */);
+		Preferences_StartMonitoring(ptr->preferencesListener, kPreferences_TagCursorBlinks,
+									true/* call immediately to initialize */);
+		Preferences_StartMonitoring(ptr->preferencesListener, kPreferences_TagMapBackquote,
+									true/* call immediately to initialize */);
 	}
 	
 	return result;
@@ -740,8 +740,8 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 			
 			
 			// clean up
-			Preferences_StopListeningForChanges(ptr->preferencesListener, kPreferences_TagCursorBlinks);
-			Preferences_StopListeningForChanges(ptr->preferencesListener, kPreferences_TagMapBackquote);
+			Preferences_StopMonitoring(ptr->preferencesListener, kPreferences_TagCursorBlinks);
+			Preferences_StopMonitoring(ptr->preferencesListener, kPreferences_TagMapBackquote);
 			ListenerModel_ReleaseListener(&ptr->preferencesListener);
 			
 			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeState, ptr->changeListener);

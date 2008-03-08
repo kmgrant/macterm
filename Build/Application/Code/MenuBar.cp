@@ -218,23 +218,23 @@ MenuBar_Init ()
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_ListenForChanges
+		prefsResult = Preferences_StartMonitoring
 						(gPreferenceChangeEventListener, kPreferences_TagArrangeWindowsUsingTabs,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ListenForChanges
+		prefsResult = Preferences_StartMonitoring
 						(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ListenForChanges
+		prefsResult = Preferences_StartMonitoring
 						(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ListenForChanges
+		prefsResult = Preferences_StartMonitoring
 						(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ListenForChanges
+		prefsResult = Preferences_StartMonitoring
 						(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
@@ -337,10 +337,10 @@ void
 MenuBar_Done ()
 {
 	// disable preference change listener
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagArrangeWindowsUsingTabs);
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys);
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect);
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagArrangeWindowsUsingTabs);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 	
 	// disable session counting listener

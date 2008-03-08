@@ -332,7 +332,7 @@ enum
 
 /*!
 Lists the kinds of preferences that can trigger notification
-when they are changed.  Use Preferences_ListenForChanges()
+when they are changed.  Use Preferences_StartMonitoring()
 to establish callbacks to receive notifications.
 
 The event context passed to the listener is a pointer to a
@@ -575,12 +575,12 @@ void
 //@{
 
 Preferences_Result
-	Preferences_ListenForChanges			(ListenerModel_ListenerRef			inListener,
+	Preferences_StartMonitoring				(ListenerModel_ListenerRef			inListener,
 											 Preferences_Change					inForWhatChange,
 											 Boolean							inNotifyOfInitialValue = false);
 
 Preferences_Result
-	Preferences_StopListeningForChanges		(ListenerModel_ListenerRef			inListener,
+	Preferences_StopMonitoring				(ListenerModel_ListenerRef			inListener,
 											 Preferences_Change					inForWhatChange);
 
 //@}

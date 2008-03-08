@@ -412,7 +412,7 @@ selfRef(REINTERPRET_CAST(this, TerminalSpeaker_Ref))
 	// ask to be notified of terminal bells
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
 	Terminal_StartMonitoring(this->screen, kTerminal_ChangeText, this->bellHandler);
-	(Preferences_Result)Preferences_ListenForChanges(this->preferencesHandler, kPreferences_TagBellSound, true/* notify of initial value */);
+	(Preferences_Result)Preferences_StartMonitoring(this->preferencesHandler, kPreferences_TagBellSound, true/* notify of initial value */);
 }// My_TerminalSpeaker one-argument constructor
 
 
@@ -428,7 +428,7 @@ My_TerminalSpeaker::
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeAudioEvent, this->bellHandler);
 	Terminal_StopMonitoring(this->screen, kTerminal_ChangeText, this->bellHandler);
 	ListenerModel_ReleaseListener(&this->bellHandler);
-	(Preferences_Result)Preferences_StopListeningForChanges(this->preferencesHandler, kPreferences_TagBellSound);
+	(Preferences_Result)Preferences_StopMonitoring(this->preferencesHandler, kPreferences_TagBellSound);
 	ListenerModel_ReleaseListener(&this->preferencesHandler);
 	if (nullptr != this->speech.channel)
 	{

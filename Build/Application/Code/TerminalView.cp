@@ -533,14 +533,14 @@ TerminalView_Init ()
 		Preferences_Result		error = kPreferences_ResultOK;
 		
 		
-		error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks,
-												true/* call immediately to get initial value */);
-		error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens,
-												true/* call immediately to get initial value */);
-		error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps,
-												true/* call immediately to get initial value */);
-		error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
-												true/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks,
+											true/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens,
+											true/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps,
+											true/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
+											true/* call immediately to get initial value */);
 		// TMP - should check for errors here!
 		//if (error != kPreferences_ResultOK) ...
 	}
@@ -565,10 +565,10 @@ TerminalView_Done ()
 	
 	EventLoop_StopMonitoring(kEventLoop_GlobalEventSuspendResume, gMainEventLoopEventListener);
 	ListenerModel_ReleaseListener(&gMainEventLoopEventListener);
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks);
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens);
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
-	Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 	
 	DisposeEventLoopIdleTimerUPP(gTerminalViewPaneIdleTimerUPP), gTerminalViewPaneIdleTimerUPP = nullptr;
@@ -3090,10 +3090,10 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		Preferences_Result		error = kPreferences_ResultOK;
 		
 		
-		error = Preferences_ListenForChanges(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType,
-												false/* call immediately to get initial value */);
-		error = Preferences_ListenForChanges(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
-												false/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType,
+											false/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
+											false/* call immediately to get initial value */);
 	}
 }// initialize
 
@@ -3126,8 +3126,8 @@ TerminalView::
 	ListenerModel_ReleaseListener(&this->screen.cursorMonitor);
 	
 	// stop receiving preference change notifications
-	Preferences_StopListeningForChanges(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType);
-	Preferences_StopListeningForChanges(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize);
+	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType);
+	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize);
 	ListenerModel_ReleaseListener(&this->screen.preferenceMonitor);
 	
 	// remove idle timer

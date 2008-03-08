@@ -349,7 +349,7 @@ macroSetChangeListener		(nullptr)
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_ListenForChanges
+		prefsResult = Preferences_StartMonitoring
 						(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
@@ -371,7 +371,7 @@ MyMacrosPanelUI::
 	Macros_StopMonitoring(kMacros_ChangeContents, this->macroSetChangeListener);
 	Macros_StopMonitoring(kMacros_ChangeMode, this->macroSetChangeListener);
 	ListenerModel_ReleaseListener(&this->macroSetChangeListener);
-	Preferences_StopListeningForChanges(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible);
+	Preferences_StopMonitoring(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible);
 	ListenerModel_ReleaseListener(&this->preferenceChangeListener);
 }// MyMacrosPanelUI destructor
 

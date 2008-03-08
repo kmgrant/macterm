@@ -342,8 +342,8 @@ PrefsWindow_Done ()
 		HelpSystem_SetWindowKeyPhrase(gPreferencesWindow, kHelpSystem_KeyPhraseDefault);
 		
 		// disable preferences callbacks
-		Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts);
-		Preferences_StopListeningForChanges(gPreferenceChangeEventListener, kPreferences_ChangeContextName);
+		Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts);
+		Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_ChangeContextName);
 		ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 		
 		// disable event callbacks and destroy the window
@@ -1370,11 +1370,11 @@ init ()
 			Preferences_Result		error = kPreferences_ResultOK;
 			
 			
-			error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_ChangeContextName,
-													false/* call immediately to get initial value */);
+			error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_ChangeContextName,
+												false/* call immediately to get initial value */);
 			assert(kPreferences_ResultOK == error);
-			error = Preferences_ListenForChanges(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts,
-													true/* call immediately to get initial value */);
+			error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts,
+												true/* call immediately to get initial value */);
 			assert(kPreferences_ResultOK == error);
 		}
 	}
