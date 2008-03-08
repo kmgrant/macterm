@@ -866,6 +866,8 @@ WARNING:	Currently, cloning a Default context is
 			will also have many other irrelevant keys
 			that will never be used.
 
+See also Preferences_ContextCopy().
+
 (3.1)
 */
 Preferences_ContextRef
@@ -1492,6 +1494,64 @@ Preferences_ArrangeWindow	(WindowRef								inWindow,
 	}
 	return result;
 }// ArrangeWindow
+
+
+/*!
+Copies all the key-value pairs from the source to the
+destination (regardless of class), and does not remove
+or change any other keys defined in the destination.
+
+Unlike Preferences_NewCloneContext(), this routine does
+not create any new contexts.  It might be used to apply
+changes in a temporary context to a more permanent one.
+
+\retval kPreferences_ResultOK
+if the context was successfully copied
+
+\retval kPreferences_ResultInvalidContextReference
+if either of the specified contexts does not exist
+
+\retval kPreferences_ResultOneOrMoreNamesNotAvailable
+if there was a problem determining what data is in the source
+
+(3.1)
+*/
+Preferences_Result
+Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
+							 Preferences_ContextRef		inDestinationContext)
+{
+	My_ContextAutoLocker	basePtr(gMyContextPtrLocks(), inBaseContext);
+	My_ContextAutoLocker	destPtr(gMyContextPtrLocks(), inDestinationContext);
+	Preferences_Result		result = kPreferences_ResultOK;
+	
+	
+	if ((nullptr == basePtr) || (nullptr == destPtr)) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		CFRetainRelease		sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
+		CFArrayRef			sourceKeysCFArray = sourceKeys.returnCFArrayRef();
+		
+		
+		if (nullptr == sourceKeysCFArray) result = kPreferences_ResultOneOrMoreNamesNotAvailable;
+		else
+		{
+			CFIndex const	kNumberOfKeys = CFArrayGetCount(sourceKeysCFArray);
+			
+			
+			for (CFIndex i = 0; i < kNumberOfKeys; ++i)
+			{
+				CFStringRef const	kKeyCFStringRef = CFUtilities_StringCast
+														(CFArrayGetValueAtIndex(sourceKeysCFArray, i));
+				CFRetainRelease		keyValueCFType(basePtr->returnValueCopy(kKeyCFStringRef),
+													true/* is retained */);
+				
+				
+				destPtr->addValue(kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
+			}
+		}
+	}
+	return result;
+}// ContextCopy
 
 
 /*!

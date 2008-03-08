@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080308',
     '20080307',
     '20080306',
     '20080305',
@@ -103,6 +104,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080308': [
+		'Custom Format dialog now correctly affects a single window and not global preferences.',
+	],
 	'20080307': [
 		'Terminal view renderer has had several internal improvements, now only partially redrawing the screen in many cases (which is faster).',
 	],

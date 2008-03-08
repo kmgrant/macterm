@@ -55,8 +55,7 @@ typedef struct FormatDialog_OpaqueStruct*	FormatDialog_Ref;
 
 FormatDialog_Ref
 	FormatDialog_New						(HIWindowRef						inParentWindowOrNullForModalDialog,
-											 Preferences_ContextRef				inoutData,
-											 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr);
+											 Preferences_ContextRef				inoutData);
 
 void
 	FormatDialog_Dispose					(FormatDialog_Ref*					inoutDialogPtr);

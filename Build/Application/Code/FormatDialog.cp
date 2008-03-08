@@ -50,14 +50,15 @@ namespace {
 
 struct My_FormatDialog
 {
-	My_FormatDialog		(HIWindowRef, Preferences_ContextRef, GenericDialog_CloseNotifyProcPtr);
+	My_FormatDialog		(HIWindowRef, Preferences_ContextRef);
 	
 	~My_FormatDialog	();
 	
-	FormatDialog_Ref		selfRef;			// identical to address of structure, but typed as ref
-	Boolean					wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
-	Preferences_ContextRef	dataModel;			// data used to initialize the dialog, and store any changes made
-	GenericDialog_Ref		genericDialog;		// handles most of the work
+	FormatDialog_Ref			selfRef;			// identical to address of structure, but typed as ref
+	Boolean						wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
+	Preferences_ContextRef		originalDataModel;	// data used to initialize the dialog, and store any changes made
+	Preferences_ContextRef		temporaryDataModel;	// data used to initialize the dialog, and store any changes made
+	GenericDialog_Ref			genericDialog;		// handles most of the work
 };
 typedef My_FormatDialog*		My_FormatDialogPtr;
 typedef My_FormatDialogPtr*		My_FormatDialogHandle;
@@ -75,6 +76,11 @@ My_FormatDialogPtrLocker&	gFormatDialogPtrLocks()  { static My_FormatDialogPtrLo
 }// anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
+
+void	handleDialogClose	(GenericDialog_Ref, Boolean);
+
+} // anonymous namespace
 
 
 
@@ -85,12 +91,16 @@ Creates a new Format Dialog.  This functions very much like the
 Preferences panel, except it is in a modal dialog and any changes
 are restricted to the specified preferences context.
 
+When the dialog eventually closes, the specified callback is
+invoked.  The callback receives a GenericDialog_Ref whose
+GenericDialog_ReturnImplementation() will match the returned
+FormatDialog_Ref.
+
 (3.1)
 */
 FormatDialog_Ref
-FormatDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
-					 Preferences_ContextRef				inoutData,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+FormatDialog_New	(HIWindowRef				inParentWindowOrNullForModalDialog,
+					 Preferences_ContextRef		inoutData)
 {
 	FormatDialog_Ref	result = nullptr;
 	
@@ -98,7 +108,7 @@ FormatDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
 	try
 	{
 		result = REINTERPRET_CAST(new My_FormatDialog(inParentWindowOrNullForModalDialog,
-														inoutData, inCloseNotifyProcPtr), FormatDialog_Ref);
+														inoutData), FormatDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -154,6 +164,7 @@ FormatDialog_Display	(FormatDialog_Ref	inDialog)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Constructor.  See FormatDialog_New().
@@ -161,18 +172,22 @@ Constructor.  See FormatDialog_New().
 (3.1)
 */
 My_FormatDialog::
-My_FormatDialog		(HIWindowRef						inParentWindowOrNullForModalDialog,
-					 Preferences_ContextRef				inoutData,
-					 GenericDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+My_FormatDialog		(HIWindowRef				inParentWindowOrNullForModalDialog,
+					 Preferences_ContextRef		inoutData)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef				(REINTERPRET_CAST(this, FormatDialog_Ref)),
 wasDisplayed		(false),
-dataModel			(inoutData),
+originalDataModel	(inoutData),
+temporaryDataModel	(Preferences_NewCloneContext(inoutData, true/* must detach */)),
 genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, PrefPanelFormats_New(),
-										inoutData, inCloseNotifyProcPtr, kHelpSystem_KeyPhraseFormatting))
+										temporaryDataModel, handleDialogClose, kHelpSystem_KeyPhraseFormatting))
 {
-	Preferences_RetainContext(this->dataModel);
+	// note that the cloned context is implicitly retained
+	Preferences_RetainContext(this->originalDataModel);
+	
+	// remember reference for use in the callback
+	GenericDialog_SetImplementation(genericDialog, this);
 }// My_FormatDialog 2-argument constructor
 
 
@@ -184,10 +199,38 @@ Destructor.  See GenericDialog_Dispose().
 My_FormatDialog::
 ~My_FormatDialog ()
 {
-	Preferences_ReleaseContext(&this->dataModel);
+	Preferences_ReleaseContext(&this->originalDataModel);
+	Preferences_ReleaseContext(&this->temporaryDataModel);
 	
 	// if the dialog is displayed, then Generic Dialog takes over responsibility to dispose of it
 	if (false == this->wasDisplayed) GenericDialog_Dispose(&this->genericDialog);
 }// My_FormatDialog destructor
+
+
+/*!
+Responds to a close of a Format Dialog by committing
+changes (if OK was pressed) between the temporary context
+and the original context.
+
+(3.1)
+*/
+void
+handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
+					 Boolean				inOKButtonPressed)
+{
+	My_FormatDialogPtr		dataPtr = REINTERPRET_CAST(GenericDialog_ReturnImplementation(inDialogThatClosed), My_FormatDialogPtr);
+	
+	
+	if (inOKButtonPressed)
+	{
+		// copy temporary context key-value pairs back into original context
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel, dataPtr->originalDataModel);
+	}
+}// handleDialogClose
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

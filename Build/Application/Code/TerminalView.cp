@@ -304,7 +304,6 @@ static OSStatus			addRowSectionToDirtyRegion		(TerminalViewPtr, SInt16, SInt16, 
 static pascal void		animateBlinkingPaletteEntries	(EventLoopTimerRef, void*);
 static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
-static void				clipToScreen					(TerminalViewPtr);
 static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTimerMessage, void*);
 static void				copySelectedTextIfUserPreference(TerminalViewPtr);
 static OSStatus			createWindowColorPalette		(TerminalViewPtr);
@@ -344,7 +343,6 @@ static void				invalidateRowSection			(TerminalViewPtr, UInt16, UInt16, UInt16);
 static void				invalidateScreenRectangle		(TerminalViewPtr);
 static Boolean			isMonospacedFont				(FMFontFamily);
 static void				localToScreen					(TerminalViewPtr, SInt16*, SInt16*);
-static void				localToScreenRect				(TerminalViewPtr, Rect*);
 static Boolean			mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static pascal void		navigationFileCaptureDialogEvent(NavEventCallbackMessage, NavCBRecPtr, void*);
 static void				offsetLeftVisibleEdge			(TerminalViewPtr, SInt16);
@@ -580,12 +578,10 @@ Creates a new HIView hierarchy for a terminal view,
 complete with all the callbacks and data necessary to
 drive it.
 
-The specified Preferences context "inFormatOrNull" is
-retained, and used to read all necessary settings (such
-as colors and the font).  If not provided, a clone of
-the default context is made.  The default context may
-also be used if any one setting is not found.  You can
-change this later with TerminalView_SetConfiguration().
+The font, colors, etc. are based on the default preferences
+context, where any settings in "inFormatOrNull" will
+override the defaults.  You can change this configuration
+later with TerminalView_CopyConfiguration().
 
 Since this is entirely associated with an HIObject, the
 view automatically goes away whenever the HIView from
@@ -1454,20 +1450,59 @@ TerminalView_PtInSelection	(TerminalViewRef	inView,
 
 
 /*!
+Copies settings from the specified Preferences context into
+this view.  Only settings present in the new configuration
+will be affected, others remain unchanged.
+
+You cannot change the font size if the display mode is
+currently setting the size automatically.  Use the
+TerminalView_ReturnDisplayMode() routine to determine what
+the display mode is.
+
+See also TerminalView_ReturnConfiguration().
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the screen reference is unrecognized
+
+\retval kTerminalView_ResultParameterError
+if the specified configuration is nullptr
+
+(3.1)
+*/
+TerminalView_Result
+TerminalView_Reconfigure	(TerminalViewRef			inView,
+							 Preferences_ContextRef		inConfigurationChanges)
+{
+	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
+	
+	
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
+	else if (nullptr == inConfigurationChanges) result = kTerminalView_ResultParameterError;
+	{
+		Preferences_ContextCopy(inConfigurationChanges, viewPtr->configuration);
+	}
+	return result;
+}// Reconfigure
+
+
+/*!
 Returns a variety of preferences unique to this view.
-You can use Preferences APIs to access them.
+You can use Preferences APIs to read values, but DO NOT
+change anything; the view will not be synchronized.
+
+This configuration will be a combination of any defaults
+in effect at the time the view was constructed, any
+overridden settings given at construction time, and any
+calls to TerminalView_CopyConfiguration() since then.
 
 Note that you cannot expect all possible tags to be
-present; be prepared to not find what you look for.
-In addition, tags that are present in one view may
-be absent in another.
-
-IMPORTANT:	A terminal view may control its font size
-			automatically in “zoom mode”.  Changes
-			to the size will be ignored while in that
-			mode.
-
-See also TerminalView_SetConfiguration().
+present; be prepared to not find what you look for.  In
+addition, tags that are present in one view may be
+absent in another.
 
 (3.1)
 */
@@ -1478,6 +1513,10 @@ TerminalView_ReturnConfiguration	(TerminalViewRef	inView)
 	Preferences_ContextRef		result = viewPtr->configuration;
 	
 	
+	// since many settings are represented internally, this context
+	// will not contain the latest information; update the context
+	// based on current settings
+	// UNIMPLEMENTED
 	return result;
 }// ReturnConfiguration
 
@@ -2334,49 +2373,6 @@ TerminalView_SetColor	(TerminalViewRef			inView,
 
 
 /*!
-Changes the Preferences context with which this view is
-synchronized.  See TerminalView_NewHIViewBased() for more
-information.
-
-The specified configuration is retained, and any previous
-one is released.
-
-See also TerminalView_ReturnConfiguration().
-
-\retval kTerminalView_ResultOK
-if no error occurred
-
-\retval kTerminalView_ResultInvalidID
-if the screen reference is unrecognized
-
-\retval kTerminalView_ResultParameterError
-if the specified configuration is nullptr
-
-(3.1)
-*/
-TerminalView_Result
-TerminalView_SetConfiguration	(TerminalViewRef			inView,
-								 Preferences_ContextRef		inNewConfiguration)
-{
-	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_Result			result = kTerminalView_ResultOK;
-	
-	
-	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
-	else if (nullptr == inNewConfiguration) result = kTerminalView_ResultParameterError;
-	{
-		if (viewPtr->configuration != inNewConfiguration)
-		{
-			Preferences_ReleaseContext(&viewPtr->configuration);
-		}
-		viewPtr->configuration = inNewConfiguration;
-		Preferences_RetainContext(viewPtr->configuration);
-	}
-	return result;
-}// SetConfiguration
-
-
-/*!
 Changes the current display mode, which is normal by default.
 Query it later with TerminalView_ReturnDisplayMode().
 
@@ -2903,7 +2899,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
-	this->configuration = inFormat;
+	this->configuration = Preferences_NewCloneContext(inFormat, true/* detach */);
 	assert(nullptr != this->configuration);
 	this->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 													kConstantsRegistry_ListenerModelDescriptorTerminalViewChanges);
@@ -3349,35 +3345,6 @@ calculateDoubleSize		(TerminalViewPtr	inTerminalViewPtr,
 	TextFace(preservedFontStyle);
 	SetGWorld(oldPort, oldDevice);
 }// calculateDoubleSize
-
-
-/*!
-Sets the current clip region to be the visible region
-of the specified screen.  This excludes any screen
-margin, it only includes the visible screen text area.
-
-(3.0)
-*/
-static void
-clipToScreen	(TerminalViewPtr	inTerminalViewPtr)
-{
-	HIViewWrap	windowContentView(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView));
-	HIRect		contentFrame;
-	Rect		contentRect;
-	OSStatus	error = noErr;
-	
-	
-	// convert the view location into QuickDraw local coordinates,
-	// which also match the coordinates of the window content view
-	assert(windowContentView.exists());
-	error = HIViewGetFrame(inTerminalViewPtr->contentHIView, &contentFrame);
-	assert_noerr(error);
-	error = HIViewConvertRect(&contentFrame, HIViewGetSuperview(inTerminalViewPtr->contentHIView), windowContentView);
-	SetRect(&contentRect, STATIC_CAST(contentFrame.origin.x, SInt16), STATIC_CAST(contentFrame.origin.y, SInt16),
-			STATIC_CAST(contentFrame.origin.x + contentFrame.size.width, SInt16),
-			STATIC_CAST(contentFrame.origin.y + contentFrame.size.height, SInt16));
-	ClipRect(&contentRect);
-}// clipToScreen
 
 
 /*!
@@ -6026,30 +5993,6 @@ localToScreen	(TerminalViewPtr	inTerminalViewPtr,
 		(*inoutVerticalPixelOffsetFromPortOrigin) -= origin.v;
 	}
 }// localToScreen
-
-
-/*!
-Translates a boundary in the coordinate system of a
-window so that it is relative to the origin of the
-screen.  In version 2.6, the program always assumed
-that the screen origin was the top-left corner of the
-window, which made it extremely hard to change.  Now,
-this routine is invoked everywhere to ensure that,
-before port pixel offsets are used to refer to the
-screen, they are translated correctly.
-
-(3.0)
-*/
-static void
-localToScreenRect	(TerminalViewPtr	inTerminalViewPtr,
-					 Rect*				inoutPortOriginBoundsPtr)
-{
-	if (inoutPortOriginBoundsPtr != nullptr)
-	{
-		localToScreen(inTerminalViewPtr, &inoutPortOriginBoundsPtr->left, &inoutPortOriginBoundsPtr->top);
-		localToScreen(inTerminalViewPtr, &inoutPortOriginBoundsPtr->right, &inoutPortOriginBoundsPtr->bottom);
-	}
-}// localToScreenRect
 
 
 /*!

@@ -483,6 +483,10 @@ void
 												 StringPtr					outFontFamilyNameOrNull,
 												 UInt16*					outFontSizeOrNull);
 
+TerminalView_Result
+	TerminalView_Reconfigure					(TerminalViewRef			inView,
+												 Preferences_ContextRef		inConfigurationChanges);
+
 Preferences_ContextRef
 	TerminalView_ReturnConfiguration			(TerminalViewRef			inView);
 
@@ -494,10 +498,6 @@ Boolean
 	TerminalView_SetColor						(TerminalViewRef			inView,
 												 TerminalView_ColorIndex	inColorEntryNumber,
 												 RGBColor const*			inColorPtr);
-
-TerminalView_Result
-	TerminalView_SetConfiguration				(TerminalViewRef			inView,
-												 Preferences_ContextRef		inNewConfiguration);
 
 TerminalView_Result
 	TerminalView_SetFontAndSize					(TerminalViewRef			inView,

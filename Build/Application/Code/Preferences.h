@@ -482,6 +482,10 @@ Preferences_Result
 //@{
 
 Preferences_Result
+	Preferences_ContextCopy					(Preferences_ContextRef				inBaseContext,
+											 Preferences_ContextRef				inDestinationContext);
+
+Preferences_Result
 	Preferences_ContextDeleteSaved			(Preferences_ContextRef				inContext);
 
 Preferences_Result

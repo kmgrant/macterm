@@ -3735,8 +3735,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						// display the sheet
 						dialog = FormatDialog_New(GetUserFocusWindow(),
-													TerminalView_ReturnConfiguration(TerminalWindow_ReturnViewWithFocus(terminalWindow)),
-													GenericDialog_StandardCloseNotifyProc);
+													TerminalView_ReturnConfiguration(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
 						FormatDialog_Display(dialog); // automatically disposed when the user clicks a button
 						
 						result = noErr;
