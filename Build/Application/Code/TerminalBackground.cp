@@ -326,7 +326,7 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, control);
 		
 		// if the control was found, continue
-		if (result == noErr)
+		if (noErr == result)
 		{
 			//HIViewPartCode		partCode = 0;
 			CGrafPtr			drawingPort = nullptr;
@@ -344,7 +344,7 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			// determine the port to draw in; if none, the current port
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, drawingPort);
-			if (result != noErr)
+			if (noErr != result)
 			{
 				// use current port
 				drawingPort = oldPort;
@@ -352,13 +352,21 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 			}
 			
 			// if all information can be found, proceed with drawing
-			if (result == noErr)
+			if (noErr == result)
 			{
 				// paint background color and draw background picture, if any
-				Rect	bounds;
+				Rect		bounds;
+				RgnHandle	optionalTargetRegion = nullptr;
 				
 				
 				SetPort(drawingPort);
+				
+				// maybe a focus region has been provided
+				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
+																	optionalTargetRegion))
+				{
+					SetClip(optionalTargetRegion);
+				}
 				
 				GetControlBounds(control, &bounds);
 				OffsetRect(&bounds, -bounds.left, -bounds.top);

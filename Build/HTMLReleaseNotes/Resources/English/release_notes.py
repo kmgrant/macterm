@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080307',
     '20080306',
     '20080305',
     '20080303',
@@ -102,6 +103,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080307': [
+		'Terminal view renderer has had several internal improvements, now only partially redrawing the screen in many cases (which is faster).',
+	],
 	'20080306': [
 		'Finally on Leopard, the application menu is no longer named "Python", and preferences will no longer be saved in the Python domain.',
 		'Fixed bug with files not opening correctly after the application first launched.',

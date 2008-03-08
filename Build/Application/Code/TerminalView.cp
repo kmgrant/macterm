@@ -3158,6 +3158,9 @@ given screen, and adds it to the dirty region of
 the current graphics port if it intersects the
 visible part.
 
+This routine expects to be called while the current
+graphics port origin is equal to the screen origin.
+
 Use this as a performance improvement prior to a
 large number of QuickDraw operations in one line;
 this ensures QuickDraw does not try to add each
@@ -3191,7 +3194,6 @@ addRowSectionToDirtyRegion	(TerminalViewPtr	inTerminalViewPtr,
 		GDHandle	currentDevice = nullptr;
 		
 		
-		screenToLocalRect(inTerminalViewPtr, &bounds);
 		GetGWorld(&currentPort, &currentDevice);
 		result = QDAddRectToDirtyRegion(currentPort, &bounds);
 	}
@@ -3822,6 +3824,9 @@ all of the text will otherwise use the given attributes.
 The area is also subtracted from any existing invalid
 region.
 
+This routine expects to be called while the current
+graphics port origin is equal to the screen origin.
+
 LOCALIZE THIS:	The terminal buffer should be rendered
 				right-to-left in right-to-left locales.
 
@@ -3851,7 +3856,6 @@ drawRowSection	(TerminalViewPtr			inTerminalViewPtr,
 	// set up the rectangle bounding the text being drawn
 	getRowSectionBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
 						inZeroBasedStartingColumnNumber, inCharacterCount, &rect);
-	screenToLocalRect(inTerminalViewPtr, &rect);
 	
 	MoveTo(rect.left, rect.top + (STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
 									? inTerminalViewPtr->text.font.doubleMetrics.ascent
@@ -3870,6 +3874,9 @@ drawRowSection	(TerminalViewPtr			inTerminalViewPtr,
 /*!
 Redraws the specified part of the given view.  Returns
 "true" only if the text was drawn successfully.
+
+This routine expects to be called while the current
+graphics port origin is equal to the screen origin.
 
 WARNING:	For efficiency, this does no range checking.
 
@@ -3904,30 +3911,15 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 	if (nullptr != inTerminalViewPtr)
 	{
 		Terminal_Result		iteratorResult = kTerminal_ResultOK;
-		RgnHandle			oldClipRegion = Memory_NewRegion();
-		CGrafPtr			oldPort = nullptr;
-		GDHandle			oldDevice = nullptr;
 		CGrafPtr			currentPort = nullptr;
 		GDHandle			currentDevice = nullptr;
 		
-		
-		// save the graphics port state and the current graphics port
-		GetGWorld(&oldPort, &oldDevice);
-		setPortScreenPort(inTerminalViewPtr);
 		
 		// for better performance on Mac OS X, lock the bits of a port
 		// before performing a series of QuickDraw operations in it,
 		// and make the intended drawing area part of the dirty region
 		GetGWorld(&currentPort, &currentDevice);
 		(OSStatus)LockPortBits(currentPort);
-		
-		// prevent drawing outside of the terminal screen area
-		if (nullptr != oldClipRegion)
-		{
-			// save the clip region, as it will be changed
-			GetClip(oldClipRegion);
-		}
-		clipToScreen(inTerminalViewPtr);
 		
 		// find contiguous blocks of text on each line in the given
 		// range that have the same attributes, and draw those blocks
@@ -3987,7 +3979,6 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 						
 						
 						getRowBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine, &rowBounds);
-						screenToLocalRect(inTerminalViewPtr, &rowBounds);
 						
 						{
 							PixMapHandle	pixels = nullptr;
@@ -4040,18 +4031,8 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 		inTerminalViewPtr->screen.currentRenderedLine = -1;
 		inTerminalViewPtr->screen.currentRenderContext = nullptr;
 		
-		// now restore the graphics port completely to its original state
-		if (oldClipRegion != nullptr)
-		{
-			SetClip(oldClipRegion);
-			Memory_DisposeRegion(&oldClipRegion);
-		}
-		
 		// undo the lock done earlier in this block
 		(OSStatus)UnlockPortBits(currentPort);
-		
-		// restore any previous focus port
-		SetGWorld(oldPort, oldDevice);
 	}
 	return result;
 }// drawSection
@@ -4060,6 +4041,9 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 /*!
 Draws the specified chunk of text in the given view
 (line number 1 is the oldest line in the scrollback).
+
+This routine expects to be called while the current
+graphics port origin is equal to the screen origin.
 
 For efficiency, this routine does not preserve or
 restore state; do that on your own before invoking
@@ -4586,6 +4570,9 @@ Erases a rectangular portion of the current rendering
 line of the screen display, preserving highlighted
 areas.
 
+This routine expects to be called while the current
+graphics port origin is equal to the screen origin.
+
 If "inDebug" is true, the background is painted in
 some obscene obvious color instead of the correct one.
 
@@ -4633,8 +4620,6 @@ eraseSection	(TerminalViewPtr	inTerminalViewPtr,
 		{
 			rect.bottom = inTerminalViewPtr->screen.maxViewHeightInPixels + 1;
 		}
-		
-		screenToLocalRect(inTerminalViewPtr, &rect);
 		
 		// before erasing make sure the terminal background is painted
 		// underneath, instead of (say) the window background
@@ -5922,11 +5907,9 @@ invalidateRowSection	(TerminalViewPtr	inTerminalViewPtr,
   	Rect	textBounds;
 	
 	
-	// set up the rectangle bounding the text being drawn
+	// mark the specified area; it is already in “screen coordinates”,
+	// which match the view coordinates used by HIViewSetNeedsDisplayInRegion()
 	getRowSectionBounds(inTerminalViewPtr, inLineNumber, inStartingColumnNumber, inCharacterCount, &textBounds);
-	screenToLocalRect(inTerminalViewPtr, &textBounds);
-	
-	// mark the specified area
 	RectRgn(gInvalidationScratchRegion(), &textBounds);
 	(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
 }// invalidateRowSection
@@ -7146,33 +7129,37 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// draw text
 				if (nullptr != viewPtr)
 				{
-					Rect		bounds;
+					RgnHandle	optionalTargetRegion = nullptr;
 					HIRect		floatBounds;
-					HIPoint		localToViewOffset = CGPointMake(0, 0);
 					
 					
 					SetPort(drawingPort);
 					
-					// determine boundaries of the content view being drawn
-					GetControlBounds(view, &bounds);
+					// determine boundaries of the content view being drawn;
+					// ensure view-local coordinates
 					HIViewGetBounds(view, &floatBounds);
 					
-					// the view position is also the conversion factor for
-					// translating QuickDraw points to view-local coordinates
+					// maybe a focus region has been provided
+					if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
+																		optionalTargetRegion))
 					{
-						OSStatus	error = noErr;
+						Rect	clipBounds;
+						HIRect	floatClipBounds;
 						
 						
-						error = HIViewConvertPoint(&localToViewOffset,
-													HIViewWrap(kHIViewWindowContentID, HIViewGetWindow(view)),
-													view);
-						assert_noerr(error);
+						SetClip(optionalTargetRegion);
+						GetRegionBounds(optionalTargetRegion, &clipBounds);
+						floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
+														clipBounds.bottom - clipBounds.top);
+						CGContextClipToRect(drawingContext, floatClipBounds);
 					}
-					
-					// translate rectangle into view-local coordinates
-					// (note: "floatBounds" is already view-local)
-					OffsetRect(&bounds, STATIC_CAST(localToViewOffset.x, SInt16),
-								STATIC_CAST(localToViewOffset.y, SInt16)); // tmp
+					else
+					{
+						SetRectRgn(gInvalidationScratchRegion(), 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
+									STATIC_CAST(floatBounds.size.height, SInt16));
+						SetClip(gInvalidationScratchRegion());
+						CGContextClipToRect(drawingContext, floatBounds);
+					}
 					
 					if ((partCode == kTerminalView_ContentPartText) ||
 						(partCode == kControlEntireControl) ||
@@ -7268,10 +7255,16 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (nullptr != selectionRegion)
 							{
+								HIPoint		localToViewOffset = CGPointMake(0, 0);
 								RGBColor	highlightColor;
+								OSStatus	error = noErr;
 								
 								
 								// convert window-content-local coordinates into view-local coordinates
+								error = HIViewConvertPoint(&localToViewOffset,
+															HIViewWrap(kHIViewWindowContentID, HIViewGetWindow(view)),
+															view);
+								assert_noerr(error);
 								OffsetRgn(selectionRegion, STATIC_CAST(localToViewOffset.x + 1/* half of thickness */, SInt16),
 											STATIC_CAST(localToViewOffset.y + 1/* half of thickness */, SInt16));
 								
@@ -8752,10 +8745,8 @@ setCursorVisibility		(TerminalViewPtr	inTerminalViewPtr,
 	// redraw the cursor if necessary
 	if (renderCursor)
 	{
-		// TEMPORARY: highlighting one part does not seem to work right now, so
-		// invalidate the WHOLE view (expensive?) to ensure the cursor redraws
-		(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->contentHIView, true);
-		//HiliteControl(inTerminalViewPtr->contentHIView, kTerminalView_ContentPartCursor);
+		RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
+		(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
 	}
 }// setCursorVisibility
 
