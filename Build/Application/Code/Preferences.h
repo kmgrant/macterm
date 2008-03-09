@@ -332,8 +332,11 @@ enum
 
 /*!
 Lists the kinds of preferences that can trigger notification
-when they are changed.  Use Preferences_StartMonitoring()
-to establish callbacks to receive notifications.
+when they are changed.  Use Preferences_StartMonitoring() to
+establish callbacks to receive notifications.
+
+NOTE:	Context-specific changes will ALWAYS trigger callbacks.
+		See Preferences_ContextStartMonitoring().
 
 The event context passed to the listener is a pointer to a
 data structure of type "Preferences_ChangeContext".
@@ -381,8 +384,7 @@ should go.
 typedef struct Preferences_OpaqueContext*	Preferences_ContextRef;
 
 /*!
-The context passed to the listeners of
-preference changes.
+The context passed to the listeners of global preference changes.
 */
 struct Preferences_ChangeContext
 {
@@ -577,6 +579,16 @@ void
 
 //!\name Receiving Notification of Changes
 //@{
+
+Preferences_Result
+	Preferences_ContextStartMonitoring		(Preferences_ContextRef				inContext,
+											 Preferences_Change					inForWhatChange,
+											 ListenerModel_ListenerRef			inListener);
+
+Preferences_Result
+	Preferences_ContextStopMonitoring		(Preferences_ContextRef				inContext,
+											 Preferences_Change					inForWhatChange,
+											 ListenerModel_ListenerRef			inListener);
 
 Preferences_Result
 	Preferences_StartMonitoring				(ListenerModel_ListenerRef			inListener,

@@ -109,77 +109,107 @@ typedef std::vector< My_AliasInfoPtr >	My_AliasInfoList;
 /*!
 Provides uniform access to context information no
 matter how it is really stored.
+
+Monitors are automatically supported at this level,
+so changing any value will trigger the appropriate
+change notification.
 */
 class My_ContextInterface
 {
 public:
 	//! inserts array value into dictionary
 	void
-	addArray	(CFStringRef	inKey,
-				 CFArrayRef		inValue)
+	addArray	(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
+				 CFArrayRef			inValue)
 	{
 		_implementorPtr->addArray(inKey, inValue);
+		notifyListeners(inTag);
 	}
 	
 	//! inserts data value into dictionary
 	void
-	addData		(CFStringRef	inKey,
-				 CFDataRef		inValue)
+	addData		(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
+				 CFDataRef			inValue)
 	{
 		_implementorPtr->addData(inKey, inValue);
+		notifyListeners(inTag);
 	}
 	
 	//! inserts true/false value into dictionary
 	void
-	addFlag		(CFStringRef	inKey,
-				 Boolean		inValue)
+	addFlag		(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
+				 Boolean			inValue)
 	{
 		_implementorPtr->addFlag(inKey, inValue);
+		notifyListeners(inTag);
 	}
 	
 	//! inserts floating-point value into dictionary
 	void
-	addFloat	(CFStringRef	inKey,
-				 Float32		inValue)
+	addFloat	(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
+				 Float32			inValue)
 	{
 		_implementorPtr->addFloat(inKey, inValue);
+		notifyListeners(inTag);
 	}
 	
 	//! inserts short integer value into dictionary
 	void
-	addInteger	(CFStringRef	inKey,
-				 SInt16			inValue)
+	addInteger	(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
+				 SInt16				inValue)
 	{
 		_implementorPtr->addInteger(inKey, inValue);
+		notifyListeners(inTag);
 	}
+	
+	//! manages callbacks that are invoked as changes are made
+	Boolean
+	addListener		(ListenerModel_ListenerRef,
+					 Preferences_Change);
 	
 	//! inserts short integer value into dictionary
 	void
-	addLong		(CFStringRef	inKey,
-				 SInt32			inValue)
+	addLong		(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
+				 SInt32				inValue)
 	{
 		_implementorPtr->addLong(inKey, inValue);
+		notifyListeners(inTag);
 	}
 	
 	//! inserts string value into dictionary
 	void
-	addString	(CFStringRef	inKey,
-				 CFStringRef	inValue)
+	addString	(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
+				 CFStringRef		inValue)
 	{
 		_implementorPtr->addString(inKey, inValue);
+		notifyListeners(inTag);
 	}
 	
 	//! inserts arbitrary value into dictionary
 	void
-	addValue	(CFStringRef		inKey,
+	addValue	(Preferences_Tag	inTag,
+				 CFStringRef		inKey,
 				 CFPropertyListRef	inValue)
 	{
 		_implementorPtr->addValue(inKey, inValue);
+		notifyListeners(inTag);
 	}
 	
 	//! delete this key-value set from application preferences
 	virtual Preferences_Result
 	destroy () NO_METHOD_IMPL = 0;
+	
+	//! manages callbacks that are invoked as changes are made
+	Boolean
+	removeListener	(ListenerModel_ListenerRef,
+					 Preferences_Change);
 	
 	//! alter the name under which this is saved; useful in UI elements
 	virtual Preferences_Result
@@ -264,11 +294,16 @@ protected:
 	~My_ContextInterface ();
 	
 	void
+	notifyListeners	(Preferences_Tag);
+	
+	void
 	setImplementor	(CFKeyValueInterface*);
 
 private:
-	Preferences_Class		_preferencesClass;
-	CFKeyValueInterface*	_implementorPtr;
+	Preferences_ContextRef	_selfRef;			//!< convenient, redundant self-reference
+	Preferences_Class		_preferencesClass;	//!< hint as to what keys are likely to be present
+	ListenerModel_Ref		_listenerModel;		//!< if monitors are used, handles change notifications
+	CFKeyValueInterface*	_implementorPtr;	//!< how settings are saved (e.g. application preferences, an in-memory dictionary...)
 };
 typedef My_ContextInterface const*	My_ContextInterfaceConstPtr;
 typedef My_ContextInterface*		My_ContextInterfacePtr;
@@ -919,7 +954,7 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 													true/* is retained */);
 				
 				
-				resultPtr->addValue(kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
+				resultPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
 			}
 		}
 	}
@@ -1546,7 +1581,7 @@ Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
 													true/* is retained */);
 				
 				
-				destPtr->addValue(kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
+				destPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
 			}
 		}
 	}
@@ -1862,6 +1897,78 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 	}
 	return result;
 }// ContextSetData
+
+
+/*!
+Arranges for a callback to be invoked every time the specified
+setting is changed in the given context.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultInvalidContextReference
+if the given context is invalid
+
+\retval kPreferences_ResultGenericFailure
+if the listener could not be added
+
+(3.1)
+*/
+Preferences_Result
+Preferences_ContextStartMonitoring		(Preferences_ContextRef		inContext,
+										 Preferences_Change			inForWhatChange,
+										 ListenerModel_ListenerRef	inListener)
+{
+	Preferences_Result		result = kPreferences_ResultGenericFailure;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	
+	
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		Boolean		addOK = ptr->addListener(inListener, inForWhatChange);
+		
+		
+		if (addOK) result = kPreferences_ResultOK;
+	}
+	return result;
+}// ContextStartMonitoring
+
+
+/*!
+Arranges for a callback to no longer be invoked every time the
+specified setting is changed in the given context.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultInvalidContextReference
+if the given context is invalid
+
+\retval kPreferences_ResultGenericFailure
+if the listener could not be removed
+
+(3.1)
+*/
+Preferences_Result
+Preferences_ContextStopMonitoring	(Preferences_ContextRef		inContext,
+									 Preferences_Change			inForWhatChange,
+									 ListenerModel_ListenerRef	inListener)
+{
+	Preferences_Result		result = kPreferences_ResultGenericFailure;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	
+	
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		Boolean		removeOK = ptr->removeListener(inListener, inForWhatChange);
+		
+		
+		if (removeOK) result = kPreferences_ResultOK;
+	}
+	return result;
+}// ContextStopMonitoring
 
 
 /*!
@@ -2483,7 +2590,9 @@ Constructor.  Used only by subclasses.
 My_ContextInterface::
 My_ContextInterface		(Preferences_Class		inClass)
 :
+_selfRef(REINTERPRET_CAST(this, Preferences_ContextRef)),
 _preferencesClass(inClass),
+_listenerModel(nullptr/* constructed as needed */),
 _implementorPtr(nullptr)
 {
 }// My_ContextInterface 1-argument constructor
@@ -2497,7 +2606,86 @@ Destructor.  Used only by subclasses.
 My_ContextInterface::
 ~My_ContextInterface ()
 {
+	if (nullptr != _listenerModel) ListenerModel_Dispose(&_listenerModel);
 }// My_ContextInterface destructor
+
+
+/*!
+Arranges for a callback to be invoked every time the specified
+setting in the context is changed.  Returns true only if
+successful.
+
+(3.1)
+*/
+Boolean
+My_ContextInterface::
+addListener		(ListenerModel_ListenerRef	inListener,
+				 Preferences_Change			inForWhatChange)
+{
+	Boolean		result = false;
+	OSStatus	error = noErr;
+	
+	
+	if (nullptr == _listenerModel)
+	{
+		_listenerModel = ListenerModel_New(kListenerModel_StyleStandard, 'PCtx');
+		assert(nullptr != _listenerModel);
+	}
+	
+	if (nullptr != _listenerModel)
+	{
+		error = ListenerModel_AddListenerForEvent(_listenerModel, inForWhatChange, inListener);
+		if (noErr == error) result = true;
+	}
+	return result;
+}// My_ContextInterface::addListener
+
+
+/*!
+If there are any monitors on this context, notifies them all
+that something has changed.
+
+You can pass the special tag of 0 to indicate no notifications.
+This is useful in some cases where code Òalways notifiesÓ and
+you want it to do nothing.
+
+(3.1)
+*/
+void
+My_ContextInterface::
+notifyListeners		(Preferences_Tag	inWhatChanged)
+{
+	if ((nullptr != _listenerModel) && (0 != inWhatChanged))
+	{
+		ListenerModel_NotifyListenersOfEvent(_listenerModel, inWhatChanged, _selfRef);
+	}
+}// My_ContextInterface::notifyListeners
+
+
+/*!
+Removes a previously-added listener.  Returns true only if
+successful.
+
+(3.1)
+*/
+Boolean
+My_ContextInterface::
+removeListener	(ListenerModel_ListenerRef	inListener,
+				 Preferences_Change			inForWhatChange)
+{
+	Boolean		result = false;
+	
+	
+	if (nullptr != _listenerModel)
+	{
+		ListenerModel_Result	modelResult = kListenerModel_ResultOK;
+		
+		
+		modelResult = ListenerModel_RemoveListenerForEvent(_listenerModel, inForWhatChange, inListener);
+		if (kListenerModel_ResultOK == modelResult) result = true;
+	}
+	return result;
+}// My_ContextInterface::removeListener
 
 
 /*!
@@ -2555,7 +2743,7 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		
 		result &= Console_Assert("test array exists", testArray.exists());
 		result &= Console_Assert("test array is the right size", 2 == CFArrayGetCount(testArray.returnCFArrayRef()));
-		inTestObjectPtr->addArray(CFSTR("__test_array_key__"), testArray.returnCFArrayRef());
+		inTestObjectPtr->addArray(0/* do not notify */, CFSTR("__test_array_key__"), testArray.returnCFArrayRef());
 		copiedArray = inTestObjectPtr->returnArrayCopy(CFSTR("__test_array_key__"));
 		result &= Console_Assert("returned array exists", copiedArray.exists());
 		result &= Console_Assert("returned array is the right size", 2 == CFArrayGetCount(copiedArray.returnCFArrayRef()));
@@ -2573,7 +2761,7 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		
 		result &= Console_Assert("test data exists", testData.exists());
 		result &= Console_Assert("test data is the right size", STATIC_CAST(kDataSize, CFIndex) == CFDataGetLength(testDataRef));
-		inTestObjectPtr->addData(CFSTR("__test_data_key__"), REINTERPRET_CAST(testData.returnCFTypeRef(), CFDataRef));
+		inTestObjectPtr->addData(0/* do not notify */, CFSTR("__test_data_key__"), REINTERPRET_CAST(testData.returnCFTypeRef(), CFDataRef));
 		copiedValue = inTestObjectPtr->returnValueCopy(CFSTR("__test_data_key__"));
 		result &= Console_Assert("returned data exists", copiedValue.exists());
 		result &= Console_Assert("returned data is the right size",
@@ -2587,9 +2775,9 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		Boolean const	kFlag2 = true;
 		
 		
-		inTestObjectPtr->addFlag(CFSTR("__test_flag_key_1__"), kFlag1);
+		inTestObjectPtr->addFlag(0/* do not notify */, CFSTR("__test_flag_key_1__"), kFlag1);
 		result &= Console_Assert("returned flag is true", kFlag1 == inTestObjectPtr->returnFlag(CFSTR("__test_flag_key_1__")));
-		inTestObjectPtr->addFlag(CFSTR("__test_flag_key_2__"), kFlag2);
+		inTestObjectPtr->addFlag(0/* do not notify */, CFSTR("__test_flag_key_2__"), kFlag2);
 		result &= Console_Assert("returned flag is false", kFlag2 == inTestObjectPtr->returnFlag(CFSTR("__test_flag_key_2__")));
 		result &= Console_Assert("nonexistent flag is false", false == inTestObjectPtr->returnFlag(CFSTR("flag does not exist")));
 	}
@@ -2604,9 +2792,9 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		Float32			returnedFloat = 0.0;
 		
 		
-		inTestObjectPtr->addFloat(CFSTR("__test_float_key_1__"), kFloat1);
-		inTestObjectPtr->addFloat(CFSTR("__test_float_key_2__"), kFloat2);
-		inTestObjectPtr->addFloat(CFSTR("__test_float_key_3__"), kFloat3);
+		inTestObjectPtr->addFloat(0/* do not notify */, CFSTR("__test_float_key_1__"), kFloat1);
+		inTestObjectPtr->addFloat(0/* do not notify */, CFSTR("__test_float_key_2__"), kFloat2);
+		inTestObjectPtr->addFloat(0/* do not notify */, CFSTR("__test_float_key_3__"), kFloat3);
 		returnedFloat = inTestObjectPtr->returnFloat(CFSTR("__test_float_key_1__"));
 		result &= Console_Assert("returned float is close to zero",
 									(returnedFloat > (kFloat1 - kTolerance)) && (returnedFloat < (kFloat1 + kTolerance)));
@@ -2616,7 +2804,7 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		returnedFloat = inTestObjectPtr->returnFloat(CFSTR("__test_float_key_3__"));
 		result &= Console_Assert("returned float is close to -36.4",
 									(returnedFloat > (kFloat3 - kTolerance)) && (returnedFloat < (kFloat3 + kTolerance)));
-		inTestObjectPtr->addFloat(CFSTR("__test_float_key_4__"), kFloat4);
+		inTestObjectPtr->addFloat(0/* do not notify */, CFSTR("__test_float_key_4__"), kFloat4);
 		returnedFloat = inTestObjectPtr->returnFloat(CFSTR("__test_float_key_4__"));
 		result &= Console_Assert("returned float is close to 5312.79195",
 									(returnedFloat > (kFloat4 - kTolerance)) && (returnedFloat < (kFloat4 + kTolerance)));
@@ -2632,16 +2820,16 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		SInt16			returnedInteger = 0;
 		
 		
-		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_1__"), kInteger1);
-		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_2__"), kInteger2);
-		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_3__"), kInteger3);
+		inTestObjectPtr->addInteger(0/* do not notify */, CFSTR("__test_integer_key_1__"), kInteger1);
+		inTestObjectPtr->addInteger(0/* do not notify */, CFSTR("__test_integer_key_2__"), kInteger2);
+		inTestObjectPtr->addInteger(0/* do not notify */, CFSTR("__test_integer_key_3__"), kInteger3);
 		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_int_key_1__"));
 		result &= Console_Assert("returned integer is zero", returnedInteger == kInteger1);
 		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_integer_key_2__"));
 		result &= Console_Assert("returned integer is 1", returnedInteger == kInteger2);
 		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_integer_key_3__"));
 		result &= Console_Assert("returned integer is -77", returnedInteger == kInteger3);
-		inTestObjectPtr->addInteger(CFSTR("__test_integer_key_4__"), kInteger4);
+		inTestObjectPtr->addInteger(0/* do not notify */, CFSTR("__test_integer_key_4__"), kInteger4);
 		returnedInteger = inTestObjectPtr->returnInteger(CFSTR("__test_integer_key_4__"));
 		result &= Console_Assert("returned integer is 16122", returnedInteger == kInteger4);
 		result &= Console_Assert("nonexistent integer is exactly zero", 0 == inTestObjectPtr->returnInteger(CFSTR("integer does not exist")));
@@ -2656,16 +2844,16 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		SInt32			returnedInteger = 0;
 		
 		
-		inTestObjectPtr->addLong(CFSTR("__test_long_key_1__"), kInteger1);
-		inTestObjectPtr->addLong(CFSTR("__test_long_key_2__"), kInteger2);
-		inTestObjectPtr->addLong(CFSTR("__test_long_key_3__"), kInteger3);
+		inTestObjectPtr->addLong(0/* do not notify */, CFSTR("__test_long_key_1__"), kInteger1);
+		inTestObjectPtr->addLong(0/* do not notify */, CFSTR("__test_long_key_2__"), kInteger2);
+		inTestObjectPtr->addLong(0/* do not notify */, CFSTR("__test_long_key_3__"), kInteger3);
 		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_int_key_1__"));
 		result &= Console_Assert("returned long integer is zero", returnedInteger == kInteger1);
 		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_long_key_2__"));
 		result &= Console_Assert("returned long integer is 1", returnedInteger == kInteger2);
 		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_long_key_3__"));
 		result &= Console_Assert("returned long integer is -9124152", returnedInteger == kInteger3);
-		inTestObjectPtr->addLong(CFSTR("__test_long_key_4__"), kInteger4);
+		inTestObjectPtr->addLong(0/* do not notify */, CFSTR("__test_long_key_4__"), kInteger4);
 		returnedInteger = inTestObjectPtr->returnLong(CFSTR("__test_long_key_4__"));
 		result &= Console_Assert("returned long integer is 161124507", returnedInteger == kInteger4);
 		result &= Console_Assert("nonexistent long integer is exactly zero", 0 == inTestObjectPtr->returnLong(CFSTR("long does not exist")));
@@ -2678,12 +2866,12 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		CFRetainRelease		copiedString;
 		
 		
-		inTestObjectPtr->addString(CFSTR("__test_string_key_1__"), kString1);
+		inTestObjectPtr->addString(0/* do not notify */, CFSTR("__test_string_key_1__"), kString1);
 		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_1__"));
 		result &= Console_Assert("returned string 1 exists", copiedString.exists());
 		result &= Console_Assert("returned string 1 is correct",
 									kCFCompareEqualTo == CFStringCompare(copiedString.returnCFStringRef(), kString1, 0/* options */));
-		inTestObjectPtr->addString(CFSTR("__test_string_key_2__"), kString2);
+		inTestObjectPtr->addString(0/* do not notify */, CFSTR("__test_string_key_2__"), kString2);
 		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_2__"));
 		result &= Console_Assert("returned string 2 exists", copiedString.exists());
 		result &= Console_Assert("returned string 2 is correct",
@@ -6593,7 +6781,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					else
 					{
 						assert(typeCFStringRef == keyValueType);
-						inContextPtr->addString(keyName, (data) ? fontNameCFString : CFSTR(""));
+						inContextPtr->addString(inDataPreferenceTag, keyName, (data) ? fontNameCFString : CFSTR(""));
 						CFRelease(fontNameCFString), fontNameCFString = nullptr;
 					}
 				}
@@ -6605,7 +6793,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addInteger(keyName, *data);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -6640,7 +6828,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 					if (convertRGBColorToCFArray(data, colorCFArray))
 					{
 						assert(typeCFArrayRef == keyValueType);
-						inContextPtr->addArray(keyName, colorCFArray);
+						inContextPtr->addArray(inDataPreferenceTag, keyName, colorCFArray);
 						CFRelease(colorCFArray), colorCFArray = nullptr;
 					}
 					else result = kPreferences_ResultGenericFailure;
@@ -6842,7 +7030,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFArrayRef == keyValueType);
-					inContextPtr->addArray(keyName, *data);
+					inContextPtr->addArray(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7363,7 +7551,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(keyName, *data);
+					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7376,7 +7564,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(keyName, data);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -7386,7 +7574,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addInteger(keyName, *data);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7396,7 +7584,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFArrayRef == keyValueType);
-					inContextPtr->addArray(keyName, *data);
+					inContextPtr->addArray(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7408,7 +7596,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addInteger(keyName, *data);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7427,7 +7615,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 									(kCFAllocatorDefault, charArray, sizeof(charArray) / sizeof(UniChar));
 					if (nullptr != charCFString)
 					{
-						inContextPtr->addString(keyName, charCFString);
+						inContextPtr->addString(inDataPreferenceTag, keyName, charCFString);
 						CFRelease(charCFString), charCFString = nullptr;
 					}
 				}
@@ -7439,7 +7627,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(keyName, (*data) ? CFSTR("\\015\\000") : CFSTR("\\015\\012"));
+					inContextPtr->addString(inDataPreferenceTag, keyName, (*data) ? CFSTR("\\015\\000") : CFSTR("\\015\\012"));
 				}
 				break;
 			
@@ -7449,7 +7637,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(keyName, (*data) ? CFSTR("backspace") : CFSTR("delete"));
+					inContextPtr->addString(inDataPreferenceTag, keyName, (*data) ? CFSTR("backspace") : CFSTR("delete"));
 				}
 				break;
 			
@@ -7462,16 +7650,16 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (*data)
 					{
 					case kClipboard_PasteMethodStandard:
-						inContextPtr->addString(keyName, CFSTR("normal"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("normal"));
 						break;
 					
 					case kClipboard_PasteMethodBlock:
-						inContextPtr->addString(keyName, CFSTR("throttled"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("throttled"));
 						break;
 					
 					default:
 						// ???
-						inContextPtr->addString(keyName, CFSTR("normal"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("normal"));
 						break;
 					}
 				}
@@ -7486,28 +7674,28 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (*data)
 					{
 					case kSession_ProtocolFTP:
-						inContextPtr->addString(keyName, CFSTR("ftp"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("ftp"));
 						break;
 					
 					case kSession_ProtocolSFTP:
-						inContextPtr->addString(keyName, CFSTR("sftp"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("sftp"));
 						break;
 					
 					case kSession_ProtocolSSH1:
-						inContextPtr->addString(keyName, CFSTR("ssh-1"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("ssh-1"));
 						break;
 					
 					case kSession_ProtocolSSH2:
-						inContextPtr->addString(keyName, CFSTR("ssh-2"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("ssh-2"));
 						break;
 					
 					case kSession_ProtocolTelnet:
-						inContextPtr->addString(keyName, CFSTR("telnet"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("telnet"));
 						break;
 					
 					default:
 						// ???
-						inContextPtr->addString(keyName, CFSTR("ssh-1"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("ssh-1"));
 						break;
 					}
 				}
@@ -7522,20 +7710,20 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (*data)
 					{
 					case kTektronixModeNotAllowed:
-						inContextPtr->addString(keyName, CFSTR("off"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("off"));
 						break;
 					
 					case kTektronixMode4014:
-						inContextPtr->addString(keyName, CFSTR("4014"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("4014"));
 						break;
 					
 					case kTektronixMode4105:
-						inContextPtr->addString(keyName, CFSTR("4105"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("4105"));
 						break;
 					
 					default:
 						// ???
-						inContextPtr->addString(keyName, CFSTR("off"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("off"));
 						break;
 					}
 				}
@@ -7547,7 +7735,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addLong(keyName, *data);
+					inContextPtr->addLong(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7599,7 +7787,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(keyName, data);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -7609,7 +7797,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(keyName, data);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -7622,16 +7810,16 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					switch (data)
 					{
 					case kSession_EMACSMetaKeyOption:
-						inContextPtr->addString(keyName, CFSTR("option"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("option"));
 						break;
 					
 					case kSession_EMACSMetaKeyControlCommand:
-						inContextPtr->addString(keyName, CFSTR("control+command"));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("control+command"));
 						break;
 					
 					case kSession_EMACSMetaKeyOff:
 					default:
-						inContextPtr->addString(keyName, CFSTR(""));
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
 						break;
 					}
 				}
@@ -7643,13 +7831,13 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(CFSTR("command-key-emacs-move-down"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-down"),
 											(data) ? CFSTR("down-arrow") : CFSTR(""));
-					inContextPtr->addString(CFSTR("command-key-emacs-move-left"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-left"),
 											(data) ? CFSTR("left-arrow") : CFSTR(""));
-					inContextPtr->addString(CFSTR("command-key-emacs-move-right"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-right"),
 											(data) ? CFSTR("right-arrow") : CFSTR(""));
-					inContextPtr->addString(CFSTR("command-key-emacs-move-up"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-emacs-move-up"),
 											(data) ? CFSTR("up-arrow") : CFSTR(""));
 				}
 				break;
@@ -7660,13 +7848,13 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(CFSTR("command-key-vt220-pf1"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-vt220-pf1"),
 											(data) ? CFSTR("") : CFSTR("keypad-clear"));
-					inContextPtr->addString(CFSTR("command-key-vt220-pf2"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-vt220-pf2"),
 											(data) ? CFSTR("") : CFSTR("keypad-="));
-					inContextPtr->addString(CFSTR("command-key-vt220-pf3"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-vt220-pf3"),
 											(data) ? CFSTR("") : CFSTR("keypad-/"));
-					inContextPtr->addString(CFSTR("command-key-vt220-pf4"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-vt220-pf4"),
 											(data) ? CFSTR("") : CFSTR("keypad-*"));
 				}
 				break;
@@ -7677,13 +7865,13 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(CFSTR("command-key-terminal-end"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-terminal-end"),
 											(data) ? CFSTR("end") : CFSTR(""));
-					inContextPtr->addString(CFSTR("command-key-terminal-home"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-terminal-home"),
 											(data) ? CFSTR("home") : CFSTR(""));
-					inContextPtr->addString(CFSTR("command-key-terminal-page-down"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-terminal-page-down"),
 											(data) ? CFSTR("page-down") : CFSTR(""));
-					inContextPtr->addString(CFSTR("command-key-terminal-page-up"),
+					inContextPtr->addString(inDataPreferenceTag, CFSTR("command-key-terminal-page-up"),
 											(data) ? CFSTR("page-up") : CFSTR(""));
 				}
 				break;
@@ -7694,7 +7882,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeCFStringRef == keyValueType);
-					inContextPtr->addString(keyName, *data);
+					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7704,7 +7892,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(keyName, data);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -7719,7 +7907,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					if (false == nameCFString.exists()) result = kPreferences_ResultGenericFailure;
 					else
 					{
-						inContextPtr->addString(keyName, nameCFString.returnCFStringRef());
+						inContextPtr->addString(inDataPreferenceTag, keyName, nameCFString.returnCFStringRef());
 					}
 				}
 				break;
@@ -7730,7 +7918,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(keyName, data);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -7743,7 +7931,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addFloat(keyName, data);
+					inContextPtr->addFloat(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -7755,7 +7943,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addInteger(keyName, *data);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -7766,7 +7954,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addInteger(keyName, STATIC_CAST(junk, SInt16));
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, STATIC_CAST(junk, SInt16));
 				}
 				break;
 			
@@ -7776,8 +7964,8 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(CFSTR("terminal-emulator-xterm-enable-color"), data);
-					inContextPtr->addFlag(CFSTR("terminal-emulator-xterm-enable-graphics"), data);
+					inContextPtr->addFlag(inDataPreferenceTag, CFSTR("terminal-emulator-xterm-enable-color"), data);
+					inContextPtr->addFlag(inDataPreferenceTag, CFSTR("terminal-emulator-xterm-enable-graphics"), data);
 				}
 				break;
 			
