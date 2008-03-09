@@ -331,42 +331,35 @@ enum
 };
 
 /*!
-Lists the kinds of preferences that can trigger notification
-when they are changed.  Use Preferences_StartMonitoring() to
-establish callbacks to receive notifications.
+Lists the kinds of global changes that can trigger notification
+when they occur.  Each of these is considered to be of type
+"Preferences_Change".  Use Preferences_StartMonitoring() to
+establish callbacks.
 
-NOTE:	Context-specific changes will ALWAYS trigger callbacks.
-		See Preferences_ContextStartMonitoring().
-
-The event context passed to the listener is a pointer to a
-data structure of type "Preferences_ChangeContext".
-
-Some changes are specific events.  However, most change codes
-directly match preferences tags, allowing you to monitor
-changes to those preferences.  For efficiency, most changes
-do NOT trigger events: only the following tags are supported
-with notifiers:
-- kPreferences_TagArrangeWindowsUsingTabs
-- kPreferences_TagBellSound
-- kPreferences_TagCursorBlinks
-- kPreferences_TagDontDimBackgroundScreens
-- kPreferences_TagFocusFollowsMouse
-- kPreferences_TagMacrosMenuVisible
-- kPreferences_TagMapBackquote
-- kPreferences_TagMenuItemKeys
-- kPreferences_TagNewCommandShortcutEffect
-- kPreferences_TagPureInverse
-- kPreferences_TagSimplifiedUserInterface
-- kPreferences_TagTerminalCursorType
-- kPreferences_TagTerminalResizeAffectsFontSize
-- kPreferences_TagTerminalScrollDelay
+These are NOT used for context-specific callbacks; see
+Preferences_ContextStartMonitoring().
 */
 enum
 {
 	kPreferences_ChangeContextName			= ('CNam'),		//!< the given context has been renamed; this may be important
-															//!  for updating user interface elements
+															//!  for updating user interface elements; UNDER EVALUATION: now
+															//!  that context-specific callbacks are possible, this event may
+															//!  be converted to that set
 	kPreferences_ChangeNumberOfContexts		= ('SvCC')		//!< the number of collections (regardless of class) has changed;
 															//!  this may be important for updating user interface elements
+};
+/*!
+Lists the kinds of changes that only trigger notification when
+they occur for specific contexts.  Each of these is considered
+to be of type "Preferences_Change".  You can establish callbacks
+with Preferences_ContextStartMonitoring().
+
+See also Preferences_StartMonitoring().
+*/
+enum
+{
+	kPreferences_ChangeContextBatchMode		= ('CMny')		//!< several settings were changed all at once; simply respond
+															//!  as if everything you care about has changed
 };
 typedef Preferences_Tag		Preferences_Change;
 

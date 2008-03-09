@@ -483,10 +483,6 @@ void
 												 StringPtr					outFontFamilyNameOrNull,
 												 UInt16*					outFontSizeOrNull);
 
-TerminalView_Result
-	TerminalView_Reconfigure					(TerminalViewRef			inView,
-												 Preferences_ContextRef		inConfigurationChanges);
-
 Preferences_ContextRef
 	TerminalView_ReturnConfiguration			(TerminalViewRef			inView);
 

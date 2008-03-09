@@ -206,6 +206,10 @@ public:
 	virtual Preferences_Result
 	destroy () NO_METHOD_IMPL = 0;
 	
+	//! invokes callbacks for an event; usually done automatically
+	void
+	notifyListeners	(Preferences_Tag);
+	
 	//! manages callbacks that are invoked as changes are made
 	Boolean
 	removeListener	(ListenerModel_ListenerRef,
@@ -292,9 +296,6 @@ protected:
 	
 	virtual
 	~My_ContextInterface ();
-	
-	void
-	notifyListeners	(Preferences_Tag);
 	
 	void
 	setImplementor	(CFKeyValueInterface*);
@@ -894,6 +895,11 @@ the name of the base context.
 If any problems occur, nullptr is returned; otherwise,
 a reference to the new context is returned.
 
+NOTE:	For the purposes of context monitors, each
+		key change during duplication does NOT send a
+		change event.  Instead, a single event is
+		
+
 WARNING:	Currently, cloning a Default context is
 			naïve, because it holds global application
 			preferences.  The resulting copy will
@@ -956,6 +962,10 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 				
 				resultPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
 			}
+			
+			// it is not easy to tell what the tags are of the changed keys, so send
+			// a single event informing listeners that many things changed at once
+			resultPtr->notifyListeners(kPreferences_ChangeContextBatchMode);
 		}
 	}
 	return result;
@@ -1583,6 +1593,10 @@ Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
 				
 				destPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
 			}
+			
+			// it is not easy to tell what the tags are of the changed keys, so send
+			// a single event informing listeners that many things changed at once
+			destPtr->notifyListeners(kPreferences_ChangeContextBatchMode);
 		}
 	}
 	return result;
@@ -1901,7 +1915,16 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 
 /*!
 Arranges for a callback to be invoked every time the specified
-setting is changed in the given context.
+setting is directly changed in the given context.
+
+It is also possible for a context to change in “batch mode”, in
+which case the change is NOT sent to individual listeners but
+is rather its own event: "kPreferences_ChangeContextBatchMode".
+You MUST register for this event in addition to your regular tag
+if you wish to detect batch-mode changes as well (e.g. when the
+entire context is duplicated).  The appropriate response to a
+batch mode event is to simply pretend every tag you care about
+has changed at once.
 
 \retval kPreferences_ResultOK
 if no error occurred
@@ -2453,9 +2476,30 @@ Preferences_SetWindowArrangementData	(WindowRef			inWindow,
 
 
 /*!
-Arranges for a callback to be invoked whenever a user
-preference changes.  The context passed to listeners
-is currently reserved and set to nullptr.
+Arranges for a callback to be invoked whenever a user preference
+changes globally.  The event context passed to the listener is a
+pointer to a data structure of type "Preferences_ChangeContext".
+The listener context is currently reserved and set to "nullptr".
+
+Some changes are specific events.  However, most change codes
+directly match preferences tags, allowing you to monitor
+changes to those preferences.  For efficiency, most changes
+do NOT trigger events: only the following tags are supported
+with notifiers:
+- kPreferences_TagArrangeWindowsUsingTabs
+- kPreferences_TagBellSound
+- kPreferences_TagCursorBlinks
+- kPreferences_TagDontDimBackgroundScreens
+- kPreferences_TagFocusFollowsMouse
+- kPreferences_TagMacrosMenuVisible
+- kPreferences_TagMapBackquote
+- kPreferences_TagMenuItemKeys
+- kPreferences_TagNewCommandShortcutEffect
+- kPreferences_TagPureInverse
+- kPreferences_TagSimplifiedUserInterface
+- kPreferences_TagTerminalCursorType
+- kPreferences_TagTerminalResizeAffectsFontSize
+- kPreferences_TagTerminalScrollDelay
 
 (3.0)
 */
@@ -2472,11 +2516,12 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	// If you change the list below, also check the preference-setting
 	// code to make sure that the tag values checked here REALLY DO
 	// trigger callback invocations!  Also keep this in sync with
-	// Preferences_StopMonitoring() and the comments in "Preferences.h".
+	// Preferences_StopMonitoring() and the comments above.
 	case kPreferences_TagArrangeWindowsUsingTabs:
 	case kPreferences_TagBellSound:
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
+	case kPreferences_TagFocusFollowsMouse:
 	case kPreferences_TagMacrosMenuVisible:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagMenuItemKeys:
@@ -2546,11 +2591,12 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	switch (inForWhatChange)
 	{
 	// Keep this in sync with Preferences_StartMonitoring() and the
-	// comments in "Preferences.h".
+	// comments in Preferences_StartMonitoring().
 	case kPreferences_TagArrangeWindowsUsingTabs:
 	case kPreferences_TagBellSound:
 	case kPreferences_TagCursorBlinks:
 	case kPreferences_TagDontDimBackgroundScreens:
+	case kPreferences_TagFocusFollowsMouse:
 	case kPreferences_TagMacrosMenuVisible:
 	case kPreferences_TagMapBackquote:
 	case kPreferences_TagMenuItemKeys:

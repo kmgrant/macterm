@@ -305,6 +305,8 @@ static pascal void		animateBlinkingPaletteEntries	(EventLoopTimerRef, void*);
 static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
 static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTimerMessage, void*);
+static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef);
+static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef);
 static void				copySelectedTextIfUserPreference(TerminalViewPtr);
 static OSStatus			createWindowColorPalette		(TerminalViewPtr);
 static Boolean			cursorBlinks					(TerminalViewPtr);
@@ -1450,59 +1452,24 @@ TerminalView_PtInSelection	(TerminalViewRef	inView,
 
 
 /*!
-Copies settings from the specified Preferences context into
-this view.  Only settings present in the new configuration
-will be affected, others remain unchanged.
+Returns a variety of preferences unique to this view.  The
+results are “read/write”; any modifications (through normal
+Preferences APIs) will be detected and used to resynchronize
+the terminal display and internal caches.
+
+The configuration is a combination of any defaults that were
+in effect at the time the view was constructed, any overridden
+settings given at construction time, and any calls to
+TerminalView_CopyConfiguration() since then.
+
+Note that you cannot expect all possible tags to be present;
+be prepared to not find what you look for.  In addition, tags
+that are present in one view may be absent in another.
 
 You cannot change the font size if the display mode is
 currently setting the size automatically.  Use the
-TerminalView_ReturnDisplayMode() routine to determine what
-the display mode is.
-
-See also TerminalView_ReturnConfiguration().
-
-\retval kTerminalView_ResultOK
-if no error occurred
-
-\retval kTerminalView_ResultInvalidID
-if the screen reference is unrecognized
-
-\retval kTerminalView_ResultParameterError
-if the specified configuration is nullptr
-
-(3.1)
-*/
-TerminalView_Result
-TerminalView_Reconfigure	(TerminalViewRef			inView,
-							 Preferences_ContextRef		inConfigurationChanges)
-{
-	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	TerminalView_Result			result = kTerminalView_ResultOK;
-	
-	
-	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
-	else if (nullptr == inConfigurationChanges) result = kTerminalView_ResultParameterError;
-	{
-		Preferences_ContextCopy(inConfigurationChanges, viewPtr->configuration);
-	}
-	return result;
-}// Reconfigure
-
-
-/*!
-Returns a variety of preferences unique to this view.
-You can use Preferences APIs to read values, but DO NOT
-change anything; the view will not be synchronized.
-
-This configuration will be a combination of any defaults
-in effect at the time the view was constructed, any
-overridden settings given at construction time, and any
-calls to TerminalView_CopyConfiguration() since then.
-
-Note that you cannot expect all possible tags to be
-present; be prepared to not find what you look for.  In
-addition, tags that are present in one view may be
-absent in another.
+TerminalView_ReturnDisplayMode() routine to determine
+what the display mode is.
 
 (3.1)
 */
@@ -3083,13 +3050,15 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	// set up a callback to receive preference change notifications
 	this->screen.preferenceMonitor = ListenerModel_NewStandardListener(preferenceChangedForView, this->selfRef/* context */);
 	{
-		Preferences_Result		error = kPreferences_ResultOK;
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		error = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType,
-											false/* call immediately to get initial value */);
-		error = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
-											false/* call immediately to get initial value */);
+		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType,
+													false/* call immediately to get initial value */);
+		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
+													false/* call immediately to get initial value */);
+		prefsResult = Preferences_ContextStartMonitoring(this->configuration, kPreferences_ChangeContextBatchMode,
+															this->screen.preferenceMonitor);
 	}
 }// initialize
 
@@ -3124,6 +3093,8 @@ TerminalView::
 	// stop receiving preference change notifications
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType);
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize);
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, kPreferences_ChangeContextBatchMode,
+															this->screen.preferenceMonitor);
 	ListenerModel_ReleaseListener(&this->screen.preferenceMonitor);
 	
 	// remove idle timer
@@ -3145,6 +3116,7 @@ TerminalView::
 	//}
 	
 	ListenerModel_Dispose(&this->changeListenerModel);
+	Preferences_ReleaseContext(&this->configuration);
 }// TerminalView destructor
 
 
@@ -3421,6 +3393,139 @@ contentHIViewIdleTimer	(EventLoopTimerRef			UNUSED_ARGUMENT(inTimer),
 
 
 /*!
+Attempts to read all supported color tags from the given
+preference context, and any colors that exist will be
+used to update the specified view.
+
+Returns the number of colors that were changed.
+
+(3.1)
+*/
+static UInt16
+copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
+						 Preferences_ContextRef		inSource)
+{
+	RGBColor	colorValue;
+	UInt16		result = 0;
+	
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData
+									(inSource, kPreferences_TagTerminalColorNormalForeground,
+										sizeof(colorValue), &colorValue))
+	{
+		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalText, &colorValue);
+		++result;
+	}
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData
+									(inSource, kPreferences_TagTerminalColorNormalBackground,
+										sizeof(colorValue), &colorValue))
+	{
+		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalBackground, &colorValue);
+		++result;
+	}
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData
+									(inSource, kPreferences_TagTerminalColorBlinkingForeground,
+										sizeof(colorValue), &colorValue))
+	{
+		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingText, &colorValue);
+		++result;
+	}
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData
+									(inSource, kPreferences_TagTerminalColorBlinkingBackground,
+										sizeof(colorValue), &colorValue))
+	{
+		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingBackground, &colorValue);
+		++result;
+	}
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData
+									(inSource, kPreferences_TagTerminalColorBoldForeground,
+										sizeof(colorValue), &colorValue))
+	{
+		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldText, &colorValue);
+		++result;
+	}
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData
+									(inSource, kPreferences_TagTerminalColorBoldBackground,
+										sizeof(colorValue), &colorValue))
+	{
+		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldBackground, &colorValue);
+		++result;
+	}
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData
+									(inSource, kPreferences_TagTerminalColorMatteBackground,
+										sizeof(colorValue), &colorValue))
+	{
+		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexMatteBackground, &colorValue);
+		++result;
+	}
+	
+	return result;
+}// copyColorPreferences
+
+
+/*!
+Attempts to read all supported font tags from the given
+preference context, and any font information that exists
+will be used to update the specified view.
+
+Note that the font size cannot be changed while in zoom
+mode, because the view size determines the font size.
+
+Returns the number of font settings that were changed.
+
+(3.1)
+*/
+static UInt16
+copyFontPreferences		(TerminalViewPtr			inTerminalViewPtr,
+						 Preferences_ContextRef		inSource)
+{
+	UInt16		result = 0;
+	Str255		fontName;
+	SInt16		fontSize = 0;
+	
+	
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontName,
+															sizeof(fontName), fontName))
+	{
+		PLstrcpy(inTerminalViewPtr->text.font.familyName, fontName);
+		if (noErr != Localization_GetFontTextEncoding(inTerminalViewPtr->text.font.familyName,
+														&inTerminalViewPtr->text.font.encoding))
+		{
+			// not really accurate, but what can really be done here?
+			inTerminalViewPtr->text.font.encoding = kTheMacRomanTextEncoding;
+		}
+		// set up font and character set information
+		if (noErr != TECCreateConverter(&inTerminalViewPtr->text.converterFromMacRoman, kTheMacRomanTextEncoding,
+										inTerminalViewPtr->text.font.encoding))
+		{
+			// failed to make converter
+			inTerminalViewPtr->text.converterFromMacRoman = nullptr;
+		}
+	}
+	
+	if (inTerminalViewPtr->displayMode != kTerminalView_DisplayModeZoom)
+	{
+		if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontSize,
+																sizeof(fontSize), &fontSize))
+		{
+			++result;
+		}
+	}
+	
+	// set font size to automatically fill in initial font metrics, etc.
+	setFontAndSize(inTerminalViewPtr, inTerminalViewPtr->text.font.familyName, fontSize);
+	
+	return result;
+}// copyFontPreferences
+
+
+/*!
 Copies all of the selected text to the clipboard
 under the condition that the user has set the
 preference to automatically copy new selections.
@@ -3646,57 +3751,7 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 						if (kPreferences_ResultOK == Preferences_GetDefaultContext
 														(&formatPreferencesContext, kPreferences_ClassFormat))
 						{
-							RGBColor	colorValue;
-							
-							
-							if (kPreferences_ResultOK == Preferences_ContextGetData
-															(formatPreferencesContext, kPreferences_TagTerminalColorNormalForeground,
-																sizeof(colorValue), &colorValue))
-							{
-								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalText, &colorValue);
-							}
-							
-							if (kPreferences_ResultOK == Preferences_ContextGetData
-															(formatPreferencesContext, kPreferences_TagTerminalColorNormalBackground,
-																sizeof(colorValue), &colorValue))
-							{
-								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalBackground, &colorValue);
-							}
-							
-							if (kPreferences_ResultOK == Preferences_ContextGetData
-															(formatPreferencesContext, kPreferences_TagTerminalColorBlinkingForeground,
-																sizeof(colorValue), &colorValue))
-							{
-								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingText, &colorValue);
-							}
-							
-							if (kPreferences_ResultOK == Preferences_ContextGetData
-															(formatPreferencesContext, kPreferences_TagTerminalColorBlinkingBackground,
-																sizeof(colorValue), &colorValue))
-							{
-								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingBackground, &colorValue);
-							}
-							
-							if (kPreferences_ResultOK == Preferences_ContextGetData
-															(formatPreferencesContext, kPreferences_TagTerminalColorBoldForeground,
-																sizeof(colorValue), &colorValue))
-							{
-								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldText, &colorValue);
-							}
-							
-							if (kPreferences_ResultOK == Preferences_ContextGetData
-															(formatPreferencesContext, kPreferences_TagTerminalColorBoldBackground,
-																sizeof(colorValue), &colorValue))
-							{
-								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldBackground, &colorValue);
-							}
-							
-							if (kPreferences_ResultOK == Preferences_ContextGetData
-															(formatPreferencesContext, kPreferences_TagTerminalColorMatteBackground,
-																sizeof(colorValue), &colorValue))
-							{
-								setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexMatteBackground, &colorValue);
-							}
+							(UInt16)copyColorPreferences(inTerminalViewPtr, formatPreferencesContext);
 						}
 					}
 				}
@@ -6301,11 +6356,15 @@ any necessary data and display elements.
 static void
 preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							 ListenerModel_Event	inPreferenceTagThatChanged,
-							 void*					UNUSED_ARGUMENT(inEventContextPtr),
+							 void*					inPreferencesContext,
 							 void*					inTerminalViewRef)
 {
-	TerminalViewRef			view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
+	// WARNING: The context is only defined for the preferences monitored in a
+	// context-specific way through Preferences_ContextStartMonitoring() calls.
+	// Otherwise, the data type of the input is "Preferences_ChangeContext*".
+	Preferences_ContextRef		prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
+	TerminalViewRef				view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
+	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), view);
 	
 	
 	switch (inPreferenceTagThatChanged)
@@ -6358,7 +6417,18 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	default:
-		// ???
+		if (kPreferences_ChangeContextBatchMode == inPreferenceTagThatChanged)
+		{
+			// batch mode; multiple things have changed, so check for the new values
+			// of everything that is understood by a terminal view
+			(UInt16)copyColorPreferences(viewPtr, prefsContext);
+			(UInt16)copyFontPreferences(viewPtr, prefsContext);
+			(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+		}
+		else
+		{
+			// ???
+		}
 		break;
 	}
 }// preferenceChangedForView
@@ -8832,49 +8902,26 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 					 TerminalView_ColorIndex	inColorEntryNumber,
 					 RGBColor const*			inColorPtr)
 {
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	
-	
 	switch (inColorEntryNumber)
 	{
 	case kTerminalView_ColorIndexNormalBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
-		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
-													kPreferences_TagTerminalColorNormalBackground,
-													sizeof(*inColorPtr), inColorPtr);
-		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBoldText:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBoldText] = *inColorPtr;
-		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
-													kPreferences_TagTerminalColorBoldForeground,
-													sizeof(*inColorPtr), inColorPtr);
-		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBoldBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBoldBackground] = *inColorPtr;
-		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
-													kPreferences_TagTerminalColorBoldBackground,
-													sizeof(*inColorPtr), inColorPtr);
-		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBlinkingText:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingText] = *inColorPtr;
-		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
-													kPreferences_TagTerminalColorBlinkingForeground,
-													sizeof(*inColorPtr), inColorPtr);
-		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexBlinkingBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingBackground] = *inColorPtr;
-		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
-													kPreferences_TagTerminalColorBlinkingBackground,
-													sizeof(*inColorPtr), inColorPtr);
-		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	
 	case kTerminalView_ColorIndexMatteBackground:
@@ -8888,22 +8935,13 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 				error = SetControlData(inTerminalViewPtr->backgroundHIView, kControlEntireControl,
 										kConstantsRegistry_ControlDataTagTerminalBackgroundColor,
 										sizeof(*inColorPtr), inColorPtr);
-				assert_noerr(error);
 			}
-			prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
-														kPreferences_TagTerminalColorMatteBackground,
-														sizeof(*inColorPtr), inColorPtr);
-			assert(kPreferences_ResultOK == prefsResult);
 		}
 		break;
 	
 	case kTerminalView_ColorIndexNormalText:
 	default:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalText] = *inColorPtr;
-		prefsResult = Preferences_ContextSetData(inTerminalViewPtr->configuration,
-													kPreferences_TagTerminalColorNormalForeground,
-													sizeof(*inColorPtr), inColorPtr);
-		assert(kPreferences_ResultOK == prefsResult);
 		break;
 	}
 	
