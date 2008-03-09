@@ -106,6 +106,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080308': [
 		'Custom Format dialog now correctly affects a single window and not global preferences.',
+		'Preferences window Formats pane now sets the sample correctly, but due to a display bug this can only be seen after resizing the window.',
 	],
 	'20080307': [
 		'Terminal view renderer has had several internal improvements, now only partially redrawing the screen in many cases (which is faster).',

@@ -167,10 +167,13 @@ struct My_FormatsPanelNormalUI
 {
 	My_FormatsPanelNormalUI		(Panel_Ref, HIWindowRef);
 	
-	Panel_Ref		panel;			//!< the panel using this UI
-	Float32			idealWidth;		//!< best size in pixels
-	Float32			idealHeight;	//!< best size in pixels
-	HIViewWrap		mainView;
+	Panel_Ref			panel;			//!< the panel using this UI
+	Float32				idealWidth;		//!< best size in pixels
+	Float32				idealHeight;	//!< best size in pixels
+	TerminalScreenRef	terminalScreen;	//!< used to store sample text
+	TerminalViewRef		terminalView;	//!< used to render a sample
+	HIViewWrap			terminalHIView;	//!< container of sample
+	HIViewWrap			mainView;
 	
 	void
 	loseFocus	();
@@ -186,13 +189,13 @@ struct My_FormatsPanelNormalUI
 
 protected:
 	HIViewWrap
-	createContainerView		(Panel_Ref, HIWindowRef, TerminalScreenRef);
-	
-	HIViewRef
-	createSampleTerminalHIView	(HIWindowRef, TerminalScreenRef) const;
+	createContainerView		(Panel_Ref, HIWindowRef);
 	
 	TerminalScreenRef
 	createSampleTerminalScreen () const;
+	
+	HIViewRef
+	setUpSampleTerminalHIView	(TerminalViewRef, TerminalScreenRef);
 	
 	static void
 	deltaSize	(HIViewRef, Float32, Float32, void*);
@@ -643,7 +646,10 @@ My_FormatsPanelNormalUI		(Panel_Ref		inPanel,
 panel					(inPanel),
 idealWidth				(0.0),
 idealHeight				(0.0),
-mainView				(createContainerView(inPanel, inOwningWindow, createSampleTerminalScreen())
+terminalScreen			(createSampleTerminalScreen()),
+terminalView			(TerminalView_NewHIViewBased(this->terminalScreen)),
+terminalHIView			(setUpSampleTerminalHIView(this->terminalView, this->terminalScreen)),
+mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
@@ -677,10 +683,11 @@ the sub-views that belong in its hierarchy.
 */
 HIViewWrap
 My_FormatsPanelNormalUI::
-createContainerView		(Panel_Ref			inPanel,
-						 HIWindowRef		inOwningWindow,
-						 TerminalScreenRef	inSampleTerminalScreen)
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
 {
+	assert(nullptr != this->terminalHIView);
+	
 	HIViewRef					result = nullptr;
 	std::vector< HIViewRef >	viewList;
 	Rect						dummy;
@@ -756,76 +763,14 @@ createContainerView		(Panel_Ref			inPanel,
 	
 	// use the original user pane only to define the boundaries of the new terminal view
 	{
-		HIViewRef	terminalView = createSampleTerminalHIView(inOwningWindow, inSampleTerminalScreen);
-		
-		
-		error = HIViewAddSubview(result, terminalView);
+		error = HIViewAddSubview(result, this->terminalHIView);
 		assert_noerr(error);
-		error = HIViewSetFrame(terminalView, &sampleViewFrame);
+		error = HIViewSetFrame(this->terminalHIView, &sampleViewFrame);
 		assert_noerr(error);
 	}
 	
 	return result;
 }// My_FormatsPanelNormalUI::createContainerView
-
-
-/*!
-Constructs the sample terminal screen HIView.
-
-(3.1)
-*/
-HIViewRef
-My_FormatsPanelNormalUI::
-createSampleTerminalHIView	(HIWindowRef		inOwningWindow,
-							 TerminalScreenRef	inSampleTerminalScreen)
-const
-{
-	HIViewRef			result = nullptr;
-	TerminalViewRef		terminalView = nullptr;
-	OSStatus			error = noErr;
-	
-	
-	terminalView = TerminalView_NewHIViewBased(inSampleTerminalScreen);
-	assert(nullptr != terminalView);
-	result = TerminalView_ReturnContainerHIView(terminalView);
-	assert(nullptr != result);
-	
-	// tag this view with an ID so it can be found easily later
-	error = SetControlID(result, &idMyUserPaneSampleTerminalView);
-	assert_noerr(error);
-	
-	// TEMPORARY - test
-	{
-		RGBColor	newColor;
-		
-		
-		newColor.red = 0;
-		newColor.green = 0;
-		newColor.blue = 0;
-		TerminalView_SetColor(terminalView, kTerminalView_ColorIndexNormalText, &newColor);
-		newColor.red = RGBCOLOR_INTENSITY_MAX;
-		newColor.green = RGBCOLOR_INTENSITY_MAX;
-		newColor.blue = RGBCOLOR_INTENSITY_MAX;
-		TerminalView_SetColor(terminalView, kTerminalView_ColorIndexNormalBackground, &newColor);
-	}
-	
-	// write some sample text to the view
-	{
-		// assumes VT100
-		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
-										"\033[2J\033[H"); // clear screen, home cursor
-		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
-										"normal \033[1mbold\033[0m \033[3mitalic\033[0m \033[6minverse\033[0m\015\012"); // LOCALIZE THIS
-		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
-										"\033[4munderline\033[0m \033[5mblinking\033[0m\015\012"); // LOCALIZE THIS
-		Terminal_EmulatorProcessCString(inSampleTerminalScreen,
-										"selected\015\012"); // LOCALIZE THIS
-		// the range selected here should be as long as the length of the word ÒselectedÓ above
-		TerminalView_SelectVirtualRange(terminalView, std::make_pair(std::make_pair(0, 2), std::make_pair(7, 2)));
-	}
-	
-	return result;
-}// My_FormatsPanelNormalUI::createSampleTerminalHIView
 
 
 /*!
@@ -952,6 +897,9 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingForeground, HIViewWrap(idMyBevelButtonBlinkingText, kOwningWindow));
 		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingBackground, HIViewWrap(idMyBevelButtonBlinkingBackground, kOwningWindow));
 		setColorBox(inSettings, kPreferences_TagTerminalColorMatteBackground, HIViewWrap(idMyBevelButtonMatteBackground, kOwningWindow));
+		
+		// update the sample area
+		Preferences_ContextCopy(inSettings, TerminalView_ReturnConfiguration(this->terminalView));
 	}
 }// My_FormatsPanelNormalUI::readPreferences
 
@@ -989,6 +937,46 @@ setFontSize		(SInt16		inFontSize)
 	NumToString(inFontSize, sizeString);
 	SetControlTitle(HIViewWrap(idMyButtonFontSize, kOwningWindow), sizeString);
 }// My_FormatsPanelNormalUI::setFontSize
+
+
+/*!
+Constructs the sample terminal screen HIView.
+
+(3.1)
+*/
+HIViewRef
+My_FormatsPanelNormalUI::
+setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
+							 TerminalScreenRef	inTerminalScreen)
+{
+	HIViewRef	result = nullptr;
+	OSStatus	error = noErr;
+	
+	
+	result = TerminalView_ReturnContainerHIView(inTerminalView);
+	assert(nullptr != result);
+	
+	// tag this view with an ID so it can be found easily later
+	error = SetControlID(result, &idMyUserPaneSampleTerminalView);
+	assert_noerr(error);
+	
+	// write some sample text to the view
+	{
+		// assumes VT100
+		Terminal_EmulatorProcessCString(inTerminalScreen,
+										"\033[2J\033[H"); // clear screen, home cursor
+		Terminal_EmulatorProcessCString(inTerminalScreen,
+										"normal \033[1mbold\033[0m \033[3mitalic\033[0m \033[6minverse\033[0m\015\012"); // LOCALIZE THIS
+		Terminal_EmulatorProcessCString(inTerminalScreen,
+										"\033[4munderline\033[0m \033[5mblinking\033[0m\015\012"); // LOCALIZE THIS
+		Terminal_EmulatorProcessCString(inTerminalScreen,
+										"selected\015\012"); // LOCALIZE THIS
+		// the range selected here should be as long as the length of the word ÒselectedÓ above
+		TerminalView_SelectVirtualRange(inTerminalView, std::make_pair(std::make_pair(0, 2), std::make_pair(7, 2)));
+	}
+	
+	return result;
+}// My_FormatsPanelNormalUI::setUpSampleTerminalHIView
 
 
 /*!
@@ -1044,10 +1032,10 @@ colorBoxNormalChangeNotify	(HIViewRef			inColorBoxThatChanged,
 							 RGBColor const*	inNewColor,
 							 void*				inMyFormatsPanelNormalUIPtr)
 {
-	My_FormatsPanelNormalUIPtr			interfacePtr = REINTERPRET_CAST(inMyFormatsPanelNormalUIPtr, My_FormatsPanelNormalUIPtr);
-	My_FormatsPanelANSIColorsDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
-																	My_FormatsPanelANSIColorsDataPtr);
-	UInt32								colorID = 0;
+	My_FormatsPanelNormalUIPtr		interfacePtr = REINTERPRET_CAST(inMyFormatsPanelNormalUIPtr, My_FormatsPanelNormalUIPtr);
+	My_FormatsPanelNormalDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																My_FormatsPanelNormalDataPtr);
+	UInt32							colorID = 0;
 	
 	
 	// command ID matches preferences tag
@@ -1062,6 +1050,9 @@ colorBoxNormalChangeNotify	(HIViewRef			inColorBoxThatChanged,
 			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
 																				sizeof(*inNewColor), inNewColor);
 			
+			
+			// update the sample area
+			Preferences_ContextCopy(dataPtr->dataModel, TerminalView_ReturnConfiguration(interfacePtr->terminalView));
 			
 			isOK = (kPreferences_ResultOK == prefsResult);
 		}
@@ -1432,6 +1423,9 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					normalDataPtr->setFontSize(fontSize);
 				}
 			}
+			
+			// update the sample area
+			Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnConfiguration(normalDataPtr->terminalView));
 		}
 		break;
 	
