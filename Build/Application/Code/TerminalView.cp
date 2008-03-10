@@ -308,7 +308,7 @@ static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTi
 static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef);
 static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef);
 static void				copySelectedTextIfUserPreference(TerminalViewPtr);
-static OSStatus			createWindowColorPalette		(TerminalViewPtr);
+static OSStatus			createWindowColorPalette		(TerminalViewPtr, Preferences_ContextRef);
 static Boolean			cursorBlinks					(TerminalViewPtr);
 static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 static void				drawRowSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, TerminalTextAttributes,
@@ -2924,12 +2924,12 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		SInt16				fontSize = 0;
 		
 		
-		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontName,
-														sizeof(fontName), fontName);
-		if (kPreferences_ResultOK != preferencesResult) PLstrcpy(fontName, "\pMonaco"); // arbitrary
-		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontSize,
-														sizeof(fontSize), &fontSize);
-		if (kPreferences_ResultOK != preferencesResult) fontSize = 12; // arbitrary
+		preferencesResult = Preferences_ContextOrDefaultGetData(inFormat, kPreferences_TagFontName,
+																sizeof(fontName), fontName);
+		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextOrDefaultGetData(inFormat, kPreferences_TagFontSize,
+																sizeof(fontSize), &fontSize);
+		assert(kPreferences_ResultOK == preferencesResult);
 		
 		// set up font and character set information
 		PLstrcpy(this->text.font.familyName, fontName);
@@ -2950,7 +2950,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	}
 	
 	// create the color palette - 14 screen colors (8 ANSI, 6 others)
-	assert_noerr(createWindowColorPalette(this));
+	assert_noerr(createWindowColorPalette(this, inFormat));
 	
 	// initialize focus area
 	this->currentContentFocus = kTerminalView_ContentPartVoid;
@@ -3564,10 +3564,11 @@ reference must be valid.
 Returns "noErr" only if the palette is created
 successfully.
 
-(3.0)
+(3.1)
 */
 static OSStatus
-createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
+createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
+							 Preferences_ContextRef		inFormat)
 {
 	OSStatus		result = noErr;
 	SInt16 const	kNumberOfPaletteEntries = (kTerminalView_ColorCountRequiredEntries +
@@ -3613,113 +3614,113 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIBlack;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIBlack;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIRed;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIRed;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIGreen;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIGreen;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIYellow;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIYellow;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIBlue;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIBlue;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIMagenta;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIMagenta;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSICyan;
 				currentPrefsTag = kPreferences_TagTerminalColorANSICyan;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexNormalANSIWhite;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIWhite;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlack;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIBlackBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIRed;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIRedBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIGreen;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIGreenBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIYellow;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIYellowBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlue;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIBlueBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIMagenta;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIMagentaBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSICyan;
 				currentPrefsTag = kPreferences_TagTerminalColorANSICyanBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
 				currentIndex = kTerminalView_ColorIndexEmphasizedANSIWhite;
 				currentPrefsTag = kPreferences_TagTerminalColorANSIWhiteBold;
-				prefsResult = Preferences_GetData(currentPrefsTag, sizeof(RGBColor),
-													&(colorTableRGBColorArray[currentIndex]), &actualSize);
+				prefsResult = Preferences_ContextOrDefaultGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
+																	&(colorTableRGBColorArray[currentIndex]), &actualSize);
 				assert(kPreferences_ResultOK == prefsResult);
 				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
 				
@@ -3734,26 +3735,17 @@ createWindowColorPalette	(TerminalViewPtr	inTerminalViewPtr)
 				else
 				{
 					// install a timer to modify blinking text color entries periodically
-					assert(inTerminalViewPtr->selfRef != nullptr);
+					assert(nullptr != inTerminalViewPtr->selfRef);
 					inTerminalViewPtr->window.palette.animationTimerUPP = NewEventLoopTimerUPP(animateBlinkingPaletteEntries);
 					(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
-													kEventDurationSecond * 1.5/* time between fires (user preference?) */,
+													kEventDurationSecond * 1.5/* time between fires (TEMPORARY - user preference?) */,
 													inTerminalViewPtr->window.palette.animationTimerUPP,
 													inTerminalViewPtr->selfRef/* user data */,
 													&inTerminalViewPtr->window.palette.animationTimer);
 					inTerminalViewPtr->window.palette.animationTimerIsActive = false;
 					
-					// use terminal default preferences (stored in preferences file) to set up window’s colors
-					{
-						Preferences_ContextRef		formatPreferencesContext = nullptr;
-						
-						
-						if (kPreferences_ResultOK == Preferences_GetDefaultContext
-														(&formatPreferencesContext, kPreferences_ClassFormat))
-						{
-							(UInt16)copyColorPreferences(inTerminalViewPtr, formatPreferencesContext);
-						}
-					}
+					// set up window’s colors
+					(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat);
 				}
 			}
 			
