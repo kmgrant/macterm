@@ -517,6 +517,8 @@ namespace {
 Preferences_Result		assertInitialized						();
 void					changeNotify							(Preferences_Change,
 																 Preferences_ContextRef = nullptr, Boolean = false);
+Preferences_Result		contextGetData							(My_ContextInterfacePtr, Preferences_Class, Preferences_Tag, size_t,
+																 void*, size_t*);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
 Preferences_Result		copyClassDictionaryByName				(Preferences_Class, CFStringRef, CFMutableDictionaryRef&);
@@ -1649,15 +1651,9 @@ Preferences_ContextDeleteSaved	(Preferences_ContextRef		inContext)
 
 /*!
 Returns preference data corresponding to the specified tag.
-
-Data is obtained sequentially by context; the ÒglobalÓ context
-is consulted last, and is only used if no preceding context
-contains the specified preferences data.  In this way, it is
-possible to ask for data generically without having to know
-exactly how the user provided it (or even if the user provided
-it at all); e.g. there may be preferences specific to a window,
-preferences specific to a workspace, and then global preferences
-that are used if neither of the former is defined.
+A context may not contain the requested data.  You can use
+its class as a *hint*, not a guarantee, as to what may be
+stored in it.
 
 Incomplete.
 
@@ -1701,34 +1697,7 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 		
 		
-		switch (dataClass)
-		{
-		case kPreferences_ClassFormat:
-			result = getFormatPreference(ptr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
-			break;
-		
-		case kPreferences_ClassGeneral:
-			result = getGeneralPreference(ptr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
-			break;
-		
-		case kPreferences_ClassMacroSet:
-			result = getMacroSetPreference(ptr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
-			break;
-		
-		case kPreferences_ClassSession:
-			result = getSessionPreference(ptr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
-			break;
-		
-		case kPreferences_ClassTerminal:
-			result = getTerminalPreference(ptr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
-			break;
-		
-		case kPreferences_ClassWindow:
-		default:
-			// unrecognized preference class
-			result = kPreferences_ResultUnknownTagOrClass;
-			break;
-		}
+		result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 	}
 	return result;
 }// ContextGetData
@@ -1765,6 +1734,79 @@ Preferences_ContextGetName	(Preferences_ContextRef		inContext,
 	}
 	return result;
 }// ContextGetName
+
+
+/*!
+Returns preference data corresponding to the specified tag:
+either from the given context, or user default preferences.
+In the future, this routine may even consult other sources of
+defaults.
+
+This routine is for convenience, when you just need a setting
+and do not care where it is defined.  To determine whether or
+not a specific context actually provides a setting, use
+Preferences_ContextGetData().
+
+Returns anything that Preferences_ContextGetData() may return.
+
+(3.1)
+*/
+Preferences_Result
+Preferences_ContextOrDefaultGetData		(Preferences_ContextRef		inContext,
+										 Preferences_Tag			inDataPreferenceTag,
+										 size_t						inDataStorageSize,
+										 void*						outDataStorage,
+										 size_t*					outActualSizePtrOrNull)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0;
+	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	
+	
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	if (kPreferences_ResultOK == result)
+	{
+		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+		
+		
+		result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		if (kPreferences_ResultOK != result)
+		{
+			// not available...try another context
+			Preferences_ContextRef		alternateContext = nullptr;
+			
+			
+			result = Preferences_GetDefaultContext(&alternateContext, ptr->returnClass());
+			if (kPreferences_ResultOK == result)
+			{
+				My_ContextAutoLocker	alternatePtr(gMyContextPtrLocks(), alternateContext);
+				
+				
+				result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag, inDataStorageSize,
+										outDataStorage, outActualSizePtrOrNull);
+				if (kPreferences_ResultOK != result)
+				{
+					// not available...try yet another context
+					Preferences_ContextRef		rootContext = nullptr;
+					
+					
+					result = Preferences_GetDefaultContext(&rootContext);
+					if (kPreferences_ResultOK == result)
+					{
+						My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
+						
+						
+						result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
+												outDataStorage, outActualSizePtrOrNull);
+					}
+				}
+			}
+		}
+	}
+	return result;
+}// ContextOrDefaultGetData
 
 
 /*!
@@ -3567,6 +3609,54 @@ changeNotify	(Preferences_Change			inWhatChanged,
 	// invoke listener callback routines appropriately, from the preferences listener model
 	ListenerModel_NotifyListenersOfEvent(gPreferenceEventListenerModel, inWhatChanged, &context);
 }// changeNotify
+
+
+/*!
+Internal version of Preferences_ContextGetData().
+
+(3.1)
+*/
+Preferences_Result
+contextGetData		(My_ContextInterfacePtr		inContextPtr,
+					 Preferences_Class			inDataClass,
+					 Preferences_Tag			inDataPreferenceTag,
+					 size_t						inDataStorageSize,
+					 void*						outDataStorage,
+					 size_t*					outActualSizePtrOrNull)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	
+	
+	switch (inDataClass)
+	{
+	case kPreferences_ClassFormat:
+		result = getFormatPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
+	case kPreferences_ClassGeneral:
+		result = getGeneralPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
+	case kPreferences_ClassMacroSet:
+		result = getMacroSetPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
+	case kPreferences_ClassSession:
+		result = getSessionPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
+	case kPreferences_ClassTerminal:
+		result = getTerminalPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
+	case kPreferences_ClassWindow:
+	default:
+		// unrecognized preference class
+		result = kPreferences_ResultUnknownTagOrClass;
+		break;
+	}
+	return result;
+}// contextGetData
 
 
 /*!

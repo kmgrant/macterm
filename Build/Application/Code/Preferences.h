@@ -491,6 +491,13 @@ Preferences_Result
 											 size_t*							outActualSizePtrOrNull = nullptr);
 
 Preferences_Result
+	Preferences_ContextOrDefaultGetData		(Preferences_ContextRef				inStartingContext,
+											 Preferences_Tag					inDataPreferenceTag,
+											 size_t								inDataStorageSize,
+											 void*								outDataStorage,
+											 size_t*							outActualSizePtrOrNull = nullptr);
+
+Preferences_Result
 	Preferences_ContextSave					(Preferences_ContextRef				inContext);
 
 Preferences_Result
