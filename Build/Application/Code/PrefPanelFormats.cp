@@ -869,7 +869,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontName, sizeof(fontName),
-														&fontName, &actualSize);
+														&fontName, false/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setFontName(fontName);
@@ -882,7 +882,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontSize, sizeof(fontSize),
-														&fontSize, &actualSize);
+														&fontSize, false/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setFontSize(fontSize);
@@ -1489,14 +1489,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					
 					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontName, sizeof(fontName),
-																fontName, &actualSize);
+																fontName, false/* search defaults too */, &actualSize);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// error...pick an arbitrary value
 						PLstrcpy(fontName, "\pMonaco");
 					}
 					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontSize, sizeof(fontSize),
-																&fontSize, &actualSize);
+																&fontSize, false/* search defaults too */, &actualSize);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// error...pick an arbitrary value
@@ -1687,7 +1687,7 @@ setColorBox		(Preferences_ContextRef		inSettings,
 	
 	// read each color, skipping ones that are not defined
 	prefsResult = Preferences_ContextGetData(inSettings, inSourceTag, sizeof(colorValue),
-												&colorValue, &actualSize);
+												&colorValue, false/* search defaults too */, &actualSize);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		ColorBox_SetColor(inDestinationBox, &colorValue);

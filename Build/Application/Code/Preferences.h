@@ -488,13 +488,7 @@ Preferences_Result
 											 Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataStorageSize,
 											 void*								outDataStorage,
-											 size_t*							outActualSizePtrOrNull = nullptr);
-
-Preferences_Result
-	Preferences_ContextOrDefaultGetData		(Preferences_ContextRef				inStartingContext,
-											 Preferences_Tag					inDataPreferenceTag,
-											 size_t								inDataStorageSize,
-											 void*								outDataStorage,
+											 Boolean							inSearchDefaults = false,
 											 size_t*							outActualSizePtrOrNull = nullptr);
 
 Preferences_Result

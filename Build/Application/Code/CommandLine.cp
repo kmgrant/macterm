@@ -240,12 +240,9 @@ CommandLine_Init ()
 				prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
 				if (kPreferences_ResultOK == prefsResult)
 				{
-					size_t	actualSize = 0;
-					
-					
 					// find default terminal font family
 					prefsResult = Preferences_ContextGetData(defaultContext, kPreferences_TagFontName,
-																sizeof(fontName), fontName, &actualSize);
+																sizeof(fontName), fontName);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						// if unable to find a preference, choose some default
