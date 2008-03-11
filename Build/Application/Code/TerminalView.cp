@@ -198,15 +198,24 @@ struct TerminalView
 	{
 		struct
 		{
-			My_CGColorList		vector;					// colors used for drawing with Core Graphics
-			My_TimeIntervalList	animationDelays;		// duration to wait after each animation stage
-			Boolean				isMonochrome;			// are the colors APPROXIMATELY black-on-white?
-			Boolean				animationTimerIsActive;	// true only if the timer is running
-			EventLoopTimerUPP	animationTimerUPP;		// procedure that animates blinking text palette entries regularly
-			EventLoopTimerRef	animationTimer;			// timer to invoke animation procedure periodically
-			RgnHandle			animatedRegion;			// used to optimize redraws during animation
-		} palette;
-	} window;
+			Boolean					isActive;	// true only if the timer is running
+			EventLoopTimerUPP		upp;		// procedure that animates blinking text palette entries regularly
+			EventLoopTimerRef		ref;		// timer to invoke animation procedure periodically
+		} timer;
+		
+		struct
+		{
+			My_TimeIntervalList		delays;		// duration to wait after each animation stage
+			SInt16					stage;		// which color and delay is currently being used
+			SInt16					stageDelta;	// +1 or -1, current direction of change
+			RgnHandle				region;		// used to optimize redraws during animation
+		} rendering;
+	} animation;
+	
+	struct
+	{
+		My_CGColorList		deviceColors;	// colors used for drawing with Core Graphics
+	} palette;
 	
 	struct
 	{
@@ -2950,17 +2959,20 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		setFontAndSize(this, fontName, fontSize);
 	}
 	
-	// create the color palette - 14 screen colors (8 ANSI, 6 others)
+	// store the colors this view will be using
 	assert_noerr(createWindowColorPalette(this, inFormat));
 	
-	// calculate the delays required 
+	// initialize blink animation
 	{
-		assert(false == this->window.palette.vector.empty());
-		this->window.palette.animationDelays.resize(this->window.palette.vector.size());
-		for (My_TimeIntervalList::size_type i = 0; i < this->window.palette.animationDelays.size(); ++i)
+		assert(false == this->palette.deviceColors.empty());
+		this->animation.rendering.delays.resize(this->palette.deviceColors.size());
+		for (My_TimeIntervalList::size_type i = 0; i < this->animation.rendering.delays.size(); ++i)
 		{
-			this->window.palette.animationDelays[i] = calculateAnimationStageDelay(this, i);
+			this->animation.rendering.delays[i] = calculateAnimationStageDelay(this, i);
 		}
+		this->animation.rendering.stage = 0;
+		this->animation.rendering.stageDelta = +1;
+		this->animation.rendering.region = Memory_NewRegion();
 	}
 	
 	// initialize focus area
@@ -3112,15 +3124,15 @@ TerminalView::
 	(OSStatus)RemoveEventLoopTimer(this->screen.cursor.flashTimer), this->screen.cursor.flashTimer = nullptr;
 	
 	// remove timer
-	RemoveEventLoopTimer(this->window.palette.animationTimer), this->window.palette.animationTimer = nullptr;
-	DisposeEventLoopTimerUPP(this->window.palette.animationTimerUPP), this->window.palette.animationTimerUPP = nullptr;
+	RemoveEventLoopTimer(this->animation.timer.ref), this->animation.timer.ref = nullptr;
+	DisposeEventLoopTimerUPP(this->animation.timer.upp), this->animation.timer.upp = nullptr;
 	
 	// 3.0 - destroy any picture
 	//if (nullptr != this->backgroundHIView)
 	//{
 	//}
 	
-	Memory_DisposeRegion(&this->window.palette.animatedRegion);
+	Memory_DisposeRegion(&this->animation.rendering.region);
 	ListenerModel_Dispose(&this->changeListenerModel);
 	Preferences_ReleaseContext(&this->configuration);
 }// TerminalView destructor
@@ -3149,33 +3161,32 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		inTimer,
 	
 	if (ptr != nullptr)
 	{
-		static SInt16		stage = 0; // which color to render; 0 is the first
-		static SInt16		iterationDirection = +1; // +1 or -1
-		static RGBColor		currentColor;
+		RGBColor	currentColor;
 		
 		
 		// update the rendered text color of the screen
-		getScreenPaletteColor(ptr, kTerminalView_ColorIndexFirstBlinkPulseColor + stage, &currentColor);
+		getScreenPaletteColor(ptr, kTerminalView_ColorIndexFirstBlinkPulseColor + ptr->animation.rendering.stage,
+								&currentColor);
 		setScreenPaletteColor(ptr, kTerminalView_ColorIndexBlinkingText, &currentColor);
 		
-		(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->window.palette.animationDelays[stage]);
+		(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->animation.rendering.delays[ptr->animation.rendering.stage]);
 		
 		// figure out which color is next; the color cycling goes up and
 		// down the list continuously, thus creating a pulsing effect
-		stage += iterationDirection;
-		if (stage < 0)
+		ptr->animation.rendering.stage += ptr->animation.rendering.stageDelta;
+		if (ptr->animation.rendering.stage < 0)
 		{
-			iterationDirection = +1;
-			stage = 0;
+			ptr->animation.rendering.stageDelta = +1;
+			ptr->animation.rendering.stage = 0;
 		}
-		else if (stage > kTerminalView_ColorCountBlinkPulseColors)
+		else if (ptr->animation.rendering.stage > kTerminalView_ColorCountBlinkPulseColors)
 		{
-			iterationDirection = -1;
-			stage = kTerminalView_ColorCountBlinkPulseColors - 1;
+			ptr->animation.rendering.stageDelta = -1;
+			ptr->animation.rendering.stage = kTerminalView_ColorCountBlinkPulseColors - 1;
 		}
 		
 		// invalidate only the appropriate (blinking) parts of the screen
-		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->backgroundHIView, ptr->window.palette.animatedRegion, true);
+		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->backgroundHIView, ptr->animation.rendering.region, true);
 	}
 }// animateBlinkingPaletteEntries
 
@@ -3229,7 +3240,7 @@ static EventTime
 calculateAnimationStageDelay	(TerminalViewPtr					inTerminalViewPtr,
 								 My_TimeIntervalList::size_type		inZeroBasedStage)
 {
-	My_TimeIntervalList::size_type const	kNumStages = inTerminalViewPtr->window.palette.animationDelays.size();
+	My_TimeIntervalList::size_type const	kNumStages = inTerminalViewPtr->animation.rendering.delays.size();
 	assert(inZeroBasedStage < kNumStages);
 	
 	EventTime		result = 0;
@@ -3727,7 +3738,7 @@ createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
 	
 	
 	// create a Core Graphics palette for future use
-	inTerminalViewPtr->window.palette.vector.resize(kNumberOfPaletteEntries);
+	inTerminalViewPtr->palette.deviceColors.resize(kNumberOfPaletteEntries);
 	
 	{
 		RGBColor	colorValue;
@@ -3747,18 +3758,15 @@ createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
 		// the blinking colors, and the ANSI colors
 		(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat, inSearchForDefaults);
 		
-		// construct a region to store the animation refresh area
-		inTerminalViewPtr->window.palette.animatedRegion = Memory_NewRegion();
-		
 		// install a timer to modify blinking text color entries periodically
 		assert(nullptr != inTerminalViewPtr->selfRef);
-		inTerminalViewPtr->window.palette.animationTimerUPP = NewEventLoopTimerUPP(animateBlinkingPaletteEntries);
+		inTerminalViewPtr->animation.timer.upp = NewEventLoopTimerUPP(animateBlinkingPaletteEntries);
 		(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
 										kEventDurationForever/* time between fires - set later */,
-										inTerminalViewPtr->window.palette.animationTimerUPP,
+										inTerminalViewPtr->animation.timer.upp,
 										inTerminalViewPtr->selfRef/* user data */,
-										&inTerminalViewPtr->window.palette.animationTimer);
-		inTerminalViewPtr->window.palette.animationTimerIsActive = false;
+										&inTerminalViewPtr->animation.timer.ref);
+		inTerminalViewPtr->animation.timer.isActive = false;
 	}
 	return result;
 }// createWindowColorPalette
@@ -4109,8 +4117,8 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		{
 			screenToLocalRect(viewPtr, &sectionBounds);
 			RectRgn(gInvalidationScratchRegion(), &sectionBounds);
-			UnionRgn(gInvalidationScratchRegion(), viewPtr->window.palette.animatedRegion,
-						viewPtr->window.palette.animatedRegion);
+			UnionRgn(gInvalidationScratchRegion(), viewPtr->animation.rendering.region,
+						viewPtr->animation.rendering.region);
 			
 			viewPtr->screen.currentRenderBlinking = true;
 		}
@@ -5103,7 +5111,7 @@ getScreenPaletteColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor*					outColorPtr)
 {
-	CGDeviceColor	deviceColor = inTerminalViewPtr->window.palette.vector[inColorEntryNumber];
+	CGDeviceColor	deviceColor = inTerminalViewPtr->palette.deviceColors[inColorEntryNumber];
 	Float32			fullIntensityFraction = 0.0;
 	
 	
@@ -8534,9 +8542,9 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			assert(screen == viewPtr->screen.ref);
-			if (viewPtr->window.palette.animationTimerIsActive)
+			if (viewPtr->animation.timer.isActive)
 			{
-				SetEmptyRgn(viewPtr->window.palette.animatedRegion);
+				SetEmptyRgn(viewPtr->animation.rendering.region);
 			}
 			recalculateCachedDimensions(viewPtr);
 		}
@@ -8673,17 +8681,17 @@ setBlinkingTimerActive	(TerminalViewPtr	inTerminalViewPtr,
 						 Boolean			inIsActive)
 {
 #if BLINK_MEANS_BLINK
-	if (inTerminalViewPtr->window.palette.animationTimerIsActive != inIsActive)
+	if (inTerminalViewPtr->animation.timer.isActive != inIsActive)
 	{
 		if (inIsActive)
 		{
-			(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->window.palette.animationTimer, kEventDurationNoWait);
+			(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationNoWait);
 		}
 		else
 		{
-			(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->window.palette.animationTimer, kEventDurationForever);
+			(OSStatus)SetEventLoopTimerNextFireTime(inTerminalViewPtr->animation.timer.ref, kEventDurationForever);
 		}
-		inTerminalViewPtr->window.palette.animationTimerIsActive = inIsActive;
+		inTerminalViewPtr->animation.timer.isActive = inIsActive;
 	}
 #endif
 }// setBlinkingTimerActive
@@ -8999,7 +9007,7 @@ setScreenPaletteColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor const*			inColorPtr)
 {
-	inTerminalViewPtr->window.palette.vector[inColorEntryNumber] = ColorUtilities_CGDeviceColorMake(*inColorPtr);
+	inTerminalViewPtr->palette.deviceColors[inColorEntryNumber] = ColorUtilities_CGDeviceColorMake(*inColorPtr);
 }// setScreenPaletteColor
 
 

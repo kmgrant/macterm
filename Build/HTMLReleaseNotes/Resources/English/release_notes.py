@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080311',
     '20080310',
     '20080308',
     '20080307',
@@ -105,6 +106,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080311': [
+		'Fixed blink rate to not change as more open windows are opened.',
+	],
 	'20080310': [
 		'Terminal views now render blinking text with a quadratic-delay pulse effect.',
 		'Terminal view renderer has been further optimized in minor ways.',
