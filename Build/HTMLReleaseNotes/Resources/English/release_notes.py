@@ -106,7 +106,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080310': [
-		'Terminal views now render blinking text with a linear pulse effect.',
+		'Terminal views now render blinking text with a quadratic-delay pulse effect.',
 		'Terminal view renderer has been further optimized in minor ways.',
 	],
 	'20080308': [

@@ -164,6 +164,7 @@ struct MyPreferenceProxies
 
 typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
 typedef std::vector< CGDeviceColor >			My_CGColorList;
+typedef std::vector< EventTime >				My_TimeIntervalList;
 
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
@@ -198,6 +199,7 @@ struct TerminalView
 		struct
 		{
 			My_CGColorList		vector;					// colors used for drawing with Core Graphics
+			My_TimeIntervalList	animationDelays;		// duration to wait after each animation stage
 			Boolean				isMonochrome;			// are the colors APPROXIMATELY black-on-white?
 			Boolean				animationTimerIsActive;	// true only if the timer is running
 			EventLoopTimerUPP	animationTimerUPP;		// procedure that animates blinking text palette entries regularly
@@ -302,6 +304,7 @@ typedef LockAcquireRelease< TerminalViewRef, TerminalView >		TerminalViewAutoLoc
 
 static pascal void		animateBlinkingPaletteEntries	(EventLoopTimerRef, void*);
 static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+static EventTime		calculateAnimationStageDelay	(TerminalViewPtr, My_TimeIntervalList::size_type);
 static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
 static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTimerMessage, void*);
 static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef, Boolean);
@@ -2950,6 +2953,16 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	// create the color palette - 14 screen colors (8 ANSI, 6 others)
 	assert_noerr(createWindowColorPalette(this, inFormat));
 	
+	// calculate the delays required 
+	{
+		assert(false == this->window.palette.vector.empty());
+		this->window.palette.animationDelays.resize(this->window.palette.vector.size());
+		for (My_TimeIntervalList::size_type i = 0; i < this->window.palette.animationDelays.size(); ++i)
+		{
+			this->window.palette.animationDelays[i] = calculateAnimationStageDelay(this, i);
+		}
+	}
+	
 	// initialize focus area
 	this->currentContentFocus = kTerminalView_ContentPartVoid;
 	
@@ -3127,7 +3140,7 @@ Mac OS X only.
 (3.0)
 */
 static pascal void
-animateBlinkingPaletteEntries	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
+animateBlinkingPaletteEntries	(EventLoopTimerRef		inTimer,
 								 void*					inTerminalViewRef)
 {
 	TerminalViewRef			ref = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
@@ -3144,6 +3157,8 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 		// update the rendered text color of the screen
 		getScreenPaletteColor(ptr, kTerminalView_ColorIndexFirstBlinkPulseColor + stage, &currentColor);
 		setScreenPaletteColor(ptr, kTerminalView_ColorIndexBlinkingText, &currentColor);
+		
+		(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->window.palette.animationDelays[stage]);
 		
 		// figure out which color is next; the color cycling goes up and
 		// down the list continuously, thus creating a pulsing effect
@@ -3199,6 +3214,31 @@ audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// audioEvent
+
+
+/*!
+For the specified stage of blink animation, calculates
+the delay that should come after that stage is rendered.
+
+For linear animation, all delays are the same; but for
+more interesting effects, all delays may be different.
+
+(3.1)
+*/
+static EventTime
+calculateAnimationStageDelay	(TerminalViewPtr					inTerminalViewPtr,
+								 My_TimeIntervalList::size_type		inZeroBasedStage)
+{
+	My_TimeIntervalList::size_type const	kNumStages = inTerminalViewPtr->window.palette.animationDelays.size();
+	assert(inZeroBasedStage < kNumStages);
+	
+	EventTime		result = 0;
+	
+	
+	//result = 200.0 * kEventDurationMillisecond; // linear
+	result = (inZeroBasedStage * inZeroBasedStage + inZeroBasedStage) * 2.0 * kEventDurationMillisecond; // quadratic
+	return result;
+}// calculateAnimationStageDelay
 
 
 /*!
@@ -3714,7 +3754,7 @@ createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
 		assert(nullptr != inTerminalViewPtr->selfRef);
 		inTerminalViewPtr->window.palette.animationTimerUPP = NewEventLoopTimerUPP(animateBlinkingPaletteEntries);
 		(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
-										kEventDurationMillisecond * 200/* time between fires (TEMPORARY - user preference?) */,
+										kEventDurationForever/* time between fires - set later */,
 										inTerminalViewPtr->window.palette.animationTimerUPP,
 										inTerminalViewPtr->selfRef/* user data */,
 										&inTerminalViewPtr->window.palette.animationTimer);
