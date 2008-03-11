@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080310',
     '20080308',
     '20080307',
     '20080306',
@@ -104,6 +105,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080310': [
+		'Terminal views now render blinking text with a linear pulse effect.',
+		'Terminal view renderer has been further optimized in minor ways.',
+	],
 	'20080308': [
 		'Custom Format dialog now correctly affects a single window and not global preferences.',
 		'Preferences window Formats pane now sets the sample correctly, but due to a display bug this can only be seen after resizing the window.',

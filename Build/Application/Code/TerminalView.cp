@@ -93,7 +93,6 @@ SInt16 const	kArbitraryVTGraphicsPseudoFontID = 74;					//!< should not match an
 SInt16 const	kArbitraryDoubleWidthDoubleHeightPseudoFontSize = 1;	//!< should not match any real size; used to flag the *lower* half
 																		//!  of double-width, double-height text (upper half is marked by
 																		//!  double the normal font size)
-SInt16 const	kNumberOfBlinkingColorStages = 4;						//!< number of animation stages for blinking color animation
 
 /*!
 Indices into the "colors" array of the main structure.
@@ -164,6 +163,7 @@ struct MyPreferenceProxies
 };
 
 typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
+typedef std::vector< CGDeviceColor >			My_CGColorList;
 
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
@@ -197,11 +197,12 @@ struct TerminalView
 	{
 		struct
 		{
-			CGDirectPaletteRef	ref;					// colors used for drawing with Core Graphics
+			My_CGColorList		vector;					// colors used for drawing with Core Graphics
 			Boolean				isMonochrome;			// are the colors APPROXIMATELY black-on-white?
 			Boolean				animationTimerIsActive;	// true only if the timer is running
 			EventLoopTimerUPP	animationTimerUPP;		// procedure that animates blinking text palette entries regularly
 			EventLoopTimerRef	animationTimer;			// timer to invoke animation procedure periodically
+			RgnHandle			animatedRegion;			// used to optimize redraws during animation
 		} palette;
 	} window;
 	
@@ -277,7 +278,6 @@ struct TerminalView
 		} font;
 		
 		RGBColor	colors[kMyBasicColorCount];	// indices are "kMyBasicColorIndexNormalText", etc.
-		RGBColor	blinkingColors[kNumberOfBlinkingColorStages];	// colors used for blinking pulse effect
 		
 		struct
 		{
@@ -300,19 +300,18 @@ typedef LockAcquireRelease< TerminalViewRef, TerminalView >		TerminalViewAutoLoc
 
 #pragma mark Internal Method Prototypes
 
-static OSStatus			addRowSectionToDirtyRegion		(TerminalViewPtr, SInt16, SInt16, SInt16);
 static pascal void		animateBlinkingPaletteEntries	(EventLoopTimerRef, void*);
 static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
 static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTimerMessage, void*);
-static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef);
+static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef, Boolean);
 static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef);
 static void				copySelectedTextIfUserPreference(TerminalViewPtr);
-static OSStatus			createWindowColorPalette		(TerminalViewPtr, Preferences_ContextRef);
+static OSStatus			createWindowColorPalette		(TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 static Boolean			cursorBlinks					(TerminalViewPtr);
 static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 static void				drawRowSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, TerminalTextAttributes,
-														 UniChar const*);
+														 UniChar const*, Rect&);
 static Boolean			drawSection						(TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
 static void				drawTerminalScreenRunOp			(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
 														 UInt16, TerminalTextAttributes, void*);
@@ -342,7 +341,6 @@ static void				handleNewViewContainerBounds	(HIViewRef, Float32, Float32, void*)
 static void				highlightCurrentSelection		(TerminalViewPtr, Boolean, Boolean);
 static void				highlightVirtualRange			(TerminalViewPtr, TerminalView_CellRange const&, TerminalTextAttributes, Boolean, Boolean);
 static void				invalidateRowSection			(TerminalViewPtr, UInt16, UInt16, UInt16);
-static void				invalidateScreenRectangle		(TerminalViewPtr);
 static Boolean			isMonospacedFont				(FMFontFamily);
 static void				localToScreen					(TerminalViewPtr, SInt16*, SInt16*);
 static Boolean			mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -3104,69 +3102,15 @@ TerminalView::
 	RemoveEventLoopTimer(this->window.palette.animationTimer), this->window.palette.animationTimer = nullptr;
 	DisposeEventLoopTimerUPP(this->window.palette.animationTimerUPP), this->window.palette.animationTimerUPP = nullptr;
 	
-	// destroy any color palette in the window
-	if (nullptr != this->window.palette.ref)
-	{
-		CGPaletteRelease(this->window.palette.ref), this->window.palette.ref = nullptr;
-	}
-	
 	// 3.0 - destroy any picture
 	//if (nullptr != this->backgroundHIView)
 	//{
 	//}
 	
+	Memory_DisposeRegion(&this->window.palette.animatedRegion);
 	ListenerModel_Dispose(&this->changeListenerModel);
 	Preferences_ReleaseContext(&this->configuration);
 }// TerminalView destructor
-
-
-/*!
-Calculates the boundary of the specified row of the
-given screen, and adds it to the dirty region of
-the current graphics port if it intersects the
-visible part.
-
-This routine expects to be called while the current
-graphics port origin is equal to the screen origin.
-
-Use this as a performance improvement prior to a
-large number of QuickDraw operations in one line;
-this ensures QuickDraw does not try to add each
-individual operation to the dirty region separately.
-For example, a diagonal line might encompass many
-small rectangles, creating a complex dirty region
-when a larger rectangle dirtying the entire area
-would be more efficient.
-
-Returns whatever QDAddRectToDirtyRegion() might
-return.
-
-(3.0)
-*/
-static OSStatus
-addRowSectionToDirtyRegion	(TerminalViewPtr	inTerminalViewPtr,
-							 SInt16				inZeroBasedLineNumber,
-							 SInt16				inZeroBasedStartingColumnNumber,
-							 SInt16				inCharacterCount)
-{
-	OSStatus	result = noErr;
-	Rect		bounds;
-	
-	
-	getRowSectionBounds(inTerminalViewPtr, inZeroBasedLineNumber, inZeroBasedStartingColumnNumber, inCharacterCount, &bounds);
-	
-	// verify that the row is visible; otherwise, do nothing
-	if (bounds.bottom >= 0)
-	{
-		CGrafPtr	currentPort = nullptr;
-		GDHandle	currentDevice = nullptr;
-		
-		
-		GetGWorld(&currentPort, &currentDevice);
-		result = QDAddRectToDirtyRegion(currentPort, &bounds);
-	}
-	return result;
-}// addRowSectionToDirtyRegion
 
 
 /*!
@@ -3192,12 +3136,14 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	
 	if (ptr != nullptr)
 	{
-		static SInt16		stage = 0; // which color to render
+		static SInt16		stage = 0; // which color to render; 0 is the first
 		static SInt16		iterationDirection = +1; // +1 or -1
+		static RGBColor		currentColor;
 		
 		
 		// update the rendered text color of the screen
-		setScreenPaletteColor(ptr, kTerminalView_ColorIndexBlinkingText, &ptr->text.blinkingColors[stage]);
+		getScreenPaletteColor(ptr, kTerminalView_ColorIndexFirstBlinkPulseColor + stage, &currentColor);
+		setScreenPaletteColor(ptr, kTerminalView_ColorIndexBlinkingText, &currentColor);
 		
 		// figure out which color is next; the color cycling goes up and
 		// down the list continuously, thus creating a pulsing effect
@@ -3207,14 +3153,14 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 			iterationDirection = +1;
 			stage = 0;
 		}
-		else if (stage > kNumberOfBlinkingColorStages)
+		else if (stage > kTerminalView_ColorCountBlinkPulseColors)
 		{
 			iterationDirection = -1;
-			stage = kNumberOfBlinkingColorStages - 1;
+			stage = kTerminalView_ColorCountBlinkPulseColors - 1;
 		}
 		
 		// invalidate only the appropriate (blinking) parts of the screen
-		invalidateScreenRectangle(ptr); // TEMPORARY - redraw everything...
+		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->backgroundHIView, ptr->window.palette.animatedRegion, true);
 	}
 }// animateBlinkingPaletteEntries
 
@@ -3403,65 +3349,227 @@ Returns the number of colors that were changed.
 */
 static UInt16
 copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
-						 Preferences_ContextRef		inSource)
+						 Preferences_ContextRef		inSource,
+						 Boolean					inSearchForDefaults)
 {
-	RGBColor	colorValue;
-	UInt16		result = 0;
+	TerminalView_ColorIndex		currentIndex = 0;
+	Preferences_Tag				currentPrefsTag = '----';
+	RGBColor					colorValue;
+	UInt16						result = 0;
 	
 	
-	if (kPreferences_ResultOK == Preferences_ContextGetData
-									(inSource, kPreferences_TagTerminalColorNormalForeground,
-										sizeof(colorValue), &colorValue))
+	//
+	// basic colors
+	//
+	
+	currentIndex = kTerminalView_ColorIndexNormalText;
+	currentPrefsTag = kPreferences_TagTerminalColorNormalForeground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalText, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
-	if (kPreferences_ResultOK == Preferences_ContextGetData
-									(inSource, kPreferences_TagTerminalColorNormalBackground,
-										sizeof(colorValue), &colorValue))
+	currentIndex = kTerminalView_ColorIndexNormalBackground;
+	currentPrefsTag = kPreferences_TagTerminalColorNormalBackground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexNormalBackground, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
-	if (kPreferences_ResultOK == Preferences_ContextGetData
-									(inSource, kPreferences_TagTerminalColorBlinkingForeground,
-										sizeof(colorValue), &colorValue))
+	currentIndex = kTerminalView_ColorIndexBlinkingText;
+	currentPrefsTag = kPreferences_TagTerminalColorBlinkingForeground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingText, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
-	if (kPreferences_ResultOK == Preferences_ContextGetData
-									(inSource, kPreferences_TagTerminalColorBlinkingBackground,
-										sizeof(colorValue), &colorValue))
+	currentIndex = kTerminalView_ColorIndexBlinkingBackground;
+	currentPrefsTag = kPreferences_TagTerminalColorBlinkingBackground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBlinkingBackground, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
-	if (kPreferences_ResultOK == Preferences_ContextGetData
-									(inSource, kPreferences_TagTerminalColorBoldForeground,
-										sizeof(colorValue), &colorValue))
+	currentIndex = kTerminalView_ColorIndexBoldText;
+	currentPrefsTag = kPreferences_TagTerminalColorBoldForeground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldText, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
-	if (kPreferences_ResultOK == Preferences_ContextGetData
-									(inSource, kPreferences_TagTerminalColorBoldBackground,
-										sizeof(colorValue), &colorValue))
+	currentIndex = kTerminalView_ColorIndexBoldBackground;
+	currentPrefsTag = kPreferences_TagTerminalColorBoldBackground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexBoldBackground, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
-	if (kPreferences_ResultOK == Preferences_ContextGetData
-									(inSource, kPreferences_TagTerminalColorMatteBackground,
-										sizeof(colorValue), &colorValue))
+	currentIndex = kTerminalView_ColorIndexMatteBackground;
+	currentPrefsTag = kPreferences_TagTerminalColorMatteBackground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, kTerminalView_ColorIndexMatteBackground, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	//
+	// ANSI colors
+	//
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSIBlack;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIBlack;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSIRed;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIRed;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSIGreen;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIGreen;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSIYellow;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIYellow;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSIBlue;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIBlue;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSIMagenta;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIMagenta;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSICyan;
+	currentPrefsTag = kPreferences_TagTerminalColorANSICyan;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexNormalANSIWhite;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIWhite;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlack;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIBlackBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSIRed;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIRedBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSIGreen;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIGreenBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSIYellow;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIYellowBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlue;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIBlueBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSIMagenta;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIMagentaBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSICyan;
+	currentPrefsTag = kPreferences_TagTerminalColorANSICyanBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		++result;
+	}
+	
+	currentIndex = kTerminalView_ColorIndexEmphasizedANSIWhite;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIWhiteBold;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3555,213 +3663,63 @@ copySelectedTextIfUserPreference	(TerminalViewPtr	inTerminalViewPtr)
 
 
 /*!
-Creates a new color palette and initializes its
-colors using terminal preferences.
+Creates a new color palette and initializes its colors using
+terminal preferences.
 
-In order to succeed, the specified view’s self-
-reference must be valid.
+In order to succeed, the specified view’s self-reference must
+be valid.
 
-Returns "noErr" only if the palette is created
-successfully.
+Returns "noErr" only if the palette is created successfully.
 
 (3.1)
 */
 static OSStatus
 createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
-							 Preferences_ContextRef		inFormat)
+							 Preferences_ContextRef		inFormat,
+							 Boolean					inSearchForDefaults)
 {
 	OSStatus		result = noErr;
-	SInt16 const	kNumberOfPaletteEntries = (kTerminalView_ColorCountRequiredEntries +
+	size_t const	kNumberOfPaletteEntries = (kTerminalView_ColorCountRequiredEntries +
 												kTerminalView_ColorCountNonANSIColors +
+												kTerminalView_ColorCountBlinkPulseColors +
 												kTerminalView_ColorCountNormalANSIColors +
 												kTerminalView_ColorCountEmphasizedANSIColors);
-	RGBColor*		colorTableRGBColorArray = nullptr;
-	CGDeviceColor*	colorTableCGArray = nullptr;
 	
 	
-	// create the color palette - 2 required colors (black and white),
-	// 14 screen colors (8 ANSI, 6 others)
-	try
+	// create a Core Graphics palette for future use
+	inTerminalViewPtr->window.palette.vector.resize(kNumberOfPaletteEntries);
+	
 	{
-		colorTableRGBColorArray = new RGBColor[kNumberOfPaletteEntries];
-		try
-		{
-			colorTableCGArray = new CGDeviceColor[kNumberOfPaletteEntries];
-			
-			// work with the allocated arrays...
-			{
-				TerminalView_ColorIndex		currentIndex = kTerminalView_ColorIndexBlack;
-				Preferences_Tag				currentPrefsTag = '----';
-				Preferences_Result			prefsResult = kPreferences_ResultOK;
-				
-				
-				// the first two entries MUST be black and white; otherwise, other HIView colors are screwed up
-				currentIndex = kTerminalView_ColorIndexBlack;
-				colorTableRGBColorArray[currentIndex].red = 0;
-				colorTableRGBColorArray[currentIndex].green = 0;
-				colorTableRGBColorArray[currentIndex].blue = 0;
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				currentIndex = kTerminalView_ColorIndexWhite;
-				colorTableRGBColorArray[currentIndex].red = RGBCOLOR_INTENSITY_MAX;
-				colorTableRGBColorArray[currentIndex].green = RGBCOLOR_INTENSITY_MAX;
-				colorTableRGBColorArray[currentIndex].blue = RGBCOLOR_INTENSITY_MAX;
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				//
-				// get the user’s preferred ANSI colors
-				//
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSIBlack;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIBlack;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSIRed;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIRed;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSIGreen;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIGreen;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSIYellow;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIYellow;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSIBlue;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIBlue;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSIMagenta;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIMagenta;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSICyan;
-				currentPrefsTag = kPreferences_TagTerminalColorANSICyan;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexNormalANSIWhite;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIWhite;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlack;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIBlackBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSIRed;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIRedBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSIGreen;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIGreenBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSIYellow;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIYellowBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSIBlue;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIBlueBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSIMagenta;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIMagentaBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSICyan;
-				currentPrefsTag = kPreferences_TagTerminalColorANSICyanBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				currentIndex = kTerminalView_ColorIndexEmphasizedANSIWhite;
-				currentPrefsTag = kPreferences_TagTerminalColorANSIWhiteBold;
-				prefsResult = Preferences_ContextGetData(inFormat, currentPrefsTag, sizeof(colorTableRGBColorArray[currentIndex]),
-															&(colorTableRGBColorArray[currentIndex]), true/* search defaults too */);
-				assert(kPreferences_ResultOK == prefsResult);
-				colorTableCGArray[currentIndex] = ColorUtilities_CGDeviceColorMake(colorTableRGBColorArray[currentIndex]);
-				
-				//
-				// update the regular colors after creating the palette (because the process
-				// of defining them ends up depending on the palette)
-				//
-				
-				// create a Core Graphics palette for future use
-				inTerminalViewPtr->window.palette.ref = CGPaletteCreateWithSamples(colorTableCGArray, kNumberOfPaletteEntries);
-				if (nullptr == inTerminalViewPtr->window.palette.ref) result = memFullErr;
-				else
-				{
-					// install a timer to modify blinking text color entries periodically
-					assert(nullptr != inTerminalViewPtr->selfRef);
-					inTerminalViewPtr->window.palette.animationTimerUPP = NewEventLoopTimerUPP(animateBlinkingPaletteEntries);
-					(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
-													kEventDurationSecond * 1.5/* time between fires (TEMPORARY - user preference?) */,
-													inTerminalViewPtr->window.palette.animationTimerUPP,
-													inTerminalViewPtr->selfRef/* user data */,
-													&inTerminalViewPtr->window.palette.animationTimer);
-					inTerminalViewPtr->window.palette.animationTimerIsActive = false;
-					
-					// set up window’s colors
-					(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat);
-				}
-			}
-			
-			delete [] colorTableCGArray, colorTableCGArray = nullptr;
-		}
-		catch (std::bad_alloc)
-		{
-			result = memFullErr;
-		}
+		RGBColor	colorValue;
 		
-		delete [] colorTableRGBColorArray, colorTableRGBColorArray = nullptr;
+		
+		// the first two entries MUST be black and white; otherwise, other HIView colors are screwed up
+		colorValue.red = 0;
+		colorValue.green = 0;
+		colorValue.blue = 0;
+		setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexBlack, &colorValue);
+		colorValue.red = RGBCOLOR_INTENSITY_MAX;
+		colorValue.green = RGBCOLOR_INTENSITY_MAX;
+		colorValue.blue = RGBCOLOR_INTENSITY_MAX;
+		setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexWhite, &colorValue);
+		
+		// set up window’s colors; note that this will set the non-ANSI colors,
+		// the blinking colors, and the ANSI colors
+		(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat, inSearchForDefaults);
+		
+		// construct a region to store the animation refresh area
+		inTerminalViewPtr->window.palette.animatedRegion = Memory_NewRegion();
+		
+		// install a timer to modify blinking text color entries periodically
+		assert(nullptr != inTerminalViewPtr->selfRef);
+		inTerminalViewPtr->window.palette.animationTimerUPP = NewEventLoopTimerUPP(animateBlinkingPaletteEntries);
+		(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
+										kEventDurationMillisecond * 200/* time between fires (TEMPORARY - user preference?) */,
+										inTerminalViewPtr->window.palette.animationTimerUPP,
+										inTerminalViewPtr->selfRef/* user data */,
+										&inTerminalViewPtr->window.palette.animationTimer);
+		inTerminalViewPtr->window.palette.animationTimerIsActive = false;
 	}
-	catch (std::bad_alloc)
-	{
-		result = memFullErr;
-	}
-	
 	return result;
 }// createWindowColorPalette
 
@@ -3835,7 +3793,8 @@ Any text that falls within the current text selection for
 the specified terminal screen is automatically highlighted;
 all of the text will otherwise use the given attributes.
 The area is also subtracted from any existing invalid
-region.
+region.  For convenience, the section boundaries are
+returned.
 
 This routine expects to be called while the current
 graphics port origin is equal to the screen origin.
@@ -3856,31 +3815,39 @@ drawRowSection	(TerminalViewPtr			inTerminalViewPtr,
 				 SInt16						inZeroBasedStartingColumnNumber,
 				 SInt16						inCharacterCount,
 				 TerminalTextAttributes		inAttributes,
-				 UniChar const*				inTextBufferPtr)
+				 UniChar const*				inTextBufferPtr,
+				 Rect&						outRowSectionBounds)
 {
-	Rect	rect;
-	
+	// set up the rectangle bounding the text being drawn
+	getRowSectionBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
+						inZeroBasedStartingColumnNumber, inCharacterCount, &outRowSectionBounds);
+	if (EmptyRect(&outRowSectionBounds))
+	{
+		Console_WriteValueFloat4("warning, attempt to draw empty row section",
+									outRowSectionBounds.left, outRowSectionBounds.top,
+									outRowSectionBounds.right, outRowSectionBounds.bottom);
+	}
 	
 	// for better performance on Mac OS X, make the intended drawing area
 	// part of the QuickDraw port’s dirty region
-	addRowSectionToDirtyRegion(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
-								inZeroBasedStartingColumnNumber, inCharacterCount);
-	
-	// set up the rectangle bounding the text being drawn
-	getRowSectionBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
-						inZeroBasedStartingColumnNumber, inCharacterCount, &rect);
-	
-	MoveTo(rect.left, rect.top + (STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
-									? inTerminalViewPtr->text.font.doubleMetrics.ascent
-									: inTerminalViewPtr->text.font.normalMetrics.ascent));
+	if (outRowSectionBounds.bottom >= 0)
+	{
+		CGrafPtr	currentPort = nullptr;
+		GDHandle	currentDevice = nullptr;
+		
+		
+		GetGWorld(&currentPort, &currentDevice);
+		(OSStatus)QDAddRectToDirtyRegion(currentPort, &outRowSectionBounds);
+	}
 	
 	// draw text
-	if (EmptyRect(&rect))
-	{
-		Console_WriteValueFloat4("warning, attempt to draw empty row section",
-									rect.left, rect.top, rect.right, rect.bottom);
-	}
-	drawTerminalText(inTerminalViewPtr, inDrawingContext, &rect, inTextBufferPtr, inCharacterCount, inAttributes);
+	MoveTo(outRowSectionBounds.left,
+			outRowSectionBounds.top +
+				(STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
+												? inTerminalViewPtr->text.font.doubleMetrics.ascent
+												: inTerminalViewPtr->text.font.normalMetrics.ascent));
+	drawTerminalText(inTerminalViewPtr, inDrawingContext, &outRowSectionBounds, inTextBufferPtr,
+						inCharacterCount, inAttributes);
 }// drawRowSection
 
 
@@ -3961,7 +3928,7 @@ drawSection		(TerminalViewPtr	inTerminalViewPtr,
 						inTerminalViewPtr->screen.currentRenderedLine < inZeroBasedPastTheBottommostRowToDraw;
 						++(inTerminalViewPtr->screen.currentRenderedLine))
 				{
-					// TEMPORARY: extremely inefficient, but necesssary for
+					// TEMPORARY: extremely inefficient, but necessary for
 					// correct scrollback behavior at the moment
 					lineIterator = findRowIterator(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine);
 					if (nullptr == lineIterator) break;
@@ -4087,17 +4054,26 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 					inZeroBasedStartColumnNumber + inLineTextBufferLength, debug);
 	if ((nullptr != inLineTextBufferOrNull) && (0 != inLineTextBufferLength))
 	{
+		Rect	sectionBounds;
+		
+		
 		drawRowSection(viewPtr, viewPtr->screen.currentRenderContext, inZeroBasedStartColumnNumber,
-						inLineTextBufferLength/* number of characters */, inAttributes, inLineTextBufferOrNull);
-	}
-	
-	// since blinking forces frequent redraws, do not do it more
-	// than necessary; keep track of any blink attributes, and
-	// elsewhere this flag can be used to disable the animation
-	// timer when it is not needed
-	if (STYLE_BLINKING(inAttributes))
-	{
-		viewPtr->screen.currentRenderBlinking = true;
+						inLineTextBufferLength/* number of characters */, inAttributes, inLineTextBufferOrNull,
+						sectionBounds);
+		
+		// since blinking forces frequent redraws, do not do it more
+		// than necessary; keep track of any blink attributes, and
+		// elsewhere this flag can be used to disable the animation
+		// timer when it is not needed
+		if (STYLE_BLINKING(inAttributes))
+		{
+			screenToLocalRect(viewPtr, &sectionBounds);
+			RectRgn(gInvalidationScratchRegion(), &sectionBounds);
+			UnionRgn(gInvalidationScratchRegion(), viewPtr->window.palette.animatedRegion,
+						viewPtr->window.palette.animatedRegion);
+			
+			viewPtr->screen.currentRenderBlinking = true;
+		}
 	}
 	
 #if 0
@@ -5087,7 +5063,7 @@ getScreenPaletteColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor*					outColorPtr)
 {
-	CGDeviceColor	deviceColor = CGPaletteGetColorAtIndex(inTerminalViewPtr->window.palette.ref, inColorEntryNumber);
+	CGDeviceColor	deviceColor = inTerminalViewPtr->window.palette.vector[inColorEntryNumber];
 	Float32			fullIntensityFraction = 0.0;
 	
 	
@@ -5929,20 +5905,6 @@ invalidateRowSection	(TerminalViewPtr	inTerminalViewPtr,
 
 
 /*!
-Marks the entire screen area for the specified
-screen as part of its window’s update region
-(effectively causing the screen to be redrawn).
-
-(3.0)
-*/
-static void
-invalidateScreenRectangle	(TerminalViewPtr	inTerminalViewPtr)
-{
-	(OSStatus)HIViewSetNeedsDisplay(inTerminalViewPtr->backgroundHIView, true);
-}// invalidateScreenRectangle
-
-
-/*!
 Determines if a font is monospaced.
 
 (3.0)
@@ -6412,7 +6374,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			// batch mode; multiple things have changed, so check for the new values
 			// of everything that is understood by a terminal view
-			(UInt16)copyColorPreferences(viewPtr, prefsContext);
+			(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
 			(UInt16)copyFontPreferences(viewPtr, prefsContext);
 			(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
 		}
@@ -8532,6 +8494,10 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			
 			assert(screen == viewPtr->screen.ref);
+			if (viewPtr->window.palette.animationTimerIsActive)
+			{
+				SetEmptyRgn(viewPtr->window.palette.animatedRegion);
+			}
 			recalculateCachedDimensions(viewPtr);
 		}
 		break;
@@ -8942,7 +8908,7 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 	{
 		register SInt16		i = 0;
 		GDHandle			device = nullptr;
-		RGBColor*			blinkingColors = inTerminalViewPtr->text.blinkingColors; // for convenience
+		RGBColor			colorValue;
 		
 		
 		// figure out which display has most control over screen content
@@ -8959,14 +8925,16 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 		// smooth “pulsing” effect as text blinks; the last color
 		// in the sequence matches the base foreground color, just
 		// for simplicity in the animation code
-		i = kNumberOfBlinkingColorStages - 1;
-		blinkingColors[i] = inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingText];
+		i = kTerminalView_ColorCountBlinkPulseColors - 1;
+		colorValue = inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingText];
+		setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexFirstBlinkPulseColor + i,
+								&colorValue);
 		while (--i >= 0)
 		{
-			GetGray(device, &inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingBackground],
-					&blinkingColors[i]);
-			//DEBUG//Console_WriteValueFloat4("blink rgbcolor + null", blinkingColors[i].red, blinkingColors[i].green,
-			//DEBUG//							blinkingColors[i].blue, 0.0);
+			(Boolean)GetGray(device, &inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingBackground],
+								&colorValue/* both input and output */);
+			setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexFirstBlinkPulseColor + i,
+									&colorValue);
 		}
 	}
 	
@@ -8991,8 +8959,7 @@ setScreenPaletteColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor const*			inColorPtr)
 {
-	CGPaletteSetColorAtIndex(inTerminalViewPtr->window.palette.ref, ColorUtilities_CGDeviceColorMake(*inColorPtr),
-								inColorEntryNumber);
+	inTerminalViewPtr->window.palette.vector[inColorEntryNumber] = ColorUtilities_CGDeviceColorMake(*inColorPtr);
 }// setScreenPaletteColor
 
 

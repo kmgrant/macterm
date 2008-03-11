@@ -121,11 +121,18 @@ enum
 	kTerminalView_ColorIndexEmphasizedANSIMagenta	= 22,
 	kTerminalView_ColorIndexEmphasizedANSICyan		= 23,
 	kTerminalView_ColorIndexEmphasizedANSIWhite		= 24,
+	// these colors are automatically set and should not be modified otherwise;
+	// to recalculate them, change "kTerminalView_ColorIndexBlinkingText" or
+	// "kTerminalView_ColorIndexBlinkingBackground"
+	kTerminalView_ColorIndexFirstBlinkPulseColor	= 25,
+	kTerminalView_ColorIndexLastBlinkPulseColor		= 34,
 	// counts of the above constants
 	kTerminalView_ColorCountRequiredEntries			= 2,
 	kTerminalView_ColorCountNonANSIColors			= 7,
 	kTerminalView_ColorCountNormalANSIColors		= 8,
 	kTerminalView_ColorCountEmphasizedANSIColors	= 8,
+	kTerminalView_ColorCountBlinkPulseColors		= kTerminalView_ColorIndexLastBlinkPulseColor -
+														kTerminalView_ColorIndexFirstBlinkPulseColor + 1,
 	// useful constants
 	kTerminalView_ColorIndexFirstValid				= kTerminalView_ColorIndexNormalText,
 	kTerminalView_ColorIndexLastValid				= kTerminalView_ColorIndexEmphasizedANSIWhite
