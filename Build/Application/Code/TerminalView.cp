@@ -3179,7 +3179,7 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		inTimer,
 			ptr->animation.rendering.stageDelta = +1;
 			ptr->animation.rendering.stage = 0;
 		}
-		else if (ptr->animation.rendering.stage > kTerminalView_ColorCountBlinkPulseColors)
+		else if (ptr->animation.rendering.stage >= kTerminalView_ColorCountBlinkPulseColors)
 		{
 			ptr->animation.rendering.stageDelta = -1;
 			ptr->animation.rendering.stage = kTerminalView_ColorCountBlinkPulseColors - 1;
@@ -8954,9 +8954,8 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 	if ((inColorEntryNumber == kTerminalView_ColorIndexBlinkingText) ||
 		(inColorEntryNumber == kTerminalView_ColorIndexBlinkingBackground))
 	{
-		register SInt16		i = 0;
-		GDHandle			device = nullptr;
-		RGBColor			colorValue;
+		GDHandle	device = nullptr;
+		RGBColor	colorValue;
 		
 		
 		// figure out which display has most control over screen content
@@ -8973,16 +8972,13 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 		// smooth “pulsing” effect as text blinks; the last color
 		// in the sequence matches the base foreground color, just
 		// for simplicity in the animation code
-		i = kTerminalView_ColorCountBlinkPulseColors - 1;
 		colorValue = inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingText];
-		setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexFirstBlinkPulseColor + i,
-								&colorValue);
-		while (--i >= 0)
+		for (TerminalView_ColorIndex i = kTerminalView_ColorIndexLastBlinkPulseColor;
+				i >= kTerminalView_ColorIndexFirstBlinkPulseColor; --i)
 		{
 			(Boolean)GetGray(device, &inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingBackground],
 								&colorValue/* both input and output */);
-			setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexFirstBlinkPulseColor + i,
-									&colorValue);
+			setScreenPaletteColor(inTerminalViewPtr, i, &colorValue);
 		}
 	}
 	

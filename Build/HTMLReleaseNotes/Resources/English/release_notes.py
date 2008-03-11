@@ -107,7 +107,8 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080311': [
-		'Fixed blink rate to not change as more open windows are opened.',
+		'Fixed blink rate to not change as more windows are opened.',
+		'Fixed blink to not include a random color (usually black) at the end.',
 	],
 	'20080310': [
 		'Terminal views now render blinking text with a quadratic-delay pulse effect.',
