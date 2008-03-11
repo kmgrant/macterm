@@ -1700,35 +1700,39 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 		
 		
-		result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
-		if ((kPreferences_ResultOK != result) && (inSearchDefaults))
+		if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
+		else
 		{
-			// not available...try another context
-			Preferences_ContextRef		alternateContext = nullptr;
-			
-			
-			result = Preferences_GetDefaultContext(&alternateContext, ptr->returnClass());
-			if (kPreferences_ResultOK == result)
+			result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+			if ((kPreferences_ResultOK != result) && (inSearchDefaults))
 			{
-				My_ContextAutoLocker	alternatePtr(gMyContextPtrLocks(), alternateContext);
+				// not available...try another context
+				Preferences_ContextRef		alternateContext = nullptr;
 				
 				
-				result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag, inDataStorageSize,
-										outDataStorage, outActualSizePtrOrNull);
-				if (kPreferences_ResultOK != result)
+				result = Preferences_GetDefaultContext(&alternateContext, ptr->returnClass());
+				if (kPreferences_ResultOK == result)
 				{
-					// not available...try yet another context
-					Preferences_ContextRef		rootContext = nullptr;
+					My_ContextAutoLocker	alternatePtr(gMyContextPtrLocks(), alternateContext);
 					
 					
-					result = Preferences_GetDefaultContext(&rootContext);
-					if (kPreferences_ResultOK == result)
+					result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag, inDataStorageSize,
+											outDataStorage, outActualSizePtrOrNull);
+					if (kPreferences_ResultOK != result)
 					{
-						My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
+						// not available...try yet another context
+						Preferences_ContextRef		rootContext = nullptr;
 						
 						
-						result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
-												outDataStorage, outActualSizePtrOrNull);
+						result = Preferences_GetDefaultContext(&rootContext);
+						if (kPreferences_ResultOK == result)
+						{
+							My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
+							
+							
+							result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
+													outDataStorage, outActualSizePtrOrNull);
+						}
 					}
 				}
 			}
