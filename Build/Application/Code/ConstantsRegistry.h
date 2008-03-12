@@ -94,16 +94,20 @@ unique value.
 Note that these strings are also used as HIObject IDs for
 toolbar items.
 */
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral			= CFSTR("com.mactelnet.prefpanels.general");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions		= CFSTR("com.mactelnet.prefpanels.sessions");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros			= CFSTR("com.mactelnet.prefpanels.macros");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals		= CFSTR("com.mactelnet.prefpanels.terminals");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormats			= CFSTR("com.mactelnet.prefpanels.formats");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsANSI		= CFSTR("com.mactelnet.prefpanels.formats.ansicolors");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsNormal	= CFSTR("com.mactelnet.prefpanels.formats.normal");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorKiosk			= CFSTR("com.mactelnet.prefpanels.kiosk");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorScripts			= CFSTR("com.mactelnet.prefpanels.scripts");
-CFStringRef const kConstantsRegistry_PrefPanelDescriptorTranslations	= CFSTR("com.mactelnet.prefpanels.translations");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral				= CFSTR("com.mactelnet.prefpanels.general");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions			= CFSTR("com.mactelnet.prefpanels.sessions");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros				= CFSTR("com.mactelnet.prefpanels.macros");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals			= CFSTR("com.mactelnet.prefpanels.terminals");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation	= CFSTR("com.mactelnet.prefpanels.terminals.emulation");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsHacks		= CFSTR("com.mactelnet.prefpanels.terminals.hacks");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsOptions	= CFSTR("com.mactelnet.prefpanels.terminals.options");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsScreen		= CFSTR("com.mactelnet.prefpanels.terminals.screen");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormats				= CFSTR("com.mactelnet.prefpanels.formats");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsANSI			= CFSTR("com.mactelnet.prefpanels.formats.ansicolors");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsNormal		= CFSTR("com.mactelnet.prefpanels.formats.normal");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorKiosk				= CFSTR("com.mactelnet.prefpanels.kiosk");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorScripts				= CFSTR("com.mactelnet.prefpanels.scripts");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorTranslations		= CFSTR("com.mactelnet.prefpanels.translations");
 
 /*!
 Used with HIObject routines (such as HIObjectCreate()) to

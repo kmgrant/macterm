@@ -45,6 +45,18 @@
 Panel_Ref
 	PrefPanelTerminals_New					();
 
+Panel_Ref
+	PrefPanelTerminals_NewEmulationPane		();
+
+Panel_Ref
+	PrefPanelTerminals_NewHacksPane			();
+
+Panel_Ref
+	PrefPanelTerminals_NewOptionsPane		();
+
+Panel_Ref
+	PrefPanelTerminals_NewScreenPane		();
+
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

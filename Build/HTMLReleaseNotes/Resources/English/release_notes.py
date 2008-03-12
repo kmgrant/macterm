@@ -107,6 +107,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080311': [
+		'Preferences window Terminals pane is now visible, though incomplete.',
 		'Fixed blink rate to not change as more windows are opened.',
 		'Fixed blink to not include a random color (usually black) at the end.',
 	],

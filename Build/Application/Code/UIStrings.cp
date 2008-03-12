@@ -1290,6 +1290,26 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowTerminalsCategoryName"));
 		break;
 	
+	case kUIStrings_PreferencesWindowTerminalsEmulationTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Emulation"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsEmulationTabName"));
+		break;
+	
+	case kUIStrings_PreferencesWindowTerminalsHacksTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Hacks"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsHacksTabName"));
+		break;
+	
+	case kUIStrings_PreferencesWindowTerminalsOptionsTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Options"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsOptionsTabName"));
+		break;
+	
+	case kUIStrings_PreferencesWindowTerminalsScreenTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Screen"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsScreenTabName"));
+		break;
+	
 	case kUIStrings_PreferencesWindowTranslationsCategoryName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Translations"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowTranslationsCategoryName"));

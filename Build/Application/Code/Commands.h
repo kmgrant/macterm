@@ -413,6 +413,10 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelScripts			'SPrC'		// “Preferences“ window
 #define kCommandDisplayPrefPanelSessions		'SPrS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTerminals		'SPrT'		// “Preferences“ window
+#define kCommandDisplayPrefPanelTerminalsEmulation	'SPTE'	// “Preferences“ window
+#define kCommandDisplayPrefPanelTerminalsHacks	'SPTH'		// “Preferences“ window
+#define kCommandDisplayPrefPanelTerminalsOptions	'SPTO'	// “Preferences“ window
+#define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
 #define kCommandPrefCursorBlock					'CrBl'		// “Preferences” window
 #define kCommandPrefCursorUnderline				'CrUn'		// “Preferences” window
@@ -432,12 +436,20 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPreferencesDuplicateFavorite	'DupC'		// “Preferences” window
 #define kCommandPreferencesRenameFavorite		'RnmC'		// “Preferences” window
 #define kCommandPreferencesDeleteFavorite		'DelC'		// “Preferences” window
+#define kCommandSetEmulatorANSIBBS				'EmAB'		// multiple interfaces
+#define kCommandSetEmulatorVT100				'E100'		// multiple interfaces
+#define kCommandSetEmulatorVT102				'E102'		// multiple interfaces
+#define kCommandSetEmulatorVT220				'E220'		// multiple interfaces
+#define kCommandSetEmulatorVT320				'E320'		// multiple interfaces
+#define kCommandSetEmulatorVT420				'E420'		// multiple interfaces
+#define kCommandSetEmulatorXTermOriginal		'EmXT'		// multiple interfaces
+#define kCommandSetEmulatorNone					'EDmb'		// multiple interfaces
 #define kCommandRetrySearch						'RFnd'		// “Find” dialog
 #define kCommandResetANSIColors					'ANSD'		// “Preferences” window
 #define kCommandOpenScriptMenuItemsFolder		'OSMI'		// “Preferences” window
-#define kCommandEditInterruptKey				'SIKy'		// “Special Key Sequences” dialog
-#define kCommandEditResumeKey					'SRKy'		// “Special Key Sequences” dialog
-#define kCommandEditSuspendKey					'SSKy'		// “Special Key Sequences” dialog
+#define kCommandEditInterruptKey				'SIKy'		// multiple interfaces
+#define kCommandEditResumeKey					'SRKy'		// multiple interfaces
+#define kCommandEditSuspendKey					'SSKy'		// multiple interfaces
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 #define kCommandSetBackground					'SBkg'		// generic request to open a UI to change a background
 

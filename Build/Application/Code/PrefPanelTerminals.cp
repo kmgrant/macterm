@@ -44,8 +44,11 @@
 // library includes
 #include <CarbonEventUtilities.template.h>
 #include <ColorUtilities.h>
+#include <CommonEventHandlers.h>
 #include <Console.h>
 #include <DialogAdjust.h>
+#include <HIViewWrap.h>
+#include <HIViewWrapManip.h>
 #include <Localization.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
@@ -63,6 +66,7 @@
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
+#include "GenericPanelTabs.h"
 #include "Panel.h"
 #include "Preferences.h"
 #include "PrefPanelTerminals.h"
@@ -71,38 +75,216 @@
 
 
 
-#pragma mark Types
+#pragma mark Constants
+namespace {
 
-struct My_TerminalsPanelData
+/*!
+IMPORTANT
+
+The following values MUST agree with the view IDs in
+the NIBs from the package "PrefPanelTerminals.nib".
+
+In addition, they MUST be unique across all panels.
+*/
+HIViewID const	idMyPopUpMenuEmulationType		= { 'MEmT', 0/* ID */ };
+HIViewID const	idMyCheckBoxXTermSequences		= { 'XXTM', 0/* ID */ };
+HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
+HIViewID const	idMyFieldAnswerBackMessage		= { 'EABM', 0/* ID */ };
+HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
+HIViewID const	idMyHelpTextHacks				= { 'HaxT', 0/* ID */ };
+
+} // anonymous namespace
+
+#pragma mark Types
+namespace {
+
+/*!
+Implements the “Emulation” tab.
+*/
+struct My_TerminalsPanelEmulationUI
 {
-	Panel_Ref		panel;	//!< the panel this data is for
+	My_TerminalsPanelEmulationUI	(Panel_Ref, HIWindowRef);
+	
+	Panel_Ref		panel;			//!< the panel using this UI
+	Float32			idealWidth;		//!< best size in pixels
+	Float32			idealHeight;	//!< best size in pixels
+	HIViewWrap		mainView;
+	
+	void
+	readPreferences		(Preferences_ContextRef);
+
+protected:
+	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef);
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
-typedef struct My_TerminalsPanelData	My_TerminalsPanelData;
-typedef My_TerminalsPanelData*			My_TerminalsPanelDataPtr;
+typedef My_TerminalsPanelEmulationUI*	My_TerminalsPanelEmulationUIPtr;
+
+/*!
+Implements the “Hacks” tab.
+*/
+struct My_TerminalsPanelHacksUI
+{
+	My_TerminalsPanelHacksUI	(Panel_Ref, HIWindowRef);
+	
+	Panel_Ref		panel;			//!< the panel using this UI
+	Float32			idealWidth;		//!< best size in pixels
+	Float32			idealHeight;	//!< best size in pixels
+	HIViewWrap		mainView;
+	
+	void
+	readPreferences		(Preferences_ContextRef);
+
+protected:
+	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef);
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;
+};
+typedef My_TerminalsPanelHacksUI*	My_TerminalsPanelHacksUIPtr;
+
+/*!
+Implements the “Options” tab.
+*/
+struct My_TerminalsPanelOptionsUI
+{
+	My_TerminalsPanelOptionsUI	(Panel_Ref, HIWindowRef);
+	
+	Panel_Ref		panel;			//!< the panel using this UI
+	Float32			idealWidth;		//!< best size in pixels
+	Float32			idealHeight;	//!< best size in pixels
+	HIViewWrap		mainView;
+	
+	void
+	readPreferences		(Preferences_ContextRef);
+
+protected:
+	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef);
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;
+};
+typedef My_TerminalsPanelOptionsUI*		My_TerminalsPanelOptionsUIPtr;
+
+/*!
+Implements the “Screen” tab.
+*/
+struct My_TerminalsPanelScreenUI
+{
+	My_TerminalsPanelScreenUI	(Panel_Ref, HIWindowRef);
+	
+	Panel_Ref		panel;			//!< the panel using this UI
+	Float32			idealWidth;		//!< best size in pixels
+	Float32			idealHeight;	//!< best size in pixels
+	HIViewWrap		mainView;
+	
+	void
+	readPreferences		(Preferences_ContextRef);
+
+protected:
+	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef);
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;
+};
+typedef My_TerminalsPanelScreenUI*	My_TerminalsPanelScreenUIPtr;
+
+/*!
+Contains the panel reference and its user interface
+(once the UI is constructed).
+*/
+struct My_TerminalsPanelEmulationData
+{
+	My_TerminalsPanelEmulationData	();
+	~My_TerminalsPanelEmulationData	();
+	
+	Panel_Ref						panel;			//!< the panel this data is for
+	My_TerminalsPanelEmulationUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
+};
+typedef My_TerminalsPanelEmulationData*		My_TerminalsPanelEmulationDataPtr;
+
+/*!
+Contains the panel reference and its user interface
+(once the UI is constructed).
+*/
+struct My_TerminalsPanelHacksData
+{
+	My_TerminalsPanelHacksData	();
+	~My_TerminalsPanelHacksData	();
+	
+	Panel_Ref					panel;			//!< the panel this data is for
+	My_TerminalsPanelHacksUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef		dataModel;		//!< source of initializations and target of changes
+};
+typedef My_TerminalsPanelHacksData*		My_TerminalsPanelHacksDataPtr;
+
+/*!
+Contains the panel reference and its user interface
+(once the UI is constructed).
+*/
+struct My_TerminalsPanelOptionsData
+{
+	My_TerminalsPanelOptionsData	();
+	~My_TerminalsPanelOptionsData	();
+	
+	Panel_Ref						panel;			//!< the panel this data is for
+	My_TerminalsPanelOptionsUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
+};
+typedef My_TerminalsPanelOptionsData*		My_TerminalsPanelOptionsDataPtr;
+
+/*!
+Contains the panel reference and its user interface
+(once the UI is constructed).
+*/
+struct My_TerminalsPanelScreenData
+{
+	My_TerminalsPanelScreenData		();
+	~My_TerminalsPanelScreenData	();
+	
+	Panel_Ref						panel;			//!< the panel this data is for
+	My_TerminalsPanelScreenUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
+};
+typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void			createPanelControls		(Panel_Ref, WindowRef);
-static void			disposePanel			(Panel_Ref, void*);
-static SInt32		panelChanged			(Panel_Ref, Panel_Message, void*);
+SInt32		panelChangedEmulation	(Panel_Ref, Panel_Message, void*);
+SInt32		panelChangedHacks		(Panel_Ref, Panel_Message, void*);
+SInt32		panelChangedOptions		(Panel_Ref, Panel_Message, void*);
+SInt32		panelChangedScreen		(Panel_Ref, Panel_Message, void*);
 
-#pragma mark Variables
-
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Float32		gIdealWidth = 0.0;
-	Float32		gIdealHeight = 0.0;
-}
+} // anonymous namespace
 
 
 
 #pragma mark Public Methods
 
 /*!
-Creates a new preference panel for the Terminals
-category, initializes it, and returns a reference
-to it.  You must destroy the reference using
-Panel_Dispose() when you are done with it.
+Creates a new preference panel for the Terminals category.
+Destroy it using Panel_Dispose().
 
 If any problems occur, nullptr is returned.
 
@@ -111,22 +293,65 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelTerminals_New ()
 {
-	Panel_Ref	result = Panel_New(panelChanged);
+	Panel_Ref				result = nullptr;
+	CFStringRef				nameCFString = nullptr;
+	GenericPanelTabs_List	tabList;
 	
 	
-	if (result != nullptr)
+	tabList.push_back(PrefPanelTerminals_NewOptionsPane());
+	tabList.push_back(PrefPanelTerminals_NewEmulationPane());
+	tabList.push_back(PrefPanelTerminals_NewScreenPane());
+	tabList.push_back(PrefPanelTerminals_NewHacksPane());
+	
+	if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsCategoryName, nameCFString).ok())
 	{
-		My_TerminalsPanelDataPtr	dataPtr = new My_TerminalsPanelData();
-		CFStringRef					nameCFString = nullptr;
+		result = GenericPanelTabs_New(nameCFString, kConstantsRegistry_PrefPanelDescriptorTerminals, tabList);
+		if (nullptr != result)
+		{
+			Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminals);
+			Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTerminalsIconFilenameNoExtension(),
+											AppResources_ReturnCreatorCode(),
+											kConstantsRegistry_IconServicesIconPrefPanelTerminals);
+		}
+		CFRelease(nameCFString), nameCFString = nullptr;
+	}
+	
+	return result;
+}// New
+
+
+/*!
+Creates only the Emulation pane, which allows the user to
+set the terminal type.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelTerminals_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelTerminals_NewEmulationPane ()
+{
+	Panel_Ref	result = Panel_New(panelChangedEmulation);
+	
+	
+	if (nullptr != result)
+	{
+		My_TerminalsPanelEmulationDataPtr	dataPtr = new My_TerminalsPanelEmulationData();
+		CFStringRef							nameCFString = nullptr;
 		
 		
-		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminals);
-		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminals);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsCategoryName, nameCFString).ok())
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsEmulation);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsEmulationTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
 		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
 		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTerminalsIconFilenameNoExtension(),
 										AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_IconServicesIconPrefPanelTerminals);
@@ -134,110 +359,767 @@ PrefPanelTerminals_New ()
 		dataPtr->panel = result;
 	}
 	return result;
-}// New
+}// NewEmulationPane
+
+
+/*!
+Creates only the Hacks pane, which allows the user to change
+standard terminal behaviors.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelTerminals_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelTerminals_NewHacksPane ()
+{
+	Panel_Ref	result = Panel_New(panelChangedHacks);
+	
+	
+	if (nullptr != result)
+	{
+		My_TerminalsPanelHacksDataPtr	dataPtr = new My_TerminalsPanelHacksData();
+		CFStringRef						nameCFString = nullptr;
+		
+		
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsHacks);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsHacks);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsHacksTabName, nameCFString).ok())
+		{
+			Panel_SetName(result, nameCFString);
+			CFRelease(nameCFString), nameCFString = nullptr;
+		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
+		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTerminalsIconFilenameNoExtension(),
+										AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_IconServicesIconPrefPanelTerminals);
+		Panel_SetImplementation(result, dataPtr);
+		dataPtr->panel = result;
+	}
+	return result;
+}// NewHacksPane
+
+
+/*!
+Creates only the Options pane, which allows the user to
+set various checkboxes.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelTerminals_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelTerminals_NewOptionsPane ()
+{
+	Panel_Ref	result = Panel_New(panelChangedOptions);
+	
+	
+	if (nullptr != result)
+	{
+		My_TerminalsPanelOptionsDataPtr		dataPtr = new My_TerminalsPanelOptionsData();
+		CFStringRef							nameCFString = nullptr;
+		
+		
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsOptions);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsOptions);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsOptionsTabName, nameCFString).ok())
+		{
+			Panel_SetName(result, nameCFString);
+			CFRelease(nameCFString), nameCFString = nullptr;
+		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
+		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTerminalsIconFilenameNoExtension(),
+										AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_IconServicesIconPrefPanelTerminals);
+		Panel_SetImplementation(result, dataPtr);
+		dataPtr->panel = result;
+	}
+	return result;
+}// NewOptionsPane
+
+
+/*!
+Creates only the Screen pane, which allows the user to set
+the size and scrollback.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelTerminals_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelTerminals_NewScreenPane ()
+{
+	Panel_Ref	result = Panel_New(panelChangedScreen);
+	
+	
+	if (nullptr != result)
+	{
+		My_TerminalsPanelScreenDataPtr	dataPtr = new My_TerminalsPanelScreenData();
+		CFStringRef						nameCFString = nullptr;
+		
+		
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsScreen);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsScreen);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsScreenTabName, nameCFString).ok())
+		{
+			Panel_SetName(result, nameCFString);
+			CFRelease(nameCFString), nameCFString = nullptr;
+		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
+		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTerminalsIconFilenameNoExtension(),
+										AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_IconServicesIconPrefPanelTerminals);
+		Panel_SetImplementation(result, dataPtr);
+		dataPtr->panel = result;
+	}
+	return result;
+}// NewScreenPane
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
-Creates the controls that belong in the “Terminals” panel, and
-attaches them to the specified owning window in the proper
-embedding hierarchy.  The specified panel’s descriptor must
-be "kConstantsRegistry_PrefPanelDescriptorTerminals".
-
-The controls are not arranged or sized.
+Initializes a My_TerminalsPanelEmulationData structure.
 
 (3.1)
 */
-static void
-createPanelControls		(Panel_Ref		inPanel,
-						 WindowRef		inOwningWindow)
+My_TerminalsPanelEmulationData::
+My_TerminalsPanelEmulationData ()
+:
+panel(nullptr),
+interfacePtr(nullptr),
+dataModel(nullptr)
 {
-	HIViewRef					container = nullptr;
-	HIViewRef					control = nullptr;
-	My_TerminalsPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_TerminalsPanelDataPtr);
-	Rect						containerBounds;
+}// My_TerminalsPanelEmulationData default constructor
+
+
+/*!
+Tears down a My_TerminalsPanelEmulationData structure.
+
+(3.1)
+*/
+My_TerminalsPanelEmulationData::
+~My_TerminalsPanelEmulationData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_TerminalsPanelEmulationData destructor
+
+
+/*!
+Initializes a My_TerminalsPanelEmulationUI structure.
+
+(3.1)
+*/
+My_TerminalsPanelEmulationUI::
+My_TerminalsPanelEmulationUI	(Panel_Ref		inPanel,
+								 HIWindowRef	inOwningWindow)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel					(inPanel),
+idealWidth				(0.0),
+idealHeight				(0.0),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_TerminalsPanelEmulationUI::deltaSize, this/* context */)
+{
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
+}// My_TerminalsPanelEmulationUI 2-argument constructor
+
+
+/*!
+Constructs the HIView that resides within the tab, and
+the sub-views that belong in its hierarchy.
+
+(3.1)
+*/
+HIViewWrap
+My_TerminalsPanelEmulationUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+{
+	HIViewRef					result = nullptr;
+	std::vector< HIViewRef >	viewList;
+	Rect						dummy;
+	Rect						idealContainerBounds;
 	OSStatus					error = noErr;
 	
 	
-	SetRect(&containerBounds, 0, 0, 0, 0);
-	error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &container);
+	// create the tab pane
+	SetRect(&dummy, 0, 0, 0, 0);
+	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
-	Panel_SetContainerView(inPanel, container);
-	SetControlVisibility(container, false/* visible */, false/* draw */);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
+	
+	// create most HIViews for the tab based on the NIB
+	error = DialogUtilities_CreateControlsBasedOnWindowNIB
+			(CFSTR("PrefPanelTerminals"), CFSTR("Emulation"), inOwningWindow,
+					result/* parent */, viewList, idealContainerBounds);
+	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
+	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
+	return result;
+}// My_TerminalsPanelEmulationUI::createContainerView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+My_TerminalsPanelEmulationUI::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
+	//My_TerminalsPanelEmulationUI*	dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelEmulationUI*);
+	
+	HIViewWrap					viewWrap;
+	
 	
 	// INCOMPLETE
-}// createPanelControls
+	viewWrap = HIViewWrap(idMyPopUpMenuEmulationType, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyCheckBoxXTermSequences, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyFieldAnswerBackMessage, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+}// My_TerminalsPanelEmulationUI::deltaSize
 
 
 /*!
-Cleans up a panel that is about to be destroyed.
+Updates the display based on the given settings.
 
 (3.1)
 */
-static void
-disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
-				 void*		inDataPtr)
+void
+My_TerminalsPanelEmulationUI::
+readPreferences		(Preferences_ContextRef		inSettings)
 {
-	My_TerminalsPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, My_TerminalsPanelDataPtr);
-	
-	
-	delete dataPtr;
-}// disposePanel
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_TerminalsPanelEmulationUI::readPreferences
 
 
 /*!
-This routine, of standard PanelChangedProcPtr form,
-is invoked by the Panel module whenever a property
-of one of the preferences dialog’s panels changes.
+Initializes a My_TerminalsPanelHacksData structure.
 
 (3.1)
 */
-static SInt32
-panelChanged	(Panel_Ref		inPanel,
-				 Panel_Message	inMessage,
-				 void*			inDataPtr)
+My_TerminalsPanelHacksData::
+My_TerminalsPanelHacksData ()
+:
+panel(nullptr),
+interfacePtr(nullptr),
+dataModel(nullptr)
+{
+}// My_TerminalsPanelHacksData default constructor
+
+
+/*!
+Tears down a My_TerminalsPanelHacksData structure.
+
+(3.1)
+*/
+My_TerminalsPanelHacksData::
+~My_TerminalsPanelHacksData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_TerminalsPanelHacksData destructor
+
+
+/*!
+Initializes a My_TerminalsPanelHacksUI structure.
+
+(3.1)
+*/
+My_TerminalsPanelHacksUI::
+My_TerminalsPanelHacksUI	(Panel_Ref		inPanel,
+							 HIWindowRef	inOwningWindow)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel					(inPanel),
+idealWidth				(0.0),
+idealHeight				(0.0),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_TerminalsPanelHacksUI::deltaSize, this/* context */)
+{
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
+}// My_TerminalsPanelHacksUI 2-argument constructor
+
+
+/*!
+Constructs the HIView that resides within the tab, and
+the sub-views that belong in its hierarchy.
+
+(3.1)
+*/
+HIViewWrap
+My_TerminalsPanelHacksUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+{
+	HIViewRef					result = nullptr;
+	std::vector< HIViewRef >	viewList;
+	Rect						dummy;
+	Rect						idealContainerBounds;
+	OSStatus					error = noErr;
+	
+	
+	// create the tab pane
+	SetRect(&dummy, 0, 0, 0, 0);
+	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
+	assert_noerr(error);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
+	
+	// create most HIViews for the tab based on the NIB
+	error = DialogUtilities_CreateControlsBasedOnWindowNIB
+			(CFSTR("PrefPanelTerminals"), CFSTR("Hacks"), inOwningWindow,
+					result/* parent */, viewList, idealContainerBounds);
+	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
+	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
+	return result;
+}// My_TerminalsPanelHacksUI::createContainerView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+My_TerminalsPanelHacksUI::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
+	//My_TerminalsPanelHacksUI*		dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelHacksUI*);
+	
+	HIViewWrap					viewWrap;
+	
+	
+	// INCOMPLETE
+	viewWrap = HIViewWrap(idMyHelpTextHacks, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+}// My_TerminalsPanelHacksUI::deltaSize
+
+
+/*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_TerminalsPanelHacksUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_TerminalsPanelHacksUI::readPreferences
+
+
+/*!
+Initializes a My_TerminalsPanelOptionsData structure.
+
+(3.1)
+*/
+My_TerminalsPanelOptionsData::
+My_TerminalsPanelOptionsData ()
+:
+panel(nullptr),
+interfacePtr(nullptr),
+dataModel(nullptr)
+{
+}// My_TerminalsPanelOptionsData default constructor
+
+
+/*!
+Tears down a My_TerminalsPanelOptionsData structure.
+
+(3.1)
+*/
+My_TerminalsPanelOptionsData::
+~My_TerminalsPanelOptionsData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_TerminalsPanelOptionsData destructor
+
+
+/*!
+Initializes a My_TerminalsPanelOptionsUI structure.
+
+(3.1)
+*/
+My_TerminalsPanelOptionsUI::
+My_TerminalsPanelOptionsUI	(Panel_Ref		inPanel,
+							 HIWindowRef	inOwningWindow)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel					(inPanel),
+idealWidth				(0.0),
+idealHeight				(0.0),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_TerminalsPanelOptionsUI::deltaSize, this/* context */)
+{
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
+}// My_TerminalsPanelOptionsUI 2-argument constructor
+
+
+/*!
+Constructs the HIView that resides within the tab, and
+the sub-views that belong in its hierarchy.
+
+(3.1)
+*/
+HIViewWrap
+My_TerminalsPanelOptionsUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+{
+	HIViewRef					result = nullptr;
+	std::vector< HIViewRef >	viewList;
+	Rect						dummy;
+	Rect						idealContainerBounds;
+	OSStatus					error = noErr;
+	
+	
+	// create the tab pane
+	SetRect(&dummy, 0, 0, 0, 0);
+	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
+	assert_noerr(error);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
+	
+	// create most HIViews for the tab based on the NIB
+	error = DialogUtilities_CreateControlsBasedOnWindowNIB
+			(CFSTR("PrefPanelTerminals"), CFSTR("Options"), inOwningWindow,
+					result/* parent */, viewList, idealContainerBounds);
+	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
+	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
+	return result;
+}// My_TerminalsPanelOptionsUI::createContainerView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+My_TerminalsPanelOptionsUI::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
+	//My_TerminalsPanelOptionsUI*	dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelOptionsUI*);
+	
+	HIViewWrap					viewWrap;
+	
+	
+	// UNIMPLEMENTED
+}// My_TerminalsPanelOptionsUI::deltaSize
+
+
+/*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_TerminalsPanelOptionsUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_TerminalsPanelOptionsUI::readPreferences
+
+
+/*!
+Initializes a My_TerminalsPanelScreenData structure.
+
+(3.1)
+*/
+My_TerminalsPanelScreenData::
+My_TerminalsPanelScreenData ()
+:
+panel(nullptr),
+interfacePtr(nullptr),
+dataModel(nullptr)
+{
+}// My_TerminalsPanelScreenData default constructor
+
+
+/*!
+Tears down a My_TerminalsPanelScreenData structure.
+
+(3.1)
+*/
+My_TerminalsPanelScreenData::
+~My_TerminalsPanelScreenData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_TerminalsPanelScreenData destructor
+
+
+/*!
+Initializes a My_TerminalsPanelScreenUI structure.
+
+(3.1)
+*/
+My_TerminalsPanelScreenUI::
+My_TerminalsPanelScreenUI	(Panel_Ref		inPanel,
+							 HIWindowRef	inOwningWindow)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel					(inPanel),
+idealWidth				(0.0),
+idealHeight				(0.0),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_TerminalsPanelScreenUI::deltaSize, this/* context */)
+{
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
+}// My_TerminalsPanelScreenUI 2-argument constructor
+
+
+/*!
+Constructs the HIView that resides within the tab, and
+the sub-views that belong in its hierarchy.
+
+(3.1)
+*/
+HIViewWrap
+My_TerminalsPanelScreenUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+{
+	HIViewRef					result = nullptr;
+	std::vector< HIViewRef >	viewList;
+	Rect						dummy;
+	Rect						idealContainerBounds;
+	OSStatus					error = noErr;
+	
+	
+	// create the tab pane
+	SetRect(&dummy, 0, 0, 0, 0);
+	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
+	assert_noerr(error);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
+	
+	// create most HIViews for the tab based on the NIB
+	error = DialogUtilities_CreateControlsBasedOnWindowNIB
+			(CFSTR("PrefPanelTerminals"), CFSTR("Screen"), inOwningWindow,
+					result/* parent */, viewList, idealContainerBounds);
+	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
+	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
+	return result;
+}// My_TerminalsPanelScreenUI::createContainerView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
+	//My_TerminalsPanelScreenUI*	dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelScreenUI*);
+	
+	HIViewWrap					viewWrap;
+	
+	
+	// INCOMPLETE
+	//viewWrap = HIViewWrap(idMySliderScrollSpeed, kPanelWindow);
+	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	//viewWrap = HIViewWrap(idMyLabelScrollSpeedFast, kPanelWindow);
+	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+}// My_TerminalsPanelScreenUI::deltaSize
+
+
+/*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_TerminalsPanelScreenUI::readPreferences
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+panelChangedEmulation	(Panel_Ref		inPanel,
+						 Panel_Message	inMessage,
+						 void*			inDataPtr)
 {
 	SInt32		result = 0L;
 	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorTerminals, 0/* options */));
+												kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation, 0/* options */));
 	
 	
 	switch (inMessage)
 	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create controls using this window
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
 		{
-			WindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelEmulationDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
 			
 			
-			createPanelControls(inPanel, *windowPtr);
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_TerminalsPanelEmulationUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
 		}
 		break;
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			void*	panelAuxiliaryDataPtr = inDataPtr;
-			
-			
-			disposePanel(inPanel, panelAuxiliaryDataPtr);
+			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelEmulationDataPtr));
 		}
 		break;
 	
-	case kPanel_MessageFocusGained: // notification that a control is now focused
+	case kPanel_MessageFocusGained: // notification that a view is now focused
 		{
-			//HIViewRef const*	controlPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
 			
 			
 			// do nothing
 		}
 		break;
 	
-	case kPanel_MessageFocusLost: // notification that a control is no longer focused
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
 		{
-			HIViewRef const*	controlPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
 			
 			
-			// INCOMPLETE
+			// do nothing
 		}
 		break;
 	
@@ -245,21 +1127,23 @@ panelChanged	(Panel_Ref		inPanel,
 		result = kPanel_ResponseEditTypeInspector;
 		break;
 	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after control creation)
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
 		{
-			HISize&		newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelEmulationDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
 			
 			
-			if ((gIdealWidth != 0) && (gIdealHeight != 0))
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
 			{
-				newLimits.width = gIdealWidth;
-				newLimits.height = gIdealHeight;
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
 				result = kPanel_ResponseSizeProvided;
 			}
 		}
 		break;
 	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate control sizes
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
 			// this notification is currently ignored, but shouldn’t be...
 		}
@@ -267,10 +1151,16 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewDataSet:
 		{
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelEmulationDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
-			// UNIMPLEMENTED
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
 		break;
 	
@@ -288,6 +1178,350 @@ panelChanged	(Panel_Ref		inPanel,
 	}
 	
 	return result;
-}// panelChanged
+}// panelChangedEmulation
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+panelChangedHacks	(Panel_Ref		inPanel,
+					 Panel_Message	inMessage,
+					 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorTerminalsHacks, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_TerminalsPanelHacksDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_TerminalsPanelHacksDataPtr);
+			WindowRef const*				windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_TerminalsPanelHacksUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelHacksDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_TerminalsPanelHacksDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_TerminalsPanelHacksDataPtr);
+			HISize&							newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_TerminalsPanelHacksDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelHacksDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// panelChangedHacks
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+panelChangedOptions		(Panel_Ref		inPanel,
+						 Panel_Message	inMessage,
+						 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorTerminalsOptions, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelOptionsDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_TerminalsPanelOptionsUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelOptionsDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelOptionsDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelOptionsDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// panelChangedOptions
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+panelChangedScreen	(Panel_Ref		inPanel,
+					 Panel_Message	inMessage,
+					 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorTerminalsScreen, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelScreenDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_TerminalsPanelScreenUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelScreenDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelScreenDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelScreenDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// panelChangedScreen
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
