@@ -431,7 +431,7 @@ CommandLine_Init ()
 		std::vector< CarbonEventType >		eventTypes;
 		
 		
-		eventTypes.push_back(std::make_pair((UInt32)kEventClassWindow, (UInt32)kEventWindowClose));
+		eventTypes.push_back(std::make_pair((UInt32)kEventClassWindow, (UInt32)kEventWindowCursorChange));
 		eventTypes.push_back(std::make_pair((UInt32)kEventClassKeyboard, (UInt32)kEventRawKeyModifiersChanged));
 		gCommandLineCursorChangeHandler.install(GetWindowEventTarget(gCommandLineWindow), receiveWindowCursorChange,
 												eventTypes, gCommandLineWindow/* user data */);
