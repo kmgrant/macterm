@@ -847,6 +847,20 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 					}
 					break;
 				
+				case kControlKindSlider:
+					{
+						// NOTE: There are no control data tags for sliders, so it is difficult
+						// to faithfully replicate them!!!
+						result = CreateSliderControl(inDestinationWindow, &templateBounds,
+														GetControl32BitValue(inTemplateControl),
+														GetControl32BitMinimum(inTemplateControl),
+														GetControl32BitMaximum(inTemplateControl),
+														kControlSliderPointsDownOrRight, 3/* number of tick marks - arbitrary */,
+														false/* live tracking */, nullptr/* action routine */,
+														&outNewControl);
+					}
+					break;
+				
 				case kControlKindStaticText:
 					{
 						CFStringRef		textCFString = nullptr;
