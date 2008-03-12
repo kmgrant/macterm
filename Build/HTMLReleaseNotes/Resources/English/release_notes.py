@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080312',
     '20080311',
     '20080310',
     '20080308',
@@ -106,6 +107,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080312': [
+		'Fixed seemingly random display glitches, traced to a corner case in processing CSI parameters.',
+	],
 	'20080311': [
 		'Preferences window Terminals pane is now visible, though incomplete.',
 		'Fixed blink rate to not change as more windows are opened.',

@@ -5131,6 +5131,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 			case ';':
 			case '?':
 				outNextState = kStateCSIParamScan;
+				result = 0; // do not absorb this character
 				break;
 			
 			default:
