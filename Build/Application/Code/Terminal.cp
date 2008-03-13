@@ -3,9 +3,9 @@
 	Terminal.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -85,166 +85,167 @@
 
 
 #pragma mark Constants
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+/*!
+A parser state represents a recent history of input that limits
+what can happen next (based on future input).
+
+The list below contains generic names, however the same values
+are often used to define aliases in specific terminal classes
+(like My_VT100).  This ties a terminal-specific state to a
+generic one, allowing the default parser to do most of the state
+determination/transition work on behalf of all terminals!
+*/
+typedef UInt32 My_ParserState;
+enum
 {
-	/*!
-	A parser state represents a recent history of input that limits
-	what can happen next (based on future input).
+	// key states
+	kMy_ParserStateInitial						= 'init',	//!< the very first state, no characters have yet been entered
+	kMy_ParserStateEcho							= 'echo',	//!< no sense could be made of the input, so let it fall through to display
 	
-	The list below contains generic names, however the same values
-	are often used to define aliases in specific terminal classes
-	(like My_VT100).  This ties a terminal-specific state to a
-	generic one, allowing the default parser to do most of the state
-	determination/transition work on behalf of all terminals!
-	*/
-	typedef UInt32 My_ParserState;
-	enum
-	{
-		// key states
-		kMy_ParserStateInitial						= 'init',	//!< the very first state, no characters have yet been entered
-		kMy_ParserStateEcho							= 'echo',	//!< no sense could be made of the input, so let it fall through to display
-		
-		// generic states - these are automatically handled by the default state determinant based on the data stream
-		kMy_ParserStateSeenNull						= 'Ctl@',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlA					= 'CtlA',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlB					= 'CtlB',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlC					= 'CtlC',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlD					= 'CtlD',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlE					= 'CtlE',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlF					= 'CtlF',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlG					= 'CtlG',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlH					= 'CtlH',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlI					= 'CtlI',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlJ					= 'CtlJ',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlK					= 'CtlK',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlL					= 'CtlL',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlM					= 'CtlM',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlN					= 'CtlN',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlO					= 'CtlO',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlP					= 'CtlP',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlQ					= 'CtlQ',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlR					= 'CtlR',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlS					= 'CtlS',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlT					= 'CtlT',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlU					= 'CtlU',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlV					= 'CtlV',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlW					= 'CtlW',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlX					= 'CtlX',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlY					= 'CtlY',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenControlZ					= 'CtlZ',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESC						= 'cESC',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracket			= 'ESC[',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParams	= 'E[;;',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsA	= 'E[;A',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsB	= 'E[;B',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsc	= 'E[;c',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsC	= 'E[;C',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsD	= 'E[;D',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsf	= 'E[;f',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsg	= 'E[;g',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsh	= 'E[;h',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsH	= 'E[;H',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsJ	= 'E[;J',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsK	= 'E[;K',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsi	= 'E[;i',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsl	= 'E[;l',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsL	= 'E[;L',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsm	= 'E[;m',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsM	= 'E[;M',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsn	= 'E[;n',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsP	= 'E[;P',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsq	= 'E[;q',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsr	= 'E[;r',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftParenB			= 'ES(B',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftParen0			= 'ES(0',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftParen1			= 'ES(1',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLeftParen2			= 'ES(2',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCRightParen			= 'ESC)',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCRightParenA			= 'ES)A',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCRightParenB			= 'ES)B',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCRightParen0			= 'ES)0',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCRightParen1			= 'ES)1',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCRightParen2			= 'ES)2',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCA						= 'ESCA',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCB						= 'ESCB',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCC						= 'ESCC',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCc						= 'ESCc',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCD						= 'ESCD',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCE						= 'ESCE',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCF						= 'ESCF',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCG						= 'ESCG',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCH						= 'ESCH',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCI						= 'ESCI',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCJ						= 'ESCJ',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCK						= 'ESCK',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCM						= 'ESCM',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCY						= 'ESCY',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCZ						= 'ESCZ',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESC7						= 'ESC7',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESC8						= 'ESC8',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCPound					= 'ESC#',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCPound3				= 'ES#3',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCPound4				= 'ES#4',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCPound5				= 'ES#5',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCPound6				= 'ES#6',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCPound8				= 'ES#8',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCEquals				= 'ESC=',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCLessThan				= 'ESC<',	//!< generic state used to define emulator-specific states, below
-		kMy_ParserStateSeenESCGreaterThan			= 'ESC>',	//!< generic state used to define emulator-specific states, below
-	};
-	
-	UInt16 const					kNumberOfScrollbackRowsToAllocateAtOnce = 100;
-	TerminalTextAttributes const	kTerminalTextAttributesAllOff = 0L;
-	
-	char const		kMy_TabSet		= 'x';	//!< in "tabSettings" field of terminal structure, characters with this value mark tab stops
-	char const		kMy_TabClear		= ' ';	//!< in "tabSettings" field of terminal structure, all characters not marking tab stops have this value
-	UInt8 const		kMy_TabStop		= 8;	//!< number of characters between normal tab stops
-	
-	enum
-	{
-		kMy_NumberOfCharactersPerLineMaximum = 256	//!< maximum number of columns allowed; must be a multiple of "kMy_TabStop"
-	};
-	
-	enum My_CharacterSet
-	{
-		kMy_CharacterSetVT100UnitedKingdom		= 0,	//!< ASCII character set except '#' is '£' (British pounds currency symbol)
-		kMy_CharacterSetVT100UnitedStates		= 1		//!< ASCII character set
-	};
-	
-	enum My_CharacterROM
-	{
-		kMy_CharacterROMNormal		= 0,	//!< regular source
-		kMy_CharacterROMAlternate	= 1		//!< alternate ROM (e.g. Unix programs like "top" will try to switch out)
-	};
-	
-	enum My_GraphicsMode
-	{
-		kMy_GraphicsModeOff			= 0,	//!< no graphics glyphs will appear
-		kMy_GraphicsModeOn			= 1		//!< non-printable ASCII will become VT graphics characters
-	};
-	
-	typedef UInt32 My_LEDBits;
-	enum
-	{
-		kMy_LEDBitsLight1			= (1 << 0),		//!< set if LED 1 is on
-		kMy_LEDBitsLight2			= (1 << 1),		//!< set if LED 2 is on
-		kMy_LEDBitsLight3			= (1 << 2),		//!< set if LED 3 is on
-		kMy_LEDBitsLight4			= (1 << 3),		//!< set if LED 4 is on
-		kMy_LEDBitsAllOff			= 0L			//!< cleared if all LEDs are off
-	};
-	
-	enum
-	{
-		kMy_MaximumANSIParameters = 16		// when <ESC>'['<param>[;<param>][;<param>]... sequences are encountered,
-											// this will be the maximum <param>s allowed
-	};
-}
+	// generic states - these are automatically handled by the default state determinant based on the data stream
+	kMy_ParserStateSeenNull						= 'Ctl@',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlA					= 'CtlA',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlB					= 'CtlB',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlC					= 'CtlC',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlD					= 'CtlD',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlE					= 'CtlE',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlF					= 'CtlF',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlG					= 'CtlG',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlH					= 'CtlH',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlI					= 'CtlI',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlJ					= 'CtlJ',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlK					= 'CtlK',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlL					= 'CtlL',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlM					= 'CtlM',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlN					= 'CtlN',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlO					= 'CtlO',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlP					= 'CtlP',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlQ					= 'CtlQ',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlR					= 'CtlR',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlS					= 'CtlS',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlT					= 'CtlT',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlU					= 'CtlU',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlV					= 'CtlV',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlW					= 'CtlW',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlX					= 'CtlX',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlY					= 'CtlY',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenControlZ					= 'CtlZ',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESC						= 'cESC',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracket			= 'ESC[',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParams	= 'E[;;',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsA	= 'E[;A',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsB	= 'E[;B',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsc	= 'E[;c',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsC	= 'E[;C',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsD	= 'E[;D',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsf	= 'E[;f',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsg	= 'E[;g',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsh	= 'E[;h',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsH	= 'E[;H',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsJ	= 'E[;J',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsK	= 'E[;K',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsi	= 'E[;i',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsl	= 'E[;l',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsL	= 'E[;L',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsm	= 'E[;m',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsM	= 'E[;M',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsn	= 'E[;n',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsP	= 'E[;P',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsq	= 'E[;q',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsr	= 'E[;r',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParenB			= 'ES(B',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen0			= 'ES(0',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen1			= 'ES(1',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftParen2			= 'ES(2',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen			= 'ESC)',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenA			= 'ES)A',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParenB			= 'ES)B',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen0			= 'ES)0',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen1			= 'ES)1',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCRightParen2			= 'ES)2',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCA						= 'ESCA',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCB						= 'ESCB',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCC						= 'ESCC',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCc						= 'ESCc',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCD						= 'ESCD',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCE						= 'ESCE',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCF						= 'ESCF',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCG						= 'ESCG',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCH						= 'ESCH',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCI						= 'ESCI',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCJ						= 'ESCJ',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCK						= 'ESCK',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCM						= 'ESCM',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCY						= 'ESCY',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCZ						= 'ESCZ',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESC7						= 'ESC7',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESC8						= 'ESC8',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPound					= 'ESC#',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPound3				= 'ES#3',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPound4				= 'ES#4',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPound5				= 'ES#5',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPound6				= 'ES#6',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCPound8				= 'ES#8',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCEquals				= 'ESC=',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLessThan				= 'ESC<',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCGreaterThan			= 'ESC>',	//!< generic state used to define emulator-specific states, below
+};
+
+UInt16 const					kNumberOfScrollbackRowsToAllocateAtOnce = 100;
+TerminalTextAttributes const	kTerminalTextAttributesAllOff = 0L;
+
+char const		kMy_TabSet		= 'x';	//!< in "tabSettings" field of terminal structure, characters with this value mark tab stops
+char const		kMy_TabClear	= ' ';	//!< in "tabSettings" field of terminal structure, all characters not marking tab stops have this value
+UInt8 const		kMy_TabStop		= 8;	//!< number of characters between normal tab stops
+
+enum
+{
+	kMy_NumberOfCharactersPerLineMaximum = 256	//!< maximum number of columns allowed; must be a multiple of "kMy_TabStop"
+};
+
+enum My_CharacterSet
+{
+	kMy_CharacterSetVT100UnitedKingdom		= 0,	//!< ASCII character set except '#' is '¬£' (British pounds currency symbol)
+	kMy_CharacterSetVT100UnitedStates		= 1		//!< ASCII character set
+};
+
+enum My_CharacterROM
+{
+	kMy_CharacterROMNormal		= 0,	//!< regular source
+	kMy_CharacterROMAlternate	= 1		//!< alternate ROM (e.g. Unix programs like "top" will try to switch out)
+};
+
+enum My_GraphicsMode
+{
+	kMy_GraphicsModeOff			= 0,	//!< no graphics glyphs will appear
+	kMy_GraphicsModeOn			= 1		//!< non-printable ASCII will become VT graphics characters
+};
+
+typedef UInt32 My_LEDBits;
+enum
+{
+	kMy_LEDBitsLight1			= (1 << 0),		//!< set if LED 1 is on
+	kMy_LEDBitsLight2			= (1 << 1),		//!< set if LED 2 is on
+	kMy_LEDBitsLight3			= (1 << 2),		//!< set if LED 3 is on
+	kMy_LEDBitsLight4			= (1 << 3),		//!< set if LED 4 is on
+	kMy_LEDBitsAllOff			= 0L			//!< cleared if all LEDs are off
+};
+
+enum
+{
+	kMy_MaximumANSIParameters = 16		// when <ESC>'['<param>[;<param>][;<param>]... sequences are encountered,
+										// this will be the maximum <param>s allowed
+};
+
+} // anonymous namespace
 
 #pragma mark Callbacks
+namespace {
 
 struct My_ScreenBuffer;		// declared here because the callback declarations use it (defined later)
 
@@ -260,7 +261,7 @@ do not wish to consume any characters.
 WARNING:	The specified buffer is a limited slice of the
 			overall data stream.  It is not guaranteed to
 			terminate at the end of a full sequence of
-			characters that you are interested in, so naïve
+			characters that you are interested in, so na√Øve
 			look-ahead generally does not work.  Instead,
 			move the parser to a custom scanner state until
 			you have found the complete sequence you want
@@ -290,7 +291,7 @@ typedef UInt32 (*My_EmulatorStateDeterminantProcPtr)	(My_ScreenBuffer*		inDataPt
 														 My_ParserState			inCurrentState,
 														 My_ParserState&		outNewState,
 														 Boolean&				outInterrupt);
-static inline UInt32
+inline UInt32
 invokeEmulatorStateDeterminantProc	(My_EmulatorStateDeterminantProcPtr		inProc,
 									 My_ScreenBuffer*						inDataPtr,
 									 UInt8 const*							inBuffer,
@@ -319,7 +320,7 @@ typedef UInt32 (*My_EmulatorStateTransitionProcPtr)	(My_ScreenBuffer*	inDataPtr,
 													 UInt32				inLength,
 													 My_ParserState		inNewState,
 													 My_ParserState		inPreviousState);
-static inline UInt32
+inline UInt32
 invokeEmulatorStateTransitionProc	(My_EmulatorStateTransitionProcPtr	inProc,
 									 My_ScreenBuffer*					inDataPtr,
 									 UInt8 const*						inBuffer,
@@ -354,7 +355,7 @@ typedef void (*My_ScreenLineOperationProcPtr)	(My_ScreenBuffer*		inScreen,
 												 CFMutableStringRef		inLineTextBuffer,
 												 UInt16					inZeroBasedRowNumberOrNegativeForScrollbackRow,
 												 void*					inContextPtr);
-static inline void
+inline void
 invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 								 My_ScreenBuffer*				inScreen,
 								 CFMutableStringRef				inLineTextBuffer,
@@ -364,9 +365,12 @@ invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 	(*inUserRoutine)(inScreen, inLineTextBuffer, inZeroBasedRowNumberRelativeToStartOfIterationRange, inContextPtr);
 }
 
-#pragma mark Types
+} // anonymous namespace
 
-typedef UniChar*								My_TextVector;
+#pragma mark Types
+namespace {
+
+typedef UniChar*								My_TextIterator;
 typedef std::map< UTF8Char, std::string >		My_PrintableByUTF8Char;
 
 typedef std::vector< char >						My_TabStopList;
@@ -415,9 +419,9 @@ NOTE:	Traditionally NCSA Telnet has used bits to
 		cell.  This is memory-inefficient (albeit
 		convenient at times), and also worsens linearly
 		as the size of the screen increases.  It may be
-		nice to implement a “style run”-based approach
+		nice to implement a ‚Äústyle run‚Äù-based approach
 		that sets attributes for ranges of text (which
-		is pretty much how they’re defined anyway, when
+		is pretty much how they‚Äôre defined anyway, when
 		VT sequences arrive).  That would greatly
 		reduce the number of attribute words in memory!
 		The first part of this is implemented, in the
@@ -427,8 +431,8 @@ NOTE:	Traditionally NCSA Telnet has used bits to
 */
 struct My_ScreenBufferLine
 {
-	My_TextVector				textVectorBegin;	//!< where characters exist
-	My_TextVector				textVectorEnd;		//!< for convenience; past-the-end of this buffer
+	My_TextIterator				textVectorBegin;	//!< where characters exist
+	My_TextIterator				textVectorEnd;		//!< for convenience; past-the-end of this buffer
 	size_t						textVectorSize;		//!< for convenience; size of buffer
 	CFRetainRelease				textCFString;		//!< mutable string object for which "textVectorBegin" is the storage,
 													//!  so the buffer can be manipulated directly if desired
@@ -491,7 +495,7 @@ public:
 
 /*!
 Represents a line of the terminal buffer, either in the
-scrollback or one of the main screen (“visible”) lines.
+scrollback or one of the main screen (‚Äúvisible‚Äù) lines.
 */
 struct My_LineIterator
 {
@@ -508,22 +512,37 @@ struct My_LineIterator
 };
 typedef My_LineIterator*	My_LineIteratorPtr;
 
+/*!
+Represents the state of a terminal emulator, such as any
+parameters collected and any pending operations.
+*/
+struct My_Emulator
+{
+public:
+	My_Emulator		(Terminal_Emulator);
+	
+	Terminal_Emulator	primaryType;		//!< VT100, VT220, etc.
+	My_ParserState		currentState;		//!< state the terminal input parser is in now
+	UInt16				stateRepetitions;	//!< to guard against looping; counts repetitions of same state
+};
+typedef My_Emulator*	My_EmulatorPtr;
+
 struct My_ScreenBuffer
 {
 public:
 	My_ScreenBuffer	(Terminal_Emulator, CFStringRef, SInt16, SInt16, SInt16, Boolean);
 	~My_ScreenBuffer ();
 	
+	My_Emulator							emulator;					//!< handles all parsing of the data stream
 	SessionRef							listeningSession;			//!< may be nullptr; the currently attached session, where certain terminal reports are sent
 	
 	TerminalSpeaker_Ref					speaker;					//!< object that emits sound based on this terminal data;
-																	//!  TEMPORARY: the speaker REALLY shouldn’t be part of the terminal data model!
+																	//!  TEMPORARY: the speaker REALLY shouldn‚Äôt be part of the terminal data model!
 	CFRetainRelease						windowTitleCFString;		//!< stores the string that the terminal considers its window title
 	CFRetainRelease						iconTitleCFString;			//!< stores the string that the terminal considers its icon title
 	
 	ListenerModel_Ref					changeListenerModel;		//!< registry of listeners for various terminal events
-	Terminal_Emulator					emulation;					//!< VT100, VT220, etc.
-	CFRetainRelease						answerBackCFString;			//!< similar to "emulation", but can be an arbitrary string
+	CFRetainRelease						answerBackCFString;			//!< similar to "emulator.primaryType", but can be an arbitrary string
 	My_EmulatorStateDeterminantProcPtr	stateDeterminant;			//!< figures out what the next state should be
 	My_EmulatorStateTransitionProcPtr	transitionHandler;			//!< handles new parser states, driving the terminal; varies based on the emulator
 	
@@ -534,7 +553,7 @@ public:
 				be deleted.  The insertNewLines() routine is the ONLY place
 				these manipulations are ever performed, so that it is easy to
 				check and resynchronize retained iterators at the same time.
-				TO MAKE LIFE EASY, DON’T MESS WITH THE BUFFER LISTS ELSEWHERE.
+				TO MAKE LIFE EASY, DON‚ÄôT MESS WITH THE BUFFER LISTS ELSEWHERE.
 	*/
 	My_ScreenBufferLineList				scrollbackBuffer;			//!< a double-ended queue containing all the scrollback text for the terminal;
 																	//!  IMPORTANT: the FRONT of this queue is the scrollback line CLOSEST to the
@@ -560,7 +579,7 @@ public:
 	My_CharacterSetInfo					vtG0;						//!< the G0 character set
 	My_CharacterSetInfo					vtG1;						//!< the G1 character set
 	
-	My_RowColumnBoundary				visibleBoundary;			//!< rows and columns forming the perimeter of the buffer’s “visible” region
+	My_RowColumnBoundary				visibleBoundary;			//!< rows and columns forming the perimeter of the buffer‚Äôs ‚Äúvisible‚Äù region
 	My_RowBoundary						scrollingRegion;			//!< rows that define the scrolling area, inclusive; should not fall outside of
 																	//!  the visible boundary;
 																	//!  WARNING: do not change this except with a setScrollingRegion...() routine
@@ -644,9 +663,6 @@ public:
 		SInt16						cursorY;		//!< previous value of corresponding value in "current" structure
 	} previous;
 	
-	My_ParserState			currentState;				//!< state the terminal input parser is in now
-	UInt16					parserStateRepetitions;		//!< to guard against looping; counts repetitions of same state
-	
 	TerminalScreenRef		selfRef;					//!< opaque reference that would resolve to a pointer to this structure
 };
 typedef My_ScreenBuffer*			My_ScreenBufferPtr;
@@ -727,7 +743,7 @@ protected:
 	// the programming manual of the original terminal.
 	enum State
 	{
-		// VT100 immediates (in order of the corresponding control character’s ASCII code)
+		// VT100 immediates (in order of the corresponding control character‚Äôs ASCII code)
 		kStateControlENQ		= 'VAns',				//!< transmit answerback message
 		kStateControlBEL		= 'VBel',				//!< audio event
 		kStateControlBS			= 'VBks',				//!< move cursor left if possible
@@ -834,125 +850,130 @@ public:
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 };
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
-static void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
-static void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
-static void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr);
-static void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr);
-static void						bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr);
-static void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_ScreenBufferLine&);
-static void						bufferEraseLineWithUpdate				(My_ScreenBufferPtr, SInt16);
-static void						bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr);
-static void						bufferEraseWithoutUpdate				(My_ScreenBufferPtr);
-static void						bufferInsertBlanksAtCursorColumn		(My_ScreenBufferPtr, SInt16);
-static void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
-																		 My_ScreenBufferLineList::iterator&);
-static void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
-																		 TerminalTextAttributes =
-																			kTerminalTextAttributesAllOff,
-																		 Boolean = true);
-static void						bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr, SInt16);
-static void						bufferRemoveLines						(My_ScreenBufferPtr, UInt16,
-																		 My_ScreenBufferLineList::iterator&);
-static void						changeLineAttributes					(My_ScreenBufferPtr, My_ScreenBufferLine&,
-																		 TerminalTextAttributes, TerminalTextAttributes);
-static void						changeLineGlobalAttributes				(My_ScreenBufferPtr, My_ScreenBufferLine&,
-																		 TerminalTextAttributes, TerminalTextAttributes);
-static void						changeLineRangeAttributes				(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt16,
-																		 SInt16, TerminalTextAttributes,
-																		 TerminalTextAttributes);
-static void						changeNotifyForTerminal					(My_ScreenBufferConstPtr, Terminal_Change, void*);
-static void						clearEscapeSequenceParameters			(My_ScreenBufferPtr);
-static void						cursorRestore							(My_ScreenBufferPtr);
-static void						cursorSave								(My_ScreenBufferPtr);
-static void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
-static void						echoData								(My_ScreenBufferPtr, UInt8 const*, UInt32);
-static void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SInt32);
-static void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
-static Terminal_Result			forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
-																		 My_ScreenLineOperationProcPtr, void*);
-static void						getBufferOffsetCell						(My_ScreenBufferPtr, size_t, UInt16, UInt16&, SInt32&);
-static inline My_LineIteratorPtr	getLineIterator						(Terminal_LineRef);
-static My_ScreenBufferPtr		getVirtualScreenData					(TerminalScreenRef);
-static void						highlightLED							(My_ScreenBufferPtr, SInt16);
-static void						initializeParserStateStack				(My_ScreenBufferPtr);
-static Boolean					insertNewLines							(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type,
-																		 Boolean);
-static void						locateCursorLine						(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
-static void						locateScrollingRegion					(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&,
-																		 My_ScreenBufferLineList::iterator&);
-static void						locateScrollingRegionTop				(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
-static void						moveCursor								(My_ScreenBufferPtr, SInt16, My_ScreenRowIndex);
-static void						moveCursorDown							(My_ScreenBufferPtr);
-static void						moveCursorDownOrScroll					(My_ScreenBufferPtr);
-static void						moveCursorDownOrStop					(My_ScreenBufferPtr);
-static void						moveCursorDownToEdge					(My_ScreenBufferPtr);
-static void						moveCursorLeft							(My_ScreenBufferPtr);
-static void						moveCursorLeftToEdge					(My_ScreenBufferPtr);
-static void						moveCursorLeftToHalf					(My_ScreenBufferPtr);
-static void						moveCursorRight							(My_ScreenBufferPtr);
-static void						moveCursorRightToEdge					(My_ScreenBufferPtr);
-static void						moveCursorRightToNextTabStop			(My_ScreenBufferPtr);
-static void						moveCursorUpToEdge						(My_ScreenBufferPtr);
-static void						moveCursorUp							(My_ScreenBufferPtr);
-static void						moveCursorUpOrScroll					(My_ScreenBufferPtr);
-static void						moveCursorX								(My_ScreenBufferPtr, SInt16);
-static void						moveCursorY								(My_ScreenBufferPtr, My_ScreenRowIndex);
-static void						resetTerminal							(My_ScreenBufferPtr);
-static SessionRef				returnListeningSession					(My_ScreenBufferPtr);
-static Terminal_EmulatorType	returnTerminalType						(Terminal_Emulator);
-static Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
-static void						saveToScrollback						(My_ScreenBufferPtr);
-static void						scrollTerminalBuffer					(My_ScreenBufferPtr);
-static void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
-static void						setScrollingRegionBottom				(My_ScreenBufferPtr, UInt16);
-static void						setScrollingRegionTop					(My_ScreenBufferPtr, UInt16);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
+void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
+void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
+void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr);
+void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr);
+void						bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr);
+void						bufferEraseLineWithoutUpdate			(My_ScreenBufferPtr, My_ScreenBufferLine&);
+void						bufferEraseLineWithUpdate				(My_ScreenBufferPtr, SInt16);
+void						bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr);
+void						bufferEraseWithoutUpdate				(My_ScreenBufferPtr);
+void						bufferInsertBlanksAtCursorColumn		(My_ScreenBufferPtr, SInt16);
+void						bufferInsertBlankLines					(My_ScreenBufferPtr, UInt16,
+																	 My_ScreenBufferLineList::iterator&);
+void						bufferLineFill							(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt8,
+																	 TerminalTextAttributes =
+																		kTerminalTextAttributesAllOff,
+																	 Boolean = true);
+void						bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr, SInt16);
+void						bufferRemoveLines						(My_ScreenBufferPtr, UInt16,
+																	 My_ScreenBufferLineList::iterator&);
+void						changeLineAttributes					(My_ScreenBufferPtr, My_ScreenBufferLine&,
+																	 TerminalTextAttributes, TerminalTextAttributes);
+void						changeLineGlobalAttributes				(My_ScreenBufferPtr, My_ScreenBufferLine&,
+																	 TerminalTextAttributes, TerminalTextAttributes);
+void						changeLineRangeAttributes				(My_ScreenBufferPtr, My_ScreenBufferLine&, UInt16,
+																	 SInt16, TerminalTextAttributes,
+																	 TerminalTextAttributes);
+void						changeNotifyForTerminal					(My_ScreenBufferConstPtr, Terminal_Change, void*);
+void						clearEscapeSequenceParameters			(My_ScreenBufferPtr);
+void						cursorRestore							(My_ScreenBufferPtr);
+void						cursorSave								(My_ScreenBufferPtr);
+void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
+void						echoData								(My_ScreenBufferPtr, UInt8 const*, UInt32);
+void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SInt32);
+void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
+Terminal_Result				forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
+																	 My_ScreenLineOperationProcPtr, void*);
+void						getBufferOffsetCell						(My_ScreenBufferPtr, size_t, UInt16, UInt16&, SInt32&);
+inline My_LineIteratorPtr	getLineIterator							(Terminal_LineRef);
+My_ScreenBufferPtr			getVirtualScreenData					(TerminalScreenRef);
+void						highlightLED							(My_ScreenBufferPtr, SInt16);
+void						initializeParserStateStack				(My_EmulatorPtr);
+Boolean						insertNewLines							(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type,
+																	 Boolean);
+void						locateCursorLine						(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
+void						locateScrollingRegion					(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&,
+																	 My_ScreenBufferLineList::iterator&);
+void						locateScrollingRegionTop				(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
+void						moveCursor								(My_ScreenBufferPtr, SInt16, My_ScreenRowIndex);
+void						moveCursorDown							(My_ScreenBufferPtr);
+void						moveCursorDownOrScroll					(My_ScreenBufferPtr);
+void						moveCursorDownOrStop					(My_ScreenBufferPtr);
+void						moveCursorDownToEdge					(My_ScreenBufferPtr);
+void						moveCursorLeft							(My_ScreenBufferPtr);
+void						moveCursorLeftToEdge					(My_ScreenBufferPtr);
+void						moveCursorLeftToHalf					(My_ScreenBufferPtr);
+void						moveCursorRight							(My_ScreenBufferPtr);
+void						moveCursorRightToEdge					(My_ScreenBufferPtr);
+void						moveCursorRightToNextTabStop			(My_ScreenBufferPtr);
+void						moveCursorUpToEdge						(My_ScreenBufferPtr);
+void						moveCursorUp							(My_ScreenBufferPtr);
+void						moveCursorUpOrScroll					(My_ScreenBufferPtr);
+void						moveCursorX								(My_ScreenBufferPtr, SInt16);
+void						moveCursorY								(My_ScreenBufferPtr, My_ScreenRowIndex);
+void						resetTerminal							(My_ScreenBufferPtr);
+SessionRef					returnListeningSession					(My_ScreenBufferPtr);
+Terminal_EmulatorType		returnTerminalType						(Terminal_Emulator);
+Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
+void						saveToScrollback						(My_ScreenBufferPtr);
+void						scrollTerminalBuffer					(My_ScreenBufferPtr);
+void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
+void						setScrollingRegionBottom				(My_ScreenBufferPtr, UInt16);
+void						setScrollingRegionTop					(My_ScreenBufferPtr, UInt16);
 // IMPORTANT: Attribute bit manipulation is fully described in "TerminalTextAttributes.typedef.h".
 //            Changes must be kept consistent everywhere.  See below, for usage.
-inline TerminalTextAttributes	styleOfVTParameter						(UInt8	inPs)
+inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
 {
 	return (1 << (inPs - 1));
 }
-static void						tabStopClearAll							(My_ScreenBufferPtr);
-static UInt16					tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr);
-static void						tabStopInitialize						(My_ScreenBufferPtr);
-static char						translateCharacter						(My_ScreenBufferPtr, char);
-static void						vt100AlignmentDisplay					(My_ScreenBufferPtr);
-static void						vt100ANSIMode							(My_ScreenBufferPtr);
-static void						vt100CursorBackward						(My_ScreenBufferPtr);
-static void						vt100CursorBackward_vt52				(My_ScreenBufferPtr);
-static void						vt100CursorDown							(My_ScreenBufferPtr);
-static void						vt100CursorDown_vt52					(My_ScreenBufferPtr);
-static void						vt100CursorForward						(My_ScreenBufferPtr);
-static void						vt100CursorForward_vt52					(My_ScreenBufferPtr);
-static void						vt100CursorUp							(My_ScreenBufferPtr);
-static void						vt100CursorUp_vt52						(My_ScreenBufferPtr);
-static void						vt100DeviceAttributes					(My_ScreenBufferPtr);
-static void						vt100DeviceStatusReport					(My_ScreenBufferPtr);
-static void						vt100EraseInDisplay						(My_ScreenBufferPtr);
-static void						vt100EraseInLine						(My_ScreenBufferPtr);
-static void						vt100Identify_vt52						(My_ScreenBufferPtr);
-static void						vt100LoadLEDs							(My_ScreenBufferPtr);
-static void						vt100ModeSetReset						(My_ScreenBufferPtr, Boolean);
-static UInt32					vt100ReadCSIParameters					(My_ScreenBufferPtr, UInt8 const*, UInt32);
-static void						vt100ReportTerminalParameters			(My_ScreenBufferPtr);
-static void						vt100SetTopAndBottomMargins				(My_ScreenBufferPtr);
-static void						vt100VT52Mode							(My_ScreenBufferPtr);
-static void						vt220DeviceAttributes					(My_ScreenBufferPtr);
+void						tabStopClearAll							(My_ScreenBufferPtr);
+UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr);
+void						tabStopInitialize						(My_ScreenBufferPtr);
+UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar);
+void						vt100AlignmentDisplay					(My_ScreenBufferPtr);
+void						vt100ANSIMode							(My_ScreenBufferPtr);
+void						vt100CursorBackward						(My_ScreenBufferPtr);
+void						vt100CursorBackward_vt52				(My_ScreenBufferPtr);
+void						vt100CursorDown							(My_ScreenBufferPtr);
+void						vt100CursorDown_vt52					(My_ScreenBufferPtr);
+void						vt100CursorForward						(My_ScreenBufferPtr);
+void						vt100CursorForward_vt52					(My_ScreenBufferPtr);
+void						vt100CursorUp							(My_ScreenBufferPtr);
+void						vt100CursorUp_vt52						(My_ScreenBufferPtr);
+void						vt100DeviceAttributes					(My_ScreenBufferPtr);
+void						vt100DeviceStatusReport					(My_ScreenBufferPtr);
+void						vt100EraseInDisplay						(My_ScreenBufferPtr);
+void						vt100EraseInLine						(My_ScreenBufferPtr);
+void						vt100Identify_vt52						(My_ScreenBufferPtr);
+void						vt100LoadLEDs							(My_ScreenBufferPtr);
+void						vt100ModeSetReset						(My_ScreenBufferPtr, Boolean);
+UInt32						vt100ReadCSIParameters					(My_ScreenBufferPtr, UInt8 const*, UInt32);
+void						vt100ReportTerminalParameters			(My_ScreenBufferPtr);
+void						vt100SetTopAndBottomMargins				(My_ScreenBufferPtr);
+void						vt100VT52Mode							(My_ScreenBufferPtr);
+void						vt220DeviceAttributes					(My_ScreenBufferPtr);
 template < typename src_char_seq_const_iter, typename src_char_seq_size_t,
 			typename dest_char_seq_iter, typename dest_char_seq_size_t >
-static dest_char_seq_iter		whitespaceSensitiveCopy					(src_char_seq_const_iter, src_char_seq_size_t,
-																		 dest_char_seq_iter, dest_char_seq_size_t,
-																		 dest_char_seq_size_t*, src_char_seq_size_t);
+dest_char_seq_iter			whitespaceSensitiveCopy					(src_char_seq_const_iter, src_char_seq_size_t,
+																	 dest_char_seq_iter, dest_char_seq_size_t,
+																	 dest_char_seq_size_t*, src_char_seq_size_t);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_PrintableByUTF8Char&		gDumbTerminalRenderings ()	{ static My_PrintableByUTF8Char x; return x; }
-}
+My_PrintableByUTF8Char&		gDumbTerminalRenderings ()	{ static My_PrintableByUTF8Char x; return x; }
+
+} // anonymous namespace
 
 
 
@@ -1047,7 +1068,7 @@ Terminal_DisposeScreen	(TerminalScreenRef		inRef)
 
 /*!
 Creates a special reference to the given line of the given
-terminal screen’s VISIBLE SCREEN buffer, or returns nullptr
+terminal screen‚Äôs VISIBLE SCREEN buffer, or returns nullptr
 if the line is out of range or the iterator cannot be
 created for some other reason.
 
@@ -1104,7 +1125,7 @@ Terminal_NewMainScreenLineIterator	(TerminalScreenRef		inRef,
 
 /*!
 Creates a special reference to the given line of the
-given terminal screen’s SCROLLBACK buffer, or returns
+given terminal screen‚Äôs SCROLLBACK buffer, or returns
 nullptr if the line is out of range or the iterator
 cannot be created for some other reason.
 
@@ -1185,12 +1206,12 @@ Terminal_DisposeLineIterator	(Terminal_LineRef*		inoutRefPtr)
 
 
 /*!
-Returns "true" only if the given terminal’s bell is
+Returns "true" only if the given terminal‚Äôs bell is
 active.  An inactive bell completely ignores all
 bell signals - without giving any audible or visible
 indication that a bell has occurred.  This can be
-useful if you know you’ve just triggered a long string
-of bells and don’t want to be annoyed by a series of
+useful if you know you‚Äôve just triggered a long string
+of bells and don‚Äôt want to be annoyed by a series of
 beeps or flashes.
 
 (3.0)
@@ -1214,7 +1235,7 @@ Terminal_BellIsEnabled		(TerminalScreenRef	inRef)
 Applies the specified changes to every single attribute
 for a single line of the screen buffer (no effect on
 the display until the next redraw). Also updates the
-“current” attributes, if the cursor happens to be on
+‚Äúcurrent‚Äù attributes, if the cursor happens to be on
 the specified line.
 
 The row value may be negative, signifying a scrollback
@@ -1263,7 +1284,7 @@ Terminal_ChangeLineAttributes	(TerminalScreenRef			inRef,
 Applies the specified changes to every single attribute
 in the specified column range of the specified line
 screen buffer (no effect on the display until the next
-redraw).  Also updates the “current” attributes, if the
+redraw).  Also updates the ‚Äúcurrent‚Äù attributes, if the
 cursor happens to be in the specified range.
 
 The row value may be negative, signifying a scrollback
@@ -1316,10 +1337,10 @@ Terminal_ChangeLineRangeAttributes	(TerminalScreenRef			inRef,
 Applies the specified changes to every single attribute
 within the specified range of the screen buffer (no
 effect on the display until the next redraw).  Also
-updates the “current” attributes, if the cursor happens
+updates the ‚Äúcurrent‚Äù attributes, if the cursor happens
 to be in the specified range.
 
-The anchor points are automatically “sorted”, so despite
+The anchor points are automatically ‚Äúsorted‚Äù, so despite
 their names it does not matter which point really marks
 the start or end of the range.
 
@@ -1378,7 +1399,7 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 	if (inNumberOfRowsToConsider > 0)
 	{
 		// now apply changes to attributes of all specified cells, and to
-		// the “current” attributes (if the cursor is anywhere in the range)
+		// the ‚Äúcurrent‚Äù attributes (if the cursor is anywhere in the range)
 		if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
 		else if (nullptr == iteratorPtr) result = kTerminal_ResultInvalidIterator;
 		else
@@ -1414,7 +1435,7 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 				if (iteratorPtr->sourceList.end() != currentLine)
 				{
 					// fill in remaining lines; the last line is special
-					// because it will end “early” at the end anchor
+					// because it will end ‚Äúearly‚Äù at the end anchor
 					{
 						register SInt16		i = 0;
 						SInt16 const		kLineEnd = (inNumberOfRowsToConsider - 1);
@@ -1509,8 +1530,8 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 		}
 		else
 		{
-			My_TextVector	textStartIter = nullptr;
-			SInt32			copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
+			My_TextIterator		textStartIter = nullptr;
+			SInt32				copyLength = INTEGER_MINIMUM(inBufferLength, endColumn - inZeroBasedStartColumn + 1);
 			
 			
 			textStartIter = iteratorPtr->rowIterator->textVectorBegin;
@@ -1542,14 +1563,14 @@ This is currently assumed to be exactly ONE character long.
 NOTE:	You can set the first character of the sequence to
 		0, to specify that no character should be used to
 		separate lines.  You might do this if you want to
-		copy multiple lines of terminal text that “really
-		are one line”.
+		copy multiple lines of terminal text that ‚Äúreally
+		are one line‚Äù.
 
 In MacTelnet 3.0, this method now copies text differently
 if the coordinates are to define a rectangular selection.
 That is, while normal Macintosh text selection includes all
 text in the rows between the start and end anchors, a text
-selection that is “rectangular” will only include text in
+selection that is ‚Äúrectangular‚Äù will only include text in
 the in-between rows that are part of the columns between
 the columns of the two anchor points.
 
@@ -1657,7 +1678,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 				destLinePastTheEndPtr = destPtr + lineLength;
 				
 				// constrain to boundaries of output buffer, in case there
-				// really isn’t enough room for all the lines in the range
+				// really isn‚Äôt enough room for all the lines in the range
 				if (destLinePastTheEndPtr > kOutBufferPastTheEndPtr)
 				{
 					destLinePastTheEndPtr = kOutBufferPastTheEndPtr;
@@ -1666,7 +1687,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 				// copy another line into the output buffer, replacing
 				// spaces with tabs as needed, omitting trailing whitespace
 				{
-					My_TextVector	textStartIter = nullptr;
+					My_TextIterator		textStartIter = nullptr;
 					
 					
 					textStartIter = currentLine->textVectorBegin;
@@ -1691,7 +1712,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 						((currentX + actualLineLength) < dataPtr->text.visibleScreen.numberOfColumnsPermitted/* not at edge? */) ||
 						CPP_STD::isspace(*destPtr)/* new-line would always follow a line ending in spaces */)
 					{
-						*destPtr++ = *inEndOfLineSequence; // assumes it’s only one character!
+						*destPtr++ = *inEndOfLineSequence; // assumes it‚Äôs only one character!
 					}
 				}
 			}
@@ -1708,7 +1729,7 @@ Terminal_CopyRange	(TerminalScreenRef			inScreen,
 Returns the title assigned to the iconified version of this
 terminal.  In MacTelnet this is symbolic, as no assumption is
 made that a terminal corresponds to a single minimized window;
-the exact usage of the “icon title” is not decided by this
+the exact usage of the ‚Äúicon title‚Äù is not decided by this
 module.
 
 IMPORTANT:	You must eventually use CFRelease() on the returned
@@ -1735,7 +1756,7 @@ Terminal_CopyTitleForIcon	(TerminalScreenRef	inRef,
 Returns the title assigned to the window of this terminal.  In
 MacTelnet this is symbolic, as no assumption is made that a
 terminal corresponds to a single window; the exact usage of the
-“window title” is not decided by this module.
+‚Äúwindow title‚Äù is not decided by this module.
 
 IMPORTANT:	You must eventually use CFRelease() on the returned
 			title string.
@@ -1769,8 +1790,8 @@ is one less than the number of rows high that the terminal
 screen is.
 
 IMPORTANT:	Currently this performs text duplication, when in
-			fact a smarter approach would probably be to “copy
-			on write” and otherwise return a light-weight
+			fact a smarter approach would probably be to ‚Äúcopy
+			on write‚Äù and otherwise return a light-weight
 			reference to the required data.
 
 (3.0)
@@ -1877,7 +1898,7 @@ Terminal_CursorIsVisible	(TerminalScreenRef		inRef)
 
 
 /*!
-Destroys all scrollback buffer lines.  The “visible”
+Destroys all scrollback buffer lines.  The ‚Äúvisible‚Äù
 lines are not affected.  This obviously invalidates any
 iterators pointing to scrollback lines.
 
@@ -1926,12 +1947,12 @@ Terminal_DeleteAllSavedLines	(TerminalScreenRef		inRef)
 
 /*!
 Scans the given data for telltale signs that it may be
-“expecting” a certain type of terminal emulator, setting
+‚Äúexpecting‚Äù a certain type of terminal emulator, setting
 "outApparentEmulator" to the emulator that seems most
 appropriate.
 
 Use this to help avoid getting the emulator into unknown
-states (the parser can recover, but gobbletygook doesn’t
+states (the parser can recover, but gobbletygook doesn‚Äôt
 help the user much).
 
 \retval kTerminal_ResultOK
@@ -1982,7 +2003,7 @@ Terminal_EmulatorIsVT100	(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = (dataPtr->emulation == kTerminal_EmulatorVT100);
+	if (dataPtr != nullptr) result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT100);
 	return result;
 }// EmulatorIsVT100
 
@@ -2007,20 +2028,20 @@ Terminal_EmulatorIsVT220	(TerminalScreenRef		inRef)
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) result = (dataPtr->emulation == kTerminal_EmulatorVT220);
+	if (dataPtr != nullptr) result = (dataPtr->emulator.primaryType == kTerminal_EmulatorVT220);
 	return result;
 }// EmulatorIsVT220
 
 
 /*!
 Sends a stream of characters originating in a
-Core Foundation string to the specified screen’s
+Core Foundation string to the specified screen‚Äôs
 terminal emulator, interpreting escape sequences,
 etc. which may affect the terminal display.
 
 USE WITH CARE.  Generally, you send data to this
 routine that comes directly from a program that
-knows what it’s doing.  There are more elegant
+knows what it‚Äôs doing.  There are more elegant
 ways to have specific effects on terminal screens
 in an emulator-independent fashion; you should
 use those routines before hacking up a string as
@@ -2077,13 +2098,13 @@ Terminal_EmulatorProcessCFString	(TerminalScreenRef	inRef,
 
 /*!
 Sends a stream of characters originating in a
-C-style string to the specified screen’s terminal
+C-style string to the specified screen‚Äôs terminal
 emulator, interpreting escape sequences, etc.
 which may affect the terminal display.
 
 USE WITH CARE.  Generally, you send data to this
 routine that comes directly from a program that
-knows what it’s doing.  There are more elegant
+knows what it‚Äôs doing.  There are more elegant
 ways to have specific effects on terminal screens
 in an emulator-independent fashion; you should
 use those routines before hacking up a string as
@@ -2107,13 +2128,13 @@ Terminal_EmulatorProcessCString		(TerminalScreenRef	inRef,
 
 /*!
 Sends a stream of characters to the specified
-screen’s terminal emulator, interpreting escape
+screen‚Äôs terminal emulator, interpreting escape
 sequences, etc. which may affect the terminal
 display.
 
 USE WITH CARE.  Generally, you send data to this
 routine that comes directly from a program that
-knows what it’s doing.  There are more elegant
+knows what it‚Äôs doing.  There are more elegant
 ways to have specific effects on terminal screens
 in an emulator-independent fashion; you should
 use those routines before hacking up a string as
@@ -2158,7 +2179,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			// function is called)
 			for (register UInt32 i = inLength; i > 0; )
 			{
-				My_ParserState	currentState = dataPtr->currentState;
+				My_ParserState	currentState = dataPtr->emulator.currentState;
 				My_ParserState	nextState = currentState;
 				Boolean			isInterrupt = false;
 				
@@ -2184,8 +2205,8 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					// time (e.g. long strings of printable text)
 					if (nextState != kMy_ParserStateEcho)
 					{
-						++dataPtr->parserStateRepetitions;
-						if (dataPtr->parserStateRepetitions > 100/* arbitrary */)
+						++dataPtr->emulator.stateRepetitions;
+						if (dataPtr->emulator.stateRepetitions > 100/* arbitrary */)
 						{
 							Console_WriteHorizontalRule();
 							Console_WriteValueFourChars("SERIOUS PARSER ERROR: appears to be stuck, state", currentState);
@@ -2204,13 +2225,13 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 								nextState = kMy_ParserStateInitial;
 							}
 							Console_WriteHorizontalRule();
-							dataPtr->parserStateRepetitions = 0;
+							dataPtr->emulator.stateRepetitions = 0;
 						}
 					}
 				}
 				else
 				{
-					dataPtr->parserStateRepetitions = 0;
+					dataPtr->emulator.stateRepetitions = 0;
 				}
 				
 				// perform whatever action is appropriate to enter this state
@@ -2224,7 +2245,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				if (false == isInterrupt)
 				{
 					// remember this new state
-					dataPtr->currentState = nextState;
+					dataPtr->emulator.currentState = nextState;
 				}
 			}
 			
@@ -2422,7 +2443,7 @@ Terminal_EmulatorSet	(TerminalScreenRef	inRef,
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr) dataPtr->emulation = inEmulationType;
+	if (dataPtr != nullptr) dataPtr->emulator.primaryType = inEmulationType;
 	switch (inEmulationType)
 	{
 	case kTerminal_EmulatorVT100:
@@ -2609,7 +2630,7 @@ Terminal_FileCaptureWriteData	(TerminalScreenRef	inRef,
 			// initialize the iterator for the chunk buffer (512 bytes maximum)
 			chunkBufferIterator = chunkBuffer;
 			bytesInCaptureBuffer = 0; // each time through, initially nothing important in the chunk buffer
-			chunkByteCount = (bytesLeft < kCaptureBufferSize) ? bytesLeft : kCaptureBufferSize; // only copy data that’s there!!!
+			chunkByteCount = (bytesLeft < kCaptureBufferSize) ? bytesLeft : kCaptureBufferSize; // only copy data that‚Äôs there!!!
 			
 			// iterate over the chunk buffer until either no bytes
 			// remain to be written from the input buffer, or until
@@ -2678,7 +2699,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 	{
 		// need to search line for style chunks
 		My_ScreenBufferLineList::iterator		lineIterator = iteratorPtr->rowIterator;
-		My_TextVector							textIterator = nullptr;
+		My_TextIterator							textIterator = nullptr;
 		My_TextAttributesList::const_iterator	attrIterator = lineIterator->attributeVector.begin();
 		TerminalTextAttributes					previousAttributes = 0;
 		TerminalTextAttributes					currentAttributes = 0;
@@ -2739,7 +2760,7 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 				TerminalTextAttributes		attributesForRemainder = lineIterator->globalAttributes;
 				
 				
-				// the “selected” attribute is special; it persists regardless
+				// the ‚Äúselected‚Äù attribute is special; it persists regardless
 				if (previousAttributes & kTerminalTextAttributeSelected)
 				{
 					attributesForRemainder |= kTerminalTextAttributeSelected;
@@ -2807,7 +2828,7 @@ Terminal_GetLine	(TerminalScreenRef		inScreen,
 					 UniChar const*&		outPossibleReferenceStart,
 					 UniChar const*&		outPossibleReferencePastEnd)
 {
-	return Terminal_GetLineRange(inScreen, inRow, 0/* first column */, -1/* last column; negative means “very end” */,
+	return Terminal_GetLineRange(inScreen, inRow, 0/* first column */, -1/* last column; negative means ‚Äúvery end‚Äù */,
 									outPossibleReferenceStart, outPossibleReferencePastEnd);
 }// GetLine
 
@@ -3092,7 +3113,7 @@ Terminal_LineIteratorAdvance	(TerminalScreenRef		inRef,
 
 /*!
 Returns "true" only if the given terminal has mapped Return
-key presses and line feeds to the “carriage return, line feed”
+key presses and line feeds to the ‚Äúcarriage return, line feed‚Äù
 behavior.  If "false", a Return sends only a carriage return
 and a line feed only moves the cursor vertically.
 
@@ -3178,7 +3199,7 @@ Terminal_PrintingEnd	(TerminalScreenRef		inRef)
 
 
 /*!
-Returns "true" only if the specified screen’s
+Returns "true" only if the specified screen‚Äôs
 text is currently being printed.
 
 (2.6)
@@ -3214,7 +3235,7 @@ Terminal_Reset		(TerminalScreenRef		inRef,
 	{
 		if (inFlags & kTerminal_ResetFlagsGraphicsCharacters)
 		{
-			// “rescue” the user by forcing graphics not to be used
+			// ‚Äúrescue‚Äù the user by forcing graphics not to be used
 			{
 				Terminal_RangeDescription	range;
 				Terminal_LineRef			lineIterator = nullptr;
@@ -3337,7 +3358,7 @@ Terminal_ReturnNextTabDistance		(TerminalScreenRef		inRef)
 
 /*!
 Returns the number of lines long the specified
-terminal screen’s main screen area is (minus any
+terminal screen‚Äôs main screen area is (minus any
 scrollback lines).
 
 (3.0)
@@ -3473,7 +3494,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 		if (inFlags & kTerminal_SearchFlagsSearchBackwards) searchFlags |= kCFCompareBackwards;
 		
 		// TEMPORARY; since the search algorithm currently traverses a
-		// contiguous buffer, one is created; however, it’s hard to imagine
+		// contiguous buffer, one is created; however, it‚Äôs hard to imagine
 		// anything less efficient than this!  A future implementation will
 		// probably create index entries for each terminal line, so that the
 		// search algorithm can be rewritten to use the existing buffer and
@@ -3497,7 +3518,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			lineIterator = Terminal_NewMainScreenLineIterator(inRef, 0);
 			
 			// note: this block is generic and the same for scrollback and screen
-			// code here, thanks to the “configuration” section above
+			// code here, thanks to the ‚Äúconfiguration‚Äù section above
 			if (nullptr != lineIterator)
 			{
 				// note that the iterator is not invalidated by this loop
@@ -3537,7 +3558,7 @@ Terminal_Search		(TerminalScreenRef							inRef,
 			lineIterator = Terminal_NewScrollbackLineIterator(inRef, 0);
 			
 			// note: this block is generic and the same for scrollback and screen
-			// code here, thanks to the “configuration” section above
+			// code here, thanks to the ‚Äúconfiguration‚Äù section above
 			if (nullptr != lineIterator)
 			{
 				// note that the iterator is not invalidated by this loop
@@ -3635,11 +3656,11 @@ Terminal_Search		(TerminalScreenRef							inRef,
 
 
 /*!
-Specifies whether the given terminal’s bell is active.
+Specifies whether the given terminal‚Äôs bell is active.
 An inactive bell completely ignores all bell signals -
 without giving any audible or visible indication that
 a bell has occurred.  This can be useful if you know
-you’ve just triggered a long string of bells and don’t
+you‚Äôve just triggered a long string of bells and don‚Äôt
 want to be annoyed by a series of beeps or flashes.
 
 (3.0)
@@ -3664,7 +3685,7 @@ Sets the string that will be printed by a dumb terminal
 (kTerminal_EmulatorDumb) when the specified character is
 to be displayed.
 
-Normally, any character that is considered “printable”
+Normally, any character that is considered ‚Äúprintable‚Äù
 should be echoed as-is, so this is the default behavior
 if no mapping has been given for a printable character.
 
@@ -3745,7 +3766,7 @@ Terminal_SetSaveLinesOnClear	(TerminalScreenRef	inRef,
 
 
 /*!
-Specifies whether the given terminal’s text may be spoken
+Specifies whether the given terminal‚Äôs text may be spoken
 by the computer.  If you disable speech, any remaining text
 in the buffer will continue to be spoken; you may want to
 invoke Terminal_SpeechPause() ahead of time to force speech
@@ -3874,7 +3895,7 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 		if (kLineDelta > 0)
 		{
 			// if more lines are in the screen buffer than before,
-			// allocate space for them (but don’t scroll them off!)
+			// allocate space for them (but don‚Äôt scroll them off!)
 			Boolean		insertOK = insertNewLines(dataPtr, kLineDelta, true/* append only */);
 			
 			
@@ -3892,7 +3913,7 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 			}
 		#endif
 			
-			// now make sure the cursor line doesn’t fall off the end
+			// now make sure the cursor line doesn‚Äôt fall off the end
 			if (dataPtr->current.cursorY >= (dataPtr->screenBuffer.size() + kLineDelta))
 			{
 				moveCursorY(dataPtr, dataPtr->screenBuffer.size() + kLineDelta - 1);
@@ -4050,7 +4071,7 @@ Terminal_StartMonitoring	(TerminalScreenRef			inRef,
 		OSStatus	error = noErr;
 		
 		
-		// add a listener to the specified target’s listener model for the given setting change
+		// add a listener to the specified target‚Äôs listener model for the given setting change
 		error = ListenerModel_AddListenerForEvent(dataPtr->changeListenerModel, inForWhatChange, inListener);
 	}
 }// StartMonitoring
@@ -4078,7 +4099,7 @@ Terminal_StopMonitoring		(TerminalScreenRef			inRef,
 	
 	if (dataPtr != nullptr)
 	{
-		// remove a listener from the specified target’s listener model for the given setting change
+		// remove a listener from the specified target‚Äôs listener model for the given setting change
 		ListenerModel_RemoveListenerForEvent(dataPtr->changeListenerModel, inForWhatChange, inListener);
 	}
 }// StopMonitoring
@@ -4110,6 +4131,24 @@ Terminal_WindowIsToBeMinimized	(TerminalScreenRef	inRef)
 
 
 #pragma mark Internal Methods
+namespace {
+
+/*!
+Initializes a My_Emulator class instance.
+
+(3.1)
+*/
+My_Emulator::
+My_Emulator		(Terminal_Emulator		inPrimaryEmulation)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+primaryType(inPrimaryEmulation),
+currentState(kMy_ParserStateInitial),
+stateRepetitions(0)
+{
+	initializeParserStateStack(this);
+}// My_Emulator default constructor
+
 
 /*!
 Constructor.  See Terminal_NewScreen().
@@ -4127,12 +4166,12 @@ My_ScreenBuffer	(Terminal_Emulator	inEmulation,
 				 Boolean			inForceLineSaving)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+emulator(inEmulation),
 listeningSession(nullptr),
 speaker(nullptr),
 windowTitleCFString(),
 iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
-emulation(inEmulation),
 answerBackCFString(inAnswerBack),
 stateDeterminant(/*tmp*/My_VT100::stateDeterminant/*My_DefaultEmulator::StateDeterminant*/),
 transitionHandler(/*tmp*/My_VT100::stateTransition/*My_DefaultEmulator::StateTransition*/),
@@ -4164,19 +4203,15 @@ printing(inMaximumColumnCount),
 // speech elements - not initialized
 // current elements - not initialized
 // previous elements - not initialized
-currentState(kMy_ParserStateInitial),
-parserStateRepetitions(0),
 selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 // TEMPORARY: initialize other members here...
 {
-	initializeParserStateStack(this);
-	
 	this->text.visibleScreen.numberOfColumnsAllocated = Terminal_ReturnAllocatedColumnCount(); // always allocate max columns
 	
 	this->current.cursorX = 0; // initialized because moveCursor() depends on prior values...
 	this->current.cursorY = 0; // initialized because moveCursor() depends on prior values...
 	
-	// now “append” the desired number of main screen lines, which will have
+	// now ‚Äúappend‚Äù the desired number of main screen lines, which will have
 	// the effect of allocating a screen buffer of the right size
 	unless (insertNewLines(this, inLineCountVisibleRows, true/* append only */))
 	{
@@ -4210,7 +4245,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	this->speech.buffer[0] = '\0'; // initially empty
 	
 	// IMPORTANT: Within constructors, calls to routines expecting a *self reference* should be
-	//            *last*; otherwise, there’s no telling whether or not the data that the routine
+	//            *last*; otherwise, there‚Äôs no telling whether or not the data that the routine
 	//            requires will have been properly initialized yet.
 	
 	moveCursor(this, 0, 0);
@@ -4397,7 +4432,7 @@ stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
 	// if no specific next state seems appropriate, the character will either
 	// be printed (if possible) or be re-evaluated from the initial state
 	My_ParserState const	kDefaultNextState = std::isprint(kTriggerChar) ? kMy_ParserStateEcho : kMy_ParserStateInitial;
-	UInt32					result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32					result = 1; // the first character is *usually* ‚Äúused‚Äù, so 1 is the default (it may change)
 	
 	
 	// by default, the state does not change
@@ -4762,7 +4797,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			UInt8 const*	bufferIterator = inBuffer;
 			
 			
-			// suck up a contiguous block of “printable” characters
+			// suck up a contiguous block of ‚Äúprintable‚Äù characters
 			while ((result < inLength) && (std::isprint(*bufferIterator)))
 			{
 				++bufferIterator;
@@ -4842,7 +4877,7 @@ stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
 					 Boolean&				UNUSED_ARGUMENT(outInterrupt))
 {
 	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32		result = 1; // the first character is *usually* ‚Äúused‚Äù, so 1 is the default (it may change)
 	
 	
 	// dumb terminals echo everything
@@ -4888,7 +4923,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			std::ostringstream	humanReadableStream;
 			
 			
-			// suck up a contiguous block of “non-printable” characters
+			// suck up a contiguous block of ‚Äúnon-printable‚Äù characters
 			while (result < inLength)
 			{
 				if (gDumbTerminalRenderings().end() != gDumbTerminalRenderings().find(*bufferIterator))
@@ -4941,7 +4976,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 					 Boolean&				outInterrupt)
 {
 	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32		result = 1; // the first character is *usually* ‚Äúused‚Äù, so 1 is the default (it may change)
 	Boolean		isControlCharacter = true;
 	
 	
@@ -5025,7 +5060,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 	}
 	
 	// all control characters are interrupt-class: they should
-	// cause actions, but not “corrupt” any partially completed
+	// cause actions, but not ‚Äúcorrupt‚Äù any partially completed
 	// sequence that may have come before them, i.e. the caller
 	// should revert to the state preceding the control character
 	if (isControlCharacter)
@@ -5733,7 +5768,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 					 Boolean&				outInterrupt)
 {
 	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32		result = 1; // the first character is *usually* ‚Äúused‚Äù, so 1 is the default (it may change)
 	
 	
 	switch (inCurrentState)
@@ -6087,10 +6122,10 @@ loadLEDs	(My_ScreenBufferPtr		inDataPtr)
 	
 	for (i = 0; i <= inDataPtr->currentEscapeSeqParamEndIndex; ++i)
 	{
-		// a parameter of 1 means “LED 1 on”, 0 means “LED 1 off”
+		// a parameter of 1 means ‚ÄúLED 1 on‚Äù, 0 means ‚ÄúLED 1 off‚Äù
 		if (0 == inDataPtr->currentEscapeSeqParamValues[i])
 		{
-			highlightLED(inDataPtr, 0/* 0 means “all off” */);
+			highlightLED(inDataPtr, 0/* 0 means ‚Äúall off‚Äù */);
 		}
 		else if (1 == inDataPtr->currentEscapeSeqParamValues[i])
 		{
@@ -6120,7 +6155,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 					 Boolean&				outInterrupt)
 {
 	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32		result = 1; // the first character is *usually* ‚Äúused‚Äù, so 1 is the default (it may change)
 	
 	
 	// if no interrupt has occurred, use the current state and
@@ -6252,7 +6287,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 					 Boolean&				outInterrupt)
 {
 	assert(inLength > 0);
-	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
+	UInt32		result = 1; // the first character is *usually* ‚Äúused‚Äù, so 1 is the default (it may change)
 	
 	
 	// see if the given character is a control character; if so,
@@ -6321,7 +6356,7 @@ is always returned.
 
 (3.0)
 */
-static void
+void
 addScreenLineLength		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
 						 CFMutableStringRef		inLineTextBuffer,
 						 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
@@ -6340,16 +6375,16 @@ this routine adds the data from the specified line text
 buffer to a CFMutableStringRef, pointed to by
 "inoutCFMutableStringRef".
 
-This is a “raw” append, there is no new-line or other
+This is a ‚Äúraw‚Äù append, there is no new-line or other
 delimiter between appended lines.
 
-Currently, this routine is somewhat naïve, but in the
+Currently, this routine is somewhat na√Øve, but in the
 future it will do its best to express the actual rendered
 content of the line in Unicode.
 
 (3.1)
 */
-static void
+void
 appendScreenLineRawToCFString	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
 								 CFMutableStringRef		inLineTextBuffer,
 								 UInt16					UNUSED_ARGUMENT(inOneBasedLineNumber),
@@ -6368,10 +6403,10 @@ position to the end of the line.
 
 (2.6)
 */
-static void
+void
 bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
 {
-	My_TextVector						textIterator = nullptr;
+	My_TextIterator						textIterator = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
 	My_ScreenBufferLineList::iterator	cursorLineIterator;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
@@ -6425,7 +6460,7 @@ up to the end position (last line, last column).
 
 (2.6)
 */
-static void
+void
 bufferEraseFromCursorToEnd  (My_ScreenBufferPtr  inDataPtr)
 {
 	My_ScreenRowIndex	postWrapCursorY = inDataPtr->current.cursorY + 1;
@@ -6493,7 +6528,7 @@ columns of line 3.
 
 (2.6)
 */
-static void
+void
 bufferEraseFromHomeToCursor		(My_ScreenBufferPtr  inDataPtr)
 {
 	My_ScreenRowIndex	postWrapCursorY = 0;
@@ -6547,7 +6582,7 @@ the line up to and including the cursor position.
 
 (2.6)
 */
-static void
+void
 bufferEraseFromLineBeginToCursorColumn  (My_ScreenBufferPtr  inDataPtr)
 {
 	SInt32								fillLength = 0;
@@ -6598,7 +6633,7 @@ VT100 "EL" sequence correctly.)
 
 (2.6)
 */
-static void
+void
 bufferEraseLineWithUpdate		(My_ScreenBufferPtr		inDataPtr,
 								 SInt16					inLineToEraseOrNegativeForCursorLine)
 {
@@ -6646,7 +6681,7 @@ triggering a redraw.  See also bufferEraseLineWithUpdate().
 
 (2.6)
 */
-static void
+void
 bufferEraseLineWithoutUpdate	(My_ScreenBufferPtr  	inDataPtr,
 								 My_ScreenBufferLine&	inRow)
 {
@@ -6664,7 +6699,7 @@ buffer if that flag is turned on.  A screen redraw is triggered.
 
 (2.6)
 */
-static void
+void
 bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr		inDataPtr)
 {
 	//Console_WriteLine("bufferEraseVisibleScreenWithUpdate");
@@ -6711,7 +6746,7 @@ is NOT updated.
 
 (2.6)
 */
-static void
+void
 bufferEraseWithoutUpdate	(My_ScreenBufferPtr		inDataPtr)
 {
 	My_ScreenBufferLineList::iterator	lineIterator;
@@ -6734,14 +6769,14 @@ display is NOT updated.
 
 (2.6)
 */
-static void
+void
 bufferInsertBlanksAtCursorColumn	(My_ScreenBufferPtr	inDataPtr,
 									 SInt16				inNumberOfBlankCharactersToInsert)
 {
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_TextVector						textIterator = nullptr;
-	My_TextVector						firstCharPastInsertedRangeIterator = nullptr;
+	My_TextIterator						textIterator = nullptr;
+	My_TextIterator						firstCharPastInsertedRangeIterator = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
 	My_TextAttributesList::iterator		firstAttrPastInsertedRangeIterator;
 	My_ScreenBufferLineList::iterator	cursorLineIterator;
@@ -6787,7 +6822,7 @@ WARNING:	The specified line MUST be part of the terminal
 
 (3.0)
 */
-static void
+void
 bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 						 UInt16									inNumberOfLines,
 						 My_ScreenBufferLineList::iterator&		inInsertionLine)
@@ -6839,7 +6874,7 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 /*!
 Efficiently overwrites the entire buffer for the given
 line, such that every character on the line becomes the
-given fill character and every character’s attributes
+given fill character and every character‚Äôs attributes
 match the given fill attributes.  You may also update
 the line global attributes, which define the default
 attributes effective regardless of individual character
@@ -6847,7 +6882,7 @@ attributes on the line.
 
 (3.0)
 */
-static void
+void
 bufferLineFill	(My_ScreenBufferPtr			UNUSED_ARGUMENT(inDataPtr),
 				 My_ScreenBufferLine&		inRow,
 				 UInt8						inFillCharacter,
@@ -6870,15 +6905,15 @@ is shifted to the left as a result.
 
 (3.0)
 */
-static void
+void
 bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 										 SInt16					inNumberOfCharactersToDelete)
 {
 	UInt16								numCharsToRemove = inNumberOfCharactersToDelete;
 	SInt16								postWrapCursorX = inDataPtr->current.cursorX;
 	My_ScreenRowIndex					postWrapCursorY = inDataPtr->current.cursorY;
-	My_TextVector						firstCharDeletedIterator = nullptr;
-	My_TextVector						firstCharPreservedIterator = nullptr;
+	My_TextIterator						firstCharDeletedIterator = nullptr;
+	My_TextIterator						firstCharPreservedIterator = nullptr;
 	My_TextAttributesList::iterator		firstAttrDeletedIterator;
 	My_TextAttributesList::iterator		firstAttrPreservedIterator;
 	My_TextAttributesList::iterator		firstAttrPastDeletedRangeIterator;
@@ -6955,7 +6990,7 @@ WARNING:	The specified line MUST be part of the terminal
 
 (3.0)
 */
-static void
+void
 bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 					 UInt16									inNumberOfLines,
 					 My_ScreenBufferLineList::iterator&		inFirstDeletionLine)
@@ -7009,13 +7044,13 @@ Internal version of Terminal_ChangeLineAttributes().
 
 (3.0)
 */
-static void
+void
 changeLineAttributes	(My_ScreenBufferPtr			inDataPtr,
 						 My_ScreenBufferLine&		inRow,
 						 TerminalTextAttributes		inSetTheseAttributes,
 						 TerminalTextAttributes		inClearTheseAttributes)
 {
-	changeLineRangeAttributes(inDataPtr, inRow, 0/* first column */, -1/* last column; negative means “very end” */,
+	changeLineRangeAttributes(inDataPtr, inRow, 0/* first column */, -1/* last column; negative means ‚Äúvery end‚Äù */,
 								inSetTheseAttributes, inClearTheseAttributes);
 }// changeLineAttributes
 
@@ -7026,11 +7061,11 @@ changeLineAttributes() which merely copies attributes
 to each character, this routine also remembers the
 specified changes as attributes for the entire line
 so that every time the cursor enters the line, the
-cursor attributes inherit the line’s global attributes.
+cursor attributes inherit the line‚Äôs global attributes.
 
 (3.0)
 */
-static void
+void
 changeLineGlobalAttributes	(My_ScreenBufferPtr			inDataPtr,
 							 My_ScreenBufferLine&		inRow,
 							 TerminalTextAttributes		inSetTheseAttributes,
@@ -7052,7 +7087,7 @@ Internal version of Terminal_ChangeLineRangeAttributes().
 
 (3.0)
 */
-static void
+void
 changeLineRangeAttributes	(My_ScreenBufferPtr			inDataPtr,
 							 My_ScreenBufferLine&		inRow,
 							 UInt16						inZeroBasedStartColumn,
@@ -7108,12 +7143,12 @@ IMPORTANT:	The context must make sense for the
 
 (3.0)
 */
-static void
+void
 changeNotifyForTerminal		(My_ScreenBufferConstPtr	inPtr,
 							 Terminal_Change			inWhatChanged,
 							 void*						inContextPtr)
 {
-	// invoke listener callback routines appropriately, from the specified terminal’s listener model
+	// invoke listener callback routines appropriately, from the specified terminal‚Äôs listener model
 	ListenerModel_NotifyListenersOfEvent(inPtr->changeListenerModel, inWhatChanged, inContextPtr);
 }// changeNotifyForTerminal
 
@@ -7125,7 +7160,7 @@ to 0.
 
 (3.0)
 */
-static void
+void
 clearEscapeSequenceParameters	(My_ScreenBufferPtr		inDataPtr)
 {
 	SInt16		parameterIndex = kMy_MaximumANSIParameters;
@@ -7146,7 +7181,7 @@ this function does the opposite.
 
 (2.6)
 */
-static void
+void
 cursorRestore  (My_ScreenBufferPtr		inPtr)
 {
 	moveCursor(inPtr, inPtr->previous.cursorX, inPtr->previous.cursorY);
@@ -7163,7 +7198,7 @@ function does the opposite.
 
 (2.6)
 */
-static void
+void
 cursorSave  (My_ScreenBufferPtr  inPtr)
 {
 	inPtr->previous.cursorX = inPtr->current.cursorX;
@@ -7179,7 +7214,7 @@ pending).
 
 (3.0)
 */
-static void
+void
 cursorWrapIfNecessaryGetLocation	(My_ScreenBufferPtr		inDataPtr,
 									 SInt16*				outCursorXPtr,
 									 My_ScreenRowIndex*		outCursorYPtr)
@@ -7195,13 +7230,13 @@ cursorWrapIfNecessaryGetLocation	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Treats the specified block of characters as “verbatim”,
+Treats the specified block of characters as ‚Äúverbatim‚Äù,
 sending them wherever they need to go (any open print
 jobs or capture files, the terminal, etc.).
 
 (3.1)
 */
-static void
+void
 echoData	(My_ScreenBufferPtr		inDataPtr,
 			 UInt8 const*			inBuffer,
 			 UInt32					inLength)
@@ -7315,7 +7350,7 @@ Terminal_EmulatorProcessData().
 
 (2.6)
 */
-static void
+void
 emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					 UInt8 const*			inBuffer,
 					 SInt32					inLength)
@@ -7325,7 +7360,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 		ASCII_ESC	= 0x1B		//!< escape character
 	};
 	register SInt16				escflg = 0;//inDataPtr->current.escapeSequence.level;
-    SInt32						ctr = inLength; // 3.0 - use a COPY so string length parameter’s original value isn’t lost!!!
+    SInt32						ctr = inLength; // 3.0 - use a COPY so string length parameter‚Äôs original value isn‚Äôt lost!!!
 	UInt8 const*				c = inBuffer;
 	My_CharacterSetInfoPtr		characterSetInfoPtr = nullptr; // which character set (G0 or G1) is being modified; used only for shift-in, -out
 	
@@ -7422,7 +7457,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			(ctr > 0) &&
 			(*c & 0x80) &&
 			(*c < 0xA0) &&
-			(inDataPtr->emulation == kTerminal_EmulatorVT220)) // VT220 eightbit starts here
+			(inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220)) // VT220 eightbit starts here
 		{											
 			switch (*c)								
 			{									
@@ -7468,7 +7503,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 		
 		{
 			UniChar*							startPtr = nullptr;
-			My_TextVector						startIterator = nullptr;
+			My_TextIterator						startIterator = nullptr;
 			TerminalTextAttributes				attrib = 0;
 			register SInt16						preWriteCursorX = 0;
 			SInt16								extra = 0;
@@ -7485,7 +7520,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			while ((escflg == 0) &&
 					(ctr > 0) &&
 					(*c >= 32) &&
-					!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulation == kTerminal_EmulatorVT220)))
+					!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220)))
 			{
 				// print lines of text one at a time
 				attrib = inDataPtr->current.attributeBits; /* current writing attribute */
@@ -7515,7 +7550,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				while ((ctr > 0) &&
 						(*c >= 32) &&
 						(!wrapped) &&
-						!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulation == kTerminal_EmulatorVT220)))
+						!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220)))
 				{
 					// write characters on a single line
 					if (inDataPtr->modeInsertNotReplace)
@@ -7544,7 +7579,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						{
 							// stay at right margin
 							moveCursorRightToEdge(inDataPtr);
-							extra = 1; // cursor position doesn’t advance 
+							extra = 1; // cursor position doesn‚Äôt advance 
 						} 
 					} 
 				}
@@ -7598,9 +7633,9 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					
 					if (doSpeak)
 					{
-						register SInt16				i = 0;
-						Str255&						buffer = inDataPtr->speech.buffer;
-						My_TextVector::iterator		speechIterator = startIterator;
+						register SInt16		i = 0;
+						Str255&				buffer = inDataPtr->speech.buffer;
+						My_TextIterator		speechIterator = startIterator;
 						
 						
 						// accumulate characters in a buffer; the buffer keeps all
@@ -7851,7 +7886,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 		
 		while ((escflg == 2) && (ctr > 0))
 		{
-			// “control sequence” processing
+			// ‚Äúcontrol sequence‚Äù processing
 			switch (*c)
 			{
 			case 0x08:
@@ -7871,7 +7906,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			case '9':
 				// parse numeric parameter
 				{
-					// rename this incredibly long expression, since it’s needed a lot here!
+					// rename this incredibly long expression, since it‚Äôs needed a lot here!
 					SInt16&		valueRef = inDataPtr->currentEscapeSeqParamValues
 											[inDataPtr->currentEscapeSeqParamEndIndex];
 					
@@ -8214,8 +8249,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				goto ShortCut;
 			
 			case 'c':
-				if (inDataPtr->emulation == kTerminal_EmulatorVT220) vt220DeviceAttributes(inDataPtr);
-				else if (inDataPtr->emulation == kTerminal_EmulatorVT100) vt100DeviceAttributes(inDataPtr);
+				if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220) vt220DeviceAttributes(inDataPtr);
+				else if (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT100) vt100DeviceAttributes(inDataPtr);
 				goto ShortCut;
 			
 			case 'n':
@@ -8498,12 +8533,12 @@ screen data on a double-width line be lost.
 
 (3.0)
 */
-static void
+void
 eraseRightHalfOfLine	(My_ScreenBufferPtr		inDataPtr,
 						 My_ScreenBufferLine&	inRow)
 {
 	SInt16								midColumn = INTEGER_HALVED(inDataPtr->text.visibleScreen.numberOfColumnsPermitted);
-	My_TextVector						textIterator = nullptr;
+	My_TextIterator						textIterator = nullptr;
 	My_TextAttributesList::iterator		attrIterator;
 	
 	
@@ -8551,7 +8586,7 @@ if any line buffers are unexpectedly empty
 
 (3.0)
 */
-static Terminal_Result
+Terminal_Result
 forEachLineDo	(TerminalScreenRef				inRef,
 				 Terminal_LineRef				inStartRow,
 				 UInt16							inNumberOfRowsToConsider,
@@ -8604,7 +8639,7 @@ numbers).
 
 (3.1)
 */
-static void
+void
 getBufferOffsetCell		(My_ScreenBufferPtr		inDataPtr,
 						 size_t					inBufferOffset,
 						 UInt16					inEndOfLinePad,
@@ -8622,7 +8657,7 @@ reference to it.
 
 (3.0)
 */
-static inline My_LineIteratorPtr
+inline My_LineIteratorPtr
 getLineIterator		(Terminal_LineRef	inIterator)
 {
 	return REINTERPRET_CAST(inIterator, My_LineIteratorPtr);
@@ -8635,7 +8670,7 @@ reference to it.
 
 (3.0)
 */
-static inline My_ScreenBufferPtr
+inline My_ScreenBufferPtr
 getVirtualScreenData	(TerminalScreenRef		inScreen)
 {
 	return REINTERPRET_CAST(inScreen, My_ScreenBufferPtr);
@@ -8658,7 +8693,7 @@ will one day be used to turn off specific LEDs.
 
 (3.0)
 */
-static void
+void
 highlightLED	(My_ScreenBufferPtr		inDataPtr,
 				 SInt16					inOneBasedLEDNumberOrZeroToTurnOffAllLEDs)
 {
@@ -8694,7 +8729,7 @@ highlightLED	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Discards all state history in the screen’s parser and creates
+Discards all state history in the screen‚Äôs parser and creates
 a single, initial state.
 
 This is obviously done when a screen is first created, but
@@ -8704,8 +8739,8 @@ type).
 
 (3.1)
 */
-static void
-initializeParserStateStack	(My_ScreenBufferPtr		inDataPtr)
+void
+initializeParserStateStack	(My_EmulatorPtr		inDataPtr)
 {
 	inDataPtr->currentState = kMy_ParserStateInitial;
 }// initializeParserStateStack
@@ -8723,14 +8758,14 @@ to the scrollback before each new line is appended.
 
 The resultant lines may share a large memory block.  So, it
 is usually better to invoke this routine once for the number
-of lines you’ll ultimately need, than to invoke it many
+of lines you‚Äôll ultimately need, than to invoke it many
 times to add a single line.
 
 Returns "true" only if successful.
 
 (3.0)
 */
-static Boolean
+Boolean
 insertNewLines	(My_ScreenBufferPtr						inDataPtr,
 				 My_ScreenBufferLineList::size_type		inNumberOfElements,
 				 Boolean								inAppendOnly)
@@ -8755,7 +8790,7 @@ insertNewLines	(My_ScreenBufferPtr						inDataPtr,
 			{
 				inDataPtr->screenBuffer.resize(kOldSize + inNumberOfElements);
 				
-				// make sure the cursor line doesn’t fall off the end
+				// make sure the cursor line doesn‚Äôt fall off the end
 				if (inDataPtr->current.cursorY >= inDataPtr->screenBuffer.size())
 				{
 					moveCursorY(inDataPtr, inDataPtr->screenBuffer.size() - 1);
@@ -8884,7 +8919,7 @@ manipulated.
 
 (3.0)
 */
-static void
+void
 locateCursorLine	(My_ScreenBufferPtr						inDataPtr,
 					 My_ScreenBufferLineList::iterator&		outCursorLine)
 {
@@ -8897,7 +8932,7 @@ locateCursorLine	(My_ScreenBufferPtr						inDataPtr,
 
 /*!
 Locates the screen buffer lines bounding the cursor and
-scrolling activity (as defined by the terminal’s current
+scrolling activity (as defined by the terminal‚Äôs current
 origin setting), providing iterators into the list (each
 of which may be past-the-end, that is, invalid).  See
 also locateScrollingRegionTop().
@@ -8913,7 +8948,7 @@ modifications that would invalidate retained iterators.
 
 (3.0)
 */
-static void
+void
 locateScrollingRegion	(My_ScreenBufferPtr						inDataPtr,
 						 My_ScreenBufferLineList::iterator&		outTopLine,
 						 My_ScreenBufferLineList::iterator&		outPastBottomLine)
@@ -8952,7 +8987,7 @@ linear, in practice it will not be a slow operation.
 
 (3.0)
 */
-static void
+void
 locateScrollingRegionTop	(My_ScreenBufferPtr						inDataPtr,
 							 My_ScreenBufferLineList::iterator&		outTopLine)
 {
@@ -8975,7 +9010,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursor		(My_ScreenBufferPtr		inDataPtr,
 				 SInt16					inNewX,
 				 My_ScreenRowIndex		inNewY)
@@ -8996,7 +9031,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorDown		(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorY(inDataPtr, inDataPtr->current.cursorY + 1);
@@ -9015,7 +9050,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static void
+void
 moveCursorDownOrScroll	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY == inDataPtr->scrollingRegion.lastRow)
@@ -9041,7 +9076,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.1)
 */
-static void
+void
 moveCursorDownOrStop	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY < (inDataPtr->screenBuffer.size() - 1))
@@ -9062,7 +9097,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorDownToEdge	(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorY(inDataPtr, inDataPtr->scrollingRegion.lastRow);
@@ -9080,7 +9115,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorLeft		(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorX(inDataPtr, inDataPtr->current.cursorX - 1);
@@ -9097,7 +9132,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorLeftToEdge	(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorX(inDataPtr, 0);
@@ -9118,7 +9153,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorLeftToHalf	(My_ScreenBufferPtr		inDataPtr)
 {
 	SInt16		halfway = INTEGER_HALVED(inDataPtr->text.visibleScreen.numberOfColumnsPermitted);
@@ -9142,7 +9177,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorRight		(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorX(inDataPtr, inDataPtr->current.cursorX + 1);
@@ -9159,7 +9194,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorRightToEdge		(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorX(inDataPtr, inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1);
@@ -9177,7 +9212,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorRightToNextTabStop	(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorX(inDataPtr, inDataPtr->current.cursorX + tabStopGetDistanceFromCursor(inDataPtr));
@@ -9194,7 +9229,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorUp	(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorY(inDataPtr, inDataPtr->current.cursorY - 1);
@@ -9213,7 +9248,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static void
+void
 moveCursorUpOrScroll	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY == inDataPtr->scrollingRegion.firstRow)
@@ -9242,7 +9277,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorUpToEdge	(My_ScreenBufferPtr		inDataPtr)
 {
 	moveCursorY(inDataPtr, inDataPtr->scrollingRegion.firstRow);
@@ -9261,7 +9296,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 				 SInt16					inNewX)
 {
@@ -9299,7 +9334,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 
 (3.0)
 */
-static inline void
+inline void
 moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 				 My_ScreenRowIndex		inNewY)
 {
@@ -9316,7 +9351,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 	}
 	inDataPtr->current.attributeBits &= ~(cursorLineIterator->globalAttributes);
 	
-	// don’t allow the cursor to fall off the screen
+	// don‚Äôt allow the cursor to fall off the screen
 	{
 		SInt16		newCursorY = inNewY;
 		
@@ -9351,7 +9386,7 @@ and notifies any listeners of reset events.
 
 (2.6)
 */
-static void
+void
 resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 {
 	setScrollingRegionTop(inDataPtr, 0);
@@ -9375,7 +9410,7 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 	}
 	bufferEraseVisibleScreenWithUpdate(inDataPtr);
 	tabStopInitialize(inDataPtr);
-	highlightLED(inDataPtr, 0/* zero means “turn off all LEDs” */);
+	highlightLED(inDataPtr, 0/* zero means ‚Äúturn off all LEDs‚Äù */);
 	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeReset, inDataPtr->selfRef/* context */);
 }// resetTerminal
 
@@ -9388,7 +9423,7 @@ back to a requester (e.g. VT100 Device Attributes).
 
 (3.1)
 */
-static SessionRef
+SessionRef
 returnListeningSession	(My_ScreenBufferPtr		inDataPtr)
 {
 	return inDataPtr->listeningSession;
@@ -9407,7 +9442,7 @@ you may not care which specific VT terminal
 
 (3.0)
 */
-static inline Terminal_EmulatorType
+inline Terminal_EmulatorType
 returnTerminalType		(Terminal_Emulator	inEmulator)
 {
 	return ((inEmulator & kTerminal_EmulatorTypeMask) >> kTerminal_EmulatorTypeByteShift);
@@ -9424,7 +9459,7 @@ a VT100 or VT220.
 
 (3.0)
 */
-static inline Terminal_EmulatorVariant
+inline Terminal_EmulatorVariant
 returnTerminalVariant		(Terminal_Emulator	inEmulator)
 {
 	return ((inEmulator & kTerminal_EmulatorVariantMask) >> kTerminal_EmulatorVariantByteShift);
@@ -9438,7 +9473,7 @@ screen area.
 
 (3.0)
 */
-static void
+void
 saveToScrollback	(My_ScreenBufferPtr		inDataPtr)
 {
 	//Console_WriteLine("saveToScrollback");
@@ -9460,7 +9495,7 @@ Moves the scrolling region up one line.
 
 (3.0)
 */
-static void
+void
 scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY < inDataPtr->screenBuffer.size())
@@ -9511,7 +9546,7 @@ flag changes.
 
 (3.0)
 */
-static inline void
+inline void
 setCursorVisible	(My_ScreenBufferPtr		inDataPtr,
 					 Boolean				inIsVisible)
 {
@@ -9521,7 +9556,7 @@ setCursorVisible	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Sets the “logical bottom” of the main screen, which is
+Sets the ‚Äúlogical bottom‚Äù of the main screen, which is
 initially the very last screen row.  A VT command can
 change this, affecting many subsequent operations such
 as scrolling and cursor movement.
@@ -9533,7 +9568,7 @@ IMPORTANT:	ALWAYS use setScrollingRegion...() routines
 
 (3.0)
 */
-static void
+void
 setScrollingRegionBottom	(My_ScreenBufferPtr		inDataPtr,
 							 UInt16					inNewBottomRow)
 {
@@ -9543,7 +9578,7 @@ setScrollingRegionBottom	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Sets the “logical top” of the main screen, which is
+Sets the ‚Äúlogical top‚Äù of the main screen, which is
 initially row zero (home position).  A VT command can
 change this, affecting many subsequent operations such
 as scrolling and cursor movement.
@@ -9555,7 +9590,7 @@ IMPORTANT:	ALWAYS use setScrollingRegion...() routines
 
 (3.0)
 */
-static void
+void
 setScrollingRegionTop	(My_ScreenBufferPtr		inDataPtr,
 						 UInt16					inNewTopRow)
 {
@@ -9569,7 +9604,7 @@ which sets tabs to reasonable default values.
 
 (3.0)
 */
-static void
+void
 tabStopClearAll		(My_ScreenBufferPtr		inDataPtr)
 {
 	My_TabStopList::iterator	tabStopIterator;
@@ -9589,7 +9624,7 @@ the specified screen.
 
 (2.6)
 */
-static UInt16
+UInt16
 tabStopGetDistanceFromCursor	(My_ScreenBufferConstPtr	inDataPtr)
 {
 	UInt16		result = 0;
@@ -9616,7 +9651,7 @@ last column).
 
 (3.0)
 */
-static void
+void
 tabStopInitialize	(My_ScreenBufferPtr		inDataPtr)
 {
 	My_TabStopList::iterator	tabStopIterator;
@@ -9645,11 +9680,11 @@ new code is returned, which may be unchanged.
 
 (3.0)
 */
-static inline char
+inline UniChar
 translateCharacter	(My_ScreenBufferPtr		inDataPtr,
-					 char					inCharacter)
+					 UniChar				inCharacter)
 {
-	char	result = inCharacter;
+	UniChar		result = inCharacter;
 	
 	
 	switch (inDataPtr->current.characterSetInfoPtr->translationTable)
@@ -9660,8 +9695,8 @@ translateCharacter	(My_ScreenBufferPtr		inDataPtr,
 	
 	case kMy_CharacterSetVT100UnitedKingdom:
 		// the only difference between ASCII and U.K. is that
-		// the pound sign (#) is a British currency symbol (£)
-		if (inCharacter == '#') result = '£';
+		// the pound sign (#) is a British currency symbol (¬£)
+		if (inCharacter == '#') result = 0x00A3;
 		break;
 	
 	default:
@@ -9678,7 +9713,7 @@ manual for complete details.
 
 (3.0)
 */
-static void
+void
 vt100AlignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
 {
 	// first clear the buffer, saving it to scrollback if appropriate
@@ -9708,16 +9743,16 @@ no longer accepts VT52 sequences.
 
 (3.1)
 */
-static void
+void
 vt100ANSIMode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = true;
 	// TEMPORARY: this will change to a mechanism that ensures the
 	// proper function is reset here based on the actual terminal type;
-	// for now, choose the “highest” terminal
+	// for now, choose the ‚Äúhighest‚Äù terminal
 	inDataPtr->stateDeterminant = My_VT100::stateDeterminant;
 	inDataPtr->transitionHandler = My_VT100::stateTransition;
-	initializeParserStateStack(inDataPtr);
+	initializeParserStateStack(&inDataPtr->emulator);
 }// vt100ANSIMode
 
 
@@ -9727,7 +9762,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorBackward		(My_ScreenBufferPtr		inDataPtr)
 {
 	// the default value is 1 if there are no parameters
@@ -9753,7 +9788,7 @@ See the VT100 manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorBackward_vt52	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorX > 0) moveCursorLeft(inDataPtr);
@@ -9767,7 +9802,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorDown		(My_ScreenBufferPtr		inDataPtr)
 {
 	// the default value is 1 if there are no parameters
@@ -9801,7 +9836,7 @@ See the VT100 manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorDown_vt52	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY < inDataPtr->scrollingRegion.lastRow) moveCursorDown(inDataPtr);
@@ -9815,7 +9850,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorForward		(My_ScreenBufferPtr		inDataPtr)
 {
 	SInt16		rightLimit = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - ((inDataPtr->modeAutoWrap) ? 0 : 1);
@@ -9844,7 +9879,7 @@ See the VT100 manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorForward_vt52	(My_ScreenBufferPtr		inDataPtr)
 {
 	SInt16		rightLimit = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - ((inDataPtr->modeAutoWrap) ? 0 : 1);
@@ -9861,7 +9896,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorUp	(My_ScreenBufferPtr		inDataPtr)
 {
 	// the default value is 1 if there are no parameters
@@ -9903,7 +9938,7 @@ See the VT100 manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100CursorUp_vt52		(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY > inDataPtr->scrollingRegion.firstRow)
@@ -9923,7 +9958,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100DeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
 {
 	SessionRef		session = returnListeningSession(inDataPtr);
@@ -9943,7 +9978,7 @@ manual for complete details.
 
 (3.0)
 */
-static void
+void
 vt100DeviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
 {
 	switch (inDataPtr->currentEscapeSeqParamValues[0])
@@ -9956,7 +9991,7 @@ vt100DeviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
 			
 			if (nullptr != session)
 			{
-				Session_SendData(session, "\033[0n"/* 0 means “ready, no malfunctions detected”; see VT100 manual on DSR for details */,
+				Session_SendData(session, "\033[0n"/* 0 means ‚Äúready, no malfunctions detected‚Äù; see VT100 manual on DSR for details */,
 									4/* length of the string */);
 			}
 		}
@@ -10026,7 +10061,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100EraseInDisplay		(My_ScreenBufferPtr		inDataPtr)
 {
 	switch (inDataPtr->currentEscapeSeqParamValues[0])
@@ -10057,7 +10092,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100EraseInLine	(My_ScreenBufferPtr		inDataPtr)
 {
 	switch (inDataPtr->currentEscapeSeqParamValues[0])
@@ -10089,7 +10124,7 @@ VT100 manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100Identify_vt52	(My_ScreenBufferPtr		inDataPtr)
 {
 	SessionRef		session = returnListeningSession(inDataPtr);
@@ -10108,7 +10143,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100LoadLEDs	(My_ScreenBufferPtr		inDataPtr)
 {
 	register SInt16		i = 0;
@@ -10118,19 +10153,19 @@ vt100LoadLEDs	(My_ScreenBufferPtr		inDataPtr)
 	{
 		if (inDataPtr->currentEscapeSeqParamValues[i] == -1)
 		{
-			// no value; default is “all off”
+			// no value; default is ‚Äúall off‚Äù
 			highlightLED(inDataPtr, 0);
 		}
 		else if (inDataPtr->currentEscapeSeqParamValues[i] == 137)
 		{
-			// could decide to emulate the “ludicrous repeat rate” bug
+			// could decide to emulate the ‚Äúludicrous repeat rate‚Äù bug
 			// of the VT100, here; in combination with key click, this
 			// should basically make each key press play a musical note :)
 		}
 		else
 		{
-			// a parameter of 1 means “LED 1 on”, 2 means “LED 2 on”,
-			// 3 means “LED 3 on”, 4 means “LED 4 on”; 0 means “all off”
+			// a parameter of 1 means ‚ÄúLED 1 on‚Äù, 2 means ‚ÄúLED 2 on‚Äù,
+			// 3 means ‚ÄúLED 3 on‚Äù, 4 means ‚ÄúLED 4 on‚Äù; 0 means ‚Äúall off‚Äù
 			highlightLED(inDataPtr, inDataPtr->currentEscapeSeqParamValues[i]/* LED # */);
 		}
 	}
@@ -10144,7 +10179,7 @@ See the VT100 manual for complete details.
 
 (2.6)
 */
-static void
+void
 vt100ModeSetReset	(My_ScreenBufferPtr		inDataPtr,
 					 Boolean				inIsModeEnabled)
 {
@@ -10247,7 +10282,7 @@ vt100ModeSetReset	(My_ScreenBufferPtr		inDataPtr,
 /*!
 Scans the specified buffer for parameter-like data
 (e.g. ;0;05;21;2) and saves all the parameters it
-finds.  The number of characters “used” is returned
+finds.  The number of characters ‚Äúused‚Äù is returned
 (you can use this to offset your original buffer
 pointer appropriately).
 
@@ -10259,7 +10294,7 @@ will have all defined parameters available to it.
 
 (3.1)
 */
-static UInt32
+UInt32
 vt100ReadCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 						 UInt8 const*			inBuffer,
 						 UInt32					inLength)
@@ -10287,7 +10322,7 @@ vt100ReadCSIParameters	(My_ScreenBufferPtr		inDataPtr,
 		case '9':
 			// parse numeric parameter
 			{
-				// rename this incredibly long expression, since it’s needed a lot here!
+				// rename this incredibly long expression, since it‚Äôs needed a lot here!
 				SInt16&		valueRef = inDataPtr->currentEscapeSeqParamValues[terminalEndIndexRef];
 				
 				
@@ -10343,7 +10378,7 @@ manual for complete details.
 
 (3.1)
 */
-static void
+void
 vt100ReportTerminalParameters	(My_ScreenBufferPtr		inDataPtr)
 {
 	UInt16 const	kRequestType = (inDataPtr->currentEscapeSeqParamValues[0] != -1)
@@ -10418,7 +10453,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->currentEscapeSeqParamValues[0] < 0)
@@ -10477,13 +10512,13 @@ starts to accept VT52 sequences.
 
 (3.1)
 */
-static void
+void
 vt100VT52Mode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = false;
 	inDataPtr->stateDeterminant = My_VT100::VT52::stateDeterminant;
 	inDataPtr->transitionHandler = My_VT100::VT52::stateTransition;
-	initializeParserStateStack(inDataPtr);
+	initializeParserStateStack(&inDataPtr->emulator);
 }// vt100VT52Mode
 
 
@@ -10493,7 +10528,7 @@ manual for complete details.
 
 (3.0)
 */
-static inline void
+inline void
 vt220DeviceAttributes	(My_ScreenBufferPtr		inDataPtr)
 {
 	SessionRef		session = returnListeningSession(inDataPtr);
@@ -10533,7 +10568,7 @@ NOTE:   This routine is generic.  It therefore works
 */
 template < typename src_char_seq_const_iter, typename src_char_seq_size_t,
 			typename dest_char_seq_iter, typename dest_char_seq_size_t >
-static dest_char_seq_iter
+dest_char_seq_iter
 whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 							 src_char_seq_size_t		inSourceBufferLength,
 							 dest_char_seq_iter			outDestinationBuffer,
@@ -10552,7 +10587,7 @@ whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 		src_char_seq_size_t			sourceLength = inSourceBufferLength;
 		
 		
-		// initialize “constant” past-source-start iterator
+		// initialize ‚Äúconstant‚Äù past-source-start iterator
 		kPastSourceStartIterator = inSourceBuffer;
 		std::advance(kPastSourceStartIterator, -1);
 		
@@ -10592,7 +10627,7 @@ whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 				dest_char_seq_iter			kPastDestinationEndIterator;
 				
 				
-				// initialize “constant” past-destination-end iterator
+				// initialize ‚Äúconstant‚Äù past-destination-end iterator
 				kPastDestinationEndIterator = outDestinationBuffer;
 				std::advance(kPastDestinationEndIterator, inDestinationBufferLength);
 				
@@ -10633,5 +10668,7 @@ whitespaceSensitiveCopy		(src_char_seq_const_iter	inSourceBuffer,
 	*outDestinationCopiedLengthPtr = std::distance(outDestinationBuffer, result);
 	return result;
 }// whitespaceSensitiveCopy
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
