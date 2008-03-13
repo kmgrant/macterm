@@ -1,117 +1,117 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
   <array count="13" name="allObjects">
+    <object class="IBCarbonRootControl" id="167">
+      <string name="viewFrame">0 0 320 139 </string>
+      <array count="11" name="subviews">
+        <object class="IBCarbonStaticText" id="255">
+          <ostype name="controlSignature">WLbl</ostype>
+          <string name="title">Width:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">34 23 85 16 </string>
+          <string name="bounds">23 34 39 119 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="257">
+          <ostype name="controlSignature">ColU</ostype>
+          <int name="fontStyle">-2</int>
+          <string name="title">columns</string>
+          <string name="viewFrame">231 25 74 13 </string>
+          <string name="bounds">25 231 38 305 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="258">
+          <ostype name="controlSignature">HLbl</ostype>
+          <string name="title">Height:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">34 53 85 16 </string>
+          <string name="bounds">53 34 69 119 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="260">
+          <ostype name="controlSignature">RowU</ostype>
+          <int name="fontStyle">-2</int>
+          <string name="title">rows</string>
+          <string name="viewFrame">231 55 74 13 </string>
+          <string name="bounds">55 231 68 305 </string>
+        </object>
+        <object class="IBCarbonEditText" id="256">
+          <ostype name="controlSignature">WFld</ostype>
+          <boolean name="isUnicode">TRUE</boolean>
+          <string name="viewFrame">130 23 71 16 </string>
+          <string name="bounds">23 130 39 201 </string>
+        </object>
+        <object class="IBCarbonLittleArrows" id="261">
+          <ostype name="controlSignature">WArr</ostype>
+          <int name="increment">4</int>
+          <string name="viewFrame">212 21 13 22 </string>
+          <string name="bounds">21 212 43 225 </string>
+        </object>
+        <object class="IBCarbonEditText" id="259">
+          <ostype name="controlSignature">HFld</ostype>
+          <boolean name="isUnicode">TRUE</boolean>
+          <string name="viewFrame">130 53 71 16 </string>
+          <string name="bounds">53 130 69 201 </string>
+        </object>
+        <object class="IBCarbonLittleArrows" id="262">
+          <ostype name="controlSignature">HArr</ostype>
+          <int name="increment">10</int>
+          <string name="viewFrame">212 51 13 22 </string>
+          <string name="bounds">51 212 73 225 </string>
+        </object>
+        <object class="IBCarbonButton" id="197">
+          <ostype name="controlSignature">Rsiz</ostype>
+          <ostype name="command">ok  </ostype>
+          <int name="buttonType">1</int>
+          <string name="title">Resize</string>
+          <string name="viewFrame">231 99 70 20 </string>
+          <string name="bounds">99 231 119 301 </string>
+        </object>
+        <object class="IBCarbonButton" id="198">
+          <ostype name="controlSignature">Canc</ostype>
+          <ostype name="command">not!</ostype>
+          <int name="buttonType">2</int>
+          <string name="title">Cancel</string>
+          <string name="viewFrame">149 99 70 20 </string>
+          <string name="bounds">99 149 119 219 </string>
+        </object>
+        <object class="IBCarbonRoundButton" id="199">
+          <ostype name="controlSignature">Help</ostype>
+          <ostype name="command">?Ctx</ostype>
+          <string name="viewFrame">20 101 21 18 </string>
+          <string name="bounds">101 20 119 41 </string>
+          <int name="contentType">132</int>
+          <int name="iconCreator">1835098995</int>
+          <int name="iconType">1751477360</int>
+        </object>
+      </array>
+      <string name="bounds">0 0 139 320 </string>
+    </object>
+    <reference idRef="255"/>
+    <reference idRef="260"/>
+    <reference idRef="261"/>
+    <reference idRef="256"/>
+    <reference idRef="198"/>
+    <reference idRef="259"/>
     <object class="IBCarbonWindow" id="166">
-      <string name="windowRect">433 330 572 651 </string>
-      <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="bounds">0 0 139 321 </string>
-        <string name="viewFrame">0 0 321 139 </string>
-        <array count="11" name="subviews">
-          <object class="IBCarbonStaticText" id="255">
-            <string name="bounds">23 34 39 119 </string>
-            <string name="viewFrame">34 23 85 16 </string>
-            <ostype name="controlSignature">WLbl</ostype>
-            <string name="title">Width:</string>
-            <int name="justification">-1</int>
-          </object>
-          <object class="IBCarbonStaticText" id="257">
-            <string name="bounds">25 231 38 305 </string>
-            <string name="viewFrame">231 25 74 13 </string>
-            <ostype name="controlSignature">ColU</ostype>
-            <int name="fontStyle">-2</int>
-            <string name="title">columns</string>
-          </object>
-          <object class="IBCarbonStaticText" id="258">
-            <string name="bounds">53 34 69 119 </string>
-            <string name="viewFrame">34 53 85 16 </string>
-            <ostype name="controlSignature">HLbl</ostype>
-            <string name="title">Height:</string>
-            <int name="justification">-1</int>
-          </object>
-          <object class="IBCarbonStaticText" id="260">
-            <string name="bounds">55 231 68 305 </string>
-            <string name="viewFrame">231 55 74 13 </string>
-            <ostype name="controlSignature">RowU</ostype>
-            <int name="fontStyle">-2</int>
-            <string name="title">rows</string>
-          </object>
-          <object class="IBCarbonEditText" id="256">
-            <string name="bounds">23 130 39 201 </string>
-            <string name="viewFrame">130 23 71 16 </string>
-            <ostype name="controlSignature">WFld</ostype>
-            <boolean name="isUnicode">TRUE</boolean>
-          </object>
-          <object class="IBCarbonLittleArrows" id="261">
-            <string name="bounds">21 212 43 225 </string>
-            <string name="viewFrame">212 21 13 22 </string>
-            <ostype name="controlSignature">WArr</ostype>
-            <int name="increment">4</int>
-          </object>
-          <object class="IBCarbonEditText" id="259">
-            <string name="bounds">53 130 69 201 </string>
-            <string name="viewFrame">130 53 71 16 </string>
-            <ostype name="controlSignature">HFld</ostype>
-            <boolean name="isUnicode">TRUE</boolean>
-          </object>
-          <object class="IBCarbonLittleArrows" id="262">
-            <string name="bounds">51 212 73 225 </string>
-            <string name="viewFrame">212 51 13 22 </string>
-            <ostype name="controlSignature">HArr</ostype>
-            <int name="increment">10</int>
-          </object>
-          <object class="IBCarbonButton" id="197">
-            <string name="bounds">99 231 119 301 </string>
-            <string name="viewFrame">231 99 70 20 </string>
-            <ostype name="controlSignature">Rsiz</ostype>
-            <string name="title">Resize</string>
-            <ostype name="command">ok  </ostype>
-            <int name="buttonType">1</int>
-          </object>
-          <object class="IBCarbonButton" id="198">
-            <string name="bounds">99 149 119 219 </string>
-            <string name="viewFrame">149 99 70 20 </string>
-            <ostype name="controlSignature">Canc</ostype>
-            <string name="title">Cancel</string>
-            <ostype name="command">not!</ostype>
-            <int name="buttonType">2</int>
-          </object>
-          <object class="IBCarbonRoundButton" id="199">
-            <string name="bounds">101 20 119 41 </string>
-            <string name="viewFrame">20 101 21 18 </string>
-            <ostype name="controlSignature">Help</ostype>
-            <ostype name="command">?Ctx</ostype>
-            <int name="contentType">132</int>
-            <int name="iconType">1751477360</int>
-          </object>
-        </array>
-      </object>
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="isResizable">FALSE</boolean>
       <boolean name="compositing">TRUE</boolean>
+      <boolean name="doesNotCycle">TRUE</boolean>
       <int name="carbonWindowClass">11</int>
       <int name="windowPosition">1</int>
-      <boolean name="doesNotCycle">TRUE</boolean>
+      <int name="scalingMode">1048576</int>
+      <string name="title"></string>
+      <reference name="rootControl" idRef="167"/>
+      <string name="windowRect">433 330 572 651 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="167"/>
-    <reference idRef="197"/>
-    <reference idRef="198"/>
-    <reference idRef="199"/>
-    <reference idRef="255"/>
-    <reference idRef="256"/>
-    <reference idRef="257"/>
     <reference idRef="258"/>
-    <reference idRef="259"/>
-    <reference idRef="260"/>
-    <reference idRef="261"/>
+    <reference idRef="257"/>
     <reference idRef="262"/>
+    <reference idRef="199"/>
+    <reference idRef="197"/>
   </array>
   <array count="13" name="allParents">
-    <reference idRef="1"/>
     <reference idRef="166"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
@@ -119,19 +119,19 @@
     <reference idRef="167"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
+    <reference idRef="1"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
     <reference idRef="167"/>
   </array>
-  <dictionary count="3" name="nameTable">
+  <dictionary count="2" name="nameTable">
     <string>Dialog</string>
     <reference idRef="166"/>
     <string>File&apos;s Owner</string>
     <reference idRef="1"/>
-    <string>NSCustomView11</string>
-    <reference idRef="199"/>
   </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
   <unsigned_int name="nextObjectID">263</unsigned_int>
 </object>

@@ -1,27 +1,9 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
   <array count="3" name="allObjects">
     <object class="IBCarbonWindow" id="166">
-      <string name="windowRect">305 407 331 520 </string>
-      <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="bounds">0 0 26 113 </string>
-        <string name="viewFrame">0 0 113 26 </string>
-        <array count="1" name="subviews">
-          <object class="IBCarbonBevelButton" id="181">
-            <string name="bounds">0 0 26 113 </string>
-            <string name="viewFrame">0 0 113 26 </string>
-            <string name="title">Disable Full Screen</string>
-            <ostype name="command">KskQ</ostype>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-          </object>
-        </array>
-      </object>
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCloseBox">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
@@ -29,10 +11,28 @@
       <boolean name="isResizable">FALSE</boolean>
       <boolean name="hasVerticalZoom">FALSE</boolean>
       <boolean name="compositing">TRUE</boolean>
-      <int name="carbonWindowClass">5</int>
-      <int name="windowPosition">4</int>
       <boolean name="isConstrained">FALSE</boolean>
       <boolean name="hideOnSuspend">TRUE</boolean>
+      <int name="carbonWindowClass">5</int>
+      <int name="windowPosition">4</int>
+      <int name="scalingMode">1048576</int>
+      <string name="title"></string>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="viewFrame">0 0 112 26 </string>
+        <array count="1" name="subviews">
+          <object class="IBCarbonBevelButton" id="181">
+            <ostype name="command">KskQ</ostype>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">Disable Full Screen</string>
+            <string name="viewFrame">0 0 113 26 </string>
+            <string name="bounds">0 0 26 113 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 26 112 </string>
+      </object>
+      <string name="windowRect">305 407 331 520 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
     <reference idRef="167"/>
     <reference idRef="181"/>
@@ -48,5 +48,6 @@
     <string>Window</string>
     <reference idRef="166"/>
   </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
   <unsigned_int name="nextObjectID">182</unsigned_int>
 </object>

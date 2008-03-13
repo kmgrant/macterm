@@ -1,40 +1,99 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
   <array count="11" name="allObjects">
-    <object class="IBCarbonWindow" id="166">
-      <string name="windowRect">212 206 633 881 </string>
+    <object class="IBCarbonStaticText" id="191">
+      <ostype name="controlSignature">Dims</ostype>
+      <string name="title">-</string>
+      <int name="justification">1</int>
+      <string name="viewFrame">20 20 97 16 </string>
+      <string name="bounds">20 20 36 117 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="195">
+      <ostype name="controlSignature">TTit</ostype>
+      <ostype name="command">MTab</ostype>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">-</string>
+      <string name="viewFrame">0 0 184 19 </string>
+      <string name="bounds">0 0 19 184 </string>
+    </object>
+    <object class="IBCarbonWindow" id="192">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="ignoreClicks">TRUE</boolean>
+      <boolean name="isConstrained">FALSE</boolean>
+      <boolean name="hideOnSuspend">TRUE</boolean>
+      <int name="carbonWindowClass">11</int>
+      <int name="windowPosition">1</int>
+      <int name="scalingMode">1048576</int>
       <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="bounds">0 0 421 675 </string>
-        <string name="viewFrame">0 0 675 421 </string>
+      <object name="rootControl" class="IBCarbonRootControl" id="190">
+        <string name="viewFrame">0 0 136 56 </string>
+        <array count="1" name="subviews">
+          <reference idRef="191"/>
+        </array>
+        <string name="bounds">0 0 56 136 </string>
       </object>
+      <string name="windowRect">365 467 421 604 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="188">
+      <ostype name="controlSignature">Dims</ostype>
+      <string name="title">-</string>
+      <int name="justification">1</int>
+      <string name="viewFrame">20 20 97 16 </string>
+      <string name="bounds">20 20 36 117 </string>
+    </object>
+    <object class="IBCarbonWindow" id="193">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="doesNotCycle">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="carbonWindowClass">20</int>
+      <int name="scalingMode">1048576</int>
+      <string name="title"></string>
+      <object name="rootControl" class="IBCarbonRootControl" id="194">
+        <string name="viewFrame">0 0 184 19 </string>
+        <array count="1" name="subviews">
+          <reference idRef="195"/>
+        </array>
+        <string name="bounds">0 0 19 184 </string>
+      </object>
+      <string name="windowRect">668 224 687 408 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <object class="IBCarbonRootControl" id="189">
+      <string name="viewFrame">0 0 136 56 </string>
+      <array count="1" name="subviews">
+        <reference idRef="188"/>
+      </array>
+      <string name="bounds">0 0 56 136 </string>
+    </object>
+    <reference idRef="190"/>
+    <object class="IBCarbonWindow" id="166">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
       <boolean name="toolbarButton">TRUE</boolean>
       <boolean name="compositing">TRUE</boolean>
       <int name="windowPosition">4</int>
-    </object>
-    <reference idRef="167"/>
-    <object class="IBCarbonWindow" id="187">
-      <string name="windowRect">345 447 401 584 </string>
       <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="189">
-        <string name="bounds">0 0 56 137 </string>
-        <string name="viewFrame">0 0 137 56 </string>
-        <array count="1" name="subviews">
-          <object class="IBCarbonStaticText" id="188">
-            <string name="bounds">20 20 36 117 </string>
-            <string name="viewFrame">20 20 97 16 </string>
-            <ostype name="controlSignature">Dims</ostype>
-            <string name="title">-</string>
-            <int name="justification">1</int>
-          </object>
-        </array>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="viewFrame">0 0 675 420 </string>
+        <string name="bounds">0 0 420 675 </string>
       </object>
+      <string name="windowRect">212 206 633 881 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <object class="IBCarbonWindow" id="187">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCloseBox">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
@@ -42,86 +101,32 @@
       <boolean name="isResizable">FALSE</boolean>
       <boolean name="hasVerticalZoom">FALSE</boolean>
       <boolean name="compositing">TRUE</boolean>
+      <boolean name="ignoreClicks">TRUE</boolean>
+      <boolean name="isConstrained">FALSE</boolean>
+      <boolean name="hideOnSuspend">TRUE</boolean>
       <int name="carbonWindowClass">5</int>
       <int name="windowPosition">1</int>
-      <boolean name="ignoreClicks">TRUE</boolean>
-      <boolean name="isConstrained">FALSE</boolean>
-      <boolean name="hideOnSuspend">TRUE</boolean>
-    </object>
-    <reference idRef="188"/>
-    <reference idRef="189"/>
-    <object class="IBCarbonRootControl" id="190">
-      <string name="bounds">0 0 56 137 </string>
-      <string name="viewFrame">0 0 137 56 </string>
-      <array count="1" name="subviews">
-        <object class="IBCarbonStaticText" id="191">
-          <string name="bounds">20 20 36 117 </string>
-          <string name="viewFrame">20 20 97 16 </string>
-          <ostype name="controlSignature">Dims</ostype>
-          <string name="title">-</string>
-          <int name="justification">1</int>
-        </object>
-      </array>
-    </object>
-    <reference idRef="191"/>
-    <object class="IBCarbonWindow" id="192">
-      <string name="windowRect">365 467 421 604 </string>
+      <int name="scalingMode">1048576</int>
       <string name="title"></string>
-      <reference name="rootControl" idRef="190"/>
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="hasCloseBox">FALSE</boolean>
-      <boolean name="hasCollapseBox">FALSE</boolean>
-      <boolean name="hasHorizontalZoom">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="hasVerticalZoom">FALSE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <int name="carbonWindowClass">11</int>
-      <int name="windowPosition">1</int>
-      <boolean name="ignoreClicks">TRUE</boolean>
-      <boolean name="isConstrained">FALSE</boolean>
-      <boolean name="hideOnSuspend">TRUE</boolean>
-    </object>
-    <object class="IBCarbonWindow" id="193">
-      <string name="windowRect">668 224 687 408 </string>
-      <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="194">
-        <string name="bounds">0 0 19 184 </string>
-        <string name="viewFrame">0 0 184 19 </string>
-        <array count="1" name="subviews">
-          <object class="IBCarbonBevelButton" id="195">
-            <string name="bounds">0 0 19 184 </string>
-            <string name="viewFrame">0 0 184 19 </string>
-            <ostype name="controlSignature">TTit</ostype>
-            <string name="title">-</string>
-            <ostype name="command">MTab</ostype>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-          </object>
-        </array>
-      </object>
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="liveResize">TRUE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <int name="carbonWindowClass">20</int>
-      <boolean name="doesNotCycle">TRUE</boolean>
-      <boolean name="inWindowMenu">FALSE</boolean>
+      <reference name="rootControl" idRef="189"/>
+      <string name="windowRect">345 447 401 584 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
     <reference idRef="194"/>
-    <reference idRef="195"/>
+    <reference idRef="167"/>
   </array>
   <array count="11" name="allParents">
-    <reference idRef="1"/>
-    <reference idRef="166"/>
+    <reference idRef="190"/>
+    <reference idRef="194"/>
     <reference idRef="1"/>
     <reference idRef="189"/>
+    <reference idRef="1"/>
     <reference idRef="187"/>
     <reference idRef="192"/>
-    <reference idRef="190"/>
     <reference idRef="1"/>
     <reference idRef="1"/>
     <reference idRef="193"/>
-    <reference idRef="194"/>
+    <reference idRef="166"/>
   </array>
   <dictionary count="5" name="nameTable">
     <string>DimensionsFloater</string>
@@ -135,5 +140,6 @@
     <string>Window</string>
     <reference idRef="166"/>
   </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
   <unsigned_int name="nextObjectID">196</unsigned_int>
 </object>

@@ -1,122 +1,124 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
   <array count="9" name="allObjects">
+    <object class="IBCarbonRoundButton" id="199">
+      <ostype name="controlSignature">Help</ostype>
+      <ostype name="command">?Ctx</ostype>
+      <string name="viewFrame">20 192 21 18 </string>
+      <string name="bounds">192 20 210 41 </string>
+      <int name="contentType">132</int>
+      <int name="iconCreator">1835098995</int>
+      <int name="iconType">1751477360</int>
+    </object>
+    <object class="IBCarbonDBListView" id="264">
+      <ostype name="controlSignature">ALst</ostype>
+      <int name="columnWidth">312</int>
+      <boolean name="variableWidthColumns">FALSE</boolean>
+      <array count="1" name="listViewColumns">
+        <object class="IBCarbonDBListViewColumn">
+          <ostype name="propertyID">Addr</ostype>
+          <int name="propertyFlags">786432</int>
+          <int name="sortOrder">1</int>
+          <int name="maxWidth">312</int>
+          <int name="minWidth">312</int>
+          <int name="textAlignment">0</int>
+        </object>
+      </array>
+      <int name="hiliteStyle">1</int>
+      <int name="selectionFlags">11</int>
+      <boolean name="horzScrollBar">FALSE</boolean>
+      <int name="listViewHeaderBtnHeight">0</int>
+      <string name="viewFrame">116 60 321 110 </string>
+      <string name="bounds">60 116 170 437 </string>
+    </object>
+    <object class="IBCarbonButton" id="197">
+      <ostype name="controlSignature">Done</ostype>
+      <ostype name="command">ok  </ostype>
+      <int name="buttonType">1</int>
+      <string name="title">Done</string>
+      <string name="viewFrame">367 190 70 20 </string>
+      <string name="bounds">190 367 210 437 </string>
+    </object>
+    <object class="IBCarbonIcon" id="266">
+      <ostype name="controlSignature">AppI</ostype>
+      <int name="contentType">132</int>
+      <int name="contentResID">1097887817</int>
+      <int name="creator">1264940615</int>
+      <string name="viewFrame">56 47 32 32 </string>
+      <string name="bounds">47 56 79 88 </string>
+    </object>
+    <object class="IBCarbonButton" id="263">
+      <ostype name="controlSignature">Copy</ostype>
+      <ostype name="command">copy</ostype>
+      <string name="title">Copy to Clipboard</string>
+      <string name="viewFrame">212 190 143 20 </string>
+      <string name="bounds">190 212 210 355 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="267">
+      <ostype name="controlSignature">Main</ostype>
+      <int name="fontStyle">107</int>
+      <string name="title">Your computer has at least the following IP addresses:</string>
+      <int name="justification">-2</int>
+      <string name="viewFrame">104 20 337 32 </string>
+      <string name="bounds">20 104 52 441 </string>
+    </object>
     <object class="IBCarbonWindow" id="166">
-      <string name="windowRect">470 410 700 871 </string>
-      <string name="title">MacTelnet</string>
-      <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="bounds">0 0 230 461 </string>
-        <string name="viewFrame">0 0 461 230 </string>
-        <array count="7" name="subviews">
-          <object class="IBCarbonButton" id="197">
-            <string name="bounds">190 367 210 437 </string>
-            <string name="viewFrame">367 190 70 20 </string>
-            <ostype name="controlSignature">Done</ostype>
-            <string name="title">Done</string>
-            <ostype name="command">ok  </ostype>
-            <int name="buttonType">1</int>
-          </object>
-          <object class="IBCarbonButton" id="263">
-            <string name="bounds">190 212 210 355 </string>
-            <string name="viewFrame">212 190 143 20 </string>
-            <ostype name="controlSignature">Copy</ostype>
-            <string name="title">Copy to Clipboard</string>
-            <ostype name="command">copy</ostype>
-          </object>
-          <object class="IBCarbonRoundButton" id="199">
-            <string name="bounds">192 20 210 41 </string>
-            <string name="viewFrame">20 192 21 18 </string>
-            <ostype name="controlSignature">Help</ostype>
-            <ostype name="command">?Ctx</ostype>
-            <int name="contentType">132</int>
-            <int name="iconType">1751477360</int>
-          </object>
-          <object class="IBCarbonDBListView" id="264">
-            <string name="bounds">60 116 170 437 </string>
-            <string name="viewFrame">116 60 321 110 </string>
-            <ostype name="controlSignature">ALst</ostype>
-            <int name="hiliteStyle">1</int>
-            <int name="columnWidth">312</int>
-            <boolean name="variableWidthColumns">FALSE</boolean>
-            <boolean name="horzScrollBar">FALSE</boolean>
-            <int name="selectionFlags">11</int>
-            <int name="listViewHeaderBtnHeight">0</int>
-            <array count="1" name="listViewColumns">
-              <object class="IBCarbonDBListViewColumn">
-                <ostype name="propertyID">Addr</ostype>
-                <int name="propertyFlags">786432</int>
-                <int name="sortOrder">1</int>
-                <int name="minWidth">312</int>
-                <int name="maxWidth">312</int>
-                <int name="textAlignment">0</int>
-              </object>
-            </array>
-          </object>
-          <object class="IBCarbonStaticText" id="267">
-            <string name="bounds">20 104 52 441 </string>
-            <string name="viewFrame">104 20 337 32 </string>
-            <ostype name="controlSignature">Main</ostype>
-            <int name="fontStyle">107</int>
-            <string name="title">Your computer has at least the following IP addresses:</string>
-            <int name="justification">-2</int>
-          </object>
-          <object class="IBCarbonIcon" id="265">
-            <string name="bounds">15 24 79 88 </string>
-            <string name="viewFrame">24 15 64 64 </string>
-            <ostype name="controlSignature">Note</ostype>
-            <int name="creator">0</int>
-          </object>
-          <object class="IBCarbonIcon" id="266">
-            <string name="bounds">47 56 79 88 </string>
-            <string name="viewFrame">56 47 32 32 </string>
-            <ostype name="controlSignature">AppI</ostype>
-            <int name="contentResID">1097887817</int>
-            <int name="contentType">132</int>
-            <int name="creator">1264940615</int>
-          </object>
-        </array>
-      </object>
       <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCloseBox">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
       <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
       <boolean name="compositing">TRUE</boolean>
-      <int name="carbonWindowClass">4</int>
-      <int name="windowPosition">7</int>
       <boolean name="doesNotCycle">TRUE</boolean>
       <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="carbonWindowClass">4</int>
+      <int name="windowPosition">7</int>
+      <int name="scalingMode">1048576</int>
+      <string name="title">MacTelnet</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="viewFrame">0 0 461 230 </string>
+        <array count="7" name="subviews">
+          <reference idRef="197"/>
+          <reference idRef="263"/>
+          <reference idRef="199"/>
+          <reference idRef="264"/>
+          <reference idRef="267"/>
+          <object class="IBCarbonIcon" id="265">
+            <ostype name="controlSignature">Note</ostype>
+            <int name="creator">0</int>
+            <string name="viewFrame">24 15 64 64 </string>
+            <string name="bounds">15 24 79 88 </string>
+          </object>
+          <reference idRef="266"/>
+        </array>
+        <string name="bounds">0 0 230 461 </string>
+      </object>
+      <string name="windowRect">470 410 700 871 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
     <reference idRef="167"/>
-    <reference idRef="197"/>
-    <reference idRef="199"/>
-    <reference idRef="263"/>
-    <reference idRef="264"/>
     <reference idRef="265"/>
-    <reference idRef="266"/>
-    <reference idRef="267"/>
   </array>
   <array count="9" name="allParents">
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
+    <reference idRef="167"/>
     <reference idRef="1"/>
     <reference idRef="166"/>
     <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
-    <reference idRef="167"/>
   </array>
-  <dictionary count="4" name="nameTable">
+  <dictionary count="2" name="nameTable">
     <string>Dialog</string>
     <reference idRef="166"/>
     <string>File&apos;s Owner</string>
     <reference idRef="1"/>
-    <string>ListView</string>
-    <reference idRef="264"/>
-    <string>NSCustomView11</string>
-    <reference idRef="199"/>
   </dictionary>
-  <unsigned_int name="nextObjectID">268</unsigned_int>
+  <string name="targetFramework">IBCarbonFramework</string>
+  <unsigned_int name="nextObjectID">269</unsigned_int>
 </object>
