@@ -6351,13 +6351,8 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
 						
 						
+						// all values are considered valid for this preference
 						*data = valueFloat32;
-						if (0 == *data)
-						{
-							// failed; make default
-							*data = 0; // arbitrary
-							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
 					}
 					break;
 				

@@ -281,7 +281,7 @@ CommandLine_Init ()
 				
 				
 				TerminalView_GetTheoreticalViewSize(gCommandLineTerminalView, 200/* arbitrary - result is ignored */,
-													1/* number of rows */, true/* include insets */, &ignoredWidth, &height);
+													1/* number of rows */, &ignoredWidth, &height);
 				// TEMPORARY: do not offset the origin yet, because the terminal view currently has
 				// known problems rendering its interior if it is moved away from the window origin
 				//floatBounds.origin.y += (floatBounds.size.height - STATIC_CAST(height, Float32)) / 2.0;

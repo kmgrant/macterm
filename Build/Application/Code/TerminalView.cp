@@ -263,6 +263,14 @@ struct TerminalView
 		SInt16			maxViewHeightInPixels;		//   always identical to the maximum dimensions of the content view
 		SInt16			maxWidthInPixels;			// the largest size the terminal view content area can possibly have, which
 		SInt16			maxHeightInPixels;			//   would display every last line of the visible screen *and* scrollback!
+		Float32			paddingLeftEmScale;			// left padding between text and focus ring; multiplies against normal (undoubled) character width
+		Float32			paddingRightEmScale;		// right padding between text and focus ring; multiplies against normal (undoubled) character width
+		Float32			paddingTopEmScale;			// top padding between text and focus ring; multiplies against normal (undoubled) character height
+		Float32			paddingBottomEmScale;		// bottom padding between text and focus ring; multiplies against normal (undoubled) character height
+		Float32			marginLeftEmScale;			// left margin between focus ring and container edge; multiplies against normal (undoubled) character width
+		Float32			marginRightEmScale;			// right margin between focus ring and container edge; multiplies against normal (undoubled) character width
+		Float32			marginTopEmScale;			// top margin between focus ring and container edge; multiplies against normal (undoubled) character height
+		Float32			marginBottomEmScale;		// bottom margin between focus ring and container edge; multiplies against normal (undoubled) character height
 	} screen;
 	
 	struct
@@ -1002,8 +1010,7 @@ TerminalView_GetFontAndSize		(TerminalViewRef	inView,
 
 
 /*!
-Retrieves the view’s best dimensions in pixels,
-optionally including the insets (margins), given
+Retrieves the view’s best dimensions in pixels, given
 the current font metrics and screen dimensions.
 Returns true only if successful.
 
@@ -1011,7 +1018,6 @@ Returns true only if successful.
 */
 Boolean
 TerminalView_GetIdealSize	(TerminalViewRef	inView,
-							 Boolean			inIncludeInsets,
 							 SInt16&			outWidthInPixels,
 							 SInt16&			outHeightInPixels)
 {
@@ -1019,65 +1025,14 @@ TerminalView_GetIdealSize	(TerminalViewRef	inView,
 	Boolean					result = false;
 	
 	
-	if (viewPtr != nullptr)
+	if (nullptr != viewPtr)
 	{
-		Point	topLeftInsets;
-		Point	bottomRightInsets;
-		
-		
-		if (inIncludeInsets)
-		{
-			TerminalView_GetInsets(&topLeftInsets, &bottomRightInsets);
-		}
-		else
-		{
-			SetPt(&topLeftInsets, 0, 0);
-			SetPt(&bottomRightInsets, 0, 0);
-		}
-		
-		outWidthInPixels = topLeftInsets.h + viewPtr->screen.viewWidthInPixels + bottomRightInsets.h;
-		outHeightInPixels = topLeftInsets.v + viewPtr->screen.viewHeightInPixels + bottomRightInsets.v;
-		
+		outWidthInPixels = viewPtr->screen.viewWidthInPixels;
+		outHeightInPixels = viewPtr->screen.viewHeightInPixels;
 		result = true;
 	}
-	
 	return result;
 }// GetIdealSize
-
-
-/*!
-Returns the screen insets.  These are the pixel offsets
-from the edges of the maximum “viewable area” that define
-the padding between the absolute edge of the screen and
-the outer rows and columns of text.  Without insets, the
-text would be flush against the edges of the screen, which
-can be very annoying and can make it harder to select text.
-
-All of the insets are generally positive numbers.  If the
-insets were negative, the screen text would get clipped at
-its edges.
-
-The top-left insets are measured intuitively relative to
-the top-left corner of the screen area.
-
-The bottom-right insets are expressed positively!!!  The
-horizontal value refers to a number of pixels to the left
-of the rightmost edge, and similarly the vertical value
-refers to a number of pixels above the bottom edge.
-
-(3.0)
-*/
-void
-TerminalView_GetInsets	(Point*		outTopLeftInsetOrNull,
-						 Point*		outBottomRightInsetOrNull)
-{
-	// NOTE: Insets shouldn’t be TOO large (i.e. comparable to the size of a character),
-	//       because then the user might mistake the padding for an empty row or column.
-	//       Also, it’s generally more aesthetically pleasing if the width is larger
-	//       than the height.
-	if (outTopLeftInsetOrNull != nullptr) SetPt(outTopLeftInsetOrNull, 6, 5);
-	if (outBottomRightInsetOrNull != nullptr) SetPt(outBottomRightInsetOrNull, 6, 5);
-}// GetInsets
 
 
 /*!
@@ -1216,11 +1171,7 @@ TerminalView_GetSelectedTextAsVirtualRange	(TerminalViewRef			inView,
 Calculates the number of rows and columns that the
 specified screen, using its current font metrics,
 would require in order to best fit the specified
-width and height in pixels.  You may optionally
-include the insets (margins) in your pixel values -
-if you do, the size of each inset will be subtracted
-from the width and height you specify before the
-row and column counts are determined.
+width and height in pixels.
 
 The inverse of this routine is
 TerminalView_GetTheoreticalViewSize().
@@ -1231,34 +1182,27 @@ void
 TerminalView_GetTheoreticalScreenDimensions		(TerminalViewRef	inView,
 												 SInt16				inWidthInPixels,
 												 SInt16				inHeightInPixels,
-												 Boolean			inIncludeInsets,
 												 UInt16*			outColumnCount,
 												 UInt16*			outRowCount)
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	Float32					highPrecision = 0.0;
 	
 	
-	if (viewPtr != nullptr)
-	{
-		Point   topLeftInsets;
-		Point   bottomRightInsets;
-		
-		
-		if (inIncludeInsets)
-		{
-			TerminalView_GetInsets(&topLeftInsets, &bottomRightInsets);
-		}
-		else
-		{
-			SetPt(&topLeftInsets, 0, 0);
-			SetPt(&bottomRightInsets, 0, 0);
-		}
-		
-		*outColumnCount = (inWidthInPixels - topLeftInsets.h - bottomRightInsets.h) / viewPtr->text.font.widthPerCharacter;
-		*outRowCount = (inHeightInPixels - topLeftInsets.v - bottomRightInsets.v) / viewPtr->text.font.heightPerCharacter;
-		if (*outColumnCount < 1) *outColumnCount = 1;
-		if (*outRowCount < 1) *outRowCount = 1;
-	}
+	// Remove padding, border and margins before scaling remainder to find number of characters.
+	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalViewSize().
+	highPrecision = STATIC_CAST(inWidthInPixels, Float32) / STATIC_CAST(viewPtr->text.font.widthPerCharacter, Float32);
+	highPrecision -= (viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
+						+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale);
+	*outColumnCount = STATIC_CAST(highPrecision, UInt16);
+	if (*outColumnCount < 1) *outColumnCount = 1;
+	highPrecision = inHeightInPixels
+					- STATIC_CAST(viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
+									+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale, Float32)
+						* STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, because this is an “em” scale factor */, Float32);
+	highPrecision /= STATIC_CAST(viewPtr->text.font.heightPerCharacter, Float32);
+	*outRowCount = STATIC_CAST(highPrecision, UInt16);
+	if (*outRowCount < 1) *outRowCount = 1;
 }// GetTheoreticalScreenDimensions
 
 
@@ -1266,11 +1210,7 @@ TerminalView_GetTheoreticalScreenDimensions		(TerminalViewRef	inView,
 Calculates the width and height in pixels that the
 specified screen would have if, using its current
 font metrics, its dimensions were the specified
-number of rows and columns.  You may optionally
-include the insets (margins) in the calculations -
-no margins means the screen size is a precise
-multiple of the width and height of a character in
-the screen’s font.
+number of rows and columns.
 
 The inverse of this routine is
 TerminalView_GetTheoreticalScreenDimensions().
@@ -1281,36 +1221,24 @@ void
 TerminalView_GetTheoreticalViewSize		(TerminalViewRef	inView,
 										 UInt16				inColumnCount,
 										 UInt16				inRowCount,
-										 Boolean			inIncludeInsets,
 										 SInt16*			outWidthInPixels,
 										 SInt16*			outHeightInPixels)
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	Float32					highPrecision = 0.0;
 	
 	
-	if (viewPtr != nullptr)
-	{
-		Point		topLeftInsets;
-		Point		bottomRightInsets;
-		UInt16		screenWidth = 0;
-		UInt16		screenHeight = 0;
-		
-		
-		if (inIncludeInsets)
-		{
-			TerminalView_GetInsets(&topLeftInsets, &bottomRightInsets);
-		}
-		else
-		{
-			SetPt(&topLeftInsets, 0, 0);
-			SetPt(&bottomRightInsets, 0, 0);
-		}
-		
-		screenWidth = inColumnCount * viewPtr->text.font.widthPerCharacter;
-		screenHeight = inRowCount * viewPtr->text.font.heightPerCharacter;
-		*outWidthInPixels = topLeftInsets.h + screenWidth + bottomRightInsets.h;
-		*outHeightInPixels = topLeftInsets.v + screenHeight + bottomRightInsets.v;
-	}
+	// Incorporate the rectangle required for this amount of text, plus padding, border and margins.
+	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalScreenDimensions().
+	highPrecision = inColumnCount + viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
+					+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale;
+	highPrecision *= viewPtr->text.font.widthPerCharacter;
+	*outWidthInPixels = STATIC_CAST(highPrecision, SInt16);
+	highPrecision = STATIC_CAST(inRowCount, Float32) * STATIC_CAST(viewPtr->text.font.heightPerCharacter, Float32);
+	highPrecision += STATIC_CAST(viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
+									+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale, Float32)
+						* viewPtr->text.font.widthPerCharacter; // yes, width, because this is an “em” scale factor
+	*outHeightInPixels = STATIC_CAST(highPrecision, SInt16);
 }// GetTheoreticalViewSize
 
 
@@ -2927,6 +2855,36 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
 	this->screen.currentRenderContext = nullptr;
 	
+	// read user preferences for paddings
+	{
+		Preferences_Result	preferencesResult = kPreferences_ResultOK;
+		
+		
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalPaddingLeft,
+														sizeof(this->screen.paddingLeftEmScale), &this->screen.paddingLeftEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalPaddingRight,
+														sizeof(this->screen.paddingRightEmScale), &this->screen.paddingRightEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalPaddingTop,
+														sizeof(this->screen.paddingTopEmScale), &this->screen.paddingTopEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalPaddingBottom,
+														sizeof(this->screen.paddingBottomEmScale), &this->screen.paddingBottomEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		
+		// currently, no special preferences are defined for margin, so use the
+		// same values as the corresponding inner padding
+		this->screen.marginLeftEmScale = this->screen.paddingLeftEmScale;
+		this->screen.marginRightEmScale = this->screen.paddingRightEmScale;
+		this->screen.marginTopEmScale = this->screen.paddingTopEmScale;
+		this->screen.marginBottomEmScale = this->screen.paddingBottomEmScale;
+	}
+	
 	// copy font defaults
 	{
 		Preferences_Result	preferencesResult = kPreferences_ResultOK;
@@ -3028,20 +2986,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 																kEventControlContextualMenuClick),
 										REINTERPRET_CAST(this, TerminalViewRef)/* user data */);
 	assert(this->contextualMenuHandler.isInstalled());
-	
-	// once embedded, offset the content pane; this initializes the top-left inset, and
-	// ensures that the offset will remain forever (if the parent view is ever moved,
-	// the child is also offset by the same amount, so the relative position is the same)
-#if 1
-	{
-		Point	insetsTopLeft;
-		Point	insetsBottomRight;
-		
-		
-		TerminalView_GetInsets(&insetsTopLeft, &insetsBottomRight);
-		HIViewPlaceInSuperviewAt(this->contentHIView, insetsTopLeft.h, insetsTopLeft.v);
-	}
-#endif
 	
 	// show all HIViews
 	HIViewSetVisible(this->encompassingHIView, true/* visible */);
@@ -5662,8 +5606,6 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	TerminalViewRef			view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
 	HIRect					terminalViewBounds;
-	Point					insetsTopLeft;
-	Point					insetsBottomRight;
 	
 	
 	// get view’s boundaries, synchronize background picture with that size
@@ -5671,10 +5613,9 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	HIViewSetFrame(viewPtr->backgroundHIView, &terminalViewBounds);
 	
 	// determine the view size within its parent
-	TerminalView_GetInsets(&insetsTopLeft, &insetsBottomRight);
 	{
-		Float32 const	kMaximumViewWidth = terminalViewBounds.size.width - insetsBottomRight.h - insetsTopLeft.h;
-		Float32 const	kMaximumViewHeight = terminalViewBounds.size.height - insetsBottomRight.v - insetsTopLeft.v;
+		Float32 const	kMaximumViewWidth = terminalViewBounds.size.width;
+		Float32 const	kMaximumViewHeight = terminalViewBounds.size.height; 
 		
 		
 		// if the display mode is zooming, choose a font size to fill the new boundaries
@@ -5746,7 +5687,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			// normal mode; resize the underlying terminal screen
 			TerminalView_GetTheoreticalScreenDimensions(view, STATIC_CAST(kMaximumViewWidth, UInt16),
 														STATIC_CAST(kMaximumViewHeight, UInt16),
-														false/* include insets */, &columns, &rows);
+														&columns, &rows);
 			Terminal_SetVisibleColumnCount(viewPtr->screen.ref, columns);
 			Terminal_SetVisibleRowCount(viewPtr->screen.ref, rows);
 			recalculateCachedDimensions(viewPtr);

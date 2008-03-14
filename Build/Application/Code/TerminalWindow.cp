@@ -1080,7 +1080,7 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 	// set the standard state to be large enough for the current font and size;
 	// and, set window dimensions to this new standard size
 	TerminalView_GetIdealSize(activeView/* TEMPORARY - must consider a list of views */,
-								true/* include insets */, screenWidth, screenHeight);
+								screenWidth, screenHeight);
 	setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
 }// SetFontAndSize
 
@@ -1187,7 +1187,7 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 		assert(kTerminalView_ResultOK == viewResult);
 		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
 											inNewColumnCount, inNewRowCount,
-											true/* include insets */, &screenWidth, &screenHeight);
+											&screenWidth, &screenHeight);
 		setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
 		viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
 		assert(kTerminalView_ResultOK == viewResult);
@@ -1844,7 +1844,7 @@ installedActions()
 		
 		
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
-											columns, rows, true/* include insets */, &screenWidth, &screenHeight);
+											columns, rows, &screenWidth, &screenHeight);
 		setStandardState(this, screenWidth, screenHeight, true/* resize window */);
 	}
 	
@@ -2957,21 +2957,15 @@ getViewSizeFromWindowSize	(TerminalWindowPtr	inPtr,
 							 SInt16*			outScreenInteriorWidthInPixels,
 							 SInt16*			outScreenInteriorHeightInPixels)
 {
-	Point	insetsTopLeft;
-	Point   insetsBottomRight;
-	
-	
-	TerminalView_GetInsets(&insetsTopLeft, &insetsBottomRight);
-	if (outScreenInteriorWidthInPixels != nullptr)
+	if (nullptr != outScreenInteriorWidthInPixels)
 	{
-		*outScreenInteriorWidthInPixels = inWindowContentWidthInPixels - insetsTopLeft.h - insetsBottomRight.h -
-											TerminalWindow_ReturnScrollBarWidth() + 2/* double the frame width */;
+		*outScreenInteriorWidthInPixels = inWindowContentWidthInPixels -
+											TerminalWindow_ReturnScrollBarWidth();
 	}
-	if (outScreenInteriorHeightInPixels != nullptr)
+	if (nullptr != outScreenInteriorHeightInPixels)
 	{
-		*outScreenInteriorHeightInPixels = inWindowContentHeightInPixels - insetsTopLeft.v - insetsBottomRight.v -
-											getStatusBarHeight(inPtr) - getToolbarHeight(inPtr) -
-											TerminalWindow_ReturnScrollBarHeight() + 2/* double the frame width */;
+		*outScreenInteriorHeightInPixels = inWindowContentHeightInPixels - getStatusBarHeight(inPtr) - getToolbarHeight(inPtr) -
+											TerminalWindow_ReturnScrollBarHeight();
 	}
 }// getViewSizeFromWindowSize
 
@@ -2997,21 +2991,16 @@ getWindowSizeFromViewSize	(TerminalWindowPtr	inPtr,
 							 SInt16*			outWindowContentWidthInPixels,
 							 SInt16*			outWindowContentHeightInPixels)
 {
-	Point	insetsTopLeft,
-			insetsBottomRight;
-	
-	
-	TerminalView_GetInsets(&insetsTopLeft, &insetsBottomRight);
-	if (outWindowContentWidthInPixels != nullptr)
+	if (nullptr != outWindowContentWidthInPixels)
 	{
-		*outWindowContentWidthInPixels = inScreenInteriorWidthInPixels + insetsTopLeft.h + insetsBottomRight.h +
-											TerminalWindow_ReturnScrollBarWidth() - 2/* double the frame width */;
+		*outWindowContentWidthInPixels = inScreenInteriorWidthInPixels +
+											TerminalWindow_ReturnScrollBarWidth();
 	}
-	if (outWindowContentHeightInPixels != nullptr)
+	if (nullptr != outWindowContentHeightInPixels)
 	{
-		*outWindowContentHeightInPixels = inScreenInteriorHeightInPixels + insetsTopLeft.v + insetsBottomRight.v +
+		*outWindowContentHeightInPixels = inScreenInteriorHeightInPixels +
 											getStatusBarHeight(inPtr) + getToolbarHeight(inPtr) +
-											TerminalWindow_ReturnScrollBarHeight() - 2/* double the frame width */;
+											TerminalWindow_ReturnScrollBarHeight();
 	}
 }// getWindowSizeFromViewSize
 

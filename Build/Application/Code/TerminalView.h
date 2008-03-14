@@ -427,14 +427,8 @@ void
 
 Boolean
 	TerminalView_GetIdealSize					(TerminalViewRef			inView,
-												 Boolean					inIncludeInsets,
 												 SInt16&					outWidthInPixels,
 												 SInt16&					outHeightInPixels);
-
-// THE BOTTOM-RIGHT INSETS ARE GIVEN AS POSITIVE NUMBERS, MEASURED UP AND TO THE LEFT FROM THE BOTTOM-RIGHT CORNER
-void
-	TerminalView_GetInsets						(Point*						outTopLeftInsetOrNull,
-												 Point*						outBottomRightInsetOrNull);
 
 TerminalView_Result
 	TerminalView_GetRange						(TerminalViewRef			inView,
@@ -446,7 +440,6 @@ void
 	TerminalView_GetTheoreticalScreenDimensions	(TerminalViewRef			inView,
 												 SInt16						inWidthInPixels,
 												 SInt16						inHeightInPixels,
-												 Boolean					inIncludeInsets,
 												 UInt16*					outColumnCount,
 												 UInt16*					outRowCount);
 
@@ -454,7 +447,6 @@ void
 	TerminalView_GetTheoreticalViewSize			(TerminalViewRef			inView,
 												 UInt16						inColumnCount,
 												 UInt16						inRowCount,
-												 Boolean					inIncludeInsets,
 												 SInt16*					outWidthInPixels,
 												 SInt16*					outHeightInPixels);
 
