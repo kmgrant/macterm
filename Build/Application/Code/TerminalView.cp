@@ -404,8 +404,8 @@ static void				setUpScreenFontMetrics			(TerminalViewPtr);
 static void				sortAnchors						(TerminalView_Cell&, TerminalView_Cell&, Boolean);
 static pascal OSErr		supplyTextSelectionToDrag		(FlavorType, void*, DragItemRef, DragRef);
 static void				trackTextSelection				(TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
-static void				useTerminalTextAttributes		(TerminalViewPtr, TerminalTextAttributes);
-static void				useTerminalTextColors			(TerminalViewPtr, TerminalTextAttributes, Boolean = true);
+static void				useTerminalTextAttributes		(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
+static void				useTerminalTextColors			(TerminalViewPtr, CGContextRef, TerminalTextAttributes, Boolean = true);
 static void				visualBell						(TerminalViewRef);
 
 #pragma mark Variables
@@ -4145,7 +4145,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 		// whether or not the text should be drawn double-width or as VT graphics
 		// glyphs (this is because pseudo-font-sizes and other tricks are used
 		// to communicate terminal mode information through the QuickDraw port)
-		useTerminalTextAttributes(inTerminalViewPtr, inAttributes);
+		useTerminalTextAttributes(inTerminalViewPtr, inDrawingContext, inAttributes);
 		
 		// get current font information (used to determine what the text should
 		// look like - including “pseudo-font” and “pseudo-font-size” values
@@ -4626,7 +4626,7 @@ eraseSection	(TerminalViewPtr	inTerminalViewPtr,
 		}
 		else
 		{
-			useTerminalTextColors(inTerminalViewPtr, 0/* attributes */, false/* set text color */);
+			useTerminalTextColors(inTerminalViewPtr, inDrawingContext, 0/* attributes */, false/* set text color */);
 		}
 		EraseRect(&rect);
 	}
@@ -9387,21 +9387,26 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 
 
 /*!
-Sets the QuickDraw background color and pattern settings
-(and ONLY those settings) of the current port, based on
-the requested attributes and the active state of the
-terminal’s container view.
+Sets the background color and pattern settings (and ONLY those
+settings) of the current QuickDraw port and the specified
+Core Graphics port, based on the requested attributes and the
+active state of the terminal’s container view.
 
 If "inUseForegroundColor" is set to "true", the appropriate
-text color will also be set up; otherwise, only the
-background is changed.
+text color will also be set up; otherwise, only the background
+is changed.
 
 In general, only style and dimming affect color.
 
-(3.0)
+IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
+			may not completely update the context with all
+			necessary parameters.
+
+(3.1)
 */
 static void
 useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
+						 CGContextRef				inDrawingContext,
 						 TerminalTextAttributes		inAttributes,
 						 Boolean					inUseForegroundColor)
 {
@@ -9519,27 +9524,31 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
-Sets the screen variable for the current text attributes
-to be the specified attributes, and sets the QuickDraw
-settings appropriately for the requested attributes (text
-font, size, style, color, inverse video, etc.).
+Sets the screen variable for the current text attributes to be
+the specified attributes, and sets QuickDraw and Core Graphics
+settings appropriately for the requested attributes (text font,
+size, style, color, inverse video, etc.).
 
-IMPORTANT:	This is ONLY for use by drawTerminalText(),
-			in order to set up the current port properly.
-			Note that certain modes (such as VT graphics
-			and double-size text) are communicated to
-			drawTerminalText() through special font sizes,
-			etc. so calling this routine does NOT
-			necessarily leave the current port in a state
-			where normal QuickDraw calls could render
-			terminal text as expected.  Use only the
-			drawTerminalText() method for rendering text
+IMPORTANT:	This is ONLY for use by drawTerminalText(), in
+			order to set up the drawing port properly.  Note
+			that certain modes (such as VT graphics and
+			double-size text) are communicated to
+			drawTerminalText() through special font sizes;
+			so calling this routine does NOT necessarily leave
+			the drawing port in a state where normal calls
+			could render terminal text as expected.  Use only
+			the drawTerminalText() method for rendering text
 			and graphics, that’s what it’s there for!
 
-(3.0)
+IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
+			may not completely update the context with all
+			necessary parameters.
+
+(3.1)
 */
 static void
 useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
+							 CGContextRef				inDrawingContext,
 							 TerminalTextAttributes		inAttributes)
 {
 	//static CGrafPtr	lastPort = nullptr;
@@ -9671,7 +9680,7 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 		PenMode(patCopy);
 		
 		// set up port to use the right colors based on the text attributes
-		useTerminalTextColors(inTerminalViewPtr, inAttributes);
+		useTerminalTextColors(inTerminalViewPtr, inDrawingContext, inAttributes);
 	}
 }// useTerminalTextAttributes
 
