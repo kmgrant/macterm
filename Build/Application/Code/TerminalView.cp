@@ -1027,8 +1027,21 @@ TerminalView_GetIdealSize	(TerminalViewRef	inView,
 	
 	if (nullptr != viewPtr)
 	{
-		outWidthInPixels = viewPtr->screen.viewWidthInPixels;
-		outHeightInPixels = viewPtr->screen.viewHeightInPixels;
+		Float32		highPrecision = 0;
+		
+		
+		highPrecision = viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
+						+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale;
+		highPrecision *= viewPtr->text.font.widthPerCharacter;
+		highPrecision += viewPtr->screen.viewWidthInPixels;
+		outWidthInPixels = STATIC_CAST(highPrecision, SInt16);
+		
+		highPrecision = viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
+						+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale;
+		highPrecision *= viewPtr->text.font.widthPerCharacter; // yes, width, because this is an “em” scale factor
+		highPrecision += viewPtr->screen.viewHeightInPixels;
+		outHeightInPixels = STATIC_CAST(highPrecision, SInt16);
+		
 		result = true;
 	}
 	return result;
@@ -1190,7 +1203,7 @@ TerminalView_GetTheoreticalScreenDimensions		(TerminalViewRef	inView,
 	
 	
 	// Remove padding, border and margins before scaling remainder to find number of characters.
-	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalViewSize().
+	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalViewSize() and TerminalView_GetIdealSize().
 	highPrecision = STATIC_CAST(inWidthInPixels, Float32) / STATIC_CAST(viewPtr->text.font.widthPerCharacter, Float32);
 	highPrecision -= (viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
 						+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale);
@@ -1229,7 +1242,7 @@ TerminalView_GetTheoreticalViewSize		(TerminalViewRef	inView,
 	
 	
 	// Incorporate the rectangle required for this amount of text, plus padding, border and margins.
-	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalScreenDimensions().
+	// IMPORTANT: Synchronize this with TerminalView_GetTheoreticalScreenDimensions() and TerminalView_GetIdealSize().
 	highPrecision = inColumnCount + viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
 					+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale;
 	highPrecision *= viewPtr->text.font.widthPerCharacter;

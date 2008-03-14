@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080314',
     '20080313',
     '20080312',
     '20080311',
@@ -108,9 +109,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080314': [
+		'Fixed calculation of ideal terminal view size, which affected the dimensions chosen by commands such as Make Text Bigger.',
+	],
 	'20080313': [
 		'Fixed calculations that set terminal view size based on screen dimensions, to no longer lose a row or column in some cases.',
-		'Terminal views now read terminal padding preferences (hidden, but accessible through the "defaults" program) when setting matte thickness.'
+		'Terminal views now read terminal padding preferences (hidden, but accessible through the "defaults" program) when setting matte thickness.',
 	],
 	'20080312': [
 		'Fixed seemingly random display glitches, traced to a corner case in processing CSI parameters.',
