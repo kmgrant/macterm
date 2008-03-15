@@ -63,6 +63,7 @@
 #include "ListenerModel.h"
 
 // MacTelnet includes
+#include "Preferences.h"
 #include "SessionRef.typedef.h"
 #include "TerminalSpeaker.h"
 #include "TerminalTextAttributes.typedef.h"
@@ -304,12 +305,7 @@ Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
 //@{
 
 Terminal_Result
-	Terminal_NewScreen						(Terminal_Emulator			inEmulation,
-											 CFStringRef				inAnswerBack,
-											 SInt16						inLineCountScrollBackBuffer,
-											 SInt16						inLineCountVisibleRows,
-											 SInt16						inMaximumColumnCount,
-											 Boolean					inForceLineSaving,
+	Terminal_NewScreen						(Preferences_ContextRef		inTerminalConfig,
 											 TerminalScreenRef*			outScreenPtr);
 
 SInt16

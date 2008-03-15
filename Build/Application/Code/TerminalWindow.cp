@@ -1660,9 +1660,6 @@ installedActions()
 {
 	TerminalScreenRef		newScreen = nullptr;
 	TerminalViewRef			newView = nullptr;
-	UInt16					columns = 0;
-	UInt16					rows = 0;
-	UInt16					scrollbackRows = 0;
 	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
 	
@@ -1681,17 +1678,6 @@ installedActions()
 		assert(kPreferences_ResultOK == preferencesResult);
 		assert(nullptr != inFontInfoOrNull);
 	}
-	
-	// copy size defaults from preferences
-	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenColumns,
-													sizeof(columns), &columns);
-	if (kPreferences_ResultOK != preferencesResult) columns = 80; // arbitrary
-	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenRows,
-													sizeof(rows), &rows);
-	if (kPreferences_ResultOK != preferencesResult) rows = 24; // arbitrary
-	preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalScreenScrollbackRows,
-													sizeof(scrollbackRows), &scrollbackRows);
-	if (kPreferences_ResultOK != preferencesResult) scrollbackRows = 200; // arbitrary
 	
 	// set up Window Info; it is important to do this right away
 	// because this is relied upon by other code to find the
@@ -1727,22 +1713,9 @@ installedActions()
 	// create controls
 	{
 		Terminal_Result		terminalError = kTerminal_ResultOK;
-		Terminal_Emulator	emulationType = kTerminal_EmulatorVT102;
-		CFStringRef			answerBackCFString = nullptr;
-		Boolean				forceSave = false;
 		
 		
-		// find some defaults...
-		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalClearSavesLines,
-														sizeof(forceSave), &forceSave);
-		if (kPreferences_ResultOK != preferencesResult) forceSave = true; // arbitrary
-		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalEmulatorType,
-														sizeof(emulationType), &emulationType);
-		if (kPreferences_ResultOK != preferencesResult) emulationType = kTerminal_EmulatorVT102; // arbitrary
-		preferencesResult = Preferences_ContextGetData(inTerminalInfoOrNull, kPreferences_TagTerminalAnswerBackMessage,
-														sizeof(answerBackCFString), &answerBackCFString);
-		
-		terminalError = Terminal_NewScreen(emulationType, answerBackCFString, scrollbackRows, rows, columns, forceSave, &newScreen);
+		terminalError = Terminal_NewScreen(inTerminalInfoOrNull, &newScreen);
 		if (terminalError == kTerminal_ResultOK)
 		{
 			newView = TerminalView_NewHIViewBased(newScreen, inFontInfoOrNull);
@@ -1838,13 +1811,16 @@ installedActions()
 	// set the standard state to be large enough for the specified number of columns and rows;
 	// and, use the standard size, initially; then, perform a maximize/restore to correct the
 	// initial-zoom quirk that would otherwise occur
+	assert(nullptr != newScreen);
+	if (nullptr != newScreen)
 	{
 		SInt16		screenWidth = 0;
 		SInt16		screenHeight = 0;
 		
 		
 		TerminalView_GetTheoreticalViewSize(getActiveView(this)/* TEMPORARY - must consider a list of views */,
-											columns, rows, &screenWidth, &screenHeight);
+											Terminal_ReturnColumnCount(newScreen), Terminal_ReturnRowCount(newScreen),
+											&screenWidth, &screenHeight);
 		setStandardState(this, screenWidth, screenHeight, true/* resize window */);
 	}
 	

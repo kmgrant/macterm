@@ -209,9 +209,10 @@ CommandLine_Init ()
 	
 	// create the terminal view
 	{
-		Terminal_Result		terminalError = kTerminal_ResultOK;
-		Rect				bounds;
-		HIRect				floatBounds;
+		Preferences_ContextRef	terminalConfig = nullptr;
+		Terminal_Result			terminalError = kTerminal_ResultOK;
+		Rect					bounds;
+		HIRect					floatBounds;
 		
 		
 		// get the proper rectangle from the NIB; but NOTE, although the NIB-based
@@ -223,8 +224,39 @@ CommandLine_Init ()
 		DisposeControl(gCommandLineTerminalViewContainer), gCommandLineTerminalViewContainer.clear();
 		floatBounds = CGRectMake(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
 		
-		terminalError = Terminal_NewScreen(kTerminal_EmulatorVT100, CFSTR("vt100"), 0/* number of scrollback rows */, 1/* number of rows */,
-											132/* number of columns */, false/* force save */, &gCommandLineTerminalScreen);
+		terminalConfig = Preferences_NewDetachedContext(kPreferences_ClassTerminal);
+		assert(nullptr != terminalConfig);
+		
+		if (nullptr != terminalConfig)
+		{
+			// set up the terminal
+			Terminal_Emulator const		kTerminalType = kTerminal_EmulatorVT100;
+			UInt16 const				kColumnCount = 132;
+			UInt16 const				kRowCount = 1;
+			UInt16 const				kScrollbackSize = 0;
+			Boolean const				kForceSave = false;
+			Preferences_Result			prefsResult = kPreferences_ResultOK;
+			
+			
+			prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalEmulatorType,
+														sizeof(kTerminalType), &kTerminalType);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalScreenColumns,
+														sizeof(kColumnCount), &kColumnCount);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalScreenRows,
+														sizeof(kRowCount), &kRowCount);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalScreenScrollbackRows,
+														sizeof(kScrollbackSize), &kScrollbackSize);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalClearSavesLines,
+														sizeof(kForceSave), &kForceSave);
+			assert(kPreferences_ResultOK == prefsResult);
+		}
+		
+		// create the screen
+		terminalError = Terminal_NewScreen(terminalConfig, &gCommandLineTerminalScreen);
 		if (kTerminal_ResultOK == terminalError)
 		{
 			Preferences_ContextRef	terminalFormat = Preferences_NewDetachedContext(kPreferences_ClassFormat);
@@ -295,6 +327,7 @@ CommandLine_Init ()
 			
 			if (nullptr != terminalFormat) Preferences_ReleaseContext(&terminalFormat);
 		}
+		Preferences_ReleaseContext(&terminalConfig);
 	}
 	
 	// find references to all controls that are needed for any operation

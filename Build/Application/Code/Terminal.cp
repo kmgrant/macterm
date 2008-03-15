@@ -535,9 +535,28 @@ typedef My_Emulator*	My_EmulatorPtr;
 struct My_ScreenBuffer
 {
 public:
-	My_ScreenBuffer	(Terminal_Emulator, CFStringRef, SInt16, SInt16, SInt16, Boolean);
+	My_ScreenBuffer	(Preferences_ContextRef);
 	~My_ScreenBuffer ();
 	
+	CFStringRef
+	returnAnswerBackMessage		(Preferences_ContextRef);
+	
+	Terminal_Emulator
+	returnEmulator		(Preferences_ContextRef);
+	
+	Boolean
+	returnForceSave		(Preferences_ContextRef);
+	
+	UInt16
+	returnScreenColumns		(Preferences_ContextRef);
+	
+	UInt16
+	returnScreenRows		(Preferences_ContextRef);
+	
+	UInt16
+	returnScrollbackRows	(Preferences_ContextRef);
+	
+	Preferences_ContextRef				configuration;
 	My_Emulator							emulator;					//!< handles all parsing of the data stream
 	SessionRef							listeningSession;			//!< may be nullptr; the currently attached session, where certain terminal reports are sent
 	
@@ -1002,13 +1021,8 @@ if there is a serious problem creating the screen
 (3.0)
 */
 Terminal_Result
-Terminal_NewScreen	(Terminal_Emulator		inEmulation,
-					 CFStringRef			inAnswerBack,
-					 SInt16					inLineCountScrollbackBuffer,
-					 SInt16					inLineCountVisibleRows,
-					 SInt16					inMaximumColumnCount,
-					 Boolean				inForceLineSaving,
-					 TerminalScreenRef*		outScreenPtr)
+Terminal_NewScreen	(Preferences_ContextRef		inTerminalConfig,
+					 TerminalScreenRef*			outScreenPtr)
 {
 	Terminal_Result		result = kTerminal_ResultOK;
 	
@@ -1018,10 +1032,7 @@ Terminal_NewScreen	(Terminal_Emulator		inEmulation,
 	{
 		try
 		{
-			*outScreenPtr = REINTERPRET_CAST(new My_ScreenBuffer(inEmulation, inAnswerBack,
-																	inLineCountScrollbackBuffer, inLineCountVisibleRows,
-																	inMaximumColumnCount, inForceLineSaving),
-												TerminalScreenRef);
+			*outScreenPtr = REINTERPRET_CAST(new My_ScreenBuffer(inTerminalConfig), TerminalScreenRef);
 		}
 		catch (std::bad_alloc)
 		{
@@ -4163,15 +4174,11 @@ Throws a Terminal_Result if any problems occur.
 (3.0)
 */
 My_ScreenBuffer::
-My_ScreenBuffer	(Terminal_Emulator	inEmulation,
-				 CFStringRef		inAnswerBack,
-				 SInt16				inLineCountScrollbackBuffer,
-				 SInt16				inLineCountVisibleRows,
-				 SInt16				inMaximumColumnCount,
-				 Boolean			inForceLineSaving)
+My_ScreenBuffer	(Preferences_ContextRef		inTerminalConfig)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-emulator(inEmulation, inAnswerBack),
+configuration(Preferences_NewCloneContext(inTerminalConfig, true/* detach */)),
+emulator(returnEmulator(inTerminalConfig), returnAnswerBackMessage(inTerminalConfig)),
 listeningSession(nullptr),
 speaker(nullptr),
 windowTitleCFString(),
@@ -4189,7 +4196,7 @@ reverseVideo(false),
 windowMinimized(false),
 vtG0(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOff),
 vtG1(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOn),
-visibleBoundary(0, 0, inMaximumColumnCount - 1, inLineCountVisibleRows - 1),
+visibleBoundary(0, 0, returnScreenColumns(inTerminalConfig) - 1, returnScreenRows(inTerminalConfig) - 1),
 scrollingRegion(0, 0), // reset below...
 // text elements - not initialized
 litLEDs(kMy_LEDBitsAllOff),
@@ -4203,7 +4210,7 @@ modeCursorKeys(false),
 modeInsertNotReplace(false),
 modeNewLineOption(false),
 modeOriginRedefined(false),
-printing(inMaximumColumnCount),
+printing(returnScreenColumns(inTerminalConfig)),
 // speech elements - not initialized
 // current elements - not initialized
 // previous elements - not initialized
@@ -4217,7 +4224,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	
 	// now “append” the desired number of main screen lines, which will have
 	// the effect of allocating a screen buffer of the right size
-	unless (insertNewLines(this, inLineCountVisibleRows, true/* append only */))
+	unless (insertNewLines(this, returnScreenRows(inTerminalConfig), true/* append only */))
 	{
 		throw kTerminal_ResultNotEnoughMemory;
 	}
@@ -4237,9 +4244,9 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	}
 	
 	this->current.characterSetInfoPtr = &this->vtG0; // by definition, G0 is active initially
-	this->text.scrollback.numberOfRowsPermitted = inLineCountScrollbackBuffer;
-	this->text.scrollback.enabled = ((inForceLineSaving) || (inLineCountScrollbackBuffer > 0));
-	this->text.visibleScreen.numberOfColumnsPermitted = inMaximumColumnCount;
+	this->text.scrollback.numberOfRowsPermitted = returnScrollbackRows(inTerminalConfig);
+	this->text.scrollback.enabled = (returnForceSave(inTerminalConfig) || (this->text.scrollback.numberOfRowsPermitted > 0));
+	this->text.visibleScreen.numberOfColumnsPermitted = returnScreenColumns(inTerminalConfig);
 	this->current.attributeBits = 0;
 	this->previous.attributeBits = kInvalidTerminalTextAttributes; /* initially no saved attribute */
 	
@@ -4254,10 +4261,10 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	moveCursor(this, 0, 0);
 	
 	setScrollingRegionTop(this, 0);
-	setScrollingRegionBottom(this, inLineCountVisibleRows - 1);
+	setScrollingRegionBottom(this, returnScreenRows(inTerminalConfig) - 1);
 	
 	this->speaker = TerminalSpeaker_New(REINTERPRET_CAST(this, TerminalScreenRef));
-}// My_ScreenBuffer 4-argument constructor
+}// My_ScreenBuffer 1-argument constructor
 
 
 /*!
@@ -4268,9 +4275,148 @@ Destructor.  See Terminal_DisposeScreen().
 My_ScreenBuffer::
 ~My_ScreenBuffer ()
 {
+	Preferences_ReleaseContext(&this->configuration);
 	TerminalSpeaker_Dispose(&this->speaker);
 	ListenerModel_Dispose(&this->changeListenerModel);
 }// My_ScreenBuffer destructor
+
+
+/*!
+Reads "kPreferences_TagTerminalAnswerBackMessage" from a
+Preferences context, and returns either that value or the
+default answer-back for returnEmulatorType().
+
+(3.1)
+*/
+CFStringRef
+My_ScreenBuffer::
+returnAnswerBackMessage		(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	CFStringRef				result = nullptr;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalAnswerBackMessage,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = Terminal_EmulatorReturnDefaultName(returnEmulator(inTerminalConfig));
+	
+	return result;
+}// returnAnswerBackMessage
+
+
+/*!
+Reads "kPreferences_TagTerminalEmulatorType" from a Preferences
+context, and returns either that value or the default VT100
+type if none was found.
+
+(3.1)
+*/
+Terminal_Emulator
+My_ScreenBuffer::
+returnEmulator	(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Terminal_Emulator		result = kTerminal_EmulatorVT100;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalEmulatorType,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = kTerminal_EmulatorVT100;
+	
+	return result;
+}// returnEmulator
+
+
+/*!
+Reads "kPreferences_TagTerminalClearSavesLines" from a
+Preferences context, and returns either that value or the
+default of true if none was found.
+
+(3.1)
+*/
+Boolean
+My_ScreenBuffer::
+returnForceSave		(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Boolean					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalClearSavesLines,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = true; // arbitrary
+	
+	return result;
+}// returnForceSave
+
+
+/*!
+Reads "kPreferences_TagTerminalScreenColumns" from a Preferences
+context, and returns either that value or the default value of
+80 if none was found.
+
+(3.1)
+*/
+UInt16
+My_ScreenBuffer::
+returnScreenColumns		(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	UInt16					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenColumns,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = 80; // arbitrary
+	
+	return result;
+}// returnScreenColumns
+
+
+/*!
+Reads "kPreferences_TagTerminalScreenRows" from a Preferences
+context, and returns either that value or the default value of
+24 if none was found.
+
+(3.1)
+*/
+UInt16
+My_ScreenBuffer::
+returnScreenRows	(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	UInt16					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenRows,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = 24; // arbitrary
+	
+	return result;
+}// returnScreenRows
+
+
+/*!
+Reads "kPreferences_TagTerminalScreenScrollbackRows" from a
+Preferences context, and returns either that value or the
+default value of 200 if none was found.
+
+(3.1)
+*/
+UInt16
+My_ScreenBuffer::
+returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	UInt16					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenScrollbackRows,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = 200; // arbitrary
+	
+	return result;
+}// returnScrollbackRows
 
 
 /*!

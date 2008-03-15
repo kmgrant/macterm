@@ -784,14 +784,43 @@ My_FormatsPanelNormalUI::
 createSampleTerminalScreen ()
 const
 {
-	Terminal_Result			screenCreationError = kTerminal_ResultOK;
 	TerminalScreenRef		result = nullptr;
+	Preferences_ContextRef	terminalConfig = Preferences_NewDetachedContext(kPreferences_ClassTerminal);
+	Terminal_Result			screenCreationError = kTerminal_ResultOK;
 	
 	
-	screenCreationError = Terminal_NewScreen(kTerminal_EmulatorVT100, CFSTR("vt100"), 0/* number of scrollback rows */, 3/* number of rows */,
-												80/* number of columns */, false/* force save */, &result);
+	assert(nullptr != terminalConfig);
+	if (nullptr != terminalConfig)
+	{
+		// set up the terminal
+		Terminal_Emulator const		kTerminalType = kTerminal_EmulatorVT100;
+		UInt16 const				kRowCount = 3;
+		UInt16 const				kScrollbackSize = 0;
+		Boolean const				kForceSave = false;
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalEmulatorType,
+													sizeof(kTerminalType), &kTerminalType);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalScreenRows,
+													sizeof(kRowCount), &kRowCount);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalScreenScrollbackRows,
+													sizeof(kScrollbackSize), &kScrollbackSize);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextSetData(terminalConfig, kPreferences_TagTerminalClearSavesLines,
+													sizeof(kForceSave), &kForceSave);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	// create the screen
+	screenCreationError = Terminal_NewScreen(terminalConfig, &result);
 	assert(kTerminal_ResultOK == screenCreationError);
 	assert(nullptr != result);
+	
+	// cleanup
+	Preferences_ReleaseContext(&terminalConfig);
 	
 	return result;
 }// My_FormatsPanelNormalUI::createSampleTerminalScreen
