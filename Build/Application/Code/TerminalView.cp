@@ -600,8 +600,8 @@ drive it.
 
 The font, colors, etc. are based on the default preferences
 context, where any settings in "inFormatOrNull" will
-override the defaults.  You can change this configuration
-later with TerminalView_CopyConfiguration().
+override the defaults.  You can access this configuration
+later with TerminalView_ReturnConfiguration().
 
 Since this is entirely associated with an HIObject, the
 view automatically goes away whenever the HIView from
@@ -1403,15 +1403,15 @@ TerminalView_PtInSelection	(TerminalViewRef	inView,
 
 
 /*!
-Returns a variety of preferences unique to this view.  The
-results are “read/write”; any modifications (through normal
-Preferences APIs) will be detected and used to resynchronize
-the terminal display and internal caches.
+Returns a variety of preferences unique to this view.
 
-The configuration is a combination of any defaults that were
-in effect at the time the view was constructed, any overridden
-settings given at construction time, and any calls to
-TerminalView_CopyConfiguration() since then.
+You can make changes to this context ONLY if you do it in “batch
+mode” with Preferences_ContextCopy().  In other words, even to
+make a single change, you must first add the change to a new
+temporary context, then use Preferences_ContextCopy() to read
+the temporary settings into the context returned by this routine.
+Batch mode changes are detected by the Terminal View and used to
+automatically update the display and internal caches.
 
 Note that you cannot expect all possible tags to be present;
 be prepared to not find what you look for.  In addition, tags

@@ -3332,6 +3332,38 @@ Terminal_ReturnColumnCount		(TerminalScreenRef		inRef)
 
 
 /*!
+Returns a variety of preferences unique to this screen.
+
+You can make changes to this context ONLY if you do it in “batch
+mode” with Preferences_ContextCopy().  In other words, even to
+make a single change, you must first add the change to a new
+temporary context, then use Preferences_ContextCopy() to read
+the temporary settings into the context returned by this routine.
+Batch mode changes are detected by the Terminal Screen and used
+to automatically update the emulator and internal caches.
+
+Note that you cannot expect all possible tags to be present;
+be prepared to not find what you look for.  In addition, tags
+that are present in one screen may be absent in another.
+
+(3.1)
+*/
+Preferences_ContextRef
+Terminal_ReturnConfiguration	(TerminalScreenRef		inRef)
+{
+	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
+	Preferences_ContextRef		result = dataPtr->configuration;
+	
+	
+	// since many settings are represented internally, this context
+	// will not contain the latest information; update the context
+	// based on current settings
+	// UNIMPLEMENTED
+	return result;
+}// ReturnConfiguration
+
+
+/*!
 Returns the number of saved lines that have scrolled
 off the top of the screen.
 

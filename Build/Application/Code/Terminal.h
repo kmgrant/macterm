@@ -545,6 +545,9 @@ void
 	Terminal_Reset							(TerminalScreenRef			inScreen,
 											 Terminal_ResetFlags		inFlags = kTerminal_ResetFlagsAll);
 
+Preferences_ContextRef
+	Terminal_ReturnConfiguration			(TerminalScreenRef			inScreen);
+
 UInt16
 	Terminal_ReturnNextTabDistance			(TerminalScreenRef			inScreen);
 
