@@ -27,10 +27,16 @@
 ###############################################################*/
 
 // Mac includes
+#import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
 
 // library includes
 #import <CocoaBasic.h>
+#import <Console.h>
+#import <HIViewWrap.h>
+
+// MacTelnet includes
+#import "ColorBox.h"
 
 
 
@@ -51,11 +57,23 @@ private:
 
 } // anonymous namespace
 
+@interface My_NoticeColorPanelChange : NSResponder
+- (void)changeColor: (id)sender;
+@end
+
 #pragma mark Internal Method prototypes
 namespace {
 
 NSString*	findFolder			(short, OSType);
 NSString*	returnPathForFSRef	(FSRef const&);
+
+} // anonymous namespace
+
+#pragma mark Variables
+namespace {
+
+HIViewWrap						gCurrentColorPanelFocus;	//!< see ColorBox.h; a view with a color box that uses the current color
+My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
 
 } // anonymous namespace
 
@@ -78,6 +96,70 @@ CocoaBasic_ApplicationLoad ()
 	
 	return loadOK;
 }// ApplicationLoad
+
+
+/*!
+Shows the global color panel floating window, if it is
+not already visible.
+
+(1.0)
+*/
+void
+CocoaBasic_ColorPanelDisplay ()
+{
+	My_AutoPool		_;
+	
+	
+	[NSApp orderFrontColorPanel:NSApp];
+}// ColorPanelDisplay
+
+
+/*!
+Specifies the view, which must be a color box, that is
+the current target of the global color panel.  Also
+initializes the global color panel color to whatever
+ColorBox_GetColor() returns.
+
+(1.0)
+*/
+void
+CocoaBasic_ColorPanelSetTargetView	(HIViewRef	inColorBoxView)
+{
+	My_AutoPool		_;
+	NSColorPanel*	colorPanel = [NSColorPanel sharedColorPanel];
+	NSColor*		globalColor = nil;
+	RGBColor		viewColor;
+	CGDeviceColor	viewColorFloat;
+	
+	
+	// create a responder if none exists, to watch for color changes
+	if (nil == gColorWatcher)
+	{
+		gColorWatcher = [[My_NoticeColorPanelChange alloc] init];
+		[gColorWatcher setNextResponder:[NSApp nextResponder]];
+		[NSApp setNextResponder:gColorWatcher];
+	}
+	
+	// remove highlighting from any previous focus
+	if (gCurrentColorPanelFocus.exists()) SetControl32BitValue(gCurrentColorPanelFocus, kControlCheckBoxUncheckedValue);
+	
+	// set the global to the new target view
+	gCurrentColorPanelFocus.setCFTypeRef(inColorBoxView);
+	
+	// highlight the new focus
+	SetControl32BitValue(gCurrentColorPanelFocus, kControlCheckBoxCheckedValue);
+	
+	// initialize the color in the panel
+	ColorBox_GetColor(inColorBoxView, &viewColor);
+	viewColorFloat.red = viewColor.red;
+	viewColorFloat.red /= RGBCOLOR_INTENSITY_MAX;
+	viewColorFloat.green = viewColor.green;
+	viewColorFloat.green /= RGBCOLOR_INTENSITY_MAX;
+	viewColorFloat.blue = viewColor.blue;
+	viewColorFloat.blue /= RGBCOLOR_INTENSITY_MAX;
+	globalColor = [NSColor colorWithDeviceRed:viewColorFloat.red green:viewColorFloat.green blue:viewColorFloat.blue alpha:1.0];
+	[colorPanel setColor:globalColor];
+}// ColorPanelSetTargetView
 
 
 /*!
@@ -235,5 +317,30 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 }// returnPathForFSRef
 
 } // anonymous namespace
+
+@implementation My_NoticeColorPanelChange
+
+- (void)changeColor: (id)sender
+{
+#pragma unused(sender)
+	NSColor*		newColor = [[NSColorPanel sharedColorPanel] color];
+	CGDeviceColor	newColorFloat;
+	float			ignoredAlpha = 0;
+	RGBColor		newColorRGB;
+	
+	
+	[newColor getRed:&newColorFloat.red green:&newColorFloat.green blue:&newColorFloat.blue
+		alpha:&ignoredAlpha];
+	newColorFloat.red *= RGBCOLOR_INTENSITY_MAX;
+	newColorFloat.green *= RGBCOLOR_INTENSITY_MAX;
+	newColorFloat.blue *= RGBCOLOR_INTENSITY_MAX;
+	newColorRGB.red = STATIC_CAST(newColorFloat.red, unsigned short);
+	newColorRGB.green = STATIC_CAST(newColorFloat.green, unsigned short);
+	newColorRGB.blue = STATIC_CAST(newColorFloat.blue, unsigned short);
+	
+	ColorBox_SetColor(gCurrentColorPanelFocus, &newColorRGB);
+}
+
+@end // My_NoticeColorPanelChange
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

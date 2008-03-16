@@ -112,6 +112,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080316': [
+		'Preferences window Formats pane and other color box interfaces now use a floating color panel.',
 		'Fixed various keyboard focus quirks.',
 	],
 	'20080315': [

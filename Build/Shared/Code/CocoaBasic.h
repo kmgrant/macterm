@@ -30,6 +30,7 @@
 #define __COCOABASIC__
 
 // Mac includes
+#include <Carbon/Carbon.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <CoreServices/CoreServices.h>
 
@@ -39,6 +40,12 @@
 
 Boolean
 	CocoaBasic_ApplicationLoad				();
+
+void
+	CocoaBasic_ColorPanelDisplay			();
+
+void
+	CocoaBasic_ColorPanelSetTargetView		(HIViewRef);
 
 void
 	CocoaBasic_PlaySoundByName				(CFStringRef);

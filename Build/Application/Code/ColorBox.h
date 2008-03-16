@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -94,7 +94,7 @@ void
 											 RGBColor const*				inColorPtr);
 
 // CALL IN RESPONSE TO A CLICK - DISPLAYS A COLOR PICKER FOR THE USER, AUTOMATICALLY UPDATING THE BUTTONÕS COLOR
-Boolean
+void
 	ColorBox_UserSetColor					(HIViewRef						inView);
 
 //@}

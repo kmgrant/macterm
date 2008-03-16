@@ -39,6 +39,7 @@
 // library includes
 #include <CarbonEventUtilities.template.h>
 #include <CGContextSaveRestore.h>
+#include <CocoaBasic.h>
 #include <ColorUtilities.h>
 #include <Console.h>
 #include <FlagManager.h>
@@ -63,6 +64,7 @@
 
 
 #pragma mark Types
+namespace {
 
 /*!
 A pointer to this data is attached to a view using the property
@@ -80,9 +82,14 @@ struct MyColorBoxData
 };
 typedef MyColorBoxData*		MyColorBoxDataPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static pascal OSStatus		receiveColorBoxDraw		(EventHandlerCallRef, EventRef, void*);
+#pragma mark Internal Method Prototypes
+namespace {
+
+pascal OSStatus		receiveColorBoxDraw		(EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 
 
@@ -98,6 +105,12 @@ the purpose of your color box).
 Be sure to invoke ColorBox_DetachFromBevelButton() when
 you are finished with the color box, to dispose of data
 allocated by invoking this routine.
+
+IMPORTANT:	To properly support modeless the color panel,
+			your bevel button should have ÒstickyÓ
+			behavior.  This allows the controller to
+			clearly show the user which bevel button is
+			the target of the panel.
 
 (3.1)
 */
@@ -306,11 +319,9 @@ ColorBox_SetColorChangeNotifyProc	(HIViewRef						inView,
 
 
 /*!
-Displays a standard Color Picker dialog box, asking the
-user to choose a color.  If the user accepts the color,
-this routine automatically updates the displayed color
-of the color box and "true" is returned; otherwise,
-"false" is returned.
+Displays a floating color panel, and arranges for the
+color box to be updated asynchronous whenever the user
+changes the color panel.
 
 You typically invoke this routine in response to a view
 click in a color box button.  For 99.99% of cases, you
@@ -320,60 +331,16 @@ ColorBox_GetColor() to determine the displayed color.
 
 (3.0)
 */
-Boolean
+void
 ColorBox_UserSetColor	(HIViewRef		inView)
 {
-	OSStatus			error = noErr;
-	MyColorBoxDataPtr	dataPtr = nullptr;
-	UInt32				actualSize = 0;
-	Boolean				result = false;
-	
-	
-	error = GetControlProperty(inView, AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_ControlPropertyTypeColorBoxData,
-								sizeof(dataPtr), &actualSize, &dataPtr);
-	assert_noerr(error);
-	assert(sizeof(dataPtr) == actualSize);
-	
-	if (nullptr != dataPtr)
-	{
-		UIStrings_Result		stringResult = kUIStrings_ResultOK;
-		CFStringRef				askColorCFString = nullptr;
-		PickerMenuItemInfo		editMenuInfo;
-		Boolean					releaseAskColorCFString = true;
-		
-		
-		stringResult = UIStrings_Copy(kUIStrings_SystemDialogPromptPickColor, askColorCFString);
-		if (false == stringResult.ok())
-		{
-			// cannot find prompt, but this is not a serious problem
-			askColorCFString = CFSTR("");
-			releaseAskColorCFString = false;
-		}
-		
-		DeactivateFrontmostWindow();
-		result = ColorUtilities_ColorChooserDialogDisplay
-					(askColorCFString, &dataPtr->displayedColor/* input */, &dataPtr->displayedColor/* output */,
-						true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
-						&editMenuInfo);
-		RestoreFrontmostWindow();
-		
-		if (releaseAskColorCFString)
-		{
-			CFRelease(askColorCFString), askColorCFString = nullptr;
-		}
-		
-		if ((result) && (nullptr != dataPtr->notifyProcPtr))
-		{
-			(*(dataPtr->notifyProcPtr))(inView, &dataPtr->displayedColor, dataPtr->contextPtr);
-			(OSStatus)HIViewSetNeedsDisplay(inView, true);
-		}
-	}
-	return result;
+	CocoaBasic_ColorPanelSetTargetView(inView);
+	CocoaBasic_ColorPanelDisplay();
 }// UserSetColor
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Embellishes "kEventControlDraw" of "kEventClassControl".
@@ -386,7 +353,7 @@ color region on top of that.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveColorBoxDraw	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inColorBoxDataPtr)
@@ -476,5 +443,7 @@ receiveColorBoxDraw	(EventHandlerCallRef	inHandlerCallRef,
 	}
 	return result;
 }// receiveColorBoxDraw
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

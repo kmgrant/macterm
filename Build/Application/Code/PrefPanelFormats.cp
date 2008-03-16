@@ -1612,7 +1612,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandColorWhiteEmphasized:
 				// see which of the color boxes was hit, display a color chooser
 				// and then (if the user accepts a new color) update open windows
-				(Boolean)ColorBox_UserSetColor(buttonHit);
+				ColorBox_UserSetColor(buttonHit);
 				result = noErr; // event is handled
 				break;
 			
