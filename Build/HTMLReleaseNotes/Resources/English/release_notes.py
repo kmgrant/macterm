@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080315',
     '20080314',
     '20080313',
     '20080312',
@@ -109,6 +110,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080315': [
+		'Fixed help tags in the Preferences window collections drawer.',
+	],
 	'20080314': [
 		'Fixed calculation of ideal terminal view size, which affected the dimensions chosen by commands such as Make Text Bigger.',
 	],
