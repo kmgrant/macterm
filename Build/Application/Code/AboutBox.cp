@@ -68,6 +68,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 IMPORTANT
@@ -75,34 +76,47 @@ IMPORTANT
 The following values MUST agree with the control IDs in
 the "Dialog" NIB from the package "AboutBox.nib".
 */
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	HIViewID const		idMyUserPaneAppIcon			= { 'Icon', 0/* ID */ };
-	HIViewID const		idMyTextAppName				= { 'Name', 0/* ID */ };
-	HIViewID const		idMyTextAppVersion			= { 'Vers', 0/* ID */ };
-	HIViewID const		idMyTextAppDescription  	= { 'Desc', 0/* ID */ };
-	HIViewID const		idMyTextAppCopyrightLine1	= { 'Cpy1', 0/* ID */ };
-	HIViewID const		idMyTextAppCopyrightLine2	= { 'Cpy2', 0/* ID */ };
-	HIViewID const		idMyTextAppCopyrightLine3	= { 'Cpy3', 0/* ID */ };
-}
+HIViewID const		idMyUserPaneAppIcon			= { 'Icon', 0/* ID */ };
+HIViewID const		idMyTextAppName				= { 'Name', 0/* ID */ };
+HIViewID const		idMyTextAppVersion			= { 'Vers', 0/* ID */ };
+HIViewID const		idMyTextAppDescription  	= { 'Desc', 0/* ID */ };
+HIViewID const		idMyButtonCheckForUpdates	= { 'ChUp', 0/* ID */ };
+HIViewID const		idMyTextAppCopyrightLine1	= { 'Cpy1', 0/* ID */ };
+HIViewID const		idMyTextAppCopyrightLine2	= { 'Cpy2', 0/* ID */ };
+HIViewID const		idMyTextAppCopyrightLine3	= { 'Cpy3', 0/* ID */ };
+
+/*!
+IMPORTANT
+
+The following values MUST agree with the control IDs in
+the "MoreInfo" NIB from the package "AboutBox.nib".
+*/
+HIViewID const		idMyButtonContactAuthor		= { 'Mail', 0/* ID */ };
+HIViewID const		idMyButtonViewLicense		= { 'CGPL', 0/* ID */ };
+HIViewID const		idMyButtonVisitWebSite		= { 'Site', 0/* ID */ };
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void				displayCreditsWindow				();
-static OSStatus			handleAboutBoxCommand				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static pascal OSStatus	receiveCreditsSheetButtonHICommand  (EventHandlerCallRef, EventRef, void*);
+void				displayCreditsWindow				();
+OSStatus			handleAboutBoxCommand				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+pascal OSStatus		receiveCreditsSheetButtonHICommand  (EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	WindowRef					gStandardAboutBoxWindow = nullptr;
-	WindowRef					gCreditsWindow = nullptr;					//!< window holding credits and license information
-	StatusIconRef				gAboutBoxApplicationIcon = nullptr;
-	EventHandlerUPP				gButtonHICommandsUPP = nullptr;				//!< wrapper for credits button callback function
-	EventHandlerRef				gButtonHICommandsHandler = nullptr;			//!< invoked when the Done button is clicked in the credits
-	ListenerModel_ListenerRef   gCommandExecutionEventListener = nullptr;	//!< invoked when interesting menu commands are used
-}
+HIWindowRef					gStandardAboutBoxWindow = nullptr;
+HIWindowRef					gCreditsWindow = nullptr;					//!< window holding credits and license information
+StatusIconRef				gAboutBoxApplicationIcon = nullptr;
+EventHandlerUPP				gButtonHICommandsUPP = nullptr;				//!< wrapper for credits button callback function
+EventHandlerRef				gButtonHICommandsHandler = nullptr;			//!< invoked when the Done button is clicked in the credits
+ListenerModel_ListenerRef   gCommandExecutionEventListener = nullptr;	//!< invoked when interesting menu commands are used
+
+} // anonymous namespace
 
 
 
@@ -294,17 +308,13 @@ AboutBox_Display ()
 		EventLoop_SelectBehindDialogWindows(gStandardAboutBoxWindow);
 		Cursors_UseArrow();
 		
-		// advance focus (the default button can already be easily hit with
-		// the keyboard, so focusing the next button makes it equally easy
-		// for the user to choose that option with a key)
-		// WARNING: this depends on the front-to-back order in the NIB!!!
+		// choose a button other than the default for focus, so it is
+		// easy for the user to hit either one with the keyboard
 		{
 			OSStatus		error = noErr;
 			
 			
-			// advance twice: once to focus the default, again to focus the other button
-			error = HIViewAdvanceFocus(HIViewGetRoot(gStandardAboutBoxWindow), 0/* modifiers */);
-			error = HIViewAdvanceFocus(HIViewGetRoot(gStandardAboutBoxWindow), 0/* modifiers */);
+			error = DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCheckForUpdates, gStandardAboutBoxWindow));
 		}
 	}
 }// Display
@@ -330,6 +340,7 @@ AboutBox_Remove ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Displays the detailed credits and license information window.
@@ -340,7 +351,7 @@ sufficient to handle everything.  Cool, huh?
 
 (3.0)
 */
-static void
+void
 displayCreditsWindow ()
 {
 	OSStatus	error = noErr;
@@ -396,14 +407,8 @@ displayCreditsWindow ()
 		error = ShowSheetWindow(gCreditsWindow, gStandardAboutBoxWindow);
 		assert_noerr(error);
 		
-		// advance focus (the default button can already be easily hit with
-		// the keyboard, so focusing the next button makes it equally easy
-		// for the user to choose that option with a key)
-		// WARNING: this depends on the front-to-back order in the NIB!!!
-		
-		// advance twice: once to focus the default, again to focus the button
-		error = HIViewAdvanceFocus(HIViewGetRoot(gCreditsWindow), 0/* modifiers */);
-		error = HIViewAdvanceFocus(HIViewGetRoot(gCreditsWindow), 0/* modifiers */);
+		// choose a button for focus, for convenience
+		error = DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonVisitWebSite, gCreditsWindow));
 	}
 }// displayCreditsWindow
 
@@ -419,7 +424,7 @@ including "noErr" terminates the command sequence.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 handleAboutBoxCommand   (ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inCommandID,
 						 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -466,7 +471,7 @@ for the Done button in the credits sheet.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveCreditsSheetButtonHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 void*					UNUSED_ARGUMENT(inContext))
@@ -509,5 +514,7 @@ receiveCreditsSheetButtonHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandle
 	
 	return result;
 }// receiveCreditsSheetButtonHICommand
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
