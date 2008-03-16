@@ -848,15 +848,11 @@ text area for the specified item.
 void
 displayCollectionRenameUI	(DataBrowserItemID		inItemToRename)
 {
-	HIViewRef const		kDrawerRoot = HIViewGetRoot(gDrawerWindow);
-	
-	
 	// focus the drawer
 	(OSStatus)SetUserFocusWindow(gDrawerWindow);
 	
 	// focus the data browser itself
-	(OSStatus)HIViewSetNextFocus(kDrawerRoot, gDataBrowserForCollections);
-	(OSStatus)HIViewAdvanceFocus(kDrawerRoot, 0L/* event modifiers */);
+	(OSStatus)DialogUtilities_SetKeyboardFocus(gDataBrowserForCollections);
 	
 	// open the new item for editing
 	(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, inItemToRename,

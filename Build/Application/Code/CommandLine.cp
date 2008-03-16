@@ -133,7 +133,7 @@ enum My_TerminatorType
 #pragma mark Variables
 namespace {
 
-WindowRef								gCommandLineWindow = nullptr;
+HIWindowRef								gCommandLineWindow = nullptr;
 WindowInfo_Ref							gCommandLineWindowInfo = nullptr;
 TerminalScreenRef						gCommandLineTerminalScreen = nullptr;
 TerminalViewRef							gCommandLineTerminalView = nullptr;
@@ -162,7 +162,7 @@ namespace {
 void							addToHistory					(CFStringRef);
 ControlKeyFilterResult			commandLineKeyFilter			(UInt32*);
 CFStringRef						getTextAsCFString				();
-void							handleNewSize					(WindowRef, Float32, Float32, void*);
+void							handleNewSize					(HIWindowRef, Float32, Float32, void*);
 Boolean							issueMessageToAllInterpreters	(CommandLine_InterpreterMessage, CFArrayRef,
 																 void*, CommandLine_InterpreterProcPtr*);
 inline My_TerminatorType		keyCodeToTerminatorType			(SInt16);
@@ -576,6 +576,24 @@ CommandLine_AddInterpreter	(CommandLine_InterpreterProcPtr		inProcPtr)
 
 
 /*!
+Sets the keyboard focus to the terminal view in the window,
+and changes the current user focus window to the command
+line window.
+
+(3.1)
+*/
+void
+CommandLine_Focus ()
+{
+	if (nullptr != gCommandLineWindow)
+	{
+		(OSStatus)SetUserFocusWindow(gCommandLineWindow);
+		(OSStatus)DialogUtilities_SetKeyboardFocus(gCommandLineTerminalViewFocus);
+	}
+}// Focus
+
+
+/*!
 Returns true only if the command line is visible.  Useful
 to avoid auto-initializing this module when doing a simple
 query.
@@ -601,7 +619,7 @@ WARNING:	This will auto-initialize the module if needed
 
 (3.0)
 */
-WindowRef
+HIWindowRef
 CommandLine_ReturnWindow ()
 {
 	if (nullptr == gCommandLineWindow) CommandLine_Init();
@@ -952,10 +970,10 @@ a resize of the floating command line window.
 (3.0)
 */
 void
-handleNewSize	(WindowRef	inWindowRef,
-				 Float32	inDeltaSizeX,
-				 Float32	inDeltaSizeY,
-				 void*		UNUSED_ARGUMENT(inData))
+handleNewSize	(HIWindowRef	inWindowRef,
+				 Float32		inDeltaSizeX,
+				 Float32		inDeltaSizeY,
+				 void*			UNUSED_ARGUMENT(inData))
 {
 	SInt32  truncDeltaX = STATIC_CAST(inDeltaSizeX, SInt32);
 	SInt32  truncDeltaY = STATIC_CAST(inDeltaSizeY, SInt32);
@@ -1412,7 +1430,7 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	assert(kEventClass == kEventClassWindow);
 	assert(kEventKind == kEventWindowClose);
 	{
-		WindowRef	window = nullptr;
+		HIWindowRef		window = nullptr;
 		
 		
 		// determine the window in question
@@ -1455,7 +1473,7 @@ receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 							 void*					inWindowRef)
 {
 	OSStatus		result = eventNotHandledErr;
-	WindowRef		targetWindow = REINTERPRET_CAST(inWindowRef, WindowRef);
+	HIWindowRef		targetWindow = REINTERPRET_CAST(inWindowRef, HIWindowRef);
 	UInt32 const	kEventClass = GetEventClass(inEvent);
 	UInt32 const	kEventKind = GetEventKind(inEvent);
 	
@@ -1472,7 +1490,7 @@ receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 		
 		if (kEventClass == kEventClassWindow)
 		{
-			WindowRef	window = nullptr;
+			HIWindowRef		window = nullptr;
 			
 			
 			// determine the window in question

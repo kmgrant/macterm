@@ -900,12 +900,9 @@ void
 TerminalView_FocusForUser	(TerminalViewRef	inView)
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	HIViewWrap				contentView(kHIViewWindowContentID, HIViewGetWindow(viewPtr->contentHIView));
 	
 	
-	assert(contentView.exists());
-	HIViewSetNextFocus(contentView, TerminalView_ReturnUserFocusHIView(inView));
-	HIViewAdvanceFocus(contentView, 0/* modifier keys */);
+	(OSStatus)DialogUtilities_SetKeyboardFocus(TerminalView_ReturnUserFocusHIView(inView));
 }// FocusForUser
 
 

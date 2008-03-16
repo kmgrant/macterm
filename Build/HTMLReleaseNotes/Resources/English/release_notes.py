@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080316',
     '20080315',
     '20080314',
     '20080313',
@@ -110,6 +111,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080316': [
+		'Fixed various keyboard focus quirks.',
+	],
 	'20080315': [
 		'Preferences window Macros pane redesigned because of far too many bugs in the Apple implementation of pop-up menus in lists.',
 		'Fixed help tags in the Preferences window collections drawer.',

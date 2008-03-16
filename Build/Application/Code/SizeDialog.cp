@@ -337,8 +337,7 @@ SizeDialog_Display		(SizeDialog_Ref		inDialog)
 	{
 		// display the dialog
 		ShowSheetWindow(ptr->dialogWindow, ptr->screenWindow);
-		HIViewSetNextFocus(HIViewGetRoot(ptr->dialogWindow), ptr->fieldWidth);
-		HIViewAdvanceFocus(HIViewGetRoot(ptr->dialogWindow), 0/* modifier keys */);
+		(OSStatus)DialogUtilities_SetKeyboardFocus(ptr->fieldWidth);
 		
 		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 	}

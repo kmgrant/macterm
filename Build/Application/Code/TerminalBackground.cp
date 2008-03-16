@@ -277,10 +277,7 @@ receiveBackgroundContextualMenuSelect	(EventHandlerCallRef		UNUSED_ARGUMENT(inHa
 			{
 				// make this the current focus, so that menu commands are sent to it!
 				SetUserFocusWindow(HIViewGetWindow(view));
-				unless (HIViewSubtreeContainsFocus(view))
-				{
-					HIViewAdvanceFocus(view, 0/* modifiers */);
-				}
+				(OSStatus)DialogUtilities_SetKeyboardFocus(view);
 				
 				// display a contextual menu
 				(OSStatus)ContextualMenuBuilder_DisplayMenuForView(view, inEvent);

@@ -1226,14 +1226,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				
 				
 				ShowWindow(window);
-				(OSStatus)SetUserFocusWindow(window);
-		
-				// advance focus until the terminal view is focused
-				// WARNING: this depends on the actual window contents!
-				(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(window), 0/* modifiers */);
-				(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(window), 0/* modifiers */);
-				(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(window), 0/* modifiers */);
-				(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(window), 0/* modifiers */);
+				CommandLine_Focus();
 			}
 			break;
 		

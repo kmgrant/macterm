@@ -1992,10 +1992,8 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		// the keyboard, so focusing the next button makes it equally easy
 		// for the user to choose that option with a key)
 		{
-			// once for the first button...
-			(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(ptr->dialogWindow)/* view */, 0/* modifiers */);
-			// ...and again for the 2nd one (this hack depends on layering in the NIB!)
-			(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(ptr->dialogWindow)/* view */, 0/* modifiers */);
+			if (isButton2) (OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonCancel);
+			else if (isButton3) (OSStatus)DialogUtilities_SetKeyboardFocus(ptr->buttonOther);
 		}
 		
 		unless ((ptr->isSheet) || (ptr->isCompletelyModeless))

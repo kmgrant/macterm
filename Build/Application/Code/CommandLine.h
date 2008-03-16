@@ -169,7 +169,10 @@ inline Boolean
 Boolean
 	CommandLine_IsVisible					();
 
-WindowRef
+void
+	CommandLine_Focus						();
+
+HIWindowRef
 	CommandLine_ReturnWindow				();
 
 void

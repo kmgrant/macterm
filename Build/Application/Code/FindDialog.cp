@@ -392,7 +392,7 @@ FindDialog_Display		(FindDialog_Ref		inDialog)
 		ShowSheetWindow(ptr->dialogWindow, TerminalWindow_ReturnWindow(ptr->terminalWindow));
 		
 		// set keyboard focus
-		error = HIViewAdvanceFocus(ptr->fieldKeywords, 0/* modifiers */);
+		error = DialogUtilities_SetKeyboardFocus(ptr->fieldKeywords);
 		
 		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 	}

@@ -295,12 +295,14 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog)
 			// handle events
 			ShowWindow(ptr->dialogWindow);
 			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
+			(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
 			error = RunAppModalLoopForWindow(ptr->dialogWindow);
 			assert_noerr(error);
 		}
 		else
 		{
 			ShowSheetWindow(ptr->dialogWindow, ptr->parentWindow);
+			(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
 			// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 		}
 	}

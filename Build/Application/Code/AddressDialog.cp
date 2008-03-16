@@ -208,8 +208,7 @@ AddressDialog_Display	(AddressDialog_Ref		inDialog)
 		ShowWindow(ptr->dialogWindow);
 		EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
 		
-		(OSStatus)HIViewSetNextFocus(HIViewGetRoot(ptr->dialogWindow), ptr->dataBrowserAddresses);
-		(OSStatus)HIViewAdvanceFocus(HIViewGetRoot(ptr->dialogWindow), 0/* modifier keys */);
+		(OSStatus)DialogUtilities_SetKeyboardFocus(ptr->dataBrowserAddresses);
 		
 		(OSStatus)RunAppModalLoopForWindow(ptr->dialogWindow);
 		
