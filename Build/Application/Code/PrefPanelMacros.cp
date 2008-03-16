@@ -49,6 +49,7 @@
 #include <CarbonEventUtilities.template.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
+#include <Cursors.h>
 #include <DialogAdjust.h>
 #include <Embedding.h>
 #include <HIViewWrap.h>
@@ -85,11 +86,6 @@ namespace {
 UInt16 const	kMy_MaxMacroActionColumnWidthInPixels = 120; // arbitrary
 UInt16 const	kMy_MaxMacroKeyColumnWidthInPixels = 100; // arbitrary
 
-enum
-{
-	kMy_ActionMenu
-};
-
 // The following cannot use any of AppleÕs reserved IDs (0 to 1023).
 enum
 {
@@ -114,6 +110,13 @@ HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { 'Inv1', 0/* ID */ };
 HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { 'Inv2', 0/* ID */ };
 HIViewID const	idMyCheckBoxMacrosMenuVisible			= { 'McMn', 0/* ID */ };
 HIViewID const	idMyFieldMacrosMenuName					= { 'MMNm', 0/* ID */ };
+HIViewID const	idMyLabelSelectedMacro					= { 'LSMc', 0/* ID */ };
+HIViewID const	idMySeparatorSelectedMacro				= { 'SSMc', 0/* ID */ };
+HIViewID const	idMyLabelMacroName						= { 'LMNm', 0/* ID */ };
+HIViewID const	idMyFieldMacroName						= { 'FMNm', 0/* ID */ };
+HIViewID const	idMyLabelMacroAction					= { 'LMTy', 0/* ID */ };
+HIViewID const	idMyPopUpMenuMacroAction				= { 'MMTy', 0/* ID */ };
+HIViewID const	idMyFieldMacroText						= { 'MTxt', 0/* ID */ };
 
 } // anonymous namespace
 
@@ -191,10 +194,10 @@ pascal OSStatus		accessDataBrowserItemData			(ControlRef, DataBrowserItemID, Dat
 														 DataBrowserItemDataRef, Boolean);
 pascal Boolean		compareDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemID,
 														 DataBrowserPropertyID);
-MenuRef				createActionMenu					();
 void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
 void				disposePanel						(Panel_Ref, void*);
 void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+pascal void			monitorDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
 SInt32				panelChanged						(Panel_Ref, Panel_Message, void*);
 void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				refreshDisplay						(My_MacrosPanelUIPtr);
@@ -267,6 +270,8 @@ My_MacrosDataBrowserCallbacks ()
 	assert(nullptr != this->listCallbacks.u.v1.itemDataCallback);
 	this->listCallbacks.u.v1.itemCompareCallback = NewDataBrowserItemCompareUPP(compareDataBrowserItems);
 	assert(nullptr != this->listCallbacks.u.v1.itemCompareCallback);
+	this->listCallbacks.u.v1.itemNotificationCallback = NewDataBrowserItemNotificationUPP(monitorDataBrowserItems);
+	assert(nullptr != this->listCallbacks.u.v1.itemNotificationCallback);
 }// My_MacrosDataBrowserCallbacks default constructor
 
 
@@ -288,6 +293,11 @@ My_MacrosDataBrowserCallbacks::
 	{
 		DisposeDataBrowserItemCompareUPP(this->listCallbacks.u.v1.itemCompareCallback),
 			this->listCallbacks.u.v1.itemCompareCallback = nullptr;
+	}
+	if (nullptr != this->listCallbacks.u.v1.itemNotificationCallback)
+	{
+		DisposeDataBrowserItemNotificationUPP(this->listCallbacks.u.v1.itemNotificationCallback),
+			this->listCallbacks.u.v1.itemNotificationCallback = nullptr;
 	}
 }// My_MacrosDataBrowserCallbacks destructor
 
@@ -485,13 +495,10 @@ const
 		if (stringResult.ok())
 		{
 			// this column does not follow the default minimum and maximum width rules set above
-			UInt16 const					kDefaultMinWidth = columnInfo.headerBtnDesc.minimumWidth;
-			UInt16 const					kDefaultMaxWidth = columnInfo.headerBtnDesc.maximumWidth;
-			// this column does not have the default property type
-			DataBrowserPropertyType const	kDefaultPropertyType = columnInfo.headerBtnDesc.maximumWidth;
+			UInt16 const	kDefaultMinWidth = columnInfo.headerBtnDesc.minimumWidth;
+			UInt16 const	kDefaultMaxWidth = columnInfo.headerBtnDesc.maximumWidth;
 			
 			
-			columnInfo.propertyDesc.propertyType = kDataBrowserPopupMenuType;
 			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDAction;
 			columnInfo.headerBtnDesc.minimumWidth = kMy_MaxMacroActionColumnWidthInPixels;
 			columnInfo.headerBtnDesc.maximumWidth = kMy_MaxMacroActionColumnWidthInPixels;
@@ -501,7 +508,6 @@ const
 			
 			columnInfo.headerBtnDesc.minimumWidth = kDefaultMinWidth;
 			columnInfo.headerBtnDesc.maximumWidth = kDefaultMaxWidth;
-			columnInfo.propertyDesc.propertyType = kDefaultPropertyType;
 		}
 		
 		// create contents column
@@ -542,18 +548,6 @@ const
 			(OSStatus)DataBrowserChangeAttributes(macrosList,
 													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
 													0/* attributes to clear */);
-			
-			// new-style menus
-			{
-				DataBrowserPropertyFlags	oldFlags = 0;
-				
-				
-				if (noErr == GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction, &oldFlags))
-				{
-					(OSStatus)SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction,
-															oldFlags | kDataBrowserPopupMenuButtonless);
-				}
-			}
 		}
 	#endif
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
@@ -567,12 +561,6 @@ const
 			{
 				flags |= kDataBrowserPropertyIsMutable;
 				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, flags);
-			}
-			error = GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction, &flags);
-			if (noErr == error)
-			{
-				flags |= kDataBrowserPropertyIsMutable;
-				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction, flags);
 			}
 			error = GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDContents, &flags);
 			if (noErr == error)
@@ -742,15 +730,8 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 			break;
 		
 		case kMyDataBrowserPropertyIDAction:
-			// return menu of possible things macros can do
-			{
-				static MenuRef		actionMenu = createActionMenu();
-				
-				
-				result = SetDataBrowserItemDataMenuRef(inItemData, actionMenu);
-				assert_noerr(result);
-				result = SetDataBrowserItemDataValue(inItemData, 1/* selected item index */);
-			}
+			// return text string for how the macro interprets its contents
+			// UNIMPLEMENTED
 			break;
 		
 		case kMyDataBrowserPropertyIDContents:
@@ -882,29 +863,6 @@ compareDataBrowserItems		(ControlRef					inDataBrowser,
 
 
 /*!
-Creates the action menu that is displayed in the
-macro list, showing the user what macros can do.
-
-(3.1)
-*/
-MenuRef
-createActionMenu ()
-{
-	MenuRef		result = nullptr;
-	NIBLoader	menuNIB(AppResources_ReturnBundleForNIBs(), CFSTR("PrefPanelMacros"));
-	assert(menuNIB.isLoaded());
-	OSStatus	error = noErr;
-	
-	
-	error = CreateMenuFromNib(menuNIB.returnNIB(), CFSTR("ActionMenu"), &result);
-	assert_noerr(error);
-	assert(nullptr != result);
-	
-	return result;
-}// createActionMenu
-
-
-/*!
 Adjusts the data browser columns in the ÒMacrosÓ
 preference panel to fill the new data browser
 dimensions.
@@ -931,6 +889,23 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		
 		viewWrap = HIViewWrap(idMyHelpTextMacroMenu, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+		
+		viewWrap = HIViewWrap(idMyFieldMacroText, kPanelWindow);
+		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		viewWrap = HIViewWrap(idMyPopUpMenuMacroAction, kPanelWindow);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		viewWrap = HIViewWrap(idMyLabelMacroAction, kPanelWindow);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		viewWrap = HIViewWrap(idMyFieldMacroName, kPanelWindow);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		viewWrap = HIViewWrap(idMyLabelMacroName, kPanelWindow);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		viewWrap = HIViewWrap(idMySeparatorSelectedMacro, kPanelWindow);
+		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		viewWrap = HIViewWrap(idMyLabelSelectedMacro, kPanelWindow);
+		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 	}
 }// deltaSizePanelContainerHIView
 
@@ -1035,6 +1010,42 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// macroSetChanged
+
+
+/*!
+Responds to changes in the data browser.
+
+(3.1)
+*/
+pascal void
+monitorDataBrowserItems		(ControlRef						inDataBrowser,
+							 DataBrowserItemID				inItemID,
+							 DataBrowserItemNotification	inMessage)
+{
+	switch (inMessage)
+	{
+	case kDataBrowserItemSelected:
+		{
+			DataBrowserTableViewRowIndex	rowIndex = 0;
+			OSStatus						error = noErr;
+			
+			
+			// update the Òselected macroÓ fields to match the newly-selected item
+			// UNIMPLEMENTED
+		}
+		break;
+	
+	case kDataBrowserEditStopped:
+		// it seems to be possible for the I-beam to persist at times
+		// unless the cursor is explicitly reset here
+		Cursors_UseArrow();
+		break;
+	
+	default:
+		// not all messages are supported
+		break;
+	}
+}// monitorDataBrowserItems
 
 
 /*!

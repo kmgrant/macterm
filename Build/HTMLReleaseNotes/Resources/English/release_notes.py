@@ -111,6 +111,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080315': [
+		'Preferences window Macros pane redesigned because of far too many bugs in the Apple implementation of pop-up menus in lists.',
 		'Fixed help tags in the Preferences window collections drawer.',
 	],
 	'20080314': [
