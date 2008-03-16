@@ -1953,6 +1953,26 @@ SetDialogItemValue	(DialogRef			inDialog,
 
 
 /*!
+Sets the current keyboard focus to a specific view.
+
+(3.1)
+*/
+OSStatus
+DialogUtilities_SetKeyboardFocus	(HIViewRef		inView)
+{
+	OSStatus	result = noErr;
+	
+	
+	result = SetKeyboardFocus(HIViewGetWindow(inView), inView, kControlFocusNoPart);
+	if (noErr == result)
+	{
+		result = SetKeyboardFocus(HIViewGetWindow(inView), inView, kControlFocusNextPart);
+	}
+	return result;
+}// SetKeyboardFocus
+
+
+/*!
 Call this routine on the Help button control of every window.
 This routine checks to see if all necessary components for
 contextual help are available (disabling the button if help
