@@ -83,6 +83,7 @@ extern "C"
 
 
 #pragma mark Constants
+namespace {
 
 #define NUMBER_OF_SESSIONS_TABPANES		4
 enum
@@ -102,18 +103,24 @@ the NIBs from the package "PrefPanelSessions.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyButtonLookUpHostName		= { 'Look', 0/* ID */ };
-static HIViewID const	idMyChasingArrowsDNSWait		= { 'Wait', 0/* ID */ };
-static HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
-static HIViewID const	idMyFieldHostName				= { 'Host', 0/* ID */ };
-static HIViewID const	idMyHelpTextCommandLine			= { 'CmdH', 0/* ID */ };
-static HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
-static HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
-static HIViewID const	idMySeparatorCaptureToFile		= { 'CapD', 0/* ID */ };
-static HIViewID const	idMySeparatorRemoteSessionsOnly	= { 'RmSD', 0/* ID */ };
-static HIViewID const	idMySeparatorTerminal			= { 'BotD', 0/* ID */ };
+HIViewID const	idMySeparatorTerminal			= { 'BotD', 0/* ID */ };
+HIViewID const	idMySeparatorRemoteSessionsOnly	= { 'RmSD', 0/* ID */ };
+HIViewID const	idMyFieldHostName				= { 'Host', 0/* ID */ };
+HIViewID const	idMyButtonLookUpHostName		= { 'Look', 0/* ID */ };
+HIViewID const	idMyChasingArrowsDNSWait		= { 'Wait', 0/* ID */ };
+HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
+HIViewID const	idMyHelpTextCommandLine			= { 'CmdH', 0/* ID */ };
+HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
+HIViewID const	idMySeparatorCaptureToFile		= { 'CapD', 0/* ID */ };
+HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
+HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
+HIViewID const	idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
+HIViewID const	idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
 
 /*!
 Implements the “Resource” tab.
@@ -133,7 +140,7 @@ protected:
 	//! you should prefer setCFTypeRef(), which is clearer
 	inline CFRetainRelease&
 	operator =	(CFRetainRelease const&);
-	
+
 private:
 	CommonEventHandlers_HIViewResizer	containerResizer;
 	CarbonEventHandlerWrap				buttonCommandsHandler;		//!< invoked when a button is clicked
@@ -248,26 +255,32 @@ struct My_SessionsPanelData
 };
 typedef My_SessionsPanelData*	My_SessionsPanelDataPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
-static void				disposePanel					(Panel_Ref, void*);
-static Boolean			lookupHostName					(My_SessionsTabResource&);
-static SInt32			panelChanged					(Panel_Ref, Panel_Message, void*);
-static pascal OSStatus	receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveLookupComplete			(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
-static void				showTabPane						(My_SessionsPanelUIPtr, UInt16);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void				deltaSizePanelContainerHIView			(HIViewRef, Float32, Float32, void*);
+void				disposePanel							(Panel_Ref, void*);
+Boolean				lookupHostName							(My_SessionsTabResource&);
+void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
+SInt32				panelChanged							(Panel_Ref, Panel_Message, void*);
+pascal OSStatus		receiveHICommand						(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveLookupComplete					(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveViewHit							(EventHandlerCallRef, EventRef, void*);
+void				showTabPane								(My_SessionsPanelUIPtr, UInt16);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Float32		gIdealPanelWidth = 0.0;
-	Float32		gIdealPanelHeight = 0.0;
-	Float32		gMaximumTabPaneWidth = 0.0;
-	Float32		gMaximumTabPaneHeight = 0.0;
-}
+Float32		gIdealPanelWidth = 0.0;
+Float32		gIdealPanelHeight = 0.0;
+Float32		gMaximumTabPaneWidth = 0.0;
+Float32		gMaximumTabPaneHeight = 0.0;
+
+} // anonymous namespace
 
 
 
@@ -313,6 +326,7 @@ PrefPanelSessions_New ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a My_SessionsPanelData structure.
@@ -635,6 +649,14 @@ const
 		error = HIViewSetFrame(result, &containerFrame);
 		assert_noerr(error);
 	}
+	
+	// make all bevel buttons use a larger font than is provided by default in a NIB
+	makeAllBevelButtonsUseTheSystemFont(inOwningWindow);
+	
+	// make the main bevel buttons use a bold font
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyButtonChangeInterruptKey, inOwningWindow), kThemeAlertHeaderFont);
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyButtonChangeSuspendKey, inOwningWindow), kThemeAlertHeaderFont);
+	Localization_SetControlThemeFontInfo(HIViewWrap(idMyButtonChangeResumeKey, inOwningWindow), kThemeAlertHeaderFont);
 	
 	// initialize values
 	// UNIMPLEMENTED
@@ -1024,7 +1046,7 @@ container.
 
 (3.1)
 */
-static void
+void
 deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
@@ -1054,7 +1076,7 @@ Cleans up a panel that is about to be destroyed.
 
 (3.1)
 */
-static void
+void
 disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 				 void*		inDataPtr)
 {
@@ -1078,7 +1100,7 @@ Returns true if the lookup succeeded.
 
 (3.0)
 */
-static Boolean
+Boolean
 lookupHostName		(My_SessionsTabResource&	inTab)
 {
 	CFStringRef		textCFString = nullptr;
@@ -1124,13 +1146,54 @@ lookupHostName		(My_SessionsTabResource&	inTab)
 
 
 /*!
+Changes the theme font of all bevel button controls
+in the specified window to use the system font
+(which automatically sets the font size).  By default
+a NIB makes bevel buttons use a small font, so this
+routine corrects that.
+
+(3.0)
+*/
+void
+makeAllBevelButtonsUseTheSystemFont		(HIWindowRef	inWindow)
+{
+	OSStatus	error = noErr;
+	HIViewRef	contentView = nullptr;
+	
+	
+	error = HIViewFindByID(HIViewGetRoot(inWindow), kHIViewWindowContentID, &contentView);
+	if (error == noErr)
+	{
+		ControlKind		kindInfo;
+		HIViewRef		button = HIViewGetFirstSubview(contentView);
+		
+		
+		while (nullptr != button)
+		{
+			error = GetControlKind(button, &kindInfo);
+			if (noErr == error)
+			{
+				if ((kControlKindSignatureApple == kindInfo.signature) &&
+					(kControlKindBevelButton == kindInfo.kind))
+				{
+					// only change bevel buttons
+					Localization_SetControlThemeFontInfo(button, kThemeSystemFont);
+				}
+			}
+			button = HIViewGetNextView(button);
+		}
+	}
+}// makeAllButtonsUseTheSystemFont
+
+
+/*!
 This routine, of standard PanelChangedProcPtr form,
 is invoked by the Panel module whenever a property
 of one of the preferences dialog’s panels changes.
 
 (3.1)
 */
-static SInt32
+SInt32
 panelChanged	(Panel_Ref		inPanel,
 				 Panel_Message	inMessage,
 				 void*			inDataPtr)
@@ -1239,7 +1302,7 @@ for the buttons in the Resource tab.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMySessionsTabResourcePtr)
@@ -1276,6 +1339,18 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				break;
 			
+			case kCommandShowCommandLine:
+				// this normally means “show command line floater”, but in the context
+				// of an active New Session sheet, it means “select command line field”
+				{
+					HIWindowRef		window = HIViewGetWindow(*ptr);
+					
+					
+					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
+					result = noErr;
+				}
+				break;
+			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
 				// wouldn’t be able to select menu commands while the window is open
@@ -1296,7 +1371,7 @@ field containing the remote host name.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inMySessionsTabResourcePtr)
@@ -1354,7 +1429,7 @@ the currently selected tab, etc.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMySessionsPanelUIPtr)
@@ -1399,7 +1474,7 @@ the dimensions of the panel’s container.
 
 (3.0)
 */
-static void
+void
 showTabPane		(My_SessionsPanelUIPtr	inUIPtr,
 				 UInt16					inTabIndex)
 {
@@ -1444,5 +1519,7 @@ showTabPane		(My_SessionsPanelUIPtr	inUIPtr,
 		assert_noerr(HIViewSetVisible(selectedTabPane, true/* visible */));
 	}
 }// showTabPane
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
