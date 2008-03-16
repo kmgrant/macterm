@@ -80,16 +80,14 @@
 
 
 #pragma mark Constants
+namespace {
 
-UInt16 const	kMyMaxMacroActionColumnWidthInPixels = 120; // arbitrary
-UInt16 const	kMyMaxMacroKeyColumnWidthInPixels = 100; // arbitrary
+UInt16 const	kMy_MaxMacroActionColumnWidthInPixels = 120; // arbitrary
+UInt16 const	kMy_MaxMacroKeyColumnWidthInPixels = 100; // arbitrary
 
 enum
 {
-	kMacrosFinderListColumnDescriptorInvokeWith	= 'Keys',
-	kMacrosFinderListColumnDescriptorMacroName	= 'Name',
-	kMacrosFinderListColumnDescriptorAction		= 'ToDo',
-	kMacrosFinderListColumnDescriptorContents	= 'Text'
+	kMy_ActionMenu
 };
 
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
@@ -101,23 +99,6 @@ enum
 	kMyDataBrowserPropertyIDContents			= 'Text'
 };
 
-enum
-{
-	// note - comparison functions depend on the fact that the values of these constants are ordered least to greatest
-	kMacrosFinderListRowDescriptorMacro1 = 'Mcr1',
-	kMacrosFinderListRowDescriptorMacro2 = 'Mcr2',
-	kMacrosFinderListRowDescriptorMacro3 = 'Mcr3',
-	kMacrosFinderListRowDescriptorMacro4 = 'Mcr4',
-	kMacrosFinderListRowDescriptorMacro5 = 'Mcr5',
-	kMacrosFinderListRowDescriptorMacro6 = 'Mcr6',
-	kMacrosFinderListRowDescriptorMacro7 = 'Mcr7',
-	kMacrosFinderListRowDescriptorMacro8 = 'Mcr8',
-	kMacrosFinderListRowDescriptorMacro9 = 'Mcr9',
-	kMacrosFinderListRowDescriptorMacro10 = 'McrX',
-	kMacrosFinderListRowDescriptorMacro11 = 'McrY',
-	kMacrosFinderListRowDescriptorMacro12 = 'McrZ'
-};
-
 /*!
 IMPORTANT
 
@@ -126,15 +107,18 @@ the NIBs from the package "PrefPanelMacros.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
-static HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
-static HIViewID const	idMyHelpTextMacroMenu					= { 'McMH', 0/* ID */ };
-static HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { 'Inv1', 0/* ID */ };
-static HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { 'Inv2', 0/* ID */ };
-static HIViewID const	idMyCheckBoxMacrosMenuVisible			= { 'McMn', 0/* ID */ };
-static HIViewID const	idMyFieldMacrosMenuName					= { 'MMNm', 0/* ID */ };
+HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
+HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
+HIViewID const	idMyHelpTextMacroMenu					= { 'McMH', 0/* ID */ };
+HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { 'Inv1', 0/* ID */ };
+HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { 'Inv2', 0/* ID */ };
+HIViewID const	idMyCheckBoxMacrosMenuVisible			= { 'McMn', 0/* ID */ };
+HIViewID const	idMyFieldMacrosMenuName					= { 'MMNm', 0/* ID */ };
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
 
 /*!
 Initializes a Data Browser callbacks structure to
@@ -143,10 +127,10 @@ handling various tasks.  Creates the necessary UPP
 types, which are destroyed when the instance goes
 away.
 */
-struct MyMacrosDataBrowserCallbacks
+struct My_MacrosDataBrowserCallbacks
 {
-	MyMacrosDataBrowserCallbacks	();
-	~MyMacrosDataBrowserCallbacks	();
+	My_MacrosDataBrowserCallbacks	();
+	~My_MacrosDataBrowserCallbacks	();
 	
 	DataBrowserCallbacks	listCallbacks;
 };
@@ -155,13 +139,16 @@ struct MyMacrosDataBrowserCallbacks
 Implements the user interface of the panel - only
 created when the panel directs for this to happen.
 */
-struct MyMacrosPanelUI
+struct My_MacrosPanelUI
 {
 public:
-	MyMacrosPanelUI		(Panel_Ref, HIWindowRef);
-	~MyMacrosPanelUI	();
+	My_MacrosPanelUI	(Panel_Ref, HIWindowRef);
+	~My_MacrosPanelUI	();
 	
-	MyMacrosDataBrowserCallbacks		listCallbacks;				//!< used to provide data for the list
+	void
+	readPreferences		(Preferences_ContextRef);
+	
+	My_MacrosDataBrowserCallbacks		listCallbacks;				//!< used to provide data for the list
 	HIViewWrap							mainView;
 	CommonEventHandlers_HIViewResizer	containerResizer;			//!< invoked when the panel is resized
 	ListenerModel_ListenerRef			macroSetChangeListener;		//!< invoked when macros change externally
@@ -171,43 +158,49 @@ protected:
 	HIViewWrap
 	createContainerView		(Panel_Ref, HIWindowRef) const;
 };
-typedef MyMacrosPanelUI*	MyMacrosPanelUIPtr;
+typedef My_MacrosPanelUI*	My_MacrosPanelUIPtr;
 
 /*!
 Contains the panel reference and its user interface
 (once the UI is constructed).
 */
-struct MyMacrosPanelData
+struct My_MacrosPanelData
 {
-	MyMacrosPanelData ();
+	My_MacrosPanelData ();
 	
-	Panel_Ref			panel;			//!< the panel this data is for
-	MyMacrosPanelUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Panel_Ref				panel;			//!< the panel this data is for
+	My_MacrosPanelUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef	dataModel;		//!< source of initializations and target of changes
 };
-typedef MyMacrosPanelData*		MyMacrosPanelDataPtr;
+typedef My_MacrosPanelData*		My_MacrosPanelDataPtr;
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Float32		gIdealPanelWidth = 0.0;
-	Float32		gIdealPanelHeight = 0.0;
-}
+Float32		gIdealPanelWidth = 0.0;
+Float32		gIdealPanelHeight = 0.0;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static pascal OSStatus	accessDataBrowserItemData			(ControlRef, DataBrowserItemID, DataBrowserPropertyID,
-															 DataBrowserItemDataRef, Boolean);
-static pascal Boolean	compareDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemID,
-															 DataBrowserPropertyID);
-static MenuRef			createActionMenu					();
-static void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
-static void				disposePanel						(Panel_Ref, void*);
-static void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static SInt32			panelChanged						(Panel_Ref, Panel_Message, void*);
-static void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				refreshDisplay						(MyMacrosPanelUIPtr);
-static void				setDataBrowserColumnWidths			(MyMacrosPanelUIPtr);
+pascal OSStatus		accessDataBrowserItemData			(ControlRef, DataBrowserItemID, DataBrowserPropertyID,
+														 DataBrowserItemDataRef, Boolean);
+pascal Boolean		compareDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemID,
+														 DataBrowserPropertyID);
+MenuRef				createActionMenu					();
+void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
+void				disposePanel						(Panel_Ref, void*);
+void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+SInt32				panelChanged						(Panel_Ref, Panel_Message, void*);
+void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				refreshDisplay						(My_MacrosPanelUIPtr);
+void				setDataBrowserColumnWidths			(My_MacrosPanelUIPtr);
+
+} // anonymous namespace
 
 
 
@@ -231,7 +224,7 @@ PrefPanelMacros_New ()
 	
 	if (result != nullptr)
 	{
-		MyMacrosPanelDataPtr	dataPtr = new MyMacrosPanelData;
+		My_MacrosPanelDataPtr	dataPtr = new My_MacrosPanelData;
 		CFStringRef				nameCFString = nullptr;
 		
 		
@@ -252,14 +245,15 @@ PrefPanelMacros_New ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
-Initializes a MyMacrosDataBrowserCallbacks structure.
+Initializes a My_MacrosDataBrowserCallbacks structure.
 
 (3.1)
 */
-MyMacrosDataBrowserCallbacks::
-MyMacrosDataBrowserCallbacks ()
+My_MacrosDataBrowserCallbacks::
+My_MacrosDataBrowserCallbacks ()
 {
 	// set up all the callbacks needed for the data browser
 	this->listCallbacks.version = kDataBrowserLatestCallbacks;
@@ -273,16 +267,16 @@ MyMacrosDataBrowserCallbacks ()
 	assert(nullptr != this->listCallbacks.u.v1.itemDataCallback);
 	this->listCallbacks.u.v1.itemCompareCallback = NewDataBrowserItemCompareUPP(compareDataBrowserItems);
 	assert(nullptr != this->listCallbacks.u.v1.itemCompareCallback);
-}// MyMacrosDataBrowserCallbacks default constructor
+}// My_MacrosDataBrowserCallbacks default constructor
 
 
 /*!
-Tears down a MyMacrosDataBrowserCallbacks structure.
+Tears down a My_MacrosDataBrowserCallbacks structure.
 
 (3.1)
 */
-MyMacrosDataBrowserCallbacks::
-~MyMacrosDataBrowserCallbacks ()
+My_MacrosDataBrowserCallbacks::
+~My_MacrosDataBrowserCallbacks ()
 {
 	// dispose callbacks
 	if (nullptr != this->listCallbacks.u.v1.itemDataCallback)
@@ -295,31 +289,32 @@ MyMacrosDataBrowserCallbacks::
 		DisposeDataBrowserItemCompareUPP(this->listCallbacks.u.v1.itemCompareCallback),
 			this->listCallbacks.u.v1.itemCompareCallback = nullptr;
 	}
-}// MyMacrosDataBrowserCallbacks destructor
+}// My_MacrosDataBrowserCallbacks destructor
 
 
 /*!
-Initializes a MyMacrosPanelData structure.
+Initializes a My_MacrosPanelData structure.
 
 (3.1)
 */
-MyMacrosPanelData::
-MyMacrosPanelData ()
+My_MacrosPanelData::
+My_MacrosPanelData ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 panel(nullptr),
-interfacePtr(nullptr)
+interfacePtr(nullptr),
+dataModel(nullptr)
 {
-}// MyMacrosPanelData default constructor
+}// My_MacrosPanelData default constructor
 
 
 /*!
-Initializes a MyMacrosPanelUI structure.
+Initializes a My_MacrosPanelUI structure.
 
 (3.1)
 */
-MyMacrosPanelUI::
-MyMacrosPanelUI		(Panel_Ref		inPanel,
+My_MacrosPanelUI::
+My_MacrosPanelUI	(Panel_Ref		inPanel,
 					 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
@@ -354,16 +349,16 @@ macroSetChangeListener		(nullptr)
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
-}// MyMacrosPanelUI 2-argument constructor
+}// My_MacrosPanelUI 2-argument constructor
 
 
 /*!
-Tears down a MyMacrosPanelUI structure.
+Tears down a My_MacrosPanelUI structure.
 
 (3.1)
 */
-MyMacrosPanelUI::
-~MyMacrosPanelUI ()
+My_MacrosPanelUI::
+~My_MacrosPanelUI ()
 {
 	// remove event handlers
 	Macros_StopMonitoring(kMacros_ChangeActiveSetPlanned, this->macroSetChangeListener);
@@ -373,7 +368,7 @@ MyMacrosPanelUI::
 	ListenerModel_ReleaseListener(&this->macroSetChangeListener);
 	Preferences_StopMonitoring(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible);
 	ListenerModel_ReleaseListener(&this->preferenceChangeListener);
-}// MyMacrosPanelUI destructor
+}// My_MacrosPanelUI destructor
 
 
 /*!
@@ -384,7 +379,7 @@ Returns this parent.
 (3.1)
 */
 HIViewWrap
-MyMacrosPanelUI::
+My_MacrosPanelUI::
 createContainerView		(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
 const
@@ -474,8 +469,8 @@ const
 			
 			
 			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDInvokeWith;
-			columnInfo.headerBtnDesc.minimumWidth = kMyMaxMacroKeyColumnWidthInPixels;
-			columnInfo.headerBtnDesc.maximumWidth = kMyMaxMacroKeyColumnWidthInPixels;
+			columnInfo.headerBtnDesc.minimumWidth = kMy_MaxMacroKeyColumnWidthInPixels;
+			columnInfo.headerBtnDesc.maximumWidth = kMy_MaxMacroKeyColumnWidthInPixels;
 			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
 			assert_noerr(error);
 			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
@@ -498,8 +493,8 @@ const
 			
 			columnInfo.propertyDesc.propertyType = kDataBrowserPopupMenuType;
 			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDAction;
-			columnInfo.headerBtnDesc.minimumWidth = kMyMaxMacroActionColumnWidthInPixels;
-			columnInfo.headerBtnDesc.maximumWidth = kMyMaxMacroActionColumnWidthInPixels;
+			columnInfo.headerBtnDesc.minimumWidth = kMy_MaxMacroActionColumnWidthInPixels;
+			columnInfo.headerBtnDesc.maximumWidth = kMy_MaxMacroActionColumnWidthInPixels;
 			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
 			assert_noerr(error);
 			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
@@ -563,6 +558,29 @@ const
 	#endif
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
 		(OSStatus)SetDataBrowserTableViewHiliteStyle(macrosList, kDataBrowserTableViewFillHilite);
+		{
+			DataBrowserPropertyFlags	flags = 0;
+			
+			
+			error = GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, &flags);
+			if (noErr == error)
+			{
+				flags |= kDataBrowserPropertyIsMutable;
+				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, flags);
+			}
+			error = GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction, &flags);
+			if (noErr == error)
+			{
+				flags |= kDataBrowserPropertyIsMutable;
+				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDAction, flags);
+			}
+			error = GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDContents, &flags);
+			if (noErr == error)
+			{
+				flags |= kDataBrowserPropertyIsMutable;
+				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDContents, flags);
+			}
+		}
 		
 		error = HIViewAddSubview(result, macrosList);
 		assert_noerr(error);
@@ -586,7 +604,24 @@ const
 	}
 	
 	return result;
-}// MyMacrosPanelUI::createContainerView
+}// My_MacrosPanelUI::createContainerView
+
+
+/*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_MacrosPanelUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		// read each macro
+		// UNIMPLEMENTED
+	}
+}// My_MacrosPanelUI::readPreferences
 
 
 /*!
@@ -596,7 +631,7 @@ belongs in the specified list.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 accessDataBrowserItemData	(ControlRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -714,7 +749,7 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 				
 				result = SetDataBrowserItemDataMenuRef(inItemData, actionMenu);
 				assert_noerr(result);
-				result = SetDataBrowserItemDataValue(inItemData, 3/* selected item index */);
+				result = SetDataBrowserItemDataValue(inItemData, 1/* selected item index */);
 			}
 			break;
 		
@@ -754,7 +789,17 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 		
 		case kMyDataBrowserPropertyIDAction:
 			// user has changed what the macro does; update the command in memory
-			// UNIMPLEMENTED
+			{
+				SInt32		selectedItem = 0;
+				
+				
+				result = GetDataBrowserItemDataValue(inItemData, &selectedItem);
+				if (noErr == result)
+				{
+					// change purpose of macro - UNIMPLEMENTED
+					result = noErr;
+				}
+			}
 			result = paramErr;
 			break;
 		
@@ -789,13 +834,15 @@ method compares items in the list.
 
 (3.1)
 */
-static pascal Boolean
+pascal Boolean
 compareDataBrowserItems		(ControlRef					inDataBrowser,
 							 DataBrowserItemID			inItemOne,
 							 DataBrowserItemID			inItemTwo,
 							 DataBrowserPropertyID		inSortProperty)
 {
-	Boolean		result = false;
+	CFStringRef		string1 = nullptr;
+	CFStringRef		string2 = nullptr;
+	Boolean			result = false;
 	
 	
 	switch (inSortProperty)
@@ -820,6 +867,16 @@ compareDataBrowserItems		(ControlRef					inDataBrowser,
 		// ???
 		break;
 	}
+	
+	// check for nullptr, because CFStringCompare() will not deal with it
+	if ((nullptr == string1) && (nullptr != string2)) result = true;
+	else if ((nullptr == string1) || (nullptr == string2)) result = false;
+	else
+	{
+		result = (kCFCompareLessThan == CFStringCompare(string1, string2,
+														kCFCompareCaseInsensitive | kCFCompareLocalized/* options */));
+	}
+	
 	return result;
 }// compareDataBrowserItems
 
@@ -830,7 +887,7 @@ macro list, showing the user what macros can do.
 
 (3.1)
 */
-static MenuRef
+MenuRef
 createActionMenu ()
 {
 	MenuRef		result = nullptr;
@@ -854,7 +911,7 @@ dimensions.
 
 (3.1)
 */
-static void
+void
 deltaSizePanelContainerHIView	(HIViewRef		inView,
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
@@ -863,7 +920,7 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 	if ((0 != inDeltaX) || (0 != inDeltaY))
 	{
 		HIWindowRef const		kPanelWindow = GetControlOwner(inView);
-		MyMacrosPanelUIPtr		interfacePtr = REINTERPRET_CAST(inContext, MyMacrosPanelUIPtr);
+		My_MacrosPanelUIPtr		interfacePtr = REINTERPRET_CAST(inContext, My_MacrosPanelUIPtr);
 		HIViewWrap				viewWrap(idMyDataBrowserMacroSetList, kPanelWindow);
 		
 		
@@ -886,11 +943,11 @@ associated with the specified panel.
 
 (3.0)
 */
-static void
+void
 disposePanel	(Panel_Ref		UNUSED_ARGUMENT(inPanel),
 				 void*			inDataPtr)
 {
-	MyMacrosPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, MyMacrosPanelDataPtr);
+	My_MacrosPanelDataPtr	dataPtr = REINTERPRET_CAST(inDataPtr, My_MacrosPanelDataPtr);
 	
 	
 	// destroy UI, if present
@@ -901,352 +958,19 @@ disposePanel	(Panel_Ref		UNUSED_ARGUMENT(inPanel),
 
 
 /*!
-Returns the data that belongs in the specified cell of
-the macro list.  This routine is of standard
-"FinderListCellDataProcPtr" form, and is invoked
-whenever the Finder List needs to display or sort data
-from the macro list.
-
-Returns "true" only if the specified message has been
-understood and processed successfully.
-
-(3.0)
-*/
-#if 0
-static Boolean
-getFinderListCellData		(FinderListRef					UNUSED_ARGUMENT(inRef),
-							 FinderListRowDescriptor		inRowDescriptor,
-							 FinderListColumnDescriptor		inColumnDescriptor,
-							 FinderListCellDataEvent		inMessage,
-							 void const**					outCellDataBufferPtrPtrIfApplicable,
-							 Size*							outCellDataBufferSizeIfApplicable)
-{
-	enum
-	{
-		kDynamicBufferSize = 255 * sizeof(char)
-	};
-	MacroManager_InvocationMethod   macroKeys = Macros_ReturnMode();
-	char const*						string = nullptr;
-	static Ptr						buffer = nullptr;
-	Boolean							result = false;
-	
-	
-	switch (inMessage)
-	{
-	case kFinderListCellDataEventAcquireLock:
-		if (inColumnDescriptor == kMacrosFinderListColumnDescriptorContents)
-		{
-			// for the contents column, allocate a buffer
-			buffer = Memory_NewPtr(kDynamicBufferSize);
-			result = (buffer != nullptr);
-		}
-		break;
-	
-	case kFinderListCellDataEventReleaseLock:
-		if (inColumnDescriptor == kMacrosFinderListColumnDescriptorContents)
-		{
-			// for the contents column, destroy the buffer
-			Memory_DisposePtr(&buffer);
-			result = true;
-		}
-		break;
-	
-	case kFinderListCellDataEventGetData:
-		// handle this
-		switch (inColumnDescriptor)
-		{
-		case kMacrosFinderListColumnDescriptorInvokeWith:
-			// temporary - should grab localized strings here
-			switch (inRowDescriptor)
-			{
-			case kMacrosFinderListRowDescriptorMacro1:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F1" : "cmd-0";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro2:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F2" : "cmd-1";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro3:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F3" : "cmd-2";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro4:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F4" : "cmd-3";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro5:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F5" : "cmd-4";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro6:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F6" : "cmd-5";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro7:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F7" : "cmd-6";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro8:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F8" : "cmd-7";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro9:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F9" : "cmd-8";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro10:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F10" : "cmd-9";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro11:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F11" : "cmd-=";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro12:
-				*outCellDataBufferPtrPtrIfApplicable = string = (macroKeys == kMacroManager_InvocationMethodFunctionKeys) ? "F12" : "cmd-/";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-			break;
-		
-		case kMacrosFinderListColumnDescriptorMacroName:
-			// temporary - just testing data display here
-			switch (inRowDescriptor)
-			{
-			case kMacrosFinderListRowDescriptorMacro1:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 1";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro2:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 2";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro3:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 3";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro4:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 4";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro5:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 5";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro6:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 6";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro7:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 7";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro8:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 8";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro9:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 9";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro10:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 10";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro11:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 11";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			case kMacrosFinderListRowDescriptorMacro12:
-				*outCellDataBufferPtrPtrIfApplicable = string = "macro 12";
-				*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(string);
-				result = true;
-				break;
-			
-			default:
-				// ???
-				break;
-			}
-			break;
-		
-		case kMacrosFinderListColumnDescriptorContents:
-			// read the appropriate text directly from the macro store
-			{
-				MacroSet	macroSet = Macros_ReturnActiveSet();
-				
-				
-				switch (inRowDescriptor)
-				{
-				case kMacrosFinderListRowDescriptorMacro1:
-					Macros_Get(macroSet, 0, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro2:
-					Macros_Get(macroSet, 1, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro3:
-					Macros_Get(macroSet, 2, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro4:
-					Macros_Get(macroSet, 3, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro5:
-					Macros_Get(macroSet, 4, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro6:
-					Macros_Get(macroSet, 5, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro7:
-					Macros_Get(macroSet, 6, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro8:
-					Macros_Get(macroSet, 7, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro9:
-					Macros_Get(macroSet, 8, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro10:
-					Macros_Get(macroSet, 9, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro11:
-					Macros_Get(macroSet, 10, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				case kMacrosFinderListRowDescriptorMacro12:
-					Macros_Get(macroSet, 11, buffer, kDynamicBufferSize);
-					*outCellDataBufferPtrPtrIfApplicable = buffer;
-					*outCellDataBufferSizeIfApplicable = CPP_STD::strlen(buffer);
-					result = true;
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-			}
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	return result;
-}// getFinderListCellData
-#endif
-
-
-/*!
 Invoked whenever interesting macro activity occurs.
 This routine responds by updating the macro list
 to be sure it displays accurate information.
 
 (3.0)
 */
-static void
+void
 macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inMacrosChange,
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
 					 void*					inMyMacrosPanelUIPtr)
 {
-	MyMacrosPanelUIPtr	interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, MyMacrosPanelUIPtr);
+	My_MacrosPanelUIPtr		interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, My_MacrosPanelUIPtr);
 	
 	
 	switch (inMacrosChange)
@@ -1320,7 +1044,7 @@ of one of the preferences dialog’s panels changes.
 
 (3.0)
 */
-static SInt32
+SInt32
 panelChanged	(Panel_Ref		inPanel,
 				 Panel_Message	inMessage,
 				 void*			inDataPtr)
@@ -1334,12 +1058,12 @@ panelChanged	(Panel_Ref		inPanel,
 	{
 	case kPanel_MessageCreateViews: // specification of the window containing the panel - create controls using this window
 		{
-			MyMacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																	MyMacrosPanelDataPtr);
+			My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																	My_MacrosPanelDataPtr);
 			HIWindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, HIWindowRef*);
 			
 			
-			panelDataPtr->interfacePtr = new MyMacrosPanelUI(inPanel, *windowPtr);
+			panelDataPtr->interfacePtr = new My_MacrosPanelUI(inPanel, *windowPtr);
 			assert(nullptr != panelDataPtr->interfacePtr);
 			setDataBrowserColumnWidths(panelDataPtr->interfacePtr);
 		}
@@ -1400,17 +1124,23 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewDataSet:
 		{
+			My_MacrosPanelDataPtr				panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_MacrosPanelDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
-			// UNIMPLEMENTED
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
 		break;
 	
 	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
 		{
-			//MyMacrosPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnAuxiliaryDataPtr(inPanel), MyMacrosPanelDataPtr);
-			//Boolean				isNowVisible = *((Boolean*)inDataPtr);
+			//My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnAuxiliaryDataPtr(inPanel), My_MacrosPanelDataPtr);
+			//Boolean					isNowVisible = *((Boolean*)inDataPtr);
 			
 			
 			// hack - on pre-Mac OS 9 systems, the pesky “Edit...” buttons sticks around for some reason; explicitly show/hide it
@@ -1434,14 +1164,14 @@ states are up to date for the changed preference.
 
 (3.1)
 */
-static void
+void
 preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inPreferenceTagThatChanged,
 					 void*					inEventContextPtr,
 					 void*					inMyMacrosPanelUIPtr)
 {
-	Preferences_ChangeContext*		contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
-	MyMacrosPanelUIPtr				interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, MyMacrosPanelUIPtr);
+	//Preferences_ChangeContext*		contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
+	My_MacrosPanelUIPtr				interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, My_MacrosPanelUIPtr);
 	size_t							actualSize = 0L;
 	
 	
@@ -1494,8 +1224,8 @@ or by switching tabs, etc.).
 
 (3.0)
 */
-static void
-refreshDisplay		(MyMacrosPanelUIPtr		inInterfacePtr)
+void
+refreshDisplay		(My_MacrosPanelUIPtr	inInterfacePtr)
 {
 	HIViewWrap		macrosListContainer(idMyDataBrowserMacroSetList, GetControlOwner(inInterfacePtr->mainView));
 	assert(macrosListContainer.exists());
@@ -1522,8 +1252,8 @@ proportionately based on the total width.
 
 (3.1)
 */
-static void
-setDataBrowserColumnWidths	(MyMacrosPanelUIPtr		inInterfacePtr)
+void
+setDataBrowserColumnWidths	(My_MacrosPanelUIPtr	inInterfacePtr)
 {
 	Rect			containerRect;
 	HIViewWrap		macrosListContainer(idMyDataBrowserMacroSetList, GetControlOwner(inInterfacePtr->mainView));
@@ -1540,14 +1270,14 @@ setDataBrowserColumnWidths	(MyMacrosPanelUIPtr		inInterfacePtr)
 		
 		
 		// key equivalent is relatively small
-		calculatedWidth = kMyMaxMacroKeyColumnWidthInPixels/* arbitrary */;
+		calculatedWidth = kMy_MaxMacroKeyColumnWidthInPixels/* arbitrary */;
 		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
 					(macrosListContainer, kMyDataBrowserPropertyIDInvokeWith,
 						STATIC_CAST(calculatedWidth, UInt16));
 		totalWidthSoFar += STATIC_CAST(calculatedWidth, UInt16);
 		
 		// action menu is relatively small
-		calculatedWidth = kMyMaxMacroActionColumnWidthInPixels/* arbitrary */;
+		calculatedWidth = kMy_MaxMacroActionColumnWidthInPixels/* arbitrary */;
 		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
 					(macrosListContainer, kMyDataBrowserPropertyIDAction,
 						STATIC_CAST(calculatedWidth, UInt16));
@@ -1566,5 +1296,7 @@ setDataBrowserColumnWidths	(MyMacrosPanelUIPtr		inInterfacePtr)
 						kAvailableWidth - totalWidthSoFar);
 	}
 }// setDataBrowserColumnWidths
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
