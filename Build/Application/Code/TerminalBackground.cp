@@ -429,10 +429,13 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				// start with a background similar to that of the text, but darker
 				// so as to create a subtle border around the interior text area
 				RGBBackColor(&backgroundColor);
+			#if 0
 					UseSelectionColors();//TMP
 					UseSelectionColors();//TMP
+			#endif
 				EraseRect(&bounds);
 				
+			#if 0
 				// frame the background in a color that contrasts with the background
 				// (this may become user-configurable); for now, take advantage of the
 				// algorithm in UseSelectionColors(), which tends to use a color darker
@@ -455,7 +458,9 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 					++(bounds.bottom);
 					FrameRect(&bounds);
 				}
+			#endif
 				
+			#if 0
 				// frame the background in a color that contrasts with the background
 				// (this may become user-configurable); for now, take advantage of the
 				// algorithm in UseSelectionColors(), which tends to use a color darker
@@ -470,6 +475,7 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				++(bounds.right);
 				++(bounds.bottom);
 				FrameRect(&bounds);
+			#endif
 				
 				// focus ring
 				{
