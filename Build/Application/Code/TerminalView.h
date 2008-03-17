@@ -462,6 +462,9 @@ HIViewRef
 	TerminalView_ReturnContainerHIView			(TerminalViewRef			inView);
 
 HIViewRef
+	TerminalView_ReturnDragFocusHIView			(TerminalViewRef			inView);
+
+HIViewRef
 	TerminalView_ReturnUserFocusHIView			(TerminalViewRef			inView);
 
 TerminalViewRef

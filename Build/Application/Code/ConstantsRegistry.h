@@ -68,20 +68,12 @@ enum
 {
 	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
 	kConstantsRegistry_ControlPropertyTypeAddressDialog				= 'ADlg',	//!< data: AddressDialog_Ref
+	kConstantsRegistry_ControlPropertyTypeBackgroundColor			= 'BkCl',	//!< data: RGBColor
 	kConstantsRegistry_ControlPropertyTypeColorBoxData				= 'ClBx',	//!< data: MyColorBoxDataPtr (internal to ColorBox.cp)
 	kConstantsRegistry_ControlPropertyTypeShowDragHighlight			= 'Drag',	//!< data: Boolean (if true, draw highlight; if false; erase)
 	kConstantsRegistry_ControlPropertyTypeTerminalBackgroundData	= 'TrmB',	//!< data: MyTerminalBackgroundPtr (internal to TerminalView.cp)
 	kConstantsRegistry_ControlPropertyTypeTerminalViewRef			= 'TrmV',	//!< data: TerminalViewRef
 	kConstantsRegistry_ControlPropertyTypeTerminalWindowRef			= 'TrmW'	//!< data: TerminalWindowRef
-};
-
-/*!
-Control kinds that use AppResources_ReturnCreatorCode()
-(this application) as the signature.
-*/
-enum
-{
-	kConstantsRegistry_ControlDataTagTerminalBackgroundColor		= 'TrmB'	//!< data: MyTerminalBackgroundPtr (internal to TerminalBackground.cp)
 };
 
 /*!

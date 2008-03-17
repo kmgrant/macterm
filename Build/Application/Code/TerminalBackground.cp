@@ -41,6 +41,7 @@
 #include <CarbonEventUtilities.template.h>
 #include <ColorUtilities.h>
 #include <Console.h>
+#include <MemoryBlocks.h>
 
 // MacTelnet includes
 #include "AppResources.h"
@@ -48,6 +49,7 @@
 #include "ConstantsRegistry.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
+#include "DragAndDrop.h"
 #include "EventLoop.h"
 #include "NetEvents.h"
 #include "TerminalBackground.h"
@@ -55,14 +57,26 @@
 
 
 
+#pragma mark Constants
+
+enum
+{
+	/*!
+	Mac OS HIView part codes for Terminal Backgrounds (used ONLY when dealing
+	with the HIView directly!!!).
+	*/
+	kTerminalBackground_ContentPartVoid		= kControlNoPart,	//!< nowhere in the content area
+	kTerminalBackground_ContentPartText		= 1,				//!< draw a focus ring around entire view perimeter
+};
+
 #pragma mark Types
 
 struct MyTerminalBackground
 {
 	MyTerminalBackground	(HIViewRef	inSuperclassViewInstance);
 	
-	HIViewRef	view;
-	RGBColor	backgroundColor;
+	HIViewRef		view;
+	HIViewPartCode	currentContentFocus;	//!< used in the content view focus handler to determine where (if anywhere) a ring goes
 };
 typedef MyTerminalBackground*			MyTerminalBackgroundPtr;
 typedef MyTerminalBackground const*		MyTerminalBackgroundConstPtr;
@@ -73,12 +87,12 @@ static OSStatus			receiveBackgroundContextualMenuSelect	(EventHandlerCallRef, Ev
 																 MyTerminalBackgroundPtr);
 static OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
 																 MyTerminalBackgroundPtr);
+static OSStatus			receiveBackgroundFocus					(EventHandlerCallRef, EventRef,
+																 MyTerminalBackgroundPtr);
 static OSStatus			receiveBackgroundHICommand				(EventHandlerCallRef, EventRef,
 																 MyTerminalBackgroundPtr);
 static pascal OSStatus  receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
 static OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
-																 MyTerminalBackgroundPtr);
-static OSStatus			receiveBackgroundSetData				(EventHandlerCallRef, EventRef,
 																 MyTerminalBackgroundPtr);
 
 #pragma mark Variables
@@ -115,7 +129,7 @@ TerminalBackground_Init ()
 									{ kEventClassControl, kEventControlDraw },
 									{ kEventClassControl, kEventControlContextualMenuClick },
 									{ kEventClassControl, kEventControlGetPartRegion },
-									{ kEventClassControl, kEventControlSetData },
+									{ kEventClassControl, kEventControlSetFocusPart },
 									{ kEventClassCommand, kEventCommandProcess },
 									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
 									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
@@ -229,7 +243,7 @@ TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef)
 #pragma mark Internal Methods
 
 /*!
-Constructor.  See receiveTerminalBackgroundHIObjectEvents().
+Constructor.  See receiveBackgroundHIObjectEvents().
 
 (3.1)
 */
@@ -239,9 +253,17 @@ MyTerminalBackground	(HIViewRef		inSuperclassViewInstance)
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 view(inSuperclassViewInstance)
 {
-	backgroundColor.red = RGBCOLOR_INTENSITY_MAX;
-	backgroundColor.green = RGBCOLOR_INTENSITY_MAX;
-	backgroundColor.blue = RGBCOLOR_INTENSITY_MAX;
+	OSStatus	error = noErr;
+	RGBColor	initialColor;
+	
+	
+	initialColor.red = RGBCOLOR_INTENSITY_MAX;
+	initialColor.green = RGBCOLOR_INTENSITY_MAX;
+	initialColor.blue = RGBCOLOR_INTENSITY_MAX;
+	error = SetControlProperty(view, AppResources_ReturnCreatorCode(),
+								kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+								sizeof(initialColor), &initialColor);
+	assert_noerr(error);
 }// MyTerminalBackground 1-argument constructor
 
 
@@ -316,20 +338,28 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 	assert(kEventClass == kEventClassControl);
 	assert(kEventKind == kEventControlDraw);
 	{
-		HIViewRef	control = nullptr;
+		HIViewRef	view = nullptr;
 		
 		
-		// get the target control
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, control);
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
 		
-		// if the control was found, continue
+		// if the view was found, continue
 		if (noErr == result)
 		{
 			//HIViewPartCode		partCode = 0;
 			CGrafPtr			drawingPort = nullptr;
+			CGContextRef		drawingContext = nullptr;
 			CGrafPtr			oldPort = nullptr;
 			GDHandle			oldDevice = nullptr;
+			RGBColor			backgroundColor;
 			
+			
+			// determine background color
+			result = GetControlProperty(view, AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+										sizeof(backgroundColor), nullptr/* actual size */, &backgroundColor);
+			assert_noerr(result);
 			
 			// find out the current port
 			GetGWorld(&oldPort, &oldDevice);
@@ -348,29 +378,57 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				result = noErr;
 			}
 			
+			// determine the context to draw in with Core Graphics
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
+															drawingContext);
+			assert_noerr(result);
+			
 			// if all information can be found, proceed with drawing
 			if (noErr == result)
 			{
 				// paint background color and draw background picture, if any
 				Rect		bounds;
+				HIRect		floatBounds;
 				RgnHandle	optionalTargetRegion = nullptr;
 				
 				
 				SetPort(drawingPort);
 				
+				// determine boundaries of the content view being drawn;
+				// ensure view-local coordinates
+				HIViewGetBounds(view, &floatBounds);
+				
 				// maybe a focus region has been provided
 				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
 																	optionalTargetRegion))
 				{
+					Rect	clipBounds;
+					HIRect	floatClipBounds;
+					
+					
 					SetClip(optionalTargetRegion);
+					GetRegionBounds(optionalTargetRegion, &clipBounds);
+					floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
+													clipBounds.bottom - clipBounds.top);
+					CGContextClipToRect(drawingContext, floatClipBounds);
+				}
+				else
+				{
+					static RgnHandle	clipRegion = Memory_NewRegion();
+					
+					
+					SetRectRgn(clipRegion, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
+								STATIC_CAST(floatBounds.size.height, SInt16));
+					SetClip(clipRegion);
+					CGContextClipToRect(drawingContext, floatBounds);
 				}
 				
-				GetControlBounds(control, &bounds);
+				GetControlBounds(view, &bounds);
 				OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
 				// start with a background similar to that of the text, but darker
 				// so as to create a subtle border around the interior text area
-				RGBBackColor(&dataPtr->backgroundColor);
+				RGBBackColor(&backgroundColor);
 					UseSelectionColors();//TMP
 					UseSelectionColors();//TMP
 				EraseRect(&bounds);
@@ -387,12 +445,12 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					
 					PenNormal();
-					RGBBackColor(&dataPtr->backgroundColor);
+					RGBBackColor(&backgroundColor);
 					UseSelectionColors();
 					GetPortBackColor(drawingPort, &frameColor); // selection color is normally applied to background, but framing requires a foreground
 					RGBForeColor(&frameColor);
-					InsetRect(&bounds, 1, 1); // make the frame visible, as the control edges are usually covered by a 1-pixel overlap
-					unless (IsControlActive(control)) UseInactiveColors();
+					InsetRect(&bounds, 1, 1); // make the frame visible, as the view edges are usually covered by a 1-pixel overlap
+					unless (IsControlActive(view)) UseInactiveColors();
 					++(bounds.right);
 					++(bounds.bottom);
 					FrameRect(&bounds);
@@ -404,14 +462,26 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				// than the background unless the background is close to black, in which
 				// case a lighter gray is used
 				PenNormal();
-				RGBBackColor(&dataPtr->backgroundColor);
+				RGBBackColor(&backgroundColor);
 				UseSelectionColors();
-				RGBForeColor(&dataPtr->backgroundColor);
-				InsetRect(&bounds, 1, 1); // make the frame visible, as the control edges are usually covered by a 1-pixel overlap
-				unless (IsControlActive(control)) UseInactiveColors();
+				RGBForeColor(&backgroundColor);
+				InsetRect(&bounds, 1, 1); // make the frame visible, as the view edges are usually covered by a 1-pixel overlap
+				unless (IsControlActive(view)) UseInactiveColors();
 				++(bounds.right);
 				++(bounds.bottom);
 				FrameRect(&bounds);
+				
+				// focus ring
+				{
+					Boolean		isFocused = false;
+					
+					
+					// determine if a focus ring is required
+					isFocused = HIViewSubtreeContainsFocus(view);
+					
+					// draw or erase focus ring
+					(OSStatus)HIThemeDrawFocusRect(&floatBounds, isFocused, drawingContext, kHIThemeOrientationNormal);
+				}
 			}
 			
 			// restore port
@@ -420,6 +490,111 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveBackgroundDraw
+
+
+/*!
+Handles "kEventControlSetFocusPart" of "kEventClassControl".
+
+Invoked by Mac OS X whenever the currently-focused part of
+a terminal view should be changed.
+
+(3.0)
+*/
+static OSStatus
+receiveBackgroundFocus	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
+						 EventRef					inEvent,
+						 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlSetFocusPart);
+	{
+		HIViewRef	view = nullptr;
+		
+		
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		
+		// if the view was found, continue
+		if (result == noErr)
+		{
+			HIViewPartCode		focusPart = kControlNoPart;
+			
+			
+			// determine the focus part
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, focusPart);
+			if (result == noErr)
+			{
+				HIViewPartCode		newFocusPart = kTerminalBackground_ContentPartVoid;
+				
+				
+				switch (focusPart)
+				{
+				case kControlFocusNextPart:
+					// advance focus
+					switch (inMyTerminalBackgroundPtr->currentContentFocus)
+					{
+					case kTerminalBackground_ContentPartVoid:
+						// when the previous view is highlighted and focus advances, the
+						// entire terminal view content area should be the next focus target
+						newFocusPart = kTerminalBackground_ContentPartText;
+						break;
+					
+					case kTerminalBackground_ContentPartText:
+					default:
+						// when the entire terminal view is highlighted and focus advances,
+						// the next view should be the next focus target
+						newFocusPart = kTerminalBackground_ContentPartVoid;
+						break;
+					}
+					break;
+				
+				case kControlFocusPrevPart:
+					// reverse focus
+					switch (inMyTerminalBackgroundPtr->currentContentFocus)
+					{
+					case kTerminalBackground_ContentPartVoid:
+						// when the next view is highlighted and focus backs up, the
+						// entire terminal view content area should be the next focus target
+						newFocusPart = kTerminalBackground_ContentPartText;
+						break;
+					
+					case kTerminalBackground_ContentPartText:
+					default:
+						// when the entire terminal view is highlighted and focus backs up,
+						// the previous view should be the next focus target
+						newFocusPart = kTerminalBackground_ContentPartVoid;
+						break;
+					}
+					break;
+				
+				default:
+					// set focus to given part
+					newFocusPart = focusPart;
+					break;
+				}
+				
+				if (inMyTerminalBackgroundPtr->currentContentFocus != newFocusPart)
+				{
+					// update focus flag
+					inMyTerminalBackgroundPtr->currentContentFocus = newFocusPart;
+					
+					// notify the system that the structure region has changed
+					(OSStatus)HIViewReshapeStructure(inMyTerminalBackgroundPtr->view);
+				}
+				
+				// update the part code parameter with the new focus part
+				result = SetEventParameter(inEvent, kEventParamControlPart,
+											typeControlPartCode, sizeof(newFocusPart), &newFocusPart);
+			}
+		}
+	}
+	return result;
+}// receiveBackgroundFocus
 
 
 /*!
@@ -465,6 +640,8 @@ receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRe
 						UIStrings_Result		stringResult = kUIStrings_ResultOK;
 						CFStringRef				askColorCFString = nullptr;
 						PickerMenuItemInfo		editMenuInfo;
+						RGBColor				backgroundColor;
+						OSStatus				error = noErr;
 						Boolean					releaseAskColorCFString = true;
 						
 						
@@ -476,14 +653,26 @@ receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRe
 							releaseAskColorCFString = false;
 						}
 						
+						error = GetControlProperty(inMyTerminalBackgroundPtr->view, AppResources_ReturnCreatorCode(),
+													kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+													sizeof(backgroundColor), nullptr/* actual size */, &backgroundColor);
+						assert_noerr(error);
+						
 						DeactivateFrontmostWindow();
 						result = ColorUtilities_ColorChooserDialogDisplay
-									(askColorCFString, &inMyTerminalBackgroundPtr->backgroundColor/* input */,
-										&inMyTerminalBackgroundPtr->backgroundColor/* output */,
+									(askColorCFString, &backgroundColor/* input */, &backgroundColor/* output */,
 										true/* is modal */, NewUserEventUPP(EventLoop_HandleColorPickerUpdate),
 										&editMenuInfo);
 						RestoreFrontmostWindow();
-						(OSStatus)HIViewSetNeedsDisplay(inMyTerminalBackgroundPtr->view, true);
+						
+						if (result)
+						{
+							error = SetControlProperty(inMyTerminalBackgroundPtr->view, AppResources_ReturnCreatorCode(),
+														kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+														sizeof(backgroundColor), &backgroundColor);
+							assert_noerr(error);
+							(OSStatus)HIViewSetNeedsDisplay(inMyTerminalBackgroundPtr->view, true);
+						}
 						
 						if (releaseAskColorCFString)
 						{
@@ -811,13 +1000,9 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			}
 			break;
 		
-		case kEventControlSetData:
-			//Console_WriteLine("HI OBJECT control set data for terminal background");
-			result = CallNextEventHandler(inHandlerCallRef, inEvent);
-			if ((noErr == result) || (eventNotHandledErr == result))
-			{
-				result = receiveBackgroundSetData(inHandlerCallRef, inEvent, dataPtr);
-			}
+		case kEventControlSetFocusPart:
+			//Console_WriteLine("HI OBJECT control set focus part for terminal background");
+			result = receiveBackgroundFocus(inHandlerCallRef, inEvent, dataPtr);
 			break;
 		
 		default:
@@ -826,7 +1011,7 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 		}
 	}
 	return result;
-}// receiveTerminalBackgroundHIObjectEvents
+}// receiveBackgroundHIObjectEvents
 
 
 /*!
@@ -879,13 +1064,22 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 				case kControlContentMetaPart:
 				case kControlOpaqueMetaPart:
 				case kControlClickableMetaPart:
+				case kTerminalBackground_ContentPartText:
 					GetControlBounds(dataPtr->view, &partBounds);
 					SetRect(&partBounds, 0, 0, partBounds.right - partBounds.left, partBounds.bottom - partBounds.top);
 					break;
 				
+				case kTerminalBackground_ContentPartVoid:
 				default:
 					SetRect(&partBounds, 0, 0, 0, 0);
 					break;
+				}
+				
+				// outset the structure rectangle when focused
+				if ((kControlNoPart != dataPtr->currentContentFocus) &&
+					(kControlStructureMetaPart == partNeedingRegion))
+				{
+					InsetRect(&partBounds, -3, -3);
 				}
 				
 				//Console_WriteValue("request was for region code", partNeedingRegion);
@@ -918,95 +1112,6 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 		}
 	}
 	return result;
-}// receiveTerminalBackgroundRegionRequest
-
-
-/*!
-Handles "kEventControlSetData" of "kEventClassControl".
-
-Updates custom state, such as the background color or
-picture.
-
-(3.1)
-*/
-static OSStatus
-receiveBackgroundSetData	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
-							 EventRef					inEvent,
-							 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
-{
-	OSStatus					result = eventNotHandledErr;
-	MyTerminalBackgroundPtr		dataPtr = inMyTerminalBackgroundPtr;
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	
-	
-	//Console_WriteLine("event handler: terminal background set data");
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlSetData);
-	{
-		// determine the type of data being set
-		HIViewRef	control = nullptr;
-		
-		
-		// get the target control
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, control);
-		
-		// if the control was found, continue
-		if (result == noErr)
-		{
-			HIViewPartCode		partNeedingDataSet = kControlNoPart;
-			
-			
-			// determine the part for which data is being set
-			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode,
-															partNeedingDataSet);
-			if (result == noErr)
-			{
-				FourCharCode	dataType = '----';
-				
-				
-				// determine the setting that is being changed
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlDataTag,
-																typeEnumeration, dataType);
-				if (noErr == result)
-				{
-					switch (dataType)
-					{
-					case kConstantsRegistry_ControlDataTagTerminalBackgroundColor:
-						{
-							SInt32		dataSize = 0;
-							
-							
-							result = CarbonEventUtilities_GetEventParameter
-										(inEvent, kEventParamControlDataBufferSize,
-											typeLongInteger, dataSize);
-							if (noErr == result)
-							{
-								RGBColor const*		colorPtr = nullptr;
-								
-								
-								assert(dataSize == sizeof(RGBColor));
-								result = CarbonEventUtilities_GetEventParameter
-											(inEvent, kEventParamControlDataBuffer,
-												typePtr, colorPtr);
-								if (noErr == result)
-								{
-									dataPtr->backgroundColor = *colorPtr;
-								}
-							}
-						}
-						result = noErr;
-						break;
-					
-					default:
-						// ???
-						break;
-					}
-				}
-			}
-		}
-	}
-	return result;
-}// receiveBackgroundSetData
+}// receiveBackgroundRegionRequest
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -125,14 +125,6 @@ enum
 	kTerminalView_ContentPartText			= 121,				//!< draw a focus ring around terminal text area
 	kTerminalView_ContentPartCursor			= 122,				//!< draw cursor (this part can’t be hit or focused)
 	kTerminalView_ContentPartCursorGhost	= 123,				//!< draw cursor outline (also can’t be hit or focused)
-	
-	/*!
-	Use these constants when referring to the user focus, so that you don’t
-	have to depend on the control type.  For this to work, you have to use an
-	"HIViewRef" returned by TerminalView_ReturnUserFocusHIView() and set your
-	corresponding "HIViewPartCode" to one of the following.
-	*/
-	kTerminalView_UserFocusPaneControlPartCodePrimary		= kTerminalView_ContentPartText
 };
 
 enum MyCursorState
@@ -187,6 +179,7 @@ struct TerminalView
 	CFRetainRelease		accessibilityObject;	// AXUIElementRef; makes terminal views compatible with accessibility technologies
 	HIViewRef			encompassingHIView;		// contains all other HIViews but is otherwise invisible
 	HIViewRef			backgroundHIView;		// view that renders the background of the terminal screen (border included)
+	HIViewRef			focusAndPaddingHIView;	// view that renders the focus ring and is outset by the padding amount from the content view
 	HIViewRef			contentHIView;			// view that renders the text of the terminal screen
 	
 	HIViewPartCode		currentContentFocus;	// used in the content view focus handler to determine where (if anywhere) a ring goes
@@ -1482,6 +1475,29 @@ TerminalView_ReturnDisplayMode	(TerminalViewRef	inView)
 
 
 /*!
+Returns the Mac OS HIView that can render a drag highlight
+(via TerminalView_SetDragHighlight()) and should have drag
+handlers installed on it.
+
+This might be, but is NOT guaranteed to be, the same as the
+user focus view.  See also TerminalView_ReturnUserFocusHIView().
+
+(3.1)
+*/
+HIViewRef
+TerminalView_ReturnDragFocusHIView	(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	HIViewRef				result = nullptr;
+	
+	
+	// should match whichever view has drag handlers installed on it
+	result = viewPtr->contentHIView;
+	return result;
+}// ReturnDragFocusHIView
+
+
+/*!
 DEPRECATED.  Use TerminalView_ReturnSelectedTextAsNewUnicode()
 instead.
 
@@ -1627,7 +1643,7 @@ TerminalView_ReturnUserFocusHIView	(TerminalViewRef	inView)
 	
 	
 	// should match whichever view has the set-focus-part event handler installed on it
-	result = viewPtr->contentHIView;
+	result = viewPtr->focusAndPaddingHIView;
 	return result;
 }// ReturnUserFocusHIView
 
@@ -2318,12 +2334,14 @@ TerminalView_SetDisplayMode		(TerminalViewRef			inView,
 
 /*!
 Arranges for a drag highlight to be shown or hidden for
-the given view, which should be the content view of a
+the given view, which should be the drag focus view of a
 terminal view.  Also updates the cursor, because this is
 presumably happening during a drag.
 
 The highlight is only rendered when the view is drawn.
 However, this call will invalidate the appropriate area.
+
+See TerminalView_ReturnDragFocusHIView().
 
 (3.1)
 */
@@ -2793,6 +2811,7 @@ accessibilityObject(AXUIElementCreateWithHIObjectAndIdentifier
 					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */)),
 encompassingHIView(nullptr), // set later
 backgroundHIView(nullptr), // set later
+focusAndPaddingHIView(nullptr), // set later
 contentHIView(inSuperclassViewInstance),
 currentContentFocus(kControlEntireControl), // set later
 containerResizeHandler(), // set later
@@ -2939,6 +2958,51 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		setFontAndSize(this, fontName, fontSize);
 	}
 	
+	// initialize focus area
+	this->currentContentFocus = kTerminalView_ContentPartVoid;
+	
+	// create HIViews
+	if (this->contentHIView != nullptr)
+	{
+		OSStatus	error = noErr;
+		
+		
+		// see the HIObject callbacks, this will already exist
+		error = HIViewSetVisible(this->contentHIView, true);
+		assert_noerr(error);
+		
+		assert_noerr(TerminalBackground_CreateHIView(this->focusAndPaddingHIView));
+		error = HIViewSetVisible(this->focusAndPaddingHIView, true);
+		assert_noerr(error);
+		
+		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView));
+		error = HIViewSetVisible(this->backgroundHIView, true);
+		assert_noerr(error);
+		
+		// initialize matte color
+		{
+			RGBColor* const		kColorPtr = &this->text.colors[kMyBasicColorIndexMatteBackground];
+			
+			
+			error = SetControlProperty(this->backgroundHIView, AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+										sizeof(*kColorPtr), kColorPtr);
+			assert_noerr(error);
+		}
+		
+		// since no extra rendering, etc. is required, make this a mere ALIAS
+		// for the background view; this is so that code intending to operate
+		// on the “entire” view can clearly indicate this by referring to the
+		// encompassing pane instead of some specific pane that might change
+		this->encompassingHIView = this->backgroundHIView;
+		
+		// set up embedding hierarchy
+		error = HIViewAddSubview(this->backgroundHIView, this->focusAndPaddingHIView);
+		assert_noerr(error);
+		error = HIViewAddSubview(this->focusAndPaddingHIView, this->contentHIView);
+		assert_noerr(error);
+	}
+	
 	// store the colors this view will be using
 	assert_noerr(createWindowColorPalette(this, inFormat));
 	
@@ -2953,45 +3017,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		this->animation.rendering.stage = 0;
 		this->animation.rendering.stageDelta = +1;
 		this->animation.rendering.region = Memory_NewRegion();
-	}
-	
-	// initialize focus area
-	this->currentContentFocus = kTerminalView_ContentPartVoid;
-	
-	// create HIViews
-	if (this->contentHIView != nullptr)
-	{
-		OSStatus	error = noErr;
-		
-		
-		// see the HIObject callbacks, this will already exist
-		error = HIViewSetVisible(this->contentHIView, true);
-		assert_noerr(error);
-		
-		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView));
-		error = HIViewSetVisible(this->backgroundHIView, true);
-		assert_noerr(error);
-		
-		// initialize matte color
-		{
-			RGBColor* const		kColorPtr = &this->text.colors[kMyBasicColorIndexMatteBackground];
-			
-			
-			error = SetControlData(this->backgroundHIView, kControlEntireControl,
-									kConstantsRegistry_ControlDataTagTerminalBackgroundColor,
-									sizeof(*kColorPtr), kColorPtr);
-			//assert_noerr(error);
-		}
-		
-		// since no extra rendering, etc. is required, make this a mere ALIAS
-		// for the background view; this is so that code intending to operate
-		// on the “entire” view can clearly indicate this by referring to the
-		// encompassing pane instead of some specific pane that might change
-		this->encompassingHIView = this->backgroundHIView;
-		
-		// set up embedding hierarchy
-		error = HIViewAddSubview(this->backgroundHIView, this->contentHIView);
-		assert_noerr(error);
 	}
 	
 	// install a monitor on the container that finds out about
@@ -3152,7 +3177,7 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		inTimer,
 		}
 		
 		// invalidate only the appropriate (blinking) parts of the screen
-		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->backgroundHIView, ptr->animation.rendering.region, true);
+		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->contentHIView, ptr->animation.rendering.region, true);
 	}
 }// animateBlinkingPaletteEntries
 
@@ -4081,7 +4106,6 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// timer when it is not needed
 		if (STYLE_BLINKING(inAttributes))
 		{
-			screenToLocalRect(viewPtr, &sectionBounds);
 			RectRgn(gInvalidationScratchRegion(), &sectionBounds);
 			UnionRgn(gInvalidationScratchRegion(), viewPtr->animation.rendering.region,
 						viewPtr->animation.rendering.region);
@@ -5716,14 +5740,28 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		}
 	}
 	
-	// keep the text area centered inside the background region
+	// keep the text area centered inside the background region;
+	// keep the focus/padding background the right padding distance
+	// away from the text
 	{
-		HIRect		terminalInteriorBounds = CGRectMake(0, 0, viewPtr->screen.viewWidthInPixels,
-														viewPtr->screen.viewHeightInPixels);
+		Float32 const	kPadLeft = (viewPtr->screen.paddingLeftEmScale *
+									STATIC_CAST(viewPtr->text.font.widthPerCharacter, Float32));
+		Float32 const	kPadRight = (viewPtr->screen.paddingRightEmScale *
+										STATIC_CAST(viewPtr->text.font.widthPerCharacter, Float32));
+		Float32 const	kPadTop = (viewPtr->screen.paddingTopEmScale *
+									STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, this is an “em” scale */, Float32));
+		Float32 const	kPadBottom = (viewPtr->screen.paddingBottomEmScale *
+										STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, this is an “em” scale */, Float32));
+		HIRect			terminalFocusFrame = CGRectMake(0, 0, kPadLeft + viewPtr->screen.viewWidthInPixels + kPadRight,
+														kPadTop + viewPtr->screen.viewHeightInPixels + kPadBottom);
+		HIRect			terminalInteriorFrame = CGRectMake(kPadLeft, kPadTop, viewPtr->screen.viewWidthInPixels,
+															viewPtr->screen.viewHeightInPixels);
 		
 		
-		RegionUtilities_CenterHIRectIn(terminalInteriorBounds, terminalViewBounds);
-		HIViewSetFrame(viewPtr->contentHIView, &terminalInteriorBounds);
+		// TEMPORARY: this should in fact respect margin values too
+		RegionUtilities_CenterHIRectIn(terminalFocusFrame, terminalViewBounds);
+		HIViewSetFrame(viewPtr->focusAndPaddingHIView, &terminalFocusFrame);
+		HIViewSetFrame(viewPtr->contentHIView, &terminalInteriorFrame);
 	}
 	
 	// recalculate cursor boundaries for the specified view
@@ -6910,7 +6948,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 		
 		case kEventControlSetFocusPart:
 			//Console_WriteLine("HI OBJECT control set focus part for terminal view");
-			result = receiveTerminalViewFocus(inHandlerCallRef, inEvent, view);
+			//TMP//result = receiveTerminalViewFocus(inHandlerCallRef, inEvent, view);
 			break;
 		
 		case kEventControlTrack:
@@ -7152,7 +7190,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// draw or erase focus ring
 						if (viewPtr->screen.focusRingEnabled)
 						{
-							(OSStatus)HIThemeDrawFocusRect(&floatBounds, isFocused, drawingContext, kHIThemeOrientationNormal);
+							//TMP//(OSStatus)HIThemeDrawFocusRect(&floatBounds, isFocused, drawingContext, kHIThemeOrientationNormal);
 						}
 						
 						// perform any necessary rendering for drags
@@ -7924,7 +7962,7 @@ receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 					OffsetRect(&partBounds, -partBounds.left, -partBounds.top); // make view-relative coordinates
 					break;
 				
-				case FUTURE_SYMBOL(-3, kControlOpaqueMetaPart):
+				case kControlOpaqueMetaPart:
 					// the text area is designed to draw on top of a background widget,
 					// so in general it is not really considered opaque anywhere (this
 					// could be changed for certain cases, however)
@@ -8874,6 +8912,16 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 	{
 	case kTerminalView_ColorIndexNormalBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
+		if (nullptr != inTerminalViewPtr->focusAndPaddingHIView)
+		{
+			OSStatus	error = noErr;
+			
+			
+			error = SetControlProperty(inTerminalViewPtr->focusAndPaddingHIView, AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+										sizeof(*inColorPtr), inColorPtr);
+			assert_noerr(error);
+		}
 		break;
 	
 	case kTerminalView_ColorIndexBoldText:
@@ -8900,9 +8948,10 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 				OSStatus	error = noErr;
 				
 				
-				error = SetControlData(inTerminalViewPtr->backgroundHIView, kControlEntireControl,
-										kConstantsRegistry_ControlDataTagTerminalBackgroundColor,
-										sizeof(*inColorPtr), inColorPtr);
+				error = SetControlProperty(inTerminalViewPtr->backgroundHIView, AppResources_ReturnCreatorCode(),
+											kConstantsRegistry_ControlPropertyTypeBackgroundColor,
+											sizeof(*inColorPtr), inColorPtr);
+				assert_noerr(error);
 			}
 		}
 		break;
@@ -9712,23 +9761,11 @@ visualBell	(TerminalViewRef	inView)
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	HIWindowRef const		kViewWindow = HIViewGetWindow(viewPtr->contentHIView);
+	Boolean const			kWasReverseVideo = viewPtr->screen.isReverseVideo;
 	Boolean					visual = false;				// is visual used?
 	Boolean					visualPreference = false;	// is ONLY visual used?
-	Rect					terminalScreenRect;
-	CGrafPtr				oldPort = nullptr;
-	GDHandle				oldDevice = nullptr;
 	size_t					actualSize = 0L;
 	
-	
-	GetGWorld(&oldPort, &oldDevice);
-	
-	setPortScreenPort(viewPtr);
-	
-	if (viewPtr == nullptr) SetRect(&terminalScreenRect, 0, 0, 0, 0);
-	else
-	{
-		GetControlBounds(viewPtr->contentHIView, &terminalScreenRect);
-	}
 	
 	// If the user turned off audible bells, always use a visual;
 	// otherwise, use a visual if the beep is in a background window.
@@ -9742,7 +9779,8 @@ visualBell	(TerminalViewRef	inView)
 	
 	if (visual)
 	{
-		InvertRect(&terminalScreenRect);
+		TerminalView_ReverseVideo(inView, !kWasReverseVideo); // also invalidates view
+		(OSStatus)HIViewRender(viewPtr->contentHIView);
 		QDFlushPortBuffer(GetWindowPort(kViewWindow), nullptr/* region */);
 	}
 	
@@ -9750,16 +9788,14 @@ visualBell	(TerminalViewRef	inView)
 	// very little delay, therefore a standard visual delay of 8
 	// ticks should be enforced even if a beep was emitted.
 	GenericThreads_DelayMinimumTicks(8);
-	setPortScreenPort(viewPtr);
 	
 	// if previously inverted, invert again to restore to normal
 	if (visual)
 	{
-		InvertRect(&terminalScreenRect);
+		TerminalView_ReverseVideo(inView, kWasReverseVideo); // also invalidates view
+		(OSStatus)HIViewRender(viewPtr->contentHIView);
 		QDFlushPortBuffer(GetWindowPort(kViewWindow), nullptr/* region */);
 	}
-	
-	SetGWorld(oldPort, oldDevice);
 	
 	if (gPreferenceProxies.notifyOfBeeps) Alert_BackgroundNotification();
 }// visualBell

@@ -7365,7 +7365,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (viewArray != nullptr)
 				{
-					HIViewRef			view = nullptr;
+					HIViewRef			userFocusView = nullptr;
+					HIViewRef			dragFocusView = nullptr;
 					register SInt16		i = 0;
 					OSStatus			error = noErr;
 					
@@ -7381,7 +7382,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
 					for (i = 0; i < viewCount; ++i)
 					{
-						view = TerminalView_ReturnUserFocusHIView(viewArray[i]);
+						userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
+						dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
 						
 						// install a callback that responds to drag-and-drop in views,
 						// and a callback that responds to key presses in views
@@ -7406,42 +7408,42 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							
 							
 							// ensure keyboard input to this view is seen
-							error = HIViewInstallEventHandler(view, ptr->terminalViewTextInputUPP,
+							error = HIViewInstallEventHandler(userFocusView, ptr->terminalViewTextInputUPP,
 																GetEventTypeCount(whenTerminalViewTextInput),
 																whenTerminalViewTextInput, session/* user data */,
-																&ptr->terminalViewTextInputHandlers[view]);
+																&ptr->terminalViewTextInputHandlers[userFocusView]);
 							assert_noerr(error);
 							
 						#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 							// if possible, allow focus-follows-mouse
-							error = HIViewInstallEventHandler(view, ptr->terminalViewEnteredUPP,
+							error = HIViewInstallEventHandler(dragFocusView, ptr->terminalViewEnteredUPP,
 																GetEventTypeCount(whenTerminalViewEntered),
 																whenTerminalViewEntered, session/* user data */,
-																&ptr->terminalViewEnteredHandlers[view]);
+																&ptr->terminalViewEnteredHandlers[dragFocusView]);
 							assert_noerr(error);
 							{
 								HIViewTrackingAreaRef	ignoredRef = nullptr;
 								
 								
-								error = HIViewNewTrackingArea(view, nullptr/* shape */, 0/* ID */,
+								error = HIViewNewTrackingArea(dragFocusView, nullptr/* shape */, 0/* ID */,
 																&ignoredRef);
 								assert_noerr(error);
 							}
 						#endif
 							
 							// ensure drags to this view are seen
-							error = HIViewInstallEventHandler(view, ptr->terminalViewDragDropUPP,
+							error = HIViewInstallEventHandler(dragFocusView, ptr->terminalViewDragDropUPP,
 																GetEventTypeCount(whenTerminalViewDragDrop),
 																whenTerminalViewDragDrop, session/* user data */,
-																&ptr->terminalViewDragDropHandlers[view]);
+																&ptr->terminalViewDragDropHandlers[dragFocusView]);
 							assert_noerr(error);
-							error = SetControlDragTrackingEnabled(view, true/* is drag enabled */);
+							error = SetControlDragTrackingEnabled(dragFocusView, true/* is drag enabled */);
 							assert_noerr(error);
 						}
 						
 						// enable drag tracking for the window, if it is not enabled already
 						error = SetAutomaticControlDragTrackingEnabledForWindow
-								(GetControlOwner(view), true/* is drag enabled */);
+								(GetControlOwner(dragFocusView), true/* is drag enabled */);
 						assert_noerr(error);
 					}
 					Memory_DisposePtr(REINTERPRET_CAST(&viewArray, Ptr*));
@@ -7474,16 +7476,21 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (viewArray != nullptr)
 				{
-					HIViewRef			view = nullptr;
+					HIViewRef			userFocusView = nullptr;
+					HIViewRef			dragFocusView = nullptr;
 					register SInt16		i = 0;
 					
 					
 					TerminalWindow_GetViews(ptr->terminalWindow, viewCount, viewArray, &viewCount/* actual length */);
 					for (i = 0; i < viewCount; ++i)
 					{
-						view = TerminalView_ReturnUserFocusHIView(viewArray[i]);
-						RemoveEventHandler(ptr->terminalViewDragDropHandlers[view]);
-						RemoveEventHandler(ptr->terminalViewTextInputHandlers[view]);
+						userFocusView = TerminalView_ReturnUserFocusHIView(viewArray[i]);
+						dragFocusView = TerminalView_ReturnDragFocusHIView(viewArray[i]);
+						RemoveEventHandler(ptr->terminalViewTextInputHandlers[userFocusView]);
+						RemoveEventHandler(ptr->terminalViewDragDropHandlers[dragFocusView]);
+					#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+						RemoveEventHandler(ptr->terminalViewEnteredHandlers[dragFocusView]);
+					#endif
 					}
 					DisposeEventHandlerUPP(ptr->terminalViewDragDropUPP), ptr->terminalViewDragDropUPP = nullptr;
 					DisposeEventHandlerUPP(ptr->terminalViewEnteredUPP), ptr->terminalViewEnteredUPP = nullptr;
