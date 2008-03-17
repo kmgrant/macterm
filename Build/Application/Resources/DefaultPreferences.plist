@@ -753,16 +753,24 @@
 	<true/>
 	<key>terminal-line-wrap</key>
 	<true/>
+	<key>terminal-margin-left-em</key>
+	<real>0.7</real>
+	<key>terminal-margin-right-em</key>
+	<real>0.7</real>
+	<key>terminal-margin-top-em</key>
+	<real>0.6</real>
+	<key>terminal-margin-bottom-em</key>
+	<real>0.6</real>
 	<key>terminal-no-dim-on-deactivate</key>
 	<false/>
 	<key>terminal-padding-left-em</key>
-	<real>0.7</real>
+	<real>0.3</real>
 	<key>terminal-padding-right-em</key>
-	<real>0.7</real>
+	<real>0.3</real>
 	<key>terminal-padding-top-em</key>
-	<real>0.6</real>
+	<real>0.2</real>
 	<key>terminal-padding-bottom-em</key>
-	<real>0.6</real>
+	<real>0.2</real>
 	<key>terminal-resize-affects</key>
 	<string>screen</string>
 	<key>terminal-screen-dimensions-columns</key>

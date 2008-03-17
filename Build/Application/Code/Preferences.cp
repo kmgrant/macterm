@@ -5625,6 +5625,34 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassTerminal;
 		break;
 	
+	case kPreferences_TagTerminalMarginLeft:
+		outKeyName = CFSTR("terminal-margin-left-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagTerminalMarginRight:
+		outKeyName = CFSTR("terminal-margin-right-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagTerminalMarginTop:
+		outKeyName = CFSTR("terminal-margin-top-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagTerminalMarginBottom:
+		outKeyName = CFSTR("terminal-margin-bottom-em");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
 	case kPreferences_TagTerminalPaddingLeft:
 		outKeyName = CFSTR("terminal-padding-left-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
@@ -6341,6 +6369,10 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagTerminalMarginLeft:
+				case kPreferences_TagTerminalMarginRight:
+				case kPreferences_TagTerminalMarginTop:
+				case kPreferences_TagTerminalMarginBottom:
 				case kPreferences_TagTerminalPaddingLeft:
 				case kPreferences_TagTerminalPaddingRight:
 				case kPreferences_TagTerminalPaddingTop:
@@ -8019,6 +8051,10 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagTerminalMarginLeft:
+			case kPreferences_TagTerminalMarginRight:
+			case kPreferences_TagTerminalMarginTop:
+			case kPreferences_TagTerminalMarginBottom:
 			case kPreferences_TagTerminalPaddingLeft:
 			case kPreferences_TagTerminalPaddingRight:
 			case kPreferences_TagTerminalPaddingTop:

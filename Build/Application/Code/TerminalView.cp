@@ -2865,11 +2865,30 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
 	this->screen.currentRenderContext = nullptr;
 	
-	// read user preferences for paddings
+	// read user preferences for the spacing around the edges
 	{
 		Preferences_Result	preferencesResult = kPreferences_ResultOK;
 		
 		
+		// margins
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalMarginLeft,
+														sizeof(this->screen.marginLeftEmScale), &this->screen.marginLeftEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalMarginRight,
+														sizeof(this->screen.marginRightEmScale), &this->screen.marginRightEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalMarginTop,
+														sizeof(this->screen.marginTopEmScale), &this->screen.marginTopEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalMarginBottom,
+														sizeof(this->screen.marginBottomEmScale), &this->screen.marginBottomEmScale,
+														true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
+		
+		// paddings
 		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagTerminalPaddingLeft,
 														sizeof(this->screen.paddingLeftEmScale), &this->screen.paddingLeftEmScale,
 														true/* search defaults too */);
@@ -2886,13 +2905,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 														sizeof(this->screen.paddingBottomEmScale), &this->screen.paddingBottomEmScale,
 														true/* search defaults too */);
 		assert(kPreferences_ResultOK == preferencesResult);
-		
-		// currently, no special preferences are defined for margin, so use the
-		// same values as the corresponding inner padding
-		this->screen.marginLeftEmScale = this->screen.paddingLeftEmScale;
-		this->screen.marginRightEmScale = this->screen.paddingRightEmScale;
-		this->screen.marginTopEmScale = this->screen.paddingTopEmScale;
-		this->screen.marginBottomEmScale = this->screen.paddingBottomEmScale;
 	}
 	
 	// copy font defaults
