@@ -1,85 +1,80 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
   <array count="10" name="allObjects">
+    <object class="IBCarbonMenuItem" id="196">
+      <string name="title">MacTelnet Web Site</string>
+      <boolean name="updateSingleItem">TRUE</boolean>
+      <ostype name="command">.com</ostype>
+    </object>
+    <object class="IBCarbonMenuItem" id="199">
+      <boolean name="separator">TRUE</boolean>
+      <boolean name="updateSingleItem">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="200">
+      <string name="title">New Shell Session</string>
+      <boolean name="dynamic">TRUE</boolean>
+      <boolean name="updateSingleItem">TRUE</boolean>
+      <ostype name="command">NShS</ostype>
+    </object>
+    <object class="IBCarbonMenuItem" id="184">
+      <boolean name="separator">TRUE</boolean>
+    </object>
+    <object class="IBCarbonMenuItem" id="182">
+      <string name="title">New Default Session</string>
+      <ostype name="command">new </ostype>
+    </object>
+    <object class="IBCarbonMenuItem" id="185">
+      <boolean name="separator">TRUE</boolean>
+    </object>
     <object class="IBCarbonMenu" id="180">
       <string name="title">Menu</string>
       <array count="9" name="items">
-        <object class="IBCarbonMenuItem" id="182">
-          <string name="title">New Default Session</string>
-          <ostype name="command">new </ostype>
-        </object>
-        <object class="IBCarbonMenuItem" id="200">
-          <boolean name="dynamic">TRUE</boolean>
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">New Shell Session</string>
-          <ostype name="command">NShS</ostype>
-        </object>
+        <reference idRef="182"/>
+        <reference idRef="200"/>
         <object class="IBCarbonMenuItem" id="194">
-          <boolean name="dynamic">TRUE</boolean>
           <string name="title">New Log-In Shell Session</string>
+          <boolean name="dynamic">TRUE</boolean>
           <int name="keyEquivalentModifier">1572864</int>
           <ostype name="command">NLgS</ostype>
         </object>
-        <object class="IBCarbonMenuItem" id="184">
-          <boolean name="separator">TRUE</boolean>
-        </object>
+        <reference idRef="184"/>
         <object class="IBCarbonMenuItem" id="183">
-          <string name="title">Get IP Address…</string>
+          <string name="title">Show IP Addresses…</string>
           <ostype name="command">CIPn</ostype>
         </object>
-        <object class="IBCarbonMenuItem" id="185">
-          <boolean name="separator">TRUE</boolean>
-        </object>
+        <reference idRef="185"/>
         <object class="IBCarbonMenuItem" id="186">
           <string name="title">About MacTelnet</string>
           <ostype name="command">abou</ostype>
         </object>
-        <object class="IBCarbonMenuItem" id="199">
-          <boolean name="separator">TRUE</boolean>
-          <boolean name="updateSingleItem">TRUE</boolean>
-        </object>
-        <object class="IBCarbonMenuItem" id="196">
-          <boolean name="updateSingleItem">TRUE</boolean>
-          <string name="title">MacTelnet Web Site</string>
-          <ostype name="command">.com</ostype>
-        </object>
+        <reference idRef="199"/>
+        <reference idRef="196"/>
       </array>
     </object>
-    <reference idRef="182"/>
-    <reference idRef="183"/>
-    <reference idRef="184"/>
-    <reference idRef="185"/>
     <reference idRef="186"/>
+    <reference idRef="183"/>
     <reference idRef="194"/>
-    <reference idRef="196"/>
-    <reference idRef="199"/>
-    <reference idRef="200"/>
   </array>
   <array count="10" name="allParents">
+    <reference idRef="180"/>
+    <reference idRef="180"/>
+    <reference idRef="180"/>
+    <reference idRef="180"/>
+    <reference idRef="180"/>
+    <reference idRef="180"/>
     <reference idRef="1"/>
     <reference idRef="180"/>
     <reference idRef="180"/>
     <reference idRef="180"/>
-    <reference idRef="180"/>
-    <reference idRef="180"/>
-    <reference idRef="180"/>
-    <reference idRef="180"/>
-    <reference idRef="180"/>
-    <reference idRef="180"/>
   </array>
-  <dictionary count="4" name="nameTable">
+  <dictionary count="2" name="nameTable">
     <string>DockMenu</string>
     <reference idRef="180"/>
     <string>File&apos;s Owner</string>
     <reference idRef="1"/>
-    <string>IBCarbonMenuItem</string>
-    <reference idRef="182"/>
-    <string>IBCarbonMenuItem1</string>
-    <reference idRef="200"/>
   </dictionary>
+  <string name="targetFramework">IBCarbonFramework</string>
   <unsigned_int name="nextObjectID">201</unsigned_int>
 </object>
