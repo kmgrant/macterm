@@ -6426,6 +6426,8 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
 			(UInt16)copyFontPreferences(viewPtr, prefsContext);
 			(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+			(OSStatus)HIViewSetNeedsDisplay(viewPtr->focusAndPaddingHIView, true);
+			(OSStatus)HIViewSetNeedsDisplay(viewPtr->backgroundHIView, true);
 		}
 		else
 		{
