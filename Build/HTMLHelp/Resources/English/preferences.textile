@@ -242,7 +242,7 @@ terminal settings can be changed while the session is running,
 by using the Terminal menu.
 
 In Unix sessions, you typically will set a "TERM" environment
-variable that is consistent with the Translation setting.
+variable that is consistent with the Terminal setting.
 
 h4. Remote Sessions Only
 
