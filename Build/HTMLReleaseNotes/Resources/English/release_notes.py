@@ -118,6 +118,7 @@ notes_by_version = {
 		'Terminal view now renders extra space between the focus ring and text of a view, in the default background color; this is known as padding.',
 		'Terminal views now read terminal margin preferences (hidden, but accessible through the "defaults" program) when setting matte thickness.',
 		'Terminal views now interpret terminal padding preferences as the size of the new interior space, not the thickness of the matte.',
+		'MacTelnet Help updated with additional preferences information, and a few minor corrections.',
 	],
 	'20080316': [
 		'Preferences window Formats pane and other color box interfaces now use a floating color panel.',

@@ -78,8 +78,8 @@ the Remote Sessions Only section, and enter command line text at
 the bottom of the dialog.
 
 * Hold down Option to see File >> Log-In Shell.  This invokes a
-shell in log-in mode (with shell-dependent settings), and will
-prompt you for your Mac OS X user ID and password.
+shell in log-in mode (with shell-dependent settings) that will
+not inherit any environment variable settings from MacTelnet.
 
 bq. Most session creation commands are also available from the
 MacTelnet icon's Dock menu.

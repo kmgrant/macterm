@@ -14,7 +14,14 @@ MacTelnet Preferences window.  To access any of the settings
 mentioned here, start by choosing the "Preferences..." item in
 the MacTelnet menu.
 
-* General:"#general"
+* "General":#general
+* "Sessions":#sessions
+* "Macros":#macros
+* "Translations":#translations
+* "Terminals":#terminals
+* "Formats":#formats
+* "Full Screen":#fullscreen
+* "Scripts":#scripts
 
 h2(#general). General
 
@@ -214,15 +221,243 @@ appears with all the collections you have.  Simply choose
 a name from the list in the drawer, and then edit that
 collection's settings in the main Preferences window.
 
-Sessions define how MacTelnet accesses a resource (a local or
-remote terminal application), as well as other settings like key
-mappings and the TEK graphics mode.  These are a little like
-Bookmarks from your web browser, in that they allow you to easily
-return to the things you use frequently.
+Sessions are a little like Bookmarks from your web browser.
 
-Note that MacTelnet also supports saving sessions to files with
-File >> Save As, though those files do not save as many details
+These collections specify how to access a resource (typically a
+local or remote terminal application).  They are also used to
+define key mappings, set up vector graphics, and precisely
+control data transfers.
+
+Note that MacTelnet can also save session details to files with
+File >> Save As, though the files do not contain as many details
 as Preferences do.
+
+h3(#sessionresource). Resource
+
+h4. Terminal
+
+Specifies the Terminals collection that will be used to set up
+the emulator for the session terminal window.  Most of the
+terminal settings can be changed while the session is running,
+by using the Terminal menu.
+
+In Unix sessions, you typically will set a "TERM" environment
+variable that is consistent with the Translation setting.
+
+h4. Remote Sessions Only
+
+These fields are only required when connecting to a server,
+and can be left blank if your Resource is a local Unix command.
+
+Note also that editing fields in this section will overwrite
+the Unix command line portion of the panel.
+
+h5. Protocol
+
+A protocol determines the local command that MacTelnet uses to
+establish the connection.  This also determines how secure the
+connection is, and the purpose of the connection (for instance,
+FTP connections are only for uploading and downloading files).
+
+The target host must be running a server accepting connections
+for the protocol you choose.
+
+The Options button is used to customize settings that are not
+common to all protocols.  Currently, no protocols have Options
+interfaces.
+
+h5. Host
+
+The domain name or IP address (version 4 or version 6) of the
+server you want to connect to.
+
+Storing IP addresses is not recommended, because addresses are
+usually changed more frequently than domain names.  On the
+other hand, not all servers have domain names.
+
+You can use Look Up to test a domain name, which will replace
+the name with its current IP address (version 6, if available).
+
+h5. Port
+
+Since more than one server can be running on a computer, the
+port number specifies which one you want.
+
+Usually, you can rely on the port number that is automatically
+chosen when you select a Protocol.
+
+h5. User ID
+
+You can choose to remember the user identification that is
+requested by the server each time you connect.
+
+MacTelnet does not remember passwords for you.  You will be
+prompted for a password when you connect, if the server
+requires one.
+
+h4. Command Line
+
+A Resource is actually defined entirely by its command line
+field.  For local Unix commands, just type in whatever you want
+to run.
+
+For remote sessions, you will notice that the command line was
+already defined for you, as you edited the Remote Sessions Only
+fields.  Advanced users can further edit this command line if
+necessary.
+
+It is important to note that MacTelnet splits this line into words
+(on whitespace), and does not interpret *any* characters: not
+even those common to Unix shells like "~", "|" and ">".  If you
+want to run a more complex command, you can save it in a script
+for the target shell, and ask MacTelnet to run that script.
+
+h3(#sessiondataflow). Data Flow
+
+h4. Translation
+
+Specifies the Translations collection that will be initially used
+to interpret text in the session.
+
+In Unix sessions, you typically will set a "LANG" environment
+variable that is consistent with the Translation setting.
+
+h4. Delete Sends
+
+Specifies what a Delete keypress on your Mac keyboard will do.
+Some remote applications do not understand the default
+interpretation of Delete and can respond in odd ways (such as
+printing a "^H").
+
+h4. New Line
+
+Since some systems or applications recognize different characters
+for end-of-line, you can specify how MacTelnet sends a new-line
+(say, when pressing Return or pasting multi-line text).
+
+"CF LF" means "carriage return, line feed" and sends two
+characters: ASCII codes 13 and 10.
+
+"CF NULL" means "carriage return, null character" and sends two
+characters: ASCII codes 13 and 0.
+
+h4. EMACS Meta Key
+
+The EMACS text editor relies heavily on a key that is not
+available on Mac keyboards, the meta key.  However, you can
+ask MacTelnet to emulate the meta key by using other keys.
+
+h4. EMACS Arrow Keys
+
+The EMACS text editor has its own commands for moving the
+cursor in the buffer.  You can choose to have your Mac arrow
+keys trigger the appropriate EMACS commands.
+
+h4. Capture to File
+
+You can choose to automatically capture this session to a
+specific file when it starts.  Note also that this can be done
+from a menu, Terminal >> Begin Capture to File.
+
+Currently, MacTelnet does not have sophisticated ways to
+handle automatic file captures.  It would be nice, for instance,
+if successive sessions could use new files in a target folder
+and not overwrite the same file.
+
+h4. Duplication
+
+MacTelnet can send keyboard characters directly to the terminal
+as it transmits them to a session; this is known as Local Echo.
+
+Local Echo is useful for slow connections, because it displays
+what you type immediately instead of waiting for a server
+response.  (The floating Command Line in MacTelnet gives a
+similar benefit; see the Window menu.)
+
+There are downsides to echoing, that basically boil down to how
+well the session and MacTelnet agree.  When half-duplex, the
+server does not send back what you type; so you cannot be sure
+if it was received, even if it _looks_ right in your terminal.
+When full-duplex, you do see confirmation from the server, but
+technically it is sending back redundant text and will cause the
+same information to appear twice in the local terminal.
+
+h4. Paste Buffering
+
+When you use Paste for a large amount of text, the session may
+not be prepared to receive that much data at once; this can
+cause problems, like losing or garbling some of the characters.
+
+MacTelnet allows you to locally buffer Paste on a per-session
+basis.  This means that MacTelnet does not send all text at
+once, it splits the data into small chunks and sends each piece
+separately.
+
+h3(#sessioncontrolkeys). Control Keys
+
+You can map certain key combinations to special behaviors that
+allow control over applications and data flow.
+
+Usually the default mappings are sufficient, however there are
+notable Unix applications (like "pine" and "EMACS") that may
+need to use the default control-key mappings for something else.
+
+Note also that the Control Keys palette allows you to enter
+_any_ control key at any time, regardless of key mappings.  See
+the Window menu.
+
+h4. Interrupt
+
+Defaults to control-C (^C), the key sequence that will cause
+the application in a terminal to quit immediately if possible.
+
+This is also in the menu bar, Terminal >> Interrupt Process.
+
+h4. Suspend
+
+Defaults to control-S (^S), the key sequence that will cause a
+scroll lock (also known as XOFF, or "suspend transmission", or
+sending a stop signal to a Unix process).
+
+While suspended, no new text will appear in the terminal even
+though the session remains active.  This can be useful to pause
+rapidly-scrolling displays.
+
+This is also in the menu bar, Terminal >> Suspend (Scroll Lock),
+and is available as a toolbar item.
+
+h4. Resume
+
+Defaults to control-Q (^Q), the key sequence that will cause a
+scroll unlock (also known as XON, or "resume transmission", or
+sending a start signal to a Unix process).
+
+A Resume is like an Undo for a Suspend.
+
+This is also in the menu bar, Terminal >> Suspend (Scroll Lock),
+and is available as a toolbar item.
+
+h3(#sessiontek). Graphics (TEK)
+
+MacTelnet is not only a terminal emulator, but also a display
+for various kinds of images.  You can enable a vector graphics
+command set for a session so that, when MacTelnet receives
+certain special sequences, it will automatically render the
+data as a picture instead of dumping it to the terminal screen.
+
+h4. Command set
+
+If you want to use vector graphics, select the command set that
+indicates the kind of graphics data the session will send.
+TEK 4105 is a more powerful protocol that support scrolling,
+colored lines, and rotated text compared to TEK 4014.
+
+h4. PAGE command clears screen
+
+When a new vector graphics image is created (known in TEK as a
+PAGE command), it is normally put into its own window.  If you
+do not want several windows and instead want MacTelnet to reuse
+the same window, enable the clear-screen option.
 
 h2(#macros). Macros
 
@@ -236,14 +471,14 @@ All macro sets use the same key equivalents, so only one set can
 be available at a time.  When a terminal window is active, use
 the Map menu to choose the current macro set.
 
-h3. Options
+h3. Global Options
 
 h4. Invoke With
 
 h5. Command + keypad
 
-Macros are invoked by combining the command (cloverleaf) key and
-keypad keys such as numbers.
+Macros are invoked by combining the command (cloverleaf) key
+with keypad keys (such as numbers).
 
 h5. Function keys
 
@@ -258,24 +493,49 @@ Macros are always available from the keyboard, but this option
 displays them in a top-level menu as well.  The menu changes as
 you swap macro sets with the Map menu.
 
-h3. Editing
+h3. Selected Macro
 
-Use Window >> Show Macro Editor to display an older interface
-for editing macros, currently the most reliable.  (Eventually the
-Preferences window will be the only editing method.)
+The intent is to allow macro editing by selecting a macro from
+the list, and either changing it inline or using the fields
+below the list.
 
-Macros in the Preferences window can be edited directly in their
-list.
+Currently, you must use Window >> Show Macro Editor to
+display an older interface to perform certain edits.  (This
+will be removed soon.)
 
-A macro contains only plain text.  To edit, click on its content
-portion in the list, and then hover until an edit box appears.
-Hit Return or Enter when finished editing.
+h4. Macro Name
 
-The name column can be edited in a similar way.  Note that macro
-names are currently only used when a macro menu is displayed.
+The name of the macro when it is displayed in a menu.  This is
+not currently used otherwise.
 
-MacTelnet does allow you to put several special codes into the
-content of macros, representing additional characters:
+h4. Invoke With
+
+The key or combination of keys that will trigger the macro
+action.  Currently this can only be set globally, see above.
+
+h4. Action
+
+The type of behavior the macro will trigger, and the way the
+Contents will be interpreted:
+
+h5. Open URL
+
+The Contents are interpreted as a URL and opened locally with
+whatever helper application is appropriate (such as your
+preferred web browser).
+
+h5. New Window with Command
+
+The Contents are interpreted as a command line, split into
+words (on whitespace) and run in a new terminal window.
+When the command finishes, the terminal window is closed.
+
+h5. Enter Text
+
+The Contents will be typed into the active terminal view as if
+the keyboard were used; however, any special sequences will
+first be substituted with their current values.  The possible
+special sequences are:
 
 |_<{padding-right:0.5em}. Code|_<{padding-left:0.5em}. Meaning|
 |<. \"|<{padding-left:0.5em}. double-quote (")|
@@ -290,8 +550,8 @@ bq. To see the octal versions of all ASCII characters, look at
 <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a MacTelnet window and runs
 "man ascii").
 
-MacTelnet also recognizes codes that represent information to be
-inserted at the time a macro is actually used:
+MacTelnet also recognizes codes that represent information
+to be inserted at the time a macro is actually used:
 
 |<. \i|<{padding-left:0.5em}. dynamically substitute an IP address of the computer|
 |<. \#|<{padding-left:0.5em}. dynamically substitute the number of terminal lines|
@@ -342,9 +602,9 @@ Terminals decide somewhat technical aspects of a window, such as
 the emulation type.  Usually, you set up one or more of these with
 the help of an administrator or application documentation, so that
 MacTelnet behaves correctly when you use an application in a
-terminal window.  Custom and Favorite sessions can associate a
-Terminal Favorite with them, ensuring that these important settings
-are always made for you.
+terminal window.  Custom and collection Sessions can associate a
+Terminal collection with them, ensuring that these important
+settings are always made for you.
 
 h2(#formats). Formats
 
@@ -356,7 +616,7 @@ collection's settings in the main Preferences window.
 
 Formats are collections of fonts, font sizes, colors, and more, that
 decide how your terminal windows look.  You can use the View menu
-to quickly change a window's format to one of the Favorites you
+to quickly change a window's format to one of the collections you
 specify in Preferences, or to make customizations local to the
 frontmost window.
 
@@ -381,13 +641,16 @@ Ordinarily, the bold color is a slightly brighter version of the
 normal color.
 
 Not all applications in terminals will make use of these colors.
-In addition, a Terminal Favorite can disable them.
+In addition, a Terminal collection can disable them.
 
-h2(#macros). Full Screen
+h2(#fullscreen). Full Screen
 
 Settings that control "kiosk mode", the Full Screen command in
 the MacTelnet application menu.  You can use these preferences to
 create a more complete kiosk (by hiding the menu bar, for example).
+
+Note also the General preference (above) for removing all menu
+command keys, which can also be useful for kiosks.
 
 h3. Options
 
