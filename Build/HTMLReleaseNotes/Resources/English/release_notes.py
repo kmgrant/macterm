@@ -113,6 +113,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080317': [
+		'Fixed terminal windows to respond to changes in the font or font size.',
 		'Terminal view matte now renders with precisely the chosen color, not a tinted version of it.',
 		'Terminal view now renders extra space between the focus ring and text of a view, in the default background color; this is known as padding.',
 		'Terminal views now read terminal margin preferences (hidden, but accessible through the "defaults" program) when setting matte thickness.',

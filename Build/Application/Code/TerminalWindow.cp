@@ -314,7 +314,7 @@ static void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean)
 static void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
 static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 static void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void					terminalViewScrolled			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+static void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void		updateScreenSizeDialogCloseNotifyProc		(SizeDialog_Ref, Boolean);
 static void					updateScrollBars				(TerminalWindowPtr);
 
@@ -1850,7 +1850,8 @@ installedActions()
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowMinimization, this->terminalStateChangeEventListener);
-	this->terminalViewEventListener = ListenerModel_NewStandardListener(terminalViewScrolled, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
+	this->terminalViewEventListener = ListenerModel_NewStandardListener(terminalViewStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
+	TerminalView_StartMonitoring(newView, kTerminalView_EventFontSizeChanged, this->terminalViewEventListener);
 	TerminalView_StartMonitoring(newView, kTerminalView_EventScrolling, this->terminalViewEventListener);
 	
 	// install a callback that handles commands relevant to terminal windows
@@ -2129,6 +2130,7 @@ TerminalWindow::
 		for (viewIterator = this->allViews.begin(); viewIterator != this->allViews.end(); ++viewIterator)
 		{
 			view = *viewIterator;
+			TerminalView_StopMonitoring(view, kTerminalView_EventFontSizeChanged, this->terminalViewEventListener);
 			TerminalView_StopMonitoring(view, kTerminalView_EventScrolling, this->terminalViewEventListener);
 		}
 	}
@@ -5736,34 +5738,55 @@ Invoked whenever a monitored terminal view event occurs (see
 TerminalWindow_New() to see which events are monitored).
 This routine responds by updating terminal windows appropriately.
 
-(3.0)
+(3.1)
 */
 static void
-terminalViewScrolled	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-						 ListenerModel_Event	inTerminalViewEvent,
-						 void*					UNUSED_ARGUMENT(inEventContextPtr),
-						 void*					inListenerContextPtr)
+terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+							 ListenerModel_Event	inTerminalViewEvent,
+							 void*					inEventContextPtr,
+							 void*					inListenerContextPtr)
 {
-	// currently, only one type of event is expected
-	assert(inTerminalViewEvent == kTerminalView_EventScrolling);
+	TerminalWindowRef			ref = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), ref);
 	
-	// recalculate appearance of the scroll bars to match current screen attributes, and redraw them
+	
+	// currently, only one type of event is expected
+	assert((inTerminalViewEvent == kTerminalView_EventScrolling) ||
+			(inTerminalViewEvent == kTerminalView_EventFontSizeChanged));
+	
+	switch (inTerminalViewEvent)
 	{
-		//TerminalViewRef	view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef); // not needed
-		TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
-		
-		
-		if (nullptr != terminalWindow)
+	case kTerminalView_EventScrolling:
+		// recalculate appearance of the scroll bars to match current screen attributes, and redraw them
 		{
-			TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+			//TerminalViewRef	view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef); // not needed
 			
 			
 			updateScrollBars(ptr);
 			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarH, true);
 			(OSStatus)HIViewSetNeedsDisplay(ptr->controls.scrollBarV, true);
 		}
+		break;
+	
+	case kTerminalView_EventFontSizeChanged:
+		{
+			TerminalViewRef		view = REINTERPRET_CAST(inEventContextPtr, TerminalViewRef);
+			SInt16				screenWidth = 0;
+			SInt16				screenHeight = 0;
+			
+			
+			// set the standard state to be large enough for the current font and size;
+			// and, set window dimensions to this new standard size
+			TerminalView_GetIdealSize(view, screenWidth, screenHeight);
+			setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+		}
+		break;
+	
+	default:
+		// ???
+		break;
 	}
-}// terminalViewScrolled
+}// terminalViewStateChanged
 
 
 /*!

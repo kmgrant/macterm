@@ -385,7 +385,7 @@ static void				screenToLocalRect				(TerminalViewPtr, Rect*);
 static void				setBlinkingTimerActive			(TerminalViewPtr, Boolean);
 static void				setCursorGhostVisibility		(TerminalViewPtr, Boolean);
 static void				setCursorVisibility				(TerminalViewPtr, Boolean);
-static void				setFontAndSize					(TerminalViewPtr, ConstStringPtr, UInt16);
+static void				setFontAndSize					(TerminalViewPtr, ConstStringPtr, UInt16, Boolean = true);
 static SInt16			setPortScreenPort				(TerminalViewPtr);
 static void				setScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
 static void				setScreenPaletteColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
@@ -5718,8 +5718,10 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			}
 			
 			// updating the font size should also recalculate cached dimensions
-			// which are used later to center the view rectangle
-			setFontAndSize(viewPtr, nullptr/* font */, fontSize);
+			// which are used later to center the view rectangle; but do not
+			// notify listeners, since this routine is itself a response to a
+			// change in another property (view size)
+			setFontAndSize(viewPtr, nullptr/* font */, fontSize, false/* notify listeners */);
 			
 			Localization_RestorePortFontState(&fontState);
 			SetGWorld(oldPort, oldDevice);
@@ -8789,7 +8791,8 @@ The screen is not redrawn.
 static void
 setFontAndSize		(TerminalViewPtr	inViewPtr,
 					 ConstStringPtr		inFontFamilyNameOrNull,
-					 UInt16				inFontSizeOrZero)
+					 UInt16				inFontSizeOrZero,
+					 Boolean			inNotifyListeners)
 {
 	CGrafPtr	oldPort = nullptr;
 	GDHandle	oldDevice = nullptr;
@@ -8854,8 +8857,11 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 	
 	SetGWorld(oldPort, oldDevice);
 	
-	// notify listeners that the size has changed
-	eventNotifyForView(inViewPtr, kTerminalView_EventFontSizeChanged, inViewPtr->selfRef/* context */);
+	if (inNotifyListeners)
+	{
+		// notify listeners that the size has changed
+		eventNotifyForView(inViewPtr, kTerminalView_EventFontSizeChanged, inViewPtr->selfRef/* context */);
+	}
 }// setFontAndSize
 
 
