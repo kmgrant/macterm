@@ -128,7 +128,8 @@ static HIViewID const	idMyRadioButtonResizeAffectsFontSize		= { 'WRFS', 0/* ID *
 static HIViewID const	idMyHelpTextResizeEffect					= { 'HTWR', 0/* ID */ };
 static HIViewID const	idMyFieldCopyUsingSpacesForTabs				= { 'CUST', 0/* ID */ };
 static HIViewID const	idMyRadioButtonCommandNDefault				= { 'CNDf', 0/* ID */ };
-static HIViewID const	idMyRadioButtonCommandNLogInShell			= { 'CNSh', 0/* ID */ };
+static HIViewID const	idMyRadioButtonCommandNShell				= { 'CNSh', 0/* ID */ };
+static HIViewID const	idMyRadioButtonCommandNLogInShell			= { 'CNLI', 0/* ID */ };
 static HIViewID const	idMyRadioButtonCommandNDialog				= { 'CNDg', 0/* ID */ };
 static HIViewID const	idMyLabelBellType							= { 'LSnd', 0/* ID */ };
 static HIViewID const	idMyPopUpMenuBellType						= { 'BSnd', 0/* ID */ };
@@ -1366,6 +1367,7 @@ const
 	// ...initialize command-N radio buttons using user preferences
 	{
 		HIViewWrap	radioButtonDefault(idMyRadioButtonCommandNDefault, inOwningWindow);
+		HIViewWrap	radioButtonShell(idMyRadioButtonCommandNShell, inOwningWindow);
 		HIViewWrap	radioButtonLogInShell(idMyRadioButtonCommandNLogInShell, inOwningWindow);
 		HIViewWrap	radioButtonDialog(idMyRadioButtonCommandNDialog, inOwningWindow);
 		UInt32		newCommandShortcutEffect = kCommandNewSessionShell;
@@ -1379,6 +1381,7 @@ const
 			newCommandShortcutEffect = kCommandNewSessionShell; // assume default, if preference can’t be found
 		}
 		SetControl32BitValue(radioButtonDefault, kControlRadioButtonUncheckedValue);
+		SetControl32BitValue(radioButtonShell, kControlRadioButtonUncheckedValue);
 		SetControl32BitValue(radioButtonLogInShell, kControlRadioButtonUncheckedValue);
 		SetControl32BitValue(radioButtonDialog, kControlRadioButtonUncheckedValue);
 		switch (newCommandShortcutEffect)
@@ -1388,6 +1391,10 @@ const
 			break;
 		
 		case kCommandNewSessionShell:
+			SetControl32BitValue(radioButtonShell, kControlRadioButtonCheckedValue);
+			break;
+		
+		case kCommandNewSessionLoginShell:
 			SetControl32BitValue(radioButtonLogInShell, kControlRadioButtonCheckedValue);
 			break;
 		
@@ -2055,6 +2062,7 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 			{
 				// check if any of the radio buttons was hit; if not, check for other control hits
 				HIViewWrap		radioButtonCommandNDefault(idMyRadioButtonCommandNDefault, kWindow);
+				HIViewWrap		radioButtonCommandNShell(idMyRadioButtonCommandNShell, kWindow);
 				HIViewWrap		radioButtonCommandNLogInShell(idMyRadioButtonCommandNLogInShell, kWindow);
 				HIViewWrap		radioButtonCommandNDialog(idMyRadioButtonCommandNDialog, kWindow);
 				UInt32			newCommandShortcutEffect = 0;
@@ -2063,19 +2071,29 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 				if (HIViewIDWrap(radioButtonCommandNDefault.identifier()) == viewID)
 				{
 					newCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
+					SetControl32BitValue(radioButtonCommandNShell, kControlRadioButtonUncheckedValue);
+					SetControl32BitValue(radioButtonCommandNLogInShell, kControlRadioButtonUncheckedValue);
+					SetControl32BitValue(radioButtonCommandNDialog, kControlRadioButtonUncheckedValue);
+				}
+				else if (HIViewIDWrap(radioButtonCommandNShell.identifier()) == viewID)
+				{
+					newCommandShortcutEffect = kCommandNewSessionShell;
+					SetControl32BitValue(radioButtonCommandNDefault, kControlRadioButtonUncheckedValue);
 					SetControl32BitValue(radioButtonCommandNLogInShell, kControlRadioButtonUncheckedValue);
 					SetControl32BitValue(radioButtonCommandNDialog, kControlRadioButtonUncheckedValue);
 				}
 				else if (HIViewIDWrap(radioButtonCommandNLogInShell.identifier()) == viewID)
 				{
-					newCommandShortcutEffect = kCommandNewSessionShell;
+					newCommandShortcutEffect = kCommandNewSessionLoginShell;
 					SetControl32BitValue(radioButtonCommandNDefault, kControlRadioButtonUncheckedValue);
+					SetControl32BitValue(radioButtonCommandNShell, kControlRadioButtonUncheckedValue);
 					SetControl32BitValue(radioButtonCommandNDialog, kControlRadioButtonUncheckedValue);
 				}
 				else if (HIViewIDWrap(radioButtonCommandNDialog.identifier()) == viewID)
 				{
 					newCommandShortcutEffect = kCommandNewSessionDialog;
 					SetControl32BitValue(radioButtonCommandNDefault, kControlRadioButtonUncheckedValue);
+					SetControl32BitValue(radioButtonCommandNShell, kControlRadioButtonUncheckedValue);
 					SetControl32BitValue(radioButtonCommandNLogInShell, kControlRadioButtonUncheckedValue);
 				}
 				else

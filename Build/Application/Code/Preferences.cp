@@ -4609,6 +4609,10 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							{
 								*storedValuePtr = kCommandNewSessionShell;
 							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("log-in shell"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kCommandNewSessionLoginShell;
+							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("dialog"), kCFCompareCaseInsensitive))
 							{
 								*storedValuePtr = kCommandNewSessionDialog;
@@ -7223,6 +7227,10 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					case kCommandNewSessionDefaultFavorite:
 						setMacTelnetPreference(keyName, CFSTR("default"));
+						break;
+					
+					case kCommandNewSessionLoginShell:
+						setMacTelnetPreference(keyName, CFSTR("log-in shell"));
 						break;
 					
 					case kCommandNewSessionShell:

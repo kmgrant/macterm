@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080318',
     '20080317',
     '20080316',
     '20080315',
@@ -112,6 +113,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080318': [
+		'Preferences window General pane now allows command-N to be used for creating log-in shells.',
+	],
 	'20080317': [
 		'Fixed terminal windows to respond to changes in the font or font size.',
 		'Terminal view matte now renders with precisely the chosen color, not a tinted version of it.',

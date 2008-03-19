@@ -426,7 +426,8 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPrefWindowResizeSetsScreenSize	'WRSS'		// “Preferences” window
 #define kCommandPrefWindowResizeSetsFontSize	'WRFS'		// “Preferences” window
 #define kCommandPrefCommandNOpensDefault		'CNDf'		// “Preferences” window
-#define kCommandPrefCommandNOpensLogInShell		'CNSh'		// “Preferences” window
+#define kCommandPrefCommandNOpensShell			'CNSh'		// “Preferences” window
+#define kCommandPrefCommandNOpensLogInShell		'CNLI'		// “Preferences” window
 #define kCommandPrefCommandNOpensCustomSession	'CNDg'		// “Preferences” window
 #define kCommandPrefBellOff						'NoBp'		// “Preferences” window
 #define kCommandPrefBellSystemAlert				'BpBl'		// “Preferences” window

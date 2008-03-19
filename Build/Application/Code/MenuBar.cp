@@ -1689,9 +1689,12 @@ inline void
 removeMenuItemModifier	(MenuRef		inMenu,
 						 MenuItemIndex	inItemIndex)
 {
-	(OSStatus)SetMenuItemCommandKey(inMenu, inItemIndex, false/* virtual key */, '\0'/* character */);
-	(OSStatus)SetMenuItemModifiers(inMenu, inItemIndex, kMenuNoCommandModifier);
-	(OSStatus)SetMenuItemKeyGlyph(inMenu, inItemIndex, kMenuNullGlyph);
+	if (nullptr != inMenu)
+	{
+		(OSStatus)SetMenuItemCommandKey(inMenu, inItemIndex, false/* virtual key */, '\0'/* character */);
+		(OSStatus)SetMenuItemModifiers(inMenu, inItemIndex, kMenuNoCommandModifier);
+		(OSStatus)SetMenuItemKeyGlyph(inMenu, inItemIndex, kMenuNullGlyph);
+	}
 }// removeMenuItemModifier
 
 
@@ -2057,182 +2060,160 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 	
 	if (menuCommandKeys)
 	{
-		MenuRef			newShellSessionMenu = nullptr;
-		MenuRef			newShellSessionMenuSimplifiedMode = nullptr;
-		MenuRef			newSessionDialogMenu = nullptr;
-		MenuRef			newSessionDialogMenuSimplifiedMode = nullptr;
-		MenuRef			newDefaultSessionMenu = nullptr;
-		MenuRef			newDefaultSessionMenuSimplifiedMode = nullptr;
-		MenuItemIndex	itemIndexNewShellSession = 0;
-		MenuItemIndex	itemIndexNewShellSessionSimplifiedMode = 0;
-		MenuItemIndex	itemIndexNewSessionDialog = 0;
-		MenuItemIndex	itemIndexNewSessionDialogSimplifiedMode = 0;
-		MenuItemIndex	itemIndexNewDefaultSession = 0;
-		MenuItemIndex	itemIndexNewDefaultSessionSimplifiedMode = 0;
+		MenuRef			defaultMenu = nullptr;
+		MenuRef			shellMenu = nullptr;
+		MenuRef			logInShellMenu = nullptr;
+		MenuRef			dialogMenu = nullptr;
+		MenuItemIndex	shellItemIndex = 0;
+		MenuItemIndex	logInShellItemIndex = 0;
+		MenuItemIndex	dialogItemIndex = 0;
+		MenuItemIndex	defaultItemIndex = 0;
 		
+		
+		// IMPORTANT: For, er, simplicity, since there is no longer a simplified version
+		// of the File menu, secondary menus are ignored here and key equivalents are
+		// just flipped in the single File menu.  If a simplified File menu is ever
+		// added back, this code has to check and flip the key equivalents in the
+		// secondary menu, too.
+		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionDefaultFavorite, &defaultMenu,
+												nullptr/* simple menu */,
+												&defaultItemIndex, nullptr/* simple item index */);
+		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionShell, &shellMenu,
+												nullptr/* simple menu */,
+												&shellItemIndex, nullptr/* simple item index */);
+		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionLoginShell, &logInShellMenu,
+												nullptr/* simple menu */,
+												&logInShellItemIndex, nullptr/* simple item index */);
+		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionDialog, &dialogMenu,
+												nullptr/* simple menu */,
+												&dialogItemIndex, nullptr/* simple item index */);
 		
 		// first clear the non-command-key modifiers of certain “New” commands
-		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionDefaultFavorite, &newDefaultSessionMenu,
-												&newDefaultSessionMenuSimplifiedMode,
-												&itemIndexNewDefaultSession, &itemIndexNewDefaultSessionSimplifiedMode);
-		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionShell, &newShellSessionMenu,
-												&newShellSessionMenuSimplifiedMode,
-												&itemIndexNewShellSession, &itemIndexNewShellSessionSimplifiedMode);
-		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionDialog, &newSessionDialogMenu,
-												&newSessionDialogMenuSimplifiedMode,
-												&itemIndexNewSessionDialog, &itemIndexNewSessionDialogSimplifiedMode);
+		removeMenuItemModifier(defaultMenu, defaultItemIndex);
+		removeMenuItemModifier(shellMenu, shellItemIndex);
+		removeMenuItemModifier(logInShellMenu, logInShellItemIndex);
+		removeMenuItemModifier(dialogMenu, dialogItemIndex);
 		
-		if (nullptr != newShellSessionMenu)
-		{
-			removeMenuItemModifier(newShellSessionMenu, itemIndexNewShellSession);
-		}
-		if (nullptr != newShellSessionMenuSimplifiedMode)
-		{
-			removeMenuItemModifier(newShellSessionMenuSimplifiedMode, itemIndexNewShellSessionSimplifiedMode);
-		}
-		if (nullptr != newSessionDialogMenu)
-		{
-			removeMenuItemModifier(newSessionDialogMenu, itemIndexNewSessionDialog);
-		}
-		if (nullptr != newSessionDialogMenuSimplifiedMode)
-		{
-			removeMenuItemModifier(newSessionDialogMenuSimplifiedMode, itemIndexNewSessionDialogSimplifiedMode);
-		}
-		if (nullptr != newDefaultSessionMenu)
-		{
-			removeMenuItemModifier(newDefaultSessionMenu, itemIndexNewDefaultSession);
-		}
-		if (nullptr != newDefaultSessionMenuSimplifiedMode)
-		{
-			removeMenuItemModifier(newDefaultSessionMenuSimplifiedMode, itemIndexNewDefaultSessionSimplifiedMode);
-		}
-		
-		// now assign the modifiers appropriately based on the given command
+		// Modifiers are assigned appropriately based on the given command.
+		// If a menu item is assigned to command-N, then Default is given
+		// whatever key equivalent the item would have otherwise had.  The
+		// NIB is always overridden, although the keys in the NIB act like
+		// comments for the key equivalents used in the code below.
 		switch (inCommandNShortcutCommand)
 		{
-		case kCommandNewSessionShell:
-			// apply shift key equivalent to dialog-based command,
-			// and the unshifted equivalent to the New Session command
+		case kCommandNewSessionDefaultFavorite:
+			// default case: everything here should match NIB assignments
 			{
 				MenuRef			menu = nullptr;
 				MenuItemIndex	itemIndex = 0;
 				
 				
-				menu = newSessionDialogMenu;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewSessionDialog;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
-				}
+				menu = defaultMenu;
+				itemIndex = defaultItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
 				
-				menu = newSessionDialogMenuSimplifiedMode;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewSessionDialogSimplifiedMode;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
-				}
+				menu = shellMenu;
+				itemIndex = shellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
 				
-				menu = newShellSessionMenu;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewShellSession;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
-				}
+				menu = logInShellMenu;
+				itemIndex = logInShellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
 				
-				menu = newShellSessionMenuSimplifiedMode;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewShellSessionSimplifiedMode;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
-				}
+				menu = dialogMenu;
+				itemIndex = dialogItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
 			}
 			break;
 		
-		case kCommandNewSessionDefaultFavorite:
-			// apply shift key equivalent to dialog-based command,
-			// and the unshifted equivalent to the Default item
+		case kCommandNewSessionShell:
+			// swap Default and Shell key equivalents
 			{
 				MenuRef			menu = nullptr;
 				MenuItemIndex	itemIndex = 0;
 				
 				
-				menu = newSessionDialogMenu;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewSessionDialog;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
-				}
+				menu = defaultMenu;
+				itemIndex = defaultItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
 				
-				menu = newSessionDialogMenuSimplifiedMode;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewSessionDialogSimplifiedMode;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
-				}
+				menu = shellMenu;
+				itemIndex = shellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
 				
-				menu = newDefaultSessionMenu;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewDefaultSession;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
-				}
+				menu = logInShellMenu;
+				itemIndex = logInShellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
 				
-				menu = newDefaultSessionMenuSimplifiedMode;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewDefaultSessionSimplifiedMode;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
-				}
+				menu = dialogMenu;
+				itemIndex = dialogItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
+			}
+			break;
+		
+		case kCommandNewSessionLoginShell:
+			// swap Default and Log-In Shell key equivalents
+			{
+				MenuRef			menu = nullptr;
+				MenuItemIndex	itemIndex = 0;
+				
+				
+				menu = defaultMenu;
+				itemIndex = defaultItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
+				
+				menu = shellMenu;
+				itemIndex = shellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
+				
+				menu = logInShellMenu;
+				itemIndex = logInShellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
+				
+				menu = dialogMenu;
+				itemIndex = dialogItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
 			}
 			break;
 		
 		case kCommandNewSessionDialog:
-			// apply shift key equivalent to the new-shell command,
-			// and the unshifted equivalent to new-session-dialog
+			// swap Default and Custom New Session key equivalents
 			{
 				MenuRef			menu = nullptr;
 				MenuItemIndex	itemIndex = 0;
 				
 				
-				menu = newShellSessionMenu;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewShellSession;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
-				}
+				menu = defaultMenu;
+				itemIndex = defaultItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
 				
-				menu = newShellSessionMenuSimplifiedMode;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewShellSessionSimplifiedMode;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
-				}
+				menu = shellMenu;
+				itemIndex = shellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
 				
-				menu = newSessionDialogMenu;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewSessionDialog;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
-				}
+				menu = logInShellMenu;
+				itemIndex = logInShellItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
 				
-				menu = newSessionDialogMenuSimplifiedMode;
-				if (nullptr != menu)
-				{
-					itemIndex = itemIndexNewSessionDialogSimplifiedMode;
-					SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
-					SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
-				}
+				menu = dialogMenu;
+				itemIndex = dialogItemIndex;
+				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
 			}
 			break;
 		
