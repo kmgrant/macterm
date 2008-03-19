@@ -111,7 +111,6 @@ HIViewID const	idMyChasingArrowsDNSWait		= { 'Wait', 0/* ID */ };
 HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
 HIViewID const	idMyHelpTextCommandLine			= { 'CmdH', 0/* ID */ };
 HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
-HIViewID const	idMySeparatorCaptureToFile		= { 'CapD', 0/* ID */ };
 HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
 HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
 HIViewID const	idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
@@ -628,7 +627,7 @@ const
 	
 	// create most HIViews for the tab based on the NIB
 	error = DialogUtilities_CreateControlsBasedOnWindowNIB
-			(CFSTR("PrefPanelSessions"), CFSTR("ControlKeys"), inOwningWindow,
+			(CFSTR("PrefPanelSessions"), CFSTR("Keyboard"), inOwningWindow,
 					result/* parent */, viewList, idealContainerBounds);
 	assert_noerr(error);
 	
@@ -786,8 +785,6 @@ deltaSize	(HIViewRef		inContainer,
 	
 	
 	viewWrap = HIViewWrap(idMyStaticTextCaptureFilePath, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMySeparatorCaptureToFile, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	// INCOMPLETE
 }// My_SessionsTabDataFlow::deltaSize

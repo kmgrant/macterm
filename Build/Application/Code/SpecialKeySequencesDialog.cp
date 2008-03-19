@@ -272,7 +272,7 @@ MySpecialKeysDialog	(SessionRef										inSession,
 selfRef							(REINTERPRET_CAST(this, SpecialKeySequencesDialog_Ref)),
 session							(inSession),
 dialogWindow					(NIBWindow(AppResources_ReturnBundleForNIBs(),
-											CFSTR("PrefPanelSessions"), CFSTR("ControlKeys"))
+											CFSTR("PrefPanelSessions"), CFSTR("Keyboard"))
 									<< NIBLoader_AssertWindowExists),
 buttonInterrupt					(dialogWindow.returnHIViewWithID(idMyButtonChangeInterruptKey)
 									<< HIViewWrap_AssertExists),

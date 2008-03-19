@@ -115,6 +115,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080318': [
 		'Preferences window General pane now allows command-N to be used for creating log-in shells.',
+		'Preferences window Sessions pane (and Special Key Sequences dialog) slightly redesigned to collect keyboard-related settings.',
 	],
 	'20080317': [
 		'Fixed terminal windows to respond to changes in the font or font size.',

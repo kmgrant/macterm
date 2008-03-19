@@ -322,37 +322,6 @@ to interpret text in the session.
 In Unix sessions, you typically will set a "LANG" environment
 variable that is consistent with the Translation setting.
 
-h4. Delete Sends
-
-Specifies what a Delete keypress on your Mac keyboard will do.
-Some remote applications do not understand the default
-interpretation of Delete and can respond in odd ways (such as
-printing a "^H").
-
-h4. New Line
-
-Since some systems or applications recognize different characters
-for end-of-line, you can specify how MacTelnet sends a new-line
-(say, when pressing Return or pasting multi-line text).
-
-"CF LF" means "carriage return, line feed" and sends two
-characters: ASCII codes 13 and 10.
-
-"CF NULL" means "carriage return, null character" and sends two
-characters: ASCII codes 13 and 0.
-
-h4. EMACS Meta Key
-
-The EMACS text editor relies heavily on a key that is not
-available on Mac keyboards, the meta key.  However, you can
-ask MacTelnet to emulate the meta key by using other keys.
-
-h4. EMACS Arrow Keys
-
-The EMACS text editor has its own commands for moving the
-cursor in the buffer.  You can choose to have your Mac arrow
-keys trigger the appropriate EMACS commands.
-
 h4. Capture to File
 
 You can choose to automatically capture this session to a
@@ -393,7 +362,7 @@ basis.  This means that MacTelnet does not send all text at
 once, it splits the data into small chunks and sends each piece
 separately.
 
-h3(#sessioncontrolkeys). Control Keys
+h3(#sessioncontrolkeys). Keyboard
 
 You can map certain key combinations to special behaviors that
 allow control over applications and data flow.
@@ -436,6 +405,37 @@ A Resume is like an Undo for a Suspend.
 
 This is also in the menu bar, Terminal >> Suspend (Scroll Lock),
 and is available as a toolbar item.
+
+h4. Delete Sends
+
+Specifies what a Delete keypress on your Mac keyboard will do.
+Some remote applications do not understand the default
+interpretation of Delete and can respond in odd ways (such as
+printing a "^H").
+
+h4. New Line
+
+Since some systems or applications recognize different characters
+for end-of-line, you can specify how MacTelnet sends a new-line
+(say, when pressing Return or pasting multi-line text).
+
+"CF LF" means "carriage return, line feed" and sends two
+characters: ASCII codes 13 and 10.
+
+"CF NULL" means "carriage return, null character" and sends two
+characters: ASCII codes 13 and 0.
+
+h4. EMACS Meta Key
+
+The EMACS text editor relies heavily on a key that is not
+available on Mac keyboards, the meta key.  However, you can
+ask MacTelnet to emulate the meta key by using other keys.
+
+h4. EMACS Arrow Keys
+
+The EMACS text editor has its own commands for moving the
+cursor in the buffer.  You can choose to have your Mac arrow
+keys trigger the appropriate EMACS commands.
 
 h3(#sessiontek). Graphics (TEK)
 

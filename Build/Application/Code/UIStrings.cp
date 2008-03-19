@@ -1276,7 +1276,7 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_PreferencesWindowSessionsControlKeysTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Control Keys"), CFSTR("PreferencesWindow"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Keyboard"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowSessionsControlKeysTabName"));
 		break;
 	
