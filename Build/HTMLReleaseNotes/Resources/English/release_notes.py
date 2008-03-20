@@ -115,6 +115,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080319': [
+		'Fixed Custom Format sheet to show the actual terminal font size.',
 		'Minor fix to definition of text selection regions, visible through their outline shape in inactive windows.',
 	],
 	'20080318': [

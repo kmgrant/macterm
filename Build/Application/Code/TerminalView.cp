@@ -1420,13 +1420,34 @@ Preferences_ContextRef
 TerminalView_ReturnConfiguration	(TerminalViewRef	inView)
 {
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	Preferences_ContextRef		result = viewPtr->configuration;
 	
 	
 	// since many settings are represented internally, this context
 	// will not contain the latest information; update the context
 	// based on current settings
-	// UNIMPLEMENTED
+	
+	// IMPORTANT: There is a trick here...because NO internal
+	// routines in this module mess with fonts or colors outside
+	// of initialization and user changes, it is NOT necessary to
+	// resync those preferences here: they will already be accurate.
+	// HOWEVER, if an internal routine were added that (say) messed
+	// with internally-stored colors for some reason, then it WOULD
+	// be necessary to call Preferences_ContextSetData() here to
+	// ensure the latest cached values are in the context.
+	
+	// font size is messed with programmatically (e.g. Make Text Bigger)
+	// so its current value is resynced with the context regardless
+	{
+		SInt16		fontSize = viewPtr->text.font.normalMetrics.size;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagFontSize,
+													sizeof(fontSize), &fontSize);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
 	return result;
 }// ReturnConfiguration
 
@@ -2826,6 +2847,16 @@ selfRef(REINTERPRET_CAST(this, TerminalViewRef))
 /*!
 Initializer.  See the constructor as well as
 receiveTerminalHIObjectEvents().
+
+IMPORTANT:	Settings that are read from "inFormat" here
+			and cached in the class, need to also be
+			updated in TerminalView_ReturnConfiguration()
+			before a context is returned from that API!
+			This ensures that external editors are seeing
+			accurate settings.  Put another way, the calls
+			to Preferences_ContextGetData() here should be
+			balanced by Preferences_ContextSetData() calls
+			in TerminalView_ReturnConfiguration().
 
 (3.1)
 */
