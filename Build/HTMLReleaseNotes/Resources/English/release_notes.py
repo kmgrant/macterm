@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080320',
     '20080319',
     '20080318',
     '20080317',
@@ -114,6 +115,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080320': [
+		'Preferences window Sessions pane Keyboard tab has been refined further.',
+	],
 	'20080319': [
 		'Fixed Custom Format sheet to show the actual terminal font size.',
 		'Minor fix to definition of text selection regions, visible through their outline shape in inactive windows.',
