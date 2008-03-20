@@ -346,8 +346,10 @@ static void				getScreenOrigin					(TerminalViewPtr, SInt16*, SInt16*);
 static void				getScreenOriginFloat			(TerminalViewPtr, Float32&, Float32&);
 static Handle			getSelectedTextAsNewHandle		(TerminalViewPtr, UInt16, TerminalView_TextFlags);
 static RgnHandle		getSelectedTextAsNewRegion		(TerminalViewPtr);
+static RgnHandle	getSelectedTextAsNewRegionOnScreen	(TerminalViewPtr);
 static size_t			getSelectedTextSize				(TerminalViewPtr);
 static RgnHandle		getVirtualRangeAsNewRegion		(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
+static RgnHandle	getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
 static void				getVirtualVisibleRegion			(TerminalViewPtr, SInt16*, SInt16*, SInt16*, SInt16*);
 static void				handleMultiClick				(TerminalViewPtr, UInt16);
 static void				handleNewViewContainerBounds	(HIViewRef, Float32, Float32, void*);
@@ -5247,6 +5249,8 @@ getSelectedTextAsNewHandle	(TerminalViewPtr			inTerminalViewPtr,
 /*!
 Internal version of TerminalView_ReturnSelectedTextAsNewRegion().
 
+DEPRECATED.  Use getSelectedTextAsNewRegionOnScreen() instead.
+
 (2.6)
 */
 static RgnHandle
@@ -5259,6 +5263,25 @@ getSelectedTextAsNewRegion		(TerminalViewPtr	inTerminalViewPtr)
 	
 	return result;
 }// getSelectedTextAsNewRegion
+
+
+/*!
+Like getVirtualRangeAsNewRegionOnScreen(), except specifically
+for the current text selection.  Automatically takes into
+account rectangular shape, if applicable.
+
+(3.1)
+*/
+static RgnHandle
+getSelectedTextAsNewRegionOnScreen		(TerminalViewPtr	inTerminalViewPtr)
+{
+	RgnHandle	result = getVirtualRangeAsNewRegionOnScreen(inTerminalViewPtr, inTerminalViewPtr->text.selection.range.first,
+															inTerminalViewPtr->text.selection.range.second,
+															inTerminalViewPtr->text.selection.isRectangular);
+	
+	
+	return result;
+}// getSelectedTextAsNewRegionOnScreen
 
 
 /*!
@@ -5291,8 +5314,11 @@ getSelectedTextSize		(TerminalViewPtr	inTerminalViewPtr)
 
 
 /*!
-Returns a new global region locating the specified area of
-the terminal view.  You must dispose of the region yourself.
+Returns a new region locating the specified area of the
+terminal view, LOCAL to its window port.  You must dispose of
+the region yourself.
+
+DEPRECATED.  Use getVirtualRangeAsNewRegionOnScreen() instead.
 
 (3.1)
 */
@@ -5302,21 +5328,57 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 								 TerminalView_Cell const&	inSelectionPastEnd,
 								 Boolean					inIsRectangular)
 {
+	RgnHandle	result = getVirtualRangeAsNewRegionOnScreen(inTerminalViewPtr, inSelectionStart,
+															inSelectionPastEnd, inIsRectangular);
+	
+	
+	if (nullptr != result)
+	{
+		// now convert the region to be in QuickDraw local coordinates,
+		// which are the same as those of the window content view
+		HIPoint		offsetAmount = CGPointMake(0, 0);
+		OSStatus	error = noErr;
+		
+		
+		error = HIViewConvertPoint(&offsetAmount, inTerminalViewPtr->contentHIView,
+									HIViewWrap(kHIViewWindowContentID, HIViewGetWindow(inTerminalViewPtr->contentHIView)));
+		assert_noerr(error);
+		OffsetRgn(result, STATIC_CAST(offsetAmount.x, SInt16), STATIC_CAST(offsetAmount.y, SInt16));
+	}
+	return result;
+}// getVirtualRangeAsNewRegion
+
+
+/*!
+Returns a new region locating the specified area of the
+terminal view, relative to itself: for example, the first
+character in the top-left corner has origin (0, 0) in
+pixels.  You must dispose of the region yourself.
+
+(3.1)
+*/
+static RgnHandle
+getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr			inTerminalViewPtr,
+									 TerminalView_Cell const&	inSelectionStart,
+									 TerminalView_Cell const&	inSelectionPastEnd,
+									 Boolean					inIsRectangular)
+{
 	RgnHandle	result = Memory_NewRegion();
 	
 	
 	if (nullptr != result)
 	{
-		CGrafPtr			oldPort = nullptr;
-		GDHandle			oldDevice = nullptr;
-		Rect				screenArea;
+		HIRect				floatBounds;
+		Rect				screenBounds;
 		TerminalView_Cell	selectionStart;
 		TerminalView_Cell	selectionPastEnd;
+		OSStatus			error = noErr;
 		
 		
-		GetGWorld(&oldPort, &oldDevice);
-		SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
-		GetControlBounds(inTerminalViewPtr->contentHIView, &screenArea);
+		// find clipping region
+		error = HIViewGetBounds(inTerminalViewPtr->contentHIView, &floatBounds);
+		assert_noerr(error);
+		SetRect(&screenBounds, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16), STATIC_CAST(floatBounds.size.height, SInt16));
 		
 		selectionStart = inSelectionStart;
 		selectionPastEnd = inSelectionPastEnd;
@@ -5352,11 +5414,10 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 					selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
 					selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
 					selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
-			screenToLocalRect(inTerminalViewPtr, &selectionBounds);
 			
 			// the final selection region is the portion of the full rectangle
 			// that fits within the current screen boundaries
-			SectRect(&selectionBounds, &screenArea, &clippedRect);
+			SectRect(&selectionBounds, &screenBounds, &clippedRect);
 			RectRgn(result, &clippedRect);
 		}
 		else
@@ -5381,8 +5442,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 						selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
 						inTerminalViewPtr->screen.viewWidthInPixels,
 						(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter);
-				screenToLocalRect(inTerminalViewPtr, &partialSelectionBounds);
-				SectRect(&partialSelectionBounds, &screenArea, &clippedRect); // clip to constraint rectangle
+				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(result, &clippedRect);
 				
 				// bounds of last (possibly partial) line to be highlighted
@@ -5391,8 +5451,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 						(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter,
 						selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter,
 						selectionPastEnd.second * inTerminalViewPtr->text.font.heightPerCharacter);
-				screenToLocalRect(inTerminalViewPtr, &partialSelectionBounds);
-				SectRect(&partialSelectionBounds, &screenArea, &clippedRect); // clip to constraint rectangle
+				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(clippedRegion, &clippedRect);
 				UnionRgn(clippedRegion, result, result);
 				
@@ -5404,8 +5463,7 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 							(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter,
 							inTerminalViewPtr->screen.viewWidthInPixels,
 							(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter);
-					screenToLocalRect(inTerminalViewPtr, &partialSelectionBounds);
-					SectRect(&partialSelectionBounds, &screenArea, &clippedRect); // clip to constraint rectangle
+					SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 					RectRgn(clippedRegion, &clippedRect);
 					UnionRgn(clippedRegion, result, result);
 				}
@@ -5413,10 +5471,9 @@ getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 				Memory_DisposeRegion(&clippedRegion);
 			}
 		}
-		SetGWorld(oldPort, oldDevice);
 	}
 	return result;
-}// getVirtualRangeAsNewRegion
+}// getVirtualRangeAsNewRegionOnScreen
 
 
 /*!
@@ -7269,23 +7326,13 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// have drawn the active selection)
 						if ((false == viewPtr->isActive) && viewPtr->text.selection.exists)
 						{
-							RgnHandle	selectionRegion = getSelectedTextAsNewRegion(viewPtr);
+							RgnHandle	selectionRegion = getSelectedTextAsNewRegionOnScreen(viewPtr);
 							
 							
 							if (nullptr != selectionRegion)
 							{
-								HIPoint		localToViewOffset = CGPointMake(0, 0);
 								RGBColor	highlightColor;
-								OSStatus	error = noErr;
 								
-								
-								// convert window-content-local coordinates into view-local coordinates
-								error = HIViewConvertPoint(&localToViewOffset,
-															HIViewWrap(kHIViewWindowContentID, HIViewGetWindow(view)),
-															view);
-								assert_noerr(error);
-								OffsetRgn(selectionRegion, STATIC_CAST(localToViewOffset.x + 1/* half of thickness */, SInt16),
-											STATIC_CAST(localToViewOffset.y + 1/* half of thickness */, SInt16));
 								
 								// draw outline
 								PenNormal();

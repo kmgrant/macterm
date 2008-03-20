@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080319',
     '20080318',
     '20080317',
     '20080316',
@@ -113,6 +114,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080319': [
+		'Minor fix to definition of text selection regions, visible through their outline shape in inactive windows.',
+	],
 	'20080318': [
 		'Preferences window General pane now allows command-N to be used for creating log-in shells.',
 		'Preferences window Sessions pane (and Special Key Sequences dialog) slightly redesigned to collect keyboard-related settings.',
