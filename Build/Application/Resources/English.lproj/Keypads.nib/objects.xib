@@ -3,444 +3,130 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="86" name="allObjects">
-    <object class="IBCarbonBevelButton" id="233">
-      <ostype name="controlSignature">FKey</ostype>
-      <int name="controlID">4</int>
-      <boolean name="enabled">FALSE</boolean>
-      <ostype name="command">VF4 </ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">F4</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">110 5 36 35 </string>
-      <string name="bounds">5 110 40 146 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="310">
+    <object class="IBCarbonBevelButton" id="308">
       <ostype name="controlSignature">ASCI</ostype>
-      <int name="controlID">6</int>
-      <ostype name="command">CK^F</ostype>
+      <int name="controlID">8</int>
+      <ostype name="command">CK^H</ostype>
+      <string name="helpTagText">BS — Backspace</string>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
       <int name="textPlacement">3</int>
-      <string name="title">^F</string>
+      <string name="title">^H</string>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">215 5 36 35 </string>
-      <string name="bounds">5 215 40 251 </string>
+      <string name="viewFrame">5 39 36 35 </string>
+      <string name="bounds">39 5 74 41 </string>
     </object>
-    <object class="IBCarbonBevelButton" id="236">
+    <object class="IBCarbonBevelButton" id="312">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">20</int>
+      <ostype name="command">CK^T</ostype>
+      <string name="helpTagText">DC4 — Device Control 4</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^T</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">145 73 36 35 </string>
+      <string name="bounds">73 145 108 181 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="237">
       <ostype name="controlSignature">FKey</ostype>
+      <int name="controlID">10</int>
+      <ostype name="command">VF10</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">F10</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">320 5 36 35 </string>
+      <string name="bounds">5 320 40 356 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="245">
+      <ostype name="controlSignature">FKey</ostype>
+      <int name="controlID">15</int>
+      <ostype name="command">VF15</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">?</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">495 5 36 35 </string>
+      <string name="bounds">5 495 40 531 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="315">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">21</int>
+      <ostype name="command">CK^U</ostype>
+      <string name="helpTagText">NAK — Negative Acknowledge</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^U</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">180 73 36 35 </string>
+      <string name="bounds">73 180 108 216 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="292">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">28</int>
+      <ostype name="command">CK^\</ostype>
+      <string name="helpTagText">FS — File Separator</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^\</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">145 107 36 35 </string>
+      <string name="bounds">107 145 142 181 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="293">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">23</int>
+      <ostype name="command">CK^W</ostype>
+      <string name="helpTagText">ETB — End Transmission Block</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^W</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">250 73 36 35 </string>
+      <string name="bounds">73 250 108 286 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="253">
+      <ostype name="controlSignature">FKey</ostype>
+      <int name="controlID">13</int>
+      <ostype name="command">VF13</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">F13</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">425 5 36 35 </string>
+      <string name="bounds">5 425 40 461 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="269">
+      <ostype name="controlSignature">KPAR</ostype>
+      <ostype name="command">KARt</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="contentResID">0</int>
+      <int name="textPlacement">3</int>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">75 141 36 35 </string>
+      <string name="bounds">141 75 176 111 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="306">
+      <ostype name="controlSignature">ASCI</ostype>
       <int name="controlID">14</int>
-      <ostype name="command">VF14</ostype>
+      <ostype name="command">CK^N</ostype>
+      <string name="helpTagText">SO — Shift Out (Character Set)</string>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
       <int name="textPlacement">3</int>
-      <string name="title">F14</string>
+      <string name="title">^N</string>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">460 5 36 35 </string>
-      <string name="bounds">5 460 40 496 </string>
-    </object>
-    <object class="IBCarbonRootControl" id="303">
-      <string name="viewFrame">0 0 291 147 </string>
-      <array count="32" name="subviews">
-        <object class="IBCarbonBevelButton" id="317">
-          <ostype name="controlSignature">ASCI</ostype>
-          <ostype name="command">CK^@</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^@</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">5 5 36 35 </string>
-          <string name="bounds">5 5 40 41 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="298">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">1</int>
-          <ostype name="command">CK^A</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^A</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">40 5 36 35 </string>
-          <string name="bounds">5 40 40 76 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="313">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">2</int>
-          <ostype name="command">CK^B</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^B</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">75 5 36 35 </string>
-          <string name="bounds">5 75 40 111 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="304">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">3</int>
-          <ostype name="command">CK^C</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^C</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">110 5 36 35 </string>
-          <string name="bounds">5 110 40 146 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="285">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">4</int>
-          <ostype name="command">CK^D</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^D</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">145 5 36 35 </string>
-          <string name="bounds">5 145 40 181 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="311">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">5</int>
-          <ostype name="command">CK^E</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^E</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">180 5 36 35 </string>
-          <string name="bounds">5 180 40 216 </string>
-        </object>
-        <reference idRef="310"/>
-        <object class="IBCarbonBevelButton" id="307">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">7</int>
-          <ostype name="command">CK^G</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^G</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">250 5 36 35 </string>
-          <string name="bounds">5 250 40 286 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="308">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">8</int>
-          <ostype name="command">CK^H</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^H</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">5 39 36 35 </string>
-          <string name="bounds">39 5 74 41 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="300">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">9</int>
-          <ostype name="command">CK^I</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^I</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">40 39 36 35 </string>
-          <string name="bounds">39 40 74 76 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="305">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">10</int>
-          <ostype name="command">CK^J</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^J</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">75 39 36 35 </string>
-          <string name="bounds">39 75 74 111 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="302">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">11</int>
-          <ostype name="command">CK^K</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^K</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">110 39 36 35 </string>
-          <string name="bounds">39 110 74 146 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="318">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">12</int>
-          <ostype name="command">CK^L</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^L</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">145 39 36 35 </string>
-          <string name="bounds">39 145 74 181 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="295">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">13</int>
-          <ostype name="command">CK^M</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^M</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">180 39 36 35 </string>
-          <string name="bounds">39 180 74 216 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="306">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">14</int>
-          <ostype name="command">CK^N</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^N</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">215 39 36 35 </string>
-          <string name="bounds">39 215 74 251 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="316">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">15</int>
-          <ostype name="command">CK^O</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^O</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">250 39 36 35 </string>
-          <string name="bounds">39 250 74 286 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="294">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">16</int>
-          <ostype name="command">CK^P</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^P</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">5 73 36 35 </string>
-          <string name="bounds">73 5 108 41 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="288">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">17</int>
-          <ostype name="command">CK^Q</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^Q</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">40 73 36 35 </string>
-          <string name="bounds">73 40 108 76 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="287">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">18</int>
-          <ostype name="command">CK^R</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^R</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">75 73 36 35 </string>
-          <string name="bounds">73 75 108 111 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="290">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">19</int>
-          <ostype name="command">CK^S</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^S</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">110 73 36 35 </string>
-          <string name="bounds">73 110 108 146 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="312">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">20</int>
-          <ostype name="command">CK^T</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^T</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">145 73 36 35 </string>
-          <string name="bounds">73 145 108 181 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="315">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">21</int>
-          <ostype name="command">CK^U</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^U</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">180 73 36 35 </string>
-          <string name="bounds">73 180 108 216 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="301">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">22</int>
-          <ostype name="command">CK^V</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^V</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">215 73 36 35 </string>
-          <string name="bounds">73 215 108 251 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="293">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">23</int>
-          <ostype name="command">CK^W</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^W</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">250 73 36 35 </string>
-          <string name="bounds">73 250 108 286 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="309">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">24</int>
-          <ostype name="command">CK^X</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^X</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">5 107 36 35 </string>
-          <string name="bounds">107 5 142 41 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="291">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">25</int>
-          <ostype name="command">CK^Y</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^Y</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">40 107 36 35 </string>
-          <string name="bounds">107 40 142 76 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="299">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">26</int>
-          <ostype name="command">CK^Z</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^Z</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">75 107 36 35 </string>
-          <string name="bounds">107 75 142 111 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="286">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">27</int>
-          <ostype name="command">CK^[</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^[</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">110 107 36 35 </string>
-          <string name="bounds">107 110 142 146 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="292">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">28</int>
-          <ostype name="command">CK^\</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^\</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">145 107 36 35 </string>
-          <string name="bounds">107 145 142 181 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="289">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">29</int>
-          <ostype name="command">CK^]</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^]</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">180 107 36 35 </string>
-          <string name="bounds">107 180 142 216 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="296">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">30</int>
-          <ostype name="command">CK^~</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^~</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">215 107 36 35 </string>
-          <string name="bounds">107 215 142 251 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="314">
-          <ostype name="controlSignature">ASCI</ostype>
-          <int name="controlID">31</int>
-          <ostype name="command">CK^?</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">^?</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">250 107 36 35 </string>
-          <string name="bounds">107 250 142 286 </string>
-        </object>
-      </array>
-      <string name="bounds">0 0 147 291 </string>
-    </object>
-    <reference idRef="292"/>
-    <reference idRef="302"/>
-    <object class="IBCarbonBevelButton" id="277">
-      <ostype name="command">KNm2</ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">2</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">180 107 36 35 </string>
-      <string name="bounds">107 180 142 216 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="244">
-      <ostype name="controlSignature">FKey</ostype>
-      <int name="controlID">6</int>
-      <ostype name="command">VF6 </ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">F6</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">180 5 36 35 </string>
-      <string name="bounds">5 180 40 216 </string>
+      <string name="viewFrame">215 39 36 35 </string>
+      <string name="bounds">39 215 74 251 </string>
     </object>
     <object class="IBCarbonBevelButton" id="255">
       <ostype name="command">KPF1</ostype>
@@ -451,51 +137,6 @@
       <unsigned_int name="behavior">32768</unsigned_int>
       <string name="viewFrame">145 5 36 35 </string>
       <string name="bounds">5 145 40 181 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="251">
-      <ostype name="controlSignature">FKey</ostype>
-      <int name="controlID">5</int>
-      <boolean name="enabled">FALSE</boolean>
-      <ostype name="command">VF5 </ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">F5</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">145 5 36 35 </string>
-      <string name="bounds">5 145 40 181 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="259">
-      <ostype name="command">KPF3</ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">PF3</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">215 5 36 35 </string>
-      <string name="bounds">5 215 40 251 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="250">
-      <ostype name="controlSignature">FKey</ostype>
-      <int name="controlID">11</int>
-      <ostype name="command">VF11</ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">F11</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">355 5 36 35 </string>
-      <string name="bounds">5 355 40 391 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="270">
-      <ostype name="command">KNm4</ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">4</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">145 73 36 35 </string>
-      <string name="bounds">73 145 108 181 </string>
     </object>
     <object class="IBCarbonBevelButton" id="240">
       <ostype name="controlSignature">FKey</ostype>
@@ -510,233 +151,6 @@
       <string name="viewFrame">40 5 36 35 </string>
       <string name="bounds">5 40 40 76 </string>
     </object>
-    <object class="IBCarbonBevelButton" id="267">
-      <ostype name="command">KNm9</ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">9</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">215 39 36 35 </string>
-      <string name="bounds">39 215 74 251 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="273">
-      <ostype name="controlSignature">KPDl</ostype>
-      <ostype name="command">KDel</ostype>
-      <string name="helpTagText">Delete</string>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="contentResID">0</int>
-      <int name="textPlacement">3</int>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">75 5 36 35 </string>
-      <string name="bounds">5 75 40 111 </string>
-    </object>
-    <object class="IBCarbonRootControl" id="239">
-      <string name="viewFrame">0 0 711 45 </string>
-      <array count="20" name="subviews">
-        <reference idRef="244"/>
-        <object class="IBCarbonBevelButton" id="246">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">7</int>
-          <ostype name="command">VF7 </ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F7</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">215 5 36 35 </string>
-          <string name="bounds">5 215 40 251 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="238">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">8</int>
-          <ostype name="command">VF8 </ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F8</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">250 5 36 35 </string>
-          <string name="bounds">5 250 40 286 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="242">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">9</int>
-          <ostype name="command">VF9 </ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F9</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">285 5 36 35 </string>
-          <string name="bounds">5 285 40 321 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="237">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">10</int>
-          <ostype name="command">VF10</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F10</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">320 5 36 35 </string>
-          <string name="bounds">5 320 40 356 </string>
-        </object>
-        <reference idRef="250"/>
-        <object class="IBCarbonBevelButton" id="254">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">12</int>
-          <ostype name="command">VF12</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F12</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">390 5 36 35 </string>
-          <string name="bounds">5 390 40 426 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="253">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">13</int>
-          <ostype name="command">VF13</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F13</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">425 5 36 35 </string>
-          <string name="bounds">5 425 40 461 </string>
-        </object>
-        <reference idRef="236"/>
-        <object class="IBCarbonBevelButton" id="245">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">15</int>
-          <ostype name="command">VF15</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">?</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">495 5 36 35 </string>
-          <string name="bounds">5 495 40 531 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="249">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">16</int>
-          <ostype name="command">VF16</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">do</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">530 5 36 35 </string>
-          <string name="bounds">5 530 40 566 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="235">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">17</int>
-          <ostype name="command">VF17</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F17</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">565 5 36 35 </string>
-          <string name="bounds">5 565 40 601 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="252">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">18</int>
-          <ostype name="command">VF18</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F18</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">600 5 36 35 </string>
-          <string name="bounds">5 600 40 636 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="243">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">19</int>
-          <ostype name="command">VF19</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F19</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">635 5 36 35 </string>
-          <string name="bounds">5 635 40 671 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="247">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">20</int>
-          <ostype name="command">VF20</ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F20</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">670 5 36 35 </string>
-          <string name="bounds">5 670 40 706 </string>
-        </object>
-        <object class="IBCarbonBevelButton" id="248">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">1</int>
-          <boolean name="enabled">FALSE</boolean>
-          <ostype name="command">VF1 </ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F1</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">5 5 36 35 </string>
-          <string name="bounds">5 5 40 41 </string>
-        </object>
-        <reference idRef="240"/>
-        <object class="IBCarbonBevelButton" id="234">
-          <ostype name="controlSignature">FKey</ostype>
-          <int name="controlID">3</int>
-          <boolean name="enabled">FALSE</boolean>
-          <ostype name="command">VF3 </ostype>
-          <int name="bevelThickness">1</int>
-          <int name="contentType">0</int>
-          <int name="textPlacement">3</int>
-          <string name="title">F3</string>
-          <unsigned_int name="behavior">32768</unsigned_int>
-          <string name="viewFrame">75 5 36 35 </string>
-          <string name="bounds">5 75 40 111 </string>
-        </object>
-        <reference idRef="233"/>
-        <reference idRef="251"/>
-      </array>
-      <string name="bounds">0 0 45 711 </string>
-    </object>
-    <object class="IBCarbonBevelButton" id="276">
-      <ostype name="command">KNm5</ostype>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="textPlacement">3</int>
-      <string name="title">5</string>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">180 73 36 35 </string>
-      <string name="bounds">73 180 108 216 </string>
-    </object>
-    <reference idRef="311"/>
-    <object class="IBCarbonBevelButton" id="257">
-      <ostype name="controlSignature">KPFn</ostype>
-      <ostype name="command">KFnd</ostype>
-      <string name="helpTagText">Find</string>
-      <int name="bevelThickness">1</int>
-      <int name="contentType">0</int>
-      <int name="contentResID">0</int>
-      <int name="textPlacement">3</int>
-      <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">5 5 36 35 </string>
-      <string name="bounds">5 5 40 41 </string>
-    </object>
     <object class="IBCarbonBevelButton" id="272">
       <ostype name="command">KPrd</ostype>
       <string name="helpTagText">Decimal Point</string>
@@ -748,66 +162,633 @@
       <string name="viewFrame">215 141 36 35 </string>
       <string name="bounds">141 215 176 251 </string>
     </object>
-    <reference idRef="315"/>
-    <object class="IBCarbonBevelButton" id="275">
-      <ostype name="controlSignature">KPPU</ostype>
-      <ostype name="command">KPgU</ostype>
-      <string name="helpTagText">Page Up</string>
+    <object class="IBCarbonBevelButton" id="235">
+      <ostype name="controlSignature">FKey</ostype>
+      <int name="controlID">17</int>
+      <ostype name="command">VF17</ostype>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
-      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
+      <string name="title">F17</string>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">40 39 36 35 </string>
-      <string name="bounds">39 40 74 76 </string>
+      <string name="viewFrame">565 5 36 35 </string>
+      <string name="bounds">5 565 40 601 </string>
     </object>
-    <reference idRef="296"/>
-    <object class="IBCarbonBevelButton" id="258">
-      <ostype name="command">KNm7</ostype>
+    <object class="IBCarbonBevelButton" id="296">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">30</int>
+      <ostype name="command">CK^~</ostype>
+      <string name="helpTagText">RS — Record Separator / End Block Mode</string>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
       <int name="textPlacement">3</int>
-      <string name="title">7</string>
+      <string name="title">^~</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">215 107 36 35 </string>
+      <string name="bounds">107 215 142 251 </string>
+    </object>
+    <object class="IBCarbonRootControl" id="262">
+      <string name="viewFrame">0 0 291 181 </string>
+      <array count="28" name="subviews">
+        <object class="IBCarbonBevelButton" id="257">
+          <ostype name="controlSignature">KPFn</ostype>
+          <ostype name="command">KFnd</ostype>
+          <string name="helpTagText">Find</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">5 5 36 35 </string>
+          <string name="bounds">5 5 40 41 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="260">
+          <ostype name="controlSignature">KPIn</ostype>
+          <ostype name="command">KIns</ostype>
+          <string name="helpTagText">Insert</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">40 5 36 35 </string>
+          <string name="bounds">5 40 40 76 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="273">
+          <ostype name="controlSignature">KPDl</ostype>
+          <ostype name="command">KDel</ostype>
+          <string name="helpTagText">Delete</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">75 5 36 35 </string>
+          <string name="bounds">5 75 40 111 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="271">
+          <ostype name="controlSignature">KPSl</ostype>
+          <ostype name="command">KSel</ostype>
+          <string name="helpTagText">Select</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">5 39 36 35 </string>
+          <string name="bounds">39 5 74 41 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="275">
+          <ostype name="controlSignature">KPPU</ostype>
+          <ostype name="command">KPgU</ostype>
+          <string name="helpTagText">Page Up</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">40 39 36 35 </string>
+          <string name="bounds">39 40 74 76 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="284">
+          <ostype name="controlSignature">KPPD</ostype>
+          <ostype name="command">KPgD</ostype>
+          <string name="helpTagText">Page Down</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">75 39 36 35 </string>
+          <string name="bounds">39 75 74 111 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="261">
+          <ostype name="controlSignature">KPAU</ostype>
+          <ostype name="command">KAUp</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">40 107 36 35 </string>
+          <string name="bounds">107 40 142 76 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="282">
+          <ostype name="controlSignature">KPAD</ostype>
+          <ostype name="command">KADn</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">40 141 36 35 </string>
+          <string name="bounds">141 40 176 76 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="280">
+          <ostype name="controlSignature">KPAL</ostype>
+          <ostype name="command">KALt</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">5 141 36 35 </string>
+          <string name="bounds">141 5 176 41 </string>
+        </object>
+        <reference idRef="269"/>
+        <object class="IBCarbonBevelButton" id="268">
+          <ostype name="command">KNm0</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">0</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">145 141 71 35 </string>
+          <string name="bounds">141 145 176 216 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="263">
+          <ostype name="command">KNm1</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">1</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">145 107 36 35 </string>
+          <string name="bounds">107 145 142 181 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="277">
+          <ostype name="command">KNm2</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">2</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">180 107 36 35 </string>
+          <string name="bounds">107 180 142 216 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="281">
+          <ostype name="command">KNm3</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">3</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">215 107 36 35 </string>
+          <string name="bounds">107 215 142 251 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="270">
+          <ostype name="command">KNm4</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">4</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">145 73 36 35 </string>
+          <string name="bounds">73 145 108 181 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="276">
+          <ostype name="command">KNm5</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">5</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">180 73 36 35 </string>
+          <string name="bounds">73 180 108 216 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="264">
+          <ostype name="command">KNm6</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">6</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">215 73 36 35 </string>
+          <string name="bounds">73 215 108 251 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="258">
+          <ostype name="command">KNm7</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">7</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">145 39 36 35 </string>
+          <string name="bounds">39 145 74 181 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="266">
+          <ostype name="command">KNm8</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">8</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">180 39 36 35 </string>
+          <string name="bounds">39 180 74 216 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="267">
+          <ostype name="command">KNm9</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">9</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">215 39 36 35 </string>
+          <string name="bounds">39 215 74 251 </string>
+        </object>
+        <reference idRef="272"/>
+        <object class="IBCarbonBevelButton" id="279">
+          <ostype name="command">KDsh</ostype>
+          <string name="helpTagText">Hyphen</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">-</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">250 73 36 35 </string>
+          <string name="bounds">73 250 108 286 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="278">
+          <ostype name="command">KCom</ostype>
+          <string name="helpTagText">Comma</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">,</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">250 39 36 35 </string>
+          <string name="bounds">39 250 74 286 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="265">
+          <ostype name="controlSignature">KPEn</ostype>
+          <ostype name="command">KEnt</ostype>
+          <string name="helpTagText">Enter</string>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="contentResID">0</int>
+          <int name="textPlacement">3</int>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">250 107 36 69 </string>
+          <string name="bounds">107 250 176 286 </string>
+        </object>
+        <reference idRef="255"/>
+        <object class="IBCarbonBevelButton" id="283">
+          <ostype name="command">KPF2</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">PF2</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">180 5 36 35 </string>
+          <string name="bounds">5 180 40 216 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="259">
+          <ostype name="command">KPF3</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">PF3</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">215 5 36 35 </string>
+          <string name="bounds">5 215 40 251 </string>
+        </object>
+        <object class="IBCarbonBevelButton" id="256">
+          <ostype name="command">KPF4</ostype>
+          <int name="bevelThickness">1</int>
+          <int name="contentType">0</int>
+          <int name="textPlacement">3</int>
+          <string name="title">PF4</string>
+          <unsigned_int name="behavior">32768</unsigned_int>
+          <string name="viewFrame">250 5 36 35 </string>
+          <string name="bounds">5 250 40 286 </string>
+        </object>
+      </array>
+      <string name="bounds">0 0 181 291 </string>
+    </object>
+    <reference idRef="283"/>
+    <object class="IBCarbonBevelButton" id="309">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">24</int>
+      <ostype name="command">CK^X</ostype>
+      <string name="helpTagText">CAN — Cancel</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^X</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">5 107 36 35 </string>
+      <string name="bounds">107 5 142 41 </string>
+    </object>
+    <reference idRef="275"/>
+    <object class="IBCarbonBevelButton" id="286">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">27</int>
+      <ostype name="command">CK^[</ostype>
+      <string name="helpTagText">ESC — Escape</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^[</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">110 107 36 35 </string>
+      <string name="bounds">107 110 142 146 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="236">
+      <ostype name="controlSignature">FKey</ostype>
+      <int name="controlID">14</int>
+      <ostype name="command">VF14</ostype>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">F14</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">460 5 36 35 </string>
+      <string name="bounds">5 460 40 496 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="316">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">15</int>
+      <ostype name="command">CK^O</ostype>
+      <string name="helpTagText">SI — Shift In (Character Set)</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^O</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">250 39 36 35 </string>
+      <string name="bounds">39 250 74 286 </string>
+    </object>
+    <reference idRef="282"/>
+    <object class="IBCarbonBevelButton" id="318">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">12</int>
+      <ostype name="command">CK^L</ostype>
+      <string name="helpTagText">FF/NP — Form Feed / New Page</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^L</string>
       <unsigned_int name="behavior">32768</unsigned_int>
       <string name="viewFrame">145 39 36 35 </string>
       <string name="bounds">39 145 74 181 </string>
     </object>
-    <object class="IBCarbonBevelButton" id="279">
-      <ostype name="command">KDsh</ostype>
-      <string name="helpTagText">Hyphen</string>
+    <object class="IBCarbonBevelButton" id="246">
+      <ostype name="controlSignature">FKey</ostype>
+      <int name="controlID">7</int>
+      <ostype name="command">VF7 </ostype>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
       <int name="textPlacement">3</int>
-      <string name="title">-</string>
+      <string name="title">F7</string>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">250 73 36 35 </string>
-      <string name="bounds">73 250 108 286 </string>
+      <string name="viewFrame">215 5 36 35 </string>
+      <string name="bounds">5 215 40 251 </string>
     </object>
-    <object class="IBCarbonBevelButton" id="268">
-      <ostype name="command">KNm0</ostype>
+    <object class="IBCarbonBevelButton" id="311">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">5</int>
+      <ostype name="command">CK^E</ostype>
+      <string name="helpTagText">ENQ — Enquiry (Flow Control)</string>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
       <int name="textPlacement">3</int>
-      <string name="title">0</string>
+      <string name="title">^E</string>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">145 141 71 35 </string>
-      <string name="bounds">141 145 176 216 </string>
+      <string name="viewFrame">180 5 36 35 </string>
+      <string name="bounds">5 180 40 216 </string>
     </object>
-    <reference idRef="247"/>
-    <reference idRef="243"/>
-    <reference idRef="288"/>
-    <object class="IBCarbonBevelButton" id="265">
-      <ostype name="controlSignature">KPEn</ostype>
-      <ostype name="command">KEnt</ostype>
-      <string name="helpTagText">Enter</string>
+    <object class="IBCarbonBevelButton" id="242">
+      <ostype name="controlSignature">FKey</ostype>
+      <int name="controlID">9</int>
+      <ostype name="command">VF9 </ostype>
       <int name="bevelThickness">1</int>
       <int name="contentType">0</int>
-      <int name="contentResID">0</int>
       <int name="textPlacement">3</int>
+      <string name="title">F9</string>
       <unsigned_int name="behavior">32768</unsigned_int>
-      <string name="viewFrame">250 107 36 69 </string>
-      <string name="bounds">107 250 176 286 </string>
+      <string name="viewFrame">285 5 36 35 </string>
+      <string name="bounds">5 285 40 321 </string>
     </object>
+    <object class="IBCarbonBevelButton" id="313">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">2</int>
+      <ostype name="command">CK^B</ostype>
+      <string name="helpTagText">STX — Start of Text</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^B</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">75 5 36 35 </string>
+      <string name="bounds">5 75 40 111 </string>
+    </object>
+    <object class="IBCarbonWindow" id="241">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="hideOnSuspend">TRUE</boolean>
+      <boolean name="inWindowMenu">FALSE</boolean>
+      <int name="carbonWindowClass">5</int>
+      <int name="scalingMode">1048576</int>
+      <string name="title">VT220 Function Keys</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="239">
+        <string name="viewFrame">0 0 711 45 </string>
+        <array count="20" name="subviews">
+          <object class="IBCarbonBevelButton" id="244">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">6</int>
+            <ostype name="command">VF6 </ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F6</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">180 5 36 35 </string>
+            <string name="bounds">5 180 40 216 </string>
+          </object>
+          <reference idRef="246"/>
+          <object class="IBCarbonBevelButton" id="238">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">8</int>
+            <ostype name="command">VF8 </ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F8</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">250 5 36 35 </string>
+            <string name="bounds">5 250 40 286 </string>
+          </object>
+          <reference idRef="242"/>
+          <reference idRef="237"/>
+          <object class="IBCarbonBevelButton" id="250">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">11</int>
+            <ostype name="command">VF11</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F11</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">355 5 36 35 </string>
+            <string name="bounds">5 355 40 391 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="254">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">12</int>
+            <ostype name="command">VF12</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F12</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">390 5 36 35 </string>
+            <string name="bounds">5 390 40 426 </string>
+          </object>
+          <reference idRef="253"/>
+          <reference idRef="236"/>
+          <reference idRef="245"/>
+          <object class="IBCarbonBevelButton" id="249">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">16</int>
+            <ostype name="command">VF16</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">do</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">530 5 36 35 </string>
+            <string name="bounds">5 530 40 566 </string>
+          </object>
+          <reference idRef="235"/>
+          <object class="IBCarbonBevelButton" id="252">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">18</int>
+            <ostype name="command">VF18</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F18</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">600 5 36 35 </string>
+            <string name="bounds">5 600 40 636 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="243">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">19</int>
+            <ostype name="command">VF19</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F19</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">635 5 36 35 </string>
+            <string name="bounds">5 635 40 671 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="247">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">20</int>
+            <ostype name="command">VF20</ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F20</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">670 5 36 35 </string>
+            <string name="bounds">5 670 40 706 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="248">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">1</int>
+            <boolean name="enabled">FALSE</boolean>
+            <ostype name="command">VF1 </ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F1</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">5 5 36 35 </string>
+            <string name="bounds">5 5 40 41 </string>
+          </object>
+          <reference idRef="240"/>
+          <object class="IBCarbonBevelButton" id="234">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">3</int>
+            <boolean name="enabled">FALSE</boolean>
+            <ostype name="command">VF3 </ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F3</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">75 5 36 35 </string>
+            <string name="bounds">5 75 40 111 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="233">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">4</int>
+            <boolean name="enabled">FALSE</boolean>
+            <ostype name="command">VF4 </ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F4</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">110 5 36 35 </string>
+            <string name="bounds">5 110 40 146 </string>
+          </object>
+          <object class="IBCarbonBevelButton" id="251">
+            <ostype name="controlSignature">FKey</ostype>
+            <int name="controlID">5</int>
+            <boolean name="enabled">FALSE</boolean>
+            <ostype name="command">VF5 </ostype>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">F5</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">145 5 36 35 </string>
+            <string name="bounds">5 145 40 181 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 45 711 </string>
+      </object>
+      <string name="windowRect">235 365 280 1076 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="289">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">29</int>
+      <ostype name="command">CK^]</ostype>
+      <string name="helpTagText">GS — Group Separator</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^]</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">180 107 36 35 </string>
+      <string name="bounds">107 180 142 216 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="317">
+      <ostype name="controlSignature">ASCI</ostype>
+      <ostype name="command">CK^@</ostype>
+      <string name="helpTagText">NUL — Null (0) Character</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^@</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">5 5 36 35 </string>
+      <string name="bounds">5 5 40 41 </string>
+    </object>
+    <reference idRef="239"/>
+    <reference idRef="238"/>
+    <reference idRef="261"/>
+    <reference idRef="276"/>
+    <reference idRef="265"/>
     <object class="IBCarbonWindow" id="274">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
@@ -821,214 +802,203 @@
       <int name="carbonWindowClass">5</int>
       <int name="scalingMode">1048576</int>
       <string name="title">VT220 Keypad</string>
-      <object name="rootControl" class="IBCarbonRootControl" id="262">
-        <string name="viewFrame">0 0 291 181 </string>
-        <array count="28" name="subviews">
-          <reference idRef="257"/>
-          <object class="IBCarbonBevelButton" id="260">
-            <ostype name="controlSignature">KPIn</ostype>
-            <ostype name="command">KIns</ostype>
-            <string name="helpTagText">Insert</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="contentResID">0</int>
-            <int name="textPlacement">3</int>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">40 5 36 35 </string>
-            <string name="bounds">5 40 40 76 </string>
-          </object>
-          <reference idRef="273"/>
-          <object class="IBCarbonBevelButton" id="271">
-            <ostype name="controlSignature">KPSl</ostype>
-            <ostype name="command">KSel</ostype>
-            <string name="helpTagText">Select</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="contentResID">0</int>
-            <int name="textPlacement">3</int>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">5 39 36 35 </string>
-            <string name="bounds">39 5 74 41 </string>
-          </object>
-          <reference idRef="275"/>
-          <object class="IBCarbonBevelButton" id="284">
-            <ostype name="controlSignature">KPPD</ostype>
-            <ostype name="command">KPgD</ostype>
-            <string name="helpTagText">Page Down</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="contentResID">0</int>
-            <int name="textPlacement">3</int>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">75 39 36 35 </string>
-            <string name="bounds">39 75 74 111 </string>
-          </object>
-          <object class="IBCarbonBevelButton" id="261">
-            <ostype name="controlSignature">KPAU</ostype>
-            <ostype name="command">KAUp</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="contentResID">0</int>
-            <int name="textPlacement">3</int>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">40 107 36 35 </string>
-            <string name="bounds">107 40 142 76 </string>
-          </object>
-          <object class="IBCarbonBevelButton" id="282">
-            <ostype name="controlSignature">KPAD</ostype>
-            <ostype name="command">KADn</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="contentResID">0</int>
-            <int name="textPlacement">3</int>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">40 141 36 35 </string>
-            <string name="bounds">141 40 176 76 </string>
-          </object>
-          <object class="IBCarbonBevelButton" id="280">
-            <ostype name="controlSignature">KPAL</ostype>
-            <ostype name="command">KALt</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="contentResID">0</int>
-            <int name="textPlacement">3</int>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">5 141 36 35 </string>
-            <string name="bounds">141 5 176 41 </string>
-          </object>
-          <object class="IBCarbonBevelButton" id="269">
-            <ostype name="controlSignature">KPAR</ostype>
-            <ostype name="command">KARt</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="contentResID">0</int>
-            <int name="textPlacement">3</int>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">75 141 36 35 </string>
-            <string name="bounds">141 75 176 111 </string>
-          </object>
-          <reference idRef="268"/>
-          <object class="IBCarbonBevelButton" id="263">
-            <ostype name="command">KNm1</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <string name="title">1</string>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">145 107 36 35 </string>
-            <string name="bounds">107 145 142 181 </string>
-          </object>
-          <reference idRef="277"/>
-          <object class="IBCarbonBevelButton" id="281">
-            <ostype name="command">KNm3</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <string name="title">3</string>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">215 107 36 35 </string>
-            <string name="bounds">107 215 142 251 </string>
-          </object>
-          <reference idRef="270"/>
-          <reference idRef="276"/>
-          <object class="IBCarbonBevelButton" id="264">
-            <ostype name="command">KNm6</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <string name="title">6</string>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">215 73 36 35 </string>
-            <string name="bounds">73 215 108 251 </string>
-          </object>
-          <reference idRef="258"/>
-          <object class="IBCarbonBevelButton" id="266">
-            <ostype name="command">KNm8</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <string name="title">8</string>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">180 39 36 35 </string>
-            <string name="bounds">39 180 74 216 </string>
-          </object>
-          <reference idRef="267"/>
-          <reference idRef="272"/>
-          <reference idRef="279"/>
-          <object class="IBCarbonBevelButton" id="278">
-            <ostype name="command">KCom</ostype>
-            <string name="helpTagText">Comma</string>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <string name="title">,</string>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">250 39 36 35 </string>
-            <string name="bounds">39 250 74 286 </string>
-          </object>
-          <reference idRef="265"/>
-          <reference idRef="255"/>
-          <object class="IBCarbonBevelButton" id="283">
-            <ostype name="command">KPF2</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <string name="title">PF2</string>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">180 5 36 35 </string>
-            <string name="bounds">5 180 40 216 </string>
-          </object>
-          <reference idRef="259"/>
-          <object class="IBCarbonBevelButton" id="256">
-            <ostype name="command">KPF4</ostype>
-            <int name="bevelThickness">1</int>
-            <int name="contentType">0</int>
-            <int name="textPlacement">3</int>
-            <string name="title">PF4</string>
-            <unsigned_int name="behavior">32768</unsigned_int>
-            <string name="viewFrame">250 5 36 35 </string>
-            <string name="bounds">5 250 40 286 </string>
-          </object>
-        </array>
-        <string name="bounds">0 0 181 291 </string>
-      </object>
+      <reference name="rootControl" idRef="262"/>
       <string name="windowRect">295 463 476 754 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="271"/>
-    <reference idRef="278"/>
-    <reference idRef="286"/>
-    <reference idRef="295"/>
-    <reference idRef="312"/>
-    <reference idRef="316"/>
-    <reference idRef="317"/>
-    <reference idRef="318"/>
-    <reference idRef="298"/>
-    <reference idRef="234"/>
-    <reference idRef="253"/>
-    <reference idRef="246"/>
-    <reference idRef="283"/>
-    <reference idRef="284"/>
-    <reference idRef="306"/>
-    <reference idRef="290"/>
-    <reference idRef="280"/>
-    <reference idRef="254"/>
-    <reference idRef="264"/>
-    <reference idRef="245"/>
-    <reference idRef="256"/>
-    <reference idRef="242"/>
-    <reference idRef="291"/>
-    <reference idRef="309"/>
-    <reference idRef="289"/>
-    <reference idRef="262"/>
-    <reference idRef="314"/>
-    <reference idRef="238"/>
-    <reference idRef="304"/>
-    <reference idRef="252"/>
-    <reference idRef="260"/>
-    <reference idRef="261"/>
-    <reference idRef="249"/>
+    <object class="IBCarbonBevelButton" id="314">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">31</int>
+      <ostype name="command">CK^?</ostype>
+      <string name="helpTagText">US — Unit Separator</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^?</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">250 107 36 35 </string>
+      <string name="bounds">107 250 142 286 </string>
+    </object>
+    <reference idRef="273"/>
+    <reference idRef="267"/>
     <reference idRef="263"/>
+    <reference idRef="281"/>
+    <reference idRef="279"/>
+    <reference idRef="280"/>
+    <reference idRef="248"/>
+    <reference idRef="256"/>
+    <object class="IBCarbonBevelButton" id="288">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">17</int>
+      <ostype name="command">CK^Q</ostype>
+      <string name="helpTagText">DC1 — Device Control 1 (XON)</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^Q</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">40 73 36 35 </string>
+      <string name="bounds">73 40 108 76 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="287">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">18</int>
+      <ostype name="command">CK^R</ostype>
+      <string name="helpTagText">DC2 — Device Control 2 (Block Mode)</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^R</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">75 73 36 35 </string>
+      <string name="bounds">73 75 108 111 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="302">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">11</int>
+      <ostype name="command">CK^K</ostype>
+      <string name="helpTagText">VT — Vertical Tab</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^K</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">110 39 36 35 </string>
+      <string name="bounds">39 110 74 146 </string>
+    </object>
+    <reference idRef="278"/>
+    <object class="IBCarbonBevelButton" id="285">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">4</int>
+      <ostype name="command">CK^D</ostype>
+      <string name="helpTagText">EOT — End of Transmission</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^D</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">145 5 36 35 </string>
+      <string name="bounds">5 145 40 181 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="291">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">25</int>
+      <ostype name="command">CK^Y</ostype>
+      <string name="helpTagText">EM — End of Medium</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^Y</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">40 107 36 35 </string>
+      <string name="bounds">107 40 142 76 </string>
+    </object>
+    <reference idRef="270"/>
+    <reference idRef="251"/>
+    <reference idRef="233"/>
+    <reference idRef="243"/>
+    <reference idRef="259"/>
+    <reference idRef="249"/>
+    <reference idRef="266"/>
+    <object class="IBCarbonBevelButton" id="307">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">7</int>
+      <ostype name="command">CK^G</ostype>
+      <string name="helpTagText">BEL — Terminal Bell</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^G</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">250 5 36 35 </string>
+      <string name="bounds">5 250 40 286 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="304">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">3</int>
+      <ostype name="command">CK^C</ostype>
+      <string name="helpTagText">ETX — End of Text</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^C</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">110 5 36 35 </string>
+      <string name="bounds">5 110 40 146 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="300">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">9</int>
+      <ostype name="command">CK^I</ostype>
+      <string name="helpTagText">HT — Horizontal Tab</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^I</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">40 39 36 35 </string>
+      <string name="bounds">39 40 74 76 </string>
+    </object>
+    <reference idRef="252"/>
+    <reference idRef="264"/>
+    <object class="IBCarbonBevelButton" id="290">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">19</int>
+      <ostype name="command">CK^S</ostype>
+      <string name="helpTagText">DC3 — Device Control 3 (XOFF)</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^S</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">110 73 36 35 </string>
+      <string name="bounds">73 110 108 146 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="298">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">1</int>
+      <ostype name="command">CK^A</ostype>
+      <string name="helpTagText">SOH — Start of Heading (Console Interrupt)</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^A</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">40 5 36 35 </string>
+      <string name="bounds">5 40 40 76 </string>
+    </object>
+    <reference idRef="258"/>
+    <reference idRef="257"/>
+    <reference idRef="260"/>
+    <object class="IBCarbonBevelButton" id="301">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">22</int>
+      <ostype name="command">CK^V</ostype>
+      <string name="helpTagText">SYN — Synchronous Idle</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^V</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">215 73 36 35 </string>
+      <string name="bounds">73 215 108 251 </string>
+    </object>
+    <reference idRef="254"/>
+    <reference idRef="247"/>
+    <reference idRef="234"/>
+    <object class="IBCarbonBevelButton" id="294">
+      <ostype name="controlSignature">ASCI</ostype>
+      <int name="controlID">16</int>
+      <ostype name="command">CK^P</ostype>
+      <string name="helpTagText">DLE — Data Link Escape</string>
+      <int name="bevelThickness">1</int>
+      <int name="contentType">0</int>
+      <int name="textPlacement">3</int>
+      <string name="title">^P</string>
+      <unsigned_int name="behavior">32768</unsigned_int>
+      <string name="viewFrame">5 73 36 35 </string>
+      <string name="bounds">73 5 108 41 </string>
+    </object>
     <object class="IBCarbonWindow" id="297">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
@@ -1042,132 +1012,194 @@
       <int name="carbonWindowClass">5</int>
       <int name="scalingMode">1048576</int>
       <string name="title">Control Keys</string>
-      <reference name="rootControl" idRef="303"/>
+      <object name="rootControl" class="IBCarbonRootControl" id="303">
+        <string name="viewFrame">0 0 291 147 </string>
+        <array count="32" name="subviews">
+          <reference idRef="317"/>
+          <reference idRef="298"/>
+          <reference idRef="313"/>
+          <reference idRef="304"/>
+          <reference idRef="285"/>
+          <reference idRef="311"/>
+          <object class="IBCarbonBevelButton" id="310">
+            <ostype name="controlSignature">ASCI</ostype>
+            <int name="controlID">6</int>
+            <ostype name="command">CK^F</ostype>
+            <string name="helpTagText">ACK — Acknowledge (Flow Control)</string>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">^F</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">215 5 36 35 </string>
+            <string name="bounds">5 215 40 251 </string>
+          </object>
+          <reference idRef="307"/>
+          <reference idRef="308"/>
+          <reference idRef="300"/>
+          <object class="IBCarbonBevelButton" id="305">
+            <ostype name="controlSignature">ASCI</ostype>
+            <int name="controlID">10</int>
+            <ostype name="command">CK^J</ostype>
+            <string name="helpTagText">NL/LF — New Line / Line Feed</string>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">^J</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">75 39 36 35 </string>
+            <string name="bounds">39 75 74 111 </string>
+          </object>
+          <reference idRef="302"/>
+          <reference idRef="318"/>
+          <object class="IBCarbonBevelButton" id="295">
+            <ostype name="controlSignature">ASCI</ostype>
+            <int name="controlID">13</int>
+            <ostype name="command">CK^M</ostype>
+            <string name="helpTagText">CR — Carriage Return</string>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">^M</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">180 39 36 35 </string>
+            <string name="bounds">39 180 74 216 </string>
+          </object>
+          <reference idRef="306"/>
+          <reference idRef="316"/>
+          <reference idRef="294"/>
+          <reference idRef="288"/>
+          <reference idRef="287"/>
+          <reference idRef="290"/>
+          <reference idRef="312"/>
+          <reference idRef="315"/>
+          <reference idRef="301"/>
+          <reference idRef="293"/>
+          <reference idRef="309"/>
+          <reference idRef="291"/>
+          <object class="IBCarbonBevelButton" id="299">
+            <ostype name="controlSignature">ASCI</ostype>
+            <int name="controlID">26</int>
+            <ostype name="command">CK^Z</ostype>
+            <string name="helpTagText">SUB — Substitute</string>
+            <int name="bevelThickness">1</int>
+            <int name="contentType">0</int>
+            <int name="textPlacement">3</int>
+            <string name="title">^Z</string>
+            <unsigned_int name="behavior">32768</unsigned_int>
+            <string name="viewFrame">75 107 36 35 </string>
+            <string name="bounds">107 75 142 111 </string>
+          </object>
+          <reference idRef="286"/>
+          <reference idRef="292"/>
+          <reference idRef="289"/>
+          <reference idRef="296"/>
+          <reference idRef="314"/>
+        </array>
+        <string name="bounds">0 0 147 291 </string>
+      </object>
       <string name="windowRect">295 785 442 1076 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="282"/>
+    <reference idRef="244"/>
+    <reference idRef="268"/>
+    <reference idRef="250"/>
+    <reference idRef="284"/>
+    <reference idRef="277"/>
+    <reference idRef="295"/>
+    <reference idRef="310"/>
     <reference idRef="305"/>
-    <reference idRef="307"/>
-    <reference idRef="248"/>
-    <reference idRef="313"/>
-    <reference idRef="294"/>
-    <reference idRef="287"/>
-    <object class="IBCarbonWindow" id="241">
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="hasCollapseBox">FALSE</boolean>
-      <boolean name="hasHorizontalZoom">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="hasVerticalZoom">FALSE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <boolean name="hideOnSuspend">TRUE</boolean>
-      <boolean name="inWindowMenu">FALSE</boolean>
-      <int name="carbonWindowClass">5</int>
-      <int name="scalingMode">1048576</int>
-      <string name="title">VT220 Function Keys</string>
-      <reference name="rootControl" idRef="239"/>
-      <string name="windowRect">235 365 280 1076 </string>
-      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
-    </object>
-    <reference idRef="285"/>
-    <reference idRef="235"/>
-    <reference idRef="281"/>
-    <reference idRef="266"/>
+    <reference idRef="303"/>
+    <reference idRef="271"/>
     <reference idRef="299"/>
-    <reference idRef="237"/>
-    <reference idRef="293"/>
-    <reference idRef="300"/>
-    <reference idRef="301"/>
-    <reference idRef="308"/>
-    <reference idRef="269"/>
   </array>
   <array count="86" name="allParents">
-    <reference idRef="239"/>
-    <reference idRef="303"/>
-    <reference idRef="239"/>
-    <reference idRef="297"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
-    <reference idRef="262"/>
-    <reference idRef="239"/>
-    <reference idRef="262"/>
-    <reference idRef="239"/>
-    <reference idRef="262"/>
-    <reference idRef="239"/>
-    <reference idRef="262"/>
-    <reference idRef="239"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="241"/>
-    <reference idRef="262"/>
-    <reference idRef="303"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="303"/>
-    <reference idRef="262"/>
-    <reference idRef="303"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="239"/>
-    <reference idRef="239"/>
-    <reference idRef="303"/>
-    <reference idRef="262"/>
-    <reference idRef="1"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
     <reference idRef="303"/>
     <reference idRef="303"/>
     <reference idRef="239"/>
     <reference idRef="239"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
     <reference idRef="239"/>
     <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="303"/>
     <reference idRef="303"/>
     <reference idRef="262"/>
     <reference idRef="239"/>
     <reference idRef="262"/>
     <reference idRef="239"/>
-    <reference idRef="262"/>
-    <reference idRef="239"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
     <reference idRef="303"/>
     <reference idRef="274"/>
+    <reference idRef="262"/>
+    <reference idRef="303"/>
+    <reference idRef="262"/>
+    <reference idRef="303"/>
+    <reference idRef="239"/>
+    <reference idRef="303"/>
+    <reference idRef="262"/>
     <reference idRef="303"/>
     <reference idRef="239"/>
     <reference idRef="303"/>
     <reference idRef="239"/>
-    <reference idRef="262"/>
-    <reference idRef="262"/>
-    <reference idRef="239"/>
-    <reference idRef="262"/>
-    <reference idRef="1"/>
-    <reference idRef="262"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
-    <reference idRef="239"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
     <reference idRef="303"/>
     <reference idRef="1"/>
     <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="241"/>
+    <reference idRef="239"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="1"/>
+    <reference idRef="303"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="239"/>
+    <reference idRef="262"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="262"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="262"/>
+    <reference idRef="239"/>
+    <reference idRef="239"/>
+    <reference idRef="239"/>
+    <reference idRef="262"/>
+    <reference idRef="239"/>
+    <reference idRef="262"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="239"/>
+    <reference idRef="262"/>
+    <reference idRef="303"/>
+    <reference idRef="303"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="262"/>
+    <reference idRef="303"/>
+    <reference idRef="239"/>
+    <reference idRef="239"/>
+    <reference idRef="239"/>
+    <reference idRef="303"/>
+    <reference idRef="1"/>
+    <reference idRef="239"/>
+    <reference idRef="262"/>
     <reference idRef="239"/>
     <reference idRef="262"/>
     <reference idRef="262"/>
     <reference idRef="303"/>
-    <reference idRef="239"/>
     <reference idRef="303"/>
     <reference idRef="303"/>
-    <reference idRef="303"/>
-    <reference idRef="303"/>
+    <reference idRef="297"/>
     <reference idRef="262"/>
+    <reference idRef="303"/>
   </array>
   <dictionary count="4" name="nameTable">
     <string>ControlKeys</string>

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080321',
     '20080320',
     '20080319',
     '20080318',
@@ -115,6 +116,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080321': [
+		'Using Show Help Tags on the Control Keys palette now displays the common abbreviations and meanings of each control key.',
+	],
 	'20080320': [
 		'Preferences window Sessions pane Keyboard tab has been refined further.',
 		'Session Info window now has a Device column, showing the pseudo-terminal connected to a process.',
