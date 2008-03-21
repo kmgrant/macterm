@@ -641,6 +641,9 @@ HIWindowRef
 	Session_ReturnActiveWindow				(SessionRef							inRef);
 
 CFStringRef
+	Session_ReturnPseudoTerminalDeviceNameCFString	(SessionRef					inRef);
+
+CFStringRef
 	Session_ReturnResourceLocationCFString	(SessionRef							inRef);
 
 Session_State
@@ -648,6 +651,10 @@ Session_State
 
 Session_StateAttributes
 	Session_ReturnStateAttributes			(SessionRef							inRef);
+
+void
+	Session_SetPseudoTerminalDeviceNameCFString		(SessionRef					inRef,
+											 CFStringRef						inDeviceNameString);
 
 void
 	Session_SetResourceLocationCFString		(SessionRef							inRef,

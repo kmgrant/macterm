@@ -5169,6 +5169,17 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			// but the response is specific to one, so check first
 			if (Session_ReturnActiveTerminalWindow(session) == terminalWindow)
 			{
+				// set the initial window title
+				if (Session_StateIsActiveUnstable(session))
+				{
+					CFStringRef		titleCFString = nullptr;
+					
+					
+					if (kSession_ResultOK == Session_GetWindowUserDefinedTitle(session, titleCFString))
+					{
+						TerminalWindow_SetWindowTitle(terminalWindow, titleCFString);
+					}
+				}
 				// add or remove window adornments as appropriate; once a session has died
 				// its window (if left open by the user) won’t display a warning, so the
 				// adornment is removed in that case, although its title is then changed
@@ -5221,7 +5232,6 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			// this handler is invoked for changes to ANY session,
 			// but the response is specific to one, so check first
-			if (Session_ReturnActiveTerminalWindow(session) == terminalWindow)
 			{
 				CFStringRef		titleCFString = nullptr;
 				

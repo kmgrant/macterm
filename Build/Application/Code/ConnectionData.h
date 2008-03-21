@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -148,12 +148,10 @@ struct ConnectionData
 	// local sessions are only possible on Mac OS X, with the help of UNIX
 	struct ProcessInfo
 	{
-		ProcessInfo (): pseudoTerminal(0), processID(0L),
-							commandLinePtr(nullptr) { bzero(devicePath, sizeof(devicePath)); }
+		ProcessInfo (): pseudoTerminal(0), processID(0), commandLinePtr(nullptr) {}
 		
 		PseudoTeletypewriterID	pseudoTerminal;		// file descriptor of pseudo-terminal master
-		long int				processID;			// Unix process ID of local shell
-		char					devicePath[20];		// TTY name (e.g. "/dev/ttyp2")
+		pid_t					processID;			// the process directly spawned by this session
 		char const*				commandLinePtr;		// buffer for parent process’ command line
 	} mainProcess;
 };

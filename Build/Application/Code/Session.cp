@@ -226,6 +226,7 @@ struct Session
 	Session_StateAttributes		statusAttributes;			// ÒtagsÓ for the status, above
 	CFRetainRelease				statusString;				// one word (usually) describing the state succinctly
 	CFRetainRelease				resourceLocationString;		// one-liner for remote URL or local Unix command line
+	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
 	UInt32						connectionDateTime;			// result of GetDateTime() call at connection time
 	CFAbsoluteTime				terminationAbsoluteTime;	// result of CFAbsoluteTimeGetCurrent() call at disconnection time
 	EventHandlerUPP				windowClosingUPP;			// wrapper for window closing callback
@@ -655,6 +656,7 @@ Session_New		(Boolean	inIsReadOnly)
 		//drag-and-drop handlers set in response to window-open event
 		ptr->statusString.clear();
 		ptr->resourceLocationString.clear();
+		ptr->deviceNameString.clear();
 		try
 		{
 			ptr->dataPtr = REINTERPRET_CAST(new ConnectionData(), ConnectionDataPtr);
@@ -2430,6 +2432,24 @@ Session_ReturnActiveWindow	(SessionRef		inRef)
 
 
 /*!
+Returns a pathname for the slave pseudo-terminal device
+attached to the given session.  This can be displayed in
+user interface elements.
+
+(3.1)
+*/
+CFStringRef
+Session_ReturnPseudoTerminalDeviceNameCFString		(SessionRef		inRef)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFStringRef			result = ptr->deviceNameString.returnCFStringRef();
+	
+	
+	return result;
+}// ReturnPseudoTerminalDeviceNameCFString
+
+
+/*!
 Returns a succinct string representation of the
 specified sessionÕs resource; for a remote session
 this is always a URL, for local sessions it is the
@@ -2938,6 +2958,29 @@ Session_SetNewlineMode	(SessionRef				inRef,
 	
 	ptr->dataPtr->crmap = inNewlineMode;
 }// SetNewlineMode
+
+
+/*!
+Specifies the device pathname for the slave pseudo-terminal
+attached to the given session.  This may be displayed in user
+interfaces; Session_ReturnPseudoTerminalDeviceNameCFString()
+can be used to retrieve the value later.
+
+IMPORTANT:  This is simply a stored property, and is usually
+			set only once, when a session first starts.
+
+(3.1)
+*/
+void
+Session_SetPseudoTerminalDeviceNameCFString		(SessionRef		inRef,
+												 CFStringRef	inDeviceNameString)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	
+	
+	// the following assignment will automatically retain the string
+	ptr->deviceNameString.setCFTypeRef(inDeviceNameString);
+}// SetPseudoTerminalDeviceNameCFString
 
 
 /*!

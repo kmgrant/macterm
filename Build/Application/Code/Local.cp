@@ -630,10 +630,18 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					connectionDataPtr->controlKey.suspend = terminalControl.c_cc[VSTOP];
 					connectionDataPtr->controlKey.resume = terminalControl.c_cc[VSTART];
 					
-					// temporary - session parameters are hacked in here
+					// initializer certain session parameters
 					connectionDataPtr->mainProcess.pseudoTerminal = masterTTY;
 					connectionDataPtr->mainProcess.processID = *outProcessIDPtr;
-					CPP_STD::strcpy(connectionDataPtr->mainProcess.devicePath, outSlaveName);
+					{
+						CFRetainRelease		deviceNameString(CFStringCreateWithCString(kCFAllocatorDefault, outSlaveName,
+																						kCFStringEncodingASCII),
+																true/* is retained */);
+						
+						
+						Session_SetPseudoTerminalDeviceNameCFString(inUninitializedSession, deviceNameString.returnCFStringRef());
+					}
+					
 					{
 						char*				buffer = nullptr;
 						char const* const*	argumentPtr = argv;
@@ -668,6 +676,17 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 						
 						// retain the buffer
 						connectionDataPtr->mainProcess.commandLinePtr = buffer;
+						
+						// set this as the window title initially (could easily change)
+						{
+							CFRetainRelease		titleString(CFStringCreateWithCString(kCFAllocatorDefault, buffer,
+																						kCFStringEncodingASCII),
+															true/* is retained */);
+							
+							
+							Session_SetResourceLocationCFString(inUninitializedSession, titleString.returnCFStringRef());
+							Session_SetWindowUserDefinedTitle(inUninitializedSession, titleString.returnCFStringRef());
+						}
 					}
 					
 					threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(DataLoopThreadContext)),

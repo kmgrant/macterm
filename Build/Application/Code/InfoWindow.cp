@@ -85,6 +85,7 @@ enum
 {
 	kMyDataBrowserPropertyIDWindow			= 'Wind',
 	kMyDataBrowserPropertyIDResource		= 'Rsrc',
+	kMyDataBrowserPropertyIDDevice			= 'Devc',
 	kMyDataBrowserPropertyIDStatus			= 'Stat',
 	kMyDataBrowserPropertyIDCreationTime	= 'Open'
 };
@@ -92,6 +93,7 @@ enum
 #pragma mark Types
 
 typedef std::map< SessionRef, SInt32 >				SessionToCreationTimeMap;
+typedef std::map< SessionRef, CFRetainRelease >		SessionToDeviceMap;
 typedef std::map< SessionRef, CFRetainRelease >		SessionToURLMap;
 typedef std::map< SessionRef, CFRetainRelease >		SessionToWindowTitleMap;
 
@@ -118,6 +120,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	EventHandlerRef							gWindowCursorChangeHandler = nullptr;	//!< invoked when the cursor shape needs to be modified
 	EventHandlerUPP							gWindowCursorChangeUPP = nullptr;		//!< wrapper for window cursor change callback function
 	SessionToCreationTimeMap&				gSessionToCreationTimeMap ()	{ static SessionToCreationTimeMap x; return x; }
+	SessionToDeviceMap&						gSessionToDeviceMap ()		{ static SessionToDeviceMap x; return x; }
 	SessionToURLMap&						gSessionToURLMap ()		{ static SessionToURLMap x; return x; }
 	SessionToWindowTitleMap&				gSessionToWindowTitleMap ()		{ static SessionToWindowTitleMap x; return x; }
 }
@@ -313,6 +316,11 @@ InfoWindow_Init	()
 			{
 				error = SetDataBrowserPropertyFlags(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDResource, flags);
 			}
+			error = GetDataBrowserPropertyFlags(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice, &flags);
+			if (noErr == error)
+			{
+				error = SetDataBrowserPropertyFlags(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice, flags);
+			}
 			error = GetDataBrowserPropertyFlags(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus, &flags);
 			if (noErr == error)
 			{
@@ -353,6 +361,9 @@ InfoWindow_Init	()
 					(OSStatus)SetDataBrowserTableViewColumnPosition
 								(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDResource,
 									CFArrayGetFirstIndexOfValue(orderCFArray, kWholeArray, CFSTR("resource")));
+					(OSStatus)SetDataBrowserTableViewColumnPosition
+								(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice,
+									CFArrayGetFirstIndexOfValue(orderCFArray, kWholeArray, CFSTR("device")));
 					(OSStatus)SetDataBrowserTableViewColumnPosition
 								(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus,
 									CFArrayGetFirstIndexOfValue(orderCFArray, kWholeArray, CFSTR("status")));
@@ -569,6 +580,7 @@ InfoWindow_Done	()
 			{
 				DataBrowserTableViewColumnIndex		windowColumnIndex = 0;
 				DataBrowserTableViewColumnIndex		resourceColumnIndex = 0;
+				DataBrowserTableViewColumnIndex		deviceColumnIndex = 0;
 				DataBrowserTableViewColumnIndex		statusColumnIndex = 0;
 				DataBrowserTableViewColumnIndex		openTimeColumnIndex = 0;
 				CFStringRef							stringToAppend = nullptr;
@@ -580,6 +592,8 @@ InfoWindow_Done	()
 				(OSStatus)GetDataBrowserTableViewColumnPosition
 							(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDResource, &resourceColumnIndex);
 				(OSStatus)GetDataBrowserTableViewColumnPosition
+							(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice, &deviceColumnIndex);
+				(OSStatus)GetDataBrowserTableViewColumnPosition
 							(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus, &statusColumnIndex);
 				(OSStatus)GetDataBrowserTableViewColumnPosition
 							(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDCreationTime, &openTimeColumnIndex);
@@ -589,6 +603,7 @@ InfoWindow_Done	()
 				{
 					if (windowColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("window");
 					else if (resourceColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("resource");
+					else if (deviceColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("device");
 					else if (statusColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("status");
 					else if (openTimeColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("open-time");
 					
@@ -730,7 +745,7 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 				sessionToCreationTimeIterator = gSessionToCreationTimeMap().find(session);
 				if (sessionToCreationTimeIterator != gSessionToCreationTimeMap().end())
 				{
-					SInt32		dateTime = gSessionToCreationTimeMap()[session];
+					SInt32		dateTime = sessionToCreationTimeIterator->second;
 					
 					
 					if (dateTime != 0)
@@ -750,7 +765,27 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 				sessionToURLIterator = gSessionToURLMap().find(session);
 				if (sessionToURLIterator != gSessionToURLMap().end())
 				{
-					CFStringRef		theCFString = gSessionToURLMap()[session].returnCFStringRef();
+					CFStringRef		theCFString = (sessionToURLIterator->second).returnCFStringRef();
+					
+					
+					if (theCFString != nullptr)
+					{
+						result = SetDataBrowserItemDataText(inItemData, theCFString);
+					}
+				}
+			}
+			break;
+		
+		case kMyDataBrowserPropertyIDDevice:
+			// return the text string with the session pseudo-terminal device name
+			{
+				SessionToURLMap::iterator	sessionToDeviceIterator;
+				
+				
+				sessionToDeviceIterator = gSessionToDeviceMap().find(session);
+				if (sessionToDeviceIterator != gSessionToDeviceMap().end())
+				{
+					CFStringRef		theCFString = (sessionToDeviceIterator->second).returnCFStringRef();
 					
 					
 					if (theCFString != nullptr)
@@ -801,7 +836,7 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 				sessionToWindowTitleIterator = gSessionToWindowTitleMap().find(session);
 				if (sessionToWindowTitleIterator != gSessionToWindowTitleMap().end())
 				{
-					CFStringRef		titleCFString = gSessionToWindowTitleMap()[session].returnCFStringRef();
+					CFStringRef		titleCFString = (sessionToWindowTitleIterator->second).returnCFStringRef();
 					
 					
 					if (nullptr != titleCFString)
@@ -823,6 +858,7 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 		{
 		case kMyDataBrowserPropertyIDCreationTime:
 		case kMyDataBrowserPropertyIDResource:
+		case kMyDataBrowserPropertyIDDevice:
 		case kMyDataBrowserPropertyIDStatus:
 			// read-only
 			result = paramErr;
@@ -889,13 +925,13 @@ compareDataBrowserItems		(ControlRef					UNUSED_ARGUMENT(inDataBrowser),
 				sessionToCreationTimeIterator = gSessionToCreationTimeMap().find(session1);
 				if (sessionToCreationTimeIterator != gSessionToCreationTimeMap().end())
 				{
-					dateTime1 = gSessionToCreationTimeMap()[session1];
+					dateTime1 = sessionToCreationTimeIterator->second;
 				}
 				
 				sessionToCreationTimeIterator = gSessionToCreationTimeMap().find(session2);
 				if (sessionToCreationTimeIterator != gSessionToCreationTimeMap().end())
 				{
-					dateTime2 = gSessionToCreationTimeMap()[session2];
+					dateTime2 = sessionToCreationTimeIterator->second;
 				}
 				
 				if ((0 == dateTime1) && (0 != dateTime2)) result = true;
@@ -915,13 +951,32 @@ compareDataBrowserItems		(ControlRef					UNUSED_ARGUMENT(inDataBrowser),
 				sessionToURLIterator = gSessionToURLMap().find(session1);
 				if (sessionToURLIterator != gSessionToURLMap().end())
 				{
-					string1 = gSessionToURLMap()[session1].returnCFStringRef();
+					string1 = (sessionToURLIterator->second).returnCFStringRef();
 				}
 				
 				sessionToURLIterator = gSessionToURLMap().find(session2);
 				if (sessionToURLIterator != gSessionToURLMap().end())
 				{
-					string2 = gSessionToURLMap()[session2].returnCFStringRef();
+					string2 = (sessionToURLIterator->second).returnCFStringRef();
+				}
+			}
+			break;
+		
+		case kMyDataBrowserPropertyIDDevice:
+			{
+				SessionToURLMap::iterator	sessionToDeviceIterator;
+				
+				
+				sessionToDeviceIterator = gSessionToDeviceMap().find(session1);
+				if (sessionToDeviceIterator != gSessionToDeviceMap().end())
+				{
+					string1 = (sessionToDeviceIterator->second).returnCFStringRef();
+				}
+				
+				sessionToDeviceIterator = gSessionToDeviceMap().find(session2);
+				if (sessionToDeviceIterator != gSessionToDeviceMap().end())
+				{
+					string2 = (sessionToDeviceIterator->second).returnCFStringRef();
 				}
 			}
 			break;
@@ -941,13 +996,13 @@ compareDataBrowserItems		(ControlRef					UNUSED_ARGUMENT(inDataBrowser),
 				sessionToWindowTitleIterator = gSessionToWindowTitleMap().find(session1);
 				if (sessionToWindowTitleIterator != gSessionToWindowTitleMap().end())
 				{
-					string1 = gSessionToWindowTitleMap()[session1].returnCFStringRef();
+					string1 = (sessionToWindowTitleIterator->second).returnCFStringRef();
 				}
 				
 				sessionToWindowTitleIterator = gSessionToWindowTitleMap().find(session2);
 				if (sessionToWindowTitleIterator != gSessionToWindowTitleMap().end())
 				{
-					string2 = gSessionToWindowTitleMap()[session2].returnCFStringRef();
+					string2 = (sessionToWindowTitleIterator->second).returnCFStringRef();
 				}
 			}
 			break;
@@ -1290,6 +1345,10 @@ refreshDisplay ()
 	(OSStatus)UpdateDataBrowserItems(gSessionStatusDataBrowser, kDataBrowserNoItem/* parent item */,
 										0/* number of IDs */, nullptr/* IDs */,
 										kDataBrowserItemNoProperty/* pre-sort property */,
+										kMyDataBrowserPropertyIDDevice);
+	(OSStatus)UpdateDataBrowserItems(gSessionStatusDataBrowser, kDataBrowserNoItem/* parent item */,
+										0/* number of IDs */, nullptr/* IDs */,
+										kDataBrowserItemNoProperty/* pre-sort property */,
 										kMyDataBrowserPropertyIDStatus);
 	(OSStatus)UpdateDataBrowserItems(gSessionStatusDataBrowser, kDataBrowserNoItem/* parent item */,
 										0/* number of IDs */, nullptr/* IDs */,
@@ -1423,6 +1482,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					// find out all session information for initialization purposes
 					// (registered callbacks handle any changes later on)
 					gSessionToCreationTimeMap()[session] = Session_TimeOfActivation(session);
+					gSessionToDeviceMap()[session].setCFTypeRef(Session_ReturnPseudoTerminalDeviceNameCFString(session));
 					gSessionToURLMap()[session].setCFTypeRef(Session_ReturnResourceLocationCFString(session));
 					if (Session_GetWindowUserDefinedTitle(session, titleCFString).ok())
 					{
@@ -1463,6 +1523,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 														kDataBrowserItemNoProperty/* pre-sort property */);
 				}
 				gSessionToCreationTimeMap().erase(session);
+				gSessionToDeviceMap().erase(session);
 				gSessionToURLMap().erase(session);
 				gSessionToWindowTitleMap().erase(session);
 				refreshDisplay();
@@ -1508,6 +1569,13 @@ setDataBrowserColumnWidths ()
 		Float32		calculatedWidth = 0;
 		UInt16		totalWidthSoFar = 0;
 		
+		
+		// leave device string space fixed
+		if (noErr == GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice,
+																&integerWidth))
+		{
+			availableWidth -= integerWidth;
+		}
 		
 		// leave status string space fixed
 		if (noErr == GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus,

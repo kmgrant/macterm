@@ -439,28 +439,12 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 		result = Session_New();
 		if (nullptr != result)
 		{
-			CFMutableStringRef		commandLineCFString = CFStringCreateMutable(kCFAllocatorDefault,
-																				0/* length; 0 = unlimited */);
-			Local_Result			localResult = kLocal_ResultOK;
-			WindowRef				window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t					processID = 0;
-			char					devicePath[20];
+			Local_Result	localResult = kLocal_ResultOK;
+			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+			pid_t			processID = 0;
+			char			devicePath[20];
 			
 			
-			if (nullptr != commandLineCFString)
-			{
-				char const* const*   stringPtrArray = argv;
-				
-				
-				while (nullptr != *stringPtrArray)
-				{
-					CFStringAppendCString(commandLineCFString, *stringPtrArray++, kCFStringEncodingASCII);
-					if (nullptr != *stringPtrArray) CFStringAppendCString(commandLineCFString, " ", kCFStringEncodingASCII);
-				}
-				Session_SetResourceLocationCFString(result, commandLineCFString);
-				Session_SetWindowUserDefinedTitle(result, commandLineCFString);
-				CFRelease(commandLineCFString), commandLineCFString = nullptr;
-			}
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnProcess(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 												argv, &processID, devicePath, inWorkingDirectoryOrNull);
@@ -606,32 +590,12 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindowOrNul
 		result = Session_New();
 		if (nullptr != result)
 		{
-			char*				defaultShell = nullptr;
-			Local_Result		localResult = kLocal_ResultOK;
-			WindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t				processID = 0;
-			char				devicePath[20];
+			Local_Result	localResult = kLocal_ResultOK;
+			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+			pid_t			processID = 0;
+			char			devicePath[20];
 			
 			
-			if (Local_GetDefaultShell(&defaultShell) == kLocal_ResultOK)
-			{
-				// indicate the active program
-				CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault, defaultShell,
-																		CFStringGetSystemEncoding());
-				
-				
-				Session_SetResourceLocationCFString(result, titleString);
-				Session_SetWindowUserDefinedTitle(result, titleString);
-				TerminalWindow_SetWindowTitle(terminalWindow, titleString);
-				CFRelease(titleString);
-			}
-			else
-			{
-				// ???
-				Session_SetResourceLocationCFString(result, CFSTR("hello")/* TEMPORARY */);
-				Session_SetWindowUserDefinedTitle(result, CFSTR("hello")/* TEMPORARY */);
-				TerminalWindow_SetWindowTitle(terminalWindow, CFSTR("untitled")/* TEMPORARY */);
-			}
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 													&processID, devicePath);
@@ -694,32 +658,12 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindowOr
 		result = Session_New();
 		if (nullptr != result)
 		{
-			char*				defaultShell = nullptr;
-			Local_Result		localResult = kLocal_ResultOK;
-			WindowRef			window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t				processID = 0;
-			char				devicePath[20];
+			Local_Result	localResult = kLocal_ResultOK;
+			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+			pid_t			processID = 0;
+			char			devicePath[20];
 			
 			
-			if (Local_GetDefaultShell(&defaultShell) == kLocal_ResultOK)
-			{
-				// indicate the active program
-				CFStringRef		titleString = CFStringCreateWithCString(kCFAllocatorDefault, defaultShell,
-																		CFStringGetSystemEncoding());
-				
-				
-				Session_SetResourceLocationCFString(result, titleString);
-				Session_SetWindowUserDefinedTitle(result, titleString);
-				TerminalWindow_SetWindowTitle(terminalWindow, titleString);
-				CFRelease(titleString);
-			}
-			else
-			{
-				// ???
-				Session_SetResourceLocationCFString(result, CFSTR("hello")/* TEMPORARY */);
-				Session_SetWindowUserDefinedTitle(result, CFSTR("hello")/* TEMPORARY */);
-				TerminalWindow_SetWindowTitle(terminalWindow, CFSTR("untitled")/* TEMPORARY */);
-			}
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 													&processID, devicePath);
@@ -1023,9 +967,13 @@ SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef			inTerminalWindowO
 					error = TerminalFile_NewFromFile(url, &termFile);
 					if (noErr == error)
 					{
-						// success!
-						displayOK = true;
-						startTrackingSession(result, terminalWindow);
+						// UNIMPLEMENTED - read session data (e.g. command) from file reference and open session
+						if (0)
+						{
+							// success!
+							displayOK = true;
+							startTrackingSession(result, terminalWindow);
+						}
 					}
 					
 					CFRelease(url), url = nullptr;
@@ -1084,13 +1032,11 @@ SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindowOrNull
 		if (nullptr != result)
 		{
 			Local_Result	localResult = kLocal_ResultOK;
-			WindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
+			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
 			pid_t			processID = 0;
 			char			devicePath[20];
 			
 			
-			Session_SetResourceLocationCFString(result, CFSTR("/usr/bin/login"));
-			TerminalWindow_SetWindowTitle(terminalWindow, CFSTR("/usr/bin/login"));
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnLoginShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
 												&processID, devicePath);

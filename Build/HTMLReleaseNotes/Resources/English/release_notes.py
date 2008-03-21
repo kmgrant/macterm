@@ -117,6 +117,8 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080320': [
 		'Preferences window Sessions pane Keyboard tab has been refined further.',
+		'Session Info window now has a Device column, showing the pseudo-terminal connected to a process.',
+		'Fixed setup of window title and command line display when creating certain kinds of sessions.',
 	],
 	'20080319': [
 		'Fixed Custom Format sheet to show the actual terminal font size.',
