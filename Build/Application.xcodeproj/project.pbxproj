@@ -167,6 +167,8 @@
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
 		0AE852690D94613300B6834B /* AutoPool.objc++.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AE852680D94613300B6834B /* AutoPool.objc++.h */; };
+		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; };
+		0AE852750D9463B900B6834B /* CocoaUserDefaults.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AE852740D9463B900B6834B /* CocoaUserDefaults.h */; };
 		0AFA782C0B470144001FCE83 /* com_mactelnet_ParseURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* com_mactelnet_Util.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */; };
 		0AFA782E0B470144001FCE83 /* com_mactelnet_HandleURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */; };
@@ -592,6 +594,8 @@
 		0AE63E2807F3B98100EB82FA /* Bind.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Bind.cp; path = Application/Code/Bind.cp; sourceTree = "<group>"; };
 		0AE63E3107F3B9C900EB82FA /* Bind.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Bind.h; path = Application/Code/Bind.h; sourceTree = "<group>"; };
 		0AE852680D94613300B6834B /* AutoPool.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AutoPool.objc++.h"; path = "Shared/Code/AutoPool.objc++.h"; sourceTree = "<group>"; };
+		0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
+		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
 		0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPreferenceCollections.icns; path = Application/Resources/IconForPreferenceCollections.icns; sourceTree = "<group>"; };
 		0AF289A206CC9ADC002A89A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskDisableFloater.nib; sourceTree = "<group>"; };
@@ -643,6 +647,7 @@
 				0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */,
 				0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */,
 				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
+				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */,
 				0A46FDCC055432A400ACDF3A /* Cursors.cp */,
 				0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */,
@@ -667,6 +672,7 @@
 				0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */,
 				0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */,
 				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
+				0AE852740D9463B900B6834B /* CocoaUserDefaults.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
 				0A9B318A0D538E6F00C1616D /* Cursors.h */,
 				0A4603D50554376100ACDF3A /* DialogAdjust.h */,
@@ -1171,6 +1177,7 @@
 				0ACBC3590D5BBC6800FCF05F /* CocoaBasic.h in Headers */,
 				0A2890DF0D68019E0017D99E /* GenericPanelTabs.h in Headers */,
 				0AE852690D94613300B6834B /* AutoPool.objc++.h in Headers */,
+				0AE852750D9463B900B6834B /* CocoaUserDefaults.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1476,6 +1483,7 @@
 				0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */,
 				0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */,
 				0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */,
+				0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
