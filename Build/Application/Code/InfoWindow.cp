@@ -104,6 +104,9 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	WindowRef								gSessionStatusWindow = nullptr;
 	WindowInfo_Ref							gSessionStatusWindowInfo = nullptr;
 	HIViewRef								gSessionStatusDataBrowser = nullptr;
+	UInt16									gIdealColumnWidthCreationTime = 0;
+	UInt16									gIdealColumnWidthDevice = 0;
+	UInt16									gIdealColumnWidthStatus = 0;
 	Boolean									gIsShowing = false;
 	CommonEventHandlers_WindowResizer		gSessionStatusWindowResizeHandler;
 	ListenerModel_ListenerRef				gSessionAttributeChangeEventListener = nullptr;
@@ -271,6 +274,18 @@ InfoWindow_Init	()
 		error = GetControlByID(sessionStatusWindow, &id, &gSessionStatusDataBrowser);
 		assert_noerr(error);
 		
+		// remember the NIB-specified widths of certain static columns,
+		// these are used as ideal sizes later
+		error = GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDCreationTime,
+														&gIdealColumnWidthCreationTime);
+		assert_noerr(error);
+		error = GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice,
+														&gIdealColumnWidthDevice);
+		assert_noerr(error);
+		error = GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus,
+														&gIdealColumnWidthStatus);
+		assert_noerr(error);
+		
 		// define a callback for specifying what data belongs in the list
 		callbacks.version = kDataBrowserLatestCallbacks;
 		error = InitDataBrowserCallbacks(&callbacks);
@@ -319,6 +334,7 @@ InfoWindow_Init	()
 			error = GetDataBrowserPropertyFlags(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice, &flags);
 			if (noErr == error)
 			{
+				flags |= kDataBrowserTruncateTextAtStart; // this way, the common root (usually /dev) is lost first
 				error = SetDataBrowserPropertyFlags(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice, flags);
 			}
 			error = GetDataBrowserPropertyFlags(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus, &flags);
@@ -1570,24 +1586,39 @@ setDataBrowserColumnWidths ()
 		UInt16		totalWidthSoFar = 0;
 		
 		
-		// leave device string space fixed
-		if (noErr == GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice,
-																&integerWidth))
+		// leave some columns fixed-size; but arbitrarily cut down even this width
+		// if the entire window is sufficiently small; note that because the
+		// available width is used for measurement, these should be cut down in
+		// order of least “importance”
 		{
+			integerWidth = gIdealColumnWidthDevice;
+			if (availableWidth < 600/* arbitrary */) integerWidth = 0;
+			else if (availableWidth < 800/* arbitrary */) integerWidth -= 40/* arbitrary */;
+			else if (availableWidth < 1000/* arbitrary */) integerWidth -= 20/* arbitrary */;
+			
+			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+						(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDDevice, integerWidth);
+			
 			availableWidth -= integerWidth;
 		}
-		
-		// leave status string space fixed
-		if (noErr == GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus,
-																&integerWidth))
 		{
+			integerWidth = gIdealColumnWidthStatus;
+			if (availableWidth < 600/* arbitrary */) integerWidth -= 125/* arbitrary */;
+			else if (availableWidth < 800/* arbitrary */) integerWidth -= 100/* arbitrary */;
+			else if (availableWidth < 1000/* arbitrary */) integerWidth -= 75/* arbitrary */;
+			
+			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+						(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDStatus, integerWidth);
+			
 			availableWidth -= integerWidth;
 		}
-		
-		// leave creation time space fixed
-		if (noErr == GetDataBrowserTableViewNamedColumnWidth(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDCreationTime,
-																&integerWidth))
 		{
+			integerWidth = gIdealColumnWidthCreationTime;
+			if (availableWidth < 600/* arbitrary */) integerWidth = 0;
+			
+			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+						(gSessionStatusDataBrowser, kMyDataBrowserPropertyIDCreationTime, integerWidth);
+			
 			availableWidth -= integerWidth;
 		}
 		

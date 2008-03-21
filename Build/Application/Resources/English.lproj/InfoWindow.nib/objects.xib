@@ -3,67 +3,6 @@
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
   <array count="3" name="allObjects">
-    <object class="IBCarbonRootControl" id="167">
-      <string name="viewFrame">0 0 1031 324 </string>
-      <array count="1" name="subviews">
-        <object class="IBCarbonDBListView" id="181">
-          <ostype name="controlSignature">List</ostype>
-          <boolean name="showFocusRing">FALSE</boolean>
-          <array count="5" name="listViewColumns">
-            <object class="IBCarbonDBListViewColumn">
-              <ostype name="propertyID">Wind</ostype>
-              <int name="propertyFlags">983041</int>
-              <int name="sortOrder">1</int>
-              <int name="minWidth">100</int>
-              <int name="textAlignment">0</int>
-              <int name="titleOffset">20</int>
-              <string name="titleString">Window</string>
-            </object>
-            <object class="IBCarbonDBListViewColumn">
-              <ostype name="propertyID">Rsrc</ostype>
-              <int name="sortOrder">1</int>
-              <int name="minWidth">100</int>
-              <int name="textAlignment">0</int>
-              <int name="titleOffset">20</int>
-              <string name="titleString">Command</string>
-            </object>
-            <object class="IBCarbonDBListViewColumn">
-              <ostype name="propertyID">Stat</ostype>
-              <ostype name="propertyType">ticn</ostype>
-              <int name="sortOrder">1</int>
-              <int name="maxWidth">350</int>
-              <int name="minWidth">150</int>
-              <int name="textAlignment">0</int>
-              <int name="titleOffset">20</int>
-              <string name="titleString">Status</string>
-            </object>
-            <object class="IBCarbonDBListViewColumn">
-              <ostype name="propertyID">Open</ostype>
-              <ostype name="propertyType">date</ostype>
-              <int name="sortOrder">1</int>
-              <int name="maxWidth">150</int>
-              <int name="minWidth">150</int>
-              <int name="textAlignment">0</int>
-              <int name="titleOffset">20</int>
-              <string name="titleString">Creation Time</string>
-            </object>
-            <object class="IBCarbonDBListViewColumn">
-              <ostype name="propertyID">Devc</ostype>
-              <int name="sortOrder">1</int>
-              <int name="maxWidth">150</int>
-              <int name="minWidth">150</int>
-              <int name="textAlignment">0</int>
-              <int name="titleOffset">20</int>
-              <string name="titleString">Device</string>
-            </object>
-          </array>
-          <int name="selectionFlags">11</int>
-          <string name="viewFrame">-1 -1 1033 326 </string>
-          <string name="bounds">-1 -1 325 1032 </string>
-        </object>
-      </array>
-      <string name="bounds">0 0 324 1031 </string>
-    </object>
     <object class="IBCarbonWindow" id="166">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
@@ -71,15 +10,78 @@
       <boolean name="compositing">TRUE</boolean>
       <int name="scalingMode">1048576</int>
       <string name="title">Session Info: MacTelnet</string>
-      <reference name="rootControl" idRef="167"/>
+      <object name="rootControl" class="IBCarbonRootControl" id="167">
+        <string name="viewFrame">0 0 1031 324 </string>
+        <array count="1" name="subviews">
+          <object class="IBCarbonDBListView" id="181">
+            <ostype name="controlSignature">List</ostype>
+            <boolean name="showFocusRing">FALSE</boolean>
+            <array count="5" name="listViewColumns">
+              <object class="IBCarbonDBListViewColumn">
+                <ostype name="propertyID">Wind</ostype>
+                <int name="propertyFlags">983041</int>
+                <int name="sortOrder">1</int>
+                <int name="maxWidth">1000</int>
+                <int name="minWidth">150</int>
+                <int name="textAlignment">0</int>
+                <int name="titleOffset">20</int>
+                <string name="titleString">Window</string>
+              </object>
+              <object class="IBCarbonDBListViewColumn">
+                <ostype name="propertyID">Rsrc</ostype>
+                <int name="sortOrder">1</int>
+                <int name="maxWidth">1500</int>
+                <int name="minWidth">150</int>
+                <int name="textAlignment">0</int>
+                <int name="titleOffset">20</int>
+                <string name="titleString">Command</string>
+              </object>
+              <object class="IBCarbonDBListViewColumn">
+                <ostype name="propertyID">Stat</ostype>
+                <ostype name="propertyType">ticn</ostype>
+                <int name="sortOrder">1</int>
+                <int name="maxWidth">325</int>
+                <int name="minWidth">200</int>
+                <int name="textAlignment">0</int>
+                <int name="titleOffset">20</int>
+                <string name="titleString">Status</string>
+              </object>
+              <object class="IBCarbonDBListViewColumn">
+                <ostype name="propertyID">Open</ostype>
+                <ostype name="propertyType">date</ostype>
+                <int name="sortOrder">1</int>
+                <int name="maxWidth">150</int>
+                <int name="minWidth">150</int>
+                <int name="textAlignment">0</int>
+                <int name="titleOffset">20</int>
+                <string name="titleString">Creation Time</string>
+              </object>
+              <object class="IBCarbonDBListViewColumn">
+                <ostype name="propertyID">Devc</ostype>
+                <int name="sortOrder">1</int>
+                <int name="maxWidth">150</int>
+                <int name="minWidth">125</int>
+                <int name="textAlignment">0</int>
+                <int name="titleOffset">20</int>
+                <string name="titleString">Device</string>
+              </object>
+            </array>
+            <int name="selectionFlags">11</int>
+            <string name="viewFrame">-1 -1 1033 326 </string>
+            <string name="bounds">-1 -1 325 1032 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 324 1031 </string>
+      </object>
       <string name="windowRect">541 120 865 1151 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
+    <reference idRef="167"/>
     <reference idRef="181"/>
   </array>
   <array count="3" name="allParents">
-    <reference idRef="166"/>
     <reference idRef="1"/>
+    <reference idRef="166"/>
     <reference idRef="167"/>
   </array>
   <dictionary count="2" name="nameTable">
