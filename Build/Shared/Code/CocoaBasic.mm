@@ -31,6 +31,7 @@
 #import <Cocoa/Cocoa.h>
 
 // library includes
+#import <AutoPool.objc++.h>
 #import <CocoaBasic.h>
 #import <Console.h>
 #import <HIViewWrap.h>
@@ -41,21 +42,6 @@
 
 
 #pragma mark Types
-namespace {
-
-class My_AutoPool
-{
-public:
-	My_AutoPool		();
-	~My_AutoPool	();
-
-protected:
-
-private:
-	NSAutoreleasePool*		_pool;
-};
-
-} // anonymous namespace
 
 @interface My_NoticeColorPanelChange : NSResponder
 - (void)changeColor: (id)sender;
@@ -90,8 +76,8 @@ NSApplicationLoad().
 Boolean
 CocoaBasic_ApplicationLoad ()
 {
-	My_AutoPool		_;
-	BOOL			loadOK = NSApplicationLoad();
+	AutoPool	_;
+	BOOL		loadOK = NSApplicationLoad();
 	
 	
 	return loadOK;
@@ -107,7 +93,7 @@ not already visible.
 void
 CocoaBasic_ColorPanelDisplay ()
 {
-	My_AutoPool		_;
+	AutoPool	_;
 	
 	
 	[NSApp orderFrontColorPanel:NSApp];
@@ -125,7 +111,7 @@ ColorBox_GetColor() returns.
 void
 CocoaBasic_ColorPanelSetTargetView	(HIViewRef	inColorBoxView)
 {
-	My_AutoPool		_;
+	AutoPool		_;
 	NSColorPanel*	colorPanel = [NSColorPanel sharedColorPanel];
 	NSColor*		globalColor = nil;
 	RGBColor		viewColor;
@@ -174,7 +160,7 @@ See also CocoaBasic_ReturnUserSoundNames().
 void
 CocoaBasic_PlaySoundByName	(CFStringRef	inName)
 {
-	My_AutoPool		_;
+	AutoPool	_;
 	
 	
 	[(NSSound*)[NSSound soundNamed:REINTERPRET_CAST(inName, NSString const*)] stop];
@@ -190,7 +176,7 @@ Plays the sound in the specified file (asynchronously).
 void
 CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 {
-	My_AutoPool		_;
+	AutoPool	_;
 	
 	
 	[[[[NSSound alloc] initWithContentsOfURL:REINTERPRET_CAST(inFile, NSURL const*) byReference:NO] autorelease] play];
@@ -208,7 +194,7 @@ user.
 CFArrayRef
 CocoaBasic_ReturnUserSoundNames ()
 {
-	My_AutoPool				_;
+	AutoPool				_;
 	NSArray* const			kSearchPaths = [NSArray arrayWithObjects:
 												findFolder(kUserDomain, kSystemSoundsFolderType),
 												findFolder(kLocalDomain, kSystemSoundsFolderType),
@@ -248,19 +234,6 @@ CocoaBasic_ReturnUserSoundNames ()
 
 #pragma mark Internal Methods
 namespace {
-
-My_AutoPool::
-My_AutoPool (): _pool([[NSAutoreleasePool alloc] init])
-{
-}// My_AutoPool constructor
-
-
-My_AutoPool::
-~My_AutoPool ()
-{
-	[_pool release];
-}// My_AutoPool destructor
-
 
 /*!
 Returns the path of the specified folder.  The domain is

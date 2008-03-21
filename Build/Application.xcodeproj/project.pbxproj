@@ -166,6 +166,7 @@
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
+		0AE852690D94613300B6834B /* AutoPool.objc++.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AE852680D94613300B6834B /* AutoPool.objc++.h */; };
 		0AFA782C0B470144001FCE83 /* com_mactelnet_ParseURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* com_mactelnet_Util.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */; };
 		0AFA782E0B470144001FCE83 /* com_mactelnet_HandleURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */; };
@@ -590,6 +591,7 @@
 		0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadFind.icns; path = Application/Resources/IconForKeypadFind.icns; sourceTree = "<group>"; };
 		0AE63E2807F3B98100EB82FA /* Bind.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Bind.cp; path = Application/Code/Bind.cp; sourceTree = "<group>"; };
 		0AE63E3107F3B9C900EB82FA /* Bind.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Bind.h; path = Application/Code/Bind.h; sourceTree = "<group>"; };
+		0AE852680D94613300B6834B /* AutoPool.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AutoPool.objc++.h"; path = "Shared/Code/AutoPool.objc++.h"; sourceTree = "<group>"; };
 		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
 		0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPreferenceCollections.icns; path = Application/Resources/IconForPreferenceCollections.icns; sourceTree = "<group>"; };
 		0AF289A206CC9ADC002A89A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskDisableFloater.nib; sourceTree = "<group>"; };
@@ -659,6 +661,7 @@
 				0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */,
 				0A46FE36055432A400ACDF3A /* Undoables.cp */,
 				0A46FE09055432A400ACDF3A /* UniversalPrint.cp */,
+				0AE852680D94613300B6834B /* AutoPool.objc++.h */,
 				0AFD1266087A0A3C00439BEA /* CarbonEventHandlerWrap.template.h */,
 				0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */,
 				0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */,
@@ -1167,6 +1170,7 @@
 				0AAD86E50D54E45F003544E0 /* TerminalRangeDescription.typedef.h in Headers */,
 				0ACBC3590D5BBC6800FCF05F /* CocoaBasic.h in Headers */,
 				0A2890DF0D68019E0017D99E /* GenericPanelTabs.h in Headers */,
+				0AE852690D94613300B6834B /* AutoPool.objc++.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
