@@ -586,7 +586,7 @@ InfoWindow_Done	()
 		{
 			enum
 			{
-				kNumberOfColumns = 4	// IMPORTANT: set this to the number of CFArrayAppendValue() calls that are made
+				kNumberOfColumns = 5	// IMPORTANT: set this to the number of CFArrayAppendValue() calls that are made
 			};
 			CFMutableArrayRef	orderCFArray = CFArrayCreateMutable(kCFAllocatorDefault, kNumberOfColumns,
 																	&kCFTypeArrayCallBacks);
@@ -617,6 +617,7 @@ InfoWindow_Done	()
 				// add entries to the list for each column, in the right place
 				for (CFIndex i = 0; i < kNumberOfColumns; ++i)
 				{
+					// see definition of "kNumberOfColumns", above, if any more columns are added here
 					if (windowColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("window");
 					else if (resourceColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("resource");
 					else if (deviceColumnIndex == STATIC_CAST(i, UInt32)) stringToAppend = CFSTR("device");
