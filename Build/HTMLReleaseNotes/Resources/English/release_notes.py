@@ -118,6 +118,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080321': [
 		'Using Show Help Tags on the Control Keys palette now displays the common abbreviations and meanings of each control key.',
+		'Internal changes to restructure preferences, renaming some keys and placing collections into their own domains.',
 	],
 	'20080320': [
 		'Preferences window Sessions pane Keyboard tab has been refined further.',

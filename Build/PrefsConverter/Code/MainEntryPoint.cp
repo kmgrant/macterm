@@ -3,7 +3,7 @@
 	MainEntryPoint.cp
 	
 	MacTelnet Preferences Converter
-		© 2004-2006 by Kevin Grant.
+		© 2004-2008 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -46,6 +46,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 // these should match what is in MacTelnet’s Info.plist file;
 // note also that IF MacTelnet’s identifier ever changes,
@@ -58,34 +59,34 @@ enum
 	kASRequiredSuite = kCoreEventClass
 };
 
-typedef SInt16 TelnetFolder;
+typedef SInt16 My_MacTelnetFolder;
 enum
 {
 	// folders defined by MacTelnet
-	kTelnetFolderFavorites = 2,					// MacTelnet’s “Favorites” folder, in the preferences folder.
+	kMy_MacTelnetFolderFavorites = 2,					// MacTelnet’s “Favorites” folder, in the preferences folder.
 	
-	kTelnetFolderPreferences = 4,				// The folder “MacTelnet Preferences”, in the preferences
+	kMy_MacTelnetFolderPreferences = 4,				// The folder “MacTelnet Preferences”, in the preferences
 												//   folder of the user currently logged in.
 	
-	kTelnetFolderScriptsMenuItems = 5,			// MacTelnet’s “Scripts Menu Items” folder.
+	kMy_MacTelnetFolderScriptsMenuItems = 5,			// MacTelnet’s “Scripts Menu Items” folder.
 	
-	kTelnetFolderStartupItems = 6,				// MacTelnet’s “Startup Items” folder, in MacTelnet’s
+	kMy_MacTelnetFolderStartupItems = 6,				// MacTelnet’s “Startup Items” folder, in MacTelnet’s
 												//   preferences folder.
 	
-	kTelnetFolderUserMacroFavorites = 8,		// “Macro Sets” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserMacroFavorites = 8,		// “Macro Sets” folder, in the Favorites folder.
 	
-	kTelnetFolderUserProxyFavorites = 9,		// “Proxies” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserProxyFavorites = 9,		// “Proxies” folder, in the Favorites folder.
 	
-	kTelnetFolderUserSessionFavorites = 10,		// “Sessions” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserSessionFavorites = 10,		// “Sessions” folder, in the Favorites folder.
 	
-	kTelnetFolderUserTerminalFavorites = 11,	// “Terminals” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserTerminalFavorites = 11,	// “Terminals” folder, in the Favorites folder.
 	
-	kTelnetFolderRecentSessions = 12,			// “Recent Sessions” folder, in MacTelnet’s preferences folder.
+	kMy_MacTelnetFolderRecentSessions = 12,			// “Recent Sessions” folder, in MacTelnet’s preferences folder.
 	
 	// folders defined by the Mac OS
-	kTelnetFolderMacPreferences = -1,			// the Preferences folder for the user currently logged in
+	kMy_MacTelnetFolderMacPreferences = -1,			// the Preferences folder for the user currently logged in
 	
-	kTelnetFolderMacTrash = -8					// the Trash
+	kMy_MacTelnetFolderMacTrash = -8					// the Trash
 };
 
 /*!
@@ -94,7 +95,7 @@ File or Folder Names String Table ("FileOrFolderNames.strings")
 The titles of special files or folders on disk; for example, used to
 find preferences or error logs.
 */
-enum MyFolderStringType
+enum My_FolderStringType
 {
 	kUIStrings_FolderNameApplicationFavorites			= 'AFav',
 	kUIStrings_FolderNameApplicationFavoritesMacros		= 'AFFM',
@@ -106,50 +107,55 @@ enum MyFolderStringType
 	kUIStrings_FolderNameApplicationStartupItems		= 'AStI'
 };
 
-enum MyPrefsResult
+enum My_PrefsResult
 {
-	kMyPrefsResultSuccess			= 0,	//!< no error
-	kMyPrefsResultGenericFailure	= 1		//!< some error
+	kMy_PrefsResultOK				= 0,	//!< no error
+	kMy_PrefsResultGenericFailure	= 1		//!< some error
 };
 
-enum MyStringResult
+enum My_StringResult
 {
-	kMyStringResultSuccess			= 0,	//!< no error
-	kMyStringResultNoSuchString		= 1,	//!< tag is invalid for given string category
-	kMyStringResultCannotGetString	= 2		//!< probably an OS error, the string cannot be retrieved
+	kMy_StringResultOK				= 0,	//!< no error
+	kMy_StringResultNoSuchString	= 1,	//!< tag is invalid for given string category
+	kMy_StringResultCannotGetString	= 2		//!< probably an OS error, the string cannot be retrieved
 };
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	AEAddressDesc		gSelfAddress;				//!< used to target send-to-self Apple Events
-	ProcessSerialNumber	gSelfProcessID;				//!< used to target send-to-self Apple Events
-	SInt16				gOldPrefsFileRefNum = 0;	//!< when the resource fork of the old preferences file is
-													//!  open, this is its file reference number
-	Boolean				gFinished = false;			//!< used to control exit warnings to the user
-}
+AEAddressDesc		gSelfAddress;				//!< used to target send-to-self Apple Events
+ProcessSerialNumber	gSelfProcessID;				//!< used to target send-to-self Apple Events
+SInt16				gOldPrefsFileRefNum = 0;	//!< when the resource fork of the old preferences file is
+												//!  open, this is its file reference number
+Boolean				gFinished = false;			//!< used to control exit warnings to the user
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static MyPrefsResult		actionLegacyUpdates			();
-static OSStatus				addErrorToReply				(ConstStringPtr, OSStatus, AppleEventPtr);
-static Boolean				convertRGBColorToCFArray	(RGBColor const*, CFArrayRef&);
-static MyStringResult		copyFileOrFolderCFString	(MyFolderStringType, CFStringRef*);
-static long					getDirectoryIDFromFSSpec	(FSSpec const*);
-static OSStatus				getFolderFSSpec				(TelnetFolder, FSSpec*);
-static Boolean				installRequiredHandlers		();
-static OSStatus				loadPreferencesStructure	(void*, size_t, ResType, SInt16);
-static OSStatus				makeLocalizedFSSpec			(SInt16, SInt32, MyFolderStringType, FSSpec*);
-static pascal OSErr			receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveApplicationReopen	(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveApplicationQuit		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receiveOpenDocuments		(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr			receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
-static Boolean				setMacTelnetCoordPreference	(CFStringRef, SInt16, SInt16);
-static void					setMacTelnetPreference		(CFStringRef, CFPropertyListRef);
-static void					transformFolderFSSpec		(FSSpec*);
+My_PrefsResult		actionLegacyUpdates			();
+OSStatus			addErrorToReply				(ConstStringPtr, OSStatus, AppleEventPtr);
+Boolean				convertRGBColorToCFArray	(RGBColor const*, CFArrayRef&);
+My_StringResult		copyFileOrFolderCFString	(My_FolderStringType, CFStringRef*);
+long				getDirectoryIDFromFSSpec	(FSSpec const*);
+OSStatus			getFolderFSSpec				(My_MacTelnetFolder, FSSpec*);
+Boolean				installRequiredHandlers		();
+OSStatus			loadPreferencesStructure	(void*, size_t, ResType, SInt16);
+OSStatus			makeLocalizedFSSpec			(SInt16, SInt32, My_FolderStringType, FSSpec*);
+pascal OSErr		receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
+pascal OSErr		receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
+pascal OSErr		receiveApplicationReopen	(AppleEvent const*, AppleEvent*, SInt32);
+pascal OSErr		receiveApplicationQuit		(AppleEvent const*, AppleEvent*, SInt32);
+pascal OSErr		receiveOpenDocuments		(AppleEvent const*, AppleEvent*, SInt32);
+pascal OSErr		receivePrintDocuments		(AppleEvent const*, AppleEvent*, SInt32);
+Boolean				setMacTelnetCoordPreference	(CFStringRef, SInt16, SInt16);
+void				setMacTelnetPreference		(CFStringRef, CFPropertyListRef);
+void				transformFolderFSSpec		(FSSpec*);
+
+} // anonymous namespace
 
 
 
@@ -204,6 +210,7 @@ main	(int	argc,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Performs all necessary operations to bring data
@@ -220,15 +227,15 @@ INCOMPLETE
 
 (3.1)
 */
-static MyPrefsResult
+My_PrefsResult
 actionLegacyUpdates ()
 {
-	MyPrefsResult	result = kMyPrefsResultSuccess;
+	My_PrefsResult	result = kMy_PrefsResultOK;
 	FSSpec			parseFolder;
 	OSStatus		error = noErr;
 	
 	
-	error = getFolderFSSpec(kTelnetFolderPreferences, &parseFolder);
+	error = getFolderFSSpec(kMy_MacTelnetFolderPreferences, &parseFolder);
 	if (noErr == error)
 	{
 		FSSpec		parseFile;
@@ -257,7 +264,7 @@ actionLegacyUpdates ()
 		else
 		{
 			// some kind of problem referencing the file...
-			result = kMyPrefsResultGenericFailure;
+			result = kMy_PrefsResultGenericFailure;
 		}
 		
 		// load any "MacTelnet Preferences" file
@@ -1126,12 +1133,34 @@ actionLegacyUpdates ()
 			}
 			
 			// save XML
-			unless (CFPreferencesAppSynchronize(kMacTelnetApplicationID)) result = kMyPrefsResultGenericFailure;
+			unless (CFPreferencesAppSynchronize(kMacTelnetApplicationID)) result = kMy_PrefsResultGenericFailure;
 		}
 	}
 	
 	return result;
 }// actionLegacyUpdates
+
+
+/*!
+Upgrades from version 1 to version 2.  Some keys are
+now obsolete that were never available to users, so
+they are deleted.
+
+(3.1)
+*/
+My_PrefsResult
+actionVersion3 ()
+{
+	My_PrefsResult		result = kMy_PrefsResultOK;
+	
+	
+	// this is now "favorite-macro-sets" and redefined as a simple array of domain names
+	CFPreferencesSetAppValue(CFSTR("favorite-macros"), nullptr/* delete value */, kMacTelnetApplicationID);
+	
+	// this is now "favorite-formats" and redefined as a simple array of domain names
+	CFPreferencesSetAppValue(CFSTR("favorite-styles"), nullptr/* delete value */, kMacTelnetApplicationID);
+	return result;
+}// actionVersion3
 
 
 /*!
@@ -1146,7 +1175,7 @@ a specific error code.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 addErrorToReply		(ConstStringPtr		inErrorMessageOrNull,
 					 OSStatus			inError,
 					 AppleEventPtr		inoutReplyAppleEventPtr)
@@ -1194,7 +1223,7 @@ Returns "true" only if successful.
 
 (3.1)
 */
-static Boolean
+Boolean
 convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 							 CFArrayRef&		outArray)
 {
@@ -1254,22 +1283,22 @@ name, and returns a reference to a Core Foundation
 string.  Since a copy is made, you must call CFRelease()
 on the returned string when you are finished with it.
 
-\retval kMyStringResultSuccess
+\retval kMy_StringResultOK
 if the string is copied successfully
 
-\retval kMyStringResultNoSuchString
+\retval kMy_StringResultNoSuchString
 if the given tag is invalid
 
-\retval kMyStringResultCannotGetString
+\retval kMy_StringResultCannotGetString
 if an OS error occurred
 
 (3.1)
 */
-MyStringResult
-copyFileOrFolderCFString	(MyFolderStringType		inWhichString,
+My_StringResult
+copyFileOrFolderCFString	(My_FolderStringType	inWhichString,
 							 CFStringRef*			outStringPtr)
 {
-	MyStringResult		result = kMyStringResultSuccess;
+	My_StringResult		result = kMy_StringResultOK;
 	
 	
 	assert(nullptr != outStringPtr);
@@ -1323,7 +1352,7 @@ copyFileOrFolderCFString	(MyFolderStringType		inWhichString,
 	
 	default:
 		// ???
-		result = kMyStringResultNoSuchString;
+		result = kMy_StringResultNoSuchString;
 		break;
 	}
 	return result;
@@ -1337,7 +1366,7 @@ specification record.
 
 (3.1)
 */
-static long
+long
 getDirectoryIDFromFSSpec	(FSSpec const*		inFSSpecPtr)
 {
 	StrFileName		name;
@@ -1378,9 +1407,9 @@ valid types, "invalidFolderTypeErr" is returned.
 
 (3.1)
 */
-static OSStatus
-getFolderFSSpec		(TelnetFolder	inFolderType,
-					 FSSpec*		outFolderFSSpecPtr)
+OSStatus
+getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
+					 FSSpec*				outFolderFSSpecPtr)
 {
 	OSStatus		result = noErr;
 	
@@ -1390,8 +1419,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 	{
 		switch (inFolderType)
 		{
-		case kTelnetFolderFavorites: // the “Favorites” folder inside the MacTelnet preferences folder
-			result = getFolderFSSpec(kTelnetFolderPreferences, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderFavorites: // the “Favorites” folder inside the MacTelnet preferences folder
+			result = getFolderFSSpec(kMy_MacTelnetFolderPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1409,8 +1438,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderPreferences: // the “MacTelnet Preferences” folder inside the system “Preferences” folder
-			result = getFolderFSSpec(kTelnetFolderMacPreferences, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderPreferences: // the “MacTelnet Preferences” folder inside the system “Preferences” folder
+			result = getFolderFSSpec(kMy_MacTelnetFolderMacPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1428,8 +1457,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderScriptsMenuItems: // the MacTelnet “Scripts Menu Items” folder, in MacTelnet’s folder
-			result = getFolderFSSpec(kTelnetFolderPreferences, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderScriptsMenuItems: // the MacTelnet “Scripts Menu Items” folder, in MacTelnet’s folder
+			result = getFolderFSSpec(kMy_MacTelnetFolderPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1447,8 +1476,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderStartupItems: // the MacTelnet “Startup Items” folder, in MacTelnet’s preferences folder
-			result = getFolderFSSpec(kTelnetFolderPreferences, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderStartupItems: // the MacTelnet “Startup Items” folder, in MacTelnet’s preferences folder
+			result = getFolderFSSpec(kMy_MacTelnetFolderPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1466,8 +1495,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderUserMacroFavorites: // the “Macro Sets” folder inside MacTelnet’s Favorites folder (in preferences)
-			result = getFolderFSSpec(kTelnetFolderFavorites, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderUserMacroFavorites: // the “Macro Sets” folder inside MacTelnet’s Favorites folder (in preferences)
+			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1485,8 +1514,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderUserProxyFavorites: // the “Proxies” folder inside MacTelnet’s Favorites folder (in preferences)
-			result = getFolderFSSpec(kTelnetFolderFavorites, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderUserProxyFavorites: // the “Proxies” folder inside MacTelnet’s Favorites folder (in preferences)
+			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1504,8 +1533,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderUserSessionFavorites: // the “Sessions” folder inside MacTelnet’s Favorites folder (in preferences)
-			result = getFolderFSSpec(kTelnetFolderFavorites, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderUserSessionFavorites: // the “Sessions” folder inside MacTelnet’s Favorites folder (in preferences)
+			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1523,8 +1552,8 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderUserTerminalFavorites: // the “Terminals” folder inside MacTelnet’s Favorites folder (in preferences)
-			result = getFolderFSSpec(kTelnetFolderFavorites, outFolderFSSpecPtr);
+		case kMy_MacTelnetFolderUserTerminalFavorites: // the “Terminals” folder inside MacTelnet’s Favorites folder (in preferences)
+			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
 				long	unusedDirID = 0L;
@@ -1542,13 +1571,13 @@ getFolderFSSpec		(TelnetFolder	inFolderType,
 			}
 			break;
 		
-		case kTelnetFolderMacPreferences: // the Mac OS “Preferences” folder for the current user
+		case kMy_MacTelnetFolderMacPreferences: // the Mac OS “Preferences” folder for the current user
 			result = FindFolder(kUserDomain, kPreferencesFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
 			break;
 		
-		case kTelnetFolderMacTrash: // the Trash for the current user
+		case kMy_MacTelnetFolderMacTrash: // the Trash for the current user
 			result = FindFolder(kUserDomain, kTrashFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
@@ -1577,7 +1606,7 @@ returned; otherwise, "false" is returned.
 
 (3.1)
 */
-static Boolean
+Boolean
 installRequiredHandlers ()
 {
 	Boolean			result = false;
@@ -1622,7 +1651,7 @@ if the load fails
 
 (3.0)
 */
-static OSStatus
+OSStatus
 loadPreferencesStructure	(void*		outStructurePtr,
 							 size_t		inStructureSize,
 							 ResType	inResourceType,
@@ -1675,21 +1704,21 @@ may be what you are intending to do)
 
 (3.1)
 */
-static OSStatus
+OSStatus
 makeLocalizedFSSpec		(SInt16					inVRefNum,
 						 SInt32					inDirID,
-						 MyFolderStringType		inWhichString,
+						 My_FolderStringType	inWhichString,
 						 FSSpec*				outFSSpecPtr)
 {
 	CFStringRef			nameCFString = nullptr;
-	MyStringResult		stringResult = kMyStringResultSuccess;
+	My_StringResult		stringResult = kMy_StringResultOK;
 	OSStatus			result = noErr;
 	
 	
 	stringResult = copyFileOrFolderCFString(inWhichString, &nameCFString);
 	
 	// if the string was obtained, call FSMakeFSSpec
-	if (kMyStringResultSuccess == stringResult)
+	if (kMy_StringResultOK == stringResult)
 	{
 		Str255		name;
 		
@@ -1720,7 +1749,7 @@ of type "kAEOpenApplication".
 
 (3.1)
 */
-static pascal OSErr
+pascal OSErr
 receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -1728,11 +1757,11 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	// The preferences version MUST match what is used by the version of
 	// MacTelnet that ships with this preferences converter; it should
 	// be changed here if it is changed in MacTelnet.
-	SInt16 const	kCurrentPrefsVersion = 2;
+	SInt16 const	kCurrentPrefsVersion = 3;
 	CFIndex			diskVersion = 0;
 	Boolean			doConvert = false;
 	Boolean			conversionSuccessful = false;
-	MyPrefsResult	actionResult = kMyPrefsResultSuccess;
+	My_PrefsResult	actionResult = kMy_PrefsResultOK;
 	OSStatus		error = noErr;
 	OSErr const		result = noErr; // errors are ALWAYS returned via the reply record
 	
@@ -1822,10 +1851,13 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		}
 		if (diskVersion < 2)
 		{
-			// Version 2 added macro sets to the XML core.  So any
-			// standalone macro set files should be converted over.
-			// UNIMPLEMENTED
-			//actionResult = actionMacroSetImports();
+			// Version 2 was experimental and not used in practice.
+			//actionResult = actionVersion2();
+		}
+		if (diskVersion < 3)
+		{
+			// Version 3 changed some key names; delete obsolete keys.
+			actionResult = actionVersion3();
 		}
 		//if (diskVersion < X)
 		//{
@@ -1834,7 +1866,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		//	// above will naturally allow really old preferences to update.
 		//	. . .
 		//}
-		conversionSuccessful = (kMyPrefsResultSuccess == actionResult);
+		conversionSuccessful = (kMy_PrefsResultOK == actionResult);
 		gFinished = true;
 		
 		// If conversion is successful, save a preference indicating the
@@ -1965,7 +1997,7 @@ of type "kAEReopenApplication".
 
 (3.1)
 */
-static pascal OSErr
+pascal OSErr
 receiveApplicationReopen	(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		outReplyAppleEventPtr,
 							 SInt32				inData)
@@ -1987,7 +2019,7 @@ of type "kAEShowPreferences".
 
 (3.1)
 */
-static pascal OSErr
+pascal OSErr
 receiveApplicationPrefs		(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		outReplyAppleEventPtr,
 							 SInt32				inData)
@@ -2009,7 +2041,7 @@ of type "kAEQuitApplication".
 
 (3.1)
 */
-static pascal OSErr
+pascal OSErr
 receiveApplicationQuit	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -2066,7 +2098,7 @@ of type "kAEOpenDocuments".
 
 (3.1)
 */
-static pascal OSErr
+pascal OSErr
 receiveOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -2088,7 +2120,7 @@ of type "kAEPrintDocuments".
 
 (3.1)
 */
-static pascal OSErr
+pascal OSErr
 receivePrintDocuments	(AppleEvent const*	inAppleEventPtr,
 						 AppleEvent*		outReplyAppleEventPtr,
 						 SInt32				inData)
@@ -2114,7 +2146,7 @@ necessary Core Foundation types.
 
 (3.1)
 */
-static Boolean
+Boolean
 setMacTelnetCoordPreference		(CFStringRef	inKey,
 								 SInt16			inX,
 								 SInt16			inY)
@@ -2159,7 +2191,7 @@ the data being written (if debugging is enabled).
 
 (3.1)
 */
-static void
+void
 setMacTelnetPreference	(CFStringRef		inKey,
 						 CFPropertyListRef	inValue)
 {
@@ -2247,11 +2279,13 @@ refer to the folder).
 
 (3.1)
 */
-static void
+void
 transformFolderFSSpec		(FSSpec*	inoutFolderFSSpecPtr)
 {
 	inoutFolderFSSpecPtr->parID = getDirectoryIDFromFSSpec(inoutFolderFSSpecPtr);
 	PLstrcpy(inoutFolderFSSpecPtr->name, "\p");
 }// transformFolderFSSpec
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

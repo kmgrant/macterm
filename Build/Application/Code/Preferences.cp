@@ -79,6 +79,10 @@
 namespace {
 
 CFStringEncoding const		kMy_SavedNameEncoding = kCFStringEncodingUnicode;
+CFStringRef const			kMy_PreferencesSubDomainFormats = CFSTR("com.mactelnet.MacTelnet.formats");
+CFStringRef const			kMy_PreferencesSubDomainMacros = CFSTR("com.mactelnet.MacTelnet.macros");
+CFStringRef const			kMy_PreferencesSubDomainSessions = CFSTR("com.mactelnet.MacTelnet.sessions");
+CFStringRef const			kMy_PreferencesSubDomainTerminals = CFSTR("com.mactelnet.MacTelnet.terminals");
 
 } // anonymous namespace
 
@@ -547,7 +551,7 @@ Preferences_Result		getSessionPreference					(My_ContextInterfaceConstPtr, Prefe
 Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Boolean					getWindowPreferences					(Preferences_Tag, MyWindowArrangement&);
-OSStatus				initPreferences							(Boolean);
+OSStatus				mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDictionaryCFArray			(Preferences_Class, CFArrayRef);
 void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
 void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
@@ -688,7 +692,7 @@ Preferences_Init ()
 	unless (gHaveRunConverter)
 	{
 		CFDictionaryRef		defaultPrefDictionary = createDefaultPrefDictionary();
-		SInt16				currentPrefsVersion = 1; // only a default...
+		SInt16				currentPrefsVersion = 2; // only a default...
 		
 		
 		// The "prefs-version" key in DefaultPreferences.plist defines the
@@ -729,9 +733,6 @@ Preferences_Init ()
 				AppResources_Result		launchResult = noErr;
 				
 				
-				// start with an initial set
-				initPreferences(true/* brand new */);
-				
 				// launch the converter and wait for it to complete
 				launchResult = AppResources_LaunchPreferencesConverter();
 				gHaveRunConverter = true;
@@ -765,7 +766,12 @@ Preferences_Init ()
 	// known keys being defined, ALWAYS merge in default values for
 	// any keys that may not already be defined (by the data on disk,
 	// by the Preferences Converter, etc.)
-	initPreferences(false/* brand new */);
+	// NOTE: the Cocoa NSUserDefaults class supports the concept of
+	// a registered domain, which *would* avoid the need to actually
+	// replicate defaults; instead, the defaults are simply referred
+	// to as needed; a better future solution would be to register
+	// all defaults instead of copying them into user preferences
+	mergeInDefaultPreferences();
 	
 	gPreferenceEventListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 														kConstantsRegistry_ListenerModelDescriptorPreferences);
@@ -6540,10 +6546,8 @@ getWindowPreferences	(Preferences_Tag		inWindowPreferenceTag,
 
 
 /*!
-Adds default values for known preference keys.  If "inIsBrandNew"
-is true, any existing values for those keys are replaced,
-otherwise existing values are kept and any other defaults are
-added.
+Adds default values for known preference keys.  Existing
+values are kept and any other defaults are added.
 
 \retval noErr
 if successful
@@ -6554,7 +6558,7 @@ if some component could not be set up properly
 (2.6)
 */
 OSStatus
-initPreferences		(Boolean	inIsBrandNew)
+mergeInDefaultPreferences ()
 {
 	CFDictionaryRef		defaultPrefDictionary = createDefaultPrefDictionary();
 	OSStatus			result = noErr;
@@ -6569,7 +6573,7 @@ initPreferences		(Boolean	inIsBrandNew)
 		// to register (in memory only) the appropriate updates;
 		// other values are written to the specified handles,
 		// where the data must be extracted for saving elsewhere
-		result = readPreferencesDictionary(defaultPrefDictionary, false == inIsBrandNew/* merge */);
+		result = readPreferencesDictionary(defaultPrefDictionary, true/* merge */);
 		CFRelease(defaultPrefDictionary), defaultPrefDictionary = nullptr;
 		
 		if (noErr == result)
@@ -6580,7 +6584,7 @@ initPreferences		(Boolean	inIsBrandNew)
 	}
 	
 	return result;
-}// initPreferences
+}// mergeInDefaultPreferences
 
 
 /*!
