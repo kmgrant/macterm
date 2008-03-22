@@ -117,6 +117,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080321': [
+		'Fixed significant persistence problems in preference collections.',
 		'Using Show Help Tags on the Control Keys palette now displays the common abbreviations and meanings of each control key.',
 		'Internal changes to restructure preferences, renaming some keys and placing collections into their own domains.',
 	],
