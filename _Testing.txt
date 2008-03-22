@@ -1,0 +1,52 @@
+
+                      How to Test MacTelnet            2008-03-22
+
+OVERVIEW
+  To be perfectly honest, automated testing is a huge hole in the
+  project right now, but something I am working on, and something
+  that will become incredibly easy to do once sufficient code is
+  exposed to Python through the Quills API.
+  
+  Having said that, there are some automated tests, and plenty of
+  manual ones you can run.
+
+COMPILED-IN UNIT TESTS
+  The source file Build/Application/Code/Initialize.cp contains a
+  preprocessor definition "RUN_MODULE_TESTS".  If set to 1, some
+  unit tests for certain modules will be compiled in and run at
+  application startup time.  A test report will be printed to
+  standard output.
+
+PYTHON MODULE TESTS
+  Source files implemented entirely in Python, found in folders
+  named "PythonCode", generally support standard Python doctests
+  completely.  But more than that, they are set up so you can
+  simply "run" a file to invoke all of its doctests.
+  
+  Keep in mind that if a Python module depends on Quills, it will
+  also depend on compiled libraries, and therefore is easiest to
+  run within the main script (MacTelnet.app/Contents/MacOS/...)
+  where library environment variables are already set correctly.
+
+TERMINAL TESTS
+  The popular testing program "vttest" is strongly recommended;
+  this is easy to Google and compile yourself.  It contains many
+  very useful and thorough tests of VT100/ANSI, VT100/VT52,
+  VT102, VT220, XTerm, and more.
+  
+  Mac OS X comes with the "tack" program (in /usr/bin; see also
+  "man tack"), which is another source of terminal tests.
+  
+  I am developing a series of "curses"-based Python test suites
+  to do as much automated testing of the terminal emulators as
+  possible.  Currently, these are not checked into the project
+  tree.
+
+GRAPHICAL USER INTERFACE TESTS
+  It is theoretically possible to use AppleScript to automate GUI
+  actions.  This is something I intend to try some day.  So far,
+  there is no automatic GUI testing, so I just click on things
+  myself until I cause a crash. :)
+
+                                     Kevin Grant (kevin@ieee.org)
+                                        Lead Developer, MacTelnet
