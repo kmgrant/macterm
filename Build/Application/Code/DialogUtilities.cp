@@ -601,10 +601,12 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 	{
 		ControlKind		templateControlInfo;
 		Rect			templateBounds;
+		HIRect			templateFrame;
 		
 		
 		// copy the control’s boundaries (pretty much always needed)
 		GetControlBounds(inTemplateControl, &templateBounds);
+		HIViewGetFrame(inTemplateControl, &templateFrame);
 		
 		// find out what it is, and create a duplicate that matches
 		result = GetControlKind(inTemplateControl, &templateControlInfo);
@@ -894,6 +896,54 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 						{
 							result = CreateUserPaneControl(inDestinationWindow, &templateBounds,
 															features, &outNewControl);
+						}
+					}
+					break;
+				
+				case kHISegmentedViewKind:
+					{
+						result = HISegmentedViewCreate(&templateFrame, &outNewControl);
+						if (noErr == result)
+						{
+							UInt32				segmentCount = HISegmentedViewGetSegmentCount(inTemplateControl);
+							HISegmentBehavior	segmentBehavior = kHISegmentBehaviorRadio;
+							OptionBits			segmentAttributes = 0L;
+							SInt32				segmentValue = 0;
+							UInt32				segmentCommand = 0;
+							CFStringRef			segmentLabelCFString = nullptr;
+							float				segmentWidth = 0.0;
+							Boolean				segmentWidthAutoCalculated = false;
+							Boolean				segmentEnabled = false;
+							
+							
+							(OSStatus)HISegmentedViewSetSegmentCount(outNewControl, segmentCount);
+							for (UInt32 i = 0; i < segmentCount; ++i)
+							{
+								segmentBehavior = HISegmentedViewGetSegmentBehavior(inTemplateControl, i);
+								(OSStatus)HISegmentedViewSetSegmentBehavior(outNewControl, i, segmentBehavior);
+								
+								segmentAttributes = HISegmentedViewGetSegmentAttributes(inTemplateControl, i);
+								(OSStatus)HISegmentedViewChangeSegmentAttributes(outNewControl, i, segmentAttributes/* set */,
+																					0L/* clear */);
+								
+								segmentValue = HISegmentedViewGetSegmentValue(inTemplateControl, i);
+								(OSStatus)HISegmentedViewSetSegmentValue(outNewControl, i, segmentValue);
+								
+								segmentCommand = HISegmentedViewGetSegmentCommand(inTemplateControl, i);
+								(OSStatus)HISegmentedViewSetSegmentCommand(outNewControl, i, segmentCommand);
+								
+								if (noErr == HISegmentedViewCopySegmentLabel(inTemplateControl, i, &segmentLabelCFString))
+								{
+									(OSStatus)HISegmentedViewSetSegmentLabel(outNewControl, i, segmentLabelCFString);
+									CFRelease(segmentLabelCFString), segmentLabelCFString = nullptr;
+								}
+								
+								segmentWidth = HISegmentedViewGetSegmentContentWidth(inTemplateControl, i, &segmentWidthAutoCalculated);
+								(OSStatus)HISegmentedViewSetSegmentContentWidth(outNewControl, i, segmentWidthAutoCalculated, segmentWidth);
+								
+								segmentEnabled = HISegmentedViewIsSegmentEnabled(inTemplateControl, i);
+								(OSStatus)HISegmentedViewSetSegmentEnabled(outNewControl, i, segmentEnabled);
+							}
 						}
 					}
 					break;
