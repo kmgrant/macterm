@@ -1099,7 +1099,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 														sizeof(associatedTerminalName), &associatedTerminalName);
 		if (kPreferences_ResultOK == preferencesResult)
 		{
-			associatedTerminalContext = Preferences_NewContext(kPreferences_ClassTerminal, associatedTerminalName);
+			associatedTerminalContext = Preferences_NewContextFromFavorites(kPreferences_ClassTerminal, associatedTerminalName);
 		}
 	}
 	
@@ -2141,7 +2141,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef,
 																	received.menu.menuItemIndex, &itemTextCFString))
 							{
-								sessionContext = Preferences_NewContext(kPreferences_ClassSession, itemTextCFString);
+								sessionContext = Preferences_NewContextFromFavorites(kPreferences_ClassSession, itemTextCFString);
 								CFRelease(itemTextCFString), itemTextCFString = nullptr;
 							}
 						}

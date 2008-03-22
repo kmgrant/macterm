@@ -158,7 +158,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 	Preferences_ContextRef	preferencesContext = nullptr;
 	
 	
-	preferencesContext = Preferences_NewContext(inClass, inContextName);
+	preferencesContext = Preferences_NewContextFromFavorites(inClass, inContextName);
 	if (preferencesContext == nullptr) result = false;
 	else
 	{

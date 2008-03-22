@@ -807,7 +807,7 @@ createCollection	(CFStringRef	inNameOrNull)
 	// creating and immediately saving a new named context
 	// (a preferences callback elsewhere in this file is
 	// then notified by the Preferences module of the change)
-	Preferences_ContextRef		newContext = Preferences_NewContext
+	Preferences_ContextRef		newContext = Preferences_NewContextFromFavorites
 												(returnCurrentPreferencesClass(), inNameOrNull);
 	Boolean						result = false;
 	

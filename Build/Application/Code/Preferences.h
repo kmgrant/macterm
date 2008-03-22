@@ -420,15 +420,15 @@ void
 //@{
 
 Preferences_ContextRef
-	Preferences_NewContext					(Preferences_Class					inClass,
+	Preferences_NewContext					(Preferences_Class					inClass);
+
+Preferences_ContextRef
+	Preferences_NewContextFromFavorites		(Preferences_Class					inClass,
 											 CFStringRef						inNameOrNullToAutoGenerateUniqueName = nullptr);
 
 Preferences_ContextRef
 	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext,
 											 Boolean							inForceDetach = false);
-
-Preferences_ContextRef
-	Preferences_NewDetachedContext			(Preferences_Class					inClass);
 
 // IMPLICITLY DONE WHEN A CONTEXT IS CREATED
 void

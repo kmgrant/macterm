@@ -486,58 +486,6 @@ typedef My_ContextFavorite const*	My_ContextFavoriteConstPtr;
 typedef My_ContextFavorite*			My_ContextFavoritePtr;
 
 /*!
-A context for storing data in a CFDictionary that will
-ultimately be saved in Favorites under Preferences.
-
-OBSOLETE.
-*/
-class My_ContextFavoriteOld:
-public My_ContextCFDictionary
-{
-public:
-	My_ContextFavoriteOld	(Preferences_Class, CFStringRef);
-	
-	//!\name New Methods In This Class
-	//@{
-	
-	//! test routine
-	static Boolean
-	unitTest ();
-	
-	//@}
-	
-	//!\name My_ContextInterface Methods
-	//@{
-	
-	//! delete keys in this dictionary, and their values, from application preferences
-	Preferences_Result
-	destroy ();
-	
-	//! alter the name under which this is saved; useful in UI elements
-	Preferences_Result
-	rename	(CFStringRef);
-	
-	//! the name under which this is saved; useful in UI elements
-	CFStringRef
-	returnName () const;
-	
-	//! save changes to this dictionary in the application preferences
-	Preferences_Result
-	save ();
-	
-	//@}
-
-protected:
-	CFMutableDictionaryRef
-	createClassDictionary	(Preferences_Class, CFStringRef);
-
-private:
-	CFRetainRelease		_contextName;	//!< CFStringRef; a display name for this context
-};
-typedef My_ContextFavoriteOld const*	My_ContextFavoriteOldConstPtr;
-typedef My_ContextFavoriteOld*			My_ContextFavoriteOldPtr;
-
-/*!
 Keeps track of all named contexts in memory.
 */
 typedef std::vector< My_ContextFavoritePtr >	My_FavoriteContextList;
@@ -600,8 +548,6 @@ Preferences_Result		contextGetData							(My_ContextInterfacePtr, Preferences_Cl
 																 void*, size_t*);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
-Preferences_Result		copyClassDictionaryByName				(Preferences_Class, CFStringRef, CFMutableDictionaryRef&);
-Preferences_Result		copyClassDictionaryCFArray				(Preferences_Class, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Preferences_Class, CFArrayRef&);
 Preferences_Result		createAllPreferencesContextsFromDisk	();
 CFDictionaryRef			createDefaultPrefDictionary				();
@@ -609,7 +555,6 @@ void					deleteAliasData							(My_AliasInfoPtr*);
 void					deleteAllAliasNodes						();
 My_AliasInfoPtr			findAlias								(Preferences_AliasID);
 Boolean					findAliasOnDisk							(Preferences_AliasID, AliasHandle*);
-CFIndex					findDictionaryIndexInArrayByName		(CFArrayRef, CFStringRef);
 CFIndex					findDomainIndexInArray					(CFArrayRef, CFStringRef);
 CFStringRef				findDomainUserSpecifiedName				(CFStringRef);
 Boolean					getDefaultContext						(Preferences_Class, My_ContextInterfacePtr&);
@@ -630,7 +575,6 @@ Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Pref
 																 size_t, void*, size_t*);
 Boolean					getWindowPreferences					(Preferences_Tag, MyWindowArrangement&);
 OSStatus				mergeInDefaultPreferences				();
-Preferences_Result		overwriteClassDictionaryCFArray			(Preferences_Class, CFArrayRef);
 Preferences_Result		overwriteClassDomainCFArray				(Preferences_Class, CFArrayRef);
 void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
 void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
@@ -963,38 +907,41 @@ Preferences_NewAlias	(FSSpec const*		inFileSpecificationPtr)
 
 
 /*!
-Creates a new preferences context that copies the data
-of the specified original context.  The reference is
-automatically retained, but you need to invoke
-Preferences_ReleaseContext() when finished.
+Creates a new preferences context that copies the data of the
+specified original context.  The new context is automatically
+retained, so you need to invoke Preferences_ReleaseContext()
+when finished.  If any problems occur, nullptr is returned.
 
-If the specified context is detached (has an empty
-name, meaning it is not tracked globally), its copy is
-also detached.  Otherwise, the copy remains tracked
-unless "inForceDetach" is true.  (Specifying true for
-an already-detached source has no effect.)
+IMPORTANT:	Any context originally read from preferences, such
+			as defaults or user favorites, *will* be tied to
+			disk, causing its clone to also be tied to disk by
+			default (albeit under a different name).  You can
+			force the clone to be anonymous and in memory only
+			by setting "inForceDetach" to true.
 
-Since tracked contexts are named, cloning a tracked
-context will generate a unique name for the copy.
-See Preferences_ContextRename().
+WARNING:	Currently, cloning a Default context is naïve,
+			because it holds global application preferences.
+			The resulting copy technically contains all necessary
+			keys, but will also have many other irrelevant keys
+			that will never be used.  (A future implementation
+			should copy only the keys expected for the class of
+			the original context.)  It may be better to use a
+			few Preferences_ContextGetData() calls on your
+			desired source of defaults, and then manually call
+			Preferences_ContextSetData() on a new context to
+			extract only the keys you want.
 
-The initial name of the new context is a variation on
-the name of the base context.
+The special "kPreferences_ChangeContextBatchMode" event is
+triggered by cloning, INSTEAD OF causing notifications for each
+key individually.
 
-If any problems occur, nullptr is returned; otherwise,
-a reference to the new context is returned.
+Note that although the clone is given an arbitrary unique name,
+this can be changed later with Preferences_ContextRename().
 
-NOTE:	For the purposes of context monitors, each
-		key change during duplication does NOT send a
-		change event.  Instead, a single event is
-		
-
-WARNING:	Currently, cloning a Default context is
-			naïve, because it holds global application
-			preferences.  The resulting copy will
-			correctly contain the necessary keys, but
-			will also have many other irrelevant keys
-			that will never be used.
+Contexts that were already temporary or otherwise detached,
+remain detached (unnamed) when cloned, regardless of the value
+of "inForceDetach".  Still, it is a good idea to explicitly
+specify the value you want for this argument.
 
 See also Preferences_ContextCopy().
 
@@ -1014,7 +961,7 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 	
 	if ((isDetached) || (inForceDetach))
 	{
-		result = Preferences_NewDetachedContext(baseClass);
+		result = Preferences_NewContext(baseClass);
 	}
 	else
 	{
@@ -1026,7 +973,7 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 		// and find a unique name.  For now, just assume one.
 		nameCFString = CFSTR("copy"); // TEMPORARY; LOCALIZE THIS
 		
-		result = Preferences_NewContext(baseClass, nameCFString);
+		result = Preferences_NewContextFromFavorites(baseClass, nameCFString);
 	}
 	
 	if (nullptr != result)
@@ -1079,7 +1026,7 @@ reference to the new context is returned.
 (3.1)
 */
 Preferences_ContextRef
-Preferences_NewDetachedContext	(Preferences_Class		inClass)
+Preferences_NewContext	(Preferences_Class		inClass)
 {
 	Preferences_ContextRef		result = nullptr;
 	
@@ -1104,23 +1051,29 @@ Preferences_NewDetachedContext	(Preferences_Class		inClass)
 		result = nullptr;
 	}
 	return result;
-}// NewDetachedContext
+}// NewContext
 
 
 /*!
-Creates a new preferences context according to the
-given specifications, or returns an existing one that
-matches.  The reference is automatically retained, but
-you need to invoke Preferences_ReleaseContext() when
-finished.
+Creates a new preferences context according to the given
+specifications, or returns an existing one that matches.
+The reference is automatically retained, but you need to
+invoke Preferences_ReleaseContext() when finished.
+
+If any problems occur, nullptr is returned; otherwise,
+a reference to the new context is returned.
+
+If you need a standalone copy based on an existing user
+collection, first use this routine to acquire the collection
+you want, and then use Preferences_NewCloneContext().  Keep
+in mind that Preferences_NewCloneContext() allows two kinds
+of copies: in-memory only (temporary), or named copies that
+are synchronized to disk.
 
 Contexts are used in order to make changes to settings
 (and save changes) within the constraints of a single
 named dictionary of a particular class.  To the user,
 this is a collection such as a Session Favorite.
-
-If any problems occur, nullptr is returned; otherwise,
-a reference to the new context is returned.
 
 IMPORTANT:	Contexts can be renamed.  Make sure you
 			are not relying on names for long periods
@@ -1135,8 +1088,8 @@ WARNING:	Despite the name, the 2nd parameter does
 (3.1)
 */
 Preferences_ContextRef
-Preferences_NewContext	(Preferences_Class		inClass,
-						 CFStringRef			inNameOrNullToAutoGenerateUniqueName)
+Preferences_NewContextFromFavorites		(Preferences_Class		inClass,
+										 CFStringRef			inNameOrNullToAutoGenerateUniqueName)
 {
 	Preferences_ContextRef		result = nullptr;
 	
@@ -1185,7 +1138,7 @@ Preferences_NewContext	(Preferences_Class		inClass,
 		result = nullptr;
 	}
 	return result;
-}// NewContext
+}// NewContextFromFavorites
 
 
 /*!
@@ -1318,9 +1271,9 @@ Preferences_RetainContext	(Preferences_ContextRef		inRef)
 
 /*!
 Releases one lock on the specified context created with
-Preferences_NewContext() or similar routines, and deletes
-the context *if* no other locks remain.  Your copy of the
-reference is set to nullptr.
+Preferences_NewContextFromFavorites() or similar routines,
+and deletes the context *if* no other locks remain.  Your
+copy of the reference is set to nullptr.
 
 (3.1)
 */
@@ -2092,8 +2045,8 @@ Preferences_ContextStopMonitoring	(Preferences_ContextRef		inContext,
 /*!
 Provides a list of the names of valid contexts in the
 specified preferences class; none of these names should
-be used when calling Preferences_NewContext(), otherwise
-the creation will fail.
+be used when calling Preferences_NewContextFromFavorites(),
+otherwise the creation will fail.
 
 The Core Foundation array is allocated, so you must invoke
 CFRelease() on the array when finished with it (however,
@@ -2315,12 +2268,6 @@ Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 Returns the default context for the specified class.
 Preferences written to the "kPreferences_ClassGeneral"
 default context are in fact global settings.
-
-This is equivalent to, but more efficient and desirable
-than, invoking Preferences_NewContext() using the
-appropriate default name, which should be avoided as it
-will make it possible for preference changes in each
-context to trump one another.
 
 WARNING:	Do not dispose of default contexts.
 
@@ -3024,7 +2971,7 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 
 
 /*!
-Constructor.  See Preferences_NewDetachedContext().
+Constructor.  See Preferences_NewContext().
 
 (3.1)
 */
@@ -3341,287 +3288,7 @@ unitTest ()
 
 
 /*!
-Constructor.  See Preferences_NewContext().
-
-(3.1)
-*/
-My_ContextFavoriteOld::
-My_ContextFavoriteOld	(Preferences_Class	inClass,
-						 CFStringRef		inNameOrNull)
-:
-My_ContextCFDictionary(inClass, createClassDictionary(inClass, inNameOrNull)),
-_contextName(inNameOrNull)
-{
-	// the parent retains the created dictionary, so
-	// release the copy made by createClassDictionary()
-	if (nullptr != returnDictionary()) CFRelease(returnDictionary());
-}// My_ContextFavoriteOld 2-argument constructor
-
-
-/*!
-Returns a new dictionary for the context with the specified
-name and class.  If preferences already exist, the dictionary
-is initialized with their values; otherwise, the dictionary
-is empty.
-
-(3.1)
-*/
-CFMutableDictionaryRef
-My_ContextFavoriteOld::
-createClassDictionary	(Preferences_Class	inClass,
-						 CFStringRef		inNameOrNull)
-{
-	Preferences_Result			error = kPreferences_ResultOK;
-	CFMutableDictionaryRef		result = nullptr;
-	
-	
-	error = copyClassDictionaryByName(inClass, inNameOrNull, result);
-	if (kPreferences_ResultOK != error)
-	{
-		result = nullptr;
-		if (kPreferences_ResultUnknownName == error)
-		{
-			// if the name is simply unknown, the dictionary does not exist; create one!
-			result = createDictionary();
-			error = (nullptr == result) ? kPreferences_ResultGenericFailure : kPreferences_ResultOK;
-		}
-		
-		if (kPreferences_ResultOK != error)
-		{
-			throw std::runtime_error("unable to construct data dictionary for given class and context name");
-		}
-	}
-	
-	return result;
-}// My_ContextFavoriteOld::createClassDictionary
-
-
-/*!
-Removes the entire dictionary represented by this
-context from a list in application preferences, but
-does NOT affect what is in memory.  Effects become
-permanent (on disk) the next time preferences are
-synchronized.
-
-\retval kPreferences_ResultOK
-if no error occurred
-
-\retval kPreferences_ResultGenericFailure
-if preferences could not be removed for any reason
-
-(3.1)
-*/
-Preferences_Result
-My_ContextFavoriteOld::
-destroy ()
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	CFArrayRef				favoritesListCFArray = nullptr;
-	
-	
-	// figure out which MacTelnet preferences key holds the
-	// relevant list of Favorites dictionaries
-	(Preferences_Result)copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
-	if (nullptr != favoritesListCFArray)
-	{
-		CFIndex		indexForName = findDictionaryIndexInArrayByName(favoritesListCFArray, this->returnName());
-		
-		
-		if (indexForName >= 0)
-		{
-			// then an entry with this name exists on disk; destroy it!
-			CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
-														(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
-															favoritesListCFArray), true/* is retained */);
-			
-			
-			if (false == mutableFavoritesList.exists()) result = kPreferences_ResultGenericFailure;
-			else
-			{
-				// delete this entry from the array
-				CFArrayRemoveValueAtIndex(mutableFavoritesList.returnCFMutableArrayRef(), indexForName);
-				result = kPreferences_ResultOK;
-			}
-			
-			// update the preferences list
-			overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesList.returnCFMutableArrayRef());
-			if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
-			{
-				result = kPreferences_ResultGenericFailure;
-			}
-		}
-	}
-	
-	return result;
-}// My_ContextFavoriteOld::destroy
-
-
-/*!
-Changes the name of this context.  This is often
-used in user interface elements.
-
-\retval kPreferences_ResultOK
-if no error occurred
-
-\retval kPreferences_ResultGenericFailure
-if rename did not occur for any reason
-
-(3.1)
-*/
-Preferences_Result
-My_ContextFavoriteOld::
-rename	(CFStringRef	inNewName)
-{
-	_contextName.setCFTypeRef(inNewName);
-	return kPreferences_ResultOK;
-}// My_ContextFavoriteOld::rename
-
-
-/*!
-Returns the name of this context.  This is often
-used in user interface elements.
-
-(3.1)
-*/
-CFStringRef
-My_ContextFavoriteOld::
-returnName ()
-const
-{
-	return _contextName.returnCFStringRef();
-}// My_ContextFavoriteOld::returnName
-
-
-/*!
-Saves changes to the dictionary controlled by this
-instance, overwriting any previously-saved dictionary
-for the same name.  Has the side effect of synchronizing
-any other modified application-wide preferences (but
-will not save preferences from other contexts).
-
-\retval kPreferences_ResultOK
-if no error occurred
-
-\retval kPreferences_ResultGenericFailure
-if preferences could not be fully saved for any reason
-
-(3.1)
-*/
-Preferences_Result
-My_ContextFavoriteOld::
-save ()
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	CFArrayRef				favoritesListCFArray = nullptr;
-	
-	
-	// figure out which MacTelnet preferences key holds the
-	// relevant list of Favorites dictionaries
-	result = copyClassDictionaryCFArray(this->returnClass(), favoritesListCFArray);
-	if (nullptr == favoritesListCFArray) result = kPreferences_ResultGenericFailure;
-	else if (kPreferences_ResultOK == result)
-	{
-		CFIndex				indexForName = findDictionaryIndexInArrayByName(favoritesListCFArray, this->returnName());
-		CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
-													(kCFAllocatorDefault, CFArrayGetCount(favoritesListCFArray)/* capacity */,
-														favoritesListCFArray), true/* is retained */);
-		
-		
-		// generate or replace the name entry for this collection
-		{
-			CFRetainRelease		nameCFString(CFStringCreateExternalRepresentation
-												(kCFAllocatorDefault, this->returnName(), kMy_SavedNameEncoding,
-													'?'/* loss byte */), true/* is retained */);
-			
-			
-			if (nameCFString.exists())
-			{
-				assert(CFDataGetTypeID() == CFGetTypeID(nameCFString.returnCFTypeRef()));
-				CFDictionarySetValue(this->returnDictionary(), CFSTR("name"), nameCFString.returnCFTypeRef());
-			}
-			
-			// regardless of whether a Unicode name was stored (which is preferred),
-			// also store a raw string as a backup, just in case and also for
-			// convenience when reading the raw XML in some cases
-			CFDictionarySetValue(this->returnDictionary(), CFSTR("name-string"), this->returnName());
-		}
-		
-		if (false == mutableFavoritesList.exists()) result = kPreferences_ResultGenericFailure;
-		else if (indexForName < 0)
-		{
-			// was not previously saved; create something new!
-			CFArrayAppendValue(mutableFavoritesList.returnCFMutableArrayRef(), this->returnDictionary());
-			if (findDictionaryIndexInArrayByName(favoritesListCFArray, this->returnName()) < 0)
-			{
-				result = kPreferences_ResultOK;
-			}
-			else
-			{
-				result = kPreferences_ResultGenericFailure;
-			}
-		}
-		else
-		{
-			// replace this entry in the array
-			CFArraySetValueAtIndex(mutableFavoritesList.returnCFMutableArrayRef(), indexForName, this->returnDictionary());
-			
-			// update the preferences list
-			result = overwriteClassDictionaryCFArray(this->returnClass(), mutableFavoritesList.returnCFMutableArrayRef());
-			if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
-			{
-				result = kPreferences_ResultGenericFailure;
-			}
-		}
-	}
-	return result;
-}// My_ContextFavoriteOld::save
-
-
-/*!
-Tests this class.  Returns true only if successful.
-Information on failures is printed to the console.
-
-(3.1)
-*/
-Boolean
-My_ContextFavoriteOld::
-unitTest ()
-{
-	Boolean					result = true;
-	My_ContextFavoriteOld*	testObjectPtr = new My_ContextFavoriteOld
-												(kPreferences_ClassGeneral, CFSTR("__test_old__"));
-	CFArrayRef				keyListCFArray = nullptr;
-	
-	
-	result &= Console_Assert("class is set correctly",
-								kPreferences_ClassGeneral == testObjectPtr->returnClass());
-	result &= Console_Assert("name is set correctly",
-								kCFCompareEqualTo == CFStringCompare
-														(CFSTR("__test__"), testObjectPtr->returnName(),
-															0/* options */));
-	
-	testObjectPtr->rename(CFSTR("__test_renamed__"));
-	result &= Console_Assert("rename worked",
-								kCFCompareEqualTo == CFStringCompare
-														(CFSTR("__test_renamed__"), testObjectPtr->returnName(),
-															0/* options */));
-	
-	keyListCFArray = testObjectPtr->returnKeyListCopy();
-	result &= Console_Assert("key list exists", nullptr != keyListCFArray);
-	result &= Console_Assert("key list is initially empty",
-								0 == CFArrayGetCount(keyListCFArray));
-	
-	result &= My_ContextInterface::unitTest(testObjectPtr);
-	
-	CFRelease(keyListCFArray), keyListCFArray = nullptr;
-	delete testObjectPtr, testObjectPtr = nullptr;
-	
-	return result;
-}// My_ContextFavoriteOld::unitTest
-
-
-/*!
-Constructor.  See Preferences_NewContext().
+Constructor.  See Preferences_NewContextFromFavorites().
 
 (3.1)
 */
@@ -3802,7 +3469,6 @@ My_ContextFavorite::
 rename	(CFStringRef	inNewName)
 {
 	_contextName.setCFTypeRef(inNewName);
-	_domainName.setCFTypeRef(createDomainName(returnClass(), inNewName), true/* is retained */);
 	return kPreferences_ResultOK;
 }// My_ContextFavorite::rename
 
@@ -4194,133 +3860,6 @@ convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 
 
 /*!
-Attempts to find a Core Foundation dictionary of settings
-that match the specified class and set name.
-
-OBSOLETE.
-
-\retval kPreferences_ResultOK
-if a matching dictionary was found and retrieved successfully
-
-\retval kPreferences_ResultUnknownTagOrClass
-if "inClass" is not valid
-
-\retval kPreferences_ResultUnknownName
-if no matching dictionary could be found
-
-\retval kPreferences_ResultGenericFailure
-other issue
-
-(3.1)
-*/
-Preferences_Result
-copyClassDictionaryByName	(Preferences_Class			inClass,
-							 CFStringRef				inName,
-							 CFMutableDictionaryRef&	outNewCFDictionary)
-{
-	Preferences_Result		result = kPreferences_ResultUnknownName;
-	CFArrayRef				favoritesListCFArray = nullptr;
-	
-	
-	// set default value
-	outNewCFDictionary = nullptr;
-	
-	// retrieve the list of Favorites dictionaries
-	result = copyClassDictionaryCFArray(inClass, favoritesListCFArray);
-	if (kPreferences_ResultOK == result)
-	{
-		CFIndex		indexForName = findDictionaryIndexInArrayByName(favoritesListCFArray, inName);
-		
-		
-		if (indexForName < 0) result = kPreferences_ResultUnknownName;
-		else
-		{
-			CFDictionaryRef const		kDataCFDictionary = CFUtilities_DictionaryCast
-															(CFArrayGetValueAtIndex(favoritesListCFArray, indexForName));
-			
-			
-			if (nullptr == kDataCFDictionary) result = kPreferences_ResultGenericFailure;
-			else
-			{
-				outNewCFDictionary = CFDictionaryCreateMutableCopy
-										(kCFAllocatorDefault, 0/* capacity, or 0 for unlimited */,
-											kDataCFDictionary);
-				if (nullptr == outNewCFDictionary) result = kPreferences_ResultGenericFailure;
-				else
-				{
-					// success!
-					result = kPreferences_ResultOK;
-				}
-			}
-		}
-		CFRelease(favoritesListCFArray), favoritesListCFArray = nullptr;
-	}
-	
-	return result;
-}// copyClassDictionaryByName
-
-
-/*!
-Creates a Core Foundation array that contains
-Core Foundation dictionary references in no
-particular order, for the specified class of
-preferences.  You must release the array when
-finished with it.
-
-If the dictionary cannot be found, it will be
-nullptr.
-
-See also overwriteClassDictionaryCFArray().
-
-OBSOLETE.
-
-(3.1)
-*/
-Preferences_Result
-copyClassDictionaryCFArray	(Preferences_Class		inClass,
-							 CFArrayRef&			outCFArrayOfCFDictionaries)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	
-	
-	// set default value
-	outCFArrayOfCFDictionaries = nullptr;
-	
-	// figure out which MacTelnet preferences key holds the relevant list of Favorites dictionaries
-	switch (inClass)
-	{
-	case kPreferences_ClassGeneral:
-	case kPreferences_ClassWindow:
-		// not applicable
-		result = kPreferences_ResultBadVersionDataNotAvailable;
-		break;
-	
-	case kPreferences_ClassFormat:
-		readMacTelnetArrayPreference(CFSTR("favorite-styles"), outCFArrayOfCFDictionaries);
-		if (nullptr == outCFArrayOfCFDictionaries) result = kPreferences_ResultBadVersionDataNotAvailable;
-		break;
-	
-	case kPreferences_ClassSession:
-		readMacTelnetArrayPreference(CFSTR("favorite-sessions"), outCFArrayOfCFDictionaries);
-		if (nullptr == outCFArrayOfCFDictionaries) result = kPreferences_ResultBadVersionDataNotAvailable;
-		break;
-	
-	case kPreferences_ClassTerminal:
-		readMacTelnetArrayPreference(CFSTR("favorite-terminals"), outCFArrayOfCFDictionaries);
-		if (nullptr == outCFArrayOfCFDictionaries) result = kPreferences_ResultBadVersionDataNotAvailable;
-		break;
-	
-	default:
-		// ???
-		result = kPreferences_ResultUnknownTagOrClass;
-		break;
-	}
-	
-	return result;
-}// copyClassDictionaryCFArray
-
-
-/*!
 Creates an ordered Core Foundation array that contains
 Core Foundation string references, specifying all the
 domains containing collections for this class.  You must
@@ -4442,7 +3981,7 @@ createAllPreferencesContextsFromDisk ()
 				CFStringRef const		kDomainName = CFUtilities_StringCast(CFArrayGetValueAtIndex
 																				(namesInClass, i));
 				CFStringRef const		kFavoriteName = findDomainUserSpecifiedName(kDomainName);
-				Preferences_ContextRef	newContext = Preferences_NewContext(*toClass, kFavoriteName);
+				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(*toClass, kFavoriteName);
 				
 				
 				assert(nullptr != newContext);
@@ -4629,86 +4168,6 @@ findAliasOnDisk		(Preferences_AliasID	inAliasID,
 	}
 	return result;
 }// findAliasOnDisk
-
-
-/*!
-Collections of preferences are arrays of dictionaries,
-where the "name" (or, barring that, "name-string") key
-is a particular collection’s name; this routine searches
-an array of dictionaries for the dictionary that has the
-given name.
-
-If the dictionary is not found, -1 is returned; otherwise,
-the zero-based index into the array is returned.  This
-index can be used with CFArray APIs.
-
-IMPORTANT:	Make sure this is what you want; arrays are
-			typically searched when reading saved data,
-			whereas getNamedContext() is used to find
-			contexts in memory (that may not yet be
-			saved).
-
-WARNING:	Since preferences arrays can change, use the
-			returned index immediately.
-
-OBSOLETE.
-
-(3.1)
-*/
-CFIndex
-findDictionaryIndexInArrayByName	(CFArrayRef		inArray,
-									 CFStringRef	inName)
-{
-	CFIndex				result = -1;
-	CFIndex const		kArraySize = CFArrayGetCount(inArray);
-	CFIndex				i = 0;
-	CFDictionaryRef		dataCFDictionary = nullptr;
-	CFDataRef			externalStringRepresentationCFData = nullptr;
-	CFStringRef			newCFString = nullptr;
-	Boolean				releaseNameString = false;
-	
-	
-	for (i = 0; ((result < 0) && (i < kArraySize)); ++i)
-	{
-		dataCFDictionary = CFUtilities_DictionaryCast(CFArrayGetValueAtIndex(inArray, i));
-		if (nullptr != dataCFDictionary)
-		{
-			// in order to support many languages, the "name" field is stored as
-			// Unicode data (string external representation); however, if that
-			// is not available, purely for convenience a "name-string" alternate
-			// is supported, holding a raw string
-			externalStringRepresentationCFData = CFUtilities_DataCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name")));
-			if (nullptr != externalStringRepresentationCFData)
-			{
-				// Unicode string was found
-				newCFString = CFStringCreateFromExternalRepresentation
-								(kCFAllocatorDefault, externalStringRepresentationCFData,
-									kCFStringEncodingUnicode);
-				CFRelease(externalStringRepresentationCFData), externalStringRepresentationCFData = nullptr;
-				releaseNameString = true;
-			}
-			else
-			{
-				// raw string was found
-				newCFString = CFUtilities_StringCast(CFDictionaryGetValue(dataCFDictionary, CFSTR("name-string")));
-			}
-			
-			if (nullptr != newCFString)
-			{
-				if (kCFCompareEqualTo == CFStringCompare(inName, newCFString, 0/* flags */))
-				{
-					result = i;
-				}
-			}
-			
-			if (releaseNameString)
-			{
-				CFRelease(newCFString), newCFString = nullptr;
-			}
-		}
-	}
-	return result;
-}// findDictionaryIndexInArrayByName
 
 
 /*!
@@ -5448,16 +4907,16 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 
 
 /*!
-Retrieves the list that stores any in-memory settings for
-the specified class (only works for classes that can be
-collections).  Returns true unless this fails.
+Retrieves the list that stores any in-memory settings for the
+specified class (only works for classes that can be collections).
+Returns true unless this fails.
 
-IMPORTANT:	This list will only contain contexts created
-			with Preferences_NewContext() that have not
-			been destroyed by Preferences_ReleaseContext().
+IMPORTANT:	This list will only contain contexts created with
+			Preferences_NewContextFromFavorites() that have
+			not been destroyed by Preferences_ReleaseContext().
 			There is no guarantee that this list will have
-			every on-disk collection for the given class.
-			But, see Preferences_CreateContextNameArray().
+			every on-disk collection for the given class.  But,
+			see Preferences_CreateContextNameArray().
 
 (3.1)
 */
@@ -5615,8 +5074,7 @@ this case ONLY, Core Foundation Preferences may be
 used to store or retrieve the key value directly in
 the application’s globals.  However, keys intended
 for storage in user Favorites will have a different
-class, and must be set in a specific dictionary; see
-copyClassDictionaryCFArray().
+class, and must be set in a specific domain.
 
 \retval kPreferences_ResultOK
 if the information was found successfully
@@ -7172,57 +6630,6 @@ mergeInDefaultPreferences ()
 	
 	return result;
 }// mergeInDefaultPreferences
-
-
-/*!
-Replaces the list of Favorites for a given class of
-settings with the given list.  Typically, you start
-by calling copyClassDictionaryCFArray() to get the
-original list, then you create a mutable copy, make
-your changes and pass it into this routine.
-
-OBSOLETE.
-
-\retval kPreferences_ResultOK
-if the array was overwritten successfully
-
-\retval kPreferences_ResultUnknownTagOrClass
-if the given preference class is unknown or does not have an array value
-
-(3.1)
-*/
-Preferences_Result
-overwriteClassDictionaryCFArray	(Preferences_Class	inClass,
-								 CFArrayRef			inCFArrayOfCFDictionaries)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	
-	
-	// figure out which MacTelnet preferences key should hold this list of Favorites dictionaries
-	switch (inClass)
-	{
-	case kPreferences_ClassFormat:
-		setMacTelnetPreference(CFSTR("favorite-styles"), inCFArrayOfCFDictionaries);
-		break;
-	
-	case kPreferences_ClassSession:
-		setMacTelnetPreference(CFSTR("favorite-sessions"), inCFArrayOfCFDictionaries);
-		break;
-	
-	case kPreferences_ClassTerminal:
-		setMacTelnetPreference(CFSTR("favorite-terminals"), inCFArrayOfCFDictionaries);
-		break;
-	
-	case kPreferences_ClassGeneral:
-	case kPreferences_ClassWindow:
-	default:
-		// ???
-		result = kPreferences_ResultUnknownTagOrClass;
-		break;
-	}
-	
-	return result;
-}// overwriteClassDictionaryCFArray
 
 
 /*!

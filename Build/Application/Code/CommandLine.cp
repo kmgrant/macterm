@@ -224,7 +224,7 @@ CommandLine_Init ()
 		DisposeControl(gCommandLineTerminalViewContainer), gCommandLineTerminalViewContainer.clear();
 		floatBounds = CGRectMake(bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
 		
-		terminalConfig = Preferences_NewDetachedContext(kPreferences_ClassTerminal);
+		terminalConfig = Preferences_NewContext(kPreferences_ClassTerminal);
 		assert(nullptr != terminalConfig);
 		
 		if (nullptr != terminalConfig)
@@ -259,7 +259,7 @@ CommandLine_Init ()
 		terminalError = Terminal_NewScreen(terminalConfig, &gCommandLineTerminalScreen);
 		if (kTerminal_ResultOK == terminalError)
 		{
-			Preferences_ContextRef	terminalFormat = Preferences_NewDetachedContext(kPreferences_ClassFormat);
+			Preferences_ContextRef	terminalFormat = Preferences_NewContext(kPreferences_ClassFormat);
 			Preferences_Result		prefsResult = kPreferences_ResultOK;
 			
 			

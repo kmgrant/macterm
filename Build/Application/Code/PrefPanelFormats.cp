@@ -785,7 +785,7 @@ createSampleTerminalScreen ()
 const
 {
 	TerminalScreenRef		result = nullptr;
-	Preferences_ContextRef	terminalConfig = Preferences_NewDetachedContext(kPreferences_ClassTerminal);
+	Preferences_ContextRef	terminalConfig = Preferences_NewContext(kPreferences_ClassTerminal);
 	Terminal_Result			screenCreationError = kTerminal_ResultOK;
 	
 	
