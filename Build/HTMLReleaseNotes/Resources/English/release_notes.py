@@ -120,6 +120,7 @@ notes_by_version = {
 	'20080322': [
 		'Now using a slightly more correct control-key symbol in the Control Keys palette and various other user interface elements.',
 		'Preferences window Sessions pane (and Special Key Sequences dialog) now using segmented views instead of menus in some places.',
+		'Preferences window General pane Special tab now using a segmented view for cursor shape preferences.',
 	],
 	'20080321': [
 		'Fixed significant persistence problems in preference collections.',

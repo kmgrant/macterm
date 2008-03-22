@@ -115,11 +115,7 @@ static HIViewID const	idMyCheckBoxDoNotAutoCreateWindows			= { 'DCNW', 0/* ID */
 static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { 'FcFM', 0/* ID */ };
 static HIViewID const	idMyLabelTerminalCursor						= { 'LCrs', 0/* ID */ };
 static HIViewID const	idMyCheckBoxCursorFlashing					= { 'CurF', 0/* ID */ };
-static HIViewID const	idMyButtonCursorBlock						= { 'CrBl', 0/* ID */ };
-static HIViewID const	idMyButtonCursorVerticalBar					= { 'CrVB', 0/* ID */ };
-static HIViewID const	idMyButtonCursorUnderline					= { 'CrUn', 0/* ID */ };
-static HIViewID const	idMyButtonCursorBoldVerticalBar				= { 'CrBV', 0/* ID */ };
-static HIViewID const	idMyButtonCursorBoldUnderline				= { 'CrBU', 0/* ID */ };
+static HIViewID const	idMySegmentedViewCursorShape				= { 'CShp', 0/* ID */ };
 static HIViewID const	idMyFieldStackingOriginLeft					= { 'WSOL', 0/* ID */ };
 static HIViewID const	idMyFieldStackingOriginTop					= { 'WSOT', 0/* ID */ };
 static HIViewID const	idMyLabelWindowResizeEffect					= { 'LWRE', 0/* ID */ };
@@ -1241,45 +1237,8 @@ const
 	
 	// set up the cursor shape bevel buttons
 	{
-		enum
-		{
-			kNumberOfButtons = 5
-		};
-		struct CursorButtonInfo
-		{
-			HIViewID		buttonID;
-			UInt16			cursorType;
-			HIViewRef		view;
-		};
+		HIViewWrap					segmentedView(idMySegmentedViewCursorShape, inOwningWindow);
 		TerminalView_CursorType		terminalCursorType = kTerminalView_CursorTypeBlock;
-		struct CursorButtonInfo		cursorButtonIDs[kNumberOfButtons] =
-									{
-										{
-											idMyButtonCursorBlock,
-											kTerminalView_CursorTypeBlock,
-											nullptr
-										},
-										{
-											idMyButtonCursorVerticalBar,
-											kTerminalView_CursorTypeVerticalLine,
-											nullptr
-										},
-										{
-											idMyButtonCursorBoldVerticalBar,
-											kTerminalView_CursorTypeThickVerticalLine,
-											nullptr
-										},
-										{
-											idMyButtonCursorUnderline,
-											kTerminalView_CursorTypeUnderscore,
-											nullptr
-										},
-										{
-											idMyButtonCursorBoldUnderline,
-											kTerminalView_CursorTypeThickUnderscore,
-											nullptr
-										}
-									};
 		
 		
 		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
@@ -1288,10 +1247,34 @@ const
 			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference can’t be found
 		}
 		
-		for (SInt16 i = 0; i < kNumberOfButtons; ++i)
+		// IMPORTANT: this must agree with what the NIB does
+		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 0/* value */);
+		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 0/* value */);
+		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 0/* value */);
+		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 0/* value */);
+		(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 0/* value */);
+		switch (terminalCursorType)
 		{
-			cursorButtonIDs[i].view = HIViewWrap(cursorButtonIDs[i].buttonID, inOwningWindow);
-			if (terminalCursorType == cursorButtonIDs[i].cursorType) SetControl32BitValue(cursorButtonIDs[i].view, kControlCheckBoxCheckedValue);
+		case kTerminalView_CursorTypeVerticalLine:
+			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 1/* value */);
+			break;
+		
+		case kTerminalView_CursorTypeUnderscore:
+			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 1/* value */);
+			break;
+		
+		case kTerminalView_CursorTypeThickVerticalLine:
+			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 1/* value */);
+			break;
+		
+		case kTerminalView_CursorTypeThickUnderscore:
+			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 1/* value */);
+			break;
+		
+		case kTerminalView_CursorTypeBlock:
+		default:
+			(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 1/* value */);
+			break;
 		}
 	}
 	{
@@ -1681,44 +1664,40 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandPrefCursorThickVerticalBar:
 				{
 					assert(0 != (received.attributes & kHICommandFromControl));
-					HIViewRef					fromView = received.source.control;
+					HIViewRef					segmentedView = received.source.control;
 					TerminalView_CursorType		cursorType = kTerminalView_CursorTypeBlock;
 					
 					
-					SetControl32BitValue(HIViewWrap(idMyButtonCursorBlock, GetControlOwner(fromView)),
-											kControlCheckBoxUncheckedValue);
-					SetControl32BitValue(HIViewWrap(idMyButtonCursorVerticalBar, GetControlOwner(fromView)),
-											kControlCheckBoxUncheckedValue);
-					SetControl32BitValue(HIViewWrap(idMyButtonCursorUnderline, GetControlOwner(fromView)),
-											kControlCheckBoxUncheckedValue);
-					SetControl32BitValue(HIViewWrap(idMyButtonCursorBoldVerticalBar, GetControlOwner(fromView)),
-											kControlCheckBoxUncheckedValue);
-					SetControl32BitValue(HIViewWrap(idMyButtonCursorBoldUnderline, GetControlOwner(fromView)),
-											kControlCheckBoxUncheckedValue);
+					// IMPORTANT: this must agree with what the NIB does
+					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 0/* value */);
+					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 0/* value */);
+					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 0/* value */);
+					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 0/* value */);
+					(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 0/* value */);
 					if (kCommandPrefCursorBlock == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeBlock;
-						SetControl32BitValue(fromView, kControlCheckBoxCheckedValue);
-					}
-					if (kCommandPrefCursorUnderline == received.commandID)
-					{
-						cursorType = kTerminalView_CursorTypeUnderscore;
-						SetControl32BitValue(fromView, kControlCheckBoxCheckedValue);
+						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 1/* segment */, 1/* value */);
 					}
 					if (kCommandPrefCursorVerticalBar == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeVerticalLine;
-						SetControl32BitValue(fromView, kControlCheckBoxCheckedValue);
+						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 2/* segment */, 1/* value */);
 					}
-					if (kCommandPrefCursorThickUnderline == received.commandID)
+					if (kCommandPrefCursorUnderline == received.commandID)
 					{
-						cursorType = kTerminalView_CursorTypeThickUnderscore;
-						SetControl32BitValue(fromView, kControlCheckBoxCheckedValue);
+						cursorType = kTerminalView_CursorTypeUnderscore;
+						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 3/* segment */, 1/* value */);
 					}
 					if (kCommandPrefCursorThickVerticalBar == received.commandID)
 					{
 						cursorType = kTerminalView_CursorTypeThickVerticalLine;
-						SetControl32BitValue(fromView, kControlCheckBoxCheckedValue);
+						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 4/* segment */, 1/* value */);
+					}
+					if (kCommandPrefCursorThickUnderline == received.commandID)
+					{
+						cursorType = kTerminalView_CursorTypeThickUnderscore;
+						(OSStatus)HISegmentedViewSetSegmentValue(segmentedView, 5/* segment */, 1/* value */);
 					}
 					Preferences_SetData(kPreferences_TagTerminalCursorType, sizeof(cursorType), &cursorType);
 				}
