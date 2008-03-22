@@ -917,7 +917,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 							
 							
 							(OSStatus)HISegmentedViewSetSegmentCount(outNewControl, segmentCount);
-							for (UInt32 i = 0; i < segmentCount; ++i)
+							for (UInt32 i = 1; i <= segmentCount; ++i)
 							{
 								segmentBehavior = HISegmentedViewGetSegmentBehavior(inTemplateControl, i);
 								(OSStatus)HISegmentedViewSetSegmentBehavior(outNewControl, i, segmentBehavior);
@@ -944,6 +944,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 								segmentEnabled = HISegmentedViewIsSegmentEnabled(inTemplateControl, i);
 								(OSStatus)HISegmentedViewSetSegmentEnabled(outNewControl, i, segmentEnabled);
 							}
+							(OSStatus)HIViewSetVisible(outNewControl, true);
 						}
 					}
 					break;
