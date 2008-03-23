@@ -118,6 +118,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080322': [
+		'Fixed user interfaces to consult default preferences when a required setting is not actually defined by a chosen collection.',
 		'Now using a slightly more correct control-key symbol in the Control Keys palette and various other user interface elements.',
 		'Preferences window Sessions pane (and Special Key Sequences dialog) now using segmented views instead of menus in some places.',
 		'Preferences window General pane Special tab now using a segmented view for cursor shape preferences.',

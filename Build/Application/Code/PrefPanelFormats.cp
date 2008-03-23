@@ -898,7 +898,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontName, sizeof(fontName),
-														&fontName, false/* search defaults too */, &actualSize);
+														&fontName, true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setFontName(fontName);
@@ -911,7 +911,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			
 			
 			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontSize, sizeof(fontSize),
-														&fontSize, false/* search defaults too */, &actualSize);
+														&fontSize, true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setFontSize(fontSize);
@@ -1714,9 +1714,9 @@ setColorBox		(Preferences_ContextRef		inSettings,
 	size_t					actualSize = 0;
 	
 	
-	// read each color, skipping ones that are not defined
+	// read each color, falling back to defaults for anything not defined
 	prefsResult = Preferences_ContextGetData(inSettings, inSourceTag, sizeof(colorValue),
-												&colorValue, false/* search defaults too */, &actualSize);
+												&colorValue, true/* search defaults too */, &actualSize);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		ColorBox_SetColor(inDestinationBox, &colorValue);
