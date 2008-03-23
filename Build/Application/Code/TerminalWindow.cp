@@ -3837,6 +3837,74 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					SessionFactory_MoveTerminalWindowToNewWorkspace(terminalWindow);
 					break;
 				
+				case kCommandToggleTerminalLED1:
+					{
+						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+						
+						
+						if (nullptr == activeScreen)
+						{
+							// error...
+							Sound_StandardAlert();
+						}
+						else
+						{
+							Terminal_LEDSetState(activeScreen, 1/* LED number */, false == Terminal_LEDIsOn(activeScreen, 1));
+						}
+					}
+					break;
+				
+				case kCommandToggleTerminalLED2:
+					{
+						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+						
+						
+						if (nullptr == activeScreen)
+						{
+							// error...
+							Sound_StandardAlert();
+						}
+						else
+						{
+							Terminal_LEDSetState(activeScreen, 2/* LED number */, false == Terminal_LEDIsOn(activeScreen, 2));
+						}
+					}
+					break;
+				
+				case kCommandToggleTerminalLED3:
+					{
+						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+						
+						
+						if (nullptr == activeScreen)
+						{
+							// error...
+							Sound_StandardAlert();
+						}
+						else
+						{
+							Terminal_LEDSetState(activeScreen, 3/* LED number */, false == Terminal_LEDIsOn(activeScreen, 3));
+						}
+					}
+					break;
+				
+				case kCommandToggleTerminalLED4:
+					{
+						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+						
+						
+						if (nullptr == activeScreen)
+						{
+							// error...
+							Sound_StandardAlert();
+						}
+						else
+						{
+							Terminal_LEDSetState(activeScreen, 4/* LED number */, false == Terminal_LEDIsOn(activeScreen, 4));
+						}
+					}
+					break;
+				
 				default:
 					// ???
 					break;
@@ -4165,6 +4233,9 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									// set the label based on which LED is being created
 									if (kIs1)
 									{
+										UInt32 const	kMyCommandID = kCommandToggleTerminalLED1;
+										
+										
 										// then this is the LED 1 item; remember it so it can be updated later
 										if (nullptr != targetToolbar)
 										{
@@ -4178,11 +4249,16 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
 																				nullptr/* long text */);
 											assert_noerr(result);
+											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+											assert_noerr(result);
 											CFRelease(nameCFString), nameCFString = nullptr;
 										}
 									}
 									else if (kIs2)
 									{
+										UInt32 const	kMyCommandID = kCommandToggleTerminalLED2;
+										
+										
 										// then this is the LED 2 item; remember it so it can be updated later
 										if (nullptr != targetToolbar)
 										{
@@ -4196,11 +4272,16 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
 																				nullptr/* long text */);
 											assert_noerr(result);
+											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+											assert_noerr(result);
 											CFRelease(nameCFString), nameCFString = nullptr;
 										}
 									}
 									else if (kIs3)
 									{
+										UInt32 const	kMyCommandID = kCommandToggleTerminalLED3;
+										
+										
 										// then this is the LED 3 item; remember it so it can be updated later
 										if (nullptr != targetToolbar)
 										{
@@ -4214,11 +4295,16 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
 																				nullptr/* long text */);
 											assert_noerr(result);
+											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
+											assert_noerr(result);
 											CFRelease(nameCFString), nameCFString = nullptr;
 										}
 									}
 									else if (kIs4)
 									{
+										UInt32 const	kMyCommandID = kCommandToggleTerminalLED4;
+										
+										
 										// then this is the LED 4 item; remember it so it can be updated later
 										if (nullptr != targetToolbar)
 										{
@@ -4231,6 +4317,8 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 											assert_noerr(result);
 											result = HIToolbarItemSetHelpText(itemRef, nameCFString/* short text */,
 																				nullptr/* long text */);
+											assert_noerr(result);
+											result = HIToolbarItemSetCommandID(itemRef, kMyCommandID);
 											assert_noerr(result);
 											CFRelease(nameCFString), nameCFString = nullptr;
 										}
@@ -4404,28 +4492,35 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
 							
 							
-							if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED1,
+							// forget any stale references to important items being removed
+							if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDScrollLock,
 																		identifierCFString, kCFCompareBackwards))
 							{
-								// then this is the LED 1 item; forget its reference so it is not updated again
+								ptr->toolbarItemScrollLock.clear();
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalBell,
+																		identifierCFString, kCFCompareBackwards))
+							{
+								ptr->toolbarItemBell.clear();
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED1,
+																		identifierCFString, kCFCompareBackwards))
+							{
 								ptr->toolbarItemLED1.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED2,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								// then this is the LED 2 item; forget its reference so it is not updated again
 								ptr->toolbarItemLED2.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED3,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								// then this is the LED 3 item; forget its reference so it is not updated again
 								ptr->toolbarItemLED3.clear();
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_HIToolbarItemIDTerminalLED4,
 																			identifierCFString, kCFCompareBackwards))
 							{
-								// then this is the LED 4 item; forget its reference so it is not updated again
 								ptr->toolbarItemLED4.clear();
 							}
 							

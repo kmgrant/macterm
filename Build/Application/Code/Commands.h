@@ -451,6 +451,10 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEditInterruptKey				'SIKy'		// multiple interfaces
 #define kCommandEditResumeKey					'SRKy'		// multiple interfaces
 #define kCommandEditSuspendKey					'SSKy'		// multiple interfaces
+#define kCommandToggleTerminalLED1				'LED1'		// terminal window toolbars
+#define kCommandToggleTerminalLED2				'LED2'		// terminal window toolbars
+#define kCommandToggleTerminalLED3				'LED3'		// terminal window toolbars
+#define kCommandToggleTerminalLED4				'LED4'		// terminal window toolbars
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 #define kCommandSetBackground					'SBkg'		// generic request to open a UI to change a background
 

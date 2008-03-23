@@ -535,6 +535,11 @@ Boolean
 	Terminal_LEDIsOn						(TerminalScreenRef			inScreen,
 											 SInt16						inOneBasedLEDNumber);
 
+void
+	Terminal_LEDSetState					(TerminalScreenRef			inRef,
+											 SInt16						inOneBasedLEDNumber,
+											 Boolean					inIsOn);
+
 Boolean
 	Terminal_LineFeedNewLineMode			(TerminalScreenRef			inScreen);
 

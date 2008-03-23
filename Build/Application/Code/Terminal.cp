@@ -3044,7 +3044,7 @@ Terminal_LEDIsOn	(TerminalScreenRef	inRef,
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if (dataPtr != nullptr)
+	if (nullptr != dataPtr)
 	{
 		switch (inOneBasedLEDNumber)
 		{
@@ -3072,6 +3072,58 @@ Terminal_LEDIsOn	(TerminalScreenRef	inRef,
 	}
 	return result;
 }// LEDIsOn
+
+
+/*!
+Sets an LED to on or off.  Values less than or equal to
+zero are reserved.
+
+Note that LEDs are ordinarily entirely under the control
+of the terminal, and the terminal could later change the
+LED state anyway.
+
+(3.1)
+*/
+void
+Terminal_LEDSetState	(TerminalScreenRef	inRef,
+						 SInt16				inOneBasedLEDNumber,
+						 Boolean			inIsHighlighted)
+{
+	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
+	
+	
+	if (nullptr != dataPtr)
+	{
+		switch (inOneBasedLEDNumber)
+		{
+		case 1:
+			if (inIsHighlighted) dataPtr->litLEDs |= kMy_LEDBitsLight1;
+			else dataPtr->litLEDs &= ~kMy_LEDBitsLight1;
+			break;
+		
+		case 2:
+			if (inIsHighlighted) dataPtr->litLEDs |= kMy_LEDBitsLight2;
+			else dataPtr->litLEDs &= ~kMy_LEDBitsLight2;
+			break;
+		
+		case 3:
+			if (inIsHighlighted) dataPtr->litLEDs |= kMy_LEDBitsLight3;
+			else dataPtr->litLEDs &= ~kMy_LEDBitsLight3;
+			break;
+		
+		case 4:
+			if (inIsHighlighted) dataPtr->litLEDs |= kMy_LEDBitsLight4;
+			else dataPtr->litLEDs &= ~kMy_LEDBitsLight4;
+			break;
+		
+		case 0:
+		default:
+			// ???
+			break;
+		}
+	}
+	changeNotifyForTerminal(dataPtr, kTerminal_ChangeNewLEDState, dataPtr->selfRef/* context */);
+}// LEDSetState
 
 
 /*!
