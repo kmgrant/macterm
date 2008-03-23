@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080323',
     '20080322',
     '20080321',
     '20080320',
@@ -117,6 +118,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080323': [
+		'Fixed Preferences window Sessions pane Resource tab to properly handle text field entries.',
+	],
 	'20080322': [
 		'Selecting the name of a Format from the View menu will now transform the active terminal window to use those fonts/colors.',
 		'It is now possible to override the state of an LED toolbar item just by clicking on it.  (Can also be set by the terminal.)',
