@@ -3690,7 +3690,57 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormatDefault:
 					{
 						// reformat frontmost window using the Default preferences
-						// UNIMPLEMENTED
+						Preferences_ContextRef		currentSettings = TerminalView_ReturnConfiguration
+																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
+						Preferences_ContextRef		defaultSettings = nullptr;
+						Boolean						isError = true;
+						
+						
+						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, kPreferences_ClassFormat))
+						{
+							isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
+						}
+						
+						if (isError)
+						{
+							// failed...
+							Sound_StandardAlert();
+						}
+					}
+					break;
+				
+				case kCommandFormatByFavoriteName:
+					{
+						// reformat frontmost window using the specified preferences
+						Preferences_ContextRef		currentSettings = TerminalView_ReturnConfiguration
+																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
+						Boolean						isError = true;
+						
+						
+						if (received.attributes & kHICommandFromMenu)
+						{
+							CFStringRef		collectionName = nullptr;
+							
+							
+							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
+							{
+								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
+																			(kPreferences_ClassFormat, collectionName);
+								
+								
+								if (nullptr != namedSettings)
+								{
+									isError = (kPreferences_ResultOK != Preferences_ContextCopy(namedSettings, currentSettings));
+								}
+								CFRelease(collectionName), collectionName = nullptr;
+							}
+						}
+						
+						if (isError)
+						{
+							// failed...
+							Sound_StandardAlert();
+						}
 					}
 					break;
 				

@@ -820,9 +820,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	break;
 		
 		//case kCommandFormatDefault:
-		//	see TerminalWindow.cp
-		//	break;
-		
+		//case kCommandFormatByFavoriteName:
 		//case kCommandFormat:
 		//	see TerminalWindow.cp
 		//	break;
