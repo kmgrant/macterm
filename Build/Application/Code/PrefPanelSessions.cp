@@ -103,6 +103,7 @@ the NIBs from the package "PrefPanelSessions.nib".
 
 In addition, they MUST be unique across all panels.
 */
+HIViewID const	idMyPopUpMenuTerminal			= { 'Term', 0/* ID */ };
 HIViewID const	idMySeparatorTerminal			= { 'BotD', 0/* ID */ };
 HIViewID const	idMySeparatorRemoteSessionsOnly	= { 'RmSD', 0/* ID */ };
 HIViewID const	idMyFieldHostName				= { 'Host', 0/* ID */ };
@@ -128,6 +129,10 @@ struct My_SessionsTabResource:
 public HIViewWrap
 {
 	My_SessionsTabResource	(HIWindowRef);
+	~My_SessionsTabResource	();
+	
+	void
+	rebuildTerminalMenu ();
 
 protected:
 	HIViewWrap
@@ -142,8 +147,10 @@ protected:
 
 private:
 	CommonEventHandlers_HIViewResizer	containerResizer;
-	CarbonEventHandlerWrap				buttonCommandsHandler;		//!< invoked when a button is clicked
-	CarbonEventHandlerWrap				whenLookupCompleteHandler;	//!< invoked when a DNS query finally returns
+	CarbonEventHandlerWrap				buttonCommandsHandler;			//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				whenLookupCompleteHandler;		//!< invoked when a DNS query finally returns
+	ListenerModel_ListenerRef			whenFavoritesChangedHandler;	//!< used to manage Terminal pop-up menu
+	MenuItemIndex						numberOfTerminalItemsAdded;		//!< used to manage Terminal pop-up menu
 };
 
 /*!
@@ -264,6 +271,7 @@ void				disposePanel							(Panel_Ref, void*);
 Boolean				lookupHostName							(My_SessionsTabResource&);
 void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
 SInt32				panelChanged							(Panel_Ref, Panel_Message, void*);
+void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal OSStatus		receiveHICommand						(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveLookupComplete					(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveViewHit							(EventHandlerCallRef, EventRef, void*);
@@ -824,11 +832,34 @@ buttonCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 whenLookupCompleteHandler	(GetApplicationEventTarget(), receiveLookupComplete,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_DNS),
 														kEventNetEvents_HostLookupComplete),
-								this/* user data */)
+								this/* user data */),
+whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
+numberOfTerminalItemsAdded	(0)
 {
 	assert(exists());
 	assert(containerResizer.isInstalled());
+	
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_StartMonitoring
+					(this->whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
+						true/* notify of initial value */);
+	assert(kPreferences_ResultOK == prefsResult);
 }// My_SessionsTabResource 1-argument constructor
+
+
+/*!
+Tears down a My_SessionTabResource structure.
+
+(3.1)
+*/
+My_SessionsTabResource::
+~My_SessionsTabResource ()
+{
+	Preferences_StopMonitoring(this->whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts);
+	ListenerModel_ReleaseListener(&whenFavoritesChangedHandler);
+}// My_SessionsTabResource destructor
 
 
 /*!
@@ -918,6 +949,53 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	// INCOMPLETE
 }// My_SessionsTabResource::deltaSize
+
+
+/*!
+Deletes all the items in the Terminal pop-up menu and
+rebuilds the menu based on current preferences.
+
+(3.1)
+*/
+void
+My_SessionsTabResource::
+rebuildTerminalMenu ()
+{
+	HIViewWrap		terminalPopUpMenuView(idMyPopUpMenuTerminal, HIViewGetWindow(this->operator HIViewRef()));
+	OSStatus		error = noErr;
+	MenuRef			favoritesMenu = nullptr;
+	MenuItemIndex	defaultIndex = 0;
+	Size			actualSize = 0;
+	
+	
+	error = GetControlData(terminalPopUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
+							sizeof(favoritesMenu), &favoritesMenu, &actualSize);
+	assert_noerr(error);
+	
+	// find the key item to use as an anchor point
+	error = GetIndMenuItemWithCommandID(favoritesMenu, kCommandTerminalDefaultFavorite, 1/* which match to return */,
+										&favoritesMenu, &defaultIndex);
+	assert_noerr(error);
+	
+	// erase previous items
+	if (0 != this->numberOfTerminalItemsAdded)
+	{
+		(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, this->numberOfTerminalItemsAdded);
+	}
+	
+	// add the names of all session configurations to the menu;
+	// update global count of items added at that location
+	this->numberOfTerminalItemsAdded = 0;
+	(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTerminal, favoritesMenu,
+																1/* default index */, 0/* indentation level */,
+																0/* command ID */,
+																this->numberOfTerminalItemsAdded);
+	
+	// TEMPORARY: verify that this final step is necessary...
+	error = SetControlData(terminalPopUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
+							sizeof(favoritesMenu), &favoritesMenu);
+	assert_noerr(error);
+}// My_SessionsTabResource::rebuildTerminalMenu
 
 
 /*!
@@ -1291,6 +1369,36 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	return result;
 }// panelChanged
+
+
+/*!
+Invoked whenever a monitored preference value is changed.
+Responds by updating the user interface.
+
+(3.1)
+*/
+void
+preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+					 ListenerModel_Event	inPreferenceTagThatChanged,
+					 void*					inEventContextPtr,
+					 void*					inMySessionsTabResourcePtr)
+{
+	Preferences_ChangeContext*		contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
+	My_SessionsTabResource*			ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsTabResource*);
+	size_t							actualSize = 0L;
+	
+	
+	switch (inPreferenceTagThatChanged)
+	{
+	case kPreferences_ChangeNumberOfContexts:
+		ptr->rebuildTerminalMenu();
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// preferenceChanged
 
 
 /*!
