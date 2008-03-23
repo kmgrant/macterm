@@ -851,13 +851,22 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 				
 				case kControlKindSlider:
 					{
+						UInt32		numberOfTickMarks = 0;
+						
+						
+						// use a property to read tick marks, if available (since there is no
+						// API for reading this automatically)
+						(OSStatus)GetControlProperty(inTemplateControl, AppResources_ReturnCreatorCode(),
+														'Tick', sizeof(numberOfTickMarks), nullptr/* actual size */,
+														&numberOfTickMarks);
+						
 						// NOTE: There are no control data tags for sliders, so it is difficult
 						// to faithfully replicate them!!!
 						result = CreateSliderControl(inDestinationWindow, &templateBounds,
 														GetControl32BitValue(inTemplateControl),
 														GetControl32BitMinimum(inTemplateControl),
 														GetControl32BitMaximum(inTemplateControl),
-														kControlSliderPointsDownOrRight, 3/* number of tick marks - arbitrary */,
+														kControlSliderPointsDownOrRight, numberOfTickMarks,
 														false/* live tracking */, nullptr/* action routine */,
 														&outNewControl);
 					}
