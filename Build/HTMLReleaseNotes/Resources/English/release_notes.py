@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080324',
     '20080323',
     '20080322',
     '20080321',
@@ -118,6 +119,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080324': [
+		'MacTelnet Help updated with additional preferences information, and a few minor corrections.',
+	],
 	'20080323': [
 		'Fixed Preferences window Sessions pane Resource tab to properly handle text field entries.',
 	],

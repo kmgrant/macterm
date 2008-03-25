@@ -7,11 +7,9 @@
 	<key>IBLastKnownRelativeProjectPath</key>
 	<string>../../..</string>
 	<key>IBOldestOS</key>
-	<integer>3</integer>
+	<integer>5</integer>
 	<key>IBOpenObjects</key>
-	<array>
-		<integer>2086</integer>
-	</array>
+	<array/>
 	<key>IBSystem Version</key>
 	<string>9C7010</string>
 	<key>targetFramework</key>

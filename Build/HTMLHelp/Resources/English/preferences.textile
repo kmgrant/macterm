@@ -119,18 +119,20 @@ Unix-like systems.
 
 h3(#generalspecial). Special
 
-h4(#cursorflash). Terminal Cursor: Flashing
+h4. Terminal Cursor
 
-The cursor blinks on and off periodically when Flashing is set,
-which may make it easier to see.  But, see also the Find Cursor
-command in the Edit menu, which locates the cursor on demand.
-
-h4(#cursorshape). Terminal Cursor: Shape
+h5(#cursorshape). Shape
 
 MacTelnet allows one of 5 different shapes for the terminal
 cursor; a solid square is typical, but you may wish to have the
 standard Mac vertical bar, a horizontal underline, or thicker
 versions of either (more noticeable on LCD displays).
+
+h5(#cursorflash). Flashing
+
+The cursor blinks on and off periodically when Flashing is set,
+which may make it easier to see.  But, see also the Find Cursor
+command in the Edit menu, which locates the cursor on demand.
 
 h4(#stackorigin). Window Stacking Origin
 
@@ -153,9 +155,9 @@ the current window size.
 You can hold down the Option key prior to starting a window
 resize to temporarily switch this preference.
 
-h4(#spacesfortab). Copy With Tab Substitution: Spaces Per Tab
+h4(#spacesfortab). Copy With Tab Substitution
 
-When copying text using Copy With Tab Substitution, this number
+When copying text using Copy with Tab Substitution, this number
 determines how many consecutive spaces are replaced with a single
 tab character before putting the text on the clipboard.
 
@@ -322,17 +324,6 @@ to interpret text in the session.
 In Unix sessions, you typically will set a "LANG" environment
 variable that is consistent with the Translation setting.
 
-h4. Capture to File
-
-You can choose to automatically capture this session to a
-specific file when it starts.  Note also that this can be done
-from a menu, Terminal >> Begin Capture to File.
-
-Currently, MacTelnet does not have sophisticated ways to
-handle automatic file captures.  It would be nice, for instance,
-if successive sessions could use new files in a target folder
-and not overwrite the same file.
-
 h4. Duplication
 
 MacTelnet can send keyboard characters directly to the terminal
@@ -362,6 +353,17 @@ basis.  This means that MacTelnet does not send all text at
 once, it splits the data into small chunks and sends each piece
 separately.
 
+h4. Capture to File
+
+You can choose to automatically capture this session to a
+specific file when it starts.  Note also that this can be done
+from a menu, File >> Begin Capture to File.
+
+Currently, MacTelnet does not have sophisticated ways to
+handle automatic file captures.  It would be nice, for instance,
+if successive sessions could use new files in a target folder
+and not overwrite the same file.
+
 h3(#sessioncontrolkeys). Keyboard
 
 You can map certain key combinations to special behaviors that
@@ -375,14 +377,18 @@ Note also that the Control Keys palette allows you to enter
 _any_ control key at any time, regardless of key mappings.  See
 the Window menu.
 
-h4. Interrupt
+h4. Process Control
+
+h5. Interrupt Process
 
 Defaults to control-C (^C), the key sequence that will cause
 the application in a terminal to quit immediately if possible.
 
 This is also in the menu bar, Terminal >> Interrupt Process.
 
-h4. Suspend
+h4. Flow Control
+
+h5. Suspend (Scroll Lock / XOFF)
 
 Defaults to control-S (^S), the key sequence that will cause a
 scroll lock (also known as XOFF, or "suspend transmission", or
@@ -395,7 +401,7 @@ rapidly-scrolling displays.
 This is also in the menu bar, Terminal >> Suspend (Scroll Lock),
 and is available as a toolbar item.
 
-h4. Resume
+h5. Resume (XON)
 
 Defaults to control-Q (^Q), the key sequence that will cause a
 scroll unlock (also known as XON, or "resume transmission", or
@@ -406,12 +412,28 @@ A Resume is like an Undo for a Suspend.
 This is also in the menu bar, Terminal >> Suspend (Scroll Lock),
 and is available as a toolbar item.
 
-h4. Delete Sends
+h4. EMACS Cursor
+
+The EMACS text editor has its own commands for moving the
+cursor in the buffer.  You can choose to have your Mac arrow
+keys trigger the appropriate EMACS commands.
+
+h4. EMACS Meta
+
+The EMACS text editor relies heavily on a key that is not
+available on Mac keyboards, the meta key.  However, you can
+ask MacTelnet to emulate the meta key by using other keys.
+
+h4. Delete
 
 Specifies what a Delete keypress on your Mac keyboard will do.
 Some remote applications do not understand the default
 interpretation of Delete and can respond in odd ways (such as
-printing a "^H").
+printing a "^H").  Choose between either regular Delete, or a
+Backspace.
+
+Note that you can temporarily choose the alternate mapping by
+using shift-Delete or command-Delete in a terminal window.
 
 h4. New Line
 
@@ -424,18 +446,6 @@ characters: ASCII codes 13 and 10.
 
 "CF NULL" means "carriage return, null character" and sends two
 characters: ASCII codes 13 and 0.
-
-h4. EMACS Meta Key
-
-The EMACS text editor relies heavily on a key that is not
-available on Mac keyboards, the meta key.  However, you can
-ask MacTelnet to emulate the meta key by using other keys.
-
-h4. EMACS Arrow Keys
-
-The EMACS text editor has its own commands for moving the
-cursor in the buffer.  You can choose to have your Mac arrow
-keys trigger the appropriate EMACS commands.
 
 h3(#sessiontek). Graphics (TEK)
 
@@ -627,6 +637,9 @@ specific property.
 
 Color settings have two entries, the leftmost box is the text
 (foreground) color and the rightmost box is the background color.
+
+To edit any setting, click on a box and the standard system panel
+(Fonts or Colors) will appear.
 
 h3. ANSI Colors
 
