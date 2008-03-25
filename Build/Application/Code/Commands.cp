@@ -619,7 +619,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (isSession) Session_DisplayPrintPageSetupDialog(frontSession);
 			break;
 		
-		case kCommandQuit:
 		case kHICommandQuit:
 			// send a Quit Apple Event, to allow scripts that may be recording to pick up the command
 			{
@@ -1044,37 +1043,9 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				else Sound_StandardAlert(); // IP-to-string failed in this case
 			}
 			break;
-		
-		case kCommandSendSync:
-			Console_WriteLine("WARNING, now unimplemented: sync");
-			break;
-		
-		case kCommandSendBreak:
-			Console_WriteLine("WARNING, now unimplemented: break");
-			break;
 
 		case kCommandSendInterruptProcess:
 			Session_UserInputInterruptProcess(frontSession, false/* record to scripts */);
-			break;
-		
-		case kCommandSendAbortOutput:
-			Console_WriteLine("WARNING, now unimplemented: abort output");
-			break;
-		
-		case kCommandSendAreYouThere:
-			Console_WriteLine("WARNING, now unimplemented: are you there");
-			break;
-
-		case kCommandSendEraseCharacter:
-			Console_WriteLine("WARNING, now unimplemented: erase character");
-			break;
-
-		case kCommandSendEraseLine:
-			Console_WriteLine("WARNING, now unimplemented: erase line");
-			break;
-		
-		case kCommandSendEndOfFile:
-			Console_WriteLine("WARNING, now unimplemented: end-of-file");
 			break;
 		
 		case kCommandWatchNothing:

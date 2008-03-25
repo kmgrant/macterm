@@ -1470,8 +1470,12 @@ comment, for completeness.
 void
 installMenuItemStateTrackers ()
 {
-	// Apple
+	// Application
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandAboutThisApplication, nullptr/* no state tracker necessary */);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFullScreenModal, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandKioskModeDisable, stateTrackerShowHideItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowNetworkNumbers, nullptr/* no state tracker necessary */);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendInternetProtocolNumber, stateTrackerNetSendItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandURLAuthorMail, nullptr/* no state tracker necessary */);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandURLHomePage, nullptr/* no state tracker necessary */);
 	
@@ -1484,11 +1488,13 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandCloseConnection, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandKillProcessesKeepWindow, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSaveSession, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSaveText, stateTrackerStandardEditItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandImportMacroSet, nullptr/* no state tracker necessary */);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandExportCurrentMacroSet, nullptr/* no state tracker necessary */);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandNewDuplicateSession, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHandleURL, stateTrackerStandardEditItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSaveText, stateTrackerStandardEditItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandCaptureToFile, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEndCaptureToFile, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandImportMacroSet, nullptr/* no state tracker necessary */);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandExportCurrentMacroSet, nullptr/* no state tracker necessary */);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrint, stateTrackerPrintingItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrintOne, stateTrackerPrintingItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrintScreen, stateTrackerPrintingItems);
@@ -1512,77 +1518,63 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSelectNothing, stateTrackerStandardEditItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowClipboard, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideClipboard, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFixCharacterTranslation, stateTrackerStandardEditItems);
 	
 	// View
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandLargeScreen, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSmallScreen, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTallScreen, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandLargeScreen, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSetScreenSize, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandBiggerText, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSmallerText, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFullScreen, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFormat, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSmallerText, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFormatDefault, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFullScreenModal, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFormat, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTEKPageCommand, stateTrackerTEKItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTEKPageClearsScreen, stateTrackerTEKItems);
 	
 	// Terminal
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTerminalEmulatorSetup, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSuspendNetwork, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendInterruptProcess, stateTrackerNetSendItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandBellEnabled, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEcho, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWrapMode, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandClearScreenSavesLines, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandJumpScrolling, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandCaptureToFile, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEndCaptureToFile, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTEKPageCommand, stateTrackerTEKItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTEKPageClearsScreen, stateTrackerTEKItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSpeechEnabled, stateTrackerCheckableItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSpeakSelectedText, stateTrackerStandardEditItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandClearEntireScrollback, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandResetGraphicsCharacters, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandResetTerminal, stateTrackerGenericSessionItems);
-	
-	// Keys
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandDeletePressSendsBackspace, stateTrackerCheckableItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandDeletePressSendsDelete, stateTrackerCheckableItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSetKeys, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEMACSArrowMapping, stateTrackerCheckableItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandLocalPageUpDown, stateTrackerCheckableItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMacroSetNone, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTranslationTableNone, stateTrackerGenericSessionItems);
-	
-	// Network
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowNetworkNumbers, nullptr/* no state tracker necessary */);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendInternetProtocolNumber, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendAreYouThere, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendAbortOutput, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendBreak, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendInterruptProcess, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendEraseCharacter, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendEraseLine, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendEndOfFile, stateTrackerNetSendItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendSync, stateTrackerNetSendItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTerminalEmulatorSetup, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchNothing, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchForActivity, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWatchForInactivity, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTransmitOnInactivity, stateTrackerCheckableItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSuspendNetwork, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSpeechEnabled, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandClearEntireScrollback, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandResetGraphicsCharacters, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandResetTerminal, stateTrackerGenericSessionItems);
+	
+	// Map
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandDeletePressSendsBackspace, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandDeletePressSendsDelete, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEMACSArrowMapping, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandLocalPageUpDown, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSetKeys, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMacroSetNone, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMacroSetDefault, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTranslationTableNone, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTranslationTableDefault, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFixCharacterTranslation, stateTrackerGenericSessionItems);
 	
 	// Window
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMinimizeWindow, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandZoomWindow, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMaximizeWindow, stateTrackerShowHideItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTerminalNewWorkspace, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandChangeWindowTitle, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideFrontWindow, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideOtherWindows, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowAllHiddenWindows, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandKioskModeDisable, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandStackWindows, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandNextWindow, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandNextWindowHideCurrent, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPreviousWindow, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTerminalNewWorkspace, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowConnectionStatus, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideConnectionStatus, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowMacros, stateTrackerShowHideItems);
@@ -2319,31 +2311,54 @@ void
 setUpMacroSetsMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
+	MenuItemIndex	noneIndex = 0;
 	MenuItemIndex	defaultIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
 	error = GetIndMenuItemWithCommandID(inMenu, kCommandMacroSetNone, 1/* which match to return */,
-										&inMenu, &defaultIndex);
+										&inMenu, &noneIndex);
 	if (noErr == error)
 	{
-		// erase previous items
-		if (0 != gNumberOfMacroSetMenuItemsAdded)
+		// find the key item to use as an anchor point
+		error = GetIndMenuItemWithCommandID(inMenu, kCommandMacroSetDefault, 1/* which match to return */,
+											&inMenu, &defaultIndex);
+		if (noErr == error)
 		{
-			(OSStatus)DeleteMenuItems(inMenu, defaultIndex + 1/* first item */, gNumberOfMacroSetMenuItemsAdded);
+			// erase previous items
+			if (0 != gNumberOfMacroSetMenuItemsAdded)
+			{
+				(OSStatus)DeleteMenuItems(inMenu, defaultIndex + 1/* first item */, gNumberOfMacroSetMenuItemsAdded);
+			}
+			
+			// add the names of all macro sets to the menu;
+			// update global count of items added at that location
+			gNumberOfMacroSetMenuItemsAdded = 0;
+			(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassMacroSet, inMenu,
+																		defaultIndex, 1/* indentation level */,
+																		kCommandMacroSetByFavoriteName,
+																		gNumberOfMacroSetMenuItemsAdded);
+			
+			// ensure these items are inactive except for terminal windows
+			for (SInt16 i = 1; i <= gNumberOfMacroSetMenuItemsAdded; ++i)
+			{
+				MenuItemIndex		itemIndex = 0;
+				
+				
+				error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandMacroSetByFavoriteName,
+													i/* which matching item to return */,
+													nullptr/* matching menu */, &itemIndex);
+				if (noErr == error)
+				{
+					MenuBar_SetMenuItemStateTrackerProc(inMenu, itemIndex, stateTrackerGenericSessionItems);
+				}
+			}
 		}
 		
-		// add the names of all macro sets to the menu;
-		// update global count of items added at that location
-		gNumberOfMacroSetMenuItemsAdded = 0;
-		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassMacroSet, inMenu,
-																	defaultIndex, 1/* indentation level */,
-																	kCommandMacroSetByFavoriteName,
-																	gNumberOfMacroSetMenuItemsAdded);
-		
-		// also fix the indentation of the None choice, as this
-		// cannot be set in the NIB and will be wrong (again) if
+		// also fix the indentation of the None and Default choices, as
+		// these cannot be set in the NIB and will be wrong (again) if
 		// the indicated menu has been reloaded recently
+		(OSStatus)SetMenuItemIndent(inMenu, noneIndex, 1/* number of indents */);
 		(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
 	}
 }// setUpMacroSetsMenu
@@ -2685,32 +2700,62 @@ void
 setUpTranslationTablesMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
+	MenuItemIndex	noneIndex = 0;
 	MenuItemIndex	defaultIndex = 0;
+	MenuItemIndex	customIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
 	error = GetIndMenuItemWithCommandID(inMenu, kCommandTranslationTableNone, 1/* which match to return */,
-										&inMenu, &defaultIndex);
+										&inMenu, &noneIndex);
 	if (noErr == error)
 	{
-		// erase previous items
-		if (0 != gNumberOfTranslationTableMenuItemsAdded)
+		// find the key item to use as an anchor point
+		error = GetIndMenuItemWithCommandID(inMenu, kCommandTranslationTableDefault, 1/* which match to return */,
+											&inMenu, &defaultIndex);
+		if (noErr == error)
 		{
-			(OSStatus)DeleteMenuItems(inMenu, defaultIndex + 1/* first item */, gNumberOfTranslationTableMenuItemsAdded);
+			// erase previous items
+			if (0 != gNumberOfTranslationTableMenuItemsAdded)
+			{
+				(OSStatus)DeleteMenuItems(inMenu, defaultIndex + 1/* first item */, gNumberOfTranslationTableMenuItemsAdded);
+			}
+			
+			// add the names of all translation tables to the menu;
+			// update global count of items added at that location
+			gNumberOfTranslationTableMenuItemsAdded = 0;
+			//(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslationTable, inMenu,
+			//														defaultIndex, 1/* indentation level */,
+			//														kCommandTranslationTableByFavoriteName,
+			//														gNumberOfTranslationTableMenuItemsAdded);
+			
+			// ensure these items are inactive except for terminal windows
+			for (SInt16 i = 1; i <= gNumberOfTranslationTableMenuItemsAdded; ++i)
+			{
+				MenuItemIndex		itemIndex = 0;
+				
+				
+				error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandTranslationTableByFavoriteName,
+													i/* which matching item to return */,
+													nullptr/* matching menu */, &itemIndex);
+				if (noErr == error)
+				{
+					MenuBar_SetMenuItemStateTrackerProc(inMenu, itemIndex, stateTrackerGenericSessionItems);
+				}
+			}
 		}
 		
-		// add the names of all translation tables to the menu;
-		// update global count of items added at that location
-		gNumberOfTranslationTableMenuItemsAdded = 0;
-		//(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslationTable, inMenu,
-		//														defaultIndex, 1/* indentation level */,
-		//														kCommandTranslationTableByFavoriteName,
-		//														gNumberOfTranslationTableMenuItemsAdded);
-		
-		// also fix the indentation of the None choice, as this
-		// cannot be set in the NIB and will be wrong (again) if
+		// also fix the indentation of the None and Default choices, as
+		// these cannot be set in the NIB and will be wrong (again) if
 		// the indicated menu has been reloaded recently
+		(OSStatus)SetMenuItemIndent(inMenu, noneIndex, 1/* number of indents */);
 		(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+		error = GetIndMenuItemWithCommandID(inMenu, kCommandFixCharacterTranslation, 1/* which match to return */,
+											&inMenu, &customIndex);
+		if (noErr == error)
+		{
+			(OSStatus)SetMenuItemIndent(inMenu, customIndex, 1/* number of indents */);
+		}
 	}
 }// setUpTranslationTablesMenu
 
@@ -3216,8 +3261,12 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 	case kCommandJumpScrolling:
 	case kCommandSetKeys:
 	case kCommandMacroSetNone:
+	case kCommandMacroSetDefault:
 	case kCommandMacroSetByFavoriteName:
+	case kCommandTranslationTableNone:
+	case kCommandTranslationTableDefault:
 	case kCommandTranslationTableByFavoriteName:
+	case kCommandFixCharacterTranslation:
 	case kCommandClearEntireScrollback:
 	case kCommandResetGraphicsCharacters:
 	case kCommandResetTerminal:
@@ -3279,14 +3328,7 @@ stateTrackerNetSendItems	(UInt32				inCommandID,
 	switch (inCommandID)
 	{
 	case kCommandSendInternetProtocolNumber:
-	case kCommandSendAreYouThere:
-	case kCommandSendAbortOutput:
-	case kCommandSendBreak:
 	case kCommandSendInterruptProcess:
-	case kCommandSendEraseCharacter:
-	case kCommandSendEraseLine:
-	case kCommandSendEndOfFile:
-	case kCommandSendSync:
 		result = areSessionRelatedItemsEnabled();
 		break;
 	
@@ -3598,8 +3640,6 @@ stateTrackerStandardEditItems	(UInt32			inCommandID,
 	case kCommandCopy:
 	case kCommandCopyTable:
 	case kCommandCopyAndPaste:
-	case kCommandFixCharacterTranslation:
-	case kCommandSpeakSelectedText:
 		if (isTEK)
 		{
 			result = false; // text selection commands do not apply to graphics

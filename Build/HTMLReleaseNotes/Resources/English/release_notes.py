@@ -120,6 +120,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080324': [
+		'Various minor changes to the menu bar layout, including the removal of the Action menu.',
 		'MacTelnet Help updated with additional preferences information, and a few minor corrections.',
 	],
 	'20080323': [

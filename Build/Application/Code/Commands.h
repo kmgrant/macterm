@@ -108,16 +108,20 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 */
 
 // Application (Apple) menu
-// WARNING: These are referenced by value in the MainMenuApplication.nib and
+// WARNING: These are referenced by value in the MainMenus.nib and
 //          MenuForDockIcon.nib files!
 #define kCommandAboutThisApplication			kHICommandAbout
+#define kCommandFullScreenModal					'Kios'
+#define kCommandKioskModeDisable				'KskQ'		// also used in Kiosk Mode off-switch floater
+#define kCommandShowNetworkNumbers				'CIPn'
+#define kCommandSendInternetProtocolNumber		'SIPn'
 #define kCommandCheckForUpdates					'ChUp'
 #define kCommandURLHomePage						'.com'
 #define kCommandURLAuthorMail					'Mail'
 #define kCommandURLSourceLicense				'CGPL'
 #define kCommandURLProjectStatus				'Proj'
 
-// Workspace (File) menu
+// File menu
 #define kCommandNewSessionDefaultFavorite		kHICommandNew
 #define kCommandNewSessionByFavoriteName		'NFav'
 #define kCommandNewSessionLoginShell			'NLgS'
@@ -125,24 +129,21 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandNewSessionDialog				'New…'
 #define kCommandOpenSession						kHICommandOpen
 #define kCommandCloseConnection					kHICommandClose
-#define kCommandCloseWorkspace					'ClsA'
-#define kCommandKillProcessesKeepWindow			'Kill'
 #define kCommandSaveSession						kHICommandSaveAs
-#define kCommandSaveText						'SvTx'
-#define kCommandImportMacroSet					'IMcr'
-#define kCommandExportCurrentMacroSet			'EMcr'
 #define kCommandNewDuplicateSession				'NewD'
 #define kCommandHandleURL						'HURL'
+#define kCommandSaveText						'SvTx'
+#define kCommandCaptureToFile					'Capt'
+#define kCommandEndCaptureToFile				'CapE'
+#define kCommandImportMacroSet					'IMcr'
+#define kCommandExportCurrentMacroSet			'EMcr'
 #define kCommandPageSetup						kHICommandPageSetup
 #define kCommandPrint							kHICommandPrint
 #define kCommandPrintOne						'Pr1C'
 #define kCommandPrintScreen						'PrSc'
-#define kCommandQuit							'Quit'	/* Classic only */
-
-#define kCommandFindFiles						'FFil'
 
 // Edit menu
-// WARNING: These are referenced by value in the MainMenuEdit.nib file!
+// WARNING: These are referenced by value in the MainMenus.nib file!
 #define kCommandUndo							kHICommandUndo
 #define kCommandRedo							kHICommandRedo
 #define kCommandCut								kHICommandCut
@@ -160,74 +161,58 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSelectNothing					'Sel0'
 #define kCommandShowClipboard					'ShCl'
 #define kCommandHideClipboard					'HiCl'
-#define kCommandFixCharacterTranslation			'FixT'
 
 // View menu
-// WARNING: These are referenced by value in the MainMenuView.nib file!
-#define kCommandLargeScreen						'Wide'
+// WARNING: These are referenced by value in the MainMenus.nib file!
 #define kCommandSmallScreen						'StdW'
 #define kCommandTallScreen						'Tall'
+#define kCommandLargeScreen						'Wide'
 #define kCommandSetScreenSize					'SSiz'
 #define kCommandBiggerText						'FSzB'
-#define kCommandSmallerText						'FSzS'
 #define kCommandFullScreen						'Full'
-#define kCommandFullScreenModal					'Kios'
+#define kCommandSmallerText						'FSzS'
 #define kCommandFormatDefault					'FmtD'
 #define kCommandFormatByFavoriteName			'FFav'
 #define kCommandFormat							'Text'
+#define	kCommandTEKPageCommand					'TEKP'
+#define	kCommandTEKPageClearsScreen				'TEKC'
 
 // Terminal menu
-// WARNING: These are referenced by value in the MainMenuTerminal.nib file!
-#define kCommandTerminalEmulatorSetup			'Emul'
+// WARNING: These are referenced by value in the MainMenus.nib file!
+#define kCommandSuspendNetwork					'Susp'
+#define kCommandSendInterruptProcess			'IP  '
 #define kCommandBellEnabled						'Bell'
 #define kCommandEcho							'Echo'
 #define kCommandWrapMode						'Wrap'
 #define kCommandClearScreenSavesLines			'CSSL'
 #define kCommandJumpScrolling					'Jump'
-#define kCommandCaptureToFile					'Capt'
-#define kCommandEndCaptureToFile				'CapE'
-#define	kCommandTEKPageCommand					'TEKP'
-#define	kCommandTEKPageClearsScreen				'TEKC'
+#define kCommandTerminalEmulatorSetup			'Emul'
+#define kCommandWatchNothing					'WOff'
+#define kCommandWatchForActivity				'Notf'
+#define kCommandWatchForInactivity				'Idle'
+#define kCommandTransmitOnInactivity			'KAlv'
 #define kCommandSpeechEnabled					'Talk'
-#define kCommandSpeakSelectedText				'SpkS'
 #define kCommandClearEntireScrollback			'ClSB'
 #define kCommandResetGraphicsCharacters			'NoGr'
 #define kCommandResetTerminal					'RTrm'
 
-// Keys menu
-// WARNING: These are referenced by value in the MainMenuKeys.nib file!
+// Map menu
+// WARNING: These are referenced by value in the MainMenus.nib file!
 #define kCommandDeletePressSendsBackspace		'DBks'
 #define kCommandDeletePressSendsDelete			'DDel'
 #define kCommandEMACSArrowMapping				'EMAC'
 #define kCommandLocalPageUpDown					'LcPg'
 #define kCommandSetKeys							'SetK'
 #define kCommandMacroSetNone					'XMcr'
+#define kCommandMacroSetDefault					'McrD'
 #define kCommandMacroSetByFavoriteName			'MFav'
 #define kCommandTranslationTableNone			'XXlt'
+#define kCommandTranslationTableDefault			'XltD'
 #define kCommandTranslationTableByFavoriteName	'XFav'
-
-// Network menu
-// WARNING: These are referenced by value in the MainMenuNetwork.nib file!
-#define kCommandShowNetworkNumbers				'CIPn'
-#define kCommandSendInternetProtocolNumber		'SIPn'
-#define kCommandSendFTPCommand					'FTP '
-#define kCommandSendSecureFTPCommand			'SFTP'
-#define kCommandSendSync						'SYNC'
-#define kCommandSendBreak						'BRK '
-#define kCommandSendInterruptProcess			'IP  '
-#define kCommandSendAbortOutput					'AO  '
-#define kCommandSendAreYouThere					'AYT '
-#define kCommandSendEraseCharacter				'EC  '
-#define kCommandSendEraseLine					'EL  '
-#define kCommandSendEndOfFile					'EOF '
-#define kCommandWatchNothing					'WOff'
-#define kCommandWatchForActivity				'Notf'
-#define kCommandWatchForInactivity				'Idle'
-#define kCommandTransmitOnInactivity			'KAlv'
-#define kCommandSuspendNetwork					'Susp'
+#define kCommandFixCharacterTranslation			'FixT'
 
 // Window menu
-// WARNING: These are referenced by value in the MainMenuWindow.nib file!
+// WARNING: These are referenced by value in the MainMenus.nib file!
 #define kCommandMinimizeWindow					kHICommandMinimizeWindow
 #define kCommandZoomWindow						kHICommandZoomWindow
 #define kCommandMaximizeWindow					'Maxm'
@@ -235,7 +220,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandHideFrontWindow					'HdFW'
 #define kCommandHideOtherWindows				'HdOW'
 #define kCommandShowAllHiddenWindows			'ShAW'
-#define kCommandKioskModeDisable				'KskQ'		// also used in Kiosk Mode off-switch floater
 #define kCommandStackWindows					'StkW'
 #define kCommandNextWindow						'NxtW'
 #define kCommandNextWindowHideCurrent			'NxWH'
@@ -390,7 +374,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 // commands currently used only in dialogs
 #define kCommandAlertOtherButton				'Othr'		// alerts
 #define kCommandCreditsAndLicenseInfo			'Cred'		// about box
-#define kCommandDisplayWindowContextualMenu		'CMnu'		// terminal window toolbars
 #define kCommandEditFontAndSize					'EdFS'		// multiple interfaces
 #define kCommandNewProtocolSelectedFTP			'NPFT'		// “New Session” dialog
 #define kCommandNewProtocolSelectedSFTP			'NPSF'		// “New Session” dialog
@@ -457,6 +440,13 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandToggleTerminalLED4				'LED4'		// terminal window toolbars
 #define kCommandTerminalNewWorkspace			'MTab'		// terminal window tab drawers
 #define kCommandSetBackground					'SBkg'		// generic request to open a UI to change a background
+
+// commands no longer used, may be deleted
+#define kCommandDisplayWindowContextualMenu		'CMnu'
+#define kCommandCloseWorkspace					'ClsA'
+#define kCommandKillProcessesKeepWindow			'Kill'
+#define kCommandSpeakSelectedText				'SpkS'
+#define kCommandFindFiles						'FFil'
 
 #pragma mark Types
 
