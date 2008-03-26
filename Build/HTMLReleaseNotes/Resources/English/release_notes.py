@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080325',
     '20080324',
     '20080323',
     '20080322',
@@ -119,6 +120,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080325': [
+		'Fixed a problem where icon-changing toolbar items (such as LEDs) may stop working after a toolbar is customized.',
+	],
 	'20080324': [
 		'Various minor changes to the menu bar layout, including the removal of the Action menu.',
 		'MacTelnet Help updated with additional preferences information, and a few minor corrections.',

@@ -4170,6 +4170,8 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 					CFStringRef		identifierCFString = nullptr;
 					HIToolbarRef	targetToolbar = nullptr;
+					HIToolbarRef	terminalToolbar = nullptr;
+					Boolean			isPermanentItem = false;
 					
 					
 					// see if this item is for a toolbar; if not, it may be used for something
@@ -4179,6 +4181,11 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																		typeHIToolbarRef, targetToolbar))
 					{
 						targetToolbar = nullptr;
+					}
+					isPermanentItem = (nullptr != targetToolbar);
+					if (noErr == GetWindowToolbar(TerminalWindow_ReturnWindow(terminalWindow), &terminalToolbar))
+					{
+						isPermanentItem = ((isPermanentItem) && (terminalToolbar == targetToolbar));
 					}
 					
 					result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamToolbarItemIdentifier,
@@ -4237,7 +4244,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										
 										
 										// then this is the LED 1 item; remember it so it can be updated later
-										if (nullptr != targetToolbar)
+										if (isPermanentItem)
 										{
 											ptr->toolbarItemLED1.setCFTypeRef(itemRef);
 										}
@@ -4260,7 +4267,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										
 										
 										// then this is the LED 2 item; remember it so it can be updated later
-										if (nullptr != targetToolbar)
+										if (isPermanentItem)
 										{
 											ptr->toolbarItemLED2.setCFTypeRef(itemRef);
 										}
@@ -4283,7 +4290,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										
 										
 										// then this is the LED 3 item; remember it so it can be updated later
-										if (nullptr != targetToolbar)
+										if (isPermanentItem)
 										{
 											ptr->toolbarItemLED3.setCFTypeRef(itemRef);
 										}
@@ -4306,7 +4313,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										
 										
 										// then this is the LED 4 item; remember it so it can be updated later
-										if (nullptr != targetToolbar)
+										if (isPermanentItem)
 										{
 											ptr->toolbarItemLED4.setCFTypeRef(itemRef);
 										}
@@ -4345,7 +4352,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									
 									
 									// remember this item so its icon can be kept in sync with scroll lock state
-									if (nullptr != targetToolbar)
+									if (isPermanentItem)
 									{
 										ptr->toolbarItemScrollLock.setCFTypeRef(itemRef);
 									}
@@ -4438,7 +4445,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									
 									
 									// then this is the bell item; remember it so it can be updated later
-									if (nullptr != targetToolbar)
+									if (isPermanentItem)
 									{
 										ptr->toolbarItemBell.setCFTypeRef(itemRef);
 									}
