@@ -4538,6 +4538,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagHeadersCollapsed:
 				case kPreferences_TagMenuItemKeys:
 				case kPreferences_TagPureInverse:
+				case kPreferences_TagRandomTerminalFormats:
 				case kPreferences_TagSimplifiedUserInterface:
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
@@ -5437,6 +5438,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 	
 	case kPreferences_TagPureInverse:
 		outKeyName = CFSTR("terminal-inverse-selections");
+		outKeyValueType = typeNetEvents_CFBooleanRef;
+		outNonDictionaryValueSize = sizeof(Boolean);
+		outClass = kPreferences_ClassGeneral;
+		break;
+	
+	case kPreferences_TagRandomTerminalFormats:
+		outKeyName = CFSTR("terminal-format-random");
 		outKeyValueType = typeNetEvents_CFBooleanRef;
 		outNonDictionaryValueSize = sizeof(Boolean);
 		outClass = kPreferences_ClassGeneral;
@@ -6438,8 +6446,15 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
 						
 						
-						// all values are considered valid for this preference
+						// note that precisely zero is returned by Core Foundation to show errors; if
+						// the user actually wants zero, a tiny value like 0.000001 should be used
 						*data = valueFloat32;
+						if (0 == *data)
+						{
+							// failed; make default
+							*data = 0; // arbitrary
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
 					}
 					break;
 				
@@ -7342,6 +7357,16 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag);
+				}
+				break;
+			
+			case kPreferences_TagRandomTerminalFormats:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 				}
 				break;
 			

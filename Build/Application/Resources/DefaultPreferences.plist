@@ -418,6 +418,8 @@
 	<string>Monaco</string>
 	<key>terminal-font-size-points</key>
 	<integer>12</integer>
+	<key>terminal-format-random</key>
+	<false/>
 	<key>terminal-inverse-selections</key>
 	<true/>
 	<key>terminal-line-wrap</key>

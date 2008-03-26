@@ -203,6 +203,7 @@ enum
 	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify..." constant
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
 	kPreferences_TagPureInverse							= 'pinv',	//!< data: "Boolean"
+	kPreferences_TagRandomTerminalFormats				= 'rfmt',	//!< data: "Boolean"
 	kPreferences_TagSimplifiedUserInterface				= 'simp',	//!< data: "Boolean"
 	kPreferences_TagTerminalCursorType					= 'curs',	//!< data: "TerminalView_CursorType"
 	kPreferences_TagTerminalResizeAffectsFontSize		= 'rszf',	//!< data: "Boolean"

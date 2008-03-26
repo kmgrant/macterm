@@ -122,6 +122,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080325': [
 		'Fixed a problem where icon-changing toolbar items (such as LEDs) may stop working after a toolbar is customized.',
+		'Added a hidden preference (accessible through the "defaults" program) to randomize the Format of every new terminal window.',
 	],
 	'20080324': [
 		'Various minor changes to the menu bar layout, including the removal of the Action menu.',

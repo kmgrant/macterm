@@ -39,6 +39,9 @@
 #include <map>
 #include <vector>
 
+// GNU extension includes
+#include <ext/numeric>
+
 // UNIX includes
 extern "C"
 {
@@ -1674,9 +1677,34 @@ installedActions()
 	}
 	if (nullptr == inFontInfoOrNull)
 	{
-		preferencesResult = Preferences_GetDefaultContext(&inFontInfoOrNull, kPreferences_ClassFormat);
-		assert(kPreferences_ResultOK == preferencesResult);
-		assert(nullptr != inFontInfoOrNull);
+		Boolean		chooseRandom = false;
+		
+		
+		(Preferences_Result)Preferences_GetData(kPreferences_TagRandomTerminalFormats, sizeof(chooseRandom), &chooseRandom);
+		if (chooseRandom)
+		{
+			std::vector< Preferences_ContextRef >	contextList;
+			
+			
+			if (Preferences_GetContextsInClass(kPreferences_ClassFormat, contextList))
+			{
+				std::vector< UInt16 >	numberList(contextList.size());
+				
+				
+				__gnu_cxx::iota(numberList.begin(), numberList.end(), 0/* starting value */);
+				std::random_shuffle(numberList.begin(), numberList.end());
+				inFontInfoOrNull = contextList[numberList[0]];
+			}
+			
+			if (nullptr == inFontInfoOrNull) chooseRandom = false; // error...
+		}
+		
+		if (false == chooseRandom)
+		{
+			preferencesResult = Preferences_GetDefaultContext(&inFontInfoOrNull, kPreferences_ClassFormat);
+			assert(kPreferences_ResultOK == preferencesResult);
+			assert(nullptr != inFontInfoOrNull);
+		}
 	}
 	
 	// set up Window Info; it is important to do this right away
