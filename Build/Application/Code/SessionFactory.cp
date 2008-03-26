@@ -2383,7 +2383,7 @@ void
 startTrackingSession	(SessionRef				inSession,
 						 TerminalWindowRef		inTerminalWindow)
 {
-	Console_WriteLine("NEW SESSION CONSTRUCTED");
+	//Console_WriteLine("NEW SESSION CONSTRUCTED");
 	
 	// ensure that changes to the specified session invoke the Session Factory’s notifier
 	Session_StartMonitoring(inSession, kSession_AllChanges, gSessionChangeListenerRef);
@@ -2449,7 +2449,7 @@ to undo the effects of startTrackingSession().
 void
 stopTrackingSession		(SessionRef		inSession)
 {
-	Console_WriteLine("SESSION DESTRUCTED");
+	//Console_WriteLine("SESSION DESTRUCTED");
 	
 	// ensure that changes to the specified session no longer invoke the Session Factory’s notifier
 	Session_StopMonitoring(inSession, kSession_AllChanges, gSessionChangeListenerRef);

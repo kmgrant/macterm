@@ -734,7 +734,7 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			///
 			///!!! REMEMBER, THIS IS CALLED DIRECTLY BY THE TOOLBOX - NO CallNextEventHandler() ALLOWED!!!
 			///
-			Console_WriteLine("HI OBJECT construct terminal background");
+			//Console_WriteLine("HI OBJECT construct terminal background");
 			{
 				HIObjectRef		superclassHIObject = nullptr;
 				
@@ -779,7 +779,7 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			break;
 		
 		case kEventHIObjectInitialize:
-			Console_WriteLine("HI OBJECT initialize terminal background");
+			//Console_WriteLine("HI OBJECT initialize terminal background");
 			result = CallNextEventHandler(inHandlerCallRef, inEvent);
 			if ((noErr == result) || (eventNotHandledErr == result))
 			{
@@ -792,7 +792,7 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 			///
 			///!!! REMEMBER, THIS IS CALLED DIRECTLY BY THE TOOLBOX - NO CallNextEventHandler() ALLOWED!!!
 			///
-			Console_WriteLine("HI OBJECT destruct terminal background");
+			//Console_WriteLine("HI OBJECT destruct terminal background");
 			delete dataPtr;
 			result = noErr;
 			break;
