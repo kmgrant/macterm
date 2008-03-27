@@ -3,7 +3,7 @@
 	Local.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -66,6 +66,7 @@ extern "C"
 // library includes
 #include <CarbonEventUtilities.template.h>
 #include <Console.h>
+#include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 
 // MacTelnet includes
@@ -82,8 +83,7 @@ extern "C"
 
 
 #pragma mark Constants
-
-#define	BUFFSIZE	256	//!< theoretically, this should respect the user’s Network Block Size preference
+namespace {
 
 enum MyTTYState
 {
@@ -91,50 +91,82 @@ enum MyTTYState
 	kMyTTYStateRaw
 };
 
-#pragma mark Types
+} // anonymous namespace
 
-typedef PseudoTeletypewriterID		TTYMasterID;
-typedef PseudoTeletypewriterID		TTYSlaveID;
+#pragma mark Types
+namespace {
+
+typedef Local_TerminalID		My_TTYMasterID;
+typedef Local_TerminalID		My_TTYSlaveID;
+
+typedef std::map< pid_t, Local_TerminalID >	My_UnixProcessIDToTTYMap;
 
 /*!
 Thread context passed to threadForLocalProcessDataLoop().
 */
-struct DataLoopThreadContext
+struct My_DataLoopThreadContext
 {
 	EventQueueRef		eventQueue;
 	SessionRef			session;
-	TTYMasterID			masterTTY;
+	My_TTYMasterID		masterTTY;
 };
-typedef DataLoopThreadContext*			DataLoopThreadContextPtr;
-typedef DataLoopThreadContext const*	DataLoopThreadContextConstPtr;
+typedef My_DataLoopThreadContext*			My_DataLoopThreadContextPtr;
+typedef My_DataLoopThreadContext const*		My_DataLoopThreadContextConstPtr;
 
-typedef std::map< pid_t, PseudoTeletypewriterID >		UnixProcessIDToTTYMap;
+/*!
+Information retained about a new process.  Known externally
+as a Local_ProcessRef.
+*/
+struct My_Process
+{
+	My_Process	(int, char const* const[], Local_TerminalID, char const*, pid_t);
+	~My_Process	();
+	
+	char const*
+	createCommandLine	(int, char const* const[]);
+	
+	pid_t				_processID;			// the process directly spawned by this session
+	Local_TerminalID	_pseudoTerminal;	// file descriptor of pseudo-terminal master
+	char const*			_slaveDeviceName;	// e.g. "/dev/ttyp0", data sent here goes to the terminal emulator (not the process)
+	char const*			_commandLine;		// buffer for parent process’ command line
+};
+typedef My_Process*			My_ProcessPtr;
+typedef My_Process const*	My_ProcessConstPtr;
+
+typedef MemoryBlockPtrLocker< Local_ProcessRef, My_Process >	My_ProcessPtrLocker;
+typedef LockAcquireRelease< Local_ProcessRef, My_Process >		My_ProcessAutoLocker;
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void				fillInTerminalControlStructure		(struct termios*);
-static pid_t			forkToNewTTY						(TTYMasterID*, char*, struct termios const*,
-																struct winsize const*);
-static TTYMasterID		openMasterTeletypewriter			(char*);
-static TTYSlaveID		openSlaveTeletypewriter				(char const*);
-static void				printTerminalControlStructure		(struct termios const*);
-static Local_Result		putTTYInOriginalMode				(PseudoTeletypewriterID);
-static void				putTTYInOriginalModeAtExit			();
-static Local_Result		putTTYInRawMode						(PseudoTeletypewriterID);
-static Local_Result		sendTerminalResizeMessage			(PseudoTeletypewriterID, struct winsize const*);
-static void*			threadForLocalProcessDataLoop		(void*);
+void			fillInTerminalControlStructure		(struct termios*);
+pid_t			forkToNewTTY						(My_TTYMasterID*, char*, size_t,
+													 struct termios const*, struct winsize const*);
+Local_Result	openMasterTeletypewriter			(size_t, char*, My_TTYMasterID&);
+My_TTYSlaveID	openSlaveTeletypewriter				(char const*);
+void			printTerminalControlStructure		(struct termios const*);
+Local_Result	putTTYInOriginalMode				(Local_TerminalID);
+void			putTTYInOriginalModeAtExit			();
+Local_Result	putTTYInRawMode						(Local_TerminalID);
+Local_Result	sendTerminalResizeMessage			(Local_TerminalID, struct winsize const*);
+void*			threadForLocalProcessDataLoop		(void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	struct termios		gCachedTerminalAttributes;
-	MyTTYState			gTTYState = kMyTTYStateReset;
-	Boolean				gInDebuggingMode = Local_StandardInputIsATerminal();	//!< true if terminal I/O is possible for debugging
-	
-	//! used to help atexit() handlers know which terminal to touch
-	UnixProcessIDToTTYMap&	gUnixProcessIDToTTYMap ()	{ static UnixProcessIDToTTYMap x; return x; }
-}
+My_ProcessPtrLocker&		gProcessPtrLocks ()		{ static My_ProcessPtrLocker x; return x; }
+struct termios				gCachedTerminalAttributes;
+MyTTYState					gTTYState = kMyTTYStateReset;
+Boolean						gInDebuggingMode = Local_StandardInputIsATerminal();	//!< true if terminal I/O is possible for debugging
+
+//! used to help atexit() handlers know which terminal to touch
+My_UnixProcessIDToTTYMap&	gUnixProcessIDToTTYMap ()	{ static My_UnixProcessIDToTTYMap x; return x; }
+
+} // anonymous namespace
 
 
 
@@ -148,7 +180,7 @@ control routines.
 (3.0)
 */
 int
-Local_DisableTerminalLocalEcho		(PseudoTeletypewriterID		inPseudoTerminalID)
+Local_DisableTerminalLocalEcho		(Local_TerminalID		inPseudoTerminalID)
 {
 	struct termios	stermios;
 	int				result = 0;
@@ -207,30 +239,131 @@ Local_GetDefaultShell	(char**		outStringPtr)
 
 
 /*!
-Kills the specified process, whose input and output
-are being channeled through the given window.
+Kills the specified process, disposes of the data and
+sets your copy of the reference to nullptr.
 
-The given process is not allowed to be less than or
-equal to zero, as this has special significance to
-the system (kills multiple processes).
+The given process’ ID is not allowed to be less than
+or equal to zero, as this has special significance
+to the system (kills multiple processes).
 
-(3.0)
+(3.1)
 */
 void
-Local_KillProcess	(pid_t		inUnixProcessID)
+Local_KillProcess	(Local_ProcessRef*	inoutRefPtr)
 {
-	if (inUnixProcessID > 0)
+	// clean up
 	{
-		int		killResult = kill(inUnixProcessID, SIGKILL);
+		My_ProcessAutoLocker	ptr(gProcessPtrLocks(), *inoutRefPtr);
 		
 		
-		if (0 != killResult) Console_WriteValue("warning, unable to kill process: Unix error", errno);
+		if (nullptr != ptr)
+		{
+			if (ptr->_processID > 0)
+			{
+				int		killResult = kill(ptr->_processID, SIGKILL);
+				
+				
+				if (0 != killResult) Console_WriteValue("warning, unable to kill process: Unix error", errno);
+				else
+				{
+					// successful kill, ID is no longer valid
+					ptr->_processID = -1;
+				}
+			}
+			else
+			{
+				Console_WriteValue("warning, attempt to run kill with special pid", ptr->_processID);
+			}
+		}
+	}
+	
+	if (gProcessPtrLocks().isLocked(*inoutRefPtr))
+	{
+		Console_WriteValue("warning, attempt to dispose of locked process data; outstanding locks",
+							gProcessPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{
-		Console_WriteValue("warning, attempt to run kill with special pid", inUnixProcessID);
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_ProcessPtr*)), *inoutRefPtr = nullptr;
 	}
 }// KillProcess
+
+
+/*!
+Returns the program and its given arguments as a string,
+suitable for display but not advisable for execution (e.g.
+whitespace in original arguments may no longer be obvious).
+
+(3.1)
+*/
+char const*
+Local_ProcessReturnCommandLineString	(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	char const*				result = nullptr;
+	
+	
+	result = ptr->_commandLine;
+	return result;
+}// ProcessReturnCommandLineString
+
+
+/*!
+Returns the file descriptor of the pseudo-terminal device that
+is the master.  Data sent to this device will interact directly
+with the running process, and have only indirect effects on any
+slave terminal.
+
+(3.1)
+*/
+Local_TerminalID
+Local_ProcessReturnMasterTerminal	(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	Local_TerminalID		result = kLocal_InvalidTerminalID;
+	
+	
+	result = ptr->_pseudoTerminal;
+	return result;
+}// ProcessReturnMasterTerminal
+
+
+/*!
+Returns the name of the pseudo-terminal device ("/dev/ttyp0",
+for example) that is connected as a slave.  Data sent to this
+device will interact directly with the terminal, and not affect
+the process.
+
+(3.1)
+*/
+char const*
+Local_ProcessReturnSlaveDeviceName		(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	char const*				result = nullptr;
+	
+	
+	result = ptr->_slaveDeviceName;
+	return result;
+}// ProcessReturnSlaveDeviceName
+
+
+/*!
+Returns the actual process ID, useful when making system calls
+directly.
+
+(3.1)
+*/
+pid_t
+Local_ProcessReturnUnixID	(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	pid_t					result = -1;
+	
+	
+	result = ptr->_processID;
+	return result;
+}// ProcessReturnUnixID
 
 
 /*!
@@ -242,7 +375,7 @@ control routines.
 (3.1)
 */
 int
-Local_ReturnTerminalFlowStartCharacter	(PseudoTeletypewriterID		inPseudoTerminalID)
+Local_ReturnTerminalFlowStartCharacter	(Local_TerminalID		inPseudoTerminalID)
 {
 	struct termios	stermios;
 	int				result = 0;
@@ -274,7 +407,7 @@ routines.
 (3.1)
 */
 int
-Local_ReturnTerminalFlowStopCharacter	(PseudoTeletypewriterID		inPseudoTerminalID)
+Local_ReturnTerminalFlowStopCharacter	(Local_TerminalID		inPseudoTerminalID)
 {
 	struct termios	stermios;
 	int				result = 0;
@@ -306,7 +439,7 @@ control routines.
 (3.1)
 */
 int
-Local_ReturnTerminalInterruptCharacter	(PseudoTeletypewriterID		inPseudoTerminalID)
+Local_ReturnTerminalInterruptCharacter	(Local_TerminalID		inPseudoTerminalID)
 {
 	struct termios	stermios;
 	int				result = 0;
@@ -346,11 +479,11 @@ if the message could not be sent
 (3.0)
 */
 Local_Result
-Local_SendTerminalResizeMessage		(PseudoTeletypewriterID		inPseudoTerminalID,
-									 UInt16						inNewColumnCount,
-									 UInt16						inNewRowCount,
-									 UInt16						inNewColumnWidthInPixels,
-									 UInt16						inNewRowHeightInPixels)
+Local_SendTerminalResizeMessage		(Local_TerminalID	inPseudoTerminalID,
+									 UInt16				inNewColumnCount,
+									 UInt16				inNewRowCount,
+									 UInt16				inNewColumnWidthInPixels,
+									 UInt16				inNewRowHeightInPixels)
 {
 	Local_Result		result = kLocal_ResultOK;
 	struct winsize		unixTerminalWindowSizeStructure; // defined in "/usr/include/sys/ttycom.h"
@@ -374,15 +507,13 @@ or falling back to the SHELL environment variable).
 See the documentation on Local_SpawnProcess() for
 more on how the working directory is handled.
 
-\return any code that Local_SpawnProcess() can return
+\retval any code that Local_SpawnProcess() can return
 
 (3.0)
 */
 Local_Result
 Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
-						 pid_t*				outProcessIDPtr,
-						 char*				outSlaveName,
 						 char const*		inWorkingDirectoryOrNull)
 {
 	struct passwd*	userInfoPtr = getpwuid(getuid());
@@ -400,8 +531,7 @@ Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 		args[0] = getenv("SHELL");
 	}
 	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName,
-								inWorkingDirectoryOrNull);
+	return Local_SpawnProcess(inUninitializedSession, inContainer, args, inWorkingDirectoryOrNull);
 }// SpawnDefaultShell
 
 
@@ -413,22 +543,19 @@ a password.
 See the documentation on Local_SpawnProcess() for more on
 how the working directory is handled.
 
-\return any code that Local_SpawnProcess() can return
+\retval any code that Local_SpawnProcess() can return
 
 (3.0)
 */
 Local_Result
 Local_SpawnLoginShell	(SessionRef			inUninitializedSession,
 						 TerminalScreenRef	inContainer,
-						 pid_t*				outProcessIDPtr,
-						 char*				outSlaveName,
 						 char const*		inWorkingDirectoryOrNull)
 {
 	char const*		args[] = { "/usr/bin/login", "-p", "-f", getenv("USER"), nullptr/* terminator */ };
 	
 	
-	return Local_SpawnProcess(inUninitializedSession, inContainer, args, outProcessIDPtr, outSlaveName,
-								inWorkingDirectoryOrNull);
+	return Local_SpawnProcess(inUninitializedSession, inContainer, args, inWorkingDirectoryOrNull);
 }// SpawnLoginShell
 
 
@@ -449,16 +576,11 @@ directory is unchanged.  If it is not possible to
 change to that directory, the child process is
 aborted.
 
-The Unix process ID and TTY name (e.g. "/dev/ttyp2")
-are returned.  The buffer you provide for the slave
-name should be sufficiently large (20 characters is
-probably enough).
-
 \retval kLocal_ResultOK
 if the process was created successfully
 
 \retval kLocal_ResultParameterError
-if a storage variable is nullptr
+if a storage variable is nullptr or argv is not terminated
 
 \retval kLocal_ResultForkError
 if the process cannot be spawned
@@ -472,241 +594,202 @@ Local_Result
 Local_SpawnProcess	(SessionRef			inUninitializedSession,
 					 TerminalScreenRef	inContainer,
 					 char const* const	argv[],
-					 pid_t*				outProcessIDPtr,
-					 char*				outSlaveName,
 					 char const*		inWorkingDirectoryOrNull)
 {
-	Local_Result	result = kLocal_ResultOK;
+	Local_Result		result = kLocal_ResultOK;
+	My_TTYMasterID		masterTTY = 0;
+	char				slaveDeviceName[20/* arbitrary */];
+	pid_t				processID = -1;
+	size_t				argc = 0;
+	struct termios		terminalControl;
 	
 	
-	if ((nullptr == outProcessIDPtr) || (nullptr == outSlaveName)) result = kLocal_ResultParameterError;
+	// figure out the size of the argument list
+	{
+		char const* const*		argPtr = argv;
+		
+		
+		while (nullptr != *argPtr)
+		{
+			++argc;
+			++argPtr;
+		}
+	}
+	
+	// set the answer-back message
+	{
+		CFStringRef		answerBackCFString = Terminal_EmulatorReturnName(inContainer);
+		
+		
+		if (nullptr != answerBackCFString)
+		{
+			size_t const	kAnswerBackSize = CFStringGetLength(answerBackCFString) + 1/* terminator */;
+			char*			answerBackCString = new char[kAnswerBackSize];
+			
+			
+			if (CFStringGetCString(answerBackCFString, answerBackCString, kAnswerBackSize, kCFStringEncodingASCII))
+			{
+				(int)setenv("TERM", answerBackCString, true/* overwrite */);
+			}
+			delete [] answerBackCString;
+		}
+	}
+	
+	// TEMPORARY - the UNIX structures are filled in with defaults that work,
+	//             but eventually MacTelnet has to map user preferences, etc.
+	//             to these so that they affect “local” terminals in the same
+	//             way as they affect remote ones
+	std::memset(&terminalControl, 0, sizeof(terminalControl));
+	fillInTerminalControlStructure(&terminalControl); // TEMP
+	if (gInDebuggingMode)
+	{
+		// in debugging mode, show the terminal configuration
+		printTerminalControlStructure(&terminalControl);
+	}
+	
+	// spawn a child process attached to a pseudo-terminal device; the child
+	// will be used to run the shell, and the shell’s I/O will be handled in
+	// a separate preemptive thread by MacTelnet’s awesome terminal emulator
+	// and main event loop
+	{
+		struct winsize		terminalSize; // defined in "/usr/include/sys/ttycom.h"
+		
+		
+		terminalSize.ws_col = Terminal_ReturnColumnCount(inContainer);
+		terminalSize.ws_row = Terminal_ReturnRowCount(inContainer);
+		
+		// TEMPORARY; the TerminalView_GetTheoreticalScreenDimensions() API would be useful for this
+		terminalSize.ws_xpixel = 0;	// terminal width, in pixels; UNKNOWN
+		terminalSize.ws_ypixel = 0;	// terminal height, in pixels; UNKNOWN
+		
+		processID = forkToNewTTY(&masterTTY, slaveDeviceName, sizeof(slaveDeviceName),
+									&terminalControl, &terminalSize);
+	}
+	
+	if (-1 == processID) result = kLocal_ResultForkError;
 	else
 	{
-		TTYMasterID		masterTTY = 0;
-		struct termios	terminalControl;
-		
-		
-		// set the answer-back message
+		if (0 == processID)
 		{
-			CFStringRef		answerBackCFString = Terminal_EmulatorReturnName(inContainer);
-			
-			
-			if (nullptr != answerBackCFString)
-			{
-				size_t const	kAnswerBackSize = CFStringGetLength(answerBackCFString) + 1/* terminator */;
-				char*			answerBackCString = new char[kAnswerBackSize];
-				
-				
-				if (CFStringGetCString(answerBackCFString, answerBackCString, kAnswerBackSize, kCFStringEncodingASCII))
-				{
-					(int)setenv("TERM", answerBackCString, true/* overwrite */);
-				}
-				delete [] answerBackCString;
-			}
-		}
-		
-		// TEMPORARY - the UNIX structures are filled in with defaults that work,
-		//             but eventually MacTelnet has to map user preferences, etc.
-		//             to these so that they affect “local” terminals in the same
-		//             way as they affect remote ones
-		std::memset(&terminalControl, 0, sizeof(terminalControl));
-		fillInTerminalControlStructure(&terminalControl); // TEMP
-		if (gInDebuggingMode)
-		{
-			// in debugging mode, show the terminal configuration
-			printTerminalControlStructure(&terminalControl);
-		}
-		
-		// spawn a child process attached to a pseudo-terminal device; the child
-		// will be used to run the shell, and the shell’s I/O will be handled in
-		// a separate preemptive thread by MacTelnet’s awesome terminal emulator
-		// and main event loop
-		{
-			struct winsize		terminalSize; // defined in "/usr/include/sys/ttycom.h"
-			
-			
-			terminalSize.ws_col = Terminal_ReturnColumnCount(inContainer);
-			terminalSize.ws_row = Terminal_ReturnRowCount(inContainer);
-			
-			// TEMPORARY; the TerminalView_GetTheoreticalScreenDimensions() API would be useful for this
-			terminalSize.ws_xpixel = 0;	// terminal width, in pixels; UNKNOWN
-			terminalSize.ws_ypixel = 0;	// terminal height, in pixels; UNKNOWN
-			
-			*outProcessIDPtr = forkToNewTTY(&masterTTY, outSlaveName, &terminalControl, &terminalSize);
-		}
-		
-		if (-1 == *outProcessIDPtr) result = kLocal_ResultForkError;
-		else
-		{
-			if (0 == *outProcessIDPtr)
-			{
-				//
-				// this is executed inside the child process
-				//
-				
-				// IMPORTANT: There are limitations on what a child process can do.
-				// For example, global data and framework calls are generally unsafe.
-				// See the "fork" man page for more information.
-				
-				char const*		targetDir = inWorkingDirectoryOrNull;
-				
-				
-				// determine the directory to be in when the command is run
-				if (nullptr == targetDir)
-				{
-					struct passwd*	userInfoPtr = getpwuid(getuid());
-					
-					
-					if (nullptr != userInfoPtr)
-					{
-						targetDir = userInfoPtr->pw_dir;
-					}
-					else
-					{
-						// revert to the $HOME method, which usually works but is less reliable...
-						targetDir = getenv("HOME");
-					}
-				}
-				
-				// set the current working directory...abort if this fails
-				// because presumably it is important that a command not
-				// start in the wrong directory
-				if (0 != chdir(targetDir))
-				{
-					Console_WriteValueCString("Aborting, failed to chdir() to ", targetDir);
-					abort();
-				}
-				
-				// run a Unix terminal-based application program; this is accomplished
-				// using an execvp() call, which DOES NOT RETURN UNLESS there is an
-				// error; technically the return value is -1 on error, but really it’s
-				// a problem if any return value is received, so an abort() is done no
-				// matter what (the abort() kills this child process, but not MacTelnet)
-				{					
-					// An execvp() accepts mutable arguments and the input is constant.
-					// But the child process has a copy of the original data and the
-					// data goes away after the execvp(), so a const_cast should be okay.
-					char**		argvCopy = CONST_CAST(argv, char**);
-					
-					
-					(int)execvp(argvCopy[0], argvCopy); // should not return
-					abort(); // almost no chance this line will be run, but if it does, just kill the child process
-				}
-			}
-			
 			//
-			// this is executed inside the parent process
+			// this is executed inside the child process
 			//
 			
-			// set user’s TTY to raw mode
-			if (kLocal_ResultOK != putTTYInRawMode(STDIN_FILENO)) { /* error */ }
+			// IMPORTANT: There are limitations on what a child process can do.
+			// For example, global data and framework calls are generally unsafe.
+			// See the "fork" man page for more information.
 			
-			// reset user’s TTY on exit
-			if (-1 != atexit(putTTYInOriginalModeAtExit))
-			{
-				// insert TTY information into map so the atexit() handler can find it
-				gUnixProcessIDToTTYMap()[getpid()] = STDIN_FILENO;
-			}
+			char const*		targetDir = inWorkingDirectoryOrNull;
 			
-			// start a thread for data processing so that MacTelnet’s main event loop can still run
+			
+			// determine the directory to be in when the command is run
+			if (nullptr == targetDir)
 			{
-				pthread_attr_t	attr;
-				int				error = 0;
+				struct passwd*	userInfoPtr = getpwuid(getuid());
 				
 				
-				error = pthread_attr_init(&attr);
-				if (0 != error) result = kLocal_ResultThreadError;
+				if (nullptr != userInfoPtr)
+				{
+					targetDir = userInfoPtr->pw_dir;
+				}
 				else
 				{
-					ConnectionDataPtr			connectionDataPtr = nullptr;
-					DataLoopThreadContextPtr	threadContextPtr = nullptr;
-					pthread_t					thread;
-					
-					
-					connectionDataPtr = Session_ConnectionDataPtr(inUninitializedSession);
-					
-					// synchronize somewhat with terminal control structure
-					connectionDataPtr->controlKey.interrupt = terminalControl.c_cc[VINTR];
-					connectionDataPtr->controlKey.suspend = terminalControl.c_cc[VSTOP];
-					connectionDataPtr->controlKey.resume = terminalControl.c_cc[VSTART];
-					
-					// initializer certain session parameters
-					connectionDataPtr->mainProcess.pseudoTerminal = masterTTY;
-					connectionDataPtr->mainProcess.processID = *outProcessIDPtr;
-					{
-						CFRetainRelease		deviceNameString(CFStringCreateWithCString(kCFAllocatorDefault, outSlaveName,
-																						kCFStringEncodingASCII),
-																true/* is retained */);
-						
-						
-						Session_SetPseudoTerminalDeviceNameCFString(inUninitializedSession, deviceNameString.returnCFStringRef());
-					}
-					
-					{
-						char*				buffer = nullptr;
-						char const* const*	argumentPtr = argv;
-						size_t				requiredSize = 0;
-						
-						
-						// figure out how long the string needs to be, taking into account delimiting spaces
-						while (nullptr != *argumentPtr)
-						{
-							requiredSize += (CPP_STD::strlen(*argumentPtr) + sizeof(char)/* room for space */);
-							++argumentPtr;
-						}
-						
-						// allocate space
-						buffer = REINTERPRET_CAST(Memory_NewPtr(requiredSize), char*);
-						if (nullptr != buffer)
-						{
-							char*	endPtr = buffer;
-							
-							
-							// copy in all the arguments, each delimited by a space
-							argumentPtr = argv;
-							while (*argumentPtr)
-							{
-								CPP_STD::strcat(endPtr, *argumentPtr);
-								endPtr += CPP_STD::strlen(*argumentPtr);
-								CPP_STD::strcat(endPtr, " "); // delimit arguments
-								++endPtr;
-								++argumentPtr;
-							}
-						}
-						
-						// retain the buffer
-						connectionDataPtr->mainProcess.commandLinePtr = buffer;
-						
-						// set this as the window title initially (could easily change)
-						{
-							CFRetainRelease		titleString(CFStringCreateWithCString(kCFAllocatorDefault, buffer,
-																						kCFStringEncodingASCII),
-															true/* is retained */);
-							
-							
-							Session_SetResourceLocationCFString(inUninitializedSession, titleString.returnCFStringRef());
-							Session_SetWindowUserDefinedTitle(inUninitializedSession, titleString.returnCFStringRef());
-						}
-					}
-					
-					threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(DataLoopThreadContext)),
-														DataLoopThreadContextPtr);
-					if (nullptr == threadContextPtr) result = kLocal_ResultThreadError;
-					else
-					{
-						// set up context
-						threadContextPtr->eventQueue = nullptr; // set inside the handler
-						threadContextPtr->session = inUninitializedSession;
-						threadContextPtr->masterTTY = masterTTY;
-						
-						// create thread
-						error = pthread_create(&thread, &attr, threadForLocalProcessDataLoop, threadContextPtr);
-						if (0 != error) result = kLocal_ResultThreadError;
-					}
-					
-					// put the session in the initialized state, to indicate it is complete
-					Session_SetState(inUninitializedSession, kSession_StateInitialized);
+					// revert to the $HOME method, which usually works but is less reliable...
+					targetDir = getenv("HOME");
 				}
+			}
+			
+			// set the current working directory...abort if this fails
+			// because presumably it is important that a command not
+			// start in the wrong directory
+			if (0 != chdir(targetDir))
+			{
+				Console_WriteValueCString("Aborting, failed to chdir() to ", targetDir);
+				abort();
+			}
+			
+			// run a Unix terminal-based application program; this is accomplished
+			// using an execvp() call, which DOES NOT RETURN UNLESS there is an
+			// error; technically the return value is -1 on error, but really it’s
+			// a problem if any return value is received, so an abort() is done no
+			// matter what (the abort() kills this child process, but not MacTelnet)
+			{					
+				// An execvp() accepts mutable arguments and the input is constant.
+				// But the child process has a copy of the original data and the
+				// data goes away after the execvp(), so a const_cast should be okay.
+				char**		argvCopy = CONST_CAST(argv, char**);
+				
+				
+				(int)execvp(argvCopy[0], argvCopy); // should not return
+				abort(); // almost no chance this line will be run, but if it does, just kill the child process
+			}
+		}
+		
+		//
+		// this is executed inside the parent process
+		//
+		
+		// set user’s TTY to raw mode
+		if (kLocal_ResultOK != putTTYInRawMode(STDIN_FILENO))
+		{
+			Console_WriteLine("warning, error entering TTY raw-mode");
+		}
+		
+		// reset user’s TTY on exit
+		if (-1 != atexit(putTTYInOriginalModeAtExit))
+		{
+			// insert TTY information into map so the atexit() handler can find it
+			gUnixProcessIDToTTYMap()[getpid()] = STDIN_FILENO;
+		}
+		
+		// start a thread for data processing so that MacTelnet’s main event loop can still run
+		{
+			pthread_attr_t	attr;
+			int				error = 0;
+			
+			
+			error = pthread_attr_init(&attr);
+			if (0 != error) result = kLocal_ResultThreadError;
+			else
+			{
+				ConnectionDataPtr				connectionDataPtr = nullptr;
+				My_DataLoopThreadContextPtr		threadContextPtr = nullptr;
+				pthread_t						thread;
+				
+				
+				connectionDataPtr = Session_ConnectionDataPtr(inUninitializedSession);
+				
+				// synchronize somewhat with terminal control structure
+				connectionDataPtr->controlKey.interrupt = terminalControl.c_cc[VINTR];
+				connectionDataPtr->controlKey.suspend = terminalControl.c_cc[VSTOP];
+				connectionDataPtr->controlKey.resume = terminalControl.c_cc[VSTART];
+				
+				// store process information for session
+				{
+					Local_ProcessRef	newProcess = nullptr;
+					
+					
+					newProcess = REINTERPRET_CAST(new My_Process(argc, argv, masterTTY, slaveDeviceName, processID),
+													Local_ProcessRef);
+					Session_SetProcess(inUninitializedSession, newProcess);
+				}
+				threadContextPtr = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(sizeof(My_DataLoopThreadContext)),
+													My_DataLoopThreadContextPtr);
+				if (nullptr == threadContextPtr) result = kLocal_ResultThreadError;
+				else
+				{
+					// set up context
+					threadContextPtr->eventQueue = nullptr; // set inside the handler
+					threadContextPtr->session = inUninitializedSession;
+					threadContextPtr->masterTTY = masterTTY;
+					
+					// create thread
+					error = pthread_create(&thread, &attr, threadForLocalProcessDataLoop, threadContextPtr);
+					if (0 != error) result = kLocal_ResultThreadError;
+				}
+				
+				// put the session in the initialized state, to indicate it is complete
+				Session_SetState(inUninitializedSession, kSession_StateInitialized);
 			}
 		}
 	}
@@ -820,6 +903,72 @@ Local_WriteBytes	(int			inFileDescriptor,
 
 
 #pragma mark Internal Methods
+namespace {
+
+My_Process::
+My_Process	(int				argc,
+			 char const* const	argv[],
+			 Local_TerminalID	inMasterTerminal,
+			 char const*		inSlaveDeviceName,
+			 pid_t				inProcessID)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+_processID(inProcessID),
+_pseudoTerminal(inMasterTerminal),
+_slaveDeviceName(inSlaveDeviceName),
+_commandLine(createCommandLine(argc, argv))
+{
+}// My_Process constructor
+
+
+My_Process::
+~My_Process ()
+{
+	if (nullptr != _commandLine) delete [] _commandLine, _commandLine = nullptr;
+}// My_Process destructor
+
+
+char const*
+My_Process::
+createCommandLine	(int				argc,
+					 char const* const	argv[])
+{
+	char const* const	kDelimiter = " ";
+	size_t const		kDelimiterSize = CPP_STD::strlen(kDelimiter);
+	char const* const*	argumentPtr = argv;
+	size_t				requiredSize = 0;
+	char*				result = nullptr;
+	
+	
+	// figure out how long the string needs to be, taking into account delimiting spaces
+	for (int i = 0; i < argc; ++i)
+	{
+		requiredSize += (CPP_STD::strlen(*argumentPtr) + kDelimiterSize);
+		++argumentPtr;
+	}
+	++requiredSize; // space for terminator
+	
+	// allocate space
+	result = new char[requiredSize];
+	if (nullptr != result)
+	{
+		char*	endPtr = result;
+		
+		
+		// copy in all the arguments, each delimited by a space
+		argumentPtr = argv;
+		*endPtr = '\0';
+		for (int i = 0; i < argc; ++i, ++endPtr, ++argumentPtr)
+		{
+			CPP_STD::strcat(endPtr, *argumentPtr);
+			endPtr += CPP_STD::strlen(*argumentPtr);
+			CPP_STD::strcat(endPtr, kDelimiter);
+		}
+	}
+	
+	return result;
+}// createCommandLine
+
 
 /*!
 Fills in a UNIX "termios" structure using information
@@ -829,7 +978,7 @@ and defaults are in "/usr/include/sys/ttydefaults.h".
 
 (3.0)
 */
-static void
+void
 fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 {
 	tcflag_t*	inputFlagsPtr = &outTerminalControlPtr->c_iflag;
@@ -947,24 +1096,26 @@ value is returned on failure.
 
 (3.0)
 */
-static pid_t
-forkToNewTTY	(TTYMasterID*			outMasterTTYPtr,
+pid_t
+forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 				 char*					outSlaveTeletypewriterName,
+				 size_t					inSlaveNameSize,
 				 struct termios const*	inSlaveTerminalControlPtrOrNull,
 				 struct winsize const*	inSlaveTerminalSizePtrOrNull)
 {
-	TTYMasterID		masterTTY = kInvalidPseudoTeletypewriterID;
+	My_TTYMasterID	masterTTY = kLocal_InvalidTerminalID;
 	pid_t			result = -1;
+	Local_Result	localResult = kLocal_ResultOK;
 	
 	
 	// create master and slave teletypewriters (represented by
 	// file descriptors under UNIX); use the slave teletypewriter
 	// to receive all output from the child process (it is expected
 	// that the caller will "exec" something in the child)
-	masterTTY = openMasterTeletypewriter(outSlaveTeletypewriterName);
-	if (kInvalidPseudoTeletypewriterID != masterTTY)
+	localResult = openMasterTeletypewriter(inSlaveNameSize, outSlaveTeletypewriterName, masterTTY);
+	if (kLocal_ResultOK == localResult)
 	{
-		TTYSlaveID		slaveTTY = kInvalidPseudoTeletypewriterID;
+		My_TTYSlaveID	slaveTTY = kLocal_InvalidTerminalID;
 		
 		
 		// split into child and parent processes; 0 is returned
@@ -981,6 +1132,7 @@ forkToNewTTY	(TTYMasterID*			outMasterTTYPtr,
 				// this is executed inside the child process
 				//
 				
+				// create a session
 				if (-1 == setsid()) abort();
 				
 				// SVR4 acquires controlling terminal on open()
@@ -1029,48 +1181,75 @@ forkToNewTTY	(TTYMasterID*			outMasterTTYPtr,
 
 
 /*!
-Finds an available master TTY for the specified
-slave, or returns "kInvalidPseudoTeletypewriterID"
-if no devices are available.
+Finds an available master TTY for the specified slave.
 
-(3.0)
+\retval kLocal_ResultOK
+if no error occurred
+
+\retval kLocalResultInsufficientBufferSpace
+if the given name buffer is not big enough for a device path
+
+\retval kLocal_ResultTermCapError
+if no devices are available
+
+(3.1)
 */
-static TTYMasterID
-openMasterTeletypewriter	(char*		outSlaveTeletypewriterName)
+Local_Result
+openMasterTeletypewriter	(size_t				inNameSize,
+							 char*				outSlaveTeletypewriterName,
+							 My_TTYMasterID&	outID)
 {
-	TTYMasterID		result = kInvalidPseudoTeletypewriterID;
-	char*			ptr1 = nullptr;
-	char*			ptr2 = nullptr;
-	Boolean			doneSearch = false;
+	char const* const	kSlaveTemplate = "/dev/WtyXY";
+	size_t const		kIndexW = 5; // must match string above
+	size_t const		kIndexX = 8; // must match string above
+	size_t const		kIndexY = 9; // must match string above
+	Local_Result		result = kLocal_ResultTermCapError;
 	
 	
-	strcpy(outSlaveTeletypewriterName, "/dev/ptyXY"); // careted indices into this array are referenced below
-	                                 /*      ^  ^^ */
-	                                 /* 0123456789 */
-	
-	// vary the name of the pseudo-teletypewriter until
-	// an available device is found; the choices are
-	// based on what appears in /dev on Mac OS X 10.1
-	for (ptr1 = "pqrstuvwxyzPQRST"; ((!doneSearch) && (0 != *ptr1)); ++ptr1)
+	outID = kLocal_InvalidTerminalID;
+	if (inNameSize < CPP_STD::strlen(kSlaveTemplate))
 	{
-		outSlaveTeletypewriterName[8] = *ptr1;
-		for (ptr2 = "0123456789abcdef"; ((!doneSearch) && (0 != *ptr2)); ++ptr2)
+		result = kLocalResultInsufficientBufferSpace;
+	}
+	else
+	{
+		char*		ptr1 = nullptr;
+		char*		ptr2 = nullptr;
+		Boolean		doneSearch = false;
+		
+		
+		strcpy(outSlaveTeletypewriterName, kSlaveTemplate);
+		outSlaveTeletypewriterName[kIndexW] = 'p'; // use "pty"
+		
+		// vary the name of the pseudo-teletypewriter until
+		// an available device is found; the choices are
+		// based on what appears in /dev on Mac OS X 10.1
+		for (ptr1 = "pqrstuvwxyzPQRST"; ((!doneSearch) && (0 != *ptr1)); ++ptr1)
 		{
-			outSlaveTeletypewriterName[9] = *ptr2;
-			
-			// try to open master
-			result = open(outSlaveTeletypewriterName, O_RDWR);
-			if (-1 != result)
+			outSlaveTeletypewriterName[kIndexX] = *ptr1;
+			for (ptr2 = "0123456789abcdef"; ((!doneSearch) && (0 != *ptr2)); ++ptr2)
 			{
-				outSlaveTeletypewriterName[5] = 't'; // change "pty" to "tty"
-				doneSearch = true;
-			}
-			else
-			{
-				// only quit if there are no more devices available;
-				// other errors might be avoided by trying another “pty”
-				if (ENOENT == errno) doneSearch = true;
-				result = kInvalidPseudoTeletypewriterID;
+				outSlaveTeletypewriterName[kIndexY] = *ptr2;
+				
+				// try to open master
+				outID = open(outSlaveTeletypewriterName, O_RDWR);
+				if (-1 != outID)
+				{
+					outSlaveTeletypewriterName[kIndexW] = 't'; // use "tty"
+					doneSearch = true;
+					result = kLocal_ResultOK;
+				}
+				else
+				{
+					// only quit if there are no more devices available;
+					// other errors might be avoided by trying another “pty”
+					if (ENOENT == errno)
+					{
+						doneSearch = true;
+						result = kLocal_ResultTermCapError;
+					}
+					outID = kLocal_InvalidTerminalID;
+				}
 			}
 		}
 	}
@@ -1080,15 +1259,14 @@ openMasterTeletypewriter	(char*		outSlaveTeletypewriterName)
 
 /*!
 Opens a slave TTY with the given name, or returns
-"kInvalidPseudoTeletypewriterID" if any problems
-occur.
+"kLocal_InvalidTerminalID" if any problems occur.
 
 (3.0)
 */
-static TTYSlaveID
+My_TTYSlaveID
 openSlaveTeletypewriter		(char const*	inSlaveTeletypewriterName)
 {
-	TTYSlaveID		result = kInvalidPseudoTeletypewriterID;
+	My_TTYSlaveID	result = kLocal_InvalidTerminalID;
 	
 	
 	// chown/chmod calls may only be done by root
@@ -1105,7 +1283,7 @@ openSlaveTeletypewriter		(char const*	inSlaveTeletypewriterName)
 	}
 	
 	result = open(inSlaveTeletypewriterName, O_RDWR);
-	if (-1 == result) result = kInvalidPseudoTeletypewriterID;
+	if (-1 == result) result = kLocal_InvalidTerminalID;
 	return result;
 }// openSlaveTeletypewriter
 
@@ -1115,7 +1293,7 @@ For debugging - prints the data in a UNIX "termios" structure.
 
 (3.0)
 */
-static void
+void
 printTerminalControlStructure	(struct termios const*		inTerminalControlPtr)
 {
 	tcflag_t const*		inputFlagsPtr = &inTerminalControlPtr->c_iflag;
@@ -1167,8 +1345,8 @@ if the terminal attributes cannot be changed
 
 (3.0)
 */
-static Local_Result
-putTTYInOriginalMode	(PseudoTeletypewriterID		inTTY)
+Local_Result
+putTTYInOriginalMode	(Local_TerminalID		inTTY)
 {
 	Local_Result	result = kLocal_ResultOK;
 	
@@ -1203,12 +1381,12 @@ void
 putTTYInOriginalModeAtExit ()
 {
 	pid_t								currentProcessID = getpid();
-	UnixProcessIDToTTYMap::iterator		unixProcessIDToTTYIterator = gUnixProcessIDToTTYMap().find(currentProcessID);
+	My_UnixProcessIDToTTYMap::iterator	unixProcessIDToTTYIterator = gUnixProcessIDToTTYMap().find(currentProcessID);
 	
 	
 	if (gUnixProcessIDToTTYMap().end() != unixProcessIDToTTYIterator)
 	{
-		PseudoTeletypewriterID const	terminalID = unixProcessIDToTTYIterator->first;
+		Local_TerminalID const		terminalID = unixProcessIDToTTYIterator->first;
 		
 		
 		if (terminalID >= 0)
@@ -1240,8 +1418,8 @@ or if they cannot be modified
 
 (3.0)
 */
-static Local_Result
-putTTYInRawMode		(PseudoTeletypewriterID		inTTY)
+Local_Result
+putTTYInRawMode		(Local_TerminalID		inTTY)
 {
 	Local_Result		result = kLocal_ResultOK;
 	struct termios		terminalControl;
@@ -1357,8 +1535,8 @@ if the message could not be sent
 
 (3.0)
 */
-static Local_Result
-sendTerminalResizeMessage   (PseudoTeletypewriterID		inTTY,
+Local_Result
+sendTerminalResizeMessage   (Local_TerminalID			inTTY,
 							 struct winsize const*		inTerminalSizePtr)
 {
 	Local_Result	result = kLocal_ResultOK;
@@ -1388,15 +1566,16 @@ WARNING:	As this is a preemptable thread, you MUST
 
 (3.0)
 */
-static void*
+void*
 threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 {
-	DataLoopThreadContextPtr	contextPtr = REINTERPRET_CAST(inDataLoopThreadContextPtr, DataLoopThreadContextPtr);
-	size_t						numberOfBytesRead = 0;
-	size_t						numberOfBytesToProcess = 0;
-	char						buffer[BUFFSIZE];
-	void* const					kBufferAddress = buffer;
-	OSStatus					error = noErr;
+	size_t const					kBufferSize = 256; // theoretically, this should respect the user’s Network Block Size preference
+	My_DataLoopThreadContextPtr		contextPtr = REINTERPRET_CAST(inDataLoopThreadContextPtr, My_DataLoopThreadContextPtr);
+	size_t							numberOfBytesRead = 0;
+	size_t							numberOfBytesToProcess = 0;
+	char							buffer[kBufferSize];
+	void* const						kBufferAddress = buffer;
+	OSStatus						error = noErr;
 	
 	
 	// arrange to communicate with the main application thread
@@ -1541,5 +1720,7 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 	
 	return nullptr;
 }// threadForLocalProcessDataLoop
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

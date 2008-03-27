@@ -653,12 +653,8 @@ Session_StateAttributes
 	Session_ReturnStateAttributes			(SessionRef							inRef);
 
 void
-	Session_SetPseudoTerminalDeviceNameCFString		(SessionRef					inRef,
-											 CFStringRef						inDeviceNameString);
-
-void
-	Session_SetResourceLocationCFString		(SessionRef							inRef,
-											 CFStringRef						inResourceLocationString);
+	Session_SetProcess						(SessionRef							inRef,
+											 Local_ProcessRef					inRunningProcess);
 
 Boolean
 	Session_SpeechIsEnabled					(SessionRef							inRef);

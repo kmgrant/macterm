@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080326',
     '20080325',
     '20080324',
     '20080323',
@@ -120,6 +121,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080326': [
+		'Internal changes to improve how process spawns are handled, and how process attributes are saved.',
+	],
 	'20080325': [
 		'Fixed a problem where icon-changing toolbar items (such as LEDs) may stop working after a toolbar is customized.',
 		'Added a hidden preference (accessible through the "defaults" program) to randomize the Format of every new terminal window.',

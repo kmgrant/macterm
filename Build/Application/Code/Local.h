@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,9 +36,6 @@
 
 #ifndef __LOCAL__
 #define __LOCAL__
-
-// this is only possible on Mac OS X!!!
-#if TARGET_API_MAC_CARBON
 
 // UNIX includes
 extern "C"
@@ -74,68 +71,61 @@ enum
 	kLocalResultInsufficientBufferSpace		= 11	//!< out of memory; free more memory and try again
 };
 
-/*!
-TTY-related routines may return this invalid ID to
-indicate an error.
-*/
+typedef int/* file descriptor */	Local_TerminalID;
 enum
 {
-	kInvalidPseudoTeletypewriterID		= -1
+	kLocal_InvalidTerminalID		= -1
 };
 
 #pragma mark Types
 
-typedef int/* file descriptor */		PseudoTeletypewriterID;
+typedef struct Local_OpaqueProcess*		Local_ProcessRef;
 
 
 
 #pragma mark Public Methods
 
-//!\name Creating Pseudo-Terminals
+//!\name Creating Processes and Pseudo-Terminals
 //@{
-
-Local_Result
-	Local_GetDefaultShell					(char**						outStringPtr);
-
-void
-	Local_KillProcess						(pid_t						inUnixProcessID);
-
-int
-	Local_ReturnTerminalFlowStartCharacter	(PseudoTeletypewriterID		inPseudoTerminalID);
-
-int
-	Local_ReturnTerminalFlowStopCharacter	(PseudoTeletypewriterID		inPseudoTerminalID);
-
-int
-	Local_ReturnTerminalInterruptCharacter	(PseudoTeletypewriterID		inPseudoTerminalID);
 
 Local_Result
 	Local_SpawnDefaultShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
-											 pid_t*						outProcessIDPtr,
-											 char*						outSlaveName,
 											 char const*				inWorkingDirectoryOrNull = nullptr);
 
 Local_Result
 	Local_SpawnLoginShell					(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
-											 pid_t*						outProcessIDPtr,
-											 char*						outSlaveName,
 											 char const*				inWorkingDirectoryOrNull = nullptr);
 
 Local_Result
 	Local_SpawnProcess						(SessionRef					inUninitializedSession,
 											 TerminalScreenRef			inContainer,
 											 char const* const			argv[],
-											 pid_t*						outProcessIDPtr,
-											 char*						outSlaveName,
 											 char const*				inWorkingDirectoryOrNull = nullptr);
 
 Local_Result
 	Local_SpawnProcessAndWaitForTermination	(char const*				inCommand);
 
-Boolean
-	Local_StandardInputIsATerminal			();
+//@}
+
+//!\name Manipulating Processes
+//@{
+
+void
+	Local_KillProcess						(Local_ProcessRef*			inoutRefPtr);
+
+char const*
+	Local_ProcessReturnCommandLineString	(Local_ProcessRef			inProcess);
+
+Local_TerminalID
+	Local_ProcessReturnMasterTerminal		(Local_ProcessRef			inProcess);
+
+char const*
+	Local_ProcessReturnSlaveDeviceName		(Local_ProcessRef			inProcess);
+
+pid_t
+	Local_ProcessReturnUnixID				(Local_ProcessRef			inProcess);
 
 //@}
 
@@ -143,10 +133,19 @@ Boolean
 //@{
 
 int
-	Local_DisableTerminalLocalEcho			(PseudoTeletypewriterID		inPseudoTerminalID);
+	Local_DisableTerminalLocalEcho			(Local_TerminalID			inPseudoTerminalID);
+
+int
+	Local_ReturnTerminalFlowStartCharacter	(Local_TerminalID			inPseudoTerminalID);
+
+int
+	Local_ReturnTerminalFlowStopCharacter	(Local_TerminalID			inPseudoTerminalID);
+
+int
+	Local_ReturnTerminalInterruptCharacter	(Local_TerminalID			inPseudoTerminalID);
 
 Local_Result
-	Local_SendTerminalResizeMessage			(PseudoTeletypewriterID		inPseudoTerminalID,
+	Local_SendTerminalResizeMessage			(Local_TerminalID			inPseudoTerminalID,
 											 UInt16						inNewColumnCount,
 											 UInt16						inNewRowCount,
 											 UInt16						inNewColumnWidthInPixels,
@@ -155,14 +154,23 @@ Local_Result
 extern "C"
 {
 ssize_t
-	Local_WriteBytes						(PseudoTeletypewriterID		inFileDescriptor,
+	Local_WriteBytes						(Local_TerminalID			inFileDescriptor,
 											 void const*				inBufferPtr,
 											 size_t						inByteCount);
 }
 
 //@}
 
-#endif
+//!\name General Information
+//@{
+
+Local_Result
+	Local_GetDefaultShell					(char**						outStringPtr);
+
+Boolean
+	Local_StandardInputIsATerminal			();
+
+//@}
 
 #endif
 

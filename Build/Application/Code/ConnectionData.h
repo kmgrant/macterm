@@ -144,16 +144,6 @@ struct ConnectionData
 		TektronixMode			mode;
 		TektronixGraphicID		graphicsID;
 	} TEK;
-	
-	// local sessions are only possible on Mac OS X, with the help of UNIX
-	struct ProcessInfo
-	{
-		ProcessInfo (): pseudoTerminal(0), processID(0), commandLinePtr(nullptr) {}
-		
-		PseudoTeletypewriterID	pseudoTerminal;		// file descriptor of pseudo-terminal master
-		pid_t					processID;			// the process directly spawned by this session
-		char const*				commandLinePtr;		// buffer for parent process’ command line
-	} mainProcess;
 };
 typedef ConnectionData*		ConnectionDataPtr;
 

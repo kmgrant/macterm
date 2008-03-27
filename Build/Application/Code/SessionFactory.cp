@@ -441,13 +441,11 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 		{
 			Local_Result	localResult = kLocal_ResultOK;
 			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t			processID = 0;
-			char			devicePath[20];
 			
 			
 			SetWindowKind(window, WIN_SHELL);
 			localResult = Local_SpawnProcess(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
-												argv, &processID, devicePath, inWorkingDirectoryOrNull);
+												argv, inWorkingDirectoryOrNull);
 			if (kLocal_ResultOK == localResult)
 			{
 				// success!
@@ -458,6 +456,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 			unless (displayOK)
 			{
 				// TEMPORARY - NEED to display some kind of user alert here
+				Console_WriteValue("process spawn failed, error", localResult);
 				Sound_StandardAlert();
 				Session_Dispose(&result);
 			}
@@ -592,13 +591,10 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindowOrNul
 		{
 			Local_Result	localResult = kLocal_ResultOK;
 			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t			processID = 0;
-			char			devicePath[20];
 			
 			
 			SetWindowKind(window, WIN_SHELL);
-			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
-													&processID, devicePath);
+			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow));
 			if (kLocal_ResultOK == localResult)
 			{
 				// success!
@@ -660,13 +656,10 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindowOr
 		{
 			Local_Result	localResult = kLocal_ResultOK;
 			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t			processID = 0;
-			char			devicePath[20];
 			
 			
 			SetWindowKind(window, WIN_SHELL);
-			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
-													&processID, devicePath);
+			localResult = Local_SpawnDefaultShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow));
 			if (kLocal_ResultOK == localResult)
 			{
 				// construct a command that runs the shell script and then exits
@@ -1033,13 +1026,10 @@ SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindowOrNull
 		{
 			Local_Result	localResult = kLocal_ResultOK;
 			HIWindowRef		window = TerminalWindow_ReturnWindow(terminalWindow);
-			pid_t			processID = 0;
-			char			devicePath[20];
 			
 			
 			SetWindowKind(window, WIN_SHELL);
-			localResult = Local_SpawnLoginShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow),
-												&processID, devicePath);
+			localResult = Local_SpawnLoginShell(result, TerminalWindow_ReturnScreenWithFocus(terminalWindow));
 			if (kLocal_ResultOK == localResult)
 			{
 				// success!

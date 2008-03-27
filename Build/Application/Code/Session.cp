@@ -250,6 +250,7 @@ struct Session
 	ConnectionDataPtr			dataPtr;					// data for this connection
 	InterfaceLibAlertRef		currentTerminationAlert;	// retained while a sheet is still open so a 2nd sheet is not displayed
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
+	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
 	MyTEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
 	MyRasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
 	MyTerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
@@ -272,22 +273,6 @@ struct Session
 		Boolean		cursorFlashes;				//!< preferences callback should update this value
 		Boolean		remapBackquoteToEscape;		//!< preferences callback should update this value
 	} preferencesCache;
-	
-	// data applicable either to remote or local sessions, but not both;
-	// which to use currently depends on "dataPtr->remote" flag
-	union
-	{
-		// local sessions are only possible on Mac OS X, with the help of UNIX
-		struct
-		{
-			int x; // nothing migrated yet (look at ConnectionDataPtr)
-		} local;
-		
-		struct
-		{
-			Boolean		watched;		// is activity notification enabled?
-		} remote;
-	} variable;
 };
 typedef Session*		SessionPtr;
 typedef SessionPtr*		SessionHandle;
@@ -645,6 +630,7 @@ Session_New		(Boolean	inIsReadOnly)
 		SessionAutoLocker	ptr(gSessionPtrLocks(), result);
 		
 		
+		ptr->mainProcess = nullptr;
 		ptr->readOnly = inIsReadOnly;
 		ptr->kind = kSession_TypeLocalNonLoginShell;
 		ptr->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
@@ -1569,15 +1555,9 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				}
 				
 				// command info
-				stringValue = CFStringCreateWithCString(kCFAllocatorDefault,
-														ptr->dataPtr->mainProcess.commandLinePtr,
-														GetApplicationTextEncoding());
-				if (stringValue != nullptr)
-				{
-					saveError = SessionDescription_SetStringData
-								(saveFileMemoryModel, kSessionDescription_StringTypeCommandLine, stringValue);
-					CFRelease(stringValue), stringValue = nullptr;
-				}
+				saveError = SessionDescription_SetStringData
+								(saveFileMemoryModel, kSessionDescription_StringTypeCommandLine,
+									ptr->resourceLocationString.returnCFStringRef());
 				
 				// font info
 				{
@@ -2621,7 +2601,10 @@ Session_SendData	(SessionRef		inRef,
 	SInt16				result = 0;
 	
 	
-	result = Local_WriteBytes(ptr->dataPtr->mainProcess.pseudoTerminal, inBufferPtr, inByteCount);
+	if (nullptr != ptr->mainProcess)
+	{
+		result = Local_WriteBytes(Local_ProcessReturnMasterTerminal(ptr->mainProcess), inBufferPtr, inByteCount);
+	}
 	
 	return result;
 }// SendData
@@ -2904,9 +2887,12 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		}
 		
 		// suspend
-		queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-										(Local_ReturnTerminalFlowStopCharacter
-											(ptr->dataPtr->mainProcess.pseudoTerminal), char));
+		if (nullptr != ptr->mainProcess)
+		{
+			queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
+											(Local_ReturnTerminalFlowStopCharacter
+												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), char));
+		}
 		// set the scroll lock attribute of the session
 		changeStateAttributes(ptr, kSession_StateAttributeSuspendNetwork/* attributes to set */,
 								0/* attributes to clear */);
@@ -2933,9 +2919,12 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		(OSStatus)HMHideTag();
 		
 		// resume
-		queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-										(Local_ReturnTerminalFlowStartCharacter
-											(ptr->dataPtr->mainProcess.pseudoTerminal), char));
+		if (nullptr != ptr->mainProcess)
+		{
+			queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
+											(Local_ReturnTerminalFlowStartCharacter
+												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), char));
+		}
 		// clear the scroll lock attribute of the session
 		changeStateAttributes(ptr, 0/* attributes to set */,
 								kSession_StateAttributeSuspendNetwork/* attributes to clear */);
@@ -2961,53 +2950,45 @@ Session_SetNewlineMode	(SessionRef				inRef,
 
 
 /*!
-Specifies the device pathname for the slave pseudo-terminal
-attached to the given session.  This may be displayed in user
-interfaces; Session_ReturnPseudoTerminalDeviceNameCFString()
-can be used to retrieve the value later.
-
-IMPORTANT:  This is simply a stored property, and is usually
-			set only once, when a session first starts.
+Specifies the process that this session is running.  This
+automatically sets the device name, window title, and resource
+location (Session_ReturnPseudoTerminalDeviceNameCFString(),
+Session_GetWindowUserDefinedTitle(), and
+Session_ReturnResourceLocationCFString() can be used to return
+these values later).
 
 (3.1)
 */
 void
-Session_SetPseudoTerminalDeviceNameCFString		(SessionRef		inRef,
-												 CFStringRef	inDeviceNameString)
+Session_SetProcess	(SessionRef			inRef,
+					 Local_ProcessRef	inRunningProcess)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	// the following assignment will automatically retain the string
-	ptr->deviceNameString.setCFTypeRef(inDeviceNameString);
-}// SetPseudoTerminalDeviceNameCFString
-
-
-/*!
-Specifies a succinct string representation of the
-given sessionÕs resource; for a remote session this
-is always a URL, for local sessions it is the Unix
-command line.  This may be displayed in user interface
-elements; Session_ReturnResourceLocationCFString() can
-be used to retrieve the value later.
-
-IMPORTANT:  This is simply a stored property, and is
-			usually set only once, when a session first
-			starts.
-
-(3.0)
-*/
-void
-Session_SetResourceLocationCFString		(SessionRef		inRef,
-										 CFStringRef	inResourceLocationString)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	
-	
-	// the following assignment will automatically retain the string
-	ptr->resourceLocationString.setCFTypeRef(inResourceLocationString);
-	changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef);
-}// SetResourceLocationCFString
+	assert(nullptr != inRunningProcess);
+	ptr->mainProcess = inRunningProcess;
+	{
+		// set device name string
+		char const* const	kDeviceName = Local_ProcessReturnSlaveDeviceName(ptr->mainProcess);
+		
+		
+		ptr->deviceNameString.setCFTypeRef(CFStringCreateWithCString
+											(kCFAllocatorDefault, kDeviceName, kCFStringEncodingASCII),
+											true/* is retained */);
+	}
+	{
+		// set resource location string (and initial window title to match)
+		char const* const	kCommandLine = Local_ProcessReturnCommandLineString(ptr->mainProcess);
+		
+		
+		ptr->resourceLocationString.setCFTypeRef(CFStringCreateWithCString
+													(kCFAllocatorDefault, kCommandLine, kCFStringEncodingASCII),
+													true/* is retained */);
+		Session_SetWindowUserDefinedTitle(inRef, ptr->resourceLocationString.returnCFStringRef());
+		changeNotifyForSession(ptr, kSession_ChangeResourceLocation, inRef/* context */);
+	}
+}// SetProcess
 
 
 /*!
@@ -3095,8 +3076,7 @@ Session_SetState	(SessionRef		inRef,
 	ptr->status = inNewState;
 	if ((kSession_StateDead == ptr->status) || (kSession_StateImminentDisposal == ptr->status))
 	{
-		// nullify the process ID field once a session is disconnected
-		ptr->dataPtr->mainProcess.processID = 0;
+		Local_KillProcess(&ptr->mainProcess);
 	}
 	changeNotifyForSession(ptr, kSession_ChangeState, inRef/* context */);
 }// SetState
@@ -3941,11 +3921,19 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 	}
 	
 	// send character to Unix process
-	Session_UserInputQueueCharacter(inRef, STATIC_CAST
-									(Local_ReturnTerminalInterruptCharacter
-										(Session_ConnectionDataPtr(inRef)->mainProcess.pseudoTerminal),
-										char));
-	Session_FlushUserInputBuffer(inRef);
+	{
+		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		
+		
+		if (nullptr != ptr->mainProcess)
+		{
+			Session_UserInputQueueCharacter(inRef, STATIC_CAST
+											(Local_ReturnTerminalInterruptCharacter
+												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)),
+												char));
+			Session_FlushUserInputBuffer(inRef);
+		}
+	}
 	
 	// 3.0 - send to any scripts that may be recording
 	if (inSendToRecordingScripts)
@@ -4476,8 +4464,7 @@ kblen			(0),
 // parsedat initialized below
 parseIndex		(0),
 controlKey		(),
-TEK				(),
-mainProcess		()
+TEK				()
 {
 	bzero(&this->kbbuf, sizeof(this->kbbuf));
 	bzero(&this->parsedat, sizeof(this->parsedat));
@@ -7026,10 +7013,13 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					TerminalWindow_GetScreenDimensions(terminalWindow, &newColumnCount, &newRowCount);
 					
 					// send an I/O control message to the TTY informing it that the screen size has changed
-					Local_SendTerminalResizeMessage(ptr->dataPtr->mainProcess.pseudoTerminal,
-													newColumnCount, newRowCount,
-													0/* tmp - not easy to tell pixel width here */,
-													0/* tmp - not easy to tell pixel width here */);
+					if (nullptr != ptr->mainProcess)
+					{
+						Local_SendTerminalResizeMessage(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
+														newColumnCount, newRowCount,
+														0/* tmp - not easy to tell pixel width here */,
+														0/* tmp - not easy to tell pixel width here */);
+					}
 				}
 			}
 			
@@ -7095,7 +7085,6 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 			
 			// temporary - eventually a Session API will know how to close properly
 			// close local shell
-			Local_KillProcess(Session_ConnectionDataPtr(dataPtr->sessionBeingTerminated)->mainProcess.processID);
 			Session_SetState(dataPtr->sessionBeingTerminated, kSession_StateDead);
 			
 			// decide whether to dispose of the terminal window immediately
@@ -7116,8 +7105,6 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 				if (leaveWindowOpen)
 				{
 					// make window look dead, but leave it open for now
-					Console_WriteLine("not being killed");
-					sessionPtr->status = kSession_StateDead;
 					changeNotifyForSession(sessionPtr, kSession_ChangeState, dataPtr->sessionBeingTerminated/* context */);
 				}
 				else
@@ -7125,7 +7112,6 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 					// close window, clean up, etc.
 					Session_Disconnect(dataPtr->sessionBeingTerminated);
 				}
-				
 			}
 		}
 		
