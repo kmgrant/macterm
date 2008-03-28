@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080327',
     '20080326',
     '20080325',
     '20080324',
@@ -121,6 +122,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080327': [
+		'Various minor tweaks to user interface text, such as alert messages.',
+	],
 	'20080326': [
 		'Internal changes to improve how process spawns are handled, and how process attributes are saved.',
 	],

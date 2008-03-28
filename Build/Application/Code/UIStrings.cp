@@ -107,7 +107,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowClosePrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Active processes in this window will be forced to quit.  Close anyway?"), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The processes in this window will be forced to quit.  Close anyway?"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowClosePrimaryText"));
 		break;
 	
@@ -119,11 +119,6 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	case kUIStrings_AlertWindowCommandFailedPrimaryText:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("The command could not be completed, because an error of type %1$d occurred."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowCommandFailedPrimaryText; %1$d will be an error code"));
-		break;
-	
-	case kUIStrings_AlertWindowConnectionOpeningFailedName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Connection Opening Timed Out"), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowConnectionOpeningFailedName"));
 		break;
 	
 	case kUIStrings_AlertWindowGenericCannotUndoHelpText:
@@ -147,17 +142,17 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowMacroImportWarningHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("The active macro set is whichever one is visible in the Macros pane of the Preferences window."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("The active macro set is whichever one is selected in the Map menu."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowMacroImportWarningHelpText"));
 		break;
 	
 	case kUIStrings_AlertWindowNotifyActivityPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Data has arrived in one of the sessions you are monitoring."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Data has arrived in a monitored session."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
 		break;
 	
 	case kUIStrings_AlertWindowNotifyInactivityPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("One of the sessions you are monitoring appears to be idle."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("A monitored session has become idle."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
 		break;
 	
@@ -176,11 +171,6 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowPasteLinesWarningHelpText"));
 		break;
 	
-	case kUIStrings_AlertWindowRuntimeExceptionName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Fatal Error"), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowRuntimeExceptionName"));
-		break;
-	
 	case kUIStrings_AlertWindowScriptErrorName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Script Error"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowScriptErrorName"));
@@ -196,53 +186,18 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowShowIPAddressesPrimaryText"));
 		break;
 	
-	case kUIStrings_AlertWindowStartupErrorName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Startup Error"), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowStartupErrorName"));
-		break;
-	
-	case kUIStrings_AlertWindowUpdateAvailableName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Update Available"), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowUpdateAvailableName"));
-		break;
-	
-	case kUIStrings_AlertWindowUpdateAvailableHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("No information is available on specific changes in this update."), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowUpdateAvailableHelpText; displayed only if release notes are not available"));
-		break;
-	
-	case kUIStrings_AlertWindowUpdateAvailablePrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("You can download it from MacTelnet.com or most Mac shareware sites."), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowUpdateAvailablePrimaryText"));
-		break;
-	
-	case kUIStrings_AlertWindowUpdateCheckErrorPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Unable to check for updates.  Please try again later."), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowUpdateCheckErrorPrimaryText"));
-		break;
-	
-	case kUIStrings_AlertWindowUpToDateName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Up to Date"), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowUpToDateName"));
-		break;
-	
-	case kUIStrings_AlertWindowUpToDatePrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Your copy matches the latest available one on the web."), CFSTR("Alerts"),
-													CFSTR("kUIStrings_AlertWindowUpToDatePrimaryText"));
-		break;
-	
 	case kUIStrings_AlertWindowQuitName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Quit"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitName"));
 		break;
 	
 	case kUIStrings_AlertWindowQuitHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("You can then verify that each session should be forced to terminate.  Sessions open for less than 15 seconds will be closed automatically."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Windows opened recently are skipped."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitHelpText"));
 		break;
 	
 	case kUIStrings_AlertWindowQuitPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Review the sessions not recently opened?"), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Review long-running sessions?"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitPrimaryText"));
 		break;
 	
