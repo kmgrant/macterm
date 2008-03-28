@@ -85,13 +85,13 @@ void
 													 SInt16				inData4,
 													 SInt16				inData5);
 
+SInt16
+	TektronixNullOutput_SetBounds					(Rect const*		inBoundsPtr);
+
 void
 	TektronixNullOutput_SetCharacterMode			(SInt16				inDevice,
 													 SInt16				inRotation,
 													 SInt16				inSize);
-
-SInt16
-	TektronixNullOutput_SetBounds					(Rect const*		inBoundsPtr);
 
 SInt16
 	TektronixNullOutput_SetPenColor					(SInt16				inDevice,

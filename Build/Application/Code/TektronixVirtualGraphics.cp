@@ -3,7 +3,7 @@
 	TektronixVirtualGraphics.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -60,93 +60,137 @@
 
 
 #pragma mark Constants
+namespace {
 
 enum
 {
 	kMaximumAllowedGraphicsWindows = 30
 };
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static short	fontnum(short vw, short n);
-static void		storexy(short vw, short x, short y);
-static short	joinup(short hi, short lo, short e);
-static void		newcoord(short vw);
-static void		linefeed(short vw);
-static void		clipvec(short vw, short xa, short ya, short xb, short yb);
-static short	VGcheck(short dnum);
-static void		findTEKGraphicSessionOp		(SessionRef, void*, SInt32, void*);
+#pragma mark Types
+namespace {
+
+/*--------------------------------------------------------------------------*/
+/* VGwintype structure -- this is the main high level TEK structure, where	*/
+/* 		everything happens													*/
+/*--------------------------------------------------------------------------*/
+struct VGWINTYPE {
+	OSType	id;	// VGWN
+	SessionRef theVS;
+	short	RGdevice,RGnum;
+	char	mode,modesave;					/* current output mode */
+	char	loy,hiy,lox,hix,ex,ey;			/* current graphics coordinates */
+	char	nloy,nhiy,nlox,nhix,nex,ney;	/* new coordinates */
+	short	curx,cury;						/* current composite coordinates */
+	short	savx,savy;						/* save the panel's x,y */
+	short	winbot,wintop,winleft,winright,wintall,winwide; 
+		/* position of window in virutal space */
+	short	textcol;						/* text starts in 0 or 2048 */
+	short	intin;							/* integer parameter being input */
+	short	pencolor;						/* current pen color */
+	short	fontnum,charx,chary;			/* char size */
+	short	count;							/* for temporary use in special state loops */
+	TektronixMode	TEKtype;						/* 4105 or 4014?  added: 16jul90dsw */
+	char	TEKMarker;						/* 4105 marker type 17jul90dsw */
+	char	TEKOutline;						/* 4105 panel outline boolean */
+	short	TEKPath;						/* 4105 GTPath */
+	short	TEKPattern;						/* 4105 Panel Fill Pattern */
+	short	TEKIndex;						/* 4105 GTIndex */
+	short	TEKRot;							/* 4105 GTRotation */
+	short	TEKSize;						/* 4105 GTSize */
+	short	TEKBackground;					/* 4105 Background color */
+	pointlist	TEKPanel;					/* 4105 Panel's list of points */
+	pointlist	current;					/* current point in the list */
+};
+
+} // anonymous namespace
+
+#pragma mark Internal Method Prototypes
+namespace {
+
+void	clipvec(short vw, short xa, short ya, short xb, short yb);
+void	findTEKGraphicSessionOp		(SessionRef, void*, SInt32, void*);
+short	fontnum(short vw, short n);
+short	joinup(short hi, short lo, short e);
+void	linefeed(short vw);
+void	newcoord(short vw);
+void	storexy(short vw, short x, short y);
+short	VGcheck(short dnum);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	RGLINK				RG[TEK_DEVICE_MAX] =
+RGLINK				RG[TEK_DEVICE_MAX] =
+					{
 						{
-							{
-								// DEVICE 0 - normal TEK graphics page
-								RGMnewwin,
-								RGMdevname,
-								RGMinit,
-								RGMgin,
-								RGMpencolor,
-								RGMclrscr,
-								RGMclose,
-								RGMpoint,
-								RGMdrawline,
-								RGMinfo,
-								RGMpagedone,
-								RGMdataline,
-								RGMcharmode,
-								RGMgmode,
-								RGMtmode,
-								RGMshowcur,
-								RGMlockcur,
-								RGMhidecur,
-								RGMbell,
-								RGMuncover
-							},
-							{
-								// DEVICE 1 - Mac picture output (QuickDraw PICT)
-								TektronixMacPictureOutput_New,
-								TektronixMacPictureOutput_ReturnDeviceName,
-								TektronixMacPictureOutput_Init,
-								TektronixNullOutput_DoNothingIntArgReturnZero/* gin */,
-								TektronixMacPictureOutput_SetPenColor,
-								TektronixNullOutput_DoNothingIntArgReturnZero/* cls */,
-								TektronixMacPictureOutput_Dispose,
-								TektronixMacPictureOutput_DrawDot,
-								TektronixMacPictureOutput_DrawLine,
-								TektronixMacPictureOutput_SetCallbackData,
-								TektronixNullOutput_DoNothingIntArgReturnVoid/* pagedone */,
-								TektronixMacPictureOutput_DataLine,
-								TektronixMacPictureOutput_SetCharacterMode,
-								TektronixNullOutput_DoNothingNoArgReturnVoid/* gmode */,
-								TektronixNullOutput_DoNothingNoArgReturnVoid/* tmode */,
-								TektronixNullOutput_DoNothingNoArgReturnVoid/* showcur */,
-								TektronixNullOutput_DoNothingNoArgReturnVoid/* lockcur */,
-								TektronixNullOutput_DoNothingNoArgReturnVoid/* hidecur */,
-								TektronixNullOutput_DoNothingIntArgReturnVoid/* bell */,
-								TektronixNullOutput_DoNothingIntArgReturnVoid/* uncover */
-							}
-						};
-	
-	struct VGWINTYPE*	VGwin[MAXVG];  /* virtual window descriptors */
-	
-	char				state[MAXVG];
-	char				savstate[MAXVG];
-	/* save state in a parallel array for speed */
-	TEKSTOREP			VGstore[MAXVG]; /* the store where data for this window is kept */
-	char				storing[MAXVG]; /* are we currently saving data from this window */
-	short				drawing[MAXVG]; /* redrawing or not? */
-	
-	short				charxset[NUMSIZES] = {56,51,34,31,112,168};
-	short				charyset[NUMSIZES] = {88,82,53,48,176,264};
-	
-	short				gGraphCurs = 0;
-	short				gNumGraphs = 0;
-	long				gOldGraphs[kMaximumAllowedGraphicsWindows];
-}
+							// DEVICE 0 - normal TEK graphics page
+							VectorCanvas_New,
+							VectorCanvas_ReturnDeviceName,
+							VectorCanvas_Init,
+							VectorCanvas_MonitorMouse,
+							VectorCanvas_SetPenColor,
+							VectorCanvas_ClearScreen,
+							VectorCanvas_Dispose,
+							VectorCanvas_DrawDot,
+							VectorCanvas_DrawLine,
+							VectorCanvas_SetCallbackData,
+							VectorCanvas_FinishPage,
+							VectorCanvas_DataLine,
+							VectorCanvas_SetCharacterMode,
+							VectorCanvas_SetGraphicsMode,
+							VectorCanvas_SetTextMode,
+							VectorCanvas_CursorShow,
+							VectorCanvas_CursorLock,
+							VectorCanvas_CursorHide,
+							VectorCanvas_AudioEvent,
+							VectorCanvas_Uncover
+						},
+						{
+							// DEVICE 1 - Mac picture output (QuickDraw PICT)
+							VectorToBitmap_New,
+							VectorToBitmap_ReturnDeviceName,
+							VectorToBitmap_Init,
+							TektronixNullOutput_DoNothingIntArgReturnZero/* GIN / monitor-mouse */,
+							VectorToBitmap_SetPenColor,
+							TektronixNullOutput_DoNothingIntArgReturnZero/* clear screen */,
+							VectorToBitmap_Dispose,
+							VectorToBitmap_DrawDot,
+							VectorToBitmap_DrawLine,
+							VectorToBitmap_SetCallbackData,
+							TektronixNullOutput_DoNothingIntArgReturnVoid/* page done */,
+							VectorToBitmap_DataLine,
+							VectorToBitmap_SetCharacterMode,
+							TektronixNullOutput_DoNothingNoArgReturnVoid/* graphics mode */,
+							TektronixNullOutput_DoNothingNoArgReturnVoid/* text mode */,
+							TektronixNullOutput_DoNothingNoArgReturnVoid/* show cursor */,
+							TektronixNullOutput_DoNothingNoArgReturnVoid/* lock cursor */,
+							TektronixNullOutput_DoNothingNoArgReturnVoid/* hide cursor */,
+							TektronixNullOutput_DoNothingIntArgReturnVoid/* bell */,
+							TektronixNullOutput_DoNothingIntArgReturnVoid/* uncover */
+						}
+					};
+
+struct VGWINTYPE*	VGwin[MAXVG];  /* virtual window descriptors */
+
+char				state[MAXVG];
+char				savstate[MAXVG];
+/* save state in a parallel array for speed */
+TEKSTOREP			VGstore[MAXVG]; /* the store where data for this window is kept */
+char				storing[MAXVG]; /* are we currently saving data from this window */
+short				drawing[MAXVG]; /* redrawing or not? */
+
+short				charxset[NUMSIZES] = {56,51,34,31,112,168};
+short				charyset[NUMSIZES] = {88,82,53,48,176,264};
+
+short				gGraphCurs = 0;
+short				gNumGraphs = 0;
+long				gOldGraphs[kMaximumAllowedGraphicsWindows];
+
+} // anonymous namespace
 
 
 
@@ -226,7 +270,6 @@ detachGraphics	(short		dnum)
 		gOldGraphs[gNumGraphs++] = dnum;
 		connectionDataPtr->TEK.graphicsID = -1;
 		Session_RemoveDataTarget(session, kSession_DataTargetTektronixGraphicsCanvas, &dnum);
-		RGdetach(dnum);
 		result = 0;
 	}
 	return result;
@@ -245,32 +288,6 @@ setgraphcurs	()
 {
 	gGraphCurs = 1;
 }// setgraphcurs
-
-
-void
-TekDisable	(short		vg)
-{
-	SessionRef		session = TektronixVirtualGraphics_FindSessionUsingGraphic(vg);
-	
-	
-	if (session != nullptr)
-	{
-		Session_ConnectionDataPtr(session)->enabled = 0;
-	}
-}// TekDisable
-
-
-void
-TekEnable	(short		vg)
-{
-	SessionRef		session = TektronixVirtualGraphics_FindSessionUsingGraphic(vg);
-	
-	
-	if (session != nullptr)
-	{
-		Session_ConnectionDataPtr(session)->enabled = 1;
-	}
-}// TekEnable
 
 
 void
@@ -325,140 +342,6 @@ donothing ()
 {
 	return 0;
 }// donothing
-
-
-/*
- *	Set font for window 'vw' to size 'n'.
- *	Sizes are 0..3 in Tek 4014 standard.
- *	Sizes 4 & 5 are used internally for Tek 4105 emulation.
- */
-static short
-fontnum		(short		vw,
-			 short		n)
-{
-	short	result = 0;
-	
-	
-	if ((n < 0) || (n >= NUMSIZES)) result = -1;
-	else
-	{
-		VGwin[vw]->fontnum = n;
-		VGwin[vw]->charx = charxset[n];
-		VGwin[vw]->chary = charyset[n];
-	}
-	return result;
-}// fontnum
-
-
-static void
-storexy		(short		vw,
-			 short		x,
-			 short		y)
-/* set graphics x and y position */
-{
-	VGwin[vw]->curx = x;
-	VGwin[vw]->cury = y;
-}// storexy
-
-
-static short
-joinup		(short		hi,
-			 short		lo,
-			 short		e)
-/* returns the number represented by the 3 pieces */
-{
-#if 1
-	return (((hi & 31) << 7) | ((lo & 31) << 2) | (e & 3));
-#else
-	return (((hi /* & 31 */ ) << 7) | ((lo /* & 31 */ ) << 2) | (e /* & 3 */));
-#endif
-}// joinup
-
-
-static void
-newcoord	(short		vw)
-/*
- *	Replace x,y with nx,ny
- */
-{
-	VGwin[vw]->hiy = VGwin[vw]->nhiy;
-	VGwin[vw]->hix = VGwin[vw]->nhix;
-	VGwin[vw]->loy = VGwin[vw]->nloy;
-	VGwin[vw]->lox = VGwin[vw]->nlox;
-	VGwin[vw]->ey  = VGwin[vw]->ney;
-	VGwin[vw]->ex  = VGwin[vw]->nex;
-
-	VGwin[vw]->curx = joinup(VGwin[vw]->nhix,VGwin[vw]->nlox,VGwin[vw]->nex);
-	VGwin[vw]->cury = joinup(VGwin[vw]->nhiy,VGwin[vw]->nloy,VGwin[vw]->ney);
-}
-
-
-static void
-linefeed	(short		vw) 
-/* 
- *	Perform a linefeed & cr (CHARTALL units) in specified window.
- */
-{
-/*	short y = joinup(VGwin[vw]->hiy,VGwin[vw]->loy,VGwin[vw]->ey);*/
-	short y = VGwin[vw]->cury;
-	short x;
-
-	if (y > VGwin[vw]->chary) y -= VGwin[vw]->chary;
-	else
-	{
-		y = 3119 - VGwin[vw]->chary;
-		VGwin[vw]->textcol = 2048 - VGwin[vw]->textcol;
-	}
-	x = VGwin[vw]->textcol;
-	storexy(vw,x,y);
-}// linefeed
-
-
-/*
- *	Draw a vector in vw's window from x0,y0 to x1,y1.
- *	Zoom the vector to the current visible window,
- *	and clip it before drawing it.
- *	Uses Liang-Barsky algorithm from ACM Transactions on Graphics,
- *		Vol. 3, No. 1, January 1984, p. 7.
- *
- *  Note: since QuickDraw on the Mac already handles clipping, we
- *		  will not do any processing here.
- *  14may91dsw
- *
- */
-static void
-clipvec		(short		vw,
-			 short		xa,
-			 short		ya,
-			 short		xb,
-			 short		yb)
-{
-	short				t = 0,
-						b = 0,
-						l = 0,
-						r = 0;
-	struct VGWINTYPE*	vp = nullptr;
-	long				hscale = 0L,
-						vscale = 0L;
-	
-	
-	vp = VGwin[vw];
-	
-	hscale = INXMAX / (long) vp->winwide;
-	vscale = INYMAX / (long) vp->wintall;
-	
-	t = vp->wintop;
-	b = vp->winbot;
-	l = vp->winleft;
-	r = vp->winright;
-
-	(*RG[vp->RGdevice].drawline) (vp->RGnum,
-		(short) ((long)(xa - l) * INXMAX / (long) vp->winwide),
-		(short) ((long)(ya- b) * INYMAX / (long) vp->wintall),
-		(short) ((long)(xb - l) * INXMAX / (long) vp->winwide),
-		(short) ((long)(yb- b) * INYMAX / (long) vp->wintall)
-		);
-}// clipvec
 
 
 /*
@@ -632,20 +515,6 @@ VGgetVS		(short		theVGnum)
 	
 	return result;
 }// VGgetVS
-
-
-static short
-VGcheck		(short		dnum)
-{
-	short		result = 0;
-	
-	
-	if ((dnum >= MAXVG) || (dnum < 0)) result = -1;
-	else if (VGwin[dnum] == nullptr) result = -1;
-	else result = 0;
-	
-	return result;
-}// VGcheck
 
 
 /*
@@ -1833,6 +1702,54 @@ void VGgindata( short vw,
 
 
 #pragma mark Internal Methods
+namespace {
+
+/*
+ *	Draw a vector in vw's window from x0,y0 to x1,y1.
+ *	Zoom the vector to the current visible window,
+ *	and clip it before drawing it.
+ *	Uses Liang-Barsky algorithm from ACM Transactions on Graphics,
+ *		Vol. 3, No. 1, January 1984, p. 7.
+ *
+ *  Note: since QuickDraw on the Mac already handles clipping, we
+ *		  will not do any processing here.
+ *  14may91dsw
+ *
+ */
+void
+clipvec		(short		vw,
+			 short		xa,
+			 short		ya,
+			 short		xb,
+			 short		yb)
+{
+	short				t = 0,
+						b = 0,
+						l = 0,
+						r = 0;
+	struct VGWINTYPE*	vp = nullptr;
+	long				hscale = 0L,
+						vscale = 0L;
+	
+	
+	vp = VGwin[vw];
+	
+	hscale = INXMAX / (long) vp->winwide;
+	vscale = INYMAX / (long) vp->wintall;
+	
+	t = vp->wintop;
+	b = vp->winbot;
+	l = vp->winleft;
+	r = vp->winright;
+
+	(*RG[vp->RGdevice].drawline) (vp->RGnum,
+		(short) ((long)(xa - l) * INXMAX / (long) vp->winwide),
+		(short) ((long)(ya- b) * INYMAX / (long) vp->wintall),
+		(short) ((long)(xb - l) * INXMAX / (long) vp->winwide),
+		(short) ((long)(yb- b) * INYMAX / (long) vp->wintall)
+		);
+}// clipvec
+
 
 /*!
 This method is of standard "SessionFactory_SessionOpProcPtr"
@@ -1847,7 +1764,7 @@ the actual type of "inoutSessionRefPtr" is a pointer to a
 
 (3.0)
 */
-static void
+void
 findTEKGraphicSessionOp		(SessionRef		inSession,
 							 void*			UNUSED_ARGUMENT(inData1),
 							 SInt32			inGraphicIDToFind,
@@ -1861,3 +1778,108 @@ findTEKGraphicSessionOp		(SessionRef		inSession,
 		}
 	}
 }// findTEKGraphicSessionOp
+
+
+/*
+ *	Set font for window 'vw' to size 'n'.
+ *	Sizes are 0..3 in Tek 4014 standard.
+ *	Sizes 4 & 5 are used internally for Tek 4105 emulation.
+ */
+short
+fontnum		(short		vw,
+			 short		n)
+{
+	short	result = 0;
+	
+	
+	if ((n < 0) || (n >= NUMSIZES)) result = -1;
+	else
+	{
+		VGwin[vw]->fontnum = n;
+		VGwin[vw]->charx = charxset[n];
+		VGwin[vw]->chary = charyset[n];
+	}
+	return result;
+}// fontnum
+
+
+short
+joinup		(short		hi,
+			 short		lo,
+			 short		e)
+/* returns the number represented by the 3 pieces */
+{
+#if 1
+	return (((hi & 31) << 7) | ((lo & 31) << 2) | (e & 3));
+#else
+	return (((hi /* & 31 */ ) << 7) | ((lo /* & 31 */ ) << 2) | (e /* & 3 */));
+#endif
+}// joinup
+
+
+void
+linefeed	(short		vw) 
+/* 
+ *	Perform a linefeed & cr (CHARTALL units) in specified window.
+ */
+{
+/*	short y = joinup(VGwin[vw]->hiy,VGwin[vw]->loy,VGwin[vw]->ey);*/
+	short y = VGwin[vw]->cury;
+	short x;
+
+	if (y > VGwin[vw]->chary) y -= VGwin[vw]->chary;
+	else
+	{
+		y = 3119 - VGwin[vw]->chary;
+		VGwin[vw]->textcol = 2048 - VGwin[vw]->textcol;
+	}
+	x = VGwin[vw]->textcol;
+	storexy(vw,x,y);
+}// linefeed
+
+
+void
+newcoord	(short		vw)
+/*
+ *	Replace x,y with nx,ny
+ */
+{
+	VGwin[vw]->hiy = VGwin[vw]->nhiy;
+	VGwin[vw]->hix = VGwin[vw]->nhix;
+	VGwin[vw]->loy = VGwin[vw]->nloy;
+	VGwin[vw]->lox = VGwin[vw]->nlox;
+	VGwin[vw]->ey  = VGwin[vw]->ney;
+	VGwin[vw]->ex  = VGwin[vw]->nex;
+
+	VGwin[vw]->curx = joinup(VGwin[vw]->nhix,VGwin[vw]->nlox,VGwin[vw]->nex);
+	VGwin[vw]->cury = joinup(VGwin[vw]->nhiy,VGwin[vw]->nloy,VGwin[vw]->ney);
+}
+
+
+void
+storexy		(short		vw,
+			 short		x,
+			 short		y)
+/* set graphics x and y position */
+{
+	VGwin[vw]->curx = x;
+	VGwin[vw]->cury = y;
+}// storexy
+
+
+short
+VGcheck		(short		dnum)
+{
+	short		result = 0;
+	
+	
+	if ((dnum >= MAXVG) || (dnum < 0)) result = -1;
+	else if (VGwin[dnum] == nullptr) result = -1;
+	else result = 0;
+	
+	return result;
+}// VGcheck
+
+} // anonymous namespace
+
+// BELOW IS REQUIRED NEWLINE TO END FILE

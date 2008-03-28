@@ -1372,7 +1372,7 @@ graphicToPICT	(short		inDrawingNumber)
 	
 	SetRect(&trect, 0, 0, 384, 384);
 	j = VGnewwin(TEK_DEVICE_PICTURE, VGgetVS(inDrawingNumber));
-	TektronixMacPictureOutput_SetBounds(&trect);
+	VectorToBitmap_SetBounds(&trect);
 	VGzcpy(inDrawingNumber, j);
 	
 	tpic = OpenPicture(&trect);

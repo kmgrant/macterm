@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -181,69 +181,6 @@ typedef struct {
 		(*bell)(short),
 		(*uncover)(short);
 } RGLINK;
-
-/*--------------------------------------------------------------------------*/
-/* VGwintype structure -- this is the main high level TEK structure, where	*/
-/* 		everything happens													*/
-/*--------------------------------------------------------------------------*/
-struct VGWINTYPE {
-	OSType	id;	// VGWN
-	SessionRef theVS;
-	short	RGdevice,RGnum;
-	char	mode,modesave;					/* current output mode */
-	char	loy,hiy,lox,hix,ex,ey;			/* current graphics coordinates */
-	char	nloy,nhiy,nlox,nhix,nex,ney;	/* new coordinates */
-	short	curx,cury;						/* current composite coordinates */
-	short	savx,savy;						/* save the panel's x,y */
-	short	winbot,wintop,winleft,winright,wintall,winwide; 
-		/* position of window in virutal space */
-	short	textcol;						/* text starts in 0 or 2048 */
-	short	intin;							/* integer parameter being input */
-	short	pencolor;						/* current pen color */
-	short	fontnum,charx,chary;			/* char size */
-	short	count;							/* for temporary use in special state loops */
-	TektronixMode	TEKtype;						/* 4105 or 4014?  added: 16jul90dsw */
-	char	TEKMarker;						/* 4105 marker type 17jul90dsw */
-	char	TEKOutline;						/* 4105 panel outline boolean */
-	short	TEKPath;						/* 4105 GTPath */
-	short	TEKPattern;						/* 4105 Panel Fill Pattern */
-	short	TEKIndex;						/* 4105 GTIndex */
-	short	TEKRot;							/* 4105 GTRotation */
-	short	TEKSize;						/* 4105 GTSize */
-	short	TEKBackground;					/* 4105 Background color */
-	pointlist	TEKPanel;					/* 4105 Panel's list of points */
-	pointlist	current;					/* current point in the list */
-};
-
-/*--------------------------------------------------------------------------*/
-/* RGMwindow structure -- this is the display structure for tek stuff.  It	*/
-/* 		contains all the display specific info (location, scale, etc)		*/
-/*--------------------------------------------------------------------------*/
-
-struct RGMwindows {
-OSType
-	id;		// RGMW
-WindowRef
-	wind;
-short 
-	xorigin,
-	yorigin,
-	xscale,
-	yscale,
-	vg,
-	ingin;
-UInt8
-	*name;
-short 
-	width,
-	height;
-ControlRef
-	zoom,
-	vert,
-	horiz;
-SessionRef vs;
-	};
-	/* *RGMwind[ MAXWIND ];	*/
 
 typedef struct {
 	long	thiselnum;	/* number of currently-viewing element */

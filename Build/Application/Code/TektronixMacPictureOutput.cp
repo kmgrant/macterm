@@ -1,9 +1,9 @@
 /*###############################################################
 
-	TektronixMacPictureOutput.cp
+	VectorToBitmap.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -37,6 +37,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 enum
 {
@@ -44,28 +45,29 @@ enum
 	INYMAX = 4096
 };
 
+} // anonymous namespace
+
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Boolean		gRGMPbusy = false;	// is device already in use?
-	SInt16		gRGMPwidth = 0,
-				gRGMPheight = 0,
-				gRGMPxoffset = 0,
-				gRGMPyoffset = 0;
-	SInt16		gRGMPcolor[] =
-				{
-					30,			// black
-					33,			// white
-					205,		// red
-					341,		// green
-					409,		// blue
-					273,		// cyan
-					137,		// magenta
-					69			// yellow
-				};
-}
+Boolean		gRGMPbusy = false;	// is device already in use?
+SInt16		gRGMPwidth = 0;
+SInt16		gRGMPheight = 0;
+SInt16		gRGMPxoffset = 0;
+SInt16		gRGMPyoffset = 0;
+SInt16		gRGMPcolor[] =
+			{
+				30,			// black
+				33,			// white
+				205,		// red
+				341,		// green
+				409,		// blue
+				273,		// cyan
+				137,		// magenta
+				69			// yellow
+			};
 
+} // anonymous namespace
 
 
 #pragma mark Public Methods
@@ -76,7 +78,7 @@ Initializes this module.
 (2.6)
 */
 void
-TektronixMacPictureOutput_Init ()
+VectorToBitmap_Init ()
 {
 	gRGMPbusy = false;
 	//gRGMPwidth = INXMAX;
@@ -93,7 +95,7 @@ effectively resets the origin.
 (2.6)
 */
 SInt16
-TektronixMacPictureOutput_New ()
+VectorToBitmap_New ()
 {
 	SInt16		result = 0;
 	
@@ -110,7 +112,7 @@ TektronixMacPictureOutput_New ()
 
 /*!
 Signals the end of a picture created with
-TektronixMacPictureOutput_New().
+VectorToBitmap_New().
 
 \retval 0
 always
@@ -118,7 +120,7 @@ always
 (2.6)
 */
 SInt16
-TektronixMacPictureOutput_Dispose	(SInt16		UNUSED_ARGUMENT(inDevice))
+VectorToBitmap_Dispose	(SInt16		UNUSED_ARGUMENT(inDevice))
 {
 	SInt16		result = 0;
 	
@@ -137,9 +139,9 @@ it either.
 (2.6)
 */
 void
-TektronixMacPictureOutput_DataLine		(SInt16		UNUSED_ARGUMENT(inDevice),
-										 SInt16		UNUSED_ARGUMENT(inData),
-										 SInt16		UNUSED_ARGUMENT(inCount))
+VectorToBitmap_DataLine		(SInt16		UNUSED_ARGUMENT(inDevice),
+							 SInt16		UNUSED_ARGUMENT(inData),
+							 SInt16		UNUSED_ARGUMENT(inCount))
 {
 }// DataLine
 
@@ -154,9 +156,9 @@ always
 (2.6)
 */
 SInt16
-TektronixMacPictureOutput_DrawDot	(SInt16		UNUSED_ARGUMENT(inDevice),
-									 SInt16		inX,
-									 SInt16		inY)
+VectorToBitmap_DrawDot	(SInt16		UNUSED_ARGUMENT(inDevice),
+						 SInt16		inX,
+						 SInt16		inY)
 {
 	SInt16		result = 0;
 	
@@ -177,11 +179,11 @@ always
 (2.6)
 */
 SInt16
-TektronixMacPictureOutput_DrawLine	(SInt16		UNUSED_ARGUMENT(inDevice),
-									 SInt16		inStartX,
-									 SInt16		inStartY,
-									 SInt16		inEndX,
-									 SInt16		inEndY)
+VectorToBitmap_DrawLine	(SInt16		UNUSED_ARGUMENT(inDevice),
+						 SInt16		inStartX,
+						 SInt16		inStartY,
+						 SInt16		inEndX,
+						 SInt16		inEndY)
 {
 	SInt16		result = 0;
 	
@@ -201,7 +203,7 @@ QuickDraw pictures.
 (2.6)
 */
 char const*
-TektronixMacPictureOutput_ReturnDeviceName ()
+VectorToBitmap_ReturnDeviceName ()
 {
 	return "Macintosh PICTURE output";
 }// ReturnDeviceName
@@ -215,7 +217,7 @@ non-zero values to offset graphics drawings.
 (2.6)
 */
 SInt16
-TektronixMacPictureOutput_SetBounds		(Rect const*	inBoundsPtr)
+VectorToBitmap_SetBounds	(Rect const*	inBoundsPtr)
 {
 	SInt16		result = 0;
 	
@@ -237,12 +239,12 @@ callbacks.
 (2.6)
 */
 void
-TektronixMacPictureOutput_SetCallbackData	(SInt16		UNUSED_ARGUMENT(inDevice),
-											 SInt16		UNUSED_ARGUMENT(inTektronixVirtualGraphicsRef),
-											 SInt16		UNUSED_ARGUMENT(inData2),
-											 SInt16		UNUSED_ARGUMENT(inData3),
-											 SInt16		UNUSED_ARGUMENT(inData4),
-											 SInt16		UNUSED_ARGUMENT(inData5))
+VectorToBitmap_SetCallbackData	(SInt16		UNUSED_ARGUMENT(inDevice),
+								 SInt16		UNUSED_ARGUMENT(inTektronixVirtualGraphicsRef),
+								 SInt16		UNUSED_ARGUMENT(inData2),
+								 SInt16		UNUSED_ARGUMENT(inData3),
+								 SInt16		UNUSED_ARGUMENT(inData4),
+								 SInt16		UNUSED_ARGUMENT(inData5))
 {
 }// SetCallbackData
 
@@ -255,9 +257,9 @@ type of TEK output.
 (2.6)
 */
 void
-TektronixMacPictureOutput_SetCharacterMode		(SInt16		UNUSED_ARGUMENT(inDevice),
-												 SInt16		UNUSED_ARGUMENT(inRotation),
-												 SInt16		UNUSED_ARGUMENT(inSize))
+VectorToBitmap_SetCharacterMode		(SInt16		UNUSED_ARGUMENT(inDevice),
+									 SInt16		UNUSED_ARGUMENT(inRotation),
+									 SInt16		UNUSED_ARGUMENT(inSize))
 {
 }// SetCharacterMode
 
@@ -272,8 +274,8 @@ always
 (2.6)
 */
 SInt16
-TektronixMacPictureOutput_SetPenColor	(SInt16		UNUSED_ARGUMENT(inDevice),
-										 SInt16		inColorIndex)
+VectorToBitmap_SetPenColor	(SInt16		UNUSED_ARGUMENT(inDevice),
+							 SInt16		inColorIndex)
 {
 	SInt16		result = 0;
 	

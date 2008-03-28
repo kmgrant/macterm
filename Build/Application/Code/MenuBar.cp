@@ -3384,7 +3384,7 @@ stateTrackerPrintingItems	(UInt32				inCommandID,
 				SInt16		graphicNumber = 0;
 				
 				
-				result = TektronixRealGraphics_IsRealGraphicsWindow(EventLoop_ReturnRealFrontWindow(), &graphicNumber);
+				result = VectorCanvas_GetFromWindow(EventLoop_ReturnRealFrontWindow(), &graphicNumber);
 			}
 		}
 		break;
@@ -3599,7 +3599,7 @@ stateTrackerStandardEditItems	(UInt32			inCommandID,
 		isDialog = (GetWindowKind(frontWindow) == kDialogWindowKind);
 		isReadOnly = (GetWindowKind(frontWindow) == WIN_CONSOLE); // is the frontmost window read-only?
 		isTerminal = TerminalWindow_ExistsFor(frontWindow); // terminal windows include the FTP log, too
-		isTEK = TektronixRealGraphics_IsRealGraphicsWindow(frontWindow, &tekGraphicID);
+		isTEK = VectorCanvas_GetFromWindow(frontWindow, &tekGraphicID);
 	}
 	
 	currentTerminalView = TerminalView_ReturnUserFocusTerminalView();

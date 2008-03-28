@@ -1,4 +1,4 @@
-/*!	\file TektronixMacPictureOutput.h
+/*!	\file VectorToBitmap.h
 	\brief Routines for creating Macintosh pictures (QuickDraw
 	PICT format) out of TEK vector graphics.
 	
@@ -9,7 +9,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -37,8 +37,8 @@
 
 #include "UniversalDefines.h"
 
-#ifndef __TEKTRONIXMACPICTUREOUTPUT__
-#define __TEKTRONIXMACPICTUREOUTPUT__
+#ifndef __VECTORTOBITMAP__
+#define __VECTORTOBITMAP__
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
@@ -51,7 +51,7 @@
 //@{
 
 void
-	TektronixMacPictureOutput_Init					();
+	VectorToBitmap_Init					();
 
 //@}
 
@@ -59,10 +59,10 @@ void
 //@{
 
 SInt16
-	TektronixMacPictureOutput_New					();
+	VectorToBitmap_New					();
 
 SInt16
-	TektronixMacPictureOutput_Dispose				(SInt16			inWhichDevice);
+	VectorToBitmap_Dispose				(SInt16			inWhichDevice);
 
 //@}
 
@@ -70,44 +70,44 @@ SInt16
 //@{
 
 void
-	TektronixMacPictureOutput_DataLine				(SInt16			inDevice,
-													 SInt16			inData,
-													 SInt16			inCount);
+	VectorToBitmap_DataLine				(SInt16			inDevice,
+										 SInt16			inData,
+										 SInt16			inCount);
 
 SInt16
-	TektronixMacPictureOutput_DrawDot				(SInt16			inDevice,
-													 SInt16			inX,
-													 SInt16			inY);
+	VectorToBitmap_DrawDot				(SInt16			inDevice,
+										 SInt16			inX,
+										 SInt16			inY);
 
 SInt16
-	TektronixMacPictureOutput_DrawLine				(SInt16			inDevice,
-													 SInt16			inStartX,
-													 SInt16			inStartY,
-													 SInt16			inEndX,
-													 SInt16			inEndY);
+	VectorToBitmap_DrawLine				(SInt16			inDevice,
+										 SInt16			inStartX,
+										 SInt16			inStartY,
+										 SInt16			inEndX,
+										 SInt16			inEndY);
 
 char const*
-	TektronixMacPictureOutput_ReturnDeviceName		();
+	VectorToBitmap_ReturnDeviceName		();
 
 SInt16
-	TektronixMacPictureOutput_SetBounds				(Rect const*	inBoundsPtr);
+	VectorToBitmap_SetBounds			(Rect const*	inBoundsPtr);
 
 void
-	TektronixMacPictureOutput_SetCallbackData		(SInt16			inDevice,
-													 SInt16			inTektronixVirtualGraphicsRef,
-													 SInt16			inData2,
-													 SInt16			inData3,
-													 SInt16			inData4,
-													 SInt16			inData5);
+	VectorToBitmap_SetCallbackData		(SInt16			inDevice,
+										 SInt16			inTektronixVirtualGraphicsRef,
+										 SInt16			inData2,
+										 SInt16			inData3,
+										 SInt16			inData4,
+										 SInt16			inData5);
 
 void
-	TektronixMacPictureOutput_SetCharacterMode		(SInt16			inDevice,
-													 SInt16			inRotation,
-													 SInt16			inSize);
+	VectorToBitmap_SetCharacterMode		(SInt16			inDevice,
+										 SInt16			inRotation,
+										 SInt16			inSize);
 
 SInt16
-	TektronixMacPictureOutput_SetPenColor			(SInt16			inDevice,
-													 SInt16			inColorIndex);
+	VectorToBitmap_SetPenColor			(SInt16			inDevice,
+										 SInt16			inColorIndex);
 
 //@}
 

@@ -53,8 +53,6 @@ void setgraphcurs();
 void unsetgraphcurs();
 short VGalive(short dnum);
 void destroyGraphics(short dnum);
-void TekEnable(short vg);
-void TekDisable(short vg);
 SessionRef TektronixVirtualGraphics_FindSessionUsingGraphic (short vg);
 short donothing();
 short drawc(short vw, short c);

@@ -1859,8 +1859,7 @@ handleUpdate	(EventRecord*		inoutEventPtr)
 				break;
 				
 			case WIN_TEK: // a Tektronix display
-				if (RGupdate(windowToUpdate) == 0) TekDisable(RGgetVG(windowToUpdate));
-				else {/* error */}
+				(SInt16)VectorCanvas_RenderInWindow(windowToUpdate);
 				result = true;
 				break;
 			

@@ -692,7 +692,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				}
 				else
 				{
-					if (TektronixRealGraphics_IsRealGraphicsWindow(EventLoop_ReturnRealFrontWindow(), &j))
+					if (VectorCanvas_GetFromWindow(EventLoop_ReturnRealFrontWindow(), &j))
 					{
 						Clipboard_GraphicsToScrap(j); // copy graphics
 					}

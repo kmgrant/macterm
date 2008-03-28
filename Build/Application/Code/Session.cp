@@ -93,8 +93,8 @@
 #include "SessionDescription.h"
 #include "SessionFactory.h"
 #include "SpecialKeySequencesDialog.h"
-#include "TektronixVirtualGraphics.h"
 #include "TektronixRealGraphics.h"
+#include "TektronixVirtualGraphics.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "TerminalWindow.h"
@@ -3510,14 +3510,19 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 	id = VGnewwin(TEK_DEVICE_WINDOW, inRef);
 	if (id > -1)
 	{
-		Str255		string;
-		
-		
 		ptr->dataPtr->TEK.graphicsID = id;
 		VGgiveinfo(id);
-		GetWTitle(ptr->dataPtr->window, string);
-		StringUtilities_PToCInPlace(string);
-		RGattach(id, inRef, REINTERPRET_CAST(string, char*), ptr->dataPtr->TEK.mode);
+		VectorCanvas_SetListeningSession(id, inRef);
+		{
+			CFStringRef		windowTitleCFString = nullptr;
+			
+			
+			if (noErr == CopyWindowTitleAsCFString(ptr->dataPtr->window, &windowTitleCFString))
+			{
+				VectorCanvas_SetTitle(id, windowTitleCFString);
+				CFRelease(windowTitleCFString), windowTitleCFString = nullptr;
+			}
+		}
 		Session_AddDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &id);
 		result = true;
 	}
