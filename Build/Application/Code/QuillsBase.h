@@ -56,12 +56,9 @@ public:
 %feature("docstring",
 "Initialize every module, in dependency order.  May also trigger\n\
 side effects such as displaying the splash screen.\n\
-\n\
-The argument is a filesystem path locating the MacTelnet bundle.\n\
-This is necessary so that resources (like NIBs) can be found.\n\
 ") all_init;
 #endif
-	static void all_init (std::string	inBundlePath);
+	static void all_init ();
 	
 #if SWIG
 %feature("docstring",
@@ -77,6 +74,8 @@ just-in-time.)\n\
 %feature("docstring",
 "Returns the CFBundleVersion field from the Info.plist of the\n\
 main bundle.\n\
+\n\
+The string encoding is UTF-8.\n\
 ") version;
 #endif
 	static std::string version ();

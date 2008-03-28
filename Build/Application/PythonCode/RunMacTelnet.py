@@ -9,7 +9,7 @@ API and is declared in the MacTelnet headers of the same name
 Exposure to Python simplifies debugging, and gives you options
 for extensibility and configuration that most applications lack!
 This file shows just a few examples of what you can do...look for
-more information on MacTelnet.com.
+more information at MacTelnet.com.
 """
 __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '24 August 2006'
@@ -49,7 +49,8 @@ except ImportError, err:
 
 
 # load all required MacTelnet modules
-Base.all_init(os.environ['INITIAL_APP_BUNDLE_DIR'])
+Base.all_init()
+#Base.all_init(os.environ['INITIAL_APP_BUNDLE_DIR']) # this variant is no longer needed
 
 # banner
 print "MacTelnet: Base initialization complete.  This is MacTelnet version %s." % Base.version()

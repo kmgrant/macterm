@@ -57,10 +57,20 @@ See header or "pydoc" for Python docstrings.
 (3.1)
 */
 void
-Base::all_init	(std::string	inBundlePath)
+Base::all_init ()
 {
+#if 1
+	// as long as CFBundle is not confused by which application is
+	// the current one, this call is sufficient; for now, the problem
+	// is fixed, though in the past the system could mistakenly think
+	// that the interpreter (Python) was the application bundle!
+	Initialize_ApplicationStartup(CFBundleGetMainBundle());
+#else
+	// this alternate implementation assumes a given path argument
+	// and locates a suitable bundle from that
+	std::string		unusedBundlePath = "";
 	CFStringRef		pathCFString = CFStringCreateWithCString
-									(kCFAllocatorDefault, inBundlePath.c_str(),
+									(kCFAllocatorDefault, unusedBundlePath.c_str(),
 										kCFStringEncodingUTF8);
 	Boolean			success = false;
 	
@@ -92,6 +102,7 @@ Base::all_init	(std::string	inBundlePath)
 		Console_WriteValueCFString("given bundle path", pathCFString);
 		throw std::runtime_error("unable to find a bundle at the given path");
 	}
+#endif
 }// all_init
 
 
