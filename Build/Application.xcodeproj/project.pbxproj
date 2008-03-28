@@ -30,6 +30,7 @@
 		0A9B319C0D538EF000C1616D /* MemoryBlockReferenceLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */; };
 		0A9B319D0D538EF000C1616D /* MemoryBlockReferenceTracker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */; };
 		0A9B319F0D538EFA00C1616D /* Releases.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B319E0D538EFA00C1616D /* Releases.h */; };
+		0AAB15BF0D9DAFD300285094 /* VectorToBitmap.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AAB15BE0D9DAFD300285094 /* VectorToBitmap.cp */; };
 		0AAD86E50D54E45F003544E0 /* TerminalRangeDescription.typedef.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
@@ -95,7 +96,7 @@
 		0AC6BB1B0A8C0BA000AFF37A /* InstallAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE9055432A400ACDF3A /* InstallAE.cp */; };
 		0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */; };
 		0AC6BB1D0A8C0BA000AFF37A /* TektronixNullOutput.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE20055432A400ACDF3A /* TektronixNullOutput.cp */; };
-		0AC6BB1E0A8C0BA000AFF37A /* TektronixRealGraphics.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE21055432A400ACDF3A /* TektronixRealGraphics.cp */; };
+		0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE21055432A400ACDF3A /* VectorCanvas.cp */; };
 		0AC6BB1F0A8C0BA000AFF37A /* GetElementAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDE055432A400ACDF3A /* GetElementAE.cp */; };
 		0AC6BB200A8C0BA000AFF37A /* RequiredAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE11055432A400ACDF3A /* RequiredAE.cp */; };
 		0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE05055432A400ACDF3A /* PrefPanelGeneral.cp */; };
@@ -145,7 +146,6 @@
 		0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */; };
 		0AC6BB4E0A8C0BA100AFF37A /* FormatDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDB055432A400ACDF3A /* FormatDialog.cp */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
-		0AC6BB510A8C0BA100AFF37A /* TektronixMacPictureOutput.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE1E055432A400ACDF3A /* TektronixMacPictureOutput.cp */; };
 		0AC6BB520A8C0BA100AFF37A /* ICGluePPC.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */; };
 		0AC6BB530A8C0BA100AFF37A /* CoreSuiteAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCB055432A400ACDF3A /* CoreSuiteAE.cp */; };
 		0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFF055432A400ACDF3A /* Network.cp */; };
@@ -323,11 +323,11 @@
 		0A46042C0554376100ACDF3A /* SplashScreenDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SplashScreenDialog.h; path = Application/Code/SplashScreenDialog.h; sourceTree = SOURCE_ROOT; };
 		0A46042E0554376100ACDF3A /* StatusIcon.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = StatusIcon.h; path = Application/Code/StatusIcon.h; sourceTree = SOURCE_ROOT; };
 		0A4604310554376100ACDF3A /* tekdefs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tekdefs.h; path = Application/Code/tekdefs.h; sourceTree = SOURCE_ROOT; };
-		0A4604320554376100ACDF3A /* tekstor.proto.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tekstor.proto.h; path = Application/Code/tekstor.proto.h; sourceTree = SOURCE_ROOT; };
+		0A4604320554376100ACDF3A /* TektronixMain.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixMain.h; path = Application/Code/TektronixMain.h; sourceTree = "<group>"; };
 		0A4604330554376100ACDF3A /* TektronixFont.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixFont.h; path = Application/Code/TektronixFont.h; sourceTree = SOURCE_ROOT; };
-		0A4604340554376100ACDF3A /* TektronixMacPictureOutput.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixMacPictureOutput.h; path = Application/Code/TektronixMacPictureOutput.h; sourceTree = SOURCE_ROOT; };
+		0A4604340554376100ACDF3A /* VectorToBitmap.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorToBitmap.h; path = Application/Code/VectorToBitmap.h; sourceTree = "<group>"; };
 		0A4604350554376100ACDF3A /* TektronixNullOutput.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixNullOutput.h; path = Application/Code/TektronixNullOutput.h; sourceTree = SOURCE_ROOT; };
-		0A4604360554376100ACDF3A /* TektronixRealGraphics.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixRealGraphics.h; path = Application/Code/TektronixRealGraphics.h; sourceTree = SOURCE_ROOT; };
+		0A4604360554376100ACDF3A /* VectorCanvas.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorCanvas.h; path = Application/Code/VectorCanvas.h; sourceTree = "<group>"; };
 		0A4604370554376100ACDF3A /* TektronixVirtualGraphics.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixVirtualGraphics.h; path = Application/Code/TektronixVirtualGraphics.h; sourceTree = SOURCE_ROOT; };
 		0A4604390554376100ACDF3A /* TelnetPrinting.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TelnetPrinting.h; path = Application/Code/TelnetPrinting.h; sourceTree = SOURCE_ROOT; };
 		0A46043B0554376100ACDF3A /* Terminal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Terminal.h; path = Application/Code/Terminal.h; sourceTree = SOURCE_ROOT; };
@@ -435,10 +435,9 @@
 		0A46FE19055432A400ACDF3A /* SoundSystem.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SoundSystem.cp; path = Shared/Code/SoundSystem.cp; sourceTree = "<group>"; };
 		0A46FE1A055432A400ACDF3A /* SplashScreenDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SplashScreenDialog.cp; path = Application/Code/SplashScreenDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE1C055432A400ACDF3A /* StatusIcon.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StatusIcon.cp; path = Application/Code/StatusIcon.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE1E055432A400ACDF3A /* TektronixMacPictureOutput.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixMacPictureOutput.cp; path = Application/Code/TektronixMacPictureOutput.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE1F055432A400ACDF3A /* TektronixMain.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixMain.cp; path = Application/Code/TektronixMain.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE20055432A400ACDF3A /* TektronixNullOutput.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixNullOutput.cp; path = Application/Code/TektronixNullOutput.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE21055432A400ACDF3A /* TektronixRealGraphics.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixRealGraphics.cp; path = Application/Code/TektronixRealGraphics.cp; sourceTree = SOURCE_ROOT; };
+		0A46FE21055432A400ACDF3A /* VectorCanvas.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = VectorCanvas.cp; path = Application/Code/VectorCanvas.cp; sourceTree = "<group>"; };
 		0A46FE22055432A400ACDF3A /* TektronixVirtualGraphics.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixVirtualGraphics.cp; path = Application/Code/TektronixVirtualGraphics.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TelnetPrinting.cp; path = Application/Code/TelnetPrinting.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE25055432A400ACDF3A /* Terminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Terminal.cp; path = Application/Code/Terminal.cp; sourceTree = SOURCE_ROOT; };
@@ -533,6 +532,7 @@
 		0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceTracker.template.h; path = Shared/Code/MemoryBlockReferenceTracker.template.h; sourceTree = "<group>"; };
 		0A9B319E0D538EFA00C1616D /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
 		0A9CC37A06DC470D00DCD12E /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanels.nib; sourceTree = "<group>"; };
+		0AAB15BE0D9DAFD300285094 /* VectorToBitmap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VectorToBitmap.cp; path = Application/Code/VectorToBitmap.cp; sourceTree = "<group>"; };
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
 		0AABEA0B05A1203200F15EF2 /* SpecialKeySequencesDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SpecialKeySequencesDialog.h; path = Application/Code/SpecialKeySequencesDialog.h; sourceTree = "<group>"; };
@@ -773,10 +773,8 @@
 				0AABEA3D05A1211400F15EF2 /* SpecialKeySequencesDialog.cp */,
 				0A46FE1A055432A400ACDF3A /* SplashScreenDialog.cp */,
 				0A46FE1C055432A400ACDF3A /* StatusIcon.cp */,
-				0A46FE1E055432A400ACDF3A /* TektronixMacPictureOutput.cp */,
 				0A46FE1F055432A400ACDF3A /* TektronixMain.cp */,
 				0A46FE20055432A400ACDF3A /* TektronixNullOutput.cp */,
-				0A46FE21055432A400ACDF3A /* TektronixRealGraphics.cp */,
 				0A46FE22055432A400ACDF3A /* TektronixVirtualGraphics.cp */,
 				0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */,
 				0A46FE25055432A400ACDF3A /* Terminal.cp */,
@@ -789,6 +787,8 @@
 				0A46FE2E055432A400ACDF3A /* ThreadEntryPoints.cp */,
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
 				0A46FE38055432A400ACDF3A /* URL.cp */,
+				0A46FE21055432A400ACDF3A /* VectorCanvas.cp */,
+				0AAB15BE0D9DAFD300285094 /* VectorToBitmap.cp */,
 				0A46FE3A055432A400ACDF3A /* VirtualDevice.cp */,
 				0A46FE3B055432A400ACDF3A /* WindowInfo.cp */,
 				0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */,
@@ -860,11 +860,9 @@
 				0A46042C0554376100ACDF3A /* SplashScreenDialog.h */,
 				0A46042E0554376100ACDF3A /* StatusIcon.h */,
 				0A4604310554376100ACDF3A /* tekdefs.h */,
-				0A4604320554376100ACDF3A /* tekstor.proto.h */,
 				0A4604330554376100ACDF3A /* TektronixFont.h */,
-				0A4604340554376100ACDF3A /* TektronixMacPictureOutput.h */,
+				0A4604320554376100ACDF3A /* TektronixMain.h */,
 				0A4604350554376100ACDF3A /* TektronixNullOutput.h */,
-				0A4604360554376100ACDF3A /* TektronixRealGraphics.h */,
 				0A4604370554376100ACDF3A /* TektronixVirtualGraphics.h */,
 				0A4604390554376100ACDF3A /* TelnetPrinting.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
@@ -884,6 +882,8 @@
 				0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */,
 				0A4604510554376100ACDF3A /* Undoables.h */,
 				0A4604540554376100ACDF3A /* URL.h */,
+				0A4604360554376100ACDF3A /* VectorCanvas.h */,
+				0A4604340554376100ACDF3A /* VectorToBitmap.h */,
 				0A4604560554376100ACDF3A /* VirtualDevice.h */,
 				0A4604570554376100ACDF3A /* VTKeys.h */,
 				0A4604580554376100ACDF3A /* WindowInfo.h */,
@@ -1414,7 +1414,7 @@
 				0AC6BB1B0A8C0BA000AFF37A /* InstallAE.cp in Sources */,
 				0AC6BB1C0A8C0BA000AFF37A /* PrefPanelSessions.cp in Sources */,
 				0AC6BB1D0A8C0BA000AFF37A /* TektronixNullOutput.cp in Sources */,
-				0AC6BB1E0A8C0BA000AFF37A /* TektronixRealGraphics.cp in Sources */,
+				0AC6BB1E0A8C0BA000AFF37A /* VectorCanvas.cp in Sources */,
 				0AC6BB1F0A8C0BA000AFF37A /* GetElementAE.cp in Sources */,
 				0AC6BB200A8C0BA000AFF37A /* RequiredAE.cp in Sources */,
 				0AC6BB210A8C0BA000AFF37A /* PrefPanelGeneral.cp in Sources */,
@@ -1464,7 +1464,6 @@
 				0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */,
 				0AC6BB4E0A8C0BA100AFF37A /* FormatDialog.cp in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
-				0AC6BB510A8C0BA100AFF37A /* TektronixMacPictureOutput.cp in Sources */,
 				0AC6BB520A8C0BA100AFF37A /* ICGluePPC.cp in Sources */,
 				0AC6BB530A8C0BA100AFF37A /* CoreSuiteAE.cp in Sources */,
 				0AC6BB540A8C0BA100AFF37A /* Network.cp in Sources */,
@@ -1484,6 +1483,7 @@
 				0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */,
 				0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */,
 				0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */,
+				0AAB15BF0D9DAFD300285094 /* VectorToBitmap.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

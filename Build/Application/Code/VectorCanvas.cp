@@ -66,8 +66,8 @@ Routines for Macintosh Window output.
 #include "EventLoop.h"
 #include "Session.h"
 #include "tekdefs.h"		/* NCSA: sb - all the TEK defines are now here */
-#include "TektronixRealGraphics.h"
 #include "TektronixVirtualGraphics.h"
+#include "VectorCanvas.h"
 
 
 

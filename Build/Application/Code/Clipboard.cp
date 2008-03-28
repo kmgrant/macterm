@@ -76,10 +76,10 @@
 #include "Preferences.h"
 #include "Session.h"
 #include "TextTranslation.h"
-#include "TektronixMacPictureOutput.h"
 #include "TektronixVirtualGraphics.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
+#include "VectorToBitmap.h"
 
 
 

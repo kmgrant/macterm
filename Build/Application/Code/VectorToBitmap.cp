@@ -32,7 +32,7 @@
 #include "UniversalDefines.h"
 
 // MacTelnet includes
-#include "TektronixMacPictureOutput.h"
+#include "VectorToBitmap.h"
 
 
 

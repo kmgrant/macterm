@@ -35,10 +35,10 @@
 #include "MemoryBlocks.h"
 
 // MacTelnet includes
-#include "TektronixRealGraphics.h"
+#include "TektronixMain.h"
 #include "TektronixVirtualGraphics.h"
 #include "tekdefs.h"	/* NCSA: sb - all defines are now here, for easy access */
-#include "tekstor.proto.h"
+#include "VectorCanvas.h"
 
 //	thiselnum runs from 0 to (handlesize-1), which is in accordance with C style
 //	arrays.  The handle is indexed 0...(handlesize-1) as well.  This is why you see

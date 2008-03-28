@@ -50,12 +50,12 @@
 #include "ConnectionData.h"
 #include "SessionFactory.h"
 #include "TektronixFont.h"
-#include "TektronixMacPictureOutput.h"
+#include "TektronixMain.h"
 #include "TektronixNullOutput.h"
 #include "TektronixVirtualGraphics.h"
-#include "TektronixRealGraphics.h"
 #include "tekdefs.h"	/* NCSA: sb - all defines are now here, for easy access */
-#include "tekstor.proto.h"
+#include "VectorToBitmap.h"
+#include "VectorCanvas.h"
 
 
 

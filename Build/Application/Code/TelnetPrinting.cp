@@ -59,13 +59,13 @@
 #include "EventLoop.h"
 #include "Folder.h"
 #include "ProgressDialog.h"
-#include "TektronixMacPictureOutput.h"
-#include "TektronixRealGraphics.h"
 #include "TelnetPrinting.h"
 #include "TektronixVirtualGraphics.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
+#include "VectorCanvas.h"
+#include "VectorToBitmap.h"
 
 
 
