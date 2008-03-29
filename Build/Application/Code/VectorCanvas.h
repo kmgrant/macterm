@@ -114,7 +114,7 @@ char const*
 
 void
 	VectorCanvas_SetCallbackData		(SInt16			inCanvasID,
-										 SInt16			inTektronixVirtualGraphicsRef,
+										 SInt16			inVectorInterpreterRef,
 										 SInt16			inData2,
 										 SInt16			inData3,
 										 SInt16			inData4,
@@ -144,16 +144,16 @@ void
 //@{
 
 Boolean
-	VectorCanvas_GetFromWindow					(HIWindowRef	inWindow,
-												 SInt16*		outDeviceIDPtr);
+	VectorCanvas_GetFromWindow			(HIWindowRef	inWindow,
+										 SInt16*		outDeviceIDPtr);
 
 SInt16
-	VectorCanvas_SetListeningSession			(SInt16			inCanvasID,
-												 SessionRef		inSession);
+	VectorCanvas_SetListeningSession	(SInt16			inCanvasID,
+										 SessionRef		inSession);
 
 SInt16
-	VectorCanvas_SetTitle						(SInt16			inCanvasID,
-												 CFStringRef	inTitle);
+	VectorCanvas_SetTitle				(SInt16			inCanvasID,
+										 CFStringRef	inTitle);
 
 //@}
 

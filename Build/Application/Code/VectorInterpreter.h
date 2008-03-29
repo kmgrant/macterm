@@ -1,4 +1,4 @@
-/*!	\file TektronixVirtualGraphics.h
+/*!	\file VectorInterpreter.h
 	\brief Takes Tektronix codes as input, and sends the output
 	to real graphics devices.
 	
@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,34 +46,25 @@
 
 #pragma mark Public Methods
 
-/* vgtek.c */
+//!\name Initialization
+//@{
+
+void
+	VectorInterpreter_Init					();
+
+//@}
+
 short detachGraphics(short dnum);
-short getgraphcurs();
-void setgraphcurs();
-void unsetgraphcurs();
-short VGalive(short dnum);
-void destroyGraphics(short dnum);
-SessionRef TektronixVirtualGraphics_FindSessionUsingGraphic (short vg);
-short donothing();
-short drawc(short vw, short c);
-void TektronixVirtualGraphics_Init();
-short VGdevice(short vw, short dev);
 short VGnewwin(short device, SessionRef inSession);
-void VGclrstor(short vw);
-void VGdumpstore(short vw, short (*func )(short));
-void VGdraw(short vw, char c);
 void VGpage(short vw);
 short VGpred(short vw, short dest);
 void VGstopred(short vw);
 void VGredraw(short vw, short dest);
 void VGgiveinfo(short vw);
 void VGzoom(short vw, short x0, short y0, short x1, short y1);
-void VGwhatzoom(short vw, short *px0, short *py0, short *px1, short *py1);
 void VGzcpy(short src, short dest);
 void VGclose(short vw);
 short VGwrite(short vw, char const* data, short count);
-char const*VGrgname(short rgdev);
-void VGtmode(short rgdev);
 void VGgindata(short vw, unsigned short x, unsigned short y, char c, char *a);
 SessionRef VGgetVS(short theVGnum);
 

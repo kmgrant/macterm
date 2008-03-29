@@ -60,11 +60,11 @@
 #include "Folder.h"
 #include "ProgressDialog.h"
 #include "TelnetPrinting.h"
-#include "TektronixVirtualGraphics.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
 #include "VectorCanvas.h"
+#include "VectorInterpreter.h"
 #include "VectorToBitmap.h"
 
 

@@ -93,13 +93,13 @@
 #include "SessionDescription.h"
 #include "SessionFactory.h"
 #include "SpecialKeySequencesDialog.h"
-#include "TektronixVirtualGraphics.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "TerminalWindow.h"
 #include "Terminology.h"
 #include "UIStrings.h"
 #include "VectorCanvas.h"
+#include "VectorInterpreter.h"
 #include "VTKeys.h"
 
 

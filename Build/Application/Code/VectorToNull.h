@@ -79,7 +79,7 @@ char const*
 
 void
 	VectorToNull_SetCallbackData			(SInt16				inDevice,
-											 SInt16				inTektronixVirtualGraphicsRef,
+											 SInt16				inVectorInterpreterRef,
 											 SInt16				inData2,
 											 SInt16				inData3,
 											 SInt16				inData4,

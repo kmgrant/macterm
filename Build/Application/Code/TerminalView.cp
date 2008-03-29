@@ -77,13 +77,13 @@
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "SessionFactory.h"
-#include "TektronixVirtualGraphics.h"
 #include "Terminal.h"
 #include "TerminalBackground.h"
 #include "TerminalView.h"
 #include "TextTranslation.h"
 #include "UIStrings.h"
 #include "URL.h"
+#include "VectorInterpreter.h"
 
 
 

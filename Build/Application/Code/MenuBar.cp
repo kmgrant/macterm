@@ -79,13 +79,13 @@
 #include "RasterGraphicsScreen.h"
 #include "Session.h"
 #include "SessionFactory.h"
-#include "TektronixVirtualGraphics.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "ThreadEntryPoints.h"
 #include "UIStrings.h"
 #include "URL.h"
 #include "VectorCanvas.h"
+#include "VectorInterpreter.h"
 
 
 

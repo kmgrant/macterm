@@ -66,8 +66,8 @@ Routines for Macintosh Window output.
 #include "EventLoop.h"
 #include "Session.h"
 #include "tekdefs.h"		/* NCSA: sb - all the TEK defines are now here */
-#include "TektronixVirtualGraphics.h"
 #include "VectorCanvas.h"
+#include "VectorInterpreter.h"
 
 
 
@@ -79,20 +79,22 @@ Internal representation of a VectorCanvas_Ref.
 */
 struct My_VectorCanvas
 {
-	OSType			id;
-	SessionRef		vs;
-	HIWindowRef		wind;
-	HIViewRef		zoom;
-	HIViewRef		vert;
-	HIViewRef		horiz;
-	SInt16			xorigin;
-	SInt16			yorigin;
-	SInt16			xscale;
-	SInt16			yscale;
-	SInt16			vg;
-	SInt16			ingin;
-	SInt16			width;
-	SInt16			height;
+	OSType				id;
+	SessionRef			vs;
+	HIWindowRef			wind;
+	EventHandlerUPP		closeUPP;
+	EventHandlerRef		closeHandler;
+	HIViewRef			zoom;
+	HIViewRef			vert;
+	HIViewRef			horiz;
+	SInt16				xorigin;
+	SInt16				yorigin;
+	SInt16				xscale;
+	SInt16				yscale;
+	SInt16				vg;
+	SInt16				ingin;
+	SInt16				width;
+	SInt16				height;
 };
 typedef My_VectorCanvas*		My_VectorCanvasPtr;
 typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
@@ -127,8 +129,6 @@ short												RGMcolor[] =
 														69			// yellow
 													};
 My_VectorCanvasPtr									RGMwind[MAXWIND];
-EventHandlerUPP										gTEKWindowClosingUPPs[MAXWIND];
-EventHandlerRef										gTEKWindowClosingHandlers[MAXWIND];
 std::vector< CommonEventHandlers_WindowResizer >	gWindowResizeHandlers(MAXWIND);
 
 } // anonymous namespace
@@ -195,11 +195,11 @@ VectorCanvas_New ()
 				OSStatus				error = noErr;
 				
 				
-				gTEKWindowClosingUPPs[i] = NewEventHandlerUPP(receiveWindowClosing);
-				error = InstallWindowEventHandler(RGMwind[i]->wind, gTEKWindowClosingUPPs[i],
+				RGMwind[i]->closeUPP = NewEventHandlerUPP(receiveWindowClosing);
+				error = InstallWindowEventHandler(RGMwind[i]->wind, RGMwind[i]->closeUPP,
 													GetEventTypeCount(whenWindowClosing), whenWindowClosing,
 													nullptr/* user data */,
-													&gTEKWindowClosingHandlers[i]/* event handler reference */);
+													&RGMwind[i]->closeHandler/* event handler reference */);
 				assert_noerr(error);
 			}
 			
@@ -243,8 +243,8 @@ VectorCanvas_Dispose	(SInt16		inCanvasID)
 	else
 	{
 		detachGraphics(inCanvasID);
-		RemoveEventHandler(gTEKWindowClosingHandlers[inCanvasID]), gTEKWindowClosingHandlers[inCanvasID] = nullptr;
-		DisposeEventHandlerUPP(gTEKWindowClosingUPPs[inCanvasID]), gTEKWindowClosingUPPs[inCanvasID] = nullptr;
+		RemoveEventHandler(RGMwind[inCanvasID]->closeHandler), RGMwind[inCanvasID]->closeHandler = nullptr;
+		DisposeEventHandlerUPP(RGMwind[inCanvasID]->closeUPP), RGMwind[inCanvasID]->closeUPP = nullptr;
 		gWindowResizeHandlers[inCanvasID] = CommonEventHandlers_WindowResizer();
 		DisposeWindow(RGMwind[inCanvasID]->wind);
 		Memory_DisposePtr((Ptr*)&RGMwind[inCanvasID]);
@@ -443,7 +443,6 @@ VectorCanvas_MonitorMouse	(SInt16		inCanvasID)
 	if (setPortCanvasPort(inCanvasID)) result = -1;
 	else
 	{
-		setgraphcurs();
 		RGMwind[inCanvasID]->ingin = 1;
 	}
 	return result;
@@ -506,13 +505,13 @@ Applies miscellaneous settings to a canvas.
 */
 void
 VectorCanvas_SetCallbackData	(SInt16		inCanvasID,
-								 SInt16		inTektronixVirtualGraphicsRef,
+								 SInt16		inVectorInterpreterRef,
 								 SInt16		UNUSED_ARGUMENT(inData2),
 								 SInt16		UNUSED_ARGUMENT(inData3),
 								 SInt16		UNUSED_ARGUMENT(inData4),
 								 SInt16		UNUSED_ARGUMENT(inData5))
 {
-	RGMwind[inCanvasID]->vg = inTektronixVirtualGraphicsRef;
+	RGMwind[inCanvasID]->vg = inVectorInterpreterRef;
 }// SetCallbackData
 
 
@@ -898,7 +897,6 @@ void RGmousedown
 	Session_SendData(RGMwind[i]->vs, " \r\n", 3);
 
     /*	RGMwind[i]->ingin = 0; */
-	unsetgraphcurs();
 	RGMlastclick = TickCount();
 }// RGmousedown
 

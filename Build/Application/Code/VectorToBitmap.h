@@ -94,7 +94,7 @@ SInt16
 
 void
 	VectorToBitmap_SetCallbackData		(SInt16			inDevice,
-										 SInt16			inTektronixVirtualGraphicsRef,
+										 SInt16			inVectorInterpreterRef,
 										 SInt16			inData2,
 										 SInt16			inData3,
 										 SInt16			inData4,

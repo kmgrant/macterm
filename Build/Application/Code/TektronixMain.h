@@ -1,4 +1,4 @@
-/*!	\file tekstor.proto.h
+/*!	\file TektronixMain.h
 	\brief TEK backing store.
 */
 /*###############################################################
@@ -32,8 +32,8 @@
 
 #include "UniversalDefines.h"
 
-#ifndef __TEKSTORPROTO__
-#define __TEKSTORPROTO__
+#ifndef __TEKTRONIXMAIN__
+#define __TEKTRONIXMAIN__
 
 // MacTelnet includes
 #include "tekdefs.h"

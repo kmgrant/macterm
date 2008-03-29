@@ -76,9 +76,9 @@
 #include "Preferences.h"
 #include "Session.h"
 #include "TextTranslation.h"
-#include "TektronixVirtualGraphics.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
+#include "VectorInterpreter.h"
 #include "VectorToBitmap.h"
 
 

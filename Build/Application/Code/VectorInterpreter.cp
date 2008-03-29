@@ -1,6 +1,6 @@
 /*###############################################################
 
-	TektronixVirtualGraphics.cp
+	VectorInterpreter.cp
 	
 	MacTelnet
 		© 1998-2008 by Kevin Grant.
@@ -51,9 +51,9 @@
 #include "SessionFactory.h"
 #include "TektronixFont.h"
 #include "TektronixMain.h"
-#include "TektronixVirtualGraphics.h"
 #include "tekdefs.h"	/* NCSA: sb - all defines are now here, for easy access */
 #include "VectorCanvas.h"
+#include "VectorInterpreter.h"
 #include "VectorToBitmap.h"
 #include "VectorToNull.h"
 
@@ -110,14 +110,25 @@ struct VGWINTYPE {
 #pragma mark Internal Method Prototypes
 namespace {
 
-void	clipvec(short vw, short xa, short ya, short xb, short yb);
-void	findTEKGraphicSessionOp		(SessionRef, void*, SInt32, void*);
-short	fontnum(short vw, short n);
-short	joinup(short hi, short lo, short e);
-void	linefeed(short vw);
-void	newcoord(short vw);
-void	storexy(short vw, short x, short y);
-short	VGcheck(short dnum);
+void			clipvec						(short, short, short, short, short);
+void			destroyGraphics				(short);
+short			drawc						(short, short);
+SessionRef		findSessionUsingGraphic		(short);
+void			findTEKGraphicSessionOp		(SessionRef, void*, SInt32, void*);
+short			fontnum						(short, short);
+short			joinup						(short, short, short);
+void			linefeed					(short);
+void			newcoord					(short);
+void			storexy						(short, short, short);
+short			VGalive						(short);
+short			VGcheck						(short);
+void			VGclrstor					(short);
+short			VGdevice					(short, short);
+void			VGdraw						(short, char);
+void			VGdumpstore					(short, short (*)(short));
+char const*		VGrgname					(short);
+void			VGtmode						(short);
+void			VGwhatzoom					(short, short*, short*, short*, short*);
 
 } // anonymous namespace
 
@@ -186,7 +197,6 @@ short				drawing[MAXVG]; /* redrawing or not? */
 short				charxset[NUMSIZES] = {56,51,34,31,112,168};
 short				charyset[NUMSIZES] = {88,82,53,48,176,264};
 
-short				gGraphCurs = 0;
 short				gNumGraphs = 0;
 long				gOldGraphs[kMaximumAllowedGraphicsWindows];
 
@@ -197,12 +207,13 @@ long				gOldGraphs[kMaximumAllowedGraphicsWindows];
 #pragma mark Public Methods
 
 /*!
-Initializes the whole TEK environment.  Should
-be called at program startup before using any
-other TEK functionality.
+Initializes the whole TEK environment.  Should be called
+before using any other TEK functionality.
+
+(2.6)
 */
 void
-TektronixVirtualGraphics_Init ()
+VectorInterpreter_Init ()
 {
 	register SInt16		i = 0;
 	
@@ -210,6 +221,371 @@ TektronixVirtualGraphics_Init ()
 	for (i = 0; i < MAXVG; ++i) VGwin[i] = nullptr;
 	for (i = 0; i < TEK_DEVICE_MAX; ++i) (*RG[i].init)();
 }// Init
+
+
+short
+detachGraphics	(short		dnum)
+{
+	SInt16			result = -1;
+	SessionRef		session = nullptr;
+	
+	
+	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
+										kSessionFactory_SessionFilterFlagConsoleSessions,
+									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
+									STATIC_CAST(dnum, SInt32)/* data 2 */, (void*)&session);
+	if (session == nullptr) result = -1;
+	else
+	{
+		ConnectionDataPtr	connectionDataPtr = Session_ConnectionDataPtr(session);
+		
+		
+		gOldGraphs[gNumGraphs++] = dnum;
+		connectionDataPtr->TEK.graphicsID = -1;
+		Session_RemoveDataTarget(session, kSession_DataTargetTektronixGraphicsCanvas, &dnum);
+		result = 0;
+	}
+	return result;
+}// detachGraphics
+
+
+/***********************************************************
+************************************************************
+***														 ***
+**	All routines given below may be called by the user	  **
+**	program.  No routines given above may be called from  **
+**	the user program.									  **
+***														 ***
+************************************************************
+***********************************************************/
+
+
+SessionRef
+VGgetVS		(short		theVGnum)
+{
+	SessionRef	result = nullptr;
+	
+	
+	if (VGcheck(theVGnum)) result = nullptr;
+	else result = VGwin[theVGnum]->theVS;
+	
+	return result;
+}// VGgetVS
+
+
+/*
+ *	create a new VG window and return its number.
+ *	New window will be attached to specified real device.
+ *	Returns -1 if unable to create a new VG window.
+ *
+ *	Modified 16jul90dsw: Support selection of 4105 or 4014.
+ */
+short VGnewwin
+  (
+	short device, /* number of RG device to use */
+	SessionRef inSession
+  )
+{
+	short	vw = 0;
+	
+
+	while ((vw < MAXVG) && (VGwin[vw] != nullptr)) vw++;
+	if (vw == MAXVG)
+		return(-1);
+		
+	VGwin[vw] = (struct VGWINTYPE *) Memory_NewPtr(sizeof(struct VGWINTYPE));
+	if (VGwin[vw] == nullptr) {
+		return -1;
+		}
+			
+	VGstore[vw] = newTEKstore();
+	if (VGstore[vw] == nullptr) {
+		Memory_DisposePtr((Ptr*)&VGwin[vw]);
+		VGwin[vw] = nullptr;
+		return -1;
+		}
+	
+	VGwin[vw]->id = 'VGWN';
+	VGwin[vw]->RGdevice = device;
+	VGwin[vw]->RGnum = (*RG[device].newwin)();
+	VGwin[vw]->TEKtype = Session_TEKGetMode(inSession);
+
+	if (VGwin[vw]->RGnum < 0)
+	{
+		/* no windows available on device */
+		Memory_DisposePtr((Ptr*)&VGwin[vw]);
+		VGwin[vw] = nullptr;
+		freeTEKstore(VGstore[vw]);
+		Sound_StandardAlert();
+		return(-1);
+	}
+			
+	VGwin[vw]->mode = ALPHA;
+	VGwin[vw]->TEKPanel = (pointlist) nullptr;
+	VGwin[vw]->theVS = inSession;
+	state[vw] = DONE;
+	storing[vw] = true;
+	VGwin[vw]->textcol = 0;
+	drawing[vw] = 1;
+	fontnum(vw,0);
+	(*RG[device].pencolor)(VGwin[vw]->RGnum,1);
+
+	storexy(vw,0,3071);
+#if 1
+	VGzoom(vw,0,0,4095,3119);				/* important */
+#else
+	VGzoom(vw,0,0,INXMAX-1,INYMAX-1);
+#endif
+	return(vw);
+}
+
+/*	Release its real graphics device and its store. */
+void	VGclose(short vw)
+{
+	if (VGcheck(vw)) {
+		return;
+		}
+
+	(*RG[VGwin[vw]->RGdevice].close)(VGwin[vw]->RGnum);
+	freeTEKstore(VGstore[vw]);
+	Memory_DisposePtr((Ptr*)VGwin[vw]);
+	VGwin[vw] = nullptr;
+}
+
+/*  Clear screen and have a few other effects:
+ *	- Return graphics to home position (0,3071)
+ *	- Switch to alpha mode
+ *	This is a standard Tek command; don't look at me.
+ */
+void VGpage(short vw)
+{
+	if (VGcheck(vw)) {
+		return;
+		}
+
+	if (VGwin[vw]->TEKtype == kTektronixMode4105)
+		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKBackground);
+	else
+		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,0);
+	(*RG[VGwin[vw]->RGdevice].clrscr)(VGwin[vw]->RGnum);
+	(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,1);
+	VGwin[vw]->mode = ALPHA;
+	state[vw] = DONE;
+	VGwin[vw]->textcol = 0;
+	fontnum(vw,0);
+	storexy(vw,0,3071);
+}
+
+/*	Redraw window 'vw' in pieces to window 'dest'.
+ *	Must call this function repeatedly to draw whole image.
+ *	Only draws part of the image at a time, to yield CPU power.
+ *	Returns 0 if needs to be called more, or 1 if the image
+ *	is complete.  Another call would result in the redraw beginning again.
+ *	User should clear screen before beginning redraw.
+ */
+short VGpred(short vw, short dest)
+{
+	short		data = 0;
+	TEKSTOREP	st;
+	short		count = 0;
+	
+	if (VGcheck(vw)) {
+		return -1;
+		}
+
+	st = VGstore[vw];
+	
+	if (drawing[vw])		/* wasn't redrawing */
+	{
+		topTEKstore(VGstore[vw]);
+		drawing[vw] = 0;	/* redraw incomplete */
+	}
+
+	while (++count < PREDCOUNT && ((data = nextTEKitem(st)) != -1))
+		VGdraw(dest,data);
+
+	if (data == -1) drawing[vw] = 1; 	/* redraw complete */
+	return(drawing[vw]);
+}
+
+/*	Abort VGpred redrawing of specified window.
+	Must call this routine if you decide not to complete the redraw. */
+void VGstopred(short vw)
+{
+	if (VGcheck(vw)) {
+		return;
+		}
+
+	drawing[vw] = 1;
+}
+
+/*	Redraw the contents of window 'vw' to window 'dest'.
+ *	Does not yield CPU until done.
+ *	User should clear the screen before calling this, to avoid 
+ *	a messy display. */
+void VGredraw(short vw, short dest)
+{
+	short	data;
+
+	if (VGcheck(vw)) {
+		return;
+		}
+
+	topTEKstore(VGstore[vw]);
+	while ((data = nextTEKitem(VGstore[vw])) != -1) VGdraw(dest,data);
+}
+ 
+/*	Send interesting information about the virtual window down to
+ *	its RG, so that the RG can make VG calls and display zoom values
+ */
+void	VGgiveinfo(short vw)
+{
+	if (VGcheck(vw)) {
+		return;
+		}
+
+	(*RG[VGwin[vw]->RGdevice].info)(VGwin[vw]->RGnum,
+		vw,
+		VGwin[vw]->winbot,
+		VGwin[vw]->winleft,
+		VGwin[vw]->wintop,
+		VGwin[vw]->winright);
+}
+
+/*	Set new borders for zoom/pan region.
+ *	x0,y0 is lower left; x1,y1 is upper right.
+ *	User should redraw after calling this.
+ */
+void	VGzoom(short vw, short x0, short inY0, short x1, short inY1)
+{
+	if (VGcheck(vw)) {
+		return;
+		}
+
+	VGwin[vw]->winbot = inY0;
+	VGwin[vw]->winleft = x0;
+	VGwin[vw]->wintop = inY1;
+	VGwin[vw]->winright = x1;
+	VGwin[vw]->wintall = inY1 - inY0 + 1;
+	VGwin[vw]->winwide = x1 - x0 + 1;
+	VGgiveinfo(vw);
+}
+
+/*	Set zoom/pan borders for window 'dest' equal to those for window 'src'.
+ *	User should redraw window 'dest' after calling this.
+ */
+void	VGzcpy(short src, short dest)
+{
+	VGzoom(dest,VGwin[src]->winleft, VGwin[src]->winbot,
+	VGwin[src]->winright, VGwin[src]->wintop);
+}
+
+/*	Close virtual window.
+ *	Draw the data pointed to by 'data' of length 'count'
+ *	on window vw, and add it to the store for that window.
+ *	This is THE way for user program to pass Tektronix data.
+ */
+short	VGwrite(short vw, char const* data, short count)
+{
+	char const* c = data;
+	char const* end = &(data[count]);
+	char storeit;
+
+	if (VGcheck(vw)) {
+		return -1;
+		}
+
+	storeit = storing[vw];
+	
+	while (c != end)
+	{
+		if (*c == 24)				/* ASC CAN character */
+			return(c-data+1);
+		if (storeit) addTEKstore(VGstore[vw],*c);
+		VGdraw(vw,*c++);
+
+	}
+	return(count);
+}
+
+/*	Translate data for output as GIN report.
+ *
+ *	User indicates VW number and x,y coordinates of the GIN cursor.
+ *	Coordinate space is 0-4095, 0-4095 with 0,0 at the bottom left of
+ *	the real window and 4095,4095 at the upper right of the real window.
+ *	'c' is the character to be returned as the keypress.
+ *	'a' is a pointer to an array of 5 characters.  The 5 chars must
+ *	be transmitted by the user to the remote host as the GIN report. */
+void VGgindata( short vw,
+	unsigned short x,		/* NCSA: SB - UNSIGNED data */
+	unsigned short y,		/* NCSA: SB - "          "  */
+	char c, char *a)
+{
+	long	x2,y2;
+	
+	if (VGcheck(vw)) {
+		return;
+		}
+
+	x2 = ((x * VGwin[vw]->winwide) / INXMAX + VGwin[vw]->winleft) >> 2;
+	y2 = ((y * VGwin[vw]->wintall) / INYMAX + VGwin[vw]->winbot) >> 2;
+
+	a[0] = c;
+	a[1] = 0x20 | ((x2 & 0x03E0) >> 5);
+	a[2] = 0x20 | (x2 & 0x001F);
+	a[3] = 0x20 | ((y2 & 0x03E0) >> 5);
+	a[4] = 0x20 | (y2 & 0x001F);
+}
+
+
+#pragma mark Internal Methods
+namespace {
+
+/*
+ *	Draw a vector in vw's window from x0,y0 to x1,y1.
+ *	Zoom the vector to the current visible window,
+ *	and clip it before drawing it.
+ *	Uses Liang-Barsky algorithm from ACM Transactions on Graphics,
+ *		Vol. 3, No. 1, January 1984, p. 7.
+ *
+ *  Note: since QuickDraw on the Mac already handles clipping, we
+ *		  will not do any processing here.
+ *  14may91dsw
+ *
+ */
+void
+clipvec		(short		vw,
+			 short		xa,
+			 short		ya,
+			 short		xb,
+			 short		yb)
+{
+	short				t = 0,
+						b = 0,
+						l = 0,
+						r = 0;
+	struct VGWINTYPE*	vp = nullptr;
+	long				hscale = 0L,
+						vscale = 0L;
+	
+	
+	vp = VGwin[vw];
+	
+	hscale = INXMAX / (long) vp->winwide;
+	vscale = INYMAX / (long) vp->wintall;
+	
+	t = vp->wintop;
+	b = vp->winbot;
+	l = vp->winleft;
+	r = vp->winright;
+
+	(*RG[vp->RGdevice].drawline) (vp->RGnum,
+		(short) ((long)(xa - l) * INXMAX / (long) vp->winwide),
+		(short) ((long)(ya- b) * INYMAX / (long) vp->wintall),
+		(short) ((long)(xb - l) * INXMAX / (long) vp->winwide),
+		(short) ((long)(yb- b) * INYMAX / (long) vp->wintall)
+		);
+}// clipvec
 
 
 void
@@ -248,100 +624,6 @@ destroyGraphics	(short		dnum)
 	}
 	VGclose(dnum);
 }// destroyGraphics
-
-
-short
-detachGraphics	(short		dnum)
-{
-	SInt16			result = -1;
-	SessionRef		session = nullptr;
-	
-	
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
-										kSessionFactory_SessionFilterFlagConsoleSessions,
-									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
-									STATIC_CAST(dnum, SInt32)/* data 2 */, (void*)&session);
-	if (session == nullptr) result = -1;
-	else
-	{
-		ConnectionDataPtr	connectionDataPtr = Session_ConnectionDataPtr(session);
-		
-		
-		gOldGraphs[gNumGraphs++] = dnum;
-		connectionDataPtr->TEK.graphicsID = -1;
-		Session_RemoveDataTarget(session, kSession_DataTargetTektronixGraphicsCanvas, &dnum);
-		result = 0;
-	}
-	return result;
-}// detachGraphics
-
-
-short
-getgraphcurs	()
-{
-	return gGraphCurs;
-}// getgraphcurs
-
-
-void
-setgraphcurs	()
-{
-	gGraphCurs = 1;
-}// setgraphcurs
-
-
-void
-unsetgraphcurs	()
-{
-	gGraphCurs = 0;
-}// unsetgraphcurs
-
-
-short
-VGalive	(short		dnum)
-{
-	SInt16			result = 0;
-	SessionRef		session = nullptr;
-	
-	
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
-										kSessionFactory_SessionFilterFlagConsoleSessions,
-									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
-									STATIC_CAST(dnum, SInt32)/* data 2 */, (void*)&session);
-	if (session != nullptr) result = 1; // specified graphic is still attached, it must be alive
-	else
-	{
-		// specified graphic is detached; but if it’s still in the list it is alive
-		register SInt16		i = 0;
-		
-		
-		while ((i < gNumGraphs) && (dnum != gOldGraphs[i])) ++i;
-		if (i < gNumGraphs) result = 1;
-	}
-	
-	return result;
-}// VGalive
-
-
-SessionRef
-TektronixVirtualGraphics_FindSessionUsingGraphic	(short		vg)
-{
-	SessionRef		result = nullptr;
-	
-	
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
-										kSessionFactory_SessionFilterFlagConsoleSessions,
-									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
-									STATIC_CAST(vg, SInt32)/* data 2 */, (void*)&result);
-	return result;
-}// FindSessionUsingGraphic
-
-
-short
-donothing ()
-{
-	return 0;
-}// donothing
 
 
 /*
@@ -493,108 +775,192 @@ drawc		(short		vw,
 }// drawc
 
 
-/***********************************************************
-************************************************************
-***														 ***
-**	All routines given below may be called by the user	  **
-**	program.  No routines given above may be called from  **
-**	the user program.									  **
-***														 ***
-************************************************************
-***********************************************************/
-
-
 SessionRef
-VGgetVS		(short		theVGnum)
+findSessionUsingGraphic		(short		vg)
 {
-	SessionRef	result = nullptr;
+	SessionRef		result = nullptr;
 	
 	
-	if (VGcheck(theVGnum)) result = nullptr;
-	else result = VGwin[theVGnum]->theVS;
-	
+	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
+										kSessionFactory_SessionFilterFlagConsoleSessions,
+									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
+									STATIC_CAST(vg, SInt32)/* data 2 */, (void*)&result);
 	return result;
-}// VGgetVS
+}// findSessionUsingGraphic
+
+
+/*!
+This method is of standard "SessionFactory_SessionOpProcPtr"
+form.  It determines whether the specified session’s TEK
+graphics ID is the same as the ID specified by
+"inGraphicIDToFind".  The value of "inData1" is not defined,
+and should be nullptr.
+
+You should provide storage for a "SessionRef"; that is,
+the actual type of "inoutSessionRefPtr" is a pointer to a
+"SessionRef".
+
+(3.0)
+*/
+void
+findTEKGraphicSessionOp		(SessionRef		inSession,
+							 void*			UNUSED_ARGUMENT(inData1),
+							 SInt32			inGraphicIDToFind,
+							 void*			inoutSessionRefPtr)
+{
+	if ((inoutSessionRefPtr != nullptr) && (inSession != nullptr))
+	{
+		if (Session_ConnectionDataPtr(inSession)->TEK.graphicsID == inGraphicIDToFind)
+		{
+			*((SessionRef*)inoutSessionRefPtr) = inSession;
+		}
+	}
+}// findTEKGraphicSessionOp
 
 
 /*
- *	create a new VG window and return its number.
- *	New window will be attached to specified real device.
- *	Returns -1 if unable to create a new VG window.
- *
- *	Modified 16jul90dsw: Support selection of 4105 or 4014.
+ *	Set font for window 'vw' to size 'n'.
+ *	Sizes are 0..3 in Tek 4014 standard.
+ *	Sizes 4 & 5 are used internally for Tek 4105 emulation.
  */
-short VGnewwin
-  (
-	short device, /* number of RG device to use */
-	SessionRef inSession
-  )
+short
+fontnum		(short		vw,
+			 short		n)
 {
-	short	vw = 0;
+	short	result = 0;
 	
-
-	while ((vw < MAXVG) && (VGwin[vw] != nullptr)) vw++;
-	if (vw == MAXVG)
-		return(-1);
-		
-	VGwin[vw] = (struct VGWINTYPE *) Memory_NewPtr(sizeof(struct VGWINTYPE));
-	if (VGwin[vw] == nullptr) {
-		return -1;
-		}
-			
-	VGstore[vw] = newTEKstore();
-	if (VGstore[vw] == nullptr) {
-		Memory_DisposePtr((Ptr*)&VGwin[vw]);
-		VGwin[vw] = nullptr;
-		return -1;
-		}
 	
-	VGwin[vw]->id = 'VGWN';
-	VGwin[vw]->RGdevice = device;
-	VGwin[vw]->RGnum = (*RG[device].newwin)();
-	VGwin[vw]->TEKtype = Session_TEKGetMode(inSession);
-
-	if (VGwin[vw]->RGnum < 0)
+	if ((n < 0) || (n >= NUMSIZES)) result = -1;
+	else
 	{
-		/* no windows available on device */
-		Memory_DisposePtr((Ptr*)&VGwin[vw]);
-		VGwin[vw] = nullptr;
-		freeTEKstore(VGstore[vw]);
-		Sound_StandardAlert();
-		return(-1);
+		VGwin[vw]->fontnum = n;
+		VGwin[vw]->charx = charxset[n];
+		VGwin[vw]->chary = charyset[n];
 	}
-			
-	VGwin[vw]->mode = ALPHA;
-	VGwin[vw]->TEKPanel = (pointlist) nullptr;
-	VGwin[vw]->theVS = inSession;
-	state[vw] = DONE;
-	storing[vw] = true;
-	VGwin[vw]->textcol = 0;
-	drawing[vw] = 1;
-	fontnum(vw,0);
-	(*RG[device].pencolor)(VGwin[vw]->RGnum,1);
+	return result;
+}// fontnum
 
-	storexy(vw,0,3071);
+
+short
+joinup		(short		hi,
+			 short		lo,
+			 short		e)
+/* returns the number represented by the 3 pieces */
+{
 #if 1
-	VGzoom(vw,0,0,4095,3119);				/* important */
+	return (((hi & 31) << 7) | ((lo & 31) << 2) | (e & 3));
 #else
-	VGzoom(vw,0,0,INXMAX-1,INYMAX-1);
+	return (((hi /* & 31 */ ) << 7) | ((lo /* & 31 */ ) << 2) | (e /* & 3 */));
 #endif
-	return(vw);
+}// joinup
+
+
+void
+linefeed	(short		vw) 
+/* 
+ *	Perform a linefeed & cr (CHARTALL units) in specified window.
+ */
+{
+/*	short y = joinup(VGwin[vw]->hiy,VGwin[vw]->loy,VGwin[vw]->ey);*/
+	short y = VGwin[vw]->cury;
+	short x;
+
+	if (y > VGwin[vw]->chary) y -= VGwin[vw]->chary;
+	else
+	{
+		y = 3119 - VGwin[vw]->chary;
+		VGwin[vw]->textcol = 2048 - VGwin[vw]->textcol;
+	}
+	x = VGwin[vw]->textcol;
+	storexy(vw,x,y);
+}// linefeed
+
+
+void
+newcoord	(short		vw)
+/*
+ *	Replace x,y with nx,ny
+ */
+{
+	VGwin[vw]->hiy = VGwin[vw]->nhiy;
+	VGwin[vw]->hix = VGwin[vw]->nhix;
+	VGwin[vw]->loy = VGwin[vw]->nloy;
+	VGwin[vw]->lox = VGwin[vw]->nlox;
+	VGwin[vw]->ey  = VGwin[vw]->ney;
+	VGwin[vw]->ex  = VGwin[vw]->nex;
+
+	VGwin[vw]->curx = joinup(VGwin[vw]->nhix,VGwin[vw]->nlox,VGwin[vw]->nex);
+	VGwin[vw]->cury = joinup(VGwin[vw]->nhiy,VGwin[vw]->nloy,VGwin[vw]->ney);
 }
 
-/*	Release its real graphics device and its store. */
-void	VGclose(short vw)
+
+void
+storexy		(short		vw,
+			 short		x,
+			 short		y)
+/* set graphics x and y position */
+{
+	VGwin[vw]->curx = x;
+	VGwin[vw]->cury = y;
+}// storexy
+
+
+short
+VGalive	(short		dnum)
+{
+	SInt16			result = 0;
+	SessionRef		session = nullptr;
+	
+	
+	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
+										kSessionFactory_SessionFilterFlagConsoleSessions,
+									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
+									STATIC_CAST(dnum, SInt32)/* data 2 */, (void*)&session);
+	if (session != nullptr) result = 1; // specified graphic is still attached, it must be alive
+	else
+	{
+		// specified graphic is detached; but if it’s still in the list it is alive
+		register SInt16		i = 0;
+		
+		
+		while ((i < gNumGraphs) && (dnum != gOldGraphs[i])) ++i;
+		if (i < gNumGraphs) result = 1;
+	}
+	
+	return result;
+}// VGalive
+
+
+short
+VGcheck		(short		dnum)
+{
+	short		result = 0;
+	
+	
+	if ((dnum >= MAXVG) || (dnum < 0)) result = -1;
+	else if (VGwin[dnum] == nullptr) result = -1;
+	else result = 0;
+	
+	return result;
+}// VGcheck
+
+
+/*	Clear the store associated with window vw.  
+ *	All contents are lost.
+ *	User program can call this whenever desired.
+ *	Automatically called after receipt of Tek page command. */
+void	VGclrstor(short vw)
 {
 	if (VGcheck(vw)) {
 		return;
 		}
 
-	(*RG[VGwin[vw]->RGdevice].close)(VGwin[vw]->RGnum);
 	freeTEKstore(VGstore[vw]);
-	Memory_DisposePtr((Ptr*)VGwin[vw]);
-	VGwin[vw] = nullptr;
+	VGstore[vw] = newTEKstore();
+		/* Don't have to check for errors --	*/
+		/* there was definitely enough memory.	*/
 }
+
 
 /*	Detach window from its current device and attach it to the
  *	specified device.  Returns negative number if unable to do so.
@@ -621,41 +987,6 @@ short	VGdevice(short vw, short dev)
 	return(0);
 }
 
-/*	Clear the store associated with window vw.  
- *	All contents are lost.
- *	User program can call this whenever desired.
- *	Automatically called after receipt of Tek page command. */
-void	VGclrstor(short vw)
-{
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	freeTEKstore(VGstore[vw]);
-	VGstore[vw] = newTEKstore();
-		/* Don't have to check for errors --	*/
-		/* there was definitely enough memory.	*/
-}
-
-/*	Successively call the function pointed to by 'func' for each
- *	character stored from window vw.  Each character will
- *	be passed in integer form as the only parameter.  A value of -1
- *	will be passed on the last call to indicate the end of the data.
- */
-void	VGdumpstore(short vw, short (*func )(short))
-{
-	short		data;
-	TEKSTOREP	st;
-
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	st = VGstore[vw];
-	topTEKstore(st);
-	while ((data = nextTEKitem(st)) != -1) (*func)(data);
-	(*func)(-1);
-}
 
 /*	This is the main Tek emulator process.  Pass it the window and
  *	the latest input character, and it will take care of the rest.
@@ -1489,124 +1820,43 @@ void VGdraw(short vw, char c)			/* the latest input char */
 	return;
 }
 
-/*  Clear screen and have a few other effects:
- *	- Return graphics to home position (0,3071)
- *	- Switch to alpha mode
- *	This is a standard Tek command; don't look at me.
+
+/*	Successively call the function pointed to by 'func' for each
+ *	character stored from window vw.  Each character will
+ *	be passed in integer form as the only parameter.  A value of -1
+ *	will be passed on the last call to indicate the end of the data.
  */
-void VGpage(short vw)
+void	VGdumpstore(short vw, short (*func )(short))
 {
+	short		data;
+	TEKSTOREP	st;
+
 	if (VGcheck(vw)) {
 		return;
-		}
-
-	if (VGwin[vw]->TEKtype == kTektronixMode4105)
-		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKBackground);
-	else
-		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,0);
-	(*RG[VGwin[vw]->RGdevice].clrscr)(VGwin[vw]->RGnum);
-	(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,1);
-	VGwin[vw]->mode = ALPHA;
-	state[vw] = DONE;
-	VGwin[vw]->textcol = 0;
-	fontnum(vw,0);
-	storexy(vw,0,3071);
-}
-
-/*	Redraw window 'vw' in pieces to window 'dest'.
- *	Must call this function repeatedly to draw whole image.
- *	Only draws part of the image at a time, to yield CPU power.
- *	Returns 0 if needs to be called more, or 1 if the image
- *	is complete.  Another call would result in the redraw beginning again.
- *	User should clear screen before beginning redraw.
- */
-short VGpred(short vw, short dest)
-{
-	short		data = 0;
-	TEKSTOREP	st;
-	short		count = 0;
-	
-	if (VGcheck(vw)) {
-		return -1;
 		}
 
 	st = VGstore[vw];
-	
-	if (drawing[vw])		/* wasn't redrawing */
-	{
-		topTEKstore(VGstore[vw]);
-		drawing[vw] = 0;	/* redraw incomplete */
-	}
-
-	while (++count < PREDCOUNT && ((data = nextTEKitem(st)) != -1))
-		VGdraw(dest,data);
-
-	if (data == -1) drawing[vw] = 1; 	/* redraw complete */
-	return(drawing[vw]);
+	topTEKstore(st);
+	while ((data = nextTEKitem(st)) != -1) (*func)(data);
+	(*func)(-1);
 }
 
-/*	Abort VGpred redrawing of specified window.
-	Must call this routine if you decide not to complete the redraw. */
-void VGstopred(short vw)
-{
-	if (VGcheck(vw)) {
-		return;
-		}
 
-	drawing[vw] = 1;
-}
-
-/*	Redraw the contents of window 'vw' to window 'dest'.
- *	Does not yield CPU until done.
- *	User should clear the screen before calling this, to avoid 
- *	a messy display. */
-void VGredraw(short vw, short dest)
-{
-	short	data;
-
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	topTEKstore(VGstore[vw]);
-	while ((data = nextTEKitem(VGstore[vw])) != -1) VGdraw(dest,data);
-}
- 
-/*	Send interesting information about the virtual window down to
- *	its RG, so that the RG can make VG calls and display zoom values
+/*	Return a pointer to a human-readable string
+ *	which describes the specified real device
  */
-void	VGgiveinfo(short vw)
+char const*	VGrgname(short rgdev)
 {
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	(*RG[VGwin[vw]->RGdevice].info)(VGwin[vw]->RGnum,
-		vw,
-		VGwin[vw]->winbot,
-		VGwin[vw]->winleft,
-		VGwin[vw]->wintop,
-		VGwin[vw]->winright);
+	return(*RG[rgdev].devname)();
 }
 
-/*	Set new borders for zoom/pan region.
- *	x0,y0 is lower left; x1,y1 is upper right.
- *	User should redraw after calling this.
- */
-void	VGzoom(short vw, short x0, short inY0, short x1, short inY1)
-{
-	if (VGcheck(vw)) {
-		return;
-		}
 
-	VGwin[vw]->winbot = inY0;
-	VGwin[vw]->winleft = x0;
-	VGwin[vw]->wintop = inY1;
-	VGwin[vw]->winright = x1;
-	VGwin[vw]->wintall = inY1 - inY0 + 1;
-	VGwin[vw]->winwide = x1 - x0 + 1;
-	VGgiveinfo(vw);
+/*	Put the specified real device into text mode */
+void	VGtmode(short rgdev)
+{
+	(*RG[rgdev].tmode)();
 }
+
 
 void	VGwhatzoom(short vw, short *px0, short *py0, short *px1, short *py1)
 {
@@ -1619,266 +1869,6 @@ void	VGwhatzoom(short vw, short *px0, short *py0, short *px1, short *py1)
 	*py1 = VGwin[vw]->wintop;
 	*px1 = VGwin[vw]->winright;
 }
-
-/*	Set zoom/pan borders for window 'dest' equal to those for window 'src'.
- *	User should redraw window 'dest' after calling this.
- */
-void	VGzcpy(short src, short dest)
-{
-	VGzoom(dest,VGwin[src]->winleft, VGwin[src]->winbot,
-	VGwin[src]->winright, VGwin[src]->wintop);
-}
-
-/*	Close virtual window.
- *	Draw the data pointed to by 'data' of length 'count'
- *	on window vw, and add it to the store for that window.
- *	This is THE way for user program to pass Tektronix data.
- */
-short	VGwrite(short vw, char const* data, short count)
-{
-	char const* c = data;
-	char const* end = &(data[count]);
-	char storeit;
-
-	if (VGcheck(vw)) {
-		return -1;
-		}
-
-	storeit = storing[vw];
-	
-	while (c != end)
-	{
-		if (*c == 24)				/* ASC CAN character */
-			return(c-data+1);
-		if (storeit) addTEKstore(VGstore[vw],*c);
-		VGdraw(vw,*c++);
-
-	}
-	return(count);
-}
-
-/*	Return a pointer to a human-readable string
- *	which describes the specified real device
- */
-char const*	VGrgname(short rgdev)
-{
-	return(*RG[rgdev].devname)();
-}
-
-/*	Put the specified real device into text mode */
-void	VGtmode(short rgdev)
-{
-	(*RG[rgdev].tmode)();
-}
-
-/*	Translate data for output as GIN report.
- *
- *	User indicates VW number and x,y coordinates of the GIN cursor.
- *	Coordinate space is 0-4095, 0-4095 with 0,0 at the bottom left of
- *	the real window and 4095,4095 at the upper right of the real window.
- *	'c' is the character to be returned as the keypress.
- *	'a' is a pointer to an array of 5 characters.  The 5 chars must
- *	be transmitted by the user to the remote host as the GIN report. */
-void VGgindata( short vw,
-	unsigned short x,		/* NCSA: SB - UNSIGNED data */
-	unsigned short y,		/* NCSA: SB - "          "  */
-	char c, char *a)
-{
-	long	x2,y2;
-	
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	x2 = ((x * VGwin[vw]->winwide) / INXMAX + VGwin[vw]->winleft) >> 2;
-	y2 = ((y * VGwin[vw]->wintall) / INYMAX + VGwin[vw]->winbot) >> 2;
-
-	a[0] = c;
-	a[1] = 0x20 | ((x2 & 0x03E0) >> 5);
-	a[2] = 0x20 | (x2 & 0x001F);
-	a[3] = 0x20 | ((y2 & 0x03E0) >> 5);
-	a[4] = 0x20 | (y2 & 0x001F);
-}
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*
- *	Draw a vector in vw's window from x0,y0 to x1,y1.
- *	Zoom the vector to the current visible window,
- *	and clip it before drawing it.
- *	Uses Liang-Barsky algorithm from ACM Transactions on Graphics,
- *		Vol. 3, No. 1, January 1984, p. 7.
- *
- *  Note: since QuickDraw on the Mac already handles clipping, we
- *		  will not do any processing here.
- *  14may91dsw
- *
- */
-void
-clipvec		(short		vw,
-			 short		xa,
-			 short		ya,
-			 short		xb,
-			 short		yb)
-{
-	short				t = 0,
-						b = 0,
-						l = 0,
-						r = 0;
-	struct VGWINTYPE*	vp = nullptr;
-	long				hscale = 0L,
-						vscale = 0L;
-	
-	
-	vp = VGwin[vw];
-	
-	hscale = INXMAX / (long) vp->winwide;
-	vscale = INYMAX / (long) vp->wintall;
-	
-	t = vp->wintop;
-	b = vp->winbot;
-	l = vp->winleft;
-	r = vp->winright;
-
-	(*RG[vp->RGdevice].drawline) (vp->RGnum,
-		(short) ((long)(xa - l) * INXMAX / (long) vp->winwide),
-		(short) ((long)(ya- b) * INYMAX / (long) vp->wintall),
-		(short) ((long)(xb - l) * INXMAX / (long) vp->winwide),
-		(short) ((long)(yb- b) * INYMAX / (long) vp->wintall)
-		);
-}// clipvec
-
-
-/*!
-This method is of standard "SessionFactory_SessionOpProcPtr"
-form.  It determines whether the specified session’s TEK
-graphics ID is the same as the ID specified by
-"inGraphicIDToFind".  The value of "inData1" is not defined,
-and should be nullptr.
-
-You should provide storage for a "SessionRef"; that is,
-the actual type of "inoutSessionRefPtr" is a pointer to a
-"SessionRef".
-
-(3.0)
-*/
-void
-findTEKGraphicSessionOp		(SessionRef		inSession,
-							 void*			UNUSED_ARGUMENT(inData1),
-							 SInt32			inGraphicIDToFind,
-							 void*			inoutSessionRefPtr)
-{
-	if ((inoutSessionRefPtr != nullptr) && (inSession != nullptr))
-	{
-		if (Session_ConnectionDataPtr(inSession)->TEK.graphicsID == inGraphicIDToFind)
-		{
-			*((SessionRef*)inoutSessionRefPtr) = inSession;
-		}
-	}
-}// findTEKGraphicSessionOp
-
-
-/*
- *	Set font for window 'vw' to size 'n'.
- *	Sizes are 0..3 in Tek 4014 standard.
- *	Sizes 4 & 5 are used internally for Tek 4105 emulation.
- */
-short
-fontnum		(short		vw,
-			 short		n)
-{
-	short	result = 0;
-	
-	
-	if ((n < 0) || (n >= NUMSIZES)) result = -1;
-	else
-	{
-		VGwin[vw]->fontnum = n;
-		VGwin[vw]->charx = charxset[n];
-		VGwin[vw]->chary = charyset[n];
-	}
-	return result;
-}// fontnum
-
-
-short
-joinup		(short		hi,
-			 short		lo,
-			 short		e)
-/* returns the number represented by the 3 pieces */
-{
-#if 1
-	return (((hi & 31) << 7) | ((lo & 31) << 2) | (e & 3));
-#else
-	return (((hi /* & 31 */ ) << 7) | ((lo /* & 31 */ ) << 2) | (e /* & 3 */));
-#endif
-}// joinup
-
-
-void
-linefeed	(short		vw) 
-/* 
- *	Perform a linefeed & cr (CHARTALL units) in specified window.
- */
-{
-/*	short y = joinup(VGwin[vw]->hiy,VGwin[vw]->loy,VGwin[vw]->ey);*/
-	short y = VGwin[vw]->cury;
-	short x;
-
-	if (y > VGwin[vw]->chary) y -= VGwin[vw]->chary;
-	else
-	{
-		y = 3119 - VGwin[vw]->chary;
-		VGwin[vw]->textcol = 2048 - VGwin[vw]->textcol;
-	}
-	x = VGwin[vw]->textcol;
-	storexy(vw,x,y);
-}// linefeed
-
-
-void
-newcoord	(short		vw)
-/*
- *	Replace x,y with nx,ny
- */
-{
-	VGwin[vw]->hiy = VGwin[vw]->nhiy;
-	VGwin[vw]->hix = VGwin[vw]->nhix;
-	VGwin[vw]->loy = VGwin[vw]->nloy;
-	VGwin[vw]->lox = VGwin[vw]->nlox;
-	VGwin[vw]->ey  = VGwin[vw]->ney;
-	VGwin[vw]->ex  = VGwin[vw]->nex;
-
-	VGwin[vw]->curx = joinup(VGwin[vw]->nhix,VGwin[vw]->nlox,VGwin[vw]->nex);
-	VGwin[vw]->cury = joinup(VGwin[vw]->nhiy,VGwin[vw]->nloy,VGwin[vw]->ney);
-}
-
-
-void
-storexy		(short		vw,
-			 short		x,
-			 short		y)
-/* set graphics x and y position */
-{
-	VGwin[vw]->curx = x;
-	VGwin[vw]->cury = y;
-}// storexy
-
-
-short
-VGcheck		(short		dnum)
-{
-	short		result = 0;
-	
-	
-	if ((dnum >= MAXVG) || (dnum < 0)) result = -1;
-	else if (VGwin[dnum] == nullptr) result = -1;
-	else result = 0;
-	
-	return result;
-}// VGcheck
 
 } // anonymous namespace
 

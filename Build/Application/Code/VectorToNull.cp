@@ -199,7 +199,7 @@ Does absolutely nothing - placeholder for a
 */
 void
 VectorToNull_SetCallbackData	(SInt16		UNUSED_ARGUMENT(inDevice),
-								 SInt16		UNUSED_ARGUMENT(inTektronixVirtualGraphicsRef),
+								 SInt16		UNUSED_ARGUMENT(inVectorInterpreterRef),
 								 SInt16		UNUSED_ARGUMENT(inData2),
 								 SInt16		UNUSED_ARGUMENT(inData3),
 								 SInt16		UNUSED_ARGUMENT(inData4),

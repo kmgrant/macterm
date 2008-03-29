@@ -3,7 +3,7 @@
 	TektronixMain.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,9 +36,9 @@
 
 // MacTelnet includes
 #include "TektronixMain.h"
-#include "TektronixVirtualGraphics.h"
 #include "tekdefs.h"	/* NCSA: sb - all defines are now here, for easy access */
 #include "VectorCanvas.h"
+#include "VectorInterpreter.h"
 
 //	thiselnum runs from 0 to (handlesize-1), which is in accordance with C style
 //	arrays.  The handle is indexed 0...(handlesize-1) as well.  This is why you see

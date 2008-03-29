@@ -50,7 +50,7 @@
 		0AC6BAE90A8C0BA000AFF37A /* DataAccessAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCD055432A400ACDF3A /* DataAccessAE.cp */; };
 		0AC6BAEA0A8C0BA000AFF37A /* GenericThreads.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDC055432A400ACDF3A /* GenericThreads.cp */; };
 		0AC6BAEB0A8C0BA000AFF37A /* SplashScreenDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE1A055432A400ACDF3A /* SplashScreenDialog.cp */; };
-		0AC6BAEC0A8C0BA000AFF37A /* TektronixVirtualGraphics.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* TektronixVirtualGraphics.cp */; };
+		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
 		0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */; };
 		0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0007FAC07A00248DDF /* FlagManager.cp */; };
 		0AC6BAEF0A8C0BA000AFF37A /* IconListDef.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE5055432A400ACDF3A /* IconListDef.cp */; };
@@ -328,7 +328,7 @@
 		0A4604340554376100ACDF3A /* VectorToBitmap.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorToBitmap.h; path = Application/Code/VectorToBitmap.h; sourceTree = "<group>"; };
 		0A4604350554376100ACDF3A /* VectorToNull.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorToNull.h; path = Application/Code/VectorToNull.h; sourceTree = "<group>"; };
 		0A4604360554376100ACDF3A /* VectorCanvas.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorCanvas.h; path = Application/Code/VectorCanvas.h; sourceTree = "<group>"; };
-		0A4604370554376100ACDF3A /* TektronixVirtualGraphics.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixVirtualGraphics.h; path = Application/Code/TektronixVirtualGraphics.h; sourceTree = SOURCE_ROOT; };
+		0A4604370554376100ACDF3A /* VectorInterpreter.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorInterpreter.h; path = Application/Code/VectorInterpreter.h; sourceTree = "<group>"; };
 		0A4604390554376100ACDF3A /* TelnetPrinting.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TelnetPrinting.h; path = Application/Code/TelnetPrinting.h; sourceTree = SOURCE_ROOT; };
 		0A46043B0554376100ACDF3A /* Terminal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Terminal.h; path = Application/Code/Terminal.h; sourceTree = SOURCE_ROOT; };
 		0A46043C0554376100ACDF3A /* TerminalFile.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TerminalFile.h; path = Application/Code/TerminalFile.h; sourceTree = SOURCE_ROOT; };
@@ -438,7 +438,7 @@
 		0A46FE1F055432A400ACDF3A /* TektronixMain.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixMain.cp; path = Application/Code/TektronixMain.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE20055432A400ACDF3A /* VectorToNull.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = VectorToNull.cp; path = Application/Code/VectorToNull.cp; sourceTree = "<group>"; };
 		0A46FE21055432A400ACDF3A /* VectorCanvas.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = VectorCanvas.cp; path = Application/Code/VectorCanvas.cp; sourceTree = "<group>"; };
-		0A46FE22055432A400ACDF3A /* TektronixVirtualGraphics.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TektronixVirtualGraphics.cp; path = Application/Code/TektronixVirtualGraphics.cp; sourceTree = SOURCE_ROOT; };
+		0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = VectorInterpreter.cp; path = Application/Code/VectorInterpreter.cp; sourceTree = "<group>"; };
 		0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TelnetPrinting.cp; path = Application/Code/TelnetPrinting.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE25055432A400ACDF3A /* Terminal.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Terminal.cp; path = Application/Code/Terminal.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE26055432A400ACDF3A /* TerminalFile.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalFile.cp; path = Application/Code/TerminalFile.cp; sourceTree = SOURCE_ROOT; };
@@ -774,7 +774,6 @@
 				0A46FE1A055432A400ACDF3A /* SplashScreenDialog.cp */,
 				0A46FE1C055432A400ACDF3A /* StatusIcon.cp */,
 				0A46FE1F055432A400ACDF3A /* TektronixMain.cp */,
-				0A46FE22055432A400ACDF3A /* TektronixVirtualGraphics.cp */,
 				0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */,
 				0A46FE25055432A400ACDF3A /* Terminal.cp */,
 				0A984182083452E6002E1BCE /* TerminalBackground.cp */,
@@ -787,6 +786,7 @@
 				0A46FDE3055432A400ACDF3A /* UIStrings.cp */,
 				0A46FE38055432A400ACDF3A /* URL.cp */,
 				0A46FE21055432A400ACDF3A /* VectorCanvas.cp */,
+				0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */,
 				0AAB15BE0D9DAFD300285094 /* VectorToBitmap.cp */,
 				0A46FE20055432A400ACDF3A /* VectorToNull.cp */,
 				0A46FE3A055432A400ACDF3A /* VirtualDevice.cp */,
@@ -862,7 +862,6 @@
 				0A4604310554376100ACDF3A /* tekdefs.h */,
 				0A4604330554376100ACDF3A /* TektronixFont.h */,
 				0A4604320554376100ACDF3A /* TektronixMain.h */,
-				0A4604370554376100ACDF3A /* TektronixVirtualGraphics.h */,
 				0A4604390554376100ACDF3A /* TelnetPrinting.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
 				0A9841C7083457A4002E1BCE /* TerminalBackground.h */,
@@ -882,6 +881,7 @@
 				0A4604510554376100ACDF3A /* Undoables.h */,
 				0A4604540554376100ACDF3A /* URL.h */,
 				0A4604360554376100ACDF3A /* VectorCanvas.h */,
+				0A4604370554376100ACDF3A /* VectorInterpreter.h */,
 				0A4604340554376100ACDF3A /* VectorToBitmap.h */,
 				0A4604350554376100ACDF3A /* VectorToNull.h */,
 				0A4604560554376100ACDF3A /* VirtualDevice.h */,
@@ -1368,7 +1368,7 @@
 				0AC6BAE90A8C0BA000AFF37A /* DataAccessAE.cp in Sources */,
 				0AC6BAEA0A8C0BA000AFF37A /* GenericThreads.cp in Sources */,
 				0AC6BAEB0A8C0BA000AFF37A /* SplashScreenDialog.cp in Sources */,
-				0AC6BAEC0A8C0BA000AFF37A /* TektronixVirtualGraphics.cp in Sources */,
+				0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */,
 				0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.cp in Sources */,
 				0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */,
 				0AC6BAEF0A8C0BA000AFF37A /* IconListDef.cp in Sources */,

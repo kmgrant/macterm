@@ -93,12 +93,12 @@
 #include "RecordAE.h"
 #include "SessionFactory.h"
 #include "SplashScreenDialog.h"
-#include "TektronixVirtualGraphics.h"
 #include "TerminalBackground.h"
 #include "TerminalView.h"
 #include "Terminology.h"
 #include "TextTranslation.h"
 #include "UIStrings.h"
+#include "VectorInterpreter.h"
 
 
 
@@ -261,9 +261,9 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		//MacroSetupWindow_RunTests();
 	#endif
 		
-		TektronixVirtualGraphics_Init(); // TEK setup
+		VectorInterpreter_Init(); // TEK setup
 	#if RUN_MODULE_TESTS
-		//TektronixVirtualGraphics_RunTests();
+		//VectorInterpreter_RunTests();
 	#endif
 		
 		RasterGraphicsKernel_Init(); // ICR setup

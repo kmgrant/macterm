@@ -77,9 +77,9 @@
 #include "Preferences.h"
 #include "QuillsSession.h"
 #include "RasterGraphicsScreen.h"
-#include "TektronixVirtualGraphics.h"
 #include "Terminology.h"
 #include "VectorCanvas.h"
+#include "VectorInterpreter.h"
 
 
 
