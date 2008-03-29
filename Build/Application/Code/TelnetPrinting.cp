@@ -810,7 +810,7 @@ static void printGraph(SInt16 dnum)			/* Which drawing to print */
 				prRect.bottom = prRect.top + wv;
 				prRect.right = prRect.left + wh;
 
-				j=VGnewwin(TEK_DEVICE_PICTURE,VGgetVS(dnum));		/* NCSA 2.5: fixed the print call */
+				j=VGnewwin(kVectorInterpreter_TargetQuickDrawPicture,VGgetVS(dnum));		/* NCSA 2.5: fixed the print call */
 				VectorToBitmap_SetBounds( &prRect );
 				VGzcpy( dnum, j);				/* Love dat zm factr */
 				VGredraw(dnum,j);				/* Copy the picture in i to j */

@@ -287,6 +287,17 @@ enum Session_TelnetOptionStateType
 };
 
 /*!
+Data specific to a telnet option that is stored on a Session.
+Note that "Session_PropertyKey" is probably more appropriate.
+*/
+enum Session_VectorGraphicsMode
+{
+	kSession_VectorGraphicsModeDisabled			= 'TEKX',	//!< no vector graphics
+	kSession_VectorGraphicsModeTEK4014			= '4014',	//!< TEK 4014 command set
+	kSession_VectorGraphicsModeTEK4105			= '4105'	//!< TEK 4105 command set
+};
+
+/*!
 A session can watch for one special event at a time, which (if
 monitored) is automatically handled with an appropriate user
 interface.  Watches are defined in a mutually exclusive way, so
@@ -465,9 +476,6 @@ Boolean
 void
 	Session_TEKDetachTargetGraphic			(SessionRef							inRef);
 
-TektronixMode
-	Session_TEKGetMode						(SessionRef							inRef);
-
 Boolean
 	Session_TEKHasTargetGraphic				(SessionRef							inRef);
 
@@ -476,6 +484,13 @@ Boolean
 
 Boolean
 	Session_TEKPageCommandOpensNewWindow	(SessionRef							inRef);
+
+Session_VectorGraphicsMode
+	Session_TEKReturnMode					(SessionRef							inRef);
+
+void
+	Session_TEKSetPageCommandOpensNewWindow	(SessionRef							inRef,
+											 Boolean							inNewWindow);
 
 SInt16
 	Session_TEKWrite						(SessionRef							inRef,

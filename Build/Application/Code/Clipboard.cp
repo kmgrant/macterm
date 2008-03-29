@@ -1371,7 +1371,7 @@ graphicToPICT	(short		inDrawingNumber)
 	
 	
 	SetRect(&trect, 0, 0, 384, 384);
-	j = VGnewwin(TEK_DEVICE_PICTURE, VGgetVS(inDrawingNumber));
+	j = VGnewwin(kVectorInterpreter_TargetQuickDrawPicture, VGgetVS(inDrawingNumber));
 	VectorToBitmap_SetBounds(&trect);
 	VGzcpy(inDrawingNumber, j);
 	

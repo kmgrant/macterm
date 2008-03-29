@@ -5481,7 +5481,7 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 	case kPreferences_TagTektronixMode:
 		outKeyName = CFSTR("tek-mode");
 		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(TektronixMode);
+		outNonDictionaryValueSize = sizeof(Session_VectorGraphicsMode);
 		outClass = kPreferences_ClassSession;
 		break;
 	
@@ -6186,25 +6186,25 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						}
 						else
 						{
-							TektronixMode*		storedValuePtr = REINTERPRET_CAST(outDataPtr, TektronixMode*);
+							Session_VectorGraphicsMode*		storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_VectorGraphicsMode*);
 							
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("off"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTektronixModeNotAllowed;
+								*storedValuePtr = kSession_VectorGraphicsModeDisabled;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("4014"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTektronixMode4014;
+								*storedValuePtr = kSession_VectorGraphicsModeTEK4014;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("4105"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kTektronixMode4105;
+								*storedValuePtr = kSession_VectorGraphicsModeTEK4105;
 							}
 							else
 							{
 								// failed; make default
-								*storedValuePtr = kTektronixModeNotAllowed; // arbitrary
+								*storedValuePtr = kSession_VectorGraphicsModeDisabled; // arbitrary
 								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
@@ -7918,21 +7918,21 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			
 			case kPreferences_TagTektronixMode:
 				{
-					TektronixMode const* const	data = REINTERPRET_CAST(inDataPtr, TektronixMode const*);
+					Session_VectorGraphicsMode const* const		data = REINTERPRET_CAST(inDataPtr, Session_VectorGraphicsMode const*);
 					
 					
 					assert(typeCFStringRef == keyValueType);
 					switch (*data)
 					{
-					case kTektronixModeNotAllowed:
+					case kSession_VectorGraphicsModeDisabled:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("off"));
 						break;
 					
-					case kTektronixMode4014:
+					case kSession_VectorGraphicsModeTEK4014:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("4014"));
 						break;
 					
-					case kTektronixMode4105:
+					case kSession_VectorGraphicsModeTEK4105:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("4105"));
 						break;
 					

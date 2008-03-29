@@ -928,10 +928,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandTEKPageClearsScreen:
-			// clear on TEK page
+			// toggle TEK page behavior
 			if (isSession)
 			{
-				currentConnectionDataPtr->TEK.pageLocation = !currentConnectionDataPtr->TEK.pageLocation;
+				Session_TEKSetPageCommandOpensNewWindow(frontSession, false == Session_TEKPageCommandOpensNewWindow(frontSession));
 			}
 			break;
 		

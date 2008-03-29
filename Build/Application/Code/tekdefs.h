@@ -44,31 +44,6 @@
 
 
 
-// the two Tektronix devices (window and picture)
-typedef SInt16 TelnetTektronixDevice;
-enum
-{
-	TEK_DEVICE_WINDOW = 0,
-	TEK_DEVICE_PICTURE = 1
-};
-
-typedef UInt8 TektronixPageLocation;
-enum
-{
-	kTektronixPageLocationNewWindowClear = 0,
-	kTektronixPageLocationSameWindowClear = 1
-};
-
-typedef SInt16 TektronixMode;
-enum
-{
-	kTektronixModeNotAllowed = -1,
-	kTektronixMode4014 = 0,
-	kTektronixMode4105 = 1
-};
-
-typedef SInt16 TektronixGraphicID;	// valid graphics screen IDs are 0 or greater; -1 is "none"
-
 #define TEK_DEVICE_MAX 2
 #define SPLASH_SQUARED	4	/* NCSA: sb - used by tekrgmac.c */
 

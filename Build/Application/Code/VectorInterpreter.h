@@ -44,6 +44,23 @@
 
 
 
+#pragma mark Constants
+
+typedef SInt16 VectorInterpreter_ID;
+enum
+{
+	kVectorInterpreter_InvalidID				= -1
+};
+
+typedef SInt16 VectorInterpreter_Target;
+enum
+{
+	kVectorInterpreter_TargetScreenPixels		= 0,
+	kVectorInterpreter_TargetQuickDrawPicture	= 1
+};
+
+
+
 #pragma mark Public Methods
 
 //!\name Initialization
@@ -54,19 +71,19 @@ void
 
 //@}
 
-short detachGraphics(short dnum);
-short VGnewwin(short device, SessionRef inSession);
-void VGpage(short vw);
-short VGpred(short vw, short dest);
-void VGstopred(short vw);
-void VGredraw(short vw, short dest);
-void VGgiveinfo(short vw);
-void VGzoom(short vw, short x0, short y0, short x1, short y1);
+short detachGraphics(VectorInterpreter_ID dnum);
+VectorInterpreter_ID VGnewwin(VectorInterpreter_Target, SessionRef);
+void VGpage(VectorInterpreter_ID vw);
+short VGpred(VectorInterpreter_ID vw, short dest);
+void VGstopred(VectorInterpreter_ID vw);
+void VGredraw(VectorInterpreter_ID vw, short dest);
+void VGgiveinfo(VectorInterpreter_ID vw);
+void VGzoom(VectorInterpreter_ID vw, short x0, short y0, short x1, short y1);
 void VGzcpy(short src, short dest);
-void VGclose(short vw);
-short VGwrite(short vw, char const* data, short count);
-void VGgindata(short vw, unsigned short x, unsigned short y, char c, char *a);
-SessionRef VGgetVS(short theVGnum);
+void VGclose(VectorInterpreter_ID vw);
+short VGwrite(VectorInterpreter_ID vw, char const* data, short count);
+void VGgindata(VectorInterpreter_ID vw, unsigned short x, unsigned short y, char c, char *a);
+SessionRef VGgetVS(VectorInterpreter_ID theVGnum);
 
 #endif
 

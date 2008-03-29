@@ -241,6 +241,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 		AppResources_UseResFile(kAppResources_FileIDPreferences);
 		
 		
+	#if 0
 		{
 			TektronixMode	tekMode = kTektronixModeNotAllowed;
 			
@@ -270,11 +271,12 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 				break;
 			}
 		}
+	#endif
 		{
 			Clipboard_PasteMethod	pasteMethod = kClipboard_PasteMethodStandard;
 			
 			
-			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagTektronixMode,
+			preferencesResult = Preferences_ContextGetData(preferencesContext, kPreferences_TagPasteMethod,
 															sizeof(pasteMethod), &pasteMethod);
 			if (preferencesResult != kPreferences_ResultOK) pasteMethod = kClipboard_PasteMethodStandard;
 			switch (pasteMethod)
@@ -722,6 +724,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 					saveError = true;
 				}
 			}
+		#if 0
 			{
 				TektronixMode	tekMode = kTektronixModeNotAllowed;
 				
@@ -736,6 +739,7 @@ SessionEditorDialog_Display		(Preferences_Class		inClass,
 					saveError = true;
 				}
 			}
+		#endif
 			{
 				Clipboard_PasteMethod	pasteMethod = (kControlRadioButtonCheckedValue == GetDialogItemValue
 														(gSessionEditorDialog, SessPasteQuick))

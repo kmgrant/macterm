@@ -49,7 +49,6 @@
 
 // MacTelnet includes
 #include "Local.h"
-#include "tekdefs.h"
 #include "TerminalScreenRef.typedef.h"
 #include "TerminalWindow.h"
 
@@ -127,23 +126,6 @@ struct ConnectionData
 							interrupt,			// character for “interrupt process”
 							pad;				// unused
 	} controlKey;
-	
-	struct TEKInfo
-	{
-		TEKInfo (): pageLocation(kTektronixPageLocationNewWindowClear),
-						mode(kTektronixMode4014), graphicsID(0) {}
-		
-		// DIRECT ACCESS PROHIBITED; use:
-		//		Session_TEKCreateTargetGraphic()
-		//		Session_TEKDetachTargetGraphic()
-		//		Session_TEKHasTargetGraphic()
-		//		Session_TEKIsEnabled()
-		//		Session_TEKPageCommandOpensNewWindow()
-		//		Session_TEKWrite()
-		TektronixPageLocation	pageLocation;
-		TektronixMode			mode;
-		TektronixGraphicID		graphicsID;
-	} TEK;
 };
 typedef ConnectionData*		ConnectionDataPtr;
 

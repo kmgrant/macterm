@@ -92,7 +92,6 @@ struct VGWINTYPE {
 	short	pencolor;						/* current pen color */
 	short	fontnum,charx,chary;			/* char size */
 	short	count;							/* for temporary use in special state loops */
-	TektronixMode	TEKtype;						/* 4105 or 4014?  added: 16jul90dsw */
 	char	TEKMarker;						/* 4105 marker type 17jul90dsw */
 	char	TEKOutline;						/* 4105 panel outline boolean */
 	short	TEKPath;						/* 4105 GTPath */
@@ -111,16 +110,13 @@ struct VGWINTYPE {
 namespace {
 
 void			clipvec						(short, short, short, short, short);
-void			destroyGraphics				(short);
 short			drawc						(short, short);
-SessionRef		findSessionUsingGraphic		(short);
-void			findTEKGraphicSessionOp		(SessionRef, void*, SInt32, void*);
 short			fontnum						(short, short);
 short			joinup						(short, short, short);
 void			linefeed					(short);
 void			newcoord					(short);
+SInt16			returnTargetDeviceIndex		(VectorInterpreter_Target);
 void			storexy						(short, short, short);
-short			VGalive						(short);
 short			VGcheck						(short);
 void			VGclrstor					(short);
 short			VGdevice					(short, short);
@@ -137,6 +133,7 @@ namespace {
 
 RGLINK				RG[TEK_DEVICE_MAX] =
 					{
+						// See returnTargetDeviceIndex(), which must be in sync.
 						{
 							// DEVICE 0 - normal TEK graphics page
 							VectorCanvas_New,
@@ -226,25 +223,12 @@ VectorInterpreter_Init ()
 short
 detachGraphics	(short		dnum)
 {
-	SInt16			result = -1;
-	SessionRef		session = nullptr;
+	SInt16		result = -1;
 	
 	
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
-										kSessionFactory_SessionFilterFlagConsoleSessions,
-									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
-									STATIC_CAST(dnum, SInt32)/* data 2 */, (void*)&session);
-	if (session == nullptr) result = -1;
-	else
-	{
-		ConnectionDataPtr	connectionDataPtr = Session_ConnectionDataPtr(session);
-		
-		
-		gOldGraphs[gNumGraphs++] = dnum;
-		connectionDataPtr->TEK.graphicsID = -1;
-		Session_RemoveDataTarget(session, kSession_DataTargetTektronixGraphicsCanvas, &dnum);
-		result = 0;
-	}
+	gOldGraphs[gNumGraphs++] = dnum;
+	result = 0;
+	
 	return result;
 }// detachGraphics
 
@@ -280,35 +264,35 @@ VGgetVS		(short		theVGnum)
  *
  *	Modified 16jul90dsw: Support selection of 4105 or 4014.
  */
-short VGnewwin
+VectorInterpreter_ID VGnewwin
   (
-	short device, /* number of RG device to use */
+	VectorInterpreter_Target target, /* number of RG device to use */
 	SessionRef inSession
   )
 {
-	short	vw = 0;
+	VectorInterpreter_ID	vw = 0;
+	short					device = returnTargetDeviceIndex(target);
 	
 
 	while ((vw < MAXVG) && (VGwin[vw] != nullptr)) vw++;
 	if (vw == MAXVG)
-		return(-1);
+		return kVectorInterpreter_InvalidID;
 		
 	VGwin[vw] = (struct VGWINTYPE *) Memory_NewPtr(sizeof(struct VGWINTYPE));
 	if (VGwin[vw] == nullptr) {
-		return -1;
+		return kVectorInterpreter_InvalidID;
 		}
 			
 	VGstore[vw] = newTEKstore();
 	if (VGstore[vw] == nullptr) {
 		Memory_DisposePtr((Ptr*)&VGwin[vw]);
 		VGwin[vw] = nullptr;
-		return -1;
+		return kVectorInterpreter_InvalidID;
 		}
 	
 	VGwin[vw]->id = 'VGWN';
 	VGwin[vw]->RGdevice = device;
 	VGwin[vw]->RGnum = (*RG[device].newwin)();
-	VGwin[vw]->TEKtype = Session_TEKGetMode(inSession);
 
 	if (VGwin[vw]->RGnum < 0)
 	{
@@ -317,7 +301,7 @@ short VGnewwin
 		VGwin[vw] = nullptr;
 		freeTEKstore(VGstore[vw]);
 		Sound_StandardAlert();
-		return(-1);
+		return kVectorInterpreter_InvalidID;
 	}
 			
 	VGwin[vw]->mode = ALPHA;
@@ -363,7 +347,7 @@ void VGpage(short vw)
 		return;
 		}
 
-	if (VGwin[vw]->TEKtype == kTektronixMode4105)
+	if (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105)
 		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKBackground);
 	else
 		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,0);
@@ -588,44 +572,6 @@ clipvec		(short		vw,
 }// clipvec
 
 
-void
-destroyGraphics	(short		dnum)
-{
-	SessionRef		session = nullptr;
-	
-	
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
-										kSessionFactory_SessionFilterFlagConsoleSessions,
-									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
-									STATIC_CAST(dnum, SInt32)/* data 2 */, (void*)&session);
-	if (session != nullptr)
-	{
-		// canvas is currently the destination of terminal data;
-		// reinstate the regular terminal screen target
-		ConnectionDataPtr	connectionDataPtr = Session_ConnectionDataPtr(session);
-		
-		
-		connectionDataPtr->TEK.graphicsID = -1;
-		Session_RemoveDataTarget(session, kSession_DataTargetTektronixGraphicsCanvas, &dnum);
-	}
-	else
-	{
-		// canvas is not apparently in use by any session; so, destroy it
-		register SInt16		i = 0;
-		
-		
-		while ((i < gNumGraphs) && (dnum != gOldGraphs[i])) ++i;
-		while (i < (kMaximumAllowedGraphicsWindows - 1))
-		{
-			gOldGraphs[i] = gOldGraphs[i + 1]; // close the gap
-			++i;
-		}
-		--gNumGraphs;
-	}
-	VGclose(dnum);
-}// destroyGraphics
-
-
 /*
  *	Draw a stroked character at the current cursor location.
  *	Uses simple 8-directional moving, 8-directional drawing.
@@ -677,7 +623,7 @@ drawc		(short		vw,
 		return(0);
 	}
 
-	if (VGwin[vw]->TEKtype == kTektronixMode4105)
+	if (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105)
 	{
 		height = VGwin[vw]->TEKSize;
 		if (c > 126)
@@ -716,7 +662,7 @@ drawc		(short		vw,
 	if ((c < 32) || (c > 137))
 		return(0);					// Is this return value correct?
 	c -= 32;
-	pstroke = (VGwin[vw]->TEKtype == kTektronixMode4105) ? VGTEKfont[c] : VGfont[c];
+	pstroke = (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105) ? VGTEKfont[c] : VGfont[c];
 	while (*pstroke)
 	{
 		strokex = x;
@@ -765,7 +711,7 @@ drawc		(short		vw,
 		savey = savey < 0 ? 0 : savey > 3119 ? 3119 : savey;
 	}
 
-	if (VGwin[vw]->TEKtype == kTektronixMode4105)
+	if (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105)
 		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->pencolor);
 
 	VGwin[vw]->cury = savey;
@@ -773,49 +719,6 @@ drawc		(short		vw,
 	
 	return(0);
 }// drawc
-
-
-SessionRef
-findSessionUsingGraphic		(short		vg)
-{
-	SessionRef		result = nullptr;
-	
-	
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
-										kSessionFactory_SessionFilterFlagConsoleSessions,
-									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
-									STATIC_CAST(vg, SInt32)/* data 2 */, (void*)&result);
-	return result;
-}// findSessionUsingGraphic
-
-
-/*!
-This method is of standard "SessionFactory_SessionOpProcPtr"
-form.  It determines whether the specified session’s TEK
-graphics ID is the same as the ID specified by
-"inGraphicIDToFind".  The value of "inData1" is not defined,
-and should be nullptr.
-
-You should provide storage for a "SessionRef"; that is,
-the actual type of "inoutSessionRefPtr" is a pointer to a
-"SessionRef".
-
-(3.0)
-*/
-void
-findTEKGraphicSessionOp		(SessionRef		inSession,
-							 void*			UNUSED_ARGUMENT(inData1),
-							 SInt32			inGraphicIDToFind,
-							 void*			inoutSessionRefPtr)
-{
-	if ((inoutSessionRefPtr != nullptr) && (inSession != nullptr))
-	{
-		if (Session_ConnectionDataPtr(inSession)->TEK.graphicsID == inGraphicIDToFind)
-		{
-			*((SessionRef*)inoutSessionRefPtr) = inSession;
-		}
-	}
-}// findTEKGraphicSessionOp
 
 
 /*
@@ -894,6 +797,33 @@ newcoord	(short		vw)
 }
 
 
+/*!
+Returns the index into the global callbacks array
+to use for the specified target.
+
+(3.1)
+*/
+SInt16
+returnTargetDeviceIndex		(VectorInterpreter_Target	inTarget)
+{
+	SInt16		result = 0;
+	
+	
+	switch (inTarget)
+	{
+	case kVectorInterpreter_TargetQuickDrawPicture:
+		result = 1;
+		break;
+	
+	case kVectorInterpreter_TargetScreenPixels:
+	default:
+		result = 0;
+		break;
+	}
+	return result;
+}// returnTargetDeviceIndex
+
+
 void
 storexy		(short		vw,
 			 short		x,
@@ -903,32 +833,6 @@ storexy		(short		vw,
 	VGwin[vw]->curx = x;
 	VGwin[vw]->cury = y;
 }// storexy
-
-
-short
-VGalive	(short		dnum)
-{
-	SInt16			result = 0;
-	SessionRef		session = nullptr;
-	
-	
-	SessionFactory_ForEachSessionDo(kSessionFactory_SessionFilterFlagAllSessions -
-										kSessionFactory_SessionFilterFlagConsoleSessions,
-									findTEKGraphicSessionOp, nullptr/* data 1 - undefined */,
-									STATIC_CAST(dnum, SInt32)/* data 2 */, (void*)&session);
-	if (session != nullptr) result = 1; // specified graphic is still attached, it must be alive
-	else
-	{
-		// specified graphic is detached; but if it’s still in the list it is alive
-		register SInt16		i = 0;
-		
-		
-		while ((i < gNumGraphs) && (dnum != gOldGraphs[i])) ++i;
-		if (i < gNumGraphs) result = 1;
-	}
-	
-	return result;
-}// VGalive
 
 
 short
@@ -1444,7 +1348,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			switch(c)
 			{
 			case 'E':					/* END PANEL 25jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 				{
 					if (vp->TEKPanel)
 					{
@@ -1513,7 +1417,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				savstate[vw] = DONE;
 				break;
 			case 'P':					/* BEGIN PANEL 17jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)		/* 4105 only */
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)		/* 4105 only */
 				{
 					state[vw] = HIY;
 					vp->mode = PANEL;
@@ -1522,7 +1426,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					state[vw] = DONE;
 				break;
 			case 'T':					/* GTEXT 17jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)		/* 4105 only */
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)		/* 4105 only */
 				{
 					savstate[vw] = GTEXT;
 					state[vw] = INTEGER;
@@ -1546,7 +1450,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				state[vw] = INTEGER;
 				break;
 			case 'M':					/* MARKERTYPE 17jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 				{
 					savstate[vw] = MARKER;
 					state[vw] = INTEGER;
@@ -1555,7 +1459,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					state[vw] = DONE;
 				break;
 			case 'N':					/* GTPATH 17jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 				{
 					savstate[vw] = GTPATH;
 					state[vw] = INTEGER;
@@ -1564,7 +1468,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					state[vw] = DONE;
 				break;
 			case 'P':					/* FillPattern 17jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 				{
 					savstate[vw] = FPATTERN;
 					state[vw] = INTEGER;
@@ -1573,7 +1477,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					state[vw] = DONE;
 				break;
 			case 'R':					/* GTROT 17jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 				{
 					savstate[vw] = GTROT;
 					state[vw] = INTEGER;
@@ -1582,7 +1486,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					state[vw] = DONE;
 				break;
 			case 'T':					/* GTINDEX 17jul90dsw */
-				if (vp->TEKtype == kTektronixMode4105)
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 				{
 					savstate[vw] = GTINDEX;
 					state[vw] = INTEGER;
@@ -1591,7 +1495,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					state[vw] = DONE;
 				break;
 			case 'V':
-				if (vp->TEKtype == kTektronixMode4105)
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 				{
 					state[vw] = INTEGER;
 					savstate[vw] = DONE;
@@ -1615,7 +1519,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			goagain = true;
 			break;
 		case GTSIZE1:				/* integer is the height */
-			if (vp->TEKtype == kTektronixMode4105)
+			if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
 			{
 				if (vp->intin < 88) vp->TEKSize = 1;
 				else if ((vp->intin > 87) && (vp->intin < 149)) vp->TEKSize = 2;
@@ -1736,7 +1640,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				if (vp->mode == ALPHA)
 				{
 					state[vw] = DONE;
-					if (vp->TEKtype == kTektronixMode4014)
+					if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4014)
 						drawc(vw,(short) c);
 					else
 					{
@@ -1809,7 +1713,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			else if ((vp->mode == MARK) || (vp->mode == TEMPMARK))
 			{
 				newcoord(vw);
-				if (vp->TEKtype == kTektronixMode4105) drawc(vw,127 + vp->TEKMarker);
+				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105) drawc(vw,127 + vp->TEKMarker);
 				newcoord(vw);
 				if (vp->mode == TEMPMARK) vp->mode = vp->modesave;
 			}

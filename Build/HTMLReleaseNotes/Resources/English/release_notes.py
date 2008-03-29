@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080328',
     '20080327',
     '20080326',
     '20080325',
@@ -122,6 +123,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080328': [
+		'Internal changes to improve vector graphics handling.',
+	],
 	'20080327': [
 		'Various minor tweaks to user interface text, such as alert messages.',
 	],

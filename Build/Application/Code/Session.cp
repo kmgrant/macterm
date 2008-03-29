@@ -257,6 +257,9 @@ struct Session
 	MyTerminalScreenList		targetTerminals;			// list of screen buffers to which incoming data is being copied
 	MyCaptureFileList			targetFiles;				// list of open files, if any, to which incoming data is being copied
 	MyPrintJobList				targetPrintJobs;			// list of open printer spool files, if any, to which incoming data is being copied
+	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
+	Session_VectorGraphicsMode	vectorGraphicsCommandSet;	// e.g. TEK 4014, TEK 4105 or nothing
+	VectorInterpreter_ID		vectorGraphicsID;			// the ID of the current graphic, if any; see "VectorInterpreter.h"
 	UInt8*						readBufferPtr;				// buffer space for processing data
 	size_t						readBufferSizeMaximum;		// maximum number of bytes that can be processed at once
 	size_t						readBufferSizeInUse;		// number of bytes of data currently in the read buffer
@@ -632,6 +635,8 @@ Session_New		(Boolean	inIsReadOnly)
 		
 		ptr->mainProcess = nullptr;
 		ptr->readOnly = inIsReadOnly;
+		ptr->vectorGraphicsPageOpensNewWindow = true;
+		ptr->vectorGraphicsCommandSet = kSession_VectorGraphicsModeTEK4014; // arbitrary initial value
 		ptr->kind = kSession_TypeLocalNonLoginShell;
 		ptr->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 														kConstantsRegistry_ListenerModelDescriptorSessionChanges);
@@ -3502,15 +3507,15 @@ window remains the target).
 Boolean
 Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16				id = -1;
-	Boolean				result = false;
+	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	VectorInterpreter_ID	id = kVectorInterpreter_InvalidID;
+	Boolean					result = false;
 	
 	
-	id = VGnewwin(TEK_DEVICE_WINDOW, inRef);
-	if (id > -1)
+	id = VGnewwin(kVectorInterpreter_TargetScreenPixels, inRef);
+	if (kVectorInterpreter_InvalidID != id)
 	{
-		ptr->dataPtr->TEK.graphicsID = id;
+		ptr->vectorGraphicsID = id;
 		VGgiveinfo(id);
 		VectorCanvas_SetListeningSession(id, inRef);
 		{
@@ -3531,10 +3536,10 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 
 
 /*!
-Dissociates the current target graphic of the given
-session from the session.  TEK writes will therefore
-no longer affect this graphic.  If there is no
-target graphic, this routine does nothing.
+Dissociates the current target graphic of the given session
+from the session.  TEK writes will therefore no longer affect
+this graphic.  If there is no target graphic, this routine
+does nothing.
 
 (3.0)
 */
@@ -3544,25 +3549,13 @@ Session_TEKDetachTargetGraphic		(SessionRef		inRef)
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	if (ptr->dataPtr->TEK.graphicsID > -1) detachGraphics(ptr->dataPtr->TEK.graphicsID);
+	if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
+	{
+		Session_RemoveDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &ptr->vectorGraphicsID);
+		detachGraphics(ptr->vectorGraphicsID);
+		ptr->vectorGraphicsID = kVectorInterpreter_InvalidID;
+	}
 }// TEKDetachTargetGraphic
-
-
-/*!
-Returns the command set, if any, supported by the
-graphic attached to the given session.
-
-(3.1)
-*/
-TektronixMode
-Session_TEKGetMode	(SessionRef		inRef)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	TektronixMode		result = ptr->dataPtr->TEK.mode;
-	
-	
-	return result;
-}// TEKGetMode
 
 
 /*!
@@ -3575,7 +3568,7 @@ Boolean
 Session_TEKHasTargetGraphic		(SessionRef		inRef)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (ptr->dataPtr->TEK.graphicsID > -1);
+	Boolean				result = (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID);
 	
 	
 	return result;
@@ -3592,7 +3585,7 @@ Boolean
 Session_TEKIsEnabled	(SessionRef		inRef)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kTektronixModeNotAllowed != ptr->dataPtr->TEK.mode);
+	Boolean				result = (kSession_VectorGraphicsModeDisabled != ptr->vectorGraphicsCommandSet);
 	
 	
 	return result;
@@ -3612,11 +3605,49 @@ Boolean
 Session_TEKPageCommandOpensNewWindow	(SessionRef		inRef)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kTektronixPageLocationNewWindowClear == ptr->dataPtr->TEK.pageLocation);
+	Boolean				result = ptr->vectorGraphicsPageOpensNewWindow;
 	
 	
 	return result;
 }// TEKPageCommandOpensNewWindow
+
+
+/*!
+Returns the command set, if any, supported by the
+graphic attached to the given session.
+
+(3.1)
+*/
+Session_VectorGraphicsMode
+Session_TEKReturnMode	(SessionRef		inRef)
+{
+	SessionAutoLocker			ptr(gSessionPtrLocks(), inRef);
+	Session_VectorGraphicsMode	result = ptr->vectorGraphicsCommandSet;
+	
+	
+	return result;
+}// TEKReturnMode
+
+
+/*!
+Set to "true" only if the given session should open a
+new TEK window whenever a TEK PAGE command is received.
+(The alternative is that the current TEK window is
+cleared and replaced with the new graphics.)
+
+See also Session_TEKPageCommandOpensNewWindow().
+
+(3.1)
+*/
+void
+Session_TEKSetPageCommandOpensNewWindow		(SessionRef		inRef,
+											 Boolean		inNewWindow)
+{
+	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	
+	
+	ptr->vectorGraphicsPageOpensNewWindow = inNewWindow;
+}// TEKSetPageCommandOpensNewWindow
 
 
 /*!
@@ -3637,7 +3668,7 @@ Session_TEKWrite	(SessionRef		inRef,
 	SInt16				result = 0;
 	
 	
-	result = VGwrite(ptr->dataPtr->TEK.graphicsID, inBuffer, inLength);
+	result = VGwrite(ptr->vectorGraphicsID, inBuffer, inLength);
 	return result;
 }// TEKWrite
 
@@ -4468,8 +4499,7 @@ kblen			(0),
 // kbbuf initialized below
 // parsedat initialized below
 parseIndex		(0),
-controlKey		(),
-TEK				()
+controlKey		()
 {
 	bzero(&this->kbbuf, sizeof(this->kbbuf));
 	bzero(&this->parsedat, sizeof(this->parsedat));
@@ -5557,7 +5587,8 @@ killConnection		(SessionPtr		inPtr)
 		
 		if (wasDead)
 		{
-			if (inPtr->dataPtr->TEK.graphicsID > -1) detachGraphics(inPtr->dataPtr->TEK.graphicsID); // detach the TEK screen
+			// detach the TEK screen
+			if (kVectorInterpreter_InvalidID != inPtr->vectorGraphicsID) detachGraphics(inPtr->vectorGraphicsID);
 		}
 		
 		if (nullptr != inPtr->terminalWindow)
