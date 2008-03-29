@@ -80,7 +80,6 @@
 #include "Initialize.h"
 #include "InstallAE.h"
 #include "InternetPrefs.h"
-#include "InternetServices.h"
 #include "Keypads.h"
 #include "MacroManager.h"
 #include "MacroSetupWindow.h"
@@ -430,7 +429,6 @@ Initialize_ApplicationShutdown ()
 	InstallAE_Done();
 	Cursors_Done();
 	Undoables_Done();
-	InternetServices_Done(); // doing this last avoids CloseOpenTransport()Õs memory corruption bug
 	EventLoop_Done();
 	FlagManager_Done();
 }// ApplicationShutdown
@@ -587,8 +585,6 @@ initMacOSToolbox ()
 		if (nullptr != undoNameCFString) CFRelease(undoNameCFString), undoNameCFString = nullptr;
 		if (nullptr != redoNameCFString) CFRelease(redoNameCFString), redoNameCFString = nullptr;
 	}
-	
-	InternetServices_Init(); // may not return if an error occurs
 	
 	// install event handlers, allowing Quit to work and
 	// double-clicked documents to be opened, etc.

@@ -89,7 +89,6 @@
 		0AC6BB130A8C0BA000AFF37A /* ConnectionAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC5055432A400ACDF3A /* ConnectionAE.cp */; };
 		0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD1055432A400ACDF3A /* DNR.cp */; };
 		0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */; };
-		0AC6BB170A8C0BA000AFF37A /* InternetServices.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDEB055432A400ACDF3A /* InternetServices.cp */; };
 		0AC6BB180A8C0BA000AFF37A /* Bind.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AE63E2807F3B98100EB82FA /* Bind.cp */; };
 		0AC6BB190A8C0BA000AFF37A /* IconManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE6055432A400ACDF3A /* IconManager.cp */; };
 		0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */; };
@@ -289,7 +288,6 @@
 		0A4603F30554376100ACDF3A /* InstallAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = InstallAE.h; path = Application/Code/InstallAE.h; sourceTree = "<group>"; };
 		0A4603F40554376100ACDF3A /* AlertMessages.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AlertMessages.h; path = Application/Code/AlertMessages.h; sourceTree = "<group>"; };
 		0A4603F50554376100ACDF3A /* InternetPrefs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = InternetPrefs.h; path = Application/Code/InternetPrefs.h; sourceTree = SOURCE_ROOT; };
-		0A4603F60554376100ACDF3A /* InternetServices.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = InternetServices.h; path = Application/Code/InternetServices.h; sourceTree = SOURCE_ROOT; };
 		0A4603F70554376100ACDF3A /* Keypads.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Keypads.h; path = Application/Code/Keypads.h; sourceTree = SOURCE_ROOT; };
 		0A4603FD0554376100ACDF3A /* Local.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Local.h; path = Application/Code/Local.h; sourceTree = SOURCE_ROOT; };
 		0A4603FE0554376100ACDF3A /* Localization.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Localization.h; path = Application/Code/Localization.h; sourceTree = SOURCE_ROOT; };
@@ -400,7 +398,6 @@
 		0A46FDE8055432A400ACDF3A /* Initialize.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Initialize.cp; path = Application/Code/Initialize.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE9055432A400ACDF3A /* InstallAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InstallAE.cp; path = Application/Code/InstallAE.cp; sourceTree = "<group>"; };
 		0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InternetPrefs.cp; path = Application/Code/InternetPrefs.cp; sourceTree = SOURCE_ROOT; };
-		0A46FDEB055432A400ACDF3A /* InternetServices.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = InternetServices.cp; path = Application/Code/InternetServices.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDEC055432A400ACDF3A /* Keypads.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Keypads.cp; path = Application/Code/Keypads.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDF2055432A400ACDF3A /* ListUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ListUtilities.cp; path = Shared/Code/ListUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF3055432A400ACDF3A /* Local.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Local.cp; path = Application/Code/Local.cp; sourceTree = SOURCE_ROOT; };
@@ -747,7 +744,6 @@
 				0A46FDE7055432A400ACDF3A /* InfoWindow.cp */,
 				0A46FDE8055432A400ACDF3A /* Initialize.cp */,
 				0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */,
-				0A46FDEB055432A400ACDF3A /* InternetServices.cp */,
 				0A46FDEC055432A400ACDF3A /* Keypads.cp */,
 				0A46FDF3055432A400ACDF3A /* Local.cp */,
 				0A46FDF4055432A400ACDF3A /* Localization.cp */,
@@ -832,7 +828,6 @@
 				0A4603F10554376100ACDF3A /* InfoWindow.h */,
 				0A4603F20554376100ACDF3A /* Initialize.h */,
 				0A4603F50554376100ACDF3A /* InternetPrefs.h */,
-				0A4603F60554376100ACDF3A /* InternetServices.h */,
 				0A4603F70554376100ACDF3A /* Keypads.h */,
 				0A4603FD0554376100ACDF3A /* Local.h */,
 				0A4603FE0554376100ACDF3A /* Localization.h */,
@@ -1407,7 +1402,6 @@
 				0AC6BB130A8C0BA000AFF37A /* ConnectionAE.cp in Sources */,
 				0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */,
 				0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */,
-				0AC6BB170A8C0BA000AFF37A /* InternetServices.cp in Sources */,
 				0AC6BB180A8C0BA000AFF37A /* Bind.cp in Sources */,
 				0AC6BB190A8C0BA000AFF37A /* IconManager.cp in Sources */,
 				0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */,
