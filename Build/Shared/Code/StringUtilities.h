@@ -21,7 +21,7 @@
 	form.
 	
 	Data Access Library 1.3
-	© 1998-2004 by Kevin Grant
+	ï¿½ 1998-2004 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -158,12 +158,6 @@ Boolean
 /*###############################################################
 	STRING CONVERSION UTILITIES
 ###############################################################*/
-
-// RETURNS TRUE IF THE GIVEN BUFFER CONTAINS A VALID STRING REPRESENTATION OF AN IP ADDRESS (THIS ADDRESS IS RETURNED)
-Boolean
-	StringUtilities_BufferToInternetAddress		(char const*							inBuffer,
-												 Size									inBufferLength,
-												 InetAddress*							outIPAddressPtr);
 
 void
 	StringUtilities_CToP						(char const*							inString,

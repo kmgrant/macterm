@@ -118,8 +118,7 @@ Memory_DisposePtr	(Ptr*	inoutPtrPtr)
 /*!
 Frees a memory block previously allocated with the
 Memory_NewPtrInterruptSafe() routine.  This routine
-uses the Open Transport call OTFreeMem(), and is
-interrupt-safe.
+uses an interrupt-safe allocator.
 
 (1.0)
 */
@@ -128,7 +127,7 @@ Memory_DisposePtrInterruptSafe	(void**		inoutPtrPtr)
 {
 	if (nullptr != inoutPtrPtr)
 	{
-		OTFreeMem(*inoutPtrPtr);
+		::free(*inoutPtrPtr);
 		*inoutPtrPtr = nullptr;
 	}
 }// DisposePtrInterruptSafe
@@ -262,9 +261,7 @@ Memory_NewPtr	(Size	inDesiredNumberOfBytes)
 
 /*!
 Allocates a new memory block and returns a pointer to it.
-This routine uses the Open Transport call OTAllocMem(),
-and automatically uses the proper context.  It is
-interrupt-safe.
+This routine uses an interrupt-safe allocator.
 
 (1.0)
 */
@@ -274,8 +271,7 @@ Memory_NewPtrInterruptSafe		(Size		inDesiredNumberOfBytes)
 	void*		result = nullptr;
 	
 	
-	result = OTAllocMemInContext(inDesiredNumberOfBytes, nullptr/* client context; nullptr = “use application context” */);
-	//if (nullptr != result) OTMemzero(result, inDesiredNumberOfBytes);
+	result = ::malloc(STATIC_CAST(inDesiredNumberOfBytes, size_t));
 	return result;
 }// NewPtrInterruptSafe
 

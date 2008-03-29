@@ -1021,7 +1021,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if (isSession)
 			{
 				std::string		ipAddressString;
-				int				addressType = AF_INET;
+				int				addressType = 0;
 				
 				
 				// send whatever keystrokes are still buffered

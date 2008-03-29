@@ -848,7 +848,7 @@ MacroManager_UserInputMacroString	(SessionRef		inSession,
 			if (*mp == MACRO_IP)
 			{
 				std::string		ipAddressString;
-				int				addressType = AF_INET;
+				int				addressType = 0;
 				
 				
 				Session_UserInputString(inSession, (char*)first, (mp - first) * sizeof(char), true/* record */);

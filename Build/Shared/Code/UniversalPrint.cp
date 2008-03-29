@@ -153,7 +153,7 @@ UniversalPrint_Done ()
 #if TARGET_API_MAC_OS8
 	PrClose();
 #else
-	DisposePMSheetDoneUPP(gSheetDoneUPP), gSheetDoneUPP = nullptr;
+	DisposePMSheetDoneUPP(gSheetDoneUPP); gSheetDoneUPP = nullptr;
 #endif
 }// Done
 
@@ -226,7 +226,10 @@ UniversalPrint_DisposeContext	(UniversalPrint_ContextRef*		inoutRefPtr)
 		#else
 			(OSStatus)PMRelease(ptr->settings), ptr->settings = nullptr;
 			(OSStatus)PMRelease(ptr->pageFormat), ptr->pageFormat = nullptr;
-			if (ptr->idleUPP != nullptr) DisposePMIdleUPP(ptr->idleUPP), ptr->idleUPP = nullptr;
+			if (ptr->idleUPP != nullptr)
+			{
+				DisposePMIdleUPP(ptr->idleUPP); ptr->idleUPP = nullptr;
+			}
 		#endif
 		}
 		DisposeHandle((Handle)*inoutRefPtr), *inoutRefPtr = nullptr;
