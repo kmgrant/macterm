@@ -51,11 +51,11 @@
 #include "SessionFactory.h"
 #include "TektronixFont.h"
 #include "TektronixMain.h"
-#include "TektronixNullOutput.h"
 #include "TektronixVirtualGraphics.h"
 #include "tekdefs.h"	/* NCSA: sb - all defines are now here, for easy access */
-#include "VectorToBitmap.h"
 #include "VectorCanvas.h"
+#include "VectorToBitmap.h"
+#include "VectorToNull.h"
 
 
 
@@ -154,23 +154,23 @@ RGLINK				RG[TEK_DEVICE_MAX] =
 							VectorToBitmap_New,
 							VectorToBitmap_ReturnDeviceName,
 							VectorToBitmap_Init,
-							TektronixNullOutput_DoNothingIntArgReturnZero/* GIN / monitor-mouse */,
+							VectorToNull_DoNothingIntArgReturnZero/* GIN / monitor-mouse */,
 							VectorToBitmap_SetPenColor,
-							TektronixNullOutput_DoNothingIntArgReturnZero/* clear screen */,
+							VectorToNull_DoNothingIntArgReturnZero/* clear screen */,
 							VectorToBitmap_Dispose,
 							VectorToBitmap_DrawDot,
 							VectorToBitmap_DrawLine,
 							VectorToBitmap_SetCallbackData,
-							TektronixNullOutput_DoNothingIntArgReturnVoid/* page done */,
+							VectorToNull_DoNothingIntArgReturnVoid/* page done */,
 							VectorToBitmap_DataLine,
 							VectorToBitmap_SetCharacterMode,
-							TektronixNullOutput_DoNothingNoArgReturnVoid/* graphics mode */,
-							TektronixNullOutput_DoNothingNoArgReturnVoid/* text mode */,
-							TektronixNullOutput_DoNothingNoArgReturnVoid/* show cursor */,
-							TektronixNullOutput_DoNothingNoArgReturnVoid/* lock cursor */,
-							TektronixNullOutput_DoNothingNoArgReturnVoid/* hide cursor */,
-							TektronixNullOutput_DoNothingIntArgReturnVoid/* bell */,
-							TektronixNullOutput_DoNothingIntArgReturnVoid/* uncover */
+							VectorToNull_DoNothingNoArgReturnVoid/* graphics mode */,
+							VectorToNull_DoNothingNoArgReturnVoid/* text mode */,
+							VectorToNull_DoNothingNoArgReturnVoid/* show cursor */,
+							VectorToNull_DoNothingNoArgReturnVoid/* lock cursor */,
+							VectorToNull_DoNothingNoArgReturnVoid/* hide cursor */,
+							VectorToNull_DoNothingIntArgReturnVoid/* bell */,
+							VectorToNull_DoNothingIntArgReturnVoid/* uncover */
 						}
 					};
 

@@ -1,4 +1,4 @@
-/*!	\file TektronixNullOutput.h
+/*!	\file VectorToNull.h
 	\brief Routines for "null" device - calling them has no
 	effect, but they are compatible with all normal graphics
 	callbacks.
@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,8 +36,8 @@
 
 #include "UniversalDefines.h"
 
-#ifndef __TEKTRONIXNULLOUTPUT__
-#define __TEKTRONIXNULLOUTPUT__
+#ifndef __VECTORTONULL__
+#define __VECTORTONULL__
 
 
 
@@ -47,10 +47,10 @@
 //@{
 
 SInt16
-	TektronixNullOutput_New							();
+	VectorToNull_New						();
 
 SInt16
-	TektronixNullOutput_Dispose						(SInt16				inDevice);
+	VectorToNull_Dispose					(SInt16				inDevice);
 
 //@}
 
@@ -58,44 +58,44 @@ SInt16
 //@{
 
 void
-	TektronixNullOutput_DataLine					(SInt16				inDevice,
-													 SInt16				inData,
-													 SInt16				inCount);
+	VectorToNull_DataLine					(SInt16				inDevice,
+											 SInt16				inData,
+											 SInt16				inCount);
 
 SInt16
-	TektronixNullOutput_DrawDot						(SInt16				inDevice,
-													 SInt16				inX,
-													 SInt16				inY);
+	VectorToNull_DrawDot					(SInt16				inDevice,
+											 SInt16				inX,
+											 SInt16				inY);
 
 SInt16
-	TektronixNullOutput_DrawLine					(SInt16				inDevice,
-													 SInt16				inStartX,
-													 SInt16				inStartY,
-													 SInt16				inEndX,
-													 SInt16				inEndY);
+	VectorToNull_DrawLine					(SInt16				inDevice,
+											 SInt16				inStartX,
+											 SInt16				inStartY,
+											 SInt16				inEndX,
+											 SInt16				inEndY);
 
 char const*
-	TektronixNullOutput_ReturnDeviceName			();
+	VectorToNull_ReturnDeviceName			();
 
 void
-	TektronixNullOutput_SetCallbackData				(SInt16				inDevice,
-													 SInt16				inTektronixVirtualGraphicsRef,
-													 SInt16				inData2,
-													 SInt16				inData3,
-													 SInt16				inData4,
-													 SInt16				inData5);
+	VectorToNull_SetCallbackData			(SInt16				inDevice,
+											 SInt16				inTektronixVirtualGraphicsRef,
+											 SInt16				inData2,
+											 SInt16				inData3,
+											 SInt16				inData4,
+											 SInt16				inData5);
 
 SInt16
-	TektronixNullOutput_SetBounds					(Rect const*		inBoundsPtr);
+	VectorToNull_SetBounds					(Rect const*		inBoundsPtr);
 
 void
-	TektronixNullOutput_SetCharacterMode			(SInt16				inDevice,
-													 SInt16				inRotation,
-													 SInt16				inSize);
+	VectorToNull_SetCharacterMode			(SInt16				inDevice,
+											 SInt16				inRotation,
+											 SInt16				inSize);
 
 SInt16
-	TektronixNullOutput_SetPenColor					(SInt16				inDevice,
-													 SInt16				inColorIndex);
+	VectorToNull_SetPenColor				(SInt16				inDevice,
+											 SInt16				inColorIndex);
 
 //@}
 
@@ -103,13 +103,13 @@ SInt16
 //@{
 
 void
-	TektronixNullOutput_DoNothingIntArgReturnVoid	(SInt16				inUnused);
+	VectorToNull_DoNothingIntArgReturnVoid	(SInt16				inUnused);
 
 void
-	TektronixNullOutput_DoNothingNoArgReturnVoid	();
+	VectorToNull_DoNothingNoArgReturnVoid	();
 
 short
-	TektronixNullOutput_DoNothingIntArgReturnZero	(SInt16				inUnused);
+	VectorToNull_DoNothingIntArgReturnZero	(SInt16				inUnused);
 
 //@}
 

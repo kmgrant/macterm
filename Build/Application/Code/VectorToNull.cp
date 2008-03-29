@@ -1,6 +1,6 @@
 /*###############################################################
 
-	TektronixNullOutput.cp
+	VectorToNull.cp
 	
 	MacTelnet
 		© 1998-2008 by Kevin Grant.
@@ -32,7 +32,7 @@
 #include "UniversalDefines.h"
 
 // MacTelnet includes
-#include "TektronixNullOutput.h"
+#include "VectorToNull.h"
 
 
 
@@ -48,7 +48,7 @@ always
 (2.6)
 */
 SInt16
-TektronixNullOutput_New ()
+VectorToNull_New ()
 {
 	// DO NOTHING!
 	return 0;
@@ -65,7 +65,7 @@ always
 (2.6)
 */
 SInt16
-TektronixNullOutput_Dispose		(SInt16		UNUSED_ARGUMENT(inDevice))
+VectorToNull_Dispose	(SInt16		UNUSED_ARGUMENT(inDevice))
 {
 	// DO NOTHING!
 	return 0;
@@ -79,9 +79,9 @@ Does absolutely nothing - placeholder for a
 (2.6)
 */
 void
-TektronixNullOutput_DataLine	(SInt16		UNUSED_ARGUMENT(inDevice),
-								 SInt16		UNUSED_ARGUMENT(inData),
-								 SInt16		UNUSED_ARGUMENT(inCount))
+VectorToNull_DataLine	(SInt16		UNUSED_ARGUMENT(inDevice),
+						 SInt16		UNUSED_ARGUMENT(inData),
+						 SInt16		UNUSED_ARGUMENT(inCount))
 {
 	// DO NOTHING!
 }// DataLine
@@ -95,7 +95,7 @@ as a placeholder in TEK callback lists.
 (2.6)
 */
 void
-TektronixNullOutput_DoNothingIntArgReturnVoid	(SInt16		UNUSED_ARGUMENT(inUnused))
+VectorToNull_DoNothingIntArgReturnVoid	(SInt16		UNUSED_ARGUMENT(inUnused))
 {
 	// DO NOTHING!
 }// DoNothingIntArgReturnVoid
@@ -112,7 +112,7 @@ always
 (2.6)
 */
 SInt16
-TektronixNullOutput_DoNothingIntArgReturnZero	(SInt16		UNUSED_ARGUMENT(inUnused))
+VectorToNull_DoNothingIntArgReturnZero	(SInt16		UNUSED_ARGUMENT(inUnused))
 {
 	// DO NOTHING!
 	return 0;
@@ -127,7 +127,7 @@ in TEK callback lists.
 (2.6)
 */
 void
-TektronixNullOutput_DoNothingNoArgReturnVoid ()
+VectorToNull_DoNothingNoArgReturnVoid ()
 {
 	// DO NOTHING!
 }// DoNothingNoArgReturnVoid
@@ -143,9 +143,9 @@ always
 (2.6)
 */
 SInt16
-TektronixNullOutput_DrawDot		(SInt16		UNUSED_ARGUMENT(inDevice),
-								 SInt16		UNUSED_ARGUMENT(inX),
-								 SInt16		UNUSED_ARGUMENT(inY))
+VectorToNull_DrawDot	(SInt16		UNUSED_ARGUMENT(inDevice),
+						 SInt16		UNUSED_ARGUMENT(inX),
+						 SInt16		UNUSED_ARGUMENT(inY))
 {
 	// DO NOTHING!
 	return 0;
@@ -162,11 +162,11 @@ always
 (2.6)
 */
 SInt16
-TektronixNullOutput_DrawLine	(SInt16		UNUSED_ARGUMENT(inDevice),
-								 SInt16		UNUSED_ARGUMENT(inStartX),
-								 SInt16		UNUSED_ARGUMENT(inStartY),
-								 SInt16		UNUSED_ARGUMENT(inEndX),
-								 SInt16		UNUSED_ARGUMENT(inEndY))
+VectorToNull_DrawLine	(SInt16		UNUSED_ARGUMENT(inDevice),
+						 SInt16		UNUSED_ARGUMENT(inStartX),
+						 SInt16		UNUSED_ARGUMENT(inStartY),
+						 SInt16		UNUSED_ARGUMENT(inEndX),
+						 SInt16		UNUSED_ARGUMENT(inEndY))
 {
 	// DO NOTHING!
 	return 0;
@@ -184,7 +184,7 @@ always
 (2.6)
 */
 char const*
-TektronixNullOutput_ReturnDeviceName ()
+VectorToNull_ReturnDeviceName ()
 {
 	// DO NOTHING!
 	return nullptr;
@@ -198,21 +198,21 @@ Does absolutely nothing - placeholder for a
 (2.6)
 */
 void
-TektronixNullOutput_SetCallbackData		(SInt16		UNUSED_ARGUMENT(inDevice),
-										 SInt16		UNUSED_ARGUMENT(inTektronixVirtualGraphicsRef),
-										 SInt16		UNUSED_ARGUMENT(inData2),
-										 SInt16		UNUSED_ARGUMENT(inData3),
-										 SInt16		UNUSED_ARGUMENT(inData4),
-										 SInt16		UNUSED_ARGUMENT(inData5))
+VectorToNull_SetCallbackData	(SInt16		UNUSED_ARGUMENT(inDevice),
+								 SInt16		UNUSED_ARGUMENT(inTektronixVirtualGraphicsRef),
+								 SInt16		UNUSED_ARGUMENT(inData2),
+								 SInt16		UNUSED_ARGUMENT(inData3),
+								 SInt16		UNUSED_ARGUMENT(inData4),
+								 SInt16		UNUSED_ARGUMENT(inData5))
 {
 	// DO NOTHING!
 }// SetCallbackData
 
 
 void
-TektronixNullOutput_SetCharacterMode	(SInt16		UNUSED_ARGUMENT(inDevice),
-										 SInt16		UNUSED_ARGUMENT(inRotation),
-										 SInt16		UNUSED_ARGUMENT(inSize))
+VectorToNull_SetCharacterMode	(SInt16		UNUSED_ARGUMENT(inDevice),
+								 SInt16		UNUSED_ARGUMENT(inRotation),
+								 SInt16		UNUSED_ARGUMENT(inSize))
 {
 	// DO NOTHING!
 }// SetCharacterMode
@@ -228,8 +228,8 @@ always
 (2.6)
 */
 SInt16
-TektronixNullOutput_SetPenColor		(SInt16		UNUSED_ARGUMENT(inDevice),
-									 SInt16		UNUSED_ARGUMENT(inColorIndex))
+VectorToNull_SetPenColor	(SInt16		UNUSED_ARGUMENT(inDevice),
+							 SInt16		UNUSED_ARGUMENT(inColorIndex))
 {
 	// DO NOTHING!
 	return 0;
