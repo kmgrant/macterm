@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080329',
     '20080328',
     '20080327',
     '20080326',
@@ -123,6 +124,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080329': [
+		'Improved overall terminal performance by adjusting the session loop to process data at a faster rate.',
+	],
 	'20080328': [
 		'Internal changes to improve vector graphics handling.',
 	],

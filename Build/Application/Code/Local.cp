@@ -1569,12 +1569,12 @@ WARNING:	As this is a preemptable thread, you MUST
 void*
 threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 {
-	size_t const					kBufferSize = 256; // theoretically, this should respect the user’s Network Block Size preference
+	size_t const					kBufferSize = 4096; // TEMPORARY - this should respect the user’s Network Block Size preference
 	My_DataLoopThreadContextPtr		contextPtr = REINTERPRET_CAST(inDataLoopThreadContextPtr, My_DataLoopThreadContextPtr);
 	size_t							numberOfBytesRead = 0;
-	size_t							numberOfBytesToProcess = 0;
-	char							buffer[kBufferSize];
-	void* const						kBufferAddress = buffer;
+	char*							buffer = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(kBufferSize), char*);
+	char*							processingBegin = buffer;
+	char*							processingPastEnd = processingBegin;
 	OSStatus						error = noErr;
 	
 	
@@ -1584,18 +1584,27 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 	
 	for (;;)
 	{
-		assert(numberOfBytesToProcess <= sizeof(buffer));
+		assert(processingBegin >= buffer);
+		assert(processingBegin <= (buffer + kBufferSize));
 		
-		// each time through the loop, read a bit more data from the
-		// pseudo-terminal device, up to the maximum limit of the buffer;
-		// the effective buffer size is even smaller if bytes remain
-		// unprocessed following the previous read() attempt
-		numberOfBytesRead = read(contextPtr->masterTTY, buffer + numberOfBytesToProcess,
-									sizeof(buffer) - numberOfBytesToProcess * sizeof(char));
-		if (numberOfBytesRead <= 0)
+		// There are two possible actions...read more data, or process
+		// the data that is in the buffer already.  If the processing
+		// buffer is smaller than the data buffer, then this loop will
+		// effectively stall reads until the processor catchs up.
+		if (processingPastEnd == processingBegin)
 		{
-			// error or EOF
-			break;
+			// each time through the loop, read a bit more data from the
+			// pseudo-terminal device, up to the maximum limit of the buffer
+			numberOfBytesRead = read(contextPtr->masterTTY, buffer, kBufferSize);
+			if (numberOfBytesRead <= 0)
+			{
+				// error or EOF (process quit)
+				break;
+			}
+			
+			// adjust the total number of bytes remaining to be processed
+			processingBegin = buffer;
+			processingPastEnd = processingBegin + numberOfBytesRead;
 		}
 		else
 		{
@@ -1612,8 +1621,8 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 			// After sending a “please process this data” event, this thread
 			// blocks until a go-ahead response is received from the main queue.
 			// The go-ahead event also returns the number of unprocessed bytes,
-			// which will affect the size of the buffer available the next time
-			// through the processing loop.
+			// which will determine if another post is necessary (next time
+			// through the loop).
 			//
 			// WARNING:	To simplify the code below, certain assumptions are
 			//			made.  One, that the current thread serves exactly one
@@ -1626,12 +1635,10 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 			//			assumptions, and I think you’ll deserve the outcome.
 			//
 			
-			// adjust the total number of bytes remaining to be processed
-			numberOfBytesToProcess += numberOfBytesRead;
-			
 			// notify that data has arrived
-			postingResult = Session_PostDataArrivedEventToMainQueue(contextPtr->session, kBufferAddress, numberOfBytesToProcess,
-																	kEventPriorityStandard, contextPtr->eventQueue);
+			postingResult = Session_PostDataArrivedEventToMainQueue
+							(contextPtr->session, processingBegin, processingPastEnd - processingBegin,
+								kEventPriorityStandard, contextPtr->eventQueue);
 			assert(kSession_ResultOK == postingResult);
 			{
 				// now block until the data processing has completed
@@ -1660,7 +1667,7 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 								typeUInt32, unprocessedDataSize);
 					if (noErr == error)
 					{
-						numberOfBytesToProcess = unprocessedDataSize;
+						processingBegin = (processingPastEnd - unprocessedDataSize);
 					}
 				}
 				if (nullptr != dataProcessedEvent) ReleaseEvent(dataProcessedEvent), dataProcessedEvent = nullptr;
@@ -1715,7 +1722,8 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 		if (nullptr != setStateEvent) ReleaseEvent(setStateEvent), setStateEvent = nullptr;
 	}
 	
-	// since the thread is finished, the context should be disposed of
+	// since the thread is finished, dispose of dynamically-allocated memory
+	Memory_DisposePtrInterruptSafe(REINTERPRET_CAST(&buffer, void**));
 	Memory_DisposePtrInterruptSafe(REINTERPRET_CAST(&contextPtr, void**));
 	
 	return nullptr;

@@ -658,7 +658,7 @@ Session_New		(Boolean	inIsReadOnly)
 		}
 		ptr->currentTerminationAlert = nullptr;
 		ptr->terminalWindow = nullptr;
-		ptr->readBufferSizeMaximum = 512; // arbitrary, for initialization; see Session_SetDataProcessingCapacity()
+		ptr->readBufferSizeMaximum = 4096; // arbitrary, for initialization; see Session_SetDataProcessingCapacity()
 		ptr->readBufferSizeInUse = 0;
 		// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
 		ptr->readBufferPtr = new UInt8[ptr->readBufferSizeMaximum];
@@ -884,7 +884,7 @@ Session_AppendDataForProcessing		(SessionRef		inRef,
 	if (numberOfBytesToCopy > 0)
 	{
 		result = inSize - numberOfBytesToCopy;
-		BlockMoveData(inDataPtr, ptr->readBufferPtr + ptr->readBufferSizeInUse, numberOfBytesToCopy);
+		CPP_STD::memcpy(ptr->readBufferPtr + ptr->readBufferSizeInUse, inDataPtr, numberOfBytesToCopy);
 		ptr->readBufferSizeInUse += numberOfBytesToCopy;
 		changeNotifyForSession(ptr, kSession_ChangeDataArrived, inRef/* context */);
 	}
