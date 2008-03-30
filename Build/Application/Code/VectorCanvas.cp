@@ -243,6 +243,7 @@ VectorCanvas_Dispose	(SInt16		inCanvasID)
 	else
 	{
 		detachGraphics(inCanvasID);
+		Session_TEKDetachTargetGraphic(RGMwind[inCanvasID]->vs);
 		RemoveEventHandler(RGMwind[inCanvasID]->closeHandler), RGMwind[inCanvasID]->closeHandler = nullptr;
 		DisposeEventHandlerUPP(RGMwind[inCanvasID]->closeUPP), RGMwind[inCanvasID]->closeUPP = nullptr;
 		gWindowResizeHandlers[inCanvasID] = CommonEventHandlers_WindowResizer();

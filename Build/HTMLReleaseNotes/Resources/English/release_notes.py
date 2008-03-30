@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080330',
     '20080329',
     '20080328',
     '20080327',
@@ -124,6 +125,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080330': [
+		'Fixed bug (recently introduced) where closing a vector graphics window would not restore terminal input.',
+	],
 	'20080329': [
 		'Improved overall terminal performance by adjusting the session loop to process data at a faster rate.',
 	],
