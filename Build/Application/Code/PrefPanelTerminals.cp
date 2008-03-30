@@ -87,11 +87,11 @@ the NIBs from the package "PrefPanelTerminals.nib".
 In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyPopUpMenuEmulationType		= { 'MEmT', 0/* ID */ };
-HIViewID const	idMyCheckBoxXTermSequences		= { 'XXTM', 0/* ID */ };
-HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyFieldAnswerBackMessage		= { 'EABM', 0/* ID */ };
+HIViewID const	idMySeparatorHacks				= { 'HxSp', 0/* ID */ };
+HIViewID const	idMyDataBrowserHacks			= { 'HxDB', 0/* ID */ };
+HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
-HIViewID const	idMyHelpTextHacks				= { 'HaxT', 0/* ID */ };
 
 } // anonymous namespace
 
@@ -124,33 +124,6 @@ private:
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
 typedef My_TerminalsPanelEmulationUI*	My_TerminalsPanelEmulationUIPtr;
-
-/*!
-Implements the “Hacks” tab.
-*/
-struct My_TerminalsPanelHacksUI
-{
-	My_TerminalsPanelHacksUI	(Panel_Ref, HIWindowRef);
-	
-	Panel_Ref		panel;			//!< the panel using this UI
-	Float32			idealWidth;		//!< best size in pixels
-	Float32			idealHeight;	//!< best size in pixels
-	HIViewWrap		mainView;
-	
-	void
-	readPreferences		(Preferences_ContextRef);
-
-protected:
-	HIViewWrap
-	createContainerView		(Panel_Ref, HIWindowRef);
-	
-	static void
-	deltaSize	(HIViewRef, Float32, Float32, void*);
-	
-private:
-	CommonEventHandlers_HIViewResizer	_containerResizer;
-};
-typedef My_TerminalsPanelHacksUI*	My_TerminalsPanelHacksUIPtr;
 
 /*!
 Implements the “Options” tab.
@@ -225,21 +198,6 @@ typedef My_TerminalsPanelEmulationData*		My_TerminalsPanelEmulationDataPtr;
 Contains the panel reference and its user interface
 (once the UI is constructed).
 */
-struct My_TerminalsPanelHacksData
-{
-	My_TerminalsPanelHacksData	();
-	~My_TerminalsPanelHacksData	();
-	
-	Panel_Ref					panel;			//!< the panel this data is for
-	My_TerminalsPanelHacksUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
-	Preferences_ContextRef		dataModel;		//!< source of initializations and target of changes
-};
-typedef My_TerminalsPanelHacksData*		My_TerminalsPanelHacksDataPtr;
-
-/*!
-Contains the panel reference and its user interface
-(once the UI is constructed).
-*/
 struct My_TerminalsPanelOptionsData
 {
 	My_TerminalsPanelOptionsData	();
@@ -272,7 +230,6 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 namespace {
 
 SInt32		panelChangedEmulation	(Panel_Ref, Panel_Message, void*);
-SInt32		panelChangedHacks		(Panel_Ref, Panel_Message, void*);
 SInt32		panelChangedOptions		(Panel_Ref, Panel_Message, void*);
 SInt32		panelChangedScreen		(Panel_Ref, Panel_Message, void*);
 
@@ -301,7 +258,6 @@ PrefPanelTerminals_New ()
 	tabList.push_back(PrefPanelTerminals_NewOptionsPane());
 	tabList.push_back(PrefPanelTerminals_NewEmulationPane());
 	tabList.push_back(PrefPanelTerminals_NewScreenPane());
-	tabList.push_back(PrefPanelTerminals_NewHacksPane());
 	
 	if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsCategoryName, nameCFString).ok())
 	{
@@ -360,48 +316,6 @@ PrefPanelTerminals_NewEmulationPane ()
 	}
 	return result;
 }// NewEmulationPane
-
-
-/*!
-Creates only the Hacks pane, which allows the user to change
-standard terminal behaviors.  Destroy it using Panel_Dispose().
-
-You only use this routine if you need to display the pane
-alone, outside its usual tabbed interface.  To create the
-complete, multi-pane interface, use PrefPanelTerminals_New().
-
-If any problems occur, nullptr is returned.
-
-(3.1)
-*/
-Panel_Ref
-PrefPanelTerminals_NewHacksPane ()
-{
-	Panel_Ref	result = Panel_New(panelChangedHacks);
-	
-	
-	if (nullptr != result)
-	{
-		My_TerminalsPanelHacksDataPtr	dataPtr = new My_TerminalsPanelHacksData();
-		CFStringRef						nameCFString = nullptr;
-		
-		
-		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorTerminalsHacks);
-		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelTerminalsHacks);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsHacksTabName, nameCFString).ok())
-		{
-			Panel_SetName(result, nameCFString);
-			CFRelease(nameCFString), nameCFString = nullptr;
-		}
-		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
-		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTerminalsIconFilenameNoExtension(),
-										AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_IconServicesIconPrefPanelTerminals);
-		Panel_SetImplementation(result, dataPtr);
-		dataPtr->panel = result;
-	}
-	return result;
-}// NewHacksPane
 
 
 /*!
@@ -615,9 +529,11 @@ deltaSize	(HIViewRef		inContainer,
 	// INCOMPLETE
 	viewWrap = HIViewWrap(idMyPopUpMenuEmulationType, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMyCheckBoxXTermSequences, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyFieldAnswerBackMessage, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMySeparatorHacks, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyDataBrowserHacks, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 }// My_TerminalsPanelEmulationUI::deltaSize
 
@@ -636,149 +552,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		// UNIMPLEMENTED
 	}
 }// My_TerminalsPanelEmulationUI::readPreferences
-
-
-/*!
-Initializes a My_TerminalsPanelHacksData structure.
-
-(3.1)
-*/
-My_TerminalsPanelHacksData::
-My_TerminalsPanelHacksData ()
-:
-panel(nullptr),
-interfacePtr(nullptr),
-dataModel(nullptr)
-{
-}// My_TerminalsPanelHacksData default constructor
-
-
-/*!
-Tears down a My_TerminalsPanelHacksData structure.
-
-(3.1)
-*/
-My_TerminalsPanelHacksData::
-~My_TerminalsPanelHacksData ()
-{
-	if (nullptr != this->interfacePtr) delete this->interfacePtr;
-}// My_TerminalsPanelHacksData destructor
-
-
-/*!
-Initializes a My_TerminalsPanelHacksUI structure.
-
-(3.1)
-*/
-My_TerminalsPanelHacksUI::
-My_TerminalsPanelHacksUI	(Panel_Ref		inPanel,
-							 HIWindowRef	inOwningWindow)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-panel					(inPanel),
-idealWidth				(0.0),
-idealHeight				(0.0),
-mainView				(createContainerView(inPanel, inOwningWindow)
-							<< HIViewWrap_AssertExists),
-_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-							My_TerminalsPanelHacksUI::deltaSize, this/* context */)
-{
-	assert(this->mainView.exists());
-	assert(_containerResizer.isInstalled());
-}// My_TerminalsPanelHacksUI 2-argument constructor
-
-
-/*!
-Constructs the HIView that resides within the tab, and
-the sub-views that belong in its hierarchy.
-
-(3.1)
-*/
-HIViewWrap
-My_TerminalsPanelHacksUI::
-createContainerView		(Panel_Ref		inPanel,
-						 HIWindowRef	inOwningWindow)
-{
-	HIViewRef					result = nullptr;
-	std::vector< HIViewRef >	viewList;
-	Rect						dummy;
-	Rect						idealContainerBounds;
-	OSStatus					error = noErr;
-	
-	
-	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
-	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
-	assert_noerr(error);
-	Panel_SetContainerView(inPanel, result);
-	SetControlVisibility(result, false/* visible */, false/* draw */);
-	
-	// create most HIViews for the tab based on the NIB
-	error = DialogUtilities_CreateControlsBasedOnWindowNIB
-			(CFSTR("PrefPanelTerminals"), CFSTR("Hacks"), inOwningWindow,
-					result/* parent */, viewList, idealContainerBounds);
-	assert_noerr(error);
-	
-	// calculate the ideal size
-	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
-	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
-	
-	// make the container match the ideal size, because the tabs view
-	// will need this guideline when deciding its largest size
-	{
-		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
-												idealContainerBounds.bottom - idealContainerBounds.top);
-		
-		
-		error = HIViewSetFrame(result, &containerFrame);
-		assert_noerr(error);
-	}
-	
-	// initialize values
-	// UNIMPLEMENTED
-	
-	return result;
-}// My_TerminalsPanelHacksUI::createContainerView
-
-
-/*!
-Resizes the views in this tab.
-
-(3.1)
-*/
-void
-My_TerminalsPanelHacksUI::
-deltaSize	(HIViewRef		inContainer,
-			 Float32		inDeltaX,
-			 Float32		UNUSED_ARGUMENT(inDeltaY),
-			 void*			UNUSED_ARGUMENT(inContext))
-{
-	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
-	//My_TerminalsPanelHacksUI*		dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelHacksUI*);
-	
-	HIViewWrap					viewWrap;
-	
-	
-	// INCOMPLETE
-	viewWrap = HIViewWrap(idMyHelpTextHacks, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-}// My_TerminalsPanelHacksUI::deltaSize
-
-
-/*!
-Updates the display based on the given settings.
-
-(3.1)
-*/
-void
-My_TerminalsPanelHacksUI::
-readPreferences		(Preferences_ContextRef		inSettings)
-{
-	if (nullptr != inSettings)
-	{
-		// UNIMPLEMENTED
-	}
-}// My_TerminalsPanelHacksUI::readPreferences
 
 
 /*!
@@ -1179,120 +952,6 @@ panelChangedEmulation	(Panel_Ref		inPanel,
 	
 	return result;
 }// panelChangedEmulation
-
-
-/*!
-Invoked when the state of a panel changes, or information
-about the panel is required.  (This routine is of type
-PanelChangedProcPtr.)
-
-(3.1)
-*/
-SInt32
-panelChangedHacks	(Panel_Ref		inPanel,
-					 Panel_Message	inMessage,
-					 void*			inDataPtr)
-{
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorTerminalsHacks, 0/* options */));
-	
-	
-	switch (inMessage)
-	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
-		{
-			My_TerminalsPanelHacksDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																			My_TerminalsPanelHacksDataPtr);
-			WindowRef const*				windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
-			
-			
-			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new My_TerminalsPanelHacksUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelHacksDataPtr));
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a view is now focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a view is no longer focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
-		{
-			My_TerminalsPanelHacksDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																			My_TerminalsPanelHacksDataPtr);
-			HISize&							newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
-			{
-				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
-				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
-				result = kPanel_ResponseSizeProvided;
-			}
-		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
-		{
-			// this notification is currently ignored, but shouldn’t be...
-		}
-		break;
-	
-	case kPanel_MessageNewDataSet:
-		{
-			My_TerminalsPanelHacksDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelHacksDataPtr);
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
-			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
-			
-			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
-		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
-		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// panelChangedHacks
 
 
 /*!
