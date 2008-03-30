@@ -5402,6 +5402,10 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 				result = 0; // do not absorb this character
 				break;
 			
+			case '\033':
+				outNextState = kMy_ParserStateSeenESC;
+				break;
+			
 			default:
 				// this is unexpected data; choose a new state
 				Console_WriteValueCharacter("warning, VT100 in CSI parameter mode did not expect character", *inBuffer);
