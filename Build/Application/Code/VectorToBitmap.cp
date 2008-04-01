@@ -241,10 +241,7 @@ callbacks.
 void
 VectorToBitmap_SetCallbackData	(SInt16		UNUSED_ARGUMENT(inDevice),
 								 SInt16		UNUSED_ARGUMENT(inVectorInterpreterRef),
-								 SInt16		UNUSED_ARGUMENT(inData2),
-								 SInt16		UNUSED_ARGUMENT(inData3),
-								 SInt16		UNUSED_ARGUMENT(inData4),
-								 SInt16		UNUSED_ARGUMENT(inData5))
+								 SInt16		UNUSED_ARGUMENT(inData2))
 {
 }// SetCallbackData
 

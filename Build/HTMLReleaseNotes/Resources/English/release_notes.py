@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080401',
     '20080330',
     '20080329',
     '20080328',
@@ -125,6 +126,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080401': [
+		'Fixed dynamic resize of TEK graphics, so they once again scale as the window is resized.',
+		'Internal changes to improve vector graphics handling.',
+	],
 	'20080330': [
 		'Fixed bug (recently introduced) where closing a vector graphics window would not restore terminal input.',
 		'Preferences window Terminals pane has been refined further.',

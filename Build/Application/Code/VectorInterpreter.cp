@@ -62,8 +62,121 @@
 
 
 
+#pragma mark Constants
+namespace {
+
+UInt16 const	kMy_NumberOfSupportedTargets = 2;	//!< e.g. screen, bitmap, ...
+
+/* temporary states */
+#define HIY			0	/* waiting for various pieces of coordinates */
+#define EXTRA		1
+#define LOY			2
+#define HIX			3
+#define LOX			4
+
+#define DONE		5	/* not waiting for coordinates */
+#define ENTERVEC	6	/* entering vector mode */
+#define CANCEL		7	/* done but don't draw a line */
+#define RS			8	/* RS - incremental plot mode */
+#define ESCOUT		9	/* when you receive an escape char after a draw command */
+#define CMD0		50	/* got esc, need 1st cmd letter */
+#define SOMEL		51	/* got esc L, need 2nd letter */
+#define IGNORE		52	/* ignore next char */
+#define SOMEM		53	/* got esc M, need 2nd letter */
+#define IGNORE2		54
+#define INTEGER		60	/* waiting for 1st integer part */
+#define INTEGER1	61	/* waiting for 2nd integer part */
+#define INTEGER2	62	/* waiting for 3rd (last) integer part */
+#define COLORINT	70
+#define GTSIZE0		75
+#define GTSIZE1		76
+#define	GTEXT		77	/* TEK4105 GraphText			17jul90dsw */
+#define MARKER		78	/* TEK4105 Marker select		17jul90dsw */
+#define	GTPATH		79	/* TEK4105 GraphText path		17jul90dsw */
+#define SOMET		80
+#define JUNKARRAY	81
+#define STARTDISC	82
+#define DISCARDING	83
+#define	FPATTERN	84	/* TEK4105 FillPattern			17jul90dsw */
+#define	GTROT		85	/* TEK4105 GraphText rotation	17jul90dsw */
+#define GTROT1		86
+#define	GTINDEX		87	/* TEK4105 GraphText color		17jul90dsw */
+#define PANEL		88	/* TEK4105 Begin Panel			23jul90dsw */
+#define	SUBPANEL	89	/* TEK4105 Begin^2 Panel		25jul90dsw */
+#define TERMSTAT	90	/* TEK4105 Report Term Status	24jul90dsw */
+#define	SOMER		91	/* TEK4105 for ViewAttributes	10jan91dsw */
+#define	VIEWAT		92	/* TEK4105 ViewAttributes		10jan91dsw */
+#define VIEWAT2		93
+
+/* output modes */
+#define ALPHA		0
+#define DRAW		1
+#define MARK		3
+#define TEMPDRAW	101
+#define TEMPMOVE	102
+#define TEMPMARK	103
+
+/* stroked fonts */
+#define CHARWIDE	51		/* total horz. size */
+#define CHARTALL	76		/* total vert. size */
+#define CHARH		10		/* horz. unit size */
+#define CHARV		13		/* vert. unit size */
+
+} // anonymous namespace
+
 #pragma mark Types
 namespace {
+
+// TEMPORARY - Convert this to a modern data structure.
+struct My_Point
+{
+	My_Point	(): x(0), y(0), next(nullptr) {}
+	My_Point	(SInt16 inX,
+				 SInt16	inY)
+	: x(inX), y(inY), next(nullptr) {}
+	
+	SInt16		x;
+	SInt16		y;
+	My_Point*	next;
+};
+typedef My_Point*	My_PointList;
+
+typedef void		(*My_NoArgReturnVoidProcPtr)();
+typedef SInt16		(*My_NoArgReturnIntProcPtr)();
+typedef char const*	(*My_NoArgReturnCharConstPtrProcPtr)();
+typedef void		(*My_IDArgReturnVoidProcPtr)(VectorInterpreter_ID);
+typedef SInt16		(*My_IDArgReturnIntProcPtr)(VectorInterpreter_ID);
+typedef SInt16		(*My_IDIntArgsReturnIntProcPtr)(VectorInterpreter_ID, SInt16);
+typedef void		(*My_IDIntArgsReturnVoidProcPtr)(VectorInterpreter_ID, SInt16);
+typedef SInt16		(*My_ID2IntArgsReturnIntProcPtr)(VectorInterpreter_ID, SInt16, SInt16);
+typedef void		(*My_ID2IntArgsReturnVoidProcPtr)(VectorInterpreter_ID, SInt16, SInt16);
+typedef SInt16		(*My_ID4IntArgsReturnIntProcPtr)(VectorInterpreter_ID, SInt16, SInt16, SInt16, SInt16);
+
+struct My_VectorCallbacks
+{
+	// IMPORTANT: This order is relied upon for initialization below.
+	My_NoArgReturnIntProcPtr			newwin;
+	My_NoArgReturnCharConstPtrProcPtr	devname;
+	My_NoArgReturnVoidProcPtr			init;
+	My_IDArgReturnIntProcPtr			gin;
+	My_IDIntArgsReturnIntProcPtr		pencolor;
+	My_IDArgReturnIntProcPtr			clrscr;
+	My_IDArgReturnIntProcPtr			close;
+	My_ID2IntArgsReturnIntProcPtr		point;
+	My_ID4IntArgsReturnIntProcPtr		drawline;
+	My_ID2IntArgsReturnVoidProcPtr		info;
+	My_IDArgReturnVoidProcPtr			pagedone;
+	My_ID2IntArgsReturnVoidProcPtr		dataline;
+	My_ID2IntArgsReturnVoidProcPtr		charmode;
+	My_NoArgReturnVoidProcPtr			gmode;
+	My_NoArgReturnVoidProcPtr			tmode;
+	My_NoArgReturnVoidProcPtr			showcur;
+	My_NoArgReturnVoidProcPtr			lockcur;
+	My_NoArgReturnVoidProcPtr			hidecur;
+	My_IDArgReturnVoidProcPtr			bell;
+	My_IDArgReturnVoidProcPtr			uncover;
+};
+typedef My_VectorCallbacks*		My_VectorCallbacksPtr;
 
 /*!
 Stores information used to interpreter vector graphics
@@ -74,7 +187,7 @@ struct My_VectorInterpreter
 	VectorInterpreter_ID	selfRef;			// the ID given to this structure at construction time
 	VectorInterpreter_Mode	commandSet;			// how data is interpreted
 	Boolean					pageClears;			// true if PAGE clears the screen, false if it opens a new window
-	RGLINK*					deviceCallbacks;	// routines customized for the type of target (picture or window)
+	My_VectorCallbacks*		deviceCallbacks;	// routines customized for the type of target (picture or window)
 	short	RGnum;
 	char	mode,modesave;					/* current output mode */
 	char	loy,hiy,lox,hix,ex,ey;			/* current graphics coordinates */
@@ -96,8 +209,8 @@ struct My_VectorInterpreter
 	short	TEKRot;							/* 4105 GTRotation */
 	short	TEKSize;						/* 4105 GTSize */
 	short	TEKBackground;					/* 4105 Background color */
-	pointlist	TEKPanel;					/* 4105 Panel's list of points */
-	pointlist	current;					/* current point in the list */
+	My_PointList	TEKPanel;					/* 4105 Panel's list of points */
+	My_PointList	current;					/* current point in the list */
 	char	state;
 	char	savstate;
 	TEKSTOREP	VGstore;	/* the store where data for this window is kept */
@@ -137,56 +250,56 @@ void			VGwhatzoom					(short, short*, short*, short*, short*);
 #pragma mark Variables
 namespace {
 
-RGLINK				RG[TEK_DEVICE_MAX] =
-					{
-						// See returnTargetDeviceIndex(), which must be in sync.
+My_VectorCallbacks		gTargetDeviceCallbacks[kMy_NumberOfSupportedTargets] =
 						{
-							// DEVICE 0 - normal TEK graphics page
-							VectorCanvas_New,
-							VectorCanvas_ReturnDeviceName,
-							VectorCanvas_Init,
-							VectorCanvas_MonitorMouse,
-							VectorCanvas_SetPenColor,
-							VectorCanvas_ClearScreen,
-							VectorCanvas_Dispose,
-							VectorCanvas_DrawDot,
-							VectorCanvas_DrawLine,
-							VectorCanvas_SetCallbackData,
-							VectorCanvas_FinishPage,
-							VectorCanvas_DataLine,
-							VectorCanvas_SetCharacterMode,
-							VectorCanvas_SetGraphicsMode,
-							VectorCanvas_SetTextMode,
-							VectorCanvas_CursorShow,
-							VectorCanvas_CursorLock,
-							VectorCanvas_CursorHide,
-							VectorCanvas_AudioEvent,
-							VectorCanvas_Uncover
-						},
-						{
-							// DEVICE 1 - Mac picture output (QuickDraw PICT)
-							VectorToBitmap_New,
-							VectorToBitmap_ReturnDeviceName,
-							VectorToBitmap_Init,
-							VectorToNull_DoNothingIntArgReturnZero/* GIN / monitor-mouse */,
-							VectorToBitmap_SetPenColor,
-							VectorToNull_DoNothingIntArgReturnZero/* clear screen */,
-							VectorToBitmap_Dispose,
-							VectorToBitmap_DrawDot,
-							VectorToBitmap_DrawLine,
-							VectorToBitmap_SetCallbackData,
-							VectorToNull_DoNothingIntArgReturnVoid/* page done */,
-							VectorToBitmap_DataLine,
-							VectorToBitmap_SetCharacterMode,
-							VectorToNull_DoNothingNoArgReturnVoid/* graphics mode */,
-							VectorToNull_DoNothingNoArgReturnVoid/* text mode */,
-							VectorToNull_DoNothingNoArgReturnVoid/* show cursor */,
-							VectorToNull_DoNothingNoArgReturnVoid/* lock cursor */,
-							VectorToNull_DoNothingNoArgReturnVoid/* hide cursor */,
-							VectorToNull_DoNothingIntArgReturnVoid/* bell */,
-							VectorToNull_DoNothingIntArgReturnVoid/* uncover */
-						}
-					};
+							// See returnTargetDeviceIndex(), which must be in sync.
+							{
+								// DEVICE 0 - normal TEK graphics page
+								VectorCanvas_New,
+								VectorCanvas_ReturnDeviceName,
+								VectorCanvas_Init,
+								VectorCanvas_MonitorMouse,
+								VectorCanvas_SetPenColor,
+								VectorCanvas_ClearScreen,
+								VectorCanvas_Dispose,
+								VectorCanvas_DrawDot,
+								VectorCanvas_DrawLine,
+								VectorCanvas_SetCallbackData,
+								VectorCanvas_FinishPage,
+								VectorCanvas_DataLine,
+								VectorCanvas_SetCharacterMode,
+								VectorCanvas_SetGraphicsMode,
+								VectorCanvas_SetTextMode,
+								VectorCanvas_CursorShow,
+								VectorCanvas_CursorLock,
+								VectorCanvas_CursorHide,
+								VectorCanvas_AudioEvent,
+								VectorCanvas_Uncover
+							},
+							{
+								// DEVICE 1 - Mac picture output (QuickDraw PICT)
+								VectorToBitmap_New,
+								VectorToBitmap_ReturnDeviceName,
+								VectorToBitmap_Init,
+								VectorToNull_DoNothingIntArgReturnZero/* GIN / monitor-mouse */,
+								VectorToBitmap_SetPenColor,
+								VectorToNull_DoNothingIntArgReturnZero/* clear screen */,
+								VectorToBitmap_Dispose,
+								VectorToBitmap_DrawDot,
+								VectorToBitmap_DrawLine,
+								VectorToBitmap_SetCallbackData,
+								VectorToNull_DoNothingIntArgReturnVoid/* page done */,
+								VectorToBitmap_DataLine,
+								VectorToBitmap_SetCharacterMode,
+								VectorToNull_DoNothingNoArgReturnVoid/* graphics mode */,
+								VectorToNull_DoNothingNoArgReturnVoid/* text mode */,
+								VectorToNull_DoNothingNoArgReturnVoid/* show cursor */,
+								VectorToNull_DoNothingNoArgReturnVoid/* lock cursor */,
+								VectorToNull_DoNothingNoArgReturnVoid/* hide cursor */,
+								VectorToNull_DoNothingIntArgReturnVoid/* bell */,
+								VectorToNull_DoNothingIntArgReturnVoid/* uncover */
+							}
+						};
 
 My_InterpreterPtrByID	VGwin;
 
@@ -210,7 +323,7 @@ VectorInterpreter_Init ()
 	register SInt16		i = 0;
 	
 	
-	for (i = 0; i < TEK_DEVICE_MAX; ++i) (*RG[i].init)();
+	for (i = 0; i < kMy_NumberOfSupportedTargets; ++i) (*gTargetDeviceCallbacks[i].init)();
 }// Init
 
 
@@ -244,7 +357,7 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 			SInt16		device = returnTargetDeviceIndex(inTarget);
 			
 			
-			dataPtr->deviceCallbacks = &RG[device];
+			dataPtr->deviceCallbacks = &gTargetDeviceCallbacks[device];
 		}
 		
 		dataPtr->mode = ALPHA;
@@ -402,6 +515,7 @@ SInt16
 VectorInterpreter_PiecewiseRedraw	(VectorInterpreter_ID	inGraphicID,
 									 VectorInterpreter_ID	inDestinationGraphicID)
 {
+	UInt16 const				kPiecewiseRedrawCount = 50;		// TEMPORARY - historical...why the hell is it this value?
 	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
 	SInt16						result = -1;
 	SInt16						data = 0;
@@ -415,7 +529,7 @@ VectorInterpreter_PiecewiseRedraw	(VectorInterpreter_ID	inGraphicID,
 		ptr->drawing = 0;
 	}
 	
-	for (SInt16 count = 0; ++count < PREDCOUNT && (-1 != (data = nextTEKitem(storePtr))); )
+	for (SInt16 count = 0; ++count < kPiecewiseRedrawCount && (-1 != (data = nextTEKitem(storePtr))); )
 	{
 		VGdraw(inDestinationGraphicID, data);
 	}
@@ -930,11 +1044,11 @@ short	VGdevice(short vw, short dev)
 		return -1;
 		}
 
-	newwin = (*RG[dev].newwin)();
+	newwin = (*gTargetDeviceCallbacks[dev].newwin)();
 	if (newwin<0) return(newwin);	/* unable to open new window */
 
 	(*VGwin[vw]->deviceCallbacks->close)(VGwin[vw]->RGnum);
-	VGwin[vw]->deviceCallbacks = &RG[dev];
+	VGwin[vw]->deviceCallbacks = &gTargetDeviceCallbacks[dev];
 	VGwin[vw]->RGnum = newwin;
 	VGwin[vw]->pencolor = 1;
 	VGwin[vw]->TEKBackground = 0;
@@ -959,7 +1073,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 	char		temp[80];
 	RgnHandle	PanelRgn;
 	My_VectorInterpreterPtr	vp;
-	pointlist	temppoint;
+	My_PointList	temppoint;
 
 	if (false == isValidID(vw)) {
 		return;
@@ -1406,17 +1520,14 @@ void VGdraw(short vw, char c)			/* the latest input char */
 						if ((vp->current->x != vp->savx) ||
 							(vp->current->y != vp->savy))
 						{
-							temppoint = (pointlist) Memory_NewPtr(sizeof(point));
-							temppoint->x = vp->savx;
-							temppoint->y = vp->savy;
-							temppoint->next = (pointlist) nullptr;
+							temppoint = new My_Point(vp->savx, vp->savy);
 							vp->current->next = temppoint;
 						}
 						temppoint = vp->current = vp->TEKPanel;
 						vp->savx = vp->curx = vp->current->x;
 						vp->savy = vp->cury = vp->current->y;
 						vp->current = vp->current->next;
-						Memory_DisposePtr((Ptr*)temppoint);
+						delete temppoint;
 						PanelRgn = Memory_NewRegion();
 						OpenRgn();
 						while (vp->current)
@@ -1427,7 +1538,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 							vp->curx = vp->current->x;
 							vp->cury = vp->current->y;
 							vp->current = vp->current->next;
-							Memory_DisposePtr((Ptr*)temppoint);
+							delete temppoint;
 						}
 						CloseRgn(PanelRgn);
 						if (vp->TEKPattern <= 0)
@@ -1437,7 +1548,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 							FrameRgn(PanelRgn); */
 						Memory_DisposeRegion(&PanelRgn);
 						(*vp->deviceCallbacks->pencolor)(vp->RGnum,vp->pencolor);
-						vp->TEKPanel = (pointlist) nullptr;
+						vp->TEKPanel = (My_PointList) nullptr;
 						vp->curx = vp->savx;
 						vp->cury = vp->savy;
 					}
@@ -1642,7 +1753,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			break;
 		case PANEL:
 			vp->TEKOutline = (vp->intin == 0) ? 0 : 1;
-			temppoint = (pointlist) Memory_NewPtr(sizeof(point));
+			temppoint = new My_Point;
 			if (vp->TEKPanel)
 			{
 				if ((vp->current->x != vp->savx) && (vp->current->y != vp->savy))
@@ -1651,7 +1762,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					temppoint->y = vp->savy;
 					vp->current->next = temppoint;
 					vp->current = temppoint;
-					temppoint = (pointlist) Memory_NewPtr(sizeof(point));
+					temppoint = new My_Point;
 				}
 				vp->current->next = temppoint;
 			}
@@ -1659,7 +1770,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			vp->current = temppoint;
 			vp->current->x = vp->savx = joinup(vp->nhix,vp->nlox,vp->nex);
 			vp->current->y = vp->savy = joinup(vp->nhiy,vp->nloy,vp->ney);
-			vp->current->next = (pointlist) nullptr;
+			vp->current->next = (My_PointList) nullptr;
 			VGwin[vw]->state = INTEGER;
 			VGwin[vw]->savstate = PANEL;
 			vp->mode = DONE;
@@ -1738,12 +1849,12 @@ void VGdraw(short vw, char c)			/* the latest input char */
 					|| (vp->mode == MARK) || (vp->mode == TEMPMARK) ||
 						(vp->mode == TEMPMOVE)))
 			{
-				temppoint = (pointlist) Memory_NewPtr(sizeof(point));
+				temppoint = new My_Point;
 				vp->current->next = temppoint;
 				vp->current = temppoint;
 				vp->current->x = joinup(vp->nhix,vp->nlox,vp->nex);
 				vp->current->y = joinup(vp->nhiy,vp->nloy,vp->ney);
-				vp->current->next = (pointlist) nullptr;
+				vp->current->next = (My_PointList) nullptr;
 				if ((vp->mode == TEMPDRAW) || (vp->mode == TEMPMOVE) ||
 					(vp->mode == TEMPMARK))
 					vp->mode = vp->modesave;
@@ -1808,11 +1919,8 @@ void	VGgiveinfo(short vw)
 		}
 
 	(*VGwin[vw]->deviceCallbacks->info)(VGwin[vw]->RGnum,
-		vw,
-		VGwin[vw]->winbot,
-		VGwin[vw]->winleft,
-		VGwin[vw]->wintop,
-		VGwin[vw]->winright);
+		vw, 0);
+	// note: might send VGwin[vw]->winbot/left/top/right too
 }
 
 
@@ -1821,14 +1929,14 @@ void	VGgiveinfo(short vw)
  */
 char const*	VGrgname(short rgdev)
 {
-	return(*RG[rgdev].devname)();
+	return(*gTargetDeviceCallbacks[rgdev].devname)();
 }
 
 
 /*	Put the specified real device into text mode */
 void	VGtmode(short rgdev)
 {
-	(*RG[rgdev].tmode)();
+	(*gTargetDeviceCallbacks[rgdev].tmode)();
 }
 
 

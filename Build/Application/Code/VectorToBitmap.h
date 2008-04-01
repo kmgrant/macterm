@@ -95,10 +95,7 @@ SInt16
 void
 	VectorToBitmap_SetCallbackData		(SInt16			inDevice,
 										 SInt16			inVectorInterpreterRef,
-										 SInt16			inData2,
-										 SInt16			inData3,
-										 SInt16			inData4,
-										 SInt16			inData5);
+										 SInt16			inData2);
 
 void
 	VectorToBitmap_SetCharacterMode		(SInt16			inDevice,

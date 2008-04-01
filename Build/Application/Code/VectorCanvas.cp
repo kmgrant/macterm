@@ -84,6 +84,11 @@ the NIB "TEKWindow.nib".
 */
 HIViewID const	idMyCanvas		= { 'Cnvs', 0/* ID */ };
 
+UInt16 const	kMy_MaximumGraphics = 20;	//!< limit is for historical reasons; TEMPORARY
+
+UInt16 const	kMy_MaximumX = 4095;
+UInt16 const	kMy_MaximumY = 3139;	// TEMPORARY - figure out where the hell this value comes from
+
 } // anonymous namespace
 
 #pragma mark Types
@@ -100,9 +105,6 @@ struct My_VectorCanvas
 	EventHandlerUPP			closeUPP;
 	EventHandlerRef			closeHandler;
 	HIViewRef				canvas;
-	HIViewRef				zoom;
-	HIViewRef				vert;
-	HIViewRef				horiz;
 	CarbonEventHandlerWrap	canvasDrawHandler;
 	SInt16					xorigin;
 	SInt16					yorigin;
@@ -145,7 +147,7 @@ short												RGMcolor[] =
 														137,		// magenta
 														69			// yellow
 													};
-My_VectorCanvasPtr									RGMwind[MAXWIND];
+My_VectorCanvasPtr									RGMwind[kMy_MaximumGraphics];
 
 } // anonymous namespace
 
@@ -163,7 +165,7 @@ VectorCanvas_Init ()
 	register SInt16		i = 0;
 	
 	
-	for (i = 0; i < MAXWIND; i++) RGMwind[i] = nullptr;
+	for (i = 0; i < kMy_MaximumGraphics; ++i) RGMwind[i] = nullptr;
 }// Init
 
 
@@ -180,11 +182,11 @@ VectorCanvas_New ()
 	SInt16		i = 0;
 	
 	
-	while ((i < MAXWIND) && (nullptr != RGMwind[i]))
+	while ((i < kMy_MaximumGraphics) && (nullptr != RGMwind[i]))
 	{
 		++i;
 	}
-	if (i < MAXWIND)
+	if (i < kMy_MaximumGraphics)
 	{
 		RGMwind[i] = new My_VectorCanvas;
 		if (nullptr != RGMwind[i])
@@ -231,8 +233,8 @@ VectorCanvas_New ()
 			RGMwind[i]->vs = nullptr;
 			RGMwind[i]->xorigin = 0;
 			RGMwind[i]->yorigin = 0;
-			RGMwind[i]->xscale = WINXMAX;
-			RGMwind[i]->yscale = WINYMAX;
+			RGMwind[i]->xscale = kMy_MaximumX;
+			RGMwind[i]->yscale = kMy_MaximumY;
 			RGMwind[i]->width = 400;
 			RGMwind[i]->height = 300;
 			RGMwind[i]->ingin = 0;
@@ -490,10 +492,7 @@ Applies miscellaneous settings to a canvas.
 void
 VectorCanvas_SetCallbackData	(SInt16		inCanvasID,
 								 SInt16		inVectorInterpreterRef,
-								 SInt16		UNUSED_ARGUMENT(inData2),
-								 SInt16		UNUSED_ARGUMENT(inData3),
-								 SInt16		UNUSED_ARGUMENT(inData4),
-								 SInt16		UNUSED_ARGUMENT(inData5))
+								 SInt16		UNUSED_ARGUMENT(inData2))
 {
 	RGMwind[inCanvasID]->vg = inVectorInterpreterRef;
 }// SetCallbackData
@@ -538,7 +537,7 @@ VectorCanvas_SetListeningSession	(SInt16			inCanvasID,
 	Boolean		result = -1;
 	
 	
-	if ((inCanvasID >= 0) && (inCanvasID < MAXWIND))
+	if ((inCanvasID >= 0) && (inCanvasID < kMy_MaximumGraphics))
 	{
 		RGMwind[inCanvasID]->vs = inSession;
 	}
@@ -628,7 +627,7 @@ findCanvasWithWindow	(HIWindowRef	inWindow)
 	SInt16		result = 0;
 	
 	
-	while (result < MAXWIND)
+	while (result < kMy_MaximumGraphics)
 	{
 		if (nullptr != RGMwind[result])
 		{
@@ -636,7 +635,7 @@ findCanvasWithWindow	(HIWindowRef	inWindow)
 		}
 		++result;
 	}
-	if (result >= MAXWIND)
+	if (result >= kMy_MaximumGraphics)
 	{
 		result = -1;
 	}
@@ -761,12 +760,12 @@ handleMouseDown		(HIWindowRef	inWindow,
 		{
 			if (RGMlastclick && ((RGMlastclick + GetDblTime()) > TickCount()))
 			{
-				ptr->xscale = WINXMAX;
-				ptr->yscale = WINYMAX;
+				ptr->xscale = kMy_MaximumX;
+				ptr->yscale = kMy_MaximumY;
 				ptr->xorigin = 0;
 				ptr->yorigin = 0;
 				
-				VectorInterpreter_Zoom(ptr->vg, 0, 0, WINXMAX - 1, WINYMAX - 1);
+				VectorInterpreter_Zoom(ptr->vg, 0, 0, kMy_MaximumX - 1, kMy_MaximumY - 1);
 				VectorInterpreter_PageCommand(ptr->vg);
 				RGMlastclick = 0L;
 			}
@@ -935,7 +934,16 @@ receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// INCOMPLETE - these callbacks need to be updated to support Core Graphics
 				VectorInterpreter_StopRedraw(dataPtr->vg);
 				VectorInterpreter_PageCommand(dataPtr->vg);
-				(SInt16)VectorInterpreter_PiecewiseRedraw(dataPtr->vg, dataPtr->vg);
+				{
+					SInt16		zeroIfMoreRedrawsNeeded = 0;
+					SInt16		loopGuard = 0;
+					
+					
+					while ((0 == zeroIfMoreRedrawsNeeded) && (loopGuard++ < 1000/* arbitrary */))
+					{
+						zeroIfMoreRedrawsNeeded = VectorInterpreter_PiecewiseRedraw(dataPtr->vg, dataPtr->vg);
+					}
+				}
 				
 				result = noErr;
 			}
@@ -1008,7 +1016,7 @@ setPortCanvasPort	(SInt16		inCanvasID)
 	SInt16		result = -1;
 	
 	
-	if ((inCanvasID >= 0) && (inCanvasID < MAXWIND))
+	if ((inCanvasID >= 0) && (inCanvasID < kMy_MaximumGraphics))
 	{
 		if (nullptr != RGMwind[inCanvasID])
 		{

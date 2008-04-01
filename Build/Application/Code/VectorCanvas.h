@@ -40,6 +40,7 @@
 #include <Carbon/Carbon.h>
 
 // MacTelnet includes
+#include "SessionRef.typedef.h"
 #include "tekdefs.h"
 
 
@@ -112,10 +113,7 @@ char const*
 void
 	VectorCanvas_SetCallbackData		(SInt16			inCanvasID,
 										 SInt16			inVectorInterpreterRef,
-										 SInt16			inData2,
-										 SInt16			inData3,
-										 SInt16			inData4,
-										 SInt16			inData5);
+										 SInt16			inData2);
 
 void
 	VectorCanvas_SetCharacterMode		(SInt16			inCanvasID,
