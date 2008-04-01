@@ -1378,11 +1378,11 @@ graphicToPICT	(VectorInterpreter_ID	inDrawingNumber)
 		
 		SetRect(&pictureBounds, 0, 0, 384, 384); // arbitrary?
 		VectorToBitmap_SetBounds(&pictureBounds);
-		VGzcpy(inDrawingNumber, graphicID);
+		VectorInterpreter_CopyZoom(graphicID, inDrawingNumber);
 		
 		result = OpenPicture(&pictureBounds);
 		ClipRect(&pictureBounds);
-		VGredraw(inDrawingNumber, graphicID);
+		VectorInterpreter_Redraw(inDrawingNumber, graphicID);
 		ClosePicture();
 		VectorInterpreter_Dispose(&graphicID);
 	}

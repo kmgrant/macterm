@@ -398,7 +398,6 @@ void
 TelnetPrinting_PrintSelection ()
 {
 	WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
-	SInt16		i = 0;
 	
 	
 	UniversalPrint_Init();

@@ -769,13 +769,13 @@ void RGmousedown
 			x1 = (x1 < x0+2) ? x0 + 4 : x1;
 			y0 = (y0 < y1+2) ? y1 + 4 : y0;
 
-			VGzoom( i,
-					x0 + RGMwind[i]->xorigin,
-					y1 + RGMwind[i]->yorigin,
-					x1 + RGMwind[i]->xorigin,
-					y0 + RGMwind[i]->yorigin);
+			VectorInterpreter_Zoom( i,
+									x0 + RGMwind[i]->xorigin,
+									y1 + RGMwind[i]->yorigin,
+									x1 + RGMwind[i]->xorigin,
+									y0 + RGMwind[i]->yorigin);
 
-			VGpage(RGMwind[i]->vg);
+			VectorInterpreter_PageCommand(RGMwind[i]->vg);
 
 			RGMwind[i]->xscale  = x1 - x0;
 			RGMwind[i]->yscale  = y0 - y1;
@@ -793,8 +793,8 @@ void RGmousedown
 				RGMwind[i]->xorigin = 0;
 				RGMwind[i]->yorigin = 0;
 
-				VGzoom(i,0,0,WINXMAX-1,WINYMAX-1);
-				VGpage( RGMwind[i]->vg);
+				VectorInterpreter_Zoom(i,0,0,WINXMAX-1,WINYMAX-1);
+				VectorInterpreter_PageCommand( RGMwind[i]->vg);
 				RGMlastclick = 0L;
 			}
 			else RGMlastclick = TickCount();
@@ -929,9 +929,9 @@ receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				// finally, draw the graphic!
 				// INCOMPLETE - these callbacks need to be updated to support Core Graphics
-				VGstopred(dataPtr->vg);
-				VGpage(dataPtr->vg);
-				(SInt16)VGpred(dataPtr->vg, dataPtr->vg);
+				VectorInterpreter_StopRedraw(dataPtr->vg);
+				VectorInterpreter_PageCommand(dataPtr->vg);
+				(SInt16)VectorInterpreter_PiecewiseRedraw(dataPtr->vg, dataPtr->vg);
 				
 				result = noErr;
 			}

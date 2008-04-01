@@ -478,11 +478,6 @@ void
 	Session_TEKSetPageCommandOpensNewWindow	(SessionRef							inRef,
 											 Boolean							inNewWindow);
 
-SInt16
-	Session_TEKWrite						(SessionRef							inRef,
-											 char const*						inBuffer,
-											 SInt16								inLength);
-
 //@}
 
 //!\name Virtual Terminal Routines

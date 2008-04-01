@@ -53,7 +53,6 @@
 #define INXMAX 4096
 #define INYMAX 4096
 
-#define NUMSIZES 6 				/* number of char sizes */
 #define PREDCOUNT 50
 
 /* MORE vgtek specific stuff */

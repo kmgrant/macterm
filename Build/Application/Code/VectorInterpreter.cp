@@ -82,7 +82,7 @@ struct My_VectorInterpreter
 	short	curx,cury;						/* current composite coordinates */
 	short	savx,savy;						/* save the panel's x,y */
 	short	winbot,wintop,winleft,winright,wintall,winwide; 
-		/* position of window in virutal space */
+		/* position of window in virtual space */
 	short	textcol;						/* text starts in 0 or 2048 */
 	short	intin;							/* integer parameter being input */
 	short	pencolor;						/* current pen color */
@@ -116,17 +116,18 @@ namespace {
 
 void			clipvec						(short, short, short, short, short);
 short			drawc						(short, short);
-short			fontnum						(short, short);
+short			fontnum						(short, UInt16);
+Boolean			isValidID					(VectorInterpreter_ID);
 short			joinup						(short, short, short);
 void			linefeed					(short);
 void			newcoord					(short);
 SInt16			returnTargetDeviceIndex		(VectorInterpreter_Target);
 void			storexy						(short, short, short);
-short			VGcheck						(short);
 void			VGclrstor					(short);
 short			VGdevice					(short, short);
 void			VGdraw						(short, char);
 void			VGdumpstore					(short, short (*)(short));
+void			VGgiveinfo					(VectorInterpreter_ID);
 char const*		VGrgname					(short);
 void			VGtmode						(short);
 void			VGwhatzoom					(short, short*, short*, short*, short*);
@@ -189,9 +190,6 @@ RGLINK				RG[TEK_DEVICE_MAX] =
 
 My_InterpreterPtrByID	VGwin;
 
-short				charxset[NUMSIZES] = {56,51,34,31,112,168};
-short				charyset[NUMSIZES] = {88,82,53,48,176,264};
-
 VectorInterpreter_ID	gIDCounter = 0;
 
 } // anonymous namespace
@@ -250,23 +248,23 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 		}
 		
 		dataPtr->mode = ALPHA;
-		dataPtr->TEKPanel = (pointlist) nullptr;
+		dataPtr->TEKPanel = nullptr;
 		dataPtr->state = DONE;
 		dataPtr->storing = true;
 		dataPtr->textcol = 0;
 		dataPtr->drawing = 1;
-		fontnum(result,0);
-		(*dataPtr->deviceCallbacks->pencolor)(dataPtr->RGnum,1);
-
-		storexy(result,0,3071);
+		fontnum(result, 0);
+		(*dataPtr->deviceCallbacks->pencolor)(dataPtr->RGnum, 1);
+		
+		storexy(result, 0, 3071);
 		
 		// do this last, because it will trigger rendering that
 		// depends on all the initializations above
 		dataPtr->RGnum = (*dataPtr->deviceCallbacks->newwin)();
 	#if 1
-		VGzoom(result,0,0,4095,3119);				/* important */
+		VectorInterpreter_Zoom(result, 0, 0, 4095, 3119); // important!
 	#else
-		VGzoom(result,0,0,INXMAX-1,INYMAX-1);
+		VectorInterpreter_Zoom(result, 0, 0, INXMAX - 1, INYMAX - 1);
 	#endif
 	}
 	catch (std::bad_alloc)
@@ -286,7 +284,7 @@ and sets your copy of the ID to kVectorInterpreter_InvalidID.
 void
 VectorInterpreter_Dispose	(VectorInterpreter_ID*		inoutGraphicIDPtr)
 {
-	if (VGwin.end() != VGwin.find(*inoutGraphicIDPtr))
+	if (isValidID(*inoutGraphicIDPtr))
 	{
 		My_VectorInterpreterPtr		ptr = VGwin[*inoutGraphicIDPtr];
 		
@@ -298,6 +296,117 @@ VectorInterpreter_Dispose	(VectorInterpreter_ID*		inoutGraphicIDPtr)
 	}
 	*inoutGraphicIDPtr = kVectorInterpreter_InvalidID;
 }// Dispose
+
+
+/*!
+Sets zoom/pan borders for the destination to match the source.
+The destination should be redrawn.
+
+(3.1)
+*/
+void
+VectorInterpreter_CopyZoom	(VectorInterpreter_ID	inDestinationGraphicID,
+							 VectorInterpreter_ID	inSourceGraphicID)
+{
+	VectorInterpreter_Zoom(inDestinationGraphicID, VGwin[inSourceGraphicID]->winleft, VGwin[inSourceGraphicID]->winbot,
+							VGwin[inSourceGraphicID]->winright, VGwin[inSourceGraphicID]->wintop);
+}// CopyZoom
+
+
+/*!
+Standard TEK PAGE command; clears the screen, homes the cursor
+and switches to alpha mode.
+
+(2.6)
+*/
+void
+VectorInterpreter_PageCommand	(VectorInterpreter_ID	inGraphicID)
+{
+	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+	
+	
+	if (kVectorInterpreter_ModeTEK4105 == ptr->commandSet)
+	{
+		(*ptr->deviceCallbacks->pencolor)(ptr->RGnum, ptr->TEKBackground);
+	}
+	else
+	{
+		(*ptr->deviceCallbacks->pencolor)(ptr->RGnum, 0);
+	}
+	(*ptr->deviceCallbacks->clrscr)(ptr->RGnum);
+	(*ptr->deviceCallbacks->pencolor)(ptr->RGnum, 1);
+	ptr->mode = ALPHA;
+	ptr->state = DONE;
+	ptr->textcol = 0;
+	fontnum(inGraphicID, 0);
+	storexy(inGraphicID, 0, 3071);
+}// PageCommand
+
+
+/*!
+Redraws part of a graphic; must be called repeatedly to draw
+everything.  Returns 0 if more calls are needed, 1 if complete,
+and negative on error.  If the drawing is complete, this call
+will start it again.
+
+Clear the screen before invoking a redraw.
+
+(2.6)
+*/
+SInt16
+VectorInterpreter_PiecewiseRedraw	(VectorInterpreter_ID	inGraphicID,
+									 VectorInterpreter_ID	inDestinationGraphicID)
+{
+	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+	SInt16						result = -1;
+	SInt16						data = 0;
+	TEKSTOREP					storePtr = ptr->VGstore;
+	
+	
+	if (ptr->drawing)
+	{
+		// continuation of previous redraw
+		topTEKstore(ptr->VGstore);
+		ptr->drawing = 0;
+	}
+	
+	for (SInt16 count = 0; ++count < PREDCOUNT && (-1 != (data = nextTEKitem(storePtr))); )
+	{
+		VGdraw(inDestinationGraphicID, data);
+	}
+	
+	if (data == -1)
+	{
+		// redraw complete
+		ptr->drawing = 1;
+	}
+	result = ptr->drawing;
+	
+	return result;
+}// PiecewiseRedraw
+
+
+/*!
+Redraws the whole graphic.  Clear the screen before invoking
+a redraw.
+
+See also VectorInterpreter_PiecewiseRedraw().
+
+(2.6)
+*/
+void
+VectorInterpreter_Redraw	(VectorInterpreter_ID	inGraphicID,
+							 VectorInterpreter_ID	inDestinationGraphicID)
+{
+	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+	
+	
+	topTEKstore(ptr->VGstore);
+	for (SInt16 data = 0; -1 != (data = nextTEKitem(ptr->VGstore)); )
+	{
+		VGdraw(inDestinationGraphicID, data);
+	}
+}// Redraw
 
 
 /*!
@@ -317,6 +426,45 @@ VectorInterpreter_ReturnMode	(VectorInterpreter_ID	inGraphicID)
 
 
 /*!
+This is the main entry point for rendering any vector graphics!
+
+Stores and renders the specified data, returning the number of
+bytes accepted before possible cancellation.  The data should
+use the command set specified by VectorInterpreter_ReturnMode().
+
+(3.1)
+*/
+size_t
+VectorInterpreter_ProcessData	(VectorInterpreter_ID	inGraphicID,
+								 UInt8 const*			inDataPtr,
+								 size_t					inDataSize)
+{
+	size_t		result = 0;
+	
+	
+	if (isValidID(inGraphicID))
+	{
+		UInt8 const* const			kPastEnd = inDataPtr + inDataSize;
+		My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+		UInt8 const*				charPtr = nullptr;
+		
+		
+		for (charPtr = inDataPtr;
+				((kPastEnd != charPtr) && (24/* CAN(CEL) character */ != *charPtr)); ++charPtr)
+		{
+			if (ptr->storing)
+			{
+				addTEKstore(ptr->VGstore, *charPtr);
+			}
+			VGdraw(inGraphicID, *charPtr);
+		}
+		result = charPtr - inDataPtr;
+	}
+	return result;
+}// ProcessData
+
+
+/*!
 Specifies whether a PAGE command clears the screen, or
 opens a new window.
 
@@ -333,161 +481,49 @@ VectorInterpreter_SetPageClears		(VectorInterpreter_ID	inGraphicID,
 }// SetPageClears
 
 
-/*  Clear screen and have a few other effects:
- *	- Return graphics to home position (0,3071)
- *	- Switch to alpha mode
- *	This is a standard Tek command; don't look at me.
- */
-void VGpage(short vw)
-{
-	if (VGcheck(vw)) {
-		return;
-		}
+/*!
+Aborts a redraw in progress.  Prevents successive calls to
+VectorInterpreter_PiecewiseRedraw() from completing the
+picture, instead the redraw would start from the beginning.
 
-	if (kVectorInterpreter_ModeTEK4105 == VGwin[vw]->commandSet)
-		(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKBackground);
-	else
-		(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,0);
-	(*VGwin[vw]->deviceCallbacks->clrscr)(VGwin[vw]->RGnum);
-	(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,1);
-	VGwin[vw]->mode = ALPHA;
-	VGwin[vw]->state = DONE;
-	VGwin[vw]->textcol = 0;
-	fontnum(vw,0);
-	storexy(vw,0,3071);
-}
-
-/*	Redraw window 'vw' in pieces to window 'dest'.
- *	Must call this function repeatedly to draw whole image.
- *	Only draws part of the image at a time, to yield CPU power.
- *	Returns 0 if needs to be called more, or 1 if the image
- *	is complete.  Another call would result in the redraw beginning again.
- *	User should clear screen before beginning redraw.
- */
-short VGpred(short vw, short dest)
+(2.6)
+*/
+void
+VectorInterpreter_StopRedraw	(VectorInterpreter_ID	inGraphicID)
 {
-	short		data = 0;
-	TEKSTOREP	st;
-	short		count = 0;
+	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
 	
-	if (VGcheck(vw)) {
-		return -1;
-		}
-
-	st = VGwin[vw]->VGstore;
 	
-	if (VGwin[vw]->drawing)		/* wasn't redrawing */
-	{
-		topTEKstore(VGwin[vw]->VGstore);
-		VGwin[vw]->drawing = 0;	/* redraw incomplete */
-	}
+	ptr->drawing = 1;
+}// StopRedraw
 
-	while (++count < PREDCOUNT && ((data = nextTEKitem(st)) != -1))
-		VGdraw(dest,data);
-
-	if (data == -1) VGwin[vw]->drawing = 1; 	/* redraw complete */
-	return(VGwin[vw]->drawing);
-}
-
-/*	Abort VGpred redrawing of specified window.
-	Must call this routine if you decide not to complete the redraw. */
-void VGstopred(short vw)
-{
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	VGwin[vw]->drawing = 1;
-}
-
-/*	Redraw the contents of window 'vw' to window 'dest'.
- *	Does not yield CPU until done.
- *	User should clear the screen before calling this, to avoid 
- *	a messy display. */
-void VGredraw(short vw, short dest)
-{
-	short	data;
-
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	topTEKstore(VGwin[vw]->VGstore);
-	while ((data = nextTEKitem(VGwin[vw]->VGstore)) != -1) VGdraw(dest,data);
-}
- 
-/*	Send interesting information about the virtual window down to
- *	its RG, so that the RG can make VG calls and display zoom values
- */
-void	VGgiveinfo(short vw)
-{
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	(*VGwin[vw]->deviceCallbacks->info)(VGwin[vw]->RGnum,
-		vw,
-		VGwin[vw]->winbot,
-		VGwin[vw]->winleft,
-		VGwin[vw]->wintop,
-		VGwin[vw]->winright);
-}
 
 /*	Set new borders for zoom/pan region.
  *	x0,y0 is lower left; x1,y1 is upper right.
  *	User should redraw after calling this.
  */
-void	VGzoom(short vw, short x0, short inY0, short x1, short inY1)
+void
+VectorInterpreter_Zoom	(VectorInterpreter_ID	inGraphicID,
+						 SInt16					inX0,
+						 SInt16					inY0,
+						 SInt16					inX1,
+						 SInt16					inY1)
 {
-	if (VGcheck(vw)) {
-		return;
-		}
-
-	VGwin[vw]->winbot = inY0;
-	VGwin[vw]->winleft = x0;
-	VGwin[vw]->wintop = inY1;
-	VGwin[vw]->winright = x1;
-	VGwin[vw]->wintall = inY1 - inY0 + 1;
-	VGwin[vw]->winwide = x1 - x0 + 1;
-	VGgiveinfo(vw);
-}
-
-/*	Set zoom/pan borders for window 'dest' equal to those for window 'src'.
- *	User should redraw window 'dest' after calling this.
- */
-void	VGzcpy(short src, short dest)
-{
-	VGzoom(dest,VGwin[src]->winleft, VGwin[src]->winbot,
-	VGwin[src]->winright, VGwin[src]->wintop);
-}
-
-/*	Close virtual window.
- *	Draw the data pointed to by 'data' of length 'count'
- *	on window vw, and add it to the store for that window.
- *	This is THE way for user program to pass Tektronix data.
- */
-short	VGwrite(short vw, char const* data, short count)
-{
-	char const* c = data;
-	char const* end = &(data[count]);
-	char storeit;
-
-	if (VGcheck(vw)) {
-		return -1;
-		}
-
-	storeit = VGwin[vw]->storing;
-	
-	while (c != end)
+	if (isValidID(inGraphicID))
 	{
-		if (*c == 24)				/* ASC CAN character */
-			return(c-data+1);
-		if (storeit) addTEKstore(VGwin[vw]->VGstore,*c);
-		VGdraw(vw,*c++);
-
+		My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+		
+		
+		ptr->winbot = inY0;
+		ptr->winleft = inX0;
+		ptr->wintop = inY1;
+		ptr->winright = inX1;
+		ptr->wintall = inY1 - inY0 + 1;
+		ptr->winwide = inX1 - inX0 + 1;
+		VGgiveinfo(inGraphicID);
 	}
-	return(count);
-}
+}// Zoom
+
 
 /*	Translate data for output as GIN report.
  *
@@ -504,7 +540,7 @@ void VGgindata( short vw,
 {
 	long	x2,y2;
 	
-	if (VGcheck(vw)) {
+	if (false == isValidID(vw)) {
 		return;
 		}
 
@@ -725,20 +761,37 @@ drawc		(short		vw,
  */
 short
 fontnum		(short		vw,
-			 short		n)
+			 UInt16		n)
 {
-	short	result = 0;
+	size_t const	kCharSizeCount = 6;
+	short			result = 0;
 	
 	
-	if ((n < 0) || (n >= NUMSIZES)) result = -1;
+	if (n >= kCharSizeCount) result = -1;
 	else
 	{
+		static SInt16	characterSetX[kCharSizeCount] = { 56, 51, 34, 31, 112, 168 };
+		static SInt16	characterSetY[kCharSizeCount] = { 88, 82, 53, 48, 176, 264 };
+		
+		
 		VGwin[vw]->fontnum = n;
-		VGwin[vw]->charx = charxset[n];
-		VGwin[vw]->chary = charyset[n];
+		VGwin[vw]->charx = characterSetX[n];
+		VGwin[vw]->chary = characterSetY[n];
 	}
 	return result;
 }// fontnum
+
+
+/*!
+Returns true only if the specified ID is valid.
+
+(3.1)
+*/
+Boolean
+isValidID	(VectorInterpreter_ID	inGraphicID)
+{
+	return (VGwin.end() != VGwin.find(inGraphicID));
+}// isValidID
 
 
 short
@@ -788,7 +841,7 @@ newcoord	(short		vw)
 	VGwin[vw]->lox = VGwin[vw]->nlox;
 	VGwin[vw]->ey  = VGwin[vw]->ney;
 	VGwin[vw]->ex  = VGwin[vw]->nex;
-
+	
 	VGwin[vw]->curx = joinup(VGwin[vw]->nhix,VGwin[vw]->nlox,VGwin[vw]->nex);
 	VGwin[vw]->cury = joinup(VGwin[vw]->nhiy,VGwin[vw]->nloy,VGwin[vw]->ney);
 }
@@ -832,27 +885,13 @@ storexy		(short		vw,
 }// storexy
 
 
-short
-VGcheck		(short		dnum)
-{
-	short		result = 0;
-	
-	
-	if ((dnum >= MAXVG) || (dnum < 0)) result = -1;
-	else if (VGwin[dnum] == nullptr) result = -1;
-	else result = 0;
-	
-	return result;
-}// VGcheck
-
-
 /*	Clear the store associated with window vw.  
  *	All contents are lost.
  *	User program can call this whenever desired.
  *	Automatically called after receipt of Tek page command. */
 void	VGclrstor(short vw)
 {
-	if (VGcheck(vw)) {
+	if (false == isValidID(vw)) {
 		return;
 		}
 
@@ -872,7 +911,7 @@ short	VGdevice(short vw, short dev)
 {
 	short newwin;
 
-	if (VGcheck(vw)) {
+	if (false == isValidID(vw)) {
 		return -1;
 		}
 
@@ -907,7 +946,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 	My_VectorInterpreterPtr	vp;
 	pointlist	temppoint;
 
-	if (VGcheck(vw)) {
+	if (false == isValidID(vw)) {
 		return;
 		}
 
@@ -1191,7 +1230,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			case 12: /* form feed = clrscr */
 				if (vp->pageClears)
 				{
-					VGpage(vw);
+					VectorInterpreter_PageCommand(vw);
 					VGclrstor(vw);
 				}
 				break;
@@ -1733,7 +1772,7 @@ void	VGdumpstore(short vw, short (*func )(short))
 	short		data;
 	TEKSTOREP	st;
 
-	if (VGcheck(vw)) {
+	if (false == isValidID(vw)) {
 		return;
 		}
 
@@ -1741,6 +1780,24 @@ void	VGdumpstore(short vw, short (*func )(short))
 	topTEKstore(st);
 	while ((data = nextTEKitem(st)) != -1) (*func)(data);
 	(*func)(-1);
+}
+
+ 
+/*	Send interesting information about the virtual window down to
+ *	its RG, so that the RG can make VG calls and display zoom values
+ */
+void	VGgiveinfo(short vw)
+{
+	if (false == isValidID(vw)) {
+		return;
+		}
+
+	(*VGwin[vw]->deviceCallbacks->info)(VGwin[vw]->RGnum,
+		vw,
+		VGwin[vw]->winbot,
+		VGwin[vw]->winleft,
+		VGwin[vw]->wintop,
+		VGwin[vw]->winright);
 }
 
 
@@ -1762,7 +1819,7 @@ void	VGtmode(short rgdev)
 
 void	VGwhatzoom(short vw, short *px0, short *py0, short *px1, short *py1)
 {
-	if (VGcheck(vw)) {
+	if (false == isValidID(vw)) {
 		return;
 		}
 

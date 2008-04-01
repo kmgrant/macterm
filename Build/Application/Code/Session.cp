@@ -590,7 +590,7 @@ public:
 	void
 	operator()	(SInt16		inTEKWindowID)
 	{
-		_result = VGwrite(inTEKWindowID, REINTERPRET_CAST(_buffer, char const*), STATIC_CAST(_bufferSize, SInt16));
+		_result = VectorInterpreter_ProcessData(inTEKWindowID, _buffer, _bufferSize);
 	}
 
 protected:
@@ -598,7 +598,7 @@ protected:
 private:
 	UInt8 const*	_buffer;
 	size_t			_bufferSize;
-	SInt16			_result;
+	size_t			_result;
 };
 
 
@@ -3523,7 +3523,6 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 	{
 		VectorInterpreter_SetPageClears(id, false == ptr->vectorGraphicsPageOpensNewWindow);
 		ptr->vectorGraphicsID = id;
-		VGgiveinfo(id);
 		VectorCanvas_SetListeningSession(id, inRef);
 		{
 			CFStringRef		windowTitleCFString = nullptr;
@@ -3638,29 +3637,6 @@ Session_TEKSetPageCommandOpensNewWindow		(SessionRef		inRef,
 	ptr->vectorGraphicsPageOpensNewWindow = inNewWindow;
 	VectorInterpreter_SetPageClears(ptr->vectorGraphicsID, false == inNewWindow);
 }// TEKSetPageCommandOpensNewWindow
-
-
-/*!
-Writes the specified string to the TEK graphics
-screen, without transmitting it to the network.
-Returns the number of characters parsed (equal
-to "inLength" if everything was parsed), or -1
-if an internal error occurs.
-
-(3.0)
-*/
-SInt16
-Session_TEKWrite	(SessionRef		inRef,
-					 char const*	inBuffer,
-					 SInt16			inLength)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16				result = 0;
-	
-	
-	result = VGwrite(ptr->vectorGraphicsID, inBuffer, inLength);
-	return result;
-}// TEKWrite
 
 
 /*!
@@ -5563,10 +5539,6 @@ killConnection		(SessionPtr		inPtr)
 {
 	if (inPtr->dataPtr != nullptr)
 	{
-		//size_t		junk = 0;
-		Boolean		wasDead = (inPtr->status == kSession_StateDead);
-		
-		
 		Cursors_UseWatch();
 		
 		// 3.1 - record the time when the command exited
@@ -5590,7 +5562,6 @@ killConnection		(SessionPtr		inPtr)
 		
 		Session_Dispose(&inPtr->selfRef);
 		
-		//MaxMem(&junk);
 		Cursors_UseArrow();
 	}
 	else

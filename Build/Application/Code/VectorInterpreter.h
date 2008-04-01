@@ -36,11 +36,11 @@
 
 #include "UniversalDefines.h"
 
-#ifndef __TEKTRONIXVIRTUALGRAPHICS__
-#define __TEKTRONIXVIRTUALGRAPHICS__
+#ifndef __VECTORINTERPRETER__
+#define __VECTORINTERPRETER__
 
-// MacTelnet includes
-#include "SessionRef.typedef.h"
+// Mac includes
+#include <CoreServices/CoreServices.h>
 
 
 
@@ -63,6 +63,11 @@ enum VectorInterpreter_Mode
 	kVectorInterpreter_ModeTEK4105		= '4105'	//!< TEK 4105 command set
 };
 
+/*!
+An interpreter can apply vector graphics to more than one
+type of output format.  Currently, it is possible to target
+a window or a bitmap.
+*/
 typedef SInt16 VectorInterpreter_Target;
 enum
 {
@@ -97,24 +102,51 @@ void
 //!\name Manipulating Graphics
 //@{
 
-VectorInterpreter_Mode
-	VectorInterpreter_ReturnMode		(VectorInterpreter_ID		inGraphicID);
+void
+	VectorInterpreter_CopyZoom			(VectorInterpreter_ID		inDestinationGraphicID,
+										 VectorInterpreter_ID		inSourceGraphicID);
+
+void
+	VectorInterpreter_PageCommand		(VectorInterpreter_ID		inGraphicID);
+
+SInt16
+	VectorInterpreter_PiecewiseRedraw	(VectorInterpreter_ID		inGraphicID,
+										 VectorInterpreter_ID		inDestinationGraphicID);
+
+size_t
+	VectorInterpreter_ProcessData		(VectorInterpreter_ID		inGraphicID,
+										 UInt8 const*				inDataPtr,
+										 size_t						inDataSize);
+
+void
+	VectorInterpreter_Redraw			(VectorInterpreter_ID		inGraphicID,
+										 VectorInterpreter_ID		inDestinationGraphicID);
 
 void
 	VectorInterpreter_SetPageClears		(VectorInterpreter_ID		inGraphicID,
 										 Boolean					inTrueClearsFalseNewWindow);
 
+void
+	VectorInterpreter_StopRedraw		(VectorInterpreter_ID		inGraphicID);
+
+void
+	VectorInterpreter_Zoom				(VectorInterpreter_ID		inGraphicID,
+										 SInt16						inX0,
+										 SInt16						inY0,
+										 SInt16						inX1,
+										 SInt16						inY1);
+
 //@}
 
-void VGpage(VectorInterpreter_ID vw);
-short VGpred(VectorInterpreter_ID vw, short dest);
-void VGstopred(VectorInterpreter_ID vw);
-void VGredraw(VectorInterpreter_ID vw, short dest);
-void VGgiveinfo(VectorInterpreter_ID vw);
-void VGzoom(VectorInterpreter_ID vw, short x0, short y0, short x1, short y1);
-void VGzcpy(short src, short dest);
-short VGwrite(VectorInterpreter_ID vw, char const* data, short count);
 void VGgindata(VectorInterpreter_ID vw, unsigned short x, unsigned short y, char c, char *a);
+
+//!\name Miscellaneous
+//@{
+
+VectorInterpreter_Mode
+	VectorInterpreter_ReturnMode		(VectorInterpreter_ID		inGraphicID);
+
+//@}
 
 #endif
 
