@@ -939,7 +939,7 @@ receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					SInt16		loopGuard = 0;
 					
 					
-					while ((0 == zeroIfMoreRedrawsNeeded) && (loopGuard++ < 1000/* arbitrary */))
+					while ((0 == zeroIfMoreRedrawsNeeded) && (loopGuard++ < 10000/* arbitrary */))
 					{
 						zeroIfMoreRedrawsNeeded = VectorInterpreter_PiecewiseRedraw(dataPtr->vg, dataPtr->vg);
 					}
