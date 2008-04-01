@@ -248,7 +248,7 @@ enum
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
 	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
-	kPreferences_TagTektronixMode						= 'tekm',	//!< data: a "kSession_VectorGraphicsModeÉ" constant
+	kPreferences_TagTektronixMode						= 'tekm',	//!< data: a "kVectorInterpreter_ModeÉ" constant
 	kPreferences_TagTektronixPAGEClearsScreen			= 'tkpc',	//!< data: "Boolean"
 	kPreferences_TagTextEncoding						= 'tenc',	//!< data: "TextEncoding"
 	kPreferences_TagTextTranslationTable				= 'xlat',	//!< data: "CFStringRef" (a translation table name)

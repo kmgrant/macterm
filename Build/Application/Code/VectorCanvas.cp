@@ -121,12 +121,11 @@ typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-SInt16				findCanvasWithWindow				(HIWindowRef);
-void				handleNewSize						(HIWindowRef, Float32, Float32, void*);
-Boolean				inSplash							(Point, Point);
-pascal OSStatus		receiveCanvasDraw					(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
-SInt16				setPortCanvasPort					(SInt16);
+SInt16				findCanvasWithWindow		(HIWindowRef);
+Boolean				inSplash					(Point, Point);
+pascal OSStatus		receiveCanvasDraw			(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveWindowClosing		(EventHandlerCallRef, EventRef, void*);
+SInt16				setPortCanvasPort			(SInt16);
 
 } // anonymous namespace
 
@@ -146,7 +145,6 @@ short												RGMcolor[] =
 														69			// yellow
 													};
 My_VectorCanvasPtr									RGMwind[MAXWIND];
-std::vector< CommonEventHandlers_WindowResizer >	gWindowResizeHandlers(MAXWIND);
 
 } // anonymous namespace
 
@@ -207,15 +205,6 @@ VectorCanvas_New ()
 				assert(RGMwind[i]->canvasDrawHandler.isInstalled());
 			}
 			
-			// install dynamic resize, constrain, zoom, etc. handlers for the window
-		#if 0
-			gWindowResizeHandlers[i].install
-										(RGMwind[i]->wind, handleNewSize, nullptr/* user data */,
-											100/* arbitrary minimum width */, 100/* arbitrary minimum height */,
-											SHRT_MAX/* arbitrary maximum width */, SHRT_MAX/* maximum height */);
-			assert(gWindowResizeHandlers[i].isInstalled());
-		#endif
-			
 			// install a close handler so TEK windows are detached properly
 			{
 				EventTypeSpec const		whenWindowClosing[] =
@@ -272,11 +261,12 @@ VectorCanvas_Dispose	(SInt16		inCanvasID)
 	if (setPortCanvasPort(inCanvasID)) result = -1;
 	else
 	{
-		detachGraphics(inCanvasID);
-		Session_TEKDetachTargetGraphic(RGMwind[inCanvasID]->vs);
+		if (nullptr != RGMwind[inCanvasID]->vs)
+		{
+			Session_TEKDetachTargetGraphic(RGMwind[inCanvasID]->vs);
+		}
 		RemoveEventHandler(RGMwind[inCanvasID]->closeHandler), RGMwind[inCanvasID]->closeHandler = nullptr;
 		DisposeEventHandlerUPP(RGMwind[inCanvasID]->closeUPP), RGMwind[inCanvasID]->closeUPP = nullptr;
-		gWindowResizeHandlers[inCanvasID] = CommonEventHandlers_WindowResizer();
 		DisposeWindow(RGMwind[inCanvasID]->wind);
 		delete RGMwind[inCanvasID], RGMwind[inCanvasID] = nullptr;
 	}
@@ -651,40 +641,6 @@ findCanvasWithWindow	(HIWindowRef	inWindow)
 	}
 	return result;
 }// findCanvasWithWindow
-
-
-/*!
-This method resizes TEK graphics windows dynamically.
-
-(3.0)
-*/
-void
-handleNewSize	(HIWindowRef	inWindow,
-				 Float32		UNUSED_ARGUMENT(inDeltaX),
-				 Float32		UNUSED_ARGUMENT(inDeltaY),
-				 void*			UNUSED_ARGUMENT(inContext))
-{
-	SInt16		myRGMnum = findCanvasWithWindow(inWindow);
-	
-	
-	if (myRGMnum > -1)
-	{
-		CGrafPtr	oldPort = nullptr;
-		GDHandle	oldDevice = nullptr;
-		Rect		windowPortRect;
-		
-		
-		GetGWorld(&oldPort, &oldDevice);
-		SetPortWindowPort(inWindow);
-		GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
-		RGMwind[myRGMnum]->width = windowPortRect.right - windowPortRect.left;		
-		RGMwind[myRGMnum]->height = windowPortRect.bottom - windowPortRect.top;		 
-		VGpage(RGMwind[myRGMnum]->vg);
-		//RegionUtilities_SetWindowUpToDate(inWindow);
-		//RGupdate(inWindow);
-		SetGWorld(oldPort, oldDevice);
-	}
-}// handleNewSize
 
 
 /*!

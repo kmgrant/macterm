@@ -41,6 +41,9 @@
 
 #include "UniversalDefines.h"
 
+// standard-C++ includes
+#include <map>
+
 // library includes
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
@@ -59,27 +62,20 @@
 
 
 
-#pragma mark Constants
-namespace {
-
-enum
-{
-	kMaximumAllowedGraphicsWindows = 30
-};
-
-} // anonymous namespace
-
 #pragma mark Types
 namespace {
 
-/*--------------------------------------------------------------------------*/
-/* VGwintype structure -- this is the main high level TEK structure, where	*/
-/* 		everything happens													*/
-/*--------------------------------------------------------------------------*/
-struct VGWINTYPE {
-	OSType	id;	// VGWN
-	SessionRef theVS;
-	short	RGdevice,RGnum;
+/*!
+Stores information used to interpreter vector graphics
+commands and ultimately render a picture.
+*/
+struct My_VectorInterpreter
+{
+	VectorInterpreter_ID	selfRef;			// the ID given to this structure at construction time
+	VectorInterpreter_Mode	commandSet;			// how data is interpreted
+	Boolean					pageClears;			// true if PAGE clears the screen, false if it opens a new window
+	RGLINK*					deviceCallbacks;	// routines customized for the type of target (picture or window)
+	short	RGnum;
 	char	mode,modesave;					/* current output mode */
 	char	loy,hiy,lox,hix,ex,ey;			/* current graphics coordinates */
 	char	nloy,nhiy,nlox,nhix,nex,ney;	/* new coordinates */
@@ -102,7 +98,16 @@ struct VGWINTYPE {
 	short	TEKBackground;					/* 4105 Background color */
 	pointlist	TEKPanel;					/* 4105 Panel's list of points */
 	pointlist	current;					/* current point in the list */
+	char	state;
+	char	savstate;
+	TEKSTOREP	VGstore;	/* the store where data for this window is kept */
+	char	storing;		/* are we currently saving data from this window */
+	short	drawing;		/* redrawing or not? */
 };
+typedef My_VectorInterpreter*			My_VectorInterpreterPtr;
+typedef My_VectorInterpreter const*		My_VectorInterpreterConstPtr;
+
+typedef std::map< VectorInterpreter_ID, My_VectorInterpreterPtr >	My_InterpreterPtrByID;
 
 } // anonymous namespace
 
@@ -182,20 +187,12 @@ RGLINK				RG[TEK_DEVICE_MAX] =
 						}
 					};
 
-struct VGWINTYPE*	VGwin[MAXVG];  /* virtual window descriptors */
-
-char				state[MAXVG];
-char				savstate[MAXVG];
-/* save state in a parallel array for speed */
-TEKSTOREP			VGstore[MAXVG]; /* the store where data for this window is kept */
-char				storing[MAXVG]; /* are we currently saving data from this window */
-short				drawing[MAXVG]; /* redrawing or not? */
+My_InterpreterPtrByID	VGwin;
 
 short				charxset[NUMSIZES] = {56,51,34,31,112,168};
 short				charyset[NUMSIZES] = {88,82,53,48,176,264};
 
-short				gNumGraphs = 0;
-long				gOldGraphs[kMaximumAllowedGraphicsWindows];
+VectorInterpreter_ID	gIDCounter = 0;
 
 } // anonymous namespace
 
@@ -215,128 +212,126 @@ VectorInterpreter_Init ()
 	register SInt16		i = 0;
 	
 	
-	for (i = 0; i < MAXVG; ++i) VGwin[i] = nullptr;
 	for (i = 0; i < TEK_DEVICE_MAX; ++i) (*RG[i].init)();
 }// Init
 
 
-short
-detachGraphics	(short		dnum)
+/*!
+Constructs a new interpreter object that will ultimately
+render in the specified way, respecting the given command set.
+Returns "kVectorInterpreter_InvalidID" on failure.
+
+Release this object with VectorInterpreter_Dispose().
+
+(3.1)
+*/
+VectorInterpreter_ID
+VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
+						 VectorInterpreter_Mode		inCommandSet)
 {
-	SInt16		result = -1;
+	VectorInterpreter_ID		result = gIDCounter++;
 	
 	
-	gOldGraphs[gNumGraphs++] = dnum;
-	result = 0;
-	
-	return result;
-}// detachGraphics
-
-
-/***********************************************************
-************************************************************
-***														 ***
-**	All routines given below may be called by the user	  **
-**	program.  No routines given above may be called from  **
-**	the user program.									  **
-***														 ***
-************************************************************
-***********************************************************/
-
-
-SessionRef
-VGgetVS		(short		theVGnum)
-{
-	SessionRef	result = nullptr;
-	
-	
-	if (VGcheck(theVGnum)) result = nullptr;
-	else result = VGwin[theVGnum]->theVS;
-	
-	return result;
-}// VGgetVS
-
-
-/*
- *	create a new VG window and return its number.
- *	New window will be attached to specified real device.
- *	Returns -1 if unable to create a new VG window.
- *
- *	Modified 16jul90dsw: Support selection of 4105 or 4014.
- */
-VectorInterpreter_ID VGnewwin
-  (
-	VectorInterpreter_Target target, /* number of RG device to use */
-	SessionRef inSession
-  )
-{
-	VectorInterpreter_ID	vw = 0;
-	short					device = returnTargetDeviceIndex(target);
-	
-
-	while ((vw < MAXVG) && (VGwin[vw] != nullptr)) vw++;
-	if (vw == MAXVG)
-		return kVectorInterpreter_InvalidID;
-		
-	VGwin[vw] = (struct VGWINTYPE *) Memory_NewPtr(sizeof(struct VGWINTYPE));
-	if (VGwin[vw] == nullptr) {
-		return kVectorInterpreter_InvalidID;
-		}
-			
-	VGstore[vw] = newTEKstore();
-	if (VGstore[vw] == nullptr) {
-		Memory_DisposePtr((Ptr*)&VGwin[vw]);
-		VGwin[vw] = nullptr;
-		return kVectorInterpreter_InvalidID;
-		}
-	
-	VGwin[vw]->id = 'VGWN';
-	VGwin[vw]->RGdevice = device;
-			
-	VGwin[vw]->mode = ALPHA;
-	VGwin[vw]->TEKPanel = (pointlist) nullptr;
-	VGwin[vw]->theVS = inSession;
-	state[vw] = DONE;
-	storing[vw] = true;
-	VGwin[vw]->textcol = 0;
-	drawing[vw] = 1;
-	fontnum(vw,0);
-	(*RG[device].pencolor)(VGwin[vw]->RGnum,1);
-
-	storexy(vw,0,3071);
-	
-	// do this last, because it will trigger rendering that
-	// depends on all the initializations above
-	VGwin[vw]->RGnum = (*RG[device].newwin)();
-	if (VGwin[vw]->RGnum < 0)
+	try
 	{
-		/* no windows available on device */
-		Memory_DisposePtr((Ptr*)&VGwin[vw]);
-		VGwin[vw] = nullptr;
-		freeTEKstore(VGstore[vw]);
-		Sound_StandardAlert();
-		return kVectorInterpreter_InvalidID;
-	}
-#if 1
-	VGzoom(vw,0,0,4095,3119);				/* important */
-#else
-	VGzoom(vw,0,0,INXMAX-1,INYMAX-1);
-#endif
-	return(vw);
-}
-
-/*	Release its real graphics device and its store. */
-void	VGclose(short vw)
-{
-	if (VGcheck(vw)) {
-		return;
+		My_VectorInterpreterPtr		dataPtr = new My_VectorInterpreter;
+		
+		
+		VGwin[result] = dataPtr;
+		dataPtr->VGstore = newTEKstore();
+		dataPtr->selfRef = result;
+		dataPtr->commandSet = inCommandSet;
+		dataPtr->pageClears = false;
+		{
+			SInt16		device = returnTargetDeviceIndex(inTarget);
+			
+			
+			dataPtr->deviceCallbacks = &RG[device];
 		}
+		
+		dataPtr->mode = ALPHA;
+		dataPtr->TEKPanel = (pointlist) nullptr;
+		dataPtr->state = DONE;
+		dataPtr->storing = true;
+		dataPtr->textcol = 0;
+		dataPtr->drawing = 1;
+		fontnum(result,0);
+		(*dataPtr->deviceCallbacks->pencolor)(dataPtr->RGnum,1);
 
-	(*RG[VGwin[vw]->RGdevice].close)(VGwin[vw]->RGnum);
-	freeTEKstore(VGstore[vw]);
-	Memory_DisposePtr((Ptr*)VGwin[vw]);
-	VGwin[vw] = nullptr;
-}
+		storexy(result,0,3071);
+		
+		// do this last, because it will trigger rendering that
+		// depends on all the initializations above
+		dataPtr->RGnum = (*dataPtr->deviceCallbacks->newwin)();
+	#if 1
+		VGzoom(result,0,0,4095,3119);				/* important */
+	#else
+		VGzoom(result,0,0,INXMAX-1,INYMAX-1);
+	#endif
+	}
+	catch (std::bad_alloc)
+	{
+		result = kVectorInterpreter_InvalidID;
+	}
+	return result;
+}// VectorInterpreter_New
+
+
+/*!
+Destroys a graphic created with VectorInterpreter_New(),
+and sets your copy of the ID to kVectorInterpreter_InvalidID.
+
+(2.6)
+*/
+void
+VectorInterpreter_Dispose	(VectorInterpreter_ID*		inoutGraphicIDPtr)
+{
+	if (VGwin.end() != VGwin.find(*inoutGraphicIDPtr))
+	{
+		My_VectorInterpreterPtr		ptr = VGwin[*inoutGraphicIDPtr];
+		
+		
+		(*ptr->deviceCallbacks->close)(ptr->RGnum);
+		freeTEKstore(ptr->VGstore);
+		delete ptr, ptr = nullptr;
+		VGwin.erase(*inoutGraphicIDPtr);
+	}
+	*inoutGraphicIDPtr = kVectorInterpreter_InvalidID;
+}// Dispose
+
+
+/*!
+Returns the command set of the specified graphic.
+
+(3.1)
+*/
+VectorInterpreter_Mode
+VectorInterpreter_ReturnMode	(VectorInterpreter_ID	inGraphicID)
+{
+	My_VectorInterpreterConstPtr	ptr = VGwin[inGraphicID];
+	VectorInterpreter_Mode			result = ptr->commandSet;
+	
+	
+	return result;
+}// ReturnMode
+
+
+/*!
+Specifies whether a PAGE command clears the screen, or
+opens a new window.
+
+(3.1)
+*/
+void
+VectorInterpreter_SetPageClears		(VectorInterpreter_ID	inGraphicID,
+									 Boolean				inTrueClearsFalseNewWindow)
+{
+	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+	
+	
+	ptr->pageClears = inTrueClearsFalseNewWindow;
+}// SetPageClears
+
 
 /*  Clear screen and have a few other effects:
  *	- Return graphics to home position (0,3071)
@@ -349,14 +344,14 @@ void VGpage(short vw)
 		return;
 		}
 
-	if (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105)
-		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKBackground);
+	if (kVectorInterpreter_ModeTEK4105 == VGwin[vw]->commandSet)
+		(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKBackground);
 	else
-		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,0);
-	(*RG[VGwin[vw]->RGdevice].clrscr)(VGwin[vw]->RGnum);
-	(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,1);
+		(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,0);
+	(*VGwin[vw]->deviceCallbacks->clrscr)(VGwin[vw]->RGnum);
+	(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,1);
 	VGwin[vw]->mode = ALPHA;
-	state[vw] = DONE;
+	VGwin[vw]->state = DONE;
 	VGwin[vw]->textcol = 0;
 	fontnum(vw,0);
 	storexy(vw,0,3071);
@@ -379,19 +374,19 @@ short VGpred(short vw, short dest)
 		return -1;
 		}
 
-	st = VGstore[vw];
+	st = VGwin[vw]->VGstore;
 	
-	if (drawing[vw])		/* wasn't redrawing */
+	if (VGwin[vw]->drawing)		/* wasn't redrawing */
 	{
-		topTEKstore(VGstore[vw]);
-		drawing[vw] = 0;	/* redraw incomplete */
+		topTEKstore(VGwin[vw]->VGstore);
+		VGwin[vw]->drawing = 0;	/* redraw incomplete */
 	}
 
 	while (++count < PREDCOUNT && ((data = nextTEKitem(st)) != -1))
 		VGdraw(dest,data);
 
-	if (data == -1) drawing[vw] = 1; 	/* redraw complete */
-	return(drawing[vw]);
+	if (data == -1) VGwin[vw]->drawing = 1; 	/* redraw complete */
+	return(VGwin[vw]->drawing);
 }
 
 /*	Abort VGpred redrawing of specified window.
@@ -402,7 +397,7 @@ void VGstopred(short vw)
 		return;
 		}
 
-	drawing[vw] = 1;
+	VGwin[vw]->drawing = 1;
 }
 
 /*	Redraw the contents of window 'vw' to window 'dest'.
@@ -417,8 +412,8 @@ void VGredraw(short vw, short dest)
 		return;
 		}
 
-	topTEKstore(VGstore[vw]);
-	while ((data = nextTEKitem(VGstore[vw])) != -1) VGdraw(dest,data);
+	topTEKstore(VGwin[vw]->VGstore);
+	while ((data = nextTEKitem(VGwin[vw]->VGstore)) != -1) VGdraw(dest,data);
 }
  
 /*	Send interesting information about the virtual window down to
@@ -430,7 +425,7 @@ void	VGgiveinfo(short vw)
 		return;
 		}
 
-	(*RG[VGwin[vw]->RGdevice].info)(VGwin[vw]->RGnum,
+	(*VGwin[vw]->deviceCallbacks->info)(VGwin[vw]->RGnum,
 		vw,
 		VGwin[vw]->winbot,
 		VGwin[vw]->winleft,
@@ -481,13 +476,13 @@ short	VGwrite(short vw, char const* data, short count)
 		return -1;
 		}
 
-	storeit = storing[vw];
+	storeit = VGwin[vw]->storing;
 	
 	while (c != end)
 	{
 		if (*c == 24)				/* ASC CAN character */
 			return(c-data+1);
-		if (storeit) addTEKstore(VGstore[vw],*c);
+		if (storeit) addTEKstore(VGwin[vw]->VGstore,*c);
 		VGdraw(vw,*c++);
 
 	}
@@ -550,7 +545,7 @@ clipvec		(short		vw,
 						b = 0,
 						l = 0,
 						r = 0;
-	struct VGWINTYPE*	vp = nullptr;
+	My_VectorInterpreterPtr		vp = nullptr;
 	long				hscale = 0L,
 						vscale = 0L;
 	
@@ -565,7 +560,7 @@ clipvec		(short		vw,
 	l = vp->winleft;
 	r = vp->winright;
 
-	(*RG[vp->RGdevice].drawline) (vp->RGnum,
+	(*vp->deviceCallbacks->drawline) (vp->RGnum,
 		(short) ((long)(xa - l) * INXMAX / (long) vp->winwide),
 		(short) ((long)(ya- b) * INYMAX / (long) vp->wintall),
 		(short) ((long)(xb - l) * INXMAX / (long) vp->winwide),
@@ -607,8 +602,8 @@ drawc		(short		vw,
 
 	if (c == 7)
 	{
-		(*RG[VGwin[vw]->RGdevice].bell) (VGwin[vw]->RGnum);
-		TEKunstore(VGstore[vw]);
+		(*VGwin[vw]->deviceCallbacks->bell) (VGwin[vw]->RGnum);
+		TEKunstore(VGwin[vw]->VGstore);
 		return(0);
 	}
 
@@ -625,16 +620,16 @@ drawc		(short		vw,
 		return(0);
 	}
 
-	if (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105)
+	if (kVectorInterpreter_ModeTEK4105 == VGwin[vw]->commandSet)
 	{
 		height = VGwin[vw]->TEKSize;
 		if (c > 126)
 		{
 			height = 1;
-			(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->pencolor);
+			(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,VGwin[vw]->pencolor);
 		}
 		else
-			(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKIndex);
+			(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,VGwin[vw]->TEKIndex);
 		hmag = (height*8);
 		vmag = (height*8);
 		
@@ -664,7 +659,7 @@ drawc		(short		vw,
 	if ((c < 32) || (c > 137))
 		return(0);					// Is this return value correct?
 	c -= 32;
-	pstroke = (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105) ? VGTEKfont[c] : VGfont[c];
+	pstroke = (kVectorInterpreter_ModeTEK4105 == VGwin[vw]->commandSet) ? VGTEKfont[c] : VGfont[c];
 	while (*pstroke)
 	{
 		strokex = x;
@@ -713,8 +708,8 @@ drawc		(short		vw,
 		savey = savey < 0 ? 0 : savey > 3119 ? 3119 : savey;
 	}
 
-	if (Session_TEKReturnMode(VGwin[vw]->theVS) == kSession_VectorGraphicsModeTEK4105)
-		(*RG[VGwin[vw]->RGdevice].pencolor)(VGwin[vw]->RGnum,VGwin[vw]->pencolor);
+	if (kVectorInterpreter_ModeTEK4105 == VGwin[vw]->commandSet)
+		(*VGwin[vw]->deviceCallbacks->pencolor)(VGwin[vw]->RGnum,VGwin[vw]->pencolor);
 
 	VGwin[vw]->cury = savey;
 	VGwin[vw]->curx = savex;
@@ -861,8 +856,8 @@ void	VGclrstor(short vw)
 		return;
 		}
 
-	freeTEKstore(VGstore[vw]);
-	VGstore[vw] = newTEKstore();
+	freeTEKstore(VGwin[vw]->VGstore);
+	VGwin[vw]->VGstore = newTEKstore();
 		/* Don't have to check for errors --	*/
 		/* there was definitely enough memory.	*/
 }
@@ -884,8 +879,8 @@ short	VGdevice(short vw, short dev)
 	newwin = (*RG[dev].newwin)();
 	if (newwin<0) return(newwin);	/* unable to open new window */
 
-	(*RG[VGwin[vw]->RGdevice].close)(VGwin[vw]->RGnum);
-	VGwin[vw]->RGdevice = dev;
+	(*VGwin[vw]->deviceCallbacks->close)(VGwin[vw]->RGnum);
+	VGwin[vw]->deviceCallbacks = &RG[dev];
 	VGwin[vw]->RGnum = newwin;
 	VGwin[vw]->pencolor = 1;
 	VGwin[vw]->TEKBackground = 0;
@@ -909,7 +904,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 	char		goagain;	/* true means go thru the function a second time */
 	char		temp[80];
 	RgnHandle	PanelRgn;
-	struct	VGWINTYPE *vp;
+	My_VectorInterpreterPtr	vp;
 	pointlist	temppoint;
 
 	if (VGcheck(vw)) {
@@ -929,7 +924,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 		value = c & 0x1f;
 		goagain = false;
 
-		switch(state[vw])
+		switch(VGwin[vw]->state)
 		{
 		case HIY: /* beginning of a vector */
 			vp->nhiy = vp->hiy;
@@ -944,8 +939,8 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			case 0:
 				if (value == 27)		/* escape sequence */
 				{
-					state[vw] = ESCOUT;
-					savstate[vw] = HIY;
+					VGwin[vw]->state = ESCOUT;
+					VGwin[vw]->savstate = HIY;
 				}
 				else if (value < 27)	/* ignore */
 				{
@@ -953,28 +948,28 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				}
 				else
 				{
-					state[vw] = CANCEL;
+					VGwin[vw]->state = CANCEL;
 					goagain = true;
 				}
 				break;
 			case 1:						/* hiy */
 				vp->nhiy = value;
-				state[vw] = EXTRA;
+				VGwin[vw]->state = EXTRA;
 				break;
 			case 2:						/* lox */
 				vp->nlox = value;
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case 3:						/* extra or loy */
 				vp->nloy = value;
-				state[vw] = LOY;
+				VGwin[vw]->state = LOY;
 				break;
 			}
 			break;		
 		case ESCOUT:
 			if ((value != 13) && (value != 10) && (value != 27) && (value != '~'))
 			{
-				state[vw] = savstate[vw];		/* skip all EOL-type characters */
+				VGwin[vw]->state = VGwin[vw]->savstate;		/* skip all EOL-type characters */
 				goagain = true;
 			}
 			break;
@@ -984,8 +979,8 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			case 0:
 				if (value == 27)		/* escape sequence */
 				{
-					state[vw] = ESCOUT;
-					savstate[vw] = EXTRA;
+					VGwin[vw]->state = ESCOUT;
+					VGwin[vw]->savstate = EXTRA;
 				}
 				else if (value < 27)	/* ignore */
 				{
@@ -993,21 +988,21 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				}
 				else
 				{
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 					goagain = true;
 				}
 				break;
 			case 1:						/* hix */
 				vp->nhix = value;
-				state[vw] = LOX;
+				VGwin[vw]->state = LOX;
 				break;
 			case 2:						/* lox */
 				vp->nlox = value;
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case 3:						/* extra or loy */
 				vp->nloy = value;
-				state[vw] = LOY;
+				VGwin[vw]->state = LOY;
 				break;
 			}
 			break;
@@ -1017,8 +1012,8 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			case 0:
 				if (value == 27)		/* escape sequence */
 				{
-					state[vw] = ESCOUT;
-					savstate[vw] = LOY;
+					VGwin[vw]->state = ESCOUT;
+					VGwin[vw]->savstate = LOY;
 				}
 				else if (value < 27)	/* ignore */
 				{
@@ -1026,23 +1021,23 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				}
 				else
 				{
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 					goagain = true;
 				}
 				break;
 			case 1: /* hix */
 				vp->nhix = value;
-				state[vw] = LOX;
+				VGwin[vw]->state = LOX;
 				break;
 			case 2: /* lox */
 				vp->nlox = value;
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case 3: /* this is loy; previous loy was really extra */
 				vp->ney = (vp->nloy >> 2) & 3;
 				vp->nex = vp->nloy & 3;
 				vp->nloy = value;
-				state[vw] = HIX;
+				VGwin[vw]->state = HIX;
 				break;
 			}
 			break;
@@ -1052,8 +1047,8 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			case 0:
 				if (value == 27)		/* escape sequence */
 				{
-					state[vw] = ESCOUT;
-					savstate[vw] = HIX;
+					VGwin[vw]->state = ESCOUT;
+					VGwin[vw]->savstate = HIX;
 				}
 				else if (value < 27)	/* ignore */
 				{
@@ -1061,17 +1056,17 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				}
 				else
 				{
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 					goagain = true;
 				}
 				break;
 			case 1:						/* hix */
 				vp->nhix = value;
-				state[vw] = LOX;
+				VGwin[vw]->state = LOX;
 				break;
 			case 2:						/* lox */
 				vp->nlox = value;
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			}
 		 	break;
@@ -1082,8 +1077,8 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			case 0:
 				if (value == 27)		/* escape sequence */
 				{
-					state[vw] = ESCOUT;
-					savstate[vw] = LOX;
+					VGwin[vw]->state = ESCOUT;
+					VGwin[vw]->savstate = LOX;
 				}
 				else if (value < 27)	/* ignore */
 				{
@@ -1091,13 +1086,13 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				}
 				else
 				{
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 					goagain = true;
 				}
 				break;
 			case 2:
 				vp->nlox = value;
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			}
 			break;
@@ -1106,12 +1101,12 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			if (c == 7) vp->mode = DRAW;
 			if (c < 32)
 			{
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				goagain = true;
 				vp->mode = DONE;
 				break;
 			}
-			state[vw] = HIY;
+			VGwin[vw]->state = HIY;
 			vp->mode = TEMPMOVE;
 			vp->modesave = DRAW;
 			goagain = true;
@@ -1155,12 +1150,12 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				vp->curx--;
 				break;
 			case 27:
-				savstate[vw] = RS;
-				state[vw] = ESCOUT;
+				VGwin[vw]->savstate = RS;
+				VGwin[vw]->state = ESCOUT;
 				break;
 			default:
 /*				storexy(vw,vp->curx,vp->cury);*/
-				state[vw] = CANCEL;
+				VGwin[vw]->state = CANCEL;
 				goagain = true;
 				break;
 			}
@@ -1171,72 +1166,72 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			switch(c)
 			{
 			case 29:					/* GS, start draw */
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				goagain = true;
 				break;
 			case '%':
-				state[vw] = TERMSTAT;
+				VGwin[vw]->state = TERMSTAT;
 				break;
 			case '8':
 				fontnum(vw,0);
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case '9':
 				fontnum(vw,1);
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case ':':
 				fontnum(vw,2);
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case ';':
 				fontnum(vw,3);
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case 12: /* form feed = clrscr */
-				if (false == Session_TEKPageCommandOpensNewWindow(vp->theVS))
+				if (vp->pageClears)
 				{
 					VGpage(vw);
 					VGclrstor(vw);
 				}
 				break;
 			case 'L':
-				state[vw] = SOMEL;
+				VGwin[vw]->state = SOMEL;
 				break;
 			case 'K':
-				state[vw] = IGNORE;
+				VGwin[vw]->state = IGNORE;
 				break;
 			case 'M':
-				state[vw] = SOMEM;
+				VGwin[vw]->state = SOMEM;
 				break;
 			case 'R':
-				state[vw] = SOMER;
+				VGwin[vw]->state = SOMER;
 				break;
 			case 'T':
-				state[vw] = SOMET;
+				VGwin[vw]->state = SOMET;
 				break;
 			case 26:
-				(*RG[vp->RGdevice].gin)(vp->RGnum);
-				TEKunstore(VGstore[vw]);
-				TEKunstore(VGstore[vw]);
+				(*vp->deviceCallbacks->gin)(vp->RGnum);
+				TEKunstore(VGwin[vw]->VGstore);
+				TEKunstore(VGwin[vw]->VGstore);
 				break;
 			case 10:
 			case 13:
 			case 27:
 			case '~':
-				savstate[vw] = DONE;
-				state[vw] = ESCOUT;
+				VGwin[vw]->savstate = DONE;
+				VGwin[vw]->state = ESCOUT;
 				break;			/* completely ignore these after ESC */
 			default:
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 			}
 			break;
 		case TERMSTAT:
 			switch(c)
 			{
 				case '!':
-					state[vw] = INTEGER;		/* Drop the next integer */
-					savstate[vw] = DONE;
+					VGwin[vw]->state = INTEGER;		/* Drop the next integer */
+					VGwin[vw]->savstate = DONE;
 					break;
 			}
 			break;
@@ -1244,22 +1239,22 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			switch(c)
 			{
 				case 'A':
-					state[vw] = INTEGER;
-					savstate[vw] = VIEWAT;
+					VGwin[vw]->state = INTEGER;
+					VGwin[vw]->savstate = VIEWAT;
 					break;
 				default:
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 			}
 			break;
 		case VIEWAT:
-			state[vw] = INTEGER;
-			savstate[vw] = VIEWAT2;
+			VGwin[vw]->state = INTEGER;
+			VGwin[vw]->savstate = VIEWAT2;
 			goagain = true;
 			break;
 		case VIEWAT2:
 			vp->TEKBackground = vp->intin < 0 ? 0 : vp->intin > 7 ? 7 : vp->intin;
-			state[vw] = INTEGER;
-			savstate[vw] = DONE;
+			VGwin[vw]->state = INTEGER;
+			VGwin[vw]->savstate = DONE;
 			goagain = true;
 			break;
 		case SOMET:				/* Got ESC T; now handle 3rd char. */
@@ -1267,90 +1262,90 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			{
 			case 'C':			/* GCURSOR */
 				vp->intin = 3;
-				state[vw] = STARTDISC;
+				VGwin[vw]->state = STARTDISC;
 				break;
 			case 'D':
 				vp->intin = 2;
-				state[vw] = STARTDISC;
+				VGwin[vw]->state = STARTDISC;
 				break;
 			case 'F':			/* set dialog area color map */
-				state[vw] = JUNKARRAY;
+				VGwin[vw]->state = JUNKARRAY;
 				break;
 			case 'G':			/* set surface color map */
-				state[vw] = INTEGER;
-				savstate[vw] = JUNKARRAY;
+				VGwin[vw]->state = INTEGER;
+				VGwin[vw]->savstate = JUNKARRAY;
 				break;
 			default:
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 			}			
 			break;
 		case JUNKARRAY:			/* This character is the beginning of an integer
 									array to be discarded.  Get array size. */
-			savstate[vw] = STARTDISC;
-			state[vw] = INTEGER;
+			VGwin[vw]->savstate = STARTDISC;
+			VGwin[vw]->state = INTEGER;
 			break;					
 		case STARTDISC:			/* Begin discarding integers. */
 			vp->count = vp->intin + 1;
 			goagain = true;
-			state[vw] = DISCARDING;
+			VGwin[vw]->state = DISCARDING;
 			break;
 		case DISCARDING:
 			/* We are in the process of discarding an integer array. */
 			goagain = true;
-			if (!(--(vp->count))) state[vw] = DONE;
+			if (!(--(vp->count))) VGwin[vw]->state = DONE;
 			else if (vp->count == 1)
 			{
-				state[vw] = INTEGER;
-				savstate[vw] = DONE;
+				VGwin[vw]->state = INTEGER;
+				VGwin[vw]->savstate = DONE;
 			}
 			else
 			{
-				state[vw] = INTEGER;
-				savstate[vw] = DISCARDING;
+				VGwin[vw]->state = INTEGER;
+				VGwin[vw]->savstate = DISCARDING;
 			}
 			break;
 		case INTEGER:
 			if (c & 0x40)
 			{
 				vp->intin = c & 0x3f;
-				state[vw] = INTEGER1;
+				VGwin[vw]->state = INTEGER1;
 			}
 			else
 			{
 				vp->intin = c & 0x0f;
 				if (!(c & 0x10)) vp->intin *= -1;
-				state[vw] = savstate[vw];
+				VGwin[vw]->state = VGwin[vw]->savstate;
 			}
 			break;
 		case INTEGER1:
 			if (c & 0x40)
 			{
 				vp->intin = (vp->intin << 6) | (c & 0x3f);
-				state[vw] = INTEGER2;
+				VGwin[vw]->state = INTEGER2;
 			}
 			else
 			{
 				vp->intin = (vp->intin << 4) | (c & 0x0f);
 				if (!(c & 0x10)) vp->intin *= -1;
-				state[vw] = savstate[vw];
+				VGwin[vw]->state = VGwin[vw]->savstate;
 			}
 			break;
 		case INTEGER2:
 			vp->intin = (vp->intin << 4) | (c & 0x0f);
 			if (!(c & 0x10)) vp->intin *= -1;
-			state[vw] = savstate[vw];
+			VGwin[vw]->state = VGwin[vw]->savstate;
 			break;
 		case IGNORE:			/* ignore next char; it's not supported */
-			state[vw] = DONE;
+			VGwin[vw]->state = DONE;
 			break;
 		case IGNORE2:			/* ignore next 2 chars */
-			state[vw] = IGNORE;
+			VGwin[vw]->state = IGNORE;
 			break;
 		case SOMEL:				/* now process 2nd letter */
 			switch(c)
 			{
 			case 'E':					/* END PANEL 25jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 				{
 					if (vp->TEKPanel)
 					{
@@ -1382,146 +1377,146 @@ void VGdraw(short vw, char c)			/* the latest input char */
 						}
 						CloseRgn(PanelRgn);
 						if (vp->TEKPattern <= 0)
-							(*RG[vp->RGdevice].pencolor)(vp->RGnum,-vp->TEKPattern);
+							(*vp->deviceCallbacks->pencolor)(vp->RGnum,-vp->TEKPattern);
 						PaintRgn(PanelRgn);
 				/*		if (vp->TEKOutline) 
 							FrameRgn(PanelRgn); */
 						Memory_DisposeRegion(&PanelRgn);
-						(*RG[vp->RGdevice].pencolor)(vp->RGnum,vp->pencolor);
+						(*vp->deviceCallbacks->pencolor)(vp->RGnum,vp->pencolor);
 						vp->TEKPanel = (pointlist) nullptr;
 						vp->curx = vp->savx;
 						vp->cury = vp->savy;
 					}
 				}
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				break;
 			case 'F':					/* MOVE */
 				vp->modesave = vp->mode;
 				vp->mode = TEMPMOVE;
-				state[vw] = HIY;
+				VGwin[vw]->state = HIY;
 				break;
 			case 'G':					/* DRAW */
 				vp->modesave = vp->mode;
 				vp->mode = TEMPDRAW;
-				state[vw] = HIY;
+				VGwin[vw]->state = HIY;
 				break;
 			case 'H':					/* MARKER */
 				vp->modesave = vp->mode;
 				vp->mode = TEMPMARK;
-				state[vw] = HIY;
+				VGwin[vw]->state = HIY;
 				break;
 			case 'I':					/* DAINDEX 24jul90dsw*/
-				state[vw] = STARTDISC;
+				VGwin[vw]->state = STARTDISC;
 				vp->intin = 3;
 				break;
 			case 'L':
-				state[vw] = INTEGER;
-				savstate[vw] = DONE;
+				VGwin[vw]->state = INTEGER;
+				VGwin[vw]->savstate = DONE;
 				break;
 			case 'P':					/* BEGIN PANEL 17jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)		/* 4105 only */
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)		/* 4105 only */
 				{
-					state[vw] = HIY;
+					VGwin[vw]->state = HIY;
 					vp->mode = PANEL;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			case 'T':					/* GTEXT 17jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)		/* 4105 only */
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)		/* 4105 only */
 				{
-					savstate[vw] = GTEXT;
-					state[vw] = INTEGER;
+					VGwin[vw]->savstate = GTEXT;
+					VGwin[vw]->state = INTEGER;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			default:
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 			}
 			break;
 		case SOMEM:
 			switch(c)
 			{
 			case 'C':					/* set graphtext size */
-				savstate[vw] = GTSIZE0;
-				state[vw] = INTEGER;
+				VGwin[vw]->savstate = GTSIZE0;
+				VGwin[vw]->state = INTEGER;
 				break;
 			case 'L':					/* set line index */
-				savstate[vw] = COLORINT;
-				state[vw] = INTEGER;
+				VGwin[vw]->savstate = COLORINT;
+				VGwin[vw]->state = INTEGER;
 				break;
 			case 'M':					/* MARKERTYPE 17jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 				{
-					savstate[vw] = MARKER;
-					state[vw] = INTEGER;
+					VGwin[vw]->savstate = MARKER;
+					VGwin[vw]->state = INTEGER;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			case 'N':					/* GTPATH 17jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 				{
-					savstate[vw] = GTPATH;
-					state[vw] = INTEGER;
+					VGwin[vw]->savstate = GTPATH;
+					VGwin[vw]->state = INTEGER;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			case 'P':					/* FillPattern 17jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 				{
-					savstate[vw] = FPATTERN;
-					state[vw] = INTEGER;
+					VGwin[vw]->savstate = FPATTERN;
+					VGwin[vw]->state = INTEGER;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			case 'R':					/* GTROT 17jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 				{
-					savstate[vw] = GTROT;
-					state[vw] = INTEGER;
+					VGwin[vw]->savstate = GTROT;
+					VGwin[vw]->state = INTEGER;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			case 'T':					/* GTINDEX 17jul90dsw */
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 				{
-					savstate[vw] = GTINDEX;
-					state[vw] = INTEGER;
+					VGwin[vw]->savstate = GTINDEX;
+					VGwin[vw]->state = INTEGER;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			case 'V':
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 				{
-					state[vw] = INTEGER;
-					savstate[vw] = DONE;
+					VGwin[vw]->state = INTEGER;
+					VGwin[vw]->savstate = DONE;
 				}
 				else
-					state[vw] = DONE;
+					VGwin[vw]->state = DONE;
 				break;
 			default:
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 			}
 			break;
 		case COLORINT:				/* set line index; have integer */
 			vp->pencolor = vp->intin;
-			(*RG[vp->RGdevice].pencolor)(vp->RGnum,vp->intin);
-			state[vw] = CANCEL;
+			(*vp->deviceCallbacks->pencolor)(vp->RGnum,vp->intin);
+			VGwin[vw]->state = CANCEL;
 			goagain = true;			/* we ignored current char; now process it */
 			break;
 		case GTSIZE0:				/* discard the first integer; get the 2nd */
-			state[vw] = INTEGER;	/* get the important middle integer */
-			savstate[vw] = GTSIZE1;
+			VGwin[vw]->state = INTEGER;	/* get the important middle integer */
+			VGwin[vw]->savstate = GTSIZE1;
 			goagain = true;
 			break;
 		case GTSIZE1:				/* integer is the height */
-			if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105)
+			if (kVectorInterpreter_ModeTEK4105 == vp->commandSet)
 			{
 				if (vp->intin < 88) vp->TEKSize = 1;
 				else if ((vp->intin > 87) && (vp->intin < 149)) vp->TEKSize = 2;
@@ -1539,8 +1534,8 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				else
 					fontnum(vw,5);
 			}
-			state[vw] = INTEGER;	/* discard last integer */
-			savstate[vw] = DONE;
+			VGwin[vw]->state = INTEGER;	/* discard last integer */
+			VGwin[vw]->savstate = DONE;
 			goagain = true;
 			break;
 		case GTEXT:					/* TEK4105 GraphText output.  17jul90dsw */
@@ -1552,7 +1547,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			else
 			{
 				goagain = true;
-				state[vw] = DONE;
+				VGwin[vw]->state = DONE;
 				newcoord(vw);
 			}
 			break;
@@ -1560,35 +1555,35 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			vp->TEKMarker = vp->intin;
 			if (vp->TEKMarker > 10) vp->TEKMarker = 10;
 			if (vp->TEKMarker <  0) vp->TEKMarker = 0;
-			state[vw] = DONE;
+			VGwin[vw]->state = DONE;
 			goagain = true;
 			break;
 		case GTPATH:
 			vp->TEKPath = vp->intin;
-			state[vw] = DONE;
+			VGwin[vw]->state = DONE;
 			goagain = true;
 			break;
 		case FPATTERN:
 			vp->TEKPattern = (vp->intin <  -7) ?  -7 :
 							 (vp->intin > 149) ? 149 : vp->intin;
-			state[vw] = DONE;
+			VGwin[vw]->state = DONE;
 			goagain = true;
 			break;
 		case GTROT:
 			vp->TEKRot = vp->intin;
-			state[vw] = INTEGER;
-			savstate[vw] = GTROT1;
+			VGwin[vw]->state = INTEGER;
+			VGwin[vw]->savstate = GTROT1;
 			goagain = true;
 			break;
 		case GTROT1:
 			vp->TEKRot = (vp->TEKRot) << (vp->intin);
 			vp->TEKRot = ((vp->TEKRot + 45) / 90) * 90;
-			state[vw] = DONE;
+			VGwin[vw]->state = DONE;
 			goagain = true;
 			break;
 		case GTINDEX:
 			vp->TEKIndex = (vp->intin < 0) ? 0 : (vp->intin > 7) ? 7 : vp->intin;
-			state[vw] = DONE;
+			VGwin[vw]->state = DONE;
 			goagain = true;
 			break;
 		case PANEL:
@@ -1611,11 +1606,11 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			vp->current->x = vp->savx = joinup(vp->nhix,vp->nlox,vp->nex);
 			vp->current->y = vp->savy = joinup(vp->nhiy,vp->nloy,vp->ney);
 			vp->current->next = (pointlist) nullptr;
-			state[vw] = INTEGER;
-			savstate[vw] = PANEL;
+			VGwin[vw]->state = INTEGER;
+			VGwin[vw]->savstate = PANEL;
 			vp->mode = DONE;
 			newcoord(vw);
-			state[vw] = DONE;
+			VGwin[vw]->state = DONE;
 			goagain = true;
 			break;
 		case DONE:					/* ready for anything */
@@ -1623,66 +1618,67 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			{
 			case 31:				/* US - enter ALPHA mode */
 				vp->mode = ALPHA; 
-				state[vw] = CANCEL;
+				VGwin[vw]->state = CANCEL;
 				break;
 			case 30:
-				state[vw] = RS;
+				VGwin[vw]->state = RS;
 				break;
 			case 28:
 					vp->mode = MARK;
-					state[vw] = HIY;
+					VGwin[vw]->state = HIY;
 				break;
 			case 29:				/* GS - enter VECTOR mode */
-				state[vw] = ENTERVEC;
+				VGwin[vw]->state = ENTERVEC;
 				break;
 			case 27:
-				state[vw] = CMD0;
+				VGwin[vw]->state = CMD0;
 				break;
 			default:
 				if (vp->mode == ALPHA)
 				{
-					state[vw] = DONE;
-					if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4014)
+					VGwin[vw]->state = DONE;
+					if (kVectorInterpreter_ModeTEK4014 == vp->commandSet)
 						drawc(vw,(short) c);
 					else
 					{
-						UInt8		uc = c;
-						Session_TerminalWrite(vp->theVS, &uc, 1);
-						TEKunstore(VGstore[vw]);
+						//UInt8		uc = c;
+						// TEMPORARY - FIX THIS
+						//Session_TerminalWrite(vp->theVS, &uc, 1);
+						TEKunstore(VGwin[vw]->VGstore);
 					}
 					return;
 				}
 				else if ((vp->mode == DRAW) && cmd)
 				{
-					state[vw] = HIY;
+					VGwin[vw]->state = HIY;
 					goagain = true;
 				}
 				else if ((vp->mode == MARK) && cmd)
 				{
-					state[vw] = HIY;
+					VGwin[vw]->state = HIY;
 					goagain = true;
 				}
 				else if ((vp->mode == DRAW) && ((c == 13) || (c == 10)))
 				{
 					/* break drawing mode on CRLF */
 					vp->mode = ALPHA; 
-					state[vw] = CANCEL;
+					VGwin[vw]->state = CANCEL;
 				}
 				else
 				{
-					state[vw] = DONE;			/* do nothing */
+					VGwin[vw]->state = DONE;			/* do nothing */
 					return;
 				}
 			}
 		}
 	
-		if (state[vw] == DONE)
+		if (VGwin[vw]->state == DONE)
 		{
 			if (vp->mode == PANEL)
 			{
 				vp->mode = DONE;
-				state[vw] = INTEGER;
-				savstate[vw] = PANEL;
+				VGwin[vw]->state = INTEGER;
+				VGwin[vw]->savstate = PANEL;
 			}
 			else if ((vp->TEKPanel) && ((vp->mode == DRAW) || (vp->mode == TEMPDRAW)
 					|| (vp->mode == MARK) || (vp->mode == TEMPMARK) ||
@@ -1715,13 +1711,13 @@ void VGdraw(short vw, char c)			/* the latest input char */
 			else if ((vp->mode == MARK) || (vp->mode == TEMPMARK))
 			{
 				newcoord(vw);
-				if (Session_TEKReturnMode(vp->theVS) == kSession_VectorGraphicsModeTEK4105) drawc(vw,127 + vp->TEKMarker);
+				if (kVectorInterpreter_ModeTEK4105 == vp->commandSet) drawc(vw,127 + vp->TEKMarker);
 				newcoord(vw);
 				if (vp->mode == TEMPMARK) vp->mode = vp->modesave;
 			}
 		}
 
-		if (state[vw] == CANCEL) state[vw] = DONE;
+		if (VGwin[vw]->state == CANCEL) VGwin[vw]->state = DONE;
 	} while (goagain);
 	return;
 }
@@ -1741,7 +1737,7 @@ void	VGdumpstore(short vw, short (*func )(short))
 		return;
 		}
 
-	st = VGstore[vw];
+	st = VGwin[vw]->VGstore;
 	topTEKstore(st);
 	while ((data = nextTEKitem(st)) != -1) (*func)(data);
 	(*func)(-1);

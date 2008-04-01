@@ -258,7 +258,7 @@ struct Session
 	MyCaptureFileList			targetFiles;				// list of open files, if any, to which incoming data is being copied
 	MyPrintJobList				targetPrintJobs;			// list of open printer spool files, if any, to which incoming data is being copied
 	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
-	Session_VectorGraphicsMode	vectorGraphicsCommandSet;	// e.g. TEK 4014, TEK 4105 or nothing
+	VectorInterpreter_Mode		vectorGraphicsCommandSet;	// e.g. TEK 4014 or 4105
 	VectorInterpreter_ID		vectorGraphicsID;			// the ID of the current graphic, if any; see "VectorInterpreter.h"
 	UInt8*						readBufferPtr;				// buffer space for processing data
 	size_t						readBufferSizeMaximum;		// maximum number of bytes that can be processed at once
@@ -635,8 +635,9 @@ Session_New		(Boolean	inIsReadOnly)
 		
 		ptr->mainProcess = nullptr;
 		ptr->readOnly = inIsReadOnly;
+		ptr->vectorGraphicsCommandSet = kVectorInterpreter_ModeTEK4014; // arbitrary, for now...
 		ptr->vectorGraphicsPageOpensNewWindow = true;
-		ptr->vectorGraphicsCommandSet = kSession_VectorGraphicsModeTEK4014; // arbitrary initial value
+		ptr->vectorGraphicsID = kVectorInterpreter_InvalidID;
 		ptr->kind = kSession_TypeLocalNonLoginShell;
 		ptr->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 														kConstantsRegistry_ListenerModelDescriptorSessionChanges);
@@ -741,6 +742,11 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeDataArrived, ptr->dataArrivalListener);
 			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeWindowValid, ptr->windowValidationListener);
 			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeWindowInvalid, ptr->windowValidationListener);
+			
+			if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
+			{
+				VectorInterpreter_Dispose(&ptr->vectorGraphicsID);
+			}
 			
 			delete ptr->dataPtr, ptr->dataPtr = nullptr;
 			
@@ -3512,9 +3518,10 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 	Boolean					result = false;
 	
 	
-	id = VGnewwin(kVectorInterpreter_TargetScreenPixels, inRef);
+	id = VectorInterpreter_New(kVectorInterpreter_TargetScreenPixels, ptr->vectorGraphicsCommandSet);
 	if (kVectorInterpreter_InvalidID != id)
 	{
+		VectorInterpreter_SetPageClears(id, false == ptr->vectorGraphicsPageOpensNewWindow);
 		ptr->vectorGraphicsID = id;
 		VGgiveinfo(id);
 		VectorCanvas_SetListeningSession(id, inRef);
@@ -3552,7 +3559,6 @@ Session_TEKDetachTargetGraphic		(SessionRef		inRef)
 	if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
 	{
 		Session_RemoveDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &ptr->vectorGraphicsID);
-		detachGraphics(ptr->vectorGraphicsID);
 		ptr->vectorGraphicsID = kVectorInterpreter_InvalidID;
 	}
 }// TEKDetachTargetGraphic
@@ -3585,7 +3591,7 @@ Boolean
 Session_TEKIsEnabled	(SessionRef		inRef)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_VectorGraphicsModeDisabled != ptr->vectorGraphicsCommandSet);
+	Boolean				result = (kVectorInterpreter_ModeDisabled != ptr->vectorGraphicsCommandSet);
 	
 	
 	return result;
@@ -3613,23 +3619,6 @@ Session_TEKPageCommandOpensNewWindow	(SessionRef		inRef)
 
 
 /*!
-Returns the command set, if any, supported by the
-graphic attached to the given session.
-
-(3.1)
-*/
-Session_VectorGraphicsMode
-Session_TEKReturnMode	(SessionRef		inRef)
-{
-	SessionAutoLocker			ptr(gSessionPtrLocks(), inRef);
-	Session_VectorGraphicsMode	result = ptr->vectorGraphicsCommandSet;
-	
-	
-	return result;
-}// TEKReturnMode
-
-
-/*!
 Set to "true" only if the given session should open a
 new TEK window whenever a TEK PAGE command is received.
 (The alternative is that the current TEK window is
@@ -3647,6 +3636,7 @@ Session_TEKSetPageCommandOpensNewWindow		(SessionRef		inRef,
 	
 	
 	ptr->vectorGraphicsPageOpensNewWindow = inNewWindow;
+	VectorInterpreter_SetPageClears(ptr->vectorGraphicsID, false == inNewWindow);
 }// TEKSetPageCommandOpensNewWindow
 
 
@@ -5584,12 +5574,6 @@ killConnection		(SessionPtr		inPtr)
 		
 		inPtr->status = kSession_StateImminentDisposal;
 		changeNotifyForSession(inPtr, kSession_ChangeState, inPtr->selfRef/* context */);
-		
-		if (wasDead)
-		{
-			// detach the TEK screen
-			if (kVectorInterpreter_InvalidID != inPtr->vectorGraphicsID) detachGraphics(inPtr->vectorGraphicsID);
-		}
 		
 		if (nullptr != inPtr->terminalWindow)
 		{

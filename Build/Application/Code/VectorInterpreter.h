@@ -52,6 +52,17 @@ enum
 	kVectorInterpreter_InvalidID				= -1
 };
 
+/*!
+The command set, which determines how input data streams
+are interpreted.
+*/
+enum VectorInterpreter_Mode
+{
+	kVectorInterpreter_ModeDisabled		= 'None',	//!< TEK 4014 command set
+	kVectorInterpreter_ModeTEK4014		= '4014',	//!< TEK 4014 command set
+	kVectorInterpreter_ModeTEK4105		= '4105'	//!< TEK 4105 command set
+};
+
 typedef SInt16 VectorInterpreter_Target;
 enum
 {
@@ -67,12 +78,34 @@ enum
 //@{
 
 void
-	VectorInterpreter_Init					();
+	VectorInterpreter_Init				();
 
 //@}
 
-short detachGraphics(VectorInterpreter_ID dnum);
-VectorInterpreter_ID VGnewwin(VectorInterpreter_Target, SessionRef);
+//!\name Creating and Destroying Graphics
+//@{
+
+VectorInterpreter_ID
+	VectorInterpreter_New				(VectorInterpreter_Target	inTarget,
+										 VectorInterpreter_Mode		inCommandSet);
+
+void
+	VectorInterpreter_Dispose			(VectorInterpreter_ID*		inoutGraphicIDPtr);
+
+//@}
+
+//!\name Manipulating Graphics
+//@{
+
+VectorInterpreter_Mode
+	VectorInterpreter_ReturnMode		(VectorInterpreter_ID		inGraphicID);
+
+void
+	VectorInterpreter_SetPageClears		(VectorInterpreter_ID		inGraphicID,
+										 Boolean					inTrueClearsFalseNewWindow);
+
+//@}
+
 void VGpage(VectorInterpreter_ID vw);
 short VGpred(VectorInterpreter_ID vw, short dest);
 void VGstopred(VectorInterpreter_ID vw);
@@ -80,10 +113,8 @@ void VGredraw(VectorInterpreter_ID vw, short dest);
 void VGgiveinfo(VectorInterpreter_ID vw);
 void VGzoom(VectorInterpreter_ID vw, short x0, short y0, short x1, short y1);
 void VGzcpy(short src, short dest);
-void VGclose(VectorInterpreter_ID vw);
 short VGwrite(VectorInterpreter_ID vw, char const* data, short count);
 void VGgindata(VectorInterpreter_ID vw, unsigned short x, unsigned short y, char c, char *a);
-SessionRef VGgetVS(VectorInterpreter_ID theVGnum);
 
 #endif
 

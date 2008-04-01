@@ -92,9 +92,8 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static pascal void		printIdle			();
-static void				printGraph			(SInt16);
-static void				printText			(TerminalScreenRef, TerminalViewRef, ConstStringPtr);
+static pascal void		printIdle		();
+static void				printText		(TerminalScreenRef, TerminalViewRef, ConstStringPtr);
 
 
 
@@ -392,7 +391,6 @@ TelnetPrinting_PageSetup		(SInt16		inResourceFileRefNum)
 
 /*!
 Prints the selection in the frontmost window.
-Selections of text or graphics are supported.
 
 (2.6)
 */
@@ -405,8 +403,7 @@ TelnetPrinting_PrintSelection ()
 	
 	UniversalPrint_Init();
 	
-	if (VectorCanvas_GetFromWindow(frontWindow, &i)) printGraph(i);
-	else if (TerminalWindow_ExistsFor(frontWindow))
+	if (TerminalWindow_ExistsFor(frontWindow))
 	{
 		Str255				title;
 		TerminalWindowRef	terminalWindow = TerminalWindow_ReturnFromWindow(frontWindow);
@@ -753,79 +750,6 @@ TelnetPrinting_SpoolMetaCharacter	(TerminalPrintingInfoPtr	inPrintingInfoPtr,
 
 
 #pragma mark Internal Methods
-
-/*	printGraph -	Print the graphics on the current window
- *		vg - which graphics window to print */
-
-static void printGraph(SInt16 dnum)			/* Which drawing to print */
-{
-	SInt16 h,v;			/* used for centering (h=horiz. , v=vert.) */
-	SInt16 wh,wv;			/* Window horiz and vert */
-	Rect prRect;		/* the rectangle to print in */
-	SInt16 j;				/* VG identifier for pass-through */
-	UniversalPrint_ContextRef		printRecordRef = nullptr;
-	
-	
-	UniversalPrint_Init();
-	printRecordRef = TelnetPrinting_ReturnNewPrintRecord();
-	
-	{
-		Boolean		printOK = false;
-		
-		
-		if (UniversalPrint_ReturnMode() == kUniversalPrint_ModeNormal)
-		{
-			DeactivateFrontmostWindow();
-			Cursors_UseArrow();
-			printOK = UniversalPrint_JobDialogDisplay(printRecordRef);
-			RestoreFrontmostWindow();
-		}
-		else
-		{
-			printOK = true;
-			UniversalPrint_SetNumberOfCopies(printRecordRef, 1, false/* lock */);
-		}
-		
-		if (printOK)
-		{			/* Cancel the print if false */
-			UniversalPrint_BeginDocument(printRecordRef);
-			if (UniversalPrint_ReturnLastResult(printRecordRef) == noErr)	{				/* If we can't, then die */
-				UniversalPrint_BeginPage(printRecordRef, (Rect*)nullptr);				/* Open a page */
-				UniversalPrint_SetIdleProc(printRecordRef, printIdle);
-				
-				UniversalPrint_GetPageBounds(printRecordRef, &prRect);
-				h=prRect.right - prRect.left;	/* Get the width */
-				v=prRect.bottom- prRect.top;	/* Get the height */
-				if (3*h<4*v) {					/* Center the little bugger */
-					wh = h;
-					wv = (3 * h)/ 4;
-					}
-				else {							/* On the page rectangle */
-					wv = v;
-					wh = (4 * v)/ 3;
-					}
-		
-				prRect.top  = (v- wv) /2;
-				prRect.left = (h- wh) /2;
-				prRect.bottom = prRect.top + wv;
-				prRect.right = prRect.left + wh;
-
-				j=VGnewwin(kVectorInterpreter_TargetQuickDrawPicture,VGgetVS(dnum));		/* NCSA 2.5: fixed the print call */
-				VectorToBitmap_SetBounds( &prRect );
-				VGzcpy( dnum, j);				/* Love dat zm factr */
-				VGredraw(dnum,j);				/* Copy the picture in i to j */
-				VGclose(j);						/* OK, we're done, give it to someone else */
-				UniversalPrint_EndPage(printRecordRef);			/* Page out.... */
-				}
-
-			UniversalPrint_EndDocument(printRecordRef);					/* Done with the document */
-			//putln("Doc is closed... the printing begins....");
-		}
-	}
-	UniversalPrint_DisposeContext(&printRecordRef);
-	Cursors_UseArrow();
-}// printGraph
-
 
 /*!
 This routine services network events and watches

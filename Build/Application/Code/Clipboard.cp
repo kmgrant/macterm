@@ -121,7 +121,7 @@ pascal void			clipboardUpdatesTimer					(EventLoopTimerRef, void*);
 OSStatus			createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
 OSStatus			createCGImageFromData					(CFDataRef, CGImageRef&);
 void				disposeImporterImageBuffer				(void*, void const*, size_t);
-PicHandle			graphicToPICT							(short);
+PicHandle			graphicToPICT							(VectorInterpreter_ID);
 void				handleNewSize							(HIWindowRef, Float32, Float32, void*);
 void				pictureToScrap							(Handle);
 pascal OSStatus		receiveClipboardContentDraw				(EventHandlerCallRef, EventRef, void*);
@@ -1363,25 +1363,30 @@ QuickDraw format (PICT), and returns the handle.
 (2.6)
 */
 PicHandle
-graphicToPICT	(short		inDrawingNumber)
+graphicToPICT	(VectorInterpreter_ID	inDrawingNumber)
 {
-	short		j = 0;
-	PicHandle	tpic = nullptr;
-	Rect		trect;
+	VectorInterpreter_ID	graphicID = 0;
+	PicHandle				result = nullptr;
 	
 	
-	SetRect(&trect, 0, 0, 384, 384);
-	j = VGnewwin(kVectorInterpreter_TargetQuickDrawPicture, VGgetVS(inDrawingNumber));
-	VectorToBitmap_SetBounds(&trect);
-	VGzcpy(inDrawingNumber, j);
-	
-	tpic = OpenPicture(&trect);
-	ClipRect(&trect);
-	VGredraw(inDrawingNumber, j);
-	ClosePicture();
-	VGclose(j);
-	
-	return(tpic);
+	graphicID = VectorInterpreter_New(kVectorInterpreter_TargetQuickDrawPicture,
+										VectorInterpreter_ReturnMode(inDrawingNumber));
+	if (kVectorInterpreter_InvalidID != graphicID)
+	{
+		Rect	pictureBounds;
+		
+		
+		SetRect(&pictureBounds, 0, 0, 384, 384); // arbitrary?
+		VectorToBitmap_SetBounds(&pictureBounds);
+		VGzcpy(inDrawingNumber, graphicID);
+		
+		result = OpenPicture(&pictureBounds);
+		ClipRect(&pictureBounds);
+		VGredraw(inDrawingNumber, graphicID);
+		ClosePicture();
+		VectorInterpreter_Dispose(&graphicID);
+	}
+	return result;
 }// graphicToPICT
 
 
