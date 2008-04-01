@@ -314,6 +314,51 @@ VectorInterpreter_CopyZoom	(VectorInterpreter_ID	inDestinationGraphicID,
 
 
 /*!
+Converts graphics-screen-local coordinates for the mouse
+into a cursor position report ("GIN") that can be sent to
+a session in TEK mode.  Returns 0 only if successful.
+
+You must allocate space for at least 5 characters into
+which the final report is written.
+
+The position (0, 0) represents the bottom-left corner, and
+(4095, 4095) represents the upper-right corner.
+
+(2.6)
+*/
+SInt16
+VectorInterpreter_FillInPositionReport	(VectorInterpreter_ID	inGraphicID,
+										 UInt16					inX,
+										 UInt16					inY,
+										 char					inKeyPress,
+										 char*					outPositionReportLength5)
+{
+	SInt16		result = -1;
+	
+	
+	if (isValidID(inGraphicID))
+	{
+		My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
+		UInt32						x2 = 0;
+		UInt32						y2 = 0;
+		
+		
+		x2 = ((inX * ptr->winwide) / INXMAX + ptr->winleft) >> 2;
+		y2 = ((inY * ptr->wintall) / INYMAX + ptr->winbot) >> 2;
+		
+		outPositionReportLength5[0] = inKeyPress;
+		outPositionReportLength5[1] = 0x20 | ((x2 & 0x03e0) >> 5);
+		outPositionReportLength5[2] = 0x20 | (x2 & 0x001f);
+		outPositionReportLength5[3] = 0x20 | ((y2 & 0x03e0) >> 5);
+		outPositionReportLength5[4] = 0x20 | (y2 & 0x001f);
+		
+		result = 0;
+	}
+	return result;
+}// FillInPositionReport
+
+
+/*!
 Standard TEK PAGE command; clears the screen, homes the cursor
 and switches to alpha mode.
 
@@ -523,36 +568,6 @@ VectorInterpreter_Zoom	(VectorInterpreter_ID	inGraphicID,
 		VGgiveinfo(inGraphicID);
 	}
 }// Zoom
-
-
-/*	Translate data for output as GIN report.
- *
- *	User indicates VW number and x,y coordinates of the GIN cursor.
- *	Coordinate space is 0-4095, 0-4095 with 0,0 at the bottom left of
- *	the real window and 4095,4095 at the upper right of the real window.
- *	'c' is the character to be returned as the keypress.
- *	'a' is a pointer to an array of 5 characters.  The 5 chars must
- *	be transmitted by the user to the remote host as the GIN report. */
-void VGgindata( short vw,
-	unsigned short x,		/* NCSA: SB - UNSIGNED data */
-	unsigned short y,		/* NCSA: SB - "          "  */
-	char c, char *a)
-{
-	long	x2,y2;
-	
-	if (false == isValidID(vw)) {
-		return;
-		}
-
-	x2 = ((x * VGwin[vw]->winwide) / INXMAX + VGwin[vw]->winleft) >> 2;
-	y2 = ((y * VGwin[vw]->wintall) / INYMAX + VGwin[vw]->winbot) >> 2;
-
-	a[0] = c;
-	a[1] = 0x20 | ((x2 & 0x03E0) >> 5);
-	a[2] = 0x20 | (x2 & 0x001F);
-	a[3] = 0x20 | ((y2 & 0x03E0) >> 5);
-	a[4] = 0x20 | (y2 & 0x001F);
-}
 
 
 #pragma mark Internal Methods

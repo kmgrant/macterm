@@ -138,10 +138,15 @@ void
 
 //@}
 
-void VGgindata(VectorInterpreter_ID vw, unsigned short x, unsigned short y, char c, char *a);
-
 //!\name Miscellaneous
 //@{
+
+SInt16
+VectorInterpreter_FillInPositionReport	(VectorInterpreter_ID		inGraphicID,
+										 UInt16						inX,
+										 UInt16						inY,
+										 char						inKeyPress,
+										 char*						outPositionReportLength5);
 
 VectorInterpreter_Mode
 	VectorInterpreter_ReturnMode		(VectorInterpreter_ID		inGraphicID);

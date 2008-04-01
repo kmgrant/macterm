@@ -122,6 +122,7 @@ typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
 namespace {
 
 SInt16				findCanvasWithWindow		(HIWindowRef);
+void				handleMouseDown				(HIWindowRef, Point);
 Boolean				inSplash					(Point, Point);
 pascal OSStatus		receiveCanvasDraw			(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveWindowClosing		(EventHandlerCallRef, EventRef, void*);
@@ -230,11 +231,11 @@ VectorCanvas_New ()
 			RGMwind[i]->vs = nullptr;
 			RGMwind[i]->xorigin = 0;
 			RGMwind[i]->yorigin = 0;
-			RGMwind[i]->xscale  = WINXMAX;
-			RGMwind[i]->yscale  = WINYMAX;
-			RGMwind[i]->width   = 400;
-			RGMwind[i]->height  = 300;
-			RGMwind[i]->ingin   = 0;
+			RGMwind[i]->xscale = WINXMAX;
+			RGMwind[i]->yscale = WINYMAX;
+			RGMwind[i]->width = 400;
+			RGMwind[i]->height = 300;
+			RGMwind[i]->ingin = 0;
 			
 			RegionUtilities_SetWindowUpToDate(RGMwind[i]->wind);
 			
@@ -644,75 +645,73 @@ findCanvasWithWindow	(HIWindowRef	inWindow)
 
 
 /*!
-Determines if two points are fairly close.
+Responds to a click/drag in a TEK window.  The current QuickDraw
+port will be drawn into.
+
+NOTE: This old routine will be needed to add mouse support to a
+new HIView-based canvas that is planned.
 
 (2.6)
 */
-Boolean
-inSplash	(Point		inPoint1,
-			 Point		inPoint2)
+void
+handleMouseDown		(HIWindowRef	inWindow,
+					 Point			inViewLocalMouse)
 {
-	Boolean		result = true;
+	My_VectorCanvasPtr		ptr = RGMwind[findCanvasWithWindow(inWindow)];
 	
 	
-	if (((inPoint1.h - inPoint2.h) > 3/* arbitrary */) ||
-		((inPoint2.h - inPoint1.h) > 3/* arbitrary */))
+	if (ptr->ingin)
 	{
-		result = false;
+		// report the location of the cursor
+		{
+			SInt32		lx = 0L;
+			SInt32		ly = 0L;
+			char		cursorReport[6];
+			
+			
+			lx = ((SInt32)ptr->xscale * (SInt32)inViewLocalMouse.h) / (SInt32)ptr->width;
+			ly = (SInt32)ptr->yscale -
+					((SInt32)ptr->yscale * (SInt32)inViewLocalMouse.v) / (SInt32)ptr->height;
+			
+			// the report is exactly 5 characters long
+			if (0 == VectorInterpreter_FillInPositionReport(ptr->vg, STATIC_CAST(lx, UInt16), STATIC_CAST(ly, UInt16),
+															' ', cursorReport))
+			{
+				Session_SendData(ptr->vs, cursorReport, 5);
+				Session_SendData(ptr->vs, " \r\n", 3);
+			}
+		}
+		
+		//ptr->ingin = 0;
+		RGMlastclick = TickCount();
 	}
-	else if (((inPoint1.v - inPoint2.v) > 3/* arbitrary */) ||
-				((inPoint2.v - inPoint1.v) > 3/* arbitrary */))
+	else
 	{
-		result = false;
-	}
-	
-	return result;
-}// inSplash
-
-
-// NOTE: This old routine will be needed to add mouse support to a
-// new HIView-based canvas that is planned.
-void RGmousedown
-  (
-	HIWindowRef wind,
-	Point *wherein
-  )
-{
-	unsigned long	lx = 0L,
-					ly = 0L;
-	char			thispaceforent[6];
-	short			i = 0;
-	Point			where;
-
-	where = *wherein;
-	if ((i = findCanvasWithWindow(wind)) < 0)
-		return;
-
-	if (!RGMwind[i]->ingin)
-	{
-	Point	anchor,current,last;
-	UInt32	tc = 0;
-	short	x0,y0,x1,y1;
-	Rect	rect;
-	MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
-	
-		SetPortWindowPort(wind);
-	
-		last  = where;
-		current = where;
-		anchor = where;
+		Point					anchor = inViewLocalMouse;
+		Point					current = inViewLocalMouse;
+		Point					last = inViewLocalMouse;
+		SInt16					x0 = 0;
+		SInt16					y0 = 0;
+		SInt16					x1 = 0;
+		SInt16					y1 = 0;
+		Rect					rect;
+		MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
+		
+		
+		SetPortWindowPort(inWindow);
+		
+		last = inViewLocalMouse;
+		current = inViewLocalMouse;
+		anchor = inViewLocalMouse;
 		
 		ColorUtilities_SetGrayPenPattern();
 		PenMode(patXor);
-	
-		SetRect(&rect,0,0,0,0);
+		
+		SetRect(&rect, 0, 0, 0, 0);
 		do
 		{
-			unless (inSplash(current,anchor))
+			unless (inSplash(current, anchor))
 			{
-				tc = TickCount();
-				while(TickCount() == tc)
-					/* loop */;
 				FrameRect(&rect);
 		
 				if (anchor.v < current.v)
@@ -751,75 +750,80 @@ void RGmousedown
 				if (error != noErr) break;
 			}
 		}
-		while (trackingResult != kMouseTrackingMouseUp);
+		while (kMouseTrackingMouseUp != trackingResult);
 		
 		FrameRect(&rect);
 		
 		ColorUtilities_SetBlackPenPattern();
 		PenMode(patCopy);
 		
-		if (!inSplash(anchor,current))
-		{
-			x0 = (short) ((long) rect.left * RGMwind[i]->xscale / RGMwind[i]->width );
-			y0 = (short) (RGMwind[i]->yscale -
-					(long) rect.top * RGMwind[i]->yscale / RGMwind[i]->height);
-			x1 = (short) ((long) rect.right * RGMwind[i]->xscale / RGMwind[i]->width);
-			y1 = (short) (RGMwind[i]->yscale -
-					(long) rect.bottom * RGMwind[i]->yscale / RGMwind[i]->height);
-			x1 = (x1 < x0+2) ? x0 + 4 : x1;
-			y0 = (y0 < y1+2) ? y1 + 4 : y0;
-
-			VectorInterpreter_Zoom( i,
-									x0 + RGMwind[i]->xorigin,
-									y1 + RGMwind[i]->yorigin,
-									x1 + RGMwind[i]->xorigin,
-									y0 + RGMwind[i]->yorigin);
-
-			VectorInterpreter_PageCommand(RGMwind[i]->vg);
-
-			RGMwind[i]->xscale  = x1 - x0;
-			RGMwind[i]->yscale  = y0 - y1;
-			RGMwind[i]->xorigin = x0 + RGMwind[i]->xorigin;
-			RGMwind[i]->yorigin = y1 + RGMwind[i]->yorigin;
-			
-			RGMlastclick = 0L;
-		}
-		else
+		if (inSplash(anchor, current))
 		{
 			if (RGMlastclick && ((RGMlastclick + GetDblTime()) > TickCount()))
 			{
-				RGMwind[i]->xscale  = WINXMAX;
-				RGMwind[i]->yscale  = WINYMAX;
-				RGMwind[i]->xorigin = 0;
-				RGMwind[i]->yorigin = 0;
-
-				VectorInterpreter_Zoom(i,0,0,WINXMAX-1,WINYMAX-1);
-				VectorInterpreter_PageCommand( RGMwind[i]->vg);
+				ptr->xscale = WINXMAX;
+				ptr->yscale = WINYMAX;
+				ptr->xorigin = 0;
+				ptr->yorigin = 0;
+				
+				VectorInterpreter_Zoom(ptr->vg, 0, 0, WINXMAX - 1, WINYMAX - 1);
+				VectorInterpreter_PageCommand(ptr->vg);
 				RGMlastclick = 0L;
 			}
-			else RGMlastclick = TickCount();
+			else
+			{
+				RGMlastclick = TickCount();
+			}
 		}
-		return;
+		else
+		{
+			x0 = (short)((long)rect.left * ptr->xscale / ptr->width);
+			y0 = (short)(ptr->yscale - (long)rect.top * ptr->yscale / ptr->height);
+			x1 = (short)((long)rect.right * ptr->xscale / ptr->width);
+			y1 = (short)(ptr->yscale - (long)rect.bottom * ptr->yscale / ptr->height);
+			x1 = (x1 < (x0 + 2)) ? x0 + 4 : x1;
+			y0 = (y0 < (y1 + 2)) ? y1 + 4 : y0;
+			
+			VectorInterpreter_Zoom(ptr->vg, x0 + ptr->xorigin, y1 + ptr->yorigin,
+									x1 + ptr->xorigin, y0 + ptr->yorigin);
+			VectorInterpreter_PageCommand(ptr->vg);
+			
+			ptr->xscale = x1 - x0;
+			ptr->yscale = y0 - y1;
+			ptr->xorigin = x0 + ptr->xorigin;
+			ptr->yorigin = y1 + ptr->yorigin;
+			
+			RGMlastclick = 0L;
+		}
+	}
+}// handleMouseDown
+
+
+/*!
+Determines if two points are fairly close.
+
+(2.6)
+*/
+Boolean
+inSplash	(Point		inPoint1,
+			 Point		inPoint2)
+{
+	Boolean		result = true;
 	
+	
+	if (((inPoint1.h - inPoint2.h) > 3/* arbitrary */) ||
+		((inPoint2.h - inPoint1.h) > 3/* arbitrary */))
+	{
+		result = false;
+	}
+	else if (((inPoint1.v - inPoint2.v) > 3/* arbitrary */) ||
+				((inPoint2.v - inPoint1.v) > 3/* arbitrary */))
+	{
+		result = false;
 	}
 	
-	/* NCSA: SB */
-	/* NCSA: SB - These computations are being truncated and turned into signed ints. */
-	/* NCSA: SB - Just make sure everything is cast correctly, and were fine */
-	
-	lx = ((unsigned long)RGMwind[i]->xscale * (unsigned long)where.h) 	/* NCSA: SB */
-			/ (unsigned long)RGMwind[i]->width;						 	/* NCSA: SB */
-	ly = (unsigned long)RGMwind[i]->yscale - 							/* NCSA: SB */
-		((unsigned long)RGMwind[i]->yscale * (unsigned long)where.v) / (unsigned long)RGMwind[i]->height; /* NCSA: SB */
-
-	VGgindata(RGMwind[i]->vg,(unsigned short) lx,(unsigned short)ly,' ',thispaceforent);	/* NCSA: SB */
-	
-	Session_SendData(RGMwind[i]->vs,thispaceforent,5);
-	Session_SendData(RGMwind[i]->vs, " \r\n", 3);
-
-    /*	RGMwind[i]->ingin = 0; */
-	RGMlastclick = TickCount();
-}// RGmousedown
+	return result;
+}// inSplash
 
 
 /*!
