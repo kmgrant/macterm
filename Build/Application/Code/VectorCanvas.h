@@ -106,9 +106,6 @@ void
 SInt16
 	VectorCanvas_MonitorMouse			(SInt16			inCanvasID);
 
-SInt16
-	VectorCanvas_RenderInWindow			(HIWindowRef	inWindow);
-
 char const*
 	VectorCanvas_ReturnDeviceName		();
 

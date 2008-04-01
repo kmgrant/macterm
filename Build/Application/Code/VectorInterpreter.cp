@@ -292,17 +292,6 @@ VectorInterpreter_ID VGnewwin
 	
 	VGwin[vw]->id = 'VGWN';
 	VGwin[vw]->RGdevice = device;
-	VGwin[vw]->RGnum = (*RG[device].newwin)();
-
-	if (VGwin[vw]->RGnum < 0)
-	{
-		/* no windows available on device */
-		Memory_DisposePtr((Ptr*)&VGwin[vw]);
-		VGwin[vw] = nullptr;
-		freeTEKstore(VGstore[vw]);
-		Sound_StandardAlert();
-		return kVectorInterpreter_InvalidID;
-	}
 			
 	VGwin[vw]->mode = ALPHA;
 	VGwin[vw]->TEKPanel = (pointlist) nullptr;
@@ -315,6 +304,19 @@ VectorInterpreter_ID VGnewwin
 	(*RG[device].pencolor)(VGwin[vw]->RGnum,1);
 
 	storexy(vw,0,3071);
+	
+	// do this last, because it will trigger rendering that
+	// depends on all the initializations above
+	VGwin[vw]->RGnum = (*RG[device].newwin)();
+	if (VGwin[vw]->RGnum < 0)
+	{
+		/* no windows available on device */
+		Memory_DisposePtr((Ptr*)&VGwin[vw]);
+		VGwin[vw] = nullptr;
+		freeTEKstore(VGstore[vw]);
+		Sound_StandardAlert();
+		return kVectorInterpreter_InvalidID;
+	}
 #if 1
 	VGzoom(vw,0,0,4095,3119);				/* important */
 #else

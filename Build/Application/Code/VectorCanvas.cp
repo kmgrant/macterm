@@ -46,9 +46,11 @@ Routines for Macintosh Window output.
 #include <vector>
 
 // library includes
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <ColorUtilities.h>
 #include <CommonEventHandlers.h>
+#include <HIViewWrap.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 #include <RegionUtilities.h>
@@ -71,6 +73,19 @@ Routines for Macintosh Window output.
 
 
 
+#pragma mark Constants
+namespace {
+
+/*!
+IMPORTANT
+
+The following values MUST agree with the view IDs in
+the NIB "TEKWindow.nib".
+*/
+HIViewID const	idMyCanvas		= { 'Cnvs', 0/* ID */ };
+
+} // anonymous namespace
+
 #pragma mark Types
 namespace {
 
@@ -79,22 +94,24 @@ Internal representation of a VectorCanvas_Ref.
 */
 struct My_VectorCanvas
 {
-	OSType				id;
-	SessionRef			vs;
-	HIWindowRef			wind;
-	EventHandlerUPP		closeUPP;
-	EventHandlerRef		closeHandler;
-	HIViewRef			zoom;
-	HIViewRef			vert;
-	HIViewRef			horiz;
-	SInt16				xorigin;
-	SInt16				yorigin;
-	SInt16				xscale;
-	SInt16				yscale;
-	SInt16				vg;
-	SInt16				ingin;
-	SInt16				width;
-	SInt16				height;
+	OSType					id;
+	SessionRef				vs;
+	HIWindowRef				wind;
+	EventHandlerUPP			closeUPP;
+	EventHandlerRef			closeHandler;
+	HIViewRef				canvas;
+	HIViewRef				zoom;
+	HIViewRef				vert;
+	HIViewRef				horiz;
+	CarbonEventHandlerWrap	canvasDrawHandler;
+	SInt16					xorigin;
+	SInt16					yorigin;
+	SInt16					xscale;
+	SInt16					yscale;
+	SInt16					vg;
+	SInt16					ingin;
+	SInt16					width;
+	SInt16					height;
 };
 typedef My_VectorCanvas*		My_VectorCanvasPtr;
 typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
@@ -104,10 +121,10 @@ typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-SInt16				findCanvasWithVirtualGraphicsID		(SInt16);
 SInt16				findCanvasWithWindow				(HIWindowRef);
 void				handleNewSize						(HIWindowRef, Float32, Float32, void*);
 Boolean				inSplash							(Point, Point);
+pascal OSStatus		receiveCanvasDraw					(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 SInt16				setPortCanvasPort					(SInt16);
 
@@ -170,7 +187,7 @@ VectorCanvas_New ()
 	}
 	if (i < MAXWIND)
 	{
-		RGMwind[i] = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_VectorCanvas)), My_VectorCanvasPtr);
+		RGMwind[i] = new My_VectorCanvas;
 		if (nullptr != RGMwind[i])
 		{
 			RGMwind[i]->id = 'RGMW';
@@ -179,12 +196,25 @@ VectorCanvas_New ()
 			RGMwind[i]->wind = NIBWindow(AppResources_ReturnBundleForNIBs(),
 											CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
 			
+			{
+				HIViewWrap		canvasView(idMyCanvas, RGMwind[i]->wind);
+				
+				
+				RGMwind[i]->canvas = canvasView;
+				RGMwind[i]->canvasDrawHandler.install(GetControlEventTarget(canvasView), receiveCanvasDraw,
+														CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+														RGMwind[i]/* context */);
+				assert(RGMwind[i]->canvasDrawHandler.isInstalled());
+			}
+			
 			// install dynamic resize, constrain, zoom, etc. handlers for the window
+		#if 0
 			gWindowResizeHandlers[i].install
 										(RGMwind[i]->wind, handleNewSize, nullptr/* user data */,
 											100/* arbitrary minimum width */, 100/* arbitrary minimum height */,
 											SHRT_MAX/* arbitrary maximum width */, SHRT_MAX/* maximum height */);
 			assert(gWindowResizeHandlers[i].isInstalled());
+		#endif
 			
 			// install a close handler so TEK windows are detached properly
 			{
@@ -248,8 +278,7 @@ VectorCanvas_Dispose	(SInt16		inCanvasID)
 		DisposeEventHandlerUPP(RGMwind[inCanvasID]->closeUPP), RGMwind[inCanvasID]->closeUPP = nullptr;
 		gWindowResizeHandlers[inCanvasID] = CommonEventHandlers_WindowResizer();
 		DisposeWindow(RGMwind[inCanvasID]->wind);
-		Memory_DisposePtr((Ptr*)&RGMwind[inCanvasID]);
-		RGMwind[inCanvasID] = nullptr;
+		delete RGMwind[inCanvasID], RGMwind[inCanvasID] = nullptr;
 	}
 	return result;
 }// Dispose
@@ -451,43 +480,6 @@ VectorCanvas_MonitorMouse	(SInt16		inCanvasID)
 
 
 /*!
-Changes the current graphics port to that of the given window,
-and draws the picture.  Returns 1 if the drawing is complete,
-0 if there is more to do, or -1 on error.
-
-TEMPORARY.  This needs to be transitioned to an HIView and
-drawn via Carbon Events.
-
-(3.0)
-*/
-SInt16
-VectorCanvas_RenderInWindow		(HIWindowRef	inWindow)
-{
-	Boolean		result = -1;
-	SInt16		i = findCanvasWithWindow(inWindow);
-	
-	
-	if (i >= 0)
-	{
-		SetPortWindowPort(inWindow);
-		
-		BeginUpdate(inWindow);
-		VGstopred(RGMwind[i]->vg);
-		VGpage(RGMwind[i]->vg);
-		result = VGpred(RGMwind[i]->vg, RGMwind[i]->vg);
-		EndUpdate(inWindow);
-		
-		if (0 == result)
-		{
-			// TEMPORARY - notify session of vector graphics update
-			// UNIMPLEMENTED
-		}
-	}
-	return result;
-}// RenderInWindow
-
-
-/*!
 Returns a name for this type of canvas.
 
 (3.0)
@@ -632,34 +624,6 @@ VectorCanvas_Uncover	(SInt16		UNUSED_ARGUMENT(inCanvasID))
 
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Returns the canvas ID whose virtual graphics ID matches
-the given ID, or a negative value on error.
-
-(3.1)
-*/
-SInt16
-findCanvasWithVirtualGraphicsID		(SInt16		inVirtualGraphicsRef)
-{
-	SInt16		result = 0;
-	
-	
-	while (result < MAXWIND)
-	{
-		if (nullptr != RGMwind[result])
-		{
-			if (inVirtualGraphicsRef == RGMwind[result]->vg) break;
-		}
-		++result;
-	}
-	if (result >= MAXWIND)
-	{
-		result = -1;
-	}
-	return result;
-}// findCanvasWithVirtualGraphicsID
-
 
 /*!
 Returns the canvas ID whose Mac OS window matches the given
@@ -900,6 +864,128 @@ void RGmousedown
     /*	RGMwind[i]->ingin = 0; */
 	RGMlastclick = TickCount();
 }// RGmousedown
+
+
+/*!
+Handles "kEventControlDraw" of "kEventClassControl".
+
+Invoked by Mac OS X whenever the TEK canvas should be
+redrawn.
+
+(3.1)
+*/
+pascal OSStatus
+receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inVectorCanvasPtr)
+{
+	OSStatus			result = eventNotHandledErr;
+	My_VectorCanvasPtr	dataPtr = REINTERPRET_CAST(inVectorCanvasPtr, My_VectorCanvasPtr);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlDraw);
+	{
+		HIViewRef		view = nullptr;
+		
+		
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+		
+		// if the view was found, continue
+		if (noErr == result)
+		{
+			//ControlPartCode		partCode = 0;
+			CGrafPtr			drawingPort = nullptr;
+			CGContextRef		drawingContext = nullptr;
+			CGrafPtr			oldPort = nullptr;
+			GDHandle			oldDevice = nullptr;
+			
+			
+			// find out the current port
+			GetGWorld(&oldPort, &oldDevice);
+			
+			// could determine which part (if any) to draw; if none, draw everything
+			// (ignored, not needed)
+			//result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamControlPart, typeControlPartCode, partCode);
+			//result = noErr; // ignore part code parameter if absent
+			
+			// determine the port to draw in; if none, the current port
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamGrafPort, typeGrafPtr, drawingPort);
+			if (noErr != result)
+			{
+				// use current port
+				drawingPort = oldPort;
+				result = noErr;
+			}
+			
+			// determine the port to draw in; if none, the current port
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef,
+															typeCGContextRef, drawingContext);
+			assert_noerr(result);
+			
+			// if all information can be found, proceed with drawing
+			if (noErr == result)
+			{
+				Rect		bounds;
+				HIRect		floatBounds;
+				RgnHandle	optionalTargetRegion = nullptr;
+				
+				
+				SetPort(drawingPort);
+				
+				// determine boundaries of the content view being drawn
+				HIViewGetBounds(view, &floatBounds);
+				GetControlBounds(view, &bounds);
+				OffsetRect(&bounds, -bounds.left, -bounds.top);
+				
+				// update internal dimensions to match current view size
+				// (NOTE: could be done in a bounds-changed handler)
+				dataPtr->width = bounds.right - bounds.left;
+				dataPtr->height = bounds.bottom - bounds.top;
+				
+				// maybe a focus region has been provided
+				if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
+																	optionalTargetRegion))
+				{
+					Rect	clipBounds;
+					HIRect	floatClipBounds;
+					
+					
+					SetClip(optionalTargetRegion);
+					GetRegionBounds(optionalTargetRegion, &clipBounds);
+					floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
+													clipBounds.bottom - clipBounds.top);
+					CGContextClipToRect(drawingContext, floatClipBounds);
+				}
+				else
+				{
+					static RgnHandle	clipRegion = Memory_NewRegion();
+					
+					
+					SetRectRgn(clipRegion, 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
+								STATIC_CAST(floatBounds.size.height, SInt16));
+					SetClip(clipRegion);
+					CGContextClipToRect(drawingContext, floatBounds);
+				}
+				
+				// finally, draw the graphic!
+				// INCOMPLETE - these callbacks need to be updated to support Core Graphics
+				VGstopred(dataPtr->vg);
+				VGpage(dataPtr->vg);
+				(SInt16)VGpred(dataPtr->vg, dataPtr->vg);
+				
+				result = noErr;
+			}
+			
+			// restore port
+			SetGWorld(oldPort, oldDevice);
+		}
+	}
+	return result;
+}// receiveCanvasDraw
 
 
 /*!

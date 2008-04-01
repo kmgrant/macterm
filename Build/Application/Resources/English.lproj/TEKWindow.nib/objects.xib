@@ -1,24 +1,41 @@
 <?xml version="1.0" standalone="yes"?>
 <object class="NSIBObjectData">
-  <string name="targetFramework">IBCarbonFramework</string>
   <object name="rootObject" class="NSCustomObject" id="1">
-    <string name="customClass">NSApplication</string>
   </object>
-  <array count="2" name="allObjects">
-    <object class="IBCarbonWindow" id="166">
-      <string name="windowRect">181 186 541 666 </string>
-      <string name="title">(TEK)</string>
-      <object name="rootControl" class="IBCarbonRootControl" id="167">
-        <string name="bounds">0 0 360 480 </string>
-      </object>
-      <boolean name="liveResize">TRUE</boolean>
-      <int name="windowPosition">4</int>
+  <array count="3" name="allObjects">
+    <object class="IBCarbonRootControl" id="167">
+      <string name="viewFrame">0 0 780 815 </string>
+      <array count="1" name="subviews">
+        <object class="IBCarbonHIView" id="181">
+          <ostype name="controlSignature">Cnvs</ostype>
+          <object name="layoutInfo" class="IBCarbonHILayoutInfo">
+            <int name="bindingTopKind">1</int>
+            <int name="bindingLeftKind">1</int>
+            <int name="bindingBottomKind">2</int>
+            <int name="bindingRightKind">2</int>
+          </object>
+          <string name="viewFrame">0 0 780 815 </string>
+          <string name="bounds">0 0 815 780 </string>
+        </object>
+      </array>
+      <string name="bounds">0 0 815 780 </string>
     </object>
-    <reference idRef="167"/>
+    <reference idRef="181"/>
+    <object class="IBCarbonWindow" id="166">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <int name="windowPosition">4</int>
+      <string name="title"></string>
+      <reference name="rootControl" idRef="167"/>
+      <string name="windowRect">181 186 996 966 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
   </array>
-  <array count="2" name="allParents">
-    <reference idRef="1"/>
+  <array count="3" name="allParents">
     <reference idRef="166"/>
+    <reference idRef="167"/>
+    <reference idRef="1"/>
   </array>
   <dictionary count="2" name="nameTable">
     <string>File&apos;s Owner</string>
@@ -26,5 +43,6 @@
     <string>Window</string>
     <reference idRef="166"/>
   </dictionary>
-  <unsigned_int name="nextObjectID">180</unsigned_int>
+  <string name="targetFramework">IBCarbonFramework</string>
+  <unsigned_int name="nextObjectID">182</unsigned_int>
 </object>

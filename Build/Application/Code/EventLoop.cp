@@ -1857,11 +1857,6 @@ handleUpdate	(EventRecord*		inoutEventPtr)
 				if (MacRGupdate(windowToUpdate)) {/* error */}
 				result = true;
 				break;
-				
-			case WIN_TEK: // a Tektronix display
-				(SInt16)VectorCanvas_RenderInWindow(windowToUpdate);
-				result = true;
-				break;
 			
 			default:
 				// redraw content controls; for any modern window, this is sufficient
