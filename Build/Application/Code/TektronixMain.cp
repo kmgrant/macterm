@@ -36,7 +36,6 @@
 
 // MacTelnet includes
 #include "TektronixMain.h"
-#include "tekdefs.h"	/* NCSA: sb - all defines are now here, for easy access */
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
 

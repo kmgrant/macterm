@@ -320,9 +320,7 @@
 		0A46042A0554376100ACDF3A /* SizeDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SizeDialog.h; path = Application/Code/SizeDialog.h; sourceTree = SOURCE_ROOT; };
 		0A46042C0554376100ACDF3A /* SplashScreenDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SplashScreenDialog.h; path = Application/Code/SplashScreenDialog.h; sourceTree = SOURCE_ROOT; };
 		0A46042E0554376100ACDF3A /* StatusIcon.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = StatusIcon.h; path = Application/Code/StatusIcon.h; sourceTree = SOURCE_ROOT; };
-		0A4604310554376100ACDF3A /* tekdefs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = tekdefs.h; path = Application/Code/tekdefs.h; sourceTree = SOURCE_ROOT; };
 		0A4604320554376100ACDF3A /* TektronixMain.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixMain.h; path = Application/Code/TektronixMain.h; sourceTree = "<group>"; };
-		0A4604330554376100ACDF3A /* TektronixFont.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TektronixFont.h; path = Application/Code/TektronixFont.h; sourceTree = SOURCE_ROOT; };
 		0A4604340554376100ACDF3A /* VectorToBitmap.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorToBitmap.h; path = Application/Code/VectorToBitmap.h; sourceTree = "<group>"; };
 		0A4604350554376100ACDF3A /* VectorToNull.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorToNull.h; path = Application/Code/VectorToNull.h; sourceTree = "<group>"; };
 		0A4604360554376100ACDF3A /* VectorCanvas.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = VectorCanvas.h; path = Application/Code/VectorCanvas.h; sourceTree = "<group>"; };
@@ -854,8 +852,6 @@
 				0AABEA0B05A1203200F15EF2 /* SpecialKeySequencesDialog.h */,
 				0A46042C0554376100ACDF3A /* SplashScreenDialog.h */,
 				0A46042E0554376100ACDF3A /* StatusIcon.h */,
-				0A4604310554376100ACDF3A /* tekdefs.h */,
-				0A4604330554376100ACDF3A /* TektronixFont.h */,
 				0A4604320554376100ACDF3A /* TektronixMain.h */,
 				0A4604390554376100ACDF3A /* TelnetPrinting.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,

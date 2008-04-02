@@ -46,6 +46,16 @@
 
 #pragma mark Constants
 
+/*!
+These represent the largest values allowed in
+graphics screen coordinates.
+*/
+enum
+{
+	kVectorInterpreter_MaxX		= 4096,
+	kVectorInterpreter_MaxY		= 4096
+};
+
 typedef SInt16 VectorInterpreter_ID;
 enum
 {

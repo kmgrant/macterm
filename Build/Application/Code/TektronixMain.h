@@ -35,10 +35,20 @@
 #ifndef __TEKTRONIXMAIN__
 #define __TEKTRONIXMAIN__
 
-// MacTelnet includes
-#include "tekdefs.h"
 
 
+#pragma mark Types
+
+struct TEKSTORE
+{
+	long		thiselnum;		// number of currently-viewing elements
+	Handle		dataHandle;
+};
+typedef TEKSTORE*	TEKSTOREP;
+
+
+
+#pragma mark Public Methods
 
 TEKSTOREP	newTEKstore();
 void freeTEKstore(TEKSTOREP s);

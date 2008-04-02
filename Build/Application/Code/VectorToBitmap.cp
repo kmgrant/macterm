@@ -3,9 +3,9 @@
 	VectorToBitmap.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -32,20 +32,10 @@
 #include "UniversalDefines.h"
 
 // MacTelnet includes
+#include "VectorInterpreter.h"
 #include "VectorToBitmap.h"
 
 
-
-#pragma mark Constants
-namespace {
-
-enum
-{
-	INXMAX = 4096,
-	INYMAX = 4096
-};
-
-} // anonymous namespace
 
 #pragma mark Variables
 namespace {
@@ -81,8 +71,8 @@ void
 VectorToBitmap_Init ()
 {
 	gRGMPbusy = false;
-	//gRGMPwidth = INXMAX;
-	//gRGMPheight = INYMAX;
+	//gRGMPwidth = kVectorInterpreter_MaxX;
+	//gRGMPheight = kVectorInterpreter_MaxY;
 	gRGMPxoffset = 0;
 	gRGMPyoffset = 0;
 }// Init
@@ -101,8 +91,8 @@ VectorToBitmap_New ()
 	
 	
 	gRGMPbusy = true;
-	//gRGMPwidth = INXMAX;
-	//gRGMPheight = INYMAX;
+	//gRGMPwidth = kVectorInterpreter_MaxX;
+	//gRGMPheight = kVectorInterpreter_MaxY;
 	gRGMPxoffset = 0;
 	gRGMPyoffset = 0;
 	
@@ -131,7 +121,7 @@ VectorToBitmap_Dispose	(SInt16		UNUSED_ARGUMENT(inDevice))
 
 
 /*!
-A “data line” callback.  Not sure what this is supposed
+A ‚Äúdata line‚Äù callback.  Not sure what this is supposed
 to do - but since the default TEK device does not support
 this capability, the Mac picture output does not support
 it either.
@@ -188,10 +178,10 @@ VectorToBitmap_DrawLine	(SInt16		UNUSED_ARGUMENT(inDevice),
 	SInt16		result = 0;
 	
 	
-	MoveTo(gRGMPxoffset + (SInt16) (STATIC_CAST(inStartX, SInt32) * gRGMPwidth / INXMAX),
-			gRGMPyoffset + gRGMPheight - (SInt16) (STATIC_CAST(inStartY, SInt32) * gRGMPheight / INYMAX));
-	LineTo(gRGMPxoffset + (SInt16) (STATIC_CAST(inEndX, SInt32) * gRGMPwidth/INXMAX),
-			gRGMPyoffset + gRGMPheight - (SInt16) (STATIC_CAST(inEndY, SInt32) * gRGMPheight / INYMAX));
+	MoveTo(gRGMPxoffset + (SInt16) (STATIC_CAST(inStartX, SInt32) * gRGMPwidth / kVectorInterpreter_MaxX),
+			gRGMPyoffset + gRGMPheight - (SInt16) (STATIC_CAST(inStartY, SInt32) * gRGMPheight / kVectorInterpreter_MaxY));
+	LineTo(gRGMPxoffset + (SInt16) (STATIC_CAST(inEndX, SInt32) * gRGMPwidth/kVectorInterpreter_MaxX),
+			gRGMPyoffset + gRGMPheight - (SInt16) (STATIC_CAST(inEndY, SInt32) * gRGMPheight / kVectorInterpreter_MaxY));
 	return result;
 }// DrawLine
 
@@ -232,7 +222,7 @@ VectorToBitmap_SetBounds	(Rect const*	inBoundsPtr)
 
 
 /*!
-A “set callback information” TEK callback for
+A ‚Äúset callback information‚Äù TEK callback for
 setting arbitrary data needed within other
 callbacks.
 
@@ -247,7 +237,7 @@ VectorToBitmap_SetCallbackData	(SInt16		UNUSED_ARGUMENT(inDevice),
 
 
 /*!
-A “character mode” callback.  Apparently sets rotation
+A ‚Äúcharacter mode‚Äù callback.  Apparently sets rotation
 and size - but this is not currently supported by this
 type of TEK output.
 

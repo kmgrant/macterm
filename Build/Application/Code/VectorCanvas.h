@@ -41,7 +41,6 @@
 
 // MacTelnet includes
 #include "SessionRef.typedef.h"
-#include "tekdefs.h"
 
 
 

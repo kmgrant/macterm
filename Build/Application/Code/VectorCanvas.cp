@@ -67,7 +67,6 @@ Routines for Macintosh Window output.
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "Session.h"
-#include "tekdefs.h"		/* NCSA: sb - all the TEK defines are now here */
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
 
@@ -402,12 +401,12 @@ VectorCanvas_DrawLine	(SInt16		inCanvasID,
 	if (setPortCanvasPort(inCanvasID)) result = -1;
 	else
 	{
-		SInt32		xl0 = (STATIC_CAST(inStartX, SInt32) * RGMwind[inCanvasID]->width) / INXMAX;
+		SInt32		xl0 = (STATIC_CAST(inStartX, SInt32) * RGMwind[inCanvasID]->width) / kVectorInterpreter_MaxX;
 		SInt32		yl0 = STATIC_CAST(RGMwind[inCanvasID]->height, SInt32) -
-							((STATIC_CAST(inStartY, SInt32) * RGMwind[inCanvasID]->height) / INYMAX);
-		SInt32		xl1 = (STATIC_CAST(inEndX, SInt32) * RGMwind[inCanvasID]->width) / INXMAX;
+							((STATIC_CAST(inStartY, SInt32) * RGMwind[inCanvasID]->height) / kVectorInterpreter_MaxY);
+		SInt32		xl1 = (STATIC_CAST(inEndX, SInt32) * RGMwind[inCanvasID]->width) / kVectorInterpreter_MaxX;
 		SInt32		yl1 = STATIC_CAST(RGMwind[inCanvasID]->height, SInt32) -
-							((STATIC_CAST(inEndY, SInt32) * RGMwind[inCanvasID]->height) / INYMAX);
+							((STATIC_CAST(inEndY, SInt32) * RGMwind[inCanvasID]->height) / kVectorInterpreter_MaxY);
 		
 		
 		MoveTo(STATIC_CAST(xl0, short), STATIC_CAST(yl0, short));

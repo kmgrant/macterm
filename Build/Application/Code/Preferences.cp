@@ -69,7 +69,6 @@
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "Session.h"
-#include "tekdefs.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
