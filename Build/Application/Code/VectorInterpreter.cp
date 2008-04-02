@@ -42,6 +42,7 @@
 #include "UniversalDefines.h"
 
 // standard-C++ includes
+#include <deque>
 #include <map>
 
 // library includes
@@ -178,7 +179,7 @@ typedef My_VectorCallbacks*		My_VectorCallbacksPtr;
 /*!
 Used to store drawing commands.
 */
-typedef std::vector< SInt16 >	My_VectorDB;
+typedef std::deque< SInt16 >	My_VectorDB;
 
 /*!
 Stores information used to interpret vector graphics
