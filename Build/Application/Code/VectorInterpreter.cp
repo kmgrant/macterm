@@ -52,7 +52,6 @@
 // MacTelnet includes
 #include "ConnectionData.h"
 #include "SessionFactory.h"
-#include "TektronixMain.h"
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
 #include "VectorToBitmap.h"
@@ -177,11 +176,19 @@ struct My_VectorCallbacks
 typedef My_VectorCallbacks*		My_VectorCallbacksPtr;
 
 /*!
-Stores information used to interpreter vector graphics
+Used to store drawing commands.
+*/
+typedef std::vector< SInt16 >	My_VectorDB;
+
+/*!
+Stores information used to interpret vector graphics
 commands and ultimately render a picture.
 */
 struct My_VectorInterpreter
 {
+	inline void
+	shrinkVectorDB	(My_VectorDB::size_type);
+	
 	VectorInterpreter_ID	selfRef;			// the ID given to this structure at construction time
 	VectorInterpreter_Mode	commandSet;			// how data is interpreted
 	Boolean					pageClears;			// true if PAGE clears the screen, false if it opens a new window
@@ -211,7 +218,9 @@ struct My_VectorInterpreter
 	My_PointList	current;					/* current point in the list */
 	char	state;
 	char	savstate;
-	TEKSTOREP	VGstore;	/* the store where data for this window is kept */
+	// WARNING: shrinkVectorDB() is the recommended way to reduce the size of "commandList", to keep iterators in sync
+	My_VectorDB				commandList;		// list of commands
+	My_VectorDB::iterator	toCurrentCommand;	// used to track drawing
 	char	storing;		/* are we currently saving data from this window */
 	short	drawing;		/* redrawing or not? */
 };
@@ -605,8 +614,8 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 		
 		
 		VGwin[result] = dataPtr;
-		dataPtr->VGstore = newTEKstore();
 		dataPtr->selfRef = result;
+		dataPtr->toCurrentCommand = dataPtr->commandList.begin();
 		dataPtr->commandSet = inCommandSet;
 		dataPtr->pageClears = false;
 		{
@@ -659,7 +668,6 @@ VectorInterpreter_Dispose	(VectorInterpreter_ID*		inoutGraphicIDPtr)
 		
 		
 		(*ptr->deviceCallbacks->close)(ptr->RGnum);
-		freeTEKstore(ptr->VGstore);
 		delete ptr, ptr = nullptr;
 		VGwin.erase(*inoutGraphicIDPtr);
 	}
@@ -774,23 +782,23 @@ VectorInterpreter_PiecewiseRedraw	(VectorInterpreter_ID	inGraphicID,
 	UInt16 const				kPiecewiseRedrawCount = 50;		// TEMPORARY - historical...why the hell is it this value?
 	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
 	SInt16						result = -1;
-	SInt16						data = 0;
-	TEKSTOREP					storePtr = ptr->VGstore;
 	
 	
 	if (ptr->drawing)
 	{
 		// continuation of previous redraw
-		topTEKstore(ptr->VGstore);
+		ptr->toCurrentCommand = ptr->commandList.begin();
 		ptr->drawing = 0;
 	}
 	
-	for (SInt16 count = 0; ++count < kPiecewiseRedrawCount && (-1 != (data = nextTEKitem(storePtr))); )
+	for (SInt16 count = 0;
+			(++count < kPiecewiseRedrawCount) && (ptr->commandList.end() != ptr->toCurrentCommand);
+			++(ptr->toCurrentCommand))
 	{
-		VGdraw(inDestinationGraphicID, data);
+		VGdraw(inDestinationGraphicID, *(ptr->toCurrentCommand));
 	}
 	
-	if (data == -1)
+	if (ptr->commandList.end() == ptr->toCurrentCommand)
 	{
 		// redraw complete
 		ptr->drawing = 1;
@@ -816,10 +824,10 @@ VectorInterpreter_Redraw	(VectorInterpreter_ID	inGraphicID,
 	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
 	
 	
-	topTEKstore(ptr->VGstore);
-	for (SInt16 data = 0; -1 != (data = nextTEKitem(ptr->VGstore)); )
+	for (ptr->toCurrentCommand = ptr->commandList.begin();
+			ptr->commandList.end() != ptr->toCurrentCommand; ++(ptr->toCurrentCommand))
 	{
-		VGdraw(inDestinationGraphicID, data);
+		VGdraw(inDestinationGraphicID, *(ptr->toCurrentCommand));
 	}
 }// Redraw
 
@@ -869,7 +877,7 @@ VectorInterpreter_ProcessData	(VectorInterpreter_ID	inGraphicID,
 		{
 			if (ptr->storing)
 			{
-				addTEKstore(ptr->VGstore, *charPtr);
+				ptr->commandList.push_back(*charPtr);
 			}
 			VGdraw(inGraphicID, *charPtr);
 		}
@@ -942,6 +950,38 @@ VectorInterpreter_Zoom	(VectorInterpreter_ID	inGraphicID,
 
 #pragma mark Internal Methods
 namespace {
+
+/*!
+This is the recommended way to shrink the command vector,
+because it keeps the current command iterator in sync!!!
+
+(3.1)
+*/
+void
+My_VectorInterpreter::
+shrinkVectorDB	(My_VectorDB::size_type		inByHowMany)
+{
+	if (this->commandList.size() < inByHowMany)
+	{
+		// removing all remaining items
+		this->toCurrentCommand = this->commandList.begin();
+		this->commandList.clear();
+	}
+	else
+	{
+		// remove specified number of items; back up the
+		// iterator if it is at the end
+		for (My_VectorDB::size_type i = 0; i < inByHowMany; ++i)
+		{
+			if (this->commandList.end() == this->toCurrentCommand)
+			{
+				--(this->toCurrentCommand);
+			}
+			this->commandList.resize(this->commandList.size() - 1);
+		}
+	}
+}// shrinkVectorDB
+
 
 /*
  *	Draw a vector in vw's window from x0,y0 to x1,y1.
@@ -1024,7 +1064,7 @@ drawc		(short		vw,
 	if (c == 7)
 	{
 		(*VGwin[vw]->deviceCallbacks->bell) (VGwin[vw]->RGnum);
-		TEKunstore(VGwin[vw]->VGstore);
+		VGwin[vw]->shrinkVectorDB(1);
 		return(0);
 	}
 
@@ -1276,14 +1316,11 @@ storexy		(short		vw,
  *	Automatically called after receipt of Tek page command. */
 void	VGclrstor(short vw)
 {
-	if (false == isValidID(vw)) {
-		return;
-		}
-
-	freeTEKstore(VGwin[vw]->VGstore);
-	VGwin[vw]->VGstore = newTEKstore();
-		/* Don't have to check for errors --	*/
-		/* there was definitely enough memory.	*/
+	if (isValidID(vw))
+	{
+		VGwin[vw]->commandList.clear();
+		VGwin[vw]->toCurrentCommand = VGwin[vw]->commandList.begin();
+	}
 }
 
 
@@ -1636,8 +1673,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 				break;
 			case 26:
 				(*vp->deviceCallbacks->gin)(vp->RGnum);
-				TEKunstore(VGwin[vw]->VGstore);
-				TEKunstore(VGwin[vw]->VGstore);
+				VGwin[vw]->shrinkVectorDB(2);
 				break;
 			case 10:
 			case 13:
@@ -2065,7 +2101,7 @@ void VGdraw(short vw, char c)			/* the latest input char */
 						//UInt8		uc = c;
 						// TEMPORARY - FIX THIS
 						//Session_TerminalWrite(vp->theVS, &uc, 1);
-						TEKunstore(VGwin[vw]->VGstore);
+						VGwin[vw]->shrinkVectorDB(1);
 					}
 					return;
 				}
@@ -2151,17 +2187,19 @@ void VGdraw(short vw, char c)			/* the latest input char */
  */
 void	VGdumpstore(short vw, short (*func )(short))
 {
-	short		data;
-	TEKSTOREP	st;
-
-	if (false == isValidID(vw)) {
-		return;
+	if (isValidID(vw))
+	{
+		My_VectorInterpreterPtr		ptr = VGwin[vw];
+		
+		
+		for (ptr->toCurrentCommand = ptr->commandList.begin();
+				ptr->commandList.end() != ptr->toCurrentCommand;
+				++(ptr->toCurrentCommand))
+		{
+			(*func)(*(ptr->toCurrentCommand));
 		}
-
-	st = VGwin[vw]->VGstore;
-	topTEKstore(st);
-	while ((data = nextTEKitem(st)) != -1) (*func)(data);
-	(*func)(-1);
+		(*func)(-1);
+	}
 }
 
  
