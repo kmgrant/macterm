@@ -66,7 +66,6 @@
 #include "HelpSystem.h"
 #include "Preferences.h"
 #include "SessionEditorDialog.h"
-#include "tekdefs.h"
 #include "Terminal.h"
 #include "TextTranslation.h"
 #include "UIStrings.h"
