@@ -46,6 +46,7 @@
 // MacTelnet includes
 #include "SessionRef.typedef.h"
 #include "TerminalViewRef.typedef.h"
+#include "VectorInterpreterID.typedef.h"
 
 
 
@@ -145,7 +146,7 @@ OSStatus
 	Clipboard_CreateContentsAEDesc			(AEDesc*					outDescPtr);
 
 void
-	Clipboard_GraphicsToScrap				(short						inDrawingNumber);
+	Clipboard_GraphicsToScrap				(VectorInterpreter_ID		inGraphicID);
 
 Boolean
 	Clipboard_GetData						(Clipboard_DataConstraint	inConstraint,

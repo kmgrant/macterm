@@ -183,7 +183,8 @@ API; kept in one place so they are known to be unique.
 enum
 {
 	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
-	kConstantsRegistry_WindowPropertyTypeWindowInfoRef	= 'WInf'	//!< data: WindowInfo_Ref
+	kConstantsRegistry_WindowPropertyTypeWindowInfoRef	= 'WInf',	//!< data: WindowInfo_Ref
+	kConstantsRegistry_WindowPropertyTypeVectorCanvas	= 'VCnv'	//!< data: VectorCanvas_Ref
 };
 
 /*!

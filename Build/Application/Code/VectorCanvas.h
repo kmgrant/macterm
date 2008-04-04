@@ -122,8 +122,11 @@ void
 SInt16
 	VectorCanvas_MonitorMouse			(VectorCanvas_Ref		inRef);
 
-char const*
-	VectorCanvas_ReturnDeviceName		();
+VectorCanvas_Ref
+	VectorCanvas_ReturnFromWindow		(HIWindowRef			inWindow);
+
+VectorInterpreter_ID
+	VectorCanvas_ReturnInterpreterID	(VectorCanvas_Ref		inRef);
 
 SInt16
 	VectorCanvas_SetBounds				(Rect const*			inBoundsPtr);

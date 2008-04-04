@@ -203,6 +203,17 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 	ptr->wind = NIBWindow(AppResources_ReturnBundleForNIBs(),
 							CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
 	
+	// associate this canvas with the window so that it can be found by other things;
+	// NOTE that this is just the simplest thing for now, but a better implementation
+	// would be to use *control* properties and a custom HIView class, associating
+	// the canvas directly with the view that renders it
+	{
+		OSStatus	error = SetWindowProperty(ptr->wind, AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_WindowPropertyTypeVectorCanvas,
+												sizeof(ptr->selfRef), &ptr->selfRef);
+		assert_noerr(error);
+	}
+	
 	{
 		HIViewWrap		canvasView(idMyCanvas, ptr->wind);
 		
@@ -476,6 +487,46 @@ VectorCanvas_MonitorMouse	(VectorCanvas_Ref	inRef)
 	
 	return 0;
 }// MonitorMouse
+
+
+/*!
+Returns the canvas attached to the given window, or nullptr.
+
+Note that this is a potentially limiting API; a future user
+interface may benefit from showing more than one graphic in
+the same window.  At that point, it will be necessary to use
+properties of HIViews (and not windows) to attach canvases.
+
+(3.1)
+*/
+VectorCanvas_Ref
+VectorCanvas_ReturnFromWindow	(HIWindowRef	inWindow)
+{
+	VectorCanvas_Ref	result = nullptr;
+	OSStatus			error = GetWindowProperty(inWindow, AppResources_ReturnCreatorCode(),
+													kConstantsRegistry_WindowPropertyTypeVectorCanvas,
+													sizeof(result), nullptr/* actual size */, &result);
+	
+	
+	if (noErr != error) result = nullptr;
+	return result;
+}// ReturnFromWindow
+
+
+/*!
+Returns the intepreter whose commands affect this canvas.
+
+(3.1)
+*/
+VectorInterpreter_ID
+VectorCanvas_ReturnInterpreterID	(VectorCanvas_Ref	inRef)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	VectorInterpreter_ID		result = ptr->vg;
+	
+	
+	return result;
+}// ReturnInterpreterID
 
 
 /*!

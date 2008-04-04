@@ -692,12 +692,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				}
 				else
 				{
-					if (WIN_TEK == GetWindowKind(EventLoop_ReturnRealFrontWindow()))
+					VectorCanvas_Ref	canvasRef = VectorCanvas_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
+					
+					
+					if (nullptr != canvasRef)
 					{
-					#if 0
-						// TEMPORARY - broken!
-						Clipboard_GraphicsToScrap(j); // copy graphics
-					#endif
+						Clipboard_GraphicsToScrap(VectorCanvas_ReturnInterpreterID(canvasRef));
 					}
 					else
 					{

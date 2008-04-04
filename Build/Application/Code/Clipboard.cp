@@ -812,12 +812,12 @@ Copies the indicated drawing to the clipboard.
 (2.6)
 */
 void
-Clipboard_GraphicsToScrap	(short	inDrawingNumber)
+Clipboard_GraphicsToScrap	(VectorInterpreter_ID		inGraphicID)
 {
 	PicHandle	picture = nullptr;
 	
 	
-	picture = graphicToPICT(inDrawingNumber);
+	picture = graphicToPICT(inGraphicID);
 	pictureToScrap((Handle)picture);
 	KillPicture(picture);
 	

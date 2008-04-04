@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080404',
     '20080403',
     '20080401',
     '20080330',
@@ -127,6 +128,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080404': [
+		'Fixed bug (recently introduced) with Copy command in TEK windows.',
+	],
 	'20080403': [
 		'Fixed all known stability problems when using multiple TEK windows.',
 		'Since MacTelnet cannot currently input text directly to TEK windows, it no longer puts them in front when they open.',
