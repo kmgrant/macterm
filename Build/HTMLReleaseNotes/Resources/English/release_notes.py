@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080403',
     '20080401',
     '20080330',
     '20080329',
@@ -126,6 +127,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080403': [
+		'Fixed all known stability problems when using multiple TEK windows.',
+	],
 	'20080401': [
 		'Fixed dynamic resize of TEK graphics, so they once again scale as the window is resized.',
 		'Internal changes to improve vector graphics handling.',

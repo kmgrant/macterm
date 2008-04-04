@@ -65,7 +65,6 @@
 #include "UIStrings.h"
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
-#include "VectorToBitmap.h"
 
 
 

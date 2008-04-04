@@ -1,5 +1,5 @@
 /*!	\file VectorCanvas.h
-	\brief UI elements for vector graphics screens.
+	\brief Renders vector graphics, onscreen or offscreen.
 */
 /*###############################################################
 
@@ -44,6 +44,20 @@
 
 
 
+#pragma mark Constants
+
+enum VectorCanvas_Target
+{
+	kVectorCanvas_TargetScreenPixels		= 0,	//!< canvas will open a new TEK window
+	kVectorCanvas_TargetQuickDrawPicture	= 1		//!< canvas will target a QuickDraw picture
+};
+
+#pragma mark Types
+
+typedef struct VectorCanvas_OpaqueStruct*	VectorCanvas_Ref;
+
+
+
 #pragma mark Public Methods
 
 //!\name Initialization
@@ -57,11 +71,11 @@ void
 //!\name Creating and Destroying Vector Graphics Contexts
 //@{
 
-SInt16
-	VectorCanvas_New					();
+VectorCanvas_Ref
+	VectorCanvas_New					(VectorCanvas_Target	inTarget);
 
-SInt16
-	VectorCanvas_Dispose				(SInt16			inCanvasID);
+void
+	VectorCanvas_Dispose				(VectorCanvas_Ref*		inoutPtr);
 
 //@}
 
@@ -69,10 +83,10 @@ SInt16
 //@{
 
 void
-	VectorCanvas_AudioEvent				(SInt16			inCanvasID);
+	VectorCanvas_AudioEvent				(VectorCanvas_Ref		inRef);
 
 SInt16
-	VectorCanvas_ClearScreen			(SInt16			inCanvasID);
+	VectorCanvas_ClearScreen			(VectorCanvas_Ref		inRef);
 
 void
 	VectorCanvas_CursorHide				();
@@ -84,70 +98,69 @@ void
 	VectorCanvas_CursorShow				();
 
 void
-	VectorCanvas_DataLine				(SInt16			inCanvasID,
-										 SInt16			inData,
-										 SInt16			inCount);
+	VectorCanvas_DataLine				(VectorCanvas_Ref		inRef,
+										 SInt16					inData,
+										 SInt16					inCount);
 
 SInt16
-	VectorCanvas_DrawDot				(SInt16			inCanvasID,
-										 SInt16			inX,
-										 SInt16			inY);
+	VectorCanvas_DrawDot				(VectorCanvas_Ref		inRef,
+										 SInt16					inX,
+										 SInt16					inY);
 
 SInt16
-	VectorCanvas_DrawLine				(SInt16			inCanvasID,
-										 SInt16			inStartX,
-										 SInt16			inStartY,
-										 SInt16			inEndX,
-										 SInt16			inEndY);
+	VectorCanvas_DrawLine				(VectorCanvas_Ref		inRef,
+										 SInt16					inStartX,
+										 SInt16					inStartY,
+										 SInt16					inEndX,
+										 SInt16					inEndY);
 
 void
-	VectorCanvas_FinishPage				(SInt16			inCanvasID);
+	VectorCanvas_FinishPage				(VectorCanvas_Ref		inRef);
 
 SInt16
-	VectorCanvas_MonitorMouse			(SInt16			inCanvasID);
+	VectorCanvas_MonitorMouse			(VectorCanvas_Ref		inRef);
 
 char const*
 	VectorCanvas_ReturnDeviceName		();
 
-void
-	VectorCanvas_SetCallbackData		(SInt16			inCanvasID,
-										 SInt16			inVectorInterpreterRef,
-										 SInt16			inData2);
+SInt16
+	VectorCanvas_SetBounds				(Rect const*			inBoundsPtr);
 
 void
-	VectorCanvas_SetCharacterMode		(SInt16			inCanvasID,
-										 SInt16			inRotation,
-										 SInt16			inSize);
+	VectorCanvas_SetCallbackData		(VectorCanvas_Ref		inRef,
+										 SInt16					inVectorInterpreterRef,
+										 SInt16					inData2);
+
+void
+	VectorCanvas_SetCharacterMode		(VectorCanvas_Ref		inRef,
+										 SInt16					inRotation,
+										 SInt16					inSize);
 
 void
 	VectorCanvas_SetGraphicsMode		();
 
 SInt16
-	VectorCanvas_SetPenColor			(SInt16			inCanvasID,
-										 SInt16			inColor);
+	VectorCanvas_SetPenColor			(VectorCanvas_Ref		inRef,
+										 SInt16					inColor);
 
 void
 	VectorCanvas_SetTextMode			();
 
 void
-	VectorCanvas_Uncover				(SInt16			inCanvasID);
+	VectorCanvas_Uncover				(VectorCanvas_Ref		inRef);
 
 //@}
 
 //!\name Miscellaneous
 //@{
 
-Boolean
-	VectorCanvas_GetFromWindow			(HIWindowRef	inWindow,
-										 SInt16*		outDeviceIDPtr);
+SInt16
+	VectorCanvas_SetListeningSession	(VectorCanvas_Ref		inRef,
+										 SessionRef				inSession);
 
 SInt16
-	VectorCanvas_SetListeningSession	(SInt16			inCanvasID,
-										 SessionRef		inSession);
-
-SInt16
-	VectorCanvas_SetTitle				(SInt16			inCanvasID,
-										 CFStringRef	inTitle);
+	VectorCanvas_SetTitle				(VectorCanvas_Ref		inRef,
+										 CFStringRef			inTitle);
 
 //@}
 

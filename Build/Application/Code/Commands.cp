@@ -692,9 +692,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				}
 				else
 				{
-					if (VectorCanvas_GetFromWindow(EventLoop_ReturnRealFrontWindow(), &j))
+					if (WIN_TEK == GetWindowKind(EventLoop_ReturnRealFrontWindow()))
 					{
+					#if 0
+						// TEMPORARY - broken!
 						Clipboard_GraphicsToScrap(j); // copy graphics
+					#endif
 					}
 					else
 					{

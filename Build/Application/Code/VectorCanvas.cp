@@ -51,6 +51,7 @@ Routines for Macintosh Window output.
 #include <ColorUtilities.h>
 #include <CommonEventHandlers.h>
 #include <HIViewWrap.h>
+#include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 #include <RegionUtilities.h>
@@ -83,8 +84,6 @@ the NIB "TEKWindow.nib".
 */
 HIViewID const	idMyCanvas		= { 'Cnvs', 0/* ID */ };
 
-UInt16 const	kMy_MaximumGraphics = 20;	//!< limit is for historical reasons; TEMPORARY
-
 UInt16 const	kMy_MaximumX = 4095;
 UInt16 const	kMy_MaximumY = 3139;	// TEMPORARY - figure out where the hell this value comes from
 
@@ -99,6 +98,8 @@ Internal representation of a VectorCanvas_Ref.
 struct My_VectorCanvas
 {
 	OSType					id;
+	VectorCanvas_Ref		selfRef;
+	VectorCanvas_Target		target;
 	SessionRef				vs;
 	HIWindowRef				wind;
 	EventHandlerUPP			closeUPP;
@@ -117,36 +118,46 @@ struct My_VectorCanvas
 typedef My_VectorCanvas*		My_VectorCanvasPtr;
 typedef My_VectorCanvas const*	My_VectorCanvasConstPtr;
 
+typedef MemoryBlockPtrLocker< VectorCanvas_Ref, My_VectorCanvas >	My_VectorCanvasPtrLocker;
+typedef LockAcquireRelease< VectorCanvas_Ref, My_VectorCanvas >		My_VectorCanvasAutoLocker;
+
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-SInt16				findCanvasWithWindow		(HIWindowRef);
-void				handleMouseDown				(HIWindowRef, Point);
+void				handleMouseDown				(My_VectorCanvasPtr, Point);
 Boolean				inSplash					(Point, Point);
 pascal OSStatus		receiveCanvasDraw			(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveWindowClosing		(EventHandlerCallRef, EventRef, void*);
-SInt16				setPortCanvasPort			(SInt16);
+SInt16				setPortCanvasPort			(My_VectorCanvasPtr);
 
 } // anonymous namespace
 
 #pragma mark Variables
 namespace {
 
-long												RGMlastclick = 0L;
-short												RGMcolor[] =
-													{
-														30,			// black
-														33,			// white
-														205,		// red
-														341,		// green
-														409,		// blue
-														273,		// cyan
-														137,		// magenta
-														69			// yellow
-													};
-My_VectorCanvasPtr									RGMwind[kMy_MaximumGraphics];
+My_VectorCanvasPtrLocker&	gVectorCanvasPtrLocks ()	{ static My_VectorCanvasPtrLocker x; return x; }
+
+long						RGMlastclick = 0L;
+short						RGMcolor[] =
+							{
+								30,			// black
+								33,			// white
+								205,		// red
+								341,		// green
+								409,		// blue
+								273,		// cyan
+								137,		// magenta
+								69			// yellow
+							};
+
+// the following variables are used in bitmap mode
+Boolean						gRGMPbusy = false;	// is device already in use?
+SInt16						gRGMPwidth = 0;
+SInt16						gRGMPheight = 0;
+SInt16						gRGMPxoffset = 0;
+SInt16						gRGMPyoffset = 0;
 
 } // anonymous namespace
 
@@ -161,10 +172,12 @@ Call this routine before anything else in this module.
 void
 VectorCanvas_Init ()
 {
-	register SInt16		i = 0;
-	
-	
-	for (i = 0; i < kMy_MaximumGraphics; ++i) RGMwind[i] = nullptr;
+	// set up bitmap mode
+	gRGMPbusy = false;
+	//gRGMPwidth = kVectorInterpreter_MaxX;
+	//gRGMPheight = kVectorInterpreter_MaxY;
+	gRGMPxoffset = 0;
+	gRGMPyoffset = 0;
 }// Init
 
 
@@ -174,74 +187,73 @@ Returns a nonnegative number (the canvas ID) if successful.
 
 (3.0)
 */
-SInt16
-VectorCanvas_New ()
+VectorCanvas_Ref
+VectorCanvas_New	(VectorCanvas_Target	inTarget)
 {
-	SInt16		result = -1;
-	SInt16		i = 0;
+	My_VectorCanvasPtr		ptr = new My_VectorCanvas;
+	VectorCanvas_Ref		result = REINTERPRET_CAST(ptr, VectorCanvas_Ref);
 	
 	
-	while ((i < kMy_MaximumGraphics) && (nullptr != RGMwind[i]))
+	ptr->id = 'RGMW';
+	ptr->selfRef = result;
+	ptr->target = inTarget;
+	
+	// load the NIB containing this dialog (automatically finds the right localization)
+	ptr->wind = NIBWindow(AppResources_ReturnBundleForNIBs(),
+							CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
+	
 	{
-		++i;
+		HIViewWrap		canvasView(idMyCanvas, ptr->wind);
+		
+		
+		ptr->canvas = canvasView;
+		ptr->canvasDrawHandler.install(GetControlEventTarget(canvasView), receiveCanvasDraw,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+										result/* context */);
+		assert(ptr->canvasDrawHandler.isInstalled());
 	}
-	if (i < kMy_MaximumGraphics)
+	
+	// install a close handler so TEK windows are detached properly
 	{
-		RGMwind[i] = new My_VectorCanvas;
-		if (nullptr != RGMwind[i])
-		{
-			RGMwind[i]->id = 'RGMW';
-			
-			// load the NIB containing this dialog (automatically finds the right localization)
-			RGMwind[i]->wind = NIBWindow(AppResources_ReturnBundleForNIBs(),
-											CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
-			
-			{
-				HIViewWrap		canvasView(idMyCanvas, RGMwind[i]->wind);
-				
-				
-				RGMwind[i]->canvas = canvasView;
-				RGMwind[i]->canvasDrawHandler.install(GetControlEventTarget(canvasView), receiveCanvasDraw,
-														CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
-														RGMwind[i]/* context */);
-				assert(RGMwind[i]->canvasDrawHandler.isInstalled());
-			}
-			
-			// install a close handler so TEK windows are detached properly
-			{
-				EventTypeSpec const		whenWindowClosing[] =
-										{
-											{ kEventClassWindow, kEventWindowClose }
-										};
-				OSStatus				error = noErr;
-				
-				
-				RGMwind[i]->closeUPP = NewEventHandlerUPP(receiveWindowClosing);
-				error = InstallWindowEventHandler(RGMwind[i]->wind, RGMwind[i]->closeUPP,
-													GetEventTypeCount(whenWindowClosing), whenWindowClosing,
-													nullptr/* user data */,
-													&RGMwind[i]->closeHandler/* event handler reference */);
-				assert_noerr(error);
-			}
-			
-			SetWindowKind(RGMwind[i]->wind, WIN_TEK);
-			ShowWindow(RGMwind[i]->wind);
-			EventLoop_SelectBehindDialogWindows(RGMwind[i]->wind);
-			
-			RGMwind[i]->vg = -1;
-			RGMwind[i]->vs = nullptr;
-			RGMwind[i]->xorigin = 0;
-			RGMwind[i]->yorigin = 0;
-			RGMwind[i]->xscale = kMy_MaximumX;
-			RGMwind[i]->yscale = kMy_MaximumY;
-			RGMwind[i]->width = 400;
-			RGMwind[i]->height = 300;
-			RGMwind[i]->ingin = 0;
-			
-			RegionUtilities_SetWindowUpToDate(RGMwind[i]->wind);
-			
-			result = i;
-		}
+		EventTypeSpec const		whenWindowClosing[] =
+								{
+									{ kEventClassWindow, kEventWindowClose }
+								};
+		OSStatus				error = noErr;
+		
+		
+		ptr->closeUPP = NewEventHandlerUPP(receiveWindowClosing);
+		error = InstallWindowEventHandler(ptr->wind, ptr->closeUPP,
+											GetEventTypeCount(whenWindowClosing), whenWindowClosing,
+											ptr->selfRef/* user data */,
+											&ptr->closeHandler/* event handler reference */);
+		assert_noerr(error);
+	}
+	
+	SetWindowKind(ptr->wind, WIN_TEK);
+	ShowWindow(ptr->wind);
+	EventLoop_SelectBehindDialogWindows(ptr->wind);
+	
+	ptr->vg = -1;
+	ptr->vs = nullptr;
+	ptr->xorigin = 0;
+	ptr->yorigin = 0;
+	ptr->xscale = kMy_MaximumX;
+	ptr->yscale = kMy_MaximumY;
+	ptr->width = 400;
+	ptr->height = 300;
+	ptr->ingin = 0;
+	
+	RegionUtilities_SetWindowUpToDate(ptr->wind);
+	
+	// set up bitmap mode
+	if (kVectorCanvas_TargetQuickDrawPicture == ptr->target)
+	{
+		gRGMPbusy = true;
+		//gRGMPwidth = kVectorInterpreter_MaxX;
+		//gRGMPheight = kVectorInterpreter_MaxY;
+		gRGMPxoffset = 0;
+		gRGMPyoffset = 0;
 	}
 	
 	return result;
@@ -254,25 +266,29 @@ invalid after this routine returns.  Returns 0 if successful.
 
 (3.0)
 */
-SInt16
-VectorCanvas_Dispose	(SInt16		inCanvasID)
+void
+VectorCanvas_Dispose	(VectorCanvas_Ref*		inoutRefPtr)
 {
-	SInt16		result = 0;
-	
-	
-	if (setPortCanvasPort(inCanvasID)) result = -1;
-	else
+	// clean up structure
 	{
-		if (nullptr != RGMwind[inCanvasID]->vs)
+		My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), *inoutRefPtr);
+		
+		
+		setPortCanvasPort(ptr);
+		if (nullptr != ptr->vs)
 		{
-			Session_TEKDetachTargetGraphic(RGMwind[inCanvasID]->vs);
+			Session_TEKDetachTargetGraphic(ptr->vs);
 		}
-		RemoveEventHandler(RGMwind[inCanvasID]->closeHandler), RGMwind[inCanvasID]->closeHandler = nullptr;
-		DisposeEventHandlerUPP(RGMwind[inCanvasID]->closeUPP), RGMwind[inCanvasID]->closeUPP = nullptr;
-		DisposeWindow(RGMwind[inCanvasID]->wind);
-		delete RGMwind[inCanvasID], RGMwind[inCanvasID] = nullptr;
+		RemoveEventHandler(ptr->closeHandler), ptr->closeHandler = nullptr;
+		DisposeEventHandlerUPP(ptr->closeUPP), ptr->closeUPP = nullptr;
+		DisposeWindow(ptr->wind);
+		
+		if (kVectorCanvas_TargetQuickDrawPicture == ptr->target)
+		{
+			gRGMPbusy = false;
+		}
 	}
-	return result;
+	delete *(REINTERPRET_CAST(inoutRefPtr, My_VectorCanvasPtr*)), *inoutRefPtr = nullptr;
 }// Dispose
 
 
@@ -282,7 +298,7 @@ UNIMPLEMENTED.
 (3.0)
 */
 void
-VectorCanvas_AudioEvent		(SInt16		UNUSED_ARGUMENT(inCanvasID))
+VectorCanvas_AudioEvent		(VectorCanvas_Ref		UNUSED_ARGUMENT(inRef))
 {
 }// AudioEvent
 
@@ -294,18 +310,19 @@ Returns 0 if successful.
 (3.0)
 */
 SInt16
-VectorCanvas_ClearScreen	(SInt16		inCanvasID)
+VectorCanvas_ClearScreen	(VectorCanvas_Ref	inRef)
 {
-	SInt16		result = 0;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	SInt16						result = 0;
 	
 	
-	if (setPortCanvasPort(inCanvasID)) result = -1;
+	if (setPortCanvasPort(ptr)) result = -1;
 	else
 	{
 		Rect	bounds;
 		
 		
-		GetPortBounds(GetWindowPort(RGMwind[inCanvasID]->wind), &bounds);
+		GetPortBounds(GetWindowPort(ptr->wind), &bounds);
 		PaintRect(&bounds);
 	}
 	return result;
@@ -351,9 +368,9 @@ UNIMPLEMENTED.
 (3.0)
 */
 void
-VectorCanvas_DataLine	(SInt16		UNUSED_ARGUMENT(inCanvasID),
-						 SInt16		UNUSED_ARGUMENT(inData),
-						 SInt16		UNUSED_ARGUMENT(inCount))
+VectorCanvas_DataLine	(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef),
+						 SInt16				UNUSED_ARGUMENT(inData),
+						 SInt16				UNUSED_ARGUMENT(inCount))
 {
 }// DataLine
 
@@ -362,23 +379,24 @@ VectorCanvas_DataLine	(SInt16		UNUSED_ARGUMENT(inCanvasID),
 Renders a single point in canvas coordinates.  Returns 0 if
 successful.
 
-(3.0)
+(3.1)
 */
 SInt16
-VectorCanvas_DrawDot	(SInt16		inCanvasID,
-						 SInt16		inX,
-						 SInt16		inY)
+VectorCanvas_DrawDot	(VectorCanvas_Ref	inRef,
+						 SInt16				inX,
+						 SInt16				inY)
 {
-	SInt16		result = 0;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	if (setPortCanvasPort(inCanvasID)) result = -1;
-	else
+	if (kVectorCanvas_TargetScreenPixels == ptr->target)
 	{
-		MoveTo(inX, inY);
-		LineTo(inX, inY);
+		setPortCanvasPort(ptr);
 	}
-	return result;
+	MoveTo(inX, inY);
+	LineTo(inX, inY);
+	
+	return 0;
 }// DrawDot
 
 
@@ -386,33 +404,41 @@ VectorCanvas_DrawDot	(SInt16		inCanvasID,
 Renders a straight line between two points expressed in
 canvas coordinates.  Returns 0 if successful.
 
-(3.0)
+(3.1)
 */
 SInt16
-VectorCanvas_DrawLine	(SInt16		inCanvasID,
-						 SInt16		inStartX,
-						 SInt16		inStartY,
-						 SInt16		inEndX,
-						 SInt16		inEndY)
+VectorCanvas_DrawLine	(VectorCanvas_Ref	inRef,
+						 SInt16				inStartX,
+						 SInt16				inStartY,
+						 SInt16				inEndX,
+						 SInt16				inEndY)
 {
-	SInt16		result = 0;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	if (setPortCanvasPort(inCanvasID)) result = -1;
-	else
+	if (kVectorCanvas_TargetScreenPixels == ptr->target)
 	{
-		SInt32		xl0 = (STATIC_CAST(inStartX, SInt32) * RGMwind[inCanvasID]->width) / kVectorInterpreter_MaxX;
-		SInt32		yl0 = STATIC_CAST(RGMwind[inCanvasID]->height, SInt32) -
-							((STATIC_CAST(inStartY, SInt32) * RGMwind[inCanvasID]->height) / kVectorInterpreter_MaxY);
-		SInt32		xl1 = (STATIC_CAST(inEndX, SInt32) * RGMwind[inCanvasID]->width) / kVectorInterpreter_MaxX;
-		SInt32		yl1 = STATIC_CAST(RGMwind[inCanvasID]->height, SInt32) -
-							((STATIC_CAST(inEndY, SInt32) * RGMwind[inCanvasID]->height) / kVectorInterpreter_MaxY);
+		SInt32		xl0 = (STATIC_CAST(inStartX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
+		SInt32		yl0 = STATIC_CAST(ptr->height, SInt32) -
+							((STATIC_CAST(inStartY, SInt32) * ptr->height) / kVectorInterpreter_MaxY);
+		SInt32		xl1 = (STATIC_CAST(inEndX, SInt32) * ptr->width) / kVectorInterpreter_MaxX;
+		SInt32		yl1 = STATIC_CAST(ptr->height, SInt32) -
+							((STATIC_CAST(inEndY, SInt32) * ptr->height) / kVectorInterpreter_MaxY);
 		
 		
+		setPortCanvasPort(ptr);
 		MoveTo(STATIC_CAST(xl0, short), STATIC_CAST(yl0, short));
 		LineTo(STATIC_CAST(xl1, short), STATIC_CAST(yl1, short));
 	}
-	return result;
+	else
+	{
+		MoveTo(gRGMPxoffset + (SInt16) (STATIC_CAST(inStartX, SInt32) * gRGMPwidth / kVectorInterpreter_MaxX),
+				gRGMPyoffset + gRGMPheight - (SInt16) (STATIC_CAST(inStartY, SInt32) * gRGMPheight / kVectorInterpreter_MaxY));
+		LineTo(gRGMPxoffset + (SInt16) (STATIC_CAST(inEndX, SInt32) * gRGMPwidth/kVectorInterpreter_MaxX),
+				gRGMPyoffset + gRGMPheight - (SInt16) (STATIC_CAST(inEndY, SInt32) * gRGMPheight / kVectorInterpreter_MaxY));
+	}
+	
+	return 0;
 }// DrawLine
 
 
@@ -422,30 +448,9 @@ UNIMPLEMENTED.
 (3.0)
 */
 void
-VectorCanvas_FinishPage		(SInt16		UNUSED_ARGUMENT(inCanvasID))
+VectorCanvas_FinishPage		(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef))
 {
 }// FinishPage
-
-
-/*!
-Determines if a window represents a vector graphic, and if
-so, which one.  Returns true and a nonnegative device ID
-only if successful.
-
-(3.0)
-*/
-Boolean
-VectorCanvas_GetFromWindow	(HIWindowRef	inWindow,
-							 SInt16*		outDeviceIDPtr)
-{
-	Boolean		result = false;
-	
-	
-	*outDeviceIDPtr = findCanvasWithWindow(inWindow);
-	result = (*outDeviceIDPtr > -1);
-	
-	return result;
-}// GetFromWindow
 
 
 /*!
@@ -457,30 +462,42 @@ characters indicating the event type.  Returns 0 if successful.
 (3.0)
 */
 SInt16
-VectorCanvas_MonitorMouse	(SInt16		inCanvasID)
+VectorCanvas_MonitorMouse	(VectorCanvas_Ref	inRef)
 {
-	SInt16		result = 0;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	if (setPortCanvasPort(inCanvasID)) result = -1;
-	else
-	{
-		RGMwind[inCanvasID]->ingin = 1;
-	}
-	return result;
+	setPortCanvasPort(ptr);
+	ptr->ingin = 1;
+	
+	return 0;
 }// MonitorMouse
 
 
 /*!
-Returns a name for this type of canvas.
+Sets the boundaries for the given QuickDraw picture.  The
+top-left corner can be set to non-zero values to offset
+graphics drawings.
 
-(3.0)
+TEMPORARY.  This routine was moved from an older bitmap
+rendering module, and currently uses globals.  This will
+be changed as the renderer moves to Core Graphics.
+
+(2.6)
 */
-char const*
-VectorCanvas_ReturnDeviceName ()
+SInt16
+VectorCanvas_SetBounds		(Rect const*	inBoundsPtr)
 {
-	return "Macintosh Windows";
-}// ReturnDeviceName
+	SInt16		result = 0;
+	
+	
+	gRGMPheight= inBoundsPtr->bottom - inBoundsPtr->top;
+	gRGMPwidth = inBoundsPtr->right - inBoundsPtr->left;
+	gRGMPyoffset = inBoundsPtr->top;
+	gRGMPxoffset = inBoundsPtr->left;
+	
+	return result;
+}// SetBounds
 
 
 /*!
@@ -489,11 +506,14 @@ Applies miscellaneous settings to a canvas.
 (3.0)
 */
 void
-VectorCanvas_SetCallbackData	(SInt16		inCanvasID,
-								 SInt16		inVectorInterpreterRef,
-								 SInt16		UNUSED_ARGUMENT(inData2))
+VectorCanvas_SetCallbackData	(VectorCanvas_Ref	inRef,
+								 SInt16				inVectorInterpreterRef,
+								 SInt16				UNUSED_ARGUMENT(inData2))
 {
-	RGMwind[inCanvasID]->vg = inVectorInterpreterRef;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	
+	
+	ptr->vg = inVectorInterpreterRef;
 }// SetCallbackData
 
 
@@ -505,9 +525,9 @@ UNIMPLEMENTED.
 (3.0)
 */
 void
-VectorCanvas_SetCharacterMode	(SInt16		UNUSED_ARGUMENT(inCanvasID),
-								 SInt16		UNUSED_ARGUMENT(inRotation),
-								 SInt16		UNUSED_ARGUMENT(inSize))
+VectorCanvas_SetCharacterMode	(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef),
+								 SInt16				UNUSED_ARGUMENT(inRotation),
+								 SInt16				UNUSED_ARGUMENT(inSize))
 {
 }// SetCharacterMode
 
@@ -530,17 +550,14 @@ the mouse location.  Returns 0 if successful.
 (3.1)
 */
 SInt16
-VectorCanvas_SetListeningSession	(SInt16			inCanvasID,
-									 SessionRef		inSession)
+VectorCanvas_SetListeningSession	(VectorCanvas_Ref	inRef,
+									 SessionRef			inSession)
 {
-	Boolean		result = -1;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	if ((inCanvasID >= 0) && (inCanvasID < kMy_MaximumGraphics))
-	{
-		RGMwind[inCanvasID]->vs = inSession;
-	}
-	return result;
+	ptr->vs = inSession;
+	return 0;
 }// SetListeningSession
 
 
@@ -551,18 +568,19 @@ a set palette.  Returns 0 if successful.
 (3.0)
 */
 SInt16
-VectorCanvas_SetPenColor	(SInt16		inCanvasID,
-							 SInt16		inColor)
+VectorCanvas_SetPenColor	(VectorCanvas_Ref	inRef,
+							 SInt16				inColor)
 {
-	SInt16		result = 0;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	if (setPortCanvasPort(inCanvasID)) result = -1;
-	else
+	if (kVectorCanvas_TargetScreenPixels == ptr->target)
 	{
-		ForeColor(STATIC_CAST(RGMcolor[inColor], long));
+		setPortCanvasPort(ptr);
 	}
-	return result;
+	ForeColor(STATIC_CAST(RGMcolor[inColor], SInt32));
+	
+	return 0;
 }// SetPenColor
 
 
@@ -583,20 +601,15 @@ Sets the name of the graphics window.  Returns 0 if successful.
 (3.1)
 */
 SInt16
-VectorCanvas_SetTitle	(SInt16			inCanvasID,
-						 CFStringRef	inTitle)
+VectorCanvas_SetTitle	(VectorCanvas_Ref	inRef,
+						 CFStringRef		inTitle)
 {
-	Boolean		result = -1;
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	if (inCanvasID >= 0)
-	{
-		if (noErr == SetWindowTitleWithCFString(RGMwind[inCanvasID]->wind, inTitle))
-		{
-			result = 0; // success!
-		}
-	}
-	return result;
+	(OSStatus)SetWindowTitleWithCFString(ptr->wind, inTitle);
+	
+	return 0;
 }// SetTitle
 
 
@@ -606,41 +619,13 @@ UNIMPLEMENTED.
 (3.0)
 */
 void
-VectorCanvas_Uncover	(SInt16		UNUSED_ARGUMENT(inCanvasID))
+VectorCanvas_Uncover	(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef))
 {
 }// Uncover
 
 
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Returns the canvas ID whose Mac OS window matches the given
-window, or a negative value on error.
-
-(3.0)
-*/
-SInt16
-findCanvasWithWindow	(HIWindowRef	inWindow)
-{
-	SInt16		result = 0;
-	
-	
-	while (result < kMy_MaximumGraphics)
-	{
-		if (nullptr != RGMwind[result])
-		{
-			if (inWindow == RGMwind[result]->wind) break;
-		}
-		++result;
-	}
-	if (result >= kMy_MaximumGraphics)
-	{
-		result = -1;
-	}
-	return result;
-}// findCanvasWithWindow
-
 
 /*!
 Responds to a click/drag in a TEK window.  The current QuickDraw
@@ -652,13 +637,10 @@ new HIView-based canvas that is planned.
 (2.6)
 */
 void
-handleMouseDown		(HIWindowRef	inWindow,
-					 Point			inViewLocalMouse)
+handleMouseDown		(My_VectorCanvasPtr		inPtr,
+					 Point					inViewLocalMouse)
 {
-	My_VectorCanvasPtr		ptr = RGMwind[findCanvasWithWindow(inWindow)];
-	
-	
-	if (ptr->ingin)
+	if (inPtr->ingin)
 	{
 		// report the location of the cursor
 		{
@@ -667,20 +649,20 @@ handleMouseDown		(HIWindowRef	inWindow,
 			char		cursorReport[6];
 			
 			
-			lx = ((SInt32)ptr->xscale * (SInt32)inViewLocalMouse.h) / (SInt32)ptr->width;
-			ly = (SInt32)ptr->yscale -
-					((SInt32)ptr->yscale * (SInt32)inViewLocalMouse.v) / (SInt32)ptr->height;
+			lx = ((SInt32)inPtr->xscale * (SInt32)inViewLocalMouse.h) / (SInt32)inPtr->width;
+			ly = (SInt32)inPtr->yscale -
+					((SInt32)inPtr->yscale * (SInt32)inViewLocalMouse.v) / (SInt32)inPtr->height;
 			
 			// the report is exactly 5 characters long
-			if (0 == VectorInterpreter_FillInPositionReport(ptr->vg, STATIC_CAST(lx, UInt16), STATIC_CAST(ly, UInt16),
+			if (0 == VectorInterpreter_FillInPositionReport(inPtr->vg, STATIC_CAST(lx, UInt16), STATIC_CAST(ly, UInt16),
 															' ', cursorReport))
 			{
-				Session_SendData(ptr->vs, cursorReport, 5);
-				Session_SendData(ptr->vs, " \r\n", 3);
+				Session_SendData(inPtr->vs, cursorReport, 5);
+				Session_SendData(inPtr->vs, " \r\n", 3);
 			}
 		}
 		
-		//ptr->ingin = 0;
+		//inPtr->ingin = 0;
 		RGMlastclick = TickCount();
 	}
 	else
@@ -696,7 +678,7 @@ handleMouseDown		(HIWindowRef	inWindow,
 		MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
 		
 		
-		SetPortWindowPort(inWindow);
+		SetPortWindowPort(inPtr->wind);
 		
 		last = inViewLocalMouse;
 		current = inViewLocalMouse;
@@ -759,13 +741,13 @@ handleMouseDown		(HIWindowRef	inWindow,
 		{
 			if (RGMlastclick && ((RGMlastclick + GetDblTime()) > TickCount()))
 			{
-				ptr->xscale = kMy_MaximumX;
-				ptr->yscale = kMy_MaximumY;
-				ptr->xorigin = 0;
-				ptr->yorigin = 0;
+				inPtr->xscale = kMy_MaximumX;
+				inPtr->yscale = kMy_MaximumY;
+				inPtr->xorigin = 0;
+				inPtr->yorigin = 0;
 				
-				VectorInterpreter_Zoom(ptr->vg, 0, 0, kMy_MaximumX - 1, kMy_MaximumY - 1);
-				VectorInterpreter_PageCommand(ptr->vg);
+				VectorInterpreter_Zoom(inPtr->vg, 0, 0, kMy_MaximumX - 1, kMy_MaximumY - 1);
+				VectorInterpreter_PageCommand(inPtr->vg);
 				RGMlastclick = 0L;
 			}
 			else
@@ -775,21 +757,21 @@ handleMouseDown		(HIWindowRef	inWindow,
 		}
 		else
 		{
-			x0 = (short)((long)rect.left * ptr->xscale / ptr->width);
-			y0 = (short)(ptr->yscale - (long)rect.top * ptr->yscale / ptr->height);
-			x1 = (short)((long)rect.right * ptr->xscale / ptr->width);
-			y1 = (short)(ptr->yscale - (long)rect.bottom * ptr->yscale / ptr->height);
+			x0 = (short)((long)rect.left * inPtr->xscale / inPtr->width);
+			y0 = (short)(inPtr->yscale - (long)rect.top * inPtr->yscale / inPtr->height);
+			x1 = (short)((long)rect.right * inPtr->xscale / inPtr->width);
+			y1 = (short)(inPtr->yscale - (long)rect.bottom * inPtr->yscale / inPtr->height);
 			x1 = (x1 < (x0 + 2)) ? x0 + 4 : x1;
 			y0 = (y0 < (y1 + 2)) ? y1 + 4 : y0;
 			
-			VectorInterpreter_Zoom(ptr->vg, x0 + ptr->xorigin, y1 + ptr->yorigin,
-									x1 + ptr->xorigin, y0 + ptr->yorigin);
-			VectorInterpreter_PageCommand(ptr->vg);
+			VectorInterpreter_Zoom(inPtr->vg, x0 + inPtr->xorigin, y1 + inPtr->yorigin,
+									x1 + inPtr->xorigin, y0 + inPtr->yorigin);
+			VectorInterpreter_PageCommand(inPtr->vg);
 			
-			ptr->xscale = x1 - x0;
-			ptr->yscale = y0 - y1;
-			ptr->xorigin = x0 + ptr->xorigin;
-			ptr->yorigin = y1 + ptr->yorigin;
+			inPtr->xscale = x1 - x0;
+			inPtr->yscale = y0 - y1;
+			inPtr->xorigin = x0 + inPtr->xorigin;
+			inPtr->yorigin = y1 + inPtr->yorigin;
 			
 			RGMlastclick = 0L;
 		}
@@ -966,11 +948,13 @@ ensure the terminal is re-attached to the data stream!
 pascal OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inContext))
+						 void*					inContext)
 {
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
+	OSStatus					result = eventNotHandledErr;
+	VectorCanvas_Ref			ref = REINTERPRET_CAST(inContext, VectorCanvas_Ref);
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), ref);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassWindow);
@@ -983,19 +967,10 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
 		
 		// if the window was found, proceed
-		if (result == noErr)
+		if (noErr == result)
 		{
-			SInt16		myRGMnum = findCanvasWithWindow(window);
-			
-			
-			if (myRGMnum > -1)
-			{
-				SInt16		nonZeroOnError = VectorCanvas_Dispose(myRGMnum);
-				
-				
-				if (nonZeroOnError != 0) Sound_StandardAlert();
-				result = noErr;
-			}
+			VectorCanvas_Dispose(&ref);
+			result = noErr;
 		}
 	}
 	
@@ -1010,20 +985,10 @@ Returns 0 if successful.
 (3.0)
 */
 SInt16
-setPortCanvasPort	(SInt16		inCanvasID)
+setPortCanvasPort	(My_VectorCanvasPtr		inPtr)
 {
-	SInt16		result = -1;
-	
-	
-	if ((inCanvasID >= 0) && (inCanvasID < kMy_MaximumGraphics))
-	{
-		if (nullptr != RGMwind[inCanvasID])
-		{
-			SetPortWindowPort(RGMwind[inCanvasID]->wind);
-			result = 0;
-		}
-	}
-	return result;
+	SetPortWindowPort(inPtr->wind);
+	return 0;
 }// setPortCanvasPort
 
 } // anonymous namespace

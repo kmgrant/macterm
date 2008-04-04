@@ -42,6 +42,9 @@
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
+// MacTelnet includes
+#include "VectorCanvas.h"
+
 
 
 #pragma mark Constants
@@ -131,6 +134,9 @@ size_t
 void
 	VectorInterpreter_Redraw			(VectorInterpreter_ID		inGraphicID,
 										 VectorInterpreter_ID		inDestinationGraphicID);
+
+VectorCanvas_Ref
+	VectorInterpreter_ReturnCanvas		(VectorInterpreter_ID		inGraphicID);
 
 void
 	VectorInterpreter_SetPageClears		(VectorInterpreter_ID		inGraphicID,

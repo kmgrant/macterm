@@ -3523,14 +3523,14 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 	{
 		VectorInterpreter_SetPageClears(id, false == ptr->vectorGraphicsPageOpensNewWindow);
 		ptr->vectorGraphicsID = id;
-		VectorCanvas_SetListeningSession(id, inRef);
+		VectorCanvas_SetListeningSession(VectorInterpreter_ReturnCanvas(id), inRef);
 		{
 			CFStringRef		windowTitleCFString = nullptr;
 			
 			
 			if (noErr == CopyWindowTitleAsCFString(ptr->dataPtr->window, &windowTitleCFString))
 			{
-				VectorCanvas_SetTitle(id, windowTitleCFString);
+				VectorCanvas_SetTitle(VectorInterpreter_ReturnCanvas(id), windowTitleCFString);
 				CFRelease(windowTitleCFString), windowTitleCFString = nullptr;
 			}
 		}

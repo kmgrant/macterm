@@ -78,8 +78,8 @@
 #include "TextTranslation.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
+#include "VectorCanvas.h"
 #include "VectorInterpreter.h"
-#include "VectorToBitmap.h"
 
 
 
@@ -1377,7 +1377,7 @@ graphicToPICT	(VectorInterpreter_ID	inDrawingNumber)
 		
 		
 		SetRect(&pictureBounds, 0, 0, 384, 384); // arbitrary?
-		VectorToBitmap_SetBounds(&pictureBounds);
+		VectorCanvas_SetBounds(&pictureBounds);
 		VectorInterpreter_CopyZoom(graphicID, inDrawingNumber);
 		
 		result = OpenPicture(&pictureBounds);
