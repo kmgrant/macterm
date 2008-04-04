@@ -11,6 +11,7 @@ if [ "x$attached_pid" = "x" ] ; then
 fi
 warn=y
 if [ "x${warn}" = "xy" ] ; then
+    echo
     echo 'WARNING: This command cannot run in MacTelnet, it should run in some'
     echo 'other terminal.  Otherwise, MacTelnet and gdb will become unkillable.'
     echo
@@ -22,11 +23,5 @@ if [ "x${warn}" = "xy" ] ; then
     fi
 fi
 echo
-echo '______________________________________________________________________________'
-echo
-echo 'IMPORTANT: When in gdb, say "run MacTelnet".  This will auto-breakpoint at'
-echo '           __dyld__dyld_start().  Start MacTelnet by using the "c" command.'
-echo '           (On Leopard, you may have to "c" multiple times.)'
-echo '______________________________________________________________________________'
-echo
+echo 'Use "c" to continue.'
 exec gdb --pid=${attached_pid}
