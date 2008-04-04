@@ -34,12 +34,12 @@ h5(#simplify). Simplified user interface
 Hides commands and portions of windows that are not frequently
 needed.
 
-h5(#noautoclose). Don't automatically close windows
+h5(#noautoclose). No window close on process exit
 
 Prevents a window from closing when the process running inside it
 has quit.
 
-h5(#noautonew). Don't create new windows automatically
+h5(#noautonew). No automatic new windows
 
 Prevents a new shell from being created if MacTelnet is activated
 while it has no windows open.
@@ -99,7 +99,7 @@ when in kiosk (Full Screen) mode, or whenever it is necessary to
 use keys from menu commands as input to the application in the
 active terminal.
 
-h5(#mapbackquote). Map backquote key to escape character
+h5(#mapbackquote). Treat backquote key like Escape
 
 On many keyboards, the backquote key is in a location similar to
 or identical to the location of the Esc key on other keyboards.
