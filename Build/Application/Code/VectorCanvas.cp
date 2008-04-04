@@ -252,8 +252,13 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 	}
 	
 	SetWindowKind(ptr->wind, WIN_TEK);
-	ShowWindow(ptr->wind);
-	EventLoop_SelectBehindDialogWindows(ptr->wind);
+	{
+		HIWindowRef		frontWindow = GetFrontWindowOfClass(kDocumentWindowClass, true/* visible */);
+		
+		
+		SendBehind(ptr->wind, frontWindow);
+		ShowWindow(ptr->wind);
+	}
 	
 	return result;
 }// New

@@ -129,6 +129,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080403': [
 		'Fixed all known stability problems when using multiple TEK windows.',
+		'Since MacTelnet cannot currently input text directly to TEK windows, it no longer puts them in front when they open.',
 	],
 	'20080401': [
 		'Fixed dynamic resize of TEK graphics, so they once again scale as the window is resized.',
