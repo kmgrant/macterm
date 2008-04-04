@@ -105,7 +105,6 @@ In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
 HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
-HIViewID const	idMyHelpTextMacroMenu					= { 'McMH', 0/* ID */ };
 HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { 'Inv1', 0/* ID */ };
 HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { 'Inv2', 0/* ID */ };
 HIViewID const	idMyCheckBoxMacrosMenuVisible			= { 'McMn', 0/* ID */ };
@@ -886,9 +885,6 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
 		
 		setDataBrowserColumnWidths(interfacePtr);
-		
-		viewWrap = HIViewWrap(idMyHelpTextMacroMenu, kPanelWindow);
-		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 		
 		viewWrap = HIViewWrap(idMyFieldMacroText, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);

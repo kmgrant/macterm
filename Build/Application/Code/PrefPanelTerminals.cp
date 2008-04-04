@@ -88,7 +88,6 @@ In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyPopUpMenuEmulationType		= { 'MEmT', 0/* ID */ };
 HIViewID const	idMyFieldAnswerBackMessage		= { 'EABM', 0/* ID */ };
-HIViewID const	idMySeparatorHacks				= { 'HxSp', 0/* ID */ };
 HIViewID const	idMyDataBrowserHacks			= { 'HxDB', 0/* ID */ };
 HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
@@ -530,8 +529,6 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap = HIViewWrap(idMyPopUpMenuEmulationType, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyFieldAnswerBackMessage, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMySeparatorHacks, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyDataBrowserHacks, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);

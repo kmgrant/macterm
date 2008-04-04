@@ -16,10 +16,10 @@ the MacTelnet menu.
 
 * "General":#general
 * "Sessions":#sessions
-* "Macros":#macros
-* "Translations":#translations
 * "Terminals":#terminals
 * "Formats":#formats
+* "Macros":#macros
+* "Translations":#translations
 * "Full Screen":#fullscreen
 * "Scripts":#scripts
 
@@ -462,12 +462,68 @@ indicates the kind of graphics data the session will send.
 TEK 4105 is a more powerful protocol that support scrolling,
 colored lines, and rotated text compared to TEK 4014.
 
-h4. PAGE command clears screen
+h4. PAGE clears screen
 
 When a new vector graphics image is created (known in TEK as a
 PAGE command), it is normally put into its own window.  If you
 do not want several windows and instead want MacTelnet to reuse
 the same window, enable the clear-screen option.
+
+h2(#terminals). Terminals
+
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply choose
+a name from the list in the drawer, and then edit that
+collection's settings in the main Preferences window.
+
+Terminals decide somewhat technical aspects of a window, such as
+the emulation type.  Usually, you set up one or more of these with
+the help of an administrator or application documentation, so that
+MacTelnet behaves correctly when you use an application in a
+terminal window.  Custom and collection Sessions can associate a
+Terminal collection with them, ensuring that these important
+settings are always made for you.
+
+h2(#formats). Formats
+
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply choose
+a name from the list in the drawer, and then edit that
+collection's settings in the main Preferences window.
+
+Formats are collections of fonts, font sizes, colors, and more, that
+decide how your terminal windows look.  You can use the View menu
+to quickly change a window's format to one of the collections you
+specify in Preferences, or to make customizations local to the
+frontmost window.
+
+h3. Normal
+
+Settings that apply to all text, unless overridden by some more
+specific property.
+
+Color settings have two entries, the leftmost box is the text
+(foreground) color and the rightmost box is the background color.
+
+To edit any setting, click on a box and the standard system panel
+(Fonts or Colors) will appear.
+
+h3. ANSI Colors
+
+Terminal applications can rely on an ANSI standard palette of
+colors.  While it is a good idea to choose colors that match the
+specified names, sometimes you have to change them so they don't
+clash with your other customizations!
+
+Color settings have two entries, the leftmost box is the "normal"
+version and the rightmost box is the "bold" (or emphasized) one.
+Ordinarily, the bold color is a slightly brighter version of the
+normal color.
+
+Not all applications in terminals will make use of these colors.
+In addition, a Terminal collection can disable them.
 
 h2(#macros). Macros
 
@@ -495,9 +551,7 @@ h5. Function keys
 Macros are invoked using the first twelve function keys at the
 top of your keyboard.
 
-h4. User Interface
-
-h5. Display as menu
+h5. Menu
 
 Macros are always available from the keyboard, but this option
 displays them in a top-level menu as well.  The menu changes as
@@ -600,62 +654,6 @@ For example, you could start with a United States character set
 and add an exception that changes "#" to the British symbol for
 pounds.
 
-h2(#terminals). Terminals
-
-bq. You can create more than one set of preferences in
-this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply choose
-a name from the list in the drawer, and then edit that
-collection's settings in the main Preferences window.
-
-Terminals decide somewhat technical aspects of a window, such as
-the emulation type.  Usually, you set up one or more of these with
-the help of an administrator or application documentation, so that
-MacTelnet behaves correctly when you use an application in a
-terminal window.  Custom and collection Sessions can associate a
-Terminal collection with them, ensuring that these important
-settings are always made for you.
-
-h2(#formats). Formats
-
-bq. You can create more than one set of preferences in
-this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply choose
-a name from the list in the drawer, and then edit that
-collection's settings in the main Preferences window.
-
-Formats are collections of fonts, font sizes, colors, and more, that
-decide how your terminal windows look.  You can use the View menu
-to quickly change a window's format to one of the collections you
-specify in Preferences, or to make customizations local to the
-frontmost window.
-
-h3. Normal
-
-Settings that apply to all text, unless overridden by some more
-specific property.
-
-Color settings have two entries, the leftmost box is the text
-(foreground) color and the rightmost box is the background color.
-
-To edit any setting, click on a box and the standard system panel
-(Fonts or Colors) will appear.
-
-h3. ANSI Colors
-
-Terminal applications can rely on an ANSI standard palette of
-colors.  While it is a good idea to choose colors that match the
-specified names, sometimes you have to change them so they don't
-clash with your other customizations!
-
-Color settings have two entries, the leftmost box is the "normal"
-version and the rightmost box is the "bold" (or emphasized) one.
-Ordinarily, the bold color is a slightly brighter version of the
-normal color.
-
-Not all applications in terminals will make use of these colors.
-In addition, a Terminal collection can disable them.
-
 h2(#fullscreen). Full Screen
 
 Settings that control "kiosk mode", the Full Screen command in
@@ -669,7 +667,7 @@ h3. Options
 
 h4. Access Control
 
-h5. Show menu bar when mouse is near it
+h5. Show menu bar on demand
 
 The menu bar is hidden in Full Screen mode, but it can normally
 be displayed simply by moving the mouse to the top of the screen

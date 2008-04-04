@@ -79,7 +79,6 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyHelpTextFullScreenDescription		= { 'FSDs', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowMenuBar					= { 'XKSM', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowScrollBar				= { 'XKSS', 0/* ID */ };
 static HIViewID const	idMyCheckBoxAllowForceQuit				= { 'XKFQ', 0/* ID */ };
@@ -357,10 +356,6 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 	HIViewWrap			viewWrap;
 	
 	
-	viewWrap.setCFTypeRef(HIViewWrap(idMyHelpTextFullScreenDescription, kPanelWindow));
-	viewWrap
-		<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */)
-		;
 	viewWrap.setCFTypeRef(HIViewWrap(idMyHelpTextSuperfluousEffects, kPanelWindow));
 	viewWrap
 		<< HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */)

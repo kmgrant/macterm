@@ -130,7 +130,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080404': [
 		'Fixed bug (recently introduced) with Copy command in TEK windows.',
-		'Preferences window General pane now takes up less space and has equal heading widths on all tabs.',
+		'Various minor layout improvements in the Preferences window.',
 	],
 	'20080403': [
 		'Fixed all known stability problems when using multiple TEK windows.',

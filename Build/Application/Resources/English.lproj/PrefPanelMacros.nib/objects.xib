@@ -2,104 +2,19 @@
 <object class="NSIBObjectData">
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
-  <array count="21" name="allObjects">
-    <object class="IBCarbonMenuItem" id="2064">
-      <string name="title">New Window with Command</string>
-      <boolean name="notPreviousAlternate">TRUE</boolean>
-    </object>
-    <object class="IBCarbonMenuItem" id="2063">
-      <string name="title">Open URL</string>
-      <boolean name="notPreviousAlternate">TRUE</boolean>
-    </object>
-    <object class="IBCarbonStaticText" id="2069">
-      <ostype name="controlSignature">LMNm</ostype>
-      <int name="fontStyle">107</int>
-      <string name="title">Name:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 435 164 16 </string>
-      <string name="bounds">435 20 451 184 </string>
-    </object>
-    <object class="IBCarbonMenuItem" id="2062">
-      <string name="title">Enter Text</string>
-      <boolean name="notPreviousAlternate">TRUE</boolean>
-    </object>
-    <object class="IBCarbonEditText" id="2067">
-      <ostype name="controlSignature">MTxt</ostype>
-      <boolean name="useInlineInput">TRUE</boolean>
-      <boolean name="isUnicode">TRUE</boolean>
-      <boolean name="isSingleLine">TRUE</boolean>
-      <int name="justification">-2</int>
-      <string name="foreColor">0 0 0 </string>
-      <string name="viewFrame">205 493 376 16 </string>
-      <string name="bounds">493 205 509 581 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="2058">
-      <ostype name="controlSignature">LMTy</ostype>
-      <int name="fontStyle">107</int>
-      <string name="title">Action:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 464 164 16 </string>
-      <string name="bounds">464 20 480 184 </string>
-    </object>
-    <object class="IBCarbonRadioButton" id="1990">
-      <ostype name="controlSignature">Inv2</ostype>
-      <ostype name="command">MKFK</ostype>
-      <boolean name="autoToggle">FALSE</boolean>
-      <string name="title">Function keys</string>
-      <string name="viewFrame">190 43 202 19 </string>
-      <string name="bounds">43 190 62 392 </string>
-    </object>
-    <object class="IBCarbonCheckBox" id="2011">
-      <ostype name="controlSignature">McMn</ostype>
-      <ostype name="command">McMn</ostype>
-      <boolean name="autoToggle">FALSE</boolean>
-      <string name="title">Display as menu:</string>
-      <string name="viewFrame">192 94 133 14 </string>
-      <string name="bounds">94 192 108 325 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1987">
-      <ostype name="controlSignature">MLst</ostype>
-      <int name="featureBits">2</int>
-      <string name="viewFrame">0 137 624 263 </string>
-      <string name="bounds">137 0 400 624 </string>
-    </object>
+  <array count="19" name="allObjects">
     <object class="IBCarbonRadioButton" id="1989">
       <ostype name="controlSignature">Inv1</ostype>
       <ostype name="command">MKCK</ostype>
       <int name="initialState">1</int>
       <boolean name="autoToggle">FALSE</boolean>
       <string name="title">Command + keypad</string>
-      <string name="viewFrame">190 18 202 19 </string>
-      <string name="bounds">18 190 37 392 </string>
+      <string name="viewFrame">224 19 258 18 </string>
+      <string name="bounds">19 224 37 482 </string>
     </object>
-    <object class="IBCarbonSeparator" id="2066">
-      <ostype name="controlSignature">SSMc</ostype>
-      <string name="viewFrame">147 416 457 8 </string>
-      <string name="bounds">416 147 424 604 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="2043">
-      <ostype name="controlSignature">McMH</ostype>
-      <int name="controlSize">1</int>
-      <string name="title">The menu will only appear when this macro set is active.</string>
-      <string name="viewFrame">211 116 393 13 </string>
-      <string name="bounds">116 211 129 604 </string>
-    </object>
-    <object class="IBCarbonMenu" id="2061">
-      <array count="3" name="items">
-        <reference idRef="2062"/>
-        <reference idRef="2063"/>
-        <reference idRef="2064"/>
-      </array>
-    </object>
-    <object class="IBCarbonEditText" id="2070">
-      <ostype name="controlSignature">FMNm</ostype>
-      <boolean name="useInlineInput">TRUE</boolean>
-      <boolean name="isUnicode">TRUE</boolean>
-      <boolean name="isSingleLine">TRUE</boolean>
-      <int name="justification">-2</int>
-      <string name="foreColor">0 0 0 </string>
-      <string name="viewFrame">195 435 169 16 </string>
-      <string name="bounds">435 195 451 364 </string>
+    <object class="IBCarbonMenuItem" id="2063">
+      <string name="title">Open URL</string>
+      <boolean name="notPreviousAlternate">TRUE</boolean>
     </object>
     <object class="IBCarbonEditText" id="2012">
       <ostype name="controlSignature">MMNm</ostype>
@@ -109,9 +24,125 @@
       <string name="title">Macros</string>
       <int name="justification">-2</int>
       <string name="foreColor">0 0 0 </string>
-      <string name="viewFrame">336 93 150 16 </string>
-      <string name="bounds">93 336 109 486 </string>
+      <string name="viewFrame">331 72 148 16 </string>
+      <string name="bounds">72 331 88 479 </string>
     </object>
+    <object class="IBCarbonStaticText" id="2058">
+      <ostype name="controlSignature">LMTy</ostype>
+      <int name="fontStyle">107</int>
+      <string name="title">Action:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 426 200 16 </string>
+      <string name="bounds">426 20 442 220 </string>
+    </object>
+    <object class="IBCarbonEditText" id="2070">
+      <ostype name="controlSignature">FMNm</ostype>
+      <boolean name="useInlineInput">TRUE</boolean>
+      <boolean name="isUnicode">TRUE</boolean>
+      <boolean name="isSingleLine">TRUE</boolean>
+      <int name="justification">-2</int>
+      <string name="foreColor">0 0 0 </string>
+      <string name="viewFrame">231 397 169 16 </string>
+      <string name="bounds">397 231 413 400 </string>
+    </object>
+    <object class="IBCarbonCheckBox" id="2011">
+      <ostype name="controlSignature">McMn</ostype>
+      <ostype name="command">McMn</ostype>
+      <boolean name="autoToggle">FALSE</boolean>
+      <string name="title">Menu:</string>
+      <string name="viewFrame">226 73 94 14 </string>
+      <string name="bounds">73 226 87 320 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1987">
+      <ostype name="controlSignature">MLst</ostype>
+      <int name="featureBits">2</int>
+      <string name="viewFrame">0 99 502 263 </string>
+      <string name="bounds">99 0 362 502 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="2069">
+      <ostype name="controlSignature">LMNm</ostype>
+      <int name="fontStyle">107</int>
+      <string name="title">Name:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 397 200 16 </string>
+      <string name="bounds">397 20 413 220 </string>
+    </object>
+    <object class="IBCarbonMenu" id="2061">
+      <array count="3" name="items">
+        <object class="IBCarbonMenuItem" id="2062">
+          <string name="title">Enter Text</string>
+          <boolean name="notPreviousAlternate">TRUE</boolean>
+        </object>
+        <reference idRef="2063"/>
+        <object class="IBCarbonMenuItem" id="2064">
+          <string name="title">New Window with Command</string>
+          <boolean name="notPreviousAlternate">TRUE</boolean>
+        </object>
+      </array>
+    </object>
+    <object class="IBCarbonStaticText" id="1988">
+      <int name="fontStyle">107</int>
+      <string name="title">Invoke With:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 20 200 16 </string>
+      <string name="bounds">20 20 36 220 </string>
+    </object>
+    <object class="IBCarbonSeparator" id="2066">
+      <ostype name="controlSignature">SSMc</ostype>
+      <string name="viewFrame">153 378 329 8 </string>
+      <string name="bounds">378 153 386 482 </string>
+    </object>
+    <object class="IBCarbonEditText" id="2067">
+      <ostype name="controlSignature">MTxt</ostype>
+      <boolean name="useInlineInput">TRUE</boolean>
+      <boolean name="isUnicode">TRUE</boolean>
+      <boolean name="isSingleLine">TRUE</boolean>
+      <int name="justification">-2</int>
+      <string name="foreColor">0 0 0 </string>
+      <string name="viewFrame">241 455 238 16 </string>
+      <string name="bounds">455 241 471 479 </string>
+    </object>
+    <reference idRef="2064"/>
+    <object class="IBCarbonRootControl" id="1927">
+      <string name="viewFrame">0 0 502 494 </string>
+      <array count="13" name="subviews">
+        <reference idRef="1987"/>
+        <reference idRef="1988"/>
+        <reference idRef="2058"/>
+        <object class="IBCarbonStaticText" id="2065">
+          <ostype name="controlSignature">LSMc</ostype>
+          <string name="title">Selected Macro</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">20 370 125 16 </string>
+          <string name="bounds">370 20 386 145 </string>
+        </object>
+        <reference idRef="2066"/>
+        <reference idRef="2069"/>
+        <reference idRef="1989"/>
+        <object class="IBCarbonRadioButton" id="1990">
+          <ostype name="controlSignature">Inv2</ostype>
+          <ostype name="command">MKFK</ostype>
+          <boolean name="autoToggle">FALSE</boolean>
+          <string name="title">Function keys</string>
+          <string name="viewFrame">224 40 258 18 </string>
+          <string name="bounds">40 224 58 482 </string>
+        </object>
+        <reference idRef="2011"/>
+        <reference idRef="2012"/>
+        <reference idRef="2070"/>
+        <object class="IBCarbonPopupButton" id="2060">
+          <ostype name="controlSignature">MMTy</ostype>
+          <reference name="menu" idRef="2061"/>
+          <int name="titleJustification">0</int>
+          <string name="viewFrame">227 424 255 20 </string>
+          <string name="bounds">424 227 444 482 </string>
+        </object>
+        <reference idRef="2067"/>
+      </array>
+      <string name="bounds">0 0 494 502 </string>
+    </object>
+    <reference idRef="1990"/>
+    <reference idRef="2065"/>
     <object class="IBCarbonWindow" id="1926">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="liveResize">TRUE</boolean>
@@ -119,67 +150,16 @@
       <boolean name="isConstrained">FALSE</boolean>
       <int name="themeBrush">1</int>
       <string name="title"></string>
-      <object name="rootControl" class="IBCarbonRootControl" id="1927">
-        <string name="viewFrame">0 0 624 532 </string>
-        <array count="15" name="subviews">
-          <reference idRef="1987"/>
-          <object class="IBCarbonStaticText" id="1988">
-            <int name="fontStyle">107</int>
-            <string name="title">Invoke With:</string>
-            <int name="justification">-1</int>
-            <string name="viewFrame">20 20 164 16 </string>
-            <string name="bounds">20 20 36 184 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="2009">
-            <int name="fontStyle">107</int>
-            <string name="title">User Interface:</string>
-            <int name="justification">-1</int>
-            <string name="viewFrame">20 93 164 16 </string>
-            <string name="bounds">93 20 109 184 </string>
-          </object>
-          <reference idRef="2043"/>
-          <reference idRef="2058"/>
-          <object class="IBCarbonStaticText" id="2065">
-            <ostype name="controlSignature">LSMc</ostype>
-            <string name="title">Selected Macro</string>
-            <int name="justification">-1</int>
-            <string name="viewFrame">20 408 119 16 </string>
-            <string name="bounds">408 20 424 139 </string>
-          </object>
-          <reference idRef="2066"/>
-          <reference idRef="2069"/>
-          <reference idRef="1989"/>
-          <reference idRef="1990"/>
-          <reference idRef="2011"/>
-          <reference idRef="2012"/>
-          <reference idRef="2070"/>
-          <object class="IBCarbonPopupButton" id="2060">
-            <ostype name="controlSignature">MMTy</ostype>
-            <reference name="menu" idRef="2061"/>
-            <int name="titleJustification">0</int>
-            <string name="viewFrame">191 462 298 20 </string>
-            <string name="bounds">462 191 482 489 </string>
-          </object>
-          <reference idRef="2067"/>
-        </array>
-        <string name="bounds">0 0 532 624 </string>
-      </object>
-      <string name="windowRect">425 182 957 806 </string>
+      <reference name="rootControl" idRef="1927"/>
+      <string name="windowRect">425 182 919 684 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="2065"/>
-    <reference idRef="1988"/>
-    <reference idRef="2009"/>
+    <reference idRef="2062"/>
     <reference idRef="2060"/>
-    <reference idRef="1927"/>
   </array>
-  <array count="21" name="allParents">
-    <reference idRef="2061"/>
-    <reference idRef="2061"/>
+  <array count="19" name="allParents">
     <reference idRef="1927"/>
     <reference idRef="2061"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
@@ -187,14 +167,16 @@
     <reference idRef="1927"/>
     <reference idRef="1927"/>
     <reference idRef="2060"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="1927"/>
+    <reference idRef="2061"/>
+    <reference idRef="1926"/>
     <reference idRef="1927"/>
     <reference idRef="1927"/>
     <reference idRef="1"/>
+    <reference idRef="2061"/>
     <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1927"/>
-    <reference idRef="1926"/>
   </array>
   <dictionary count="2" name="nameTable">
     <string>File&apos;s Owner</string>

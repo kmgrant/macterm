@@ -1251,10 +1251,10 @@ init ()
 		// create category panels - call these routines in the order you want their category buttons to appear
 		installPanel(PrefPanelGeneral_New());
 		installPanel(PrefPanelSessions_New());
-		installPanel(PrefPanelMacros_New());
-		installPanel(PrefPanelTranslations_New());
 		installPanel(PrefPanelTerminals_New());
 		installPanel(PrefPanelFormats_New());
+		installPanel(PrefPanelMacros_New());
+		installPanel(PrefPanelTranslations_New());
 		installPanel(PrefPanelKiosk_New());
 		installPanel(PrefPanelScripts_New());
 		
