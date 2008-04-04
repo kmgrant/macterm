@@ -3635,7 +3635,10 @@ Session_TEKSetPageCommandOpensNewWindow		(SessionRef		inRef,
 	
 	
 	ptr->vectorGraphicsPageOpensNewWindow = inNewWindow;
-	VectorInterpreter_SetPageClears(ptr->vectorGraphicsID, false == inNewWindow);
+	if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
+	{
+		VectorInterpreter_SetPageClears(ptr->vectorGraphicsID, false == inNewWindow);
+	}
 }// TEKSetPageCommandOpensNewWindow
 
 
