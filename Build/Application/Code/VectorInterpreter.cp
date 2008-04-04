@@ -243,7 +243,6 @@ void			storexy						(My_VectorInterpreterPtr, short, short);
 void			VGclrstor					(My_VectorInterpreterPtr);
 void			VGdraw						(My_VectorInterpreterPtr, char);
 void			VGdumpstore					(My_VectorInterpreterPtr, short (*)(short));
-void			VGgiveinfo					(My_VectorInterpreterPtr);
 void			VGtmode						(My_VectorInterpreterPtr);
 void			VGwhatzoom					(My_VectorInterpreterPtr, short*, short*, short*, short*);
 
@@ -571,7 +570,8 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 		
 		// do this last, because it will trigger rendering that
 		// depends on all the initializations above
-		ptr->canvas = VectorCanvas_New((kVectorInterpreter_TargetQuickDrawPicture == inTarget)
+		ptr->canvas = VectorCanvas_New(result,
+										(kVectorInterpreter_TargetQuickDrawPicture == inTarget)
 										? kVectorCanvas_TargetQuickDrawPicture
 										: kVectorCanvas_TargetScreenPixels);
 		VectorCanvas_SetPenColor(ptr->canvas, 1);
@@ -900,7 +900,6 @@ VectorInterpreter_Zoom	(VectorInterpreter_ID	inGraphicID,
 		ptr->winright = inX1;
 		ptr->wintall = inY1 - inY0 + 1;
 		ptr->winwide = inX1 - inX0 + 1;
-		VGgiveinfo(ptr);
 	}
 }// Zoom
 
@@ -2086,16 +2085,6 @@ void	VGdumpstore(My_VectorInterpreterPtr		inPtr, short (*func )(short))
 		(*func)(*(inPtr->toCurrentCommand));
 	}
 	(*func)(-1);
-}
-
- 
-/*	Send interesting information about the virtual window down to
- *	its RG, so that the RG can make VG calls and display zoom values
- */
-void	VGgiveinfo(My_VectorInterpreterPtr inPtr)
-{
-	VectorCanvas_SetCallbackData(inPtr->canvas, inPtr->selfRef, 0);
-	// note: might send VGwin[vw]->winbot/left/top/right too
 }
 
 

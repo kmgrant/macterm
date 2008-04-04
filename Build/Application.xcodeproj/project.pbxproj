@@ -10,27 +10,9 @@
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */; };
 		0A26DDE10CCF0FDA00768AD8 /* AddressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A26DD900CCF09D400768AD8 /* AddressDialog.cp */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
-		0A2890DF0D68019E0017D99E /* GenericPanelTabs.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */; };
 		0A377E630D38806B001F3573 /* com_mactelnet_HandleFile.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* com_mactelnet_HandleFile.py */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
-		0A9B317F0D538E2800C1616D /* TextDataFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B317E0D538E2800C1616D /* TextDataFile.h */; };
-		0A9B31810D538E3C00C1616D /* StringUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31800D538E3C00C1616D /* StringUtilities.h */; };
-		0A9B31830D538E4400C1616D /* SoundSystem.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31820D538E4400C1616D /* SoundSystem.h */; };
-		0A9B31850D538E4D00C1616D /* Undoables.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31840D538E4D00C1616D /* Undoables.h */; };
-		0A9B31870D538E5B00C1616D /* CFDictionaryManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */; };
-		0A9B31890D538E6300C1616D /* CFKeyValueInterface.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */; };
-		0A9B318B0D538E6F00C1616D /* Cursors.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B318A0D538E6F00C1616D /* Cursors.h */; };
-		0A9B318D0D538E8600C1616D /* FlagManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B318C0D538E8600C1616D /* FlagManager.h */; };
-		0A9B318F0D538EAB00C1616D /* ListenerModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B318E0D538EAB00C1616D /* ListenerModel.h */; };
-		0A9B31930D538EE400C1616D /* MemoryBlocks.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31920D538EE400C1616D /* MemoryBlocks.h */; };
-		0A9B31990D538EF000C1616D /* MemoryBlockHandleLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */; };
-		0A9B319A0D538EF000C1616D /* MemoryBlockLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31950D538EF000C1616D /* MemoryBlockLocker.template.h */; };
-		0A9B319B0D538EF000C1616D /* MemoryBlockPtrLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31960D538EF000C1616D /* MemoryBlockPtrLocker.template.h */; };
-		0A9B319C0D538EF000C1616D /* MemoryBlockReferenceLocker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31970D538EF000C1616D /* MemoryBlockReferenceLocker.template.h */; };
-		0A9B319D0D538EF000C1616D /* MemoryBlockReferenceTracker.template.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */; };
-		0A9B319F0D538EFA00C1616D /* Releases.h in Headers */ = {isa = PBXBuildFile; fileRef = 0A9B319E0D538EFA00C1616D /* Releases.h */; };
-		0AAD86E50D54E45F003544E0 /* TerminalRangeDescription.typedef.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AAD86E40D54E45F003544E0 /* TerminalRangeDescription.typedef.h */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADC0A8C0BA000AFF37A /* UniversalPrint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE09055432A400ACDF3A /* UniversalPrint.cp */; };
@@ -157,14 +139,11 @@
 		0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059305543D7C00ACDF3A /* ApplicationServices.framework */; };
 		0ACA57D30AEADDE800B5F482 /* GenericDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */; };
 		0ACBC3570D5BBC6300FCF05F /* CocoaBasic.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */; };
-		0ACBC3590D5BBC6800FCF05F /* CocoaBasic.h in Headers */ = {isa = PBXBuildFile; fileRef = 0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */; };
 		0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */; };
 		0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */; };
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
-		0AE852690D94613300B6834B /* AutoPool.objc++.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AE852680D94613300B6834B /* AutoPool.objc++.h */; };
 		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; };
-		0AE852750D9463B900B6834B /* CocoaUserDefaults.h in Headers */ = {isa = PBXBuildFile; fileRef = 0AE852740D9463B900B6834B /* CocoaUserDefaults.h */; };
 		0AFA782C0B470144001FCE83 /* com_mactelnet_ParseURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* com_mactelnet_ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* com_mactelnet_Util.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* com_mactelnet_Util.py */; };
 		0AFA782E0B470144001FCE83 /* com_mactelnet_HandleURL.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* com_mactelnet_HandleURL.py */; };
@@ -209,6 +188,7 @@
 		0A11F54B059FE55D00A565C3 /* IconForPrefPanelGeneral.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelGeneral.icns; path = Application/Resources/IconForPrefPanelGeneral.icns; sourceTree = "<group>"; };
 		0A11F54C059FE55D00A565C3 /* IconForPrefPanelScripts.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelScripts.icns; path = Application/Resources/IconForPrefPanelScripts.icns; sourceTree = "<group>"; };
 		0A11F54D059FE55D00A565C3 /* IconForPrefPanelMacros.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelMacros.icns; path = Application/Resources/IconForPrefPanelMacros.icns; sourceTree = "<group>"; };
+		0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreterID.typedef.h; path = Application/Code/VectorInterpreterID.typedef.h; sourceTree = "<group>"; };
 		0A1A06860ABA6236002C95D7 /* PrintTerminal.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrintTerminal.h; path = Application/Code/PrintTerminal.h; sourceTree = "<group>"; };
 		0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrintTerminal.cp; path = Application/Code/PrintTerminal.cp; sourceTree = "<group>"; };
 		0A1BCD8905CA2B21005CF1E5 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TerminalWindow.nib; sourceTree = "<group>"; };
@@ -860,6 +840,7 @@
 				0A4604540554376100ACDF3A /* URL.h */,
 				0A4604360554376100ACDF3A /* VectorCanvas.h */,
 				0A4604370554376100ACDF3A /* VectorInterpreter.h */,
+				0A1427340DA5D4270028510F /* VectorInterpreterID.typedef.h */,
 				0A4604560554376100ACDF3A /* VirtualDevice.h */,
 				0A4604570554376100ACDF3A /* VTKeys.h */,
 				0A4604580554376100ACDF3A /* WindowInfo.h */,
@@ -1133,27 +1114,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A9B317F0D538E2800C1616D /* TextDataFile.h in Headers */,
-				0A9B31810D538E3C00C1616D /* StringUtilities.h in Headers */,
-				0A9B31830D538E4400C1616D /* SoundSystem.h in Headers */,
-				0A9B31850D538E4D00C1616D /* Undoables.h in Headers */,
-				0A9B31870D538E5B00C1616D /* CFDictionaryManager.h in Headers */,
-				0A9B31890D538E6300C1616D /* CFKeyValueInterface.h in Headers */,
-				0A9B318B0D538E6F00C1616D /* Cursors.h in Headers */,
-				0A9B318D0D538E8600C1616D /* FlagManager.h in Headers */,
-				0A9B318F0D538EAB00C1616D /* ListenerModel.h in Headers */,
-				0A9B31930D538EE400C1616D /* MemoryBlocks.h in Headers */,
-				0A9B31990D538EF000C1616D /* MemoryBlockHandleLocker.template.h in Headers */,
-				0A9B319A0D538EF000C1616D /* MemoryBlockLocker.template.h in Headers */,
-				0A9B319B0D538EF000C1616D /* MemoryBlockPtrLocker.template.h in Headers */,
-				0A9B319C0D538EF000C1616D /* MemoryBlockReferenceLocker.template.h in Headers */,
-				0A9B319D0D538EF000C1616D /* MemoryBlockReferenceTracker.template.h in Headers */,
-				0A9B319F0D538EFA00C1616D /* Releases.h in Headers */,
-				0AAD86E50D54E45F003544E0 /* TerminalRangeDescription.typedef.h in Headers */,
-				0ACBC3590D5BBC6800FCF05F /* CocoaBasic.h in Headers */,
-				0A2890DF0D68019E0017D99E /* GenericPanelTabs.h in Headers */,
-				0AE852690D94613300B6834B /* AutoPool.objc++.h in Headers */,
-				0AE852750D9463B900B6834B /* CocoaUserDefaults.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

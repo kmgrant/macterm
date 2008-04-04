@@ -41,6 +41,7 @@
 
 // MacTelnet includes
 #include "SessionRef.typedef.h"
+#include "VectorInterpreterID.typedef.h"
 
 
 
@@ -72,7 +73,8 @@ void
 //@{
 
 VectorCanvas_Ref
-	VectorCanvas_New					(VectorCanvas_Target	inTarget);
+	VectorCanvas_New					(VectorInterpreter_ID	inData,
+										 VectorCanvas_Target	inTarget);
 
 void
 	VectorCanvas_Dispose				(VectorCanvas_Ref*		inoutPtr);
@@ -125,11 +127,6 @@ char const*
 
 SInt16
 	VectorCanvas_SetBounds				(Rect const*			inBoundsPtr);
-
-void
-	VectorCanvas_SetCallbackData		(VectorCanvas_Ref		inRef,
-										 SInt16					inVectorInterpreterRef,
-										 SInt16					inData2);
 
 void
 	VectorCanvas_SetCharacterMode		(VectorCanvas_Ref		inRef,

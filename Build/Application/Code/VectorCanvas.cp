@@ -183,12 +183,13 @@ VectorCanvas_Init ()
 
 /*!
 Creates a new vector graphics canvas that targets a Mac window.
-Returns a nonnegative number (the canvas ID) if successful.
+Returns nullptr on failure.
 
 (3.0)
 */
 VectorCanvas_Ref
-VectorCanvas_New	(VectorCanvas_Target	inTarget)
+VectorCanvas_New	(VectorInterpreter_ID	inID,
+					 VectorCanvas_Target	inTarget)
 {
 	My_VectorCanvasPtr		ptr = new My_VectorCanvas;
 	VectorCanvas_Ref		result = REINTERPRET_CAST(ptr, VectorCanvas_Ref);
@@ -230,11 +231,7 @@ VectorCanvas_New	(VectorCanvas_Target	inTarget)
 		assert_noerr(error);
 	}
 	
-	SetWindowKind(ptr->wind, WIN_TEK);
-	ShowWindow(ptr->wind);
-	EventLoop_SelectBehindDialogWindows(ptr->wind);
-	
-	ptr->vg = -1;
+	ptr->vg = inID;
 	ptr->vs = nullptr;
 	ptr->xorigin = 0;
 	ptr->yorigin = 0;
@@ -243,8 +240,6 @@ VectorCanvas_New	(VectorCanvas_Target	inTarget)
 	ptr->width = 400;
 	ptr->height = 300;
 	ptr->ingin = 0;
-	
-	RegionUtilities_SetWindowUpToDate(ptr->wind);
 	
 	// set up bitmap mode
 	if (kVectorCanvas_TargetQuickDrawPicture == ptr->target)
@@ -255,6 +250,10 @@ VectorCanvas_New	(VectorCanvas_Target	inTarget)
 		gRGMPxoffset = 0;
 		gRGMPyoffset = 0;
 	}
+	
+	SetWindowKind(ptr->wind, WIN_TEK);
+	ShowWindow(ptr->wind);
+	EventLoop_SelectBehindDialogWindows(ptr->wind);
 	
 	return result;
 }// New
@@ -498,23 +497,6 @@ VectorCanvas_SetBounds		(Rect const*	inBoundsPtr)
 	
 	return result;
 }// SetBounds
-
-
-/*!
-Applies miscellaneous settings to a canvas.
-
-(3.0)
-*/
-void
-VectorCanvas_SetCallbackData	(VectorCanvas_Ref	inRef,
-								 SInt16				inVectorInterpreterRef,
-								 SInt16				UNUSED_ARGUMENT(inData2))
-{
-	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	
-	
-	ptr->vg = inVectorInterpreterRef;
-}// SetCallbackData
 
 
 /*!
