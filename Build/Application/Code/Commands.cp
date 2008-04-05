@@ -912,7 +912,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				// allow this command for either session terminal windows, or
 				// the graphics themselves (as long as the graphic can be
 				// traced to a session)
-				if (nullptr == frontSession)
+				if (nullptr == sessionForGraphic)
 				{
 					VectorCanvas_Ref	frontCanvas = VectorCanvas_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
 					
@@ -1139,13 +1139,30 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandChangeWindowTitle:
 			// display a dialog allowing the user to change the title of a terminal window
-			if (EventLoop_ReturnRealFrontWindow() == nullptr) Sound_StandardAlert();
-			else
 			{
-				WindowTitleDialog_Ref		dialog = WindowTitleDialog_NewForSession(frontSession);
+				WindowTitleDialog_Ref	dialog = nullptr;
 				
 				
-				WindowTitleDialog_Display(dialog); // automatically disposed when the user clicks a button
+				if (nullptr != frontSession)
+				{
+					dialog = WindowTitleDialog_NewForSession(frontSession);
+				}
+				
+				if (nullptr == dialog)
+				{
+					// see if the active window is a vector graphics canvas
+					VectorCanvas_Ref	canvas = VectorCanvas_ReturnFromWindow
+													(EventLoop_ReturnRealFrontWindow());
+					
+					
+					if (nullptr != canvas) dialog = WindowTitleDialog_NewForVectorCanvas(canvas);
+				}
+				
+				if (nullptr == dialog) Sound_StandardAlert();
+				else
+				{
+					WindowTitleDialog_Display(dialog); // automatically disposed when the user clicks a button
+				}
 			}
 			break;
 		

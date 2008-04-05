@@ -131,6 +131,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080405': [
 		'TEK-related menu commands can now be used when a vector graphics window is frontmost.',
+		'The Rename menu command now works with TEK windows.',
 	],
 	'20080404': [
 		'Fixed bug (recently introduced) with Copy command in TEK windows.',

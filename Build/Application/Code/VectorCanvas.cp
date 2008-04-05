@@ -346,6 +346,24 @@ VectorCanvas_ClearScreen	(VectorCanvas_Ref	inRef)
 
 
 /*!
+Returns a copy of the window title string, or nullptr on error.
+
+(3.1)
+*/
+void
+VectorCanvas_CopyTitle	(VectorCanvas_Ref	inRef,
+						 CFStringRef&		outTitle)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	OSStatus					error = noErr;
+	
+	
+	error = CopyWindowTitleAsCFString(ptr->wind, &outTitle);
+	if (noErr != error) outTitle = nullptr;
+}// CopyTitle
+
+
+/*!
 UNIMPLEMENTED.
 
 (3.0)
@@ -512,6 +530,23 @@ VectorCanvas_ReturnFromWindow	(HIWindowRef	inWindow)
 	if (noErr != error) result = nullptr;
 	return result;
 }// ReturnFromWindow
+
+
+/*!
+Returns the window that a canvas belongs to.  Note that some
+canvases target bitmaps and may never be placed in a window.
+
+(3.1)
+*/
+HIWindowRef
+VectorCanvas_ReturnWindow	(VectorCanvas_Ref	inRef)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	HIWindowRef					result = ptr->wind;
+	
+	
+	return result;
+}// ReturnWindow
 
 
 /*!

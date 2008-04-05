@@ -46,6 +46,7 @@
 
 // MacTelnet includes
 #include "SessionRef.typedef.h"
+#include "VectorCanvas.h"
 
 
 
@@ -87,6 +88,11 @@ WindowTitleDialog_Ref
 
 WindowTitleDialog_Ref
 	WindowTitleDialog_NewForSession				(SessionRef								inSession,
+												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
+																							WindowTitleDialog_StandardCloseNotifyProc);
+
+WindowTitleDialog_Ref
+	WindowTitleDialog_NewForVectorCanvas		(VectorCanvas_Ref						inCanvas,
 												 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr =
 																							WindowTitleDialog_StandardCloseNotifyProc);
 

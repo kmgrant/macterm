@@ -58,6 +58,7 @@
 #include "DialogUtilities.h"
 #include "HelpSystem.h"
 #include "Session.h"
+#include "VectorCanvas.h"
 #include "WindowTitleDialog.h"
 
 
@@ -95,6 +96,7 @@ struct My_WindowTitleDialog
 	
 	WindowTitleDialog_Ref					selfRef;					// convenient reference to this structure
 	SessionRef								session;					// the session, if any, to which this applies
+	VectorCanvas_Ref						canvas;						// the canvas, if any, to which this applies
 	HIWindowRef								screenWindow;				// the terminal window for which this dialog applies
 	NIBWindow								dialogWindow;				// the dialog’s window
 	HIViewWrap								buttonRename;				// Rename button
@@ -146,6 +148,7 @@ My_WindowTitleDialog	(HIWindowRef							inParentWindow,
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.,
 selfRef					(REINTERPRET_CAST(this, WindowTitleDialog_Ref)),
 session					(nullptr),
+canvas					(nullptr),
 screenWindow			(inParentWindow),
 dialogWindow			(NIBWindow(AppResources_ReturnBundleForNIBs(), CFSTR("WindowTitleDialog"), CFSTR("Dialog"))
 							<< NIBLoader_AssertWindowExists),
@@ -296,6 +299,48 @@ WindowTitleDialog_NewForSession		(SessionRef								inSession,
 
 
 /*!
+This method is used to initialize a canvas-specific window
+title dialog box.  It creates the dialog box invisibly, and
+uses the specified vector canvas’ user-defined title as the
+initial field value.
+
+When the user changes the title, the canvas’ user-defined
+title is updated (which may affect the title of one or more
+windows, but this is up to the canvas implementation).
+
+(3.1)
+*/
+WindowTitleDialog_Ref
+WindowTitleDialog_NewForVectorCanvas	(VectorCanvas_Ref						inCanvas,
+										 WindowTitleDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr)
+{
+	WindowTitleDialog_Ref			result = WindowTitleDialog_New(VectorCanvas_ReturnWindow(inCanvas), inCloseNotifyProcPtr);
+	My_WindowTitleDialogAutoLocker	ptr(gWindowTitleDialogPtrLocks(), result);
+	
+	
+	ptr->canvas = inCanvas;
+	
+	// re-initialize the title text field
+	if (ptr->fieldTitle.exists())
+	{
+		CFStringRef		titleString = nullptr;
+		OSStatus		error = noErr;
+		
+		
+		VectorCanvas_CopyTitle(inCanvas, titleString);
+		if (nullptr != titleString)
+		{
+			error = SetControlData(ptr->fieldTitle, kControlEditTextPart, kControlEditTextCFStringTag,
+									sizeof(titleString), &titleString);
+			CFRelease(titleString), titleString = nullptr;
+		}
+	}
+	
+	return result;
+}// NewForVectorCanvas
+
+
+/*!
 Call this method to destroy a window title dialog
 box and its associated data structures.  On return,
 your copy of the dialog reference is set to nullptr.
@@ -338,7 +383,7 @@ WindowTitleDialog_Display	(WindowTitleDialog_Ref		inDialog)
 		ShowSheetWindow(ptr->dialogWindow, ptr->screenWindow);
 		
 		// set keyboard focus
-		(OSStatus)SetKeyboardFocus(ptr->dialogWindow, ptr->fieldTitle, kControlEditTextPart);
+		(OSStatus)DialogUtilities_SetKeyboardFocus(ptr->fieldTitle);
 		
 		// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 	}
@@ -400,12 +445,14 @@ handleItemHit	(My_WindowTitleDialogPtr	inPtr,
 				assert(CFStringGetTypeID() == CFGetTypeID(titleCFString));
 				if (nullptr != inPtr->session)
 				{
-					Console_WriteLine("session rename");
 					Session_SetWindowUserDefinedTitle(inPtr->session, titleCFString);
+				}
+				else if (nullptr != inPtr->canvas)
+				{
+					VectorCanvas_SetTitle(inPtr->canvas, titleCFString);
 				}
 				else
 				{
-					Console_WriteLine("session not found, window rename");
 					(OSStatus)SetWindowTitleWithCFString(inPtr->screenWindow, titleCFString);
 				}
 				CFRelease(titleCFString), titleCFString = nullptr;

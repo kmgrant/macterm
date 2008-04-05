@@ -91,6 +91,10 @@ SInt16
 	VectorCanvas_ClearScreen			(VectorCanvas_Ref		inRef);
 
 void
+	VectorCanvas_CopyTitle				(VectorCanvas_Ref		inRef,
+										 CFStringRef&			outTitle);
+
+void
 	VectorCanvas_CursorHide				();
 
 void
@@ -124,6 +128,9 @@ SInt16
 
 VectorCanvas_Ref
 	VectorCanvas_ReturnFromWindow		(HIWindowRef			inWindow);
+
+HIWindowRef
+	VectorCanvas_ReturnWindow			(VectorCanvas_Ref		inRef);
 
 VectorInterpreter_ID
 	VectorCanvas_ReturnInterpreterID	(VectorCanvas_Ref		inRef);

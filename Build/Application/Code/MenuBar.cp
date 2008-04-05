@@ -3289,11 +3289,13 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 			// this item isn’t available if the “rebuilding font list” thread is still running
 			result = (result && gFontMenusAvailable);
 		}
-		else if ((inCommandID == kCommandSetScreenSize) ||
-					(inCommandID == kCommandChangeWindowTitle))
+		else if (inCommandID == kCommandSetScreenSize)
 		{
-			// these items are also available for the console window
 			result = TerminalWindow_ExistsFor(frontWindow);
+		}
+		else if (inCommandID == kCommandChangeWindowTitle)
+		{
+			result = TerminalWindow_ExistsFor(frontWindow) || (nullptr != returnTEKSession());
 		}
 		else if ((inCommandID == kCommandNextWindow) ||
 				(inCommandID == kCommandNextWindowHideCurrent) ||
