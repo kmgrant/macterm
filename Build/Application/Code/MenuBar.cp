@@ -148,7 +148,6 @@ void				addWindowMenuItemSessionOp				(SessionRef, void*, SInt32, void*);
 void				adjustMenuItem							(MenuRef, MenuItemIndex, UInt32);
 void				adjustMenuItemByCommandID				(UInt32);
 Boolean				areSessionRelatedItemsEnabled			();
-Boolean				areTEKRelatedItemsEnabled				();
 void				buildMenuBar							();
 void				executeScriptByMenuEvent				(MenuRef, MenuItemIndex);
 MenuItemIndex		getMenuAndMenuItemIndexByCommandID		(UInt32, MenuRef*);
@@ -162,6 +161,7 @@ void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, v
 void				removeMenuItemModifier					(MenuRef, MenuItemIndex);
 void				removeMenuItemModifiers					(MenuRef);
 MenuItemIndex		returnFirstWindowItemAnchor				(MenuRef);
+SessionRef			returnTEKSession						();
 void				sessionCountChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				sessionStateChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				sessionWindowStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -1126,32 +1126,6 @@ areSessionRelatedItemsEnabled ()
 #endif
 	return result;
 }// areSessionRelatedItemsEnabled
-
-
-/*!
-Many menu items are all jointly enabled or disabled
-based on the same basic factor - whether any graphics
-window is frontmost.  Use this method to determine if
-TEK-related menu items should be enabled.
-
-(3.0)
-*/
-Boolean
-areTEKRelatedItemsEnabled ()
-{
-	Boolean		result = false;
-	WindowRef	frontWindow = EventLoop_ReturnRealFrontWindow();
-	
-	
-	if (nullptr != frontWindow)
-	{
-		short		windowKind = GetWindowKind(EventLoop_ReturnRealFrontWindow());
-		
-		
-		result = ((windowKind == WIN_CNXN) || (windowKind == WIN_SHELL));
-	}
-	return result;
-}// areTEKRelatedItemsEnabled
 	
 	
 /*!
@@ -1738,6 +1712,38 @@ returnFirstWindowItemAnchor		(MenuRef	inWindowMenu)
 	
 	return result;
 }// returnFirstWindowItemAnchor
+
+
+/*!
+Returns the session currently applicable to TEK commands;
+defined if the focus window is either a session terminal,
+or a vector graphic that came from a session.
+
+(3.1)
+*/
+SessionRef
+returnTEKSession ()
+{
+	SessionRef		result = SessionFactory_ReturnUserFocusSession();
+	
+	
+	if (nullptr == result)
+	{
+		// if the active session is not a terminal, it may be a graphic
+		// which can be used to trace to its session
+		HIWindowRef		frontWindow = EventLoop_ReturnRealFrontWindow();
+		
+		
+		if (nullptr != frontWindow)
+		{
+			VectorCanvas_Ref	canvasForWindow = VectorCanvas_ReturnFromWindow(frontWindow);
+			
+			
+			if (nullptr != canvasForWindow) result = VectorCanvas_ReturnListeningSession(canvasForWindow);
+		}
+	}
+	return result;
+}// returnTEKSession
 
 
 /*!
@@ -3733,15 +3739,13 @@ stateTrackerTEKItems	(UInt32				inCommandID,
 	{
 	case kCommandTEKPageCommand:
 	case kCommandTEKPageClearsScreen:
-		if (TerminalWindow_ExistsFor(EventLoop_ReturnRealFrontWindow()))
 		{
-			SessionRef		session = SessionFactory_ReturnUserFocusSession();
+			SessionRef		session = returnTEKSession();
 			
 			
 			if (nullptr != session)
 			{
-				result = areTEKRelatedItemsEnabled();
-				if (result) result = Session_TEKIsEnabled(session);
+				result = true;
 				if (inCommandID == kCommandTEKPageClearsScreen)
 				{
 					CheckMenuItem(inMenu, inItemNumber,

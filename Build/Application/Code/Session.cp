@@ -3535,6 +3535,7 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 			}
 		}
 		Session_AddDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &id);
+		SelectWindow(Session_ReturnActiveWindow(inRef));
 		result = true;
 	}
 	return result;

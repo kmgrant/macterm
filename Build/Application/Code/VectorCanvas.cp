@@ -267,7 +267,8 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 		HIWindowRef		frontWindow = GetFrontWindowOfClass(kDocumentWindowClass, true/* visible */);
 		
 		
-		SendBehind(ptr->wind, frontWindow);
+		// unless the front window is another graphic, do not force it in front
+		if (WIN_TEK != GetWindowKind(frontWindow)) SendBehind(ptr->wind, frontWindow);
 		ShowWindow(ptr->wind);
 	}
 	
@@ -527,6 +528,23 @@ VectorCanvas_ReturnInterpreterID	(VectorCanvas_Ref	inRef)
 	
 	return result;
 }// ReturnInterpreterID
+
+
+/*!
+Returns the session that responds to events from this canvas,
+or nullptr if none has been set.
+
+(3.1)
+*/
+SessionRef
+VectorCanvas_ReturnListeningSession		(VectorCanvas_Ref	inRef)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	SessionRef					result = ptr->vs;
+	
+	
+	return result;
+}// ReturnListeningSession
 
 
 /*!

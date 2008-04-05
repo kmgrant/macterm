@@ -128,6 +128,9 @@ VectorCanvas_Ref
 VectorInterpreter_ID
 	VectorCanvas_ReturnInterpreterID	(VectorCanvas_Ref		inRef);
 
+SessionRef
+	VectorCanvas_ReturnListeningSession	(VectorCanvas_Ref		inRef);
+
 SInt16
 	VectorCanvas_SetBounds				(Rect const*			inBoundsPtr);
 

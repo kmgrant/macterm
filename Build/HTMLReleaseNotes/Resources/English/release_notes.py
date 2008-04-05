@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080405',
     '20080404',
     '20080403',
     '20080401',
@@ -128,6 +129,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080405': [
+		'TEK-related menu commands can now be used when a vector graphics window is frontmost.',
+	],
 	'20080404': [
 		'Fixed bug (recently introduced) with Copy command in TEK windows.',
 		'Various minor layout improvements in the Preferences window.',

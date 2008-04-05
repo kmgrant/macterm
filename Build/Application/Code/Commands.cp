@@ -904,37 +904,55 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandTEKPageCommand:
-			// Tektronix page command
-			if (isSession)
+		case kCommandTEKPageClearsScreen:
 			{
-				if (!Session_TEKHasTargetGraphic(frontSession) ||
-					Session_TEKPageCommandOpensNewWindow(frontSession))
+				SessionRef		sessionForGraphic = frontSession;
+				
+				
+				// allow this command for either session terminal windows, or
+				// the graphics themselves (as long as the graphic can be
+				// traced to a session)
+				if (nullptr == frontSession)
 				{
-					if (Session_TEKPageCommandOpensNewWindow(frontSession))
-					{
-						// leave current TEK mode, then re-enter to open a new window
-						Session_TEKDetachTargetGraphic(frontSession); // this removes the data target
-					}
+					VectorCanvas_Ref	frontCanvas = VectorCanvas_ReturnFromWindow(EventLoop_ReturnRealFrontWindow());
 					
-					unless (Session_TEKHasTargetGraphic(frontSession))
+					
+					if (nullptr != frontCanvas) sessionForGraphic = VectorCanvas_ReturnListeningSession(frontCanvas);
+				}
+				
+				if (nullptr != sessionForGraphic)
+				{
+					if (kCommandTEKPageClearsScreen == inCommandID)
 					{
-						// then there is no current TEK window for this screen - make one
-						// (this also makes it one of the session’s data targets)
-						unless (Session_TEKCreateTargetGraphic(frontSession))
+						// toggle this setting
+						Session_TEKSetPageCommandOpensNewWindow
+						(sessionForGraphic, false == Session_TEKPageCommandOpensNewWindow(sessionForGraphic));
+					}
+					else
+					{
+						// open a new window or clear the buffer of the current one
+						if (!Session_TEKHasTargetGraphic(sessionForGraphic) ||
+							Session_TEKPageCommandOpensNewWindow(sessionForGraphic))
 						{
-							// error - can’t create TEK window; get out of TEK mode
-							// UNIMPLEMENTED
+							if (Session_TEKPageCommandOpensNewWindow(sessionForGraphic))
+							{
+								// leave current TEK mode, then re-enter to open a new window
+								Session_TEKDetachTargetGraphic(sessionForGraphic); // this removes the data target
+							}
+							
+							unless (Session_TEKHasTargetGraphic(sessionForGraphic))
+							{
+								// then there is no current TEK window for this screen - make one
+								// (this also makes it one of the session’s data targets)
+								unless (Session_TEKCreateTargetGraphic(sessionForGraphic))
+								{
+									// error - can’t create TEK window; get out of TEK mode
+									// UNIMPLEMENTED
+								}
+							}
 						}
 					}
 				}
-			}
-			break;
-		
-		case kCommandTEKPageClearsScreen:
-			// toggle TEK page behavior
-			if (isSession)
-			{
-				Session_TEKSetPageCommandOpensNewWindow(frontSession, false == Session_TEKPageCommandOpensNewWindow(frontSession));
 			}
 			break;
 		
