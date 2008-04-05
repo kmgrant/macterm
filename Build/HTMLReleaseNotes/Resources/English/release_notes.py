@@ -130,6 +130,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080405': [
+		'Fixed color boxes on Panther to no longer use the floating Color Panel, because it is too buggy on that system.',
 		'TEK-related menu commands can now be used when a vector graphics window is frontmost.',
 		'The Rename menu command now works with TEK windows.',
 	],

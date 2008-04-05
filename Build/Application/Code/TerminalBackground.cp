@@ -659,6 +659,8 @@ receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRe
 							releaseAskColorCFString = false;
 						}
 						
+						bzero(&editMenuInfo, sizeof(editMenuInfo));
+						
 						error = GetControlProperty(inMyTerminalBackgroundPtr->view, AppResources_ReturnCreatorCode(),
 													kConstantsRegistry_ControlPropertyTypeBackgroundColor,
 													sizeof(backgroundColor), nullptr/* actual size */, &backgroundColor);
