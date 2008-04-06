@@ -5412,6 +5412,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			// this handler is invoked for changes to ANY session,
 			// but the response is specific to one, so check first
+			if (Session_ReturnActiveTerminalWindow(session) == terminalWindow)
 			{
 				CFStringRef		titleCFString = nullptr;
 				

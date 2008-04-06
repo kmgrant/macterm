@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080406',
     '20080405',
     '20080404',
     '20080403',
@@ -129,6 +130,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080406': [
+		'Fixed a case where renaming a single window could propagate the change to every open terminal window.',
+	],
 	'20080405': [
 		'Fixed color boxes on Panther to no longer use the floating Color Panel, because it is too buggy on that system.',
 		'TEK-related menu commands can now be used when a vector graphics window is frontmost.',
