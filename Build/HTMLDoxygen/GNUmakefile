@@ -37,8 +37,8 @@ STYLE_SRC := $(CURDIR)/Resources/
 .PHONY: all
 all:
 	$(begin_target)
-	$(MAKE) build-app
-	$(MAKE) build-py
+	$(MAKE) build_app
+	$(MAKE) build_py
 	$(end_target)
 
 .PHONY: build_app
