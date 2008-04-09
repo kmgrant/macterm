@@ -121,7 +121,6 @@ pascal void			clipboardUpdatesTimer					(EventLoopTimerRef, void*);
 OSStatus			createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
 OSStatus			createCGImageFromData					(CFDataRef, CGImageRef&);
 void				disposeImporterImageBuffer				(void*, void const*, size_t);
-PicHandle			graphicToPICT							(VectorInterpreter_ID);
 void				handleNewSize							(HIWindowRef, Float32, Float32, void*);
 void				pictureToScrap							(Handle);
 pascal OSStatus		receiveClipboardContentDraw				(EventHandlerCallRef, EventRef, void*);
@@ -817,7 +816,7 @@ Clipboard_GraphicsToScrap	(VectorInterpreter_ID		inGraphicID)
 	PicHandle	picture = nullptr;
 	
 	
-	picture = graphicToPICT(inGraphicID);
+	picture = VectorCanvas_ReturnNewQuickDrawPicture(inGraphicID);
 	pictureToScrap((Handle)picture);
 	KillPicture(picture);
 	
@@ -1354,40 +1353,6 @@ disposeImporterImageBuffer	(void*			UNUSED_ARGUMENT(inInfo),
 {
 	DisposePtr(REINTERPRET_CAST(CONST_CAST(inData, void*), Ptr));
 }// disposeImporterImageBuffer
-
-
-/*!
-Converts the specified TEK window drawing into a picture in
-QuickDraw format (PICT), and returns the handle.
-
-(2.6)
-*/
-PicHandle
-graphicToPICT	(VectorInterpreter_ID	inDrawingNumber)
-{
-	VectorInterpreter_ID	graphicID = 0;
-	PicHandle				result = nullptr;
-	
-	
-	graphicID = VectorInterpreter_New(kVectorInterpreter_TargetQuickDrawPicture,
-										VectorInterpreter_ReturnMode(inDrawingNumber));
-	if (kVectorInterpreter_InvalidID != graphicID)
-	{
-		Rect	pictureBounds;
-		
-		
-		SetRect(&pictureBounds, 0, 0, 384, 384); // arbitrary?
-		VectorCanvas_SetBounds(&pictureBounds);
-		VectorInterpreter_CopyZoom(graphicID, inDrawingNumber);
-		
-		result = OpenPicture(&pictureBounds);
-		ClipRect(&pictureBounds);
-		VectorInterpreter_Redraw(inDrawingNumber, graphicID);
-		ClosePicture();
-		VectorInterpreter_Dispose(&graphicID);
-	}
-	return result;
-}// graphicToPICT
 
 
 /*!

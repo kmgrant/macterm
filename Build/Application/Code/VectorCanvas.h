@@ -107,6 +107,9 @@ SInt16
 VectorCanvas_Ref
 	VectorCanvas_ReturnFromWindow		(HIWindowRef			inWindow);
 
+PicHandle
+	VectorCanvas_ReturnNewQuickDrawPicture	(VectorInterpreter_ID	inGraphicID);
+
 HIWindowRef
 	VectorCanvas_ReturnWindow			(VectorCanvas_Ref		inRef);
 

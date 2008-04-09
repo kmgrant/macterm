@@ -467,23 +467,6 @@ VectorCanvas_ReturnFromWindow	(HIWindowRef	inWindow)
 
 
 /*!
-Returns the window that a canvas belongs to.  Note that some
-canvases target bitmaps and may never be placed in a window.
-
-(3.1)
-*/
-HIWindowRef
-VectorCanvas_ReturnWindow	(VectorCanvas_Ref	inRef)
-{
-	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	HIWindowRef					result = ptr->owningWindow;
-	
-	
-	return result;
-}// ReturnWindow
-
-
-/*!
 Returns the intepreter whose commands affect this canvas.
 
 (3.1)
@@ -514,6 +497,74 @@ VectorCanvas_ReturnListeningSession		(VectorCanvas_Ref	inRef)
 	
 	return result;
 }// ReturnListeningSession
+
+
+/*!
+Converts the specified TEK window drawing into a picture in
+QuickDraw format (PICT), and returns the handle.  Call
+KillPicture() when finished with the result.
+
+TEMPORARY.  This will eventually be unnecessary when the
+rendering has transitioned completely to Core Graphics and
+HIView.
+
+(2.6)
+*/
+PicHandle
+VectorCanvas_ReturnNewQuickDrawPicture		(VectorInterpreter_ID	inDrawingNumber)
+{
+	VectorInterpreter_ID	graphicID = 0;
+	PicHandle				result = nullptr;
+	
+	
+	graphicID = VectorInterpreter_New(kVectorInterpreter_TargetQuickDrawPicture,
+										VectorInterpreter_ReturnMode(inDrawingNumber));
+	if (kVectorInterpreter_InvalidID != graphicID)
+	{
+		VectorCanvas_Ref	sourceCanvas = VectorInterpreter_ReturnCanvas(inDrawingNumber);
+		Rect				pictureBounds;
+		
+		
+		SetRect(&pictureBounds, 0, 0, 384, 384); // arbitrary?
+		VectorCanvas_SetBounds(&pictureBounds);
+		VectorInterpreter_CopyZoom(graphicID, inDrawingNumber);
+		
+		result = OpenPicture(&pictureBounds);
+		ClipRect(&pictureBounds);
+		{
+			My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), sourceCanvas);
+			SInt16						backgroundColorIndex = VectorInterpreter_ReturnBackgroundColor(graphicID);
+			RGBColor					backgroundColor;
+			
+			
+			assert((backgroundColorIndex >= 0) && (backgroundColorIndex < kMy_MaxColors));
+			getPaletteColor(ptr, backgroundColorIndex, backgroundColor);
+			RGBBackColor(&backgroundColor);
+			EraseRect(&pictureBounds);
+		}
+		VectorInterpreter_Redraw(inDrawingNumber, graphicID);
+		ClosePicture();
+		VectorInterpreter_Dispose(&graphicID);
+	}
+	return result;
+}// ReturnNewQuickDrawPicture
+
+
+/*!
+Returns the window that a canvas belongs to.  Note that some
+canvases target bitmaps and may never be placed in a window.
+
+(3.1)
+*/
+HIWindowRef
+VectorCanvas_ReturnWindow	(VectorCanvas_Ref	inRef)
+{
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	HIWindowRef					result = ptr->owningWindow;
+	
+	
+	return result;
+}// ReturnWindow
 
 
 /*!
