@@ -33,6 +33,7 @@
 
 // standard-C includes
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 
 // standard-C++ includes
@@ -122,6 +123,10 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 {
 	Boolean		splashScreenInitialized = false;
 	
+	
+	// seed random number generator; calls to random() should not be
+	// used for anything particularly important, arc4random() is better
+	::srandom(TickCount());
 	
 //#define RUN_MODULE_TESTS (defined DEBUG)
 #define RUN_MODULE_TESTS 0

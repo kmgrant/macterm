@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080409',
     '20080408',
     '20080406',
     '20080405',
@@ -131,6 +132,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080409': [
+		'Fixed random actions to be more random; used in such things as the splash screen and the random terminal format setting.',
+	],
 	'20080408': [
 		'The foreground and background colors used by TEK windows are now defined by Default Format preferences.',
 		'The 6 other colors used by TEK windows are now defined by the normal ANSI Colors from Default Format preferences.',

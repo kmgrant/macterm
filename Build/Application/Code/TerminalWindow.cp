@@ -68,6 +68,7 @@ extern "C"
 #include <MemoryBlockReferenceTracker.template.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
+#include <RandomWrap.h>
 #include <RegionUtilities.h>
 #include <SoundSystem.h>
 #include <Undoables.h>
@@ -1689,10 +1690,11 @@ installedActions()
 			if (Preferences_GetContextsInClass(kPreferences_ClassFormat, contextList))
 			{
 				std::vector< UInt16 >	numberList(contextList.size());
+				RandomWrap				generator;
 				
 				
 				__gnu_cxx::iota(numberList.begin(), numberList.end(), 0/* starting value */);
-				std::random_shuffle(numberList.begin(), numberList.end());
+				std::random_shuffle(numberList.begin(), numberList.end(), generator);
 				inFontInfoOrNull = contextList[numberList[0]];
 			}
 			

@@ -31,8 +31,12 @@
 
 #include "UniversalDefines.h"
 
+// standard-C includes
+#include <cstdlib>
+
 // standard-C++ includes
 #include <algorithm>
+#include <functional>
 #include <vector>
 
 // GNU extension includes
@@ -40,6 +44,9 @@
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
+
+// library includes
+#include <RandomWrap.h>
 
 // resource includes
 #include "CFRetainRelease.h"
@@ -1749,10 +1756,11 @@ UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 	case kUIStrings_StringClassSplashScreen:
 		{
 			std::vector< UInt16 >	numberList(10/* number of available strings below */);
+			RandomWrap				generator;
 			
 			
 			__gnu_cxx::iota(numberList.begin(), numberList.end(), 0/* starting value */);
-			std::random_shuffle(numberList.begin(), numberList.end());
+			std::random_shuffle(numberList.begin(), numberList.end(), generator);
 			switch (numberList[0])
 			{
 			case 0:
