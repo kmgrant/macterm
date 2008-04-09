@@ -87,23 +87,15 @@ enum
 
 #pragma mark Public Methods
 
-//!\name Initialization
-//@{
-
-void
-	VectorInterpreter_Init				();
-
-//@}
-
 //!\name Creating and Destroying Graphics
 //@{
 
 VectorInterpreter_ID
-	VectorInterpreter_New				(VectorInterpreter_Target	inTarget,
-										 VectorInterpreter_Mode		inCommandSet);
+	VectorInterpreter_New					(VectorInterpreter_Target	inTarget,
+											 VectorInterpreter_Mode		inCommandSet);
 
 void
-	VectorInterpreter_Dispose			(VectorInterpreter_ID*		inoutGraphicIDPtr);
+	VectorInterpreter_Dispose				(VectorInterpreter_ID*		inoutGraphicIDPtr);
 
 //@}
 
@@ -111,41 +103,37 @@ void
 //@{
 
 void
-	VectorInterpreter_CopyZoom			(VectorInterpreter_ID		inDestinationGraphicID,
-										 VectorInterpreter_ID		inSourceGraphicID);
+	VectorInterpreter_CopyZoom				(VectorInterpreter_ID		inDestinationGraphicID,
+											 VectorInterpreter_ID		inSourceGraphicID);
 
 void
-	VectorInterpreter_PageCommand		(VectorInterpreter_ID		inGraphicID);
-
-SInt16
-	VectorInterpreter_PiecewiseRedraw	(VectorInterpreter_ID		inGraphicID,
-										 VectorInterpreter_ID		inDestinationGraphicID);
+	VectorInterpreter_PageCommand			(VectorInterpreter_ID		inGraphicID);
 
 size_t
-	VectorInterpreter_ProcessData		(VectorInterpreter_ID		inGraphicID,
-										 UInt8 const*				inDataPtr,
-										 size_t						inDataSize);
+	VectorInterpreter_ProcessData			(VectorInterpreter_ID		inGraphicID,
+											 UInt8 const*				inDataPtr,
+											 size_t						inDataSize);
 
 void
-	VectorInterpreter_Redraw			(VectorInterpreter_ID		inGraphicID,
-										 VectorInterpreter_ID		inDestinationGraphicID);
+	VectorInterpreter_Redraw				(VectorInterpreter_ID		inGraphicID,
+											 VectorInterpreter_ID		inDestinationGraphicID);
+
+SInt16
+	VectorInterpreter_ReturnBackgroundColor	(VectorInterpreter_ID		inGraphicID);
 
 VectorCanvas_Ref
-	VectorInterpreter_ReturnCanvas		(VectorInterpreter_ID		inGraphicID);
+	VectorInterpreter_ReturnCanvas			(VectorInterpreter_ID		inGraphicID);
 
 void
-	VectorInterpreter_SetPageClears		(VectorInterpreter_ID		inGraphicID,
-										 Boolean					inTrueClearsFalseNewWindow);
+	VectorInterpreter_SetPageClears			(VectorInterpreter_ID		inGraphicID,
+											 Boolean					inTrueClearsFalseNewWindow);
 
 void
-	VectorInterpreter_StopRedraw		(VectorInterpreter_ID		inGraphicID);
-
-void
-	VectorInterpreter_Zoom				(VectorInterpreter_ID		inGraphicID,
-										 SInt16						inX0,
-										 SInt16						inY0,
-										 SInt16						inX1,
-										 SInt16						inY1);
+	VectorInterpreter_Zoom					(VectorInterpreter_ID		inGraphicID,
+											 SInt16						inX0,
+											 SInt16						inY0,
+											 SInt16						inX1,
+											 SInt16						inY1);
 
 //@}
 
@@ -153,14 +141,14 @@ void
 //@{
 
 SInt16
-VectorInterpreter_FillInPositionReport	(VectorInterpreter_ID		inGraphicID,
-										 UInt16						inX,
-										 UInt16						inY,
-										 char						inKeyPress,
-										 char*						outPositionReportLength5);
+VectorInterpreter_FillInPositionReport		(VectorInterpreter_ID		inGraphicID,
+											 UInt16						inX,
+											 UInt16						inY,
+											 char						inKeyPress,
+											 char*						outPositionReportLength5);
 
 VectorInterpreter_Mode
-	VectorInterpreter_ReturnMode		(VectorInterpreter_ID		inGraphicID);
+	VectorInterpreter_ReturnMode			(VectorInterpreter_ID		inGraphicID);
 
 //@}
 

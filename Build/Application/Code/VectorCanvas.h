@@ -87,31 +87,9 @@ void
 void
 	VectorCanvas_AudioEvent				(VectorCanvas_Ref		inRef);
 
-SInt16
-	VectorCanvas_ClearScreen			(VectorCanvas_Ref		inRef);
-
 void
 	VectorCanvas_CopyTitle				(VectorCanvas_Ref		inRef,
 										 CFStringRef&			outTitle);
-
-void
-	VectorCanvas_CursorHide				();
-
-void
-	VectorCanvas_CursorLock				();
-
-void
-	VectorCanvas_CursorShow				();
-
-void
-	VectorCanvas_DataLine				(VectorCanvas_Ref		inRef,
-										 SInt16					inData,
-										 SInt16					inCount);
-
-SInt16
-	VectorCanvas_DrawDot				(VectorCanvas_Ref		inRef,
-										 SInt16					inX,
-										 SInt16					inY);
 
 SInt16
 	VectorCanvas_DrawLine				(VectorCanvas_Ref		inRef,
@@ -121,7 +99,7 @@ SInt16
 										 SInt16					inEndY);
 
 void
-	VectorCanvas_FinishPage				(VectorCanvas_Ref		inRef);
+	VectorCanvas_InvalidateView			(VectorCanvas_Ref		inRef);
 
 SInt16
 	VectorCanvas_MonitorMouse			(VectorCanvas_Ref		inRef);
@@ -141,23 +119,9 @@ SessionRef
 SInt16
 	VectorCanvas_SetBounds				(Rect const*			inBoundsPtr);
 
-void
-	VectorCanvas_SetCharacterMode		(VectorCanvas_Ref		inRef,
-										 SInt16					inRotation,
-										 SInt16					inSize);
-
-void
-	VectorCanvas_SetGraphicsMode		();
-
 SInt16
 	VectorCanvas_SetPenColor			(VectorCanvas_Ref		inRef,
 										 SInt16					inColor);
-
-void
-	VectorCanvas_SetTextMode			();
-
-void
-	VectorCanvas_Uncover				(VectorCanvas_Ref		inRef);
 
 //@}
 

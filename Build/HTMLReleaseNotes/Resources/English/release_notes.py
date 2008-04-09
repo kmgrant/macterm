@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080408',
     '20080406',
     '20080405',
     '20080404',
@@ -130,6 +131,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080408': [
+		'The foreground and background colors used by TEK windows are now defined by Default Format preferences.',
+		'The 6 other colors used by TEK windows are now defined by the normal ANSI Colors from Default Format preferences.',
+		'Minor internal optimizations to TEK windows.',
+	],
 	'20080406': [
 		'Fixed a case where renaming a single window could propagate the change to every open terminal window.',
 	],

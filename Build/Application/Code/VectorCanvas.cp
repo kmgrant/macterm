@@ -66,7 +66,7 @@ Routines for Macintosh Window output.
 #include "Console.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
-#include "EventLoop.h"
+#include "Preferences.h"
 #include "Session.h"
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
@@ -87,10 +87,29 @@ HIViewID const	idMyCanvas		= { 'Cnvs', 0/* ID */ };
 UInt16 const	kMy_MaximumX = 4095;
 UInt16 const	kMy_MaximumY = 3139;	// TEMPORARY - figure out where the hell this value comes from
 
+enum
+{
+	// WARNING: Currently, despite the constants, these values are
+	// very important, they match definitions in TEK.  The order
+	// (zero-based) should be: white, black, red, green, blue, cyan,
+	// magenta, yellow.
+	kMy_ColorIndexBackground	= 0,	// technically, black
+	kMy_ColorIndexForeground	= 1,	// technically, white
+	kMy_ColorIndexRed			= 2,
+	kMy_ColorIndexGreen			= 3,
+	kMy_ColorIndexBlue			= 4,
+	kMy_ColorIndexCyan			= 5,
+	kMy_ColorIndexMagenta		= 6,
+	kMy_ColorIndexYellow		= 7,
+	kMy_MaxColors				= 8
+};
+
 } // anonymous namespace
 
 #pragma mark Types
 namespace {
+
+typedef std::vector< CGDeviceColor >	My_CGColorList;
 
 /*!
 Internal representation of a VectorCanvas_Ref.
@@ -100,17 +119,18 @@ struct My_VectorCanvas
 	OSType					id;
 	VectorCanvas_Ref		selfRef;
 	VectorCanvas_Target		target;
-	SessionRef				vs;
-	HIWindowRef				wind;
+	VectorInterpreter_ID	interpreter;
+	SessionRef				session;
+	HIWindowRef				owningWindow;
 	EventHandlerUPP			closeUPP;
 	EventHandlerRef			closeHandler;
 	HIViewRef				canvas;
 	CarbonEventHandlerWrap	canvasDrawHandler;
+	My_CGColorList			deviceColors;
 	SInt16					xorigin;
 	SInt16					yorigin;
 	SInt16					xscale;
 	SInt16					yscale;
-	SInt16					vg;
 	SInt16					ingin;
 	SInt16					width;
 	SInt16					height;
@@ -126,10 +146,14 @@ typedef LockAcquireRelease< VectorCanvas_Ref, My_VectorCanvas >		My_VectorCanvas
 #pragma mark Internal Method Prototypes
 namespace {
 
+UInt16				copyColorPreferences		(My_VectorCanvasPtr, Preferences_ContextRef, Boolean = true);
+void				getPaletteColor				(My_VectorCanvasPtr, SInt16, CGDeviceColor&);
+void				getPaletteColor				(My_VectorCanvasPtr, SInt16, RGBColor&);
 void				handleMouseDown				(My_VectorCanvasPtr, Point);
 Boolean				inSplash					(Point, Point);
 pascal OSStatus		receiveCanvasDraw			(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveWindowClosing		(EventHandlerCallRef, EventRef, void*);
+void				setPaletteColor				(My_VectorCanvasPtr, SInt16, RGBColor const&);
 SInt16				setPortCanvasPort			(My_VectorCanvasPtr);
 
 } // anonymous namespace
@@ -140,17 +164,6 @@ namespace {
 My_VectorCanvasPtrLocker&	gVectorCanvasPtrLocks ()	{ static My_VectorCanvasPtrLocker x; return x; }
 
 long						RGMlastclick = 0L;
-short						RGMcolor[] =
-							{
-								30,			// black
-								33,			// white
-								205,		// red
-								341,		// green
-								409,		// blue
-								273,		// cyan
-								137,		// magenta
-								69			// yellow
-							};
 
 // the following variables are used in bitmap mode
 Boolean						gRGMPbusy = false;	// is device already in use?
@@ -200,29 +213,18 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 	ptr->target = inTarget;
 	
 	// load the NIB containing this dialog (automatically finds the right localization)
-	ptr->wind = NIBWindow(AppResources_ReturnBundleForNIBs(),
-							CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
+	ptr->owningWindow = NIBWindow(AppResources_ReturnBundleForNIBs(),
+									CFSTR("TEKWindow"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
 	
 	// associate this canvas with the window so that it can be found by other things;
 	// NOTE that this is just the simplest thing for now, but a better implementation
 	// would be to use *control* properties and a custom HIView class, associating
 	// the canvas directly with the view that renders it
 	{
-		OSStatus	error = SetWindowProperty(ptr->wind, AppResources_ReturnCreatorCode(),
+		OSStatus	error = SetWindowProperty(ptr->owningWindow, AppResources_ReturnCreatorCode(),
 												kConstantsRegistry_WindowPropertyTypeVectorCanvas,
 												sizeof(ptr->selfRef), &ptr->selfRef);
 		assert_noerr(error);
-	}
-	
-	{
-		HIViewWrap		canvasView(idMyCanvas, ptr->wind);
-		
-		
-		ptr->canvas = canvasView;
-		ptr->canvasDrawHandler.install(GetControlEventTarget(canvasView), receiveCanvasDraw,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
-										result/* context */);
-		assert(ptr->canvasDrawHandler.isInstalled());
 	}
 	
 	// install a close handler so TEK windows are detached properly
@@ -235,15 +237,15 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 		
 		
 		ptr->closeUPP = NewEventHandlerUPP(receiveWindowClosing);
-		error = InstallWindowEventHandler(ptr->wind, ptr->closeUPP,
+		error = InstallWindowEventHandler(ptr->owningWindow, ptr->closeUPP,
 											GetEventTypeCount(whenWindowClosing), whenWindowClosing,
 											ptr->selfRef/* user data */,
 											&ptr->closeHandler/* event handler reference */);
 		assert_noerr(error);
 	}
 	
-	ptr->vg = inID;
-	ptr->vs = nullptr;
+	ptr->interpreter = inID;
+	ptr->session = nullptr;
 	ptr->xorigin = 0;
 	ptr->yorigin = 0;
 	ptr->xscale = kMy_MaximumX;
@@ -262,14 +264,38 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 		gRGMPyoffset = 0;
 	}
 	
-	SetWindowKind(ptr->wind, WIN_TEK);
+	// create a color palette for this window
+	ptr->deviceColors.resize(kMy_MaxColors);
+	{
+		Preferences_ContextRef		defaultFormat = nullptr;
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_GetDefaultContext(&defaultFormat, kPreferences_ClassFormat);
+		assert(kPreferences_ResultOK == prefsResult);
+		copyColorPreferences(ptr, defaultFormat);
+	}
+	
+	// install this handler last so drawing cannot occur prematurely
+	{
+		HIViewWrap		canvasView(idMyCanvas, ptr->owningWindow);
+		
+		
+		ptr->canvas = canvasView;
+		ptr->canvasDrawHandler.install(GetControlEventTarget(canvasView), receiveCanvasDraw,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+										result/* context */);
+		assert(ptr->canvasDrawHandler.isInstalled());
+	}
+	
+	SetWindowKind(ptr->owningWindow, WIN_TEK);
 	{
 		HIWindowRef		frontWindow = GetFrontWindowOfClass(kDocumentWindowClass, true/* visible */);
 		
 		
 		// unless the front window is another graphic, do not force it in front
-		if (WIN_TEK != GetWindowKind(frontWindow)) SendBehind(ptr->wind, frontWindow);
-		ShowWindow(ptr->wind);
+		if (WIN_TEK != GetWindowKind(frontWindow)) SendBehind(ptr->owningWindow, frontWindow);
+		ShowWindow(ptr->owningWindow);
 	}
 	
 	return result;
@@ -291,13 +317,13 @@ VectorCanvas_Dispose	(VectorCanvas_Ref*		inoutRefPtr)
 		
 		
 		setPortCanvasPort(ptr);
-		if (nullptr != ptr->vs)
+		if (nullptr != ptr->session)
 		{
-			Session_TEKDetachTargetGraphic(ptr->vs);
+			Session_TEKDetachTargetGraphic(ptr->session);
 		}
 		RemoveEventHandler(ptr->closeHandler), ptr->closeHandler = nullptr;
 		DisposeEventHandlerUPP(ptr->closeUPP), ptr->closeUPP = nullptr;
-		DisposeWindow(ptr->wind);
+		DisposeWindow(ptr->owningWindow);
 		
 		if (kVectorCanvas_TargetQuickDrawPicture == ptr->target)
 		{
@@ -320,32 +346,6 @@ VectorCanvas_AudioEvent		(VectorCanvas_Ref		UNUSED_ARGUMENT(inRef))
 
 
 /*!
-Erases the entire background of the vector graphics canvas.
-Returns 0 if successful.
-  
-(3.0)
-*/
-SInt16
-VectorCanvas_ClearScreen	(VectorCanvas_Ref	inRef)
-{
-	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	SInt16						result = 0;
-	
-	
-	if (setPortCanvasPort(ptr)) result = -1;
-	else
-	{
-		Rect	bounds;
-		
-		
-		GetPortBounds(GetWindowPort(ptr->wind), &bounds);
-		PaintRect(&bounds);
-	}
-	return result;
-}// ClearScreen
-
-
-/*!
 Returns a copy of the window title string, or nullptr on error.
 
 (3.1)
@@ -358,80 +358,9 @@ VectorCanvas_CopyTitle	(VectorCanvas_Ref	inRef,
 	OSStatus					error = noErr;
 	
 	
-	error = CopyWindowTitleAsCFString(ptr->wind, &outTitle);
+	error = CopyWindowTitleAsCFString(ptr->owningWindow, &outTitle);
 	if (noErr != error) outTitle = nullptr;
 }// CopyTitle
-
-
-/*!
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_CursorHide ()
-{
-}// CursorHide
-
-
-/*!
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_CursorLock ()
-{
-}// CursorLock
-
-
-/*!
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_CursorShow ()
-{
-}// CursorShow
-
-
-/*!
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_DataLine	(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef),
-						 SInt16				UNUSED_ARGUMENT(inData),
-						 SInt16				UNUSED_ARGUMENT(inCount))
-{
-}// DataLine
-
-
-/*!
-Renders a single point in canvas coordinates.  Returns 0 if
-successful.
-
-(3.1)
-*/
-SInt16
-VectorCanvas_DrawDot	(VectorCanvas_Ref	inRef,
-						 SInt16				inX,
-						 SInt16				inY)
-{
-	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	
-	
-	if (kVectorCanvas_TargetScreenPixels == ptr->target)
-	{
-		setPortCanvasPort(ptr);
-	}
-	MoveTo(inX, inY);
-	LineTo(inX, inY);
-	
-	return 0;
-}// DrawDot
 
 
 /*!
@@ -477,14 +406,19 @@ VectorCanvas_DrawLine	(VectorCanvas_Ref	inRef,
 
 
 /*!
-UNIMPLEMENTED.
+Marks the canvas view as invalid, which will trigger a redraw
+at the next opportunity.
 
-(3.0)
+(3.1)
 */
 void
-VectorCanvas_FinishPage		(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef))
+VectorCanvas_InvalidateView		(VectorCanvas_Ref	inRef)
 {
-}// FinishPage
+	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	
+	
+	(OSStatus)HIViewSetNeedsDisplay(ptr->canvas, true);
+}// InvalidateView
 
 
 /*!
@@ -542,7 +476,7 @@ HIWindowRef
 VectorCanvas_ReturnWindow	(VectorCanvas_Ref	inRef)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	HIWindowRef					result = ptr->wind;
+	HIWindowRef					result = ptr->owningWindow;
 	
 	
 	return result;
@@ -558,7 +492,7 @@ VectorInterpreter_ID
 VectorCanvas_ReturnInterpreterID	(VectorCanvas_Ref	inRef)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	VectorInterpreter_ID		result = ptr->vg;
+	VectorInterpreter_ID		result = ptr->interpreter;
 	
 	
 	return result;
@@ -575,7 +509,7 @@ SessionRef
 VectorCanvas_ReturnListeningSession		(VectorCanvas_Ref	inRef)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
-	SessionRef					result = ptr->vs;
+	SessionRef					result = ptr->session;
 	
 	
 	return result;
@@ -609,32 +543,6 @@ VectorCanvas_SetBounds		(Rect const*	inBoundsPtr)
 
 
 /*!
-Specifies text rendering options.
-
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_SetCharacterMode	(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef),
-								 SInt16				UNUSED_ARGUMENT(inRotation),
-								 SInt16				UNUSED_ARGUMENT(inSize))
-{
-}// SetCharacterMode
-
-
-/*!
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_SetGraphicsMode ()
-{
-}// SetGraphicsMode
-
-
-/*!
 Specifies the session that receives input events, such as
 the mouse location.  Returns 0 if successful.
 
@@ -647,7 +555,7 @@ VectorCanvas_SetListeningSession	(VectorCanvas_Ref	inRef,
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	ptr->vs = inSession;
+	ptr->session = inSession;
 	return 0;
 }// SetListeningSession
 
@@ -656,6 +564,10 @@ VectorCanvas_SetListeningSession	(VectorCanvas_Ref	inRef,
 Chooses a color for drawing dots and lines, from among
 a set palette.  Returns 0 if successful.
 
+TEK defines colors as the following: 0 is white, 1 is
+black, 2 is red, 3 is green, 4 is blue, 5 is cyan, 6 is
+magenta, and 7 is yellow.
+
 (3.0)
 */
 SInt16
@@ -663,27 +575,18 @@ VectorCanvas_SetPenColor	(VectorCanvas_Ref	inRef,
 							 SInt16				inColor)
 {
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
+	RGBColor					newColor;
 	
 	
 	if (kVectorCanvas_TargetScreenPixels == ptr->target)
 	{
 		setPortCanvasPort(ptr);
 	}
-	ForeColor(STATIC_CAST(RGMcolor[inColor], SInt32));
+	getPaletteColor(ptr, inColor, newColor);
+	RGBForeColor(&newColor);
 	
 	return 0;
 }// SetPenColor
-
-
-/*!
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_SetTextMode ()
-{
-}// SetTextMode
 
 
 /*!
@@ -698,25 +601,159 @@ VectorCanvas_SetTitle	(VectorCanvas_Ref	inRef,
 	My_VectorCanvasAutoLocker	ptr(gVectorCanvasPtrLocks(), inRef);
 	
 	
-	(OSStatus)SetWindowTitleWithCFString(ptr->wind, inTitle);
+	(OSStatus)SetWindowTitleWithCFString(ptr->owningWindow, inTitle);
 	
 	return 0;
 }// SetTitle
 
 
-/*!
-UNIMPLEMENTED.
-
-(3.0)
-*/
-void
-VectorCanvas_Uncover	(VectorCanvas_Ref	UNUSED_ARGUMENT(inRef))
-{
-}// Uncover
-
-
 #pragma mark Internal Methods
 namespace {
+
+/*!
+Attempts to read all supported color tags from the given
+preference context, and any colors that exist will be
+used to update the specified canvas.
+
+Returns the number of colors that were changed.
+
+(3.1)
+*/
+UInt16
+copyColorPreferences	(My_VectorCanvasPtr			inPtr,
+						 Preferences_ContextRef		inSource,
+						 Boolean					inSearchForDefaults)
+{
+	SInt16				currentIndex = 0;
+	Preferences_Tag		currentPrefsTag = '----';
+	RGBColor			colorValue;
+	UInt16				result = 0;
+	
+	
+	currentIndex = kMy_ColorIndexBackground;
+	currentPrefsTag = kPreferences_TagTerminalColorNormalBackground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	currentIndex = kMy_ColorIndexForeground;
+	currentPrefsTag = kPreferences_TagTerminalColorNormalForeground;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	currentIndex = kMy_ColorIndexRed;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIRed;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	currentIndex = kMy_ColorIndexGreen;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIGreen;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	currentIndex = kMy_ColorIndexBlue;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIBlue;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	currentIndex = kMy_ColorIndexCyan;
+	currentPrefsTag = kPreferences_TagTerminalColorANSICyan;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	currentIndex = kMy_ColorIndexMagenta;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIMagenta;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	currentIndex = kMy_ColorIndexYellow;
+	currentPrefsTag = kPreferences_TagTerminalColorANSIYellow;
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
+															sizeof(colorValue), &colorValue, inSearchForDefaults))
+	{
+		setPaletteColor(inPtr, currentIndex, colorValue);
+		++result;
+	}
+	
+	return result;
+}// copyColorPreferences
+
+
+/*!
+Retrieves the floating-point RGB color for the specified
+TEK color index.
+
+See also the RGBColor version.
+
+(3.1)
+*/
+void
+getPaletteColor		(My_VectorCanvasPtr		inPtr,
+					 SInt16					inZeroBasedIndex,
+					 CGDeviceColor&			outColor)
+{
+	outColor = inPtr->deviceColors[inZeroBasedIndex];
+}// getPaletteColor
+
+
+/*!
+Retrieves the RGB color for the specified TEK color index.
+
+See also the CGDeviceColor version.
+
+(3.1)
+*/
+void
+getPaletteColor	(My_VectorCanvasPtr		inPtr,
+				 SInt16					inZeroBasedIndex,
+				 RGBColor&				outColor)
+{
+	CGDeviceColor	deviceColor;
+	Float32			fullIntensityFraction = 0.0;
+	
+	
+	getPaletteColor(inPtr, inZeroBasedIndex, deviceColor);
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= deviceColor.red;
+	outColor.red = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= deviceColor.green;
+	outColor.green = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= deviceColor.blue;
+	outColor.blue = STATIC_CAST(fullIntensityFraction, unsigned short);
+}// getPaletteColor
+
 
 /*!
 Responds to a click/drag in a TEK window.  The current QuickDraw
@@ -745,11 +782,11 @@ handleMouseDown		(My_VectorCanvasPtr		inPtr,
 					((SInt32)inPtr->yscale * (SInt32)inViewLocalMouse.v) / (SInt32)inPtr->height;
 			
 			// the report is exactly 5 characters long
-			if (0 == VectorInterpreter_FillInPositionReport(inPtr->vg, STATIC_CAST(lx, UInt16), STATIC_CAST(ly, UInt16),
+			if (0 == VectorInterpreter_FillInPositionReport(inPtr->interpreter, STATIC_CAST(lx, UInt16), STATIC_CAST(ly, UInt16),
 															' ', cursorReport))
 			{
-				Session_SendData(inPtr->vs, cursorReport, 5);
-				Session_SendData(inPtr->vs, " \r\n", 3);
+				Session_SendData(inPtr->session, cursorReport, 5);
+				Session_SendData(inPtr->session, " \r\n", 3);
 			}
 		}
 		
@@ -769,7 +806,7 @@ handleMouseDown		(My_VectorCanvasPtr		inPtr,
 		MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
 		
 		
-		SetPortWindowPort(inPtr->wind);
+		SetPortWindowPort(inPtr->owningWindow);
 		
 		last = inViewLocalMouse;
 		current = inViewLocalMouse;
@@ -837,8 +874,8 @@ handleMouseDown		(My_VectorCanvasPtr		inPtr,
 				inPtr->xorigin = 0;
 				inPtr->yorigin = 0;
 				
-				VectorInterpreter_Zoom(inPtr->vg, 0, 0, kMy_MaximumX - 1, kMy_MaximumY - 1);
-				VectorInterpreter_PageCommand(inPtr->vg);
+				VectorInterpreter_Zoom(inPtr->interpreter, 0, 0, kMy_MaximumX - 1, kMy_MaximumY - 1);
+				//VectorInterpreter_PageCommand(inPtr->interpreter);
 				RGMlastclick = 0L;
 			}
 			else
@@ -855,9 +892,9 @@ handleMouseDown		(My_VectorCanvasPtr		inPtr,
 			x1 = (x1 < (x0 + 2)) ? x0 + 4 : x1;
 			y0 = (y0 < (y1 + 2)) ? y1 + 4 : y0;
 			
-			VectorInterpreter_Zoom(inPtr->vg, x0 + inPtr->xorigin, y1 + inPtr->yorigin,
+			VectorInterpreter_Zoom(inPtr->interpreter, x0 + inPtr->xorigin, y1 + inPtr->yorigin,
 									x1 + inPtr->xorigin, y0 + inPtr->yorigin);
-			VectorInterpreter_PageCommand(inPtr->vg);
+			//VectorInterpreter_PageCommand(inPtr->interpreter);
 			
 			inPtr->xscale = x1 - x0;
 			inPtr->yscale = y0 - y1;
@@ -1004,18 +1041,18 @@ receiveCanvasDraw	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				// finally, draw the graphic!
 				// INCOMPLETE - these callbacks need to be updated to support Core Graphics
-				VectorInterpreter_StopRedraw(dataPtr->vg);
-				VectorInterpreter_PageCommand(dataPtr->vg);
 				{
-					SInt16		zeroIfMoreRedrawsNeeded = 0;
-					SInt16		loopGuard = 0;
+					SInt16			backgroundColorIndex = VectorInterpreter_ReturnBackgroundColor(dataPtr->interpreter);
+					CGDeviceColor	backgroundColor;
 					
 					
-					while ((0 == zeroIfMoreRedrawsNeeded) && (loopGuard++ < 10000/* arbitrary */))
-					{
-						zeroIfMoreRedrawsNeeded = VectorInterpreter_PiecewiseRedraw(dataPtr->vg, dataPtr->vg);
-					}
+					assert((backgroundColorIndex >= 0) && (backgroundColorIndex < kMy_MaxColors));
+					getPaletteColor(dataPtr, backgroundColorIndex, backgroundColor);
+					CGContextSetRGBFillColor(drawingContext, backgroundColor.red, backgroundColor.green,
+												backgroundColor.blue, 1.0/* alpha */);
+					CGContextFillRect(drawingContext, floatBounds);
 				}
+				VectorInterpreter_Redraw(dataPtr->interpreter, dataPtr->interpreter);
 				
 				result = noErr;
 			}
@@ -1070,6 +1107,20 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
+Changes the RGB color for the specified TEK color index.
+
+(3.1)
+*/
+void
+setPaletteColor		(My_VectorCanvasPtr		inPtr,
+					 SInt16					inZeroBasedIndex,
+					 RGBColor const&		inColor)
+{
+	inPtr->deviceColors[inZeroBasedIndex] = ColorUtilities_CGDeviceColorMake(inColor);
+}// setPaletteColor
+
+
+/*!
 Sets the current QuickDraw port to that of the given canvas.
 Returns 0 if successful.
 
@@ -1078,7 +1129,7 @@ Returns 0 if successful.
 SInt16
 setPortCanvasPort	(My_VectorCanvasPtr		inPtr)
 {
-	SetPortWindowPort(inPtr->wind);
+	SetPortWindowPort(inPtr->owningWindow);
 	return 0;
 }// setPortCanvasPort
 

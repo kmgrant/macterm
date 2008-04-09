@@ -219,8 +219,6 @@ struct My_VectorInterpreter
 	// WARNING: shrinkVectorDB() is the recommended way to reduce the size of "commandList", to keep iterators in sync
 	My_VectorDB				commandList;		// list of commands
 	My_VectorDB::iterator	toCurrentCommand;	// used to track drawing
-	char	storing;		/* are we currently saving data from this window */
-	short	drawing;		/* redrawing or not? */
 };
 typedef My_VectorInterpreter*			My_VectorInterpreterPtr;
 typedef My_VectorInterpreter const*		My_VectorInterpreterConstPtr;
@@ -242,9 +240,6 @@ void			newcoord					(My_VectorInterpreterPtr);
 void			storexy						(My_VectorInterpreterPtr, short, short);
 void			VGclrstor					(My_VectorInterpreterPtr);
 void			VGdraw						(My_VectorInterpreterPtr, char);
-void			VGdumpstore					(My_VectorInterpreterPtr, short (*)(short));
-void			VGtmode						(My_VectorInterpreterPtr);
-void			VGwhatzoom					(My_VectorInterpreterPtr, short*, short*, short*, short*);
 
 } // anonymous namespace
 
@@ -520,18 +515,6 @@ VectorInterpreter_ID	gIDCounter = 0;
 #pragma mark Public Methods
 
 /*!
-Initializes the whole TEK environment.  Should be called
-before using any other TEK functionality.
-
-(2.6)
-*/
-void
-VectorInterpreter_Init ()
-{
-}// Init
-
-
-/*!
 Constructs a new interpreter object that will ultimately
 render in the specified way, respecting the given command set.
 Returns "kVectorInterpreter_InvalidID" on failure.
@@ -562,9 +545,7 @@ VectorInterpreter_New	(VectorInterpreter_Target	inTarget,
 		ptr->mode = ALPHA;
 		ptr->TEKPanel = nullptr;
 		ptr->state = DONE;
-		ptr->storing = true;
 		ptr->textcol = 0;
-		ptr->drawing = 1;
 		fontnum(ptr, 0);
 		storexy(ptr, 0, 3071);
 		
@@ -685,17 +666,10 @@ VectorInterpreter_PageCommand	(VectorInterpreter_ID	inGraphicID)
 	
 	if (nullptr != ptr->canvas)
 	{
-		if (kVectorInterpreter_ModeTEK4105 == ptr->commandSet)
-		{
-			VectorCanvas_SetPenColor(ptr->canvas, ptr->TEKBackground);
-		}
-		else
-		{
-			VectorCanvas_SetPenColor(ptr->canvas, 0);
-		}
-		VectorCanvas_ClearScreen(ptr->canvas);
+		VectorCanvas_InvalidateView(ptr->canvas);
 		VectorCanvas_SetPenColor(ptr->canvas, 1);
 	}
+	VGclrstor(ptr);
 	ptr->mode = ALPHA;
 	ptr->state = DONE;
 	ptr->textcol = 0;
@@ -705,55 +679,8 @@ VectorInterpreter_PageCommand	(VectorInterpreter_ID	inGraphicID)
 
 
 /*!
-Redraws part of a graphic; must be called repeatedly to draw
-everything.  Returns 0 if more calls are needed, 1 if complete,
-and negative on error.  If the drawing is complete, this call
-will start it again.
-
-Clear the screen before invoking a redraw.
-
-(2.6)
-*/
-SInt16
-VectorInterpreter_PiecewiseRedraw	(VectorInterpreter_ID	inGraphicID,
-									 VectorInterpreter_ID	inDestinationGraphicID)
-{
-	UInt16 const				kPiecewiseRedrawCount = 50;		// TEMPORARY - historical...why the hell is it this value?
-	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
-	My_VectorInterpreterPtr		destPtr = VGwin[inDestinationGraphicID];
-	SInt16						result = -1;
-	
-	
-	if (ptr->drawing)
-	{
-		// continuation of previous redraw
-		ptr->toCurrentCommand = ptr->commandList.begin();
-		ptr->drawing = 0;
-	}
-	
-	for (SInt16 count = 0;
-			(++count < kPiecewiseRedrawCount) && (ptr->commandList.end() != ptr->toCurrentCommand);
-			++(ptr->toCurrentCommand))
-	{
-		VGdraw(destPtr, *(ptr->toCurrentCommand));
-	}
-	
-	if (ptr->commandList.end() == ptr->toCurrentCommand)
-	{
-		// redraw complete
-		ptr->drawing = 1;
-	}
-	result = ptr->drawing;
-	
-	return result;
-}// PiecewiseRedraw
-
-
-/*!
 Redraws the whole graphic.  Clear the screen before invoking
 a redraw.
-
-See also VectorInterpreter_PiecewiseRedraw().
 
 (2.6)
 */
@@ -771,6 +698,26 @@ VectorInterpreter_Redraw	(VectorInterpreter_ID	inGraphicID,
 		VGdraw(destPtr, *(ptr->toCurrentCommand));
 	}
 }// Redraw
+
+
+/*!
+Returns the current background color index, as defined by
+TEK (from 0 to 7), suitable for clearing the screen in a
+renderer.
+
+(3.1)
+*/
+SInt16
+VectorInterpreter_ReturnBackgroundColor		(VectorInterpreter_ID	inGraphicID)
+{
+	My_VectorInterpreterConstPtr	ptr = VGwin[inGraphicID];
+	SInt16							result = (kVectorInterpreter_ModeTEK4105 == ptr->commandSet)
+												? ptr->TEKBackground
+												: 0;
+	
+	
+	return result;
+}// ReturnBackgroundColor
 
 
 /*!
@@ -832,12 +779,14 @@ VectorInterpreter_ProcessData	(VectorInterpreter_ID	inGraphicID,
 		for (charPtr = inDataPtr;
 				((kPastEnd != charPtr) && (24/* CAN(CEL) character */ != *charPtr)); ++charPtr)
 		{
-			if (ptr->storing)
-			{
-				ptr->commandList.push_back(*charPtr);
-			}
+			ptr->commandList.push_back(*charPtr);
+		#if 1
 			VGdraw(ptr, *charPtr);
+		#endif
 		}
+	#if 0
+		VectorCanvas_InvalidateView(ptr->canvas);
+	#endif
 		result = charPtr - inDataPtr;
 	}
 	return result;
@@ -859,23 +808,6 @@ VectorInterpreter_SetPageClears		(VectorInterpreter_ID	inGraphicID,
 	
 	ptr->pageClears = inTrueClearsFalseNewWindow;
 }// SetPageClears
-
-
-/*!
-Aborts a redraw in progress.  Prevents successive calls to
-VectorInterpreter_PiecewiseRedraw() from completing the
-picture, instead the redraw would start from the beginning.
-
-(2.6)
-*/
-void
-VectorInterpreter_StopRedraw	(VectorInterpreter_ID	inGraphicID)
-{
-	My_VectorInterpreterPtr		ptr = VGwin[inGraphicID];
-	
-	
-	ptr->drawing = 1;
-}// StopRedraw
 
 
 /*	Set new borders for zoom/pan region.
@@ -1544,7 +1476,6 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 				if (vp->pageClears)
 				{
 					VectorInterpreter_PageCommand(vp->selfRef);
-					VGclrstor(vp);
 				}
 				break;
 			case 'L':
@@ -2068,39 +1999,6 @@ void VGdraw(My_VectorInterpreterPtr vp, char c)			/* the latest input char */
 		if (vp->state == CANCEL) vp->state = DONE;
 	} while (goagain);
 	return;
-}
-
-
-/*	Successively call the function pointed to by 'func' for each
- *	character stored from window vw.  Each character will
- *	be passed in integer form as the only parameter.  A value of -1
- *	will be passed on the last call to indicate the end of the data.
- */
-void	VGdumpstore(My_VectorInterpreterPtr		inPtr, short (*func )(short))
-{
-	for (inPtr->toCurrentCommand = inPtr->commandList.begin();
-			inPtr->commandList.end() != inPtr->toCurrentCommand;
-			++(inPtr->toCurrentCommand))
-	{
-		(*func)(*(inPtr->toCurrentCommand));
-	}
-	(*func)(-1);
-}
-
-
-/*	Put the specified real device into text mode */
-void	VGtmode(My_VectorInterpreterPtr)
-{
-	VectorCanvas_SetTextMode();
-}
-
-
-void	VGwhatzoom(My_VectorInterpreterPtr inPtr, short *px0, short *py0, short *px1, short *py1)
-{
-	*py0 = inPtr->winbot;
-	*px0 = inPtr->winleft;
-	*py1 = inPtr->wintop;
-	*px1 = inPtr->winright;
 }
 
 } // anonymous namespace

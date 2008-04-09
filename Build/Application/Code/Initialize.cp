@@ -260,11 +260,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		//MacroSetupWindow_RunTests();
 	#endif
 		
-		VectorInterpreter_Init(); // TEK setup
-	#if RUN_MODULE_TESTS
-		//VectorInterpreter_RunTests();
-	#endif
-		
 		RasterGraphicsKernel_Init(); // ICR setup
 	#if RUN_MODULE_TESTS
 		//RasterGraphicsKernel_RunTests();
