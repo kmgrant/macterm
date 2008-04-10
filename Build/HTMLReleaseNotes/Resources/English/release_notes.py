@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080410',
     '20080409',
     '20080408',
     '20080406',
@@ -132,6 +133,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080410': [
+		'Fixed some glitches in the display of items in the Window menu.',
+	],
 	'20080409': [
 		'Fixed random actions to be more random; used in such things as the splash screen and the random terminal format setting.',
 	],

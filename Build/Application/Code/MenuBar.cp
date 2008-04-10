@@ -867,10 +867,9 @@ MenuBar_SetFontMenuAvailable		(Boolean		inIsAvailable)
 
 
 /*!
-To associate a menu item with a function specifically
-designed to report what its proper state should be, use
-this method.  The menu item’s reference constant is used
-to store the information.
+Associates a menu item with a function that reports the proper
+state of the item at any given time.  A menu item property is
+used to store the information.
 
 See also MenuBar_SetMenuItemStateTrackerProcByCommandID().
 
@@ -881,23 +880,25 @@ MenuBar_SetMenuItemStateTrackerProc		(MenuRef							inMenu,
 										 MenuItemIndex						inItemIndex,
 										 MenuCommandStateTrackerProcPtr		inProc)
 {
-	if ((nullptr != inMenu) && (inItemIndex > 0)) SetMenuItemRefCon(inMenu, inItemIndex, REINTERPRET_CAST(inProc, UInt32));
+	if ((nullptr != inMenu) && (inItemIndex > 0))
+	{
+		OSStatus	error = noErr;
+		
+		
+		error = SetMenuItemProperty(inMenu, inItemIndex, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_MenuPropertyTypeStateTrackerProcPtr,
+									sizeof(inProc), &inProc);
+		assert_noerr(error);
+	}
 }// SetMenuItemStateTrackerProc
 
 
 /*!
-To associate a menu command with a function specifically
-designed to report what its proper state should be, use
-this method.  The menu item’s reference constant is used
-to store the information.
+Associates a menu item with a function that reports the proper
+state of the item at any given time.  A menu item property is
+used to store the information.
 
-This is the best way to set or remove a callback from a
-menu item in MacTelnet 3.0.  It is completely independent
-of menu implementation, and will always modify the correct
-item even if a menu command is relocated within a menu or
-moved to a different menu altogether.  Do not defeat the
-purpose of the new, centralized menu management system in
-MacTelnet 3.0!
+See also MenuBar_SetMenuItemStateTrackerProc().
 
 (3.0)
 */
@@ -912,8 +913,14 @@ MenuBar_SetMenuItemStateTrackerProcByCommandID	(UInt32								inCommandID,
 	
 	
 	getMenusAndMenuItemIndicesByCommandID(inCommandID, &menuHandle1, &menuHandle2, &itemIndex1, &itemIndex2);
-	MenuBar_SetMenuItemStateTrackerProc(menuHandle1, itemIndex1, inProc);
-	MenuBar_SetMenuItemStateTrackerProc(menuHandle2, itemIndex2, inProc);
+	if ((nullptr != menuHandle1) && (0 != itemIndex1))
+	{
+		MenuBar_SetMenuItemStateTrackerProc(menuHandle1, itemIndex1, inProc);
+	}
+	if ((nullptr != menuHandle2) && (0 != itemIndex2))
+	{
+		MenuBar_SetMenuItemStateTrackerProc(menuHandle2, itemIndex2, inProc);
+	}
 }// SetMenuItemStateTrackerProcByCommandID
 
 
@@ -1288,20 +1295,25 @@ getMenuAndMenuItemIndexByCommandID	(UInt32		inCommandID,
 
 
 /*!
-To interpret the reference constant of a menu item as if
-it were a command state tracking routine, use this method.
-This allows you to directly get access to a routine that
-can describe an item’s state, using only the item
-information itself.
+Retrieves the command state tracking routine stored in a
+property of the specified menu item, or nullptr if there is
+none.
 
 (3.0)
 */
 void
 getMenuItemAdjustmentProc	(MenuRef							inMenu,
-							 MenuItemIndex						inItemNumber,
+							 MenuItemIndex						inItemIndex,
 							 MenuCommandStateTrackerProcPtr*	outProcPtrPtr)
 {
-	(OSStatus)GetMenuItemRefCon(inMenu, inItemNumber, (UInt32*)outProcPtrPtr);
+	OSStatus	error = noErr;
+	UInt32		actualSize = 0;
+	
+	
+	error = GetMenuItemProperty(inMenu, inItemIndex, AppResources_ReturnCreatorCode(),
+								kConstantsRegistry_MenuPropertyTypeStateTrackerProcPtr,
+								sizeof(*outProcPtrPtr), &actualSize, outProcPtrPtr);
+	if (noErr != error) *outProcPtrPtr = nullptr;
 }// getMenuItemAdjustmentProc
 
 
@@ -2290,9 +2302,9 @@ setUpFormatFavoritesMenu	(MenuRef	inMenu)
 		}
 		
 		// ensure these items are inactive except for terminal windows
-		for (SInt16 i = 1; i <= gNumberOfFormatMenuItemsAdded; ++i)
+		for (UInt32 i = 1; i <= gNumberOfFormatMenuItemsAdded; ++i)
 		{
-			MenuItemIndex		itemIndex = 0;
+			MenuItemIndex	itemIndex = 0;
 			
 			
 			error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandFormatByFavoriteName,
@@ -2346,9 +2358,9 @@ setUpMacroSetsMenu	(MenuRef	inMenu)
 																		gNumberOfMacroSetMenuItemsAdded);
 			
 			// ensure these items are inactive except for terminal windows
-			for (SInt16 i = 1; i <= gNumberOfMacroSetMenuItemsAdded; ++i)
+			for (UInt32 i = 1; i <= gNumberOfMacroSetMenuItemsAdded; ++i)
 			{
-				MenuItemIndex		itemIndex = 0;
+				MenuItemIndex	itemIndex = 0;
 				
 				
 				error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandMacroSetByFavoriteName,
@@ -2736,9 +2748,9 @@ setUpTranslationTablesMenu	(MenuRef	inMenu)
 			//														gNumberOfTranslationTableMenuItemsAdded);
 			
 			// ensure these items are inactive except for terminal windows
-			for (SInt16 i = 1; i <= gNumberOfTranslationTableMenuItemsAdded; ++i)
+			for (UInt32 i = 1; i <= gNumberOfTranslationTableMenuItemsAdded; ++i)
 			{
-				MenuItemIndex		itemIndex = 0;
+				MenuItemIndex	itemIndex = 0;
 				
 				
 				error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandTranslationTableByFavoriteName,
@@ -2784,7 +2796,7 @@ setUpWindowMenu		(MenuRef	inMenu)
 	// set up callback data
 	bzero(&insertWhere, sizeof(insertWhere));
 	insertWhere.menu = inMenu;
-	insertWhere.afterItemIndex = kDividerIndex;
+	insertWhere.afterItemIndex = kPreDividerIndex; // because, the divider is not present at insertion time
 	
 	// erase previous items
 	if (0 != gNumberOfWindowMenuItemsAdded)

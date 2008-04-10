@@ -252,6 +252,21 @@ enum
 
 //@}
 
+//!\name Menu-Related Constants
+//@{
+
+/*!
+This list contains all tags used with the SetMenuProperty()
+API; kept in one place so they are known to be unique.
+*/
+enum
+{
+	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
+	kConstantsRegistry_MenuPropertyTypeStateTrackerProcPtr		= 'STrk'	//!< data: MenuCommandStateTrackerProcPtr
+};
+
+//@}
+
 //!\name Undoable-Operation Context Identifiers
 //@{
 

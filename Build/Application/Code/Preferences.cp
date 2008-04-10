@@ -2359,7 +2359,7 @@ Preferences_InsertContextNamesInMenu	(Preferences_Class		inClass,
 			nameCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(nameCFStringCFArray, i));
 			if (nullptr != nameCFString)
 			{
-				error = InsertMenuItemTextWithCFString(inoutMenuRef, nameCFString, inAfterItemIndex + i,
+				error = InsertMenuItemTextWithCFString(inoutMenuRef, nameCFString, inAfterItemIndex + outHowManyItemsAdded,
 														kMenuItemAttrIgnoreMeta /* attributes */,
 														inCommandID/* command ID */);
 				if (noErr == error)
