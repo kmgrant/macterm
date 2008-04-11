@@ -682,18 +682,19 @@ and only add a command if it is not already in the list
 void
 addToHistory	(CFStringRef	inText)
 {
-	register SInt16		i = 0;
-	SInt16 const		kLastItem = kCommandLineCommandHistorySize - 1;
-	
-	
 	gCommandHistory().insert(gCommandHistory().begin(), inText);
-	gCommandHistory().resize(kCommandLineCommandHistorySize);
+	if (gCommandHistory().size() > kCommandLineCommandHistorySize)
+	{
+		// throw away old lines
+		gCommandHistory().resize(kCommandLineCommandHistorySize);
+	}
 	gCommandHistoryCurrentIndex = -1;
 	unless (IsControlActive(gCommandLineArrows)) ActivateControl(gCommandLineArrows);
 	DeleteMenuItems(gCommandLineHistoryMenuRef, 1/* first item */, CountMenuItems(gCommandLineHistoryMenuRef)/* number of items to delete */);
-	for (i = 0; i <= kLastItem; ++i)
+	for (CommandHistoryList::const_iterator toCommandLine = gCommandHistory().begin();
+			gCommandHistory().end() != toCommandLine; ++toCommandLine)
 	{
-		AppendMenuItemTextWithCFString(gCommandLineHistoryMenuRef, gCommandHistory()[i].returnCFStringRef(),
+		AppendMenuItemTextWithCFString(gCommandLineHistoryMenuRef, toCommandLine->returnCFStringRef(),
 										0/* attributes */, 0/* command ID */, nullptr/* new itemÕs index */);
 	}
 }// addToHistory
@@ -1575,7 +1576,7 @@ rotateHistory	(SInt16		inHowFarWhichWay)
 	
 	// the requested adjustment must land the history index in the valid range to be acceptable
 	result = (((gCommandHistoryCurrentIndex + inHowFarWhichWay) >= -1) &&
-				((gCommandHistoryCurrentIndex + inHowFarWhichWay) < kCommandLineCommandHistorySize));
+				((gCommandHistoryCurrentIndex + inHowFarWhichWay) < gCommandHistory().size()));
 	
 	if (result)
 	{
