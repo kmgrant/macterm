@@ -114,7 +114,18 @@ See header or "pydoc" for Python docstrings.
 void
 Base::all_done ()
 {
+#if 0
+	// Argh...well, this is a problem!  The final ExitToShell() *might* trigger
+	// final releases of things like HIViews for TerminalViews, which in turn
+	// triggers object destructor calls that *could* still rely on certain
+	// modules being initialized.  In the old days this was no big deal because
+	// it was always possible to know the order of teardown.  But as long as
+	// the OS can do an end run and destroy objects as late as it damn well
+	// pleases, especially as part of THE EXIT SYSTEM CALL, it will be very
+	// difficult indeed to tear down modules in a safe order.  So the extremely
+	// ugly work-around for now is to simply not tear anything down at all...
 	Initialize_ApplicationShutdown();
+#endif
 	MainEntryPoint_ImmediatelyQuit();
 }// all_done
 

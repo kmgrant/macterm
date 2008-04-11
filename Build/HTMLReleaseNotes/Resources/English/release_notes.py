@@ -135,6 +135,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080410': [
 		'Fixed some glitches in the display of items in the Window menu.',
+		'Fixed a possible crash at quitting time if the Command Line was ever displayed.',
 	],
 	'20080409': [
 		'Fixed random actions to be more random; used in such things as the splash screen and the random terminal format setting.',
