@@ -173,6 +173,28 @@ Alert_Init	(short		inApplicationResourceFile)
 {
 	gApplicationResourceFile = inApplicationResourceFile;
 	gAlertButtonHICommandUPP = NewEventHandlerUPP(receiveHICommand);
+	
+	// register application icon, because the "AlertMessages.nib" file
+	// relies on this type/creator combination for the icon badge
+	{
+		IconRef		result = nullptr;
+		FSRef		iconFile;
+		
+		
+		if (AppResources_GetArbitraryResourceFileFSRef
+			(AppResources_ReturnBundleIconFilenameNoExtension(),
+				CFSTR("icns")/* type */, iconFile))
+		{
+			if (noErr != RegisterIconRefFromFSRef(AppResources_ReturnCreatorCode(),
+													kConstantsRegistry_IconServicesIconApplication,
+													&iconFile, &result))
+			{
+				// failed!
+				Console_WriteLine("warning, failed to register application icon for use in alert messages");
+			}
+		}
+	}
+	
 	gIsInited = true;
 }// Init
 
