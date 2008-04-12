@@ -38,6 +38,9 @@
 
 #pragma mark Public Methods
 
+void
+	CocoaBasic_AboutPanelDisplay			();
+
 Boolean
 	CocoaBasic_ApplicationLoad				();
 

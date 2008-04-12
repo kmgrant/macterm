@@ -68,6 +68,25 @@ My_NoticeColorPanelChange*		gColorWatcher = nil;		//!< sees color changes
 #pragma mark Public Methods
 
 /*!
+Shows the standard About panel, or brings it to the front.
+
+(1.0)
+*/
+void
+CocoaBasic_AboutPanelDisplay ()
+{
+	AutoPool		_;
+	// clear out the version field because it tends to be redundant
+	NSDictionary*	aboutBoxOptions = [NSDictionary dictionaryWithObjectsAndKeys:
+										@"", @"Version",
+										nil];
+	
+	
+	[NSApp orderFrontStandardAboutPanelWithOptions:aboutBoxOptions];
+}// AboutPanelDisplay
+
+
+/*!
 Initializes a Cocoa application by calling
 NSApplicationLoad().
 

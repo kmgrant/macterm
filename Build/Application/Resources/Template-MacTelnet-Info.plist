@@ -242,6 +242,11 @@
 	<!--<string>http://homepage.mac.com/kmg/mactelnet/updates/%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%.html</string>-->
 	<key>NSAppleScriptEnabled</key>
 	<true/>
+	<!-- IMPORTANT: On older Mac OS X versions, the copyright is limited to 2 lines for About box display. -->
+	<!-- New-lines and indentation in the copyright string are significant. -->
+	<key>NSHumanReadableCopyright</key>
+	<string>©1998-2008 by Kevin M. Grant
+©1986-1994 U. of Illinois Board of Trustees</string>
 	<key>NSServices</key>
 	<array>
 		<dict>

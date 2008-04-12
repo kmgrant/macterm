@@ -92,7 +92,6 @@
 		0AC6BB2C0A8C0BA000AFF37A /* StatusIcon.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE1C055432A400ACDF3A /* StatusIcon.cp */; };
 		0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE2D055432A400ACDF3A /* TextTranslation.cp */; };
 		0AC6BB2E0A8C0BA000AFF37A /* Embedding.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD3055432A400ACDF3A /* Embedding.cp */; };
-		0AC6BB2F0A8C0BA000AFF37A /* AboutBox.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB7055432A400ACDF3A /* AboutBox.cp */; };
 		0AC6BB300A8C0BA000AFF37A /* TelnetPrinting.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */; };
 		0AC6BB310A8C0BA000AFF37A /* ProgressDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0A055432A400ACDF3A /* ProgressDialog.cp */; };
 		0AC6BB320A8C0BA000AFF37A /* InfoWindow.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE7055432A400ACDF3A /* InfoWindow.cp */; };
@@ -218,7 +217,6 @@
 		0A4123170ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelMacros.nib; sourceTree = "<group>"; };
 		0A4123190ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelSessions.nib; sourceTree = "<group>"; };
 		0A41231B0ACE525B0067D333 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelTerminals.nib; sourceTree = "<group>"; };
-		0A4603BA0554376100ACDF3A /* AboutBox.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AboutBox.h; path = Application/Code/AboutBox.h; sourceTree = SOURCE_ROOT; };
 		0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AppleEventUtilities.h; path = Application/Code/AppleEventUtilities.h; sourceTree = SOURCE_ROOT; };
 		0A4603BD0554376100ACDF3A /* BasicTypesAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = BasicTypesAE.h; path = Application/Code/BasicTypesAE.h; sourceTree = "<group>"; };
 		0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CarbonEventUtilities.template.h; path = Shared/Code/CarbonEventUtilities.template.h; sourceTree = "<group>"; };
@@ -326,7 +324,6 @@
 		0A46059605543D7C00ACDF3A /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		0A46059705543D7C00ACDF3A /* System.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = System.framework; path = /System/Library/Frameworks/System.framework; sourceTree = "<absolute>"; };
 		0A46079705543DE400ACDF3A /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
-		0A46FDB7055432A400ACDF3A /* AboutBox.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AboutBox.cp; path = Application/Code/AboutBox.cp; sourceTree = "<group>"; };
 		0A46FDB8055432A400ACDF3A /* AlertMessages.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AlertMessages.cp; path = Application/Code/AlertMessages.cp; sourceTree = "<group>"; };
 		0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AppleEventUtilities.cp; path = Application/Code/AppleEventUtilities.cp; sourceTree = "<group>"; };
 		0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = BasicTypesAE.cp; path = Application/Code/BasicTypesAE.cp; sourceTree = "<group>"; };
@@ -457,7 +454,6 @@
 		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
 		0A719D54055D963A009B0A88 /* ControlResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ControlResources.h; path = Application/Resources/ControlResources.h; sourceTree = "<group>"; };
 		0A719D55055D963A009B0A88 /* PreferenceResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PreferenceResources.h; path = Application/Resources/PreferenceResources.h; sourceTree = "<group>"; };
-		0A72360A05703FB7005BA8D1 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AboutBox.nib; sourceTree = "<group>"; };
 		0A73DB9608C568D90099BA73 /* MacTelnet.help */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MacTelnet.help; path = HTMLHelp/MacTelnet.help; sourceTree = SOURCE_ROOT; };
 		0A7530D20580470F00BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MenuForDockIcon.nib; sourceTree = "<group>"; };
 		0A7530DE058048F800BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/CommandLine.nib; sourceTree = "<group>"; };
@@ -679,7 +675,6 @@
 				0AC6BDB90A8C130400AFF37A /* Python */,
 				0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */,
 				0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */,
-				0A46FDB7055432A400ACDF3A /* AboutBox.cp */,
 				0A26DD900CCF09D400768AD8 /* AddressDialog.cp */,
 				0A46FDB8055432A400ACDF3A /* AlertMessages.cp */,
 				0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */,
@@ -757,7 +752,6 @@
 				0A46FE3B055432A400ACDF3A /* WindowInfo.cp */,
 				0A46FE3C055432A400ACDF3A /* WindowTitleDialog.cp */,
 				0A46FE3D055432A400ACDF3A /* Workspace.cp */,
-				0A4603BA0554376100ACDF3A /* AboutBox.h */,
 				0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */,
 				0A4603F40554376100ACDF3A /* AlertMessages.h */,
 				0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */,
@@ -948,7 +942,6 @@
 				0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */,
 				0AC57BC40B1AE73B000F0250 /* MainMenus.nib */,
 				0ADC6B4008739552000A7EFC /* MainMenuHelp.nib */,
-				0A72360905703FB7005BA8D1 /* AboutBox.nib */,
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
 				0ADEFCCC06C34E1B00814772 /* Clipboard.nib */,
 				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
@@ -1367,7 +1360,6 @@
 				0AC6BB2C0A8C0BA000AFF37A /* StatusIcon.cp in Sources */,
 				0AC6BB2D0A8C0BA000AFF37A /* TextTranslation.cp in Sources */,
 				0AC6BB2E0A8C0BA000AFF37A /* Embedding.cp in Sources */,
-				0AC6BB2F0A8C0BA000AFF37A /* AboutBox.cp in Sources */,
 				0AC6BB300A8C0BA000AFF37A /* TelnetPrinting.cp in Sources */,
 				0AC6BB310A8C0BA000AFF37A /* ProgressDialog.cp in Sources */,
 				0AC6BB320A8C0BA000AFF37A /* InfoWindow.cp in Sources */,
@@ -1494,14 +1486,6 @@
 				0A6E225906CF42F0004AC0A4 /* English */,
 			);
 			name = KioskPasswordDialog.nib;
-			sourceTree = "<group>";
-		};
-		0A72360905703FB7005BA8D1 /* AboutBox.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A72360A05703FB7005BA8D1 /* English */,
-			);
-			name = AboutBox.nib;
 			sourceTree = "<group>";
 		};
 		0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */ = {

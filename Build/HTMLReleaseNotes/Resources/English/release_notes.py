@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080411',
     '20080410',
     '20080409',
     '20080408',
@@ -133,6 +134,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080411': [
+		'The About box now uses the Cocoa standard implementation.',
+		'Fixed certain cases on Panther where user interface panels could become "unclickable".',
+	],
 	'20080410': [
 		'Fixed some glitches in the display of items in the Window menu.',
 		'Fixed a possible crash at quitting time if the Command Line was ever displayed.',

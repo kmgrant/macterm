@@ -57,6 +57,7 @@ extern "C"
 #include <AlertMessages.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
+#include <CocoaBasic.h>
 #include <Console.h>
 #include <Localization.h>
 #include <MemoryBlocks.h>
@@ -320,9 +321,9 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		switch (inCommandID)
 		{
-		//case kCommandAboutThisApplication:
-		//	see AboutBox.cp
-		//  break;
+		case kCommandAboutThisApplication:
+			CocoaBasic_AboutPanelDisplay();
+			break;
 		
 		//case kCommandCreditsAndLicenseInfo:
 		//	see AboutBox.cp

@@ -65,7 +65,6 @@
 #include "StringResources.h"
 
 // MacTelnet includes
-#include "AboutBox.h"
 #include "AppResources.h"
 #include "Clipboard.h"
 #include "CommandLine.h"
@@ -141,13 +140,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	
 	// initialize memory manager, start up toolbox managers, etc.
 	initMacOSToolbox();
-	{
-		Boolean		cocoaOK = false;
-		
-		
-		cocoaOK = CocoaBasic_ApplicationLoad();
-		assert(cocoaOK);
-	}
 	
 	// on Mac OS X the following call also stops the bouncing of MacTelnet’s Dock icon
 	FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
@@ -253,11 +245,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		InfoWindow_Init(); // installs command handler to enable this window to be displayed and hidden
 	#if RUN_MODULE_TESTS
 		//InfooWindow_RunTests();
-	#endif
-		
-		AboutBox_Init(); // installds command handler to enable this window to be displayed
-	#if RUN_MODULE_TESTS
-		//AboutBox_RunTests();
 	#endif
 		
 		MacroSetupWindow_Init(); // installs command handler to enable this window to be displayed and hidden
@@ -386,6 +373,15 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		}
 	}
 	
+	// initialize Cocoa
+	{
+		Boolean		cocoaOK = false;
+		
+		
+		cocoaOK = CocoaBasic_ApplicationLoad();
+		assert(cocoaOK);
+	}
+	
 	// set default cursor
 	Cursors_UseArrow();
 }// ApplicationStartup
@@ -408,8 +404,6 @@ Initialize_ApplicationShutdown ()
 	Clipboard_Done();
 	CommandLine_Done();
 	InfoWindow_Done();
-	
-	AboutBox_Done();
 	
 	InternetPrefs_Done();
 	
