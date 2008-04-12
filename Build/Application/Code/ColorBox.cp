@@ -320,7 +320,7 @@ ColorBox_SetColorChangeNotifyProc	(HIViewRef						inView,
 
 /*!
 Displays a floating color panel, and arranges for the
-color box to be updated asynchronous whenever the user
+color box to be updated asynchronously whenever the user
 changes the color panel.
 
 You typically invoke this routine in response to a view
@@ -334,14 +334,14 @@ ColorBox_GetColor() to determine the displayed color.
 void
 ColorBox_UserSetColor	(HIViewRef		inView)
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED > MAC_OS_X_VERSION_10_3
+#if 1
 	// ah, nice, simple and sane on recent Mac OS X versions...
 	CocoaBasic_ColorPanelSetTargetView(inView);
 	CocoaBasic_ColorPanelDisplay();
 #else
-	// ...but despite documentation, Panther is frankly horribly broken
-	// when it comes to the color panel, so the traditional modal dialog
-	// is the only practical option on this system
+	// here is a modal dialog implementation if the color panel
+	// proves to be too flaky; so far, the Cocoa panel seems to
+	// be working correctly...
 	OSStatus			error = noErr;
 	MyColorBoxDataPtr	dataPtr = nullptr;
 	UInt32				actualSize = 0;
