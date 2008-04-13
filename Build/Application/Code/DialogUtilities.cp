@@ -602,6 +602,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 		ControlKind		templateControlInfo;
 		Rect			templateBounds;
 		HIRect			templateFrame;
+		Boolean			kindBased = true;
 		
 		
 		// copy the control’s boundaries (pretty much always needed)
@@ -610,7 +611,24 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 		
 		// find out what it is, and create a duplicate that matches
 		result = GetControlKind(inTemplateControl, &templateControlInfo);
-		if (noErr == result)
+		kindBased = (noErr == result);
+		if (HIObjectIsOfClass(REINTERPRET_CAST(inTemplateControl, HIObjectRef), kHIImageViewClassID))
+		{
+			kindBased = false;
+			result = HIImageViewCreate(nullptr, &outNewControl);
+			if (noErr == result)
+			{
+				(OSStatus)HIImageViewSetOpaque(outNewControl, HIImageViewIsOpaque(inTemplateControl));
+				(OSStatus)HIImageViewSetAlpha(outNewControl, HIImageViewGetAlpha(inTemplateControl));
+				(OSStatus)HIImageViewSetScaleToFit(outNewControl, HIImageViewGetScaleToFit(inTemplateControl));
+				
+				(OSStatus)HIViewSetFrame(outNewControl, &templateFrame);
+				
+				(OSStatus)HIViewSetVisible(outNewControl, true);
+			}
+		}
+		
+		if (kindBased)
 		{
 			if (kControlKindSignatureApple == templateControlInfo.signature)
 			{
@@ -971,66 +989,66 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 				// ???
 				result = paramErr;
 			}
-			
-			// if successful, copy other common attributes (again, arbitrary,
-			// and if you depend on other things, you need to add support for
-			// them here)
-			if ((noErr == result) && (nullptr != outNewControl))
+		}
+		
+		// if successful, copy other common attributes (again, arbitrary,
+		// and if you depend on other things, you need to add support for
+		// them here)
+		if ((noErr == result) && (nullptr != outNewControl))
+		{
+			// if a view has an ID, copy that to the new view
 			{
-				// if a view has an ID, copy that to the new view
+				HIViewID	controlID;
+				
+				
+				if (noErr == GetControlID(inTemplateControl, &controlID))
 				{
-					HIViewID	controlID;
-					
-					
-					if (noErr == GetControlID(inTemplateControl, &controlID))
-					{
-						result = SetControlID(outNewControl, &controlID);
-					}
+					result = SetControlID(outNewControl, &controlID);
 				}
+			}
+			
+			// if a view has an associated command, copy that to the new view
+			{
+				UInt32		commandID = 0;
 				
-				// if a view has an associated command, copy that to the new view
+				
+				if (noErr == GetControlCommandID(inTemplateControl, &commandID))
 				{
-					UInt32		commandID = 0;
-					
-					
-					if (noErr == GetControlCommandID(inTemplateControl, &commandID))
-					{
-						result = SetControlCommandID(outNewControl, commandID);
-					}
+					result = SetControlCommandID(outNewControl, commandID);
 				}
+			}
+			
+			// if a view has layout information, copy that to the new view
+			{
+				HILayoutInfo	layoutInfo;
 				
-				// if a view has layout information, copy that to the new view
+				
+				bzero(&layoutInfo, sizeof(layoutInfo));
+				layoutInfo.version = kHILayoutInfoVersionZero;
+				if (noErr == HIViewGetLayoutInfo(inTemplateControl, &layoutInfo))
 				{
-					HILayoutInfo	layoutInfo;
-					
-					
-					bzero(&layoutInfo, sizeof(layoutInfo));
-					layoutInfo.version = kHILayoutInfoVersionZero;
-					if (noErr == HIViewGetLayoutInfo(inTemplateControl, &layoutInfo))
-					{
-						result = HIViewSetLayoutInfo(outNewControl, &layoutInfo);
-					}
+					result = HIViewSetLayoutInfo(outNewControl, &layoutInfo);
 				}
+			}
+			
+			// copy other attributes
+			SetControl32BitMaximum(outNewControl, GetControl32BitMaximum(inTemplateControl));
+			SetControl32BitMinimum(outNewControl, GetControl32BitMinimum(inTemplateControl));
+			SetControl32BitValue(outNewControl, GetControl32BitValue(inTemplateControl));
+			
+			// if a control has an unusual size, make sure the duplicate is also resized;
+			// note that not all controls have this tag, so ignore it for those cases
+			{
+				ControlSize		controlSize = kControlSizeNormal;
+				Size			actualSize = 0;
 				
-				// copy other attributes
-				SetControl32BitMaximum(outNewControl, GetControl32BitMaximum(inTemplateControl));
-				SetControl32BitMinimum(outNewControl, GetControl32BitMinimum(inTemplateControl));
-				SetControl32BitValue(outNewControl, GetControl32BitValue(inTemplateControl));
 				
-				// if a control has an unusual size, make sure the duplicate is also resized;
-				// note that not all controls have this tag, so ignore it for those cases
+				if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlSizeTag,
+											sizeof(controlSize), &controlSize, &actualSize))
 				{
-					ControlSize		controlSize = kControlSizeNormal;
-					Size			actualSize = 0;
-					
-					
-					if (noErr == GetControlData(inTemplateControl, kControlEntireControl, kControlSizeTag,
-												sizeof(controlSize), &controlSize, &actualSize))
-					{
-						// not all views support size, apparently, so ignore this result
-						(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlSizeTag,
-													sizeof(controlSize), &controlSize);
-					}
+					// not all views support size, apparently, so ignore this result
+					(OSStatus)SetControlData(outNewControl, kControlEntireControl, kControlSizeTag,
+												sizeof(controlSize), &controlSize);
 				}
 			}
 		}
