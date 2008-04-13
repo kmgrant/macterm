@@ -9,7 +9,7 @@ if [ "x$attached_pid" = "x" ] ; then
     echo "$0: could not find process ID of MacTelnet" >&2
     exit 1
 fi
-warn=y
+warn=n
 if [ "x${warn}" = "xy" ] ; then
     echo
     echo 'WARNING: This command cannot run in MacTelnet, it should run in some'
