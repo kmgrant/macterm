@@ -83,18 +83,17 @@ In addition, they MUST be unique across all panels.
 */
 static HIViewID const	idMyLabelBaseTranslationTable			= { 'LBTT', 0/* ID */ };
 static HIViewID const	idMyDataBrowserBaseTranslationTable		= { 'Tran', 0/* ID */ };
-static HIViewID const	idMyLabelExceptions						= { 'LExc', 0/* ID */ };
-static HIViewID const	idMyDataBrowserExceptions				= { 'Xcpt', 0/* ID */ };
-static HIViewID const	idMyButtonSpecialCharacters				= { 'SplC', 0/* ID */ };
-static HIViewID const	idMyButtonAddException					= { 'AddX', 0/* ID */ };
-static HIViewID const	idMyButtonRemoveException				= { 'DelX', 0/* ID */ };
+static HIViewID const	idMyLabelOptions						= { 'LOpt', 0/* ID */ };
+static HIViewID const	idMyCheckBoxUseBackupFont				= { 'XUBF', 0/* ID */ };
+static HIViewID const	idMyButtonBackupFontName				= { 'UFNm', 0/* ID */ };
+static HIViewID const	idMyLabelBackupFontTest					= { 'BFTs', 0/* ID */ };
+static HIViewID const	idMyImageBackupFontTest					= { 'BFTI', 0/* ID */ };
+static HIViewID const	idMyHelpTextBackupFontTest				= { 'HFTs', 0/* ID */ };
 
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
 {
-	kMy_DataBrowserPropertyIDBaseCharacterSet		= 'Base',
-	kMy_DataBrowserPropertyIDExceptionOriginal		= 'EOrg',
-	kMy_DataBrowserPropertyIDExceptionReplacement	= 'ERpl'
+	kMy_DataBrowserPropertyIDBaseCharacterSet		= 'Base'
 };
 
 #pragma mark Types
@@ -127,8 +126,6 @@ public:
 	HIViewWrap								mainView;
 	HIViewWrap								labelBaseTable;
 	HIViewWrap								dataBrowserBaseTable;
-	HIViewWrap								labelExceptions;
-	HIViewWrap								dataBrowserExceptions;
 	CommonEventHandlers_HIViewResizer		containerResizer;	//!< invoked when the panel is resized
 	CarbonEventHandlerWrap					viewClickHandler;	//!< invoked when a tab is clicked
 
@@ -292,8 +289,6 @@ mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 labelBaseTable			(idMyLabelBaseTranslationTable, inOwningWindow),
 dataBrowserBaseTable	(idMyDataBrowserBaseTranslationTable, inOwningWindow),
-labelExceptions			(idMyLabelExceptions, inOwningWindow),
-dataBrowserExceptions	(idMyDataBrowserExceptions, inOwningWindow),
 containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 							kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
 							deltaSizePanelContainerHIView, this/* context */),
@@ -303,8 +298,6 @@ viewClickHandler		(CarbonEventUtilities_ReturnViewTarget(this->mainView), receiv
 {
 	assert(labelBaseTable.exists());
 	assert(dataBrowserBaseTable.exists());
-	assert(labelExceptions.exists());
-	assert(dataBrowserExceptions.exists());
 	assert(containerResizer.isInstalled());
 	assert(viewClickHandler.isInstalled());
 	
@@ -329,61 +322,6 @@ void
 My_TranslationsPanelUI::
 assignAccessibilityRelationships ()
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-	// set accessibility relationships, if possible
-	if (FlagManager_Test(kFlagOS10_4API))
-	{
-		CFStringRef		accessibilityDescCFString = nullptr;
-		HIViewWrap		addButton(idMyButtonAddException, HIViewGetWindow(this->mainView));
-		HIViewWrap		removeButton(idMyButtonRemoveException, HIViewGetWindow(this->mainView));
-		OSStatus		error = noErr;
-		
-		
-		// associate the data browsers with their labels, and vice-versa
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->dataBrowserBaseTable.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXTitleUIElementAttribute, this->labelBaseTable.acquireAccessibilityObject());
-		{
-			void const*			values[] = { this->dataBrowserBaseTable.acquireAccessibilityObject() };
-			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-																&kCFTypeArrayCallBacks), true/* is retained */);
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(this->labelBaseTable.returnHIObjectRef(), 0/* sub-component identifier */,
-						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-		}
-		error = HIObjectSetAuxiliaryAccessibilityAttribute
-				(this->dataBrowserExceptions.returnHIObjectRef(), 0/* sub-component identifier */,
-					kAXTitleUIElementAttribute, this->labelExceptions.acquireAccessibilityObject());
-		{
-			void const*			values[] = { this->dataBrowserExceptions.acquireAccessibilityObject() };
-			CFRetainRelease		labelForCFArray(CFArrayCreate(kCFAllocatorDefault, values, sizeof(values) / sizeof(void const*),
-																&kCFTypeArrayCallBacks), true/* is retained */);
-			
-			
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(this->labelExceptions.returnHIObjectRef(), 0/* sub-component identifier */,
-						kAXServesAsTitleForUIElementsAttribute, labelForCFArray.returnCFArrayRef());
-		}
-		
-		// describe the add and remove buttons
-		if (UIStrings_Copy(kUIStrings_ButtonAddAccessibilityDesc, accessibilityDescCFString).ok())
-		{
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(addButton.returnHIObjectRef(), 0/* sub-component identifier */,
-						kAXDescriptionAttribute, accessibilityDescCFString);
-			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-		}
-		if (UIStrings_Copy(kUIStrings_ButtonRemoveAccessibilityDesc, accessibilityDescCFString).ok())
-		{
-			error = HIObjectSetAuxiliaryAccessibilityAttribute
-					(removeButton.returnHIObjectRef(), 0/* sub-component identifier */,
-						kAXDescriptionAttribute, accessibilityDescCFString);
-			CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
-		}
-	}
-#endif
 }// assignAccessibilityRelationships
 
 
@@ -470,6 +408,9 @@ const
 			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
 		}
 		
+		// hide the heading; it is not useful
+		(OSStatus)SetDataBrowserListViewHeaderBtnHeight(baseTableList, 0);
+		
 		// insert as many rows as there are translation tables
 		{
 			UInt16 const	kNumberOfTables = TextTranslation_ReturnCharacterSetCount();
@@ -506,87 +447,24 @@ const
 		assert_noerr(error);
 	}
 	
-	// create the exceptions list; insert appropriate columns
+	// render the backup font test
 	{
-		HIViewWrap							listDummy(idMyDataBrowserExceptions, inOwningWindow);
-		HIViewRef							exceptionsList = nullptr;
-		DataBrowserTableViewColumnIndex		columnNumber = 0;
-		DataBrowserListViewColumnDesc		columnInfo;
-		Rect								bounds;
-		UIStrings_Result					stringResult = kUIStrings_ResultOK;
+		AppResources_Result		resourceError = noErr;
+		CGImageRef				fontTestPicture = nullptr;
 		
 		
-		GetControlBounds(listDummy, &bounds);
-		
-		// NOTE: here, the original variable is being *replaced* with the data browser, as
-		// the original user pane was only needed for size definition
-		error = CreateDataBrowserControl(inOwningWindow, &bounds, kDataBrowserListView, &exceptionsList);
-		assert_noerr(error);
-		error = SetControlID(exceptionsList, &idMyDataBrowserExceptions);
-		assert_noerr(error);
-		
-		bzero(&columnInfo, sizeof(columnInfo));
-		
-		// set defaults for all columns, then override below
-		columnInfo.propertyDesc.propertyID = '----';
-		columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
-		columnInfo.propertyDesc.propertyFlags = kDataBrowserDefaultPropertyFlags | kDataBrowserListViewSortableColumn |
-												kDataBrowserListViewMovableColumn;
-		columnInfo.headerBtnDesc.version = kDataBrowserListViewLatestHeaderDesc;
-		columnInfo.headerBtnDesc.minimumWidth = 100; // arbitrary
-		columnInfo.headerBtnDesc.maximumWidth = 100; // arbitrary
-		columnInfo.headerBtnDesc.titleOffset = 0; // arbitrary
-		columnInfo.headerBtnDesc.titleString = nullptr;
-		columnInfo.headerBtnDesc.initialOrder = 0;
-		columnInfo.headerBtnDesc.btnFontStyle.flags = kControlUseJustMask;
-		columnInfo.headerBtnDesc.btnFontStyle.just = teFlushDefault;
-		columnInfo.headerBtnDesc.btnContentInfo.contentType = kControlContentTextOnly;
-		
-		// create original character column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTranslationsListHeaderOrigChar,
-										columnInfo.headerBtnDesc.titleString);
-		if (stringResult.ok())
+		resourceError = AppResources_GetFontTestPicture(fontTestPicture);
+		assert_noerr(resourceError);
+		if ((noErr == resourceError) && (nullptr != fontTestPicture))
 		{
-			columnInfo.propertyDesc.propertyID = kMy_DataBrowserPropertyIDExceptionOriginal;
-			error = AddDataBrowserListViewColumn(exceptionsList, &columnInfo, columnNumber++);
+			HIViewWrap		fontTestView(idMyImageBackupFontTest, inOwningWindow);
+			
+			
+			error = HIImageViewSetImage(fontTestView, fontTestPicture);
 			assert_noerr(error);
-			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
+			
+			CFRelease(fontTestPicture), fontTestPicture = nullptr;
 		}
-		
-		// create original character column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTranslationsListHeaderReplChar,
-										columnInfo.headerBtnDesc.titleString);
-		if (stringResult.ok())
-		{
-			columnInfo.propertyDesc.propertyID = kMy_DataBrowserPropertyIDExceptionReplacement;
-			error = AddDataBrowserListViewColumn(exceptionsList, &columnInfo, columnNumber++);
-			assert_noerr(error);
-			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
-		}
-				
-		// attach data that would not be specifiable in a NIB
-		error = SetDataBrowserCallbacks(exceptionsList, &this->listCallbacks.listCallbacks);
-		assert_noerr(error);
-		
-		// initialize sort column
-		error = SetDataBrowserSortProperty(exceptionsList, kMy_DataBrowserPropertyIDExceptionOriginal);
-		assert_noerr(error);
-		
-		// set other nice things (most can be set in a NIB someday)
-	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-		if (FlagManager_Test(kFlagOS10_4API))
-		{
-			(OSStatus)DataBrowserChangeAttributes(exceptionsList,
-													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
-													0/* attributes to clear */);
-		}
-	#endif
-		(OSStatus)SetDataBrowserListViewUsePlainBackground(exceptionsList, false);
-		(OSStatus)SetDataBrowserHasScrollBars(exceptionsList, false/* horizontal */, true/* vertical */);
-		(OSStatus)SetDataBrowserSelectionFlags(exceptionsList, kDataBrowserSelectOnlyOne);
-		
-		error = HIViewAddSubview(result, exceptionsList);
-		assert_noerr(error);
 	}
 	
 	// calculate the ideal size
@@ -604,52 +482,6 @@ const
 		
 		error = HIViewSetFrame(result, &containerFrame);
 		assert_noerr(error);
-	}
-	
-	// add "+" and "-" icons to the add and remove buttons
-	{
-		IconManagerIconRef		buttonIcon = nullptr;
-		
-		
-		buttonIcon = IconManager_NewIcon();
-		if (nullptr != buttonIcon)
-		{
-			HIViewWrap		addButton(idMyButtonAddException, inOwningWindow);
-			
-			
-			if (noErr == IconManager_MakeIconRefFromBundleFile
-							(buttonIcon, AppResources_ReturnItemAddIconFilenameNoExtension(),
-								AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_IconServicesIconItemAdd))
-			{
-				if (noErr == IconManager_SetButtonIcon(addButton, buttonIcon))
-				{
-					// once the icon is set successfully, the equivalent text title can be removed
-					(OSStatus)SetControlTitleWithCFString(addButton, CFSTR(""));
-				}
-			}
-			IconManager_DisposeIcon(&buttonIcon);
-		}
-		
-		buttonIcon = IconManager_NewIcon();
-		if (nullptr != buttonIcon)
-		{
-			HIViewWrap		removeButton(idMyButtonRemoveException, inOwningWindow);
-			
-			
-			if (noErr == IconManager_MakeIconRefFromBundleFile
-							(buttonIcon, AppResources_ReturnItemRemoveIconFilenameNoExtension(),
-								AppResources_ReturnCreatorCode(),
-								kConstantsRegistry_IconServicesIconItemRemove))
-			{
-				if (noErr == IconManager_SetButtonIcon(removeButton, buttonIcon))
-				{
-					// once the icon is set successfully, the equivalent text title can be removed
-					(OSStatus)SetControlTitleWithCFString(removeButton, CFSTR(""));
-				}
-			}
-			IconManager_DisposeIcon(&buttonIcon);
-		}
 	}
 	
 	// initialize views - UNIMPLEMENTED
@@ -701,18 +533,6 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 			}
 			break;
 		
-		case kMy_DataBrowserPropertyIDExceptionOriginal:
-			// return the text string for the character
-			// UNIMPLEMENTED
-			result = unimpErr;
-			break;
-		
-		case kMy_DataBrowserPropertyIDExceptionReplacement:
-			// return the text string for the character
-			// UNIMPLEMENTED
-			result = unimpErr;
-			break;
-		
 		default:
 			// ???
 			break;
@@ -725,26 +545,6 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		case kMy_DataBrowserPropertyIDBaseCharacterSet:
 			// read-only
 			result = paramErr;
-			break;
-		
-		case kMy_DataBrowserPropertyIDExceptionOriginal:
-			// read-only
-			result = paramErr;
-			break;
-		
-		case kMy_DataBrowserPropertyIDExceptionReplacement:
-			// user has changed the replacement character
-			{
-				CFStringRef		newCharacter = nullptr;
-				
-				
-				result = GetDataBrowserItemDataText(inItemData, &newCharacter);
-				if (noErr == result)
-				{
-					// UNIMPLEMENTED
-					result = noErr;
-				}
-			}
 			break;
 		
 		default:
@@ -778,14 +578,6 @@ compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 		result = (inItemOne < inItemTwo);
 		break;
 	
-	case kMy_DataBrowserPropertyIDExceptionOriginal:
-		result = (inItemOne < inItemTwo);
-		break;
-	
-	case kMy_DataBrowserPropertyIDExceptionReplacement:
-		result = (inItemOne < inItemTwo);
-		break;
-	
 	default:
 		// ???
 		break;
@@ -813,17 +605,23 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 	
 	
 	viewWrap = HIViewWrap(idMyDataBrowserBaseTranslationTable, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY / 2.0);
-	viewWrap = HIViewWrap(idMyLabelExceptions, kPanelWindow);
-	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY / 2.0);
-	viewWrap = HIViewWrap(idMyDataBrowserExceptions, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY / 2.0);
-	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY / 2.0);
-	viewWrap = HIViewWrap(idMyButtonSpecialCharacters, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+	
+	viewWrap = HIViewWrap(idMyLabelOptions, kPanelWindow);
 	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-	viewWrap = HIViewWrap(idMyButtonAddException, kPanelWindow);
+	viewWrap = HIViewWrap(idMyCheckBoxUseBackupFont, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
 	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-	viewWrap = HIViewWrap(idMyButtonRemoveException, kPanelWindow);
+	viewWrap = HIViewWrap(idMyButtonBackupFontName, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+	viewWrap = HIViewWrap(idMyLabelBackupFontTest, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+	viewWrap = HIViewWrap(idMyImageBackupFontTest, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+	viewWrap = HIViewWrap(idMyHelpTextBackupFontTest, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0);
 	viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 	
 	setDataBrowserColumnWidths(interfacePtr);
@@ -1011,7 +809,6 @@ static void
 setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 {
 	Rect			containerRect;
-	Rect			scrollBarRect;
 	HIViewWrap		baseTableListContainer(idMyDataBrowserBaseTranslationTable, HIViewGetWindow(inInterfacePtr->mainView));
 	assert(baseTableListContainer.exists());
 	

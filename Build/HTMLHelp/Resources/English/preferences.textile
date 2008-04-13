@@ -632,27 +632,31 @@ A translation table essentially allows the terminal to display text
 the way it is supposed to, according to what an application in a
 terminal expects.
 
-The Map menu allows you to choose any of these translation tables
+The Map menu allows you to choose among these translation settings
 while sessions are running.
 
-h3. Base Translation Table
+h3. Settings
 
-Since translation tables are large and cumbersome, and it is
-common to customize small parts of existing character sets, you
-can choose a table on which to base your customizations.
+h4. Character Set
 
-Alternatively, if you want to set up a collection that contains
-exactly what is in a standard table, simply choose the standard
-table and then avoid setting up Exceptions, below.
+Choose an encoding from the list to tell MacTelnet how to
+interpret text while these translation settings are active.
+Typically a good value is "Unicode (UTF-8)".
 
-h3. Exceptions
+h4. Options
 
-For one or more characters in the selected base table, you can
-specify alternate mappings by adding them to the Exceptions list.
+h5. Use a backup font
 
-For example, you could start with a United States character set
-and add an exception that changes "#" to the British symbol for
-pounds.
+Unfortunately, not all fonts are the same: some of them cannot
+render all possible characters.  A "backup font" allows you to
+*prefer* current Format preferences for most text (perhaps
+because those fonts look nicer in general), but use the backup
+to handle special characters.  A Unicode font is recommended as
+a backup font.
+
+The test area shows some special characters in your chosen font,
+and a reference rendering to give you an idea if the backup font
+is capable of displaying special characters properly.
 
 h2(#fullscreen). Full Screen
 

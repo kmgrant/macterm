@@ -1278,18 +1278,8 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Base Character Set"), CFSTR("PreferencesWindow"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Available Encodings"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTranslationsListHeaderOrigChar:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Original"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTranslationsListHeaderOrigChar"));
-		break;
-	
-	case kUIStrings_PreferencesWindowTranslationsListHeaderReplChar:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Replacement"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTranslationsListHeaderReplChar"));
 		break;
 	
 	default:

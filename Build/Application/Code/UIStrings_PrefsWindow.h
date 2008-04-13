@@ -98,9 +98,7 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowTerminalsOptionsTabName			= 'TrmO',
 	kUIStrings_PreferencesWindowTerminalsScreenTabName			= 'TrmS',
 	kUIStrings_PreferencesWindowTranslationsCategoryName		= 'TrnT',
-	kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable	= 'TrnB',
-	kUIStrings_PreferencesWindowTranslationsListHeaderOrigChar	= 'TrnO',
-	kUIStrings_PreferencesWindowTranslationsListHeaderReplChar	= 'TrnR'
+	kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable	= 'TrnB'
 };
 
 

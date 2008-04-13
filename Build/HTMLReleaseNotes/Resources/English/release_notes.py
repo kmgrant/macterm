@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080412',
     '20080411',
     '20080410',
     '20080409',
@@ -134,6 +135,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080412': [
+		'Redesigned parts of the Preferences window Translations pane to offer more useful rendering preferences.',
+	],
 	'20080411': [
 		'The About box now uses the Cocoa standard implementation.',
 		'Fixed certain cases on Panther where user interface panels could become "unclickable".',
