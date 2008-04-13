@@ -50,7 +50,6 @@
 // resource includes
 #include "GeneralResources.h"
 #include "MenuResources.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "TextTranslation.h"

@@ -66,7 +66,6 @@
 
 // resource includes
 #include "ApplicationVersion.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "Commands.h"

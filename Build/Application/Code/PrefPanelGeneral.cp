@@ -60,16 +60,13 @@
 #include <SoundSystem.h>
 
 // resource includes
-#include "ControlResources.h"
 #include "DialogResources.h"
 #include "GeneralResources.h"
-#include "StringResources.h"
 #include "SpacingConstants.r"
 
 // MacTelnet includes
 #include "AppResources.h"
 #include "Commands.h"
-#include "Configure.h" // GetApplicationType()
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "Panel.h"

@@ -51,7 +51,6 @@
 
 // resource includes
 #include "GeneralResources.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "AppleEventUtilities.h"
@@ -59,7 +58,6 @@
 #include "BasicTypesAE.h"
 #include "Clipboard.h"
 #include "Commands.h"
-#include "Configure.h"
 #include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"

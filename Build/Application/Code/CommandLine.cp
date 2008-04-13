@@ -64,9 +64,7 @@
 #include <WindowInfo.h>
 
 // resource includes
-#include "ControlResources.h"
 #include "DialogResources.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "AppResources.h"

@@ -58,7 +58,6 @@
 
 // resource includes
 #include "ApplicationVersion.h"
-#include "StringResources.h"
 #include "GeneralResources.h"
 
 // MacTelnet includes
@@ -2168,8 +2167,9 @@ Preferences_CreateOrFindFiles ()
 			
 			// the Interface Library Alert module is responsible for handling Notification Manager stuff...
 			Alert_SetNotificationPreferences(notificationPreferences);
-			GetIndString(notificationMessage, rStringsNoteAlerts, siNotificationAlert);
-			Alert_SetNotificationMessage(notificationMessage);
+			// TEMPORARY: This needs a new localized string.  LOCALIZE THIS.
+			//GetIndString(notificationMessage, rStringsNoteAlerts, siNotificationAlert);
+			//Alert_SetNotificationMessage(notificationMessage);
 		}
 	}
 	return result;

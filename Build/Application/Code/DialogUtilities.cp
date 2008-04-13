@@ -63,7 +63,6 @@
 // resource includes
 #include "DialogResources.h"
 #include "GeneralResources.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "AppResources.h"

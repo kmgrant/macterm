@@ -71,7 +71,6 @@ extern "C"
 #include "ApplicationVersion.h"
 #include "DialogResources.h"
 #include "MenuResources.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "AppResources.h"

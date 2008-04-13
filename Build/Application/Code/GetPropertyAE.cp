@@ -48,9 +48,6 @@
 #include <StringUtilities.h>
 #include <WindowInfo.h>
 
-// resource includes
-#include "StringResources.h"
-
 // MacTelnet includes
 #include "AppleEventUtilities.h"
 #include "BasicTypesAE.h"

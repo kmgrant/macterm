@@ -51,7 +51,6 @@
 // resource includes
 #include "CFRetainRelease.h"
 #include "LocalizedAlertMessages.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "UIStrings.h"

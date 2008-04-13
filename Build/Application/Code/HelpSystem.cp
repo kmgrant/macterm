@@ -40,9 +40,6 @@
 // library includes
 #include "MacHelpUtilities.h"
 
-// resource includes
-#include "StringResources.h"
-
 // MacTelnet includes
 #include "EventLoop.h"
 #include "HelpSystem.h"

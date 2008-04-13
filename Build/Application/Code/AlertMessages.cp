@@ -48,10 +48,8 @@
 #include <NIBLoader.h>
 
 // resource includes
-#include "ControlResources.h"
 #include "DialogResources.h"
 #include "GeneralResources.h"
-#include "InterfaceLibAppResources.r"
 #include "SpacingConstants.r"
 
 // MacTelnet includes

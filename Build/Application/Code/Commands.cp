@@ -51,7 +51,6 @@ extern "C"
 
 // resource includes
 #include "MenuResources.h"
-#include "StringResources.h"
 
 // library includes
 #include <AlertMessages.h>
@@ -73,7 +72,6 @@ extern "C"
 #include "Commands.h"
 #include "Clipboard.h"
 #include "CommandLine.h"
-#include "Configure.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"

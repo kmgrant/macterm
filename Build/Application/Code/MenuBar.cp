@@ -56,7 +56,6 @@
 #include "DialogResources.h"
 #include "GeneralResources.h"
 #include "MenuResources.h"
-#include "StringResources.h"
 #include "TelnetMenuItemNames.h"
 
 // MacTelnet includes

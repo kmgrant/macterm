@@ -53,7 +53,6 @@
 #include "ApplicationVersion.h"
 #include "DialogResources.h"
 #include "GeneralResources.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "AppResources.h"
@@ -137,40 +136,12 @@ Macros_Init ()
 													kConstantsRegistry_ListenerModelDescriptorMacroChanges);
 	assert(nullptr != gMacroChangeListenerModel);
 	
-	// COMPATIBILITY: If the macro sets exist in the old location
-	// (i.e. directly in the Preferences folder), move them into
-	// the Macros sub-folder.
-	{
-		if (noErr == Folder_GetFSSpec(kFolder_RefPreferences, &folder))
-		{
-			// there are five files, one per set; read each file, moving it if it exists
-			for (i = MACRO_SET_COUNT - 1; i >= 0; --i)
-			{
-				GetIndString(fileName, rStringsImportantFileNames, siImportantFileNameMacroSet1 + i);
-				if (PLstrlen(fileName) > 0)
-				{
-					if (noErr == FSMakeFSSpec(folder.vRefNum, folder.parID, fileName, &file))
-					{
-						// if this point is reached, then the requested file exists; move it!
-						FSSpec		newLocation;
-						
-						
-						if (noErr == Folder_GetFSSpec(kFolder_RefUserMacroFavorites, &newLocation))
-						{
-							(OSStatus)CatMove(file.vRefNum, file.parID, fileName,
-												newLocation.parID, fileName);
-						}
-					}
-				}
-			}
-		}
-	}
-	
 	// there are five files, one per set; read each file, importing only if no errors occur
 	for (i = MACRO_SET_COUNT; i >= 1; --i)
 	{
 		Macros_SetActiveSetNumber(i); // set numbers are one-based
-		GetIndString(fileName, rStringsImportantFileNames, siImportantFileNameMacroSet1 + i - 1);
+		// TEMPORARY: This needs to migrate to the new Preferences API.
+		//GetIndString(fileName, rStringsImportantFileNames, siImportantFileNameMacroSet1 + i - 1);
 		if (PLstrlen(fileName) > 0)
 		{
 			if (noErr == Folder_GetFSSpec(kFolder_RefUserMacroFavorites, &folder))
@@ -217,7 +188,8 @@ Macros_Done ()
 		for (i = MACRO_SET_COUNT; i >= 1; --i)
 		{
 			Macros_SetActiveSetNumber(i); // set numbers are one-based
-			GetIndString(fileName, rStringsImportantFileNames, siImportantFileNameMacroSet1 + i - 1);
+			// TEMPORARY: This needs to migrate to the new Preferences API.
+			//GetIndString(fileName, rStringsImportantFileNames, siImportantFileNameMacroSet1 + i - 1);
 			if (PLstrlen(fileName) > 0)
 			{
 				if (Folder_GetFSSpec(kFolder_RefUserMacroFavorites, &folder) == noErr)
@@ -388,8 +360,11 @@ Macros_ExportToText		(MacroSet						inSet,
 					fileDefaultName;
 		
 		
-		GetIndString(prompt, rStringsNavigationServices, siNavPromptExportMacrosToFile);
-		GetIndString(title, rStringsNavigationServices, siNavDialogTitleExportMacros);
+		// TEMPORARY: This needs to migrate to the new Navigation Services API.
+		PLstrcpy(prompt, "\p");
+		PLstrcpy(title, "\p");
+		//GetIndString(prompt, rStringsNavigationServices, siNavPromptExportMacrosToFile);
+		//GetIndString(title, rStringsNavigationServices, siNavDialogTitleExportMacros);
 		{
 			// TEMPORARY; the string retrieval has been upgraded to CFStrings, but not
 			//            the Navigation Services calls; eventually, the CFString can
@@ -529,8 +504,11 @@ Macros_ImportFromText	(MacroSet						inSet,
 		Str255		title;
 		
 		
-		GetIndString(prompt, rStringsNavigationServices, siNavPromptImportMacrosFromFile);
-		GetIndString(title, rStringsNavigationServices, siNavDialogTitleImportMacros);
+		// TEMPORARY: This needs to migrate to the new Navigation Services API.
+		PLstrcpy(prompt, "\p");
+		PLstrcpy(title, "\p");
+		//GetIndString(prompt, rStringsNavigationServices, siNavPromptImportMacrosFromFile);
+		//GetIndString(title, rStringsNavigationServices, siNavDialogTitleImportMacros);
 		{
 			FileInfo	fileInfo;
 			OSType		fileType;

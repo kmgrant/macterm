@@ -55,10 +55,8 @@
 #include <RegionUtilities.h>
 
 // resource includes
-#include "ControlResources.h"
 #include "DialogResources.h"
 #include "GeneralResources.h"
-#include "StringResources.h"
 #include "SpacingConstants.r"
 
 // MacTelnet includes

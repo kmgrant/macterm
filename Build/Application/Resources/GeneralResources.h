@@ -1,11 +1,10 @@
 /*!	\file GeneralResources.h
-	\brief Constants describing general resources, such as
-	resource types and special resource IDs.
+	\brief Now only used for old-style file types.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2005 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -34,31 +33,9 @@
 #ifndef __GENERALRESOURCES__
 #define __GENERALRESOURCES__
 
-
-
 // type and creator signatures
 #define kApplicationFileTypeMacroSet				'TEXT'
 #define kApplicationFileTypeSessionDescription		'CONF'
-
-// types and creator signatures, as strings
-#define	kStrApplicationCreatorSignature				"KevG"
-#define kStrApplicationFileTypeMacroSet				"TEXT"
-#define kStrApplicationFileTypeSessionDescription	"CONF"
-
-// icon family for the MacTelnet application icon
-#define kNCSAIconFamilyId						128
-
-// 'LDEF' for icon list
-#define kIconListDefinitionProcResID			128
-
-// 'open' resource ID
-#define	kNavGetFileOpenResource					128
-
-// base ID for all ResEdit template resources
-#define kTemplateBaseID							128
-
-#define	USER_TRSL			'taBL'	/* User translation tables resource type */
-									/* 256 bytes of in table followed by 256 bytes of out table */
 
 #endif
 

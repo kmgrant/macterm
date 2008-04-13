@@ -43,9 +43,6 @@
 #include <Console.h>
 #include <MemoryBlocks.h>
 
-// resource includes
-#include "StringResources.h"
-
 // MacTelnet includes
 #include "AppleEventUtilities.h"
 #include "BasicTypesAE.h"

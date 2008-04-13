@@ -55,9 +55,6 @@
 #include <SoundSystem.h>
 #include <StringUtilities.h>
 
-// resource includes
-#include "StringResources.h"
-
 // MacTelnet includes
 #include "DialogUtilities.h"
 #include "EventLoop.h"

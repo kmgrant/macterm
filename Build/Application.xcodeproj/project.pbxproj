@@ -70,7 +70,6 @@
 		0AC6BB130A8C0BA000AFF37A /* ConnectionAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC5055432A400ACDF3A /* ConnectionAE.cp */; };
 		0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD1055432A400ACDF3A /* DNR.cp */; };
 		0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE27055432A400ACDF3A /* TerminalSpeaker.cp */; };
-		0AC6BB180A8C0BA000AFF37A /* Bind.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AE63E2807F3B98100EB82FA /* Bind.cp */; };
 		0AC6BB190A8C0BA000AFF37A /* IconManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE6055432A400ACDF3A /* IconManager.cp */; };
 		0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */; };
 		0AC6BB1B0A8C0BA000AFF37A /* InstallAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE9055432A400ACDF3A /* InstallAE.cp */; };
@@ -100,7 +99,6 @@
 		0AC6BB350A8C0BA100AFF37A /* TerminalFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE26055432A400ACDF3A /* TerminalFile.cp */; };
 		0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3D055432A400ACDF3A /* Workspace.cp */; };
 		0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AFD12B5087A147D00439BEA /* NIBLoader.cp */; };
-		0AC6BB380A8C0BA100AFF37A /* Configure.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC4055432A400ACDF3A /* Configure.cp */; };
 		0AC6BB390A8C0BA100AFF37A /* DuplicateDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A82CE13069A374C0047E652 /* DuplicateDialog.cp */; };
 		0AC6BB3A0A8C0BA100AFF37A /* Initialize.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE8055432A400ACDF3A /* Initialize.cp */; };
 		0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD6055432A400ACDF3A /* FileUtilities.cp */; };
@@ -119,7 +117,6 @@
 		0AC6BB480A8C0BA100AFF37A /* Clipboard.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBC055432A400ACDF3A /* Clipboard.cp */; };
 		0AC6BB490A8C0BA100AFF37A /* AlertMessages.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.cp */; };
 		0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.cp */; };
-		0AC6BB4C0A8C0BA100AFF37A /* SessionEditorDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE16055432A400ACDF3A /* SessionEditorDialog.cp */; };
 		0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */; };
 		0AC6BB4E0A8C0BA100AFF37A /* FormatDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDB055432A400ACDF3A /* FormatDialog.cp */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
@@ -226,7 +223,6 @@
 		0A4603C50554376100ACDF3A /* ColorUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ColorUtilities.h; path = Shared/Code/ColorUtilities.h; sourceTree = "<group>"; };
 		0A4603C60554376100ACDF3A /* CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CommandLine.h; path = Application/Code/CommandLine.h; sourceTree = SOURCE_ROOT; };
 		0A4603C70554376100ACDF3A /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = Application/Code/Commands.h; sourceTree = SOURCE_ROOT; };
-		0A4603C80554376100ACDF3A /* Configure.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Configure.h; path = Application/Code/Configure.h; sourceTree = SOURCE_ROOT; };
 		0A4603C90554376100ACDF3A /* ConnectionAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ConnectionAE.h; path = Application/Code/ConnectionAE.h; sourceTree = "<group>"; };
 		0A4603CA0554376100ACDF3A /* ConnectionData.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ConnectionData.h; path = Application/Code/ConnectionData.h; sourceTree = SOURCE_ROOT; };
 		0A4603CB0554376100ACDF3A /* Console.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Console.h; path = Shared/Code/Console.h; sourceTree = "<group>"; };
@@ -289,7 +285,6 @@
 		0A4604230554376100ACDF3A /* AppResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AppResources.h; path = Application/Code/AppResources.h; sourceTree = "<group>"; };
 		0A4604250554376100ACDF3A /* Session.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Session.h; path = Application/Code/Session.h; sourceTree = SOURCE_ROOT; };
 		0A4604260554376100ACDF3A /* SessionDescription.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SessionDescription.h; path = Application/Code/SessionDescription.h; sourceTree = SOURCE_ROOT; };
-		0A4604270554376100ACDF3A /* SessionEditorDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SessionEditorDialog.h; path = Application/Code/SessionEditorDialog.h; sourceTree = SOURCE_ROOT; };
 		0A4604280554376100ACDF3A /* SessionFactory.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SessionFactory.h; path = Application/Code/SessionFactory.h; sourceTree = SOURCE_ROOT; };
 		0A4604290554376100ACDF3A /* SessionRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SessionRef.typedef.h; path = Application/Code/SessionRef.typedef.h; sourceTree = SOURCE_ROOT; };
 		0A46042A0554376100ACDF3A /* SizeDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = SizeDialog.h; path = Application/Code/SizeDialog.h; sourceTree = SOURCE_ROOT; };
@@ -333,7 +328,6 @@
 		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Shared/Code/ColorUtilities.cp; sourceTree = "<group>"; };
 		0A46FDC2055432A400ACDF3A /* CommandLine.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CommandLine.cp; path = Application/Code/CommandLine.cp; sourceTree = "<group>"; };
 		0A46FDC3055432A400ACDF3A /* Commands.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Commands.cp; path = Application/Code/Commands.cp; sourceTree = "<group>"; };
-		0A46FDC4055432A400ACDF3A /* Configure.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Configure.cp; path = Application/Code/Configure.cp; sourceTree = "<group>"; };
 		0A46FDC5055432A400ACDF3A /* ConnectionAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ConnectionAE.cp; path = Application/Code/ConnectionAE.cp; sourceTree = "<group>"; };
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
 		0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ContextSensitiveMenu.cp; path = Shared/Code/ContextSensitiveMenu.cp; sourceTree = "<group>"; };
@@ -395,7 +389,6 @@
 		0A46FE12055432A400ACDF3A /* AppResources.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = AppResources.cp; path = Application/Code/AppResources.cp; sourceTree = "<group>"; };
 		0A46FE14055432A400ACDF3A /* Session.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Session.cp; path = Application/Code/Session.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE15055432A400ACDF3A /* SessionDescription.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SessionDescription.cp; path = Application/Code/SessionDescription.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE16055432A400ACDF3A /* SessionEditorDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SessionEditorDialog.cp; path = Application/Code/SessionEditorDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE17055432A400ACDF3A /* SessionFactory.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SessionFactory.cp; path = Application/Code/SessionFactory.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE18055432A400ACDF3A /* SizeDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SizeDialog.cp; path = Application/Code/SizeDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE19055432A400ACDF3A /* SoundSystem.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = SoundSystem.cp; path = Shared/Code/SoundSystem.cp; sourceTree = "<group>"; };
@@ -439,21 +432,10 @@
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6E225906CF42F0004AC0A4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskPasswordDialog.nib; sourceTree = "<group>"; };
-		0A719D23055D95ED009B0A88 /* InterfaceLibAppResources.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = InterfaceLibAppResources.r; path = Application/Resources/InterfaceLibAppResources.r; sourceTree = "<group>"; };
-		0A719D26055D95ED009B0A88 /* FormatDialog.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = FormatDialog.r; path = Application/Resources/FormatDialog.r; sourceTree = "<group>"; };
-		0A719D2C055D95EE009B0A88 /* ReusableControls.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = ReusableControls.r; path = Application/Resources/ReusableControls.r; sourceTree = "<group>"; };
-		0A719D2F055D95EE009B0A88 /* WindowsMisc.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = WindowsMisc.r; path = Application/Resources/WindowsMisc.r; sourceTree = "<group>"; };
-		0A719D31055D95EE009B0A88 /* TerminalEditorDialog.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = TerminalEditorDialog.r; path = Application/Resources/TerminalEditorDialog.r; sourceTree = "<group>"; };
-		0A719D32055D95EE009B0A88 /* StringsMisc.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = StringsMisc.r; path = Application/Resources/StringsMisc.r; sourceTree = "<group>"; };
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
-		0A719D34055D95EE009B0A88 /* ApplicationMisc.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = ApplicationMisc.r; path = Application/Resources/ApplicationMisc.r; sourceTree = "<group>"; };
-		0A719D38055D95EE009B0A88 /* SessionEditorDialog.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = SessionEditorDialog.r; path = Application/Resources/SessionEditorDialog.r; sourceTree = "<group>"; };
 		0A719D50055D963A009B0A88 /* DialogResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DialogResources.h; path = Application/Resources/DialogResources.h; sourceTree = "<group>"; };
 		0A719D51055D963A009B0A88 /* GeneralResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = GeneralResources.h; path = Application/Resources/GeneralResources.h; sourceTree = "<group>"; };
-		0A719D52055D963A009B0A88 /* StringResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = StringResources.h; path = Application/Resources/StringResources.h; sourceTree = "<group>"; };
 		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
-		0A719D54055D963A009B0A88 /* ControlResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ControlResources.h; path = Application/Resources/ControlResources.h; sourceTree = "<group>"; };
-		0A719D55055D963A009B0A88 /* PreferenceResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PreferenceResources.h; path = Application/Resources/PreferenceResources.h; sourceTree = "<group>"; };
 		0A73DB9608C568D90099BA73 /* MacTelnet.help */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MacTelnet.help; path = HTMLHelp/MacTelnet.help; sourceTree = SOURCE_ROOT; };
 		0A7530D20580470F00BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MenuForDockIcon.nib; sourceTree = "<group>"; };
 		0A7530DE058048F800BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/CommandLine.nib; sourceTree = "<group>"; };
@@ -554,8 +536,6 @@
 		0AE285D90B8D7AEA00E2253A /* IconForKeypadPageUp.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadPageUp.icns; path = Application/Resources/IconForKeypadPageUp.icns; sourceTree = "<group>"; };
 		0AE285F10B8D7EF800E2253A /* IconForKeypadDelete.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadDelete.icns; path = Application/Resources/IconForKeypadDelete.icns; sourceTree = "<group>"; };
 		0AE285FF0B8D830500E2253A /* IconForKeypadFind.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadFind.icns; path = Application/Resources/IconForKeypadFind.icns; sourceTree = "<group>"; };
-		0AE63E2807F3B98100EB82FA /* Bind.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Bind.cp; path = Application/Code/Bind.cp; sourceTree = "<group>"; };
-		0AE63E3107F3B9C900EB82FA /* Bind.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Bind.h; path = Application/Code/Bind.h; sourceTree = "<group>"; };
 		0AE852680D94613300B6834B /* AutoPool.objc++.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "AutoPool.objc++.h"; path = "Shared/Code/AutoPool.objc++.h"; sourceTree = "<group>"; };
 		0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaUserDefaults.mm; path = Shared/Code/CocoaUserDefaults.mm; sourceTree = "<group>"; };
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
@@ -679,14 +659,12 @@
 				0A46FDB8055432A400ACDF3A /* AlertMessages.cp */,
 				0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */,
 				0A46FE12055432A400ACDF3A /* AppResources.cp */,
-				0AE63E2807F3B98100EB82FA /* Bind.cp */,
 				0A46FDBC055432A400ACDF3A /* Clipboard.cp */,
 				0A46FDC0055432A400ACDF3A /* ColorBox.cp */,
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A46FDC2055432A400ACDF3A /* CommandLine.cp */,
 				0A46FDC3055432A400ACDF3A /* Commands.cp */,
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
-				0A46FDC4055432A400ACDF3A /* Configure.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */,
 				0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */,
@@ -729,7 +707,6 @@
 				0A46FDF6055432A400ACDF3A /* RegionUtilities.cp */,
 				0A46FE14055432A400ACDF3A /* Session.cp */,
 				0A46FE15055432A400ACDF3A /* SessionDescription.cp */,
-				0A46FE16055432A400ACDF3A /* SessionEditorDialog.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.cp */,
 				0A46FE18055432A400ACDF3A /* SizeDialog.cp */,
 				0AABEA3D05A1211400F15EF2 /* SpecialKeySequencesDialog.cp */,
@@ -756,14 +733,12 @@
 				0A4603F40554376100ACDF3A /* AlertMessages.h */,
 				0A4603BB0554376100ACDF3A /* AppleEventUtilities.h */,
 				0A4604230554376100ACDF3A /* AppResources.h */,
-				0AE63E3107F3B9C900EB82FA /* Bind.h */,
 				0A4603C00554376100ACDF3A /* Clipboard.h */,
 				0A4603C40554376100ACDF3A /* ColorBox.h */,
 				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
 				0A4603C60554376100ACDF3A /* CommandLine.h */,
 				0A4603C70554376100ACDF3A /* Commands.h */,
 				0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */,
-				0A4603C80554376100ACDF3A /* Configure.h */,
 				0A4603CA0554376100ACDF3A /* ConnectionData.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
@@ -809,7 +784,6 @@
 				0A4603FF0554376100ACDF3A /* RegionUtilities.h */,
 				0A4604250554376100ACDF3A /* Session.h */,
 				0A4604260554376100ACDF3A /* SessionDescription.h */,
-				0A4604270554376100ACDF3A /* SessionEditorDialog.h */,
 				0A4604280554376100ACDF3A /* SessionFactory.h */,
 				0A4604290554376100ACDF3A /* SessionRef.typedef.h */,
 				0A46042A0554376100ACDF3A /* SizeDialog.h */,
@@ -1033,15 +1007,7 @@
 		0AFF137B0AF42077006CCA34 /* Rez Input */ = {
 			isa = PBXGroup;
 			children = (
-				0A719D34055D95EE009B0A88 /* ApplicationMisc.r */,
-				0A719D23055D95ED009B0A88 /* InterfaceLibAppResources.r */,
-				0A719D26055D95ED009B0A88 /* FormatDialog.r */,
-				0A719D2C055D95EE009B0A88 /* ReusableControls.r */,
-				0A719D38055D95EE009B0A88 /* SessionEditorDialog.r */,
 				0A719D33055D95EE009B0A88 /* SpacingConstants.r */,
-				0A719D32055D95EE009B0A88 /* StringsMisc.r */,
-				0A719D31055D95EE009B0A88 /* TerminalEditorDialog.r */,
-				0A719D2F055D95EE009B0A88 /* WindowsMisc.r */,
 			);
 			name = "Rez Input";
 			sourceTree = "<group>";
@@ -1058,12 +1024,9 @@
 				0A4A86B0055B3DDF0011CC82 /* TelnetButtonNames.h */,
 				0A4A86AE055B3DDF0011CC82 /* TelnetMiscellaneousText.h */,
 				0A4A86AF055B3DDF0011CC82 /* TelnetMenuItemNames.h */,
-				0A719D54055D963A009B0A88 /* ControlResources.h */,
 				0A719D50055D963A009B0A88 /* DialogResources.h */,
 				0A719D51055D963A009B0A88 /* GeneralResources.h */,
 				0A719D53055D963A009B0A88 /* MenuResources.h */,
-				0A719D55055D963A009B0A88 /* PreferenceResources.h */,
-				0A719D52055D963A009B0A88 /* StringResources.h */,
 			);
 			name = "Resource Headers";
 			sourceTree = "<group>";
@@ -1338,7 +1301,6 @@
 				0AC6BB130A8C0BA000AFF37A /* ConnectionAE.cp in Sources */,
 				0AC6BB140A8C0BA000AFF37A /* DNR.cp in Sources */,
 				0AC6BB160A8C0BA000AFF37A /* TerminalSpeaker.cp in Sources */,
-				0AC6BB180A8C0BA000AFF37A /* Bind.cp in Sources */,
 				0AC6BB190A8C0BA000AFF37A /* IconManager.cp in Sources */,
 				0AC6BB1A0A8C0BA000AFF37A /* ColorUtilities.cp in Sources */,
 				0AC6BB1B0A8C0BA000AFF37A /* InstallAE.cp in Sources */,
@@ -1368,7 +1330,6 @@
 				0AC6BB350A8C0BA100AFF37A /* TerminalFile.cp in Sources */,
 				0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */,
 				0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */,
-				0AC6BB380A8C0BA100AFF37A /* Configure.cp in Sources */,
 				0AC6BB390A8C0BA100AFF37A /* DuplicateDialog.cp in Sources */,
 				0AC6BB3A0A8C0BA100AFF37A /* Initialize.cp in Sources */,
 				0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */,
@@ -1387,7 +1348,6 @@
 				0AC6BB480A8C0BA100AFF37A /* Clipboard.cp in Sources */,
 				0AC6BB490A8C0BA100AFF37A /* AlertMessages.cp in Sources */,
 				0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */,
-				0AC6BB4C0A8C0BA100AFF37A /* SessionEditorDialog.cp in Sources */,
 				0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */,
 				0AC6BB4E0A8C0BA100AFF37A /* FormatDialog.cp in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,

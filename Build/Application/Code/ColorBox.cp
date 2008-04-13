@@ -46,11 +46,9 @@
 #include <RegionUtilities.h>
 
 // resource includes
-#include "ControlResources.h"
 #include "DialogResources.h"
 #include "GeneralResources.h"
 #include "MenuResources.h"
-#include "StringResources.h"
 
 // MacTelnet includes
 #include "AppResources.h"
