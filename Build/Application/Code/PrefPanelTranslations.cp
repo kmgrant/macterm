@@ -70,6 +70,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 IMPORTANT
@@ -79,14 +80,14 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyLabelBaseTranslationTable			= { 'LBTT', 0/* ID */ };
-static HIViewID const	idMyDataBrowserBaseTranslationTable		= { 'Tran', 0/* ID */ };
-static HIViewID const	idMyLabelOptions						= { 'LOpt', 0/* ID */ };
-static HIViewID const	idMyCheckBoxUseBackupFont				= { 'XUBF', 0/* ID */ };
-static HIViewID const	idMyButtonBackupFontName				= { 'UFNm', 0/* ID */ };
-static HIViewID const	idMyLabelBackupFontTest					= { 'BFTs', 0/* ID */ };
-static HIViewID const	idMyImageBackupFontTest					= { 'BFTI', 0/* ID */ };
-static HIViewID const	idMyHelpTextBackupFontTest				= { 'HFTs', 0/* ID */ };
+HIViewID const	idMyLabelBaseTranslationTable			= { 'LBTT', 0/* ID */ };
+HIViewID const	idMyDataBrowserBaseTranslationTable		= { 'Tran', 0/* ID */ };
+HIViewID const	idMyLabelOptions						= { 'LOpt', 0/* ID */ };
+HIViewID const	idMyCheckBoxUseBackupFont				= { 'XUBF', 0/* ID */ };
+HIViewID const	idMyButtonBackupFontName				= { 'UFNm', 0/* ID */ };
+HIViewID const	idMyLabelBackupFontTest					= { 'BFTs', 0/* ID */ };
+HIViewID const	idMyImageBackupFontTest					= { 'BFTI', 0/* ID */ };
+HIViewID const	idMyHelpTextBackupFontTest				= { 'HFTs', 0/* ID */ };
 
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
@@ -94,7 +95,10 @@ enum
 	kMy_DataBrowserPropertyIDBaseCharacterSet		= 'Base'
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 /*!
 Initializes a Data Browser callbacks structure to
@@ -108,7 +112,7 @@ struct My_TranslationsDataBrowserCallbacks
 	My_TranslationsDataBrowserCallbacks		();
 	~My_TranslationsDataBrowserCallbacks	();
 	
-	DataBrowserCallbacks	listCallbacks;
+	DataBrowserCallbacks	_listCallbacks;
 };
 
 /*!
@@ -120,12 +124,19 @@ struct My_TranslationsPanelUI
 public:
 	My_TranslationsPanelUI	(Panel_Ref, HIWindowRef);
 	
-	My_TranslationsDataBrowserCallbacks		listCallbacks;
-	HIViewWrap								mainView;
-	HIViewWrap								labelBaseTable;
-	HIViewWrap								dataBrowserBaseTable;
-	CommonEventHandlers_HIViewResizer		containerResizer;	//!< invoked when the panel is resized
-	CarbonEventHandlerWrap					viewClickHandler;	//!< invoked when a tab is clicked
+	Panel_Ref								_panel;
+	My_TranslationsDataBrowserCallbacks		_listCallbacks;
+	HIViewWrap								_mainView;
+	CarbonEventHandlerWrap					_buttonCommandsHandler;		//!< invoked when a button is clicked
+	CarbonEventHandlerWrap					_fontPanelHandler;			//!< invoked when the font panel changes
+	CarbonEventHandlerWrap					_viewClickHandler;			//!< invoked when a tab is clicked
+	CommonEventHandlers_HIViewResizer		_containerResizer;			//!< invoked when the panel is resized
+	
+	void
+	loseFocus	();
+	
+	void
+	setFontName		(StringPtr);
 
 protected:
 	void
@@ -144,29 +155,37 @@ struct My_TranslationsPanelData
 {
 	My_TranslationsPanelData ();
 	
-	Panel_Ref					panel;			//!< the panel this data is for
-	My_TranslationsPanelUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Panel_Ref					_panel;			//!< the panel this data is for
+	My_TranslationsPanelUI*		_interfacePtr;	//!< if not nullptr, the panel user interface is active
+	//Preferences_ContextRef		_dataModel;		//!< source of initializations and target of changes
 };
 typedef My_TranslationsPanelData*	My_TranslationsPanelDataPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static pascal OSStatus	accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
-														 DataBrowserItemDataRef, Boolean);
-static pascal Boolean	compareDataBrowserItems			(HIViewRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
-static void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
-static void				disposePanel					(Panel_Ref, void*);
-static SInt32			panelChanged					(Panel_Ref, Panel_Message, void*);
-static pascal OSStatus	receiveViewHit					(EventHandlerCallRef, EventRef, void*);
-static void				setDataBrowserColumnWidths		(My_TranslationsPanelUIPtr);
+#pragma mark Internal Method Prototypes
+namespace {
+
+pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+													 DataBrowserItemDataRef, Boolean);
+pascal Boolean		compareDataBrowserItems			(HIViewRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
+void				deltaSizePanelContainerHIView	(HIViewRef, Float32, Float32, void*);
+void				disposePanel					(Panel_Ref, void*);
+SInt32				panelChanged					(Panel_Ref, Panel_Message, void*);
+pascal OSStatus		receiveFontChange				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveViewHit					(EventHandlerCallRef, EventRef, void*);
+void				setDataBrowserColumnWidths		(My_TranslationsPanelUIPtr);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Float32		gIdealPanelWidth = 0.0;
-	Float32		gIdealPanelHeight = 0.0;
-}
+Float32		gIdealPanelWidth = 0.0;
+Float32		gIdealPanelHeight = 0.0;
+
+} // anonymous namespace
 
 
 
@@ -211,6 +230,7 @@ PrefPanelTranslations_New ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes a My_TranslationsDataBrowserCallbacks structure.
@@ -221,17 +241,17 @@ My_TranslationsDataBrowserCallbacks::
 My_TranslationsDataBrowserCallbacks ()
 {
 	// set up all the callbacks needed for the data browser
-	this->listCallbacks.version = kDataBrowserLatestCallbacks;
-	if (noErr != InitDataBrowserCallbacks(&this->listCallbacks))
+	this->_listCallbacks.version = kDataBrowserLatestCallbacks;
+	if (noErr != InitDataBrowserCallbacks(&this->_listCallbacks))
 	{
 		// fallback
-		bzero(&this->listCallbacks, sizeof(this->listCallbacks));
-		this->listCallbacks.version = kDataBrowserLatestCallbacks;
+		bzero(&this->_listCallbacks, sizeof(this->_listCallbacks));
+		this->_listCallbacks.version = kDataBrowserLatestCallbacks;
 	}
-	this->listCallbacks.u.v1.itemDataCallback = NewDataBrowserItemDataUPP(accessDataBrowserItemData);
-	assert(nullptr != this->listCallbacks.u.v1.itemDataCallback);
-	this->listCallbacks.u.v1.itemCompareCallback = NewDataBrowserItemCompareUPP(compareDataBrowserItems);
-	assert(nullptr != this->listCallbacks.u.v1.itemCompareCallback);
+	this->_listCallbacks.u.v1.itemDataCallback = NewDataBrowserItemDataUPP(accessDataBrowserItemData);
+	assert(nullptr != this->_listCallbacks.u.v1.itemDataCallback);
+	this->_listCallbacks.u.v1.itemCompareCallback = NewDataBrowserItemCompareUPP(compareDataBrowserItems);
+	assert(nullptr != this->_listCallbacks.u.v1.itemCompareCallback);
 }// My_TranslationsDataBrowserCallbacks default constructor
 
 
@@ -244,15 +264,15 @@ My_TranslationsDataBrowserCallbacks::
 ~My_TranslationsDataBrowserCallbacks ()
 {
 	// dispose callbacks
-	if (nullptr != this->listCallbacks.u.v1.itemDataCallback)
+	if (nullptr != this->_listCallbacks.u.v1.itemDataCallback)
 	{
-		DisposeDataBrowserItemDataUPP(this->listCallbacks.u.v1.itemDataCallback),
-			this->listCallbacks.u.v1.itemDataCallback = nullptr;
+		DisposeDataBrowserItemDataUPP(this->_listCallbacks.u.v1.itemDataCallback),
+			this->_listCallbacks.u.v1.itemDataCallback = nullptr;
 	}
-	if (nullptr != this->listCallbacks.u.v1.itemCompareCallback)
+	if (nullptr != this->_listCallbacks.u.v1.itemCompareCallback)
 	{
-		DisposeDataBrowserItemCompareUPP(this->listCallbacks.u.v1.itemCompareCallback),
-			this->listCallbacks.u.v1.itemCompareCallback = nullptr;
+		DisposeDataBrowserItemCompareUPP(this->_listCallbacks.u.v1.itemCompareCallback),
+			this->_listCallbacks.u.v1.itemCompareCallback = nullptr;
 	}
 }// My_TranslationsDataBrowserCallbacks destructor
 
@@ -266,8 +286,8 @@ My_TranslationsPanelData::
 My_TranslationsPanelData ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-panel(nullptr),
-interfacePtr(nullptr)
+_panel(nullptr),
+_interfacePtr(nullptr)
 {
 }// My_TranslationsPanelData default constructor
 
@@ -282,22 +302,27 @@ My_TranslationsPanelUI	(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-listCallbacks			(),
-mainView				(createContainerView(inPanel, inOwningWindow)
+_panel					(inPanel),
+_listCallbacks			(),
+_mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
-labelBaseTable			(idMyLabelBaseTranslationTable, inOwningWindow),
-dataBrowserBaseTable	(idMyDataBrowserBaseTranslationTable, inOwningWindow),
-containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
-							kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-							deltaSizePanelContainerHIView, this/* context */),
-viewClickHandler		(CarbonEventUtilities_ReturnViewTarget(this->mainView), receiveViewHit,
+_buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
+_fontPanelHandler		(GetControlEventTarget(HIViewWrap(idMyButtonBackupFontName, inOwningWindow)), receiveFontChange,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassFont), kEventFontPanelClosed, kEventFontSelection),
+							this/* user data */),
+_viewClickHandler		(CarbonEventUtilities_ReturnViewTarget(this->_mainView), receiveViewHit,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
-							this/* user data */)
+							this/* user data */),
+_containerResizer		(_mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+							kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
+							deltaSizePanelContainerHIView, this/* context */)
 {
-	assert(labelBaseTable.exists());
-	assert(dataBrowserBaseTable.exists());
-	assert(containerResizer.isInstalled());
-	assert(viewClickHandler.isInstalled());
+	assert(_buttonCommandsHandler.isInstalled());
+	assert(_fontPanelHandler.isInstalled());
+	assert(_viewClickHandler.isInstalled());
+	assert(_containerResizer.isInstalled());
 	
 	setDataBrowserColumnWidths(this);
 	assignAccessibilityRelationships();
@@ -420,7 +445,7 @@ const
 		}
 		
 		// attach data that would not be specifiable in a NIB
-		error = SetDataBrowserCallbacks(baseTableList, &this->listCallbacks.listCallbacks);
+		error = SetDataBrowserCallbacks(baseTableList, &this->_listCallbacks._listCallbacks);
 		assert_noerr(error);
 		
 		// initialize sort column
@@ -489,13 +514,52 @@ const
 
 
 /*!
+Deselects any font buttons that are active, in response to
+a focus-lost event.
+
+(3.1)
+*/
+void
+My_TranslationsPanelUI::
+loseFocus ()
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->_panel);
+	HIViewWrap			fontNameButton(idMyButtonBackupFontName, kOwningWindow);
+	
+	
+	SetControl32BitValue(fontNameButton, kControlCheckBoxUncheckedValue);
+}// My_TranslationsPanelUI::loseFocus
+
+
+/*!
+Updates the font name display based on the given setting.
+
+(3.1)
+*/
+void
+My_TranslationsPanelUI::
+setFontName		(StringPtr		inFontName)
+{
+	HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->_panel);
+	ControlFontStyleRec		fontStyle;
+	
+	
+	SetControlTitle(HIViewWrap(idMyButtonBackupFontName, kOwningWindow), inFontName);
+	bzero(&fontStyle, sizeof(fontStyle));
+	fontStyle.flags = kControlUseFontMask;
+	fontStyle.font = FMGetFontFamilyFromName(inFontName);
+	SetControlFontStyle(HIViewWrap(idMyLabelBackupFontTest, kOwningWindow), &fontStyle);
+}// My_TranslationsPanelUI::setFontName
+
+
+/*!
 A standard DataBrowserItemDataProcPtr, this routine
 responds to requests sent by Mac OS X for data that
 belongs in the specified list.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
@@ -561,7 +625,7 @@ method compares items in the list.
 
 (3.1)
 */
-static pascal Boolean
+pascal Boolean
 compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 							 DataBrowserItemID			inItemOne,
 							 DataBrowserItemID			inItemTwo,
@@ -591,7 +655,7 @@ specified change in dimensions of a panel’s container.
 
 (3.1)
 */
-static void
+void
 deltaSizePanelContainerHIView	(HIViewRef		inView,
 								 Float32		inDeltaX,
 								 Float32		inDeltaY,
@@ -634,7 +698,7 @@ associated with the specified panel.
 
 (3.1)
 */
-static void
+void
 disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 				 void*		inDataPtr)
 {
@@ -642,7 +706,7 @@ disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 	
 	
 	// destroy UI, if present
-	if (nullptr != dataPtr->interfacePtr) delete dataPtr->interfacePtr;
+	if (nullptr != dataPtr->_interfacePtr) delete dataPtr->_interfacePtr;
 	
 	delete dataPtr, dataPtr = nullptr;
 }// disposePanel
@@ -655,7 +719,7 @@ of one of the preferences dialog’s panels changes.
 
 (3.1)
 */
-static SInt32
+SInt32
 panelChanged	(Panel_Ref		inPanel,
 				 Panel_Message	inMessage,
 				 void*			inDataPtr)
@@ -674,9 +738,9 @@ panelChanged	(Panel_Ref		inPanel,
 			HIWindowRef const*				windowPtr = REINTERPRET_CAST(inDataPtr, HIWindowRef*);
 			
 			
-			panelDataPtr->interfacePtr = new My_TranslationsPanelUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-			setDataBrowserColumnWidths(panelDataPtr->interfacePtr);
+			panelDataPtr->_interfacePtr = new My_TranslationsPanelUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->_interfacePtr);
+			setDataBrowserColumnWidths(panelDataPtr->_interfacePtr);
 		}
 		break;
 	
@@ -758,12 +822,183 @@ panelChanged	(Panel_Ref		inPanel,
 
 
 /*!
+Handles "kEventFontPanelClosed" and "kEventFontSelection" of
+"kEventClassFont" for the font and size of the panel.
+
+(3.1)
+*/
+pascal OSStatus
+receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyTranslationsPanelUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_TranslationsPanelUI*			interfacePtr = REINTERPRET_CAST(inMyTranslationsPanelUIPtr, My_TranslationsPanelUI*);
+	//My_TranslationsPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->_panel),
+	//																My_TranslationsPanelDataPtr);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassFont);
+	assert((kEventKind == kEventFontPanelClosed) || (kEventKind == kEventFontSelection));
+	switch (kEventKind)
+	{
+	case kEventFontPanelClosed:
+		// user has closed the panel; clear focus
+		interfacePtr->loseFocus();
+		break;
+	
+	case kEventFontSelection:
+		// user has accepted font changes in some way...update views
+		// and internal preferences
+		{
+			//Preferences_Result	prefsResult = kPreferences_ResultOK;
+			FMFontFamily		fontFamily = kInvalidFontFamily;
+			OSStatus			error = noErr;
+			
+			
+			result = noErr; // initially...
+			
+			// determine the font, if possible
+			error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamFMFontFamily, typeFMFontFamily, fontFamily);
+			if (noErr == error)
+			{
+				Str255		fontName;
+				
+				
+				error = FMGetFontFamilyName(fontFamily, fontName);
+				if (noErr != error) result = eventNotHandledErr;
+				else
+				{
+					// TEMPORARY - need to make this panel use preferences contexts
+					//prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagFontName,
+					//											sizeof(fontName), fontName);
+					//if (kPreferences_ResultOK != prefsResult)
+					//{
+					//	result = eventNotHandledErr;
+					//}
+					//else
+					{
+						// success!
+						interfacePtr->setFontName(fontName);
+					}
+				}
+			}
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	return result;
+}// receiveFontChange
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons in this panel.
+
+(3.1)
+*/
+pascal OSStatus
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					UNUSED_ARGUMENT(inMyTranslationsPanelUIPtr))
+{
+	OSStatus					result = eventNotHandledErr;
+	//My_TranslationsPanelUI*		interfacePtr = REINTERPRET_CAST(inMyTranslationsPanelUIPtr, My_TranslationsPanelUI*);
+	//My_TranslationsPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->_panel),
+	//														My_TranslationsPanelDataPtr);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if ((noErr == result) && (received.attributes & kHICommandFromControl))
+		{
+			HIViewRef	buttonHit = received.source.control;
+			
+			
+			result = eventNotHandledErr; // initially...
+			
+			switch (received.commandID)
+			{
+			case kCommandEditBackupFont:
+				// select the button that was hit, and transmit font information
+				{
+					FontSelectionQDStyle	fontInfo;
+					Str255					fontName;
+					//size_t					actualSize = 0;
+					//Preferences_Result		prefsResult = kPreferences_ResultOK;
+					
+					
+					//prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontName, sizeof(fontName),
+					//											fontName, false/* search defaults too */, &actualSize);
+					//if (kPreferences_ResultOK != prefsResult)
+					{
+						// error...pick an arbitrary value
+						PLstrcpy(fontName, "\pLucida Grande");
+					}
+					
+					bzero(&fontInfo, sizeof(fontInfo));
+					fontInfo.version = kFontSelectionQDStyleVersionZero;
+					fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontName);
+					fontInfo.instance.fontStyle = normal;
+					fontInfo.size = 0;
+					fontInfo.hasColor = false;
+					// apparently this API can return paramErr even though it
+					// successfully sets the desired font information...
+					(OSStatus)SetFontInfoForSelection(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
+													// NOTE: This API is misdeclared in older headers, the last argument is supposed to
+													// be an event target.  It is bastardized into HIObjectRef form for older compiles.
+													#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+														GetControlEventTarget(buttonHit)
+													#else
+														REINTERPRET_CAST(buttonHit, HIObjectRef)
+													#endif
+													);
+					if (1)
+					{
+						SetControl32BitValue(HIViewWrap(idMyButtonBackupFontName, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
+						if (false == FPIsFontPanelVisible())
+						{
+							result = FPShowHideFontPanel();
+						}
+					}
+				}
+				break;
+			
+			default:
+				break;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// receiveHICommand
+
+
+/*!
 Handles "kEventControlClick" of "kEventClassControl"
 for this preferences panel.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				 EventRef				inEvent,
 				 void*					inMyTranslationsPanelUIPtr)
@@ -803,11 +1038,11 @@ proportionately based on the total width.
 
 (3.1)
 */
-static void
+void
 setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 {
 	Rect			containerRect;
-	HIViewWrap		baseTableListContainer(idMyDataBrowserBaseTranslationTable, HIViewGetWindow(inInterfacePtr->mainView));
+	HIViewWrap		baseTableListContainer(idMyDataBrowserBaseTranslationTable, HIViewGetWindow(inInterfacePtr->_mainView));
 	assert(baseTableListContainer.exists());
 	
 	
@@ -827,5 +1062,7 @@ setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 						STATIC_CAST(calculatedWidth, UInt16));
 	}
 }// setDataBrowserColumnWidths
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

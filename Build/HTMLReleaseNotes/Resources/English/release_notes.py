@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080413',
     '20080412',
     '20080411',
     '20080410',
@@ -135,6 +136,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080413': [
+		'Fixed font selection in the Preferences window Translations pane.',
+	],
 	'20080412': [
 		'Redesigned parts of the Preferences window Translations pane to offer more useful rendering preferences.',
 	],

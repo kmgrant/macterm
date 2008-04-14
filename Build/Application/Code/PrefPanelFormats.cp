@@ -653,7 +653,7 @@ mainView				(createContainerView(inPanel, inOwningWindow)
 _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 							this/* user data */),
-_fontPanelHandler		(GetWindowEventTarget(inOwningWindow), receiveFontChange,
+_fontPanelHandler		(GetControlEventTarget(HIViewWrap(idMyButtonFontName, inOwningWindow)), receiveFontChange,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassFont), kEventFontPanelClosed, kEventFontSelection),
 							this/* user data */),
 _windowFocusHandler		(GetWindowEventTarget(inOwningWindow), receiveWindowFocusChange,
