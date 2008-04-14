@@ -933,7 +933,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 
 
 /*!
-Updates the font size display based on the given setting.
+Updates the font name display based on the given setting.
 
 (3.1)
 */
