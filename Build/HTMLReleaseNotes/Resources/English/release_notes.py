@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080416',
     '20080413',
     '20080412',
     '20080411',
@@ -136,6 +137,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080416': [
+		'Started a Low-Level Settings section in MacTelnet Help to document preferences hidden from the main user interface.',
+	],
 	'20080413': [
 		'Fixed font selection in the Preferences window Translations pane.',
 	],

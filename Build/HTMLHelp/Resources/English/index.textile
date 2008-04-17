@@ -22,6 +22,7 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 <dt>Reference</dt><dd>
 
 * "preferences":preferences.html
+* "low-level settings":advprefs.html
 * "types of windows":windows.html
 * "terminal interaction":terminals.html
 * "terminal emulator specifics":vt.html

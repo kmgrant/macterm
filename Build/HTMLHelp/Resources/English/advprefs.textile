@@ -1,0 +1,46 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":index.html
+
+</div>
+
+h1(pagetitle). Low-Level Settings
+
+<div class="content">
+
+This page describes preferences that generally require special
+edits to make.  For example, you may need to use the command-line
+"defaults" program, or edit XML directly, instead of interacting
+with a window in MacTelnet.
+
+This document is very incomplete and will be expanded over time.
+
+h2(#general). General
+
+MacTelnet preferences are hierarchical.  Every default value is
+in "com.mactelnet.MacTelnet.plist" (in the Preferences folder of
+the user Library folder), even if it appears to be a Default
+collection in the user interface.
+
+Collections themselves are separate property list files, of the form
+"com.mactelnet.MacTelnet.[type].[number].plist".  The names
+of these domains are recorded in the primary defaults file.
+
+Each collection file contains either a "name" key of type Data,
+or a "name-string" key of type String, or both.  The String
+version is less precise, but is useful for easy viewing and
+debugging of names.  The Data version is preferred and is an
+external representation of Unicode.  These names determine how
+MacTelnet displays the collection in any user interface, such as
+a menu or a list in the Preferences window.
+
+MacTelnet settings are designed so that *any* preferences key
+might one day fit into any collection.  However, currently, only
+related settings are actually expected; for instance, nothing
+will check for colors in a Session collection.
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+
