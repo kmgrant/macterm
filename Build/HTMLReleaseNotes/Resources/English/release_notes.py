@@ -139,6 +139,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080417': [
+		'Fixed background window text selections to allow immediate drags, as their enabled states imply.',
 		'Changed the style of MacTelnet Help somewhat, to better fit the monospaced layout that the content generates.',
 	],
 	'20080416': [

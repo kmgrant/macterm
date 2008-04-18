@@ -4762,7 +4762,7 @@ receiveWindowGetClickActivation		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				
 				for (viewIterator = ptr->allViews.begin(); viewIterator != ptr->allViews.end(); ++viewIterator)
 				{
-					if (TerminalView_ReturnUserFocusHIView(*viewIterator) == control)
+					if (TerminalView_ReturnDragFocusHIView(*viewIterator) == control)
 					{
 						// clicks in terminals may work from the background
 						ClickActivationResult	clickInfo = kActivateAndIgnoreClick;
