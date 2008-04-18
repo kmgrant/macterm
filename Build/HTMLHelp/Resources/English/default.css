@@ -4,7 +4,8 @@ body
 {
 	background:			white;
 	color:				black;
-	font-family:		"Tahoma", "Gill Sans", "Lucida Grande", sans-serif;
+	font-family:		"Inconsolata", "Courier New", "Courier", "Monaco", monospace;
+	line-height:		210%;
 	
 	margin-top:			0;
 	border-top:			0;
@@ -214,6 +215,8 @@ a:hover
 {
 	background-image:	white url('SubtleBorderTop.png') repeat-x;
 	color:				#333;
+	font-family:		Optima, sans-serif;
+	line-height:		130%;
 	
 	margin-top:			0;
 	border-top:			solid #111 0.1em;
@@ -236,7 +239,8 @@ h2
 {
 	background:			#ccc;
 	color:				black;
-	font-family:		"Tahoma-Bold";
+	font-family:		Optima, sans-serif;
+	line-height:		130%;
 	
 	margin-top:			0.25em;
 	border-top:			solid #aaa 0.075em;
@@ -259,6 +263,8 @@ h3
 {
 	background:			white;
 	color:				black;
+	font-family:		Optima, sans-serif;
+	line-height:		130%;
 	
 	margin-top:			0.45em;
 	border-top:			0;
@@ -281,6 +287,8 @@ h4
 {
 	background:			white;
 	color:				black;
+	font-family:		Optima, sans-serif;
+	line-height:		130%;
 	
 	margin-top:			0.25em;
 	border-top:			solid white 0;
@@ -303,6 +311,8 @@ h5
 {
 	background:			white;
 	color:				black;
+	font-family:		Optima, sans-serif;
+	line-height:		130%;
 	
 	margin-top:			0.25em;
 	border-top:			solid white 0;
@@ -325,6 +335,8 @@ h6
 {
 	background:			white;
 	color:				black;
+	font-family:		Optima, sans-serif;
+	line-height:		130%;
 	
 	margin-top:			0.25em;
 	border-top:			solid white 0;
@@ -379,7 +391,7 @@ blockquote
 	border-bottom:		0;
 	margin-bottom:		0;
 	
-	margin-left:		3em;
+	margin-left:		2em;
 	border-left:		dashed #aae 0.1em;
 	padding-left:		1.5em;
 	width:				65%;

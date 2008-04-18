@@ -219,9 +219,10 @@ h2(#sessions). Sessions
 
 bq. You can create more than one set of preferences in
 this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply choose
-a name from the list in the drawer, and then edit that
-collection's settings in the main Preferences window.
+appears with all the collections you have.  Simply
+choose a name from the list in the drawer, and then
+edit that collection's settings in the main Preferences
+window.
 
 Sessions are a little like Bookmarks from your web browser.
 
@@ -240,19 +241,19 @@ h4. Terminal
 
 Specifies the Terminals collection that will be used to set up
 the emulator for the session terminal window.  Most of the
-terminal settings can be changed while the session is running,
-by using the Terminal menu.
+terminal settings can be changed while the session is running, by
+using the Terminal menu.
 
 In Unix sessions, you typically will set a "TERM" environment
 variable that is consistent with the Terminal setting.
 
 h4. Remote Sessions Only
 
-These fields are only required when connecting to a server,
-and can be left blank if your Resource is a local Unix command.
+These fields are only required when connecting to a server, and
+can be left blank if your Resource is a local Unix command.
 
-Note also that editing fields in this section will overwrite
-the Unix command line portion of the panel.
+Note also that editing fields in this section will overwrite the
+Unix command line portion of the panel.
 
 h5. Protocol
 
@@ -274,16 +275,16 @@ The domain name or IP address (version 4 or version 6) of the
 server you want to connect to.
 
 Storing IP addresses is not recommended, because addresses are
-usually changed more frequently than domain names.  On the
-other hand, not all servers have domain names.
+usually changed more frequently than domain names.  On the other
+hand, not all servers have domain names.
 
 You can use Look Up to test a domain name, which will replace
 the name with its current IP address (version 6, if available).
 
 h5. Port
 
-Since more than one server can be running on a computer, the
-port number specifies which one you want.
+Since more than one server can be running on a computer, the port
+number specifies which one you want.
 
 Usually, you can rely on the port number that is automatically
 chosen when you select a Protocol.
@@ -294,8 +295,8 @@ You can choose to remember the user identification that is
 requested by the server each time you connect.
 
 MacTelnet does not remember passwords for you.  You will be
-prompted for a password when you connect, if the server
-requires one.
+prompted for a password when you connect, if the server requires
+one.
 
 h4. Command Line
 
@@ -308,11 +309,11 @@ already defined for you, as you edited the Remote Sessions Only
 fields.  Advanced users can further edit this command line if
 necessary.
 
-It is important to note that MacTelnet splits this line into words
-(on whitespace), and does not interpret *any* characters: not
-even those common to Unix shells like "~", "|" and ">".  If you
-want to run a more complex command, you can save it in a script
-for the target shell, and ask MacTelnet to run that script.
+It is important to note that MacTelnet splits this line into
+words (on whitespace), and does not interpret *any* characters:
+not even those common to Unix shells like "~", "|" and ">".  If
+you want to run a more complex command, you can save it in a
+script for the target shell, and ask MacTelnet to run the script.
 
 h3(#sessiondataflow). Data Flow
 
@@ -345,12 +346,12 @@ same information to appear twice in the local terminal.
 h4. Paste Buffering
 
 When you use Paste for a large amount of text, the session may
-not be prepared to receive that much data at once; this can
-cause problems, like losing or garbling some of the characters.
+not be prepared to receive that much data at once; this can cause
+problems, like losing or garbling some of the characters.
 
 MacTelnet allows you to locally buffer Paste on a per-session
-basis.  This means that MacTelnet does not send all text at
-once, it splits the data into small chunks and sends each piece
+basis.  This means that MacTelnet does not send all text at once,
+it splits the data into small chunks and sends each piece
 separately.
 
 h4. Capture to File
@@ -359,10 +360,10 @@ You can choose to automatically capture this session to a
 specific file when it starts.  Note also that this can be done
 from a menu, File >> Begin Capture to File.
 
-Currently, MacTelnet does not have sophisticated ways to
-handle automatic file captures.  It would be nice, for instance,
-if successive sessions could use new files in a target folder
-and not overwrite the same file.
+Currently, MacTelnet does not have sophisticated ways to handle
+automatic file captures.  It would be nice, for instance, if
+successive sessions could use new files in a target folder and
+not overwrite the same file.
 
 h3(#sessioncontrolkeys). Keyboard
 
@@ -370,19 +371,19 @@ You can map certain key combinations to special behaviors that
 allow control over applications and data flow.
 
 Usually the default mappings are sufficient, however there are
-notable Unix applications (like "pine" and "EMACS") that may
-need to use the default control-key mappings for something else.
+notable Unix applications (like "pine" and "EMACS") that may need
+to use the default control-key mappings for something else.
 
-Note also that the Control Keys palette allows you to enter
-_any_ control key at any time, regardless of key mappings.  See
-the Window menu.
+Note also that the Control Keys palette allows you to enter _any_
+control key at any time, regardless of key mappings.  See the
+Window menu.
 
 h4. Process Control
 
 h5. Interrupt Process
 
-Defaults to control-C (^C), the key sequence that will cause
-the application in a terminal to quit immediately if possible.
+Defaults to control-C (^C), the key sequence that will cause the
+application in a terminal to quit immediately if possible.
 
 This is also in the menu bar, Terminal >> Interrupt Process.
 
@@ -414,15 +415,15 @@ and is available as a toolbar item.
 
 h4. EMACS Cursor
 
-The EMACS text editor has its own commands for moving the
-cursor in the buffer.  You can choose to have your Mac arrow
-keys trigger the appropriate EMACS commands.
+The EMACS text editor has its own commands for moving the cursor
+in the buffer.  You can choose to have your Mac arrow keys
+trigger the appropriate EMACS commands.
 
 h4. EMACS Meta
 
 The EMACS text editor relies heavily on a key that is not
-available on Mac keyboards, the meta key.  However, you can
-ask MacTelnet to emulate the meta key by using other keys.
+available on Mac keyboards, the meta key.  However, you can ask
+MacTelnet to emulate the meta key by using other keys.
 
 h4. Delete
 
@@ -449,11 +450,11 @@ characters: ASCII codes 13 and 0.
 
 h3(#sessiontek). Graphics (TEK)
 
-MacTelnet is not only a terminal emulator, but also a display
-for various kinds of images.  You can enable a vector graphics
+MacTelnet is not only a terminal emulator, but also a display for
+various kinds of images.  You can enable a vector graphics
 command set for a session so that, when MacTelnet receives
-certain special sequences, it will automatically render the
-data as a picture instead of dumping it to the terminal screen.
+certain special sequences, it will automatically render the data
+as a picture instead of dumping it to the terminal screen.
 
 h4. Command set
 
@@ -465,37 +466,39 @@ colored lines, and rotated text compared to TEK 4014.
 h4. PAGE clears screen
 
 When a new vector graphics image is created (known in TEK as a
-PAGE command), it is normally put into its own window.  If you
-do not want several windows and instead want MacTelnet to reuse
-the same window, enable the clear-screen option.
+PAGE command), it is normally put into its own window.  If you do
+not want several windows and instead want MacTelnet to reuse the
+same window, enable the clear-screen option.
 
 h2(#terminals). Terminals
 
 bq. You can create more than one set of preferences in
 this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply choose
-a name from the list in the drawer, and then edit that
-collection's settings in the main Preferences window.
+appears with all the collections you have.  Simply
+choose a name from the list in the drawer, and then
+edit that collection's settings in the main Preferences
+window.
 
 Terminals decide somewhat technical aspects of a window, such as
-the emulation type.  Usually, you set up one or more of these with
-the help of an administrator or application documentation, so that
-MacTelnet behaves correctly when you use an application in a
-terminal window.  Custom and collection Sessions can associate a
-Terminal collection with them, ensuring that these important
-settings are always made for you.
+the emulation type.  Usually, you set up one or more of these
+with the help of an administrator or application documentation,
+so that MacTelnet behaves correctly when you use an application
+in a terminal window.  Custom and collection Sessions can
+associate a Terminal collection with them, ensuring that these
+important settings are always made for you.
 
 h2(#formats). Formats
 
 bq. You can create more than one set of preferences in
 this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply choose
-a name from the list in the drawer, and then edit that
-collection's settings in the main Preferences window.
+appears with all the collections you have.  Simply
+choose a name from the list in the drawer, and then
+edit that collection's settings in the main Preferences
+window.
 
-Formats are collections of fonts, font sizes, colors, and more, that
-decide how your terminal windows look.  You can use the View menu
-to quickly change a window's format to one of the collections you
+Formats are collections of fonts, font sizes, colors, and more,
+that decide how your terminal windows look.  You can use the View
+menu to change a window's format to one of the collections you
 specify in Preferences, or to make customizations local to the
 frontmost window.
 
@@ -529,9 +532,10 @@ h2(#macros). Macros
 
 bq. You can create more than one set of preferences in
 this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply choose
-a name from the list in the drawer, and then edit that
-collection's settings in the main Preferences window.
+appears with all the collections you have.  Simply
+choose a name from the list in the drawer, and then
+edit that collection's settings in the main Preferences
+window.
 
 All macro sets use the same key equivalents, so only one set can
 be available at a time.  When a terminal window is active, use
@@ -610,9 +614,9 @@ special sequences are:
 |<. \e|<{padding-left:0.5em}. escape (^[)|
 |<. \0nn|<{padding-left:0.5em}. arbitrary ASCII in octal; e.g. "\004" is ^D|
 
-bq. To see the octal versions of all ASCII characters, look at
-<a href="x-man-page://ascii">x-man-page://ascii</a> (opens a MacTelnet window and runs
-"man ascii").
+bq. To see the octal versions of all ASCII characters,
+look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
+MacTelnet window and runs "man ascii").
 
 MacTelnet also recognizes codes that represent information
 to be inserted at the time a macro is actually used:
@@ -624,16 +628,17 @@ h2(#translations). Translations
 
 bq. You can create more than one set of preferences in
 this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply choose
-a name from the list in the drawer, and then edit that
-collection's settings in the main Preferences window.
+appears with all the collections you have.  Simply
+choose a name from the list in the drawer, and then
+edit that collection's settings in the main Preferences
+window.
 
-A translation table essentially allows the terminal to display text
-the way it is supposed to, according to what an application in a
-terminal expects.
+A translation table essentially allows the terminal to display
+text the way it is supposed to, according to what an application
+in a terminal expects.
 
-The Map menu allows you to choose among these translation settings
-while sessions are running.
+The Map menu allows you to choose among these translation
+settings while sessions are running.
 
 h3. Settings
 
@@ -662,7 +667,8 @@ h2(#fullscreen). Full Screen
 
 Settings that control "kiosk mode", the Full Screen command in
 the MacTelnet application menu.  You can use these preferences to
-create a more complete kiosk (by hiding the menu bar, for example).
+create a more complete kiosk (by hiding the menu bar, for
+example).
 
 Note also the General preference (above) for removing all menu
 command keys, which can also be useful for kiosks.

@@ -14,51 +14,51 @@ h2(#servers). Remote Sessions: Connecting to Servers
 Select File >> Custom New Session... to begin.
 
 bq. Only your first sessions should require this
-customization step.  In the future, it will be
-faster to rely on a Favorite or a saved session
-file to hold your preferences.  A Favorite can be
-opened directly from the File menu; for others,
-use File >> Open.
+customization step.  In the future, it will be faster
+to rely on a Favorite or a saved session file to hold
+your preferences.  A Favorite can be opened directly
+from the File menu; for others, use File >> Open.
 
 A Custom New Session opens a terminal window and a sheet to allow
 configuration.
 
-If you need special terminal settings that are saved as a Favorite, you
-can choose to enable them now with the Terminal menu.  Or, defer
-settings until after the session starts.  (Some settings cannot be
-changed later.)
+If you need special terminal settings that are saved as a
+Favorite, you can choose to enable them now with the Terminal
+menu.  Or, defer settings until after the session starts.  (Some
+settings cannot be changed later.)
 
-Your remote application will be accessible using a certain protocol -
-ask your administrator if none of the options (**SSH** versions 1 or 2,
-**TELNET**, **SFTP** or **FTP**) seems appropriate.
+Your remote application will be accessible using a certain
+protocol - ask your administrator if none of the options (**SSH**
+1 or 2, **TELNET**, **SFTP** or **FTP**) seems appropriate.
 
-There will be a "server" for your remote application, uniquely identified
-by a combination of **host** and **port**.  In the Host field, you can enter
-a name (like "apple.com") if one is applicable; if you have only an
-address (like "123.45.67.123"), enter that instead.  The Look Up button
-can be used to check if a server name is valid (if so, it is transformed
-into a numeric address; otherwise, it is unchanged).
+There will be a "server" for your remote application, uniquely
+identified by a combination of **host** and **port**.  In the
+Host field, you can enter a name (like "apple.com") if one is
+applicable; if you have only an address (like "123.45.67.123"),
+enter that instead.  The Look Up button can be used to check if a
+server name is valid (if so, it is transformed into a numeric
+address; otherwise, it is unchanged).
 
-bq. MacTelnet supports IP version 6 addresses too,
-so you could also enter something like
+bq. MacTelnet supports IP version 6 addresses too, so
+you could also enter something like
 "0000:0000:0000:0000:0000:ffff:9d16:0164".
 
-The Port field may not require changing...it was set automatically
-when you chose a Protocol earlier.  But some servers use a custom
-port number, so adjust the value if necessary.
+The Port field may not require changing...it is set automatically
+when you choose a Protocol.  But some servers use a custom port
+number, so adjust the value if necessary.
 
-The User ID is what the server uses to identify you.  If not provided,
-the name of your local Home folder is used (one-word, all-lowercase
-name).  Note that if a password is also required to access the server,
-you will be prompted for that at connection time; you cannot enter it
-initially in the configuration sheet.
+The User ID is what the server uses to identify you.  If not
+provided, the name of your local Home folder is used (one-word,
+all-lowercase).  Note that if a password is also required to
+access the server, you will be prompted for that at connection
+time; you cannot enter it initially in the configuration sheet.
 
 bq. You'll notice that your changes set up a Unix
-command line.  This is because MacTelnet relies
-on Apple's installed commands to connect to
-your server.  Advanced users may wish to add
-extra options here; see the Unix manual pages
-for each command to learn what is available.
+command line.  This is because MacTelnet relies on
+Apple's installed commands to connect to your server.
+Advanced users may wish to add extra options here; see
+the Unix manual pages for each command to learn what is
+available.
 
 h2(#unix). Local Sessions: Running Unix Commands
 
@@ -81,8 +81,8 @@ the bottom of the dialog.
 shell in log-in mode (with shell-dependent settings) that will
 not inherit any environment variable settings from MacTelnet.
 
-bq. Most session creation commands are also available from the
-MacTelnet icon's Dock menu.
+bq. Most session creation commands are also available
+from the MacTelnet icon's Dock menu.
 
 </div>
 

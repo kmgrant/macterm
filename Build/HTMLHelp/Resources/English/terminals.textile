@@ -11,30 +11,32 @@ h1(pagetitle). Terminals
 
 h2(#select). Text Selections
 
-Highlight terminal text by dragging over it with the mouse.  Keep it
-*rectangular* by holding down the Option key.
+Highlight terminal text by dragging over it with the mouse.  Keep
+it *rectangular* by holding down the Option key.
 
 h3(#selectdrag). Drag and Drop
 
-Text can be copied by using the mouse to move a selection to another
-location - for instance, the Desktop (to make a text clipping).
+Text can be copied by using the mouse to move a selection to
+another location - for instance, the Desktop (to make a text
+clipping).
 
 Text can be imported in the same way - any text dropped into a
 terminal is effectively typed into the terminal.
 
-The Unix pathname of a file or folder can be typed by dropping the
-icon (from the Finder, say) into a terminal.
+The Unix pathname of a file or folder can be typed by dropping
+the icon (from the Finder, say) into a terminal.
 
 h3(#selectappearance). Text Selection Preferences
 
 See "the Preferences page":preferences.html for some options related to the
-appearance and behavior of text selections.  For instance, you can
-choose to have them automatically copied to the clipboard.
+appearance and behavior of text selections.  For instance, you
+can choose to have them automatically copied to the clipboard.
 
 h2. Cursor
 
 The cursor is a special position in the bottommost screenful of a
-terminal, representing (usually) where text will appear when you type.
+terminal, representing (usually) where text will appear when you
+type.
 
 h3(#findcursor). Finding the Cursor
 
@@ -51,8 +53,8 @@ choose its shape and whether or not it is flashing on and off.
 
 h2(#commandline). Floating Command Line
 
-Use Window >> Show Command Line to display a floating window
-for entering text locally.  Unlike typing directly into a terminal,
+Use Window >> Show Command Line to display a floating window for
+entering text locally.  Unlike typing directly into a terminal,
 nothing you type in the floating window is seen until you press
 the *Return* key (which also sends a new-line sequence to the
 terminal).
@@ -63,8 +65,9 @@ command line, and they are handled locally using your preferred
 application.  Note that MacTelnet can handle some URLs itself.
 
 The command line is somewhat shell-like, in that you can use the
-up-arrow key to automatically type recently-entered command lines.
-You can also use the mouse to access the history from the window.
+up-arrow key to automatically type recently-entered command
+lines.  You can also use the mouse to access the history from the
+window.
 
 h2. Window Operations
 
@@ -84,10 +87,11 @@ terminal screen dimensions.
 
 h3(#magnify). Magnification
 
-Use View >> Make Text as Big as Possible to alter a terminal's text
-size based on the display that contains the largest part of its window!
-See also View >> Full Screen, which can be used in tandem with
-this effect to create a dedicated terminal display (kiosk).
+Use View >> Make Text as Big as Possible to alter a terminal's
+text size based on the display that contains the largest part of
+its window!  See also View >> Full Screen, which can be used in
+tandem with this effect to create a dedicated terminal display
+(kiosk).
 
 Note that Edit >> Undo can be used to cancel dimension changes
 made with the "Make Text..." commands.
@@ -106,15 +110,15 @@ new window.
 
 h3(#arrange). Arranging Windows
 
-When arranged, _all_ terminal windows return to a diagonal stagger
-pattern that matches their original opening positions.  NOTE that
-this cannot be undone.
+When arranged, _all_ terminal windows return to a diagonal
+stagger pattern that matches their original opening positions.
+NOTE that this cannot be undone.
 
 h3(#arrange). Session-Induced Window Changes
 
-MacTelnet respects some of XTerm's window sequences, so a terminal
-application may also affect a window.  Typically an application will
-rename the window or minimize it into the Dock.
+MacTelnet respects some of XTerm's window sequences, so a
+terminal application may also affect a window.  Typically an
+application will rename the window or minimize it into the Dock.
 
 </div>
 

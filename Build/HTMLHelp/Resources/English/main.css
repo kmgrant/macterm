@@ -4,6 +4,7 @@
 
 #lastupdated
 {
+	font-family:		Optima, sans-serif;
 	font-size:			smaller;
 	font-weight:		bold;
 	text-align:			center;
@@ -132,7 +133,7 @@
 	margin-left:		0em;
 	border-left:		0em;
 	padding-left:		0em;
-	width:				21em;
+	width:				auto;
 	padding-right:		0em;
 	border-right:		0em;
 	margin-right:		0em;
@@ -163,7 +164,8 @@
 {
 	color:				#333;
 	display:			block;
-	font-size:			x-small;
+	font-family:		Optima, sans-serif;
+	font-size:			smaller;
 	font-style:			italic;
 	font-weight:		bold;
 	text-shadow:		#666 0.075em 0.15em 0.5em;
@@ -193,6 +195,8 @@
 
 #mainnavigation dd
 {
+	font-family:		Optima, sans-serif;
+	
 	margin-top:			0em;
 	border-top:			0em;
 	padding-top:		0em;

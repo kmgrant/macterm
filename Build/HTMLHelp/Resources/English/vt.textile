@@ -98,12 +98,13 @@ does not support this terminal type (yet).
 h2(#ansibbs). ANSI-BBS
 
 The ANSI-BBS terminal type has many names, and is perhaps best
-described as the MS-DOS terminal.  The feature set is not entirely
-standardized, however it is known for using Code Page 437 extended
-ASCII as its character set.  PC console applications commonly rely
-on this to do relatively sophisticated graphics rendering.
-MacTelnet has a preliminary implementation of this emulator, but
-in development versions it is largely disabled for testing.
+described as the MS-DOS terminal.  The feature set is not
+entirely standardized, but it is known for using Code Page 437
+extended ASCII as its character set.  PC console applications
+commonly rely on this to do relatively sophisticated graphics
+rendering.  MacTelnet has a preliminary implementation of this
+emulator, but in development versions it is largely disabled for
+testing.
 
 </div>
 

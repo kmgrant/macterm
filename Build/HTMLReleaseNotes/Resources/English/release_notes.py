@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080417',
     '20080416',
     '20080413',
     '20080412',
@@ -137,6 +138,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080417': [
+		'Changed the style of MacTelnet Help somewhat, to better fit the monospaced layout that the content generates.',
+	],
 	'20080416': [
 		'Started a Low-Level Settings section in MacTelnet Help to document preferences hidden from the main user interface.',
 	],
