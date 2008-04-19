@@ -2050,6 +2050,38 @@ DialogUtilities_SetKeyboardFocus	(HIViewRef		inView)
 
 
 /*!
+Finds the menu attached to the specified view, determines
+the first item in it matching the given command ID, and
+updates the control value to match.
+
+(3.1)
+*/
+OSStatus
+DialogUtilities_SetPopUpItemByCommand	(HIViewRef		inPopUpMenuView,
+										 UInt32			inCommandID)
+{
+	OSStatus	result = errUnknownControl;
+	MenuRef		menu = GetControlPopupMenuRef(inPopUpMenuView);
+	
+	
+	if (nullptr != menu)
+	{
+		MenuItemIndex	itemIndex = 0;
+		
+		
+		result = GetIndMenuItemWithCommandID(menu, inCommandID, 1/* which match to return */,
+												&menu, &itemIndex);
+		if (noErr == result)
+		{
+			SetControl32BitValue(inPopUpMenuView, itemIndex);
+			result = noErr;
+		}
+	}
+	return result;
+}// SetPopUpItemByCommand
+
+
+/*!
 Call this routine on the Help button control of every window.
 This routine checks to see if all necessary components for
 contextual help are available (disabling the button if help

@@ -299,6 +299,10 @@ void
 OSStatus
 	DialogUtilities_SetKeyboardFocus		(HIViewRef				inView);
 
+OSStatus
+	DialogUtilities_SetPopUpItemByCommand	(HIViewRef				inPopUpMenuView,
+											 UInt32					inMenuCommandID);
+
 HIViewWrap&
 	DialogUtilities_SetUpHelpButton			(HIViewWrap&			inoutView);
 
