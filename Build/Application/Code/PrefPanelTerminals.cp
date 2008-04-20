@@ -42,6 +42,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <ColorUtilities.h>
 #include <CommonEventHandlers.h>
@@ -53,6 +54,7 @@
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
 #include <RegionUtilities.h>
+#include <SoundSystem.h>
 
 // resource includes
 #include "DialogResources.h"
@@ -68,6 +70,7 @@
 #include "Panel.h"
 #include "Preferences.h"
 #include "PrefPanelTerminals.h"
+#include "Terminal.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 
@@ -87,6 +90,11 @@ In addition, they MUST be unique across all panels.
 HIViewID const	idMyPopUpMenuEmulationType		= { 'MEmT', 0/* ID */ };
 HIViewID const	idMyFieldAnswerBackMessage		= { 'EABM', 0/* ID */ };
 HIViewID const	idMyDataBrowserHacks			= { 'HxDB', 0/* ID */ };
+HIViewID const	idMyFieldColumns				= { 'Cols', 0/* ID */ };
+HIViewID const	idMyFieldRows					= { 'Rows', 0/* ID */ };
+HIViewID const	idMyPopUpMenuScrollbackType		= { 'SbkT', 0/* ID */ };
+HIViewID const	idMyFieldScrollback				= { 'Sbak', 0/* ID */ };
+HIViewID const	idMyPopUpMenuScrollbackUnits	= { 'SbkU', 0/* ID */ };
 HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
 
@@ -163,6 +171,24 @@ struct My_TerminalsPanelScreenUI
 	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	void
+	saveFieldPreferences	(Preferences_ContextRef);
+	
+	void
+	setColumns		(UInt16);
+	
+	void
+	setRows		(UInt16);
+	
+	void
+	setScrollbackCustomizationEnabled	(Boolean);
+	
+	void
+	setScrollbackRows	(UInt16);
+	
+	void
+	setScrollbackType	(Terminal_ScrollbackType);
 
 protected:
 	HIViewWrap
@@ -172,6 +198,10 @@ protected:
 	deltaSize	(HIViewRef, Float32, Float32, void*);
 	
 private:
+	CarbonEventHandlerWrap				_menuCommandsHandler;			//!< responds to menu selections
+	CarbonEventHandlerWrap				_fieldColumnsInputHandler;		//!< saves field settings when they change
+	CarbonEventHandlerWrap				_fieldRowsInputHandler;			//!< saves field settings when they change
+	CarbonEventHandlerWrap				_fieldScrollbackInputHandler;	//!< saves field settings when they change
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
 typedef My_TerminalsPanelScreenUI*	My_TerminalsPanelScreenUIPtr;
@@ -226,9 +256,11 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-SInt32		panelChangedEmulation	(Panel_Ref, Panel_Message, void*);
-SInt32		panelChangedOptions		(Panel_Ref, Panel_Message, void*);
-SInt32		panelChangedScreen		(Panel_Ref, Panel_Message, void*);
+SInt32				panelChangedEmulation		(Panel_Ref, Panel_Message, void*);
+SInt32				panelChangedOptions			(Panel_Ref, Panel_Message, void*);
+SInt32				panelChangedScreen			(Panel_Ref, Panel_Message, void*);
+pascal OSStatus		receiveFieldChanged			(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -727,15 +759,31 @@ My_TerminalsPanelScreenUI	(Panel_Ref		inPanel,
 							 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-panel					(inPanel),
-idealWidth				(0.0),
-idealHeight				(0.0),
-mainView				(createContainerView(inPanel, inOwningWindow)
-							<< HIViewWrap_AssertExists),
-_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-							My_TerminalsPanelScreenUI::deltaSize, this/* context */)
+panel						(inPanel),
+idealWidth					(0.0),
+idealHeight					(0.0),
+mainView					(createContainerView(inPanel, inOwningWindow)
+								<< HIViewWrap_AssertExists),
+_menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+								this/* user data */),
+_fieldColumnsInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldColumns, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_fieldRowsInputHandler		(GetControlEventTarget(HIViewWrap(idMyFieldRows, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_fieldScrollbackInputHandler(GetControlEventTarget(HIViewWrap(idMyFieldScrollback, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+								My_TerminalsPanelScreenUI::deltaSize, this/* context */)
 {
 	assert(this->mainView.exists());
+	assert(_menuCommandsHandler.isInstalled());
+	assert(_fieldColumnsInputHandler.isInstalled());
+	assert(_fieldRowsInputHandler.isInstalled());
+	assert(_fieldScrollbackInputHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
 }// My_TerminalsPanelScreenUI 2-argument constructor
 
@@ -830,9 +878,264 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		// UNIMPLEMENTED
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		
+		
+		// INCOMPLETE
+		
+		// set columns
+		{
+			UInt16		dimension = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenColumns, sizeof(dimension),
+														&dimension, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setColumns(dimension);
+			}
+		}
+		
+		// set rows
+		{
+			UInt16		dimension = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenRows, sizeof(dimension),
+														&dimension, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setRows(dimension);
+			}
+		}
+		
+		// set scrollback rows
+		{
+			UInt16		dimension = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenScrollbackRows, sizeof(dimension),
+														&dimension, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setScrollbackRows(dimension);
+			}
+		}
+		
+		// set scrollback type
+		{
+			Terminal_ScrollbackType		allocationRule = kTerminal_ScrollbackTypeFixed;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalScreenScrollbackType, sizeof(allocationRule),
+														&allocationRule, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setScrollbackType(allocationRule);
+			}
+		}
 	}
 }// My_TerminalsPanelScreenUI::readPreferences
+
+
+/*!
+Saves every text field in the panel to the data model.
+It is necessary to treat fields specially because they
+do not have obvious state changes (as, say, buttons do);
+they might need saving when focus is lost or the window
+is closed, etc.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
+{
+	if (nullptr != inoutSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		SInt32					dummyInteger = 0;
+		
+		
+		// set columns
+		{
+			UInt16		dimension = 0;
+			
+			
+			GetControlNumericalText(HIViewWrap(idMyFieldColumns, kOwningWindow), &dummyInteger);
+			dimension = STATIC_CAST(dummyInteger, UInt16);
+			
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalScreenColumns,
+														sizeof(dimension), &dimension);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set screen columns");
+			}
+		}
+		
+		// set rows
+		{
+			UInt16		dimension = 0;
+			
+			
+			GetControlNumericalText(HIViewWrap(idMyFieldRows, kOwningWindow), &dummyInteger);
+			dimension = STATIC_CAST(dummyInteger, UInt16);
+			
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalScreenRows,
+														sizeof(dimension), &dimension);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set screen rows");
+			}
+		}
+		
+		// set scrollback rows
+		{
+			UInt16		dimension = 0;
+			
+			
+			// INCOMPLETE - take the current units into account!!!
+			GetControlNumericalText(HIViewWrap(idMyFieldScrollback, kOwningWindow), &dummyInteger);
+			dimension = STATIC_CAST(dummyInteger, UInt16);
+			
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalScreenScrollbackRows,
+														sizeof(dimension), &dimension);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set screen scrollback");
+			}
+		}
+	}
+}// My_TerminalsPanelScreenUI::saveFieldPreferences
+
+
+/*!
+Updates the columns display based on the given setting.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+setColumns		(UInt16		inDimension)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControlNumericalText(HIViewWrap(idMyFieldColumns, kOwningWindow), inDimension);
+}// My_TerminalsPanelScreenUI::setColumns
+
+
+/*!
+Updates the rows display based on the given setting.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+setRows		(UInt16		inDimension)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControlNumericalText(HIViewWrap(idMyFieldRows, kOwningWindow), inDimension);
+}// My_TerminalsPanelScreenUI::setRows
+
+
+/*!
+Enables or disables the views that handle customizing
+the scrollback value.  These views are not used for
+anything but fixed-size scrollbacks.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+setScrollbackCustomizationEnabled	(Boolean	inIsEnabled)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	HIViewWrap			viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyFieldScrollback, kOwningWindow);
+	viewWrap << HIViewWrap_SetActiveState(inIsEnabled);
+	viewWrap = HIViewWrap(idMyPopUpMenuScrollbackUnits, kOwningWindow);
+	viewWrap << HIViewWrap_SetActiveState(inIsEnabled);
+}// My_TerminalsPanelScreenUI::setScrollbackCustomizationEnabled
+
+
+/*!
+Updates the scrollback display based on the given setting
+in units of rows.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+setScrollbackRows	(UInt16		inDimension)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	this->setScrollbackType(kTerminal_ScrollbackTypeFixed);
+	
+	SetControlNumericalText(HIViewWrap(idMyFieldScrollback, kOwningWindow), inDimension);
+	(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits, kOwningWindow),
+													kCommandSetScrollbackUnitsRows);
+}// My_TerminalsPanelScreenUI::setScrollbackRows
+
+
+/*!
+Updates the scrollback display based on the given type.
+
+(3.1)
+*/
+void
+My_TerminalsPanelScreenUI::
+setScrollbackType	(Terminal_ScrollbackType	inAllocationRule)
+{
+	HIWindowRef const				kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	My_TerminalsPanelScreenDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
+																	My_TerminalsPanelScreenDataPtr);
+	Preferences_Result				prefsResult = kPreferences_ResultOK;
+	
+	
+	switch (inAllocationRule)
+	{
+	case kTerminal_ScrollbackTypeDisabled:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+														kCommandSetScrollbackTypeDisabled);
+		this->setScrollbackCustomizationEnabled(false);
+		break;
+	
+	case kTerminal_ScrollbackTypeUnlimited:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+														kCommandSetScrollbackTypeUnlimited);
+		this->setScrollbackCustomizationEnabled(false);
+		break;
+	
+	case kTerminal_ScrollbackTypeDistributed:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+														kCommandSetScrollbackTypeDistributed);
+		this->setScrollbackCustomizationEnabled(false);
+		break;
+	
+	case kTerminal_ScrollbackTypeFixed:
+	default:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackType, kOwningWindow),
+														kCommandSetScrollbackTypeFixed);
+		this->setScrollbackCustomizationEnabled(true);
+		break;
+	}
+	
+	prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalScreenScrollbackType,
+												sizeof(inAllocationRule), &inAllocationRule);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_WriteLine("warning, failed to set screen scrollback type");
+	}
+}// My_TerminalsPanelScreenUI::setScrollbackType
 
 
 /*!
@@ -1097,7 +1400,11 @@ panelChangedScreen	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelScreenDataPtr));
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(inDataPtr, My_TerminalsPanelScreenDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			delete panelDataPtr;
 		}
 		break;
 	
@@ -1112,10 +1419,12 @@ panelChangedScreen	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageFocusLost: // notification that a view is no longer focused
 		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			//HIViewRef const*					viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_TerminalsPanelScreenDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_TerminalsPanelScreenDataPtr);
 			
 			
-			// do nothing
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 		}
 		break;
 	
@@ -1175,6 +1484,133 @@ panelChangedScreen	(Panel_Ref		inPanel,
 	
 	return result;
 }// panelChangedScreen
+
+
+/*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the fields in this panel by saving
+their preferences when new text arrives.
+
+(3.1)
+*/
+pascal OSStatus
+receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus					result = eventNotHandledErr;
+	// WARNING: More than one UI uses this handler.  The context will
+	// depend on the target.
+	My_TerminalsPanelScreenUI*	screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// now synchronize the post-input change with preferences
+	{
+		My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(screenInterfacePtr->panel),
+																			My_TerminalsPanelScreenDataPtr);
+		
+		
+		screenInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+	}
+	
+	return result;
+}// receiveFieldChanged
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons and menus in this panel.
+
+(3.1)
+*/
+pascal OSStatus
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus					result = eventNotHandledErr;
+	// WARNING: More than one UI uses this handler.  The context will
+	// depend on the command ID.
+	My_TerminalsPanelScreenUI*	screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			result = eventNotHandledErr; // initially...
+			
+			switch (received.commandID)
+			{
+			case kCommandSetScrollbackTypeDisabled:
+				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeDisabled);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetScrollbackTypeFixed:
+				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeFixed);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetScrollbackTypeUnlimited:
+				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeUnlimited);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetScrollbackTypeDistributed:
+				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeDistributed);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetScrollbackUnitsRows:
+				// INCOMPLETE
+				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
+																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
+																received.commandID);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetScrollbackUnitsKilobytes:
+				// UNIMPLEMENTED
+				Sound_StandardAlert();
+			#if 0
+				(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuScrollbackUnits,
+																			Panel_ReturnOwningWindow(screenInterfacePtr->panel)),
+																received.commandID);
+			#endif
+				result = noErr; // event is handled
+				break;
+			
+			default:
+				break;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// receiveHICommand
 
 } // anonymous namespace
 

@@ -429,6 +429,12 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetEmulatorVT420				'E420'		// multiple interfaces
 #define kCommandSetEmulatorXTermOriginal		'EmXT'		// multiple interfaces
 #define kCommandSetEmulatorNone					'EDmb'		// multiple interfaces
+#define kCommandSetScrollbackTypeDisabled		'ScNo'		// multiple interfaces
+#define kCommandSetScrollbackTypeFixed			'ScFx'		// multiple interfaces
+#define kCommandSetScrollbackTypeUnlimited		'ScUL'		// multiple interfaces
+#define kCommandSetScrollbackTypeDistributed	'ScDs'		// multiple interfaces
+#define kCommandSetScrollbackUnitsRows			'SbUR'		// multiple interfaces
+#define kCommandSetScrollbackUnitsKilobytes		'SbUK'		// multiple interfaces
 #define kCommandRetrySearch						'RFnd'		// “Find” dialog
 #define kCommandResetANSIColors					'ANSD'		// “Preferences” window
 #define kCommandOpenScriptMenuItemsFolder		'OSMI'		// “Preferences” window

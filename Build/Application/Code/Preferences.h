@@ -280,6 +280,7 @@ enum
 	kPreferences_TagTerminalScreenColumns				= 'scol',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenRows					= 'srow',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt16"
+	kPreferences_TagTerminalScreenScrollbackType		= 'scrt',	//!< data: "Terminal_ScrollbackType"
 	kPreferences_TagTerminalScrollDelay					= 'scrd',	//!< data: "EventTime" in MILLISECONDS
 	kPreferences_TagXTermSequencesEnabled				= 'xtrm'	//!< data: "Boolean"
 };

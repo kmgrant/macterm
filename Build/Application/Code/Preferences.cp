@@ -5772,6 +5772,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassTerminal;
 		break;
 	
+	case kPreferences_TagTerminalScreenScrollbackType:
+		outKeyName = CFSTR("terminal-scrollback-type");
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(Terminal_ScrollbackType);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
 	case kPreferences_TagTerminalScrollDelay:
 		outKeyName = CFSTR("terminal-scroll-delay-milliseconds");
 		outKeyValueType = typeNetEvents_CFNumberRef;
@@ -6505,6 +6512,46 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							// failed; make default
 							*data = 200; // arbitrary
 							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+					}
+					break;
+				
+				case kPreferences_TagTerminalScreenScrollbackType:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							Terminal_ScrollbackType*	storedValuePtr = REINTERPRET_CAST(outDataPtr, Terminal_ScrollbackType*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("off"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kTerminal_ScrollbackTypeDisabled;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("unlimited"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kTerminal_ScrollbackTypeUnlimited;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("distributed"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kTerminal_ScrollbackTypeDistributed;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("fixed"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kTerminal_ScrollbackTypeFixed;
+							}
+							else
+							{
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
 						}
 					}
 					break;
@@ -8163,6 +8210,34 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);
 					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
+			case kPreferences_TagTerminalScreenScrollbackType:
+				{
+					Terminal_ScrollbackType const		data = *(REINTERPRET_CAST(inDataPtr, Terminal_ScrollbackType const*));
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (data)
+					{
+					case kTerminal_ScrollbackTypeDisabled:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("off"));
+						break;
+					
+					case kTerminal_ScrollbackTypeUnlimited:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("unlimited"));
+						break;
+					
+					case kTerminal_ScrollbackTypeDistributed:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("distributed"));
+						break;
+					
+					case kTerminal_ScrollbackTypeFixed:
+					default:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("fixed"));
+						break;
+					}
 				}
 				break;
 			

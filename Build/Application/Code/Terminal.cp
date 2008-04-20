@@ -4445,13 +4445,11 @@ My_ScreenBuffer::
 returnScreenColumns		(Preferences_ContextRef		inTerminalConfig)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	UInt16					result = true;
+	UInt16					result = 80; // arbitrary default
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenColumns,
 												sizeof(result), &result);
-	if (kPreferences_ResultOK != prefsResult) result = 80; // arbitrary
-	
 	return result;
 }// returnScreenColumns
 
@@ -4468,21 +4466,18 @@ My_ScreenBuffer::
 returnScreenRows	(Preferences_ContextRef		inTerminalConfig)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	UInt16					result = true;
+	UInt16					result = 24; // arbitrary default
 	
 	
 	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenRows,
 												sizeof(result), &result);
-	if (kPreferences_ResultOK != prefsResult) result = 24; // arbitrary
-	
 	return result;
 }// returnScreenRows
 
 
 /*!
-Reads "kPreferences_TagTerminalScreenScrollbackRows" from a
-Preferences context, and returns either that value or the
-default value of 200 if none was found.
+Reads all scrollback-related settings from a Preferences context,
+and returns an appropriate value for scrollback size.
 
 (3.1)
 */
@@ -4490,13 +4485,25 @@ UInt16
 My_ScreenBuffer::
 returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 {
-	Preferences_Result		prefsResult = kPreferences_ResultOK;
-	UInt16					result = true;
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
+	Terminal_ScrollbackType		scrollbackType = kTerminal_ScrollbackTypeFixed;
+	UInt16						result = 200; // arbitrary default
 	
 	
-	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenScrollbackRows,
-												sizeof(result), &result);
-	if (kPreferences_ResultOK != prefsResult) result = 200; // arbitrary
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenScrollbackType,
+												sizeof(scrollbackType), &scrollbackType);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		if (kTerminal_ScrollbackTypeDisabled == scrollbackType) result = 0;
+		else if (kTerminal_ScrollbackTypeUnlimited == scrollbackType) result = 1024; // TEMPORARY
+		else if (kTerminal_ScrollbackTypeDistributed == scrollbackType) ; // UNIMPLEMENTED
+	}
+	
+	if (kTerminal_ScrollbackTypeFixed == scrollbackType)
+	{
+		prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagTerminalScreenScrollbackRows,
+													sizeof(result), &result);
+	}
 	
 	return result;
 }// returnScrollbackRows

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080418',
     '20080417',
     '20080416',
     '20080413',
@@ -138,6 +139,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080418': [
+		'Fixed some parts of the Preferences window Terminals pane Screen tab.',
+	],
 	'20080417': [
 		'Fixed background window text selections to allow immediate drags, as their enabled states imply.',
 		'Changed the style of MacTelnet Help somewhat, to better fit the monospaced layout that the content generates.',

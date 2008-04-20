@@ -218,6 +218,17 @@ enum
 };
 
 /*!
+How scrollback lines are allocated.
+*/
+enum Terminal_ScrollbackType
+{
+	kTerminal_ScrollbackTypeDisabled = 0,		//!< no lines are saved
+	kTerminal_ScrollbackTypeFixed = 1,			//!< a specific number of rows is read from the preferences
+	kTerminal_ScrollbackTypeUnlimited = 2,		//!< rows are allocated continuously, memory permitting
+	kTerminal_ScrollbackTypeDistributed = 3		//!< allocations favor the active window and starve rarely-used windows
+};
+
+/*!
 Controls over the computerÕs voice when it is speaking text.
 */
 enum Terminal_SpeechMode
