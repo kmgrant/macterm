@@ -9,30 +9,21 @@
 	
 	This file defines MacTelnet's default preferences.  It has EXACTLY
 	the same format as the main Core Foundation Preferences file (i.e.
-	com.mactelnet.MacTelnet.plist in ~/Library/Preferences).  In fact,
-	MacTelnet simply copies the values of keys it recognizes from this
-	file into its Core Foundation Preferences data, if none exists when
-	MacTelnet is first run.
+	com.mactelnet.MacTelnet.plist in ~/Library/Preferences).
 	
-	These preferences keys can sometimes be reused to set per-Favorite
-	values, e.g. in the "favorite-sessions" array.  Note that currently
-	the set of keys recognized for a given kind of array is limited,
-	though eventually all global keys may be valid in Favorites arrays!
+	Keeping this data external helps simplify development.  It is also
+	useful to administrators who distribute MacTelnet; for example, a
+	university might modify this file to include school network servers
+	by default, and distribute the pre-configured copy to students.
 	
-	Keeping this data external helps simplify development, however it
-	could also be useful to administrators distributing MacTelnet.  For
-	example, a university might modify this file to include school
-	network server configurations by default, and distribute that
-	special copy to students.
+	These keys should be documented in MacTelnet Help.
 	
-	WARNING:	The key "prefs-version" is special; it refers to this set
-			of preferences.  If you make any ADDITIONS to this file,
-			you should INCREASE the prefs-version number (an integer)
-			AND update the code for the PrefsConverter module.  The
-			PrefsConverter should be told how to transition from the
-			previous version to your new version.  For instance, when
-			macro sets were added to this file, the PrefsConverter was
-			told how to convert old macro set files into XML data.
+	IMPORTANT:	Only increase "prefs-version" if a change to this file
+				is not backward-compatible, and you have added code to
+				the Preferences Converter that imports the previous
+				version.  MacTelnet automatically runs the Preferences
+				Converter when the default "prefs-version" is greater
+				than that of current user preferences.
 -->
 
 <plist version="1.0">
