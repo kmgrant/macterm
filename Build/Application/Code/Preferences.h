@@ -116,13 +116,14 @@ enum
 {
 	// All of the four-character codes for classes are listed
 	// alphabetically by code, and must be unique. 
-	kPreferences_ClassGeneral	= 'appl',
-	kPreferences_ClassFormat	= 'text',	//!< use with Preferences_NewContext()
-	kPreferences_ClassMacroSet	= 'mcro',	//!< use with Preferences_NewContext()
-	kPreferences_ClassSession	= 'sess',	//!< use with Preferences_NewContext()
-	kPreferences_ClassTerminal	= 'term',	//!< use with Preferences_NewContext()
-	kPreferences_ClassWindow	= 'wind'	//!< use only Preferences_SetWindowArrangementData() and
-											//!  Preferences_ArrangeWindow() with this class
+	kPreferences_ClassGeneral		= 'appl',
+	kPreferences_ClassFormat		= 'text',	//!< use with Preferences_NewContext()
+	kPreferences_ClassMacroSet		= 'mcro',	//!< use with Preferences_NewContext()
+	kPreferences_ClassSession		= 'sess',	//!< use with Preferences_NewContext()
+	kPreferences_ClassTerminal		= 'term',	//!< use with Preferences_NewContext()
+	kPreferences_ClassTranslation	= 'encd',	//!< use with Preferences_NewContext()
+	kPreferences_ClassWindow		= 'wind'	//!< use only Preferences_SetWindowArrangementData() and
+												//!  Preferences_ArrangeWindow() with this class
 };
 
 /*!
@@ -249,9 +250,7 @@ enum
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
 	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
 	kPreferences_TagTektronixMode						= 'tekm',	//!< data: a "kVectorInterpreter_ModeÉ" constant
-	kPreferences_TagTektronixPAGEClearsScreen			= 'tkpc',	//!< data: "Boolean"
-	kPreferences_TagTextEncoding						= 'tenc',	//!< data: "TextEncoding"
-	kPreferences_TagTextTranslationTable				= 'xlat',	//!< data: "CFStringRef" (a translation table name)
+	kPreferences_TagTektronixPAGEClearsScreen			= 'tkpc'	//!< data: "Boolean"
 };
 
 /*!
@@ -283,6 +282,16 @@ enum
 	kPreferences_TagTerminalScreenScrollbackType		= 'scrt',	//!< data: "Terminal_ScrollbackType"
 	kPreferences_TagTerminalScrollDelay					= 'scrd',	//!< data: "EventTime" in MILLISECONDS
 	kPreferences_TagXTermSequencesEnabled				= 'xtrm'	//!< data: "Boolean"
+};
+
+/*!
+Tags for use with kPreferences_ClassTranslation.
+*/
+enum
+{
+	kPreferences_TagBackupFontName						= 'bfnt',	//!< data: "Str255"
+	kPreferences_TagTextEncodingIANAName				= 'iana',	//!< data: "CFStringRef"
+	kPreferences_TagTextEncodingID						= 'encd'	//!< data: "CFStringEncoding"
 };
 
 /*!

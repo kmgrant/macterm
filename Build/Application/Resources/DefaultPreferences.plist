@@ -78,6 +78,8 @@
 	<array/>
 	<key>favorite-terminals</key>
 	<array/>
+	<key>favorite-translations</key>
+	<array/>
 	<key>key-map-backquote</key>
 	<string>\e</string>
 	<key>key-map-delete</key>
@@ -445,8 +447,8 @@
 	<true/>
 	<key>terminal-scrollback-size-lines</key>
 	<integer>200</integer>
-	<key>terminal-text-translation-table</key>
-	<string>None</string>
+	<key>terminal-text-encoding-name</key>
+	<string>UTF-8</string>
 	<key>terminal-when-bell</key>
 	<string>audio</string>
 	<key>terminal-when-bell-sound-basename</key>

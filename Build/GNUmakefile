@@ -117,7 +117,6 @@ LEOPARD_SWIG_WRAPPERS_EXTRA := $(addprefix $(DEST_SWIG_TOP_LEOPARD)/,$(SWIG_WRAP
 # need different commands for recursive trees
 APP_RESOURCES_FILES := \
 DefaultPreferences.plist \
-FontTest200x32.png \
 IconForBellOff.icns \
 IconForBellOn.icns \
 IconForBundle.icns \

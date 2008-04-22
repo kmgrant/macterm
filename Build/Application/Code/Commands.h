@@ -376,6 +376,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandCreditsAndLicenseInfo			'Cred'		// about box
 #define kCommandEditFontAndSize					'EdFS'		// multiple interfaces
 #define kCommandEditBackupFont					'EdBF'		// multiple interfaces
+#define kCommandUseBackupFont					'XUBF'		// multiple interfaces
 #define kCommandNewProtocolSelectedFTP			'NPFT'		// “New Session” dialog
 #define kCommandNewProtocolSelectedSFTP			'NPSF'		// “New Session” dialog
 #define kCommandNewProtocolSelectedSSH1			'NPS1'		// “New Session” dialog

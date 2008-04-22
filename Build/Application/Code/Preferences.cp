@@ -83,6 +83,7 @@ CFStringRef const			kMy_PreferencesSubDomainFormats = CFSTR("com.mactelnet.MacTe
 CFStringRef const			kMy_PreferencesSubDomainMacros = CFSTR("com.mactelnet.MacTelnet.macros");
 CFStringRef const			kMy_PreferencesSubDomainSessions = CFSTR("com.mactelnet.MacTelnet.sessions");
 CFStringRef const			kMy_PreferencesSubDomainTerminals = CFSTR("com.mactelnet.MacTelnet.terminals");
+CFStringRef const			kMy_PreferencesSubDomainTranslations = CFSTR("com.mactelnet.MacTelnet.translations");
 
 } // anonymous namespace
 
@@ -534,6 +535,8 @@ My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(kPr
 My_FavoriteContextList&		gSessionNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTerminal); return x; }
 My_FavoriteContextList&		gTerminalNamedContexts ()	{ static My_FavoriteContextList x; return x; }
+My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTranslation); return x; }
+My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 
 } // anonymous namespace
 
@@ -572,6 +575,8 @@ Preferences_Result		getSessionPreference					(My_ContextInterfaceConstPtr, Prefe
 																 size_t, void*, size_t*);
 Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
+Preferences_Result		getTranslationPreference				(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 size_t, void*, size_t*);
 Boolean					getWindowPreferences					(Preferences_Tag, MyWindowArrangement&);
 OSStatus				mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDomainCFArray				(Preferences_Class, CFArrayRef);
@@ -590,6 +595,8 @@ void					setMacTelnetPreference					(CFStringRef, CFPropertyListRef);
 Preferences_Result		setSessionPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setTerminalPreference					(My_ContextInterfacePtr, Preferences_Tag,
+																 size_t, void const*);
+Preferences_Result		setTranslationPreference				(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Boolean					unitTest000_Begin						();
 Boolean					unitTest001_Begin						();
@@ -1950,6 +1957,10 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 			result = setTerminalPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
+		case kPreferences_ClassTranslation:
+			result = setTranslationPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
 		case kPreferences_ClassWindow:
 		default:
 			result = kPreferences_ResultUnknownTagOrClass;
@@ -2403,6 +2414,7 @@ Preferences_Save ()
 	std::for_each(gMacroSetNamedContexts().begin(), gMacroSetNamedContexts().end(), contextSave());
 	std::for_each(gSessionNamedContexts().begin(), gSessionNamedContexts().end(), contextSave());
 	std::for_each(gTerminalNamedContexts().begin(), gTerminalNamedContexts().end(), contextSave());
+	std::for_each(gTranslationNamedContexts().begin(), gTranslationNamedContexts().end(), contextSave());
 	
 	if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
 	{
@@ -3509,6 +3521,10 @@ returnClassDomainNamePrefix		(Preferences_Class	inClass)
 		result = kMy_PreferencesSubDomainTerminals;
 		break;
 	
+	case kPreferences_ClassTranslation:
+		result = kMy_PreferencesSubDomainTranslations;
+		break;
+	
 	default:
 		// ???
 		throw std::invalid_argument("unexpected preferences class value");
@@ -3726,6 +3742,10 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 		result = getTerminalPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
+	case kPreferences_ClassTranslation:
+		result = getTranslationPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
 	case kPreferences_ClassWindow:
 	default:
 		// unrecognized preference class
@@ -3920,6 +3940,11 @@ copyClassDomainCFArray	(Preferences_Class	inClass,
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
+	case kPreferences_ClassTranslation:
+		readMacTelnetArrayPreference(CFSTR("favorite-translations"), outCFArrayOfCFStrings);
+		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
+		break;
+	
 	default:
 		// ???
 		result = kPreferences_ResultUnknownTagOrClass;
@@ -3959,6 +3984,7 @@ createAllPreferencesContextsFromDisk ()
 	allClassesSupportingCollections.push_back(kPreferences_ClassSession);
 	allClassesSupportingCollections.push_back(kPreferences_ClassMacroSet);
 	allClassesSupportingCollections.push_back(kPreferences_ClassTerminal);
+	allClassesSupportingCollections.push_back(kPreferences_ClassTranslation);
 	allClassesSupportingCollections.push_back(kPreferences_ClassFormat);
 	for (PrefClassList::const_iterator toClass = allClassesSupportingCollections.begin();
 			toClass != allClassesSupportingCollections.end(); ++toClass)
@@ -4273,6 +4299,10 @@ getDefaultContext	(Preferences_Class			inClass,
 	
 	case kPreferences_ClassTerminal:
 		outContextPtr = &(gTerminalDefaultContext());
+		break;
+	
+	case kPreferences_ClassTranslation:
+		outContextPtr = &(gTranslationDefaultContext());
 		break;
 	
 	default:
@@ -4947,6 +4977,10 @@ getListOfContexts	(Preferences_Class				inClass,
 		outListPtr = &gTerminalNamedContexts();
 		break;
 	
+	case kPreferences_ClassTranslation:
+		outListPtr = &gTranslationNamedContexts();
+		break;
+	
 	case kPreferences_ClassGeneral:
 	default:
 		// ???
@@ -5126,6 +5160,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outKeyValueType = typeNetEvents_CFBooleanRef;
 		outNonDictionaryValueSize = sizeof(Boolean);
 		outClass = kPreferences_ClassSession;
+		break;
+	
+	case kPreferences_TagBackupFontName:
+		outKeyName = CFSTR("terminal-backup-font-family");
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(Str255);
+		outClass = kPreferences_ClassTranslation;
 		break;
 	
 	case kPreferences_TagBellSound:
@@ -5786,18 +5827,18 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassTerminal;
 		break;
 	
-	case kPreferences_TagTextEncoding:
-		outKeyName = CFSTR("terminal-text-encoding");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(TextEncoding);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagTextTranslationTable:
-		outKeyName = CFSTR("terminal-text-translation-table");
+	case kPreferences_TagTextEncodingIANAName:
+		outKeyName = CFSTR("terminal-text-encoding-name");
 		outKeyValueType = typeCFStringRef;
 		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassSession;
+		outClass = kPreferences_ClassTranslation;
+		break;
+	
+	case kPreferences_TagTextEncodingID:
+		outKeyName = CFSTR("terminal-text-encoding-id");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(CFStringEncoding);
+		outClass = kPreferences_ClassTranslation;
 		break;
 	
 	case kPreferences_TagVisualBell:
@@ -5918,7 +5959,6 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				{
 				case kPreferences_TagAssociatedTerminalFavorite:
 				case kPreferences_TagServerHost:
-				case kPreferences_TagTextTranslationTable:
 					// all of these keys have Core Foundation string values
 					{
 						assert(typeCFStringRef == keyValueType);
@@ -6215,23 +6255,6 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 								result = kPreferences_ResultBadVersionDataNotAvailable;
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
-						}
-					}
-					break;
-				
-				case kPreferences_TagTextEncoding:
-					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt32					valueLong = inContextPtr->returnLong(keyName);
-						TextEncoding* const		data = REINTERPRET_CAST(outDataPtr, TextEncoding*);
-						
-						
-						*data = STATIC_CAST(valueLong, TextEncoding);
-						if (0 == *data)
-						{
-							// failed; make default
-							*data = kTextEncodingMacRoman; // arbitrary
-							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -6581,6 +6604,121 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 
 
 /*!
+Returns preference data for a translation setting.
+
+\retval kPreferences_ResultOK
+if the data was found successfully
+
+\retval kPreferences_ResultBadVersionDataNotAvailable
+if the requested data is not in the preferences file
+
+\retval kPreferences_ResultInsufficientBufferSpace
+if the given buffer is not large enough for the requested data
+
+\retval kPreferences_ResultUnknownTagOrClass
+if the given preference tag is not valid
+
+(3.1)
+*/
+Preferences_Result	
+getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
+							 Preferences_Tag				inDataPreferenceTag,
+							 size_t							inDataSize,
+							 void*							outDataPtr,
+							 size_t*						outActualSizePtrOrNull)
+{
+	size_t					actualSize = 0L;
+	Preferences_Result		result = kPreferences_ResultOK;
+	
+	
+	if (nullptr != outDataPtr)
+	{
+		CFStringRef			keyName = nullptr;
+		FourCharCode		keyValueType = '----';
+		Preferences_Class	dataClass = kPreferences_ClassTranslation;
+		
+		
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+		if (kPreferences_ResultOK == result)
+		{
+			assert(dataClass == kPreferences_ClassTranslation);
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
+			else
+			{
+				switch (inDataPreferenceTag)
+				{
+				case kPreferences_TagBackupFontName:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							StringPtr const		data = REINTERPRET_CAST(outDataPtr, StringPtr);
+							
+							
+							if (false == CFStringGetPascalString(valueCFString, data, inDataSize, kCFStringEncodingMacRoman))
+							{
+								// failed; make empty string
+								PLstrcpy(data, "\p");
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
+				case kPreferences_TagTextEncodingIANAName:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							CFStringRef* const	data = REINTERPRET_CAST(outDataPtr, CFStringRef*);
+							
+							
+							*data = valueCFString;
+							// do not release because the string is returned
+						}
+					}
+					break;
+				
+				case kPreferences_TagTextEncodingID:
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						SInt32						valueInteger = inContextPtr->returnLong(keyName);
+						CFStringEncoding* const		data = REINTERPRET_CAST(outDataPtr, CFStringEncoding*);
+						
+						
+						*data = STATIC_CAST(valueInteger, CFStringEncoding);
+					}
+					break;
+				
+				default:
+					// unrecognized tag
+					result = kPreferences_ResultUnknownTagOrClass;
+					break;
+				}
+			}
+		}
+	}
+	if (nullptr != outActualSizePtrOrNull) *outActualSizePtrOrNull = actualSize;
+	return result;
+}// getTranslationPreference
+
+
+/*!
 Fills in a window preferences structure with values
 corresponding to the specified tag’s saved preferences
 and returns "true"; or, returns "false" on failure.
@@ -6733,6 +6871,10 @@ overwriteClassDomainCFArray		(Preferences_Class	inClass,
 	
 	case kPreferences_ClassTerminal:
 		setMacTelnetPreference(CFSTR("favorite-terminals"), inCFArrayOfCFStrings);
+		break;
+	
+	case kPreferences_ClassTranslation:
+		setMacTelnetPreference(CFSTR("favorite-translations"), inCFArrayOfCFStrings);
 		break;
 	
 	case kPreferences_ClassGeneral:
@@ -7806,7 +7948,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			{
 			case kPreferences_TagAssociatedTerminalFavorite:
 			case kPreferences_TagServerHost:
-			case kPreferences_TagTextTranslationTable:
 				// all of these keys have Core Foundation string values
 				{
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
@@ -7988,16 +8129,6 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("off"));
 						break;
 					}
-				}
-				break;
-			
-			case kPreferences_TagTextEncoding:
-				{
-					TextEncoding const* const	data = REINTERPRET_CAST(inDataPtr, TextEncoding const*);
-					
-					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addLong(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
@@ -8273,6 +8404,85 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 	
 	return result;
 }// setTerminalPreference
+
+
+/*!
+Modifies the indicated translation preference using the
+given data (see Preferences.h and the definition of each
+tag for comments on what data format is expected for each
+one).
+
+(3.1)
+*/
+Preferences_Result	
+setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
+							 Preferences_Tag			inDataPreferenceTag,
+							 size_t						inDataSize,
+							 void const*				inDataPtr)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Preferences_Class		dataClass = kPreferences_ClassTranslation;
+	
+	
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	if (kPreferences_ResultOK == result)
+	{
+		assert(dataClass == kPreferences_ClassTranslation);
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
+		else
+		{
+			switch (inDataPreferenceTag)
+			{
+			case kPreferences_TagBackupFontName:
+				{
+					ConstStringPtr const	data = REINTERPRET_CAST(inDataPtr, ConstStringPtr);
+					CFStringRef				fontNameCFString = nullptr;
+					
+					
+					fontNameCFString = CFStringCreateWithPascalString(kCFAllocatorDefault, data, kCFStringEncodingMacRoman);
+					if (nullptr == fontNameCFString) result = kPreferences_ResultGenericFailure;
+					else
+					{
+						assert(typeCFStringRef == keyValueType);
+						inContextPtr->addString(inDataPreferenceTag, keyName, (data) ? fontNameCFString : CFSTR(""));
+						CFRelease(fontNameCFString), fontNameCFString = nullptr;
+					}
+				}
+				break;
+			
+			case kPreferences_TagTextEncodingIANAName:
+				{
+					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
+			case kPreferences_TagTextEncodingID:
+				{
+					CFStringEncoding const		data = *(REINTERPRET_CAST(inDataPtr, CFStringEncoding const*));
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addLong(inDataPreferenceTag, keyName, STATIC_CAST(data, SInt32));
+				}
+				break;
+			
+			default:
+				// unrecognized tag
+				result = kPreferences_ResultUnknownTagOrClass;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// setTranslationPreference
 
 } // anonymous namespace
 

@@ -659,10 +659,6 @@ because those fonts look nicer in general), but use the backup
 to handle special characters.  A Unicode font is recommended as
 a backup font.
 
-The test area shows some special characters in your chosen font,
-and a reference rendering to give you an idea if the backup font
-is capable of displaying special characters properly.
-
 h2(#fullscreen). Full Screen
 
 Settings that control "kiosk mode", the Full Screen command in

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080421',
     '20080418',
     '20080417',
     '20080416',
@@ -139,6 +140,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080421': [
+		'Fixed the Preferences window Translations pane.',
+	],
 	'20080418': [
 		'Fixed some parts of the Preferences window Terminals pane Screen tab.',
 	],

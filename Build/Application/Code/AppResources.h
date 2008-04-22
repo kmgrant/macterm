@@ -105,9 +105,6 @@ AppResources_Result
 																		 PicHandle&						outMask);
 
 AppResources_Result
-	AppResources_GetFontTestPicture										(CGImageRef&					outPicture);
-
-AppResources_Result
 	AppResources_GetSplashScreenPicture									(CGImageRef&					outPicture);
 
 AppResources_Result

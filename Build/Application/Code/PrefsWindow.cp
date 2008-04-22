@@ -2020,6 +2020,11 @@ returnCurrentPreferencesClass ()
 	{
 		result = kPreferences_ClassTerminal;
 	}
+	else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_PrefPanelDescriptorTranslations, currentPanelKind,
+													kCFCompareBackwards))
+	{
+		result = kPreferences_ClassTranslation;
+	}
 	return result;
 }// returnCurrentPreferencesClass
 
