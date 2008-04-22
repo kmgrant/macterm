@@ -142,6 +142,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080421': [
 		'Fixed the Preferences window Translations pane.',
+		'Fixed the Map menu to display all Translation collections.',
 	],
 	'20080418': [
 		'Fixed some parts of the Preferences window Terminals pane Screen tab.',

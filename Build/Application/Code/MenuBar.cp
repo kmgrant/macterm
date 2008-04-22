@@ -2741,10 +2741,10 @@ setUpTranslationTablesMenu	(MenuRef	inMenu)
 			// add the names of all translation tables to the menu;
 			// update global count of items added at that location
 			gNumberOfTranslationTableMenuItemsAdded = 0;
-			//(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslationTable, inMenu,
-			//														defaultIndex, 1/* indentation level */,
-			//														kCommandTranslationTableByFavoriteName,
-			//														gNumberOfTranslationTableMenuItemsAdded);
+			(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslation, inMenu,
+																		defaultIndex, 1/* indentation level */,
+																		kCommandTranslationTableByFavoriteName,
+																		gNumberOfTranslationTableMenuItemsAdded);
 			
 			// ensure these items are inactive except for terminal windows
 			for (UInt32 i = 1; i <= gNumberOfTranslationTableMenuItemsAdded; ++i)
