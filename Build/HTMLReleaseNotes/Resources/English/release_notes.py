@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080422',
     '20080421',
     '20080418',
     '20080417',
@@ -140,6 +141,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080422': [
+		'Added more to the Low-Level Settings section in MacTelnet Help.',
+	],
 	'20080421': [
 		'Fixed the Preferences window Translations pane.',
 		'Fixed the Map menu to display all Translation collections.',

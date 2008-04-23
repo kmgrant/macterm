@@ -16,7 +16,16 @@ with a window in MacTelnet.
 
 This document is very incomplete and will be expanded over time.
 
-h2(#general). General
+* "Overview":#overview
+* "Preference Keys":#keys
+** "General":#general
+** "Session Collections":#sessions
+** "Terminal Collections":#terminals
+** "Format Collections":#formats
+** "Macro Collections":#macros
+** "Translation Collections":#translations
+
+h2(#overview). Overview
 
 MacTelnet preferences are hierarchical.  Every default value is
 in "com.mactelnet.MacTelnet.plist" (in the Preferences folder of
@@ -39,6 +48,106 @@ MacTelnet settings are designed so that *any* preferences key
 might one day fit into any collection.  However, currently, only
 related settings are actually expected; for instance, nothing
 will check for colors in a Session collection.
+
+h2(#keys). Preference Keys
+
+h3(#general). General
+
+|@key-map-backquote@|_string_: @\e@ or _empty_|
+|\2((. Using this key will send a backquote character to the session.|
+|@kiosk-effects-enabled@|_true or false_|
+|\2((. Full-screen terminals are altered to look more like real terminal screens.|
+|@kiosk-force-quit-enabled@|_true or false_|
+|\2((. The "Force Quit" system command is available in Full Screen mode.|
+|@kiosk-menu-bar-visible@|_true or false_|
+|\2((. The menu bar can be reached in Full Screen mode by moving the mouse to the top of the screen.|
+|@kiosk-off-switch-visible@|_true or false_|
+|\2((. A floating window is visible to turn off Full Screen mode.|
+|@kiosk-scroll-bar-visible@|_true or false_|
+|\2((. The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
+|@no-auto-close@|_true or false_|
+|\2((. The window stays open after the process exits for any reason.|
+|@no-auto-new@|_true or false_|
+|\2((. A new window is not opened automatically when no other windows are open.|
+|@spaces-per-tab@|_integer_|
+|\2((. "Copy with Tab Substitution" uses this many spaces in place of each tab it finds.|
+|@terminal-auto-copy-on-select@|_true or false_|
+|\2((. Text is copied to the Clipboard as soon as it is selected via mouse or keyboard.|
+|@terminal-cursor-auto-move-on-drop@|_true or false_|
+|\2((. Cursor movement sequences are sent to the terminal prior to text drag-and-drop to position the cursor beneath the mouse.|
+|@terminal-cursor-blinking@|_true or false_|
+|\2((. The text input marker in terminals flashes on and off.|
+|@terminal-focus-follows-mouse@|_true or false_|
+|\2((. The terminal view beneath the mouse always accepts keyboard input regardless of which window is in front.|
+|@terminal-use-tabs@|_true or false_|
+|\2((. Windows stick together and have tabs.|
+|@terminal-when-bell-sound-basename@|_string_|
+|\2((. Terminal bells play this sound; found in any Library/Sounds folder; no extension (e.g. ".aiff").|
+|@window-terminal-toolbar-invisible@|_true or false_|
+|\2((. When a window first opens, its toolbar buttons are hidden.|
+|@window-sessioninfo-column-order@|_array of string_|
+|\2((. Set implicitly as the user moves columns in the Session Info window.|
+|\2. _this table is incomplete_ |
+
+h3(#sessions). Session Collections
+
+|@command-key-interrupt-process@|_string_: two characters, a caret and any control key character|
+|\2((. Using this key sequence will interrupt whatever process is currently running in the window.|
+|@command-key-resume-output@|_string_: two characters, a caret and any control key character|
+|\2((. Using this key sequence will unlock scroll ("XON"), resuming output in the window.|
+|@command-key-suspend-output@|_string_: two characters, a caret and any control key character|
+|\2((. Using this key sequence will lock scroll ("XOFF"), suspending output in the window.|
+|@command-line-token-strings@|_array of string_|
+|\2((. This Unix command and arguments are executed to start the session.  _Not_ interpreted (for that, write your own shell script!).|
+|@data-receive-buffer-size-bytes@|_integer_|
+|\2((. Fewer than this many bytes remain cached before being processed by the terminal.|
+|@data-send-local-echo-enabled@|_true or false_|
+|\2((. Text input is immediately processed by the terminal.|
+|@data-send-local-echo-half-duplex@|_true or false_|
+|\2((. The running process is instructed not to echo data coming from text input.|
+|@terminal-capture-auto-start@|_true or false_|
+|\2((. File captures begin automatically when the session starts.|
+|@terminal-favorite@|_string_|
+|\2((. This Terminal collection is used by default when the session starts.|
+|\2. _this table is incomplete_ |
+
+h3(#terminals). Terminal Collections
+
+|@command-key-emacs-move-down@|_string_: @down-arrow@ or _empty_|
+|\2((. Using this key will trigger a cursor movement in the EMACS text editor.|
+|@command-key-emacs-move-left@|_string_: @left-arrow@ or _empty_|
+|\2((. Using this key will trigger a cursor movement in the EMACS text editor.|
+|@command-key-emacs-move-right@|_string_: @right-arrow@ or _empty_|
+|\2((. Using this key will trigger a cursor movement in the EMACS text editor.|
+|@command-key-emacs-move-up@|_string_: @up-arrow@ or _empty_|
+|\2((. Using this key will trigger a cursor movement in the EMACS text editor.|
+|@data-receive-do-not-strip-high-bit@|_true or false_|
+|\2((. Characters are considered to be 8 bits.|
+|@key-map-emacs-meta@|_string_: @control+command@ or @option@ or _empty_|
+|\2((. This Mac keyboard input will be interpreted as a meta keypress in the EMACS text editor.|
+|@terminal-emulator-xterm-enable-color@|_true or false_|
+|\2((. ANSI colors are allowed (regardless of terminal type).|
+|\2. _this table is incomplete_ |
+
+h3(#formats). Format Collections
+
+|@terminal-font-family@|_string_|
+|\2((. This font is used for the majority of text rendering.|
+|@terminal-font-size-points@|_integer_|
+|\2((. Text uses this size unless overridden by "terminal-resize-affects".|
+|\2. _this table is incomplete_ |
+
+h3(#macros). Macro Collections
+
+|@menu-visible@|_true or false_|
+|\2((. The active macro set is available in the menu bar.|
+|\2. _this table is incomplete_ |
+
+h3(#translations). Translation Collections
+
+|@terminal-backup-font-family@|_string_|
+|\2((. This font is used whenever the current Format font is missing a glyph.|
+|\2. _this table is incomplete_ |
 
 </div>
 
