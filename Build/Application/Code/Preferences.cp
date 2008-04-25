@@ -4449,6 +4449,32 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagTerminalMarginLeft:
+				case kPreferences_TagTerminalMarginRight:
+				case kPreferences_TagTerminalMarginTop:
+				case kPreferences_TagTerminalMarginBottom:
+				case kPreferences_TagTerminalPaddingLeft:
+				case kPreferences_TagTerminalPaddingRight:
+				case kPreferences_TagTerminalPaddingTop:
+				case kPreferences_TagTerminalPaddingBottom:
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						Float32			valueFloat32 = inContextPtr->returnFloat(keyName);
+						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
+						
+						
+						// note that precisely zero is returned by Core Foundation to show errors; if
+						// the user actually wants zero, a tiny value like 0.000001 should be used
+						*data = valueFloat32;
+						if (0 == *data)
+						{
+							// failed; make default
+							*data = 0; // arbitrary
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+					}
+					break;
+				
 				default:
 					// unrecognized tag
 					result = kPreferences_ResultUnknownTagOrClass;
@@ -5733,56 +5759,56 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outKeyName = CFSTR("terminal-margin-left-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalMarginRight:
 		outKeyName = CFSTR("terminal-margin-right-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalMarginTop:
 		outKeyName = CFSTR("terminal-margin-top-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalMarginBottom:
 		outKeyName = CFSTR("terminal-margin-bottom-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalPaddingLeft:
 		outKeyName = CFSTR("terminal-padding-left-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalPaddingRight:
 		outKeyName = CFSTR("terminal-padding-right-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalPaddingTop:
 		outKeyName = CFSTR("terminal-padding-top-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalPaddingBottom:
 		outKeyName = CFSTR("terminal-padding-bottom-em");
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassTerminal;
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagTerminalResizeAffectsFontSize:
@@ -6458,32 +6484,6 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							
 							*storedValuePtr = Terminal_EmulatorReturnForName(valueCFString);
 							CFRelease(valueCFString), valueCFString = nullptr;
-						}
-					}
-					break;
-				
-				case kPreferences_TagTerminalMarginLeft:
-				case kPreferences_TagTerminalMarginRight:
-				case kPreferences_TagTerminalMarginTop:
-				case kPreferences_TagTerminalMarginBottom:
-				case kPreferences_TagTerminalPaddingLeft:
-				case kPreferences_TagTerminalPaddingRight:
-				case kPreferences_TagTerminalPaddingTop:
-				case kPreferences_TagTerminalPaddingBottom:
-					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
-						Float32			valueFloat32 = inContextPtr->returnFloat(keyName);
-						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
-						
-						
-						// note that precisely zero is returned by Core Foundation to show errors; if
-						// the user actually wants zero, a tiny value like 0.000001 should be used
-						*data = valueFloat32;
-						if (0 == *data)
-						{
-							// failed; make default
-							*data = 0; // arbitrary
-							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
 					}
 					break;
@@ -7222,6 +7222,23 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 						CFRelease(colorCFArray), colorCFArray = nullptr;
 					}
 					else result = kPreferences_ResultGenericFailure;
+				}
+				break;
+			
+			case kPreferences_TagTerminalMarginLeft:
+			case kPreferences_TagTerminalMarginRight:
+			case kPreferences_TagTerminalMarginTop:
+			case kPreferences_TagTerminalMarginBottom:
+			case kPreferences_TagTerminalPaddingLeft:
+			case kPreferences_TagTerminalPaddingRight:
+			case kPreferences_TagTerminalPaddingTop:
+			case kPreferences_TagTerminalPaddingBottom:
+				{
+					Float32 const	data = *(REINTERPRET_CAST(inDataPtr, Float32 const*));
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addFloat(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
@@ -8312,23 +8329,6 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
-				}
-				break;
-			
-			case kPreferences_TagTerminalMarginLeft:
-			case kPreferences_TagTerminalMarginRight:
-			case kPreferences_TagTerminalMarginTop:
-			case kPreferences_TagTerminalMarginBottom:
-			case kPreferences_TagTerminalPaddingLeft:
-			case kPreferences_TagTerminalPaddingRight:
-			case kPreferences_TagTerminalPaddingTop:
-			case kPreferences_TagTerminalPaddingBottom:
-				{
-					Float32 const	data = *(REINTERPRET_CAST(inDataPtr, Float32 const*));
-					
-					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addFloat(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			
