@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080424',
     '20080422',
     '20080421',
     '20080418',
@@ -141,6 +142,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080424': [
+		'Added even more to the Low-Level Settings section in MacTelnet Help.',
+	],
 	'20080422': [
 		'Added more to the Low-Level Settings section in MacTelnet Help.',
 	],
