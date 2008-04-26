@@ -140,6 +140,12 @@ struct My_FormatsPanelANSIColorsUI
 	Float32			idealHeight;	//!< best size in pixels
 	HIViewWrap		mainView;
 	
+	static void
+	colorBoxChangeNotify	(HIViewRef, RGBColor const*, void*);
+	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
 	void
 	readPreferences		(Preferences_ContextRef);
 	
@@ -174,8 +180,14 @@ struct My_FormatsPanelNormalUI
 	HIViewWrap			terminalHIView;	//!< container of sample
 	HIViewWrap			mainView;
 	
+	static void
+	colorBoxChangeNotify	(HIViewRef, RGBColor const*, void*);
+	
 	void
 	loseFocus	();
+	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
 	
 	void
 	readPreferences		(Preferences_ContextRef);
@@ -242,11 +254,7 @@ typedef My_FormatsPanelNormalData*	My_FormatsPanelNormalDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				colorBoxANSIChangeNotify		(HIViewRef, RGBColor const*, void*);
-void				colorBoxNormalChangeNotify		(HIViewRef, RGBColor const*, void*);
 Boolean				isMonospacedFont				(Str255);
-SInt32				panelChangedANSIColors			(Panel_Ref, Panel_Message, void*);
-SInt32				panelChangedNormal				(Panel_Ref, Panel_Message, void*);
 pascal OSStatus		receiveFontChange				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveWindowFocusChange		(EventHandlerCallRef, EventRef, void*);
@@ -318,7 +326,7 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelFormats_NewANSIColorsPane ()
 {
-	Panel_Ref	result = Panel_New(panelChangedANSIColors);
+	Panel_Ref	result = Panel_New(My_FormatsPanelANSIColorsUI::panelChanged);
 	
 	
 	if (nullptr != result)
@@ -361,7 +369,7 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelFormats_NewNormalPane ()
 {
-	Panel_Ref	result = Panel_New(panelChangedNormal);
+	Panel_Ref	result = Panel_New(My_FormatsPanelNormalUI::panelChanged);
 	
 	
 	if (nullptr != result)
@@ -446,6 +454,47 @@ _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 
 
 /*!
+This routine is invoked whenever the color box value
+is changed.  The panel responds by updating the color
+preferences and updating all open session windows to
+use the new color.
+
+(3.1)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
+						 RGBColor const*	inNewColor,
+						 void*				inMyFormatsPanelANSIColorsUIPtr)
+{
+	My_FormatsPanelANSIColorsUIPtr		interfacePtr = REINTERPRET_CAST(inMyFormatsPanelANSIColorsUIPtr, My_FormatsPanelANSIColorsUIPtr);
+	My_FormatsPanelANSIColorsDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																	My_FormatsPanelANSIColorsDataPtr);
+	UInt32								colorID = 0;
+	
+	
+	// command ID matches preferences tag
+	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
+	{
+		Boolean		isOK = false;
+		
+		
+		if (nullptr == dataPtr->dataModel) isOK = false;
+		else
+		{
+			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
+																				sizeof(*inNewColor), inNewColor);
+			
+			
+			isOK = (kPreferences_ResultOK == prefsResult);
+		}
+		
+		if (false == isOK) Sound_StandardAlert();
+	}
+}// My_FormatsPanelANSIColorsUI::colorBoxChangeNotify
+
+
+/*!
 Constructs the HIView that resides within the tab, and
 the sub-views that belong in its hierarchy.
 
@@ -503,7 +552,7 @@ createContainerView		(Panel_Ref		inPanel,
 			
 			assert(button.exists());
 			ColorBox_AttachToBevelButton(button);
-			ColorBox_SetColorChangeNotifyProc(button, colorBoxANSIChangeNotify, this/* context */);
+			ColorBox_SetColorChangeNotifyProc(button, My_FormatsPanelANSIColorsUI::colorBoxChangeNotify, this/* context */);
 		}
 	}
 	
@@ -546,6 +595,121 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap = HIViewWrap(idMyHelpTextANSIColors, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 }// My_FormatsPanelANSIColorsUI::deltaSize
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_FormatsPanelANSIColorsUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorFormatsANSI, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_FormatsPanelANSIColorsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_FormatsPanelANSIColorsDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_FormatsPanelANSIColorsUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_FormatsPanelANSIColorsDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_FormatsPanelANSIColorsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_FormatsPanelANSIColorsDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_FormatsPanelANSIColorsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_FormatsPanelANSIColorsDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_FormatsPanelANSIColorsUI::panelChanged
 
 
 /*!
@@ -675,6 +839,50 @@ _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH 
 
 
 /*!
+This routine is invoked whenever the color box value
+is changed.  The panel responds by updating the color
+preferences and updating all open session windows to
+use the new color.
+
+(3.1)
+*/
+void
+My_FormatsPanelNormalUI::
+colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
+						 RGBColor const*	inNewColor,
+						 void*				inMyFormatsPanelNormalUIPtr)
+{
+	My_FormatsPanelNormalUIPtr		interfacePtr = REINTERPRET_CAST(inMyFormatsPanelNormalUIPtr, My_FormatsPanelNormalUIPtr);
+	My_FormatsPanelNormalDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																My_FormatsPanelNormalDataPtr);
+	UInt32							colorID = 0;
+	
+	
+	// command ID matches preferences tag
+	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
+	{
+		Boolean		isOK = false;
+		
+		
+		if (nullptr == dataPtr->dataModel) isOK = false;
+		else
+		{
+			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
+																				sizeof(*inNewColor), inNewColor);
+			
+			
+			// update the sample area
+			Preferences_ContextCopy(dataPtr->dataModel, TerminalView_ReturnConfiguration(interfacePtr->terminalView));
+			
+			isOK = (kPreferences_ResultOK == prefsResult);
+		}
+		
+		if (false == isOK) Sound_StandardAlert();
+	}
+}// My_FormatsPanelNormalUI::colorBoxChangeNotify
+
+
+/*!
 Constructs the HIView that resides within the tab, and
 the sub-views that belong in its hierarchy.
 
@@ -742,7 +950,7 @@ createContainerView		(Panel_Ref		inPanel,
 			
 			assert(button.exists());
 			ColorBox_AttachToBevelButton(button);
-			ColorBox_SetColorChangeNotifyProc(button, colorBoxNormalChangeNotify, this/* context */);
+			ColorBox_SetColorChangeNotifyProc(button, My_FormatsPanelNormalUI::colorBoxChangeNotify, this/* context */);
 		}
 	}
 	
@@ -873,6 +1081,121 @@ loseFocus ()
 	SetControl32BitValue(fontNameButton, kControlCheckBoxUncheckedValue);
 	SetControl32BitValue(fontSizeButton, kControlCheckBoxUncheckedValue);
 }// My_FormatsPanelNormalUI::loseFocus
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_FormatsPanelNormalUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorFormatsNormal, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_FormatsPanelNormalDataPtr);
+			WindowRef const*				windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_FormatsPanelNormalUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_FormatsPanelNormalDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_FormatsPanelNormalDataPtr);
+			HISize&							newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_FormatsPanelNormalDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_FormatsPanelNormalDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_FormatsPanelNormalUI::panelChanged
 
 
 /*!
@@ -1008,89 +1331,6 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 
 
 /*!
-This routine is invoked whenever the color box value
-is changed.  The panel responds by updating the color
-preferences and updating all open session windows to
-use the new color.
-
-(3.1)
-*/
-void
-colorBoxANSIChangeNotify	(HIViewRef			inColorBoxThatChanged,
-							 RGBColor const*	inNewColor,
-							 void*				inMyFormatsPanelANSIColorsUIPtr)
-{
-	My_FormatsPanelANSIColorsUIPtr		interfacePtr = REINTERPRET_CAST(inMyFormatsPanelANSIColorsUIPtr, My_FormatsPanelANSIColorsUIPtr);
-	My_FormatsPanelANSIColorsDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
-																	My_FormatsPanelANSIColorsDataPtr);
-	UInt32								colorID = 0;
-	
-	
-	// command ID matches preferences tag
-	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
-	{
-		Boolean		isOK = false;
-		
-		
-		if (nullptr == dataPtr->dataModel) isOK = false;
-		else
-		{
-			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
-																				sizeof(*inNewColor), inNewColor);
-			
-			
-			isOK = (kPreferences_ResultOK == prefsResult);
-		}
-		
-		if (false == isOK) Sound_StandardAlert();
-	}
-}// colorBoxANSIChangeNotify
-
-
-/*!
-This routine is invoked whenever the color box value
-is changed.  The panel responds by updating the color
-preferences and updating all open session windows to
-use the new color.
-
-(3.1)
-*/
-void
-colorBoxNormalChangeNotify	(HIViewRef			inColorBoxThatChanged,
-							 RGBColor const*	inNewColor,
-							 void*				inMyFormatsPanelNormalUIPtr)
-{
-	My_FormatsPanelNormalUIPtr		interfacePtr = REINTERPRET_CAST(inMyFormatsPanelNormalUIPtr, My_FormatsPanelNormalUIPtr);
-	My_FormatsPanelNormalDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
-																My_FormatsPanelNormalDataPtr);
-	UInt32							colorID = 0;
-	
-	
-	// command ID matches preferences tag
-	if (noErr == GetControlCommandID(inColorBoxThatChanged, &colorID))
-	{
-		Boolean		isOK = false;
-		
-		
-		if (nullptr == dataPtr->dataModel) isOK = false;
-		else
-		{
-			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
-																				sizeof(*inNewColor), inNewColor);
-			
-			
-			// update the sample area
-			Preferences_ContextCopy(dataPtr->dataModel, TerminalView_ReturnConfiguration(interfacePtr->terminalView));
-			
-			isOK = (kPreferences_ResultOK == prefsResult);
-		}
-		
-		if (false == isOK) Sound_StandardAlert();
-	}
-}// colorBoxNormalChangeNotify
-
-
-/*!
 Determines if a font is monospaced.
 
 (2.6)
@@ -1140,234 +1380,6 @@ isMonospacedFont	(Str255		inFontName)
 	
 	return result;
 }// isMonospacedFont
-
-
-/*!
-Invoked when the state of a panel changes, or information
-about the panel is required.  (This routine is of type
-PanelChangedProcPtr.)
-
-(3.1)
-*/
-SInt32
-panelChangedANSIColors	(Panel_Ref		inPanel,
-						 Panel_Message	inMessage,
-						 void*			inDataPtr)
-{
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorFormatsANSI, 0/* options */));
-	
-	
-	switch (inMessage)
-	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
-		{
-			My_FormatsPanelANSIColorsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_FormatsPanelANSIColorsDataPtr);
-			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
-			
-			
-			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new My_FormatsPanelANSIColorsUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			delete (REINTERPRET_CAST(inDataPtr, My_FormatsPanelANSIColorsDataPtr));
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a view is now focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a view is no longer focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
-		{
-			My_FormatsPanelANSIColorsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_FormatsPanelANSIColorsDataPtr);
-			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
-			{
-				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
-				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
-				result = kPanel_ResponseSizeProvided;
-			}
-		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
-		{
-			// this notification is currently ignored, but shouldn’t be...
-		}
-		break;
-	
-	case kPanel_MessageNewDataSet:
-		{
-			My_FormatsPanelANSIColorsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_FormatsPanelANSIColorsDataPtr);
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
-			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
-			
-			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
-		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
-		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// panelChangedANSIColors
-
-
-/*!
-Invoked when the state of a panel changes, or information
-about the panel is required.  (This routine is of type
-PanelChangedProcPtr.)
-
-(3.1)
-*/
-SInt32
-panelChangedNormal	(Panel_Ref		inPanel,
-					 Panel_Message	inMessage,
-					 void*			inDataPtr)
-{
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorFormatsNormal, 0/* options */));
-	
-	
-	switch (inMessage)
-	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
-		{
-			My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																			My_FormatsPanelNormalDataPtr);
-			WindowRef const*				windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
-			
-			
-			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new My_FormatsPanelNormalUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			delete (REINTERPRET_CAST(inDataPtr, My_FormatsPanelNormalDataPtr));
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a view is now focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a view is no longer focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
-		{
-			My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																			My_FormatsPanelNormalDataPtr);
-			HISize&							newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
-			{
-				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
-				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
-				result = kPanel_ResponseSizeProvided;
-			}
-		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
-		{
-			// this notification is currently ignored, but shouldn’t be...
-		}
-		break;
-	
-	case kPanel_MessageNewDataSet:
-		{
-			My_FormatsPanelNormalDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_FormatsPanelNormalDataPtr);
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
-			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
-			
-			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
-		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
-		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// panelChangedNormal
 
 
 /*!

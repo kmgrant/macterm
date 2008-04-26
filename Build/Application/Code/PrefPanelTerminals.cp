@@ -115,6 +115,9 @@ struct My_TerminalsPanelEmulationUI
 	Float32			idealHeight;	//!< best size in pixels
 	HIViewWrap		mainView;
 	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
 	void
 	readPreferences		(Preferences_ContextRef);
 
@@ -141,6 +144,9 @@ struct My_TerminalsPanelOptionsUI
 	Float32			idealWidth;		//!< best size in pixels
 	Float32			idealHeight;	//!< best size in pixels
 	HIViewWrap		mainView;
+	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
 	
 	void
 	readPreferences		(Preferences_ContextRef);
@@ -169,8 +175,14 @@ struct My_TerminalsPanelScreenUI
 	Float32			idealHeight;	//!< best size in pixels
 	HIViewWrap		mainView;
 	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	static pascal OSStatus
+	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
 	
 	void
 	saveFieldPreferences	(Preferences_ContextRef);
@@ -256,10 +268,6 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
-SInt32				panelChangedEmulation		(Panel_Ref, Panel_Message, void*);
-SInt32				panelChangedOptions			(Panel_Ref, Panel_Message, void*);
-SInt32				panelChangedScreen			(Panel_Ref, Panel_Message, void*);
-pascal OSStatus		receiveFieldChanged			(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -320,7 +328,7 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelTerminals_NewEmulationPane ()
 {
-	Panel_Ref	result = Panel_New(panelChangedEmulation);
+	Panel_Ref	result = Panel_New(My_TerminalsPanelEmulationUI::panelChanged);
 	
 	
 	if (nullptr != result)
@@ -362,7 +370,7 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelTerminals_NewOptionsPane ()
 {
-	Panel_Ref	result = Panel_New(panelChangedOptions);
+	Panel_Ref	result = Panel_New(My_TerminalsPanelOptionsUI::panelChanged);
 	
 	
 	if (nullptr != result)
@@ -404,7 +412,7 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelTerminals_NewScreenPane ()
 {
-	Panel_Ref	result = Panel_New(panelChangedScreen);
+	Panel_Ref	result = Panel_New(My_TerminalsPanelScreenUI::panelChanged);
 	
 	
 	if (nullptr != result)
@@ -566,6 +574,121 @@ deltaSize	(HIViewRef		inContainer,
 
 
 /*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_TerminalsPanelEmulationUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelEmulationDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_TerminalsPanelEmulationUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelEmulationDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelEmulationDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldnÕt be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelEmulationDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_TerminalsPanelEmulationUI::panelChanged
+
+
+/*!
 Updates the display based on the given settings.
 
 (3.1)
@@ -704,6 +827,121 @@ deltaSize	(HIViewRef		inContainer,
 	
 	// UNIMPLEMENTED
 }// My_TerminalsPanelOptionsUI::deltaSize
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_TerminalsPanelOptionsUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorTerminalsOptions, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelOptionsDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_TerminalsPanelOptionsUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelOptionsDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelOptionsDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldnÕt be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelOptionsDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_TerminalsPanelOptionsUI::panelChanged
 
 
 /*!
@@ -868,6 +1106,127 @@ deltaSize	(HIViewRef		inContainer,
 
 
 /*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_TerminalsPanelScreenUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorTerminalsScreen, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelScreenDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_TerminalsPanelScreenUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(inDataPtr, My_TerminalsPanelScreenDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			delete panelDataPtr;
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*					viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_TerminalsPanelScreenDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_TerminalsPanelScreenDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelScreenDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldnÕt be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelScreenDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_TerminalsPanelScreenUI::panelChanged
+
+
+/*!
 Updates the display based on the given settings.
 
 (3.1)
@@ -937,6 +1296,45 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		}
 	}
 }// My_TerminalsPanelScreenUI::readPreferences
+
+
+/*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the fields in this panel by saving
+their preferences when new text arrives.
+
+(3.1)
+*/
+pascal OSStatus
+My_TerminalsPanelScreenUI::
+receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus					result = eventNotHandledErr;
+	My_TerminalsPanelScreenUI*	screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// now synchronize the post-input change with preferences
+	{
+		My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(screenInterfacePtr->panel),
+																			My_TerminalsPanelScreenDataPtr);
+		
+		
+		screenInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+	}
+	
+	return result;
+}// My_TerminalsPanelScreenUI::receiveFieldChanged
 
 
 /*!
@@ -1136,394 +1534,6 @@ setScrollbackType	(Terminal_ScrollbackType	inAllocationRule)
 		Console_WriteLine("warning, failed to set screen scrollback type");
 	}
 }// My_TerminalsPanelScreenUI::setScrollbackType
-
-
-/*!
-Invoked when the state of a panel changes, or information
-about the panel is required.  (This routine is of type
-PanelChangedProcPtr.)
-
-(3.1)
-*/
-SInt32
-panelChangedEmulation	(Panel_Ref		inPanel,
-						 Panel_Message	inMessage,
-						 void*			inDataPtr)
-{
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation, 0/* options */));
-	
-	
-	switch (inMessage)
-	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
-		{
-			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelEmulationDataPtr);
-			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
-			
-			
-			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new My_TerminalsPanelEmulationUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelEmulationDataPtr));
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a view is now focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a view is no longer focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
-		{
-			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelEmulationDataPtr);
-			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
-			{
-				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
-				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
-				result = kPanel_ResponseSizeProvided;
-			}
-		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
-		{
-			// this notification is currently ignored, but shouldnÕt be...
-		}
-		break;
-	
-	case kPanel_MessageNewDataSet:
-		{
-			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelEmulationDataPtr);
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
-			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
-			
-			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
-		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
-		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// panelChangedEmulation
-
-
-/*!
-Invoked when the state of a panel changes, or information
-about the panel is required.  (This routine is of type
-PanelChangedProcPtr.)
-
-(3.1)
-*/
-SInt32
-panelChangedOptions		(Panel_Ref		inPanel,
-						 Panel_Message	inMessage,
-						 void*			inDataPtr)
-{
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorTerminalsOptions, 0/* options */));
-	
-	
-	switch (inMessage)
-	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
-		{
-			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelOptionsDataPtr);
-			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
-			
-			
-			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new My_TerminalsPanelOptionsUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelOptionsDataPtr));
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a view is now focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a view is no longer focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
-		{
-			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelOptionsDataPtr);
-			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
-			{
-				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
-				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
-				result = kPanel_ResponseSizeProvided;
-			}
-		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
-		{
-			// this notification is currently ignored, but shouldnÕt be...
-		}
-		break;
-	
-	case kPanel_MessageNewDataSet:
-		{
-			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelOptionsDataPtr);
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
-			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
-			
-			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
-		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
-		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// panelChangedOptions
-
-
-/*!
-Invoked when the state of a panel changes, or information
-about the panel is required.  (This routine is of type
-PanelChangedProcPtr.)
-
-(3.1)
-*/
-SInt32
-panelChangedScreen	(Panel_Ref		inPanel,
-					 Panel_Message	inMessage,
-					 void*			inDataPtr)
-{
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorTerminalsScreen, 0/* options */));
-	
-	
-	switch (inMessage)
-	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
-		{
-			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelScreenDataPtr);
-			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
-			
-			
-			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new My_TerminalsPanelScreenUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(inDataPtr, My_TerminalsPanelScreenDataPtr);
-			
-			
-			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
-			delete panelDataPtr;
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a view is now focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a view is no longer focused
-		{
-			//HIViewRef const*					viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			My_TerminalsPanelScreenDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																			My_TerminalsPanelScreenDataPtr);
-			
-			
-			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
-		{
-			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelScreenDataPtr);
-			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
-			{
-				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
-				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
-				result = kPanel_ResponseSizeProvided;
-			}
-		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
-		{
-			// this notification is currently ignored, but shouldnÕt be...
-		}
-		break;
-	
-	case kPanel_MessageNewDataSet:
-		{
-			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_TerminalsPanelScreenDataPtr);
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
-			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
-			
-			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
-		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
-		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// panelChangedScreen
-
-
-/*!
-Embellishes "kEventTextInputUnicodeForKeyEvent" of
-"kEventClassTextInput" for the fields in this panel by saving
-their preferences when new text arrives.
-
-(3.1)
-*/
-pascal OSStatus
-receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
-						 EventRef				inEvent,
-						 void*					inMyTerminalsPanelUIPtr)
-{
-	OSStatus					result = eventNotHandledErr;
-	// WARNING: More than one UI uses this handler.  The context will
-	// depend on the target.
-	My_TerminalsPanelScreenUI*	screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassTextInput);
-	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
-	
-	// first ensure the keypress takes effect (that is, it updates
-	// whatever text field it is for)
-	result = CallNextEventHandler(inHandlerCallRef, inEvent);
-	
-	// now synchronize the post-input change with preferences
-	{
-		My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(screenInterfacePtr->panel),
-																			My_TerminalsPanelScreenDataPtr);
-		
-		
-		screenInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
-	}
-	
-	return result;
-}// receiveFieldChanged
 
 
 /*!
