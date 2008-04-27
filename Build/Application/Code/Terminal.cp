@@ -643,10 +643,9 @@ public:
 																	//!  sequence, but if the latter, ESC-character sequences are allowed instead
 	Boolean								modeApplicationKeys;		//!< DECKPAM mode: true only if the keypad is in application mode
 	Boolean								modeAutoWrap;				//!< DECAWM mode: true only if line wrapping is automatic
-	Boolean								modeCursorKeys;				//!< DECCKM mode: true only if the keypad should act as cursor movement arrows
+	Boolean								modeCursorKeysForApp;		//!< DECCKM mode: true only if the keypad should not act as cursor movement arrows
 																	//!  (note also that the VT100 manual states this setting has no effect unless
-																	//!  the terminal is also in ANSI mode and the keypad is in application mode;
-																	//!  see Terminal_KeypadHasMovementKeys())
+																	//!  the terminal is also in ANSI mode and the keypad is in application mode
 	Boolean								modeInsertNotReplace;		//!< IRM mode: if true, new characters overwrite the cursor position, otherwise
 																	//!  they first shift existing text over by one before appearing
 	Boolean								modeNewLineOption;			//!< LNM mode: if true, a line feed causes the cursor to move to the start of
@@ -2964,63 +2963,6 @@ Terminal_GetMaximumBounds	(TerminalScreenRef	inRef,
 
 
 /*!
-Returns "true" only if the specified terminal was told
-that its keypad keys are used for application-specific
-purposes instead of their ordinary ASCII equivalents.
-
-TEMPORARY:	This API is under evaluation.  Most likely,
-			this would only be needed to handle key
-			mappings elsewhere, and the whole key handling
-			mechanism may change.
-
-(3.1)
-*/
-Boolean
-Terminal_KeypadHasApplicationKeys	(TerminalScreenRef	inRef)
-{
-	Boolean						result = false;
-	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (dataPtr != nullptr)
-	{
-		result = dataPtr->modeApplicationKeys;
-	}
-	return result;
-}// KeypadHasApplicationKeys
-
-
-/*!
-Returns "true" only if the specified terminal was told
-that its keypad numbers are actually equivalent to arrow
-keys (for movement).
-
-For example, the VT100 terminal in ANSI mode can have
-this state while the keypad is set to application keys.
-
-TEMPORARY:	This API is under evaluation.  Most likely,
-			this would only be needed to handle key
-			mappings elsewhere, and the whole key handling
-			mechanism may change.
-
-(3.1)
-*/
-Boolean
-Terminal_KeypadHasMovementKeys	(TerminalScreenRef	inRef)
-{
-	Boolean						result = false;
-	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (dataPtr != nullptr)
-	{
-		result = (dataPtr->modeCursorKeys && dataPtr->modeApplicationKeys && dataPtr->modeANSIEnabled);
-	}
-	return result;
-}// KeypadHasMovementKeys
-
-
-/*!
 Returns "true" only if the LED with the specified
 number is currently on.  The meaning of an LED with
 a specific number is left to the caller.
@@ -4201,6 +4143,279 @@ Terminal_StopMonitoring		(TerminalScreenRef			inRef,
 
 
 /*!
+Attempts to reposition the cursor by sending enough arrow key
+sequences in the specified directions.  (A delta of zero in
+either direction means the cursor does not move on that axis.)
+
+This could fail, if for instance there is no session listening
+to input for this terminal.
+
+IMPORTANT:	This could fail in ways that cannot be detected by
+			this function; for instance, if the user is currently
+			running a process that does not interpret arrow keys
+			properly.
+
+IMPORTANT:	User input routines at the terminal level are rare,
+			and generally only used to handle sequences that
+			depend very directly on terminal state.  Look in the
+			Session module for preferred user input routines.
+
+\retval kTerminal_ResultOK
+if no error occurred
+
+\retval kTerminal_ResultInvalidID
+if the specified screen reference is invalid
+
+\retval kTerminal_ResultNoListeningSession
+if keys cannot be sent because no session is listening
+
+(3.1)
+*/
+Terminal_Result
+Terminal_UserInputOffsetCursor	(TerminalScreenRef		inRef,
+								 SInt16					inColumnDelta,
+								 SInt16					inRowDelta)
+{
+	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
+	Terminal_Result			result = kTerminal_ResultOK;
+	
+	
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+	else if (nullptr == dataPtr->listeningSession) result = kTerminal_ResultNoListeningSession;
+	else
+	{
+		Session_Result		keyResult = kSession_ResultOK;
+		
+		
+		// horizontal offset
+		if (inColumnDelta < 0)
+		{
+			for (SInt16 i = 0; i > inColumnDelta; --i)
+			{
+				keyResult = Session_UserInputKey(dataPtr->listeningSession, VSLT);
+			}
+		}
+		else
+		{
+			for (SInt16 i = 0; i < inColumnDelta; ++i)
+			{
+				keyResult = Session_UserInputKey(dataPtr->listeningSession, VSRT);
+			}
+		}
+		
+		// vertical offset
+		if (inRowDelta < 0)
+		{
+			for (SInt16 i = 0; i > inRowDelta; --i)
+			{
+				keyResult = Session_UserInputKey(dataPtr->listeningSession, VSUP);
+			}
+		}
+		else
+		{
+			for (SInt16 i = 0; i < inRowDelta; ++i)
+			{
+				keyResult = Session_UserInputKey(dataPtr->listeningSession, VSDN);
+			}
+		}
+	}
+	return result;
+}// UserInputOffsetCursor
+
+
+/*!
+Attempts to reposition the cursor by sending enough arrow key
+sequences in the specified directions.  (A delta of zero in
+either direction means the cursor does not move on that axis.)
+
+This could fail, if for instance there is no session listening
+to input for this terminal.
+
+IMPORTANT:	This could fail in ways that cannot be detected by
+			this function; for instance, if the user is currently
+			running a process that does not interpret arrow keys
+			properly.
+
+IMPORTANT:	User input routines at the terminal level are rare,
+			and generally only used to handle sequences that
+			depend very directly on terminal state.  Look in the
+			Session module for preferred user input routines.
+
+\retval kTerminal_ResultOK
+if no error occurred
+
+\retval kTerminal_ResultInvalidID
+if the specified screen reference is invalid
+
+\retval kTerminal_ResultNoListeningSession
+if keys cannot be sent because no session is listening
+
+(3.1)
+*/
+Terminal_Result
+Terminal_UserInputVTKey		(TerminalScreenRef		inRef,
+							 UInt8					inVTKey,
+							 Boolean				inLocalEcho)
+{
+	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
+	Terminal_Result			result = kTerminal_ResultOK;
+	
+	
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+	else if (nullptr == dataPtr->listeningSession) result = kTerminal_ResultNoListeningSession;
+	else
+	{
+		if ((inVTKey >= VSK0) && (inVTKey <= VSKE) && (false == dataPtr->modeApplicationKeys))
+		{
+			// VT SPECIFIC:
+			// keypad key in numeric mode (as opposed to application key mode)
+			UInt8 const		kVTNumericModeTranslation[] =
+			{
+				// numbers, symbols, Enter, PF1-PF4
+				"0123456789,-.\015"
+			};
+			
+			
+			Session_SendData(dataPtr->listeningSession, &kVTNumericModeTranslation[inVTKey - VSK0], 1);
+			if (inLocalEcho)
+			{
+				Terminal_EmulatorProcessData(dataPtr->selfRef, &kVTNumericModeTranslation[inVTKey - VSUP], 1);
+			}
+		}
+		else
+		{
+			// VT SPECIFIC:
+			// keypad key in application mode (as opposed to numeric mode),
+			// or an arrow key or PF-key in either mode
+			char const		kVTApplicationModeTranslation[] =
+			{
+				// arrows, numbers, symbols, Enter, PF1-PF4
+				"ABCDpqrstuvwxylmnMPQRS"
+			};
+			char*		seqPtr = nullptr;
+			size_t		seqLength = 0;
+			
+			
+			if (inVTKey < VSUP)
+			{
+				// construct key code sequences starting from VSF10 (see VTKeys.h);
+				// each sequence is defined starting with the template, below, and
+				// then substituting 1 or 2 characters into the sequence template;
+				// the order must exactly match what is in VTKeys.h, because of the
+				// subtraction used to derive the array index
+				static char			seqVT220Keys[] = "\033[  ~";
+				static char const	kArrayIndex2Translation[] = "222122?2?3?3?2?3?3123425161";
+				static char const	kArrayIndex3Translation[] = "134956?9?2?3?8?1?4~~~~0~8~7";
+				
+				
+				seqVT220Keys[2] = kArrayIndex2Translation[inVTKey - VSF10];
+				seqVT220Keys[3] = kArrayIndex3Translation[inVTKey - VSF10];
+				seqPtr = seqVT220Keys;
+				seqLength = CPP_STD::strlen(seqVT220Keys);
+				if ('~' == seqPtr[3]) --seqLength; // a few of the sequences are shorter
+			}
+			else if (inVTKey < VSF1)
+			{
+				// arrows or most keypad keys
+				if (dataPtr->modeANSIEnabled)
+				{
+					// non-VT52
+					static char		seqKeypadApp[] = "\033O ";
+					static char		seqKeypadCursor[] = "\033[ ";
+					
+					
+					if (inVTKey < VSK0)
+					{
+						// arrows
+						if (dataPtr->modeCursorKeysForApp)
+						{
+							seqPtr = seqKeypadApp;
+							seqLength = CPP_STD::strlen(seqKeypadApp);
+							seqPtr[2] = kVTApplicationModeTranslation[inVTKey - VSUP];
+						}
+						else
+						{
+							seqPtr = seqKeypadCursor;
+							seqLength = CPP_STD::strlen(seqKeypadCursor);
+							seqPtr[2] = kVTApplicationModeTranslation[inVTKey - VSUP];
+						}
+					}
+					else
+					{
+						if (dataPtr->modeApplicationKeys)
+						{
+							// keypad keys have special application behavior, unless
+							// the cursor keys are hit and cursor mode is enabled
+							seqPtr = seqKeypadApp;
+							seqLength = CPP_STD::strlen(seqKeypadApp);
+							seqPtr[2] = kVTApplicationModeTranslation[inVTKey - VSUP];
+						}
+						else
+						{
+							// numerical mode
+							seqPtr = seqKeypadCursor;
+							seqLength = CPP_STD::strlen(seqKeypadCursor);
+							seqPtr[2] = kVTApplicationModeTranslation[inVTKey - VSUP];
+						}
+					}
+				}
+				else
+				{
+					// VT52
+					static char		seqKeypadVT52[] = "\033? ";
+					static char		seqArrowsVT52[] = "\033 ";
+					
+					
+					if (inVTKey > VSLT)
+					{
+						// non-arrows
+						seqPtr = seqKeypadVT52;
+						seqPtr[2] = kVTApplicationModeTranslation[inVTKey - VSUP];
+						seqLength = CPP_STD::strlen(seqKeypadVT52);
+					}
+					else
+					{
+						// arrows
+						seqPtr = seqArrowsVT52;
+						seqLength = CPP_STD::strlen(seqArrowsVT52);
+						seqPtr[1] = kVTApplicationModeTranslation[inVTKey - VSUP];
+					}
+				}
+			}
+			else
+			{
+				// PF1 through PF4
+				static char		seqFunctionKeysNormal[] = "\033O ";
+				static char		seqFunctionKeysVT52[] = "\033 ";
+				
+				
+				if (dataPtr->modeANSIEnabled)
+				{
+					seqPtr = seqFunctionKeysNormal;
+					seqPtr[2] = kVTApplicationModeTranslation[inVTKey - VSUP];
+					seqLength = CPP_STD::strlen(seqFunctionKeysNormal);
+				}
+				else
+				{
+					seqPtr = seqFunctionKeysVT52;
+					seqPtr[1] = kVTApplicationModeTranslation[inVTKey - VSUP];
+					seqLength = CPP_STD::strlen(seqFunctionKeysVT52);
+				}
+			}
+			
+			// finally, send the key sequence, optionally handling it immediately in the terminal
+			Session_SendData(dataPtr->listeningSession, seqPtr, seqLength);
+			if (inLocalEcho)
+			{
+				Terminal_EmulatorProcessData(dataPtr->selfRef, REINTERPRET_CAST(seqPtr, UInt8*), seqLength);
+			}
+		}
+	}
+	return result;
+}// UserInputVTKey
+
+
+/*!
 Returns "true" only if the specified terminal has been
 *told* to iconify its window.  In order for the state of
 a real window to be in sync with this, a window handler
@@ -4289,7 +4504,7 @@ reportOnlyOnRequest(false),
 modeANSIEnabled(true),
 modeApplicationKeys(false),
 modeAutoWrap(false),
-modeCursorKeys(false),
+modeCursorKeysForApp(false),
 modeInsertNotReplace(false),
 modeNewLineOption(false),
 modeOriginRedefined(false),
@@ -9637,7 +9852,7 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 	inDataPtr->emulator.parameterEndIndex = 0;
 	vt100ANSIMode(inDataPtr);
 	//inDataPtr->modeAutoWrap = false; // 3.0 - do not touch the auto-wrap setting
-	inDataPtr->modeCursorKeys = false;
+	inDataPtr->modeCursorKeysForApp = false;
 	inDataPtr->modeApplicationKeys = false;
 	inDataPtr->modeOriginRedefined = false;
 	inDataPtr->previous.attributeBits = kInvalidTerminalTextAttributes;
@@ -10440,7 +10655,7 @@ vt100ModeSetReset	(My_ScreenBufferPtr		inDataPtr,
 				{
 				case 1:
 					// DECCKM (cursor-key mode)
-					inDataPtr->modeCursorKeys = inIsModeEnabled;
+					inDataPtr->modeCursorKeysForApp = inIsModeEnabled;
 					break;
 				
 				case 2:

@@ -82,7 +82,8 @@ enum Terminal_Result
 	kTerminal_ResultInvalidIterator = -2,		//!< a given "Terminal_LineRef" does not correspond to any known row
 	kTerminal_ResultParameterError = -3,		//!< invalid input (e.g. a null pointer)
 	kTerminal_ResultNotEnoughMemory = -4,		//!< there is not enough memory to allocate required data structures
-	kTerminal_ResultIteratorCannotAdvance = -5  //!< attempt to advance iterator past the end of its list
+	kTerminal_ResultIteratorCannotAdvance = -5,	//!< attempt to advance iterator past the end of its list
+	kTerminal_ResultNoListeningSession = -6,	//!< cannot send result anywhere because no session is currently listening
 };
 
 /*!
@@ -537,12 +538,6 @@ void
 											 Terminal_Emulator			inEmulator);
 
 Boolean
-	Terminal_KeypadHasApplicationKeys		(TerminalScreenRef			inScreen);
-
-Boolean
-	Terminal_KeypadHasMovementKeys			(TerminalScreenRef			inScreen);
-
-Boolean
 	Terminal_LEDIsOn						(TerminalScreenRef			inScreen,
 											 SInt16						inOneBasedLEDNumber);
 
@@ -588,6 +583,16 @@ void
 void
 	Terminal_SetSaveLinesOnClear			(TerminalScreenRef			inScreen,
 											 Boolean					inClearScreenSavesLines);
+
+Terminal_Result
+	Terminal_UserInputOffsetCursor			(TerminalScreenRef			inScreen,
+											 SInt16						inColumnDelta,
+											 SInt16						inRowDelta);
+
+Terminal_Result
+	Terminal_UserInputVTKey					(TerminalScreenRef			inScreen,
+											 UInt8						inVTKey,
+											 Boolean					inLocalEcho);
 
 Boolean
 	Terminal_WindowIsToBeMinimized			(TerminalScreenRef			inScreen);

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080426',
     '20080424',
     '20080422',
     '20080421',
@@ -142,6 +143,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080426': [
+		'Fixed arrow key sequences in certain modes, noticeable in applications such as the "vim" text editor.',
+		'Fixed command-option-click to once again send arrow key sequences to move the cursor to the clicked location.',
+		'Fixed "Move cursor to text drop location" behavior.',
+	],
 	'20080424': [
 		'Added even more to the Low-Level Settings section in MacTelnet Help.',
 	],

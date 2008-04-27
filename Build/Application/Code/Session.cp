@@ -3954,13 +3954,10 @@ Sends the appropriate sequence for the specified key,
 taking into account the terminal mode settings.
 
 \retval kSession_ResultOK
-if the key was input successfully
+if the key was apparently input successfully
 
 \retval kSession_ResultInvalidReference
 if "inRef" is invalid
-
-\retval kSession_ResultParameterError
-if "inTarget" or "inTargetData" are invalid
 
 (3.1)
 */
@@ -3975,39 +3972,12 @@ Session_UserInputKey	(SessionRef		inRef,
 	if (nullptr == ptr) result = kSession_ResultInvalidReference;
 	else
 	{
-		TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
-		TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-		
-		
-		// perform an initial mapping if the keypad is in cursor keys mode
-		// and the specified key is a keypad number that has a cursor key
-		if (Terminal_KeypadHasMovementKeys(screen))
+		if (inKeyOrASCII < VSF10)
 		{
-			switch (inKeyOrASCII)
-			{
-			case VSK2:
-				inKeyOrASCII = VSDN;
-				break;
-			
-			case VSK4:
-				inKeyOrASCII = VSLT;
-				break;
-			
-			case VSK6:
-				inKeyOrASCII = VSRT;
-				break;
-			
-			case VSK8:
-				inKeyOrASCII = VSUP;
-				break;
-			
-			default:
-				// not applicable
-				break;
-			}
+			// 7-bit ASCII; send as-is
+			Session_SendData(ptr->selfRef, &inKeyOrASCII, 1);
 		}
-		
-		if (ptr->dataPtr->arrowmap && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
+		else if (ptr->dataPtr->arrowmap && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
 		{
 			UInt8		actualKey = inKeyOrASCII;
 			
@@ -4038,121 +4008,18 @@ Session_UserInputKey	(SessionRef		inRef,
 			}
 			Session_SendData(ptr->selfRef, &actualKey, 1);
 		}
-		else if (inKeyOrASCII < VSF10)
-		{
-			// 7-bit ASCII; send as-is
-			Session_SendData(ptr->selfRef, &inKeyOrASCII, 1);
-		}
-		else if ((inKeyOrASCII >= VSK0) && (inKeyOrASCII <= VSKE) && (false == Terminal_KeypadHasApplicationKeys(screen)))
-		{
-			// VT SPECIFIC:
-			// keypad key in numeric mode (as opposed to application key mode)
-			UInt8 const		kVTNumericModeTranslation[] =
-			{
-				// numbers, symbols, Enter, PF1-PF4
-				"0123456789,-.\15"
-			};
-			
-			
-			Session_SendData(ptr->selfRef, &kVTNumericModeTranslation[inKeyOrASCII - VSK0], 1);
-			if (0 != ptr->dataPtr->echo)
-			{
-				Terminal_EmulatorProcessData(ptr->dataPtr->vs, &kVTNumericModeTranslation[inKeyOrASCII - VSUP], 1);
-			} 
-			if (VSKE/* Enter */ == inKeyOrASCII)
-			{
-				Session_SendData(ptr->selfRef, "\012", 1);
-			}
-		}
 		else
 		{
-			// VT SPECIFIC:
-			// keypad key in application mode (as opposed to numeric mode),
-			// or an arrow key or PF-key in either mode
-			char const		kVTApplicationModeTranslation[] =
-			{
-				// arrows, numbers, symbols, Enter, PF1-PF4
-				"ABCDpqrstuvwxylmnMPQRS"
-			};
-			char*		seqPtr = nullptr;
-			size_t		seqLength = 0;
+			TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
+			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
 			
 			
-			if (Terminal_KeypadHasMovementKeys(screen))
-			{
-				static char		seqAuxiliaryCode[] = "\033O ";
-				
-				
-				// auxiliary keypad mode
-				seqAuxiliaryCode[2] = kVTApplicationModeTranslation[inKeyOrASCII - VSUP];
-				seqPtr = seqAuxiliaryCode;
-				seqLength = sizeof(seqAuxiliaryCode);
-			}
-			else if (inKeyOrASCII < VSUP)
-			{
-				// construct key code sequences starting from VSF10 (see VTKeys.h);
-				// each sequence is defined starting with the template, below, and
-				// then substituting 1 or 2 characters into the sequence template;
-				// the order must exactly match what is in VTKeys.h, because of the
-				// subtraction used to derive the array index
-				static char			seqVT220Keys[] = "\033[  ~";
-				static char const	kArrayIndex2Translation[] = "222122?2?3?3?2?3?3123425161";
-				static char const	kArrayIndex3Translation[] = "134956?9?2?3?8?1?4~~~~0~8~7";
-				
-				
-				seqVT220Keys[2] = kArrayIndex2Translation[inKeyOrASCII - VSF10];
-				seqVT220Keys[3] = kArrayIndex3Translation[inKeyOrASCII - VSF10];
-				seqPtr = seqVT220Keys;
-				seqLength = sizeof(seqVT220Keys);
-				if ('~' == seqPtr[3]) --seqLength; // a few of the sequences are shorter
-			}
-			else
-			{
-				if (inKeyOrASCII < VSK0)
-				{
-					static char		seqArrowsNormal[] = "\033[ ";
-					
-					
-					if (Terminal_KeypadHasMovementKeys(screen))
-					{
-						seqArrowsNormal[1] = 'O';
-					}
-					else
-					{
-						seqArrowsNormal[1] = '[';
-					}
-					seqArrowsNormal[2] = kVTApplicationModeTranslation[inKeyOrASCII - VSUP];
-					seqPtr = seqArrowsNormal;
-					seqLength = sizeof(seqArrowsNormal);
-				}
-				else if (inKeyOrASCII < VSF1)
-				{
-					static char		seqKeypadNormal[] = "\033O ";
-					
-					
-					seqKeypadNormal[2] = kVTApplicationModeTranslation[inKeyOrASCII - VSUP];
-					seqPtr = seqKeypadNormal;
-					seqLength = sizeof(seqKeypadNormal);
-				}
-				else
-				{
-					static char		seqFunctionKeys[] = "\033O ";
-					
-					
-					seqFunctionKeys[2] = kVTApplicationModeTranslation[inKeyOrASCII - VSUP];
-					seqPtr = seqFunctionKeys;
-					seqLength = sizeof(seqFunctionKeys);
-				}
-			}
-			
-			Session_SendData(ptr->selfRef, seqPtr, seqLength);
-			if (0 != ptr->dataPtr->echo)
-			{
-				Terminal_EmulatorProcessData(ptr->dataPtr->vs, REINTERPRET_CAST(seqPtr, UInt8*), seqLength);
-			}
+			// allow the terminal to perform the appropriate action for the key,
+			// given its current mode (for instance, a VT100 might be in VT52
+			// mode, which would send different data than ANSI mode)
+			(Terminal_Result)Terminal_UserInputVTKey(screen, inKeyOrASCII, (0 != ptr->dataPtr->echo));
 		}
 	}
-	
 	return result;
 }// UserInputKey
 

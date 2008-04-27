@@ -1291,8 +1291,6 @@ control key sequences to the server.  Invoking this function
 to move the cursor ensures that remote applications see that
 the cursor has moved, and where it has moved to.
 
-UNIMPLEMENTED.
-
 (3.0)
 */
 void
@@ -1301,13 +1299,41 @@ TerminalView_MoveCursorWithArrowKeys	(TerminalViewRef	inView,
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
 	TerminalView_Cell		newColumnRow;
-	SInt16					deltaColumn = 0;
-	SInt16					deltaRow = 0;
+	SInt16					unusedDeltaColumn = 0;
+	SInt16					unusedDeltaRow = 0;
+	Boolean					moveOK = false;
 	
 	
-	(Boolean)findVirtualCellFromLocalPoint(viewPtr, inLocalMouse, newColumnRow, deltaColumn, deltaRow);
-	Console_WriteLine("warning, cursor key movement is not implemented");
-	// UNIMPLEMENTED!!!
+	// IMPORTANT: The deltas returned here refer to mouse locations that
+	// are outside the view, which are not needed.
+	if (findVirtualCellFromLocalPoint(viewPtr, inLocalMouse, newColumnRow, unusedDeltaColumn, unusedDeltaRow))
+	{
+		Terminal_Result		terminalResult = kTerminal_ResultOK;
+		UInt16				cursorX = 0;
+		UInt16				cursorY = 0;
+		
+		
+		// find the cursor position
+		terminalResult = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
+		if (kTerminal_ResultOK == terminalResult)
+		{
+			SInt16 const	kDeltaX = newColumnRow.first - STATIC_CAST(cursorX, SInt16);
+			SInt16 const	kDeltaY = newColumnRow.second - STATIC_CAST(cursorY, SInt16);
+			
+			
+			terminalResult = Terminal_UserInputOffsetCursor(viewPtr->screen.ref, kDeltaX, kDeltaY);
+			if (kTerminal_ResultOK == terminalResult)
+			{
+				// success!
+				moveOK = true;
+			}
+		}
+	}
+	
+	if (false == moveOK)
+	{
+		Sound_StandardAlert();
+	}
 }// MoveCursorWithArrowKeys
 
 
