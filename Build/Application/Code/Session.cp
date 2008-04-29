@@ -244,6 +244,8 @@ struct Session
 	ListenerModel_ListenerRef	windowValidationListener;	// responds after a window is created, and just before it dies
 	ListenerModel_ListenerRef	terminalWindowListener;		// responds when terminal window states change
 	ListenerModel_ListenerRef	preferencesListener;		// responds when certain preference values are initialized or changed
+	EventLoopTimerUPP			autoActivateDragTimerUPP;	// procedure that is called when a drag hovers over an inactive window
+	EventLoopTimerRef			autoActivateDragTimer;		// short timer
 	EventLoopTimerUPP			longLifeTimerUPP;			// procedure that is called when a session has been open 15 seconds
 	EventLoopTimerRef			longLifeTimer;				// 15-second timer
 	ConnectionDataPtr			dataPtr;					// data for this connection
@@ -306,6 +308,7 @@ typedef My_WatchAlertInfo*		My_WatchAlertInfoPtr;
 
 #pragma mark Internal Method Prototypes
 
+static pascal void			autoActivateWindow					(EventLoopTimerRef, void*);
 static void					changeNotifyForSession				(SessionPtr, Session_Change, void*);
 static void					changeStateAttributes				(SessionPtr, Session_StateAttributes,
 																	Session_StateAttributes);
@@ -693,6 +696,10 @@ Session_New		(Boolean	inIsReadOnly)
 										kEventDurationForever/* time between fires - this timer does not repeat */,
 										ptr->longLifeTimerUPP, ptr->selfRef/* user data */, &ptr->longLifeTimer);
 		
+		// prepare the timer for drags but install only as needed
+		ptr->autoActivateDragTimerUPP = NewEventLoopTimerUPP(autoActivateWindow);
+		ptr->autoActivateDragTimer = nullptr;
+		
 		// create a callback for preferences, then listen for certain preferences
 		// (this will also initialize the preferences cache values)
 		ptr->preferencesListener = ListenerModel_NewStandardListener(preferenceChanged, result/* context */);
@@ -741,6 +748,11 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeDataArrived, ptr->dataArrivalListener);
 			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeWindowValid, ptr->windowValidationListener);
 			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeWindowInvalid, ptr->windowValidationListener);
+			
+			if (nullptr != ptr->autoActivateDragTimer) RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
+			DisposeEventLoopTimerUPP(ptr->autoActivateDragTimerUPP), ptr->autoActivateDragTimerUPP = nullptr;
+			if (nullptr != ptr->longLifeTimer) RemoveEventLoopTimer(ptr->longLifeTimer), ptr->longLifeTimer = nullptr;
+			DisposeEventLoopTimerUPP(ptr->longLifeTimerUPP), ptr->longLifeTimerUPP = nullptr;
 			
 			if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
 			{
@@ -4343,6 +4355,28 @@ controlKey		()
 
 
 /*!
+Brings the session window to the front.  This is installed when
+a drag enters a background window, and is cancelled only if the
+drag leaves before the delay is up.  So the effect is that the
+window comes to the front after a short hover delay.
+
+Timers that draw must save and restore the current graphics port.
+
+(3.1)
+*/
+static pascal void
+autoActivateWindow	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
+					 void*					inSessionRef)
+{
+	SessionRef			ref = REINTERPRET_CAST(inSessionRef, SessionRef);
+	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	
+	
+	if (nullptr != ptr->terminalWindow) SelectWindow(TerminalWindow_ReturnWindow(ptr->terminalWindow));
+}// autoActivateWindow
+
+
+/*!
 Notifies all listeners for the specified Session
 state change, passing the given context to the
 listener.
@@ -5849,10 +5883,11 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 								 EventRef				inEvent,
 								 void*					inSessionRef)
 {
-	OSStatus		result = eventNotHandledErr;
-	SessionRef		session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	SessionRef			session = REINTERPRET_CAST(inSessionRef, SessionRef);
+	SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassControl);
@@ -5936,6 +5971,16 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 							// determine rules for accepting the drag
 							acceptDrag = ((haveText) || (haveSingleFile));
 							
+							// if the window is inactive, start a hover timer to auto-activate the window
+							if ((acceptDrag) && (false == IsWindowActive(TerminalWindow_ReturnWindow(ptr->terminalWindow))))
+							{
+								(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
+																kEventDurationSecond/* arbitrary */,
+																kEventDurationForever/* time between fires - this timer does not repeat */,
+																ptr->autoActivateDragTimerUPP, ptr->selfRef/* user data */,
+																&ptr->autoActivateDragTimer);
+							}
+							
 						#if 0
 							// if the drag can be accepted, remind the user where the cursor is
 							// (as any drop will be sent to that location, not the mouse location)
@@ -5961,12 +6006,20 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 				
 				case kEventControlDragLeave:
 					TerminalView_SetDragHighlight(view, dragRef, false/* is highlighted */);
+					if (nullptr != ptr->autoActivateDragTimer)
+					{
+						(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
+					}
 					result = noErr;
 					break;
 				
 				case kEventControlDragReceive:
 					// something was actually dropped
 					result = sessionDragDrop(inHandlerCallRef, inEvent, session, view, dragRef);
+					if (nullptr != ptr->autoActivateDragTimer)
+					{
+						(OSStatus)RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
+					}
 					break;
 				
 				default:

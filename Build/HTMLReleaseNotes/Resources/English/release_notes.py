@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080429',
     '20080426',
     '20080424',
     '20080422',
@@ -143,6 +144,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080429': [
+		'Dragging text into a background terminal window will now automatically bring the window to the front after a short delay.',
+	],
 	'20080426': [
 		'Fixed arrow key sequences in certain modes, noticeable in applications such as the "vim" text editor.',
 		'Fixed command-option-click to once again send arrow key sequences to move the cursor to the clicked location.',
