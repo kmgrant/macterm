@@ -89,6 +89,10 @@ toolbar items.
 */
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorGeneral				= CFSTR("com.mactelnet.prefpanels.general");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessions			= CFSTR("com.mactelnet.prefpanels.sessions");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionDataFlow		= CFSTR("com.mactelnet.prefpanels.sessions.dataflow");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionKeyboard		= CFSTR("com.mactelnet.prefpanels.sessions.keyboard");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionGraphics		= CFSTR("com.mactelnet.prefpanels.sessions.graphics");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorSessionResource		= CFSTR("com.mactelnet.prefpanels.sessions.resource");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorMacros				= CFSTR("com.mactelnet.prefpanels.macros");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminals			= CFSTR("com.mactelnet.prefpanels.terminals");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorTerminalsEmulation	= CFSTR("com.mactelnet.prefpanels.terminals.emulation");

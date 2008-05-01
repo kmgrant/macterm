@@ -71,6 +71,7 @@ extern "C"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "DNR.h"
+#include "GenericPanelTabs.h"
 #include "NetEvents.h"
 #include "Panel.h"
 #include "Preferences.h"
@@ -83,16 +84,6 @@ extern "C"
 
 #pragma mark Constants
 namespace {
-
-#define NUMBER_OF_SESSIONS_TABPANES		4
-enum
-{
-	// must match tab order at creation, and be one-based
-	kMy_TabIndexSessionHost				= 1,
-	kMy_TabIndexSessionDataFlow			= 2,
-	kMy_TabIndexSessionControlKeys		= 3,
-	kMy_TabIndexSessionVectorGraphics	= 4
-};
 
 /*!
 IMPORTANT
@@ -125,13 +116,114 @@ HIViewID const	idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
 namespace {
 
 /*!
+Implements the “Data Flow” tab.
+*/
+struct My_SessionsPanelDataFlowUI
+{
+	My_SessionsPanelDataFlowUI	(Panel_Ref, HIWindowRef);
+	
+	Panel_Ref		panel;			//!< the panel using this UI
+	Float32			idealWidth;		//!< best size in pixels
+	Float32			idealHeight;	//!< best size in pixels
+	HIViewWrap		mainView;
+	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
+	void
+	readPreferences		(Preferences_ContextRef);
+
+protected:
+	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef);
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;
+};
+
+/*!
+Implements the “Vector Graphics” tab.
+*/
+struct My_SessionsPanelGraphicsUI
+{
+	My_SessionsPanelGraphicsUI	(Panel_Ref, HIWindowRef);
+	
+	Panel_Ref		panel;			//!< the panel using this UI
+	Float32			idealWidth;		//!< best size in pixels
+	Float32			idealHeight;	//!< best size in pixels
+	HIViewWrap		mainView;
+	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
+	void
+	readPreferences		(Preferences_ContextRef);
+
+protected:
+	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef);
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;
+};
+
+/*!
+Implements the “Keyboard” tab.
+*/
+struct My_SessionsPanelKeyboardUI
+{
+	My_SessionsPanelKeyboardUI	(Panel_Ref, HIWindowRef);
+	
+	Panel_Ref		panel;			//!< the panel using this UI
+	Float32			idealWidth;		//!< best size in pixels
+	Float32			idealHeight;	//!< best size in pixels
+	HIViewWrap		mainView;
+	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
+	void
+	readPreferences		(Preferences_ContextRef);
+
+protected:
+	HIViewWrap
+	createContainerView		(Panel_Ref, HIWindowRef);
+	
+	static void
+	deltaSize	(HIViewRef, Float32, Float32, void*);
+
+private:
+	CommonEventHandlers_HIViewResizer	_containerResizer;
+};
+
+/*!
 Implements the “Resource” tab.
 */
-struct My_SessionsTabResource:
-public HIViewWrap
+struct My_SessionsPanelResourceUI
 {
-	My_SessionsTabResource	(HIWindowRef);
-	~My_SessionsTabResource	();
+	My_SessionsPanelResourceUI	(Panel_Ref, HIWindowRef);
+	My_SessionsPanelResourceUI	();
+	
+	Panel_Ref			panel;				//!< the panel using this UI
+	Float32				idealWidth;			//!< best size in pixels
+	Float32				idealHeight;		//!< best size in pixels
+	HIViewWrap			mainView;
+	Session_Protocol	selectedProtocol;	//!< indicates the protocol new remote sessions should use
+	
+	Boolean
+	lookupHostName ();
+	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
+	void
+	readPreferences		(Preferences_ContextRef);
 	
 	void
 	rebuildTerminalMenu ();
@@ -144,169 +236,99 @@ public HIViewWrap
 	
 	void
 	updatePortNumberField ();
-	
-	Session_Protocol		selectedProtocol;	//!< indicates the protocol new remote sessions should use
-	HIViewWrap				fieldHostName;		//!< the name, IP address or other identifier for the remote host
-	HIViewWrap				fieldPortNumber;	//!< the port number on which to attempt a connection on the host
-	HIViewWrap				fieldUserID;		//!< the (usually 8-character) login name to use for the server
-	HIViewWrap				fieldCommandLine;	//!< text of Unix command line to run
 
 protected:
 	HIViewWrap
-	createPaneView		(HIWindowRef) const;
+	createContainerView		(Panel_Ref, HIWindowRef);
 	
 	static void
 	deltaSize	(HIViewRef, Float32, Float32, void*);
-	
-	//! you should prefer setCFTypeRef(), which is clearer
-	inline CFRetainRelease&
-	operator =	(CFRetainRelease const&);
 
 private:
-	CommonEventHandlers_HIViewResizer	containerResizer;
-	CarbonEventHandlerWrap				buttonCommandsHandler;			//!< invoked when a button is clicked
-	CarbonEventHandlerWrap				whenHostNameChangedHandler;		//!< invoked when the host name field changes
-	CarbonEventHandlerWrap				whenPortNumberChangedHandler;	//!< invoked when the port number field changes
-	CarbonEventHandlerWrap				whenUserIDChangedHandler;		//!< invoked when the user ID field changes
-	CarbonEventHandlerWrap				whenLookupCompleteHandler;		//!< invoked when a DNS query finally returns
-	ListenerModel_ListenerRef			whenFavoritesChangedHandler;	//!< used to manage Terminal pop-up menu
-	MenuItemIndex						numberOfTerminalItemsAdded;		//!< used to manage Terminal pop-up menu
+	HIViewWrap							_fieldHostName;					//!< the name, IP address or other identifier for the remote host
+	HIViewWrap							_fieldPortNumber;				//!< the port number on which to attempt a connection on the host
+	HIViewWrap							_fieldUserID;					//!< the (usually 8-character) login name to use for the server
+	HIViewWrap							_fieldCommandLine;				//!< text of Unix command line to run
+	CommonEventHandlers_HIViewResizer	_containerResizer;
+	CarbonEventHandlerWrap				_buttonCommandsHandler;			//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				_whenHostNameChangedHandler;	//!< invoked when the host name field changes
+	CarbonEventHandlerWrap				_whenPortNumberChangedHandler;	//!< invoked when the port number field changes
+	CarbonEventHandlerWrap				_whenUserIDChangedHandler;		//!< invoked when the user ID field changes
+	CarbonEventHandlerWrap				_whenLookupCompleteHandler;		//!< invoked when a DNS query finally returns
+	ListenerModel_ListenerRef			_whenFavoritesChangedHandler;	//!< used to manage Terminal pop-up menu
+	MenuItemIndex						_numberOfTerminalItemsAdded;	//!< used to manage Terminal pop-up menu
 };
-
-/*!
-Implements the “Data Flow” tab.
-*/
-struct My_SessionsTabDataFlow:
-public HIViewWrap
-{
-	My_SessionsTabDataFlow	(HIWindowRef);
-
-protected:
-	HIViewWrap
-	createPaneView		(HIWindowRef) const;
-	
-	static void
-	deltaSize	(HIViewRef, Float32, Float32, void*);
-	
-	//! you should prefer setCFTypeRef(), which is clearer
-	inline CFRetainRelease&
-	operator =	(CFRetainRelease const&);
-
-private:
-	CommonEventHandlers_HIViewResizer	containerResizer;
-};
-
-/*!
-Implements the “Control Keys” tab.
-*/
-struct My_SessionsTabControlKeys:
-public HIViewWrap
-{
-	My_SessionsTabControlKeys	(HIWindowRef);
-
-protected:
-	HIViewWrap
-	createPaneView		(HIWindowRef) const;
-	
-	static void
-	deltaSize	(HIViewRef, Float32, Float32, void*);
-	
-	//! you should prefer setCFTypeRef(), which is clearer
-	inline CFRetainRelease&
-	operator =	(CFRetainRelease const&);
-
-private:
-	CommonEventHandlers_HIViewResizer	containerResizer;
-};
-
-/*!
-Implements the “TEK” tab.
-*/
-struct My_SessionsTabVectorGraphics:
-public HIViewWrap
-{
-	My_SessionsTabVectorGraphics	(HIWindowRef);
-
-protected:
-	HIViewWrap
-	createPaneView		(HIWindowRef) const;
-	
-	static void
-	deltaSize	(HIViewRef, Float32, Float32, void*);
-	
-	//! you should prefer setCFTypeRef(), which is clearer
-	inline CFRetainRelease&
-	operator =	(CFRetainRelease const&);
-
-private:
-	CommonEventHandlers_HIViewResizer	containerResizer;
-};
-
-/*!
-Implements the entire panel user interface.
-*/
-struct My_SessionsPanelUI
-{
-	My_SessionsPanelUI	(Panel_Ref, HIWindowRef);
-	
-	My_SessionsTabResource				resourceTab;
-	My_SessionsTabDataFlow				dataFlowTab;
-	My_SessionsTabControlKeys			controlKeysTab;
-	My_SessionsTabVectorGraphics		vectorGraphicsTab;
-	HIViewWrap							tabView;
-	HIViewWrap							mainView;
-	CommonEventHandlers_HIViewResizer	containerResizer;	//!< invoked when the panel is resized
-	CarbonEventHandlerWrap				viewClickHandler;	//!< invoked when a tab is clicked
-	
-protected:
-	HIViewWrap
-	createContainerView		(Panel_Ref, HIWindowRef) const;
-	
-	HIViewWrap
-	createTabsView	(HIWindowRef) const;
-};
-typedef My_SessionsPanelUI*			My_SessionsPanelUIPtr;
-typedef My_SessionsPanelUI const*	My_SessionsPanelUIConstPtr;
 
 /*!
 Contains the panel reference and its user interface
 (once the UI is constructed).
 */
-struct My_SessionsPanelData
+struct My_SessionsPanelDataFlowData
 {
-	My_SessionsPanelData ();
+	My_SessionsPanelDataFlowData	();
+	~My_SessionsPanelDataFlowData	();
 	
-	Panel_Ref				panel;			//!< the panel this data is for
-	My_SessionsPanelUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Panel_Ref						panel;			//!< the panel this data is for
+	My_SessionsPanelDataFlowUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
 };
-typedef My_SessionsPanelData*	My_SessionsPanelDataPtr;
+typedef My_SessionsPanelDataFlowData*		My_SessionsPanelDataFlowDataPtr;
+
+/*!
+Contains the panel reference and its user interface
+(once the UI is constructed).
+*/
+struct My_SessionsPanelGraphicsData
+{
+	My_SessionsPanelGraphicsData	();
+	~My_SessionsPanelGraphicsData	();
+	
+	Panel_Ref						panel;			//!< the panel this data is for
+	My_SessionsPanelGraphicsUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
+};
+typedef My_SessionsPanelGraphicsData*		My_SessionsPanelGraphicsDataPtr;
+
+/*!
+Contains the panel reference and its user interface
+(once the UI is constructed).
+*/
+struct My_SessionsPanelKeyboardData
+{
+	My_SessionsPanelKeyboardData	();
+	~My_SessionsPanelKeyboardData	();
+	
+	Panel_Ref						panel;			//!< the panel this data is for
+	My_SessionsPanelKeyboardUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
+};
+typedef My_SessionsPanelKeyboardData*		My_SessionsPanelKeyboardDataPtr;
+
+/*!
+Contains the panel reference and its user interface
+(once the UI is constructed).
+*/
+struct My_SessionsPanelResourceData
+{
+	My_SessionsPanelResourceData	();
+	~My_SessionsPanelResourceData	();
+	
+	Panel_Ref						panel;			//!< the panel this data is for
+	My_SessionsPanelResourceUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
+};
+typedef My_SessionsPanelResourceData*		My_SessionsPanelResourceDataPtr;
 
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				deltaSizePanelContainerHIView			(HIViewRef, Float32, Float32, void*);
-void				disposePanel							(Panel_Ref, void*);
-Boolean				lookupHostName							(My_SessionsTabResource&);
 void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
-SInt32				panelChanged							(Panel_Ref, Panel_Message, void*);
 void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal OSStatus		receiveFieldChanged						(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHICommand						(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveLookupComplete					(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveViewHit							(EventHandlerCallRef, EventRef, void*);
-void				showTabPane								(My_SessionsPanelUIPtr, UInt16);
-
-} // anonymous namespace
-
-#pragma mark Variables
-namespace {
-
-Float32		gIdealPanelWidth = 0.0;
-Float32		gIdealPanelHeight = 0.0;
-Float32		gMaximumTabPaneWidth = 0.0;
-Float32		gMaximumTabPaneHeight = 0.0;
 
 } // anonymous namespace
 
@@ -315,10 +337,8 @@ Float32		gMaximumTabPaneHeight = 0.0;
 #pragma mark Public Methods
 
 /*!
-Creates a new preference panel for the Sessions
-category, initializes it, and returns a reference
-to it.  You must destroy the reference using
-Panel_Dispose() when you are done with it.
+Creates a new preference panel for the Sessions category.
+Destroy it using Panel_Dispose().
 
 If any problems occur, nullptr is returned.
 
@@ -327,22 +347,65 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelSessions_New ()
 {
-	Panel_Ref	result = Panel_New(panelChanged);
+	Panel_Ref				result = nullptr;
+	CFStringRef				nameCFString = nullptr;
+	GenericPanelTabs_List	tabList;
+	
+	
+	tabList.push_back(PrefPanelSessions_NewResourcePane());
+	tabList.push_back(PrefPanelSessions_NewDataFlowPane());
+	tabList.push_back(PrefPanelSessions_NewKeyboardPane());
+	tabList.push_back(PrefPanelSessions_NewGraphicsPane());
+	
+	if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsCategoryName, nameCFString).ok())
+	{
+		result = GenericPanelTabs_New(nameCFString, kConstantsRegistry_PrefPanelDescriptorSessions, tabList);
+		if (nullptr != result)
+		{
+			Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessions);
+			Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelSessionsIconFilenameNoExtension(),
+											AppResources_ReturnCreatorCode(),
+											kConstantsRegistry_IconServicesIconPrefPanelSessions);
+		}
+		CFRelease(nameCFString), nameCFString = nullptr;
+	}
+	
+	return result;
+}// New
+
+
+/*!
+Creates only the Data Flow pane, which allows the user to
+set things like cache sizes.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelSessions_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelSessions_NewDataFlowPane ()
+{
+	Panel_Ref	result = Panel_New(My_SessionsPanelDataFlowUI::panelChanged);
 	
 	
 	if (nullptr != result)
 	{
-		My_SessionsPanelDataPtr		dataPtr = new My_SessionsPanelData();
-		CFStringRef					nameCFString = nullptr;
+		My_SessionsPanelDataFlowDataPtr		dataPtr = new My_SessionsPanelDataFlowData();
+		CFStringRef							nameCFString = nullptr;
 		
 		
-		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessions);
-		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessions);
-		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsCategoryName, nameCFString).ok())
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionDataFlow);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsDataFlow);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsDataFlowTabName, nameCFString).ok())
 		{
 			Panel_SetName(result, nameCFString);
 			CFRelease(nameCFString), nameCFString = nullptr;
 		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
 		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelSessionsIconFilenameNoExtension(),
 										AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_IconServicesIconPrefPanelSessions);
@@ -350,285 +413,186 @@ PrefPanelSessions_New ()
 		dataPtr->panel = result;
 	}
 	return result;
-}// New
+}// NewDataFlowPane
+
+
+/*!
+Creates only the Data Flow pane, which allows the user to
+set things like cache sizes.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelSessions_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelSessions_NewGraphicsPane ()
+{
+	Panel_Ref	result = Panel_New(My_SessionsPanelGraphicsUI::panelChanged);
+	
+	
+	if (nullptr != result)
+	{
+		My_SessionsPanelGraphicsDataPtr		dataPtr = new My_SessionsPanelGraphicsData();
+		CFStringRef							nameCFString = nullptr;
+		
+		
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionGraphics);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsGraphics);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsGraphicsTabName, nameCFString).ok())
+		{
+			Panel_SetName(result, nameCFString);
+			CFRelease(nameCFString), nameCFString = nullptr;
+		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
+		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelSessionsIconFilenameNoExtension(),
+										AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_IconServicesIconPrefPanelSessions);
+		Panel_SetImplementation(result, dataPtr);
+		dataPtr->panel = result;
+	}
+	return result;
+}// NewGraphicsPane
+
+
+/*!
+Creates only the Data Flow pane, which allows the user to
+set things like cache sizes.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelSessions_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelSessions_NewKeyboardPane ()
+{
+	Panel_Ref	result = Panel_New(My_SessionsPanelKeyboardUI::panelChanged);
+	
+	
+	if (nullptr != result)
+	{
+		My_SessionsPanelKeyboardDataPtr		dataPtr = new My_SessionsPanelKeyboardData();
+		CFStringRef							nameCFString = nullptr;
+		
+		
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionKeyboard);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsKeyboard);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsKeyboardTabName, nameCFString).ok())
+		{
+			Panel_SetName(result, nameCFString);
+			CFRelease(nameCFString), nameCFString = nullptr;
+		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
+		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelSessionsIconFilenameNoExtension(),
+										AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_IconServicesIconPrefPanelSessions);
+		Panel_SetImplementation(result, dataPtr);
+		dataPtr->panel = result;
+	}
+	return result;
+}// NewKeyboardPane
+
+
+/*!
+Creates only the Data Flow pane, which allows the user to
+set things like cache sizes.  Destroy it using Panel_Dispose().
+
+You only use this routine if you need to display the pane
+alone, outside its usual tabbed interface.  To create the
+complete, multi-pane interface, use PrefPanelSessions_New().
+
+If any problems occur, nullptr is returned.
+
+(3.1)
+*/
+Panel_Ref
+PrefPanelSessions_NewResourcePane ()
+{
+	Panel_Ref	result = Panel_New(My_SessionsPanelResourceUI::panelChanged);
+	
+	
+	if (nullptr != result)
+	{
+		My_SessionsPanelResourceDataPtr		dataPtr = new My_SessionsPanelResourceData();
+		CFStringRef							nameCFString = nullptr;
+		
+		
+		Panel_SetKind(result, kConstantsRegistry_PrefPanelDescriptorSessionResource);
+		Panel_SetShowCommandID(result, kCommandDisplayPrefPanelSessionsResource);
+		if (UIStrings_Copy(kUIStrings_PreferencesWindowSessionsResourceTabName, nameCFString).ok())
+		{
+			Panel_SetName(result, nameCFString);
+			CFRelease(nameCFString), nameCFString = nullptr;
+		}
+		// NOTE: This panel is currently not used in interfaces that rely on icons, so its icon is not unique.
+		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelSessionsIconFilenameNoExtension(),
+										AppResources_ReturnCreatorCode(),
+										kConstantsRegistry_IconServicesIconPrefPanelSessions);
+		Panel_SetImplementation(result, dataPtr);
+		dataPtr->panel = result;
+	}
+	return result;
+}// NewResourcePane
 
 
 #pragma mark Internal Methods
 namespace {
 
 /*!
-Initializes a My_SessionsPanelData structure.
+Initializes a My_SessionsPanelDataFlowData structure.
 
 (3.1)
 */
-My_SessionsPanelData::
-My_SessionsPanelData ()
+My_SessionsPanelDataFlowData::
+My_SessionsPanelDataFlowData ()
 :
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 panel(nullptr),
-interfacePtr(nullptr)
+interfacePtr(nullptr),
+dataModel(nullptr)
 {
-}// My_SessionsPanelData default constructor
+}// My_SessionsPanelDataFlowData default constructor
 
 
 /*!
-Initializes a My_SessionsPanelUI structure.
+Tears down a My_SessionsPanelDataFlowData structure.
 
 (3.1)
 */
-My_SessionsPanelUI::
-My_SessionsPanelUI	(Panel_Ref		inPanel,
-					 HIWindowRef	inOwningWindow)
+My_SessionsPanelDataFlowData::
+~My_SessionsPanelDataFlowData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_SessionsPanelDataFlowData destructor
+
+
+/*!
+Initializes a My_SessionsPanelDataFlowUI structure.
+
+(3.1)
+*/
+My_SessionsPanelDataFlowUI::
+My_SessionsPanelDataFlowUI	(Panel_Ref		inPanel,
+							 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-resourceTab			(inOwningWindow),
-dataFlowTab			(inOwningWindow),
-controlKeysTab		(inOwningWindow),
-vectorGraphicsTab	(inOwningWindow),
-tabView				(createTabsView(inOwningWindow)
-						<< HIViewWrap_AssertExists),
-mainView			(createContainerView(inPanel, inOwningWindow)
-						<< HIViewWrap_AssertExists),
-containerResizer	(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
-								kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-						deltaSizePanelContainerHIView, this/* context */),
-viewClickHandler	(GetControlEventTarget(this->tabView), receiveViewHit,
-						CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlHit),
-						this/* user data */)
+panel					(inPanel),
+idealWidth				(0.0),
+idealHeight				(0.0),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_SessionsPanelDataFlowUI::deltaSize, this/* context */)
 {
-	assert(containerResizer.isInstalled());
-	assert(viewClickHandler.isInstalled());
-}// My_SessionsPanelUI 2-argument constructor
-
-
-/*!
-Constructs the container for the panel.  Assumes that
-the tabs view already exists.
-
-(3.1)
-*/
-HIViewWrap
-My_SessionsPanelUI::
-createContainerView		(Panel_Ref		inPanel,
-						 HIWindowRef	inOwningWindow)
-const
-{
-	assert(this->tabView.exists());
-	assert(0 != gMaximumTabPaneWidth);
-	assert(0 != gMaximumTabPaneHeight);
-	
-	HIViewRef	result = nullptr;
-	OSStatus	error = noErr;
-	
-	
-	// create the container
-	{
-		Rect	containerBounds;
-		
-		
-		SetRect(&containerBounds, 0, 0, 0, 0);
-		error = CreateUserPaneControl(inOwningWindow, &containerBounds, kControlSupportsEmbedding, &result);
-		assert_noerr(error);
-		Panel_SetContainerView(inPanel, result);
-		SetControlVisibility(result, false/* visible */, false/* draw */);
-	}
-	
-	// calculate the ideal size
-	{
-		Point		tabFrameTopLeft;
-		Point		tabFrameWidthHeight;
-		Point		tabPaneTopLeft;
-		Point		tabPaneBottomRight;
-		
-		
-		// calculate initial frame and pane offsets (ignore width/height)
-		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
-		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
-		
-		gIdealPanelWidth = tabFrameTopLeft.h + tabPaneTopLeft.h + gMaximumTabPaneWidth +
-							tabPaneBottomRight.h + tabFrameTopLeft.h/* right is same as left */;
-		gIdealPanelHeight = tabFrameTopLeft.v + tabPaneTopLeft.v + gMaximumTabPaneHeight +
-							tabPaneBottomRight.v + tabFrameTopLeft.v/* bottom is same as top */;
-		
-		// make the container big enough for the tabs
-		{
-			HIRect		containerFrame = CGRectMake(0, 0, gIdealPanelWidth, gIdealPanelHeight);
-			
-			
-			error = HIViewSetFrame(result, &containerFrame);
-			assert_noerr(error);
-		}
-		
-		// recalculate the frame, this time the width and height will be correct
-		Panel_CalculateTabFrame(result, &tabFrameTopLeft, &tabFrameWidthHeight);
-		
-		// make the tabs match the ideal frame, because the size
-		// and position of NIB views is used to size subviews
-		// and subview resizing deltas are derived directly from
-		// changes to the container view size
-		{
-			HIRect		containerFrame = CGRectMake(tabFrameTopLeft.h, tabFrameTopLeft.v,
-													tabFrameWidthHeight.h, tabFrameWidthHeight.v);
-			
-			
-			error = HIViewSetFrame(this->tabView, &containerFrame);
-			assert_noerr(error);
-		}
-	}
-	
-	// embed the tabs in the content pane; done at this stage
-	// (after positioning the tabs) just in case the origin
-	// of the container is not (0, 0); this prevents the tabs
-	// from having to know where they will end up in the window
-	error = HIViewAddSubview(result, this->tabView);
-	assert_noerr(error);
-	
-	return result;
-}// My_SessionsPanelUI::createContainerView
-
-
-/*!
-Constructs the tab container for the panel.
-
-(3.1)
-*/
-HIViewWrap
-My_SessionsPanelUI::
-createTabsView	(HIWindowRef	inOwningWindow)
-const
-{
-	assert(this->resourceTab.exists());
-	assert(this->dataFlowTab.exists());
-	assert(this->controlKeysTab.exists());
-	assert(this->vectorGraphicsTab.exists());
-	
-	HIViewRef			result = nullptr;
-	Rect				containerBounds;
-	ControlTabEntry		tabInfo[NUMBER_OF_SESSIONS_TABPANES];
-	UIStrings_Result	stringResult = kUIStrings_ResultOK;
-	OSStatus			error = noErr;
-	
-	
-	// nullify or zero-fill everything, then set only what matters
-	bzero(&tabInfo, sizeof(tabInfo));
-	tabInfo[0].enabled =
-		tabInfo[1].enabled =
-		tabInfo[2].enabled =
-		tabInfo[3].enabled = true;
-	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowSessionsHostTabName,
-									tabInfo[kMy_TabIndexSessionHost - 1].name);
-	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowSessionsDataFlowTabName,
-									tabInfo[kMy_TabIndexSessionDataFlow - 1].name);
-	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowSessionsControlKeysTabName,
-									tabInfo[kMy_TabIndexSessionControlKeys - 1].name);
-	stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowSessionsVectorGraphicsTabName,
-									tabInfo[kMy_TabIndexSessionVectorGraphics - 1].name);
-	SetRect(&containerBounds, 0, 0, 0, 0);
-	error = CreateTabsControl(inOwningWindow, &containerBounds, kControlTabSizeLarge, kControlTabDirectionNorth,
-								sizeof(tabInfo) / sizeof(ControlTabEntry)/* number of tabs */, tabInfo,
-								&result);
-	assert_noerr(error);
-	for (size_t i = 0; i < sizeof(tabInfo) / sizeof(ControlTabEntry); ++i)
-	{
-		if (nullptr != tabInfo[i].name) CFRelease(tabInfo[i].name), tabInfo[i].name = nullptr;
-	}
-	
-	// calculate the largest area required for all tabs, and keep this as the ideal size
-	{
-		Rect		resourceTabSize;
-		Rect		dataFlowTabSize;
-		Rect		controlKeysTabSize;
-		Rect		vectorGraphicsTabSize;
-		Point		tabPaneTopLeft;
-		Point		tabPaneBottomRight;
-		
-		
-		// determine sizes of tabs from NIBs
-		GetControlBounds(this->resourceTab, &resourceTabSize);
-		GetControlBounds(this->dataFlowTab, &dataFlowTabSize);
-		GetControlBounds(this->controlKeysTab, &controlKeysTabSize);
-		GetControlBounds(this->vectorGraphicsTab, &vectorGraphicsTabSize);
-		
-		// also include pane margin in panel size
-		Panel_GetTabPaneInsets(&tabPaneTopLeft, &tabPaneBottomRight);
-		
-		// find the widest tab and the highest tab
-		gMaximumTabPaneWidth = std::max(resourceTabSize.right - resourceTabSize.left,
-										dataFlowTabSize.right - dataFlowTabSize.left);
-		gMaximumTabPaneWidth = std::max(controlKeysTabSize.right - controlKeysTabSize.left,
-										STATIC_CAST(gMaximumTabPaneWidth, int));
-		gMaximumTabPaneWidth = std::max(vectorGraphicsTabSize.right - vectorGraphicsTabSize.left,
-										STATIC_CAST(gMaximumTabPaneWidth, int));
-		gMaximumTabPaneHeight = std::max(resourceTabSize.bottom - resourceTabSize.top,
-											dataFlowTabSize.bottom - dataFlowTabSize.top);
-		gMaximumTabPaneHeight = std::max(controlKeysTabSize.bottom - controlKeysTabSize.top,
-											STATIC_CAST(gMaximumTabPaneHeight, int));
-		gMaximumTabPaneHeight = std::max(vectorGraphicsTabSize.bottom - vectorGraphicsTabSize.top,
-											STATIC_CAST(gMaximumTabPaneHeight, int));
-		
-		// make every tab pane match the ideal pane size
-		{
-			HIRect		containerFrame = CGRectMake(tabPaneTopLeft.h, tabPaneTopLeft.v,
-													gMaximumTabPaneWidth, gMaximumTabPaneHeight);
-			
-			
-			error = HIViewSetFrame(this->resourceTab, &containerFrame);
-			assert_noerr(error);
-			error = HIViewSetFrame(this->dataFlowTab, &containerFrame);
-			assert_noerr(error);
-			error = HIViewSetFrame(this->controlKeysTab, &containerFrame);
-			assert_noerr(error);
-			error = HIViewSetFrame(this->vectorGraphicsTab, &containerFrame);
-			assert_noerr(error);
-		}
-		
-		// make the tabs big enough for any of the panes
-		{
-			HIRect		containerFrame = CGRectMake(0, 0,
-													tabPaneTopLeft.h + gMaximumTabPaneWidth + tabPaneBottomRight.h,
-													tabPaneTopLeft.v + gMaximumTabPaneHeight + tabPaneBottomRight.v);
-			
-			
-			error = HIViewSetFrame(result, &containerFrame);
-			assert_noerr(error);
-		}
-		
-		// embed every tab pane in the tabs view; done at this stage
-		// so that the subsequent move of the tab frame (later) will
-		// also offset the embedded panes; if embedding is done too
-		// soon, then the panes have to know too much about where
-		// they will physically reside within the window content area
-		error = HIViewAddSubview(result, this->resourceTab);
-		assert_noerr(error);
-		error = HIViewAddSubview(result, this->dataFlowTab);
-		assert_noerr(error);
-		error = HIViewAddSubview(result, this->controlKeysTab);
-		assert_noerr(error);
-		error = HIViewAddSubview(result, this->vectorGraphicsTab);
-		assert_noerr(error);
-	}
-	
-	return result;
-}// My_SessionsPanelUI::createTabsView
-
-
-/*!
-Initializes a My_SessionsTabControlKeys structure.
-
-(3.1)
-*/
-My_SessionsTabControlKeys::
-My_SessionsTabControlKeys	(HIWindowRef	inOwningWindow)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-HIViewWrap			(createPaneView(inOwningWindow)
-						<< HIViewWrap_AssertExists),
-containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-						My_SessionsTabControlKeys::deltaSize, this/* context */)
-{
-	assert(exists());
-	assert(containerResizer.isInstalled());
-}// My_SessionsTabControlKeys 1-argument constructor
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
+}// My_SessionsPanelDataFlowUI 2-argument constructor
 
 
 /*!
@@ -638,9 +602,9 @@ the sub-views that belong in its hierarchy.
 (3.1)
 */
 HIViewWrap
-My_SessionsTabControlKeys::
-createPaneView		(HIWindowRef	inOwningWindow)
-const
+My_SessionsPanelDataFlowUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
 {
 	HIViewRef					result = nullptr;
 	std::vector< HIViewRef >	viewList;
@@ -653,12 +617,529 @@ const
 	SetRect(&dummy, 0, 0, 0, 0);
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
+	
+	// create most HIViews for the tab based on the NIB
+	error = DialogUtilities_CreateControlsBasedOnWindowNIB
+			(CFSTR("PrefPanelSessions"), CFSTR("DataFlow"), inOwningWindow,
+					result/* parent */, viewList, idealContainerBounds);
+	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
+	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
+	return result;
+}// My_SessionsPanelDataFlowUI::createContainerView
+
+
+/*!
+Resizes the views in this tab.
+
+(3.1)
+*/
+void
+My_SessionsPanelDataFlowUI::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		inDeltaX,
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	//My_SessionsTabDataFlow*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsTabDataFlow*);
+	HIViewWrap				viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyStaticTextCaptureFilePath, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	// INCOMPLETE
+}// My_SessionsPanelDataFlowUI::deltaSize
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_SessionsPanelDataFlowUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorSessionDataFlow, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelDataFlowDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_SessionsPanelDataFlowUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_SessionsPanelDataFlowDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelDataFlowDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelDataFlowDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_SessionsPanelDataFlowUI::panelChanged
+
+
+/*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_SessionsPanelDataFlowUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_SessionsPanelDataFlowUI::readPreferences
+
+
+/*!
+Initializes a My_SessionsPanelGraphicsData structure.
+
+(3.1)
+*/
+My_SessionsPanelGraphicsData::
+My_SessionsPanelGraphicsData ()
+:
+panel(nullptr),
+interfacePtr(nullptr),
+dataModel(nullptr)
+{
+}// My_SessionsPanelGraphicsData default constructor
+
+
+/*!
+Tears down a My_SessionsPanelGraphicsData structure.
+
+(3.1)
+*/
+My_SessionsPanelGraphicsData::
+~My_SessionsPanelGraphicsData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_SessionsPanelGraphicsData destructor
+
+
+/*!
+Initializes a My_SessionsPanelGraphicsUI structure.
+
+(3.1)
+*/
+My_SessionsPanelGraphicsUI::
+My_SessionsPanelGraphicsUI	(Panel_Ref		inPanel,
+							 HIWindowRef	inOwningWindow)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel					(inPanel),
+idealWidth				(0.0),
+idealHeight				(0.0),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_SessionsPanelGraphicsUI::deltaSize, this/* context */)
+{
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
+}// My_SessionsPanelGraphicsUI 2-argument constructor
+
+
+/*!
+Constructs the HIView that resides within the tab, and
+the sub-views that belong in its hierarchy.
+
+(3.1)
+*/
+HIViewWrap
+My_SessionsPanelGraphicsUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+{
+	HIViewRef					result = nullptr;
+	std::vector< HIViewRef >	viewList;
+	Rect						dummy;
+	Rect						idealContainerBounds;
+	OSStatus					error = noErr;
+	
+	
+	// create the tab pane
+	SetRect(&dummy, 0, 0, 0, 0);
+	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
+	assert_noerr(error);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
+	
+	// create most HIViews for the tab based on the NIB
+	error = DialogUtilities_CreateControlsBasedOnWindowNIB
+			(CFSTR("PrefPanelSessions"), CFSTR("TEK"), inOwningWindow,
+					result/* parent */, viewList, idealContainerBounds);
+	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
+	
+	// make the container match the ideal size, because the tabs view
+	// will need this guideline when deciding its largest size
+	{
+		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
+												idealContainerBounds.bottom - idealContainerBounds.top);
+		
+		
+		error = HIViewSetFrame(result, &containerFrame);
+		assert_noerr(error);
+	}
+	
+	// initialize values
+	// UNIMPLEMENTED
+	
+	return result;
+}// My_SessionsPanelGraphicsUI::createContainerView
+
+
+/*!
+Resizes the views in this panel.
+
+(3.1)
+*/
+void
+My_SessionsPanelGraphicsUI::
+deltaSize	(HIViewRef		inContainer,
+			 Float32		UNUSED_ARGUMENT(inDeltaX),
+			 Float32		UNUSED_ARGUMENT(inDeltaY),
+			 void*			UNUSED_ARGUMENT(inContext))
+{
+	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	//My_SessionsPanelGraphicsUI*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsPanelGraphicsUI*);
+	
+	
+	// UNIMPLEMENTED
+}// My_SessionsPanelGraphicsUI::deltaSize
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_SessionsPanelGraphicsUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorSessionGraphics, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_SessionsPanelGraphicsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelGraphicsDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_SessionsPanelGraphicsUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_SessionsPanelGraphicsDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_SessionsPanelGraphicsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelGraphicsDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_SessionsPanelGraphicsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelGraphicsDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_SessionsPanelGraphicsUI::panelChanged
+
+
+/*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_SessionsPanelGraphicsUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_SessionsPanelGraphicsUI::readPreferences
+
+
+/*!
+Initializes a My_SessionsPanelKeyboardData structure.
+
+(3.1)
+*/
+My_SessionsPanelKeyboardData::
+My_SessionsPanelKeyboardData ()
+:
+panel(nullptr),
+interfacePtr(nullptr),
+dataModel(nullptr)
+{
+}// My_SessionsPanelKeyboardData default constructor
+
+
+/*!
+Tears down a My_SessionsPanelKeyboardData structure.
+
+(3.1)
+*/
+My_SessionsPanelKeyboardData::
+~My_SessionsPanelKeyboardData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_SessionsPanelKeyboardData destructor
+
+
+/*!
+Initializes a My_SessionsPanelKeyboardUI structure.
+
+(3.1)
+*/
+My_SessionsPanelKeyboardUI::
+My_SessionsPanelKeyboardUI	(Panel_Ref		inPanel,
+							 HIWindowRef	inOwningWindow)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel					(inPanel),
+idealWidth				(0.0),
+idealHeight				(0.0),
+mainView				(createContainerView(inPanel, inOwningWindow)
+							<< HIViewWrap_AssertExists),
+_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+							My_SessionsPanelKeyboardUI::deltaSize, this/* context */)
+{
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
+}// My_SessionsPanelKeyboardUI 2-argument constructor
+
+
+/*!
+Constructs the HIView that resides within the tab, and
+the sub-views that belong in its hierarchy.
+
+(3.1)
+*/
+HIViewWrap
+My_SessionsPanelKeyboardUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
+{
+	HIViewRef					result = nullptr;
+	std::vector< HIViewRef >	viewList;
+	Rect						dummy;
+	Rect						idealContainerBounds;
+	OSStatus					error = noErr;
+	
+	
+	// create the tab pane
+	SetRect(&dummy, 0, 0, 0, 0);
+	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
+	assert_noerr(error);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
 	
 	// create most HIViews for the tab based on the NIB
 	error = DialogUtilities_CreateControlsBasedOnWindowNIB
 			(CFSTR("PrefPanelSessions"), CFSTR("Keyboard"), inOwningWindow,
 					result/* parent */, viewList, idealContainerBounds);
 	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
 	
 	// this tab has extra buttons because it is also used for a sheet;
 	// hide the extra buttons
@@ -690,7 +1171,7 @@ const
 	// UNIMPLEMENTED
 	
 	return result;
-}// My_SessionsTabControlKeys::createPaneView
+}// My_SessionsPanelKeyboardUI::createContainerView
 
 
 /*!
@@ -699,7 +1180,7 @@ Resizes the views in this tab.
 (3.1)
 */
 void
-My_SessionsTabControlKeys::
+My_SessionsPanelKeyboardUI::
 deltaSize	(HIViewRef		inContainer,
 			 Float32		inDeltaX,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
@@ -712,197 +1193,240 @@ deltaSize	(HIViewRef		inContainer,
 	
 	viewWrap = HIViewWrap(idMyHelpTextControlKeys, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-}// My_SessionsTabControlKeys::deltaSize
+}// My_SessionsPanelKeyboardUI::deltaSize
 
 
 /*!
-Exists so the superclass assignment operator is
-not hidden by an implicit assignment operator
-definition.
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
 
 (3.1)
 */
-CFRetainRelease&
-My_SessionsTabControlKeys::
-operator =	(CFRetainRelease const&		inCopy)
+SInt32
+My_SessionsPanelKeyboardUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
 {
-	return HIViewWrap::operator =(inCopy);
-}// My_SessionsTabControlKeys::operator =
-
-
-/*!
-Initializes a My_SessionsTabDataFlow structure.
-
-(3.1)
-*/
-My_SessionsTabDataFlow::
-My_SessionsTabDataFlow	(HIWindowRef	inOwningWindow)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-HIViewWrap			(createPaneView(inOwningWindow)
-						<< HIViewWrap_AssertExists),
-containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-						My_SessionsTabDataFlow::deltaSize, this/* context */)
-{
-	assert(exists());
-	assert(containerResizer.isInstalled());
-}// My_SessionsTabDataFlow 1-argument constructor
-
-
-/*!
-Constructs the HIView that resides within the tab, and
-the sub-views that belong in its hierarchy.
-
-(3.1)
-*/
-HIViewWrap
-My_SessionsTabDataFlow::
-createPaneView		(HIWindowRef	inOwningWindow)
-const
-{
-	HIViewRef					result = nullptr;
-	std::vector< HIViewRef >	viewList;
-	Rect						dummy;
-	Rect						idealContainerBounds;
-	OSStatus					error = noErr;
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorSessionKeyboard, 0/* options */));
 	
 	
-	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
-	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
-	assert_noerr(error);
-	
-	// create most HIViews for the tab based on the NIB
-	error = DialogUtilities_CreateControlsBasedOnWindowNIB
-			(CFSTR("PrefPanelSessions"), CFSTR("DataFlow"), inOwningWindow,
-					result/* parent */, viewList, idealContainerBounds);
-	assert_noerr(error);
-	
-	// make the container match the ideal size, because the tabs view
-	// will need this guideline when deciding its largest size
+	switch (inMessage)
 	{
-		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
-												idealContainerBounds.bottom - idealContainerBounds.top);
-		
-		
-		error = HIViewSetFrame(result, &containerFrame);
-		assert_noerr(error);
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_SessionsPanelKeyboardDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelKeyboardDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_SessionsPanelKeyboardUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_SessionsPanelKeyboardDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_SessionsPanelKeyboardDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelKeyboardDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_SessionsPanelKeyboardDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelKeyboardDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
 	}
 	
-	// initialize values
-	// UNIMPLEMENTED
-	
 	return result;
-}// My_SessionsTabDataFlow::createPaneView
+}// My_SessionsPanelKeyboardUI::panelChanged
 
 
 /*!
-Resizes the views in this tab.
+Updates the display based on the given settings.
 
 (3.1)
 */
 void
-My_SessionsTabDataFlow::
-deltaSize	(HIViewRef		inContainer,
-			 Float32		inDeltaX,
-			 Float32		UNUSED_ARGUMENT(inDeltaY),
-			 void*			UNUSED_ARGUMENT(inContext))
+My_SessionsPanelKeyboardUI::
+readPreferences		(Preferences_ContextRef		inSettings)
 {
-	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
-	//My_SessionsTabDataFlow*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsTabDataFlow*);
-	HIViewWrap				viewWrap;
-	
-	
-	viewWrap = HIViewWrap(idMyStaticTextCaptureFilePath, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	// INCOMPLETE
-}// My_SessionsTabDataFlow::deltaSize
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_SessionsPanelKeyboardUI::readPreferences
 
 
 /*!
-Exists so the superclass assignment operator is
-not hidden by an implicit assignment operator
-definition.
+Initializes a My_SessionsPanelResourceData structure.
 
 (3.1)
 */
-CFRetainRelease&
-My_SessionsTabDataFlow::
-operator =	(CFRetainRelease const&		inCopy)
+My_SessionsPanelResourceData::
+My_SessionsPanelResourceData ()
+:
+panel(nullptr),
+interfacePtr(nullptr),
+dataModel(nullptr)
 {
-	return HIViewWrap::operator =(inCopy);
-}// My_SessionsTabDataFlow::operator =
+}// My_SessionsPanelResourceData default constructor
 
 
 /*!
-Initializes a My_SessionsTabResource structure.
+Tears down a My_SessionsPanelResourceData structure.
 
 (3.1)
 */
-My_SessionsTabResource::
-My_SessionsTabResource	(HIWindowRef	inOwningWindow)
+My_SessionsPanelResourceData::
+~My_SessionsPanelResourceData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_SessionsPanelResourceData destructor
+
+
+/*!
+Initializes a My_SessionsPanelResourceUI structure.
+
+(3.1)
+*/
+My_SessionsPanelResourceUI::
+My_SessionsPanelResourceUI	(Panel_Ref		inPanel,
+							 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-HIViewWrap						(createPaneView(inOwningWindow)
+panel							(inPanel),
+idealWidth						(0.0),
+idealHeight						(0.0),
+mainView						(createContainerView(inPanel, inOwningWindow)
 									<< HIViewWrap_AssertExists),
 selectedProtocol				(kSession_ProtocolSSH1), // TEMPORARY: probably should read NIB and determine default menu item to find protocol value
-fieldHostName					(HIViewWrap(idMyFieldHostName, inOwningWindow)
+_fieldHostName					(HIViewWrap(idMyFieldHostName, inOwningWindow)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_InstallKeyFilter(HostNameLimiter)),
-fieldPortNumber					(HIViewWrap(idMyFieldPortNumber, inOwningWindow)
+_fieldPortNumber				(HIViewWrap(idMyFieldPortNumber, inOwningWindow)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_InstallKeyFilter(NumericalLimiter)),
-fieldUserID						(HIViewWrap(idMyFieldUserID, inOwningWindow)
+_fieldUserID					(HIViewWrap(idMyFieldUserID, inOwningWindow)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_InstallKeyFilter(NoSpaceLimiter)),
-fieldCommandLine				(HIViewWrap(idMyFieldCommandLine, inOwningWindow)
+_fieldCommandLine				(HIViewWrap(idMyFieldCommandLine, inOwningWindow)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_InstallKeyFilter(UnixCommandLineLimiter)),
-containerResizer				(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-									My_SessionsTabResource::deltaSize, this/* context */),
-buttonCommandsHandler			(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+_containerResizer				(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+									My_SessionsPanelResourceUI::deltaSize, this/* context */),
+_buttonCommandsHandler			(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 									this/* user data */),
-whenHostNameChangedHandler		(GetControlEventTarget(this->fieldHostName), receiveFieldChanged,
+_whenHostNameChangedHandler		(GetControlEventTarget(this->_fieldHostName), receiveFieldChanged,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
-whenPortNumberChangedHandler	(GetControlEventTarget(this->fieldPortNumber), receiveFieldChanged,
+_whenPortNumberChangedHandler	(GetControlEventTarget(this->_fieldPortNumber), receiveFieldChanged,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
-whenUserIDChangedHandler		(GetControlEventTarget(this->fieldUserID), receiveFieldChanged,
+_whenUserIDChangedHandler		(GetControlEventTarget(this->_fieldUserID), receiveFieldChanged,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
-whenLookupCompleteHandler		(GetApplicationEventTarget(), receiveLookupComplete,
+_whenLookupCompleteHandler		(GetApplicationEventTarget(), receiveLookupComplete,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_DNS),
 															kEventNetEvents_HostLookupComplete),
 									this/* user data */),
-whenFavoritesChangedHandler		(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
-numberOfTerminalItemsAdded		(0)
+_whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
+_numberOfTerminalItemsAdded		(0)
 {
-	assert(exists());
-	assert(containerResizer.isInstalled());
+	assert(this->mainView.exists());
+	assert(_containerResizer.isInstalled());
 	
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
 	prefsResult = Preferences_StartMonitoring
-					(this->whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
+					(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
 						true/* notify of initial value */);
 	assert(kPreferences_ResultOK == prefsResult);
-}// My_SessionsTabResource 1-argument constructor
+}// My_SessionsPanelResourceUI 2-argument constructor
 
 
 /*!
-Tears down a My_SessionTabResource structure.
+Tears down a My_SessionsPanelResourceUI structure.
 
 (3.1)
 */
-My_SessionsTabResource::
-~My_SessionsTabResource ()
+My_SessionsPanelResourceUI::
+My_SessionsPanelResourceUI ()
 {
-	Preferences_StopMonitoring(this->whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts);
-	ListenerModel_ReleaseListener(&whenFavoritesChangedHandler);
-}// My_SessionsTabResource destructor
+	Preferences_StopMonitoring(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts);
+	ListenerModel_ReleaseListener(&_whenFavoritesChangedHandler);
+}// My_SessionsPanelResourceUI destructor
 
 
 /*!
@@ -912,9 +1436,9 @@ the sub-views that belong in its hierarchy.
 (3.1)
 */
 HIViewWrap
-My_SessionsTabResource::
-createPaneView		(HIWindowRef	inOwningWindow)
-const
+My_SessionsPanelResourceUI::
+createContainerView		(Panel_Ref		inPanel,
+						 HIWindowRef	inOwningWindow)
 {
 	HIViewRef					result = nullptr;
 	std::vector< HIViewRef >	viewList;
@@ -927,12 +1451,18 @@ const
 	SetRect(&dummy, 0, 0, 0, 0);
 	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
 	assert_noerr(error);
+	Panel_SetContainerView(inPanel, result);
+	SetControlVisibility(result, false/* visible */, false/* draw */);
 	
 	// create most HIViews for the tab based on the NIB
 	error = DialogUtilities_CreateControlsBasedOnWindowNIB
 			(CFSTR("PrefPanelSessions"), CFSTR("Resource"), inOwningWindow,
 					result/* parent */, viewList, idealContainerBounds);
 	assert_noerr(error);
+	
+	// calculate the ideal size
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
 	
 	// this tab has extra buttons because it is also used for a sheet;
 	// hide the extra buttons
@@ -956,7 +1486,7 @@ const
 	// UNIMPLEMENTED
 	
 	return result;
-}// My_SessionsTabResource::createPaneView
+}// My_SessionsPanelResourceUI::createContainerView
 
 
 /*!
@@ -965,15 +1495,15 @@ Resizes the views in this tab.
 (3.1)
 */
 void
-My_SessionsTabResource::
+My_SessionsPanelResourceUI::
 deltaSize	(HIViewRef		inContainer,
 			 Float32		inDeltaX,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			inContext)
 {
-	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
-	My_SessionsTabResource*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsTabResource*);
-	HIViewWrap				viewWrap;
+	HIWindowRef const				kPanelWindow = GetControlOwner(inContainer);
+	My_SessionsPanelResourceUI*		dataPtr = REINTERPRET_CAST(inContext, My_SessionsPanelResourceUI*);
+	HIViewWrap						viewWrap;
 	
 	
 	viewWrap = HIViewWrap(idMySeparatorTerminal, kPanelWindow);
@@ -984,12 +1514,197 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyButtonLookUpHostName, kPanelWindow);
 	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
-	dataPtr->fieldHostName << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	dataPtr->_fieldHostName << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyHelpTextCommandLine, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	dataPtr->fieldCommandLine << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	dataPtr->_fieldCommandLine << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	// INCOMPLETE
-}// My_SessionsTabResource::deltaSize
+}// My_SessionsPanelResourceUI::deltaSize
+
+
+/*!
+Performs a DNR lookup of the host given in the dialog
+box’s main text field, and when complete replaces the
+contents of the text field with the resolved IP address
+(as a string).
+
+Returns true if the lookup succeeded.
+
+(3.1)
+*/
+Boolean
+My_SessionsPanelResourceUI::
+lookupHostName ()
+{
+	CFStringRef		textCFString = nullptr;
+	Boolean			result = false;
+	
+	
+	GetControlTextAsCFString(_fieldHostName, textCFString);
+	if (CFStringGetLength(textCFString) <= 0)
+	{
+		// there has to be some text entered there; let the user
+		// know that a blank is unacceptable
+		Sound_StandardAlert();
+	}
+	else
+	{
+		char	hostName[256];
+		
+		
+		//lookupWaitUI(inTab);
+		if (CFStringGetCString(textCFString, hostName, sizeof(hostName), kCFStringEncodingMacRoman))
+		{
+			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
+			
+			
+			lookupAttemptResult = DNR_New(hostName, false/* use IP version 4 addresses (defaults to IPv6) */);
+			if (false == lookupAttemptResult.ok())
+			{
+				// could not even initiate, so restore UI
+				//lookupDoneUI(inTab);
+			}
+			else
+			{
+				// okay so far...
+				result = true;
+			}
+		}
+	}
+	
+	return result;
+}// lookupHostName
+
+
+/*!
+Invoked when the state of a panel changes, or information
+about the panel is required.  (This routine is of type
+PanelChangedProcPtr.)
+
+(3.1)
+*/
+SInt32
+My_SessionsPanelResourceUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorSessionResource, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
+		{
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelResourceDataPtr);
+			WindowRef const*					windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
+			
+			
+			// create the rest of the panel user interface
+			panelDataPtr->interfacePtr = new My_SessionsPanelResourceUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			delete (REINTERPRET_CAST(inDataPtr, My_SessionsPanelResourceDataPtr));
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a view is now focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a view is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
+		{
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelResourceDataPtr);
+			HISize&								newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
+		{
+			// this notification is currently ignored, but shouldn’t be...
+		}
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelResourceDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			panelDataPtr->dataModel = newContext;
+			panelDataPtr->interfacePtr->readPreferences(newContext);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+		{
+			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_SessionsPanelResourceUI::panelChanged
+
+
+/*!
+Updates the display based on the given settings.
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+readPreferences		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		// UNIMPLEMENTED
+	}
+}// My_SessionsPanelResourceUI::readPreferences
 
 
 /*!
@@ -999,10 +1714,10 @@ rebuilds the menu based on current preferences.
 (3.1)
 */
 void
-My_SessionsTabResource::
+My_SessionsPanelResourceUI::
 rebuildTerminalMenu ()
 {
-	HIViewWrap		terminalPopUpMenuView(idMyPopUpMenuTerminal, HIViewGetWindow(this->operator HIViewRef()));
+	HIViewWrap		terminalPopUpMenuView(idMyPopUpMenuTerminal, HIViewGetWindow(this->mainView));
 	OSStatus		error = noErr;
 	MenuRef			favoritesMenu = nullptr;
 	MenuItemIndex	defaultIndex = 0;
@@ -1019,24 +1734,24 @@ rebuildTerminalMenu ()
 	assert_noerr(error);
 	
 	// erase previous items
-	if (0 != this->numberOfTerminalItemsAdded)
+	if (0 != this->_numberOfTerminalItemsAdded)
 	{
-		(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, this->numberOfTerminalItemsAdded);
+		(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, this->_numberOfTerminalItemsAdded);
 	}
 	
 	// add the names of all session configurations to the menu;
 	// update global count of items added at that location
-	this->numberOfTerminalItemsAdded = 0;
+	this->_numberOfTerminalItemsAdded = 0;
 	(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTerminal, favoritesMenu,
 																1/* default index */, 0/* indentation level */,
 																0/* command ID */,
-																this->numberOfTerminalItemsAdded);
+																this->_numberOfTerminalItemsAdded);
 	
 	// TEMPORARY: verify that this final step is necessary...
 	error = SetControlData(terminalPopUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
 							sizeof(favoritesMenu), &favoritesMenu);
 	assert_noerr(error);
-}// My_SessionsTabResource::rebuildTerminalMenu
+}// My_SessionsPanelResourceUI::rebuildTerminalMenu
 
 
 /*!
@@ -1046,19 +1761,19 @@ that matches the specified command.
 (3.1)
 */
 MenuItemIndex
-My_SessionsTabResource::
+My_SessionsPanelResourceUI::
 returnProtocolMenuCommandIndex	(UInt32		inCommandID)
 {
 	MenuItemIndex	result = 0;
 	OSStatus		error = GetIndMenuItemWithCommandID(GetControlPopupMenuHandle
-														(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(this->operator HIViewRef()))),
+														(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(this->mainView))),
 														inCommandID, 1/* 1 = return first match */,
 														nullptr/* menu */, &result);
 	assert_noerr(error);
 	
 	
 	return result;
-}// My_SessionsTabResource::returnProtocolMenuCommandIndex
+}// My_SessionsPanelResourceUI::returnProtocolMenuCommandIndex
 
 
 /*!
@@ -1080,7 +1795,7 @@ NOTE:	Currently, this routine basically obliterates
 (3.1)
 */
 Boolean
-My_SessionsTabResource::
+My_SessionsPanelResourceUI::
 updateCommandLine ()
 {
 	Boolean					result = true;
@@ -1090,7 +1805,7 @@ updateCommandLine ()
 	
 	
 	// the host field is required when updating the command line
-	GetControlTextAsCFString(this->fieldHostName, hostNameCFString);
+	GetControlTextAsCFString(this->_fieldHostName, hostNameCFString);
 	if ((nullptr == hostNameCFString) || (0 == CFStringGetLength(hostNameCFString)))
 	{
 		hostNameCFString = nullptr;
@@ -1116,12 +1831,12 @@ updateCommandLine ()
 		//       from all field values first, since otherwise the user
 		//       could enter a non-empty but blank value that would become
 		//       a broken command line.
-		GetControlTextAsCFString(this->fieldPortNumber, portNumberCFString);
+		GetControlTextAsCFString(this->_fieldPortNumber, portNumberCFString);
 		if ((nullptr == portNumberCFString) || (0 == CFStringGetLength(portNumberCFString)))
 		{
 			portNumberCFString = nullptr;
 		}
-		GetControlTextAsCFString(this->fieldUserID, userIDCFString);
+		GetControlTextAsCFString(this->_fieldUserID, userIDCFString);
 		if ((nullptr == userIDCFString) || (0 == CFStringGetLength(userIDCFString)))
 		{
 			userIDCFString = nullptr;
@@ -1254,8 +1969,8 @@ updateCommandLine ()
 			}
 			else
 			{
-				SetControlTextWithCFString(this->fieldCommandLine, newCommandLineCFString);
-				(OSStatus)HIViewSetNeedsDisplay(this->fieldCommandLine, true);
+				SetControlTextWithCFString(this->_fieldCommandLine, newCommandLineCFString);
+				(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
 			}
 		}
 		
@@ -1265,12 +1980,12 @@ updateCommandLine ()
 	// if unsuccessful, clear the command line
 	if (false == result)
 	{
-		SetControlTextWithCFString(this->fieldCommandLine, CFSTR(""));
-		(OSStatus)HIViewSetNeedsDisplay(this->fieldCommandLine, true);
+		SetControlTextWithCFString(this->_fieldCommandLine, CFSTR(""));
+		(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
 	}
 	
 	return result;
-}// My_SessionsTabResource::updateCommandLine
+}// My_SessionsPanelResourceUI::updateCommandLine
 
 
 /*!
@@ -1281,7 +1996,7 @@ value appropriately.
 (3.1)
 */
 void
-My_SessionsTabResource::
+My_SessionsPanelResourceUI::
 updatePortNumberField ()
 {
 	SInt16		newPort = 0;
@@ -1310,232 +2025,10 @@ updatePortNumberField ()
 	
 	if (0 != newPort)
 	{
-		SetControlNumericalText(this->fieldPortNumber, newPort);
-		(OSStatus)HIViewSetNeedsDisplay(this->fieldPortNumber, true);
+		SetControlNumericalText(this->_fieldPortNumber, newPort);
+		(OSStatus)HIViewSetNeedsDisplay(this->_fieldPortNumber, true);
 	}
-}// My_SessionsTabResource::updatePortNumberField
-
-
-/*!
-Exists so the superclass assignment operator is
-not hidden by an implicit assignment operator
-definition.
-
-(3.1)
-*/
-CFRetainRelease&
-My_SessionsTabResource::
-operator =	(CFRetainRelease const&		inCopy)
-{
-	return HIViewWrap::operator =(inCopy);
-}// My_SessionsTabResource::operator =
-
-
-/*!
-Initializes a My_SessionsTabVectorGraphics structure.
-
-(3.1)
-*/
-My_SessionsTabVectorGraphics::
-My_SessionsTabVectorGraphics	(HIWindowRef	inOwningWindow)
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-HIViewWrap			(createPaneView(inOwningWindow)
-						<< HIViewWrap_AssertExists),
-containerResizer	(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-						My_SessionsTabVectorGraphics::deltaSize, this/* context */)
-{
-	assert(exists());
-	assert(containerResizer.isInstalled());
-}// My_SessionsTabVectorGraphics 1-argument constructor
-
-
-/*!
-Constructs the HIView that resides within the tab, and
-the sub-views that belong in its hierarchy.
-
-(3.1)
-*/
-HIViewWrap
-My_SessionsTabVectorGraphics::
-createPaneView		(HIWindowRef	inOwningWindow)
-const
-{
-	HIViewRef					result = nullptr;
-	std::vector< HIViewRef >	viewList;
-	Rect						dummy;
-	Rect						idealContainerBounds;
-	OSStatus					error = noErr;
-	
-	
-	// create the tab pane
-	SetRect(&dummy, 0, 0, 0, 0);
-	error = CreateUserPaneControl(inOwningWindow, &dummy, kControlSupportsEmbedding, &result);
-	assert_noerr(error);
-	
-	// create most HIViews for the tab based on the NIB
-	error = DialogUtilities_CreateControlsBasedOnWindowNIB
-			(CFSTR("PrefPanelSessions"), CFSTR("TEK"), inOwningWindow,
-					result/* parent */, viewList, idealContainerBounds);
-	assert_noerr(error);
-	
-	// make the container match the ideal size, because the tabs view
-	// will need this guideline when deciding its largest size
-	{
-		HIRect		containerFrame = CGRectMake(0, 0, idealContainerBounds.right - idealContainerBounds.left,
-												idealContainerBounds.bottom - idealContainerBounds.top);
-		
-		
-		error = HIViewSetFrame(result, &containerFrame);
-		assert_noerr(error);
-	}
-	
-	// initialize values
-	// UNIMPLEMENTED
-	
-	return result;
-}// My_SessionsTabVectorGraphics::createPaneView
-
-
-/*!
-Resizes the views in this tab.
-
-(3.1)
-*/
-void
-My_SessionsTabVectorGraphics::
-deltaSize	(HIViewRef		inContainer,
-			 Float32		UNUSED_ARGUMENT(inDeltaX),
-			 Float32		UNUSED_ARGUMENT(inDeltaY),
-			 void*			UNUSED_ARGUMENT(inContext))
-{
-	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
-	//My_SessionsTabVectorGraphics*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsTabVectorGraphics*);
-	
-	
-	// UNIMPLEMENTED
-}// My_SessionsTabVectorGraphics::deltaSize
-
-
-/*!
-Exists so the superclass assignment operator is
-not hidden by an implicit assignment operator
-definition.
-
-(3.1)
-*/
-CFRetainRelease&
-My_SessionsTabVectorGraphics::
-operator =	(CFRetainRelease const&		inCopy)
-{
-	return HIViewWrap::operator =(inCopy);
-}// My_SessionsTabVectorGraphics::operator =
-
-
-/*!
-Adjusts the views in the “Sessions” preference panel
-to match the specified change in dimensions of its
-container.
-
-(3.1)
-*/
-void
-deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
-								 Float32		inDeltaX,
-								 Float32		inDeltaY,
-								 void*			inContext)
-{
-	if ((0 != inDeltaX) || (0 != inDeltaY))
-	{
-		//HIWindowRef				kPanelWindow = GetControlOwner(inView);
-		My_SessionsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inContext, My_SessionsPanelUIPtr);
-		assert(nullptr != interfacePtr);
-		
-		
-		
-		interfacePtr->tabView << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
-		
-		// due to event handlers, this will automatically resize subviews too
-		interfacePtr->resourceTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
-		interfacePtr->dataFlowTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
-		interfacePtr->controlKeysTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
-		interfacePtr->vectorGraphicsTab << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
-	}
-}// deltaSizePanelContainerHIView
-
-
-/*!
-Cleans up a panel that is about to be destroyed.
-
-(3.1)
-*/
-void
-disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
-				 void*		inDataPtr)
-{
-	My_SessionsPanelDataPtr		dataPtr = REINTERPRET_CAST(inDataPtr, My_SessionsPanelDataPtr);
-	
-	
-	// destroy UI, if present
-	if (nullptr != dataPtr->interfacePtr) delete dataPtr->interfacePtr;
-	
-	delete dataPtr;
-}// disposePanel
-
-
-/*!
-Performs a DNR lookup of the host given in the dialog
-box’s main text field, and when complete replaces the
-contents of the text field with the resolved IP address
-(as a string).
-
-Returns true if the lookup succeeded.
-
-(3.0)
-*/
-Boolean
-lookupHostName		(My_SessionsTabResource&	inTab)
-{
-	CFStringRef		textCFString = nullptr;
-	HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(inTab));
-	Boolean			result = false;
-	
-	
-	assert(fieldHostName.exists());
-	GetControlTextAsCFString(fieldHostName, textCFString);
-	if (CFStringGetLength(textCFString) <= 0)
-	{
-		// there has to be some text entered there; let the user
-		// know that a blank is unacceptable
-		Sound_StandardAlert();
-	}
-	else
-	{
-		char	hostName[256];
-		
-		
-		//lookupWaitUI(inTab);
-		if (CFStringGetCString(textCFString, hostName, sizeof(hostName), kCFStringEncodingMacRoman))
-		{
-			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
-			
-			
-			lookupAttemptResult = DNR_New(hostName, false/* use IP version 4 addresses (defaults to IPv6) */);
-			if (false == lookupAttemptResult.ok())
-			{
-				// could not even initiate, so restore UI
-				//lookupDoneUI(inTab);
-			}
-			else
-			{
-				// okay so far...
-				result = true;
-			}
-		}
-	}
-	
-	return result;
-}// lookupHostName
+}// My_SessionsPanelResourceUI::updatePortNumberField
 
 
 /*!
@@ -1580,116 +2073,6 @@ makeAllBevelButtonsUseTheSystemFont		(HIWindowRef	inWindow)
 
 
 /*!
-This routine, of standard PanelChangedProcPtr form,
-is invoked by the Panel module whenever a property
-of one of the preferences dialog’s panels changes.
-
-(3.1)
-*/
-SInt32
-panelChanged	(Panel_Ref		inPanel,
-				 Panel_Message	inMessage,
-				 void*			inDataPtr)
-{
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorSessions, 0/* options */));
-	
-	
-	switch (inMessage)
-	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create views using this window
-		{
-			My_SessionsPanelDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																		My_SessionsPanelDataPtr);
-			WindowRef const*			windowPtr = REINTERPRET_CAST(inDataPtr, WindowRef*);
-			
-			
-			// create the rest of the panel user interface
-			panelDataPtr->interfacePtr = new My_SessionsPanelUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-			showTabPane(panelDataPtr->interfacePtr, 1/* tab index */);
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			void*	panelAuxiliaryDataPtr = inDataPtr;
-			
-			
-			disposePanel(inPanel, panelAuxiliaryDataPtr);
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a view is now focused
-		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a view is no longer focused
-		{
-			HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
-			
-			
-			// INCOMPLETE
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after view creation)
-		{
-			HISize&		newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != gIdealPanelWidth) && (0 != gIdealPanelHeight))
-			{
-				newLimits.width = gIdealPanelWidth;
-				newLimits.height = gIdealPanelHeight;
-				result = kPanel_ResponseSizeProvided;
-			}
-		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
-		{
-			// this notification is currently ignored, but shouldn’t be...
-		}
-		break;
-	
-	case kPanel_MessageNewDataSet:
-		{
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			
-			
-			// UNIMPLEMENTED
-		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
-		{
-			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// panelChanged
-
-
-/*!
 Invoked whenever a monitored preference value is changed.
 Responds by updating the user interface.
 
@@ -1701,8 +2084,8 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
 					 void*					inMySessionsTabResourcePtr)
 {
-	//Preferences_ChangeContext*	contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
-	My_SessionsTabResource*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsTabResource*);
+	//Preferences_ChangeContext*		contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
+	My_SessionsPanelResourceUI*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
 	
 	
 	switch (inPreferenceTagThatChanged)
@@ -1732,10 +2115,10 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inMySessionsTabResourcePtr)
 {
-	OSStatus					result = eventNotHandledErr;
-	My_SessionsTabResource*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsTabResource*);
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelResourceUI*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassTextInput);
@@ -1763,10 +2146,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMySessionsTabResourcePtr)
 {
-	OSStatus					result = eventNotHandledErr;
-	My_SessionsTabResource*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsTabResource*);
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelResourceUI*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -1819,7 +2202,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// ???
 						break;
 					}
-					SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(ptr->operator HIViewRef())), kItemIndex);
+					SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(ptr->mainView)), kItemIndex);
 					ptr->updatePortNumberField();
 					(Boolean)ptr->updateCommandLine();
 					result = noErr;
@@ -1827,7 +2210,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				break;
 			
 			case kCommandLookUpSelectedHostName:
-				if (lookupHostName(*ptr))
+				if (ptr->lookupHostName())
 				{
 					result = noErr;
 				}
@@ -1842,7 +2225,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// this normally means “show command line floater”, but in the context
 				// of an active New Session sheet, it means “select command line field”
 				{
-					HIWindowRef		window = HIViewGetWindow(*ptr);
+					HIWindowRef		window = HIViewGetWindow(ptr->mainView);
 					
 					
 					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
@@ -1875,10 +2258,10 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inMySessionsTabResourcePtr)
 {
-	OSStatus					result = eventNotHandledErr;
-	My_SessionsTabResource*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsTabResource*);
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelResourceUI*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassNetEvents_DNS);
@@ -1901,7 +2284,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				if (nullptr != addressCFString)
 				{
-					HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(*ptr));
+					HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(ptr->mainView));
 					
 					
 					assert(fieldHostName.exists());
@@ -1919,105 +2302,6 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveLookupComplete
-
-
-/*!
-Handles "kEventControlClick" of "kEventClassControl"
-for this preferences panel.  Responds by changing
-the currently selected tab, etc.
-
-(3.1)
-*/
-pascal OSStatus
-receiveViewHit	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-				 EventRef				inEvent,
-				 void*					inMySessionsPanelUIPtr)
-{
-	OSStatus				result = eventNotHandledErr;
-	My_SessionsPanelUIPtr	interfacePtr = REINTERPRET_CAST(inMySessionsPanelUIPtr, My_SessionsPanelUIPtr);
-	assert(nullptr != interfacePtr);
-	UInt32 const			kEventClass = GetEventClass(inEvent);
-	UInt32 const			kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassControl);
-	assert(kEventKind == kEventControlHit);
-	{
-		HIViewRef	view = nullptr;
-		
-		
-		// determine the view in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
-		
-		// if the view was found, proceed
-		if (noErr == result)
-		{
-			result = eventNotHandledErr; // unless set otherwise
-			
-			if (view == interfacePtr->tabView)
-			{
-				showTabPane(interfacePtr, GetControl32BitValue(view));
-				result = noErr; // completely handled
-			}
-		}
-	}
-	
-	return result;
-}// receiveViewHit
-
-
-/*!
-Sizes and arranges views in the currently-selected
-tab pane of the specified “Sessions” panel to fit
-the dimensions of the panel’s container.
-
-(3.0)
-*/
-void
-showTabPane		(My_SessionsPanelUIPtr	inUIPtr,
-				 UInt16					inTabIndex)
-{
-	HIViewRef	selectedTabPane = nullptr;
-	
-	
-	if (kMy_TabIndexSessionHost == inTabIndex)
-	{
-		selectedTabPane = inUIPtr->resourceTab;
-		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab, false/* visible */));
-	}
-	else if (kMy_TabIndexSessionDataFlow == inTabIndex)
-	{
-		selectedTabPane = inUIPtr->dataFlowTab;
-		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab, false/* visible */));
-	}
-	else if (kMy_TabIndexSessionControlKeys == inTabIndex)
-	{
-		selectedTabPane = inUIPtr->controlKeysTab;
-		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->vectorGraphicsTab, false/* visible */));
-	}
-	else if (kMy_TabIndexSessionVectorGraphics == inTabIndex)
-	{
-		selectedTabPane = inUIPtr->vectorGraphicsTab;
-		assert_noerr(HIViewSetVisible(inUIPtr->resourceTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->dataFlowTab, false/* visible */));
-		assert_noerr(HIViewSetVisible(inUIPtr->controlKeysTab, false/* visible */));
-	}
-	else
-	{
-		assert(false && "not a recognized tab index");
-	}
-	
-	if (nullptr != selectedTabPane)
-	{
-		assert_noerr(HIViewSetVisible(selectedTabPane, true/* visible */));
-	}
-}// showTabPane
 
 } // anonymous namespace
 

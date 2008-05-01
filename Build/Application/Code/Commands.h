@@ -397,6 +397,10 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelMacros			'SPrM'		// “Preferences“ window
 #define kCommandDisplayPrefPanelScripts			'SPrC'		// “Preferences“ window
 #define kCommandDisplayPrefPanelSessions		'SPrS'		// “Preferences“ window
+#define kCommandDisplayPrefPanelSessionsDataFlow	'SPSD'	// “Preferences“ window
+#define kCommandDisplayPrefPanelSessionsGraphics	'SPSG'	// “Preferences“ window
+#define kCommandDisplayPrefPanelSessionsKeyboard	'SPSK'	// “Preferences“ window
+#define kCommandDisplayPrefPanelSessionsResource	'SPSR'	// “Preferences“ window
 #define kCommandDisplayPrefPanelTerminals		'SPrT'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTerminalsEmulation	'SPTE'	// “Preferences“ window
 #define kCommandDisplayPrefPanelTerminalsHacks	'SPTH'		// “Preferences“ window

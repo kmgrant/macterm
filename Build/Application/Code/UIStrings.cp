@@ -1226,24 +1226,24 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowSessionsCategoryName"));
 		break;
 	
-	case kUIStrings_PreferencesWindowSessionsHostTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Resource"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowSessionsHostTabName"));
-		break;
-	
 	case kUIStrings_PreferencesWindowSessionsDataFlowTabName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Data Flow"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowSessionsDataFlowTabName"));
 		break;
 	
-	case kUIStrings_PreferencesWindowSessionsControlKeysTabName:
+	case kUIStrings_PreferencesWindowSessionsGraphicsTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Graphics"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowSessionsVectorGraphicsTabName"));
+		break;
+	
+	case kUIStrings_PreferencesWindowSessionsKeyboardTabName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Keyboard"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowSessionsControlKeysTabName"));
 		break;
 	
-	case kUIStrings_PreferencesWindowSessionsVectorGraphicsTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Graphics"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowSessionsVectorGraphicsTabName"));
+	case kUIStrings_PreferencesWindowSessionsResourceTabName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Resource"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowSessionsHostTabName"));
 		break;
 	
 	case kUIStrings_PreferencesWindowTerminalsCategoryName:
