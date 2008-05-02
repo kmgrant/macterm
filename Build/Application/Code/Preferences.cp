@@ -7979,6 +7979,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagLineModeEnabled:
 			case kPreferences_TagLocalEchoEnabled:
 			case kPreferences_TagLocalEchoHalfDuplex:
+			case kPreferences_TagTektronixPAGEClearsScreen:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
