@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080501',
     '20080429',
     '20080426',
     '20080424',
@@ -144,6 +145,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080501': [
+		'Fixed the Preferences window Sessions pane Graphics tab.',
+	],
 	'20080429': [
 		'Dragging text into a background terminal window will now automatically bring the window to the front after a short delay.',
 	],

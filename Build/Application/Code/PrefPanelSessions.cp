@@ -79,6 +79,7 @@ extern "C"
 #include "Session.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
+#include "VectorInterpreter.h"
 
 
 
@@ -109,6 +110,10 @@ HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
 HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
 HIViewID const	idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
 HIViewID const	idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
+HIViewID const	idMyRadioButtonTEKDisabled		= { 'RTNo', 0/* ID */ };
+HIViewID const	idMyRadioButtonTEK4014			= { '4014', 0/* ID */ };
+HIViewID const	idMyRadioButtonTEK4105			= { '4105', 0/* ID */ };
+HIViewID const	idMyCheckBoxTEKPageClearsScreen	= { 'XPCS', 0/* ID */ };
 
 } // anonymous namespace
 
@@ -161,6 +166,12 @@ struct My_SessionsPanelGraphicsUI
 	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	void
+	setMode		(VectorInterpreter_Mode);
+	
+	void
+	setPageClears	(Boolean);
 
 protected:
 	HIViewWrap
@@ -1051,9 +1062,76 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		// UNIMPLEMENTED
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		
+		
+		// set TEK mode
+		{
+			VectorInterpreter_Mode		graphicsMode = kVectorInterpreter_ModeDisabled;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTektronixMode, sizeof(graphicsMode),
+														&graphicsMode, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setMode(graphicsMode);
+			}
+		}
+		
+		// set TEK PAGE checkbox
+		{
+			Boolean		pageClearsScreen = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTektronixPAGEClearsScreen, sizeof(pageClearsScreen),
+														&pageClearsScreen, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setPageClears(pageClearsScreen);
+			}
+		}
 	}
 }// My_SessionsPanelGraphicsUI::readPreferences
+
+
+/*!
+Updates the TEK clear checkbox based on the given setting.
+
+(3.1)
+*/
+void
+My_SessionsPanelGraphicsUI::
+setPageClears	(Boolean	inTEKPageClearsScreen)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyCheckBoxTEKPageClearsScreen, kOwningWindow),
+							BooleanToCheckBoxValue(inTEKPageClearsScreen));
+}// My_SessionsPanelGraphicsUI::setPageClears
+
+
+/*!
+Updates the TEK graphics mode display based on the
+given setting.
+
+(3.1)
+*/
+void
+My_SessionsPanelGraphicsUI::
+setMode		(VectorInterpreter_Mode		inMode)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	
+	
+	SetControl32BitValue(HIViewWrap(idMyRadioButtonTEKDisabled, kOwningWindow),
+							BooleanToRadioButtonValue(kVectorInterpreter_ModeDisabled == inMode));
+	SetControl32BitValue(HIViewWrap(idMyRadioButtonTEK4014, kOwningWindow),
+							BooleanToRadioButtonValue(kVectorInterpreter_ModeTEK4014 == inMode));
+	SetControl32BitValue(HIViewWrap(idMyRadioButtonTEK4105, kOwningWindow),
+							BooleanToRadioButtonValue(kVectorInterpreter_ModeTEK4105 == inMode));
+}// My_SessionsPanelGraphicsUI::setMode
 
 
 /*!
@@ -2137,17 +2215,20 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 
 /*!
 Handles "kEventCommandProcess" of "kEventClassCommand"
-for the buttons in the Resource tab.
+for the buttons in various tabs.
 
 (3.1)
 */
 pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
-					 void*					inMySessionsTabResourcePtr)
+					 void*					inMySessionsUIPtr)
 {
 	OSStatus						result = eventNotHandledErr;
-	My_SessionsPanelResourceUI*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
+	// WARNING: More than one UI uses this handler.  The context will
+	// depend on the command ID.
+	My_SessionsPanelGraphicsUI*		graphicsInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelGraphicsUI*);
+	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelResourceUI*);
 	UInt32 const					kEventClass = GetEventClass(inEvent);
 	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
@@ -2173,44 +2254,44 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandNewProtocolSelectedTELNET:
 				// a new protocol menu item was chosen
 				{
-					MenuItemIndex const		kItemIndex = ptr->returnProtocolMenuCommandIndex(received.commandID);
+					MenuItemIndex const		kItemIndex = resourceInterfacePtr->returnProtocolMenuCommandIndex(received.commandID);
 					
 					
 					switch (received.commandID)
 					{
 					case kCommandNewProtocolSelectedFTP:
-						ptr->selectedProtocol = kSession_ProtocolFTP;
+						resourceInterfacePtr->selectedProtocol = kSession_ProtocolFTP;
 						break;
 					
 					case kCommandNewProtocolSelectedSFTP:
-						ptr->selectedProtocol = kSession_ProtocolSFTP;
+						resourceInterfacePtr->selectedProtocol = kSession_ProtocolSFTP;
 						break;
 					
 					case kCommandNewProtocolSelectedSSH1:
-						ptr->selectedProtocol = kSession_ProtocolSSH1;
+						resourceInterfacePtr->selectedProtocol = kSession_ProtocolSSH1;
 						break;
 					
 					case kCommandNewProtocolSelectedSSH2:
-						ptr->selectedProtocol = kSession_ProtocolSSH2;
+						resourceInterfacePtr->selectedProtocol = kSession_ProtocolSSH2;
 						break;
 					
 					case kCommandNewProtocolSelectedTELNET:
-						ptr->selectedProtocol = kSession_ProtocolTelnet;
+						resourceInterfacePtr->selectedProtocol = kSession_ProtocolTelnet;
 						break;
 					
 					default:
 						// ???
 						break;
 					}
-					SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(ptr->mainView)), kItemIndex);
-					ptr->updatePortNumberField();
-					(Boolean)ptr->updateCommandLine();
+					SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(resourceInterfacePtr->mainView)), kItemIndex);
+					resourceInterfacePtr->updatePortNumberField();
+					(Boolean)resourceInterfacePtr->updateCommandLine();
 					result = noErr;
 				}
 				break;
 			
 			case kCommandLookUpSelectedHostName:
-				if (ptr->lookupHostName())
+				if (resourceInterfacePtr->lookupHostName())
 				{
 					result = noErr;
 				}
@@ -2225,11 +2306,54 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// this normally means Òshow command line floaterÓ, but in the context
 				// of an active New Session sheet, it means Òselect command line fieldÓ
 				{
-					HIWindowRef		window = HIViewGetWindow(ptr->mainView);
+					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
 					
 					
 					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
 					result = noErr;
+				}
+				break;
+			
+			case kCommandSetTEKModeDisabled:
+			case kCommandSetTEKModeTEK4014:
+			case kCommandSetTEKModeTEK4105:
+				{
+					VectorInterpreter_Mode				newMode = kVectorInterpreter_ModeDisabled;
+					My_SessionsPanelGraphicsDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(graphicsInterfacePtr->panel),
+																					My_SessionsPanelGraphicsDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					if (kCommandSetTEKModeTEK4014 == received.commandID) newMode = kVectorInterpreter_ModeTEK4014;
+					if (kCommandSetTEKModeTEK4105 == received.commandID) newMode = kVectorInterpreter_ModeTEK4105;
+					graphicsInterfacePtr->setMode(newMode);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTektronixMode,
+																sizeof(newMode), &newMode);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, unable to save TEK mode setting");
+					}
+					result = noErr;
+				}
+				break;
+			
+			case kCommandSetTEKPageClearsScreen:
+				assert(received.attributes & kHICommandFromControl);
+				{
+					HIViewRef const						kCheckBox = received.source.control;
+					Boolean const						kIsSet = (kControlCheckBoxCheckedValue == GetControl32BitValue(kCheckBox));
+					My_SessionsPanelGraphicsDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(graphicsInterfacePtr->panel),
+																					My_SessionsPanelGraphicsDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					graphicsInterfacePtr->setPageClears(kIsSet);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTektronixPAGEClearsScreen,
+																sizeof(kIsSet), &kIsSet);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, unable to save TEK PAGE setting");
+					}
 				}
 				break;
 			

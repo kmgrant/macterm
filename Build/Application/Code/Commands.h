@@ -426,6 +426,10 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPreferencesDuplicateFavorite	'DupC'		// “Preferences” window
 #define kCommandPreferencesRenameFavorite		'RnmC'		// “Preferences” window
 #define kCommandPreferencesDeleteFavorite		'DelC'		// “Preferences” window
+#define kCommandSetTEKModeDisabled				'RTNo'		// “Preferences” window
+#define kCommandSetTEKModeTEK4014				'4014'		// “Preferences” window
+#define kCommandSetTEKModeTEK4105				'4105'		// “Preferences” window
+#define kCommandSetTEKPageClearsScreen			'XPCS'		// “Preferences” window
 #define kCommandSetEmulatorANSIBBS				'EmAB'		// multiple interfaces
 #define kCommandSetEmulatorVT100				'E100'		// multiple interfaces
 #define kCommandSetEmulatorVT102				'E102'		// multiple interfaces
