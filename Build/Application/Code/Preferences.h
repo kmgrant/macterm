@@ -170,7 +170,15 @@ enum
 	kPreferences_TagTerminalColorANSIBlueBold			= kCommandColorBlueEmphasized,		//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSIMagentaBold		= kCommandColorMagentaEmphasized,	//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSICyanBold			= kCommandColorCyanEmphasized,		//!< data: "RGBColor"
-	kPreferences_TagTerminalColorANSIWhiteBold			= kCommandColorWhiteEmphasized		//!< data: "RGBColor"
+	kPreferences_TagTerminalColorANSIWhiteBold			= kCommandColorWhiteEmphasized,		//!< data: "RGBColor"
+	kPreferences_TagTerminalMarginLeft					= 'mgnl',	//!< data: "Float32", multiplies against font ÒmÓ width (even for vertical margins)
+	kPreferences_TagTerminalMarginRight					= 'mgnr',	//!< data: "Float32"
+	kPreferences_TagTerminalMarginTop					= 'mgnt',	//!< data: "Float32"
+	kPreferences_TagTerminalMarginBottom				= 'mgnb',	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingLeft					= 'padl',	//!< data: "Float32", multiplies against font ÒmÓ width (even for vertical paddings)
+	kPreferences_TagTerminalPaddingRight				= 'padr',	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingTop					= 'padt',	//!< data: "Float32"
+	kPreferences_TagTerminalPaddingBottom				= 'padb'	//!< data: "Float32"
 };
 
 /*!
@@ -268,14 +276,6 @@ enum
 	kPreferences_TagTerminalClearSavesLines				= 'clsv',	//!< data: "Boolean"
 	kPreferences_TagTerminalEmulatorType				= 'emul',	//!< data: "Terminal_Emulator", a "kTerminal_Emulator..." constant
 	kPreferences_TagTerminalLineWrap					= 'wrap',	//!< data: "Boolean"
-	kPreferences_TagTerminalMarginLeft					= 'mgnl',	//!< data: "Float32", multiplies against font ÒmÓ width (even for vertical margins)
-	kPreferences_TagTerminalMarginRight					= 'mgnr',	//!< data: "Float32"
-	kPreferences_TagTerminalMarginTop					= 'mgnt',	//!< data: "Float32"
-	kPreferences_TagTerminalMarginBottom				= 'mgnb',	//!< data: "Float32"
-	kPreferences_TagTerminalPaddingLeft					= 'padl',	//!< data: "Float32", multiplies against font ÒmÓ width (even for vertical paddings)
-	kPreferences_TagTerminalPaddingRight				= 'padr',	//!< data: "Float32"
-	kPreferences_TagTerminalPaddingTop					= 'padt',	//!< data: "Float32"
-	kPreferences_TagTerminalPaddingBottom				= 'padb',	//!< data: "Float32"
 	kPreferences_TagTerminalScreenColumns				= 'scol',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenRows					= 'srow',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt16"
