@@ -5538,6 +5538,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassSession;
 		break;
 	
+	case kPreferences_TagServerUserID:
+		outKeyName = CFSTR("server-user-id");
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(CFStringRef);
+		outClass = kPreferences_ClassSession;
+		break;
+	
 	case kPreferences_TagSimplifiedUserInterface:
 		outKeyName = CFSTR("menu-command-set-simplified");
 		outKeyValueType = typeNetEvents_CFBooleanRef;
@@ -5985,6 +5992,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				{
 				case kPreferences_TagAssociatedTerminalFavorite:
 				case kPreferences_TagServerHost:
+				case kPreferences_TagServerUserID:
 					// all of these keys have Core Foundation string values
 					{
 						assert(typeCFStringRef == keyValueType);
@@ -7965,6 +7973,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			{
 			case kPreferences_TagAssociatedTerminalFavorite:
 			case kPreferences_TagServerHost:
+			case kPreferences_TagServerUserID:
 				// all of these keys have Core Foundation string values
 				{
 					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);

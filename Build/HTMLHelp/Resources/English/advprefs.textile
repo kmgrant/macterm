@@ -154,6 +154,8 @@ h3(#sessions). Session Collections
 |\2((. The port on the host machine that the desired remote server is using; can derive default from protocol.|
 |@server-protocol@|_string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@|
 |\2((. The protocol used for a remote connection.|
+|@server-user-id@|_string_: typically all-lowercase and one word, for log-in|
+|\2((. The ID used for logging in to the remote server.|
 |@tek-mode@|_string_: @off@, @4014@ or @4105@|
 |\2((. Vector graphics commands received from the session are disabled or assumed to use this command set.|
 |@tek-page-clears-screen@|_true or false_|
