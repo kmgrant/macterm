@@ -129,7 +129,8 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Tab" NIB from the package "TerminalWindow.nib".
 */
-static HIViewID const	idMyButtonTabTitle			= { 'TTit', 0/* ID */ };
+static HIViewID const	idMyLabelTabTitle			= { 'TTit', 0/* ID */ };
+static HIViewID const	idMyButtonNewWorkspace		= { 'TTab', 0/* ID */ };
 
 #pragma mark Types
 
@@ -1499,10 +1500,10 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 				SetWindowTitleWithCFString(ptr->window, adornedCFString);
 				if (ptr->tab.exists())
 				{
-					HIViewWrap		titleWrap(idMyButtonTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
+					HIViewWrap		titleWrap(idMyLabelTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
 					
 					
-					SetControlTitleWithCFString(titleWrap, adornedCFString);
+					SetControlTextWithCFString(titleWrap, adornedCFString);
 				}
 				CFRelease(adornedCFString), adornedCFString = nullptr;
 			}
@@ -1512,10 +1513,10 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 			SetWindowTitleWithCFString(ptr->window, ptr->baseTitleString.returnCFStringRef());
 			if (ptr->tab.exists())
 			{
-				HIViewWrap		titleWrap(idMyButtonTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
+				HIViewWrap		titleWrap(idMyLabelTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
 				
 				
-				SetControlTitleWithCFString(titleWrap, ptr->baseTitleString.returnCFStringRef());
+				SetControlTextWithCFString(titleWrap, ptr->baseTitleString.returnCFStringRef());
 			}
 		}
 	}

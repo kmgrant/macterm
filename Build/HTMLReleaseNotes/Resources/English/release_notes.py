@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080505',
     '20080504',
     '20080501',
     '20080429',
@@ -146,6 +147,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080505': [
+		'Terminal window tabs can now display much longer titles.',
+		'Terminal window tabs now have a small side button for the "new workspace" behavior, instead of a huge button.',
+	],
 	'20080504': [
 		'Fixed the Preferences window Sessions pane Resource tab, so it is possible to properly save favorite commands or servers.',
 	],

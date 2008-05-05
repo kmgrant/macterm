@@ -55,10 +55,9 @@ they are separate windows, so they retain a lot of flexibility.
 For example, a sheet open on one tab will not block other tabs.
 
 Currently, new tabs always appear in the most recently created
-"workspace".  By default there is one workspace, but clicking a
-tab or selecting Window >> Move to New Workspace will separate
-the tab into its own workspace, and that workspace becomes the
-new default for future tabs.
+"workspace".  By default there is one workspace, but clicking the
+up-arrow button in a tab or using Window >> Move to New Workspace
+will separate the tab into a new workspace.
 
 h4. Text
 
