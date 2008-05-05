@@ -242,6 +242,24 @@ struct My_SessionsPanelResourceUI
 	MenuItemIndex
 	returnProtocolMenuCommandIndex	(UInt32);
 	
+	void
+	saveFieldPreferences	(Preferences_ContextRef);
+	
+	void
+	setCommandLine	(CFStringRef);
+	
+	void
+	setHost		(CFStringRef);
+	
+	void
+	setPort		(UInt16);
+	
+	void
+	setProtocol		(Session_Protocol);
+	
+	void
+	setUserID	(CFStringRef);
+	
 	Boolean
 	updateCommandLine ();
 	
@@ -1689,7 +1707,11 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			delete (REINTERPRET_CAST(inDataPtr, My_SessionsPanelResourceDataPtr));
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(inDataPtr, My_SessionsPanelResourceDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			delete panelDataPtr;
 		}
 		break;
 	
@@ -1704,10 +1726,12 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageFocusLost: // notification that a view is no longer focused
 		{
-			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			//HIViewRef const*						viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelResourceDataPtr);
 			
 			
-			// do nothing
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 		}
 		break;
 	
@@ -1746,7 +1770,11 @@ panelChanged	(Panel_Ref		inPanel,
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			if (nullptr != oldContext)
+			{
+				panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+				Preferences_ContextSave(oldContext);
+			}
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1780,7 +1808,91 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		// UNIMPLEMENTED
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		
+		
+		// INCOMPLETE
+		
+		// set protocol
+		{
+			Session_Protocol	givenProtocol = kSession_ProtocolSSH1;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(givenProtocol),
+														&givenProtocol, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setProtocol(givenProtocol);
+			}
+		}
+		
+		// set host name
+		{
+			CFStringRef		hostCFString = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerHost, sizeof(hostCFString),
+														&hostCFString, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setHost(hostCFString);
+			}
+		}
+		
+		// set port number
+		{
+			UInt16		portNumber = 0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerPort, sizeof(portNumber),
+														&portNumber, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setPort(portNumber);
+			}
+		}
+		
+		// set user ID
+		{
+			CFStringRef		userCFString = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerUserID, sizeof(userCFString),
+														&userCFString, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setUserID(userCFString);
+			}
+		}
+		
+		// set command line
+		{
+			CFArrayRef		argumentListCFArray = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagCommandLine,
+														sizeof(argumentListCFArray), &argumentListCFArray);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				CFStringRef		concatenatedString = CFStringCreateByCombiningStrings
+														(kCFAllocatorDefault, argumentListCFArray,
+															CFSTR(" ")/* separator */);
+				
+				
+				if (nullptr != concatenatedString)
+				{
+					this->setCommandLine(concatenatedString);
+					CFRelease(concatenatedString), concatenatedString = nullptr;
+				}
+			}
+			else
+			{
+				// ONLY if no actual command line was stored, generate a
+				// command line based on other settings (like host name)
+				this->updateCommandLine();
+			}
+		}
 	}
 }// My_SessionsPanelResourceUI::readPreferences
 
@@ -1855,6 +1967,216 @@ returnProtocolMenuCommandIndex	(UInt32		inCommandID)
 
 
 /*!
+Saves every text field in the panel to the data model.
+It is necessary to treat fields specially because they
+do not have obvious state changes (as, say, buttons do);
+they might need saving when focus is lost or the window
+is closed, etc.
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
+{
+	if (nullptr != inoutSettings)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		// INCOMPLETE
+		
+		// set server host
+		{
+			CFStringRef		hostCFString = nullptr;
+			
+			
+			GetControlTextAsCFString(_fieldHostName, hostCFString);
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerHost,
+														sizeof(hostCFString), &hostCFString);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set server host");
+			}
+			if (nullptr != hostCFString) CFRelease(hostCFString), hostCFString = nullptr;
+		}
+		
+		// set server port
+		{
+			SInt32		dummyInteger = 0;
+			UInt16		portNumber = 0;
+			
+			
+			GetControlNumericalText(_fieldPortNumber, &dummyInteger);
+			portNumber = STATIC_CAST(dummyInteger, UInt16);
+			
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerPort,
+														sizeof(portNumber), &portNumber);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set server port");
+			}
+		}
+		
+		// set user name
+		{
+			CFStringRef		userCFString = nullptr;
+			
+			
+			GetControlTextAsCFString(_fieldUserID, userCFString);
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerUserID,
+														sizeof(userCFString), &userCFString);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set server user ID");
+			}
+			if (nullptr != userCFString) CFRelease(userCFString), userCFString = nullptr;
+		}
+		
+		// set command line
+		{
+			CFStringRef		commandLineCFString = nullptr;
+			Boolean			saveOK = false;
+			
+			
+			GetControlTextAsCFString(_fieldCommandLine, commandLineCFString);
+			if (nullptr != commandLineCFString)
+			{
+				CFArrayRef		argumentListCFArray = nullptr;
+				
+				
+				argumentListCFArray = CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, commandLineCFString,
+																				CFSTR(" ")/* separator */);
+				if (nullptr != argumentListCFArray)
+				{
+					prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagCommandLine,
+																sizeof(argumentListCFArray), &argumentListCFArray);
+					if (kPreferences_ResultOK == prefsResult) saveOK = true;
+					CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
+				}
+				CFRelease(commandLineCFString), commandLineCFString = nullptr;
+			}
+			if (false == saveOK)
+			{
+				Console_WriteLine("warning, failed to set command line");
+			}
+		}
+	}
+}// My_SessionsPanelResourceUI::saveFieldPreferences
+
+
+/*!
+Changes the command line field.
+
+IMPORTANT:	Normally, this is for initialization; it overwrites
+			the entire field with a set value.  Most of the time
+			it is more appropriate to use updateCommandLine() in
+			response to changes to other (such as, the host).
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+setCommandLine		(CFStringRef	inCommandLine)
+{
+	SetControlTextWithCFString(_fieldCommandLine, inCommandLine);
+}// My_SessionsPanelResourceUI::setCommandLine
+
+
+/*!
+Changes the host name field.
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+setHost		(CFStringRef	inHostName)
+{
+	SetControlTextWithCFString(_fieldHostName, inHostName);
+}// My_SessionsPanelResourceUI::setHost
+
+
+/*!
+Changes the port number field.
+
+IMPORTANT:	Normally, this is for initialization; it overwrites
+			the entire field with a set value.  Most of the time
+			it is more appropriate to use updatePortNumberField()
+			in response to other changes (such as, the protocol).
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+setPort		(UInt16		inPortNumber)
+{
+	SetControlNumericalText(_fieldPortNumber, inPortNumber);
+}// My_SessionsPanelResourceUI::setPort
+
+
+/*!
+Changes the currently selected protocol menu item.
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+setProtocol		(Session_Protocol	inProtocol)
+{
+	MenuItemIndex	itemIndex = 0;
+	UInt32			commandID = 0;
+	
+	
+	switch (inProtocol)
+	{
+	case kSession_ProtocolFTP:
+		commandID = kCommandNewProtocolSelectedFTP;
+		break;
+	
+	case kSession_ProtocolSFTP:
+		commandID = kCommandNewProtocolSelectedSFTP;
+		break;
+	
+	case kSession_ProtocolSSH1:
+		commandID = kCommandNewProtocolSelectedSSH1;
+		break;
+	
+	case kSession_ProtocolSSH2:
+		commandID = kCommandNewProtocolSelectedSSH2;
+		break;
+	
+	case kSession_ProtocolTelnet:
+		commandID = kCommandNewProtocolSelectedTELNET;
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	itemIndex = this->returnProtocolMenuCommandIndex(commandID);
+	if (0 != itemIndex)
+	{
+		SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(this->mainView)),
+								itemIndex);
+	}
+}// My_SessionsPanelResourceUI::setProtocol
+
+
+/*!
+Changes the user ID field.
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+setUserID	(CFStringRef	inUserID)
+{
+	SetControlTextWithCFString(_fieldUserID, inUserID);
+}// My_SessionsPanelResourceUI::setUserID
+
+
+/*!
 Since everything is ÒreallyÓ a local Unix command,
 this routine scans the Remote Session options and
 updates the command line field with appropriate
@@ -1869,6 +2191,8 @@ NOTE:	Currently, this routine basically obliterates
 		those command line arguments that need to be
 		updated, preserving any additional parts of
 		the command line.
+
+See also setCommandLine().
 
 (3.1)
 */
@@ -2184,7 +2508,8 @@ Embellishes "kEventTextInputUnicodeForKeyEvent" of
 "kEventClassTextInput" for the remote session fields
 in the Resource tab.  Since a command line is
 constructed based on user entries, every change
-requires an update to the command line field.
+requires an update to the command line field.  This
+also saves the preferences for text field data.
 
 (3.1)
 */
@@ -2194,7 +2519,7 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 					 void*					inMySessionsTabResourcePtr)
 {
 	OSStatus						result = eventNotHandledErr;
-	My_SessionsPanelResourceUI*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
+	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
 	UInt32 const					kEventClass = GetEventClass(inEvent);
 	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
@@ -2207,7 +2532,16 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 	result = CallNextEventHandler(inHandlerCallRef, inEvent);
 	
 	// now synchronize the post-input change with the command line field
-	ptr->updateCommandLine();
+	resourceInterfacePtr->updateCommandLine();
+	
+	// synchronize the post-input change with preferences
+	{
+		My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																			My_SessionsPanelResourceDataPtr);
+		
+		
+		resourceInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+	}
 	
 	return result;
 }// receiveFieldChanged
@@ -2254,7 +2588,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandNewProtocolSelectedTELNET:
 				// a new protocol menu item was chosen
 				{
-					MenuItemIndex const		kItemIndex = resourceInterfacePtr->returnProtocolMenuCommandIndex(received.commandID);
+					MenuItemIndex const					kItemIndex = resourceInterfacePtr->returnProtocolMenuCommandIndex(received.commandID);
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
 					
 					
 					switch (received.commandID)
@@ -2286,6 +2623,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(resourceInterfacePtr->mainView)), kItemIndex);
 					resourceInterfacePtr->updatePortNumberField();
 					(Boolean)resourceInterfacePtr->updateCommandLine();
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagServerProtocol,
+																sizeof(resourceInterfacePtr->selectedProtocol),
+																&resourceInterfacePtr->selectedProtocol);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, unable to save protocol setting");
+					}
 					result = noErr;
 				}
 				break;

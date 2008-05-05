@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080504',
     '20080501',
     '20080429',
     '20080426',
@@ -145,6 +146,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080504': [
+		'Fixed the Preferences window Sessions pane Resource tab, so it is possible to properly save favorite commands or servers.',
+	],
 	'20080501': [
 		'Fixed the Preferences window Sessions pane Graphics tab.',
 	],
