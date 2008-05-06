@@ -148,6 +148,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080505': [
+		'Fixed a conflict in the Preferences window where using the Default command in the File menu would affect the collections list.',
 		'Terminal window tabs can now display much longer titles.',
 		'Terminal window tabs now have a small side button for the "new workspace" behavior, instead of a huge button.',
 	],

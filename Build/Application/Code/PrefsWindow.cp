@@ -109,7 +109,7 @@ the "Drawer" NIB from the package "PrefsWindow.nib".
 */
 HIViewID const		idMyStaticTextListTitle			= { 'Titl', 0/* ID */ };
 HIViewID const		idMyDataBrowserCollections		= { 'Favs', 0/* ID */ };
-HIViewID const		idMyButtonAddCollection			= { 'AddC', 0/* ID */ };
+HIViewID const		idMyButtonAddCollection			= { 'NewC', 0/* ID */ };
 HIViewID const		idMyButtonRemoveCollection		= { 'DelC', 0/* ID */ };
 HIViewID const		idMyButtonManipulateCollection	= { 'MnpC', 0/* ID */ };
 FourCharCode const	kMyDataBrowserPropertyIDSets	= 'Sets';
@@ -1755,7 +1755,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// execute a command selected from the toolbar
 				switch (received.commandID)
 				{
-				case kHICommandNew:
+				case kCommandPreferencesNewFavorite:
 					{
 						// create a data browser item; this is accomplished by
 						// creating and immediately saving a new named context
@@ -1777,7 +1777,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					break;
 				
-				case kHICommandClear:
+				case kCommandPreferencesDeleteFavorite:
 					{
 						// delete a data browser item; this is accomplished by
 						// destroying the underlying context (a preferences callback
