@@ -971,15 +971,19 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 	}
 	else
 	{
-		CFStringRef		nameCFString = nullptr;
+		CFStringRef			nameCFString = nullptr;
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
 		
 		
 		// INCOMPLETE: Base the new name on the name of the original.
-		// INCOMPLETE: Scan the list of all contexts for the given class
-		// and find a unique name.  For now, just assume one.
-		nameCFString = CFSTR("copy"); // TEMPORARY; LOCALIZE THIS
-		
-		result = Preferences_NewContextFromFavorites(baseClass, nameCFString);
+		// scan the list of all contexts for the given class and find a unique name
+		prefsResult = Preferences_CreateUniqueContextName(baseClass, nameCFString/* new name */,
+															basePtr->returnName()/* base name */);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = Preferences_NewContextFromFavorites(baseClass, nameCFString);
+			CFRelease(nameCFString), nameCFString = nullptr;
+		}
 	}
 	
 	if (nullptr != result)
@@ -1098,15 +1102,20 @@ Preferences_NewContextFromFavorites		(Preferences_Class		inClass,
 										 CFStringRef			inNameOrNullToAutoGenerateUniqueName)
 {
 	Preferences_ContextRef		result = nullptr;
+	Boolean						releaseName = false;
 	
 	
-	// INCOMPLETE: When nullptr is given, scan the list of all
-	// contexts for the given class and find a unique name.
-	// For now, just assume one.
+	// when nullptr is given, scan the list of all contexts for the
+	// given class and find a unique name
 	if (nullptr == inNameOrNullToAutoGenerateUniqueName)
 	{
-		// TEMPORARY
-		inNameOrNullToAutoGenerateUniqueName = CFSTR("untitled"); // LOCALIZE THIS
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_CreateUniqueContextName
+						(inClass, inNameOrNullToAutoGenerateUniqueName/* new name */);
+		assert(kPreferences_ResultOK == prefsResult);
+		releaseName = true;
 	}
 	
 	try
@@ -1143,6 +1152,12 @@ Preferences_NewContextFromFavorites		(Preferences_Class		inClass,
 		Console_WriteLine(inException.what());
 		result = nullptr;
 	}
+	
+	if (releaseName)
+	{
+		CFRelease(inNameOrNullToAutoGenerateUniqueName), inNameOrNullToAutoGenerateUniqueName = nullptr;
+	}
+	
 	return result;
 }// NewContextFromFavorites
 
@@ -2123,6 +2138,83 @@ Preferences_CreateContextNameArray	(Preferences_Class		inClass,
 	
 	return result;
 }// CreateContextNameArray
+
+
+/*!
+Creates a name for a context in the given class, that no
+other context is currently using.  You may optionally give
+a name that the new name should be “similar” to.  You must
+call CFRelease() on the new string when finished.
+
+Since this routine uses a list of contexts in memory, it
+is able to generate a unique name even among recently
+constructed contexts that have not yet been saved.
+
+\retval kPreferences_ResultOK
+if a name was created successfully
+
+\retval kPreferences_ResultUnknownTagOrClass
+if "inClass" is not valid
+
+\retval kPreferences_ResultGenericFailure
+if any other error occurs
+
+(3.1)
+*/
+Preferences_Result
+Preferences_CreateUniqueContextName		(Preferences_Class	inClass,
+										 CFStringRef&		outNewName,
+										 CFStringRef		inBaseNameOrNull)
+{
+	Preferences_Result			result = kPreferences_ResultGenericFailure;
+	My_FavoriteContextList*		listPtr = nullptr;
+	
+	
+	if (getListOfContexts(inClass, listPtr))
+	{
+		CFIndex const								kMaxTries = 100; // arbitrary
+		CFStringRef const							kBaseName = (nullptr == inBaseNameOrNull)
+																? CFSTR("untitled") // LOCALIZE THIS
+																: inBaseNameOrNull;
+		My_FavoriteContextList::const_iterator		toContextPtr = listPtr->end();
+		CFMutableStringRef							nameTemplateCFString = CFStringCreateMutableCopy
+																			(kCFAllocatorDefault,
+																				0/* maximum length */,
+																				kBaseName);
+		
+		
+		// keep trying names until a unique one is found
+		result = kPreferences_ResultGenericFailure; // initially...
+		if (nullptr != nameTemplateCFString)
+		{
+			CFStringAppend(nameTemplateCFString, CFSTR(" %ld")); // LOCALIZE THIS
+			
+			for (CFIndex i = 2; ((i <= kMaxTries) && (kPreferences_ResultOK != result)); ++i)
+			{
+				CFStringRef		currentNameCFString = CFStringCreateWithFormat
+														(kCFAllocatorDefault, nullptr/* options */,
+															nameTemplateCFString, i/* substitution */);
+				
+				
+				if (nullptr != currentNameCFString)
+				{
+					toContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+												contextNameEqualTo(currentNameCFString));
+					if (listPtr->end() == toContextPtr)
+					{
+						// success!
+						outNewName = CFStringCreateCopy(kCFAllocatorDefault, currentNameCFString);
+						result = kPreferences_ResultOK;
+					}
+					CFRelease(currentNameCFString), currentNameCFString = nullptr;
+				}
+			}
+			CFRelease(nameTemplateCFString), nameTemplateCFString = nullptr;
+		}
+	}
+	
+	return result;
+}// CreateUniqueContextName
 
 
 /*!

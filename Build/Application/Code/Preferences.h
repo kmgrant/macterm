@@ -475,6 +475,11 @@ Preferences_Result
 	Preferences_CreateContextNameArray		(Preferences_Class					inClass,
 											 CFArrayRef&						outNewArrayOfNewCFStrings);
 
+Preferences_Result
+	Preferences_CreateUniqueContextName		(Preferences_Class					inClass,
+											 CFStringRef&						outNewName,
+											 CFStringRef						inBaseNameOrNull = nullptr);
+
 Boolean
 	Preferences_GetContextsInClass			(Preferences_Class					inClass,
 											 std::vector< Preferences_ContextRef >&);
