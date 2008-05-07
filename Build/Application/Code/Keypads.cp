@@ -90,6 +90,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	EventHandlerRef					gControlKeysWindoidClosingHandler = nullptr; //!< invoked when Control Keys is about to close
 	EventHandlerRef					gFunctionKeysWindoidClosingHandler = nullptr; //!< invoked when Function Keys is about to close
 	EventHandlerRef					gVT220KeypadWindoidClosingHandler = nullptr; //!< invoked when VT220 Keypad is about to close
+	EventTargetRef					gControlKeysEventTarget = nullptr;
 	Boolean							gInited = false;
 	CommandIDToCharacterOrKeyMap&	gCommandIDToCharacterOrKeyMap()	{ static CommandIDToCharacterOrKeyMap x; return x; }
 }
@@ -586,6 +587,43 @@ Keypads_ReturnWindow	(Keypads_WindowType		inFromKeypad)
 }// ReturnWindow
 
 
+/*!
+Sets the current event target for button commands issued
+by the specified keypad, and automatically shows or hides
+the keypad window.  Currently, only the control keys palette
+(kKeypads_WindowTypeControlKeys) is recognized.
+
+You can pass "nullptr" as the target to set no target, in
+which case the default behavior (using a session window)
+is restored and the palette is hidden if there is no user
+preference to keep it visible.
+
+(3.1)
+*/
+void
+Keypads_SetKeypadEventTarget	(Keypads_WindowType		inFromKeypad,
+								 EventTargetRef			inCurrentTarget)
+{
+	if (gInited)
+	{
+		switch (inFromKeypad)
+		{
+		case kKeypads_WindowTypeControlKeys:
+			gControlKeysEventTarget = inCurrentTarget;
+			// TEMPORARY: only hide if user preference is to keep invisible
+			if (nullptr == gControlKeysEventTarget) HideWindow(gControlKeysWindow);
+			else ShowWindow(gControlKeysWindow);
+			break;
+		
+		case kKeypads_WindowTypeFunctionKeys:
+		case kKeypads_WindowTypeVT220Keys:
+		default:
+			break;
+		}
+	}
+}// SetKeypadEventTarget
+
+
 #pragma mark Internal Methods
 
 /*!
@@ -713,8 +751,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandKeypadControlRightSquareBracket:
 				case kCommandKeypadControlTilde:
 				case kCommandKeypadControlQuestionMark:
-					// control keys are actually represented by their ASCII character codes, so just ÒtypeÓ the character
+					if (nullptr != gControlKeysEventTarget)
 					{
+						SendEventToEventTarget(inEvent, gControlKeysEventTarget);
+					}
+					else
+					{
+						// control keys are actually represented by their ASCII character codes, so just ÒtypeÓ the character
 						SessionRef		currentSession = getCurrentSession();
 						
 						

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080506',
     '20080505',
     '20080504',
     '20080501',
@@ -147,6 +148,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080506': [
+		'The Special Key Sequences dialog now reuses the floating Control Keys palette to make changes, so the dialog is much smaller.',
+	],
 	'20080505': [
 		'Fixed a conflict in the Preferences window where using the Default command in the File menu would affect the collections list.',
 		'Fixed name generation in the Preferences window collections drawer (for "+", and duplication) so the result is always unique.',

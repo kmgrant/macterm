@@ -61,6 +61,10 @@ void
 WindowRef
 	Keypads_ReturnWindow			(Keypads_WindowType		inFromKeypad);
 
+void
+	Keypads_SetKeypadEventTarget	(Keypads_WindowType		inKeypad,
+									 EventTargetRef			inTarget);
+
 #endif
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

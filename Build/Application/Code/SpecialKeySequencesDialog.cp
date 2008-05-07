@@ -56,6 +56,7 @@
 #include "Commands.h"
 #include "DialogUtilities.h"
 #include "HelpSystem.h"
+#include "Keypads.h"
 #include "Session.h"
 #include "SpecialKeySequencesDialog.h"
 
@@ -202,6 +203,9 @@ SpecialKeySequencesDialog_Display  (SpecialKeySequencesDialog_Ref	inRef)
 	if (nullptr == ptr) Alert_ReportOSStatus(memFullErr);
 	else
 	{
+		// show the control keys palette
+		Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
+		
 		// display the dialog
 		ShowSheetWindow(ptr->dialogWindow, Session_ReturnActiveWindow(ptr->session));
 		
@@ -478,6 +482,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// do this outside the auto-locker block so that
 				// all locks are free when disposal is attempted
 				SpecialKeySequencesDialog_Dispose(&ref);
+				// reset the keypad
+				Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
 				break;
 			
 			case kHICommandCancel:
@@ -498,12 +504,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// do this outside the auto-locker block so that
 				// all locks are free when disposal is attempted
 				SpecialKeySequencesDialog_Dispose(&ref);
+				// reset the keypad
+				Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
 				break;
 			
 			case kCommandEditInterruptKey:
 				{
 					MySpecialKeysDialogAutoLocker	ptr(gSpecialKeysDialogPtrLocks(), ref);
 					
+					
+					// show the control keys palette and target the button
+					Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
 					
 					// change the active button
 					SetControl32BitValue(ptr->buttonInterrupt, kControlCheckBoxCheckedValue);
@@ -517,6 +528,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					MySpecialKeysDialogAutoLocker	ptr(gSpecialKeysDialogPtrLocks(), ref);
 					
 					
+					// show the control keys palette and target the button
+					Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
+					
 					// change the active button
 					SetControl32BitValue(ptr->buttonInterrupt, kControlCheckBoxUncheckedValue);
 					SetControl32BitValue(ptr->buttonSuspend, kControlCheckBoxCheckedValue);
@@ -528,6 +542,9 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 					MySpecialKeysDialogAutoLocker	ptr(gSpecialKeysDialogPtrLocks(), ref);
 					
+					
+					// show the control keys palette and target the button
+					Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
 					
 					// change the active button
 					SetControl32BitValue(ptr->buttonInterrupt, kControlCheckBoxUncheckedValue);
