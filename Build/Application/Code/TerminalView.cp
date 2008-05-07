@@ -9892,8 +9892,7 @@ visualBell	(TerminalViewRef	inView)
 	if (visual)
 	{
 		TerminalView_ReverseVideo(inView, !kWasReverseVideo); // also invalidates view
-		(OSStatus)HIViewRender(viewPtr->contentHIView);
-		QDFlushPortBuffer(GetWindowPort(kViewWindow), nullptr/* region */);
+		HIWindowFlush(kViewWindow);
 	}
 	
 	// Mac OS 8 asynchronous sounds mean that a sound generates
@@ -9905,8 +9904,7 @@ visualBell	(TerminalViewRef	inView)
 	if (visual)
 	{
 		TerminalView_ReverseVideo(inView, kWasReverseVideo); // also invalidates view
-		(OSStatus)HIViewRender(viewPtr->contentHIView);
-		QDFlushPortBuffer(GetWindowPort(kViewWindow), nullptr/* region */);
+		HIWindowFlush(kViewWindow);
 	}
 	
 	if (gPreferenceProxies.notifyOfBeeps) Alert_BackgroundNotification();
