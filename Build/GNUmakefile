@@ -171,7 +171,9 @@ English.lproj/DuplicateDialog.nib \
 English.lproj/FindDialog.nib \
 English.lproj/GenericDialog.nib \
 English.lproj/InfoWindow.nib \
-English.lproj/Keypads.nib \
+English.lproj/KeypadControlKeys.nib \
+English.lproj/KeypadFunctionKeys.nib \
+English.lproj/KeypadVT220Keys.nib \
 English.lproj/KioskDisableFloater.nib \
 English.lproj/KioskPasswordDialog.nib \
 English.lproj/MacroSetupWindow.nib \

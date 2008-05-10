@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -48,22 +48,142 @@ enum
 	kKeypads_WindowTypeVT220Keys		= 2		//!< VT220 keypad (PF1, PF2, etc.)
 };
 
+#pragma mark Types
+
+#ifdef __OBJC__
+
+@interface Keypads_PanelController : NSWindowController
+- (void)sendCharacter:(UInt8)inCharacter;
+- (void)sendKey:(UInt8)inKey;
+@end
+
+/*!
+Implements the Control Keys palette.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Keypads_ControlKeysPanelController : Keypads_PanelController
++ (id)sharedControlKeysPanelController;
+// the following MUST match what is in "KeypadControlKeys.nib"
+- (IBAction)typeNull:(id)sender;
+- (IBAction)typeControlA:(id)sender;
+- (IBAction)typeControlB:(id)sender;
+- (IBAction)typeControlC:(id)sender;
+- (IBAction)typeControlD:(id)sender;
+- (IBAction)typeControlE:(id)sender;
+- (IBAction)typeControlF:(id)sender;
+- (IBAction)typeControlG:(id)sender;
+- (IBAction)typeControlH:(id)sender;
+- (IBAction)typeControlI:(id)sender;
+- (IBAction)typeControlJ:(id)sender;
+- (IBAction)typeControlK:(id)sender;
+- (IBAction)typeControlL:(id)sender;
+- (IBAction)typeControlM:(id)sender;
+- (IBAction)typeControlN:(id)sender;
+- (IBAction)typeControlO:(id)sender;
+- (IBAction)typeControlP:(id)sender;
+- (IBAction)typeControlQ:(id)sender;
+- (IBAction)typeControlR:(id)sender;
+- (IBAction)typeControlS:(id)sender;
+- (IBAction)typeControlT:(id)sender;
+- (IBAction)typeControlU:(id)sender;
+- (IBAction)typeControlV:(id)sender;
+- (IBAction)typeControlW:(id)sender;
+- (IBAction)typeControlX:(id)sender;
+- (IBAction)typeControlY:(id)sender;
+- (IBAction)typeControlZ:(id)sender;
+- (IBAction)typeControlLeftSquareBracket:(id)sender;
+- (IBAction)typeControlBackslash:(id)sender;
+- (IBAction)typeControlRightSquareBracket:(id)sender;
+- (IBAction)typeControlTilde:(id)sender;
+- (IBAction)typeControlQuestionMark:(id)sender;
+@end
+
+/*!
+Implements the VT220 Function Keys palette.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Keypads_FunctionKeysPanelController : Keypads_PanelController
++ (id)sharedFunctionKeysPanelController;
+// the following MUST match what is in "KeypadFunctionKeys.nib"
+- (IBAction)typeF6:(id)sender;
+- (IBAction)typeF7:(id)sender;
+- (IBAction)typeF8:(id)sender;
+- (IBAction)typeF9:(id)sender;
+- (IBAction)typeF10:(id)sender;
+- (IBAction)typeF11:(id)sender;
+- (IBAction)typeF12:(id)sender;
+- (IBAction)typeF13:(id)sender;
+- (IBAction)typeF14:(id)sender;
+- (IBAction)typeF15:(id)sender;
+- (IBAction)typeF16:(id)sender;
+- (IBAction)typeF17:(id)sender;
+- (IBAction)typeF18:(id)sender;
+- (IBAction)typeF19:(id)sender;
+- (IBAction)typeF20:(id)sender;
+@end
+
+/*!
+Implements the VT220 Keypad palette.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Keypads_VT220KeysPanelController : Keypads_PanelController
++ (id)sharedVT220KeysPanelController;
+// the following MUST match what is in "KeypadVT220Keys.nib"
+- (IBAction)type0:(id)sender;
+- (IBAction)type1:(id)sender;
+- (IBAction)type2:(id)sender;
+- (IBAction)type3:(id)sender;
+- (IBAction)type4:(id)sender;
+- (IBAction)type5:(id)sender;
+- (IBAction)type6:(id)sender;
+- (IBAction)type7:(id)sender;
+- (IBAction)type8:(id)sender;
+- (IBAction)type9:(id)sender;
+- (IBAction)typeArrowDown:(id)sender;
+- (IBAction)typeArrowLeft:(id)sender;
+- (IBAction)typeArrowRight:(id)sender;
+- (IBAction)typeArrowUp:(id)sender;
+- (IBAction)typeComma:(id)sender;
+- (IBAction)typeDecimalPoint:(id)sender;
+- (IBAction)typeDelete:(id)sender;
+- (IBAction)typeEnter:(id)sender;
+- (IBAction)typeFind:(id)sender;
+- (IBAction)typeHyphen:(id)sender;
+- (IBAction)typeInsert:(id)sender;
+- (IBAction)typePageDown:(id)sender;
+- (IBAction)typePageUp:(id)sender;
+- (IBAction)typePF1:(id)sender;
+- (IBAction)typePF2:(id)sender;
+- (IBAction)typePF3:(id)sender;
+- (IBAction)typePF4:(id)sender;
+- (IBAction)typeSelect:(id)sender;
+@end
+
+#endif
+
 
 
 #pragma mark Public Methods
 
-void
-	Keypads_Init					();
+Boolean
+	Keypads_IsVisible				(Keypads_WindowType		inKeypad);
 
 void
-	Keypads_Done					();
-
-WindowRef
-	Keypads_ReturnWindow			(Keypads_WindowType		inFromKeypad);
-
-void
-	Keypads_SetKeypadEventTarget	(Keypads_WindowType		inKeypad,
+	Keypads_SetEventTarget			(Keypads_WindowType		inKeypad,
 									 EventTargetRef			inTarget);
+
+void
+	Keypads_SetVisible				(Keypads_WindowType		inKeypad,
+									 Boolean				inIsVisible);
 
 #endif
 

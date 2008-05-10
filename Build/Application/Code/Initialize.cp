@@ -216,11 +216,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		//TextTranslation_RunTests();
 	#endif
 		
-		Keypads_Init();
-	#if RUN_MODULE_TESTS
-		//Keypads_RunTests();
-	#endif
-		
 		MenuBar_Init(); // will also build the Scripts menu and font-list (if deemed necessary)
 	#if RUN_MODULE_TESTS
 		//MenuBar_RunTests();
@@ -414,7 +409,6 @@ Initialize_ApplicationShutdown ()
 	TerminalBackground_Done();
 	MenuBar_Done();
 	SessionFactory_Done();
-	Keypads_Done();
 	TextTranslation_Done();
 	Alert_Done();
 	

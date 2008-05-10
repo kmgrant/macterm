@@ -204,7 +204,7 @@ SpecialKeySequencesDialog_Display  (SpecialKeySequencesDialog_Ref	inRef)
 	else
 	{
 		// show the control keys palette
-		Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
+		Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
 		
 		// display the dialog
 		ShowSheetWindow(ptr->dialogWindow, Session_ReturnActiveWindow(ptr->session));
@@ -483,7 +483,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// all locks are free when disposal is attempted
 				SpecialKeySequencesDialog_Dispose(&ref);
 				// reset the keypad
-				Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
+				Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
 				break;
 			
 			case kHICommandCancel:
@@ -505,7 +505,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// all locks are free when disposal is attempted
 				SpecialKeySequencesDialog_Dispose(&ref);
 				// reset the keypad
-				Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
+				Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, nullptr);
 				break;
 			
 			case kCommandEditInterruptKey:
@@ -514,7 +514,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					
 					// show the control keys palette and target the button
-					Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
+					Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
 					
 					// change the active button
 					SetControl32BitValue(ptr->buttonInterrupt, kControlCheckBoxCheckedValue);
@@ -529,7 +529,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					
 					// show the control keys palette and target the button
-					Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
+					Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
 					
 					// change the active button
 					SetControl32BitValue(ptr->buttonInterrupt, kControlCheckBoxUncheckedValue);
@@ -544,7 +544,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					
 					// show the control keys palette and target the button
-					Keypads_SetKeypadEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
+					Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(ptr->dialogWindow));
 					
 					// change the active button
 					SetControl32BitValue(ptr->buttonInterrupt, kControlCheckBoxUncheckedValue);

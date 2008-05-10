@@ -1268,57 +1268,18 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	break;
 		
 		case kCommandShowControlKeys:
-			{
-				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys);
-				
-				
-				ShowWindow(window);
-			}
-			break;
-		
-		case kCommandHideControlKeys:
-			{
-				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys);
-				
-				
-				HideWindow(window);
-			}
+			// in the Cocoa implementation this really means “show or activate”
+			Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
 			break;
 		
 		case kCommandShowFunction:
-			{
-				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys);
-				
-				
-				ShowWindow(window);
-			}
-			break;
-		
-		case kCommandHideFunction:
-			{
-				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys);
-				
-				
-				HideWindow(window);
-			}
+			// in the Cocoa implementation this really means “show or activate”
+			Keypads_SetVisible(kKeypads_WindowTypeFunctionKeys, true);
 			break;
 		
 		case kCommandShowKeypad:
-			{
-				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys);
-				
-				
-				ShowWindow(window);
-			}
-			break;
-		
-		case kCommandHideKeypad:
-			{
-				WindowRef	window = Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys);
-				
-				
-				HideWindow(window);
-			}
+			// in the Cocoa implementation this really means “show or activate”
+			Keypads_SetVisible(kKeypads_WindowTypeVT220Keys, true);
 			break;
 		
 		case kCommandMainHelp:
@@ -1524,10 +1485,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 
 /*!
 Like Commands_ExecuteByID(), except it constructs a
-Carbon Event and sends it to the most local event
-target that is defined.  The first target attempted
-is the user focus; barring that, the active window;
-and barring that, the application itself.
+Carbon Event and sends it to the specified target.  If
+the target is "nullptr", the first target attempted is
+the user focus; barring that, the active window; and
+barring that, the application itself.
 
 Returns true only if the event is handled successfully.
 
@@ -1545,7 +1506,8 @@ IMPORTANT:	If Commands_StartHandlingExecution() was
 (3.1)
 */
 Boolean
-Commands_ExecuteByIDUsingEvent	(UInt32		inCommandID)
+Commands_ExecuteByIDUsingEvent	(UInt32				inCommandID,
+								 EventTargetRef		inTarget)
 {
 	EventRef	executeEvent = nullptr;
 	OSStatus	error = noErr;
@@ -1557,9 +1519,10 @@ Commands_ExecuteByIDUsingEvent	(UInt32		inCommandID)
 	if (noErr == error)
 	{
 		HICommand		commandInfo;
-		EventTargetRef	whereToStart = GetUserFocusEventTarget();
+		EventTargetRef	whereToStart = inTarget;
 		
 		
+		if (nullptr == whereToStart) whereToStart = GetUserFocusEventTarget();
 		if (nullptr == whereToStart) whereToStart = GetWindowEventTarget(EventLoop_ReturnRealFrontWindow());
 		if (nullptr == whereToStart) whereToStart = GetApplicationEventTarget();
 		assert(nullptr != whereToStart);

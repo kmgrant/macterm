@@ -1567,11 +1567,8 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowCommandLine, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideCommandLine, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowKeypad, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideKeypad, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowFunction, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideFunction, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowControlKeys, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideControlKeys, stateTrackerShowHideItems);
 	// state trackers for connection items are installed dynamically
 }// installMenuItemStateTrackers
 
@@ -1711,7 +1708,7 @@ returnFirstWindowItemAnchor		(MenuRef	inWindowMenu)
 	MenuItemIndex	result = 0;
 	MenuRef			menuContainingMatch = nullptr;
 	OSStatus		error = GetIndMenuItemWithCommandID
-							(inWindowMenu, kCommandHideKeypad/* this command should be last in the menu */,
+							(inWindowMenu, kCommandShowKeypad/* this command should be last in the menu */,
 								1/* which match to return */, &menuContainingMatch, &result);
 	
 	
@@ -3541,39 +3538,18 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 		break;
 	
 	case kCommandShowControlKeys:
+		// in the Cocoa implementation this really means “show or activate”, so it is always available
 		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys)));
-		break;
-	
-	case kCommandHideControlKeys:
-		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeControlKeys)));
 		break;
 	
 	case kCommandShowFunction:
+		// in the Cocoa implementation this really means “show or activate”, so it is always available
 		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys)));
-		break;
-	
-	case kCommandHideFunction:
-		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeFunctionKeys)));
 		break;
 	
 	case kCommandShowKeypad:
+		// in the Cocoa implementation this really means “show or activate”, so it is always available
 		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys)));
-		break;
-	
-	case kCommandHideKeypad:
-		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(Keypads_ReturnWindow(kKeypads_WindowTypeVT220Keys)));
 		break;
 	
 	default:

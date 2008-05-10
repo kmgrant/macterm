@@ -490,7 +490,8 @@ Boolean
 	Commands_ExecuteByID					(UInt32						inCommandID);
 
 Boolean
-	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID);
+	Commands_ExecuteByIDUsingEvent			(UInt32						inCommandID,
+											 EventTargetRef				inTarget = nullptr);
 
 //@}
 

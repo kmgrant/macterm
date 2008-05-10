@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080510',
     '20080506',
     '20080505',
     '20080504',
@@ -148,6 +149,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080510': [
+		'Key palettes are now implemented using Cocoa, which makes them easier to use (for example, command-W works on them).',
+	],
 	'20080506': [
 		'The Special Key Sequences dialog now reuses the floating Control Keys palette to make changes, so the dialog is much smaller.',
 	],
