@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080511',
     '20080510',
     '20080506',
     '20080505',
@@ -149,6 +150,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080511': [
+		'The Preferences window Translations pane now displays localized names for all text encodings (character sets).',
+	],
 	'20080510': [
 		'Key palettes are now implemented using Cocoa, which makes them easier to use (for example, command-W works on them).',
 	],

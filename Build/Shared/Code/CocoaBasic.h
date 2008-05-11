@@ -39,25 +39,28 @@
 #pragma mark Public Methods
 
 void
-	CocoaBasic_AboutPanelDisplay			();
+	CocoaBasic_AboutPanelDisplay					();
 
 Boolean
-	CocoaBasic_ApplicationLoad				();
+	CocoaBasic_ApplicationLoad						();
 
 void
-	CocoaBasic_ColorPanelDisplay			();
+	CocoaBasic_ColorPanelDisplay					();
 
 void
-	CocoaBasic_ColorPanelSetTargetView		(HIViewRef);
+	CocoaBasic_ColorPanelSetTargetView				(HIViewRef);
 
 void
-	CocoaBasic_PlaySoundByName				(CFStringRef);
+	CocoaBasic_PlaySoundByName						(CFStringRef);
 
 void
-	CocoaBasic_PlaySoundFile				(CFURLRef);
+	CocoaBasic_PlaySoundFile						(CFURLRef);
+
+CFStringRef
+	CocoaBasic_ReturnStringEncodingLocalizedName	(CFStringEncoding);
 
 CFArrayRef
-	CocoaBasic_ReturnUserSoundNames			();
+	CocoaBasic_ReturnUserSoundNames					();
 
 #endif
 

@@ -41,6 +41,7 @@
 // library includes
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
+#include <CocoaBasic.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
 #include <DialogAdjust.h>
@@ -727,8 +728,12 @@ accessDataBrowserItemData	(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 				CFStringRef			tableNameCFString = nullptr;
 				
 				
+			#if 0
 				// LOCALIZE THIS
 				tableNameCFString = CFStringGetNameOfEncoding(thisEncoding);
+			#else
+				tableNameCFString = CocoaBasic_ReturnStringEncodingLocalizedName(thisEncoding);
+			#endif
 				if (nullptr == tableNameCFString) result = resNotFound;
 				else
 				{

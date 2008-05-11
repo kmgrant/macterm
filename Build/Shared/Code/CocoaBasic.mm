@@ -203,6 +203,27 @@ CocoaBasic_PlaySoundFile	(CFURLRef	inFile)
 
 
 /*!
+Since Cocoa has a routine for finding the *localized* name of a
+string encoding, it is exposed as a general API here.
+
+The returned string is not retained, so do not release it.
+
+(1.0)
+*/
+CFStringRef
+CocoaBasic_ReturnStringEncodingLocalizedName	(CFStringEncoding	inEncoding)
+{
+	AutoPool			_;
+	NSStringEncoding	translatedEncoding = CFStringConvertEncodingToNSStringEncoding(inEncoding);
+	CFStringRef			result = nullptr;
+	
+	
+	result = (CFStringRef)[NSString localizedNameOfStringEncoding:translatedEncoding];
+	return result;
+}// ReturnStringEncodingLocalizedName
+
+
+/*!
 Returns an unsorted list of names (without extensions) that are
 valid sounds to pass to CocoaBasic_PlaySoundByName().  This is
 useful for displaying a set of choices, such as a menu, to the
