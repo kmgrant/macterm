@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080514',
     '20080513',
     '20080511',
     '20080510',
@@ -151,6 +152,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080514': [
+		'Preferences window Sessions pane Keyboard tab has been refined further.',
+	],
 	'20080513': [
 		'The "Show IP Addresses..." command is now in the Window menu, and has been renamed "IP Addresses".',
 		'The IP Addresses window is now implemented using Cocoa, which made it trivial to support drags.',
