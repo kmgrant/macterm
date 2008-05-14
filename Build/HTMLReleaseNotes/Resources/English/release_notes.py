@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080513',
     '20080511',
     '20080510',
     '20080506',
@@ -150,6 +151,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080513': [
+		'The "Show IP Addresses..." command is now in the Window menu, and has been renamed "IP Addresses".',
+		'The IP Addresses window is now implemented using Cocoa, which made it trivial to support drags.',
+		'"Send IP Address" was removed due to ambiguity; now, just use drag-and-drop from the IP Addresses window.',
+	],
 	'20080511': [
 		'The Preferences window Translations pane now displays localized names for all text encodings (character sets).',
 	],

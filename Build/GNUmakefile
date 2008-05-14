@@ -162,7 +162,7 @@ English.lproj/SplashScreen.png
 APP_RESOURCES_BUNDLES := \
 MacTelnet.help \
 English.lproj/Credits.html \
-English.lproj/AddressDialog.nib \
+English.lproj/AddressDialogCocoa.nib \
 English.lproj/AlertMessages.nib \
 English.lproj/Clipboard.nib \
 English.lproj/ColorBox.nib \

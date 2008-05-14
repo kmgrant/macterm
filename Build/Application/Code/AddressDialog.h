@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -35,53 +35,48 @@
 #ifndef __ADDRESSDIALOG__
 #define __ADDRESSDIALOG__
 
-// Mac includes
-#include <CoreServices/CoreServices.h>
 
 
-
-#pragma mark Types
-
-typedef struct AddressDialog_OpaqueStructure**		AddressDialog_Ref;
-
-#pragma mark Callbacks
+#ifdef __OBJC__
 
 /*!
-IP Address Dialog Close Notification Method
+Implements drag and drop for the addresses table.
 
-Invoked when a button is clicked that closes the
-dialog.  Use this to perform any post-processing.
-See also AddressDialog_StandardCloseNotifyProc().
-
-You should NOT call AddressDialog_Dispose() in
-this routine!
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
 */
-typedef void	(*AddressDialog_CloseNotifyProcPtr)		(AddressDialog_Ref	inDialogThatClosed,
-														 Boolean 			inOKButtonPressed);
-inline void
-AddressDialog_InvokeCloseNotifyProc	(AddressDialog_CloseNotifyProcPtr	inUserRoutine,
-									 AddressDialog_Ref					inDialogThatClosed,
-									 Boolean							inOKButtonPressed)
+@interface AddressDialog_AddressArrayController : NSArrayController
 {
-	(*inUserRoutine)(inDialogThatClosed, inOKButtonPressed);
+	IBOutlet NSTableView*	addressTableView;
 }
+- (BOOL)tableView:(NSTableView*)			inTable
+		writeRowsWithIndexes:(NSIndexSet*)	inRowIndices
+		toPasteboard:(NSPasteboard*)		inoutPasteboard;
+@end
+
+/*!
+Implements the IP Addresses panel.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface AddressDialog_PanelController : NSWindowController
+{
+	NSMutableArray*		addressArray; // binding
+}
++ (id)sharedAddressPanelController;
+@end
+
+#endif // __OBJC__
 
 
 
 #pragma mark Public Methods
 
-AddressDialog_Ref
-	AddressDialog_New							(AddressDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr);
-
 void
-	AddressDialog_Dispose						(AddressDialog_Ref*					inoutDialogPtr);
-
-void
-	AddressDialog_Display						(AddressDialog_Ref					inDialog);
-
-void
-	AddressDialog_StandardCloseNotifyProc		(AddressDialog_Ref					inDialogThatClosed,
-												 Boolean							inOKButtonPressed);
+	AddressDialog_Display						();
 
 #endif
 

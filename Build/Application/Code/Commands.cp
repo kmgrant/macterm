@@ -1029,12 +1029,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			break;
 		
 		case kCommandShowNetworkNumbers:
-			{
-				AddressDialog_Ref		dialog = AddressDialog_New(AddressDialog_StandardCloseNotifyProc);
-				
-				
-				AddressDialog_Display(dialog); // automatically disposed when the user clicks a button
-			}
+			// in the Cocoa implementation this really means “show or activate”
+			AddressDialog_Display();
 			break;
 		
 		case kCommandSendInternetProtocolNumber:
