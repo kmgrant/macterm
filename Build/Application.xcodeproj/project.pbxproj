@@ -431,6 +431,10 @@
 		0A66CA4B0887467000FD616C /* HIViewWrap.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = HIViewWrap.cp; path = Shared/Code/HIViewWrap.cp; sourceTree = "<group>"; };
 		0A66CA950887505200FD616C /* HIViewWrap.fwd.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrap.fwd.h; path = Shared/Code/HIViewWrap.fwd.h; sourceTree = "<group>"; };
 		0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = HIViewWrapManip.h; path = Shared/Code/HIViewWrapManip.h; sourceTree = "<group>"; };
+		0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Panther.xcconfig; path = Shared/Panther.xcconfig; sourceTree = "<group>"; };
+		0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Tiger.xcconfig; path = Shared/Tiger.xcconfig; sourceTree = "<group>"; };
+		0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Leopard.xcconfig; path = Shared/Leopard.xcconfig; sourceTree = "<group>"; };
+		0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = CustomPaths.xcconfig; path = Shared/CustomPaths.xcconfig; sourceTree = "<group>"; };
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6E225906CF42F0004AC0A4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskPasswordDialog.nib; sourceTree = "<group>"; };
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
@@ -652,6 +656,7 @@
 		0A46FDA80554325700ACDF3A = {
 			isa = PBXGroup;
 			children = (
+				0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */,
 				0A33CCEF07FABFBF00248DDF /* Shared */,
 				0AD0B0A60A9EABDF002064BA /* AppleScript */,
 				0AC6BDB90A8C130400AFF37A /* Python */,
@@ -828,6 +833,9 @@
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
 				0A73DB9608C568D90099BA73 /* MacTelnet.help */,
 				0A46FE73055433CA00ACDF3A /* Products */,
+				0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */,
+				0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */,
+				0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1689,11 +1697,10 @@
 /* Begin XCBuildConfiguration section */
 		0A8110880D0A62BF00D5CDE2 /* ForPantherDebug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */;
 			buildSettings = {
-				ARCHS = ppc;
 				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "\"$(SDKROOT)/System/Library/Frameworks\"";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
@@ -1712,8 +1719,6 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.3;
-				OBJROOT = _Generated;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1725,9 +1730,6 @@
 					"-IApplication/Resources/English.lproj",
 				);
 				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.3.9.sdk;
-				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
-				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
@@ -1847,14 +1849,10 @@
 		};
 		0AA249450D13342D00BCAF94 /* ForLeopardDebug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A69E5250DDBACB100DA7874 /* Leopard.xcconfig */;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
 				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "\"$(SDKROOT)/System/Library/Frameworks\"";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
@@ -1873,9 +1871,6 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.5;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.5;
-				OBJROOT = _Generated;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -1887,9 +1882,6 @@
 					"-IApplication/Resources/English.lproj",
 				);
 				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
-				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
-				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",
@@ -1983,14 +1975,10 @@
 		};
 		0ACFA1810929BE6B005712A9 /* ForTigerDebug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 0A69E5240DDBAC7E00DA7874 /* Tiger.xcconfig */;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
 				BUILD_VARIANTS = debug;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "\"$(SDKROOT)/System/Library/Frameworks\"";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
@@ -2009,9 +1997,6 @@
 				GCC_WARN_UNUSED_PARAMETER = YES;
 				GCC_WARN_UNUSED_VALUE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET_i386 = 10.4;
-				MACOSX_DEPLOYMENT_TARGET_ppc = 10.4;
-				OBJROOT = _Generated;
 				ONLY_LINK_ESSENTIAL_SYMBOLS = YES;
 				OTHER_CFLAGS = (
 					"-g",
@@ -2023,9 +2008,6 @@
 					"-IApplication/Resources/English.lproj",
 				);
 				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.4u.sdk;
-				SWIG_PREFIX = "/opt/swig-$(SWIG_VERSION)";
-				SYMROOT = _Generated;
 				WARNING_CFLAGS = (
 					"-Wall",
 					"-Wextra",

@@ -13,8 +13,8 @@ PREREQUISITES
   separately; look at "Build/Tools/MacTelnetSwigConfig.sh".  You
   need at least SWIG 1.3.31 to support the Python 2.5 in Leopard,
   but SWIG 1.3.29 for the Python 2.3.x in earlier versions.  See
-  the Application.xcodeproj configuration for a variable that
-  sets where SWIG is (/opt/swig-<version>/bin/swig by default).
+  "Build/Shared/CustomPaths.xcconfig" for a variable that sets
+  where SWIG is (/opt/swig-<version>/bin/swig by default).
   
   When building source code documentation only, you will need
   Doxygen (http://www.doxygen.org/), and Dot (part of GraphViz,

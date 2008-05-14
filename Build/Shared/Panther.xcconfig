@@ -1,0 +1,6 @@
+#include "CustomPaths.xcconfig"
+
+ARCHS = ppc
+MACOSX_DEPLOYMENT_TARGET_ppc = 10.3
+FRAMEWORK_SEARCH_PATHS = "$(SDKROOT)/System/Library/Frameworks"
+SDKROOT = $(DEVELOPER_SDK_DIR)/MacOSX10.3.9.sdk
