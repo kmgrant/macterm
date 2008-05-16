@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080515',
     '20080514',
     '20080513',
     '20080511',
@@ -152,6 +153,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080515': [
+		'The "IP Addresses of This Mac" command now matches its window title, and is also in sync with the Dock menu.',
+	],
 	'20080514': [
 		'Preferences window Sessions pane Keyboard tab has been refined further.',
 	],
