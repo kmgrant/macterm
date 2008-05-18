@@ -19,7 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20080516',
+    '20080517',
     '20080515',
     '20080514',
     '20080513',
@@ -154,7 +154,7 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-	'20080516': [
+	'20080517': [
 		'Fixed startup errors, such as type -2703, that could appear on certain computers.',
 	],
 	'20080515': [
