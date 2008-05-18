@@ -156,6 +156,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080517': [
 		'Fixed startup errors, such as type -2703, that could appear on certain computers.',
+		'Added Prefs.TRANSLATION to Quills, allowing Python functions to refer to this type of collection.',
 	],
 	'20080515': [
 		'The "IP Addresses of This Mac" command now matches its window title, and is also in sync with the Dock menu.',
