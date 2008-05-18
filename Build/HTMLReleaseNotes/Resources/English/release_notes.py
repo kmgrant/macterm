@@ -155,6 +155,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080517': [
+		'Fixed a possible crash if a session is still trying to process data at the time it is terminated.',
 		'Fixed startup errors, such as type -2703, that could appear on certain computers.',
 		'Added Prefs.TRANSLATION to Quills, allowing Python functions to refer to this type of collection.',
 	],

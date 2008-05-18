@@ -2259,7 +2259,10 @@ Session_ReceiveData		(SessionRef		inRef,
 	Session_Result		result = kSession_ResultOK;
 	
 	
-	// Òcarbon copyÓ the data to all active attached targets
+	// Òcarbon copyÓ the data to all active attached targets; take care
+	// not to do this once a session is flagged for destruction, since
+	// at that point it may not be able to handle data anymore
+	if (kSession_StateImminentDisposal != ptr->status)
 	{
 		UInt8 const* const	kBuffer = REINTERPRET_CAST(inBufferPtr, UInt8 const*);
 		
