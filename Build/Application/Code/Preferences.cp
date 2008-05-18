@@ -786,7 +786,7 @@ Preferences_Init ()
 				else
 				{
 					// unable to run MacTelnetPrefsConverter!
-					Alert_ReportOSStatus(launchResult);
+					Console_WriteValue("warning, error launching preferences converter", launchResult);
 				}
 			}
 		}
