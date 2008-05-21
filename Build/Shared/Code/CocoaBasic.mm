@@ -35,9 +35,11 @@
 #import <CocoaBasic.h>
 #import <Console.h>
 #import <HIViewWrap.h>
+#import <SoundSystem.h>
 
 // MacTelnet includes
 #import "ColorBox.h"
+#import "FileUtilities.h"
 
 
 
@@ -165,6 +167,87 @@ CocoaBasic_ColorPanelSetTargetView	(HIViewRef	inColorBoxView)
 	globalColor = [NSColor colorWithDeviceRed:viewColorFloat.red green:viewColorFloat.green blue:viewColorFloat.blue alpha:1.0];
 	[colorPanel setColor:globalColor];
 }// ColorPanelSetTargetView
+
+
+/*!
+Shows a modal panel for opening any number of files and
+automatically handling them via Apple Events.  The panel
+resolves aliases, does not allow the user to choose
+directories, and allows the user to try opening any type
+of file (despite the list).
+
+All of the arguments can be "nullptr" to choose defaults.
+The defaults are: no message, no title, and allowing all
+possible file types.
+
+The file type list is sophisticated and can accept
+anything you would imagine: file name extensions, HFS
+four-character codes, and reverse-domain-style UTIs.
+
+Returns true only if the user tried to open something.
+
+(1.0)
+*/
+Boolean
+CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
+									 CFStringRef	inWindowTitle,
+									 CFArrayRef		inAllowedFileTypes)
+{
+	AutoPool		_;
+	NSOpenPanel*	thePanel = [NSOpenPanel openPanel];
+	int				buttonHit = NSCancelButton;
+	Boolean			result = false;
+	
+	
+	if (nullptr != inMessage)
+	{
+		[thePanel setMessage:(NSString*)inMessage];
+	}
+	if (nullptr != inWindowTitle)
+	{
+		[thePanel setTitle:(NSString*)inWindowTitle];
+	}
+	[thePanel setCanChooseDirectories:NO];
+	[thePanel setCanChooseFiles:YES];
+	[thePanel setAllowsOtherFileTypes:YES];
+	[thePanel setAllowsMultipleSelection:YES];
+	[thePanel setResolvesAliases:YES];
+	buttonHit = [thePanel runModalForTypes:(NSArray*)inAllowedFileTypes];
+	result = (NSOKButton == buttonHit);
+	if (result)
+	{
+		NSArray*		toOpen = [thePanel URLs];
+		NSEnumerator*	forURLs = [toOpen objectEnumerator];
+		id				currentFile = nil;
+		
+		
+		while (nil != (currentFile = [forURLs nextObject]))
+		{
+			NSURL*		currentFileURL = (NSURL*)currentFile;
+			FSRef		fileRef;
+			OSStatus	error = noErr;
+			
+			
+			if (CFURLGetFSRef((CFURLRef)currentFileURL, &fileRef))
+			{
+				error = FileUtilities_OpenDocument(fileRef);
+			}
+			else
+			{
+				error = kURLInvalidURLError;
+			}
+			
+			if (noErr != error)
+			{
+				Sound_StandardAlert();
+				Console_WriteValueCFString("unable to open file", (CFStringRef)[currentFileURL absoluteString]);
+				Console_WriteValue("error", error);
+			}
+		}
+	}
+	
+	return result;
+}// FileOpenPanelDisplay
 
 
 /*!

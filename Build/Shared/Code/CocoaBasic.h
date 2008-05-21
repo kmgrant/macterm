@@ -50,6 +50,11 @@ void
 void
 	CocoaBasic_ColorPanelSetTargetView				(HIViewRef);
 
+Boolean
+	CocoaBasic_FileOpenPanelDisplay					(CFStringRef = nullptr,
+													 CFStringRef = nullptr,
+													 CFArrayRef = nullptr);
+
 void
 	CocoaBasic_PlaySoundByName						(CFStringRef);
 
