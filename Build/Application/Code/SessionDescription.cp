@@ -67,6 +67,7 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CocoaBasic.h>
 #include <FileSelectionDialogs.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlockReferenceLocker.template.h>
@@ -699,21 +700,20 @@ of the chosen file.
 void
 SessionDescription_Load ()
 {
-	CFStringRef		promptCFString = nullptr;
-	CFStringRef		titleCFString = nullptr;
-	OSType			typeList[] = { kApplicationFileTypeSessionDescription };
-	OSStatus		error = noErr;
+	// IMPORTANT: These should be consistent with declared types in the application "Info.plist".
+	void const*			kTypeList[] = { CFSTR("com.mactelnet.session"),
+										CFSTR("session"),/* redundant, needed for older systems */
+										CFSTR("CONF")/* redundant, needed for older systems */ };
+	CFRetainRelease		fileTypes(CFArrayCreate(kCFAllocatorDefault, kTypeList,
+									sizeof(kTypeList) / sizeof(CFStringRef), &kCFTypeArrayCallBacks),
+									true/* is retained */);
+	CFStringRef			promptCFString = nullptr;
+	CFStringRef			titleCFString = nullptr;
 	
 	
 	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenSession, promptCFString);
 	(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenSession, titleCFString);
-	Alert_ReportOSStatus(error = FileSelectionDialogs_GetFiles
-									(promptCFString, titleCFString,
-										AppResources_ReturnCreatorCode(),
-										kPreferences_NavPrefKeyGenericOpenFile,
-										kNavDontAddTranslateItems | kNavAllowMultipleFiles | kNavAllFilesInPopup,
-										sizeof(typeList) / sizeof(OSType), typeList,
-										nullptr/* event routine */));
+	(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
 }// Load
 
 

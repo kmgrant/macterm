@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080520',
     '20080517',
     '20080515',
     '20080514',
@@ -154,6 +155,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080520': [
+		'The Open dialog is now implemented using Cocoa, which is an improvement on older versions of Mac OS X.',
+	],
 	'20080517': [
 		'Fixed a possible crash if a session is still trying to process data at the time it is terminated.',
 		'Fixed startup errors, such as type -2703, that could appear on certain computers.',
