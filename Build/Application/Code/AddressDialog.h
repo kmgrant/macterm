@@ -67,6 +67,7 @@ changes to an interface declared in a ".mm" file.
 	NSMutableArray*		addressArray; // binding
 }
 + (id)sharedAddressPanelController;
+- (IBAction)rebuildAddressList:(id)sender;
 @end
 
 #endif // __OBJC__

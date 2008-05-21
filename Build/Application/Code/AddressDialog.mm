@@ -114,28 +114,30 @@ static AddressDialog_PanelController*	gAddressDialog_PanelController = nil;
 - (id)init
 {
 	self = [super initWithWindowNibName:@"AddressDialogCocoa"];
-	
+	[self rebuildAddressList:NSApp];
+	return self;
+}
+
+- (IBAction)rebuildAddressList:(id)sender
+{
+#pragma unused(sender)
 	// find IP addresses and store them in the bound array
+	typedef std::vector< CFRetainRelease >		My_AddressList;
+	My_AddressList	addressList;
+	Boolean			addressesFound = Network_CopyIPAddresses(addressList);
+	
+	
+	addressArray = [[NSMutableArray alloc] init];
+	if (addressesFound)
 	{
-		typedef std::vector< CFRetainRelease >		My_AddressList;
-		My_AddressList	addressList;
-		Boolean			addressesFound = Network_CopyIPAddresses(addressList);
-		
-		
-		addressArray = [[NSMutableArray alloc] init];
-		if (addressesFound)
+		for (My_AddressList::size_type i = 0; i < addressList.size(); ++i)
 		{
-			for (My_AddressList::size_type i = 0; i < addressList.size(); ++i)
-			{
-				NSString*	addressString = (NSString*)addressList[i].returnCFStringRef();
-				
-				
-				[addressArray addObject:addressString];
-			}
+			NSString*	addressString = (NSString*)addressList[i].returnCFStringRef();
+			
+			
+			[addressArray addObject:addressString];
 		}
 	}
-	
-	return self;
 }
 
 @end // AddressDialog_PanelController
