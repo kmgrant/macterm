@@ -45,6 +45,7 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CocoaBasic.h>
 #include <FileSelectionDialogs.h>
 #include <MemoryBlocks.h>
 #include <StringUtilities.h>
@@ -491,49 +492,40 @@ Macros_ImportFromText	(MacroSet						inSet,
 						 FSSpec const*					inFileSpecPtrOrNull,
 						 MacroManager_InvocationMethod*	outMacroModeOfImportedSet)
 {
-	OSStatus 		err = noErr;
-	SInt16 			fileRef = 0;
-	Boolean			result = true;
-	FSSpec			chosenFile; // this is ONLY storage, used as needed
-	FSSpec const*	fileSpecPtr = inFileSpecPtrOrNull; // this refers to the file to read from!
+	Boolean		result = true;
 	
 	
-	if (inFileSpecPtrOrNull == nullptr)
+	// if no file is given, a dialog is displayed and all selected files
+	// are automatically routed through Apple Events to trigger an import
+	if (nullptr == inFileSpecPtrOrNull)
 	{
-		Str255		prompt;
-		Str255		title;
+		// IMPORTANT: These should be consistent with declared types in the application "Info.plist".
+		void const*			kTypeList[] = { CFSTR("com.mactelnet.macros"),
+											CFSTR("macros"),/* redundant, needed for older systems */
+											CFSTR("TEXT")/* redundant, needed for older systems */ };
+		CFRetainRelease		fileTypes(CFArrayCreate(kCFAllocatorDefault, kTypeList,
+										sizeof(kTypeList) / sizeof(CFStringRef), &kCFTypeArrayCallBacks),
+										true/* is retained */);
+		CFStringRef			promptCFString = nullptr;
+		CFStringRef			titleCFString = nullptr;
 		
 		
-		// TEMPORARY: This needs to migrate to the new Navigation Services API.
-		PLstrcpy(prompt, "\p");
-		PLstrcpy(title, "\p");
-		//GetIndString(prompt, rStringsNavigationServices, siNavPromptImportMacrosFromFile);
-		//GetIndString(title, rStringsNavigationServices, siNavDialogTitleImportMacros);
-		{
-			FileInfo	fileInfo;
-			OSType		fileType;
-			OSType		types[] = { kApplicationFileTypeMacroSet };
-			OSStatus	error = noErr;
-			
-			
-			Alert_ReportOSStatus(error = FileSelectionDialogs_GetFile
-											(prompt, title,
-												AppResources_ReturnCreatorCode(),
-												kPreferences_NavPrefKeyMacroStuff,
-												kNavDefaultNavDlogOptions | kNavDontAddTranslateItems,
-												1, types, EventLoop_HandleNavigationUpdate, &chosenFile,
-												&fileType, &fileInfo));
-			result = (error == noErr);
-		}
-		if (result) fileSpecPtr = &chosenFile;
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenMacroSet, promptCFString);
+		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenMacroSet, titleCFString);
+		(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
 	}
-	
-	if (fileSpecPtr != nullptr) err = FSpOpenDF(fileSpecPtr, fsRdPerm, &fileRef);
-	
-	if ((err == noErr) && (result))
+	else
 	{
-		parseFile(inSet, fileRef, outMacroModeOfImportedSet);
-		FSClose(fileRef);
+		OSStatus 	error = noErr;
+		SInt16		fileRef = 0;
+		
+		
+		error = FSpOpenDF(inFileSpecPtrOrNull, fsRdPerm, &fileRef);
+		if ((noErr == error) && (result))
+		{
+			parseFile(inSet, fileRef, outMacroModeOfImportedSet);
+			FSClose(fileRef);
+		}
 	}
 	
 	return result;

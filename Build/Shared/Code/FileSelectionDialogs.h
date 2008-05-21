@@ -46,31 +46,6 @@
 //!\name Displaying Navigation Services Dialog Boxes
 //@{
 
-// DEPRECATED IN FAVOR OF FileSelectionDialogs_GetFiles()
-OSStatus
-	FileSelectionDialogs_GetFile		(ConstStr255Param		inPromptMessage,
-										 ConstStr255Param		inDialogTitle,
-										 OSType					inApplicationSignature,
-										 UInt32					inPrefKey,
-										 NavDialogOptionFlags	inFlags,
-										 UInt32					inNumTypes,
-										 OSType					inTypeList[],
-										 NavEventProcPtr		inEventProc,
-										 FSSpec*				inoutFileSpecPtr, // non-nullptr for single-select
-										 OSType*				inoutFileType, // non-nullptr for single-select
-										 FileInfo*				outFileInfo); // non-nullptr for single-select
-
-// PRESENTS AN APPLICATION-MODAL DIALOG
-OSStatus
-	FileSelectionDialogs_GetFiles		(CFStringRef			inPromptMessage,
-										 CFStringRef			inDialogTitle,
-										 OSType					inApplicationSignature,
-										 UInt32					inPrefKey,
-										 NavDialogOptionFlags	inFlags,
-										 UInt32					inNumTypes,
-										 OSType					inTypeList[],
-										 NavEventProcPtr		inEventProc);
-
 // PRESENTS AN APPLICATION-MODAL DIALOG
 OSStatus
 	FileSelectionDialogs_GetDirectory	(ConstStringPtr			inPromptMessage,
@@ -79,20 +54,6 @@ OSStatus
 										 NavDialogOptionFlags	inFlags,
 										 NavEventProcPtr		inEventProc,
 										 FSSpec*				outFileSpecPtr);
-
-// PRESENTS AN APPLICATION-MODAL DIALOG
-OSStatus
-	FileSelectionDialogs_GetFile		(ConstStringPtr			inPromptMessage,
-										 ConstStringPtr			inDialogTitle,
-										 OSType					inApplicationSignature,
-										 UInt32					inPrefKey,
-										 NavDialogOptionFlags	inFlags,
-										 UInt32					inNumTypes,
-										 OSType					inTypeList[],
-										 NavEventProcPtr		inEventProc,
-										 FSSpec*				inoutFileSpecPtr, // non-nullptr for single-select
-										 OSType*				inoutFileType, // non-nullptr for single-select
-										 FileInfo*				outFileInfo); // non-nullptr for single-select
 
 // PRESENTS AN APPLICATION-MODAL DIALOG
 OSStatus

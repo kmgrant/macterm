@@ -1453,6 +1453,12 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 													CFSTR("kUIStrings_SystemDialogPromptCaptureToFile"));
 		break;
 	
+	case kUIStrings_SystemDialogPromptOpenMacroSet:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more macro files to open."),
+													CFSTR("SystemDialogs"),
+													CFSTR("kUIStrings_SystemDialogPromptOpenMacroSet"));
+		break;
+	
 	case kUIStrings_SystemDialogPromptOpenSession:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Choose one or more settings files to open."),
 													CFSTR("SystemDialogs"),
@@ -1469,6 +1475,12 @@ UIStrings_Copy	(UIStrings_SystemDialogCFString		inWhichString,
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Please choose a color."),
 													CFSTR("SystemDialogs"),
 													CFSTR("kUIStrings_SystemDialogPromptPickColor"));
+		break;
+	
+	case kUIStrings_SystemDialogTitleOpenMacroSet:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Open Macro Set"),
+													CFSTR("SystemDialogs"),
+													CFSTR("kUIStrings_SystemDialogTitleOpenMacroSet"));
 		break;
 	
 	case kUIStrings_SystemDialogTitleOpenSession:

@@ -323,9 +323,11 @@ Strings used with open and save dialogs, color pickers, etc.
 enum UIStrings_SystemDialogCFString
 {
 	kUIStrings_SystemDialogPromptCaptureToFile	= 'PmCF',
+	kUIStrings_SystemDialogPromptOpenMacroSet	= 'PmOM',
 	kUIStrings_SystemDialogPromptOpenSession	= 'PmOS',
 	kUIStrings_SystemDialogPromptSaveSession	= 'PmSS',
 	kUIStrings_SystemDialogPromptPickColor		= 'PmPC',
+	kUIStrings_SystemDialogTitleOpenMacroSet	= 'TtOM',
 	kUIStrings_SystemDialogTitleOpenSession		= 'TtOS'
 };
 
