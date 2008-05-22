@@ -1,0 +1,47 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":index.html
+
+</div>
+
+h1(pagetitle). Using Automator with MacTelnet
+
+<div class="content">
+
+MacTelnet support for Automator is currently limited, however
+there are ways to use existing actions that you may not have
+realized.
+
+h2(#urls). Opening Sessions With URLs
+
+The default Internet actions in Automator (Mac OS X 10.4+) are
+often named or described in terms of web pages, but in fact they
+are general: opening sessions for URLs that MacTelnet supports.
+
+A simple workflow in Automator would be to connect (from the
+Internet category) "Get Specified URLs" to "Display Webpages".
+
+Automator will call on MacTelnet if MacTelnet is the default
+application for a particular type of URL.  Otherwise, different
+applications will handle the URL.  (3rd party software such as
+"Default Apps" can change the URL mappings on your system.)
+
+MacTelnet can handle several kinds of URLs, including:
+
+* file
+* ftp
+* rlogin
+* sftp (non-standard)
+* ssh (non-standard)
+* telnet
+* x-man-page (non-standard)
+
+It is also possible to add or change URL handlers, through the
+lower-level Python API in MacTelnet.  For instance, you could add
+a handler that runs a terminal-based browser for "http" URLs.
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+

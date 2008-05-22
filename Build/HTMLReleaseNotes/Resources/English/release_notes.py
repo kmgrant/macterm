@@ -159,6 +159,7 @@ notes_by_version = {
 	'20080522': [
 		'Fixed the sample terminal display in places like the Preferences window Formats pane.',
 		'The command line displayed as the default window title no longer has a trailing space.',
+		'MacTelnet Help now contains some basic information on how to use Automator with MacTelnet.',
 	],
 	'20080520': [
 		'The Open dialog is now implemented using Cocoa, which is an improvement on older versions of Mac OS X.',

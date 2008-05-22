@@ -41,6 +41,12 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 
 </dd>
 
+<dt>Automation</dt><dd>
+
+* "using Automator with MacTelnet":automator.html
+
+</dd>
+
 </dl>
 
 </div>
