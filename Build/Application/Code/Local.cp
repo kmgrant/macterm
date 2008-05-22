@@ -962,7 +962,7 @@ createCommandLine	(int				argc,
 		{
 			CPP_STD::strcat(endPtr, *argumentPtr);
 			endPtr += CPP_STD::strlen(*argumentPtr);
-			CPP_STD::strcat(endPtr, kDelimiter);
+			if (i != (argc - 1)) CPP_STD::strcat(endPtr, kDelimiter);
 		}
 	}
 	
