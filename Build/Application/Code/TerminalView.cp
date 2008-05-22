@@ -5772,6 +5772,9 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 	HIViewGetFrame(inHIView, &terminalViewBounds);
 	HIViewSetFrame(viewPtr->backgroundHIView, &terminalViewBounds);
 	
+	// from here on, use this only for the bounds, not the origin
+	HIViewGetBounds(inHIView, &terminalViewBounds);
+	
 	// determine the view size within its parent
 	{
 		Float32 const	kMaximumViewWidth = terminalViewBounds.size.width;

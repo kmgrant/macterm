@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080522',
     '20080520',
     '20080517',
     '20080515',
@@ -155,6 +156,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080522': [
+		'Fixed the sample terminal display in places like the Preferences window Formats pane.',
+		'The command line displayed as the default window title no longer has a trailing space.',
+	],
 	'20080520': [
 		'The Open dialog is now implemented using Cocoa, which is an improvement on older versions of Mac OS X.',
 	],
