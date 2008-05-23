@@ -6022,7 +6022,21 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassGeneral;
 		break;
 	
-	case kPreferences_TagXTermSequencesEnabled:
+	case kPreferences_TagXTermColorEnabled:
+		outKeyName = CFSTR("terminal-emulator-xterm-enable-color");
+		outKeyValueType = typeNetEvents_CFBooleanRef;
+		outNonDictionaryValueSize = sizeof(Boolean);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagXTermGraphicsEnabled:
+		outKeyName = CFSTR("terminal-emulator-xterm-enable-graphics");
+		outKeyValueType = typeNetEvents_CFBooleanRef;
+		outNonDictionaryValueSize = sizeof(Boolean);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
+	case kPreferences_TagXTermWindowAlterationEnabled:
 		outKeyName = CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences");
 		outKeyValueType = typeNetEvents_CFBooleanRef;
 		outNonDictionaryValueSize = sizeof(Boolean);
@@ -6448,7 +6462,9 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagDataReceiveDoNotStripHighBit:
 				case kPreferences_TagTerminalClearSavesLines:
 				case kPreferences_TagTerminalLineWrap:
-				case kPreferences_TagXTermSequencesEnabled:
+				case kPreferences_TagXTermColorEnabled:
+				case kPreferences_TagXTermGraphicsEnabled:
+				case kPreferences_TagXTermWindowAlterationEnabled:
 					// all of these keys have Core Foundation Boolean values
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
@@ -8485,14 +8501,15 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagXTermSequencesEnabled:
+			case kPreferences_TagXTermColorEnabled:
+			case kPreferences_TagXTermGraphicsEnabled:
+			case kPreferences_TagXTermWindowAlterationEnabled:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(inDataPreferenceTag, CFSTR("terminal-emulator-xterm-enable-color"), data);
-					inContextPtr->addFlag(inDataPreferenceTag, CFSTR("terminal-emulator-xterm-enable-graphics"), data);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 				}
 				break;
 			

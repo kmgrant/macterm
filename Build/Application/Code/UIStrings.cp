@@ -1256,9 +1256,24 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowTerminalsEmulationTabName"));
 		break;
 	
-	case kUIStrings_PreferencesWindowTerminalsHacksTabName:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Hacks"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowTerminalsHacksTabName"));
+	case kUIStrings_PreferencesWindowTerminalsXTermColorEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Color"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermColorEnabled"));
+		break;
+	
+	case kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Graphics Characters"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled"));
+		break;
+	
+	case kUIStrings_PreferencesWindowTerminalsXTermWindowAltEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Window Alteration"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermWindowAltEnabled"));
+		break;
+	
+	case kUIStrings_PreferencesWindowTerminalsListHeaderTweakName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Terminal Feature"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsListHeaderTweakName"));
 		break;
 	
 	case kUIStrings_PreferencesWindowTerminalsOptionsTabName:

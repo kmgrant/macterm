@@ -11,7 +11,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -44,6 +44,9 @@
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
+
+// MacTelnet includes
+#include "Preferences.h"
 
 
 
@@ -94,7 +97,12 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowSessionsResourceTabName			= 'SsnH',
 	kUIStrings_PreferencesWindowTerminalsCategoryName			= 'TrmT',
 	kUIStrings_PreferencesWindowTerminalsEmulationTabName		= 'TrmE',
-	kUIStrings_PreferencesWindowTerminalsHacksTabName			= 'TrmH',
+	// For simplicity, code in Preferences user interfaces assumes that tags can be
+	// used instead of the “proper” enumeration names, for these “named preferences”.
+	kUIStrings_PreferencesWindowTerminalsXTermColorEnabled		= kPreferences_TagXTermColorEnabled,
+	kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled	= kPreferences_TagXTermGraphicsEnabled,
+	kUIStrings_PreferencesWindowTerminalsXTermWindowAltEnabled	= kPreferences_TagXTermWindowAlterationEnabled,
+	kUIStrings_PreferencesWindowTerminalsListHeaderTweakName	= 'TrmH',
 	kUIStrings_PreferencesWindowTerminalsOptionsTabName			= 'TrmO',
 	kUIStrings_PreferencesWindowTerminalsScreenTabName			= 'TrmS',
 	kUIStrings_PreferencesWindowTranslationsCategoryName		= 'TrnT',

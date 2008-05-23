@@ -98,10 +98,32 @@ HIViewID const	idMyPopUpMenuScrollbackUnits	= { 'SbkU', 0/* ID */ };
 HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
 
+// The following cannot use any of Apple’s reserved IDs (0 to 1023).
+enum
+{
+	kMy_DataBrowserPropertyIDTweakIsEnabled		= 'TwOn',
+	kMy_DataBrowserPropertyIDTweakName			= 'TwNm'
+};
+
 } // anonymous namespace
 
 #pragma mark Types
 namespace {
+
+/*!
+Initializes a Data Browser callbacks structure to
+point to appropriate functions in this file for
+handling various tasks.  Creates the necessary UPP
+types, which are destroyed when the instance goes
+away.
+*/
+struct My_EmulationTweaksDataBrowserCallbacks
+{
+	My_EmulationTweaksDataBrowserCallbacks		();
+	~My_EmulationTweaksDataBrowserCallbacks		();
+	
+	DataBrowserCallbacks	_listCallbacks;
+};
 
 /*!
 Implements the “Emulation” tab.
@@ -110,10 +132,11 @@ struct My_TerminalsPanelEmulationUI
 {
 	My_TerminalsPanelEmulationUI	(Panel_Ref, HIWindowRef);
 	
-	Panel_Ref		panel;			//!< the panel using this UI
-	Float32			idealWidth;		//!< best size in pixels
-	Float32			idealHeight;	//!< best size in pixels
-	HIViewWrap		mainView;
+	Panel_Ref								panel;			//!< the panel using this UI
+	Float32									idealWidth;		//!< best size in pixels
+	Float32									idealHeight;	//!< best size in pixels
+	My_EmulationTweaksDataBrowserCallbacks	listCallbacks;
+	HIViewWrap								mainView;
 	
 	static SInt32
 	panelChanged	(Panel_Ref, Panel_Message, void*);
@@ -128,8 +151,11 @@ protected:
 	static void
 	deltaSize	(HIViewRef, Float32, Float32, void*);
 	
+	void
+	setEmulationTweaksDataBrowserColumnWidths	();
+	
 private:
-	CommonEventHandlers_HIViewResizer	_containerResizer;
+	CommonEventHandlers_HIViewResizer		_containerResizer;
 };
 typedef My_TerminalsPanelEmulationUI*	My_TerminalsPanelEmulationUIPtr;
 
@@ -268,6 +294,9 @@ typedef My_TerminalsPanelScreenData*		My_TerminalsPanelScreenDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
+pascal OSStatus		accessDataBrowserItemData	(ControlRef, DataBrowserItemID, DataBrowserPropertyID,
+													DataBrowserItemDataRef, Boolean);
+pascal Boolean		compareDataBrowserItems		(ControlRef, DataBrowserItemID, DataBrowserItemID, DataBrowserPropertyID);
 pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -443,6 +472,51 @@ PrefPanelTerminals_NewScreenPane ()
 namespace {
 
 /*!
+Initializes a My_EmulationTweaksDataBrowserCallbacks structure.
+
+(3.1)
+*/
+My_EmulationTweaksDataBrowserCallbacks::
+My_EmulationTweaksDataBrowserCallbacks ()
+{
+	// set up all the callbacks needed for the data browser
+	this->_listCallbacks.version = kDataBrowserLatestCallbacks;
+	if (noErr != InitDataBrowserCallbacks(&this->_listCallbacks))
+	{
+		// fallback
+		bzero(&this->_listCallbacks, sizeof(this->_listCallbacks));
+		this->_listCallbacks.version = kDataBrowserLatestCallbacks;
+	}
+	this->_listCallbacks.u.v1.itemDataCallback = NewDataBrowserItemDataUPP(accessDataBrowserItemData);
+	assert(nullptr != this->_listCallbacks.u.v1.itemDataCallback);
+	this->_listCallbacks.u.v1.itemCompareCallback = NewDataBrowserItemCompareUPP(compareDataBrowserItems);
+	assert(nullptr != this->_listCallbacks.u.v1.itemCompareCallback);
+}// My_EmulationTweaksDataBrowserCallbacks default constructor
+
+
+/*!
+Tears down a My_EmulationTweaksDataBrowserCallbacks structure.
+
+(3.1)
+*/
+My_EmulationTweaksDataBrowserCallbacks::
+~My_EmulationTweaksDataBrowserCallbacks ()
+{
+	// dispose callbacks
+	if (nullptr != this->_listCallbacks.u.v1.itemDataCallback)
+	{
+		DisposeDataBrowserItemDataUPP(this->_listCallbacks.u.v1.itemDataCallback),
+			this->_listCallbacks.u.v1.itemDataCallback = nullptr;
+	}
+	if (nullptr != this->_listCallbacks.u.v1.itemCompareCallback)
+	{
+		DisposeDataBrowserItemCompareUPP(this->_listCallbacks.u.v1.itemCompareCallback),
+			this->_listCallbacks.u.v1.itemCompareCallback = nullptr;
+	}
+}// My_EmulationTweaksDataBrowserCallbacks destructor
+
+
+/*!
 Initializes a My_TerminalsPanelEmulationData structure.
 
 (3.1)
@@ -482,6 +556,7 @@ My_TerminalsPanelEmulationUI	(Panel_Ref		inPanel,
 panel					(inPanel),
 idealWidth				(0.0),
 idealHeight				(0.0),
+listCallbacks			(),
 mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
@@ -523,6 +598,115 @@ createContainerView		(Panel_Ref		inPanel,
 					result/* parent */, viewList, idealContainerBounds);
 	assert_noerr(error);
 	
+	// create the emulation tweaks list; insert appropriate columns
+	{
+		HIViewWrap							listDummy(idMyDataBrowserHacks, inOwningWindow);
+		HIViewRef							emulationTweaksList = nullptr;
+		DataBrowserTableViewColumnIndex		columnNumber = 0;
+		DataBrowserListViewColumnDesc		columnInfo;
+		Rect								bounds;
+		UIStrings_Result					stringResult = kUIStrings_ResultOK;
+		
+		
+		GetControlBounds(listDummy, &bounds);
+		
+		// NOTE: here, the original variable is being *replaced* with the data browser, as
+		// the original user pane was only needed for size definition
+		error = CreateDataBrowserControl(inOwningWindow, &bounds, kDataBrowserListView, &emulationTweaksList);
+		assert_noerr(error);
+		error = SetControlID(emulationTweaksList, &idMyDataBrowserHacks);
+		assert_noerr(error);
+		
+		bzero(&columnInfo, sizeof(columnInfo));
+		
+		// set defaults for all columns, then override below
+		columnInfo.propertyDesc.propertyID = '----';
+		columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
+		columnInfo.propertyDesc.propertyFlags = kDataBrowserDefaultPropertyFlags | kDataBrowserListViewSortableColumn;
+		columnInfo.headerBtnDesc.version = kDataBrowserListViewLatestHeaderDesc;
+		columnInfo.headerBtnDesc.minimumWidth = 200; // arbitrary
+		columnInfo.headerBtnDesc.maximumWidth = 600; // arbitrary
+		columnInfo.headerBtnDesc.titleOffset = 0; // arbitrary
+		columnInfo.headerBtnDesc.titleString = nullptr;
+		columnInfo.headerBtnDesc.initialOrder = 0;
+		columnInfo.headerBtnDesc.btnFontStyle.flags = kControlUseJustMask;
+		columnInfo.headerBtnDesc.btnFontStyle.just = teFlushDefault;
+		columnInfo.headerBtnDesc.btnContentInfo.contentType = kControlContentTextOnly;
+		
+		// create checkbox column
+		columnInfo.headerBtnDesc.titleString = CFSTR("");
+		columnInfo.headerBtnDesc.minimumWidth = 32; // arbitrary
+		columnInfo.headerBtnDesc.maximumWidth = 32; // arbitrary
+		columnInfo.propertyDesc.propertyID = kMy_DataBrowserPropertyIDTweakIsEnabled;
+		columnInfo.propertyDesc.propertyType = kDataBrowserCheckboxType;
+		columnInfo.propertyDesc.propertyFlags |= kDataBrowserPropertyIsMutable;
+		error = AddDataBrowserListViewColumn(emulationTweaksList, &columnInfo, columnNumber++);
+		assert_noerr(error);
+		
+		// create tweak name column
+		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsListHeaderTweakName,
+										columnInfo.headerBtnDesc.titleString);
+		if (stringResult.ok())
+		{
+			columnInfo.headerBtnDesc.minimumWidth = 200; // arbitrary
+			columnInfo.headerBtnDesc.maximumWidth = 600; // arbitrary
+			columnInfo.propertyDesc.propertyID = kMy_DataBrowserPropertyIDTweakName;
+			columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
+			columnInfo.propertyDesc.propertyFlags &= ~kDataBrowserPropertyIsMutable;
+			error = AddDataBrowserListViewColumn(emulationTweaksList, &columnInfo, columnNumber++);
+			assert_noerr(error);
+			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
+		}
+		
+		// automatically adjust initial widths of variable-sized columns
+		this->setEmulationTweaksDataBrowserColumnWidths();
+		
+		// insert as many rows as there are preferences tags for terminal emulation tweaks
+		{
+			DataBrowserItemID const		kTweakTags[] =
+										{
+											kPreferences_TagXTermColorEnabled,
+											kPreferences_TagXTermGraphicsEnabled,
+											kPreferences_TagXTermWindowAlterationEnabled
+										};
+			
+			
+			error = AddDataBrowserItems(emulationTweaksList, kDataBrowserNoItem/* parent item */,
+										sizeof(kTweakTags) / sizeof(DataBrowserItemID), kTweakTags/* IDs */,
+										kDataBrowserItemNoProperty/* pre-sort property */);
+			assert_noerr(error);
+		}
+		
+		// attach data that would not be specifiable in a NIB
+		error = SetDataBrowserCallbacks(emulationTweaksList, &this->listCallbacks._listCallbacks);
+		assert_noerr(error);
+		
+		// initialize sort column
+		error = SetDataBrowserSortProperty(emulationTweaksList, kMy_DataBrowserPropertyIDTweakName);
+		assert_noerr(error);
+		
+		// set other nice things (most can be set in a NIB someday)
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+		if (FlagManager_Test(kFlagOS10_4API))
+		{
+			(OSStatus)DataBrowserChangeAttributes(emulationTweaksList,
+													FUTURE_SYMBOL(1 << 1, kDataBrowserAttributeListViewAlternatingRowColors)/* attributes to set */,
+													0/* attributes to clear */);
+		}
+	#endif
+		(OSStatus)SetDataBrowserListViewUsePlainBackground(emulationTweaksList, false);
+		(OSStatus)SetDataBrowserHasScrollBars(emulationTweaksList, false/* horizontal */, true/* vertical */);
+		
+		// attach panel to data browser
+		error = SetControlProperty(emulationTweaksList, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeOwningPanel,
+									sizeof(inPanel), &inPanel);
+		assert_noerr(error);
+		
+		error = HIViewAddSubview(result, emulationTweaksList);
+		assert_noerr(error);
+	}
+	
 	// calculate the ideal size
 	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
 	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
@@ -555,12 +739,11 @@ My_TerminalsPanelEmulationUI::
 deltaSize	(HIViewRef		inContainer,
 			 Float32		inDeltaX,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
-			 void*			UNUSED_ARGUMENT(inContext))
+			 void*			inContext)
 {
-	HIWindowRef const			kPanelWindow = HIViewGetWindow(inContainer);
-	//My_TerminalsPanelEmulationUI*	dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelEmulationUI*);
-	
-	HIViewWrap					viewWrap;
+	HIWindowRef const				kPanelWindow = HIViewGetWindow(inContainer);
+	My_TerminalsPanelEmulationUI*	dataPtr = REINTERPRET_CAST(inContext, My_TerminalsPanelEmulationUI*);
+	HIViewWrap						viewWrap;
 	
 	
 	// INCOMPLETE
@@ -570,6 +753,8 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyDataBrowserHacks, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	
+	dataPtr->setEmulationTweaksDataBrowserColumnWidths();
 }// My_TerminalsPanelEmulationUI::deltaSize
 
 
@@ -699,9 +884,57 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		// UNIMPLEMENTED
+		// INCOMPLETE
+		{
+			DataBrowserItemID const		kUpdatedItems = { kDataBrowserNoItem };
+			HIViewWrap					dataBrowser(idMyDataBrowserHacks, HIViewGetWindow(this->mainView));
+			
+			
+			(OSStatus)UpdateDataBrowserItems(dataBrowser, kDataBrowserNoItem/* parent */,
+												sizeof(kUpdatedItems) / sizeof(DataBrowserItemID), &kUpdatedItems,
+												kDataBrowserItemNoProperty/* pre-sort property */,
+												kMy_DataBrowserPropertyIDTweakIsEnabled/* updated property */);
+		}
 	}
 }// My_TerminalsPanelEmulationUI::readPreferences
+
+
+/*!
+Sets the widths of the data browser columns
+proportionately based on the total width.
+
+(3.1)
+*/
+void
+My_TerminalsPanelEmulationUI::
+setEmulationTweaksDataBrowserColumnWidths ()
+{
+	HIViewWrap	dataBrowser(idMyDataBrowserHacks, HIViewGetWindow(mainView));
+	Rect		containerRect;
+	
+	
+	(OSStatus)GetControlBounds(dataBrowser, &containerRect);
+	
+	// set column widths proportionately
+	{
+		UInt16		availableWidth = (containerRect.right - containerRect.left) - 16/* scroll bar width */;
+		UInt16		integerWidth = 0;
+		
+		
+		// subtract the fixed-size checkbox column from the total width
+		(OSStatus)GetDataBrowserTableViewNamedColumnWidth
+					(dataBrowser, kMy_DataBrowserPropertyIDTweakIsEnabled, &integerWidth);
+		availableWidth -= integerWidth;
+		
+		// set other column to use remaining space
+		{
+			integerWidth = availableWidth;
+			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+						(dataBrowser, kMy_DataBrowserPropertyIDTweakName, integerWidth);
+			availableWidth -= integerWidth;
+		}
+	}
+}// My_TerminalsPanelEmulationUI::setEmulationTweaksDataBrowserColumnWidths
 
 
 /*!
@@ -1534,6 +1767,173 @@ setScrollbackType	(Terminal_ScrollbackType	inAllocationRule)
 		Console_WriteLine("warning, failed to set screen scrollback type");
 	}
 }// My_TerminalsPanelScreenUI::setScrollbackType
+
+
+/*!
+A standard DataBrowserItemDataProcPtr, this routine
+responds to requests sent by Mac OS X to obtain or
+modify data for the specified list.
+
+(3.1)
+*/
+pascal OSStatus
+accessDataBrowserItemData	(HIViewRef					inDataBrowser,
+							 DataBrowserItemID			inItemID,
+							 DataBrowserPropertyID		inPropertyID,
+							 DataBrowserItemDataRef		inItemData,
+							 Boolean					inSetValue)
+{
+	My_TerminalsPanelEmulationDataPtr	panelDataPtr = nullptr;
+	Panel_Ref							owningPanel = nullptr;
+	OSStatus							result = noErr;
+	
+	
+	{
+		UInt32			actualSize = 0;
+		OSStatus		getPropertyError = GetControlProperty(inDataBrowser, AppResources_ReturnCreatorCode(),
+																kConstantsRegistry_ControlPropertyTypeOwningPanel,
+																sizeof(owningPanel), &actualSize, &owningPanel);
+		
+		
+		if (noErr == getPropertyError)
+		{
+			// IMPORTANT: If this callback ever supports more than one panel, the
+			// panel descriptor can be read at this point to determine the type.
+			panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(owningPanel),
+											My_TerminalsPanelEmulationDataPtr);
+		}
+	}
+	
+	if (false == inSetValue)
+	{
+		switch (inPropertyID)
+		{
+		case kDataBrowserItemIsEditableProperty:
+			result = SetDataBrowserItemDataBooleanValue(inItemData, true/* is editable */);
+			break;
+		
+		case kMy_DataBrowserPropertyIDTweakIsEnabled:
+			// return whether or not the checkbox should be on; the item ID is a
+			// Preferences_Tag whose value type is Boolean, so the method for
+			// determining enabled state is always the same: use Preferences
+			assert(nullptr != panelDataPtr);
+			{
+				Preferences_Tag const	kPrefTag = STATIC_CAST(inItemID, Preferences_Tag);
+				Preferences_Result		prefsResult = kPreferences_ResultOK;
+				Boolean					flag = false;
+				
+				
+				prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPrefTag, sizeof(flag), &flag,
+															true/* search defaults */);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = SetDataBrowserItemDataButtonValue(inItemData, (flag) ? kThemeButtonOn : kThemeButtonOff);
+				}
+			}
+			break;
+		
+		case kMy_DataBrowserPropertyIDTweakName:
+			// return the text string for the name of this tweak
+			{
+				UIStrings_Result	stringResult = kUIStrings_ResultOK;
+				CFStringRef			preferenceDescription = nullptr;
+				
+				
+				// the item ID is a preferences tag, but for simplicity this is
+				// also guaranteed to be a valid string identifier
+				stringResult = UIStrings_Copy(STATIC_CAST(inItemID, UIStrings_PreferencesWindowCFString), preferenceDescription);
+				if (stringResult.ok())
+				{
+					result = SetDataBrowserItemDataText(inItemData, preferenceDescription);
+					CFRelease(preferenceDescription), preferenceDescription = nullptr;
+				}
+				else
+				{
+					result = paramErr;
+				}
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	else
+	{
+		switch (inPropertyID)
+		{
+		case kMy_DataBrowserPropertyIDTweakIsEnabled:
+			// toggle checkbox, save preference
+			{
+				ThemeButtonValue	newValue = kThemeButtonOff;
+				
+				
+				result = GetDataBrowserItemDataButtonValue(inItemData, &newValue);
+				if (noErr == result)
+				{
+					assert(nullptr != panelDataPtr);
+					Preferences_Tag const	kPrefTag = STATIC_CAST(inItemID, Preferences_Tag);
+					Boolean const			kFlag = (kThemeButtonOff != newValue);
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPrefTag, sizeof(kFlag), &kFlag);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						result = paramErr;
+					}
+				}
+			}
+			break;
+		
+		case kMy_DataBrowserPropertyIDTweakName:
+			// read-only
+			result = paramErr;
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	
+	return result;
+}// accessDataBrowserItemData
+
+
+/*!
+A standard DataBrowserItemCompareProcPtr, this
+method compares items in the list.
+
+(3.1)
+*/
+pascal Boolean
+compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
+							 DataBrowserItemID			inItemOne,
+							 DataBrowserItemID			inItemTwo,
+							 DataBrowserPropertyID		inSortProperty)
+{
+	Boolean		result = false;
+	
+	
+	switch (inSortProperty)
+	{
+	case kMy_DataBrowserPropertyIDTweakIsEnabled:
+		result = (inItemOne < inItemTwo);
+		break;
+	
+	case kMy_DataBrowserPropertyIDTweakName:
+		result = (inItemOne < inItemTwo);
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	return result;
+}// compareDataBrowserItems
 
 
 /*!

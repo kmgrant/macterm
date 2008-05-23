@@ -264,6 +264,10 @@ enum
 
 /*!
 Tags for use with kPreferences_ClassTerminal.
+
+Some are terminal-specific tweaks; currently, anything
+starting with "kPreferences_TagXTerm...".  These should
+also have localized names in "UIStrings_PrefsWindow.h".
 */
 enum
 {
@@ -282,7 +286,9 @@ enum
 	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenScrollbackType		= 'scrt',	//!< data: "Terminal_ScrollbackType"
 	kPreferences_TagTerminalScrollDelay					= 'scrd',	//!< data: "EventTime" in MILLISECONDS
-	kPreferences_TagXTermSequencesEnabled				= 'xtrm'	//!< data: "Boolean"
+	kPreferences_TagXTermColorEnabled					= 'xtcl',	//!< data: "Boolean"
+	kPreferences_TagXTermGraphicsEnabled				= 'xtgr',	//!< data: "Boolean"
+	kPreferences_TagXTermWindowAlterationEnabled		= 'xtwn'	//!< data: "Boolean"
 };
 
 /*!

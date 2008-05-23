@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080523',
     '20080522',
     '20080520',
     '20080517',
@@ -156,6 +157,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080523': [
+		'Preferences window Terminals pane Emulation tab now has the intended list of checkboxes for terminal tweaks.',
+	],
 	'20080522': [
 		'Fixed the sample terminal display in places like the Preferences window Formats pane.',
 		'The command line displayed as the default window title no longer has a trailing space.',
