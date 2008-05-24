@@ -89,6 +89,7 @@ extern "C"
 #include "FormatDialog.h"
 #include "GenericThreads.h"
 #include "HelpSystem.h"
+#include "Keypads.h"
 #include "Preferences.h"
 #include "SessionFactory.h"
 #include "SizeDialog.h"
@@ -272,7 +273,6 @@ static IconRef				createBellOffIcon				();
 static IconRef				createBellOnIcon				();
 static IconRef				createFullScreenIcon			();
 static IconRef				createHideWindowIcon			();
-static HIWindowRef			createKioskOffSwitchWindow		();
 static IconRef				createScrollLockOffIcon			();
 static IconRef				createScrollLockOnIcon			();
 static IconRef				createLEDOffIcon				();
@@ -330,7 +330,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	TerminalWindowPtrLocker&	gTerminalWindowPtrLocks ()		{ static TerminalWindowPtrLocker x; return x; }
 	SInt16**					gTopLeftCorners = nullptr;
 	SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
-	HIWindowRef					gKioskOffSwitchWindow ()		{ static HIWindowRef x = createKioskOffSwitchWindow(); return x; }
 	TerminalWindowRef&			gKioskTerminalWindow ()			{ static TerminalWindowRef x = nullptr; return x; }
 	IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
 	IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
@@ -1901,9 +1900,9 @@ installedActions()
 		
 		// this technically is only needed once; but the attempt is made for each new
 		// terminal window, so ignore the errors in installing it multiple times
-		(OSStatus)InstallWindowEventHandler(gKioskOffSwitchWindow(), this->commandUPP, GetEventTypeCount(whenCommandExecuted),
-											whenCommandExecuted, nullptr/* user data */,
-											nullptr/* event handler reference */);
+		(OSStatus)InstallApplicationEventHandler(this->commandUPP, GetEventTypeCount(whenCommandExecuted),
+													whenCommandExecuted, nullptr/* user data */,
+													nullptr/* event handler reference */);
 	}
 	
 	// install a callback that tells the Window Manager the proper behavior for clicks in background terminal windows
@@ -2461,28 +2460,6 @@ createHideWindowIcon ()
 	
 	return result;
 }// createHideWindowIcon
-
-
-/*!
-Creates a floating window containing an “off switch” for
-Kiosk Mode.
-
-Returns nullptr if the window was not created successfully.
-
-(3.0)
-*/
-static HIWindowRef
-createKioskOffSwitchWindow ()
-{
-	HIWindowRef		result = nullptr;
-	
-	
-	// load the NIB containing this floater (automatically finds the right localization)
-	result = NIBWindow(AppResources_ReturnBundleForNIBs(),
-						CFSTR("KioskDisableFloater"), CFSTR("Window")) << NIBLoader_AssertWindowExists;
-	
-	return result;
-}// createKioskOffSwitchWindow
 
 
 /*!
@@ -3606,9 +3583,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								RegionUtilities_GetWindowDeviceGrayRect(window, &deviceBounds);
 								
 								// show “off switch” if user has requested it
-								if ((showOffSwitch) && (nullptr != gKioskOffSwitchWindow()))
+								if (showOffSwitch)
 								{
-									ShowWindow(gKioskOffSwitchWindow());
+									Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
+									SelectWindow(window); // return focus to the terminal window
 								}
 								
 								// set a global with the terminal window that is full screen,
@@ -3700,7 +3678,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							// end Kiosk Mode
 							FlagManager_Set(kFlagKioskMode, false);
-							HideWindow(gKioskOffSwitchWindow());
+							Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
 							if (nullptr != ptr) (OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, true);
 							assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
 							

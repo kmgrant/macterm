@@ -196,6 +196,7 @@
 		0A26DD9E0CCF0BCE00768AD8 /* AddressDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = AddressDialog.h; path = Application/Code/AddressDialog.h; sourceTree = "<group>"; };
 		0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenericPanelTabs.cp; path = Application/Code/GenericPanelTabs.cp; sourceTree = "<group>"; };
 		0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericPanelTabs.h; path = Application/Code/GenericPanelTabs.h; sourceTree = "<group>"; };
+		0A2F313D0DE7DB3300AA6D7B /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KeypadFullScreen.nib; sourceTree = "<group>"; };
 		0A33CCF607FAC04200248DDF /* ListenerModel.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ListenerModel.cp; path = Shared/Code/ListenerModel.cp; sourceTree = "<group>"; };
 		0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MemoryBlocks.cp; path = Shared/Code/MemoryBlocks.cp; sourceTree = "<group>"; };
 		0A33CCFC07FAC06200248DDF /* StringUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = StringUtilities.cp; path = Shared/Code/StringUtilities.cp; sourceTree = "<group>"; };
@@ -547,7 +548,6 @@
 		0AE852740D9463B900B6834B /* CocoaUserDefaults.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaUserDefaults.h; path = Shared/Code/CocoaUserDefaults.h; sourceTree = "<group>"; };
 		0AEA45D80642041B00E701DA /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = English; path = Application/Resources/English.lproj/Dictionary.sdef; sourceTree = "<group>"; };
 		0AEDD0940A5F76DB00705C1C /* IconForPreferenceCollections.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPreferenceCollections.icns; path = Application/Resources/IconForPreferenceCollections.icns; sourceTree = "<group>"; };
-		0AF289A206CC9ADC002A89A7 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskDisableFloater.nib; sourceTree = "<group>"; };
 		0AF4B5450A1D61C700D187A3 /* PrefPanelKiosk.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelKiosk.h; path = Application/Code/PrefPanelKiosk.h; sourceTree = "<group>"; };
 		0AF4B5460A1D61E400D187A3 /* PrefPanelKiosk.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelKiosk.cp; path = Application/Code/PrefPanelKiosk.cp; sourceTree = "<group>"; };
 		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
@@ -935,9 +935,9 @@
 				0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */,
 				0AB64A93057819E5005702BA /* InfoWindow.nib */,
 				0A01C0440DD411740078A3A1 /* KeypadControlKeys.nib */,
+				0A2F313C0DE7DB3300AA6D7B /* KeypadFullScreen.nib */,
 				0A3617680DD285390081A445 /* KeypadFunctionKeys.nib */,
 				0ACA5E8D0DD3B4DB003B62C7 /* KeypadVT220Keys.nib */,
-				0AF289A106CC9ADC002A89A7 /* KioskDisableFloater.nib */,
 				0A6E225806CF42F0004AC0A4 /* KioskPasswordDialog.nib */,
 				0A8450A30554CB8E00CFF440 /* MacroSetupWindow.nib */,
 				0A9CC37906DC470D00DCD12E /* PrefPanels.nib */,
@@ -1412,6 +1412,14 @@
 			name = TerminalWindow.nib;
 			sourceTree = "<group>";
 		};
+		0A2F313C0DE7DB3300AA6D7B /* KeypadFullScreen.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A2F313D0DE7DB3300AA6D7B /* English */,
+			);
+			name = KeypadFullScreen.nib;
+			sourceTree = "<group>";
+		};
 		0A3617680DD285390081A445 /* KeypadFunctionKeys.nib */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1674,14 +1682,6 @@
 				0AEA45D80642041B00E701DA /* English */,
 			);
 			name = Dictionary.sdef;
-			sourceTree = "<group>";
-		};
-		0AF289A106CC9ADC002A89A7 /* KioskDisableFloater.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AF289A206CC9ADC002A89A7 /* English */,
-			);
-			name = KioskDisableFloater.nib;
 			sourceTree = "<group>";
 		};
 		0AF5080409006B3D00E6FE79 /* SizeDialog.nib */ = {

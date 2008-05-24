@@ -75,6 +75,10 @@ Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 		result = (YES == [[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] window] isVisible]);
 		break;
 	
+	case kKeypads_WindowTypeFullScreen:
+		result = (YES == [[[Keypads_FullScreenPanelController sharedFullScreenPanelController] window] isVisible]);
+		break;
+	
 	case kKeypads_WindowTypeFunctionKeys:
 		result = (YES == [[[Keypads_FunctionKeysPanelController sharedFunctionKeysPanelController] window] isVisible]);
 		break;
@@ -119,6 +123,7 @@ Keypads_SetEventTarget	(Keypads_WindowType		inFromKeypad,
 		Keypads_SetVisible(inFromKeypad, (nullptr != gControlKeysEventTarget));
 		break;
 	
+	case kKeypads_WindowTypeFullScreen:
 	case kKeypads_WindowTypeFunctionKeys:
 	case kKeypads_WindowTypeVT220Keys:
 	default:
@@ -149,6 +154,17 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 		else
 		{
 			[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] close];
+		}
+		break;
+	
+	case kKeypads_WindowTypeFullScreen:
+		if (inIsVisible)
+		{
+			[[Keypads_FullScreenPanelController sharedFullScreenPanelController] showWindow:NSApp];
+		}
+		else
+		{
+			[[Keypads_FullScreenPanelController sharedFullScreenPanelController] close];
 		}
 		break;
 	
@@ -462,6 +478,32 @@ static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController 
 }
 
 @end // Keypads_ControlKeysPanelController
+
+@implementation Keypads_FullScreenPanelController
+
+static Keypads_FullScreenPanelController*		gKeypads_FullScreenPanelController = nil;
++ (id)sharedFullScreenPanelController
+{
+	if (nil == gKeypads_FullScreenPanelController)
+	{
+		gKeypads_FullScreenPanelController = [[Keypads_FullScreenPanelController allocWithZone:NULL] init];
+	}
+	return gKeypads_FullScreenPanelController;
+}
+
+- (id)init
+{
+	self = [super initWithWindowNibName:@"KeypadFullScreen"];
+	return self;
+}
+
+- (IBAction)disableFullScreen:(id)sender
+{
+#pragma unused(sender)
+	Commands_ExecuteByIDUsingEvent(kCommandKioskModeDisable, gControlKeysEventTarget);
+}
+
+@end // Keypads_FullScreenPanelController
 
 @implementation Keypads_FunctionKeysPanelController
 

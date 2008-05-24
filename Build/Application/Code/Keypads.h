@@ -45,7 +45,8 @@ enum
 {
 	kKeypads_WindowTypeControlKeys		= 0,	//!< control keys (^A, ^B, etc.)
 	kKeypads_WindowTypeFunctionKeys		= 1,	//!< VT220 function keys (F6 - F20)
-	kKeypads_WindowTypeVT220Keys		= 2		//!< VT220 keypad (PF1, PF2, etc.)
+	kKeypads_WindowTypeVT220Keys		= 2,	//!< VT220 keypad (PF1, PF2, etc.)
+	kKeypads_WindowTypeFullScreen		= 3		//!< controls for Full Screen mode
 };
 
 #pragma mark Types
@@ -166,6 +167,20 @@ changes to an interface declared in a ".mm" file.
 - (IBAction)typePF3:(id)sender;
 - (IBAction)typePF4:(id)sender;
 - (IBAction)typeSelect:(id)sender;
+@end
+
+/*!
+Implements the Full Screen control window, which is
+currently only used to disable Full Screen mode.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Keypads_FullScreenPanelController : NSWindowController
++ (id)sharedFullScreenPanelController;
+// the following MUST match what is in "KeypadFullScreen.nib"
+- (IBAction)disableFullScreen:(id)sender;
 @end
 
 #endif

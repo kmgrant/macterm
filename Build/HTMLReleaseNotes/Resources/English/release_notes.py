@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080524',
     '20080523',
     '20080522',
     '20080520',
@@ -157,6 +158,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080524': [
+		'The off-switch window in Full Screen mode is now a Cocoa window.',
+		'The off-switch window in Full Screen mode now remembers its position.',
+	],
 	'20080523': [
 		'Preferences window Terminals pane Emulation tab now has the intended list of checkboxes for terminal tweaks.',
 	],
