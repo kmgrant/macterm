@@ -1,1 +1,0 @@
-English.lproj/LocalizedKioskDialog.h

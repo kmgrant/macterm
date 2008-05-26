@@ -56,7 +56,6 @@
 #include "DialogResources.h"
 #include "GeneralResources.h"
 #include "MenuResources.h"
-#include "TelnetMenuItemNames.h"
 
 // MacTelnet includes
 #include "AppleEventUtilities.h"
@@ -2066,15 +2065,34 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 	
 	if (menuCommandKeys)
 	{
-		MenuRef			defaultMenu = nullptr;
-		MenuRef			shellMenu = nullptr;
-		MenuRef			logInShellMenu = nullptr;
-		MenuRef			dialogMenu = nullptr;
-		MenuItemIndex	shellItemIndex = 0;
-		MenuItemIndex	logInShellItemIndex = 0;
-		MenuItemIndex	dialogItemIndex = 0;
-		MenuItemIndex	defaultItemIndex = 0;
+		MenuRef				defaultMenu = nullptr;
+		MenuRef				shellMenu = nullptr;
+		MenuRef				logInShellMenu = nullptr;
+		MenuRef				dialogMenu = nullptr;
+		MenuItemIndex		shellItemIndex = 0;
+		MenuItemIndex		logInShellItemIndex = 0;
+		MenuItemIndex		dialogItemIndex = 0;
+		MenuItemIndex		defaultItemIndex = 0;
+		UInt16				keyCharacter = 'N'; // this default is ignored as long as the string value is found below
 		
+		
+		// determine the character that should be used for all key equivalents
+		{
+			CFStringRef			charCFString = nullptr;
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			
+			
+			stringResult = UIStrings_Copy(kUIStrings_TerminalNewCommandsKeyCharacter, charCFString);
+			if (stringResult.ok())
+			{
+				keyCharacter = CFStringGetCharacterAtIndex(charCFString, 0);
+				CFRelease(charCFString), charCFString = nullptr;
+			}
+			else
+			{
+				assert(false && "unable to find key equivalent for New commands");
+			}
+		}
 		
 		// IMPORTANT: For, er, simplicity, since there is no longer a simplified version
 		// of the File menu, secondary menus are ignored here and key equivalents are
@@ -2116,22 +2134,22 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 				
 				menu = defaultMenu;
 				itemIndex = defaultItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
 				
 				menu = shellMenu;
 				itemIndex = shellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
 				
 				menu = logInShellMenu;
 				itemIndex = logInShellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
 				
 				menu = dialogMenu;
 				itemIndex = dialogItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
 			}
 			break;
@@ -2145,22 +2163,22 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 				
 				menu = defaultMenu;
 				itemIndex = defaultItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
 				
 				menu = shellMenu;
 				itemIndex = shellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
 				
 				menu = logInShellMenu;
 				itemIndex = logInShellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
 				
 				menu = dialogMenu;
 				itemIndex = dialogItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
 			}
 			break;
@@ -2174,22 +2192,22 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 				
 				menu = defaultMenu;
 				itemIndex = defaultItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
 				
 				menu = shellMenu;
 				itemIndex = shellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
 				
 				menu = logInShellMenu;
 				itemIndex = logInShellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
 				
 				menu = dialogMenu;
 				itemIndex = dialogItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
 			}
 			break;
@@ -2203,22 +2221,22 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 				
 				menu = defaultMenu;
 				itemIndex = defaultItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuShiftModifier);
 				
 				menu = shellMenu;
 				itemIndex = shellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuControlModifier);
 				
 				menu = logInShellMenu;
 				itemIndex = logInShellItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, kMenuOptionModifier);
 				
 				menu = dialogMenu;
 				itemIndex = dialogItemIndex;
-				SetItemCmd(menu, itemIndex, KEYCHAR_NEWSESSION);
+				SetMenuItemCommandKey(menu, itemIndex, false/* virtual key */, keyCharacter);
 				SetMenuItemModifiers(menu, itemIndex, 0); // add command modifier
 			}
 			break;

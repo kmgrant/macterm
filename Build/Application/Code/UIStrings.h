@@ -358,6 +358,7 @@ enum UIStrings_TerminalCFString
 	kUIStrings_TerminalAccessibilityDescription				= 'ADsc',
 	kUIStrings_TerminalBackgroundAccessibilityDescription	= 'ABDs',
 	kUIStrings_TerminalInterruptProcess						= 'Intr',
+	kUIStrings_TerminalNewCommandsKeyCharacter				= 'NewK',
 	kUIStrings_TerminalResumeOutput							= 'Resu',
 	kUIStrings_TerminalSuspendOutput						= 'Susp',
 	kUIStrings_TerminalSearchNothingFound					= 'NotF',

@@ -50,7 +50,6 @@
 
 // resource includes
 #include "CFRetainRelease.h"
-#include "LocalizedAlertMessages.h"
 
 // MacTelnet includes
 #include "UIStrings.h"
@@ -1557,6 +1556,11 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 	case kUIStrings_TerminalInterruptProcess:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("[Interrupted]"), CFSTR("Terminal"),
 													CFSTR("kUIStrings_TerminalInterruptProcess"));
+		break;
+	
+	case kUIStrings_TerminalNewCommandsKeyCharacter:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("N"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalNewCommandsKeyCharacter; used for some menu command keys, this should be only one Unicode character"));
 		break;
 	
 	case kUIStrings_TerminalResumeOutput:

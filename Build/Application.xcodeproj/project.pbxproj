@@ -416,13 +416,6 @@
 		0A4A7839055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttentionMask.pict; sourceTree = "<group>"; };
 		0A4A783B055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttention.pict; sourceTree = "<group>"; };
 		0A4A86AC055B3DDF0011CC82 /* ApplicationVersion.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ApplicationVersion.h; path = Application/Resources/ApplicationVersion.h; sourceTree = "<group>"; };
-		0A4A86AD055B3DDF0011CC82 /* TelnetBalloonText.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TelnetBalloonText.h; path = Application/Resources/TelnetBalloonText.h; sourceTree = "<group>"; };
-		0A4A86AE055B3DDF0011CC82 /* TelnetMiscellaneousText.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TelnetMiscellaneousText.h; path = Application/Resources/TelnetMiscellaneousText.h; sourceTree = "<group>"; };
-		0A4A86AF055B3DDF0011CC82 /* TelnetMenuItemNames.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TelnetMenuItemNames.h; path = Application/Resources/TelnetMenuItemNames.h; sourceTree = "<group>"; };
-		0A4A86B0055B3DDF0011CC82 /* TelnetButtonNames.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = TelnetButtonNames.h; path = Application/Resources/TelnetButtonNames.h; sourceTree = "<group>"; };
-		0A4A86B3055B3DDF0011CC82 /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = English; path = Application/Resources/English.lproj/LocalizedPrefPanelGeneral.h; sourceTree = SOURCE_ROOT; };
-		0A4A86B4055B3DDF0011CC82 /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = English; path = Application/Resources/English.lproj/LocalizedPrefPanelFavorites.h; sourceTree = SOURCE_ROOT; };
-		0A4A86B7055B3DDF0011CC82 /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = English; path = Application/Resources/English.lproj/LocalizedAlertMessages.h; sourceTree = SOURCE_ROOT; };
 		0A4A86B9055B3DDF0011CC82 /* English */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = English; path = Application/Resources/English.lproj/LocalizedApplicationVersion.h; sourceTree = SOURCE_ROOT; };
 		0A54E40C0560B62F005B4592 /* IconForSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSession.icns; path = Application/Resources/IconForSession.icns; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
@@ -1028,14 +1021,7 @@
 			isa = PBXGroup;
 			children = (
 				0A4A86AC055B3DDF0011CC82 /* ApplicationVersion.h */,
-				0AAF265805CE490B0058BC0D /* LocalizedAlertMessages.h */,
 				0AAF265C05CE49110058BC0D /* LocalizedApplicationVersion.h */,
-				0AAF266405CE491E0058BC0D /* LocalizedPrefPanelFavorites.h */,
-				0AAF266805CE49240058BC0D /* LocalizedPrefPanelGeneral.h */,
-				0A4A86AD055B3DDF0011CC82 /* TelnetBalloonText.h */,
-				0A4A86B0055B3DDF0011CC82 /* TelnetButtonNames.h */,
-				0A4A86AE055B3DDF0011CC82 /* TelnetMiscellaneousText.h */,
-				0A4A86AF055B3DDF0011CC82 /* TelnetMenuItemNames.h */,
 				0A719D50055D963A009B0A88 /* DialogResources.h */,
 				0A719D51055D963A009B0A88 /* GeneralResources.h */,
 				0A719D53055D963A009B0A88 /* MenuResources.h */,
@@ -1564,36 +1550,12 @@
 			name = PrefPanels.nib;
 			sourceTree = "<group>";
 		};
-		0AAF265805CE490B0058BC0D /* LocalizedAlertMessages.h */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4A86B7055B3DDF0011CC82 /* English */,
-			);
-			name = LocalizedAlertMessages.h;
-			sourceTree = "<group>";
-		};
 		0AAF265C05CE49110058BC0D /* LocalizedApplicationVersion.h */ = {
 			isa = PBXVariantGroup;
 			children = (
 				0A4A86B9055B3DDF0011CC82 /* English */,
 			);
 			name = LocalizedApplicationVersion.h;
-			sourceTree = "<group>";
-		};
-		0AAF266405CE491E0058BC0D /* LocalizedPrefPanelFavorites.h */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4A86B4055B3DDF0011CC82 /* English */,
-			);
-			name = LocalizedPrefPanelFavorites.h;
-			sourceTree = "<group>";
-		};
-		0AAF266805CE49240058BC0D /* LocalizedPrefPanelGeneral.h */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A4A86B3055B3DDF0011CC82 /* English */,
-			);
-			name = LocalizedPrefPanelGeneral.h;
 			sourceTree = "<group>";
 		};
 		0AB64A93057819E5005702BA /* InfoWindow.nib */ = {

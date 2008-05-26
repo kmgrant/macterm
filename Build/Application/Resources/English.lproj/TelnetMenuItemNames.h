@@ -1,1 +1,0 @@
-../TelnetMenuItemNames.h
