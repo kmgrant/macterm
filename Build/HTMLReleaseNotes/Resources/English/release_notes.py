@@ -160,6 +160,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080527': [
+		'Fixed various contextual menu commands to better-match their menu bar equivalents.',
 		'The keypads, Full Screen mode off-switch and "IP Addresses of This Mac" no longer steal keyboard focus when displayed.',
 	],
 	'20080524': [

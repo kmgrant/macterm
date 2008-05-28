@@ -582,7 +582,7 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 		break;
 	
 	case kUIStrings_ContextualMenuCopyToClipboard:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Copy to Clipboard"), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Copy"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuCopyToClipboard"));
 		break;
 	
@@ -602,7 +602,7 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 		break;
 	
 	case kUIStrings_ContextualMenuFindInThisWindow:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Find In This Window..."), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Find..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuFindInThisWindow"));
 		break;
 	
@@ -617,12 +617,12 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 		break;
 	
 	case kUIStrings_ContextualMenuOpenThisResource:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Open This Resource (URL)"), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Open URL"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuOpenThisResource"));
 		break;
 	
 	case kUIStrings_ContextualMenuPasteText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Paste Text"), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Paste"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuPasteText"));
 		break;
 	
@@ -632,22 +632,22 @@ UIStrings_Copy	(UIStrings_ContextualMenuCFString	inWhichString,
 		break;
 	
 	case kUIStrings_ContextualMenuRenameThisWindow:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Rename This Window..."), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Rename..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuRenameThisWindow"));
 		break;
 	
 	case kUIStrings_ContextualMenuSaveSelectedText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Save Selected Text..."), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Save Selection..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuSaveSelectedText"));
 		break;
 	
 	case kUIStrings_ContextualMenuSpeakSelectedText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Speak Selected Text"), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Start Speaking Text"), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuSpeakSelectedText"));
 		break;
 	
 	case kUIStrings_ContextualMenuSpecialKeySequences:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Special Key Sequences..."), CFSTR("ContextualMenus"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Custom Key Sequences..."), CFSTR("ContextualMenus"),
 													CFSTR("kUIStrings_ContextualMenuSpecialKeySequences"));
 		break;
 	
