@@ -141,7 +141,8 @@ void
 Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 					 Boolean				inIsVisible)
 {
-	AutoPool	_;
+	AutoPool		_;
+	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
 	
 	
 	switch (inKeypad)
@@ -194,6 +195,8 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 		// ???
 		break;
 	}
+	
+	(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// SetVisible
 
 

@@ -53,10 +53,12 @@ Shows or hides the IP Addresses panel.
 void
 AddressDialog_Display ()
 {
-	AutoPool	_;
+	AutoPool		_;
+	HIWindowRef		oldActiveWindow = GetUserFocusWindow();
 	
 	
 	[[AddressDialog_PanelController sharedAddressPanelController] showWindow:NSApp];
+	(OSStatus)SetUserFocusWindow(oldActiveWindow);
 }// Display
 
 

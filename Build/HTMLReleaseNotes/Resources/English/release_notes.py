@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080527',
     '20080524',
     '20080523',
     '20080522',
@@ -158,6 +159,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080527': [
+		'The keypads, Full Screen mode off-switch and "IP Addresses of This Mac" no longer steal keyboard focus when displayed.',
+	],
 	'20080524': [
 		'The off-switch window in Full Screen mode is now a Cocoa window.',
 		'The off-switch window in Full Screen mode now remembers its position.',
