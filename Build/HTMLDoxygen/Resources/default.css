@@ -109,6 +109,7 @@ a:hover
 	background-color:	black; /* okay because the body image color is known */
 	color:				white;
 	font-family:		Optima, sans-serif;
+	font-size:			small;
 	font-style:			normal;
 	font-weight:		bold;
 	vertical-align:		middle;
@@ -116,7 +117,7 @@ a:hover
 	
 	margin-top:			0em;
 	border-top:			0em;
-	padding-top:		2.2em;
+	padding-top:		1.5em;
 	height:				auto;
 	padding-bottom:		0.2em;
 	border-bottom:		0em;
