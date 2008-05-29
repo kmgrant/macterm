@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080529',
     '20080527',
     '20080524',
     '20080523',
@@ -159,6 +160,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080529': [
+		'The floating command line is now a Cocoa window, which fixes numerous problems this window has had in the past.',
+	],
 	'20080527': [
 		'Fixed various contextual menu commands to better-match their menu bar equivalents.',
 		'The keypads, Full Screen mode off-switch and "IP Addresses of This Mac" no longer steal keyboard focus when displayed.',

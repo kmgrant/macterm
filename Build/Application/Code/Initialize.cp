@@ -396,7 +396,6 @@ Initialize_ApplicationShutdown ()
 	Macros_Done();
 	
 	Clipboard_Done();
-	CommandLine_Done();
 	InfoWindow_Done();
 	
 	InternetPrefs_Done();

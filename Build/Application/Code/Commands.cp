@@ -1223,24 +1223,8 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	break;
 		
 		case kCommandShowCommandLine:
-			{
-				WindowRef	window = CommandLine_ReturnWindow();
-				
-				
-				ShowWindow(window);
-				CommandLine_Focus();
-			}
-			break;
-		
-		case kCommandHideCommandLine:
-			if (CommandLine_IsVisible())
-			{
-				WindowRef	window = CommandLine_ReturnWindow();
-				
-				
-				(OSStatus)SetUserFocusWindow(REINTERPRET_CAST(kUserFocusAuto, WindowRef));
-				HideWindow(window);
-			}
+			// in the Cocoa implementation this really means “show or activate”
+			CommandLine_Display();
 			break;
 		
 		//kCommandShowHidePrefCollectionsDrawer:

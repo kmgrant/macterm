@@ -791,12 +791,7 @@ receiveDropHandler	(WindowRef		inWindow,
 			HLock(dataH);
 	
 			// send the text to the window
-			if (windowDescriptor == kConstantsRegistry_WindowDescriptorCommandLine)
-			{
-				// try to set the text field using the dropped text
-				CommandLine_SetText(*dataH, textSize);
-			}
-			else if (windowDescriptor == kConstantsRegistry_WindowDescriptorMacroSetup)
+			if (windowDescriptor == kConstantsRegistry_WindowDescriptorMacroSetup)
 			{
 				// try to import macros into Macro Setup dialog’s text fields
 				MacroSetupWindow_ReceiveDrop(inDragRef, REINTERPRET_CAST(*dataH, UInt8*), textSize);

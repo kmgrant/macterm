@@ -1564,7 +1564,6 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowMacros, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideMacros, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowCommandLine, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideCommandLine, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowKeypad, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowFunction, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowControlKeys, stateTrackerShowHideItems);
@@ -3546,13 +3545,8 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 		break;
 	
 	case kCommandShowCommandLine:
+		// in the Cocoa implementation this really means “show or activate”, so it is always available
 		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber, (false == CommandLine_IsVisible()));
-		break;
-	
-	case kCommandHideCommandLine:
-		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber, CommandLine_IsVisible());
 		break;
 	
 	case kCommandShowControlKeys:

@@ -166,7 +166,7 @@ English.lproj/AddressDialogCocoa.nib \
 English.lproj/AlertMessages.nib \
 English.lproj/Clipboard.nib \
 English.lproj/ColorBox.nib \
-English.lproj/CommandLine.nib \
+English.lproj/CommandLineCocoa.nib \
 English.lproj/DuplicateDialog.nib \
 English.lproj/FindDialog.nib \
 English.lproj/GenericDialog.nib \

@@ -230,13 +230,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandShowMacros						'ShMc'
 #define kCommandHideMacros						'HiMc'
 #define kCommandShowCommandLine					'ShCL'
-#define kCommandHideCommandLine					'HiCL'
 #define kCommandShowControlKeys					'ShCK'
-#define kCommandHideControlKeys					'HiCK'
 #define kCommandShowFunction					'ShFn'
-#define kCommandHideFunction					'HiFn'
 #define kCommandShowKeypad						'ShKp'
-#define kCommandHideKeypad						'HiKp'
 
 // Help menu
 #define kCommandMainHelp						kHICommandAppHelp

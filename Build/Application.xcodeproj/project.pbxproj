@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
+		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* com_mactelnet_HandleFile.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* com_mactelnet_HandleFile.py */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
@@ -125,7 +126,6 @@
 		0AC6BB550A8C0BA100AFF37A /* ListenerModel.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF607FAC04200248DDF /* ListenerModel.cp */; };
 		0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */; };
 		0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */; };
-		0AC6BB580A8C0BA100AFF37A /* CommandLine.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC2055432A400ACDF3A /* CommandLine.cp */; };
 		0AC6BD940A8C0BB100AFF37A /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059405543D7C00ACDF3A /* Carbon.framework */; };
 		0AC6BD950A8C0BB100AFF37A /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46079705543DE400ACDF3A /* CoreFoundation.framework */; };
 		0AC6BD960A8C0BB100AFF37A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A46059505543D7C00ACDF3A /* CoreServices.framework */; };
@@ -205,6 +205,8 @@
 		0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CFKeyValueInterface.cp; path = Shared/Code/CFKeyValueInterface.cp; sourceTree = "<group>"; };
 		0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CFDictionaryManager.cp; path = Shared/Code/CFDictionaryManager.cp; sourceTree = "<group>"; };
 		0A33CD0C07FAC0B500248DDF /* TextDataFile.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = TextDataFile.cp; path = Shared/Code/TextDataFile.cp; sourceTree = "<group>"; };
+		0A35F5130DEDD9E300F16B03 /* CommandLine.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CommandLine.mm; path = Application/Code/CommandLine.mm; sourceTree = "<group>"; };
+		0A35F51B0DEDDAA300F16B03 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/CommandLineCocoa.nib; sourceTree = "<group>"; };
 		0A3617690DD285390081A445 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KeypadFunctionKeys.nib; sourceTree = "<group>"; };
 		0A36176A0DD286240081A445 /* Keypads.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = Keypads.mm; path = Application/Code/Keypads.mm; sourceTree = "<group>"; };
 		0A377E610D38804B001F3573 /* com_mactelnet_HandleFile.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = com_mactelnet_HandleFile.py; path = Application/PythonCode/com_mactelnet_HandleFile.py; sourceTree = "<group>"; };
@@ -329,7 +331,6 @@
 		0A46FDBD055432A400ACDF3A /* CoercionsAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CoercionsAE.cp; path = Application/Code/CoercionsAE.cp; sourceTree = "<group>"; };
 		0A46FDC0055432A400ACDF3A /* ColorBox.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ColorBox.cp; path = Application/Code/ColorBox.cp; sourceTree = "<group>"; };
 		0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ColorUtilities.cp; path = Shared/Code/ColorUtilities.cp; sourceTree = "<group>"; };
-		0A46FDC2055432A400ACDF3A /* CommandLine.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CommandLine.cp; path = Application/Code/CommandLine.cp; sourceTree = "<group>"; };
 		0A46FDC3055432A400ACDF3A /* Commands.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Commands.cp; path = Application/Code/Commands.cp; sourceTree = "<group>"; };
 		0A46FDC5055432A400ACDF3A /* ConnectionAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ConnectionAE.cp; path = Application/Code/ConnectionAE.cp; sourceTree = "<group>"; };
 		0A46FDC6055432A400ACDF3A /* Console.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Console.cp; path = Shared/Code/Console.cp; sourceTree = "<group>"; };
@@ -437,7 +438,6 @@
 		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
 		0A73DB9608C568D90099BA73 /* MacTelnet.help */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MacTelnet.help; path = HTMLHelp/MacTelnet.help; sourceTree = SOURCE_ROOT; };
 		0A7530D20580470F00BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MenuForDockIcon.nib; sourceTree = "<group>"; };
-		0A7530DE058048F800BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/CommandLine.nib; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
 		0A82CE13069A374C0047E652 /* DuplicateDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = DuplicateDialog.cp; path = Application/Code/DuplicateDialog.cp; sourceTree = "<group>"; };
@@ -661,7 +661,7 @@
 				0A46FDBC055432A400ACDF3A /* Clipboard.cp */,
 				0A46FDC0055432A400ACDF3A /* ColorBox.cp */,
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
-				0A46FDC2055432A400ACDF3A /* CommandLine.cp */,
+				0A35F5130DEDD9E300F16B03 /* CommandLine.mm */,
 				0A46FDC3055432A400ACDF3A /* Commands.cp */,
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
@@ -922,7 +922,7 @@
 				0ACDD9240ABD16C200040553 /* AlertMessages.nib */,
 				0ADEFCCC06C34E1B00814772 /* Clipboard.nib */,
 				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
-				0A7530DD058048F800BCC5E4 /* CommandLine.nib */,
+				0A35F51A0DEDDAA300F16B03 /* CommandLineCocoa.nib */,
 				0A84509B0554CB8E00CFF440 /* DuplicateDialog.nib */,
 				0A84509D0554CB8E00CFF440 /* FindDialog.nib */,
 				0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */,
@@ -1354,7 +1354,6 @@
 				0AC6BB550A8C0BA100AFF37A /* ListenerModel.cp in Sources */,
 				0AC6BB560A8C0BA100AFF37A /* TextDataFile.cp in Sources */,
 				0AC6BB570A8C0BA100AFF37A /* CommonEventHandlers.cp in Sources */,
-				0AC6BB580A8C0BA100AFF37A /* CommandLine.cp in Sources */,
 				0AD0B2ED0A9EAD4E002064BA /* QuillsBase.cp in Sources */,
 				0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */,
 				0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */,
@@ -1368,6 +1367,7 @@
 				0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */,
 				0A36176B0DD286240081A445 /* Keypads.mm in Sources */,
 				0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */,
+				0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1404,6 +1404,14 @@
 				0A2F313D0DE7DB3300AA6D7B /* English */,
 			);
 			name = KeypadFullScreen.nib;
+			sourceTree = "<group>";
+		};
+		0A35F51A0DEDDAA300F16B03 /* CommandLineCocoa.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A35F51B0DEDDAA300F16B03 /* English */,
+			);
+			name = CommandLineCocoa.nib;
 			sourceTree = "<group>";
 		};
 		0A3617680DD285390081A445 /* KeypadFunctionKeys.nib */ = {
@@ -1476,14 +1484,6 @@
 				0A7530D20580470F00BCC5E4 /* English */,
 			);
 			name = MenuForDockIcon.nib;
-			sourceTree = "<group>";
-		};
-		0A7530DD058048F800BCC5E4 /* CommandLine.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A7530DE058048F800BCC5E4 /* English */,
-			);
-			name = CommandLine.nib;
 			sourceTree = "<group>";
 		};
 		0A84509B0554CB8E00CFF440 /* DuplicateDialog.nib */ = {
