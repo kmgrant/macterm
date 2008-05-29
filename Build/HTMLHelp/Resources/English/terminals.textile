@@ -53,21 +53,21 @@ choose its shape and whether or not it is flashing on and off.
 
 h2(#commandline). Floating Command Line
 
-Use Window >> Show Command Line to display a floating window for
+Use Window >> Command Line to display a floating window for
 entering text locally.  Unlike typing directly into a terminal,
 nothing you type in the floating window is seen until you press
 the *Return* key (which also sends a new-line sequence to the
 terminal).
 
-As a special exception, you can enter URLs (such as
-http://www.apple.com/ or telnet://nowhere.loopback.edu/) into the
-command line, and they are handled locally using your preferred
-application.  Note that MacTelnet can handle some URLs itself.
+You can use the down-arrow key or the mouse to access a list of
+previously-entered command lines.  The field supports the usual
+Mac editing short-cuts, such as option-left-arrow to skip to the
+previous word.  It also supports some shell-like short-cuts, such
+as control-A and control-E to jump to the beginning and end,
+respectively.
 
-The command line is somewhat shell-like, in that you can use the
-up-arrow key to automatically type recently-entered command
-lines.  You can also use the mouse to access the history from the
-window.
+The colors of the command line are read from your Default Format
+preferences when the window is first displayed.
 
 h2. Window Operations
 
