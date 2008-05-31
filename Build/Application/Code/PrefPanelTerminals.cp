@@ -665,6 +665,7 @@ createContainerView		(Panel_Ref		inPanel,
 		{
 			DataBrowserItemID const		kTweakTags[] =
 										{
+											kPreferences_TagVT100FixLineWrappingBug,
 											kPreferences_TagXTermColorEnabled,
 											kPreferences_TagXTermGraphicsEnabled,
 											kPreferences_TagXTermWindowAlterationEnabled

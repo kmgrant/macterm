@@ -99,6 +99,7 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowTerminalsEmulationTabName		= 'TrmE',
 	// For simplicity, code in Preferences user interfaces assumes that tags can be
 	// used instead of the “proper” enumeration names, for these “named preferences”.
+	kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug	= kPreferences_TagVT100FixLineWrappingBug,
 	kUIStrings_PreferencesWindowTerminalsXTermColorEnabled		= kPreferences_TagXTermColorEnabled,
 	kUIStrings_PreferencesWindowTerminalsXTermGraphicsEnabled	= kPreferences_TagXTermGraphicsEnabled,
 	kUIStrings_PreferencesWindowTerminalsXTermWindowAltEnabled	= kPreferences_TagXTermWindowAlterationEnabled,

@@ -1255,6 +1255,11 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowTerminalsEmulationTabName"));
 		break;
 	
+	case kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("VT100 Fix Line Wrapping Bug"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug"));
+		break;
+	
 	case kUIStrings_PreferencesWindowTerminalsXTermColorEnabled:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Color"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermColorEnabled"));

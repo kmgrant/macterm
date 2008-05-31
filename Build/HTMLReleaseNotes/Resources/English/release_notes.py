@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080530',
     '20080529',
     '20080527',
     '20080524',
@@ -160,6 +161,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080530': [
+		'Preferences window Terminals pane Emulation tab now has an option for fixing the line wrap bug of a standard VT100.',
+	],
 	'20080529': [
 		'The floating command line is now a Cocoa window, which fixes numerous problems this window has had in the past.',
 	],

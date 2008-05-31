@@ -201,8 +201,12 @@ h3(#terminals). Terminal Collections
 |\2((. The name sent to the session when asked about terminal type; defaults to the current emulator name.|
 |@terminal-emulator-type@|_string_: @dumb@, @vt100@, @vt102@, or @vt220@|
 |\2((. Default behavior (such as which sequences are read, and what effects they have) follows the specification of this terminal.|
+|@terminal-emulator-vt100-fix-line-wrapping-bug@|_true or false_|
+|\2((. Avoids strict VT100 emulation, preventing a real bug in VT100s that causes the last terminal line to scroll when wrapped.|
 |@terminal-emulator-xterm-enable-color@|_true or false_|
 |\2((. ANSI colors are allowed (regardless of terminal type).|
+|@terminal-emulator-xterm-enable-graphics@|_true or false_|
+|\2((. Graphics characters are allowed (regardless of terminal type).|
 |@terminal-emulator-xterm-enable-window-alteration-sequences@|_true or false_|
 |\2((. A session can request that windows be renamed or iconified, etc.|
 |@terminal-line-wrap@|_true or false_|
