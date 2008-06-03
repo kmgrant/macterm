@@ -1311,19 +1311,17 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 	error = SetControlID(result, &idMyUserPaneSampleTerminalView);
 	assert_noerr(error);
 	
-	// write some sample text to the view
+	// write some sample text to the view; NOTE that because of initial
+	// size constraints, there may not be enough room to write more than
+	// one line (if you need more than one line, defer to a later point)
 	{
 		// assumes VT100
 		Terminal_EmulatorProcessCString(inTerminalScreen,
 										"\033[2J\033[H"); // clear screen, home cursor
 		Terminal_EmulatorProcessCString(inTerminalScreen,
-										"normal \033[1mbold\033[0m \033[3mitalic\033[0m \033[6minverse\033[0m\015\012"); // LOCALIZE THIS
-		Terminal_EmulatorProcessCString(inTerminalScreen,
-										"\033[4munderline\033[0m \033[5mblinking\033[0m\015\012"); // LOCALIZE THIS
-		Terminal_EmulatorProcessCString(inTerminalScreen,
-										"selected\015\012"); // LOCALIZE THIS
-		// the range selected here should be as long as the length of the word “selected” above
-		TerminalView_SelectVirtualRange(inTerminalView, std::make_pair(std::make_pair(0, 2), std::make_pair(7, 2)));
+										"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m"); // LOCALIZE THIS
+		// the range selected here should be as long as the length of the word “sel” above
+		TerminalView_SelectVirtualRange(inTerminalView, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
 	}
 	
 	return result;
