@@ -55,6 +55,14 @@ Boolean
 													 CFStringRef = nullptr,
 													 CFArrayRef = nullptr);
 
+Boolean
+	CocoaBasic_GrowlIsAvailable						();
+
+void
+	CocoaBasic_GrowlNotify							(CFStringRef,
+													 CFStringRef = nullptr,
+													 CFStringRef = nullptr);
+
 void
 	CocoaBasic_PlaySoundByName						(CFStringRef);
 

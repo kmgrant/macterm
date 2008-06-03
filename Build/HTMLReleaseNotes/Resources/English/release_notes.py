@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080602',
     '20080530',
     '20080529',
     '20080527',
@@ -161,6 +162,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080602': [
+		'The Growl framework is now used for background notifications, when it is available.',
+	],
 	'20080530': [
 		'Preferences window Terminals pane Emulation tab now has an option for fixing the line wrap bug of a standard VT100.',
 	],

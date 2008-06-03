@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<!--
+	Growl Registration Ticket.growlRegDict
+	
+	MacTelnet 3.1
+	© 1998-2008 by Kevin Grant
+	
+	This file is used to configure Growl.  See "http://www.growl.info/".
+	(All possible key values are described in "GrowlDefines.h".)
+	
+	The file name actually requires spaces, but those are a pain to deal
+	with in scripts.  So, this file is renamed when it is copied into the
+	final application bundle.
+-->
+
+<plist version="1.0">
+<dict>
+	<key>TicketVersion</key>
+	<integer>1</integer>
+	<key>ApplicationName</key><!-- this is required because it otherwise deduces the name "python" -->
+	<string>MacTelnet</string>
+	<key>AllNotifications</key>
+	<array>
+		<string>Session active</string>
+		<string>Session idle</string>
+	</array>
+	<key>NotificationDescriptions</key>
+	<dict>
+		<key>Session active</key>
+		<string>When data arrives, in windows requesting "Notify on Next Activity"</string>
+		<key>Session idle</key>
+		<string>When data has not arrived for awhile, in windows requesting "Notify on Inactivity"</string>
+	</dict>
+</dict>
+</plist>

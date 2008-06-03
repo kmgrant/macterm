@@ -2,3 +2,5 @@ OBJROOT = _Generated
 SYMROOT = _Generated
 
 SWIG_PREFIX = /opt/swig-$(SWIG_VERSION)
+
+GROWL_SDK_ROOT = GrowlSDK

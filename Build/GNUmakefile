@@ -13,7 +13,7 @@
 
 .PHONY: help
 help:
-	@echo "Usage: make [FOR_PANTHER=no] [FOR_TIGER=no] debug"
+	@echo "Usage: make [FOR_PANTHER=no] [FOR_TIGER=no] [USE_GROWL=no] debug"
 	@echo "       make clean"
 	@echo
 	@echo "You can also request specific component rules;"
@@ -26,17 +26,34 @@ help:
 	@echo "assemble the final application bundle."
 	@echo
 
+# Xcode configuration files are "compatible enough" with GNU make
+# that it is easier to simply include them to share settings.
+#
+# IMPORTANT: This has implications.  You can't use comments in
+# the included .xcconfig file, and any #includes are ignored.
+# You CAN depend on other variables, e.g. X = /foo/bar/$(Y), in
+# the same way; however, you must then ensure that the dependent
+# value -- "Y", in this case -- is properly defined both for
+# Xcode builds and any rules in this GNUmakefile that use "X".
+#
+# The following should be defined by this "include":
+#	SYMROOT
+#	OBJROOT
+#	GROWL_SDK_ROOT (if using Growl)
+include $(CURDIR)/Shared/CustomPaths.xcconfig
+
 # temporary files (subdirectories created)
-SYMROOT=$(CURDIR)/_Generated
-OBJROOT=$(CURDIR)/_Generated
+#SYMROOT=<defined in Xcode config>
+#OBJROOT=<defined in Xcode config>
 
 XCODE_ENV := \
 	SYMROOT=$(SYMROOT) \
-	OBJROOT=$(SYMROOT)
+	OBJROOT=$(OBJROOT)
 
 # tools
 COPY=/bin/cp
 MKDIR_P=/usr/bin/install -d
+MOVE=/bin/mv
 RMDIR=/bin/rmdir
 RSYNC=/usr/bin/rsync
 SYMLINK_REPLACE=/bin/ln -snf
@@ -52,6 +69,12 @@ FOR_PANTHER=yes
 # make MacTelnet easier to build if you don't care about 10.4);
 # e.g. "make FOR_TIGER=no ..."
 FOR_TIGER=yes
+
+# set this to "no" if you want to disable Growl support for
+# notifications in MacTelnet (not recommended unless you don't
+# want to download the Growl SDK); see "http://www.growl.info/"
+USE_GROWL=yes
+#GROWL_SDK_ROOT := <defined in Xcode config>
 
 # the PyMacTelnet.framework target is platform-independent, but
 # an arbitrary configuration must be given to have Xcode build it
@@ -73,6 +96,7 @@ SRC_BUGREPORTER_TOP := $(SRC_BUGREPORTER_BUILD_TOP)/BugReporter.app
 SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/ForDebugging
 SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTelnet.framework
+SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Frameworks/Growl.framework
 SRC_QUILLS_TOP_TIGER := $(SRC_APP_BUILD_TOP_TIGER)/Quills.framework
 SRC_QUILLS_TOP_PANTHER := $(SRC_APP_BUILD_TOP_PANTHER)/Quills.framework
 SRC_SWIG_TOP_LEOPARD := $(SRC_APP_BUILD_TOP_LEOPARD)
@@ -87,6 +111,7 @@ DEST_BUGREPORTER_TOP := $(DEST_APP_RESOURCES_TOP)/BugReporter.app
 DEST_PREFSCONVERTER_TOP := $(DEST_APP_RESOURCES_TOP)/PrefsConverter.app
 DEST_PY_TOP := $(DEST_APP_FW_TOP)/PyMacTelnet.framework
 DEST_QUILLS_TOP := $(DEST_APP_FW_TOP)/Quills.framework
+DEST_GROWL_TOP := $(DEST_APP_FW_TOP)/Growl.framework
 DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.5
 DEST_SWIG_TOP_TIGER := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.3.5
 DEST_SWIG_TOP_PANTHER := $(DEST_QUILLS_TOP)/Versions/A/lib/python2.3
@@ -117,6 +142,7 @@ LEOPARD_SWIG_WRAPPERS_EXTRA := $(addprefix $(DEST_SWIG_TOP_LEOPARD)/,$(SWIG_WRAP
 # need different commands for recursive trees
 APP_RESOURCES_FILES := \
 DefaultPreferences.plist \
+GrowlRegistrationTicket.growlRegDict \
 IconForBellOff.icns \
 IconForBellOn.icns \
 IconForBundle.icns \
@@ -329,10 +355,41 @@ clean-py-framework:
 	fi
 	$(RM) -R $(DEST_PY_TOP)
 
+# Component: Growl.framework
+
+.PHONY: install-growl-framework
+install-growl-framework:
+	@# keep in sync with the matching clean rule
+	@# avoid rsyncing from /
+	@if [ "x$(SRC_GROWL_TOP)" = "x" ] ; then \
+		echo "SRC_GROWL_TOP variable unset" >&2 ; \
+		exit 1 ; \
+	fi
+	$(MKDIR_P) $(dir $(DEST_GROWL_TOP))
+	$(RSYNC) --archive '$(SRC_GROWL_TOP)/' $(DEST_GROWL_TOP)
+
+.PHONY: clean-growl-framework
+clean-growl-framework:
+	@# avoid accidental over-deletion
+	@if [ "x$(DEST_GROWL_TOP)" = "x" ] ; then \
+		echo "DEST_GROWL_TOP variable unset" >&2 ; \
+		exit 1 ; \
+	fi
+	$(RM) -R $(DEST_GROWL_TOP)
+
 # Composite: Frameworks
+
+ifeq ($(strip $(USE_GROWL)),yes)
+INSTALL_GROWL := install-growl-framework
+CLEAN_GROWL := clean-growl-framework
+else
+INSTALL_GROWL :=
+CLEAN_GROWL :=
+endif
 
 .PHONY: install-frameworks
 install-frameworks: \
+$(INSTALL_GROWL) \
 install-py-framework \
 install-quills-framework
 	@# keep in sync with the matching clean rule
@@ -340,6 +397,7 @@ install-quills-framework
 
 .PHONY: clean-frameworks
 clean-frameworks: \
+$(CLEAN_GROWL) \
 clean-quills-framework \
 clean-py-framework
 	-$(RMDIR) $(DEST_APP_FW_TOP)
@@ -460,9 +518,15 @@ $(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES))
 	$(MAKE) install-app-dot-strings
 	$(MAKE) install-bug-reporter
 	$(MAKE) install-prefs-converter
+	@# make a special exception for Growl, which requires a filename with spaces
+	$(MOVE) $(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict \
+		'$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict'
 
 .PHONY: clean-resources
 clean-resources:
+	@# undo the special Growl exception
+	$(MOVE) '$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict' \
+		$(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_FILES))' | $(XARGS) $(RM)
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES))' | $(XARGS) $(RM) -R
 	$(MAKE) clean-prefs-converter

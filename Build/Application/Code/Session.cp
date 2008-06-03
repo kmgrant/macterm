@@ -55,6 +55,7 @@
 #include <AppleEventUtilities.h>
 #include <CFRetainRelease.h>
 #include <CarbonEventUtilities.template.h>
+#include <CocoaBasic.h>
 #include <Console.h>
 #include <Cursors.h>
 #include <FileSelectionDialogs.h>
@@ -7128,38 +7129,62 @@ watchNotifyForSession	(SessionPtr		inPtr,
 		case kSession_WatchForPassiveData:
 		case kSession_WatchForInactivity:
 			{
-				My_WatchAlertInfoPtr	watchAlertInfoPtr = new My_WatchAlertInfo;
+				CFStringRef				growlNotificationName = nullptr;
 				CFStringRef				dialogTextCFString = nullptr;
 				UIStrings_Result		stringResult = kUIStrings_ResultOK;
+				Boolean					displayGrowl = CocoaBasic_GrowlIsAvailable();
+				Boolean					displayNormal = (false == displayGrowl);
 				
-				
-				// basic setup
-				watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
-				if (nullptr == inPtr->watchBox)
-				{
-					inPtr->watchBox = Alert_New();
-					Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
-					Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
-				}
 				
 				// set message based on watch type
 				if (kSession_WatchForInactivity == inWhatTriggered)
 				{
+					growlNotificationName = CFSTR("Session idle"); // MUST match "Growl Registration Ticket.growlRegDict"
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyInactivityPrimaryText, dialogTextCFString);
 				}
 				else
 				{
+					growlNotificationName = CFSTR("Session active"); // MUST match "Growl Registration Ticket.growlRegDict"
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityPrimaryText, dialogTextCFString);
 				}
-				if (stringResult.ok())
+				
+				if (displayGrowl)
 				{
-					Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
-					CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+					// page Growl and then clear immediately, instead of waiting
+					// for the user to respond
+					CocoaBasic_GrowlNotify(growlNotificationName, growlNotificationName/* title */,
+											dialogTextCFString/* description */);
+					watchClearForSession(inPtr);
 				}
 				
-				// show the message; it is disposed asynchronously
-				Alert_MakeModeless(inPtr->watchBox, watchCloseNotifyProc, watchAlertInfoPtr/* context */);
-				Alert_Display(inPtr->watchBox);
+				if (displayNormal)
+				{
+					My_WatchAlertInfoPtr	watchAlertInfoPtr = new My_WatchAlertInfo;
+					
+					
+					// basic setup
+					watchAlertInfoPtr->sessionBeingWatched = inPtr->selfRef;
+					if (nullptr == inPtr->watchBox)
+					{
+						inPtr->watchBox = Alert_New();
+						Alert_SetParamsFor(inPtr->watchBox, kAlert_StyleOK);
+						Alert_SetType(inPtr->watchBox, kAlertNoteAlert);
+					}
+					
+					if (stringResult.ok())
+					{
+						Alert_SetTextCFStrings(inPtr->watchBox, dialogTextCFString, CFSTR(""));
+					}
+					
+					// show the message; it is disposed asynchronously
+					Alert_MakeModeless(inPtr->watchBox, watchCloseNotifyProc, watchAlertInfoPtr/* context */);
+					Alert_Display(inPtr->watchBox);
+				}
+				
+				if (nullptr != dialogTextCFString)
+				{
+					CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+				}
 			}
 			break;
 		

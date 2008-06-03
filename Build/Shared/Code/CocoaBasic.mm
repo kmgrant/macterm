@@ -34,6 +34,7 @@
 #import <AutoPool.objc++.h>
 #import <CocoaBasic.h>
 #import <Console.h>
+#import <Growl/Growl.h>
 #import <HIViewWrap.h>
 #import <SoundSystem.h>
 
@@ -44,6 +45,16 @@
 
 
 #pragma mark Types
+
+@interface CocoaBasic_GrowlDelegate : NSObject<GrowlApplicationBridgeDelegate>
+{
+	BOOL	_isReady;
+}
++ (id)sharedGrowlDelegate;
+- (BOOL)isReady;
+// GrowlApplicationBridgeDelegate
+- (void)growlIsReady;
+@end
 
 @interface My_NoticeColorPanelChange : NSResponder
 - (void)changeColor: (id)sender;
@@ -101,6 +112,7 @@ CocoaBasic_ApplicationLoad ()
 	BOOL		loadOK = NSApplicationLoad();
 	
 	
+	[GrowlApplicationBridge setGrowlDelegate:[CocoaBasic_GrowlDelegate sharedGrowlDelegate]];
 	return loadOK;
 }// ApplicationLoad
 
@@ -248,6 +260,86 @@ CocoaBasic_FileOpenPanelDisplay		(CFStringRef	inMessage,
 	
 	return result;
 }// FileOpenPanelDisplay
+
+
+/*!
+Returns true only if the Growl daemon is installed and
+running, indicating that it is okay to send Growl
+notifications.
+
+(1.0)
+*/
+Boolean
+CocoaBasic_GrowlIsAvailable ()
+{
+	AutoPool	_;
+	Boolean		result = false;
+	
+	
+	result = (YES == [[CocoaBasic_GrowlDelegate sharedGrowlDelegate] isReady]);
+	return result;
+}// GrowlIsAvailable
+
+
+/*!
+Posts the specified notification to Growl.  The name should match
+one of the strings in "Growl Registration Ticket.growlRegDict".
+The title and description can be anything.  If the title is set
+to nullptr, it copies the notification name; if the description
+is set to nullptr, it is set to an empty string.
+
+Has no effect if Growl is not installed and available.
+
+(1.0)
+*/
+void
+CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
+						 CFStringRef	inTitle,
+						 CFStringRef	inDescription)
+{
+	AutoPool	_;
+	
+	
+	if (CocoaBasic_GrowlIsAvailable())
+	{
+		if (nullptr == inTitle) inTitle = inNotificationName;
+		if (nullptr == inDescription) inDescription = CFSTR("");
+	#if 0
+		// this should work, however a bug on Leopard with some software
+		// seems to break notifications when the framework call is used
+		[GrowlApplicationBridge
+			notifyWithTitle:(NSString*)inTitle
+			description:(NSString*)inDescription
+			notificationName:(NSString*)inNotificationName
+			iconData:nil
+			priority:0
+			isSticky:NO
+			clickContext:nil];
+	#else
+		// however, AppleScript works just fine!
+		NSDictionary*			errorDict = nil;
+		NSAppleEventDescriptor*	returnDescriptor = nil;
+		NSString*				scriptText = [[NSString alloc] initWithFormat:@"\
+			tell application \"GrowlHelperApp\"\n\
+				notify with name \"%@\" title \"%@\" description \"%@\" application name \"MacTelnet\"\n\
+			end tell",
+			(NSString*)inNotificationName,
+			(NSString*)inTitle,
+			(NSString*)inDescription
+		];
+		NSAppleScript*			scriptObject = [[NSAppleScript alloc] initWithSource:scriptText];
+		
+		
+		returnDescriptor = [scriptObject executeAndReturnError:&errorDict];
+		if (nullptr == returnDescriptor)
+		{
+			Console_WriteLine("warning, unable to send notification via AppleScript, error:");
+			NSLog(@"%@", errorDict);
+		}
+		[scriptObject release];
+	#endif
+	}
+}// GrowlNotify
 
 
 /*!
@@ -413,6 +505,39 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 }// returnPathForFSRef
 
 } // anonymous namespace
+
+@implementation CocoaBasic_GrowlDelegate
+
+static CocoaBasic_GrowlDelegate*	gCocoaBasic_GrowlDelegate = nil;
++ (id)sharedGrowlDelegate
+{
+	if (nil == gCocoaBasic_GrowlDelegate)
+	{
+		gCocoaBasic_GrowlDelegate = [[CocoaBasic_GrowlDelegate allocWithZone:NULL] init];
+	}
+	return gCocoaBasic_GrowlDelegate;
+}
+
+- (id)init
+{
+	self = [super init];
+	_isReady = ([GrowlApplicationBridge isGrowlInstalled] && [GrowlApplicationBridge isGrowlRunning]);
+	return self;
+}
+
+- (void)growlIsReady
+{
+	// this might only be received upon restart of Growl, not at startup;
+	// but it is handled in case Growl is started after MacTelnet starts
+	_isReady = true;
+}// growlIsReady
+
+- (BOOL)isReady
+{
+	return _isReady;
+}// isReady
+
+@end
 
 @implementation My_NoticeColorPanelChange
 

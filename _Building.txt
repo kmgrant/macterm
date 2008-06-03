@@ -16,6 +16,11 @@ PREREQUISITES
   "Build/Shared/CustomPaths.xcconfig" for a variable that sets
   where SWIG is (/opt/swig-<version>/bin/swig by default).
   
+  To enable notifications with Growl (http://www.growl.info/),
+  you need to download the SDK from that site.  It is expected to
+  exist in a directory "GrowlSDK" in the "Build" directory (see
+  "Build/Shared/CustomPaths.xcconfig" for this reference).
+  
   When building source code documentation only, you will need
   Doxygen (http://www.doxygen.org/), and Dot (part of GraphViz,
   http://www.graphviz.org/), and using doxypy for the Quills API
