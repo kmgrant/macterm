@@ -164,6 +164,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080603': [
+		'Fixed a possible crash when choosing a Format from the View menu.',
 		'Minor tweaks to the text of notifications.',
 	],
 	'20080602': [

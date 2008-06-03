@@ -3714,6 +3714,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// failed...
 							Sound_StandardAlert();
 						}
+						
+						result = noErr;
 					}
 					break;
 				
@@ -3749,6 +3751,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// failed...
 							Sound_StandardAlert();
 						}
+						
+						result = noErr;
 					}
 					break;
 				
@@ -3843,6 +3847,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					// due to event hierarchy it will eventually be sent to the handler
 					// installed on the parent terminal window (how convenient!)
 					SessionFactory_MoveTerminalWindowToNewWorkspace(terminalWindow);
+					result = noErr;
 					break;
 				
 				case kCommandToggleTerminalLED1:
@@ -3859,6 +3864,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							Terminal_LEDSetState(activeScreen, 1/* LED number */, false == Terminal_LEDIsOn(activeScreen, 1));
 						}
+						result = noErr;
 					}
 					break;
 				
@@ -3876,6 +3882,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							Terminal_LEDSetState(activeScreen, 2/* LED number */, false == Terminal_LEDIsOn(activeScreen, 2));
 						}
+						result = noErr;
 					}
 					break;
 				
@@ -3893,6 +3900,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							Terminal_LEDSetState(activeScreen, 3/* LED number */, false == Terminal_LEDIsOn(activeScreen, 3));
 						}
+						result = noErr;
 					}
 					break;
 				
@@ -3910,6 +3918,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							Terminal_LEDSetState(activeScreen, 4/* LED number */, false == Terminal_LEDIsOn(activeScreen, 4));
 						}
+						result = noErr;
 					}
 					break;
 				
