@@ -152,13 +152,23 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowNotifyActivityPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Data has arrived in a monitored session."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Data has arrived in a monitored window."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
 		break;
 	
+	case kUIStrings_AlertWindowNotifyActivityTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Session Active"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyActivityTitle"));
+		break;
+	
 	case kUIStrings_AlertWindowNotifyInactivityPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("A monitored session has become idle."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("A monitored window is no longer transmitting data."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowNotifyActivityPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifyInactivityTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Session Idle"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyInactivityTitle"));
 		break;
 	
 	case kUIStrings_AlertWindowPasteLinesWarningName:

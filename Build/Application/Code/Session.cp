@@ -7130,6 +7130,7 @@ watchNotifyForSession	(SessionPtr		inPtr,
 		case kSession_WatchForInactivity:
 			{
 				CFStringRef				growlNotificationName = nullptr;
+				CFStringRef				growlNotificationTitle = nullptr;
 				CFStringRef				dialogTextCFString = nullptr;
 				UIStrings_Result		stringResult = kUIStrings_ResultOK;
 				Boolean					displayGrowl = CocoaBasic_GrowlIsAvailable();
@@ -7140,11 +7141,23 @@ watchNotifyForSession	(SessionPtr		inPtr,
 				if (kSession_WatchForInactivity == inWhatTriggered)
 				{
 					growlNotificationName = CFSTR("Session idle"); // MUST match "Growl Registration Ticket.growlRegDict"
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyInactivityTitle, growlNotificationTitle);
+					if (false == stringResult.ok())
+					{
+						growlNotificationTitle = growlNotificationName;
+						CFRetain(growlNotificationTitle);
+					}
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyInactivityPrimaryText, dialogTextCFString);
 				}
 				else
 				{
 					growlNotificationName = CFSTR("Session active"); // MUST match "Growl Registration Ticket.growlRegDict"
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityTitle, growlNotificationTitle);
+					if (false == stringResult.ok())
+					{
+						growlNotificationTitle = growlNotificationName;
+						CFRetain(growlNotificationTitle);
+					}
 					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyActivityPrimaryText, dialogTextCFString);
 				}
 				
@@ -7152,7 +7165,7 @@ watchNotifyForSession	(SessionPtr		inPtr,
 				{
 					// page Growl and then clear immediately, instead of waiting
 					// for the user to respond
-					CocoaBasic_GrowlNotify(growlNotificationName, growlNotificationName/* title */,
+					CocoaBasic_GrowlNotify(growlNotificationName, growlNotificationTitle,
 											dialogTextCFString/* description */);
 					watchClearForSession(inPtr);
 				}
@@ -7181,6 +7194,10 @@ watchNotifyForSession	(SessionPtr		inPtr,
 					Alert_Display(inPtr->watchBox);
 				}
 				
+				if (nullptr != growlNotificationTitle)
+				{
+					CFRelease(growlNotificationTitle), growlNotificationTitle = nullptr;
+				}
 				if (nullptr != dialogTextCFString)
 				{
 					CFRelease(dialogTextCFString), dialogTextCFString = nullptr;

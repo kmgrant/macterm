@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080603',
     '20080602',
     '20080530',
     '20080529',
@@ -162,6 +163,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080603': [
+		'Minor tweaks to the text of notifications.',
+	],
 	'20080602': [
 		'The Growl framework is now used for background notifications, when it is available.',
 	],
