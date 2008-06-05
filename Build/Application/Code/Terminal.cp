@@ -9328,16 +9328,23 @@ insertNewLines	(My_ScreenBufferPtr						inDataPtr,
 				//Console_WriteValue("moved-and-reallocated lines", inNumberOfElements);
 				
 				My_ScreenBufferLineList::iterator	pastLastLineToScroll = inDataPtr->screenBuffer.begin();
+				My_ScreenBufferLineList				movedLines;
 				
 				
-				// find the first line that will remain in the screen buffer
+				// find the last line that will remain in the screen buffer
 				std::advance(pastLastLineToScroll, inNumberOfElements);
 				
-				// make the oldest screen lines the newest scrollback lines
+				// make the oldest screen lines the newest scrollback lines; since the
+				// “front” scrollback line is adjacent to the “front” screen line, a
+				// single splice is wrong; the lines have to insert in reverse order
+				movedLines.splice(movedLines.begin()/* where to insert */,
+									inDataPtr->screenBuffer/* the list to move from */,
+									inDataPtr->screenBuffer.begin()/* the first line to move */,
+									pastLastLineToScroll/* the first line that will not be moved */);
+				movedLines.reverse();
 				inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
-													inDataPtr->screenBuffer/* the list to move from */,
-													inDataPtr->screenBuffer.begin()/* the first line to move */,
-													pastLastLineToScroll/* the first line that will remain on screen */);
+													movedLines/* the list to move from */,
+													movedLines.begin(), movedLines.end());
 				
 				//Console_WriteValue("post-move scrollback size", inDataPtr->scrollbackBuffer.size());
 				

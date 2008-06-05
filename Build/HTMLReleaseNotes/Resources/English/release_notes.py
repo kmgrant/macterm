@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080604',
     '20080603',
     '20080602',
     '20080530',
@@ -163,6 +164,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080604': [
+		'Fixed a serious bug where batch copies of lines to scrollback (such as on clear) would occur in reverse order.',
+	],
 	'20080603': [
 		'Fixed a possible crash when choosing a Format from the View menu.',
 		'Preferences window Formats pane now displays samples of all styles, as originally intended.',
