@@ -304,9 +304,8 @@ CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
 	{
 		if (nullptr == inTitle) inTitle = inNotificationName;
 		if (nullptr == inDescription) inDescription = CFSTR("");
-	#if 0
-		// this should work, however a bug on Leopard with some software
-		// seems to break notifications when the framework call is used
+	#if 1
+		// normally an Objective-C call is enough, but see below
 		[GrowlApplicationBridge
 			notifyWithTitle:(NSString*)inTitle
 			description:(NSString*)inDescription
@@ -316,7 +315,10 @@ CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
 			isSticky:NO
 			clickContext:nil];
 	#else
-		// however, AppleScript works just fine!
+		// prior to Growl 1.1.3, AppleScript was the only way
+		// notifications would work on Leopard if certain 3rd-party
+		// software was installed; but this is probably slower so
+		// it is avoided unless there is a good reason to use it
 		NSDictionary*			errorDict = nil;
 		NSAppleEventDescriptor*	returnDescriptor = nil;
 		NSString*				scriptText = [[NSString alloc] initWithFormat:@"\
