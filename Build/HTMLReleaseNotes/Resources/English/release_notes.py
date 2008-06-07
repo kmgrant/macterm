@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080606',
     '20080604',
     '20080603',
     '20080602',
@@ -164,6 +165,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080606': [
+		'Modified the method for interfacing to Growl, now that Growl 1.1.3 fixes a key bug for Leopard users.',
+	],
 	'20080604': [
 		'Fixed a serious bug where batch copies of lines to scrollback (such as on clear) would occur in reverse order.',
 	],
