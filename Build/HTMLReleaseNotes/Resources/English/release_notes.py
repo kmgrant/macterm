@@ -167,6 +167,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080611': [
+		'Preferences window Terminals pane Options tab no longer has an "ANSI colors" checkbox (use the Emulation tab).',
 		'Preferences window Terminals pane Emulation tab now correctly sets the emulator type.',
 	],
 	'20080606': [
