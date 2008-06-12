@@ -143,6 +143,12 @@ struct My_TerminalsPanelEmulationUI
 	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	void
+	setAnswerBackFromEmulator	(Terminal_Emulator);
+	
+	void
+	setEmulator		(Terminal_Emulator);
 
 protected:
 	HIViewWrap
@@ -155,7 +161,8 @@ protected:
 	setEmulationTweaksDataBrowserColumnWidths	();
 	
 private:
-	CommonEventHandlers_HIViewResizer		_containerResizer;
+	CarbonEventHandlerWrap				_menuCommandsHandler;	//!< responds to menu selections
+	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
 typedef My_TerminalsPanelEmulationUI*	My_TerminalsPanelEmulationUIPtr;
 
@@ -559,10 +566,14 @@ idealHeight				(0.0),
 listCallbacks			(),
 mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
+_menuCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 							My_TerminalsPanelEmulationUI::deltaSize, this/* context */)
 {
 	assert(this->mainView.exists());
+	assert(_menuCommandsHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
 }// My_TerminalsPanelEmulationUI 2-argument constructor
 
@@ -885,7 +896,26 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		
+		
 		// INCOMPLETE
+		
+		// set emulation type
+		{
+			Terminal_Emulator		emulatorType = kTerminal_EmulatorVT100;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalEmulatorType, sizeof(emulatorType),
+														&emulatorType, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setEmulator(emulatorType);
+			}
+		}
+		
+		// set emulation options
 		{
 			DataBrowserItemID const		kUpdatedItems = { kDataBrowserNoItem };
 			HIViewWrap					dataBrowser(idMyDataBrowserHacks, HIViewGetWindow(this->mainView));
@@ -898,6 +928,36 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		}
 	}
 }// My_TerminalsPanelEmulationUI::readPreferences
+
+
+/*!
+Updates the answer-back message display based on the given
+type of emulator.
+
+(3.1)
+*/
+void
+My_TerminalsPanelEmulationUI::
+setAnswerBackFromEmulator		(Terminal_Emulator		inEmulator)
+{
+	HIWindowRef const					kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
+																		My_TerminalsPanelEmulationDataPtr);
+	Preferences_Result					prefsResult = kPreferences_ResultOK;
+	CFStringRef							answerBackMessage = Terminal_EmulatorReturnDefaultName(inEmulator);
+	
+	
+	if (nullptr != answerBackMessage)
+	{
+		SetControlTextWithCFString(HIViewWrap(idMyFieldAnswerBackMessage, kOwningWindow), answerBackMessage);
+		prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalAnswerBackMessage,
+													sizeof(answerBackMessage), &answerBackMessage);
+	}
+	if ((nullptr == answerBackMessage) || (kPreferences_ResultOK != prefsResult))
+	{
+		Console_WriteLine("warning, failed to set terminal answer-back message");
+	}
+}// My_TerminalsPanelEmulationUI::setAnswerBackFromEmulator
 
 
 /*!
@@ -936,6 +996,58 @@ setEmulationTweaksDataBrowserColumnWidths ()
 		}
 	}
 }// My_TerminalsPanelEmulationUI::setEmulationTweaksDataBrowserColumnWidths
+
+
+/*!
+Updates the emulator display based on the given type.
+
+(3.1)
+*/
+void
+My_TerminalsPanelEmulationUI::
+setEmulator		(Terminal_Emulator		inEmulator)
+{
+	HIWindowRef const					kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
+																		My_TerminalsPanelEmulationDataPtr);
+	Preferences_Result					prefsResult = kPreferences_ResultOK;
+	
+	
+	switch (inEmulator)
+	{
+	case kTerminal_EmulatorVT102:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+														kCommandSetEmulatorVT102);
+		this->setAnswerBackFromEmulator(inEmulator);
+		break;
+	
+	case kTerminal_EmulatorVT220:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+														kCommandSetEmulatorVT220);
+		this->setAnswerBackFromEmulator(inEmulator);
+		break;
+	
+	case kTerminal_EmulatorDumb:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+														kCommandSetEmulatorNone);
+		this->setAnswerBackFromEmulator(inEmulator);
+		break;
+	
+	case kTerminal_EmulatorVT100:
+	default:
+		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
+														kCommandSetEmulatorVT100);
+		this->setAnswerBackFromEmulator(inEmulator);
+		break;
+	}
+	
+	prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalEmulatorType,
+												sizeof(inEmulator), &inEmulator);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_WriteLine("warning, failed to set terminal emulator");
+	}
+}// My_TerminalsPanelEmulationUI::setEmulator
 
 
 /*!
@@ -1948,12 +2060,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inMyTerminalsPanelUIPtr)
 {
-	OSStatus					result = eventNotHandledErr;
+	OSStatus						result = eventNotHandledErr;
 	// WARNING: More than one UI uses this handler.  The context will
 	// depend on the command ID.
-	My_TerminalsPanelScreenUI*	screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
+	My_TerminalsPanelEmulationUI*	emulationInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelEmulationUI*);
+	My_TerminalsPanelScreenUI*		screenInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelScreenUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassCommand);
@@ -1972,6 +2085,26 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			switch (received.commandID)
 			{
+			case kCommandSetEmulatorNone:
+				emulationInterfacePtr->setEmulator(kTerminal_EmulatorDumb);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetEmulatorVT100:
+				emulationInterfacePtr->setEmulator(kTerminal_EmulatorVT100);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetEmulatorVT102:
+				emulationInterfacePtr->setEmulator(kTerminal_EmulatorVT102);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandSetEmulatorVT220:
+				emulationInterfacePtr->setEmulator(kTerminal_EmulatorVT220);
+				result = noErr; // event is handled
+				break;
+			
 			case kCommandSetScrollbackTypeDisabled:
 				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeDisabled);
 				result = noErr; // event is handled

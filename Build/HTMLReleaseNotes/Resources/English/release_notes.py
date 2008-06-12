@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080611',
     '20080606',
     '20080604',
     '20080603',
@@ -165,6 +166,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080611': [
+		'Preferences window Terminals pane Emulation tab now correctly sets the emulator type.',
+	],
 	'20080606': [
 		'Modified the method for interfacing to Growl, now that Growl 1.1.3 fixes a key bug for Leopard users.',
 	],
