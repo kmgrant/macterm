@@ -761,7 +761,7 @@ resetColors ()
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	
 	
-	prefsResult = Preferences_GetDefaultContext(&defaultFormat, kPreferences_ClassFormat);
+	prefsResult = Preferences_GetFactoryDefaultsContext(&defaultFormat);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		readPreferences(defaultFormat);

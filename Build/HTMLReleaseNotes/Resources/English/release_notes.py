@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080613',
     '20080611',
     '20080606',
     '20080604',
@@ -166,6 +167,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080613': [
+		'Preferences window Formats pane ANSI Colors tab now correctly uses factory defaults for resetting, instead of the Default set.',
+	],
 	'20080611': [
 		'Preferences window Terminals pane Options tab no longer has an "ANSI colors" checkbox (use the Emulation tab).',
 		'Preferences window Terminals pane Emulation tab now correctly sets the emulator type.',
