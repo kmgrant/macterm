@@ -271,6 +271,9 @@ public:
 	explicit
 	CFKeyValueDictionary	(CFMutableDictionaryRef		inTarget);
 	
+	explicit
+	CFKeyValueDictionary	(CFDictionaryRef	inSource);
+	
 	//! inserts array value into dictionary
 	inline void
 	addArray	(CFStringRef	inKey,
@@ -315,8 +318,8 @@ public:
 	inline CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey) const;
 	
-	//! return the managed dictionary
-	inline CFMutableDictionaryRef
+	//! return the managed dictionary in a form that cannot be changed
+	inline CFDictionaryRef
 	returnDictionary () const;
 	
 	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
@@ -338,6 +341,10 @@ public:
 	//! retrieves a long integer value from the dictionary (use only if the value really is a number!)
 	inline SInt32
 	returnLong		(CFStringRef	inKey) const;
+	
+	//! return the managed dictionary
+	inline CFMutableDictionaryRef
+	returnMutableDictionary () const;
 	
 	//! retrieves a string value from the dictionary (use only if the value really is a string!)
 	inline CFStringRef
@@ -601,16 +608,19 @@ const
 
 
 /*!
-Returns the dictionary managed by this instance.
+Returns the dictionary managed by this instance in a form
+that cannot be changed.
 
-(1.3)
+See also returnMutableDictionary().
+
+(2.0)
 */
-CFMutableDictionaryRef
+CFDictionaryRef
 CFKeyValueDictionary::
 returnDictionary ()
 const
 {
-	return _dataDictionary.returnCFMutableDictionaryRef();
+	return _dataDictionary.returnCFDictionaryRef();
 }// returnDictionary
 
 
@@ -700,6 +710,22 @@ const
 {
 	return _dataDictionary.returnLong(inKey);
 }// returnLong
+
+
+/*!
+Returns the dictionary managed by this instance.
+
+See also returnDictionary().
+
+(2.0)
+*/
+CFMutableDictionaryRef
+CFKeyValueDictionary::
+returnMutableDictionary ()
+const
+{
+	return _dataDictionary.returnCFMutableDictionaryRef();
+}// returnMutableDictionary
 
 
 /*!

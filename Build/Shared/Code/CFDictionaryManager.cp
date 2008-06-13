@@ -48,6 +48,8 @@ addFloat	(CFStringRef	inKey,
 	CFNumberRef		valueCFNumber = nullptr;
 	
 	
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add a floating-point value to an immutable dictionary");
+	
 	valueCFNumber = CFNumberCreate(CFGetAllocator(returnCFMutableDictionaryRef()), kCFNumberFloat32Type, &inValue);
 	if (nullptr != valueCFNumber)
 	{
@@ -71,6 +73,8 @@ addInteger	(CFStringRef	inKey,
 	CFNumberRef		valueCFNumber = nullptr;
 	
 	
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add an integer value to an immutable dictionary");
+	
 	valueCFNumber = CFNumberCreate(CFGetAllocator(returnCFMutableDictionaryRef()), kCFNumberSInt16Type, &inValue);
 	if (nullptr != valueCFNumber)
 	{
@@ -93,6 +97,8 @@ addLong		(CFStringRef	inKey,
 {
 	CFNumberRef		valueCFNumber = nullptr;
 	
+	
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add a long integer value to an immutable dictionary");
 	
 	valueCFNumber = CFNumberCreate(CFGetAllocator(returnCFMutableDictionaryRef()), kCFNumberSInt32Type, &inValue);
 	if (nullptr != valueCFNumber)

@@ -35,7 +35,7 @@
 #pragma mark Public Methods
 
 /*!
-Constructor.
+Typical constructor, for mutable dictionaries.
 
 (1.3)
 */
@@ -45,7 +45,24 @@ CFKeyValueDictionary	(CFMutableDictionaryRef		inTarget)
 CFKeyValueInterface(),
 _dataDictionary(inTarget)
 {
-}// CFKeyValueDictionary 3-argument constructor
+}// CFKeyValueDictionary mutable reference constructor
+
+
+/*!
+Special constructor to enable read methods on an
+immutable dictionary.  Any attempt to call methods
+to change the dictionary will have no effect and
+will emit warnings in debug mode.
+
+(1.3)
+*/
+CFKeyValueDictionary::
+CFKeyValueDictionary	(CFDictionaryRef	inSource)
+:
+CFKeyValueInterface(),
+_dataDictionary(inSource) // the CFDictionaryManager class automatically disables add routines due to the constant reference
+{
+}// CFKeyValueDictionary immutable reference constructor
 
 
 /*!

@@ -33,6 +33,9 @@
 #ifndef __CFDICTIONARYMANAGER__
 #define __CFDICTIONARYMANAGER__
 
+// standard-C++ includes
+#include <stdexcept>
+
 // Data Access library includes
 #include "CFRetainRelease.h"
 #include "CFUtilities.h"
@@ -53,6 +56,9 @@ public:
 	CFDictionaryManager ();
 	
 	inline
+	CFDictionaryManager	(CFDictionaryRef);
+	
+	inline
 	CFDictionaryManager	(CFMutableDictionaryRef);
 	
 	inline CFDictionaryRef
@@ -60,6 +66,9 @@ public:
 	
 	inline CFMutableDictionaryRef
 	returnCFMutableDictionaryRef () const;
+	
+	inline void
+	setCFDictionaryRef	(CFDictionaryRef);
 	
 	inline void
 	setCFMutableDictionaryRef	(CFMutableDictionaryRef);
@@ -131,6 +140,23 @@ _dictionary()
 
 
 /*!
+Retains an immutable dictionary.  This is convenient in
+certain cases (e.g. containers of various dictionaries),
+and causes all methods that change values to throw
+standard exceptions.
+
+(2.0)
+*/
+CFDictionaryManager::
+CFDictionaryManager	(CFDictionaryRef	inDictionary)
+:
+_dictionary(inDictionary)
+{
+	// defer to superclass
+}// 1-argument constructor
+
+
+/*!
 Retains a mutable dictionary.
 
 (1.3)
@@ -155,6 +181,7 @@ CFDictionaryManager::
 addArray	(CFStringRef	inKey,
 			 CFArrayRef		inValue)
 {
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add an array to an immutable dictionary");
 	CFDictionarySetValue(_dictionary.returnCFMutableDictionaryRef(), inKey, inValue);
 }// addArray
 
@@ -170,6 +197,7 @@ CFDictionaryManager::
 addData		(CFStringRef	inKey,
 			 CFDataRef		inValue)
 {
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add data to an immutable dictionary");
 	CFDictionarySetValue(_dictionary.returnCFMutableDictionaryRef(), inKey, inValue);
 }// addData
 
@@ -185,6 +213,7 @@ CFDictionaryManager::
 addFlag		(CFStringRef	inKey,
 			 Boolean		inValue)
 {
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add a flag to an immutable dictionary");
 	CFDictionarySetValue(_dictionary.returnCFMutableDictionaryRef(), inKey, (inValue) ? kCFBooleanTrue : kCFBooleanFalse);
 }// addFlag
 
@@ -200,6 +229,7 @@ CFDictionaryManager::
 addString	(CFStringRef	inKey,
 			 CFStringRef	inValue)
 {
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add string to an immutable dictionary");
 	CFDictionarySetValue(_dictionary.returnCFMutableDictionaryRef(), inKey, inValue);
 }// addString
 
@@ -215,6 +245,7 @@ CFDictionaryManager::
 addValue	(CFStringRef		inKey,
 			 CFPropertyListRef	inValue)
 {
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add a value to an immutable dictionary");
 	CFDictionarySetValue(_dictionary.returnCFMutableDictionaryRef(), inKey, inValue);
 }// addValue
 
@@ -247,6 +278,20 @@ const
 {
 	return _dictionary.returnCFMutableDictionaryRef();
 }// returnCFMutableDictionaryRef
+
+
+/*!
+Changes the CFDictionaryRef being managed, implicitly
+disabling all methods that can change values.
+
+(2.0)
+*/
+void
+CFDictionaryManager::
+setCFDictionaryRef	(CFDictionaryRef	inDictionary)
+{
+	_dictionary.setCFTypeRef(inDictionary);
+}// setCFDictionaryRef
 
 
 /*!
