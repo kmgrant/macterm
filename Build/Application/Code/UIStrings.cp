@@ -97,7 +97,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 	switch (inWhichString)
 	{
 	case kUIStrings_AlertWindowANSIColorsResetPrimaryText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Reset to the 16 default ANSI colors?"), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Reset to the 16 standard ANSI colors?"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowANSIColorsResetPrimaryText"));
 		break;
 	

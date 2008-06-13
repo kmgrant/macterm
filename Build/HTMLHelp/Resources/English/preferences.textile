@@ -524,6 +524,9 @@ version and the rightmost box is the "bold" (or emphasized) one.
 Ordinarily, the bold color is a slightly brighter version of the
 normal color.
 
+Feel free to experiment, "Set to the Standard Colors..." can be
+clicked to restore the 16 ordinary colors.
+
 Not all applications in terminals will make use of these colors.
 In addition, a Terminal collection can disable them.
 
