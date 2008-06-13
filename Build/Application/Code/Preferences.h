@@ -115,15 +115,16 @@ typedef FourCharCode Preferences_Class;
 enum
 {
 	// All of the four-character codes for classes are listed
-	// alphabetically by code, and must be unique. 
+	// alphabetically by code, and must be unique.
 	kPreferences_ClassGeneral		= 'appl',
 	kPreferences_ClassFormat		= 'text',	//!< use with Preferences_NewContext()
 	kPreferences_ClassMacroSet		= 'mcro',	//!< use with Preferences_NewContext()
 	kPreferences_ClassSession		= 'sess',	//!< use with Preferences_NewContext()
 	kPreferences_ClassTerminal		= 'term',	//!< use with Preferences_NewContext()
 	kPreferences_ClassTranslation	= 'encd',	//!< use with Preferences_NewContext()
-	kPreferences_ClassWindow		= 'wind'	//!< use only Preferences_SetWindowArrangementData() and
+	kPreferences_ClassWindow		= 'wind',	//!< use only Preferences_SetWindowArrangementData() and
 												//!  Preferences_ArrangeWindow() with this class
+	kPreferences_ClassFactoryDefaults	= 'fdef'	//!< for internal use
 };
 
 /*!
@@ -465,6 +466,9 @@ void
 Preferences_Result
 	Preferences_GetDefaultContext			(Preferences_ContextRef*			outContextPtr,
 											 Preferences_Class					inClass = kPreferences_ClassGeneral);
+
+Preferences_Result
+	Preferences_GetFactoryDefaultsContext	(Preferences_ContextRef*			outContextPtr);
 
 //@}
 

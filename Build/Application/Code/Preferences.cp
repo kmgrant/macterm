@@ -325,14 +325,12 @@ class My_ContextCFDictionary:
 public My_ContextInterface
 {
 public:
+	My_ContextCFDictionary	(Preferences_Class, CFDictionaryRef);
+	
 	My_ContextCFDictionary	(Preferences_Class, CFMutableDictionaryRef = nullptr);
 	
 	//!\name New Methods In This Class
 	//@{
-	
-	//! returns the CFMutableDictionaryRef being managed (do not edit it yourself)
-	CFMutableDictionaryRef
-	returnDictionary () const;
 	
 	//! test routine
 	static Boolean
@@ -517,29 +515,6 @@ struct MyWindowArrangement
 
 } // anonymous namespace
 
-#pragma mark Variables
-namespace {
-
-ListenerModel_Ref			gPreferenceEventListenerModel = nullptr;
-Boolean						gHaveRunConverter = false;
-Boolean						gInitialized = false;
-My_AliasInfoList&			gAliasList ()	{ static My_AliasInfoList x; return x; }
-My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
-My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
-My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassGeneral); return x; }
-My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassFormat); return x; }
-My_FavoriteContextList&		gFormatNamedContexts ()		{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassMacroSet); return x; }
-My_FavoriteContextList&		gMacroSetNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassSession); return x; }
-My_FavoriteContextList&		gSessionNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTerminal); return x; }
-My_FavoriteContextList&		gTerminalNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTranslation); return x; }
-My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-
-} // anonymous namespace
-
 #pragma mark Internal Method Prototypes
 namespace {
 
@@ -560,6 +535,7 @@ Boolean					findAliasOnDisk							(Preferences_AliasID, AliasHandle*);
 CFIndex					findDomainIndexInArray					(CFArrayRef, CFStringRef);
 CFStringRef				findDomainUserSpecifiedName				(CFStringRef);
 Boolean					getDefaultContext						(Preferences_Class, My_ContextInterfacePtr&);
+Boolean					getFactoryDefaultsContext				(My_ContextInterfacePtr&);
 Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
@@ -602,6 +578,30 @@ Boolean					unitTest000_Begin						();
 Boolean					unitTest001_Begin						();
 Boolean					unitTest002_Begin						();
 Boolean					unitTest003_Begin						();
+
+} // anonymous namespace
+
+#pragma mark Variables
+namespace {
+
+ListenerModel_Ref			gPreferenceEventListenerModel = nullptr;
+Boolean						gHaveRunConverter = false;
+Boolean						gInitialized = false;
+My_AliasInfoList&			gAliasList ()	{ static My_AliasInfoList x; return x; }
+My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
+My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
+My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(kPreferences_ClassFactoryDefaults, createDefaultPrefDictionary()); return x; }
+My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassGeneral); return x; }
+My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassFormat); return x; }
+My_FavoriteContextList&		gFormatNamedContexts ()		{ static My_FavoriteContextList x; return x; }
+My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassMacroSet); return x; }
+My_FavoriteContextList&		gMacroSetNamedContexts ()	{ static My_FavoriteContextList x; return x; }
+My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassSession); return x; }
+My_FavoriteContextList&		gSessionNamedContexts ()	{ static My_FavoriteContextList x; return x; }
+My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTerminal); return x; }
+My_FavoriteContextList&		gTerminalNamedContexts ()	{ static My_FavoriteContextList x; return x; }
+My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTranslation); return x; }
+My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 
 } // anonymous namespace
 
@@ -2372,10 +2372,18 @@ Returns the default context for the specified class.
 Preferences written to the "kPreferences_ClassGeneral"
 default context are in fact global settings.
 
+Despite the given class, the resulting context could
+easily contain additional settings you did not expect.
+It is not a good idea to do a blanket copy of a default
+context; read only what you need.
+
 WARNING:	Do not dispose of default contexts.
 
 \retval kPreferences_ResultOK
 if the requested context was found
+
+\retval kPreferences_ResultInsufficientBufferSpace
+if "outContextPtr" is not valid
 
 \retval kPreferences_ResultUnknownTagOrClass
 if "inClass" is not valid
@@ -2408,9 +2416,60 @@ Preferences_GetDefaultContext	(Preferences_ContextRef*	outContextPtr,
 			}
 		}
 	}
-	
 	return result;
 }// GetDefaultContext
+
+
+/*!
+Returns the “factory defaults” context, which represents
+core settings ("DefaultPreferences.plist") that have not
+been changed by the user.  This can be used to reset
+something, if you have no other reasonable value to set
+it to.
+
+Attempting to change the returned context has no effect
+and generates a warning in debug mode.
+
+WARNING:	Do not dispose of factory defaults.
+
+\retval kPreferences_ResultOK
+if the requested context was found
+
+\retval kPreferences_ResultInsufficientBufferSpace
+if "outContextPtr" is not valid
+
+\retval kPreferences_ResultGenericFailure
+if anything else fails
+
+(3.1)
+*/
+Preferences_Result
+Preferences_GetFactoryDefaultsContext	(Preferences_ContextRef*	outContextPtr)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	
+	
+	result = assertInitialized();
+	if (result == kPreferences_ResultOK)
+	{
+		if (nullptr == outContextPtr) result = kPreferences_ResultInsufficientBufferSpace;
+		else
+		{
+			My_ContextInterfacePtr		contextPtr = nullptr;
+			
+			
+			if (false == getFactoryDefaultsContext(contextPtr))
+			{
+				result = kPreferences_ResultGenericFailure;
+			}
+			else
+			{
+				*outContextPtr = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
+			}
+		}
+	}
+	return result;
+}// GetFactoryDefaultsContext
 
 
 /*!
@@ -3075,6 +3134,32 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 
 
 /*!
+This special constructor enables truly read-only data
+(such as factory defaults) to be handled like other
+mutable contexts, which is convenient.  It simply
+presents the interface of a mutable object, but it is
+only valid to use methods that read the data.  Any
+attempt to write data will throw an exception.
+
+(3.1)
+*/
+My_ContextCFDictionary::
+My_ContextCFDictionary	(Preferences_Class		inClass,
+						 CFDictionaryRef		inDictionary)
+:
+My_ContextInterface(inClass),
+_dictionary(inDictionary)
+{
+	if (nullptr == _dictionary.returnDictionary())
+	{
+		throw std::runtime_error("unable to set data dictionary");
+	}
+	
+	setImplementor(&_dictionary);
+}// My_ContextCFDictionary 2-argument immutable reference constructor
+
+
+/*!
 Constructor.  See Preferences_NewContext().
 
 (3.1)
@@ -3100,7 +3185,7 @@ _dictionary(inDictionaryOrNull)
 	}
 	
 	setImplementor(&_dictionary);
-}// My_ContextCFDictionary 2-argument constructor
+}// My_ContextCFDictionary 2-argument mutable reference constructor
 
 
 /*!
@@ -3165,21 +3250,6 @@ rename	(CFStringRef	UNUSED_ARGUMENT(inNewName))
 {
 	return kPreferences_ResultGenericFailure;
 }// My_ContextCFDictionary::rename
-
-
-/*!
-Returns the dictionary being manipulated.  You should not
-directly change this dictionary.
-
-(3.1)
-*/
-CFMutableDictionaryRef
-My_ContextCFDictionary::
-returnDictionary ()
-const
-{
-	return _dictionary.returnDictionary();
-}// My_ContextCFDictionary::returnDictionary
 
 
 /*!
@@ -4405,6 +4475,24 @@ getDefaultContext	(Preferences_Class			inClass,
 	
 	return result;
 }// getDefaultContext
+
+
+/*!
+Retrieves the context that stores “factory defaults”
+settings.  Returns true unless this fails.
+
+(3.1)
+*/
+Boolean
+getFactoryDefaultsContext	(My_ContextInterfacePtr&	outContextPtr)
+{
+	Boolean		result = true;
+	
+	
+	outContextPtr = &(gFactoryDefaultsContext());
+	result = (nullptr != outContextPtr);
+	return result;
+}// getFactoryDefaultsContext
 
 
 /*!
