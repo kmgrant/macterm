@@ -131,6 +131,9 @@ public:
 	inline bool
 	exists () const;
 	
+	inline bool
+	isMutable () const;
+	
 	inline CFArrayRef
 	returnCFArrayRef () const;
 	
@@ -628,6 +631,27 @@ const
 {
 	return (nullptr != _typeAs._constant.unspecified);
 }// exists
+
+
+/*!
+Returns true if the internal reference is to an object
+that can be changed, from this point of view.
+
+In other words, if you use an immutable reference
+constructor to retain a reference to an object that is
+technically mutable, isMutable() returns false.  This
+class relies on its constructors or reassignment to
+determine the mutability of its reference.
+
+(2.0)
+*/
+bool
+CFRetainRelease::
+isMutable ()
+const
+{
+	return _isMutable;
+}// isMutable
 
 
 /*!
