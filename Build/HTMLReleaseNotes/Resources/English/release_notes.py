@@ -169,6 +169,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080613': [
 		'Preferences window Formats pane ANSI Colors tab now correctly uses factory defaults for resetting, instead of the Default set.',
+		'Preferences window Terminals pane Emulation tab now correctly sets the identity, so you can "fake" the terminal type.',
 	],
 	'20080611': [
 		'Preferences window Terminals pane Options tab no longer has an "ANSI colors" checkbox (use the Emulation tab).',

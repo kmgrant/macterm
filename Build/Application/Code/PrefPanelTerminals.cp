@@ -144,11 +144,20 @@ struct My_TerminalsPanelEmulationUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
+	static pascal OSStatus
+	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
+	
+	void
+	saveFieldPreferences	(Preferences_ContextRef);
+	
+	void
+	setAnswerBack	(CFStringRef);
+	
 	void
 	setAnswerBackFromEmulator	(Terminal_Emulator);
 	
 	void
-	setEmulator		(Terminal_Emulator);
+	setEmulator		(Terminal_Emulator, Boolean = true);
 
 protected:
 	HIViewWrap
@@ -161,7 +170,8 @@ protected:
 	setEmulationTweaksDataBrowserColumnWidths	();
 	
 private:
-	CarbonEventHandlerWrap				_menuCommandsHandler;	//!< responds to menu selections
+	CarbonEventHandlerWrap				_menuCommandsHandler;			//!< responds to menu selections
+	CarbonEventHandlerWrap				_fieldAnswerBackInputHandler;	//!< saves field settings when they change
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
 typedef My_TerminalsPanelEmulationUI*	My_TerminalsPanelEmulationUIPtr;
@@ -560,17 +570,20 @@ My_TerminalsPanelEmulationUI	(Panel_Ref		inPanel,
 								 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-panel					(inPanel),
-idealWidth				(0.0),
-idealHeight				(0.0),
-listCallbacks			(),
-mainView				(createContainerView(inPanel, inOwningWindow)
-							<< HIViewWrap_AssertExists),
-_menuCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
-							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
-							this/* user data */),
-_containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-							My_TerminalsPanelEmulationUI::deltaSize, this/* context */)
+panel						(inPanel),
+idealWidth					(0.0),
+idealHeight					(0.0),
+listCallbacks				(),
+mainView					(createContainerView(inPanel, inOwningWindow)
+								<< HIViewWrap_AssertExists),
+_menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+								this/* user data */),
+_fieldAnswerBackInputHandler(GetControlEventTarget(HIViewWrap(idMyFieldAnswerBackMessage, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
+								My_TerminalsPanelEmulationUI::deltaSize, this/* context */)
 {
 	assert(this->mainView.exists());
 	assert(_menuCommandsHandler.isInstalled());
@@ -805,7 +818,11 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			delete (REINTERPRET_CAST(inDataPtr, My_TerminalsPanelEmulationDataPtr));
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(inDataPtr, My_TerminalsPanelEmulationDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			delete panelDataPtr;
 		}
 		break;
 	
@@ -821,9 +838,11 @@ panelChanged	(Panel_Ref		inPanel,
 	case kPanel_MessageFocusLost: // notification that a view is no longer focused
 		{
 			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_TerminalsPanelEmulationDataPtr);
 			
 			
-			// do nothing
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 		}
 		break;
 	
@@ -911,7 +930,21 @@ readPreferences		(Preferences_ContextRef		inSettings)
 														&emulatorType, true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				this->setEmulator(emulatorType);
+				this->setEmulator(emulatorType, false/* set answer-back */);
+			}
+		}
+		
+		// set answer-back message
+		{
+			CFStringRef		messageCFString = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTerminalAnswerBackMessage,
+														sizeof(messageCFString), &messageCFString, true/* search defaults too */,
+														&actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setAnswerBack(messageCFString);
 			}
 		}
 		
@@ -931,6 +964,107 @@ readPreferences		(Preferences_ContextRef		inSettings)
 
 
 /*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the fields in this panel by saving
+their preferences when new text arrives.
+
+(3.1)
+*/
+pascal OSStatus
+My_TerminalsPanelEmulationUI::
+receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					inMyTerminalsPanelUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_TerminalsPanelEmulationUI*	emulationInterfacePtr = REINTERPRET_CAST(inMyTerminalsPanelUIPtr, My_TerminalsPanelEmulationUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// now synchronize the post-input change with preferences
+	{
+		My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(emulationInterfacePtr->panel),
+																			My_TerminalsPanelEmulationDataPtr);
+		
+		
+		emulationInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+	}
+	
+	return result;
+}// My_TerminalsPanelEmulationUI::receiveFieldChanged
+
+
+/*!
+Saves every text field in the panel to the data model.
+It is necessary to treat fields specially because they
+do not have obvious state changes (as, say, buttons do);
+they might need saving when focus is lost or the window
+is closed, etc.
+
+(3.1)
+*/
+void
+My_TerminalsPanelEmulationUI::
+saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
+{
+	if (nullptr != inoutSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		// set answer-back message
+		{
+			CFStringRef		messageCFString = nullptr;
+			
+			
+			GetControlTextAsCFString(HIViewWrap(idMyFieldAnswerBackMessage, kOwningWindow), messageCFString);
+			
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagTerminalAnswerBackMessage,
+														sizeof(messageCFString), &messageCFString);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set answer-back message");
+			}
+		}
+	}
+}// My_TerminalsPanelEmulationUI::saveFieldPreferences
+
+
+/*!
+Updates the answer-back message display with the given string.
+
+(3.1)
+*/
+void
+My_TerminalsPanelEmulationUI::
+setAnswerBack	(CFStringRef	inMessage)
+{
+	HIWindowRef const					kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
+																		My_TerminalsPanelEmulationDataPtr);
+	Preferences_Result					prefsResult = kPreferences_ResultOK;
+	
+	
+	SetControlTextWithCFString(HIViewWrap(idMyFieldAnswerBackMessage, kOwningWindow), inMessage);
+	prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalAnswerBackMessage,
+												sizeof(inMessage), &inMessage);
+	if ((nullptr == inMessage) || (kPreferences_ResultOK != prefsResult))
+	{
+		Console_WriteLine("warning, failed to set terminal answer-back message");
+	}
+}// My_TerminalsPanelEmulationUI::setAnswerBack
+
+
+/*!
 Updates the answer-back message display based on the given
 type of emulator.
 
@@ -940,23 +1074,10 @@ void
 My_TerminalsPanelEmulationUI::
 setAnswerBackFromEmulator		(Terminal_Emulator		inEmulator)
 {
-	HIWindowRef const					kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-	My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
-																		My_TerminalsPanelEmulationDataPtr);
-	Preferences_Result					prefsResult = kPreferences_ResultOK;
-	CFStringRef							answerBackMessage = Terminal_EmulatorReturnDefaultName(inEmulator);
+	CFStringRef const	kAnswerBackMessage = Terminal_EmulatorReturnDefaultName(inEmulator);
 	
 	
-	if (nullptr != answerBackMessage)
-	{
-		SetControlTextWithCFString(HIViewWrap(idMyFieldAnswerBackMessage, kOwningWindow), answerBackMessage);
-		prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalAnswerBackMessage,
-													sizeof(answerBackMessage), &answerBackMessage);
-	}
-	if ((nullptr == answerBackMessage) || (kPreferences_ResultOK != prefsResult))
-	{
-		Console_WriteLine("warning, failed to set terminal answer-back message");
-	}
+	setAnswerBack(kAnswerBackMessage);
 }// My_TerminalsPanelEmulationUI::setAnswerBackFromEmulator
 
 
@@ -974,7 +1095,7 @@ setEmulationTweaksDataBrowserColumnWidths ()
 	Rect		containerRect;
 	
 	
-	(OSStatus)GetControlBounds(dataBrowser, &containerRect);
+	(Rect*)GetControlBounds(dataBrowser, &containerRect);
 	
 	// set column widths proportionately
 	{
@@ -1000,12 +1121,15 @@ setEmulationTweaksDataBrowserColumnWidths ()
 
 /*!
 Updates the emulator display based on the given type.
+Changing this value should usually set a new default
+for the answer-back message.
 
 (3.1)
 */
 void
 My_TerminalsPanelEmulationUI::
-setEmulator		(Terminal_Emulator		inEmulator)
+setEmulator		(Terminal_Emulator		inEmulator,
+				 Boolean				inSynchronizeAnswerBackMessage)
 {
 	HIWindowRef const					kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
@@ -1018,26 +1142,26 @@ setEmulator		(Terminal_Emulator		inEmulator)
 	case kTerminal_EmulatorVT102:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorVT102);
-		this->setAnswerBackFromEmulator(inEmulator);
+		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
 	case kTerminal_EmulatorVT220:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorVT220);
-		this->setAnswerBackFromEmulator(inEmulator);
+		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
 	case kTerminal_EmulatorDumb:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorNone);
-		this->setAnswerBackFromEmulator(inEmulator);
+		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	
 	case kTerminal_EmulatorVT100:
 	default:
 		(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuEmulationType, kOwningWindow),
 														kCommandSetEmulatorVT100);
-		this->setAnswerBackFromEmulator(inEmulator);
+		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
 	}
 	
