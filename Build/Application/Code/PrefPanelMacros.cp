@@ -1265,7 +1265,7 @@ setDataBrowserColumnWidths	(My_MacrosPanelUIPtr	inInterfacePtr)
 	assert(macrosListContainer.exists());
 	
 	
-	(OSStatus)GetControlBounds(macrosListContainer, &containerRect);
+	(Rect*)GetControlBounds(macrosListContainer, &containerRect);
 	
 	// set column widths proportionately
 	{

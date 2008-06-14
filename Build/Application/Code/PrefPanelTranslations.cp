@@ -1284,7 +1284,7 @@ setDataBrowserColumnWidths	(My_TranslationsPanelUIPtr		inInterfacePtr)
 	assert(baseTableListContainer.exists());
 	
 	
-	(OSStatus)GetControlBounds(baseTableListContainer, &containerRect);
+	(Rect*)GetControlBounds(baseTableListContainer, &containerRect);
 	
 	// set column widths proportionately
 	{
