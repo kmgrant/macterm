@@ -46,6 +46,15 @@
 
 
 
+#pragma mark Constants
+
+enum GenericDialog_DialogEffect
+{
+	kGenericDialog_DialogEffectCloseNormally		= 0,	//!< sheet closes with animation
+	kGenericDialog_DialogEffectCloseImmediately		= 1,	//!< sheet closes without animation (e.g. a Close button, or Cancel in rare cases)
+	kGenericDialog_DialogEffectNone					= 2		//!< no effect on the sheet (e.g. command button)
+};
+
 #pragma mark Types
 
 typedef struct GenericDialog_OpaqueRef*		GenericDialog_Ref;
@@ -102,6 +111,11 @@ void*
 
 HIWindowRef
 	GenericDialog_ReturnParentWindow			(GenericDialog_Ref					inDialog);
+
+void
+	GenericDialog_SetCommandDialogEffect		(GenericDialog_Ref					inDialog,
+												 UInt32								inCommandID,
+												 GenericDialog_DialogEffect			inEffect);
 
 void
 	GenericDialog_SetImplementation				(GenericDialog_Ref					inDialog,

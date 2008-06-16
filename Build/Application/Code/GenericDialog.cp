@@ -35,6 +35,9 @@
 #include <climits>
 #include <cstdlib>
 #include <cstring>
+
+// standard-C++ includes
+#include <map>
 #include <utility>
 
 // Mac includes
@@ -76,6 +79,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 IMPORTANT
@@ -83,13 +87,18 @@ IMPORTANT
 The following values MUST agree with the control IDs in the
 "Dialog" NIB from the package "GenericDialog.nib".
 */
-static HIViewID const	idMyUserPanePanelMargins	= { 'Panl', 0/* ID */ };
-static HIViewID const	idMyButtonHelp				= { 'Help', 0/* ID */ };
-static HIViewID const	idMyButtonOK				= { 'Okay', 0/* ID */ };
-static HIViewID const	idMyButtonCancel			= { 'Canc', 0/* ID */ };
-static HIViewID const	idMyButtonOther				= { 'Othr', 0/* ID */ };
+HIViewID const	idMyUserPanePanelMargins	= { 'Panl', 0/* ID */ };
+HIViewID const	idMyButtonHelp				= { 'Help', 0/* ID */ };
+HIViewID const	idMyButtonOK				= { 'Okay', 0/* ID */ };
+HIViewID const	idMyButtonCancel			= { 'Canc', 0/* ID */ };
+HIViewID const	idMyButtonOther				= { 'Othr', 0/* ID */ };
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
+
+typedef std::map< UInt32, GenericDialog_DialogEffect >		My_DialogEffectsByCommandID;
 
 struct My_GenericDialog
 {
@@ -116,6 +125,7 @@ struct My_GenericDialog
 	HIViewWrap								buttonOther;					//!< optional
 	CarbonEventHandlerWrap					buttonHICommandsHandler;		//!< invoked when a dialog button is clicked
 	GenericDialog_CloseNotifyProcPtr		closeNotifyProc;				//!< routine to call when the dialog is dismissed
+	My_DialogEffectsByCommandID				closeEffects;					//!< custom sheet-closing effects for certain commands
 	CommonEventHandlers_WindowResizer		windowResizeHandler;			//!< invoked when a window has been resized
 	HelpSystem_WindowKeyPhraseSetter		contextualHelpSetup;			//!< ensures proper contextual help for this window
 	void*									userDataPtr;					//!< optional; external data
@@ -126,18 +136,23 @@ typedef My_GenericDialog const*		My_GenericDialogConstPtr;
 typedef MemoryBlockPtrLocker< GenericDialog_Ref, My_GenericDialog >		My_GenericDialogPtrLocker;
 typedef LockAcquireRelease< GenericDialog_Ref, My_GenericDialog >		My_GenericDialogAutoLocker;
 
-#pragma mark Variables
+} // anonymous namespace
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_GenericDialogPtrLocker&	gGenericDialogPtrLocks()	{ static My_GenericDialogPtrLocker x; return x; }
-}
+#pragma mark Variables
+namespace {
+
+My_GenericDialogPtrLocker&		gGenericDialogPtrLocks ()		{ static My_GenericDialogPtrLocker x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Boolean				handleItemHit				(My_GenericDialogPtr, HIViewID const&);
-static void					handleNewSize				(WindowRef, Float32, Float32, void*);
-static pascal OSStatus		receiveHICommand			(EventHandlerCallRef, EventRef, void*);
+Boolean				handleItemHit		(My_GenericDialogPtr, HIViewID const&);
+void				handleNewSize		(HIWindowRef, Float32, Float32, void*);
+pascal OSStatus		receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 
 
@@ -367,6 +382,34 @@ GenericDialog_ReturnParentWindow	(GenericDialog_Ref	inDialog)
 
 
 /*!
+Specifies the effect that a command has on the dialog.
+
+Use kHICommandOK and kHICommandCancel to refer to the
+two standard buttons.
+
+Note that by default, the OK and Cancel buttons have the
+effect of "kGenericDialog_DialogEffectCloseNormally", and
+any extra buttons have no effect at all (that is,
+"kGenericDialog_DialogEffectNone").
+
+IMPORTANT:	This API currently only works for the
+			standard buttons, not custom command IDs.
+
+(3.1)
+*/
+void
+GenericDialog_SetCommandDialogEffect	(GenericDialog_Ref				inDialog,
+										 UInt32							inCommandID,
+										 GenericDialog_DialogEffect		inEffect)
+{
+	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
+	
+	
+	ptr->closeEffects[inCommandID] = inEffect;
+}// SetCommandDialogEffect
+
+
+/*!
 Associates arbitrary user data with your dialog.
 Retrieve with GenericDialog_ReturnImplementation().
 
@@ -397,6 +440,7 @@ GenericDialog_StandardCloseNotifyProc	(GenericDialog_Ref	UNUSED_ARGUMENT(inDialo
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Constructor.  See GenericDialog_New().
@@ -440,6 +484,7 @@ buttonHICommandsHandler			(GetWindowEventTarget(this->dialogWindow), receiveHICo
 									CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 									this->selfRef/* user data */),
 closeNotifyProc					(inCloseNotifyProcPtr),
+closeEffects					(),
 windowResizeHandler				(),
 contextualHelpSetup				(this->dialogWindow, inHelpButtonAction),
 userDataPtr						(nullptr)
@@ -582,7 +627,7 @@ to be IGNORED.
 
 (3.1)
 */
-static Boolean
+Boolean
 handleItemHit	(My_GenericDialogPtr	inPtr,
 				 HIViewID const&		inID)
 {
@@ -601,7 +646,16 @@ handleItemHit	(My_GenericDialogPtr	inPtr,
 		}
 		else
 		{
-			HideSheetWindow(inPtr->dialogWindow);
+			Boolean		animateClose = (inPtr->closeEffects.end() == inPtr->closeEffects.find(kHICommandOK)) ||
+										(kGenericDialog_DialogEffectCloseNormally == inPtr->closeEffects[kHICommandOK]);
+			
+			
+			if (false == animateClose)
+			{
+				if (noErr == DetachSheetWindow(inPtr->dialogWindow)) HideWindow(inPtr->dialogWindow);
+				else animateClose = true;
+			}
+			if (animateClose) HideSheetWindow(inPtr->dialogWindow);
 		}
 		
 		// notify of close
@@ -621,7 +675,16 @@ handleItemHit	(My_GenericDialogPtr	inPtr,
 		}
 		else
 		{
-			HideSheetWindow(inPtr->dialogWindow);
+			Boolean		animateClose = (inPtr->closeEffects.end() == inPtr->closeEffects.find(kHICommandCancel)) ||
+										(kGenericDialog_DialogEffectCloseNormally == inPtr->closeEffects[kHICommandCancel]);
+			
+			
+			if (false == animateClose)
+			{
+				if (noErr == DetachSheetWindow(inPtr->dialogWindow)) HideWindow(inPtr->dialogWindow);
+				else animateClose = true;
+			}
+			if (animateClose) HideSheetWindow(inPtr->dialogWindow);
 		}
 		
 		// notify of close
@@ -648,11 +711,11 @@ Moves or resizes the dialog views.
 
 (3.1)
 */
-static void
-handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
-				 Float32	inDeltaX,
-				 Float32	inDeltaY,
-				 void*		inGenericDialogRef)
+void
+handleNewSize	(HIWindowRef	UNUSED_ARGUMENT(inWindow),
+				 Float32		inDeltaX,
+				 Float32		inDeltaY,
+				 void*			inGenericDialogRef)
 {
 	GenericDialog_Ref			ref = REINTERPRET_CAST(inGenericDialogRef, GenericDialog_Ref);
 	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), ref);
@@ -682,7 +745,7 @@ for the buttons in the new session dialog.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inGenericDialogRef)
@@ -751,5 +814,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	
 	return result;
 }// receiveHICommand
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
