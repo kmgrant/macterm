@@ -373,14 +373,15 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEditFontAndSize					'EdFS'		// multiple interfaces
 #define kCommandEditBackupFont					'EdBF'		// multiple interfaces
 #define kCommandUseBackupFont					'XUBF'		// multiple interfaces
-#define kCommandNewProtocolSelectedFTP			'NPFT'		// “New Session” dialog
-#define kCommandNewProtocolSelectedSFTP			'NPSF'		// “New Session” dialog
-#define kCommandNewProtocolSelectedSSH1			'NPS1'		// “New Session” dialog
-#define kCommandNewProtocolSelectedSSH2			'NPS2'		// “New Session” dialog
-#define kCommandNewProtocolSelectedTELNET		'NPTN'		// “New Session” dialog
-#define kCommandShowProtocolOptions				'POpt'		// “New Session” dialog
-#define kCommandLookUpSelectedHostName			'Look'		// “New Session” dialog
-#define kCommandTerminalDefaultFavorite			'DefF'		// “New Session” dialog
+#define kCommandNewProtocolSelectedFTP			'NPFT'		// multiple interfaces
+#define kCommandNewProtocolSelectedSFTP			'NPSF'		// multiple interfaces
+#define kCommandNewProtocolSelectedSSH1			'NPS1'		// multiple interfaces
+#define kCommandNewProtocolSelectedSSH2			'NPS2'		// multiple interfaces
+#define kCommandNewProtocolSelectedTELNET		'NPTN'		// multiple interfaces
+#define kCommandShowProtocolOptions				'POpt'		// multiple interfaces
+#define kCommandLookUpSelectedHostName			'Look'		// multiple interfaces
+#define kCommandTerminalDefault					'TrmD'		// multiple interfaces
+#define kCommandTerminalByFavoriteName			'TFav'		// multiple interfaces
 #define kCommandChangeMacroKeysToCommandKeypad	'MKCK'		// “Macro Setup” window
 #define kCommandChangeMacroKeysToFunctionKeys	'MKFK'		// “Macro Setup” window
 #define kCommandShowAdvancedMacroInformation	'AdvM'		// “Macro Setup” window

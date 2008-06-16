@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080616',
     '20080613',
     '20080611',
     '20080606',
@@ -167,6 +168,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080616': [
+		'Preferences window Sessions pane Resource tab no longer has wasted space at the bottom.',
+		'Internal improvements to the Preferences window Sessions pane and Custom New Session sheet.',
+	],
 	'20080613': [
 		'Preferences window Formats pane ANSI Colors tab now correctly uses factory defaults for resetting, instead of the Default set.',
 		'Preferences window Terminals pane Emulation tab now correctly sets the identity, so you can "fake" the terminal type.',

@@ -280,6 +280,7 @@ private:
 	HIViewWrap							_fieldCommandLine;				//!< text of Unix command line to run
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 	CarbonEventHandlerWrap				_buttonCommandsHandler;			//!< invoked when a button is clicked
+	CarbonEventHandlerWrap				_whenCommandLineChangedHandler;	//!< invoked when the command line field changes
 	CarbonEventHandlerWrap				_whenHostNameChangedHandler;	//!< invoked when the host name field changes
 	CarbonEventHandlerWrap				_whenPortNumberChangedHandler;	//!< invoked when the port number field changes
 	CarbonEventHandlerWrap				_whenUserIDChangedHandler;		//!< invoked when the user ID field changes
@@ -355,7 +356,8 @@ namespace {
 
 void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
 void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-pascal OSStatus		receiveFieldChanged						(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveFieldChangedHostSetup			(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHICommand						(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveLookupComplete					(EventHandlerCallRef, EventRef, void*);
 
@@ -1483,13 +1485,16 @@ _containerResizer				(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparation
 _buttonCommandsHandler			(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 									this/* user data */),
-_whenHostNameChangedHandler		(GetControlEventTarget(this->_fieldHostName), receiveFieldChanged,
+_whenCommandLineChangedHandler	(GetControlEventTarget(this->_fieldCommandLine), receiveFieldChangedInCommandLine,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
-_whenPortNumberChangedHandler	(GetControlEventTarget(this->_fieldPortNumber), receiveFieldChanged,
+_whenHostNameChangedHandler		(GetControlEventTarget(this->_fieldHostName), receiveFieldChangedHostSetup,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
-_whenUserIDChangedHandler		(GetControlEventTarget(this->_fieldUserID), receiveFieldChanged,
+_whenPortNumberChangedHandler	(GetControlEventTarget(this->_fieldPortNumber), receiveFieldChangedHostSetup,
+									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+									this/* user data */),
+_whenUserIDChangedHandler		(GetControlEventTarget(this->_fieldUserID), receiveFieldChangedHostSetup,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
 _whenLookupCompleteHandler		(GetApplicationEventTarget(), receiveLookupComplete,
@@ -1559,13 +1564,6 @@ createContainerView		(Panel_Ref		inPanel,
 	// calculate the ideal size
 	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
 	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
-	
-	// this tab has extra buttons because it is also used for a sheet;
-	// hide the extra buttons
-	HIViewWrap		goButton(HIViewIDWrap('GoDo', 0), inOwningWindow);
-	HIViewWrap		cancelButton(HIViewIDWrap('Canc', 0), inOwningWindow);
-	goButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
-	cancelButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
 	
 	// make the container match the ideal size, because the tabs view
 	// will need this guideline when deciding its largest size
@@ -1907,40 +1905,44 @@ void
 My_SessionsPanelResourceUI::
 rebuildTerminalMenu ()
 {
-	HIViewWrap		terminalPopUpMenuView(idMyPopUpMenuTerminal, HIViewGetWindow(this->mainView));
-	OSStatus		error = noErr;
-	MenuRef			favoritesMenu = nullptr;
-	MenuItemIndex	defaultIndex = 0;
-	Size			actualSize = 0;
-	
-	
-	error = GetControlData(terminalPopUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
-							sizeof(favoritesMenu), &favoritesMenu, &actualSize);
-	assert_noerr(error);
-	
-	// find the key item to use as an anchor point
-	error = GetIndMenuItemWithCommandID(favoritesMenu, kCommandTerminalDefaultFavorite, 1/* which match to return */,
-										&favoritesMenu, &defaultIndex);
-	assert_noerr(error);
-	
-	// erase previous items
-	if (0 != this->_numberOfTerminalItemsAdded)
+	// it is possible this event arrives while the UI is not defined
+	if (IsValidWindowRef(HIViewGetWindow(this->mainView)))
 	{
-		(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, this->_numberOfTerminalItemsAdded);
+		HIViewWrap		terminalPopUpMenuView(idMyPopUpMenuTerminal, HIViewGetWindow(this->mainView));
+		OSStatus		error = noErr;
+		MenuRef			favoritesMenu = nullptr;
+		MenuItemIndex	defaultIndex = 0;
+		Size			actualSize = 0;
+		
+		
+		error = GetControlData(terminalPopUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
+								sizeof(favoritesMenu), &favoritesMenu, &actualSize);
+		assert_noerr(error);
+		
+		// find the key item to use as an anchor point
+		error = GetIndMenuItemWithCommandID(favoritesMenu, kCommandTerminalDefault, 1/* which match to return */,
+											&favoritesMenu, &defaultIndex);
+		assert_noerr(error);
+		
+		// erase previous items
+		if (0 != this->_numberOfTerminalItemsAdded)
+		{
+			(OSStatus)DeleteMenuItems(favoritesMenu, defaultIndex + 1/* first item */, this->_numberOfTerminalItemsAdded);
+		}
+		
+		// add the names of all session configurations to the menu;
+		// update global count of items added at that location
+		this->_numberOfTerminalItemsAdded = 0;
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTerminal, favoritesMenu,
+																	1/* default index */, 0/* indentation level */,
+																	kCommandTerminalByFavoriteName/* command ID */,
+																	this->_numberOfTerminalItemsAdded);
+		
+		// TEMPORARY: verify that this final step is necessary...
+		error = SetControlData(terminalPopUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
+								sizeof(favoritesMenu), &favoritesMenu);
+		assert_noerr(error);
 	}
-	
-	// add the names of all session configurations to the menu;
-	// update global count of items added at that location
-	this->_numberOfTerminalItemsAdded = 0;
-	(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTerminal, favoritesMenu,
-																1/* default index */, 0/* indentation level */,
-																0/* command ID */,
-																this->_numberOfTerminalItemsAdded);
-	
-	// TEMPORARY: verify that this final step is necessary...
-	error = SetControlData(terminalPopUpMenuView, kControlMenuPart, kControlPopupButtonMenuRefTag,
-							sizeof(favoritesMenu), &favoritesMenu);
-	assert_noerr(error);
 }// My_SessionsPanelResourceUI::rebuildTerminalMenu
 
 
@@ -1983,8 +1985,6 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
-		
-		// INCOMPLETE
 		
 		// set server host
 		{
@@ -2514,9 +2514,9 @@ also saves the preferences for text field data.
 (3.1)
 */
 pascal OSStatus
-receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
-					 EventRef				inEvent,
-					 void*					inMySessionsTabResourcePtr)
+receiveFieldChangedHostSetup	(EventHandlerCallRef	inHandlerCallRef,
+								 EventRef				inEvent,
+								 void*					inMySessionsTabResourcePtr)
 {
 	OSStatus						result = eventNotHandledErr;
 	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
@@ -2531,7 +2531,10 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 	// whatever text field it is for)
 	result = CallNextEventHandler(inHandlerCallRef, inEvent);
 	
-	// now synchronize the post-input change with the command line field
+	// for remote-host fields, synchronize the post-input change with the command line field;
+	// it is not appropriate to do this for changes to the command line itself, as the user
+	// may be trying to enter a custom Unix command, so there is a separate handler for that
+	// field (see receiveFieldChangedInCommandLine())
 	resourceInterfacePtr->updateCommandLine();
 	
 	// synchronize the post-input change with preferences
@@ -2544,7 +2547,46 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 	}
 	
 	return result;
-}// receiveFieldChanged
+}// receiveFieldChangedHostSetup
+
+
+/*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the command line field
+in the Resource tab.  This saves the preferences
+for text field data.
+
+(3.1)
+*/
+pascal OSStatus
+receiveFieldChangedInCommandLine	(EventHandlerCallRef	inHandlerCallRef,
+									 EventRef				inEvent,
+									 void*					inMySessionsTabResourcePtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// synchronize the post-input change with preferences
+	{
+		My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																			My_SessionsPanelResourceDataPtr);
+		
+		
+		resourceInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+	}
+	
+	return result;
+}// receiveFieldChangedInCommandLine
 
 
 /*!

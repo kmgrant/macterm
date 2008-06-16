@@ -96,7 +96,6 @@ void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFil
 														 SessionFactory_SessionOpProcPtr, void*, SInt32, void*);
 void					forEveryTerminalWindowInListDo	(TerminalWindowList const&,
 														 SessionFactory_TerminalWindowOpProcPtr, void*, SInt32, void*);
-void					handleNewSessionDialogClose		(NewSessionDialog_Ref, Boolean);
 pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 Workspace_Ref			returnActiveWorkspace			();
 void					sessionChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -1181,11 +1180,20 @@ Boolean
 SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowOrNullToMakeNewWindow,
 											 Preferences_ContextRef		inContext)
 {
-	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext)
-											: inTerminalWindowOrNullToMakeNewWindow;
-	Boolean				result = true;
+	TerminalWindowRef		terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
+												? createTerminalWindow(inContext, inContext)
+												: inTerminalWindowOrNullToMakeNewWindow;
+	Preferences_ContextRef	sessionContext = nullptr;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Boolean					result = true;
 	
+	
+	
+	prefsResult = Preferences_GetDefaultContext(&sessionContext, kPreferences_ClassSession);
+	if (kPreferences_ResultOK != prefsResult)
+	{
+		Console_WriteLine("warning, unable to initialize dialog with Session Default preferences!");
+	}
 	
 	if (nullptr == terminalWindow)
 	{
@@ -1198,7 +1206,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowO
 	{
 		// display a terminal window and then immediately display
 		// a sheet asking the user what to do with the new window
-		NewSessionDialog_Ref	dialog = NewSessionDialog_New(terminalWindow, handleNewSessionDialogClose);
+		NewSessionDialog_Ref	dialog = NewSessionDialog_New(terminalWindow, sessionContext);
 		
 		
 		if (displayTerminalWindow(terminalWindow))
@@ -2041,25 +2049,6 @@ forEveryTerminalWindowInListDo	(TerminalWindowList const&					inList,
 		SessionFactory_InvokeTerminalWindowOpProc(inProcPtr, terminalWindow, inData1, inData2, inoutResultPtr);
 	}
 }// forEveryTerminalWindowInListDo
-
-
-/*!
-Responds when the user dismisses a New Session sheet for
-a user-customized session opening.  This routine destroys
-the window that SessionFactory_DisplayUserCustomizationUI()
-creates if the user Cancels the dialog.
-
-(3.0)
-*/
-void
-handleNewSessionDialogClose		(NewSessionDialog_Ref	inDialogThatClosed,
-								 Boolean				inOKButtonPressed)
-{
-	TerminalWindowRef		terminalWindow = NewSessionDialog_ReturnTerminalWindow(inDialogThatClosed);
-	
-	
-	unless (inOKButtonPressed) TerminalWindow_Dispose(&terminalWindow);
-}// handleNewSessionDialogClose
 
 
 /*!
