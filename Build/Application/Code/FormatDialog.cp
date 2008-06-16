@@ -91,10 +91,8 @@ Creates a new Format Dialog.  This functions very much like the
 Preferences panel, except it is in a modal dialog and any changes
 are restricted to the specified preferences context.
 
-When the dialog eventually closes, the specified callback is
-invoked.  The callback receives a GenericDialog_Ref whose
-GenericDialog_ReturnImplementation() will match the returned
-FormatDialog_Ref.
+See FormatDialog_Display() for more information on actions that
+occur when the dialog is closed.
 
 (3.1)
 */
@@ -141,10 +139,10 @@ FormatDialog_Dispose	(FormatDialog_Ref*	inoutRefPtr)
 
 
 /*!
-This method displays and handles events in the
-Format dialog box.  If the user clicks OK,
-"true" is returned; otherwise, "false" is
-returned.
+This method displays and asynchronously handles events in
+the Format dialog box.  If the dialog is confirmed, the
+Preferences context given at construction time is updated
+automatically; otherwise, changes are discarded.
 
 (3.0)
 */
@@ -192,7 +190,7 @@ genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, PrefPanelF
 
 
 /*!
-Destructor.  See GenericDialog_Dispose().
+Destructor.  See FormatDialog_Dispose().
 
 (3.1)
 */

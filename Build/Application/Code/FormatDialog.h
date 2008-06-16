@@ -40,7 +40,6 @@
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
-#include "GenericDialog.h"
 #include "Preferences.h"
 
 
