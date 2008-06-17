@@ -170,6 +170,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20080616': [
 		'Preferences window Sessions pane Resource tab no longer has wasted space at the bottom.',
+		'Preferences window Sessions pane Resource tab now shows a correct progress indicator for domain name lookups.',
 		'Internal improvements to the Preferences window Sessions pane and Custom New Session sheet.',
 	],
 	'20080613': [

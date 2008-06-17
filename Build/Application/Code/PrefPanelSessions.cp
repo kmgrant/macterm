@@ -227,8 +227,14 @@ struct My_SessionsPanelResourceUI
 	HIViewWrap			mainView;
 	Session_Protocol	selectedProtocol;	//!< indicates the protocol new remote sessions should use
 	
+	void
+	lookupDoneUI ();
+	
 	Boolean
 	lookupHostName ();
+	
+	void
+	lookupWaitUI ();
 	
 	static SInt32
 	panelChanged	(Panel_Ref, Panel_Message, void*);
@@ -691,7 +697,7 @@ deltaSize	(HIViewRef		inContainer,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	HIWindowRef const		kPanelWindow = HIViewGetWindow(inContainer);
 	//My_SessionsTabDataFlow*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsTabDataFlow*);
 	HIViewWrap				viewWrap;
 	
@@ -948,7 +954,7 @@ deltaSize	(HIViewRef		inContainer,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	HIWindowRef const		kPanelWindow = HIViewGetWindow(inContainer);
 	//My_SessionsPanelGraphicsUI*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsPanelGraphicsUI*);
 	
 	
@@ -1284,7 +1290,7 @@ deltaSize	(HIViewRef		inContainer,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			UNUSED_ARGUMENT(inContext))
 {
-	HIWindowRef const		kPanelWindow = GetControlOwner(inContainer);
+	HIWindowRef const		kPanelWindow = HIViewGetWindow(inContainer);
 	//My_SessionsTabControlKeys*	dataPtr = REINTERPRET_CAST(inContext, My_SessionsTabControlKeys*);
 	HIViewWrap				viewWrap;
 	
@@ -1510,6 +1516,7 @@ _numberOfTerminalItemsAdded		(0)
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
+	this->lookupDoneUI();
 	prefsResult = Preferences_StartMonitoring
 					(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
 						true/* notify of initial value */);
@@ -1577,7 +1584,7 @@ createContainerView		(Panel_Ref		inPanel,
 	}
 	
 	// initialize values
-	// UNIMPLEMENTED
+	// INCOMPLETE
 	
 	return result;
 }// My_SessionsPanelResourceUI::createContainerView
@@ -1595,7 +1602,7 @@ deltaSize	(HIViewRef		inContainer,
 			 Float32		UNUSED_ARGUMENT(inDeltaY),
 			 void*			inContext)
 {
-	HIWindowRef const				kPanelWindow = GetControlOwner(inContainer);
+	HIWindowRef const				kPanelWindow = HIViewGetWindow(inContainer);
 	My_SessionsPanelResourceUI*		dataPtr = REINTERPRET_CAST(inContext, My_SessionsPanelResourceUI*);
 	HIViewWrap						viewWrap;
 	
@@ -1614,6 +1621,33 @@ deltaSize	(HIViewRef		inContainer,
 	dataPtr->_fieldCommandLine << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	// INCOMPLETE
 }// My_SessionsPanelResourceUI::deltaSize
+
+
+/*!
+Changes the state of one or more panel views to reflect a
+domain name resolution having completed.
+
+See also lookupWaitUI().
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+lookupDoneUI ()
+{
+	HIWindowRef const	kPanelWindow = HIViewGetWindow(this->mainView);
+	HIViewWrap			viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyChasingArrowsDNSWait, kPanelWindow);
+	
+	// it is possible this could be invoked late by a callback after the
+	// user interface goes away, so do not update without checking first
+	if (viewWrap.exists())
+	{
+		viewWrap << HIViewWrap_SetVisibleState(false);
+	}
+}// My_SessionsPanelResourceUI::lookupDoneUI
 
 
 /*!
@@ -1646,7 +1680,7 @@ lookupHostName ()
 		char	hostName[256];
 		
 		
-		//lookupWaitUI(inTab);
+		lookupWaitUI();
 		if (CFStringGetCString(textCFString, hostName, sizeof(hostName), kCFStringEncodingMacRoman))
 		{
 			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
@@ -1656,7 +1690,7 @@ lookupHostName ()
 			if (false == lookupAttemptResult.ok())
 			{
 				// could not even initiate, so restore UI
-				//lookupDoneUI(inTab);
+				lookupDoneUI();
 			}
 			else
 			{
@@ -1667,7 +1701,28 @@ lookupHostName ()
 	}
 	
 	return result;
-}// lookupHostName
+}// My_SessionsPanelResourceUI::lookupHostName
+
+
+/*!
+Changes the state of one or more panel views to reflect a
+domain name resolution in progress.
+
+See also lookupDoneUI().
+
+(3.1)
+*/
+void
+My_SessionsPanelResourceUI::
+lookupWaitUI ()
+{
+	HIWindowRef const	kPanelWindow = HIViewGetWindow(this->mainView);
+	HIViewWrap			viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyChasingArrowsDNSWait, kPanelWindow);
+	viewWrap << HIViewWrap_SetVisibleState(true);
+}// My_SessionsPanelResourceUI::lookupWaitUI
 
 
 /*!
@@ -2794,7 +2849,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				if (nullptr != addressCFString)
 				{
-					HIViewWrap		fieldHostName(idMyFieldHostName, GetControlOwner(ptr->mainView));
+					HIViewWrap		fieldHostName(idMyFieldHostName, HIViewGetWindow(ptr->mainView));
 					
 					
 					assert(fieldHostName.exists());
@@ -2808,7 +2863,7 @@ receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		}
 	}
 	
-	//lookupDoneUI(ptr);
+	ptr->lookupDoneUI();
 	
 	return result;
 }// receiveLookupComplete
