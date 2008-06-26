@@ -112,7 +112,9 @@ CocoaBasic_ApplicationLoad ()
 	BOOL		loadOK = NSApplicationLoad();
 	
 	
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	[GrowlApplicationBridge setGrowlDelegate:[CocoaBasic_GrowlDelegate sharedGrowlDelegate]];
+#endif
 	return loadOK;
 }// ApplicationLoad
 
@@ -300,6 +302,7 @@ CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
 	AutoPool	_;
 	
 	
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	if (CocoaBasic_GrowlIsAvailable())
 	{
 		if (nullptr == inTitle) inTitle = inNotificationName;
@@ -341,6 +344,7 @@ CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
 		[scriptObject release];
 	#endif
 	}
+#endif
 }// GrowlNotify
 
 
@@ -523,7 +527,11 @@ static CocoaBasic_GrowlDelegate*	gCocoaBasic_GrowlDelegate = nil;
 - (id)init
 {
 	self = [super init];
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 	_isReady = ([GrowlApplicationBridge isGrowlInstalled] && [GrowlApplicationBridge isGrowlRunning]);
+#else
+	_isReady = NO;
+#endif
 	return self;
 }
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080625',
     '20080616',
     '20080613',
     '20080611',
@@ -168,6 +169,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080625': [
+		'Restored Panther compatibility by correcting an accidental dependency on a newer framework for Growl.',
+	],
 	'20080616': [
 		'Preferences window Sessions pane Resource tab no longer has wasted space at the bottom.',
 		'Preferences window Sessions pane Resource tab now shows a correct progress indicator for domain name lookups.',

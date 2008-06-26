@@ -9,7 +9,6 @@
 /* Begin PBXBuildFile section */
 		0A1A068A0ABA6241002C95D7 /* PrintTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A1A06890ABA6241002C95D7 /* PrintTerminal.cp */; };
 		0A2890DD0D68017D0017D99E /* GenericPanelTabs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */; };
-		0A2A06030DF4B8F900DF8C98 /* Growl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 0A2A06020DF4B8F900DF8C98 /* Growl.framework */; };
 		0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A35F5130DEDD9E300F16B03 /* CommandLine.mm */; };
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* com_mactelnet_HandleFile.py in Populate lib-python2.3 */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* com_mactelnet_HandleFile.py */; };
@@ -580,7 +579,6 @@
 				0AC6BD980A8C0BB100AFF37A /* System.framework in Frameworks */,
 				0AC6BD990A8C0BB100AFF37A /* ApplicationServices.framework in Frameworks */,
 				0ACBC4280D5BBCC700FCF05F /* Cocoa.framework in Frameworks */,
-				0A2A06030DF4B8F900DF8C98 /* Growl.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1722,6 +1720,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
 				PREBINDING = NO;
 				PRODUCT_NAME = Quills;
 			};
@@ -1878,6 +1877,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
 				PREBINDING = NO;
 				PRODUCT_NAME = Quills;
 			};
@@ -1950,6 +1950,7 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
 				INFOPLIST_FILE = "${SRCROOT}/Application/Resources/Template-Quills.framework-Info.plist";
+				OTHER_LDFLAGS = "$(LDFLAGS_EXTRA_FRAMEWORKS)";
 				PREBINDING = NO;
 				PRODUCT_NAME = Quills;
 			};
