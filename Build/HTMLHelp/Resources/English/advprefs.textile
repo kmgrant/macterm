@@ -136,6 +136,10 @@ h3(#sessions). Session Collections
 |\2((. This Unix command and arguments are executed to start the session.  _Not_ interpreted (for that, write your own shell script!).|
 |@data-receive-buffer-size-bytes@|_integer_|
 |\2((. Fewer than this many bytes remain cached before being processed by the terminal.|
+|@data-receive-idle-seconds@|_integer_|
+|\2((. Sessions set to notify on idle, do so after a few seconds of inactivity, according to this value.|
+|@data-send-keepalive-period-minutes@|_integer_|
+|\2((. Sessions set to send a keep-alive character on idle, do so every few minutes, according to this value.|
 |@data-send-local-echo-enabled@|_true or false_|
 |\2((. Text input is immediately processed by the terminal.|
 |@data-send-local-echo-half-duplex@|_true or false_|

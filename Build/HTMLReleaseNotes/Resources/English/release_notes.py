@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080626',
     '20080625',
     '20080616',
     '20080613',
@@ -169,6 +170,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080626': [
+		'New low-level preferences for setting notification frequencies (such as keep-alive and idle).',
+	],
 	'20080625': [
 		'Restored Panther compatibility by correcting an accidental dependency on a newer framework for Growl.',
 	],

@@ -5494,6 +5494,20 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassFormat;
 		break;
 	
+	case kPreferences_TagIdleAfterInactivityInSeconds:
+		outKeyName = CFSTR("data-receive-idle-seconds");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(UInt16);
+		outClass = kPreferences_ClassSession;
+		break;
+	
+	case kPreferences_TagKeepAlivePeriodInMinutes:
+		outKeyName = CFSTR("data-send-keepalive-period-minutes");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(UInt16);
+		outClass = kPreferences_ClassSession;
+		break;
+	
 	case kPreferences_TagKeyInterruptProcess:
 		outKeyName = CFSTR("command-key-interrupt-process");
 		outKeyValueType = typeCFStringRef;
@@ -6257,6 +6271,27 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						if (nullptr == *data)
 						{
 							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+					}
+					break;
+				
+				case kPreferences_TagIdleAfterInactivityInSeconds:
+				case kPreferences_TagKeepAlivePeriodInMinutes:
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						SInt16			valueInteger = inContextPtr->returnInteger(keyName);
+						UInt16* const	data = REINTERPRET_CAST(outDataPtr, UInt16*);
+						
+						
+						if (0 == valueInteger)
+						{
+							// failed; make default
+							*data = 0;
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							*data = valueInteger;
 						}
 					}
 					break;
@@ -8227,6 +8262,17 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagServerPort:
 				{
 					SInt16 const* const		data = REINTERPRET_CAST(inDataPtr, SInt16 const*);
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
+			case kPreferences_TagIdleAfterInactivityInSeconds:
+			case kPreferences_TagKeepAlivePeriodInMinutes:
+				{
+					UInt16 const* const		data = REINTERPRET_CAST(inDataPtr, UInt16 const*);
 					
 					
 					assert(typeNetEvents_CFNumberRef == keyValueType);

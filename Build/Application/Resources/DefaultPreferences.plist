@@ -62,6 +62,10 @@
 	<integer>512</integer>
 	<key>data-receive-do-not-strip-high-bit</key>
 	<true/>
+	<key>data-receive-idle-seconds</key>
+	<integer>30</integer>
+	<key>data-send-keepalive-period-minutes</key>
+	<integer>10</integer>
 	<key>data-send-local-echo-enabled</key>
 	<false/>
 	<key>data-send-local-echo-half-duplex</key>

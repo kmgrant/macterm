@@ -7260,22 +7260,62 @@ static void
 watchTimerResetForSession	(SessionPtr		inPtr,
 							 Session_Watch	inWatchType)
 {
-	if ((kSession_WatchForKeepAlive == inWatchType) ||
-		(kSession_WatchForInactivity == inWatchType))
+	OSStatus	error = noErr;
+	
+	
+	if (kSession_WatchForKeepAlive == inWatchType)
 	{
-		// an arbitrary length of dead time must elapse before a session
-		// is considered inactive and triggers a notification
-		// TEMPORARY - should this time be user-configurable?
-		EventTimerInterval const	kTimeBeforeInactive = (kSession_WatchForKeepAlive == inWatchType)
-															? kEventDurationMinute * 10
-															: kEventDurationSecond * 30;
-		OSStatus					error = noErr;
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		size_t				actualSize = 0L;
+		UInt16				intValue = 0;
 		
 		
-		// install or reset timer to trigger the no-activity notification when appropriate
-		assert(nullptr != inPtr->inactivityWatchTimer);
-		error = SetEventLoopTimerNextFireTime(inPtr->inactivityWatchTimer, kTimeBeforeInactive);
-		assert_noerr(error);
+		prefsResult = Preferences_GetData(kPreferences_TagKeepAlivePeriodInMinutes, sizeof(intValue),
+											&intValue, &actualSize);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			// set an arbitrary default value
+			intValue = 10;
+		}
+		
+		{
+			// an arbitrary length of dead time must elapse before a session
+			// is considered inactive and triggers a notification
+			EventTimerInterval const	kTimeBeforeInactive = kEventDurationMinute * intValue;
+			
+			
+			// install or reset timer to trigger the no-activity notification when appropriate
+			assert(nullptr != inPtr->inactivityWatchTimer);
+			error = SetEventLoopTimerNextFireTime(inPtr->inactivityWatchTimer, kTimeBeforeInactive);
+			assert_noerr(error);
+		}
+	}
+	else if (kSession_WatchForInactivity == inWatchType)
+	{
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		size_t				actualSize = 0L;
+		UInt16				intValue = 0;
+		
+		
+		prefsResult = Preferences_GetData(kPreferences_TagIdleAfterInactivityInSeconds, sizeof(intValue),
+											&intValue, &actualSize);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			// set an arbitrary default value
+			intValue = 30;
+		}
+		
+		{
+			// an arbitrary length of dead time must elapse before a session
+			// is considered inactive and triggers a notification
+			EventTimerInterval const	kTimeBeforeInactive = kEventDurationSecond * intValue;
+			
+			
+			// install or reset timer to trigger the no-activity notification when appropriate
+			assert(nullptr != inPtr->inactivityWatchTimer);
+			error = SetEventLoopTimerNextFireTime(inPtr->inactivityWatchTimer, kTimeBeforeInactive);
+			assert_noerr(error);
+		}
 	}
 }// watchTimerResetForSession
 
