@@ -172,6 +172,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080627': [
+		'Fixed framework search path for Quills so that it is once again easy to refer to it in terminals (e.g. "pydoc Quills").',
 		'Added Session.pseudo_terminal_device_name() to Quills, which tells how to directly control the terminal of a session.',
 		'Added Session.resource_location_string() to Quills, to determine what a session represents; normally, this is a command line.',
 		'Added Session.state_string() to Quills, to determine the status (such as, "Running") of a session.',

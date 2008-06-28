@@ -91,7 +91,12 @@ if python_path:
     python_path = ":" + python_path
 os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + python_path
 os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
-#os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
+
+# the following is NOT required for MacTelnet to run, however it is
+# useful for such things as conveniently running "pydoc" on Quills;
+# attempts to load Quills will call dependent frameworks (currently,
+# Growl.framework), and without a path these loads would fail
+os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
 
 # DEBUGGING ONLY: if you want to do memory debugging, you can substitute
 # the allocator library as follows (do NOT do this on a whim, guard
