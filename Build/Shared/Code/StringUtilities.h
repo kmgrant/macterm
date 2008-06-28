@@ -48,6 +48,9 @@
 #ifndef __STRINGUTILITIES__
 #define __STRINGUTILITIES__
 
+// standard-C++ includes
+#include <string>
+
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
@@ -158,6 +161,10 @@ Boolean
 /*###############################################################
 	STRING CONVERSION UTILITIES
 ###############################################################*/
+
+void
+	StringUtilities_CFToUTF8					(CFStringRef							inString,
+												 std::string&							outBuffer);
 
 void
 	StringUtilities_CToP						(char const*							inString,

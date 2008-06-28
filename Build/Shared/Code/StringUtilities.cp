@@ -4,8 +4,8 @@
 	
 	This file contains useful methods for string management.
 	
-	Data Access Library 1.3
-	© 1998-2004 by Kevin Grant
+	Data Access Library 1.4
+	© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -32,6 +32,9 @@
 // standard-C includes
 #include <cstring>
 
+// standard-C++ includes
+#include <string>
+
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
@@ -42,15 +45,44 @@
 
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Boolean		isAmong			(CharParameter		inCharacter,
-									 ConstStringPtr		inCharacterList);
+Boolean		isAmong			(CharParameter		inCharacter,
+							 ConstStringPtr		inCharacterList);
 
-static Handle		refToHandle		(TokenSetRef		inRef);
+Handle		refToHandle		(TokenSetRef		inRef);
+
+} // anonymous namespace
 
 
 
 #pragma mark Public Methods
+
+/*!
+Converts a Core Foundation string into a C++ standard string
+in UTF-8 encoding.
+
+WARNING:	The result will be an empty string on failure.
+
+(1.4)
+*/
+void
+StringUtilities_CFToUTF8	(CFStringRef	inCFString,
+							 std::string&	outBuffer)
+{
+	outBuffer.clear();
+	if (nullptr != inCFString)
+	{
+		char const* const	kCharPtr = CFStringGetCStringPtr(inCFString, kCFStringEncodingUTF8);
+		
+		
+		if (nullptr != kCharPtr)
+		{
+			outBuffer = std::string(kCharPtr);
+		}
+	}
+}// CFToUTF8
+
 
 /*!
 Performs a normal conversion of a Pascal string to a C string
@@ -686,6 +718,7 @@ StringUtilities_PTruncate	(StringPtr							inoutString,
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 To determine if the specified character
@@ -694,7 +727,7 @@ string, use this method.
 
 (1.0)
 */
-static Boolean
+Boolean
 isAmong		(CharParameter		inCharacter,
 			 ConstStringPtr		inCharacterList)
 {
@@ -721,10 +754,12 @@ of a token set, use this method.
 
 (1.0)
 */
-static Handle
+Handle
 refToHandle		(TokenSetRef		inRef)
 {
 	return ((Handle)inRef);
 }// refToHandle
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
