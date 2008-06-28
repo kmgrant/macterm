@@ -67,6 +67,37 @@ terminated by the user or the command finishes.\n\
 	
 #if SWIG
 %feature("docstring",
+"Return the path of the pseudo-terminal device connected to the\n\
+session; for example, '/dev/ttyp0'.  Writes to this device are\n\
+immediately interpreted by the local terminal of the session!\n\
+\n\
+The character encoding is UTF-8.\n\
+") pseudo_terminal_device_name;
+#endif
+	std::string pseudo_terminal_device_name ();
+	
+#if SWIG
+%feature("docstring",
+"Return a string describing the resource for the session, which\n\
+will usually be its Unix command line.\n\
+\n\
+The character encoding is UTF-8.\n\
+") resource_location_string;
+#endif
+	std::string resource_location_string ();
+	
+#if SWIG
+%feature("docstring",
+"Return a simple string description of the current state of the\n\
+session.  For example, a session might be 'Running'.\n\
+\n\
+The character encoding is UTF-8.\n\
+") state_string;
+#endif
+	std::string state_string ();
+	
+#if SWIG
+%feature("docstring",
 "Either invoke a Python callback to handle the specified file,\n\
 or trigger the default MacTelnet handler if no Python callback\n\
 is available.  Callbacks registered via on_fileopen_call() are\n\

@@ -42,6 +42,7 @@
 // library includes
 #include <Console.h>
 #include <SoundSystem.h>
+#include <StringUtilities.h>
 
 // resource includes
 #include "GeneralResources.h"
@@ -129,6 +130,76 @@ _session(nullptr)
 	
 	if (nullptr != gSessionOpenedCallbackInvoker) (*gSessionOpenedCallbackInvoker)(gSessionOpenedPythonCallback);
 }// default constructor
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+std::string
+Session::pseudo_terminal_device_name ()
+{
+	std::string		result;
+	
+	
+	if (nullptr != _session)
+	{
+		CFStringRef		deviceNameCFString = Session_ReturnPseudoTerminalDeviceNameCFString(_session);
+		
+		
+		StringUtilities_CFToUTF8(deviceNameCFString, result);
+	}
+	return result;
+}// pseudo_terminal_device_name
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+std::string
+Session::resource_location_string ()
+{
+	std::string		result;
+	
+	
+	if (nullptr != _session)
+	{
+		CFStringRef		resourceLocationCFString = Session_ReturnResourceLocationCFString(_session);
+		
+		
+		StringUtilities_CFToUTF8(resourceLocationCFString, result);
+	}
+	return result;
+}// resource_location_string
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(3.1)
+*/
+std::string
+Session::state_string ()
+{
+	std::string		result;
+	
+	
+	if (nullptr != _session)
+	{
+		CFStringRef		stateCFString = nullptr;
+		Session_Result	sessionResult = Session_GetStateString(_session, stateCFString);
+		
+		
+		if (sessionResult.ok())
+		{
+			StringUtilities_CFToUTF8(stateCFString, result);
+		}
+	}
+	return result;
+}// state_string
 
 
 /*!

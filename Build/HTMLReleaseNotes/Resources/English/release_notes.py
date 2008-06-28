@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080627',
     '20080626',
     '20080625',
     '20080616',
@@ -170,6 +171,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080627': [
+		'Added Session.pseudo_terminal_device_name() to Quills, which tells how to directly control the terminal of a session.',
+		'Added Session.resource_location_string() to Quills, to determine what a session represents; normally, this is a command line.',
+		'Added Session.state_string() to Quills, to determine the status (such as, "Running") of a session.',
+	],
 	'20080626': [
 		'New low-level preferences for setting notification frequencies (such as keep-alive and idle).',
 	],
