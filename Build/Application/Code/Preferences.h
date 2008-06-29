@@ -206,6 +206,7 @@ enum
 	kPreferences_TagKioskShowsOffSwitch					= 'koff',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsScrollBar					= 'kscr',	//!< data: "Boolean"
 	kPreferences_TagKioskUsesSuperfluousEffects			= 'kewl',	//!< data: "Boolean"
+	kPreferences_TagMacrosMenuVisible					= 'mmnu',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
 	kPreferences_TagMarginBell							= 'marb',	//!< data: "Boolean"
 	kPreferences_TagMenuItemKeys						= 'mkey',	//!< data: "Boolean"
@@ -225,14 +226,6 @@ enum
 	kPreferences_TagWasSessionInfoShowing				= 'wvsi',	//!< data: "Boolean"
 	kPreferences_TagWasVT220KeypadShowing				= 'wvvk',	//!< data: "Boolean"
 	kPreferences_TagWindowStackingOrigin				= 'wino'	//!< data: "Point"
-};
-
-/*!
-Tags for use with kPreferences_ClassMacroSet.
-*/
-enum
-{
-	kPreferences_TagMacrosMenuVisible					= 'mmnu'	//!< data: "Boolean"
 };
 
 /*!

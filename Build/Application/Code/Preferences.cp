@@ -541,8 +541,6 @@ Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Prefe
 Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Boolean					getListOfContexts						(Preferences_Class, My_FavoriteContextList*&);
-Preferences_Result		getMacroSetPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
-																 size_t, void*, size_t*);
 Boolean					getNamedContext							(Preferences_Class, CFStringRef,
 																 My_ContextFavoritePtr&);
 Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, CFStringRef&, FourCharCode&,
@@ -563,8 +561,6 @@ OSStatus				setAliasChanged							(My_AliasInfoPtr);
 Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setGeneralPreference					(My_ContextInterfacePtr, Preferences_Tag,
-																 size_t, void const*);
-Preferences_Result		setMacroSetPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Boolean					setMacTelnetCoordPreference				(CFStringRef, SInt16, SInt16);
 void					setMacTelnetPreference					(CFStringRef, CFPropertyListRef);
@@ -1958,10 +1954,6 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 		
 		case kPreferences_ClassGeneral:
 			result = setGeneralPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
-			break;
-		
-		case kPreferences_ClassMacroSet:
-			result = setMacroSetPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
 		case kPreferences_ClassSession:
@@ -3892,10 +3884,6 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 		result = getGeneralPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
-	case kPreferences_ClassMacroSet:
-		result = getMacroSetPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
-		break;
-	
 	case kPreferences_ClassSession:
 		result = getSessionPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
@@ -4772,6 +4760,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagDontDimBackgroundScreens:
 				case kPreferences_TagFocusFollowsMouse:
 				case kPreferences_TagHeadersCollapsed:
+				case kPreferences_TagMacrosMenuVisible:
 				case kPreferences_TagMenuItemKeys:
 				case kPreferences_TagPureInverse:
 				case kPreferences_TagRandomTerminalFormats:
@@ -5199,70 +5188,6 @@ getListOfContexts	(Preferences_Class				inClass,
 
 
 /*!
-Returns preference data for a macro setting.
-
-\retval kPreferences_ResultOK
-if the data was found successfully
-
-\retval kPreferences_ResultBadVersionDataNotAvailable
-if the requested data is not in the preferences file
-
-\retval kPreferences_ResultInsufficientBufferSpace
-if the given buffer is not large enough for the requested data
-
-\retval kPreferences_ResultUnknownTagOrClass
-if the given preference tag is not valid
-
-(3.0)
-*/
-Preferences_Result	
-getMacroSetPreference	(My_ContextInterfaceConstPtr	inContextPtr,
-						 Preferences_Tag				inDataPreferenceTag,
-						 size_t							inDataSize,
-						 void*							outDataPtr,
-						 size_t*						outActualSizePtrOrNull)
-{
-	size_t					actualSize = 0L;
-	Preferences_Result		result = kPreferences_ResultOK;
-	
-	
-	if (nullptr != outDataPtr)
-	{
-		CFStringRef			keyName = nullptr;
-		FourCharCode		keyValueType = '----';
-		Preferences_Class	dataClass = kPreferences_ClassMacroSet;
-		
-		
-		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-		if (kPreferences_ResultOK == result)
-		{
-			assert(dataClass == kPreferences_ClassMacroSet);
-			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
-			else
-			{
-				switch (inDataPreferenceTag)
-				{
-				case kPreferences_TagMacrosMenuVisible:
-					{
-						assert(typeNetEvents_CFBooleanRef == keyValueType);
-						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
-					}
-					break;
-				
-				default:
-					// unrecognized tag
-					result = kPreferences_ResultUnknownTagOrClass;
-					break;
-				}
-			}
-		}
-	}
-	if (nullptr != outActualSizePtrOrNull) *outActualSizePtrOrNull = actualSize;
-	return result;
-}// getMacroSetPreference
-
-
-/*!
 Retrieves the context with the given name that stores
 settings for the specified class.  Returns true unless
 this fails.
@@ -5600,10 +5525,10 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		break;
 	
 	case kPreferences_TagMacrosMenuVisible:
-		outKeyName = CFSTR("menu-visible");
+		outKeyName = CFSTR("menu-macros-visible");
 		outKeyValueType = typeNetEvents_CFBooleanRef;
 		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassMacroSet;
+		outClass = kPreferences_ClassGeneral;
 		break;
 	
 	case kPreferences_TagMapArrowsForEMACS:
@@ -7693,6 +7618,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagKioskShowsOffSwitch:
 			case kPreferences_TagKioskShowsScrollBar:
 			case kPreferences_TagKioskUsesSuperfluousEffects:
+			case kPreferences_TagMacrosMenuVisible:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					
@@ -7994,59 +7920,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 	
 	return result;
 }// setGeneralPreference
-
-
-/*!
-Modifies the indicated macro set preference using the
-given data (see Preferences.h and the definition of each
-tag for comments on what data format is expected for each
-one).
-
-(3.0)
-*/
-Preferences_Result	
-setMacroSetPreference	(My_ContextInterfacePtr		inContextPtr,
-						 Preferences_Tag			inDataPreferenceTag,
-						 size_t						inDataSize,
-						 void const*				inDataPtr)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	CFStringRef				keyName = nullptr;
-	FourCharCode			keyValueType = '----';
-	size_t					actualSize = 0L;
-	Preferences_Class		dataClass = kPreferences_ClassMacroSet;
-	
-	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
-	if (kPreferences_ResultOK == result)
-	{
-		assert(dataClass == kPreferences_ClassMacroSet);
-		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
-		else
-		{
-			switch (inDataPreferenceTag)
-			{
-			case kPreferences_TagMacrosMenuVisible:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
-				}
-				break;
-			
-			default:
-				// unrecognized tag
-				result = kPreferences_ResultUnknownTagOrClass;
-				break;
-			}
-		}
-	}
-	
-	return result;
-}// setMacroSetPreference
 
 
 /*!

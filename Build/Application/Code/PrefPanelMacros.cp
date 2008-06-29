@@ -105,8 +105,6 @@ HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
 HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
 HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { 'Inv1', 0/* ID */ };
 HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { 'Inv2', 0/* ID */ };
-HIViewID const	idMyCheckBoxMacrosMenuVisible			= { 'McMn', 0/* ID */ };
-HIViewID const	idMyFieldMacrosMenuName					= { 'MMNm', 0/* ID */ };
 HIViewID const	idMyLabelSelectedMacro					= { 'LSMc', 0/* ID */ };
 HIViewID const	idMySeparatorSelectedMacro				= { 'SSMc', 0/* ID */ };
 HIViewID const	idMyLabelMacroName						= { 'LMNm', 0/* ID */ };
@@ -152,7 +150,6 @@ public:
 	HIViewWrap							mainView;
 	CommonEventHandlers_HIViewResizer	containerResizer;			//!< invoked when the panel is resized
 	ListenerModel_ListenerRef			macroSetChangeListener;		//!< invoked when macros change externally
-	ListenerModel_ListenerRef			preferenceChangeListener;	//!< notified when certain user preferences are changed
 
 protected:
 	HIViewWrap
@@ -196,7 +193,6 @@ void				disposePanel						(Panel_Ref, void*);
 void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal void			monitorDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
 SInt32				panelChanged						(Panel_Ref, Panel_Message, void*);
-void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				refreshDisplay						(My_MacrosPanelUIPtr);
 void				setDataBrowserColumnWidths			(My_MacrosPanelUIPtr);
 
@@ -344,18 +340,6 @@ macroSetChangeListener		(nullptr)
 	Macros_StartMonitoring(kMacros_ChangeActiveSet, this->macroSetChangeListener);
 	Macros_StartMonitoring(kMacros_ChangeContents, this->macroSetChangeListener);
 	Macros_StartMonitoring(kMacros_ChangeMode, this->macroSetChangeListener);
-	
-	this->preferenceChangeListener = ListenerModel_NewStandardListener(preferenceChanged, this/* context */);
-	assert(nullptr != this->preferenceChangeListener);
-	{
-		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		
-		
-		prefsResult = Preferences_StartMonitoring
-						(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible,
-							true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
-	}
 }// My_MacrosPanelUI 2-argument constructor
 
 
@@ -373,8 +357,6 @@ My_MacrosPanelUI::
 	Macros_StopMonitoring(kMacros_ChangeContents, this->macroSetChangeListener);
 	Macros_StopMonitoring(kMacros_ChangeMode, this->macroSetChangeListener);
 	ListenerModel_ReleaseListener(&this->macroSetChangeListener);
-	Preferences_StopMonitoring(this->preferenceChangeListener, kPreferences_TagMacrosMenuVisible);
-	ListenerModel_ReleaseListener(&this->preferenceChangeListener);
 }// My_MacrosPanelUI destructor
 
 
@@ -1159,67 +1141,6 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	return result;
 }// panelChanged
-
-
-/*!
-Invoked whenever a monitored preference value is changed
-(see PrefPanelMacros_New() to see which preferences are
-monitored).  This routine responds by ensuring that HIView
-states are up to date for the changed preference.
-
-(3.1)
-*/
-void
-preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-					 ListenerModel_Event	inPreferenceTagThatChanged,
-					 void*					inEventContextPtr,
-					 void*					inMyMacrosPanelUIPtr)
-{
-	//Preferences_ChangeContext*		contextPtr = REINTERPRET_CAST(inEventContextPtr, Preferences_ChangeContext*);
-	My_MacrosPanelUIPtr				interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, My_MacrosPanelUIPtr);
-	size_t							actualSize = 0L;
-	
-	
-	switch (inPreferenceTagThatChanged)
-	{
-	case kPreferences_TagMacrosMenuVisible:
-		{
-			Boolean		isVisible = false;
-			
-			
-			unless (Preferences_GetData(kPreferences_TagMacrosMenuVisible,
-										sizeof(isVisible), &isVisible,
-										&actualSize) == kPreferences_ResultOK)
-			{
-				isVisible = false; // assume a value, if preference canÕt be found
-			}
-			
-			// update user interface
-			{
-				HIViewWrap		checkBox(idMyCheckBoxMacrosMenuVisible, GetControlOwner(interfacePtr->mainView));
-				HIViewWrap		textField(idMyFieldMacrosMenuName, GetControlOwner(interfacePtr->mainView));
-				assert(checkBox.exists());
-				assert(textField.exists());
-				
-				
-				SetControlValue(checkBox, BooleanToCheckBoxValue(isVisible));
-				if (isVisible)
-				{
-					(OSStatus)ActivateControl(textField);
-				}
-				else
-				{
-					(OSStatus)DeactivateControl(textField);
-				}
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-}// preferenceChanged
 
 
 /*!

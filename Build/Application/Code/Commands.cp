@@ -1296,6 +1296,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
+	#if 0
 		case kCommandToggleMacrosMenuVisibility:
 			{
 				Preferences_Result		preferencesResult = kPreferences_ResultOK;
@@ -1317,6 +1318,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 														sizeof(isVisible), &isVisible);
 			}
 			break;
+	#endif
 		
 		case kCommandSendMacro1:
 			MacroManager_UserInputMacroString(frontSession, 0/* zero-based macro number */);

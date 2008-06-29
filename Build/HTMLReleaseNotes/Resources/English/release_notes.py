@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080629',
     '20080627',
     '20080626',
     '20080625',
@@ -171,6 +172,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080629': [
+		'Preferences window General pane Options tab is now used to globally set the preference to display a menu for macros.',
+	],
 	'20080627': [
 		'Fixed framework search path for Quills so that it is once again easy to refer to it in terminals (e.g. "pydoc Quills").',
 		'Added Session.pseudo_terminal_device_name() to Quills, which tells how to directly control the terminal of a session.',

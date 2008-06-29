@@ -103,6 +103,7 @@ static HIViewID const	idMyCheckBoxSimplifiedUI					= { 'SUIM', 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotAutoClose					= { 'DACW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotDimInactive				= { 'DDBW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxUseTabsToArrangeWindows			= { 'UTAW', 0/* ID */ };
+static HIViewID const	idMyCheckBoxMacrosMenuVisible				= { 'McMn', 0/* ID */ };
 static HIViewID const	idMyCheckBoxInvertSelectedText				= { 'ISel', 0/* ID */ };
 static HIViewID const	idMyCheckBoxAutoCopySelectedText			= { 'ACST', 0/* ID */ };
 static HIViewID const	idMyCheckBoxMoveCursorToDropArea			= { 'MCTD', 0/* ID */ };
@@ -934,7 +935,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagSimplifiedUserInterface, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume normal mode, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -946,7 +947,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume windows automatically close, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -958,7 +959,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume background screens are dimmed, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -970,7 +971,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume background screens are dimmed, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -982,7 +983,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagPureInverse, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume text is highlighted according to Mac OS standards, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -994,7 +995,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume the clipboard isn’t affected by text highlighting, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1006,7 +1007,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume the cursor is not affected by drag and drop, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1018,7 +1019,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = true; // assume menu items have key equivalents, if preference can’t be found
+			flag = true; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1030,7 +1031,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagMapBackquote, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume the backquote key isn’t re-mapped, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1042,7 +1043,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume new windows are created automatically, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1054,7 +1055,19 @@ const
 		unless (Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume new windows are created automatically, if preference can’t be found
+			flag = false; // assume a value, if preference can’t be found
+		}
+		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
+	}
+	{
+		HIViewWrap		checkBox(idMyCheckBoxMacrosMenuVisible, inOwningWindow);
+		
+		
+		assert(checkBox.exists());
+		unless (Preferences_GetData(kPreferences_TagMacrosMenuVisible, sizeof(flag), &flag,
+									&actualSize) == kPreferences_ResultOK)
+		{
+			flag = false; // assume a value, if preference can’t be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -2021,6 +2034,12 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 			else if (HIViewIDWrap(idMyCheckBoxFocusFollowsMouse) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagFocusFollowsMouse,
+									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+				result = true;
+			}
+			else if (HIViewIDWrap(idMyCheckBoxMacrosMenuVisible) == viewID)
+			{
+				Preferences_SetData(kPreferences_TagMacrosMenuVisible,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}
