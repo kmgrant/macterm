@@ -69,6 +69,8 @@ h3(#general). General
 |\2((. "Complex" or rarely needed items are hidden in the menu bar.|
 |@menu-key-equivalents@|_true or false_|
 |\2((. Menu items in the menu bar can display and respond to keyboard equivalents.|
+|@menu-macros-visible@|_true or false_|
+|\2((. Macros are available in the menu bar.|
 |@new-means@|_string_: @default@, @dialog@, @log-in shell@ or @shell@|
 |\2((. The default command-N key equivalent creates this type of session.|
 |@no-auto-close@|_true or false_|
@@ -297,8 +299,6 @@ h3(#formats). Format Collections
 
 h3(#macros). Macro Collections
 
-|@menu-visible@|_true or false_|
-|\2((. The active macro set is available in the menu bar.|
 |\2. _this table is incomplete_ |
 
 h3(#translations). Translation Collections
