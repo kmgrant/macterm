@@ -202,6 +202,7 @@ define copy_resources
 		"$(strip $(STYLE_SRC))/tabs.css" \
 		"$(strip $(STYLE_SRC))/default.css" \
 		"$(strip $(IMG_SRC))/LogoBlurFull.jpg" \
+		"$(strip $(IMG_SRC))/Metal4x60.png" \
 		"$(strip $(IMG_SRC))/SubtleBorderTop.png" \
 		"$(strip $(IMG_SRC))/TabLeft.png" \
 		"$(strip $(IMG_SRC))/TabRight.png" \
