@@ -524,6 +524,13 @@ void
 void
 	TerminalView_DeleteScrollback				(TerminalViewRef					inView);
 
+void
+	TerminalView_RotateSearchResultHighlight	(TerminalViewRef					inView,
+												 SInt16								inHowFarWhichWay);
+
+Boolean
+	TerminalView_SearchResultsExist				(TerminalViewRef					inView);
+
 TerminalView_Result
 	TerminalView_TranslateTerminalScreenRange	(TerminalViewRef					inView,
 												 Terminal_RangeDescription const&	inRange,

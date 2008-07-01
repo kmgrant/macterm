@@ -299,7 +299,8 @@ struct TerminalView
 			Boolean						isRectangular;	// is the text selection unattached from the left and right screen edges?
 		} selection;
 		
-		My_CellRangeList	searchResults;	// regions matching the most recent Find results
+		My_CellRangeList			searchResults;			// regions matching the most recent Find results
+		My_CellRangeList::iterator	toCurrentSearchResult;	// most recently focused match; MUST change if "searchResults" changes
 	} text;
 	
 	TerminalViewRef		selfRef;				// redundant opaque reference that would resolve to point to this structure
@@ -762,7 +763,8 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 
 
 /*!
-Removes all highlighted search results ranges.
+Removes all highlighted search results ranges, and clears the
+current search result focus.
 
 \retval kTerminalView_ResultOK
 if no error occurred
@@ -789,6 +791,7 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 									false/* is highlighted */, true/* redraw */);
 		}
 		viewPtr->text.searchResults.clear();
+		viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.end();
 	}
 	return result;
 }// FindNothing
@@ -796,7 +799,9 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 
 /*!
 Highlights the specified range of text as if it were a matching
-word in a set of search results.
+word in a set of search results.  The current search result
+focus is unchanged unless nothing was focused, in which case
+this first search range becomes the focused one.
 
 Unlike TerminalView_SelectVirtualRange(), this does not replace
 any current selection: it adds the specified range to a group of
@@ -824,6 +829,10 @@ TerminalView_FindVirtualRange	(TerminalViewRef				inView,
 	{
 		viewPtr->text.searchResults.push_back(inSelection);
 		assert(false == viewPtr->text.searchResults.empty());
+		if (viewPtr->text.searchResults.end() == viewPtr->text.toCurrentSearchResult)
+		{
+			viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.begin();
+		}
 		highlightVirtualRange(viewPtr, viewPtr->text.searchResults.back(),
 								kTerminalTextAttributeSearchResult,
 								true/* is highlighted */, true/* redraw */);
@@ -1792,6 +1801,46 @@ TerminalView_ReverseVideo	(TerminalViewRef	inView,
 
 
 /*!
+Changes the search results index for highlighting.  This is
+reset by a call to TerminalView_FindNothing().
+
+IMPORTANT:	Currently, the rotation amount should be +1 or -1,
+			to move respectively to the next or previous range.
+
+To update the display, use TerminalView_ZoomToSearchResults().
+
+(3.1)
+*/
+void
+TerminalView_RotateSearchResultHighlight	(TerminalViewRef	inView,
+											 SInt16				inHowFarWhichWay)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if ((viewPtr != nullptr) && (false == viewPtr->text.searchResults.empty()))
+	{
+		if (inHowFarWhichWay == -1)
+		{
+			if (viewPtr->text.searchResults.begin() == viewPtr->text.toCurrentSearchResult)
+			{
+				viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.end();
+			}
+			--viewPtr->text.toCurrentSearchResult;
+		}
+		else
+		{
+			++viewPtr->text.toCurrentSearchResult;
+			if (viewPtr->text.searchResults.end() == viewPtr->text.toCurrentSearchResult)
+			{
+				viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.begin();
+			}
+		}
+	}
+}// RotateSearchResultHighlight
+
+
+/*!
 Scrolls the contents of the terminal screen both
 horizontally and vertically.  If a delta is negative,
 the *contents* of the screen move down or to the right;
@@ -2065,6 +2114,27 @@ TerminalView_ScrollToEnd	(TerminalViewRef	inView)
 	result = TerminalView_ScrollRowsTowardTopEdge(inView, 32765);
 	return result;
 }// ScrollToEnd
+
+
+/*!
+Returns true only if one or more ranges were specified as
+search results.  (TerminalView_FindNothing() clears this.)
+
+(3.1)
+*/
+Boolean
+TerminalView_SearchResultsExist		(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	Boolean					result = false;
+	
+	
+	if ((viewPtr != nullptr) && (false == viewPtr->text.searchResults.empty()))
+	{
+		result = true;
+	}
+	return result;
+}// SearchResultsExist
 
 
 /*!
@@ -2747,8 +2817,8 @@ TerminalView_ZoomToCursor	(TerminalViewRef	inView,
 
 /*!
 Displays an animation that helps the user locate
-search results.  Currently, only the first result
-in the main screen is highlighted.
+search results.  The animation focuses on whichever
+match is considered the current match.
 
 (3.1)
 */
@@ -2760,31 +2830,25 @@ TerminalView_ZoomToSearchResults	(TerminalViewRef	inView)
 	
 	if ((viewPtr != nullptr) && (false == viewPtr->text.searchResults.empty()))
 	{
-		RgnHandle	selectionRegion = getVirtualRangeAsNewRegion(viewPtr, viewPtr->text.searchResults.front().first,
-																	viewPtr->text.searchResults.front().second,
+		RgnHandle	selectionRegion = getVirtualRangeAsNewRegion(viewPtr, viewPtr->text.toCurrentSearchResult->first,
+																	viewPtr->text.toCurrentSearchResult->second,
 																	false/* is rectangular */);
 		
 		
 		if (selectionRegion != nullptr)
 		{
 			Rect	selectionBounds;
-			HIRect	screenContentFloatBounds;
-			Rect	screenContentBounds;
+			Rect	outsetSelectionBounds;
 			
 			
-			// find global rectangle of selection
+			// find global rectangle of selection, and its immediate surrounding area
 			QDLocalToGlobalRegion(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), selectionRegion);
 			GetRegionBounds(selectionRegion, &selectionBounds);
-			
-			// find global rectangle of the screen area
-			(OSStatus)HIViewGetBounds(viewPtr->contentHIView, &screenContentFloatBounds);
-			SetRect(&screenContentBounds, 0, 0, STATIC_CAST(screenContentFloatBounds.size.width, SInt16),
-					STATIC_CAST(screenContentFloatBounds.size.height, SInt16));
-			screenToLocalRect(viewPtr, &screenContentBounds);
-			QDLocalToGlobalRect(GetWindowPort(HIViewGetWindow(viewPtr->contentHIView)), &screenContentBounds);
+			outsetSelectionBounds = selectionBounds;
+			InsetRect(&outsetSelectionBounds, -20/* arbitrary */, -20/* arbitrary */);
 			
 			// animate!
-			(OSStatus)ZoomRects(&screenContentBounds, &selectionBounds, 20/* steps, arbitrary */, kZoomDecelerate);
+			(OSStatus)ZoomRects(&outsetSelectionBounds, &selectionBounds, 8/* steps, arbitrary */, kZoomDecelerate);
 			
 			Memory_DisposeRegion(&selectionRegion);
 		}
@@ -2942,6 +3006,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.cursor.currentState = kMyCursorStateVisible;
 	this->screen.cursor.ghostState = kMyCursorStateInvisible;
 	this->screen.currentRenderContext = nullptr;
+	this->text.toCurrentSearchResult = this->text.searchResults.end();
 	
 	// read user preferences for the spacing around the edges
 	{

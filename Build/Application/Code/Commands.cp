@@ -757,6 +757,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		//case kCommandFind:
 		//case kCommandFindAgain:
+		//case kCommandFindPrevious:
 		//	see TerminalWindow.cp
 		//	break;
 		

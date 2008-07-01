@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080701',
     '20080629',
     '20080627',
     '20080626',
@@ -172,6 +173,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080701': [
+		'The Find Next and Find Previous commands now work, focusing on each match in turn (though all are highlighted at once).',
+	],
 	'20080629': [
 		'Preferences window General pane Options tab is now used to globally set the preference to display a menu for macros.',
 	],

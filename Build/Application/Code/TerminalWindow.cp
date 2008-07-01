@@ -186,7 +186,6 @@ struct TerminalWindow
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
 	FindDialog_Ref				searchSheet;			// search dialog, if any (retained so that history is kept each time, etc.)
 	FindDialog_Options			recentSearchOptions;	// used to implement Find Again baesd on the most recent Find
-	CFRetainRelease				recentSearchString;		// CFStringRef; used to implement Find Again based on the most recent Find
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
 	CFRetainRelease				preResizeTitleString;	// used to save the old title during resizes, where the title is overwritten
 	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
@@ -1631,7 +1630,6 @@ isObscured(false),
 isDead(false),
 searchSheet(nullptr),
 recentSearchOptions(kFindDialog_OptionsDefault),
-recentSearchString(),
 baseTitleString(),
 scrollProcUPP(nullptr), // reset below
 windowResizeHandler(),
@@ -3007,13 +3005,10 @@ handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 	if (terminalWindow != nullptr)
 	{
 		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-		CFStringRef					searchCFString = nullptr;
 		
 		
 		// save things the user entered in the dialog
 		ptr->recentSearchOptions = FindDialog_ReturnOptions(inDialogThatClosed);
-		FindDialog_GetSearchString(inDialogThatClosed, searchCFString);
-		ptr->recentSearchString.setCFTypeRef(searchCFString); // automatically retains
 		
 		// DO NOT destroy the dialog here; it is potentially reopened later
 		// (and is destroyed when the Terminal Window is destroyed)
@@ -3461,10 +3456,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					break;
 				
 				case kCommandFindAgain:
-					// search without a dialog, using the most recent search keyword string
-					// UNIMPLEMENTED - but could use terminal windowÕs ->recentSearchString field
-					Sound_StandardAlert();
-					result = eventNotHandledErr;
+				case kCommandFindPrevious:
+					// rotate to next or previous match; since ALL matches are highlighted at
+					// once, this is simply a focusing mechanism and does not conduct a search
+					{
+						TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+						
+						
+						TerminalView_RotateSearchResultHighlight(view, (kCommandFindPrevious == received.commandID) ? -1 : +1);
+						TerminalView_ZoomToSearchResults(view);
+					}
+					result = noErr;
 					break;
 				
 				case kCommandFindCursor:

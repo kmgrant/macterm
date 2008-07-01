@@ -3448,12 +3448,17 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	case kCommandFindAgain:
 	case kCommandFindPrevious:
 		{
-			WindowRef		window = EventLoop_ReturnRealFrontWindow();
+			HIWindowRef		window = EventLoop_ReturnRealFrontWindow();
 			
 			
 			if (TerminalWindow_ExistsFor(window))
 			{
 				result = true;
+				if ((kCommandFindAgain == inCommandID) || (kCommandFindPrevious == inCommandID))
+				{
+					result = TerminalView_SearchResultsExist
+								(TerminalWindow_ReturnViewWithFocus(TerminalWindow_ReturnFromWindow(window)));
+				}
 			}
 			else
 			{
