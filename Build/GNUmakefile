@@ -411,40 +411,32 @@ $(DEST_APP_MACOS_TOP)/%: $(SRC_APP_PYCODE_TOP)/%
 	$(MKDIR_P) $(dir $@)
 	$(COPY) $^ $@
 
-# The "MacOS/MacTelnet" (main) executable in the bundle
-# looks for "python" or "python2.5" executables in the
-# same place.  This rule sets up those virtual paths.
-#
-# IMPORTANT: These MUST exist WITHIN THE BUNDLE.  If
-# not, Mac OS X thinks Python itself is the executable,
-# and most things that look for bundle files will be
-# confused and look in Python's bundle instead!
-#
-# Sigh...prior to Leopard, a symlink to /usr/bin/python
-# was enough (the desire is to be portable and not
-# depend on any particular Python).  But on Leopard,
-# the symlink is followed so this won't work anymore.
-# The fallback has always been to use "Build Applet" to
-# get a mini-interpreter; this is now used on Leopard,
-# but will have to be fixed again in future systems
-# that introduce new Python interpreters.
-#
+# This rule sets up virtual paths in the bundle that point to (or
+# create wrappers for) interpreter executables.  For more on the
+# requirements of these, see the "MacOS/MacTelnet" (main) script.
 .PHONY: install-executables
 install-executables: \
 $(DEST_APP_MACOS_TOP)/MacTelnet \
 $(DEST_APP_MACOS_TOP)/RunMacTelnet.py
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_MACOS_TOP)
-	$(SYMLINK_REPLACE) /usr/bin/python $(DEST_APP_MACOS_TOP)/
+	$(SYMLINK_REPLACE) /usr/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.x
+	$(SYMLINK_REPLACE) /System/Library/Frameworks/Python.framework/Versions/2.5/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.5
+	@# note that Tiger's Python 2.3.5 is in the same path as Panther's Python 2.3.0
+	$(SYMLINK_REPLACE) /System/Library/Frameworks/Python.framework/Versions/2.3/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3.5
+	$(SYMLINK_REPLACE) /System/Library/Frameworks/Python.framework/Versions/2.3/bin/python $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3
 	$(COPY) /Developer/Applications/Utilities/MacPython\ 2.5/Build\ Applet.app/Contents/MacOS/Python \
-	        $(DEST_APP_MACOS_TOP)/python2.5
+	        $(DEST_APP_MACOS_TOP)/MacTelnet_python2.5_wrap
 
 .PHONY: clean-executables
 clean-executables:
 	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet
 	$(RM) $(DEST_APP_MACOS_TOP)/RunMacTelnet.py
-	$(RM) $(DEST_APP_MACOS_TOP)/python
-	$(RM) $(DEST_APP_MACOS_TOP)/python2.5
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.x
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.5
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3.5
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.3
+	$(RM) $(DEST_APP_MACOS_TOP)/MacTelnet_python2.5_wrap
 	-$(RMDIR) $(DEST_APP_MACOS_TOP)
 
 #

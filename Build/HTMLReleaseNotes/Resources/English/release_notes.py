@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080703',
     '20080701',
     '20080629',
     '20080627',
@@ -173,6 +174,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080703': [
+		'MacTelnet should no longer crash if the system Python has changed, as it can now locate another suitable interpreter.',
+		'MacTelnet now uses a more descriptive interpreter process name, of the form "MacTelnet_python2.x".',
+	],
 	'20080701': [
 		'The Find Next and Find Previous commands now work, focusing on each match in turn (though all are highlighted at once).',
 	],

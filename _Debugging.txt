@@ -17,35 +17,23 @@ BACKGROUND
   of the familiar application entry points.
 
 INVOKING GDB ON LEOPARD
-  Starting with Mac OS X 10.5, there is no apparent way to debug
-  MacTelnet unless it is first run from the FINDER.  Once it is
-  running, from the command line use "gdb --pid=<pid>" to attach
-  to the running "python2.5" process.  From that point gdb works
-  as it did in previous versions of Mac OS X.
-  
-  If you don't want gdb, but do want a console, you can also use
-  "Show Package Contents" on MacTelnet.app, and run "MacTelnet"
-  from the MacOS folder (which will open a terminal to print any
-  output as MacTelnet runs).  Note again, this has to run from
-  the FINDER.
-  
-  So why doesn't normal gdb work anymore?  I'm not sure yet...but
-  it's definitely because the main binary is different.  I had to
-  switch to Build Applet's "magical" binary for invoking Python,
-  otherwise Leopard would completely lie to MacTelnet about the
-  bundle it was in (returning "org.python.pythonapp"!).  This
-  magic is Finder-dependent, so even Build Applet's interpreter
-  reverts to the wrong bundle if invoked from the command line or
-  gdb.  Hence the need to launch MacTelnet from the Finder, and
-  then attach.  It's ugly, and some day I will figure out how to
-  make it better, sigh...
-
-INVOKING GDB ON TIGER AND EARLIER
   See the script "Debug/DebugMacTelnet.sh.command" for a utility
-  script to invoke the GNU debugger on Tiger and below, as well
-  as comments that explain what to do.  In a nutshell, since
-  "python" is the front end, "gdb" must run against python and
-  step past the framework load breakpoint for MacTelnet.
+  script to invoke the GNU debugger, as well as comments that
+  explain what to do.  In a nutshell, since Python is the front
+  end, "gdb" must run against the Python interpreter and you must
+  continue past the framework load breakpoint for MacTelnet.
+  
+  WARNING: On Leopard, do not allow the debug script to launch in
+  MacTelnet!  (For example, open it in Terminal instead.)  It is
+  currently necessary for the script to to launch and then attach
+  GDB, instead of launching the interpreter wrapper directly; if
+  MacTelnet is already open, the script can choose the wrong
+  interpreter and create an unkillable process.
+  
+  If you don't want gdb, but do want a console, you can manually
+  run the main "MacOS/MacTelnet" script from a shell.  This can
+  also be invoked from the Finder if you "Show Package Contents"
+  on the bundle and make an alias to the script inside.
 
 THE CALL STACK
   The Python interpreter has multiple threads and a moderately

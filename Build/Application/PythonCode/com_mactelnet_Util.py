@@ -9,6 +9,30 @@ __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '30 December 2006'
 __version__ = '3.1.0'
 
+def mac_os_name():
+	"""mac_os_name() -> string
+	
+	Return a common name like "Leopard", "Tiger" or "Panther" for
+	the current system, using heuristics to figure out what the
+	system is.  Return "UNKNOWN" for anything else.
+	
+	Unfortunately it is quite difficult to determine this in a
+	standard way, because (for instance) platform.mac_version()
+	fails with the Panther version of Python.
+	
+	>>> mac_os_name() in ['Leopard', 'Tiger', 'Panther']
+	True
+	
+	"""
+	result = "UNKNOWN"
+	import os
+	uname_tuple = os.uname()
+	darwin_version = str(uname_tuple[2])
+	if darwin_version.startswith('7.'): result = "Panther"
+	if darwin_version.startswith('8.'): result = "Tiger"
+	if darwin_version.startswith('9.'): result = "Leopard"
+	return result
+
 def slash_free_path(path):
 	"""slash_free_path(path) -> string
 	

@@ -7,16 +7,17 @@ cd `dirname $0`
 # Python interpreter, gdb can only run on the Python binary
 # and it will auto-breakpoint at the library load point.
 #
-# When you enter gdb, you need to say "run MacOS/MacTelnet".
-# (The current working directory is important due to the way
-# bundles magically look for Python script components.)
+# When you enter gdb, you need to say "run MacTelnet".  (This
+# is the argument passed to the Python interpreter, and works
+# because the current directory is changed to "MacOS" first.)
 #
 # A trap will automatically trigger when MacTelnet's framework
 # is loaded, which is normal.  Simply continue ("c") past it.
 #
-# Below is an example scenario within the debugger.
+# Below is an example scenario within the debugger.  Usually
+# only one "c" is required, but on Leopard there will be more.
 #     (gdb) r MacTelnet
-#     Starting program: Build/MacTelnet.app/Contents/MacOS/python MacTelnet
+#     Starting program: Build/MacTelnet.app/Contents/MacOS/MacTelnet_python2.5 MacTelnet
 #     Reading symbols for shared libraries ++. done
 #     
 #     Program received signal SIGTRAP, Trace/breakpoint trap.
@@ -55,5 +56,5 @@ else
     echo '           (On Leopard, you may have to "c" multiple times.)'
     echo '______________________________________________________________________________'
     echo
-    exec gdb './python'
+    exec gdb './MacTelnet_python2.x'
 fi

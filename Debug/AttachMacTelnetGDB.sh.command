@@ -1,10 +1,10 @@
 #!/bin/sh
 
 # This is like "DebugMacTelnet.sh.command", except it tries to find
-# a currently-running python2.5 process (MacTelnet on Leopard) and
+# a currently-running Python 2.5 process (MacTelnet on Leopard) and
 # attach to it.
 
-attached_pid=`ps -A -o 'pid command' | grep -i python | grep RunMacTelnet | awk '{print $1}'`
+attached_pid=`ps -A -o 'pid command' | grep -i MacTelnet_python | grep RunMacTelnet | awk '{print $1}'`
 if [ "x$attached_pid" = "x" ] ; then
     echo "$0: could not find process ID of MacTelnet" >&2
     exit 1

@@ -42,6 +42,19 @@ pymactelnet_versions_dir = os.path.join(pymactelnet_dir, "Versions")
 pymactelnet_current_version_dir = os.path.join(pymactelnet_versions_dir, "Current")
 pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "python" + pymactelnet_pylib_ver)
 
+# now import utility modules
+sys.path.insert(0, pymactelnet_pylib_dir)
+import com_mactelnet_Util
+mac_os_name = com_mactelnet_Util.mac_os_name()
+
+# notes on the platform-dependent setup below...
+#
+# the interpreter MUST be invoked from a location physically inside the
+# bundle in order for the system to assign the correct bundle for such
+# things as the application menu and preferences; prior to Leopard, a
+# symlink is sufficient, but on Leopard the "python2.5" mini-executable
+# from "Build Applet" is required (renamed "MacTelnet_python2.5_wrap")
+#
 # the Quills.framework code is compiled, so it is architecture-dependent;
 # the SWIG wrappers must be built for every possible Python version that
 # is incompatible, namely the Python 2.3 PowerPC of Panther, the Python
@@ -55,15 +68,24 @@ pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "py
 # - Leopard is universal and requires the Python 2.5 SWIG wrapper
 # - version "A" of the framework supports PowerPC only (and Python 2.3)
 # - version "B" of the framework is universal (for Python 2.3.5 or 2.5)
-quills_fw_ver = "A"
-quills_pylib_ver = "2.3"
-if sys.version_info[0] == 2 and sys.version_info[1] == 3 \
-   and sys.version_info[2] > 0:
-    quills_pylib_ver = "2.3.5"
+if mac_os_name == "Leopard":
+    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
     quills_fw_ver = "B"
-elif sys.version_info[0] > 2 or sys.version_info[1] > 3:
     quills_pylib_ver = "2.5"
-    quills_fw_ver = "B"
+elif mac_os_name == "Tiger":
+    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3.5")
+    quills_fw_ver = "B" # Tiger and Leopard use the same framework
+    quills_pylib_ver = "2.3.5"
+elif mac_os_name == "Panther":
+    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.3")
+    quills_fw_ver = "A"
+    quills_pylib_ver = "2.3"
+else:
+    print >>sys.stderr, "WARNING: MacTelnet may not work on your system, the Python interpreter is unrecognized."
+    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.x")
+    quills_fw_ver = "A"
+    quills_pylib_ver = "2.3"
+os.environ["PYTHONEXECUTABLE"] = py_interpreter
 quills_dir = os.path.join(frameworks_dir, "Quills.framework")
 quills_versions_dir = os.path.join(quills_dir, "Versions")
 quills_proper_version_dir = os.path.join(quills_versions_dir, quills_fw_ver)
@@ -73,23 +95,11 @@ quills_pylib_dir = os.path.join(quills_proper_version_dir, "lib", "python" + qui
 # when initializing other components
 os.environ["INITIAL_APP_BUNDLE_DIR"] = bundle_dir
 
-# the interpreter MUST be invoked from a location physically inside the
-# bundle in order for the system to assign the correct bundle for such
-# things as the application menu and preferences; prior to Leopard, a
-# symlink to /usr/bin/python is sufficient, but guess what: on Leopard
-# that doesn't work, so the mini-executable from the "Build Applet"
-# utility is used on Leopard (named "python2.5")...sigh...
-if sys.version_info[0] > 2 or sys.version_info[1] > 3:
-    interpreter = os.path.join(macos_dir, "python2.5")
-else:
-    interpreter = os.path.join(macos_dir, "python")
-os.environ["PYTHONEXECUTABLE"] = interpreter
-
 # specify where dependent Python and C++ libraries will reside
-python_path = os.getenv("PYTHONPATH", "")
-if python_path:
-    python_path = ":" + python_path
-os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + python_path
+pypath_append = ""
+if "PYTHONPATH" in os.environ:
+    pypath_append = ":" + os.environ["PYTHONPATH"]
+os.environ["PYTHONPATH"] = quills_pylib_dir + ":" + pymactelnet_pylib_dir + pypath_append
 os.environ["DYLD_LIBRARY_PATH"] = quills_proper_version_dir
 
 # the following is NOT required for MacTelnet to run, however it is
@@ -111,7 +121,7 @@ os.environ["DYLD_FRAMEWORK_PATH"] = frameworks_dir
 
 # the value of sys.argv[0] is replaced before passing arguments on,
 # because it originally referred to this script
-sys.argv[0] = interpreter
+sys.argv[0] = py_interpreter
 
 # locate the "real" main entry point script, the one depending on C++
 # libraries (hence the environment setup above); ensure it is passed as
