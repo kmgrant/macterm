@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080704',
     '20080703',
     '20080701',
     '20080629',
@@ -174,6 +175,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080704': [
+		'Preferences window Macros pane has been redesigned (again), as work on enhanced macros continues.',
+	],
 	'20080703': [
 		'MacTelnet should no longer crash if the system Python has changed, as it can now locate another suitable interpreter.',
 		'MacTelnet now uses a more descriptive interpreter process name, of the form "MacTelnet_python2.x".',

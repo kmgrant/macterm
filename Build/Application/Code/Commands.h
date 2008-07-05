@@ -419,6 +419,11 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPrefBellSystemAlert				'BpBl'		// “Preferences” window
 #define kCommandPrefBellLibrarySound			'BpLb'		// “Preferences” window
 #define kCommandToggleMacrosMenuVisibility		'McMn'		// “Preferences” window
+#define kCommandEditMacroKey					'SMKy'		// “Preferences” window
+#define kCommandSetMacroKeyModifierCommand		'McMC'		// “Preferences” window
+#define kCommandSetMacroKeyModifierControl		'McML'		// “Preferences” window
+#define kCommandSetMacroKeyModifierOption		'McMO'		// “Preferences” window
+#define kCommandSetMacroKeyModifierShift		'McMS'		// “Preferences” window
 #define kCommandPreferencesNewFavorite			'NewC'		// “Preferences” window
 #define kCommandPreferencesDuplicateFavorite	'DupC'		// “Preferences” window
 #define kCommandPreferencesRenameFavorite		'RnmC'		// “Preferences” window

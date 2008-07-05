@@ -87,10 +87,8 @@ UInt16 const	kMy_MaxMacroKeyColumnWidthInPixels = 100; // arbitrary
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
 {
-	kMyDataBrowserPropertyIDInvokeWith			= 'Keys',
 	kMyDataBrowserPropertyIDMacroName			= 'Name',
-	kMyDataBrowserPropertyIDAction				= 'ToDo',
-	kMyDataBrowserPropertyIDContents			= 'Text'
+	kMyDataBrowserPropertyIDMacroNumber			= 'Nmbr'
 };
 
 /*!
@@ -103,15 +101,18 @@ In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
 HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
-HIViewID const	idMyRadioButtonInvokeWithCommandKeypad	= { 'Inv1', 0/* ID */ };
-HIViewID const	idMyRadioButtonInvokeWithFunctionKeys	= { 'Inv2', 0/* ID */ };
-HIViewID const	idMyLabelSelectedMacro					= { 'LSMc', 0/* ID */ };
 HIViewID const	idMySeparatorSelectedMacro				= { 'SSMc', 0/* ID */ };
-HIViewID const	idMyLabelMacroName						= { 'LMNm', 0/* ID */ };
 HIViewID const	idMyFieldMacroName						= { 'FMNm', 0/* ID */ };
-HIViewID const	idMyLabelMacroAction					= { 'LMTy', 0/* ID */ };
+HIViewID const	idMyLabelMacroBaseKey					= { 'McKy', 0/* ID */ };
+HIViewID const	idMyFieldMacroKeyCharacter				= { 'MKCh', 0/* ID */ };
+HIViewID const	idMyButtonInvokeWithModifierCommand		= { 'McMC', 0/* ID */ };
+HIViewID const	idMyButtonInvokeWithModifierControl		= { 'McML', 0/* ID */ };
+HIViewID const	idMyButtonInvokeWithModifierOption		= { 'McMO', 0/* ID */ };
+HIViewID const	idMyButtonInvokeWithModifierShift		= { 'McMS', 0/* ID */ };
+HIViewID const	idMyCheckBoxRequireMacroModeForKey		= { 'XRMM', 0/* ID */ };
 HIViewID const	idMyPopUpMenuMacroAction				= { 'MMTy', 0/* ID */ };
 HIViewID const	idMyFieldMacroText						= { 'MTxt', 0/* ID */ };
+HIViewID const	idMyHelpTextMacroKeys					= { 'MHlp', 0/* ID */ };
 
 } // anonymous namespace
 
@@ -145,6 +146,12 @@ public:
 	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	void
+	refreshDisplay ();
+	
+	void
+	setDataBrowserColumnWidths ();
 	
 	My_MacrosDataBrowserCallbacks		listCallbacks;				//!< used to provide data for the list
 	HIViewWrap							mainView;
@@ -193,8 +200,6 @@ void				disposePanel						(Panel_Ref, void*);
 void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal void			monitorDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
 SInt32				panelChanged						(Panel_Ref, Panel_Message, void*);
-void				refreshDisplay						(My_MacrosPanelUIPtr);
-void				setDataBrowserColumnWidths			(My_MacrosPanelUIPtr);
 
 } // anonymous namespace
 
@@ -331,7 +336,7 @@ macroSetChangeListener		(nullptr)
 {
 	assert(containerResizer.isInstalled());
 	
-	setDataBrowserColumnWidths(this);
+	this->setDataBrowserColumnWidths();
 	
 	// now that the views exist, it is safe to monitor macro activity
 	this->macroSetChangeListener = ListenerModel_NewStandardListener(macroSetChanged, this/* context */);
@@ -422,7 +427,7 @@ const
 		columnInfo.propertyDesc.propertyID = '----';
 		columnInfo.propertyDesc.propertyType = kDataBrowserTextType;
 		columnInfo.propertyDesc.propertyFlags = kDataBrowserDefaultPropertyFlags | kDataBrowserListViewSortableColumn |
-												kDataBrowserListViewMovableColumn;
+												kDataBrowserListViewMovableColumn | kDataBrowserListViewTypeSelectColumn;
 		columnInfo.headerBtnDesc.version = kDataBrowserListViewLatestHeaderDesc;
 		columnInfo.headerBtnDesc.minimumWidth = 100; // arbitrary
 		columnInfo.headerBtnDesc.maximumWidth = 400; // arbitrary
@@ -433,68 +438,23 @@ const
 		columnInfo.headerBtnDesc.btnFontStyle.just = teFlushDefault;
 		columnInfo.headerBtnDesc.btnContentInfo.contentType = kControlContentTextOnly;
 		
+		// create number column
+		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderNumber,
+										columnInfo.headerBtnDesc.titleString);
+		if (stringResult.ok())
+		{
+			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDMacroNumber;
+			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
+			assert_noerr(error);
+			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
+		}
+		
 		// create name column
 		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderName,
 										columnInfo.headerBtnDesc.titleString);
 		if (stringResult.ok())
 		{
-		// until macros have editable names, omit this column
-		#if 1
 			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDMacroName;
-			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
-			assert_noerr(error);
-		#endif
-			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
-		}
-		
-		// create key column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderInvokeWith,
-										columnInfo.headerBtnDesc.titleString);
-		if (stringResult.ok())
-		{
-			// this column does not follow the default minimum and maximum width rules set above
-			UInt16 const	kDefaultMinWidth = columnInfo.headerBtnDesc.minimumWidth;
-			UInt16 const	kDefaultMaxWidth = columnInfo.headerBtnDesc.maximumWidth;
-			
-			
-			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDInvokeWith;
-			columnInfo.headerBtnDesc.minimumWidth = kMy_MaxMacroKeyColumnWidthInPixels;
-			columnInfo.headerBtnDesc.maximumWidth = kMy_MaxMacroKeyColumnWidthInPixels;
-			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
-			assert_noerr(error);
-			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
-			
-			columnInfo.headerBtnDesc.minimumWidth = kDefaultMinWidth;
-			columnInfo.headerBtnDesc.maximumWidth = kDefaultMaxWidth;
-		}
-		
-		// create action column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderAction,
-										columnInfo.headerBtnDesc.titleString);
-		if (stringResult.ok())
-		{
-			// this column does not follow the default minimum and maximum width rules set above
-			UInt16 const	kDefaultMinWidth = columnInfo.headerBtnDesc.minimumWidth;
-			UInt16 const	kDefaultMaxWidth = columnInfo.headerBtnDesc.maximumWidth;
-			
-			
-			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDAction;
-			columnInfo.headerBtnDesc.minimumWidth = kMy_MaxMacroActionColumnWidthInPixels;
-			columnInfo.headerBtnDesc.maximumWidth = kMy_MaxMacroActionColumnWidthInPixels;
-			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
-			assert_noerr(error);
-			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
-			
-			columnInfo.headerBtnDesc.minimumWidth = kDefaultMinWidth;
-			columnInfo.headerBtnDesc.maximumWidth = kDefaultMaxWidth;
-		}
-		
-		// create contents column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderContents,
-										columnInfo.headerBtnDesc.titleString);
-		if (stringResult.ok())
-		{
-			columnInfo.propertyDesc.propertyID = kMyDataBrowserPropertyIDContents;
 			error = AddDataBrowserListViewColumn(macrosList, &columnInfo, columnNumber++);
 			assert_noerr(error);
 			CFRelease(columnInfo.headerBtnDesc.titleString), columnInfo.headerBtnDesc.titleString = nullptr;
@@ -508,16 +468,9 @@ const
 		// attach data that would not be specifiable in a NIB
 		error = SetDataBrowserCallbacks(macrosList, &this->listCallbacks.listCallbacks);
 		assert_noerr(error);
-		{
-			Boolean const	kFrameFlag = false;
-			
-			
-			(OSStatus)SetControlData(macrosList, kControlEntireControl, kControlDataBrowserIncludesFrameAndFocusTag,
-										sizeof(kFrameFlag), &kFrameFlag);
-		}
 		
 		// initialize sort column
-		error = SetDataBrowserSortProperty(macrosList, kMyDataBrowserPropertyIDInvokeWith);
+		error = SetDataBrowserSortProperty(macrosList, kMyDataBrowserPropertyIDMacroNumber);
 		assert_noerr(error);
 		
 		// set other nice things (most can be set in a NIB someday)
@@ -530,7 +483,9 @@ const
 		}
 	#endif
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
-		(OSStatus)SetDataBrowserTableViewHiliteStyle(macrosList, kDataBrowserTableViewFillHilite);
+		(OSStatus)SetDataBrowserHasScrollBars(macrosList, false/* horizontal */, true/* vertical */);
+		error = SetDataBrowserSelectionFlags(macrosList, kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
+		assert_noerr(error);
 		{
 			DataBrowserPropertyFlags	flags = 0;
 			
@@ -540,12 +495,6 @@ const
 			{
 				flags |= kDataBrowserPropertyIsMutable;
 				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDMacroName, flags);
-			}
-			error = GetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDContents, &flags);
-			if (noErr == error)
-			{
-				flags |= kDataBrowserPropertyIsMutable;
-				error = SetDataBrowserPropertyFlags(macrosList, kMyDataBrowserPropertyIDContents, flags);
 			}
 		}
 		
@@ -592,6 +541,66 @@ readPreferences		(Preferences_ContextRef		inSettings)
 
 
 /*!
+Redraws the macro display.  Use this when you have caused
+it to change in some way (by spawning an editor dialog box
+or by switching tabs, etc.).
+
+(3.0)
+*/
+void
+My_MacrosPanelUI::
+refreshDisplay ()
+{
+	HIViewWrap		macrosListContainer(idMyDataBrowserMacroSetList, HIViewGetWindow(this->mainView));
+	assert(macrosListContainer.exists());
+	
+	
+	(OSStatus)UpdateDataBrowserItems(macrosListContainer, kDataBrowserNoItem/* parent item */,
+										0/* number of IDs */, nullptr/* IDs */,
+										kDataBrowserItemNoProperty/* pre-sort property */,
+										kMyDataBrowserPropertyIDMacroName);
+}// refreshDisplay
+
+
+/*!
+Sets the widths of the data browser columns
+proportionately based on the total width.
+
+(3.1)
+*/
+void
+My_MacrosPanelUI::
+setDataBrowserColumnWidths ()
+{
+	Rect			containerRect;
+	HIViewWrap		macrosListContainer(idMyDataBrowserMacroSetList, HIViewGetWindow(this->mainView));
+	assert(macrosListContainer.exists());
+	
+	
+	(Rect*)GetControlBounds(macrosListContainer, &containerRect);
+	
+	// set column widths proportionately
+	{
+		UInt16		availableWidth = (containerRect.right - containerRect.left) - 16/* scroll bar width */ - 6/* double the inset focus ring width */;
+		UInt16		integerWidth = 0;
+		
+		
+		// leave number column fixed-size
+		{
+			integerWidth = 42; // arbitrary
+			(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+						(macrosListContainer, kMyDataBrowserPropertyIDMacroNumber, integerWidth);
+			availableWidth -= integerWidth;
+		}
+		
+		// give all remaining space to the title
+		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
+					(macrosListContainer, kMyDataBrowserPropertyIDMacroName, availableWidth);
+	}
+}// setDataBrowserColumnWidths
+
+
+/*!
 A standard DataBrowserItemDataProcPtr, this routine
 responds to requests sent by Mac OS X for data that
 belongs in the specified list.
@@ -616,106 +625,28 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 			result = SetDataBrowserItemDataBooleanValue(inItemData, true/* is editable */);
 			break;
 		
-		case kMyDataBrowserPropertyIDInvokeWith:
-			// return the text string for the key equivalent
-			{
-				MacroManager_InvocationMethod const		kMacroKeys = Macros_ReturnMode();
-				
-				
-				switch (inItemID)
-				{
-				case 1:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-0") : CFSTR("F1"));
-					break;
-				
-				case 2:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-1") : CFSTR("F2"));
-					break;
-				
-				case 3:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-2") : CFSTR("F3"));
-					break;
-				
-				case 4:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-3") : CFSTR("F4"));
-					break;
-				
-				case 5:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-4") : CFSTR("F5"));
-					break;
-				
-				case 6:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-5") : CFSTR("F6"));
-					break;
-				
-				case 7:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-6") : CFSTR("F7"));
-					break;
-				
-				case 8:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-7") : CFSTR("F8"));
-					break;
-				
-				case 9:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-8") : CFSTR("F9"));
-					break;
-				
-				case 10:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-9") : CFSTR("F10"));
-					break;
-				
-				case 11:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-=") : CFSTR("F11"));
-					break;
-				
-				case 12:
-					result = SetDataBrowserItemDataText
-								(inItemData, (kMacroKeys == kMacroManager_InvocationMethodCommandDigit)
-												? CFSTR("Command-/") : CFSTR("F12"));
-					break;
-				
-				default:
-					// ???
-					break;
-				}
-			}
-			break;
-		
 		case kMyDataBrowserPropertyIDMacroName:
 			// return the text string for the macro name
 			// UNIMPLEMENTED
 			break;
 		
-		case kMyDataBrowserPropertyIDAction:
-			// return text string for how the macro interprets its contents
-			// UNIMPLEMENTED
-			break;
-		
-		case kMyDataBrowserPropertyIDContents:
-			// return the text string for the macro text
-			// UNIMPLEMENTED
+		case kMyDataBrowserPropertyIDMacroNumber:
+			// return the macro number as a string
+			{
+				SInt32			numericalValue = STATIC_CAST(inItemID, SInt32);
+				CFStringRef		numberCFString = CFStringCreateWithFormat(kCFAllocatorDefault,
+																			nullptr/* options dictionary */,
+																			CFSTR("%d")/* LOCALIZE THIS? */,
+																			numericalValue);
+				
+				
+				if (nullptr == numberCFString) result = memFullErr;
+				else
+				{
+					result = SetDataBrowserItemDataText(inItemData, numberCFString);
+					CFRelease(numberCFString), numberCFString = nullptr;
+				}
+			}
 			break;
 		
 		default:
@@ -727,11 +658,6 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 	{
 		switch (inPropertyID)
 		{
-		case kMyDataBrowserPropertyIDInvokeWith:
-			// read-only
-			result = paramErr;
-			break;
-		
 		case kMyDataBrowserPropertyIDMacroName:
 			// user has changed the macro name; update the macro in memory
 			{
@@ -747,35 +673,9 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 			}
 			break;
 		
-		case kMyDataBrowserPropertyIDAction:
-			// user has changed what the macro does; update the command in memory
-			{
-				SInt32		selectedItem = 0;
-				
-				
-				result = GetDataBrowserItemDataValue(inItemData, &selectedItem);
-				if (noErr == result)
-				{
-					// change purpose of macro - UNIMPLEMENTED
-					result = noErr;
-				}
-			}
+		case kMyDataBrowserPropertyIDMacroNumber:
+			// read-only
 			result = paramErr;
-			break;
-		
-		case kMyDataBrowserPropertyIDContents:
-			// user has changed the macro text; update the macro in memory
-			{
-				CFStringRef		newText = nullptr;
-				
-				
-				result = GetDataBrowserItemDataText(inItemData, &newText);
-				if (noErr == result)
-				{
-					// fix macro contents - UNIMPLEMENTED
-					result = noErr;
-				}
-			}
 			break;
 		
 		default:
@@ -800,27 +700,32 @@ compareDataBrowserItems		(ControlRef					inDataBrowser,
 							 DataBrowserItemID			inItemTwo,
 							 DataBrowserPropertyID		inSortProperty)
 {
-	CFStringRef		string1 = nullptr;
-	CFStringRef		string2 = nullptr;
-	Boolean			result = false;
+	Boolean		result = false;
 	
 	
 	switch (inSortProperty)
 	{
-	case kMyDataBrowserPropertyIDInvokeWith:
-		// UNIMPLEMENTED
-		break;
-	
 	case kMyDataBrowserPropertyIDMacroName:
-		// UNIMPLEMENTED
+		{
+			CFStringRef		string1 = nullptr;
+			CFStringRef		string2 = nullptr;
+			
+			
+			// INCOMPLETE
+			
+			// check for nullptr, because CFStringCompare() will not deal with it
+			if ((nullptr == string1) && (nullptr != string2)) result = true;
+			else if ((nullptr == string1) || (nullptr == string2)) result = false;
+			else
+			{
+				result = (kCFCompareLessThan == CFStringCompare(string1, string2,
+																kCFCompareCaseInsensitive | kCFCompareLocalized/* options */));
+			}
+		}
 		break;
 	
-	case kMyDataBrowserPropertyIDAction:
-		// UNIMPLEMENTED
-		break;
-	
-	case kMyDataBrowserPropertyIDContents:
-		// UNIMPLEMENTED
+	case kMyDataBrowserPropertyIDMacroNumber:
+		result = (inItemOne < inItemTwo);
 		break;
 	
 	default:
@@ -828,23 +733,13 @@ compareDataBrowserItems		(ControlRef					inDataBrowser,
 		break;
 	}
 	
-	// check for nullptr, because CFStringCompare() will not deal with it
-	if ((nullptr == string1) && (nullptr != string2)) result = true;
-	else if ((nullptr == string1) || (nullptr == string2)) result = false;
-	else
-	{
-		result = (kCFCompareLessThan == CFStringCompare(string1, string2,
-														kCFCompareCaseInsensitive | kCFCompareLocalized/* options */));
-	}
-	
 	return result;
 }// compareDataBrowserItems
 
 
 /*!
-Adjusts the data browser columns in the “Macros”
-preference panel to fill the new data browser
-dimensions.
+Adjusts the views in the panel to match the specified change
+in dimensions of their container.
 
 (3.1)
 */
@@ -856,32 +751,22 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 {
 	if ((0 != inDeltaX) || (0 != inDeltaY))
 	{
-		HIWindowRef const		kPanelWindow = GetControlOwner(inView);
+		HIWindowRef const		kPanelWindow = HIViewGetWindow(inView);
 		My_MacrosPanelUIPtr		interfacePtr = REINTERPRET_CAST(inContext, My_MacrosPanelUIPtr);
-		HIViewWrap				viewWrap(idMyDataBrowserMacroSetList, kPanelWindow);
+		HIViewWrap				viewWrap;
 		
 		
-		assert(viewWrap.exists());
-		viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
+		viewWrap = HIViewWrap(idMyDataBrowserMacroSetList, kPanelWindow);
+		viewWrap << HIViewWrap_DeltaSize(0/* delta X */, inDeltaY);
 		
-		setDataBrowserColumnWidths(interfacePtr);
+		interfacePtr->setDataBrowserColumnWidths();
 		
-		viewWrap = HIViewWrap(idMyFieldMacroText, kPanelWindow);
-		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		viewWrap = HIViewWrap(idMyPopUpMenuMacroAction, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		viewWrap = HIViewWrap(idMyLabelMacroAction, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		viewWrap = HIViewWrap(idMyFieldMacroName, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		viewWrap = HIViewWrap(idMyLabelMacroName, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
 		viewWrap = HIViewWrap(idMySeparatorSelectedMacro, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
-		viewWrap = HIViewWrap(idMyLabelSelectedMacro, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY);
+		viewWrap = HIViewWrap(idMyFieldMacroText, kPanelWindow);
+		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+		viewWrap = HIViewWrap(idMyHelpTextMacroKeys, kPanelWindow);
+		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	}
 }// deltaSizePanelContainerHIView
 
@@ -937,7 +822,7 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// change also; re-sort the list (which will automatically
 		// read the updated macro values), then redraw the list.
 		// Also ensure the selected tab is that of the active set.
-		refreshDisplay(interfacePtr);
+		interfacePtr->refreshDisplay();
 		break;
 	
 	case kMacros_ChangeContents:
@@ -950,36 +835,12 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		//       the list if the user isn’t currently sorting
 		//       according to macro content, and only refreshing the
 		//       part of the display that contains the changed macro.
-		refreshDisplay(interfacePtr);
+		interfacePtr->refreshDisplay();
 		break;
 	
 	case kMacros_ChangeMode:
-		// If the macro keys change, the displayed content will change
-		// also; re-sort the list (which will automatically find out
-		// the new macro keys being used), then redraw the list.
-		// NOTE: A future efficiency improvement may be to only
-		//       refresh the part of the display showing macro keys.
-		{
-			HIViewWrap		radioButtonInvokeWithCommandKeys(idMyRadioButtonInvokeWithCommandKeypad,
-																GetControlOwner(interfacePtr->mainView));
-			HIViewWrap		radioButtonInvokeWithFunctionKeys(idMyRadioButtonInvokeWithFunctionKeys,
-																GetControlOwner(interfacePtr->mainView));
-			assert(radioButtonInvokeWithCommandKeys.exists());
-			assert(radioButtonInvokeWithFunctionKeys.exists());
-			
-			
-			refreshDisplay(interfacePtr);
-			if (kMacroManager_InvocationMethodCommandDigit == Macros_ReturnMode())
-			{
-				SetControl32BitValue(radioButtonInvokeWithCommandKeys, kControlRadioButtonCheckedValue);
-				SetControl32BitValue(radioButtonInvokeWithFunctionKeys, kControlRadioButtonUncheckedValue);
-			}
-			else
-			{
-				SetControl32BitValue(radioButtonInvokeWithCommandKeys, kControlRadioButtonUncheckedValue);
-				SetControl32BitValue(radioButtonInvokeWithFunctionKeys, kControlRadioButtonCheckedValue);
-			}
-		}
+		// Obsolete; the Macro Manager will no longer have a mode, as
+		// each macro will be able to have its own unique key equivalent.
 		break;
 	
 	default:
@@ -1052,7 +913,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			panelDataPtr->interfacePtr = new My_MacrosPanelUI(inPanel, *windowPtr);
 			assert(nullptr != panelDataPtr->interfacePtr);
-			setDataBrowserColumnWidths(panelDataPtr->interfacePtr);
+			panelDataPtr->interfacePtr->setDataBrowserColumnWidths();
 		}
 		break;
 	
@@ -1141,87 +1002,6 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	return result;
 }// panelChanged
-
-
-/*!
-Redraws the macro display.  Use this when you have caused
-it to change in some way (by spawning an editor dialog box
-or by switching tabs, etc.).
-
-(3.0)
-*/
-void
-refreshDisplay		(My_MacrosPanelUIPtr	inInterfacePtr)
-{
-	HIViewWrap		macrosListContainer(idMyDataBrowserMacroSetList, GetControlOwner(inInterfacePtr->mainView));
-	assert(macrosListContainer.exists());
-	
-	
-	(OSStatus)UpdateDataBrowserItems(macrosListContainer, kDataBrowserNoItem/* parent item */,
-										0/* number of IDs */, nullptr/* IDs */,
-										kDataBrowserItemNoProperty/* pre-sort property */,
-										kMyDataBrowserPropertyIDInvokeWith);
-	(OSStatus)UpdateDataBrowserItems(macrosListContainer, kDataBrowserNoItem/* parent item */,
-										0/* number of IDs */, nullptr/* IDs */,
-										kDataBrowserItemNoProperty/* pre-sort property */,
-										kMyDataBrowserPropertyIDMacroName);
-	(OSStatus)UpdateDataBrowserItems(macrosListContainer, kDataBrowserNoItem/* parent item */,
-										0/* number of IDs */, nullptr/* IDs */,
-										kDataBrowserItemNoProperty/* pre-sort property */,
-										kMyDataBrowserPropertyIDContents);
-}// refreshDisplay
-
-
-/*!
-Sets the widths of the data browser columns
-proportionately based on the total width.
-
-(3.1)
-*/
-void
-setDataBrowserColumnWidths	(My_MacrosPanelUIPtr	inInterfacePtr)
-{
-	Rect			containerRect;
-	HIViewWrap		macrosListContainer(idMyDataBrowserMacroSetList, GetControlOwner(inInterfacePtr->mainView));
-	assert(macrosListContainer.exists());
-	
-	
-	(Rect*)GetControlBounds(macrosListContainer, &containerRect);
-	
-	// set column widths proportionately
-	{
-		UInt16		kAvailableWidth = (containerRect.right - containerRect.left) - 16/* scroll bar width */;
-		Float32		calculatedWidth = 0;
-		UInt16		totalWidthSoFar = 0;
-		
-		
-		// key equivalent is relatively small
-		calculatedWidth = kMy_MaxMacroKeyColumnWidthInPixels/* arbitrary */;
-		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-					(macrosListContainer, kMyDataBrowserPropertyIDInvokeWith,
-						STATIC_CAST(calculatedWidth, UInt16));
-		totalWidthSoFar += STATIC_CAST(calculatedWidth, UInt16);
-		
-		// action menu is relatively small
-		calculatedWidth = kMy_MaxMacroActionColumnWidthInPixels/* arbitrary */;
-		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-					(macrosListContainer, kMyDataBrowserPropertyIDAction,
-						STATIC_CAST(calculatedWidth, UInt16));
-		totalWidthSoFar += STATIC_CAST(calculatedWidth, UInt16);
-		
-		// title space is moderate
-		calculatedWidth = kAvailableWidth * 0.25/* arbitrary */;
-		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-					(macrosListContainer, kMyDataBrowserPropertyIDMacroName,
-						STATIC_CAST(calculatedWidth, UInt16));
-		totalWidthSoFar += STATIC_CAST(calculatedWidth, UInt16);
-		
-		// give all remaining space to the content string
-		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
-					(macrosListContainer, kMyDataBrowserPropertyIDContents,
-						kAvailableWidth - totalWidthSoFar);
-	}
-}// setDataBrowserColumnWidths
 
 } // anonymous namespace
 
