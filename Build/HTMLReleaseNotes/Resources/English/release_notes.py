@@ -177,6 +177,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20080806': [
+		'Acquired a new multiprocessor Intel Mac for testing, and verified that the last daily build works fine on Intel Macs.',
 		'Preferences window Macros pane enhanced further, now properly saves certain macro settings.',
 	],
 	'20080704': [
