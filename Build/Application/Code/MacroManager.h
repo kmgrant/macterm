@@ -63,6 +63,13 @@
 
 #pragma mark Constants
 
+enum MacroManager_Action
+{
+	kMacroManager_ActionSendText					= 0,		//!< macro content is a string (perhaps with metacharacters) of text to send
+	kMacroManager_ActionHandleURL					= 1,		//!< macro content is a URL to be opened
+	kMacroManager_ActionNewWindowWithCommand		= 2			//!< macro content is a Unix command line to be executed in a new terminal window
+};
+
 typedef SInt32 MacroManager_InvocationMethod;
 enum
 {

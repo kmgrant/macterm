@@ -46,6 +46,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
@@ -58,6 +59,7 @@
 #include <ListenerModel.h>
 #include <MemoryBlocks.h>
 #include <NIBLoader.h>
+#include <SoundSystem.h>
 
 // resource includes
 #include "DialogResources.h"
@@ -109,9 +111,8 @@ HIViewID const	idMyButtonInvokeWithModifierCommand		= { 'McMC', 0/* ID */ };
 HIViewID const	idMyButtonInvokeWithModifierControl		= { 'McML', 0/* ID */ };
 HIViewID const	idMyButtonInvokeWithModifierOption		= { 'McMO', 0/* ID */ };
 HIViewID const	idMyButtonInvokeWithModifierShift		= { 'McMS', 0/* ID */ };
-HIViewID const	idMyCheckBoxRequireMacroModeForKey		= { 'XRMM', 0/* ID */ };
 HIViewID const	idMyPopUpMenuMacroAction				= { 'MMTy', 0/* ID */ };
-HIViewID const	idMyFieldMacroText						= { 'MTxt', 0/* ID */ };
+HIViewID const	idMyFieldMacroText						= { 'McAc', 0/* ID */ };
 HIViewID const	idMyHelpTextMacroKeys					= { 'MHlp', 0/* ID */ };
 
 } // anonymous namespace
@@ -144,23 +145,40 @@ public:
 	My_MacrosPanelUI	(Panel_Ref, HIWindowRef);
 	~My_MacrosPanelUI	();
 	
+	static SInt32
+	panelChanged	(Panel_Ref, Panel_Message, void*);
+	
 	void
-	readPreferences		(Preferences_ContextRef);
+	readPreferences		(Preferences_ContextRef, UInt32);
+	
+	static pascal OSStatus
+	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
 	
 	void
 	refreshDisplay ();
 	
 	void
+	saveFieldPreferences	(Preferences_ContextRef, UInt32);
+	
+	void
 	setDataBrowserColumnWidths ();
 	
+	Panel_Ref							panel;						//!< the panel using this UI
+	Float32								idealWidth;					//!< best size in pixels
+	Float32								idealHeight;				//!< best size in pixels
 	My_MacrosDataBrowserCallbacks		listCallbacks;				//!< used to provide data for the list
 	HIViewWrap							mainView;
-	CommonEventHandlers_HIViewResizer	containerResizer;			//!< invoked when the panel is resized
-	ListenerModel_ListenerRef			macroSetChangeListener;		//!< invoked when macros change externally
 
 protected:
 	HIViewWrap
-	createContainerView		(Panel_Ref, HIWindowRef) const;
+	createContainerView		(Panel_Ref, HIWindowRef);
+
+private:
+	CarbonEventHandlerWrap				_menuCommandsHandler;		//!< responds to menu selections
+	CarbonEventHandlerWrap				_fieldNameInputHandler;		//!< saves field settings when they change
+	CarbonEventHandlerWrap				_fieldContentsInputHandler;	//!< saves field settings when they change
+	CommonEventHandlers_HIViewResizer	_containerResizer;			//!< invoked when the panel is resized
+	ListenerModel_ListenerRef			_macroSetChangeListener;	//!< invoked when macros change externally
 };
 typedef My_MacrosPanelUI*	My_MacrosPanelUIPtr;
 
@@ -172,34 +190,31 @@ struct My_MacrosPanelData
 {
 	My_MacrosPanelData ();
 	
+	void
+	switchDataModel		(Preferences_ContextRef, UInt32);
+	
 	Panel_Ref				panel;			//!< the panel this data is for
 	My_MacrosPanelUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
 	Preferences_ContextRef	dataModel;		//!< source of initializations and target of changes
+	UInt32					currentIndex;	//!< which index (one-based) in the data model to use for macro-specific settings
 };
 typedef My_MacrosPanelData*		My_MacrosPanelDataPtr;
-
-} // anonymous namespace
-
-#pragma mark Variables
-namespace {
-
-Float32		gIdealPanelWidth = 0.0;
-Float32		gIdealPanelHeight = 0.0;
 
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus		accessDataBrowserItemData			(ControlRef, DataBrowserItemID, DataBrowserPropertyID,
+pascal OSStatus		accessDataBrowserItemData			(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
 														 DataBrowserItemDataRef, Boolean);
-pascal Boolean		compareDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemID,
+pascal Boolean		compareDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemID,
 														 DataBrowserPropertyID);
 void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
 void				disposePanel						(Panel_Ref, void*);
 void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-pascal void			monitorDataBrowserItems				(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
+pascal void			monitorDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
 SInt32				panelChanged						(Panel_Ref, Panel_Message, void*);
+pascal OSStatus		receiveHICommand					(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -220,7 +235,7 @@ If any problems occur, nullptr is returned.
 Panel_Ref
 PrefPanelMacros_New ()
 {
-	Panel_Ref		result = Panel_New(panelChanged);
+	Panel_Ref		result = Panel_New(My_MacrosPanelUI::panelChanged);
 	
 	
 	if (result != nullptr)
@@ -311,9 +326,34 @@ My_MacrosPanelData ()
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 panel(nullptr),
 interfacePtr(nullptr),
-dataModel(nullptr)
+dataModel(nullptr),
+currentIndex(1)
 {
 }// My_MacrosPanelData default constructor
+
+
+/*!
+Updates the current data model and/or macro index to
+the specified values.  Pass nullptr to leave the context
+unchanged, and 0 to leave the index unchanged.
+
+If the user interface is initialized, it is automatically
+asked to refresh itself.
+
+(3.1)
+*/
+void
+My_MacrosPanelData::
+switchDataModel		(Preferences_ContextRef		inNewContext,
+					 UInt32						inNewIndex)
+{
+	if (nullptr != inNewContext) this->dataModel = inNewContext;
+	if (0 != inNewIndex) this->currentIndex = inNewIndex;
+	if (nullptr != this->interfacePtr)
+	{
+		this->interfacePtr->readPreferences(this->dataModel, this->currentIndex);
+	}
+}// My_MacrosPanelData::switchDataModel
 
 
 /*!
@@ -326,25 +366,40 @@ My_MacrosPanelUI	(Panel_Ref		inPanel,
 					 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel						(inPanel),
+idealWidth					(0.0),
+idealHeight					(0.0),
 listCallbacks				(),
 mainView					(createContainerView(inPanel, inOwningWindow)
 								<< HIViewWrap_AssertExists),
-containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
+_menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+								this/* user data */),
+_fieldNameInputHandler		(GetControlEventTarget(HIViewWrap(idMyFieldMacroName, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_fieldContentsInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldMacroText, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 										kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
 								deltaSizePanelContainerHIView, this/* context */),
-macroSetChangeListener		(nullptr)
+_macroSetChangeListener		(nullptr)
 {
-	assert(containerResizer.isInstalled());
+	assert(_menuCommandsHandler.isInstalled());
+	assert(_fieldNameInputHandler.isInstalled());
+	assert(_fieldContentsInputHandler.isInstalled());
+	assert(_containerResizer.isInstalled());
 	
 	this->setDataBrowserColumnWidths();
 	
 	// now that the views exist, it is safe to monitor macro activity
-	this->macroSetChangeListener = ListenerModel_NewStandardListener(macroSetChanged, this/* context */);
-	assert(nullptr != this->macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeActiveSetPlanned, this->macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeActiveSet, this->macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeContents, this->macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeMode, this->macroSetChangeListener);
+	this->_macroSetChangeListener = ListenerModel_NewStandardListener(macroSetChanged, this/* context */);
+	assert(nullptr != this->_macroSetChangeListener);
+	Macros_StartMonitoring(kMacros_ChangeActiveSetPlanned, this->_macroSetChangeListener);
+	Macros_StartMonitoring(kMacros_ChangeActiveSet, this->_macroSetChangeListener);
+	Macros_StartMonitoring(kMacros_ChangeContents, this->_macroSetChangeListener);
+	Macros_StartMonitoring(kMacros_ChangeMode, this->_macroSetChangeListener);
 }// My_MacrosPanelUI 2-argument constructor
 
 
@@ -357,11 +412,11 @@ My_MacrosPanelUI::
 ~My_MacrosPanelUI ()
 {
 	// remove event handlers
-	Macros_StopMonitoring(kMacros_ChangeActiveSetPlanned, this->macroSetChangeListener);
-	Macros_StopMonitoring(kMacros_ChangeActiveSet, this->macroSetChangeListener);
-	Macros_StopMonitoring(kMacros_ChangeContents, this->macroSetChangeListener);
-	Macros_StopMonitoring(kMacros_ChangeMode, this->macroSetChangeListener);
-	ListenerModel_ReleaseListener(&this->macroSetChangeListener);
+	Macros_StopMonitoring(kMacros_ChangeActiveSetPlanned, this->_macroSetChangeListener);
+	Macros_StopMonitoring(kMacros_ChangeActiveSet, this->_macroSetChangeListener);
+	Macros_StopMonitoring(kMacros_ChangeContents, this->_macroSetChangeListener);
+	Macros_StopMonitoring(kMacros_ChangeMode, this->_macroSetChangeListener);
+	ListenerModel_ReleaseListener(&this->_macroSetChangeListener);
 }// My_MacrosPanelUI destructor
 
 
@@ -376,7 +431,6 @@ HIViewWrap
 My_MacrosPanelUI::
 createContainerView		(Panel_Ref		inPanel,
 						 HIWindowRef	inOwningWindow)
-const
 {
 	HIViewRef					result = nullptr;
 	std::vector< HIViewRef >	viewList;
@@ -483,6 +537,7 @@ const
 		}
 	#endif
 		(OSStatus)SetDataBrowserListViewUsePlainBackground(macrosList, false);
+		(OSStatus)SetDataBrowserTableViewHiliteStyle(macrosList, kDataBrowserTableViewFillHilite);
 		(OSStatus)SetDataBrowserHasScrollBars(macrosList, false/* horizontal */, true/* vertical */);
 		error = SetDataBrowserSelectionFlags(macrosList, kDataBrowserSelectOnlyOne | kDataBrowserNeverEmptySelectionSet);
 		assert_noerr(error);
@@ -498,13 +553,19 @@ const
 			}
 		}
 		
+		// attach panel to data browser
+		error = SetControlProperty(macrosList, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeOwningPanel,
+									sizeof(inPanel), &inPanel);
+		assert_noerr(error);
+		
 		error = HIViewAddSubview(result, macrosList);
 		assert_noerr(error);
 	}
 	
 	// calculate the ideal size
-	gIdealPanelWidth = idealContainerBounds.right - idealContainerBounds.left;
-	gIdealPanelHeight = idealContainerBounds.bottom - idealContainerBounds.top;
+	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
+	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
 	
 	// make the container match the ideal size, because the
 	// size and position of NIB views is used to size subviews
@@ -524,20 +585,230 @@ const
 
 
 /*!
+This routine, of standard PanelChangedProcPtr form,
+is invoked by the Panel module whenever a property
+of one of the preferences dialogÕs panels changes.
+
+(3.0)
+*/
+SInt32
+My_MacrosPanelUI::
+panelChanged	(Panel_Ref		inPanel,
+				 Panel_Message	inMessage,
+				 void*			inDataPtr)
+{
+	SInt32		result = 0L;
+	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
+												kConstantsRegistry_PrefPanelDescriptorMacros, 0/* options */));
+	
+	
+	switch (inMessage)
+	{
+	case kPanel_MessageCreateViews: // specification of the window containing the panel - create controls using this window
+		{
+			My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																	My_MacrosPanelDataPtr);
+			HIWindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, HIWindowRef*);
+			
+			
+			panelDataPtr->interfacePtr = new My_MacrosPanelUI(inPanel, *windowPtr);
+			assert(nullptr != panelDataPtr->interfacePtr);
+			panelDataPtr->interfacePtr->setDataBrowserColumnWidths();
+		}
+		break;
+	
+	case kPanel_MessageDestroyed: // request to dispose of private data structures
+		{
+			My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(inDataPtr, My_MacrosPanelDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel, panelDataPtr->currentIndex);
+			disposePanel(inPanel, panelDataPtr);
+		}
+		break;
+	
+	case kPanel_MessageFocusGained: // notification that a control is now focused
+		{
+			//HIViewRef const*	controlPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			
+			
+			// do nothing
+		}
+		break;
+	
+	case kPanel_MessageFocusLost: // notification that a control is no longer focused
+		{
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																	My_MacrosPanelDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel, panelDataPtr->currentIndex);
+		}
+		break;
+	
+	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
+		result = kPanel_ResponseEditTypeInspector;
+		break;
+	
+	case kPanel_MessageGetGrowBoxLook: // request for panel to return its preferred appearance for the window grow box
+		result = kPanel_ResponseGrowBoxOpaque;
+		break;
+	
+	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after control creation)
+		{
+			My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																	My_MacrosPanelDataPtr);
+			HISize&					newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
+			
+			
+			if ((0 != panelDataPtr->interfacePtr->idealWidth) && (0 != panelDataPtr->interfacePtr->idealHeight))
+			{
+				newLimits.width = panelDataPtr->interfacePtr->idealWidth;
+				newLimits.height = panelDataPtr->interfacePtr->idealHeight;
+				result = kPanel_ResponseSizeProvided;
+			}
+		}
+		break;
+	
+	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate control sizes
+		// do nothing
+		break;
+	
+	case kPanel_MessageNewDataSet:
+		{
+			My_MacrosPanelDataPtr				panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_MacrosPanelDataPtr);
+			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
+			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
+			
+			
+			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			
+			// select first item
+			{
+				HIWindowRef					kOwningWindow = Panel_ReturnOwningWindow(inPanel);
+				HIViewWrap					dataBrowser(idMyDataBrowserMacroSetList, kOwningWindow);
+				DataBrowserItemID const		kFirstItem = 1;
+				
+				
+				assert(dataBrowser.exists());
+				(OSStatus)SetDataBrowserSelectedItems(dataBrowser, 1/* number of items */, &kFirstItem, kDataBrowserItemsAssign);
+			}
+			
+			// update the current data model accordingly
+			panelDataPtr->switchDataModel(newContext, 1/* one-based new item */);
+		}
+		break;
+	
+	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+		{
+			//My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnAuxiliaryDataPtr(inPanel), My_MacrosPanelDataPtr);
+			//Boolean					isNowVisible = *((Boolean*)inDataPtr);
+			
+			
+			// hack - on pre-Mac OS 9 systems, the pesky ÒEdit...Ó buttons sticks around for some reason; explicitly show/hide it
+			//SetControlVisibility(panelDataPtr->controls.editButton, isNowVisible/* visibility */, isNowVisible/* draw */);
+		}
+		break;
+	
+	default:
+		break;
+	}
+	
+	return result;
+}// My_MacrosPanelUI::panelChanged
+
+
+/*!
 Updates the display based on the given settings.
 
 (3.1)
 */
 void
 My_MacrosPanelUI::
-readPreferences		(Preferences_ContextRef		inSettings)
+readPreferences		(Preferences_ContextRef		inSettings,
+					 UInt32						inOneBasedIndex)
 {
+	assert(0 != inOneBasedIndex);
 	if (nullptr != inSettings)
 	{
-		// read each macro
-		// UNIMPLEMENTED
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		
+		
+		// INCOMPLETE
+		
+		// set name
+		{
+			CFStringRef		nameCFString = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroName,
+															inOneBasedIndex, sizeof(nameCFString), &nameCFString,
+															true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				SetControlTextWithCFString(HIViewWrap(idMyFieldMacroName, kOwningWindow), nameCFString);
+			}
+		}
+		
+		// set action text
+		{
+			CFStringRef		actionCFString = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroContents,
+															inOneBasedIndex, sizeof(actionCFString), &actionCFString,
+															true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				SetControlTextWithCFString(HIViewWrap(idMyFieldMacroText, kOwningWindow), actionCFString);
+			}
+		}
 	}
 }// My_MacrosPanelUI::readPreferences
+
+
+/*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the fields in this panel by saving
+their preferences when new text arrives.
+
+(3.1)
+*/
+pascal OSStatus
+My_MacrosPanelUI::
+receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					inMyMacrosPanelUIPtr)
+{
+	OSStatus			result = eventNotHandledErr;
+	My_MacrosPanelUI*	interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, My_MacrosPanelUI*);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// now synchronize the post-input change with preferences
+	{
+		My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																My_MacrosPanelDataPtr);
+		
+		
+		interfacePtr->saveFieldPreferences(panelDataPtr->dataModel, panelDataPtr->currentIndex);
+	}
+	
+	return result;
+}// My_MacrosPanelUI::receiveFieldChanged
 
 
 /*!
@@ -559,7 +830,65 @@ refreshDisplay ()
 										0/* number of IDs */, nullptr/* IDs */,
 										kDataBrowserItemNoProperty/* pre-sort property */,
 										kMyDataBrowserPropertyIDMacroName);
-}// refreshDisplay
+}// My_MacrosPanelUI::refreshDisplay
+
+
+/*!
+Saves every text field in the panel to the data model,
+and under the specified index for macro-specific values.
+
+It is necessary to treat fields specially because they
+do not have obvious state changes (as, say, buttons do);
+they might need saving when focus is lost or the window
+is closed, etc.
+
+(3.1)
+*/
+void
+My_MacrosPanelUI::
+saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
+						 UInt32						inOneBasedIndex)
+{
+	assert(0 != inOneBasedIndex);
+	if (nullptr != inoutSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		// set name
+		{
+			CFStringRef		nameCFString = nullptr;
+			
+			
+			GetControlTextAsCFString(HIViewWrap(idMyFieldMacroName, kOwningWindow), nameCFString);
+			
+			prefsResult = Preferences_ContextSetDataAtIndex(inoutSettings, kPreferences_TagIndexedMacroName,
+															inOneBasedIndex, sizeof(nameCFString), &nameCFString);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteValue("warning, failed to set name of macro with index", inOneBasedIndex);
+			}
+		}
+		
+		// set key - UNIMPLEMENTED
+		
+		// set action text
+		{
+			CFStringRef		actionCFString = nullptr;
+			
+			
+			GetControlTextAsCFString(HIViewWrap(idMyFieldMacroText, kOwningWindow), actionCFString);
+			
+			prefsResult = Preferences_ContextSetDataAtIndex(inoutSettings, kPreferences_TagIndexedMacroContents,
+															inOneBasedIndex, sizeof(actionCFString), &actionCFString);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteValue("warning, failed to set action text of macro with index", inOneBasedIndex);
+			}
+		}
+	}
+}// My_MacrosPanelUI::saveFieldPreferences
 
 
 /*!
@@ -597,7 +926,7 @@ setDataBrowserColumnWidths ()
 		(OSStatus)SetDataBrowserTableViewNamedColumnWidth
 					(macrosListContainer, kMyDataBrowserPropertyIDMacroName, availableWidth);
 	}
-}// setDataBrowserColumnWidths
+}// My_MacrosPanelUI::setDataBrowserColumnWidths
 
 
 /*!
@@ -608,7 +937,7 @@ belongs in the specified list.
 (3.1)
 */
 pascal OSStatus
-accessDataBrowserItemData	(ControlRef					inDataBrowser,
+accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemID,
 							 DataBrowserPropertyID		inPropertyID,
 							 DataBrowserItemDataRef		inItemData,
@@ -695,7 +1024,7 @@ method compares items in the list.
 (3.1)
 */
 pascal Boolean
-compareDataBrowserItems		(ControlRef					inDataBrowser,
+compareDataBrowserItems		(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemOne,
 							 DataBrowserItemID			inItemTwo,
 							 DataBrowserPropertyID		inSortProperty)
@@ -855,20 +1184,50 @@ Responds to changes in the data browser.
 (3.1)
 */
 pascal void
-monitorDataBrowserItems		(ControlRef						inDataBrowser,
+monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 							 DataBrowserItemID				inItemID,
 							 DataBrowserItemNotification	inMessage)
 {
+	My_MacrosPanelDataPtr	panelDataPtr = nullptr;
+	Panel_Ref				owningPanel = nullptr;
+	
+	
+	{
+		UInt32			actualSize = 0;
+		OSStatus		getPropertyError = GetControlProperty(inDataBrowser, AppResources_ReturnCreatorCode(),
+																kConstantsRegistry_ControlPropertyTypeOwningPanel,
+																sizeof(owningPanel), &actualSize, &owningPanel);
+		
+		
+		if (noErr == getPropertyError)
+		{
+			// IMPORTANT: If this callback ever supports more than one panel, the
+			// panel descriptor can be read at this point to determine the type.
+			panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(owningPanel),
+											My_MacrosPanelDataPtr);
+		}
+	}
+	
 	switch (inMessage)
 	{
 	case kDataBrowserItemSelected:
+		if (nullptr != panelDataPtr)
 		{
 			DataBrowserTableViewRowIndex	rowIndex = 0;
 			OSStatus						error = noErr;
 			
 			
 			// update the Òselected macroÓ fields to match the newly-selected item
-			// UNIMPLEMENTED
+			error = GetDataBrowserTableViewItemRow(inDataBrowser, inItemID, &rowIndex);
+			if (noErr == error)
+			{
+				panelDataPtr->switchDataModel(nullptr/* context */, 1 + rowIndex/* convert from zero-based to one-based */);
+			}
+			else
+			{
+				Console_WriteLine("warning, unexpected problem determining selected macro!");
+				Sound_StandardAlert();
+			}
 		}
 		break;
 	
@@ -886,122 +1245,49 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 
 
 /*!
-This routine, of standard PanelChangedProcPtr form,
-is invoked by the Panel module whenever a property
-of one of the preferences dialogÕs panels changes.
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons and menus in this panel.
 
-(3.0)
+(3.1)
 */
-SInt32
-panelChanged	(Panel_Ref		inPanel,
-				 Panel_Message	inMessage,
-				 void*			inDataPtr)
+pascal OSStatus
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyMacrosPanelUIPtr)
 {
-	SInt32		result = 0L;
-	assert(kCFCompareEqualTo == CFStringCompare(Panel_ReturnKind(inPanel),
-												kConstantsRegistry_PrefPanelDescriptorMacros, 0/* options */));
+	OSStatus			result = eventNotHandledErr;
+	My_MacrosPanelUI*	interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, My_MacrosPanelUI*);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
-	switch (inMessage)
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
 	{
-	case kPanel_MessageCreateViews: // specification of the window containing the panel - create controls using this window
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
 		{
-			My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																	My_MacrosPanelDataPtr);
-			HIWindowRef const*		windowPtr = REINTERPRET_CAST(inDataPtr, HIWindowRef*);
+			result = eventNotHandledErr; // initially...
 			
-			
-			panelDataPtr->interfacePtr = new My_MacrosPanelUI(inPanel, *windowPtr);
-			assert(nullptr != panelDataPtr->interfacePtr);
-			panelDataPtr->interfacePtr->setDataBrowserColumnWidths();
-		}
-		break;
-	
-	case kPanel_MessageDestroyed: // request to dispose of private data structures
-		{
-			void*		panelAuxiliaryDataPtr = inDataPtr;
-			
-			
-			disposePanel(inPanel, panelAuxiliaryDataPtr);
-		}
-		break;
-	
-	case kPanel_MessageFocusGained: // notification that a control is now focused
-		{
-			//ControlRef const*	controlPtr = REINTERPRET_CAST(inDataPtr, ControlRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageFocusLost: // notification that a control is no longer focused
-		{
-			//ControlRef const*	controlPtr = REINTERPRET_CAST(inDataPtr, ControlRef*);
-			
-			
-			// do nothing
-		}
-		break;
-	
-	case kPanel_MessageGetEditType: // request for panel to return whether or not it behaves like an inspector
-		result = kPanel_ResponseEditTypeInspector;
-		break;
-	
-	case kPanel_MessageGetGrowBoxLook: // request for panel to return its preferred appearance for the window grow box
-		result = kPanel_ResponseGrowBoxOpaque;
-		break;
-	
-	case kPanel_MessageGetIdealSize: // request for panel to return its required dimensions in pixels (after control creation)
-		{
-			HISize&		newLimits = *(REINTERPRET_CAST(inDataPtr, HISize*));
-			
-			
-			if ((0 != gIdealPanelWidth) && (0 != gIdealPanelHeight))
+			switch (received.commandID)
 			{
-				newLimits.width = gIdealPanelWidth;
-				newLimits.height = gIdealPanelHeight;
-				result = kPanel_ResponseSizeProvided;
+			default:
+				break;
 			}
 		}
-		break;
-	
-	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate control sizes
-		// do nothing
-		break;
-	
-	case kPanel_MessageNewDataSet:
+		else
 		{
-			My_MacrosPanelDataPtr				panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
-																				My_MacrosPanelDataPtr);
-			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
-			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
-			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
-			
-			
-			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			panelDataPtr->dataModel = newContext;
-			panelDataPtr->interfacePtr->readPreferences(newContext);
+			result = eventNotHandledErr;
 		}
-		break;
-	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
-		{
-			//My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnAuxiliaryDataPtr(inPanel), My_MacrosPanelDataPtr);
-			//Boolean					isNowVisible = *((Boolean*)inDataPtr);
-			
-			
-			// hack - on pre-Mac OS 9 systems, the pesky ÒEdit...Ó buttons sticks around for some reason; explicitly show/hide it
-			//SetControlVisibility(panelDataPtr->controls.editButton, isNowVisible/* visibility */, isNowVisible/* draw */);
-		}
-		break;
-	
-	default:
-		break;
 	}
-	
 	return result;
-}// panelChanged
+}// receiveHICommand
 
 } // anonymous namespace
 

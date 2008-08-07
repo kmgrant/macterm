@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080806',
     '20080704',
     '20080703',
     '20080701',
@@ -175,6 +176,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080806': [
+		'Preferences window Macros pane enhanced further, now properly saves certain macro settings.',
+	],
 	'20080704': [
 		'Preferences window Macros pane has been redesigned (again), as work on enhanced macros continues.',
 	],

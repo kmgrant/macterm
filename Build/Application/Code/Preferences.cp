@@ -65,6 +65,7 @@
 #include "Clipboard.h"
 #include "Commands.h"
 #include "Folder.h"
+#include "MacroManager.h"
 #include "NetEvents.h"
 #include "Preferences.h"
 #include "Session.h"
@@ -521,13 +522,14 @@ namespace {
 Preferences_Result		assertInitialized						();
 void					changeNotify							(Preferences_Change,
 																 Preferences_ContextRef = nullptr, Boolean = false);
-Preferences_Result		contextGetData							(My_ContextInterfacePtr, Preferences_Class, Preferences_Tag, size_t,
-																 void*, size_t*);
+Preferences_Result		contextGetData							(My_ContextInterfacePtr, Preferences_Class, Preferences_Tag,
+																 UInt32, size_t, void*, size_t*);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Preferences_Class, CFArrayRef&);
 Preferences_Result		createAllPreferencesContextsFromDisk	();
 CFDictionaryRef			createDefaultPrefDictionary				();
+CFStringRef				createKeyAtIndex						(CFStringRef, UInt32);
 void					deleteAliasData							(My_AliasInfoPtr*);
 void					deleteAllAliasNodes						();
 My_AliasInfoPtr			findAlias								(Preferences_AliasID);
@@ -541,10 +543,12 @@ Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Prefe
 Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Boolean					getListOfContexts						(Preferences_Class, My_FavoriteContextList*&);
+Preferences_Result		getMacroPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 UInt32, size_t, void*, size_t*);
 Boolean					getNamedContext							(Preferences_Class, CFStringRef,
 																 My_ContextFavoritePtr&);
-Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, CFStringRef&, FourCharCode&,
-																 size_t&, Preferences_Class&);
+Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, UInt32, CFStringRef&,
+																 FourCharCode&, size_t&, Preferences_Class&);
 Preferences_Result		getSessionPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
@@ -562,6 +566,8 @@ Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preference
 																 size_t, void const*);
 Preferences_Result		setGeneralPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
+Preferences_Result		setMacroPreference						(My_ContextInterfacePtr, Preferences_Tag,
+																 UInt32, size_t, void const*);
 Boolean					setMacTelnetCoordPreference				(CFStringRef, SInt16, SInt16);
 void					setMacTelnetPreference					(CFStringRef, CFPropertyListRef);
 Preferences_Result		setSessionPreference					(My_ContextInterfacePtr, Preferences_Tag,
@@ -1744,6 +1750,35 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 							 Boolean					inSearchDefaults,
 							 size_t*					outActualSizePtrOrNull)
 {
+	return Preferences_ContextGetDataAtIndex(inContext, inDataPreferenceTag, 0/* index */,
+												inDataStorageSize, outDataStorage,
+												inSearchDefaults, outActualSizePtrOrNull);
+}// ContextGetData
+
+
+/*!
+Like Preferences_ContextGetData(), except the specified tag is
+for a setting that is actually an ordered set; so, you must
+state which item you want using a one-based index.
+
+The tag should generally have a "kPreferences_TagIndexed…" name.
+
+For the convenience of the implementation, 0 is accepted as an
+index value to indicate that the tag is not in fact indexed
+after all.  But, it is better to use Preferences_ContextGetData()
+with non-indexed tags.
+
+(3.1)
+*/
+Preferences_Result
+Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
+									 Preferences_Tag			inDataPreferenceTag,
+									 UInt32						inOneBasedIndexOrZeroForNonIndexedTag,
+									 size_t						inDataStorageSize,
+									 void*						outDataStorage,
+									 Boolean					inSearchDefaults,
+									 size_t*					outActualSizePtrOrNull)
+{
 	Preferences_Result		result = kPreferences_ResultOK;
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
@@ -1751,7 +1786,8 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
+									keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -1760,7 +1796,8 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 		else
 		{
-			result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+			result = contextGetData(ptr, dataClass, inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
+									inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 			if ((kPreferences_ResultOK != result) && (inSearchDefaults))
 			{
 				// not available...try another context
@@ -1773,7 +1810,8 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 					My_ContextAutoLocker	alternatePtr(gMyContextPtrLocks(), alternateContext);
 					
 					
-					result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag, inDataStorageSize,
+					result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag,
+											inOneBasedIndexOrZeroForNonIndexedTag, inDataStorageSize,
 											outDataStorage, outActualSizePtrOrNull);
 					if (kPreferences_ResultOK != result)
 					{
@@ -1787,7 +1825,8 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 							My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
 							
 							
-							result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
+							result = contextGetData(rootPtr, dataClass, inDataPreferenceTag,
+													inOneBasedIndexOrZeroForNonIndexedTag, inDataStorageSize,
 													outDataStorage, outActualSizePtrOrNull);
 						}
 					}
@@ -1796,7 +1835,7 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		}
 	}
 	return result;
-}// ContextGetData
+}// ContextGetDataAtIndex
 
 
 /*!
@@ -1933,6 +1972,36 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 							 size_t						inDataSize,
 							 void const*				inDataPtr)
 {
+	return Preferences_ContextSetDataAtIndex(inContext, inDataPreferenceTag, 0/* index */,
+												inDataSize, inDataPtr);
+}// ContextSetData
+
+
+/*!
+Like Preferences_ContextSetData(), except the specified tag is
+for a setting that is actually an ordered set; so, you must
+state which item you want using a one-based index.
+
+The tag should generally have a "kPreferences_TagIndexed…" name.
+
+For the convenience of the implementation, 0 is accepted as an
+index value to indicate that the tag is not in fact indexed
+after all.  But, it is better to use Preferences_ContextSetData()
+with non-indexed tags.
+
+IMPORTANT:	The index value is currently ignored for all classes
+			except macro sets, and should be set to 0 for any
+			other preference tag.
+
+(3.0)
+*/
+Preferences_Result
+Preferences_ContextSetDataAtIndex	(Preferences_ContextRef		inContext,
+									 Preferences_Tag			inDataPreferenceTag,
+									 UInt32						inOneBasedIndexOrZeroForNonIndexedTag,
+									 size_t						inDataSize,
+									 void const*				inDataPtr)
+{
 	Preferences_Result		result = kPreferences_ResultOK;
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
@@ -1940,7 +2009,8 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -1954,6 +2024,11 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 		
 		case kPreferences_ClassGeneral:
 			result = setGeneralPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
+		case kPreferences_ClassMacroSet:
+			result = setMacroPreference(ptr, inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
+										inDataSize, inDataPtr);
 			break;
 		
 		case kPreferences_ClassSession:
@@ -1975,7 +2050,7 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 		}
 	}
 	return result;
-}// ContextSetData
+}// ContextSetDataAtIndex
 
 
 /*!
@@ -2345,7 +2420,8 @@ Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 	Preferences_Class			dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		result = Preferences_GetDefaultContext(&context, dataClass);
@@ -2587,7 +2663,8 @@ Preferences_SetData		(Preferences_Tag	inDataPreferenceTag,
 	Preferences_Class			dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		result = Preferences_GetDefaultContext(&context, dataClass);
@@ -3859,7 +3936,11 @@ changeNotify	(Preferences_Change			inWhatChanged,
 
 
 /*!
-Internal version of Preferences_ContextGetData().
+Internal version of Preferences_ContextGetDataAtIndex().
+
+IMPORTANT:	The index value is currently ignored for all classes
+			except macro sets, and should be set to 0 for any
+			other preference tag.
 
 (3.1)
 */
@@ -3867,6 +3948,7 @@ Preferences_Result
 contextGetData		(My_ContextInterfacePtr		inContextPtr,
 					 Preferences_Class			inDataClass,
 					 Preferences_Tag			inDataPreferenceTag,
+					 UInt32						inOneBasedIndexOrZeroForNonIndexedTag,
 					 size_t						inDataStorageSize,
 					 void*						outDataStorage,
 					 size_t*					outActualSizePtrOrNull)
@@ -3882,6 +3964,11 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 	
 	case kPreferences_ClassGeneral:
 		result = getGeneralPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
+	case kPreferences_ClassMacroSet:
+		result = getMacroPreference(inContextPtr, inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag, inDataStorageSize,
+									outDataStorage, outActualSizePtrOrNull);
 		break;
 	
 	case kPreferences_ClassSession:
@@ -4231,6 +4318,29 @@ createDefaultPrefDictionary ()
 
 
 /*!
+Utility routine for constructing a preferences key for an
+indexed setting.  The specified key string MUST contain
+(only) the format string "%02u", to indicate where the index
+will go in the result.
+
+You must call CFRelease() on the string when finished with
+it (unless the result is nullptr to indicate an error).
+
+(3.1)
+*/
+CFStringRef
+createKeyAtIndex	(CFStringRef	inTemplate,
+					 UInt32			inIndex)
+{
+	CFStringRef		result = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
+														inTemplate, inIndex);
+	
+	
+	return result;
+}// createKeyAtIndex
+
+
+/*!
 Disposes of memory used for the given alias structure.
 
 (3.0)
@@ -4518,7 +4628,8 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassFormat;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+										actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassFormat);
@@ -4691,7 +4802,8 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassGeneral;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+										actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassGeneral);
@@ -5188,6 +5300,91 @@ getListOfContexts	(Preferences_Class				inClass,
 
 
 /*!
+Returns preference data for a setting for a particular macro.
+In this method, 0 is an invalid index.
+
+\retval kPreferences_ResultOK
+if the data was found successfully
+
+\retval kPreferences_ResultBadVersionDataNotAvailable
+if the requested data is not in the preferences file
+
+\retval kPreferences_ResultInsufficientBufferSpace
+if the given buffer is not large enough for the requested data
+
+\retval kPreferences_ResultUnknownTagOrClass
+if the given preference tag is not valid
+
+(3.0)
+*/
+Preferences_Result	
+getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
+					 Preferences_Tag				inDataPreferenceTag,
+					 UInt32							inOneBasedIndex,
+					 size_t							inDataSize,
+					 void*							outDataPtr,
+					 size_t*						outActualSizePtrOrNull)
+{
+	size_t					actualSize = 0L;
+	Preferences_Result		result = kPreferences_ResultOK;
+	
+	
+	if (nullptr != outDataPtr)
+	{
+		CFStringRef			keyName = nullptr;
+		FourCharCode		keyValueType = '----';
+		Preferences_Class	dataClass = kPreferences_ClassMacroSet;
+		
+		
+		result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndex, keyName, keyValueType,
+										actualSize, dataClass);
+		if (kPreferences_ResultOK == result)
+		{
+			assert(dataClass == kPreferences_ClassMacroSet);
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
+			else
+			{
+				switch (inDataPreferenceTag)
+				{
+				case kPreferences_TagIndexedMacroContents:
+				case kPreferences_TagIndexedMacroName:
+					// all of these keys have Core Foundation string values
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							CFStringRef* const	data = REINTERPRET_CAST(outDataPtr, CFStringRef*);
+							
+							
+							*data = valueCFString;
+							// do not release because the string is returned
+						}
+					}
+					break;
+				
+				case kPreferences_TagIndexedMacroAction: // UNIMPLEMENTED
+				case kPreferences_TagIndexedMacroKey: // UNIMPLEMENTED
+				default:
+					// unrecognized tag
+					result = kPreferences_ResultUnknownTagOrClass;
+					break;
+				}
+			}
+		}
+	}
+	if (nullptr != outActualSizePtrOrNull) *outActualSizePtrOrNull = actualSize;
+	return result;
+}// getMacroPreference
+
+
+/*!
 Retrieves the context with the given name that stores
 settings for the specified class.  Returns true unless
 this fails.
@@ -5234,6 +5431,11 @@ type MacTelnet uses to read or write the data via
 APIs such as Preferences_ContextGetData(), and an
 indication of what class the tag belongs to.
 
+If the tag is actually an indexed tag, provide the
+one-based index of the specific instance you are
+interested in.  Usually, the index is 0 to indicate
+a non-indexed tag.
+
 If no particular class dictionary is required, then
 "outClass" will be "kPreferences_ClassGeneral".  In
 this case ONLY, Core Foundation Preferences may be
@@ -5252,6 +5454,7 @@ if the given preference tag is not valid
 */
 Preferences_Result
 getPreferenceDataInfo	(Preferences_Tag		inTag,
+						 UInt32					inOneBasedIndexOrZeroForNonIndexedTag,
 						 CFStringRef&			outKeyName,
 						 FourCharCode&			outKeyValueType,
 						 size_t&				outNonDictionaryValueSize,
@@ -5424,6 +5627,38 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outKeyValueType = typeNetEvents_CFNumberRef;
 		outNonDictionaryValueSize = sizeof(UInt16);
 		outClass = kPreferences_ClassSession;
+		break;
+	
+	case kPreferences_TagIndexedMacroAction:
+		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-action"),
+										inOneBasedIndexOrZeroForNonIndexedTag);
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(MacroManager_Action);
+		outClass = kPreferences_ClassMacroSet;
+		break;
+	
+	case kPreferences_TagIndexedMacroContents:
+		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-contents-string"),
+										inOneBasedIndexOrZeroForNonIndexedTag);
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(CFStringRef);
+		outClass = kPreferences_ClassMacroSet;
+		break;
+	
+	case kPreferences_TagIndexedMacroKey:
+		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-key"),
+										inOneBasedIndexOrZeroForNonIndexedTag);
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = 0; // UNIMPLEMENTED - TBD!
+		outClass = kPreferences_ClassMacroSet;
+		break;
+	
+	case kPreferences_TagIndexedMacroName:
+		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-name-string"),
+										inOneBasedIndexOrZeroForNonIndexedTag);
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(CFStringRef);
+		outClass = kPreferences_ClassMacroSet;
 		break;
 	
 	case kPreferences_TagKeepAlivePeriodInMinutes:
@@ -6121,7 +6356,8 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassSession;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+										actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassSession);
@@ -6504,7 +6740,8 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassTerminal;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+										actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassTerminal);
@@ -6810,7 +7047,8 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassTranslation;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+										actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassTranslation);
@@ -7323,7 +7561,8 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassFormat;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassFormat);
@@ -7446,7 +7685,8 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassGeneral);
@@ -7923,6 +8163,64 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 
 
 /*!
+Modifies the indicated preference for a specific macro using
+the given data (see Preferences.h and the definition of each
+tag for comments on what data format is expected for each one).
+In this method, 0 is an invalid index.
+
+(3.1)
+*/
+Preferences_Result	
+setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
+					 Preferences_Tag			inDataPreferenceTag,
+					 UInt32						inOneBasedIndex,
+					 size_t						inDataSize,
+					 void const*				inDataPtr)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Preferences_Class		dataClass = kPreferences_ClassMacroSet;
+	
+	
+	result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndex, keyName, keyValueType,
+									actualSize, dataClass);
+	if (kPreferences_ResultOK == result)
+	{
+		assert(dataClass == kPreferences_ClassMacroSet);
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
+		else
+		{
+			switch (inDataPreferenceTag)
+			{
+			case kPreferences_TagIndexedMacroContents:
+			case kPreferences_TagIndexedMacroName:
+				// all of these keys have Core Foundation string values
+				{
+					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
+			case kPreferences_TagIndexedMacroAction: // UNIMPLEMENTED
+			case kPreferences_TagIndexedMacroKey: // UNIMPLEMENTED
+			default:
+				// unrecognized tag
+				result = kPreferences_ResultUnknownTagOrClass;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// setMacroPreference
+
+
+/*!
 Like setMacTelnetPreference(), but is useful for creating
 coordinate values.  The work of creating a CFArrayRef
 containing two CFNumberRefs is done for you.
@@ -8074,7 +8372,8 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassSession;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassSession);
@@ -8315,7 +8614,8 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassTerminal;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassTerminal);
@@ -8562,7 +8862,8 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassTranslation;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
+									actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassTranslation);

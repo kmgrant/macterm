@@ -229,6 +229,21 @@ enum
 };
 
 /*!
+Tags for use with kPreferences_ClassMacroSet.
+
+IMPORTANT:	Indexed tag data can only be modified or
+			retrieved using APIs that provide an index,
+			such as Preferences_ContextGetDataAtIndex().
+*/
+enum
+{
+	kPreferences_TagIndexedMacroAction					= 'mcac',	//!< data: a "kMacroManager_ActionÉ" constant
+	kPreferences_TagIndexedMacroContents				= 'mtxt',	//!< data: "CFStringRef"
+	kPreferences_TagIndexedMacroKey						= 'mcky',	//!< data: TBD
+	kPreferences_TagIndexedMacroName					= 'mnam'	//!< data: "CFStringRef"
+};
+
+/*!
 Tags for use with kPreferences_ClassSession.
 */
 enum
@@ -520,11 +535,27 @@ Preferences_Result
 											 size_t*							outActualSizePtrOrNull = nullptr);
 
 Preferences_Result
+	Preferences_ContextGetDataAtIndex		(Preferences_ContextRef				inStartingContext,
+											 Preferences_Tag					inDataPreferenceTag,
+											 UInt32								inOneBasedIndexOrZeroForNonIndexedTag,
+											 size_t								inDataStorageSize,
+											 void*								outDataStorage,
+											 Boolean							inSearchDefaults = false,
+											 size_t*							outActualSizePtrOrNull = nullptr);
+
+Preferences_Result
 	Preferences_ContextSave					(Preferences_ContextRef				inContext);
 
 Preferences_Result
 	Preferences_ContextSetData				(Preferences_ContextRef				inContext,
 											 Preferences_Tag					inDataPreferenceTag,
+											 size_t								inDataSize,
+											 void const*						inDataPtr);
+
+Preferences_Result
+	Preferences_ContextSetDataAtIndex		(Preferences_ContextRef				inContext,
+											 Preferences_Tag					inDataPreferenceTag,
+											 UInt32								inOneBasedIndexOrZeroForNonIndexedTag,
 											 size_t								inDataSize,
 											 void const*						inDataPtr);
 
