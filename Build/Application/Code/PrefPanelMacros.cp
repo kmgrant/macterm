@@ -161,6 +161,9 @@ public:
 	saveFieldPreferences	(Preferences_ContextRef, UInt32);
 	
 	void
+	setKeyModifiers		(UInt32);
+	
+	void
 	setDataBrowserColumnWidths ();
 	
 	Panel_Ref							panel;						//!< the panel using this UI
@@ -213,7 +216,6 @@ void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
 void				disposePanel						(Panel_Ref, void*);
 void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal void			monitorDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
-SInt32				panelChanged						(Panel_Ref, Panel_Message, void*);
 pascal OSStatus		receiveHICommand					(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -755,6 +757,25 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			}
 		}
 		
+		// set modifier buttons
+		{
+			UInt32		modifiers = 0;
+			
+			
+			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroKeyModifiers,
+															inOneBasedIndex, sizeof(modifiers), &modifiers,
+															false/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setKeyModifiers(modifiers);
+			}
+			else
+			{
+				Console_WriteLine("warning, unable to find existing modifier key settings");
+				this->setKeyModifiers(0);
+			}
+		}
+		
 		// set action text
 		{
 			CFStringRef		actionCFString = nullptr;
@@ -889,6 +910,29 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 		}
 	}
 }// My_MacrosPanelUI::saveFieldPreferences
+
+
+/*!
+Set the state of all user interface elements that represent
+the selected modifier keys of the current macro.
+
+The specified integer uses the same bit flags as events do.
+
+(3.1)
+*/
+void
+My_MacrosPanelUI::
+setKeyModifiers		(UInt32		inModifiers)
+{
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierCommand, HIViewGetWindow(this->mainView)),
+							(inModifiers & cmdKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierControl, HIViewGetWindow(this->mainView)),
+							(inModifiers & controlKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierOption, HIViewGetWindow(this->mainView)),
+							(inModifiers & optionKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierShift, HIViewGetWindow(this->mainView)),
+							(inModifiers & shiftKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+}// My_MacrosPanelUI::setKeyModifiers
 
 
 /*!
@@ -1277,6 +1321,66 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			switch (received.commandID)
 			{
+			case kCommandSetMacroKeyModifierCommand:
+			case kCommandSetMacroKeyModifierControl:
+			case kCommandSetMacroKeyModifierOption:
+			case kCommandSetMacroKeyModifierShift:
+				{
+					UInt32					allModifiers = 0;
+					My_MacrosPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																		My_MacrosPanelDataPtr);
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextGetDataAtIndex(dataPtr->dataModel, kPreferences_TagIndexedMacroKeyModifiers,
+																	dataPtr->currentIndex, sizeof(allModifiers), &allModifiers,
+																	false/* search defaults */);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, unable to find existing modifier key settings");
+					}
+					
+					switch (received.commandID)
+					{
+					case kCommandSetMacroKeyModifierCommand:
+						if (allModifiers & cmdKey) allModifiers &= ~cmdKey;
+						else allModifiers |= cmdKey;
+						break;
+					
+					case kCommandSetMacroKeyModifierControl:
+						if (allModifiers & controlKey) allModifiers &= ~controlKey;
+						else allModifiers |= controlKey;
+						break;
+					
+					case kCommandSetMacroKeyModifierOption:
+						if (allModifiers & optionKey) allModifiers &= ~optionKey;
+						else allModifiers |= optionKey;
+						break;
+					
+					case kCommandSetMacroKeyModifierShift:
+						if (allModifiers & shiftKey) allModifiers &= ~shiftKey;
+						else allModifiers |= shiftKey;
+						break;
+					
+					default:
+						// ???
+						break;
+					}
+					
+					// update button states
+					interfacePtr->setKeyModifiers(allModifiers);
+					
+					// save preferences
+					prefsResult = Preferences_ContextSetDataAtIndex(dataPtr->dataModel, kPreferences_TagIndexedMacroKeyModifiers,
+																	dataPtr->currentIndex, sizeof(allModifiers), &allModifiers);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, unable to save modifier key settings");
+					}
+					result = noErr;
+				}
+				break;
+			
 			default:
 				break;
 			}

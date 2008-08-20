@@ -240,6 +240,7 @@ enum
 	kPreferences_TagIndexedMacroAction					= 'mcac',	//!< data: a "kMacroManager_ActionÉ" constant
 	kPreferences_TagIndexedMacroContents				= 'mtxt',	//!< data: "CFStringRef"
 	kPreferences_TagIndexedMacroKey						= 'mcky',	//!< data: TBD
+	kPreferences_TagIndexedMacroKeyModifiers			= 'mmod',	//!< data: "UInt32", 0 or a bitwise-OR with any of: cmdKey, shiftKey, controlKey, optionKey
 	kPreferences_TagIndexedMacroName					= 'mnam'	//!< data: "CFStringRef"
 };
 

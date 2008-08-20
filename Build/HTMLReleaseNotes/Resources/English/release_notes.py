@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080820',
     '20080806',
     '20080704',
     '20080703',
@@ -176,6 +177,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080820': [
+		'Preferences window Macros pane now properly saves and reads key modifier settings.',
+	],
 	'20080806': [
 		'Acquired a new multiprocessor Intel Mac for testing, and verified that the last daily build works fine on Intel Macs.',
 		'Preferences window Macros pane enhanced further, now properly saves certain macro settings.',

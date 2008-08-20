@@ -5369,6 +5369,52 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagIndexedMacroKeyModifiers:
+					{
+						assert(typeCFArrayRef == keyValueType);
+						CFArrayRef		valueCFArray = inContextPtr->returnArrayCopy(keyName);
+						
+						
+						if (nullptr == valueCFArray)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							CFIndex const	kArrayLength = CFArrayGetCount(valueCFArray);
+							CFStringRef		modifierNameCFString = nullptr;
+							UInt32* const	data = REINTERPRET_CAST(outDataPtr, UInt32*);
+							
+							
+							for (CFIndex i = 0; i < kArrayLength; ++i)
+							{
+								modifierNameCFString = CFUtilities_StringCast
+														(CFArrayGetValueAtIndex(valueCFArray, i));
+								if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("command"),
+																			kCFCompareCaseInsensitive))
+								{
+									*data |= cmdKey;
+								}
+								else if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("control"),
+																				kCFCompareCaseInsensitive))
+								{
+									*data |= controlKey;
+								}
+								else if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("option"),
+																				kCFCompareCaseInsensitive))
+								{
+									*data |= optionKey;
+								}
+								else if (kCFCompareEqualTo == CFStringCompare(modifierNameCFString, CFSTR("shift"),
+																				kCFCompareCaseInsensitive))
+								{
+									*data |= shiftKey;
+								}
+							}
+						}
+					}
+					break;
+				
 				case kPreferences_TagIndexedMacroAction: // UNIMPLEMENTED
 				case kPreferences_TagIndexedMacroKey: // UNIMPLEMENTED
 				default:
@@ -5650,6 +5696,14 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 										inOneBasedIndexOrZeroForNonIndexedTag);
 		outKeyValueType = typeCFStringRef;
 		outNonDictionaryValueSize = 0; // UNIMPLEMENTED - TBD!
+		outClass = kPreferences_ClassMacroSet;
+		break;
+	
+	case kPreferences_TagIndexedMacroKeyModifiers:
+		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-modifiers"),
+										inOneBasedIndexOrZeroForNonIndexedTag);
+		outKeyValueType = typeCFArrayRef;
+		outNonDictionaryValueSize = sizeof(UInt32);
 		outClass = kPreferences_ClassMacroSet;
 		break;
 	
@@ -8203,6 +8257,51 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
+			case kPreferences_TagIndexedMacroKeyModifiers:
+				{
+					UInt32 const	data = *(REINTERPRET_CAST(inDataPtr, UInt32 const*));
+					CFStringRef		values[4/* arbitrary, WARNING this must be no smaller than the step count below! */];
+					size_t			keysAdded = 0;
+					
+					
+					if (data & cmdKey)
+					{
+						values[keysAdded] = CFSTR("command");
+						++keysAdded;
+					}
+					if (data & controlKey)
+					{
+						values[keysAdded] = CFSTR("control");
+						++keysAdded;
+					}
+					if (data & optionKey)
+					{
+						values[keysAdded] = CFSTR("option");
+						++keysAdded;
+					}
+					if (data & shiftKey)
+					{
+						values[keysAdded] = CFSTR("shift");
+						++keysAdded;
+					}
+					
+					// now create and save the array of selected modifier key names
+					{
+						CFArrayRef		modifierCFArray = CFArrayCreate(kCFAllocatorDefault,
+																		REINTERPRET_CAST(values, void const**),
+																		keysAdded, &kCFTypeArrayCallBacks);
+						
+						
+						if (nullptr != modifierCFArray)
+						{
+							assert(typeCFArrayRef == keyValueType);
+							inContextPtr->addArray(inDataPreferenceTag, keyName, modifierCFArray);
+							CFRelease(modifierCFArray), modifierCFArray = nullptr;
+						}
+					}
 				}
 				break;
 			
