@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080821',
     '20080820',
     '20080806',
     '20080704',
@@ -177,6 +178,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080821': [
+		'Preferences window collections now always display Default values for any setting that is undefined, instead of a recent value.',
+	],
 	'20080820': [
 		'Preferences window Macros pane now properly saves and reads key modifier settings.',
 	],

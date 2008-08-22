@@ -796,11 +796,16 @@ panelChanged	(Panel_Ref		inPanel,
 			My_SessionsPanelDataFlowDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelDataFlowDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1050,11 +1055,16 @@ panelChanged	(Panel_Ref		inPanel,
 			My_SessionsPanelGraphicsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelGraphicsDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1388,11 +1398,16 @@ panelChanged	(Panel_Ref		inPanel,
 			My_SessionsPanelKeyboardDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelKeyboardDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1819,6 +1834,8 @@ panelChanged	(Panel_Ref		inPanel,
 			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_SessionsPanelResourceDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
@@ -1828,6 +1845,9 @@ panelChanged	(Panel_Ref		inPanel,
 				panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 				Preferences_ContextSave(oldContext);
 			}
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}

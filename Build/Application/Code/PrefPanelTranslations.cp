@@ -1006,11 +1006,16 @@ panelChanged	(Panel_Ref		inPanel,
 			My_TranslationsPanelDataPtr			panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_TranslationsPanelDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTranslation);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->_interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->_dataModel = newContext;
 			panelDataPtr->_interfacePtr->readPreferences(newContext);
 		}

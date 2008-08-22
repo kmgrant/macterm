@@ -877,11 +877,16 @@ panelChanged	(Panel_Ref		inPanel,
 			My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_TerminalsPanelEmulationDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTerminal);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1048,19 +1053,10 @@ void
 My_TerminalsPanelEmulationUI::
 setAnswerBack	(CFStringRef	inMessage)
 {
-	HIWindowRef const					kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-	My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
-																		My_TerminalsPanelEmulationDataPtr);
-	Preferences_Result					prefsResult = kPreferences_ResultOK;
+	HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	
 	
 	SetControlTextWithCFString(HIViewWrap(idMyFieldAnswerBackMessage, kOwningWindow), inMessage);
-	prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalAnswerBackMessage,
-												sizeof(inMessage), &inMessage);
-	if ((nullptr == inMessage) || (kPreferences_ResultOK != prefsResult))
-	{
-		Console_WriteLine("warning, failed to set terminal answer-back message");
-	}
 }// My_TerminalsPanelEmulationUI::setAnswerBack
 
 
@@ -1131,10 +1127,7 @@ My_TerminalsPanelEmulationUI::
 setEmulator		(Terminal_Emulator		inEmulator,
 				 Boolean				inSynchronizeAnswerBackMessage)
 {
-	HIWindowRef const					kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-	My_TerminalsPanelEmulationDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
-																		My_TerminalsPanelEmulationDataPtr);
-	Preferences_Result					prefsResult = kPreferences_ResultOK;
+	HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	
 	
 	switch (inEmulator)
@@ -1163,13 +1156,6 @@ setEmulator		(Terminal_Emulator		inEmulator,
 														kCommandSetEmulatorVT100);
 		if (inSynchronizeAnswerBackMessage) this->setAnswerBackFromEmulator(inEmulator);
 		break;
-	}
-	
-	prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalEmulatorType,
-												sizeof(inEmulator), &inEmulator);
-	if (kPreferences_ResultOK != prefsResult)
-	{
-		Console_WriteLine("warning, failed to set terminal emulator");
 	}
 }// My_TerminalsPanelEmulationUI::setEmulator
 
@@ -1387,11 +1373,16 @@ panelChanged	(Panel_Ref		inPanel,
 			My_TerminalsPanelOptionsDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_TerminalsPanelOptionsDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTerminal);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1669,11 +1660,16 @@ panelChanged	(Panel_Ref		inPanel,
 			My_TerminalsPanelScreenDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
 																				My_TerminalsPanelScreenDataPtr);
 			Panel_DataSetTransition const*		dataSetsPtr = REINTERPRET_CAST(inDataPtr, Panel_DataSetTransition*);
+			Preferences_Result					prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef				defaultContext = nullptr;
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTerminal);
+			assert(kPreferences_ResultOK == prefsResult);
+			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1963,10 +1959,7 @@ void
 My_TerminalsPanelScreenUI::
 setScrollbackType	(Terminal_ScrollbackType	inAllocationRule)
 {
-	HIWindowRef const				kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-	My_TerminalsPanelScreenDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
-																	My_TerminalsPanelScreenDataPtr);
-	Preferences_Result				prefsResult = kPreferences_ResultOK;
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	
 	
 	switch (inAllocationRule)
@@ -1995,13 +1988,6 @@ setScrollbackType	(Terminal_ScrollbackType	inAllocationRule)
 														kCommandSetScrollbackTypeFixed);
 		this->setScrollbackCustomizationEnabled(true);
 		break;
-	}
-	
-	prefsResult = Preferences_ContextSetData(panelDataPtr->dataModel, kPreferences_TagTerminalScreenScrollbackType,
-												sizeof(inAllocationRule), &inAllocationRule);
-	if (kPreferences_ResultOK != prefsResult)
-	{
-		Console_WriteLine("warning, failed to set screen scrollback type");
 	}
 }// My_TerminalsPanelScreenUI::setScrollbackType
 
@@ -2210,43 +2196,106 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			switch (received.commandID)
 			{
 			case kCommandSetEmulatorNone:
-				emulationInterfacePtr->setEmulator(kTerminal_EmulatorDumb);
-				result = noErr; // event is handled
-				break;
-			
 			case kCommandSetEmulatorVT100:
-				emulationInterfacePtr->setEmulator(kTerminal_EmulatorVT100);
-				result = noErr; // event is handled
-				break;
-			
 			case kCommandSetEmulatorVT102:
-				emulationInterfacePtr->setEmulator(kTerminal_EmulatorVT102);
-				result = noErr; // event is handled
-				break;
-			
 			case kCommandSetEmulatorVT220:
-				emulationInterfacePtr->setEmulator(kTerminal_EmulatorVT220);
-				result = noErr; // event is handled
+				{
+					Terminal_Emulator					newEmulator = kTerminal_EmulatorDumb;
+					My_TerminalsPanelEmulationDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(emulationInterfacePtr->panel),
+																					My_TerminalsPanelEmulationDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					switch (received.commandID)
+					{
+					case kCommandSetEmulatorNone:
+						newEmulator = kTerminal_EmulatorDumb;
+						break;
+					
+					case kCommandSetEmulatorVT100:
+						newEmulator = kTerminal_EmulatorVT100;
+						break;
+					
+					case kCommandSetEmulatorVT102:
+						newEmulator = kTerminal_EmulatorVT102;
+						break;
+					
+					case kCommandSetEmulatorVT220:
+						newEmulator = kTerminal_EmulatorVT220;
+						break;
+					
+					default:
+						// ???
+						break;
+					}
+					emulationInterfacePtr->setEmulator(newEmulator);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalEmulatorType,
+																sizeof(newEmulator), &newEmulator);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, failed to set terminal emulator");
+					}
+					
+					// only when setting from the menu, resync the answerback message
+					{
+						CFStringRef const	kAnswerBackMessage = Terminal_EmulatorReturnDefaultName(newEmulator);
+						
+						
+						prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalAnswerBackMessage,
+																	sizeof(kAnswerBackMessage), &kAnswerBackMessage);
+						if ((nullptr == kAnswerBackMessage) || (kPreferences_ResultOK != prefsResult))
+						{
+							Console_WriteLine("warning, failed to set terminal answer-back message");
+						}
+					}
+					
+					result = noErr; // event is handled
+				}
 				break;
 			
 			case kCommandSetScrollbackTypeDisabled:
-				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeDisabled);
-				result = noErr; // event is handled
-				break;
-			
 			case kCommandSetScrollbackTypeFixed:
-				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeFixed);
-				result = noErr; // event is handled
-				break;
-			
 			case kCommandSetScrollbackTypeUnlimited:
-				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeUnlimited);
-				result = noErr; // event is handled
-				break;
-			
 			case kCommandSetScrollbackTypeDistributed:
-				screenInterfacePtr->setScrollbackType(kTerminal_ScrollbackTypeDistributed);
-				result = noErr; // event is handled
+				{
+					Terminal_ScrollbackType				newScrollbackType = kTerminal_ScrollbackTypeDisabled;
+					My_TerminalsPanelEmulationDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(screenInterfacePtr->panel),
+																					My_TerminalsPanelEmulationDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					switch (received.commandID)
+					{
+					case kCommandSetScrollbackTypeDisabled:
+						newScrollbackType = kTerminal_ScrollbackTypeDisabled;
+						break;
+					
+					case kCommandSetScrollbackTypeFixed:
+						newScrollbackType = kTerminal_ScrollbackTypeFixed;
+						break;
+					
+					case kCommandSetScrollbackTypeUnlimited:
+						newScrollbackType = kTerminal_ScrollbackTypeUnlimited;
+						break;
+					
+					case kCommandSetScrollbackTypeDistributed:
+						newScrollbackType = kTerminal_ScrollbackTypeDistributed;
+						break;
+					
+					default:
+						// ???
+						break;
+					}
+					screenInterfacePtr->setScrollbackType(newScrollbackType);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTerminalScreenScrollbackType,
+																sizeof(newScrollbackType), &newScrollbackType);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, failed to set screen scrollback type");
+					}
+					
+					result = noErr; // event is handled
+				}
 				break;
 			
 			case kCommandSetScrollbackUnitsRows:
