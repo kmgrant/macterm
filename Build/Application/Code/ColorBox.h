@@ -50,11 +50,13 @@
 Color Box Color Change Notification Method
 
 This type of routine is invoked whenever a color box’s
-content color is changed.  Since it is possible for the
-user to modify the content color beyond your control,
-this routine ensures you are notified whenever the color
-changes (useful for modeless windows that might need to
-respond right away to changes).
+content color is changed as the result of a user action
+(as specified in ColorBox_SetColor()).
+
+This is indirectly triggered as a result of the handlers
+installed by ColorBox_AttachToBevelButton(), ensuring
+that all color changes by the user in the system Colors
+window will trigger this notifier.
 */
 typedef void	 (*ColorBox_ChangeNotifyProcPtr)	(HIViewRef			inColorBoxThatWasChanged,
 													 RGBColor const*	inNewColor,
@@ -91,7 +93,8 @@ void
 
 void
 	ColorBox_SetColor						(HIViewRef						inView,
-											 RGBColor const*				inColorPtr);
+											 RGBColor const*				inColorPtr,
+											 Boolean						inIsUserAction = false);
 
 // CALL IN RESPONSE TO A CLICK - DISPLAYS A COLOR PICKER FOR THE USER, AUTOMATICALLY UPDATING THE BUTTON’S COLOR
 void

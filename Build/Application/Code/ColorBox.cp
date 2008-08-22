@@ -256,11 +256,17 @@ ColorBox_GetColor	(HIViewRef		inView,
 /*!
 Changes the color displayed by a color box.
 
+If "inIsUserAction" is true, the associated callback (if
+any) is also invoked.  You should only invoke the callback
+for color changes known to be the direct result of a user
+action, such as using the system Colors window.
+
 (3.0)
 */
 void
 ColorBox_SetColor	(HIViewRef			inView,
-					 RGBColor const*	inColorPtr)
+					 RGBColor const*	inColorPtr,
+					 Boolean			inIsUserAction)
 {
 	OSStatus			error = noErr;
 	MyColorBoxDataPtr	dataPtr = nullptr;
@@ -276,7 +282,10 @@ ColorBox_SetColor	(HIViewRef			inView,
 	if ((nullptr != inColorPtr) && (nullptr != dataPtr))
 	{
 		dataPtr->displayedColor = *inColorPtr;
-		if (nullptr != dataPtr->notifyProcPtr) (*(dataPtr->notifyProcPtr))(inView, &dataPtr->displayedColor, dataPtr->contextPtr);
+		if (inIsUserAction)
+		{
+			if (nullptr != dataPtr->notifyProcPtr) (*(dataPtr->notifyProcPtr))(inView, &dataPtr->displayedColor, dataPtr->contextPtr);
+		}
 		(OSStatus)HIViewSetNeedsDisplay(inView, true);
 	}
 }// SetColor

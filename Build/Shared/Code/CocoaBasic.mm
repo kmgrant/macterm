@@ -569,7 +569,7 @@ static CocoaBasic_GrowlDelegate*	gCocoaBasic_GrowlDelegate = nil;
 	newColorRGB.green = STATIC_CAST(newColorFloat.green, unsigned short);
 	newColorRGB.blue = STATIC_CAST(newColorFloat.blue, unsigned short);
 	
-	ColorBox_SetColor(gCurrentColorPanelFocus, &newColorRGB);
+	ColorBox_SetColor(gCurrentColorPanelFocus, &newColorRGB, true/* is user action */);
 }
 
 @end // My_NoticeColorPanelChange
