@@ -1318,6 +1318,14 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 	error = SetControlID(result, &idMyUserPaneSampleTerminalView);
 	assert_noerr(error);
 	
+	// force the view into normal display mode, because zooming will
+	// mess up the font size
+	(TerminalView_Result)TerminalView_SetDisplayMode(inTerminalView, kTerminalView_DisplayModeNormal);
+	
+	// ignore changes to certain preferences for this sample view, since
+	// it is not meant to be an ordinary terminal view
+	(TerminalView_Result)TerminalView_IgnoreChangesToPreference(inTerminalView, kPreferences_TagTerminalResizeAffectsFontSize);
+	
 	// write some sample text to the view; NOTE that because of initial
 	// size constraints, there may not be enough room to write more than
 	// one line (if you need more than one line, defer to a later point)

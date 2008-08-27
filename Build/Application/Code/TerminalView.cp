@@ -36,6 +36,7 @@
 // standard-C includes
 #include <algorithm>
 #include <cctype>
+#include <set>
 #include <vector>
 
 // Mac includes
@@ -170,6 +171,7 @@ struct TerminalView
 	initialize		(TerminalScreenRef, Preferences_ContextRef);
 	
 	Preferences_ContextRef	configuration;		// various settings from an external source; not kept up to date, see TerminalView_ReturnConfiguration()
+	std::set< Preferences_Tag >		configFilter;	// settings that this view ignores when they are changed globally by the user
 	ListenerModel_Ref	changeListenerModel;	// listeners for various types of changes to this data
 	TerminalView_DisplayMode	displayMode;	// how the content fills the display area
 	Boolean				isActive;				// true if the HIView is in an active state, false otherwise; kept in sync
@@ -1254,6 +1256,40 @@ TerminalView_GetTheoreticalViewSize		(TerminalViewRef	inView,
 						* viewPtr->text.font.widthPerCharacter; // yes, width, because this is an “em” scale factor
 	*outHeightInPixels = STATIC_CAST(highPrecision, SInt16);
 }// GetTheoreticalViewSize
+
+
+/*!
+Normally, when the user changes a preference that can
+affect a view, a notification is sent and the view is
+automatically synchronized with the change; but this
+routine allows you to ignore certain changes.
+
+Currently, this does not work for settings that are
+completely global, such as cursor blinking.
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(3.1)
+*/
+TerminalView_Result
+TerminalView_IgnoreChangesToPreference	(TerminalViewRef	inView,
+										 Preferences_Tag	inWhichSetting)
+{
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result		result = kTerminalView_ResultOK;
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		viewPtr->configFilter.insert(inWhichSetting);
+	}
+	return result;
+}// IgnoreChangesToPreference
 
 
 /*!
@@ -2917,6 +2953,7 @@ TerminalView	(HIViewRef		inSuperclassViewInstance)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 configuration(nullptr), // set later
+configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
 isActive(true),
@@ -6553,71 +6590,75 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), view);
 	
 	
-	switch (inPreferenceTagThatChanged)
+	// ignore changes to settings that are part of the view’s filter
+	unless (viewPtr->configFilter.end() != viewPtr->configFilter.find(inPreferenceTagThatChanged))
 	{
-	case kPreferences_TagTerminalCursorType:
-		// recalculate cursor boundaries for the specified view
+		switch (inPreferenceTagThatChanged)
 		{
-			Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
-			UInt16				cursorX = 0;
-			UInt16				cursorY = 0;
-			
-			
-			// invalidate the entire old cursor region (in case it is bigger than the new one)
-			RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
-			if (IsValidControlHandle(viewPtr->contentHIView))
+		case kPreferences_TagTerminalCursorType:
+			// recalculate cursor boundaries for the specified view
 			{
-				(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+				Terminal_Result		getCursorLocationError = kTerminal_ResultOK;
+				UInt16				cursorX = 0;
+				UInt16				cursorY = 0;
+				
+				
+				// invalidate the entire old cursor region (in case it is bigger than the new one)
+				RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
+				if (IsValidControlHandle(viewPtr->contentHIView))
+				{
+					(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+				}
+				
+				// find the new cursor region
+				getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
+				setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds);
+				
+				// invalidate the new cursor region (in case it is bigger than the old one)
+				RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
+				if (IsValidControlHandle(viewPtr->contentHIView))
+				{
+					(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+				}
 			}
-			
-			// find the new cursor region
-			getCursorLocationError = Terminal_CursorGetLocation(viewPtr->screen.ref, &cursorX, &cursorY);
-			setUpCursorBounds(viewPtr, cursorX, cursorY, &viewPtr->screen.cursor.bounds);
-			
-			// invalidate the new cursor region (in case it is bigger than the old one)
-			RectRgn(gInvalidationScratchRegion(), &viewPtr->screen.cursor.bounds);
-			if (IsValidControlHandle(viewPtr->contentHIView))
+			break;
+		
+		case kPreferences_TagTerminalResizeAffectsFontSize:
+			// change the display mode for the specified view
 			{
-				(OSStatus)HIViewSetNeedsDisplayInRegion(viewPtr->contentHIView, gInvalidationScratchRegion(), true);
+				size_t		actualSize = 0;
+				Boolean		resizeAffectsFont = false;
+				
+				
+				unless (Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(resizeAffectsFont),
+											&resizeAffectsFont, &actualSize) ==
+						kPreferences_ResultOK)
+				{
+					resizeAffectsFont = false; // assume a value, if preference can’t be found
+				}
+				(TerminalView_Result)TerminalView_SetDisplayMode(view, (resizeAffectsFont)
+																		? kTerminalView_DisplayModeZoom
+																		: kTerminalView_DisplayModeNormal);
 			}
-		}
-		break;
-	
-	case kPreferences_TagTerminalResizeAffectsFontSize:
-		// change the display mode for the specified view
-		{
-			size_t		actualSize = 0;
-			Boolean		resizeAffectsFont = false;
-			
-			
-			unless (Preferences_GetData(kPreferences_TagTerminalResizeAffectsFontSize, sizeof(resizeAffectsFont),
-										&resizeAffectsFont, &actualSize) ==
-					kPreferences_ResultOK)
+			break;
+		
+		default:
+			if (kPreferences_ChangeContextBatchMode == inPreferenceTagThatChanged)
 			{
-				resizeAffectsFont = false; // assume a value, if preference can’t be found
+				// batch mode; multiple things have changed, so check for the new values
+				// of everything that is understood by a terminal view
+				(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
+				(UInt16)copyFontPreferences(viewPtr, prefsContext);
+				(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+				(OSStatus)HIViewSetNeedsDisplay(viewPtr->focusAndPaddingHIView, true);
+				(OSStatus)HIViewSetNeedsDisplay(viewPtr->backgroundHIView, true);
 			}
-			(TerminalView_Result)TerminalView_SetDisplayMode(view, (resizeAffectsFont)
-																	? kTerminalView_DisplayModeZoom
-																	: kTerminalView_DisplayModeNormal);
+			else
+			{
+				// ???
+			}
+			break;
 		}
-		break;
-	
-	default:
-		if (kPreferences_ChangeContextBatchMode == inPreferenceTagThatChanged)
-		{
-			// batch mode; multiple things have changed, so check for the new values
-			// of everything that is understood by a terminal view
-			(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
-			(UInt16)copyFontPreferences(viewPtr, prefsContext);
-			(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
-			(OSStatus)HIViewSetNeedsDisplay(viewPtr->focusAndPaddingHIView, true);
-			(OSStatus)HIViewSetNeedsDisplay(viewPtr->backgroundHIView, true);
-		}
-		else
-		{
-			// ???
-		}
-		break;
 	}
 }// preferenceChangedForView
 

@@ -245,14 +245,18 @@ TerminalViewRef
 //@{
 
 TerminalView_Result
-	TerminalView_StartMonitoring	(TerminalViewRef			inRef,
-									 TerminalView_Event			inForWhatEvent,
-									 ListenerModel_ListenerRef	inListener);
+	TerminalView_IgnoreChangesToPreference	(TerminalViewRef			inView,
+											 Preferences_Tag			inWhichSetting);
 
 TerminalView_Result
-	TerminalView_StopMonitoring		(TerminalViewRef			inRef,
-									 TerminalView_Event			inForWhatEvent,
-									 ListenerModel_ListenerRef	inListener);
+	TerminalView_StartMonitoring			(TerminalViewRef			inRef,
+											 TerminalView_Event			inForWhatEvent,
+											 ListenerModel_ListenerRef	inListener);
+
+TerminalView_Result
+	TerminalView_StopMonitoring				(TerminalViewRef			inRef,
+											 TerminalView_Event			inForWhatEvent,
+											 ListenerModel_ListenerRef	inListener);
 
 //@}
 

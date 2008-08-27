@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080827',
     '20080821',
     '20080820',
     '20080806',
@@ -178,6 +179,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080827': [
+		'Fixed the Preferences window Formats pane and similar interfaces to show text at the displayed font size, without scaling.',
+	],
 	'20080821': [
 		'Preferences window collections now always display Default values for any setting that is undefined, instead of a recent value.',
 	],
