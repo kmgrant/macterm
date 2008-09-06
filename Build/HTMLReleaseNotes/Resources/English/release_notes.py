@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080905',
     '20080827',
     '20080821',
     '20080820',
@@ -179,6 +180,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080905': [
+		'Preferences window Macros pane interface for selecting the base key has been slightly tweaked.',
+	],
 	'20080827': [
 		'Fixed the Preferences window Formats pane and similar interfaces to show text at the displayed font size, without scaling.',
 	],

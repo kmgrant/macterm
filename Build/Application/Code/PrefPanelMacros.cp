@@ -105,7 +105,7 @@ HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
 HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
 HIViewID const	idMySeparatorSelectedMacro				= { 'SSMc', 0/* ID */ };
 HIViewID const	idMyFieldMacroName						= { 'FMNm', 0/* ID */ };
-HIViewID const	idMyLabelMacroBaseKey					= { 'McKy', 0/* ID */ };
+HIViewID const	idMyPopUpMenuMacroKeyType				= { 'MKTy', 0/* ID */ };
 HIViewID const	idMyFieldMacroKeyCharacter				= { 'MKCh', 0/* ID */ };
 HIViewID const	idMyButtonInvokeWithModifierCommand		= { 'McMC', 0/* ID */ };
 HIViewID const	idMyButtonInvokeWithModifierControl		= { 'McML', 0/* ID */ };
@@ -161,10 +161,16 @@ public:
 	saveFieldPreferences	(Preferences_ContextRef, UInt32);
 	
 	void
+	setDataBrowserColumnWidths ();
+	
+	void
 	setKeyModifiers		(UInt32);
 	
 	void
-	setDataBrowserColumnWidths ();
+	setKeyType		(UInt32);
+	
+	void
+	setOrdinaryKeyFieldEnabled	(Boolean);
 	
 	Panel_Ref							panel;						//!< the panel using this UI
 	Float32								idealWidth;					//!< best size in pixels
@@ -757,6 +763,10 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			}
 		}
 		
+		// set key type
+		// INCOMPLETE
+		//this->setOrdinaryKeyFieldEnabled(true);
+		
 		// set modifier buttons
 		{
 			UInt32		modifiers = 0;
@@ -913,29 +923,6 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 
 
 /*!
-Set the state of all user interface elements that represent
-the selected modifier keys of the current macro.
-
-The specified integer uses the same bit flags as events do.
-
-(3.1)
-*/
-void
-My_MacrosPanelUI::
-setKeyModifiers		(UInt32		inModifiers)
-{
-	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierCommand, HIViewGetWindow(this->mainView)),
-							(inModifiers & cmdKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
-	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierControl, HIViewGetWindow(this->mainView)),
-							(inModifiers & controlKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
-	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierOption, HIViewGetWindow(this->mainView)),
-							(inModifiers & optionKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
-	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierShift, HIViewGetWindow(this->mainView)),
-							(inModifiers & shiftKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
-}// My_MacrosPanelUI::setKeyModifiers
-
-
-/*!
 Sets the widths of the data browser columns
 proportionately based on the total width.
 
@@ -971,6 +958,81 @@ setDataBrowserColumnWidths ()
 					(macrosListContainer, kMyDataBrowserPropertyIDMacroName, availableWidth);
 	}
 }// My_MacrosPanelUI::setDataBrowserColumnWidths
+
+
+/*!
+Set the state of all user interface elements that represent
+the selected modifier keys of the current macro.
+
+The specified integer uses the same bit flags as events do.
+
+(3.1)
+*/
+void
+My_MacrosPanelUI::
+setKeyModifiers		(UInt32		inModifiers)
+{
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierCommand, HIViewGetWindow(this->mainView)),
+							(inModifiers & cmdKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierControl, HIViewGetWindow(this->mainView)),
+							(inModifiers & controlKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierOption, HIViewGetWindow(this->mainView)),
+							(inModifiers & optionKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+	SetControl32BitValue(HIViewWrap(idMyButtonInvokeWithModifierShift, HIViewGetWindow(this->mainView)),
+							(inModifiers & shiftKey) ? kControlCheckBoxCheckedValue : kControlCheckBoxUncheckedValue);
+}// My_MacrosPanelUI::setKeyModifiers
+
+
+/*!
+Updates the views that represent the current macro key,
+based on the given key type.
+
+This calls setOrdinaryKeyFieldEnabled() automatically.
+
+(3.1)
+*/
+void
+My_MacrosPanelUI::
+setKeyType		(UInt32		inKeyCommandID)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	HIViewWrap			viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyFieldMacroKeyCharacter, kOwningWindow);
+	(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuMacroKeyType, kOwningWindow),
+													inKeyCommandID);
+	if (kCommandSetMacroKeyTypeOrdinaryChar == inKeyCommandID)
+	{
+		this->setOrdinaryKeyFieldEnabled(true);
+	}
+	else
+	{
+		this->setOrdinaryKeyFieldEnabled(false);
+	}
+}// My_MacrosPanelUI::setKeyType
+
+
+/*!
+Enables or disables the views that display a completely
+arbitrary key character (as opposed to a special key
+type such as Òpage downÓ).
+
+Normally, you should use setKeyType().
+
+(3.1)
+*/
+void
+My_MacrosPanelUI::
+setOrdinaryKeyFieldEnabled	(Boolean	inIsEnabled)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	HIViewWrap			viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyFieldMacroKeyCharacter, kOwningWindow);
+	viewWrap << HIViewWrap_SetActiveState(inIsEnabled);
+}// My_MacrosPanelUI::setOrdinaryKeyFieldEnabled
 
 
 /*!
@@ -1379,6 +1441,37 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					result = noErr;
 				}
+				break;
+			
+			case kCommandSetMacroKeyTypeOrdinaryChar:
+			case kCommandSetMacroKeyTypeBackwardDelete:
+			case kCommandSetMacroKeyTypeForwardDelete:
+			case kCommandSetMacroKeyTypeHome:
+			case kCommandSetMacroKeyTypeEnd:
+			case kCommandSetMacroKeyTypePageUp:
+			case kCommandSetMacroKeyTypePageDown:
+			case kCommandSetMacroKeyTypeUpArrow:
+			case kCommandSetMacroKeyTypeDownArrow:
+			case kCommandSetMacroKeyTypeLeftArrow:
+			case kCommandSetMacroKeyTypeRightArrow:
+			case kCommandSetMacroKeyTypeClear:
+			case kCommandSetMacroKeyTypeEscape:
+			case kCommandSetMacroKeyTypeReturn:
+			case kCommandSetMacroKeyTypeEnter:
+			case kCommandSetMacroKeyTypeF1:
+			case kCommandSetMacroKeyTypeF2:
+			case kCommandSetMacroKeyTypeF3:
+			case kCommandSetMacroKeyTypeF4:
+			case kCommandSetMacroKeyTypeF5:
+			case kCommandSetMacroKeyTypeF6:
+			case kCommandSetMacroKeyTypeF7:
+			case kCommandSetMacroKeyTypeF8:
+			case kCommandSetMacroKeyTypeF9:
+			case kCommandSetMacroKeyTypeF10:
+			case kCommandSetMacroKeyTypeF11:
+			case kCommandSetMacroKeyTypeF12:
+				interfacePtr->setKeyType(received.commandID);
+				result = noErr;
 				break;
 			
 			default:
