@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20080911',
     '20080905',
     '20080827',
     '20080821',
@@ -180,6 +181,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20080911': [
+		'Fixed Terminal view text selections to once again be modifiable using standard key equivalents such as shift-right-arrow.',
+	],
 	'20080905': [
 		'Preferences window Macros pane interface for selecting the base key has been slightly tweaked.',
 	],

@@ -188,6 +188,7 @@ struct TerminalView
 	
 	CommonEventHandlers_HIViewResizer	containerResizeHandler;		// responds to changes in the terminal view container boundaries
 	CarbonEventHandlerWrap		contextualMenuHandler;		// responds to right-clicks
+	CarbonEventHandlerWrap		rawKeyDownHandler;			// responds to keystrokes that change the text selection
 	
 	struct
 	{
@@ -375,7 +376,7 @@ static OSStatus			receiveTerminalViewDraw			(EventHandlerCallRef, EventRef, Term
 static OSStatus			receiveTerminalViewFocus		(EventHandlerCallRef, EventRef, TerminalViewRef);
 static OSStatus			receiveTerminalViewGetData		(EventHandlerCallRef, EventRef, TerminalViewRef);
 static OSStatus			receiveTerminalViewHitTest		(EventHandlerCallRef, EventRef, TerminalViewRef);
-static OSStatus			receiveTerminalViewRawKeyDown	(EventHandlerCallRef, EventRef, TerminalViewRef);
+static pascal OSStatus	receiveTerminalViewRawKeyDown	(EventHandlerCallRef, EventRef, void*);
 static OSStatus			receiveTerminalViewRegionRequest(EventHandlerCallRef, EventRef, TerminalViewRef);
 static OSStatus			receiveTerminalViewTrack		(EventHandlerCallRef, EventRef, TerminalViewRef);
 static void				receiveVideoModeChange			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -496,9 +497,7 @@ TerminalView_Init ()
 									{ kEventClassControl, kEventControlTrack },
 									{ kEventClassAccessibility, kEventAccessibleGetAllAttributeNames },
 									{ kEventClassAccessibility, kEventAccessibleGetNamedAttribute },
-									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable },
-									{ kEventClassKeyboard, kEventRawKeyDown },
-									{ kEventClassKeyboard, kEventRawKeyRepeat }
+									{ kEventClassAccessibility, kEventAccessibleIsNamedAttributeSettable }
 								};
 		OSStatus				error = noErr;
 		
@@ -2966,6 +2965,7 @@ contentHIView(inSuperclassViewInstance),
 currentContentFocus(kControlEntireControl), // set later
 containerResizeHandler(), // set later
 contextualMenuHandler(),
+rawKeyDownHandler(),
 selfRef(REINTERPRET_CAST(this, TerminalViewRef))
 {
 }// TerminalView 1-argument constructor
@@ -3194,6 +3194,14 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 																kEventControlContextualMenuClick),
 										REINTERPRET_CAST(this, TerminalViewRef)/* user data */);
 	assert(this->contextualMenuHandler.isInstalled());
+	
+	// set up keyboard text selection on the focus view
+	this->rawKeyDownHandler.install(GetControlEventTarget(this->focusAndPaddingHIView),
+										receiveTerminalViewRawKeyDown,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard),
+																kEventRawKeyDown, kEventRawKeyRepeat),
+										REINTERPRET_CAST(this, TerminalViewRef)/* user data */);
+	assert(this->rawKeyDownHandler.isInstalled());
 	
 	// show all HIViews
 	HIViewSetVisible(this->encompassingHIView, true/* visible */);
@@ -7022,20 +7030,6 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 			break;
 		}
 	}
-	else if (kEventClass == kEventClassKeyboard)
-	{
-		switch (kEventKind)
-		{
-		case kEventRawKeyDown:
-		case kEventRawKeyRepeat:
-			result = receiveTerminalViewRawKeyDown(inHandlerCallRef, inEvent, view);
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-	}
 	else
 	{
 		assert(kEventClass == kEventClassControl);
@@ -7833,14 +7827,15 @@ Invoked by Mac OS X whenever the user hits a key.
 
 (3.1)
 */
-static OSStatus
+static pascal OSStatus
 receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
-								 TerminalViewRef		inTerminalViewRef)
+								 void*					inTerminalViewRef)
 {
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent);
-	UInt32 const	kEventKind = GetEventKind(inEvent);
+	OSStatus			result = eventNotHandledErr;
+	TerminalViewRef		view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
+	UInt32 const		kEventClass = GetEventClass(inEvent);
+	UInt32 const		kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassKeyboard);
@@ -7862,7 +7857,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
 			if (noErr == result)
 			{
-				TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inTerminalViewRef);
+				TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
 				TerminalView_CellRange	oldSelectionRange = viewPtr->text.selection.range;
 				Boolean					selectionChanged = false;
 				
@@ -7886,7 +7881,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectBeforeCursorCharacter(inTerminalViewRef);
+							TerminalView_SelectBeforeCursorCharacter(view);
 						}
 						else
 						{
@@ -7930,7 +7925,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectBeforeCursorCharacter(inTerminalViewRef);
+							TerminalView_SelectBeforeCursorCharacter(view);
 						}
 						
 						// shift-command-left-arrow
@@ -7964,7 +7959,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+							TerminalView_SelectCursorCharacter(view);
 						}
 						else
 						{
@@ -8008,7 +8003,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectCursorCharacter(inTerminalViewRef);
+							TerminalView_SelectCursorCharacter(view);
 						}
 						
 						// shift-command-right-arrow
@@ -8042,7 +8037,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectCursorLine(inTerminalViewRef);
+							TerminalView_SelectCursorLine(view);
 						}
 						else
 						{
@@ -8076,7 +8071,7 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 						
 						if (false == viewPtr->text.selection.exists)
 						{
-							TerminalView_SelectCursorLine(inTerminalViewRef);
+							TerminalView_SelectCursorLine(view);
 						}
 						else
 						{
