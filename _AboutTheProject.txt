@@ -10,12 +10,9 @@ ABOUT THE MACTELNET PROJECT
   by giving the user just the right set of powerful features, a
   smart set of preferences and convenient window management.
   
-  The project is written in C++ with its roots in regular C (so
-  a lot of code still looks more like plain C - and this is not
-  always a bad thing!).  As of MacTelnet 3.1 the application is
-  also entirely managed by a Python interpreter: APIs are not
-  only exposed to Python (through SWIG), but it is possible to
-  implement parts of MacTelnet using only Python!
+  The project is now structured as a C/C++/Objective-C++ library
+  that is bound to Python through SWIG.  This allows Python to be
+  used for implementing core features and user extensions.
   
   Python, Perl, shell scripts and GNU makefiles are also used for
   various infrastructure and the documentation utilities.
