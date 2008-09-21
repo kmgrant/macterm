@@ -524,7 +524,7 @@
 		0AD0B3C20A9EBDFC002064BA /* QuillsPrefs.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsPrefs.h; path = Application/Code/QuillsPrefs.h; sourceTree = "<group>"; };
 		0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MacTelnetPrefix.pch; path = Application/Code/MacTelnetPrefix.pch; sourceTree = "<group>"; };
 		0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = AddressDialog.mm; path = Application/Code/AddressDialog.mm; sourceTree = "<group>"; };
-		0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xml; name = DefaultPreferences.plist; path = Application/Resources/DefaultPreferences.plist; sourceTree = "<group>"; };
+		0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = DefaultPreferences.plist; path = Application/Resources/DefaultPreferences.plist; sourceTree = "<group>"; };
 		0ADC6B4108739552000A7EFC /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MainMenuHelp.nib; sourceTree = "<group>"; };
 		0ADEFCCD06C34E1B00814772 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/Clipboard.nib; sourceTree = "<group>"; };
 		0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsCallbacks.typedef.h; path = Application/Code/QuillsCallbacks.typedef.h; sourceTree = "<group>"; };
@@ -1079,6 +1079,23 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
+/* Begin PBXLegacyTarget section */
+		0AFB6A1E0E86FD26005C5A07 /* Everything */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "$(ACTION)";
+			buildConfigurationList = 0AFB6A240E86FD48005C5A07 /* Build configuration list for PBXLegacyTarget "Everything" */;
+			buildPhases = (
+			);
+			buildToolPath = /usr/bin/make;
+			buildWorkingDirectory = "";
+			dependencies = (
+			);
+			name = Everything;
+			passBuildSettingsInEnvironment = 1;
+			productName = Everything;
+		};
+/* End PBXLegacyTarget section */
+
 /* Begin PBXNativeTarget section */
 		0A983A9B0D11087A0054B4D2 /* PythonWrapper */ = {
 			isa = PBXNativeTarget;
@@ -1148,6 +1165,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				0AFB6A1E0E86FD26005C5A07 /* Everything */,
 				0AC6BAD10A8C0A8B00AFF37A /* Quills.framework */,
 				0A983A9B0D11087A0054B4D2 /* PythonWrapper */,
 				0A9AF64D0AF5A50500E7DF18 /* PyMacTelnet.framework */,
@@ -1999,6 +2017,27 @@
 			};
 			name = ForTigerDebug;
 		};
+		0AFB6A1F0E86FD27005C5A07 /* ForTigerDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = MacTelnet;
+			};
+			name = ForTigerDebug;
+		};
+		0AFB6A200E86FD27005C5A07 /* ForLeopardDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = MacTelnet;
+			};
+			name = ForLeopardDebug;
+		};
+		0AFB6A210E86FD27005C5A07 /* ForPantherDebug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = MacTelnet;
+			};
+			name = ForPantherDebug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -2038,6 +2077,16 @@
 				0ACFA1810929BE6B005712A9 /* ForTigerDebug */,
 				0AA249450D13342D00BCAF94 /* ForLeopardDebug */,
 				0A8110880D0A62BF00D5CDE2 /* ForPantherDebug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = ForTigerDebug;
+		};
+		0AFB6A240E86FD48005C5A07 /* Build configuration list for PBXLegacyTarget "Everything" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0AFB6A1F0E86FD27005C5A07 /* ForTigerDebug */,
+				0AFB6A200E86FD27005C5A07 /* ForLeopardDebug */,
+				0AFB6A210E86FD27005C5A07 /* ForPantherDebug */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = ForTigerDebug;

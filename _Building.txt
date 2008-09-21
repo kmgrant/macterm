@@ -40,17 +40,50 @@ UNDERSTANDING THE DIRECTORY STRUCTURE
         Scripts that simplify MacTelnet debugging in "gdb".
 
 HOW TO BUILD
-  The MacTelnet.app bundle is composed of several things that are
-  all created automatically by running "make" from the Build
-  directory (or opening the Build/_MacTelnetBuild.command file in
-  the Finder, which has the same effect).
+  The MacTelnet.app bundle is constructed using a makefile, since
+  it has an unusual file layout.  However, Xcode is still called
+  by the makefile to do builds and cleans; so if a build was
+  initiated from the GUI, those results will be used by "make".
   
-  You can customize what is built by passing parameters to the
-  make (e.g. "FOR_PANTHER=no"), or by editing Build/GNUmakefile
-  and to some extent the Build/Application.xcodeproj project.
-  MacTelnet is fairly robust in terms of running with missing
-  components, so you can disable many things that you are not
-  interested in using.
+  There are a few ways to do builds, and they are equivalent:
+  - Use "Build/Application.xcodeproj".  The "Everything" target
+    just runs the makefile to create the entire bundle.  You can
+    build components separately to save time during development.
+  - Run "Build/_MacTelnetBuild.command" from the Finder.
+  - Run "make" from the Build directory, in a shell window.
+  
+  You can clean in the usual ways (i.e. the Clean command on the
+  "Everything" target, or "make clean").
+  
+  If Xcode's GUI is used to initiate builds, you should generally
+  choose the lowest configuration (i.e. "ForPantherDebug").  This
+  has two important benefits:
+  1. You can quickly see problems with unavailable APIs, and fix
+     them with conditionals.
+  2. More important, you will not stumble on unsupported build
+     configurations.  For instance, Quills.framework does support
+     "ForTigerDebug", but *does not* support "ForLeopardDebug"
+     (it relies on binary compatibility to support Leopard).  The
+     unifying makefile explicitly requests only configurations
+     that are necessary.
+
+HOW TO CUSTOMIZE THE BUILD
+  It is possible to tweak the makefile or environment to change
+  what is built.  MacTelnet is fairly robust about running with
+  components missing, so you can disable things you don't want
+  (e.g. support for older Mac OS X versions, extra applications
+  and frameworks, help files).
+  
+  Run "make help" from the Build directory to see options that
+  can be tweaked through the command line.  Other settings may
+  require GNUmakefile edits or changes to the .xcconfig files.
+  
+  NOTE: The SWIG wrappers are currently rebuilt pessimistically
+  through "FORCE" rules in the GNUmakefile, to guarantee that
+  they reflect any code changes.  However, in practice, these
+  take a long time to compile and rarely change.  You may wish
+  to disable the "FORCE" dependencies in the GNUmakefile (one
+  per SWIG platform) if you are not changing Quills code.
 
                                      Kevin Grant (kevin@ieee.org)
                                         Lead Developer, MacTelnet

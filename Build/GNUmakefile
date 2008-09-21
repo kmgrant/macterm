@@ -11,9 +11,14 @@
 # Kevin Grant (kevin@ieee.org)
 # December 14, 2007
 
+# IMPORTANT: The first rule in the file is chosen when "make" is
+# run by itself.  Xcode runs "make" for external targets.
+.PHONY: first
+first: bundle
+
 .PHONY: help
 help:
-	@echo "Usage: make [FOR_PANTHER=no] [FOR_TIGER=no] [USE_GROWL=no] debug"
+	@echo "Usage: make [FOR_PANTHER=no] [FOR_TIGER=no] [USE_GROWL=no]"
 	@echo "       make clean"
 	@echo
 	@echo "You can also request specific component rules;"
@@ -550,8 +555,8 @@ $(DEST_APP_TOP)/PkgInfo: FORCE
 # Primary Rules
 #
 
-.PHONY: debug
-debug:
+.PHONY: bundle
+bundle:
 	@# just comment-out anything you don't care about; MacTelnet
 	@# still works with most of its components missing
 	$(MAKE) $(DEST_APP_TOP)/Info.plist
