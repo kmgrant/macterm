@@ -166,7 +166,7 @@ public:
 	}
 	
 	virtual void
-	addFlag		(CFStringRef	inKey,
+	addFloat	(CFStringRef	inKey,
 				 Float32		inValue)
 	{
 		_delegate.addFloat(inKey, inValue);
