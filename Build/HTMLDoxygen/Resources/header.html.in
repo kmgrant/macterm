@@ -30,13 +30,12 @@
 
 <div class="content">
 	<div class="project-search">
-	Find in developer documentation:
 	<form action="http://homepage.mac.com/kmg/mactelnet/search/results.html" id="cse-search-box">
 	<div>
 		<input type="hidden" name="cx" value="013568045674297986199:-w5bl_indp0" />
 		<input type="hidden" name="cof" value="FORID:9" />
 		<input type="hidden" name="ie" value="UTF-8" />
-		<input type="text" name="q" size="31" />
+		<input type="search" name="q" size="31" placeholder="Search Developer Docs" results="3" />
 		<input type="submit" name="sa" value="Search" />
 	</div>
 	</form>

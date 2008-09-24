@@ -5,21 +5,21 @@ body{
 	color:				black;
 	font-family:		"Gill Sans", "Lucida Grande", sans-serif;
 	
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 /* the background image will only be useful to color display users */
@@ -45,21 +45,21 @@ a:link,
 a:visited,
 a:active,
 a:hover{
-	margin-top:			0em;
-	border-top:			0em;
-	padding-top:		0em;
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
 	height:				auto;
-	padding-bottom:		0em;
+	padding-bottom:		0;
 	border-bottom:		solid transparent 0.1em;
-	margin-bottom:		0em;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
+	margin-left:		0;
+	border-left:		0;
 	padding-left:		0.2em;
 	width:				auto;
 	padding-right:		0.2em;
-	border-right:		0em;
-	margin-right:		0em;
+	border-right:		0;
+	margin-right:		0;
 }
 
 a{
@@ -99,6 +99,7 @@ a:hover{
 	background:			#333;
 	color:				white;
 	text-decoration:	none;
+	text-shadow:		black 0.075em 0.15em 0.5em;
 	
 	border-bottom-color:#999;
 	
@@ -125,41 +126,41 @@ a:hover{
 	vertical-align:		middle;
 	white-space:		nowrap;
 	
-	margin-top:			0em;
-	border-top:			0em;
+	margin-top:			0;
+	border-top:			0;
 	padding-top:		1.5em;
 	height:				auto;
 	padding-bottom:		0.4em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	border-bottom:		0;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
+	margin-left:		0;
+	border-left:		0;
 	padding-left:		1em;
 	width:				auto;
 	padding-right:		1em;
-	border-right:		0em;
-	margin-right:		0em;
+	border-right:		0;
+	margin-right:		0;
 }
 
 .navigation ul{
 	display:			inline;
 	
-	margin-top:			0em;
-	border-top:			0em;
+	margin-top:			0;
+	border-top:			0;
 	padding-top:		15px;
 	height:				auto;
-	padding-bottom:		0em;
-	border-bottom:		0em;
-	margin-bottom:		0em;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 .navigation li{
@@ -172,13 +173,13 @@ a:hover{
 	color:				yellow;
 	text-shadow:		black 0.075em 0.15em 0.5em;
 	
-	margin-top:			0em;
+	margin-top:			0;
 	border-top:			solid transparent 0.1em;
 	padding-top:		0.25em;
 	height:				auto;
 	padding-bottom:		0.25em;
 	border-bottom:		solid transparent 0.15em;
-	margin-bottom:		0em;
+	margin-bottom:		0;
 	
 	margin-left:		0.25em;
 	border-left:		solid transparent 0.1em;
@@ -194,13 +195,13 @@ a:hover{
 	color:				#ccc;
 	text-shadow:		black 0.075em 0.15em 0.5em;
 	
-	margin-top:			0em;
+	margin-top:			0;
 	border-top:			solid transparent 0.1em;
 	padding-top:		0.25em;
 	height:				auto;
 	padding-bottom:		0.25em;
 	border-bottom:		solid transparent 0.15em;
-	margin-bottom:		0em;
+	margin-bottom:		0;
 	
 	margin-left:		0.25em;
 	border-left:		solid transparent 0.1em;
@@ -270,21 +271,21 @@ a:hover{
 	color:				white;
 	text-shadow:		black 0.1em 0.2em 1em;
 	
-	margin-top:			0em;
+	margin-top:			0;
 	border-top:			solid #111 0.1em;
 	padding-top:		0.05em;
 	height:				auto;
-	padding-bottom:		0em;
+	padding-bottom:		0;
 	border-bottom:		solid #111 0.05em;
-	margin-bottom:		0em;
+	margin-bottom:		0;
 	
-	margin-left:		0em;
-	border-left:		0em;
+	margin-left:		0;
+	border-left:		0;
 	padding-left:		1em;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 h2{
@@ -295,7 +296,7 @@ h2{
 	border-top:			solid #aaa 0.075em;
 	padding-top:		0.05em;
 	height:				auto;
-	padding-bottom:		0em;
+	padding-bottom:		0;
 	border-bottom:		solid #aaa 0.075em;
 	margin-bottom:		0.2em;
 	
@@ -303,7 +304,7 @@ h2{
 	border-left:		solid #666 0.35em;
 	padding-left:		0.8em;
 	width:				auto;
-	padding-right:		0em;
+	padding-right:		0;
 	border-right:		0;
 	margin-right:		-1.1em;
 }
@@ -313,19 +314,19 @@ h3{
 	color:				black;
 	
 	margin-top:			0.45em;
-	border-top:			0em;
+	border-top:			0;
 	padding-top:		0.25em;
 	height:				auto;
 	padding-bottom:		0.3em;
 	border-bottom:		solid #888 0.1em;
 	margin-bottom:		0.2em;
 	
-	margin-left:		0em;
-	border-left:		0em;
-	padding-left:		0em;
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		0em;
+	padding-right:		0;
+	border-right:		0;
 	margin-right:		-1.25em;
 }
 
@@ -334,20 +335,20 @@ h4{
 	color:				black;
 	
 	margin-top:			0.25em;
-	border-top:			solid white 0em;
+	border-top:			0;
 	padding-top:		0.35em;
 	height:				auto;
 	padding-bottom:		0.35em;
-	border-bottom:		solid white 0em;
+	border-bottom:		0;
 	margin-bottom:		0.1em;
 	
 	margin-left:		-1.5em;
 	border-left:		solid #666 0.7em;
 	padding-left:		0.8em;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		solid white 0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 h5{
@@ -355,20 +356,20 @@ h5{
 	color:				black;
 	
 	margin-top:			0.25em;
-	border-top:			solid white 0em;
+	border-top:			0;
 	padding-top:		0.35em;
 	height:				auto;
 	padding-bottom:		0.35em;
-	border-bottom:		solid white 0em;
+	border-bottom:		0;
 	margin-bottom:		0.1em;
 	
 	margin-left:		-1.5em;
 	border-left:		solid #666 0.7em;
 	padding-left:		0.8em;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		solid white 0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 h6{
@@ -376,41 +377,43 @@ h6{
 	color:				black;
 	
 	margin-top:			0.25em;
-	border-top:			solid white 0em;
+	border-top:			0;
 	padding-top:		0.35em;
 	height:				auto;
 	padding-bottom:		0.35em;
-	border-bottom:		solid white 0em;
+	border-bottom:		0;
 	margin-bottom:		0.1em;
 	
 	margin-left:		-1.5em;
 	border-left:		solid #666 0.7em;
 	padding-left:		0.8em;
 	width:				auto;
-	padding-right:		0em;
-	border-right:		solid white 0em;
-	margin-right:		0em;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
 }
 
 .content{
 	background:			transparent;
 	color:				black;
+	max-width:			50em;
+	line-height:		130%;
 	
 	margin-top:			1.0em;
-	border-top:			solid #666 0.1em;
+	border-top:			solid #aaa 0.15em;
 	padding-top:		1.0em;
 	height:				auto;
 	padding-bottom:		0.5em;
-	border-bottom:		solid #aaa 0.1em;
+	border-bottom:		solid #aaa 0.15em;
 	margin-bottom:		20em;
 	
-	margin-left:		1.2em;
-	border-left:		solid #999 0.2em;
+	margin-left:		auto;
+	border-left:		solid #aaa 0.15em;
 	padding-left:		1.5em;
 	width:				auto;
 	padding-right:		1.5em;
-	border-right:		solid #999 0.2em;
-	margin-right:		1.2em;
+	border-right:		solid #aaa 0.15em;
+	margin-right:		auto;
 }
 
 /* the background image will only be useful to color display users */

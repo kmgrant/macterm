@@ -53,6 +53,11 @@ DIV.tabs A
    font-weight      : bold;
    text-decoration: underline;
 padding:0; /* override to prevent display glitches when incorporating default.css styles */
+	
+	-webkit-border-top-left-radius:		0;
+	-webkit-border-top-right-radius:	0;
+	-webkit-border-bottom-left-radius:	0;
+	-webkit-border-bottom-right-radius:	0;
 }
 
 DIV.tabs A:hover
