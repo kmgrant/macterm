@@ -347,7 +347,7 @@ interfacePtr(nullptr)
 
 
 /*!
-Initializes a MyFormatsPanelUI structure.
+Initializes a My_GeneralPanelUI structure.
 
 (3.1)
 */
