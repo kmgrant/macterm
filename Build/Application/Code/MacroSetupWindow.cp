@@ -556,7 +556,6 @@ MacroSetupWindow_Init ()
 	
 	{
 		Rect		currentBounds;
-		Point		deltaSize;
 		OSStatus	error = noErr;
 		
 		
@@ -569,15 +568,6 @@ MacroSetupWindow_Init ()
 												1024/* arbitrary maximum width */,
 												currentBounds.bottom - currentBounds.top/* maximum height */);
 		assert(gMacroSetupWindowResizeHandler.isInstalled());
-		
-		// use the preferred rectangle, if any; since a resize handler was
-		// installed above, simply resizing the window will cause all
-		// controls to be adjusted automatically by the right amount
-		SetPt(&deltaSize, currentBounds.right - currentBounds.left,
-				currentBounds.bottom - currentBounds.top); // initially...
-		(Preferences_Result)Preferences_ArrangeWindow(gMacroSetupWindow, kPreferences_WindowTagMacroSetup, &deltaSize,
-														kPreferences_WindowBoundaryLocation |
-														kPreferences_WindowBoundaryElementWidth);
 	}
 	
 	// now that the macro window is ready, start listening for changes
@@ -737,7 +727,6 @@ MacroSetupWindow_Remove ()
 	if (gMacroSetupWindow != nullptr)
 	{
 		saveFields();
-		Preferences_SetWindowArrangementData(gMacroSetupWindow, kPreferences_WindowTagMacroSetup);
 		SetUserFocusWindow(REINTERPRET_CAST(kUserFocusAuto, WindowRef));
 		HideWindow(gMacroSetupWindow);
 	}

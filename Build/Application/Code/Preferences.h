@@ -122,8 +122,6 @@ enum
 	kPreferences_ClassSession		= 'sess',	//!< use with Preferences_NewContext()
 	kPreferences_ClassTerminal		= 'term',	//!< use with Preferences_NewContext()
 	kPreferences_ClassTranslation	= 'encd',	//!< use with Preferences_NewContext()
-	kPreferences_ClassWindow		= 'wind',	//!< use only Preferences_SetWindowArrangementData() and
-												//!  Preferences_ArrangeWindow() with this class
 	kPreferences_ClassFactoryDefaults	= 'fdef'	//!< for internal use
 };
 
@@ -313,20 +311,6 @@ enum
 	kPreferences_TagBackupFontName						= 'bfnt',	//!< data: "Str255"
 	kPreferences_TagTextEncodingIANAName				= 'iana',	//!< data: "CFStringRef"
 	kPreferences_TagTextEncodingID						= 'encd'	//!< data: "CFStringEncoding"
-};
-
-/*!
-Tags for use with the special window preference APIs.
-*/
-enum
-{
-	kPreferences_WindowTagCommandLine					= 'Wcml',
-	kPreferences_WindowTagControlKeypad					= 'Wctk',
-	kPreferences_WindowTagFunctionKeypad				= 'Wfnk',
-	kPreferences_WindowTagMacroSetup					= 'Wmcs',
-	kPreferences_WindowTagPreferences					= 'Wprf',
-	kPreferences_WindowTagSessionInfo					= 'Winf',
-	kPreferences_WindowTagVT220Keypad					= 'Wvtk'
 };
 
 /*!
@@ -580,22 +564,6 @@ Preferences_Result
 	Preferences_SetData						(Preferences_Tag					inDataPreferenceTag,
 											 size_t								inDataSize,
 											 void const*						inDataPtr);
-
-//@}
-
-//!\name Window Size and Position Management - Deprecated
-//@{
-
-Preferences_Result
-	Preferences_ArrangeWindow				(WindowRef							inWindow,
-											 Preferences_Tag					inWindowPreferenceTag,
-											 Point*								inoutMinimumSizeFinalSizePtr,
-											 Preferences_WindowBoundaryElements	inBoundaryElementsToRestore =
-											 										kPreferences_WindowBoundaryAllElements);
-
-void
-	Preferences_SetWindowArrangementData	(WindowRef							inWindow,
-											 Preferences_Tag					inWindowPreferenceTag);
 
 //@}
 

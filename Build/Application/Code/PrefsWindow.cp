@@ -418,10 +418,8 @@ PrefsWindow_Remove ()
 	// write all the preference data in memory to disk
 	(Preferences_Result)Preferences_Save();
 	
-	// save window size and location in preferences
 	if (nullptr != gPreferencesWindow)
 	{
-		Preferences_SetWindowArrangementData(gPreferencesWindow, kPreferences_WindowTagPreferences);
 		HideWindow(gPreferencesWindow);
 	}
 }// Remove
@@ -1283,7 +1281,6 @@ init ()
 			HISize		initialSize = CGSizeMake(panelBounds.right - panelBounds.left,
 													panelBounds.bottom - panelBounds.top);
 			HISize		idealWindowContentSize = CGSizeMake(0, 0);
-			Point		deltaSize;
 			
 			
 			findBestPanelSize(initialSize, idealWindowContentSize);
@@ -1299,14 +1296,6 @@ init ()
 			// remember this maximum width, it is used to set the window size
 			// whenever a new panel is chosen
 			gPreferencesWindowResizeHandler.getWindowMaximumSize(gMaximumWindowSize.width, gMaximumWindowSize.height);
-			
-			// use the preferred rectangle, if any; since a resize handler was
-			// installed above, simply resizing the window will cause all
-			// controls to be adjusted automatically by the right amount
-			SetPt(&deltaSize, STATIC_CAST(idealWindowContentSize.width, SInt16),
-					STATIC_CAST(idealWindowContentSize.height, SInt16)); // initially...
-			(Preferences_Result)Preferences_ArrangeWindow(gPreferencesWindow, kPreferences_WindowTagPreferences,
-															&deltaSize);
 		}
 		
 		// install a callback that responds as the drawer window is resized; this is used

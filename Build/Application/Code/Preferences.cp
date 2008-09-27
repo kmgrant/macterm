@@ -489,31 +489,6 @@ Keeps track of all named contexts in memory.
 */
 typedef std::vector< My_ContextFavoritePtr >	My_FavoriteContextList;
 
-/*!
-Implicitly-saved location and size information for a
-window.  Used to remember the user’s preferred
-window arrangement.
-*/
-struct MyWindowArrangement
-{
-	MyWindowArrangement		(SInt16		inX = 0,
-							 SInt16		inY = 0,
-							 SInt16		inWidth = 0,
-							 SInt16		inHeight = 0)
-	:
-	x(inX),
-	y(inY),
-	width(inWidth),
-	height(inHeight)
-	{
-	}
-	
-	SInt16		x;			//!< window content region location, left edge
-	SInt16		y;			//!< window content region location, top edge
-	SInt16		width;		//!< window content region size, horizontally
-	SInt16		height;		//!< window content region size, vertically
-};
-
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
@@ -555,7 +530,6 @@ Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Pref
 																 size_t, void*, size_t*);
 Preferences_Result		getTranslationPreference				(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
-Boolean					getWindowPreferences					(Preferences_Tag, MyWindowArrangement&);
 OSStatus				mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDomainCFArray				(Preferences_Class, CFArrayRef);
 void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
@@ -1487,126 +1461,6 @@ Preferences_AliasSave	(Preferences_AliasID	inAliasID,
 
 
 /*!
-Automatically sizes and/or positions a window based
-on the specified preferences.  If the preferences
-for the size are all-zero, the window size will not
-change.  Similarly, if the preferences for the
-location are all-zero, then the window will not move.
-The window is not allowed to become smaller than the
-specified minimum size.
-
-Although an entire rectangle is saved, you can always
-choose to ignore parts of it when restoring the
-window location.  This is important for windows that
-have boundary constraints, because the saved rectangle
-might reflect an earlier version of the window that
-had different size constraints; NEVER restore window
-boundary elements unless they are flexible.
-
-The window will not move to an offscreen location.
-
-This routine will return the change in width and
-height, if any, between the given initial size and
-the new, preferred size.  This is useful for windows
-with controls that need to be moved and/or resized
-appropriately when the window changes size (although
-this is somewhat deprecated on Mac OS X because the
-act of resizing the window should trigger event
-handlers that synchronize controls automatically).
-
-\retval kPreferences_ResultOK
-if no error occurred
-
-\retval kPreferences_ResultBadVersionDataNotAvailable
-if preferences for the specified tag cannot be found
-
-(3.0)
-*/
-Preferences_Result
-Preferences_ArrangeWindow	(WindowRef								inWindow,
-							 Preferences_Tag						inWindowPreferenceTag,
-							 Point*									inoutMinimumSizeFinalSizePtr,
-							 Preferences_WindowBoundaryElements		inBoundaryElementsToRestore)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
-	MyWindowArrangement		arrangementPrefs;
-	Boolean					foundPrefs = false;
-	
-	
-	foundPrefs = getWindowPreferences(inWindowPreferenceTag, arrangementPrefs); // find the data, wherever it is
-	if (!foundPrefs) result = kPreferences_ResultBadVersionDataNotAvailable;
-	else
-	{
-		Rect		originalStructureBounds;
-		Rect		windowBounds;
-		Rect		visibleScreenRect;
-		OSStatus	error = noErr;
-		
-		
-		GetWindowBounds(inWindow, kWindowStructureRgn, &originalStructureBounds);
-		GetWindowBounds(inWindow, kWindowContentRgn, &windowBounds);
-		
-		// calculate this area to make sure that windows aren’t arranged invisibly
-		RegionUtilities_GetPositioningBounds(inWindow, &visibleScreenRect);
-		
-		// change the requested parts of the window boundaries; a zero saved value
-		// means “no preference”, and in the case of dimensions, the window cannot
-		// be smaller than the initial value either
-		if ((inBoundaryElementsToRestore & kPreferences_WindowBoundaryElementLocationH) &&
-			(arrangementPrefs.x != 0))
-		{
-			windowBounds.right = arrangementPrefs.x + (windowBounds.right - windowBounds.left);
-			windowBounds.left = arrangementPrefs.x;
-		}
-		if ((inBoundaryElementsToRestore & kPreferences_WindowBoundaryElementLocationV) &&
-			(arrangementPrefs.y != 0))
-		{
-			windowBounds.bottom = arrangementPrefs.y + (windowBounds.bottom - windowBounds.top);
-			windowBounds.top = arrangementPrefs.y;
-		}
-		if (inBoundaryElementsToRestore & kPreferences_WindowBoundaryElementWidth)
-		{
-			if (arrangementPrefs.width > inoutMinimumSizeFinalSizePtr->h)
-			{
-				windowBounds.right = windowBounds.left + arrangementPrefs.width;
-			}
-			else
-			{
-				windowBounds.right = windowBounds.left + inoutMinimumSizeFinalSizePtr->h;
-			}
-		}
-		if (inBoundaryElementsToRestore & kPreferences_WindowBoundaryElementHeight)
-		{
-			if (arrangementPrefs.height > inoutMinimumSizeFinalSizePtr->v)
-			{
-				windowBounds.bottom = windowBounds.top + arrangementPrefs.height;
-			}
-			else
-			{
-				windowBounds.bottom = windowBounds.top + inoutMinimumSizeFinalSizePtr->v;
-			}
-		}
-		SetWindowBounds(inWindow, kWindowContentRgn, &windowBounds);
-		
-		inoutMinimumSizeFinalSizePtr->h = 0;
-		inoutMinimumSizeFinalSizePtr->v = 0;
-		error = ConstrainWindowToScreen(inWindow, kWindowContentRgn, kWindowConstrainStandardOptions,
-										nullptr/* constraint rectangle */,
-										&windowBounds/* new structure boundaries */);
-		if (error == noErr)
-		{
-			// figure out change in window size
-			inoutMinimumSizeFinalSizePtr->h = ((windowBounds.right - windowBounds.left) -
-												(originalStructureBounds.right - originalStructureBounds.left));
-			inoutMinimumSizeFinalSizePtr->v = ((windowBounds.bottom - windowBounds.top) -
-												(originalStructureBounds.bottom - originalStructureBounds.top));
-		}
-	}
-	return result;
-}// ArrangeWindow
-
-
-/*!
 Copies all the key-value pairs from the source to the
 destination (regardless of class), and does not remove
 or change any other keys defined in the destination.
@@ -2043,7 +1897,6 @@ Preferences_ContextSetDataAtIndex	(Preferences_ContextRef		inContext,
 			result = setTranslationPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
-		case kPreferences_ClassWindow:
 		default:
 			result = kPreferences_ResultUnknownTagOrClass;
 			break;
@@ -2675,78 +2528,6 @@ Preferences_SetData		(Preferences_Tag	inDataPreferenceTag,
 	}
 	return result;
 }// SetData
-
-
-/*!
-Reads the current size and position of a window and
-adds that data into a record with the specified tag in
-the preferences data model in memory.  If any problems
-occur, no preference is set.
-
-NOTE:	Not all boundaries of a window may be important,
-		but all are saved.  The code that reads back
-		window preferences is responsible for ignoring
-		parts that are not needed or desired (e.g. a
-		window whose position matters but whose size is
-		fixed).
-
-(3.0)
-*/
-void
-Preferences_SetWindowArrangementData	(WindowRef			inWindow,
-										 Preferences_Tag	inWindowPreferenceTag)
-{
-	if (nullptr != inWindow)
-	{
-		Rect		rect;
-		SInt16		x = 0;
-		SInt16		y = 0;
-		UInt16		width = 0;
-		UInt16		height = 0;
-		OSStatus	error = noErr;
-		
-		
-		error = GetWindowBounds(inWindow, kWindowContentRgn, &rect);
-		assert_noerr(error);
-		x = rect.left;
-		y = rect.top;
-		width = rect.right - rect.left;
-		height = rect.bottom - rect.top;
-		
-		switch (inWindowPreferenceTag)
-		{
-		case kPreferences_WindowTagCommandLine:
-			setMacTelnetCoordPreference(CFSTR("window-commandline-position-pixels"), x, y);
-			setMacTelnetCoordPreference(CFSTR("window-commandline-size-pixels"), width, height);
-			break;
-		
-		case kPreferences_WindowTagControlKeypad:
-			setMacTelnetCoordPreference(CFSTR("window-controlkeys-position-pixels"), x, y);
-			break;
-		
-		case kPreferences_WindowTagFunctionKeypad:
-			setMacTelnetCoordPreference(CFSTR("window-functionkeys-position-pixels"), x, y);
-			break;
-		
-		case kPreferences_WindowTagMacroSetup:
-			setMacTelnetCoordPreference(CFSTR("window-macroeditor-position-pixels"), x, y);
-			setMacTelnetCoordPreference(CFSTR("window-macroeditor-size-pixels"), width, height);
-			break;
-		
-		case kPreferences_WindowTagPreferences:
-			setMacTelnetCoordPreference(CFSTR("window-preferences-position-pixels"), x, y);
-			break;
-		
-		case kPreferences_WindowTagVT220Keypad:
-			setMacTelnetCoordPreference(CFSTR("window-vt220keys-position-pixels"), x, y);
-			break;
-		
-		default:
-			// ???
-			break;
-		}
-	}
-}// SetWindowArrangementData
 
 
 /*!
@@ -3983,7 +3764,6 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 		result = getTranslationPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
-	case kPreferences_ClassWindow:
 	default:
 		// unrecognized preference class
 		result = kPreferences_ResultUnknownTagOrClass;
@@ -4152,7 +3932,6 @@ copyClassDomainCFArray	(Preferences_Class	inClass,
 	switch (inClass)
 	{
 	case kPreferences_ClassGeneral:
-	case kPreferences_ClassWindow:
 		// not applicable
 		result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
@@ -7183,78 +6962,6 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 
 
 /*!
-Fills in a window preferences structure with values
-corresponding to the specified tag’s saved preferences
-and returns "true"; or, returns "false" on failure.
-
-Not all window tags result in a complete set of boundaries;
-in particular, the width or height may be zero, which
-indicates no preference at all (or, not applicable).
-
-(3.1)
-*/
-Boolean
-getWindowPreferences	(Preferences_Tag		inWindowPreferenceTag,
-						 MyWindowArrangement&	inoutWindowPrefs)
-{
-	Boolean		result = false;
-	
-	
-	switch (inWindowPreferenceTag)
-	{
-	case kPreferences_WindowTagCommandLine:
-		readMacTelnetCoordPreference(CFSTR("window-commandline-position-pixels"),
-										inoutWindowPrefs.x, inoutWindowPrefs.y);
-		readMacTelnetCoordPreference(CFSTR("window-commandline-size-pixels"),
-										inoutWindowPrefs.width, inoutWindowPrefs.height);
-		inoutWindowPrefs.height = 0; // the height of the command line is automatically set
-		break;
-	
-	case kPreferences_WindowTagControlKeypad:
-		readMacTelnetCoordPreference(CFSTR("window-controlkeys-position-pixels"),
-										inoutWindowPrefs.x, inoutWindowPrefs.y);
-		inoutWindowPrefs.width = 0; // the keypad has fixed width
-		inoutWindowPrefs.height = 0; // the keypad has fixed height
-		break;
-	
-	case kPreferences_WindowTagFunctionKeypad:
-		readMacTelnetCoordPreference(CFSTR("window-functionkeys-position-pixels"),
-										inoutWindowPrefs.x, inoutWindowPrefs.y);
-		inoutWindowPrefs.width = 0; // the keypad has fixed width
-		inoutWindowPrefs.height = 0; // the keypad has fixed height
-		break;
-	
-	case kPreferences_WindowTagMacroSetup:
-		readMacTelnetCoordPreference(CFSTR("window-macroeditor-position-pixels"),
-										inoutWindowPrefs.x, inoutWindowPrefs.y);
-		readMacTelnetCoordPreference(CFSTR("window-macroeditor-size-pixels"),
-										inoutWindowPrefs.width, inoutWindowPrefs.height);
-		inoutWindowPrefs.height = 0; // the height of the dialog cannot change
-		break;
-	
-	case kPreferences_WindowTagPreferences:
-		readMacTelnetCoordPreference(CFSTR("window-preferences-position-pixels"),
-										inoutWindowPrefs.x, inoutWindowPrefs.y);
-		inoutWindowPrefs.width = 0; // the saved size of this dialog is not restored
-		inoutWindowPrefs.height = 0; // the saved size of this dialog is not restored
-		break;
-	
-	case kPreferences_WindowTagVT220Keypad:
-		readMacTelnetCoordPreference(CFSTR("window-vt220keys-position-pixels"),
-										inoutWindowPrefs.x, inoutWindowPrefs.y);
-		inoutWindowPrefs.width = 0; // the keypad has fixed width
-		inoutWindowPrefs.height = 0; // the keypad has fixed height
-		break;
-	
-	default:
-		break;
-	}
-	
-	return result;
-}// getWindowPreferences
-
-
-/*!
 Adds default values for known preference keys.  Existing
 values are kept and any other defaults are added.
 
@@ -7342,7 +7049,6 @@ overwriteClassDomainCFArray		(Preferences_Class	inClass,
 		break;
 	
 	case kPreferences_ClassGeneral:
-	case kPreferences_ClassWindow:
 	default:
 		// ???
 		result = kPreferences_ResultUnknownTagOrClass;
