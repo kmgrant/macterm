@@ -266,6 +266,41 @@ private:
 	TerminalWindowRef	_terminalWindow;
 };
 
+/*!
+This is a functor that removes the terminal window
+given at construction time, from a specified workspace.
+
+Model of STL Unary Function.
+
+(3.1)
+*/
+#pragma mark workspaceContainsWindow
+class workspaceContainsWindow:
+public std::unary_function< Workspace_Ref/* argument */, bool/* return */ >
+{
+public:
+	workspaceContainsWindow	(HIWindowRef	inWindow)
+	: _window(inWindow)
+	{
+	}
+	
+	bool
+	operator()	(Workspace_Ref	inWorkspace)
+	const
+	{
+		HIWindowRef const	kWindow = REINTERPRET_CAST(_window.returnHIObjectRef(), HIWindowRef);
+		UInt16 const		kIndexOfWindow = Workspace_ReturnZeroBasedIndexOfWindow(inWorkspace, kWindow);
+		
+		
+		return (kWorkspace_WindowIndexInfinity != kIndexOfWindow);
+	}
+
+protected:
+
+private:
+	CFRetainRelease		_window;
+};
+
 } // anonymous namespace
 
 
@@ -2221,8 +2256,30 @@ returnActiveWorkspace ()
 	}
 	else
 	{
-		// TEMPORARY - just return the last one
-		result = gWorkspaceListSortedByCreationTime().back();
+		SessionRef const	kActiveSession = SessionFactory_ReturnUserFocusSession();
+		
+		
+		if (nullptr != kActiveSession)
+		{
+			HIWindowRef const					kActiveWindow = Session_ReturnActiveWindow(kActiveSession);
+			MyWorkspaceList&					targetList = gWorkspaceListSortedByCreationTime();
+			MyWorkspaceList::const_iterator		toWorkspace = std::find_if(targetList.begin(), targetList.end(),
+																			workspaceContainsWindow(kActiveWindow));
+			
+			
+			if (targetList.end() != toWorkspace)
+			{
+				result = *toWorkspace;
+			}
+		}
+		
+		if (nullptr == result)
+		{
+			// no recent workspace; perhaps the user toggled the preference
+			// to turn on tabs, and an untabbed window is still open and
+			// active; no problem, choose the last workspace
+			result = gWorkspaceListSortedByCreationTime().back();
+		}
 	}
 	
 	return result;

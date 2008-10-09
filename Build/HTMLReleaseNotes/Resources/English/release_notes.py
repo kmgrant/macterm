@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081009',
     '20080911',
     '20080905',
     '20080827',
@@ -181,6 +182,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081009': [
+		'Terminal window tabs now open in the same tab group as the frontmost window, instead of always choosing the latest tab group.',
+	],
 	'20080911': [
 		'Fixed Terminal view text selections to once again be modifiable using standard key equivalents such as shift-right-arrow.',
 	],
