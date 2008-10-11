@@ -258,7 +258,7 @@
 	<key>server-host</key>
 	<string>nowhere.loopback.edu</string>
 	<key>server-port</key>
-	<string>22</string>
+	<integer>22</integer>
 	<key>server-protocol</key>
 	<string>ssh-1</string>
 	<key>spaces-per-tab</key>
