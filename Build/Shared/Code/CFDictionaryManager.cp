@@ -199,38 +199,15 @@ const
 
 /*!
 Returns the specified key’s value, automatically
-cast into a short integer type.  Do not use this
-unless you know the value is a number!
-
-(1.3)
-*/
-SInt16
-CFDictionaryManager::
-returnInteger	(CFStringRef	inKey)
-const
-{
-	SInt16			result = 0;
-	void const*		voidPointerValue = nullptr;
-	
-	
-	if (CFDictionaryGetValueIfPresent(returnCFDictionaryRef(), inKey, &voidPointerValue))
-	{
-		CFNumberRef		valueCFNumber = CFUtilities_NumberCast(voidPointerValue);
-		
-		
-		if (nullptr != valueCFNumber)
-		{
-			(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberSInt16Type, &result);
-		}
-	}
-	return result;
-}// returnInteger
-
-
-/*!
-Returns the specified key’s value, automatically
 cast into a long integer type.  Do not use this
 unless you know the value is a number!
+
+This routine has limited support for parsing a
+property that is technically a string, but “looks
+like” a number.  However, the origin as a string
+is not remembered, so changing the value later
+with addInteger() will make the key an integer
+value.
 
 (1.3)
 */
@@ -239,18 +216,37 @@ CFDictionaryManager::
 returnLong	(CFStringRef	inKey)
 const
 {
-	SInt32			result = 0L;
+	SInt32			result = 0;
 	void const*		voidPointerValue = nullptr;
 	
 	
 	if (CFDictionaryGetValueIfPresent(returnCFDictionaryRef(), inKey, &voidPointerValue))
 	{
-		CFNumberRef		valueCFNumber = CFUtilities_NumberCast(voidPointerValue);
+		CFPropertyListRef	valueCFProperty = CFUtilities_PropertyListCast(voidPointerValue);
 		
 		
-		if (nullptr != valueCFNumber)
+		if (nullptr != valueCFProperty)
 		{
-			(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberSInt32Type, &result);
+			if (CFNumberGetTypeID() == CFGetTypeID(valueCFProperty))
+			{
+				CFNumberRef		valueCFNumber = CFUtilities_NumberCast(voidPointerValue);
+				
+				
+				if (nullptr != valueCFNumber)
+				{
+					(Boolean)CFNumberGetValue(valueCFNumber, kCFNumberSInt32Type, &result);
+				}
+			}
+			else if (CFStringGetTypeID() == CFGetTypeID(valueCFProperty))
+			{
+				CFStringRef		valueCFString = CFUtilities_StringCast(voidPointerValue);
+				
+				
+				if (nullptr != valueCFString)
+				{
+					result = CFStringGetIntValue(valueCFString);
+				}
+			}
 		}
 	}
 	return result;

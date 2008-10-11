@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081011',
     '20081009',
     '20080911',
     '20080905',
@@ -182,6 +183,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081011': [
+		'Fixed a possible crash using default preferences, where "server-port" was saved as a string but read as a number.',
+	],
 	'20081009': [
 		'Terminal window tabs now open in the same tab group as the frontmost window, instead of always choosing the latest tab group.',
 	],

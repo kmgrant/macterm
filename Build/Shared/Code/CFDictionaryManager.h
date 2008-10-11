@@ -106,7 +106,7 @@ public:
 	Float32
 	returnFloat		(CFStringRef) const;
 	
-	SInt16
+	inline SInt16
 	returnInteger	(CFStringRef) const;
 	
 	SInt32
@@ -278,6 +278,20 @@ const
 {
 	return _dictionary.returnCFMutableDictionaryRef();
 }// returnCFMutableDictionaryRef
+
+
+/*!
+Like returnLong(), but cast to a short integer type.
+
+(1.3)
+*/
+SInt16
+CFDictionaryManager::
+returnInteger	(CFStringRef	inKey)
+const
+{
+	return STATIC_CAST(returnLong(inKey), SInt16);
+}// returnInteger
 
 
 /*!
