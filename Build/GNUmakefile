@@ -365,6 +365,11 @@ clean-py-framework:
 .PHONY: install-growl-framework
 install-growl-framework:
 	@# keep in sync with the matching clean rule
+	@if [ ! -d "$(GROWL_SDK_ROOT)" ] ; then \
+		echo "(current working directory: '$(CURDIR)')" >&2 ; \
+		echo "first download the Growl SDK <http://growl.info/> and install in subdirectory '$(GROWL_SDK_ROOT)''" >&2 ; \
+		exit 1 ; \
+	fi
 	@# avoid rsyncing from /
 	@if [ "x$(SRC_GROWL_TOP)" = "x" ] ; then \
 		echo "SRC_GROWL_TOP variable unset" >&2 ; \
