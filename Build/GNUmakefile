@@ -533,8 +533,10 @@ $(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES))
 .PHONY: clean-resources
 clean-resources:
 	@# undo the special Growl exception
-	$(MOVE) '$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict' \
-		$(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict
+	@if [ -r "$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict" ] ; then \
+			$(MOVE) '$(DEST_APP_RESOURCES_TOP)/Growl Registration Ticket.growlRegDict' \
+				$(DEST_APP_RESOURCES_TOP)/GrowlRegistrationTicket.growlRegDict ; \
+	fi
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_FILES))' | $(XARGS) $(RM)
 	echo '$(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES_BUNDLES))' | $(XARGS) $(RM) -R
 	$(MAKE) clean-prefs-converter
