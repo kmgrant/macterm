@@ -14,11 +14,12 @@ __date__ = "28 September 2006"
 # generated).  Also, the order of this list matters; the newest
 # release should be inserted at the beginning.
 version_lineage = [
-    '3.1.0',
+    '4.0.0',
     '3.0.1',
 ]
 
 daily_build_lineage = [
+    '20081030',
     '20081011',
     '20081009',
     '20080911',
@@ -183,6 +184,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081030': [
+		'Due to the huge number of changes in the code base, renamed this to version 4.0.0 beta.',
+	],
 	'20081011': [
 		'Fixed a possible crash using default preferences, where "server-port" was saved as a string but read as a number.',
 	],
@@ -867,7 +871,7 @@ notes_by_version = {
 		'Terminal window text selections do not work properly.  Please do not submit bugs on this.',
 		'Terminal scrollback cannot be displayed.  Please do not submit bugs on this.',
 	],
-    '3.1.0': [
+    '4.0.0': [
         'Decision was made to require Mac OS X 10.3.9 minimum.',
         'IPv6 addresses can now be used anywhere hosts are normally used.',
         'Get IP Address command now returns IPv6 format if possible.',
