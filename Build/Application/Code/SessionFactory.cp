@@ -2125,9 +2125,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 				case kCommandNewSessionDefaultFavorite:
 				case kCommandNewSessionByFavoriteName:
-					// this relies on the text of the menu command to use
-					// the right Favorite, so it won’t work without a menu
-					if (received.attributes & kHICommandFromMenu)
 					{
 						Preferences_ContextRef		sessionContext = nullptr;
 						Boolean						releaseContext = true;
@@ -2144,16 +2141,21 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						}
 						else
 						{
-							// extract the name of the Favorite from the menu text;
-							// this command cannot be used unless it comes from a menu
-							CFStringRef		itemTextCFString = nullptr;
-							
-							
-							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef,
-																	received.menu.menuItemIndex, &itemTextCFString))
+							// this relies on the text of the menu command to use
+							// the right Favorite, so it won’t work without a menu
+							if (received.attributes & kHICommandFromMenu)
 							{
-								sessionContext = Preferences_NewContextFromFavorites(kPreferences_ClassSession, itemTextCFString);
-								CFRelease(itemTextCFString), itemTextCFString = nullptr;
+								// extract the name of the Favorite from the menu text;
+								// this command cannot be used unless it comes from a menu
+								CFStringRef		itemTextCFString = nullptr;
+								
+								
+								if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef,
+																		received.menu.menuItemIndex, &itemTextCFString))
+								{
+									sessionContext = Preferences_NewContextFromFavorites(kPreferences_ClassSession, itemTextCFString);
+									CFRelease(itemTextCFString), itemTextCFString = nullptr;
+								}
 							}
 						}
 						
@@ -2176,7 +2178,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							Sound_StandardAlert();
 						}
 						
-						if (releaseContext)
+						if ((releaseContext) && (nullptr != sessionContext))
 						{
 							Preferences_ReleaseContext(&sessionContext);
 						}

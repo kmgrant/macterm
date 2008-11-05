@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081105',
     '20081030',
     '20081011',
     '20081009',
@@ -184,6 +185,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081105': [
+		'Fixed the "New Default Session" command in the Dock menu.',
+	],
 	'20081030': [
 		'Due to the huge number of changes in the code base, renamed this to version 4.0.0 beta.',
 	],
