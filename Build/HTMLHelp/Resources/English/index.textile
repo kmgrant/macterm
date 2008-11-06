@@ -14,36 +14,36 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 
 <dt>Running Applications</dt><dd>
 
-* "local sessions":access.html#unix
-* "remote sessions":access.html#servers
+* "local sessions":content/access.html#unix
+* "remote sessions":content/access.html#servers
 
 </dd>
 
 <dt>Reference</dt><dd>
 
-* "preferences":preferences.html
-* "low-level settings":advprefs.html
-* "types of windows":windows.html
-* "terminal interaction":terminals.html
-* "terminal emulator specifics":vt.html
+* "preferences":content/preferences.html
+* "low-level settings":content/advprefs.html
+* "types of windows":content/windows.html
+* "terminal interaction":content/terminals.html
+* "terminal emulator specifics":content/vt.html
 
 </dd>
 
 <dt>Interesting Features</dt><dd>
 
-* "simpler user interface":preferences.html#simplify
-* "floating command line window":terminals.html#commandline
-* "rectangular text selections":terminals.html#select
-* "cursor location finder":terminals.html#findcursor
-* "full screen terminal":terminals.html#magnify
-* "hiding windows without closing":terminals.html#hide
-* "floating keypads":windows.html#keypads
+* "simpler user interface":content/preferences.html#simplify
+* "floating command line window":content/terminals.html#commandline
+* "rectangular text selections":content/terminals.html#select
+* "cursor location finder":content/terminals.html#findcursor
+* "full screen terminal":content/terminals.html#magnify
+* "hiding windows without closing":content/terminals.html#hide
+* "floating keypads":content/windows.html#keypads
 
 </dd>
 
 <dt>Automation</dt><dd>
 
-* "using Automator with MacTelnet":automator.html
+* "using Automator with MacTelnet":content/automator.html
 
 </dd>
 
