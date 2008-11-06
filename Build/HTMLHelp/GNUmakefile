@@ -12,16 +12,6 @@
 # Kevin Grant (kevin@ieee.org)
 # March 26, 2005
 
-# determine MacTelnet version
-# IMPORTANT: read from a built MacTelnet.app's Info.plist;
-# if you don't build MacTelnet first, this won't work
-VERSION_INFO := $(shell cd $(CURDIR)/.. ; ./VersionInfo.sh ; cd $(CURDIR))
-MAJOR := $(word 1,$(VERSION_INFO))
-MINOR := $(word 2,$(VERSION_INFO))
-SUBMINOR := $(word 3,$(VERSION_INFO))
-PRERELEASE := $(word 4,$(VERSION_INFO))
-BUILD := $(word 5,$(VERSION_INFO))
-
 DEST = $(CURDIR)
 MAIN_SRC = $(CURDIR)/Resources/
 define MAIN_SRC_SUB
@@ -32,12 +22,9 @@ SHARED_SRC = $(CURDIR)/../Shared/Resources
 ALL_LANGUAGES = English
 MODULES := $(sort $(notdir $(subst .textile,,$(wildcard $(strip $(MAIN_SRC))/English/*.textile))))
 
-MACTELNET_HELP_BUNDLE = MacTelnet.help
-MACTELNET_HELP = $(strip $(DEST))/$(strip $(MACTELNET_HELP_BUNDLE))
-MACTELNET_HELP_CONTENTS = $(strip $(MACTELNET_HELP))/Contents
-MACTELNET_HELP_RES = $(strip $(MACTELNET_HELP_CONTENTS))/Resources
-define MACTELNET_HELP_RES_SUB
-$(strip $(MACTELNET_HELP_RES))/$*.lproj
+# use within "xyz-%" rules where the pattern is the language (e.g. English)
+define MACTELNET_HELP_LOCALIZED
+$(strip $(DEST))/$*/Help
 endef
 
 DOCTYPER=$(CURDIR)/Tools/PrintHTMLDocType.pl
@@ -68,22 +55,12 @@ endef
 all:
 	$(begin_target)
 	@echo "Building $(MODULES)"
-	install -d "$(strip $(MACTELNET_HELP_CONTENTS))"
-	echo "BNDLhbwr" >| "$(strip $(MACTELNET_HELP_CONTENTS))/PkgInfo"
-	cp "$(strip $(MAIN_SRC))/MacTelnetHelp-Info.plist" "$(strip $(MACTELNET_HELP_CONTENTS))/Info.plist"
 	$(MAKE) build
-	$(call open_browser_to_page,$(strip $(MACTELNET_HELP_RES))/English.lproj/index.html)
+	$(call open_browser_to_page,$(strip $(DEST))/English/Help/index.html)
 	$(end_target)
 
 .PHONY: clean
 clean: $(foreach L,$(ALL_LANGUAGES),clean-$(L))
-	$(begin_target)
-	-rmdir "$(strip $(MACTELNET_HELP_RES))"
-	$(RM) "$(strip $(MACTELNET_HELP_CONTENTS))/PkgInfo"
-	$(RM) "$(strip $(MACTELNET_HELP_CONTENTS))/Info.plist"
-	-rmdir "$(strip $(MACTELNET_HELP_CONTENTS))"
-	-rmdir "$(strip $(MACTELNET_HELP))"
-	$(end_target)
 
 .PHONY: build
 build: $(foreach L,$(ALL_LANGUAGES),build-$(L))
@@ -92,59 +69,59 @@ build: $(foreach L,$(ALL_LANGUAGES),build-$(L))
 .PHONY: index
 index: $(foreach L,$(ALL_LANGUAGES),install-index-$(L))
 
-build-%: $(strip $(MAIN_SRC))/MacTelnetHelp-Info.plist
+build-%:
 	$(begin_target)
-	install -d "$(strip $(MACTELNET_HELP_RES_SUB))"
+	install -d "$(strip $(MACTELNET_HELP_LOCALIZED))"
 	$(MAKE) install-html-$*
 	$(MAKE) install-images-$*
 	$(MAKE) install-plist-$*
 	$(MAKE) install-stylesheets-$*
 	perl -pi -e 's/LAST_UPDATED/$(shell date +"%A, %B %d, %Y, %H:%M %Z")/' \
-		"$(strip $(MACTELNET_HELP_RES_SUB))/index.html"
+		"$(strip $(MACTELNET_HELP_LOCALIZED))/index.html"
 	$(MAKE) install-index-$*
 	$(end_target)
 
 install-html-%: $(call SOURCE_HTML,%)
-	cp $(call SOURCE_HTML,$*) "$(strip $(MACTELNET_HELP_RES_SUB))/"
+	cp $(call SOURCE_HTML,$*) "$(strip $(MACTELNET_HELP_LOCALIZED))/"
 
 clean-install-html-%:
-	$(RM) $(foreach PAGE,$(notdir $(call SOURCE_HTML,$*)),"$(strip $(MACTELNET_HELP_RES_SUB))/$(PAGE)")
+	$(RM) $(foreach PAGE,$(notdir $(call SOURCE_HTML,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED))/$(PAGE)")
 
 install-images-%:
-	cp $(call SOURCE_IMG,$*) "$(strip $(MACTELNET_HELP_RES_SUB))/"
+	cp $(call SOURCE_IMG,$*) "$(strip $(MACTELNET_HELP_LOCALIZED))/"
 
 clean-install-images-%:
-	$(RM) $(foreach IMG,$(notdir $(call SOURCE_IMG,$*)),"$(strip $(MACTELNET_HELP_RES_SUB))/$(IMG)")
+	$(RM) $(foreach IMG,$(notdir $(call SOURCE_IMG,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED))/$(IMG)")
 
 install-plist-%: $(call SOURCE_PLIST,%)
-	cp $(call SOURCE_PLIST,$*) "$(strip $(MACTELNET_HELP_RES_SUB))/"
+	cp $(call SOURCE_PLIST,$*) "$(strip $(MACTELNET_HELP_LOCALIZED))/"
 
 clean-install-plist-%:
-	$(RM) $(foreach PLIST,$(notdir $(call SOURCE_PLIST,$*)),"$(strip $(MACTELNET_HELP_RES_SUB))/$(PLIST)")
+	$(RM) $(foreach PLIST,$(notdir $(call SOURCE_PLIST,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED))/$(PLIST)")
 
 install-stylesheets-%:
-	cp $(call SOURCE_CSS,$*) "$(strip $(MACTELNET_HELP_RES_SUB))/"
+	cp $(call SOURCE_CSS,$*) "$(strip $(MACTELNET_HELP_LOCALIZED))/"
 
 clean-install-stylesheets-%:
-	$(RM) $(foreach CSS,$(notdir $(call SOURCE_CSS,$*)),"$(strip $(MACTELNET_HELP_RES_SUB))/$(CSS)")
+	$(RM) $(foreach CSS,$(notdir $(call SOURCE_CSS,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED))/$(CSS)")
 
 # this rule works only on Tiger
 install-index-%:
 	cd /Developer/Applications/Utilities/Help\ Indexer.app/Contents/MacOS/ && \
-	./Help\ Indexer "$(strip $(MACTELNET_HELP_RES_SUB))" \
+	./Help\ Indexer "$(strip $(MACTELNET_HELP_LOCALIZED))" \
 		-Tokenizer 1 -ShowProgress YES -UseRemoteRoot NO \
 		-PreferNetworkFiles NO -LogStyle 2 -IndexAnchors YES \
 		-PantherIndexing YES
 	cd /Developer/Applications/Utilities/Help\ Indexer.app/Contents/Resources/ && \
-	./Unarchiver -v "$(strip $(MACTELNET_HELP_RES_SUB))/$*.lproj.helpindex"
+	./Unarchiver -v "$(strip $(MACTELNET_HELP_LOCALIZED))/Help.helpindex"
 
 clean-install-index-%:
-	$(RM) "$(strip $(MACTELNET_HELP_RES_SUB))/$*.lproj.helpindex"
-	$(RM) "$(strip $(MACTELNET_HELP_RES_SUB))/$*.lproj idx"
+	$(RM) "$(strip $(MACTELNET_HELP_LOCALIZED))/Help.helpindex"
+	$(RM) "$(strip $(MACTELNET_HELP_LOCALIZED))/Help idx"
 
 clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-% clean-install-html-% clean-install-index-%
 	$(begin_target)
-	-rmdir "$(strip $(MACTELNET_HELP_RES_SUB))"
+	-rmdir "$(strip $(MACTELNET_HELP_LOCALIZED))"
 	$(end_target)
 
 # "make" considers the HTML files intermediates normally,
