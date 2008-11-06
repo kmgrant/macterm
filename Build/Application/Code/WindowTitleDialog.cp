@@ -56,7 +56,6 @@
 #include "CommonEventHandlers.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
-#include "HelpSystem.h"
 #include "Session.h"
 #include "VectorCanvas.h"
 #include "WindowTitleDialog.h"
@@ -75,13 +74,11 @@ enum
 {
 	kSignatureMyButtonRename		= 'Renm',
 	kSignatureMyButtonCancel		= 'Canc',
-	kSignatureMyButtonHelp			= 'Help',
 	kSignatureMyLabelWindowTitle	= 'TLbl',
 	kSignatureMyFieldWindowTitle	= 'Titl'
 };
 static HIViewID const		idMyButtonRename			= { kSignatureMyButtonRename,			0/* ID */ };
 static HIViewID const		idMyButtonCancel			= { kSignatureMyButtonCancel,			0/* ID */ };
-static HIViewID const		idMyButtonHelp				= { kSignatureMyButtonHelp,				0/* ID */ };
 static HIViewID const		idMyLabelWindowTitle		= { kSignatureMyLabelWindowTitle,		0/* ID */ };
 static HIViewID const		idMyFieldWindowTitle		= { kSignatureMyFieldWindowTitle,		0/* ID */ };
 
@@ -101,7 +98,6 @@ struct My_WindowTitleDialog
 	NIBWindow								dialogWindow;				// the dialog’s window
 	HIViewWrap								buttonRename;				// Rename button
 	HIViewWrap								buttonCancel;				// Cancel button
-	HIViewWrap								buttonHelp;					// help button
 	HIViewWrap								labelTitle;					// the label for the title text field
 	HIViewWrap								fieldTitle;					// the text field containing the new window title
 	
@@ -156,8 +152,6 @@ buttonRename			(dialogWindow.returnHIViewWithID(idMyButtonRename)
 							<< HIViewWrap_AssertExists),
 buttonCancel			(dialogWindow.returnHIViewWithID(idMyButtonCancel)
 							<< HIViewWrap_AssertExists),
-buttonHelp				(dialogWindow.returnHIViewWithID(idMyButtonHelp)
-							<< HIViewWrap_AssertExists),
 labelTitle				(dialogWindow.returnHIViewWithID(idMyLabelWindowTitle)
 							<< HIViewWrap_AssertExists),
 fieldTitle				(dialogWindow.returnHIViewWithID(idMyFieldWindowTitle)
@@ -168,10 +162,6 @@ buttonHICommandsHandler	(GetWindowEventTarget(this->dialogWindow), receiveHIComm
 							this->selfRef/* user data */),
 windowResizeHandler		()
 {
-	// make the help button icon appearance and state appropriate
-	HIViewWrap		helpButtonObject(this->buttonHelp);
-	DialogUtilities_SetUpHelpButton(helpButtonObject);
-	
 	// initialize the title text field
 	if (this->fieldTitle.exists())
 	{
@@ -479,10 +469,6 @@ handleItemHit	(My_WindowTitleDialogPtr	inPtr,
 		}
 		break;
 	
-	case kSignatureMyButtonHelp:
-		HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseConnections);
-		break;
-	
 	default:
 		break;
 	}
@@ -522,9 +508,6 @@ handleNewSize	(HIWindowRef	inWindow,
 		}
 		else
 		{
-			// controls which are moved horizontally
-			DialogAdjust_AddControl(kDialogItemAdjustmentMoveH, ptr->buttonHelp, truncDeltaX);
-			
 			// controls which are resized horizontally
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->labelTitle, truncDeltaX);
 			DialogAdjust_AddControl(kDialogItemAdjustmentResizeH, ptr->fieldTitle, truncDeltaX);
@@ -574,11 +557,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kHICommandCancel:
 				// do nothing (but close sheet)
 				handleItemHit(ptr, idMyButtonCancel);
-				break;
-			
-			case kCommandContextSensitiveHelp:
-				// open the Help Viewer to the right topic
-				handleItemHit(ptr, idMyButtonHelp);
 				break;
 			
 			default:
