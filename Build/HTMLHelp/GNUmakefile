@@ -22,7 +22,10 @@ SHARED_SRC = $(CURDIR)/../Shared/Resources
 ALL_LANGUAGES = English
 MODULES := $(sort $(notdir $(subst .textile,,$(wildcard $(strip $(MAIN_SRC))/English/*.textile))))
 
-# use within "xyz-%" rules where the pattern is the language (e.g. English)
+# use these within "xyz-%" rules where the pattern is the language (e.g. English)
+define MACTELNET_HELP_LOCALIZED_ROOT
+$(strip $(DEST))/$*
+endef
 define MACTELNET_HELP_LOCALIZED
 $(strip $(DEST))/$*/Help
 endef
@@ -86,6 +89,7 @@ install-html-%: $(call SOURCE_HTML,%)
 
 clean-install-html-%:
 	$(RM) $(foreach PAGE,$(notdir $(call SOURCE_HTML,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED))/$(PAGE)")
+	$(RM) $(call SOURCE_HTML,$*)
 
 install-images-%:
 	cp $(call SOURCE_IMG,$*) "$(strip $(MACTELNET_HELP_LOCALIZED))/"
@@ -122,6 +126,7 @@ clean-install-index-%:
 clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-% clean-install-html-% clean-install-index-%
 	$(begin_target)
 	-rmdir "$(strip $(MACTELNET_HELP_LOCALIZED))"
+	-rmdir "$(strip $(MACTELNET_HELP_LOCALIZED_ROOT))"
 	$(end_target)
 
 # "make" considers the HTML files intermediates normally,
@@ -129,6 +134,21 @@ clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-
 # (this line ensures HTML files are only rebuilt if their
 # original input files change)
 .SECONDARY: $(foreach L,$(ALL_LANGUAGES),$(call SOURCE_HTML,$(L)))
+
+# the index page, oddly, should be formatted XHTML 1.0
+# and contain Apple's special keywords, even though they
+# expect HTML 4.01 (or HTML 3.2, for Panther) otherwise!
+%/index.html: $(strip $(MAIN_SRC))/base.kv %/index.kv %/index.textile
+	$(begin_target)
+	$(DOCTYPER) XHTML1.0-UTF-8 >| $@
+	echo "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>" >> $@
+	$(KV_TO_HEAD) -xml $< >> $@
+	$(KV_TO_HEAD) -xml $*/index.kv >> $@
+	echo "</head><body>" >> $@
+	$(GENERATOR) $*/index.textile >> $@
+	echo "</body></html>" >> $@
+	echo >> $@
+	$(end_target)
 
 %.html: $(strip $(MAIN_SRC))/base.kv %.kv %.textile
 	$(begin_target)
@@ -140,6 +160,7 @@ clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-
 	$(GENERATOR) $*.textile >> $@
 	echo "</body></html>" >> $@
 	echo >> $@
+	@# textile produces XHTML output, convert to HTML
 	perl -pi -e 's|<br />|<br>|g' $@
 	$(end_target)
 
