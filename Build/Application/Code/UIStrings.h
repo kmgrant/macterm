@@ -259,15 +259,10 @@ enum UIStrings_HelpSystemCFString
 	kUIStrings_HelpSystemHideTagsCommandName			= 'HTag',
 	kUIStrings_HelpSystemTopicHelpCreatingSessions		= 'Sess',
 	kUIStrings_HelpSystemTopicHelpSearchingForText		= 'Find',
-	kUIStrings_HelpSystemTopicHelpSettingKeyMappings	= 'Keys',
 	kUIStrings_HelpSystemTopicHelpSettingTheScreenSize	= 'SSiz',
-	kUIStrings_HelpSystemTopicHelpUsingMacros			= 'Mcro',
 	kUIStrings_HelpSystemTopicHelpUsingTheCommandLine	= 'CmdL',
-	kUIStrings_HelpSystemTopicHelpWithIPAddresses		= 'IPAd',
-	kUIStrings_HelpSystemTopicHelpWithKioskSetup		= 'Kios',
 	kUIStrings_HelpSystemTopicHelpWithPreferences		= 'Pref',
 	kUIStrings_HelpSystemTopicHelpWithScreenFormatting	= 'Font',
-	kUIStrings_HelpSystemTopicHelpWithSessionFavorites	= 'SFav',
 	kUIStrings_HelpSystemTopicHelpWithTerminalSettings	= 'Term'
 };
 

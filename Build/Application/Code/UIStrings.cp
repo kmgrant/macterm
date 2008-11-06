@@ -928,11 +928,6 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 													CFSTR("kUIStrings_HelpSystemTopicHelpSearchingForText; should match topic title"));
 		break;
 	
-	case kUIStrings_HelpSystemTopicHelpSettingKeyMappings:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Help Setting Key Mappings"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemTopicHelpSettingKeyMappings; should match topic title"));
-		break;
-	
 	case kUIStrings_HelpSystemTopicHelpSettingTheScreenSize:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Help Setting The Screen Size"), CFSTR("HelpSystem"),
 													CFSTR("kUIStrings_HelpSystemTopicHelpSettingTheScreenSize; should match topic title"));
@@ -943,21 +938,6 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 													CFSTR("kUIStrings_HelpSystemTopicHelpUsingTheCommandLine; should match topic title"));
 		break;
 	
-	case kUIStrings_HelpSystemTopicHelpUsingMacros:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Help Using Macros"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemTopicHelpUsingMacros; should match topic title"));
-		break;
-	
-	case kUIStrings_HelpSystemTopicHelpWithIPAddresses:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Help With IP Addresses"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemTopicHelpWithIPAddresses; should match topic title"));
-		break;
-	
-	case kUIStrings_HelpSystemTopicHelpWithKioskSetup:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Help With Kiosk Setup"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemTopicHelpWithKioskSetup; should match topic title"));
-		break;
-	
 	case kUIStrings_HelpSystemTopicHelpWithPreferences:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Help With Preferences"), CFSTR("HelpSystem"),
 													CFSTR("kUIStrings_HelpSystemTopicHelpWithPreferences; should match topic title"));
@@ -966,11 +946,6 @@ UIStrings_Copy	(UIStrings_HelpSystemCFString	inWhichString,
 	case kUIStrings_HelpSystemTopicHelpWithScreenFormatting:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Help With Screen Formatting"), CFSTR("HelpSystem"),
 													CFSTR("kUIStrings_HelpSystemTopicHelpWithScreenFormatting; should match topic title"));
-		break;
-	
-	case kUIStrings_HelpSystemTopicHelpWithSessionFavorites:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Help With Session Favorites"), CFSTR("HelpSystem"),
-													CFSTR("kUIStrings_HelpSystemTopicHelpWithSessionFavorites; should match topic title"));
 		break;
 	
 	case kUIStrings_HelpSystemTopicHelpWithTerminalSettings:

@@ -270,10 +270,6 @@ copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 										outString);
 		break;
 	
-	case kHelpSystem_KeyPhraseFavorites:
-		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithSessionFavorites, outString);
-		break;
-	
 	case kHelpSystem_KeyPhraseFind:
 		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpSearchingForText, outString);
 		break;
@@ -282,28 +278,12 @@ copyCFStringHelpSearch	(HelpSystem_KeyPhrase	inKeyPhrase,
 		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithScreenFormatting, outString);
 		break;
 	
-	case kHelpSystem_KeyPhraseIPAddresses:
-		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithIPAddresses, outString);
-		break;
-	
-	case kHelpSystem_KeyPhraseKioskSetup:
-		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithKioskSetup, outString);
-		break;
-	
-	case kHelpSystem_KeyPhraseMacros:
-		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpUsingMacros, outString);
-		break;
-	
 	case kHelpSystem_KeyPhrasePreferences:
 		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpWithPreferences, outString);
 		break;
 	
 	case kHelpSystem_KeyPhraseScreenSize:
 		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpSettingTheScreenSize, outString);
-		break;
-	
-	case kHelpSystem_KeyPhraseSpecialKeys:
-		stringError = UIStrings_Copy(kUIStrings_HelpSystemTopicHelpSettingKeyMappings,outString);
 		break;
 	
 	case kHelpSystem_KeyPhraseTerminals:
