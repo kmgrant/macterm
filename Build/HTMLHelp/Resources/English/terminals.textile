@@ -8,6 +8,7 @@
 h1(pagetitle). Terminals
 
 <div class="content">
+<a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#select). Text Selections
 
@@ -32,6 +33,30 @@ See "the Preferences page":preferences.html for some options related to the
 appearance and behavior of text selections.  For instance, you
 can choose to have them automatically copied to the clipboard.
 
+h3(#arrange). Terminal Search
+
+<a name="helpsearchingfortext"></a><!-- must use this exact tag; see ExactMatch.kv -->
+
+The Edit >> Find... command allows *dynamic* search of the entire
+contents of a terminal (main screen and scrollback).  The dialog
+has a special minimalist design so that it won't cover any search
+results.
+
+As you type, every match for the forming pattern is immediately
+found and highlighted, in a special way that does not cancel any
+other text selection in the window.
+
+The "A=a" checkbox, again an abbreviated interface, simply makes
+the search case-insensitive.
+
+The history menu allows you to access any previously accepted
+queries for the current terminal window.  If you do not use the
+default button when closing a search, your query is discarded and
+any previous search's highlighting is restored.
+
+You can draw attention to individual results in turn by using the
+Edit >> Find Next command (and via modifier key, Find Previous).
+
 h2. Cursor
 
 The cursor is a special position in the bottommost screenful of a
@@ -52,6 +77,8 @@ appearance and behavior of the cursor.  For instance, you can
 choose its shape and whether or not it is flashing on and off.
 
 h2(#commandline). Floating Command Line
+
+<a name="helpusingthefloatingcommandline"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Use Window >> Command Line to display a floating window for
 entering text locally.  Unlike typing directly into a terminal,
@@ -75,13 +102,20 @@ MacTelnet provides many sophisticated ways to manage windows.
 
 h3(#dimensions). Screen Sizes
 
-The View menu contains a few short-cut commands that let you
-immediately change a terminal window to common sizes (80x24,
-80x48, 132x24).  You may also open a dialog to choose a specific
-number of rows and columns.  Note that Edit >> Undo can be used
-to cancel dimension changes made with these commands.
+<a name="helpsettingthescreensize"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
-Depending on your "Window Resize Affects" preferences, dragging
+Some applications that run in terminals will either assume one of
+a few standard sizes, or have issues at certain (typically large)
+sizes; for instance, text editors may run out of memory with wide
+terminals.  While MacTelnet does not restrict your window size,
+it does provide a few short-cut commands to let you immediately
+change to common sizes (80x24, 80x48, 132x24).
+
+You may also open a dialog to choose a specific number of rows
+and columns.  Note that Edit >> Undo can be used to cancel
+dimension changes made with these commands.
+
+Depending on your "Window Resize Effect" preferences, dragging
 the size box with or without the Option key will also change the
 terminal screen dimensions.
 
@@ -96,7 +130,7 @@ tandem with this effect to create a dedicated terminal display
 Note that Edit >> Undo can be used to cancel dimension changes
 made with the "Make Text..." commands.
 
-Depending on your "Window Resize Affects" preferences, dragging
+Depending on your "Window Resize Effect" preferences, dragging
 the size box with or without the Option key will also change the
 magnification of text.
 

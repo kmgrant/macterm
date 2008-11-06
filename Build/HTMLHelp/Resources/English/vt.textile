@@ -8,6 +8,7 @@
 h1(pagetitle). Terminal Emulator Specifics
 
 <div class="content">
+<a name="helpwithterminalsettings"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#vt100). General
 

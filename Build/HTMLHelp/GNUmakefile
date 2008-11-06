@@ -43,6 +43,7 @@ endef
 DOCTYPER=$(CURDIR)/Tools/PrintHTMLDocType.pl
 GENERATOR=$(CURDIR)/Tools/html_from_textile.py
 KV_TO_HEAD=$(CURDIR)/Tools/KeyValueToHTMLHeadTags.pl
+KV_TO_PLIST=$(CURDIR)/Tools/KeyValueToExactMatchProperties.pl
 
 define SOURCE_CSS
 $(call MAIN_SRC_SUB,$(1))/default.css \
@@ -57,6 +58,10 @@ define SOURCE_IMG
 $(wildcard $(call MAIN_SRC_SUB,$(1))/*.png) \
 $(wildcard $(strip $(SHARED_SRC))/*.jpg) \
 $(wildcard $(strip $(SHARED_SRC))/*.png)
+endef
+
+define SOURCE_PLIST
+$(foreach PREFIX,ExactMatch,$(strip $(MAIN_SRC))/$(1)/$(strip $(PREFIX)).plist)
 endef
 
 .PHONY: all
@@ -92,6 +97,7 @@ build-%: $(strip $(MAIN_SRC))/MacTelnetHelp-Info.plist
 	install -d "$(strip $(MACTELNET_HELP_RES_SUB))"
 	$(MAKE) install-html-$*
 	$(MAKE) install-images-$*
+	$(MAKE) install-plist-$*
 	$(MAKE) install-stylesheets-$*
 	perl -pi -e 's/LAST_UPDATED/$(shell date +"%A, %B %d, %Y, %H:%M %Z")/' \
 		"$(strip $(MACTELNET_HELP_RES_SUB))/index.html"
@@ -109,6 +115,12 @@ install-images-%:
 
 clean-install-images-%:
 	$(RM) $(foreach IMG,$(notdir $(call SOURCE_IMG,$*)),"$(strip $(MACTELNET_HELP_RES_SUB))/$(IMG)")
+
+install-plist-%: $(call SOURCE_PLIST,%)
+	cp $(call SOURCE_PLIST,$*) "$(strip $(MACTELNET_HELP_RES_SUB))/"
+
+clean-install-plist-%:
+	$(RM) $(foreach PLIST,$(notdir $(call SOURCE_PLIST,$*)),"$(strip $(MACTELNET_HELP_RES_SUB))/$(PLIST)")
 
 install-stylesheets-%:
 	cp $(call SOURCE_CSS,$*) "$(strip $(MACTELNET_HELP_RES_SUB))/"
@@ -130,7 +142,7 @@ clean-install-index-%:
 	$(RM) "$(strip $(MACTELNET_HELP_RES_SUB))/$*.lproj.helpindex"
 	$(RM) "$(strip $(MACTELNET_HELP_RES_SUB))/$*.lproj idx"
 
-clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-html-% clean-install-index-%
+clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-% clean-install-html-% clean-install-index-%
 	$(begin_target)
 	-rmdir "$(strip $(MACTELNET_HELP_RES_SUB))"
 	$(end_target)
@@ -152,6 +164,11 @@ clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-html-%
 	echo "</body></html>" >> $@
 	echo >> $@
 	perl -pi -e 's|<br />|<br>|g' $@
+	$(end_target)
+
+%/ExactMatch.plist: %/ExactMatch.kv
+	$(begin_target)
+	$(KV_TO_PLIST) $< > $@
 	$(end_target)
 
 define begin_target

@@ -8,6 +8,7 @@
 h1(pagetitle). Preferences
 
 <div class="content">
+<a name="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 This page is arranged in the same categories as those in the
 MacTelnet Preferences window.  To access any of the settings
@@ -494,6 +495,8 @@ appears with all the collections you have.  Simply
 choose a name from the list in the drawer, and then
 edit that collection's settings in the main Preferences
 window.
+
+<a name="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Formats are collections of fonts, font sizes, colors, and more,
 that decide how your terminal windows look.  You can use the View

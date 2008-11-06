@@ -8,6 +8,7 @@
 h1(pagetitle). Running Applications
 
 <div class="content">
+<a name="helpcreatingsessions"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 h2(#servers). Remote Sessions: Connecting to Servers
 

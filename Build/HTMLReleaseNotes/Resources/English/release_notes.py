@@ -186,6 +186,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20081105': [
+		'Contextual help items and help buttons once again bring up relevant search results in MacTelnet Help.',
 		'Fixed the "New Default Session" command in the Dock menu.',
 	],
 	'20081030': [
