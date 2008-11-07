@@ -184,7 +184,7 @@ example, minimizing whenever any other window in
 the group is minimized).
 
 If the window is already part of this workspace, it
-will be added again.
+will NOT be added again.
 
 (3.0)
 */
@@ -193,29 +193,34 @@ Workspace_AddWindow		(Workspace_Ref	inWorkspace,
 						 HIWindowRef	inWindowToAdd)
 {
 	My_WorkspaceAutoLocker	ptr(gWorkspacePtrLocks(), inWorkspace);
-	OSStatus				error = noErr;
 	
 	
-	// if there are windows in this workspace, relocate the new window
-	// to match the others in its group (for tab behavior)
-	if (false == ptr->contents.empty())
+	if (false == IsWindowContainedInGroup(inWindowToAdd, ptr->windowGroup))
 	{
-		HIWindowRef		similarWindow = REINTERPRET_CAST(ptr->contents.front().returnHIObjectRef(),
-															HIWindowRef);
-		Rect			similarWindowBounds;
+		OSStatus				error = noErr;
 		
 		
-		error = GetWindowBounds(similarWindow, kWindowStructureRgn, &similarWindowBounds);
+		// if there are windows in this workspace, relocate the new window
+		// to match the others in its group (for tab behavior)
+		if (false == ptr->contents.empty())
+		{
+			HIWindowRef		similarWindow = REINTERPRET_CAST(ptr->contents.front().returnHIObjectRef(),
+																HIWindowRef);
+			Rect			similarWindowBounds;
+			
+			
+			error = GetWindowBounds(similarWindow, kWindowStructureRgn, &similarWindowBounds);
+			assert_noerr(error);
+			error = SetWindowBounds(inWindowToAdd, kWindowStructureRgn, &similarWindowBounds);
+			assert_noerr(error);
+		}
+		
+		// put the window into a special group for this workspace
+		error = SetWindowGroup(inWindowToAdd, ptr->windowGroup);
 		assert_noerr(error);
-		error = SetWindowBounds(inWindowToAdd, kWindowStructureRgn, &similarWindowBounds);
-		assert_noerr(error);
+		
+		ptr->contents.push_back(inWindowToAdd);
 	}
-	
-	// put the window into a special group for this workspace
-	error = SetWindowGroup(inWindowToAdd, ptr->windowGroup);
-	assert_noerr(error);
-	
-	ptr->contents.push_back(inWindowToAdd);
 }// AddWindow
 
 

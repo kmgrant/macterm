@@ -187,6 +187,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20081106': [
+		'Fixed the tendency for certain new tabs to shift multiple spots, which also caused assertion failures in some cases.',
 		'Improved the performance of MacTelnet Help.',
 	],
 	'20081105': [
