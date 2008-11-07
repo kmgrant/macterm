@@ -301,6 +301,9 @@ UInt16
 //@{
 
 SessionFactory_Result
+	SessionFactory_SetAutoRearrangeTabsEnabled		(Boolean						inIsEnabled);
+
+SessionFactory_Result
 	SessionFactory_StartMonitoring					(SessionFactory_Change			inForWhatChange,
 													 ListenerModel_ListenerRef		inListener);
 

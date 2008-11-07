@@ -112,6 +112,7 @@ void					updatePaletteTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*)
 #pragma mark Variables
 namespace {
 
+Boolean							gAutoRearrangeTabs = true;
 ListenerModel_Ref				gSessionFactoryStateChangeListenerModel = nullptr;
 ListenerModel_Ref				gSessionStateChangeListenerModel = nullptr;
 ListenerModel_ListenerRef		gSessionChangeListenerRef = nullptr;
@@ -144,6 +145,8 @@ Examines every terminal window in the specified workspace
 and updates its tab placement to match its position in the
 workspace.  This has the effect of “nudging over” tabs
 when windows disappear or are inserted.
+
+IMPORTANT: Consult "gAutoRearrangeTabs" before using this.
 
 Model of STL Unary Function.
 
@@ -1629,6 +1632,44 @@ SessionFactory_ReturnUserFocusSession ()
 
 
 /*!
+Globally enables or disables the automatic rearrangement of
+tabs in all workspaces.  If you pass "true" and rearrangement
+was previously disabled, all tab positions are immediately
+updated; this makes up for not having done updates to tabs
+individually as they changed during the disabled period.
+
+This is useful in certain situations, where the animation
+would be distracting (e.g. at quitting time, where windows
+are being systematically destroyed anyway).
+
+\retval kSessionFactory_ResultOK
+always
+
+(4.0)
+*/
+SessionFactory_Result
+SessionFactory_SetAutoRearrangeTabsEnabled		(Boolean		inIsEnabled)
+{
+	SessionFactory_Result		result = kSessionFactory_ResultOK;
+	
+	
+	if (gAutoRearrangeTabs != inIsEnabled)
+	{
+		gAutoRearrangeTabs = inIsEnabled;
+		if (gAutoRearrangeTabs)
+		{
+			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();
+			
+			
+			(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
+																	fixTerminalWindowTabPositionsInWorkspace());
+		}
+	}
+	return result;
+}// SetAutoRearrangeTabsEnabled
+
+
+/*!
 Arranges for a callback to be invoked whenever something
 interesting in the Session Factory changes (such as the
 number of sessions open).
@@ -2000,8 +2041,11 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 			Workspace_AddWindow(targetWorkspace, window);
 			ShowWindow(window);
 			(OSStatus)TerminalWindow_SetTabAppearance(inTerminalWindow, true);
-			(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
-																	fixTerminalWindowTabPositionsInWorkspace());
+			if (gAutoRearrangeTabs)
+			{
+				(fixTerminalWindowTabPositionsInWorkspace)std::for_each(targetList.begin(), targetList.end(),
+																		fixTerminalWindowTabPositionsInWorkspace());
+			}
 		}
 		else
 		{
@@ -2544,8 +2588,11 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 	MyWorkspaceList&		workspaceList = gWorkspaceListSortedByCreationTime();
 	(removeTerminalWindowFromWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
 														removeTerminalWindowFromWorkspace(inTerminalWindow));
-	(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
-															fixTerminalWindowTabPositionsInWorkspace());
+	if (gAutoRearrangeTabs)
+	{
+		(fixTerminalWindowTabPositionsInWorkspace)std::for_each(workspaceList.begin(), workspaceList.end(),
+																fixTerminalWindowTabPositionsInWorkspace());
+	}
 	
 	// remove the specified window from the creation-order list;
 	// the idea here is to shuffle the list so that the given

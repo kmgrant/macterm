@@ -1123,6 +1123,9 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 		//SessionFactory_ForEveryTerminalWindowDo(setTerminalWindowTranslucency, nullptr/* data 1 */,
 		//										1/* 0 = opaque, 1 = translucent */, nullptr/* result */);
 		
+		// prevent tabs from shifting during this process
+		(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(false);
+		
 		// iterate over each session in a MODAL fashion, highlighting a window
 		// and either displaying an alert or discarding the window if it has only
 		// been open a short time
@@ -1130,6 +1133,9 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 										moveWindowAndDisplayTerminationAlertSessionOp,
 										0L/* data 1 */, 0L/* data 2 */, &cancelQuit/* result */,
 										true/* is a final iteration: use a copy of the list? */);
+		
+		// prevent tabs from shifting during this process
+		(SessionFactory_Result)SessionFactory_SetAutoRearrangeTabsEnabled(true);
 		
 		// make sure all windows become opaque again
 		//SessionFactory_ForEveryTerminalWindowDo(setTerminalWindowTranslucency, nullptr/* data 1 */,

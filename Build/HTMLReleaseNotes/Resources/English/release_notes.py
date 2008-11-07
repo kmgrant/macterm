@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081107',
     '20081106',
     '20081105',
     '20081030',
@@ -186,6 +187,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081107': [
+		'When reviewing windows at quitting time, tabs no longer shift positions as they close; the animation was too distracting.',
+	],
 	'20081106': [
 		'Fixed the tendency for certain new tabs to shift multiple spots, which also caused assertion failures in some cases.',
 		'Improved the performance of MacTelnet Help.',
