@@ -71,16 +71,29 @@ Note that this is only in the header for the sake of
 Interface Builder, which will not synchronize with
 changes to an interface declared in a ".mm" file.
 */
+@interface CommandLine_TerminalLikeComboBox : NSComboBox
+// the following MUST match what is in "CommandLineCocoa.nib"
+- (void)textDidBeginEditing:(NSNotification*)notification;
+@end
+
+/*!
+Implements the floating command line window.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
 @interface CommandLine_PanelController : NSWindowController
 {
-	NSMutableString*		commandLineText; // binding
+	NSMutableString*							commandLineText; // binding
 	
-	IBOutlet NSComboBox*	commandLineField;
+	IBOutlet CommandLine_TerminalLikeComboBox*	commandLineField;
 }
 + (id)sharedCommandLinePanelController;
 // the following MUST match what is in "CommandLineCocoa.nib"
 - (IBAction)displayHelp:(id)sender;
 - (IBAction)sendText:(id)sender;
+- (NSColor*)textColor;
 - (void)windowDidLoad;
 @end
 

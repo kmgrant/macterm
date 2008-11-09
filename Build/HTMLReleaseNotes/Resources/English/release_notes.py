@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081109',
     '20081108',
     '20081107',
     '20081106',
@@ -188,6 +189,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081109': [
+		"Fixed the floating command line to use a cursor color that will not blend in with the user's custom background.",
+	],
 	'20081108': [
 		'Fixed an internal error which had broken the Copy and Open URL commands, as well as whether or not menu items were enabled.',
 	],

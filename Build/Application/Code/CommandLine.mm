@@ -110,6 +110,30 @@ CommandLine_Display ()
 
 @end // CommandLine_HistoryDataSource
 
+@implementation CommandLine_TerminalLikeComboBox
+
+- (void)textDidBeginEditing:(NSNotification*)notification
+{
+#pragma unused(notification)
+	NSText*		fieldEditor = [self currentEditor];
+	
+	
+	if ([fieldEditor isKindOfClass:[NSTextView class]])
+	{
+		// the field editor is actually an NSTextView*
+		NSTextView*		fieldEditorAsView = (NSTextView*)fieldEditor;
+		
+		
+		// Since the text color and background are modified to match user
+		// preferences, the insertion point should also be a color that
+		// looks reasonable against the custom background.
+		[fieldEditorAsView setInsertionPointColor:
+							[[CommandLine_PanelController sharedCommandLinePanelController] textColor]];
+	}
+}
+
+@end // CommandLine_TerminalLikeComboBox
+
 @implementation CommandLine_PanelController
 
 static CommandLine_PanelController*		gCommandLine_PanelController = nil;
@@ -152,6 +176,11 @@ static CommandLine_PanelController*		gCommandLine_PanelController = nil;
 		Session_SendNewline(session, kSession_EchoCurrentSessionValue);
 		[[[commandLineField dataSource] historyArray] insertObject:[[NSString alloc] initWithString:commandLineText] atIndex:0];
 	}
+}
+
+- (NSColor*)textColor
+{
+	return [commandLineField textColor];
 }
 
 - (void)windowDidLoad
