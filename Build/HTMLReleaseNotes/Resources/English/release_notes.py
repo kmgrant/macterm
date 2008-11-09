@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081108',
     '20081107',
     '20081106',
     '20081105',
@@ -187,6 +188,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081108': [
+		'Fixed an internal error which had broken the Copy and Open URL commands, as well as whether or not menu items were enabled.',
+	],
 	'20081107': [
 		'When reviewing windows at quitting time, tabs no longer shift positions as they close; the animation was too distracting.',
 	],

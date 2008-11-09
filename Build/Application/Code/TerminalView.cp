@@ -3135,6 +3135,13 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		assert_noerr(TerminalBackground_CreateHIView(this->focusAndPaddingHIView));
 		error = HIViewSetVisible(this->focusAndPaddingHIView, true);
 		assert_noerr(error);
+		// IMPORTANT: Set a property with the TerminalViewRef, so that
+		// TerminalView_ReturnUserFocusHIView() works properly
+		error = SetControlProperty(this->focusAndPaddingHIView,
+									AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
+									sizeof(this->selfRef), &this->selfRef);
+		assert_noerr(error);
 		
 		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView));
 		error = HIViewSetVisible(this->backgroundHIView, true);
