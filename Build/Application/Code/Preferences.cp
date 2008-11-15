@@ -8907,7 +8907,7 @@ virtualKeyCreateName	(UInt16		inVirtualKeyCode)
 		break;
 	
 	case 0x33:
-		result = CFSTR("backward delete");
+		result = CFSTR("backward-delete");
 		break;
 	
 	case 0x35:
@@ -8963,11 +8963,11 @@ virtualKeyCreateName	(UInt16		inVirtualKeyCode)
 		break;
 	
 	case 0x74:
-		result = CFSTR("page up");
+		result = CFSTR("page-up");
 		break;
 	
 	case 0x75:
-		result = CFSTR("forward delete");
+		result = CFSTR("forward-delete");
 		break;
 	
 	case 0x76:
@@ -8983,7 +8983,7 @@ virtualKeyCreateName	(UInt16		inVirtualKeyCode)
 		break;
 	
 	case 0x79:
-		result = CFSTR("page down");
+		result = CFSTR("page-down");
 		break;
 	
 	case 0x7A:
@@ -8991,19 +8991,19 @@ virtualKeyCreateName	(UInt16		inVirtualKeyCode)
 		break;
 	
 	case 0x7B:
-		result = CFSTR("left arrow");
+		result = CFSTR("left-arrow");
 		break;
 	
 	case 0x7C:
-		result = CFSTR("right arrow");
+		result = CFSTR("right-arrow");
 		break;
 	
 	case 0x7D:
-		result = CFSTR("down arrow");
+		result = CFSTR("down-arrow");
 		break;
 	
 	case 0x7E:
-		result = CFSTR("left arrow");
+		result = CFSTR("up-arrow");
 		break;
 	
 	default:
@@ -9062,7 +9062,7 @@ virtualKeyParseName	(CFStringRef	inName,
 		{
 			outCharacterOrKeyCode = 0x24;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("backward delete"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("backward-delete"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x33;
 		}
@@ -9118,11 +9118,11 @@ virtualKeyParseName	(CFStringRef	inName,
 		{
 			outCharacterOrKeyCode = 0x73;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page up"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page-up"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x74;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("forward delete"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("forward-delete"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x75;
 		}
@@ -9138,7 +9138,7 @@ virtualKeyParseName	(CFStringRef	inName,
 		{
 			outCharacterOrKeyCode = 0x78;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page down"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page-down"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x79;
 		}
@@ -9146,19 +9146,19 @@ virtualKeyParseName	(CFStringRef	inName,
 		{
 			outCharacterOrKeyCode = 0x7A;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("left arrow"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("left-arrow"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x7B;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("right arrow"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("right-arrow"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x7C;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("down arrow"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("down-arrow"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x7D;
 		}
-		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("up arrow"), kCompareFlags))
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("up-arrow"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x7E;
 		}
