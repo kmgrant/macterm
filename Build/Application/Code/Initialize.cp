@@ -81,7 +81,6 @@
 #include "InternetPrefs.h"
 #include "Keypads.h"
 #include "MacroManager.h"
-#include "MacroSetupWindow.h"
 #include "MainEntryPoint.h"
 #include "MenuBar.h"
 #include "Preferences.h"
@@ -241,11 +240,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		//InfooWindow_RunTests();
 	#endif
 		
-		MacroSetupWindow_Init(); // installs command handler to enable this window to be displayed and hidden
-	#if RUN_MODULE_TESTS
-		//MacroSetupWindow_RunTests();
-	#endif
-		
 		RasterGraphicsKernel_Init(); // ICR setup
 	#if RUN_MODULE_TESTS
 		//RasterGraphicsKernel_RunTests();
@@ -392,8 +386,6 @@ Initialize_ApplicationShutdown ()
 {
 	// saving user preferences is a top priority, since other quitting procedures could cause a crash
 	PrefsWindow_Done();
-	MacroSetupWindow_Done();
-	Macros_Done();
 	
 	Clipboard_Done();
 	InfoWindow_Done();
@@ -494,7 +486,6 @@ initApplicationCore ()
 #if RUN_MODULE_TESTS
 	Preferences_RunTests();
 #endif
-	Macros_Init();
 	
 	// initialize some other flags
 	FlagManager_Set(kFlagSuspended, false); // initially, the application is active

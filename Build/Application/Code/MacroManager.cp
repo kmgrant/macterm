@@ -45,9 +45,13 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CarbonEventHandlerWrap.template.h>
+#include <CarbonEventUtilities.template.h>
 #include <CocoaBasic.h>
+#include <Console.h>
 #include <FileSelectionDialogs.h>
 #include <MemoryBlocks.h>
+#include <SoundSystem.h>
 #include <StringUtilities.h>
 
 // resource includes
@@ -56,1293 +60,913 @@
 #include "GeneralResources.h"
 
 // MacTelnet includes
-#include "AppResources.h"
 #include "ConstantsRegistry.h"
-#include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "Folder.h"
 #include "MacroManager.h"
+#include "MenuBar.h"
 #include "Network.h"
 #include "Preferences.h"
 #include "Session.h"
+#include "SessionFactory.h"
 #include "Terminal.h"
-#include "UIStrings.h"
+#include "URL.h"
 
 
-
-#pragma mark Constants
-
-#define MACRO_IP		0xFF	// metacharacter (for "\i" in source string); substituted with IP address
-#define MACRO_LINES		0xFE	// metacharacter (for "\#" in source string); substituted with screen row count
-
-enum
-{
-	MACRO_MAX_LEN = 256		// maximum number of characters allowed in any macro
-};
-
-#pragma mark Variables
-
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	Handle							gMacros[MACRO_SET_COUNT][MACRO_COUNT] =
-									{
-										// IMPORTANT - initialize all macros to empty!
-										{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr },
-										{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr },
-										{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr },
-										{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr },
-										{ nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr }
-									};
-	MacroSetNumber					gActiveSet = 1;
-	Boolean							gInited = false;
-	MacroManager_InvocationMethod	gMacroMode = kMacroManager_InvocationMethodCommandDigit;
-	ListenerModel_Ref				gMacroChangeListenerModel = nullptr;
-}
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static Boolean	allEmpty					(MacroSet);
-static void		changeNotifyForMacros		(Macros_Change, void*);
-static OSStatus	cStringToFile				(SInt16, char const*);
-static SInt16	getMacro					(MacroSet, MacroIndex, char*, SInt16);
-static void		parseFile					(MacroSet, SInt16, MacroManager_InvocationMethod*);
-static void		setTempMacrosToNull			(MacroSet);
-static void		setMacro					(MacroSet, MacroIndex, char const*);
+void						macroSetChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+pascal OSStatus				receiveHICommand		(EventHandlerCallRef, EventRef, void*);
+Preferences_ContextRef		returnDefaultMacroSet	();
+
+} // anonymous namespace
+
+#pragma mark Variables
+namespace {
+
+Boolean						gShowMacrosMenu = false;
+ListenerModel_ListenerRef&	gMacroSetMonitor ()		{ static ListenerModel_ListenerRef x = ListenerModel_NewStandardListener(macroSetChanged); return x; }
+CarbonEventHandlerWrap&		gMacroCommandsHandler ()	{ static CarbonEventHandlerWrap	x(GetApplicationEventTarget(), receiveHICommand,
+																							CarbonEventSetInClass(CarbonEventClass
+																													(kEventClassCommand),
+																													kEventCommandProcess,
+																													kEventCommandUpdateStatus),
+																							nullptr/* user data */); return x; }
+Preferences_ContextRef&		gCurrentMacroSet ()			{ static Preferences_ContextRef x = returnDefaultMacroSet(); return x; }
+
+} // anonymous namespace
 
 
 
 #pragma mark Public Methods
 
 /*!
-Loads the special macro files in the Preferences
-folder, and initializes the five macro sets from
-those files.  If any or all of the files are
-missing, the respective macro sets are simply
-left blank.
+Returns the macro set most recently made current with a
+call to MacroManager_SetCurrentMacros().
 
-(3.0)
+(4.0)
 */
-void
-Macros_Init ()
+Preferences_ContextRef
+MacroManager_ReturnCurrentMacros ()
 {
-	FSSpec							folder;
-	FSSpec							file;
-	Str255							fileName;
-	register SInt16					i = 0;
-	MacroManager_InvocationMethod   mode = kMacroManager_InvocationMethodCommandDigit;
-	
-	
-	// set up a listener model to handle callbacks
-	gMacroChangeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
-													kConstantsRegistry_ListenerModelDescriptorMacroChanges);
-	assert(nullptr != gMacroChangeListenerModel);
-	
-	// there are five files, one per set; read each file, importing only if no errors occur
-	for (i = MACRO_SET_COUNT; i >= 1; --i)
-	{
-		Macros_SetActiveSetNumber(i); // set numbers are one-based
-		// TEMPORARY: This needs to migrate to the new Preferences API.
-		//GetIndString(fileName, rStringsImportantFileNames, siImportantFileNameMacroSet1 + i - 1);
-		if (PLstrlen(fileName) > 0)
-		{
-			if (noErr == Folder_GetFSSpec(kFolder_RefUserMacroFavorites, &folder))
-			{
-				if (noErr == FSMakeFSSpec(folder.vRefNum, folder.parID, fileName, &file))
-				{
-					// if this point is reached, then the requested file exists; import it!
-					Macros_ImportFromText(Macros_ReturnActiveSet(), &file, &mode);
-				}
-			}
-		}
-	}
-	Macros_SetMode(mode); // the effect of this is that Macro Set 1 determines the “persistent” macro keys
-	gInited = true;
-}// Init
+	return gCurrentMacroSet();
+}// ReturnCurrentMacros
 
 
 /*!
-Maintains implicit persistence of the five macro
-sets by saving them into special macro files in
-the Preferences folder.
+Returns the default set of macros, which is identified as
+such in the Preferences window.
 
-Note that errors are basically ignored; a nicer
-implementation might advise the user when some
-kind of problem occurs that could jeopardize
-the saving of macros.  In fact, this should be a
-definite priority for some future release!!!
+This currently has no special significance other than its
+position in the source list and the fact that the user
+cannot delete it.  Even this set will be disabled if it
+is active when the user chooses to turn off macros.
 
-(3.0)
+(4.0)
 */
-void
-Macros_Done ()
+Preferences_ContextRef
+MacroManager_ReturnDefaultMacros ()
 {
-	if (gInited)
+	return returnDefaultMacroSet();
+}// ReturnDefaultMacros
+
+
+/*!
+Changes the current macro set, which affects the source
+of future API calls such as MacroManager_UserInputMacro().
+If "nullptr", then macros are turned off and future calls
+to use them will silently have no effect.
+
+You can retrieve this set later with a call to
+MacroManager_ReturnCurrentMacros().
+
+See also MacroManager_ReturnDefaultMacros(), which is a
+convenient way to pass the default set to this function.
+
+\retval kMacroManager_ResultOK
+if no error occurred
+
+\retval kMacroManager_ResultGenericFailure
+if any error occurred
+
+(4.0)
+*/
+MacroManager_Result
+MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
+{
+	MacroManager_Result		result = kMacroManager_ResultGenericFailure;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	// install a command handler if none exists
+	gMacroCommandsHandler();
+	
+	// perform last action for previous context
+	if (nullptr == gCurrentMacroSet())
 	{
-		FSSpec				folder,
-							file;
-		Str255				fileName;
-		register SInt16		i = 0;
-		OSStatus			error = noErr;
+		MenuRef		macrosMenu = MenuBar_ReturnMacrosMenu();
 		
 		
-		// there are five files, one per set; find each file, exporting only if no errors occur
-		for (i = MACRO_SET_COUNT; i >= 1; --i)
+		// e.g. previous set was None; now, show the Macros menu for the new set
+		if (gShowMacrosMenu)
 		{
-			Macros_SetActiveSetNumber(i); // set numbers are one-based
-			// TEMPORARY: This needs to migrate to the new Preferences API.
-			//GetIndString(fileName, rStringsImportantFileNames, siImportantFileNameMacroSet1 + i - 1);
-			if (PLstrlen(fileName) > 0)
+			(OSStatus)ChangeMenuAttributes(macrosMenu, 0/* attributes to set */, kMenuAttrHidden/* attributes to clear */);
+		}
+		else
+		{
+			// user preference is to always hide
+			(OSStatus)ChangeMenuAttributes(macrosMenu, kMenuAttrHidden/* attributes to set */, 0/* attributes to clear */);
+		}
+	}
+	else
+	{
+		// remove monitors from the context that is about to be non-current
+		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroAction);
+		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroContents);
+		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroName);
+		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKeyModifiers);
+		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKey);
+	}
+	
+	// set the new current context
+	gCurrentMacroSet() = inMacroSetOrNullForNone;
+	
+	// monitor the new current context so that caches and menus can be updated, etc.
+	if (nullptr == gCurrentMacroSet())
+	{
+		MenuRef		macrosMenu = MenuBar_ReturnMacrosMenu();
+		
+		
+		// e.g. the user selected the None macro set; hide the Macros menu entirely
+		(OSStatus)ChangeMenuAttributes(macrosMenu, kMenuAttrHidden/* attributes to set */, 0/* attributes to clear */);
+	}
+	else
+	{
+		// technically this only has to be installed once
+		static Boolean		gMacroMenuVisibleMonitorInstalled = false;
+		if (false == gMacroMenuVisibleMonitorInstalled)
+		{
+			prefsResult = Preferences_StartMonitoring(gMacroSetMonitor(), kPreferences_TagMacrosMenuVisible, true/* notify of initial value */);
+			gMacroMenuVisibleMonitorInstalled = true;
+		}
+		
+		// monitor Preferences for changes to macro settings that are important in the Macro Manager module
+		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroAction,
+															true/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroContents,
+															true/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroName,
+															true/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKeyModifiers,
+															true/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKey,
+															true/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	result = kMacroManager_ResultOK;
+	return result;
+}// SetCurrentMacros
+
+
+/*!
+Retrieves the action and associated text for the specified
+macro of the given set (or the active set, if no context
+is provided), and performs the macro action.
+
+If the action needs to target a session, such as inserting
+text, then the specified session is used (or the active
+session, if none is provided).
+
+\retval kMacroManager_ResultOK
+if no error occurred
+
+\retval kMacroManager_ResultGenericFailure
+if any error occurred
+
+(4.0)
+*/
+MacroManager_Result
+MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
+								 SessionRef					inTargetSessionOrNullForActiveSession,
+								 Preferences_ContextRef		inMacroSetOrNullForActiveSet)
+{
+	MacroManager_Result		result = kMacroManager_ResultGenericFailure;
+	SessionRef				session = (nullptr == inTargetSessionOrNullForActiveSession)
+										? SessionFactory_ReturnUserFocusSession()
+										: inTargetSessionOrNullForActiveSession;
+	Preferences_ContextRef	context = (nullptr == inMacroSetOrNullForActiveSet)
+										? gCurrentMacroSet()
+										: inMacroSetOrNullForActiveSet;
+	
+	
+	if ((nullptr != context) && (nullptr != session))
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		size_t					actualSize = 0;
+		CFStringRef				actionCFString = nullptr;
+		MacroManager_Action		actionPerformed = kMacroManager_ActionSendText;
+		
+		
+		// retrieve action type
+		// TEMPORARY - it is smarter to query this only as preferences
+		// actually change, i.e. in the monitor callback, and rely
+		// only on a cached array at this point
+		prefsResult = Preferences_ContextGetDataAtIndex(context, kPreferences_TagIndexedMacroAction,
+														inZeroBasedMacroIndex + 1/* one-based */,
+														sizeof(actionCFString), &actionCFString,
+														true/* search defaults too */, &actualSize);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			// retrieve action text
+			prefsResult = Preferences_ContextGetDataAtIndex(context, kPreferences_TagIndexedMacroContents,
+															inZeroBasedMacroIndex + 1/* one-based */,
+															sizeof(actionCFString), &actionCFString,
+															true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
 			{
-				if (Folder_GetFSSpec(kFolder_RefUserMacroFavorites, &folder) == noErr)
+				switch (actionPerformed)
 				{
-					error = FSMakeFSSpec(folder.vRefNum, folder.parID, fileName, &file);
-					
-					if ((error == noErr) || (error == fnfErr))
+				case kMacroManager_ActionSendText:
 					{
-						// If this point is reached, then it is possible to specify where on
-						// disk the macros go; export them!  Note that due to the nature of
-						// the import procedure, the “persistent” macro mode will really be
-						// Macro Set 1’s mode.
-						Macros_ExportToText(Macros_ReturnActiveSet(), &file, Macros_ReturnMode());
+						// TEMPORARY - translate everything here for now, but the plan is to
+						// eventually monitor preference changes and pre-scan and cache a
+						// mostly-processed string (e.g. static escape sequences translated)
+						// so that very little has to be done at this point
+						CFIndex const			kLength = CFStringGetLength(actionCFString);
+						CFStringInlineBuffer	charBuffer;
+						CFRetainRelease			finalCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* limit */), true/* is retained */);
+						Boolean					substitutionError = false;
+						UniChar					octalSequenceCharCode = '\0'; // overwritten each time a \0nn is processed
+						SInt16					readOctal = -1;		// if 0, a \0 was read, and the first "n" (in \0nn) might be next;
+																	// if 1, a \1 was read, and the first "n" (in \1nn) might be next;
 						
-						// since MacTelnet depends on the file having a specific name, make
-						// sure the user can’t change it
+						
+						CFStringInitInlineBuffer(actionCFString, &charBuffer, CFRangeMake(0, kLength));
+						for (CFIndex i = 0; i < kLength; ++i)
 						{
-							FileInfo		info;
+							UniChar		thisChar = CFStringGetCharacterFromInlineBuffer(&charBuffer, i);
 							
 							
-							FSpGetFInfo(&file, (FInfo*)&info);
-							info.finderFlags |= kNameLocked;
-							FSpSetFInfo(&file, (FInfo*)&info);
-						}
-					}
-				}
-			}
-		}
-		
-		// dispose of callback information; do this last because other
-		// clean-up actions might still trigger callback invocations
-		ListenerModel_Dispose(&gMacroChangeListenerModel);
-		
-		gInited = false;
-	}
-}// Done
-
-
-/*!
-Creates a temporary storage area for macros.  Use
-Macros_DisposeSet() to destroy this set when you
-are finished with it.  If any problems occur,
-nullptr is returned.
-
-(3.0)
-*/
-MacroSet
-Macros_NewSet ()
-{
-	return (MacroSet)Memory_NewPtr(MACRO_COUNT * sizeof(Handle));
-}// NewSet
-
-
-/*!
-Destroys a temporary storage area that you previously
-created with Macros_NewSet().  On output, your pointer
-to the macro set is automatically set to nullptr.
-
-(3.0)
-*/
-void
-Macros_DisposeSet	(MacroSet*		inoutSetToDestroy)
-{
-	if (inoutSetToDestroy != nullptr)
-	{
-		register SInt16		i = 0;
-		
-		
-		for (i = 0; i < MACRO_COUNT; ++i)
-		{
-			if ((*inoutSetToDestroy)[i] != nullptr)
-			{
-				HUnlock((*inoutSetToDestroy)[i]);
-				Memory_DisposeHandle(&(*inoutSetToDestroy)[i]);
-			}
-		}
-		Memory_DisposePtr((Ptr*)inoutSetToDestroy);
-	}
-}// DisposeSet
-
-
-/*!
-Determines if there is any text in any of the
-macros in the specified macro set.
-
-(3.0)
-*/
-Boolean
-Macros_AllEmpty		(MacroSet	inSet)
-{
-	return allEmpty(inSet);
-}// AllEmpty
-
-
-/*!
-Duplicates all of the macros in one set into a
-second set.
-
-(3.0)
-*/
-void
-Macros_Copy		(MacroSet	inSource,
-				 MacroSet	inDestination)
-{
-	register SInt16		i = 0;
-	
-	
-	for (i = 0; i < MACRO_COUNT; ++i)
-	{
-		if (inDestination[i] != nullptr) Memory_DisposeHandle(&inDestination[i]);
-		if (inSource[i] != nullptr)
-		{
-			SInt8		handleState = 0;
-			Size		moveSize = GetHandleSize(inSource[i]);
-			
-			
-			inDestination[i] = Memory_NewHandle(moveSize);
-			handleState = HGetState(inSource[i]);
-			HLockHi(inSource[i]);
-			HLockHi(inDestination[i]);
-			BlockMoveData(*(inSource[i]), *(inDestination[i]), moveSize);
-			HUnlock(inDestination[i]);
-			HSetState(inSource[i], handleState);
-		}
-		
-		// now notify all interested listeners that a macro has changed
-		{
-			MacroDescriptor		descriptor;
-			
-			
-			descriptor.set = inDestination;
-			descriptor.index = i;
-			changeNotifyForMacros(kMacros_ChangeContents, &descriptor);
-		}
-	}
-}// Copy
-
-
-/*!
-Exports macros stored in the specified macro storage area
-to a file.  If you pass nullptr for the file specification,
-the user is prompted to create a file in which to store
-the macro set.  The exported file also indicates the keys
-to be used for the macro keys (such as function keys,
-versus command-digit keys).
-
-To place macros in temporary storage space, you can use
-the Macros_Set() or Macros_Copy() methods.
-
-(2.6)
-*/
-void
-Macros_ExportToText		(MacroSet						inSet,
-						 FSSpec*						inFileSpecPtrOrNull,
-						 MacroManager_InvocationMethod	inMacroModeOfExportedSet)
-{
-	SInt16 		refNum = 0;
-	FSSpec		macroFile; // this is ONLY storage, used as needed
-	FSSpec*		fileSpecPtr = inFileSpecPtrOrNull; // this refers to the file to write to!
-	OSStatus	error = noErr;
-	Boolean		good = true;
-	
-	
-	if (inFileSpecPtrOrNull == nullptr)
-	{
-		Str255		prompt,
-					title,
-					fileDefaultName;
-		
-		
-		// TEMPORARY: This needs to migrate to the new Navigation Services API.
-		PLstrcpy(prompt, "\p");
-		PLstrcpy(title, "\p");
-		//GetIndString(prompt, rStringsNavigationServices, siNavPromptExportMacrosToFile);
-		//GetIndString(title, rStringsNavigationServices, siNavDialogTitleExportMacros);
-		{
-			// TEMPORARY; the string retrieval has been upgraded to CFStrings, but not
-			//            the Navigation Services calls; eventually, the CFString can
-			//            be passed directly (localized) instead of being hacked into
-			//            a Pascal string first
-			UIStrings_Result	stringResult = kUIStrings_ResultOK;
-			CFStringRef			filenameCFString = nullptr;
-			
-			
-			stringResult = UIStrings_Copy(kUIStrings_FileDefaultMacroSet, filenameCFString);
-			if (kUIStrings_ResultOK == stringResult)
-			{
-				CFStringGetPascalString(filenameCFString, fileDefaultName, sizeof(fileDefaultName),
-										kCFStringEncodingMacRoman/* TEMPORARY */);
-				CFRelease(filenameCFString);
-			}
-			else
-			{
-				PLstrcpy(fileDefaultName, "\p");
-			}
-		}
-		{
-			NavReplyRecord	reply;
-			
-			
-			Alert_ReportOSStatus(error = FileSelectionDialogs_PutFile
-											(prompt, title, fileDefaultName,
-												AppResources_ReturnCreatorCode(),
-												kApplicationFileTypeMacroSet,
-												kPreferences_NavPrefKeyMacroStuff,
-												kNavDefaultNavDlogOptions | kNavDontAddTranslateItems,
-												EventLoop_HandleNavigationUpdate, &reply, &macroFile));
-			good = ((error == noErr) && (reply.validRecord));
-			if (good) fileSpecPtr = &macroFile;
-		}
-	}
-	
-	if (good)
-	{
-		SInt16 		i = 0;
-		char		temp[MACRO_MAX_LEN],
-					temp2[MACRO_MAX_LEN];
-		Boolean		exists = false;
-		
-		
-		// try to create the file; if this fails with a “duplicate file name” error, then the file already exists
-		if ((error = FSpCreate(fileSpecPtr, AppResources_ReturnCreatorCode(),
-								kApplicationFileTypeMacroSet, GetScriptManagerVariable(smSysScript))) == dupFNErr)
-		{
-			exists = true;
-		}
-		
-		error = FSpOpenDF(fileSpecPtr, fsWrPerm, &refNum);
-		
-		if (exists) SetEOF(refNum, 0L);
-		
-		for (i = 0; i < MACRO_COUNT; ++i)
-		{
-			Macros_Get(inSet, i, temp, sizeof(temp));
-			
-			// IMPORTANT:	The internal method parseFile() determines the “key equivalents” of an imported
-			//				set by checking to see if the first character of each line is a capital "F".  If
-			//				you see a need to change the code below, be sure to update parseFile()!
-			CPP_STD::snprintf(temp2, sizeof(temp2),
-								(inMacroModeOfExportedSet == kMacroManager_InvocationMethodFunctionKeys)
-								? "F%d = \""
-								: "Cmd%d = \"",
-								(inMacroModeOfExportedSet == kMacroManager_InvocationMethodFunctionKeys)
-								? i + 1
-								: i);
-			cStringToFile(refNum, temp2);
-			if (*temp) 
-			{									
-				cStringToFile(refNum, temp);
-			}
-			CPP_STD::strcpy(temp2, "\"\015");
-			cStringToFile(refNum, temp2);
-		}
-		FSClose(refNum);
-	}
-}// ExportToText
-
-
-/*!
-Explicitly obtains the human-readable value of a
-particular macro in a macro space.  You can use
-Macros_Copy() to work between two macro spaces.
-
-The value of "inZeroBasedMacroNumber" must be
-between 0 and one less than MACRO_COUNT.
-
-(3.0)
-*/
-void
-Macros_Get	(MacroSet		inFromWhichSet,
-			 MacroIndex		inZeroBasedMacroNumber,
-			 char*			outValue,
-			 SInt16			inRoom)
-{
-	getMacro(inFromWhichSet, inZeroBasedMacroNumber, outValue, inRoom);
-}// Get
-
-
-/*!
-Imports macros.  If you pass nullptr for the file specification,
-the user is prompted to locate a file from which to fill in the
-macro set.  If the user does not cancel and no errors occur
-(that is, the macros actually got imported), true is returned;
-otherwise, false is returned.
-
-Sometimes, the key equivalents used for the macros can be
-determined from the text file.  If so, the macro mode “as saved
-in the macro set” is imported as well, and returned in
-"outMacroModeOfImportedSet".  If not, the value
-"kMacroManager_InvocationMethodCommandDigit" (the default) is
-returned in "outMacroModeOfImportedSet".  If you do not need
-this information, it is safe to pass nullptr for
-"outMacroModeOfImportedSet".
-
-(3.0)
-*/
-Boolean
-Macros_ImportFromText	(MacroSet						inSet,
-						 FSSpec const*					inFileSpecPtrOrNull,
-						 MacroManager_InvocationMethod*	outMacroModeOfImportedSet)
-{
-	Boolean		result = true;
-	
-	
-	// if no file is given, a dialog is displayed and all selected files
-	// are automatically routed through Apple Events to trigger an import
-	if (nullptr == inFileSpecPtrOrNull)
-	{
-		// IMPORTANT: These should be consistent with declared types in the application "Info.plist".
-		void const*			kTypeList[] = { CFSTR("com.mactelnet.macros"),
-											CFSTR("macros"),/* redundant, needed for older systems */
-											CFSTR("TEXT")/* redundant, needed for older systems */ };
-		CFRetainRelease		fileTypes(CFArrayCreate(kCFAllocatorDefault, kTypeList,
-										sizeof(kTypeList) / sizeof(CFStringRef), &kCFTypeArrayCallBacks),
-										true/* is retained */);
-		CFStringRef			promptCFString = nullptr;
-		CFStringRef			titleCFString = nullptr;
-		
-		
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogPromptOpenMacroSet, promptCFString);
-		(UIStrings_Result)UIStrings_Copy(kUIStrings_SystemDialogTitleOpenMacroSet, titleCFString);
-		(Boolean)CocoaBasic_FileOpenPanelDisplay(promptCFString, titleCFString, fileTypes.returnCFArrayRef());
-	}
-	else
-	{
-		OSStatus 	error = noErr;
-		SInt16		fileRef = 0;
-		
-		
-		error = FSpOpenDF(inFileSpecPtrOrNull, fsRdPerm, &fileRef);
-		if ((noErr == error) && (result))
-		{
-			parseFile(inSet, fileRef, outMacroModeOfImportedSet);
-			FSClose(fileRef);
-		}
-	}
-	
-	return result;
-}// ImportFromText
-
-
-/*!
-Explicitly changes all of the macros in the specified
-temporary space to correspond to the text contained
-in a buffer of the specified size.
-
-IMPORTANT:	The internal parseFile() method does the
-			same fundamental thing as this routine,
-			but the complexities of file access made
-			it easier to simply duplicate most of the
-			code.  If you ever change anything here,
-			be sure to compare your changes with the
-			code of parseFile().
-
-(3.0)
-*/
-void
-Macros_ParseTextBuffer	(MacroSet							inSet,
-						 UInt8*								inSourcePtr,
-						 Size								inSize,
-						 MacroManager_InvocationMethod*		outMacroModeOfImportedSet)
-{
-	UInt8				buffer[300];
-	UInt8				newMacro[MACRO_MAX_LEN];
-	UInt8*				bufferPtr = nullptr;
-	UInt8*				newMacroPtr = nullptr;
-	UInt8*				dynamicSourcePtr = inSourcePtr;
-	OSStatus			error = noErr;
-	UInt16				numMacrosRead = 0;
-	register SInt16		totalLen = 0;
-	Size				count = 1; // number of bytes copied in total
-	
-	
-	bufferPtr = buffer;
-	
-	setTempMacrosToNull(inSet); // sets all handles in the current temporary macro space to nullptr
-
-	while ((error != eofErr) && (numMacrosRead < MACRO_COUNT))
-	{
-		*bufferPtr = *dynamicSourcePtr++;
-		if (count >= inSize) error = eofErr;
-		while ((*bufferPtr != 0x0D) && (error != eofErr)) // while not CR or EOF
-		{
-			++bufferPtr;
-			++count;
-			if (count <= inSize) *bufferPtr = *dynamicSourcePtr++;
-			else error = eofErr;
-		}
-		
-		// 3.0 - determine the key equivalents, if possible (this only needs to be done once)
-		if ((!numMacrosRead) && (outMacroModeOfImportedSet != nullptr))
-		{
-			// See Macros_ExportToText() for code that explicitly specifies that
-			// the key for a function key macro starts with a capital "F".  That
-			// code is the basis for the following test, which simply looks at
-			// the first character of each macro to see what the key equivalents
-			// in the set are.
-			if (buffer[0] == 'F') *outMacroModeOfImportedSet = kMacroManager_InvocationMethodFunctionKeys;
-			else *outMacroModeOfImportedSet = kMacroManager_InvocationMethodCommandDigit;
-		}
-		
-		totalLen = bufferPtr - buffer;
-		bufferPtr = buffer;
-		newMacroPtr = newMacro;
-		while ((*bufferPtr++ != '"') && (totalLen != 0)) --totalLen;
-		
-		while ((*bufferPtr != '"') && (totalLen != 0))
-		{
-			*newMacroPtr++ = *bufferPtr++;
-			--totalLen;
-		}
-		*newMacroPtr = '\0'; // make this a C string
-		
-		Macros_Set(inSet, numMacrosRead, (char*)newMacro);
-		++numMacrosRead;
-		bufferPtr = buffer;
-	}
-}// ParseTextBuffer
-
-
-/*!
-Returns the active macro set.
-
-(3.0)
-*/
-MacroSet
-Macros_ReturnActiveSet ()
-{
-	return gMacros[Macros_ReturnActiveSetNumber() - 1];
-}// ReturnActiveSet
-
-
-/*!
-Determines which set (from 1 to MACRO_SET_COUNT) is
-active.  The active set is the one which is referenced
-by the Macros_Get() and Macros_Set() methods.
-
-(3.0)
-*/
-MacroSetNumber
-Macros_ReturnActiveSetNumber ()
-{
-	return gActiveSet;
-}// ReturnActiveSetNumber
-
-
-/*!
-Determines the current macro mode.  The mode does not
-affect how macros are stored or manipulated, it only
-affects what is required by the user in order to “type”
-one.  The default macro mode is "command-digit", which
-means that one of the key combinations from -0 through
--9 or -= or -/ is required to type a macro.  Other
-modes, such as "function key" (F1-F12), are also
-available.
-
-(3.0)
-*/
-MacroManager_InvocationMethod
-Macros_ReturnMode ()
-{
-	return gMacroMode;
-}// ReturnMode
-
-
-/*!
-Explicitlys change the value of a particular macro.
-You can use the Macros_Copy() method to work between
-two macro spaces.
-
-The value of "inZeroBasedMacroNumber" must be between
-0 and one less than MACRO_COUNT.
-
-(3.0)
-*/
-void
-Macros_Set	(MacroSet		inSet,
-			 MacroIndex		inZeroBasedMacroNumber,
-			 char const*	inValue)
-{
-	setMacro(inSet, inZeroBasedMacroNumber, inValue);
-}// Set
-
-
-/*!
-Specifies which set (from 1 to MACRO_SET_COUNT) is
-active.  The active set is the one which is referenced
-by the Macros_Get() and Macros_Set() methods.
-
-(3.0)
-*/
-void
-Macros_SetActiveSetNumber	(MacroSetNumber		inMacroSetNumber)
-{
-	// first notify all interested listeners that the active macro set *will* be changing (but hasn’t yet)
-	changeNotifyForMacros(kMacros_ChangeActiveSetPlanned, nullptr/* context */);
-	
-	gActiveSet = inMacroSetNumber;
-	
-	// now notify all interested listeners that the active macro set has changed
-	changeNotifyForMacros(kMacros_ChangeActiveSet, nullptr/* context */);
-}// SetActiveSetNumber
-
-
-/*!
-Specifies the current macro mode.  The mode does not
-affect how macros are stored or manipulated, it only
-affects what is required by the user in order to “type”
-one.  The default macro mode is "command-digit", which
-means that one of the key combinations from -0 through
--9 or -= or -/ is required to type a macro.  Other
-modes, such as "function key" (F1-F12), are also
-available.
-
-(3.0)
-*/
-void
-Macros_SetMode	(MacroManager_InvocationMethod	inNewMode)
-{
-	gMacroMode = inNewMode;
-	
-	// now notify all interested listeners that the macro keys have changed
-	changeNotifyForMacros(kMacros_ChangeMode, &inNewMode);
-}// SetMode
-
-
-/*!
-Arranges for a callback to be invoked whenever a macro
-change occurs.  For example, you can use this to find
-out when the text of a macro changes, or the macro keys
-change.
-
-For certain changes, an event will also be fired right
-away, so that your handler sees the “initial value”.
-This currently applies to: "kMacros_ChangeActiveSet",
-"kMacros_ChangeMode".
-
-IMPORTANT:	The context passed to the listener callback
-			is reserved for passing information relevant
-			to a change.  See "MacroManager.h" for
-			comments on what the context means for each
-			type of change.
-
-(3.0)
-*/
-void
-Macros_StartMonitoring	(Macros_Change				inForWhatChange,
-						 ListenerModel_ListenerRef	inListener)
-{
-	OSStatus	error = noErr;
-	
-	
-	// add a listener to the listener model for the given change
-	error = ListenerModel_AddListenerForEvent(gMacroChangeListenerModel, inForWhatChange, inListener);
-	
-	switch (inForWhatChange)
-	{
-	case kMacros_ChangeActiveSet:
-		changeNotifyForMacros(kMacros_ChangeActiveSet, nullptr/* context */);
-		break;
-	
-	case kMacros_ChangeMode:
-		changeNotifyForMacros(kMacros_ChangeMode, &gMacroMode/* context */);
-		break;
-	
-	default:
-		// initial event not sent
-		break;
-	}
-}// StartMonitoring
-
-
-/*!
-Arranges for a callback to no longer be invoked whenever
-a macro change occurs.
-
-IMPORTANT:	This routine cancels the effects of a previous
-			call to Macros_StartMonitoring() - your
-			parameters must match the previous start-call,
-			or the stop will fail.
-
-(3.0)
-*/
-void
-Macros_StopMonitoring	(Macros_Change				inForWhatChange,
-						 ListenerModel_ListenerRef	inListener)
-{
-	// remove a listener from the listener model for the given change
-	ListenerModel_RemoveListenerForEvent(gMacroChangeListenerModel, inForWhatChange, inListener);
-}// StopMonitoring
-
-
-/*!
-Sends a specific macro to the given session (from the
-currently active macro set) as a string, representing
-the text that should be “typed” for the macro.
-
-Returns "true" only if successful.
-
-(2.6)
-*/
-Boolean
-MacroManager_UserInputMacroString	(SessionRef		inSession,
-									 MacroIndex		inZeroBasedMacroNumber)
-{
-	UInt8*				mp = nullptr;
-	UInt8*				first = nullptr;
-	register UInt16		zeroBasedActiveSetNumber = Macros_ReturnActiveSetNumber() - 1;
-	Boolean				result = true;
-	
-	
-	if (inZeroBasedMacroNumber > (MACRO_COUNT - 1))
-	{
-		// invalid number
-		result = false;
-	}
-	else if (gMacros[zeroBasedActiveSetNumber][inZeroBasedMacroNumber] != nullptr)
-	{
-		HLock(gMacros[zeroBasedActiveSetNumber][inZeroBasedMacroNumber]);
-		mp = (UInt8*)*gMacros[zeroBasedActiveSetNumber][inZeroBasedMacroNumber];
-		first = mp;
-		
-		while (*mp)
-		{
-			if (*mp == MACRO_IP)
-			{
-				std::string		ipAddressString;
-				int				addressType = 0;
-				
-				
-				Session_UserInputString(inSession, (char*)first, (mp - first) * sizeof(char), true/* record */);
-				if (Network_CurrentIPAddressToString(ipAddressString, addressType))
-				{
-					Session_UserInputString(inSession, ipAddressString.c_str(),
-											ipAddressString.size() * sizeof(char), true/* record */);
-				}
-				first = mp + 1;
-			}
-			else if (*mp == MACRO_LINES)
-			{
-				std::ostringstream	numberOfLinesBuffer;
-				std::string			numberOfLinesString;
-				
-				
-				Session_UserInputString(inSession, (char*)first, (mp - first) * sizeof(char), true/* record */);
-				numberOfLinesBuffer << Terminal_ReturnRowCount(Session_ConnectionDataPtr(inSession)->vs);
-				numberOfLinesString = numberOfLinesBuffer.str();
-				Session_UserInputString(inSession, numberOfLinesString.c_str(),
-										numberOfLinesString.size(), true/* record */);
-				first = mp + 1;
-			}
-			++mp;
-		}
-		Session_UserInputString(inSession, (char*)first, (mp - first) * sizeof(char), true/* record */);
-		
-		HUnlock(gMacros[zeroBasedActiveSetNumber][inZeroBasedMacroNumber]);
-	}
-	
-	return result;
-}// UserInputMacroString
-
-
-#pragma mark Internal Methods
-
-/*!
-Determines if all macros in the specified set
-are empty.  This is the case if all strings
-in the set have zero length.
-
-(3.0)
-*/
-static Boolean
-allEmpty	(MacroSet	inSet)
-{
-	Boolean				result = true;
-	register SInt16		i = 0;
-	Str255				temp;
-	
-	
-	for (i = 0; (i < MACRO_COUNT) && (result); ++i)
-	{
-		getMacro(inSet, i, (char*)&temp, sizeof(temp));
-		if (CPP_STD::strlen((char*)&temp) > 0) result = false;
-	}
-	return result;
-}// allEmpty
-
-
-/*!
-Notifies all listeners for the specified Macros
-state change, passing the given context to the
-listener.
-
-IMPORTANT:	The context must make sense for the
-			type of change; see "MacroManager.h"
-			for the type of context associated
-			with each macros change.
-
-(3.0)
-*/
-static void
-changeNotifyForMacros	(Macros_Change	inWhatChanged,
-						 void*			inContextPtr)
-{
-	// invoke listener callback routines appropriately, from the listener model
-	ListenerModel_NotifyListenersOfEvent(gMacroChangeListenerModel, inWhatChanged, inContextPtr);
-}// changeNotifyForMacros
-
-
-/*!
-Writes the contents of a string to a file that has an
-ID number in the Macintosh HFS.
-
-(2.6)
-*/
-static OSStatus
-cStringToFile	(SInt16			inFileID,
-				 char const*	inString)
-{
-	SInt32		byteCount = CPP_STD::strlen(inString);
-	OSStatus	result = noErr;
-	
-	
-	result = FSWrite(inFileID, &byteCount, inString);
-	return result;
-}// cStringToFile
-
-
-/*!
-Copies a macro’s text into an array of characters.  The
-macro number is a zero-based index into the given set.
-
-If the given index is valid, 0 is returned; otherwise,
--1 is returned.
-
-(3.0)
-*/
-static SInt16
-getMacro	(MacroSet		inSet,
-			 MacroIndex		inMacroNumber,
-			 char*			outValue,
-			 SInt16			inRoom)
-{
-	SInt16		result = 0;
-	UInt8*		s = nullptr;
-	
-	
-	// invalid number?
-	if (inMacroNumber <= (MACRO_COUNT - 1))
-	{
-		if (inSet[inMacroNumber] != nullptr)
-		{
-			s = (UInt8*)*inSet[inMacroNumber];
-			
-			while (*s && (inRoom >= 5)) // 5 = (size of \xxx) + (terminating \0)
-			{
-				switch (*s)
-				{
-				case MACRO_IP:
-					// 0xFF -> "\i"
-					*outValue++ = '\\';
-					*outValue++ = 'i';
-					--inRoom;
-					break;
-				
-				case MACRO_LINES:
-					// 0xFE -> "\#"
-					*outValue++ = '\\';
-					*outValue++ = '#';
-					--inRoom;
-					break;
-				
-				case '\\':
-					// \ -> "\\"
-					*outValue++ = '\\';
-					*outValue++ = '\\';
-					--inRoom;
-					break;
-				
-				case '\033':
-					// ESC -> "\e"
-					*outValue++ = '\\';
-					*outValue++ = 'e';
-					--inRoom;
-					break;
-				
-				case '\015':
-					// CR -> "\r"
-					*outValue++ = '\\';
-					*outValue++ = 'r';
-					--inRoom;
-					break;
-				
-				case '\012':
-					// LF -> "\n"
-					*outValue++ = '\\';
-					*outValue++ = 'n';
-					--inRoom;
-					break;
-				
-				case '\t':
-					// tab -> "\t"
-					*outValue++ = '\\';
-					*outValue++ = 't';
-					--inRoom;
-					break;
-				
-				default: 
-					if (CPP_STD::isprint(*s)) *outValue++ = *s;
-					else
-					{
-						*outValue++ = '\\';
-						*outValue++ = (*s / 64) + '0';
-						*outValue++ = ((*s % 64) / 8) + '0';
-						*outValue++ = (*s % 8) + '0';
-						inRoom = inRoom - 3;
-					}
-					break;
-				}
-				
-				--inRoom;
-				++s;
-			}
-		}
-		*outValue = 0;
-	}
-	else
-	{
-		result = -1;
-	}
-	
-	return result;
-}// getMacro
-
-
-/*!
-Explicitly changes all of the macros in the specified
-temporary space to correspond to the text imported
-from an open file.
-
-If specified (that is, not nullptr), the parameter
-"outMacroModeOfImportedSet" can be used to determine
-the type of key equivalents that a file’s macros were
-meant to use.  This is not always possible to
-determine - in such case, the default value is
-"kMacroManager_InvocationMethodCommandDigit".
-
-IMPORTANT:	Macros_ParseTextBuffer() does the same
-			fundamental thing as this routine, but the
-			complexities of file access made it easier
-			to simply duplicate most of the code.  If
-			you ever change anything here, be sure to
-			compare your changes with the code of
-			Macros_ParseTextBuffer().
-
-(2.6)
-*/
-static void
-parseFile	(MacroSet							inSet,
-			 SInt16								inFileRef,
-			 MacroManager_InvocationMethod*		outMacroModeOfImportedSet)
-{
-	UInt8				buffer[300];
-	UInt8				newMacro[MACRO_MAX_LEN];
-	UInt8*				bufferPtr = nullptr;
-	UInt8*				newMacroPtr = nullptr;
-	OSStatus			fileErr = noErr;
-	UInt16				numMacrosRead = 0;
-	register SInt16		totalLen = 0;
-	long				count = 1; // read one byte per file access
-	
-	
-	bufferPtr = buffer; 
-	
-	setTempMacrosToNull(inSet); // sets all handles in the current temporary macro space to nullptr
-	
-	while ((fileErr != eofErr) && (numMacrosRead < MACRO_COUNT))
-	{
-		fileErr = FSRead(inFileRef, &count, bufferPtr);
-		while ((*bufferPtr != 0x0D) && (fileErr != eofErr)) // while not CR or EOF
-		{
-			++bufferPtr;
-			fileErr = FSRead(inFileRef, &count, bufferPtr);
-		}
-		
-		// 3.0 - determine the key equivalents, if possible (this only needs to be done once)
-		if ((!numMacrosRead) && (outMacroModeOfImportedSet != nullptr))
-		{
-			// See Macros_ExportToText() for code that explicitly specifies that
-			// the key for a function key macro starts with a capital "F".  That
-			// code is the basis for the following test, which simply looks at
-			// the first character to find the key equivalents of the set.
-			if (buffer[0] == 'F') *outMacroModeOfImportedSet = kMacroManager_InvocationMethodFunctionKeys;
-			else *outMacroModeOfImportedSet = kMacroManager_InvocationMethodCommandDigit;
-		}
-		
-		totalLen = bufferPtr - buffer;
-		bufferPtr = buffer;
-		newMacroPtr = newMacro;
-		while ((*bufferPtr++ != '"') && (totalLen != 0)) --totalLen;
-		
-		while ((*bufferPtr != '"') && (totalLen != 0))
-		{
-			*newMacroPtr++ = *bufferPtr++;
-			--totalLen;
-		}
-		*newMacroPtr = '\0'; // make this a C string
-		
-		Macros_Set(inSet, numMacrosRead, (char*)newMacro);
-		++numMacrosRead;
-		bufferPtr = buffer;
-	}
-}// parseFile
-
-
-/*!
-Nullifies all macro handles in the space of the active
-temporary set, leaving other temporary sets untouched.
-
-(3.0)
-*/
-static void
-setTempMacrosToNull		(MacroSet	inSet)
-{
-	register SInt16		i = 0;
-	
-	
-	for (i = 0; i < MACRO_COUNT; ++i)
-	{
-		if (inSet[i] != nullptr) Memory_DisposeHandle(&inSet[i]);
-		inSet[i] = nullptr;
-	}
-}// setTempMacrosToNull
-
-
-/*!
-Sets the specified macro’s text to a copy of the given text.
-The macro number is a zero-based index into the given set.
-
-If the given index is valid, 0 is returned; otherwise, -1 is
-returned.
-
-(3.0)
-*/
-static void
-setMacro	(MacroSet		inoutDestination,
-			 MacroIndex		inMacroNumber,
-			 char const*	inValue)
-{
-	if (inMacroNumber <= (MACRO_COUNT - 1))
-	{
-		SInt16 const	kStringLength = CPP_STD::strlen(inValue);
-		
-		
-		if (kStringLength == 0)
-		{
-			// if this is an empty string, remove whatever storage might have
-			// been used previously by this macro
-			if (inoutDestination[inMacroNumber] != nullptr)
-			{
-				Memory_DisposeHandle(&inoutDestination[inMacroNumber]);
-			}
-		}
-		else if (kStringLength < MACRO_MAX_LEN)
-		{
-			SInt16		totalByteCount = 0; // length of string plus room for a terminating byte
-			
-			
-			// restrict the maximum length of macros to MACRO_MAX_LEN bytes
-			totalByteCount = CPP_STD::strlen(inValue) + 1;
-			
-			// if necessary, create storage for the macro
-			if (inoutDestination[inMacroNumber] == nullptr)
-			{
-				inoutDestination[inMacroNumber] = Memory_NewHandle(totalByteCount * sizeof(char));
-			}
-			
-			if (inoutDestination[inMacroNumber] != nullptr)
-			{
-				UInt8*			destPtr = nullptr;
-				UInt8 const*	srcPtr = REINTERPRET_CAST(inValue, UInt8 const*);
-				OSStatus		memError = noErr;
-				
-				
-				// adjust the handle to the proper size (may be making an existing macro longer)
-				memError = Memory_SetHandleSize(inoutDestination[inMacroNumber], totalByteCount * sizeof(char));
-				if (memError == noErr)
-				{
-					SInt16		num = 0,
-								pos = 0;
-					Boolean		escape = false;
-					
-					
-					HLock(inoutDestination[inMacroNumber]);
-					destPtr = (UInt8*)*inoutDestination[inMacroNumber];
-					
-					while (*srcPtr)
-					{
-						if (escape)
-						{
-							escape = false;
-							switch (*srcPtr)
+							if (i == (kLength - 1))
 							{
-							case 'i': // current IP address
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									*destPtr++ = *srcPtr;
-									pos = 0;
-								}
-								*destPtr++ = MACRO_IP;
-								break;
-							
-							case '#': // number of rows in terminal screen
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									*destPtr++ = *srcPtr;
-									pos = 0;
-								}
-								*destPtr++ = MACRO_LINES;
-								break;
-							
-							case 'e': // ESC
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									*destPtr++ = *srcPtr;
-									pos = 0;
-								}
-								*destPtr++ = '\033';
-								break;
-							
-							case 'n': // new-line
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									*destPtr++ = *srcPtr;
-									pos = 0;
-								}
-								*destPtr++ = '\012';
-								break;
-							
-							case 'r': // carriage return
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									*destPtr++ = *srcPtr;
-									pos = 0;
-								}
-								*destPtr++ = '\015';
-								break;
-							
-							case 't': // tab
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									*destPtr++ = *srcPtr;
-									pos = 0;
-								}
-								*destPtr++ = '\t';
-								break;
-							
-							case '"': // double-quotes
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									*destPtr++ = *srcPtr;
-									pos = 0;
-								}
-								*destPtr++ = '\"';
-								break;
-									
-							case '\\': // single backslash
-								if (pos > 0)
-								{
-									*destPtr++ = num;
-									escape = true;
-									pos = 0;
-									num = 0;
-								}
-								else
-								{
-									*destPtr++ = '\\';
-								}
-								break;
-							
-							default:
-								if (CPP_STD::isdigit(*srcPtr) && pos < 3)
-								{
-									num = num * 8 + (*srcPtr - '0');
-									++pos;
-									escape = true;
-								}
-								else
-								{
-									if (pos == 0 && num == 0)
-									{
-										*destPtr++ = '\\';
-										*destPtr++ = *srcPtr;
-									}
-									else
-									{
-										*destPtr++ = num;
-										pos = 0;
-										--srcPtr; // retreat to previous character
-									}
-								}
-								break;
-							}
-						}
-						else
-						{
-							if (*srcPtr == '\\')
-							{
-								num = 0;
-								pos = 0;
-								escape = true;
+								CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(), &thisChar, 1/* count */);
 							}
 							else
 							{
-								*destPtr++ = *srcPtr;
+								UniChar		nextChar = CFStringGetCharacterFromInlineBuffer(&charBuffer, i + 1);
+								
+								
+								if (readOctal >= 0)
+								{
+									if (readOctal == 1) octalSequenceCharCode = '\100';
+									else octalSequenceCharCode = '\0';
+									
+									switch (thisChar)
+									{
+									case '0':
+										break;
+									
+									case '1':
+										octalSequenceCharCode += '\010';
+										break;
+									
+									case '2':
+										octalSequenceCharCode += '\020';
+										break;
+									
+									case '3':
+										octalSequenceCharCode += '\030';
+										break;
+									
+									case '4':
+										octalSequenceCharCode += '\040';
+										break;
+									
+									case '5':
+										octalSequenceCharCode += '\050';
+										break;
+									
+									case '6':
+										octalSequenceCharCode += '\060';
+										break;
+									
+									case '7':
+										octalSequenceCharCode += '\070';
+										break;
+									
+									default:
+										// ???
+										Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
+										substitutionError = true;
+										readOctal = -1; // flag error
+										break;
+									}
+									
+									switch (nextChar)
+									{
+									case '0':
+										break;
+									
+									case '1':
+										octalSequenceCharCode += '\001';
+										break;
+									
+									case '2':
+										octalSequenceCharCode += '\002';
+										break;
+									
+									case '3':
+										octalSequenceCharCode += '\003';
+										break;
+									
+									case '4':
+										octalSequenceCharCode += '\004';
+										break;
+									
+									case '5':
+										octalSequenceCharCode += '\005';
+										break;
+									
+									case '6':
+										octalSequenceCharCode += '\006';
+										break;
+									
+									case '7':
+										octalSequenceCharCode += '\007';
+										break;
+									
+									default:
+										// ???
+										Console_WriteLine("non-octal-numeric character found while handling a \\0nn sequence");
+										substitutionError = true;
+										readOctal = -1; // flag error
+										break;
+									}
+									
+									// this is set to false to flag errors in the above switches...
+									if (readOctal >= 0)
+									{
+										++i; // skip the 2nd digit (1st digit is current)
+										CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(),
+																	&octalSequenceCharCode, 1/* count */);
+									}
+									
+									readOctal = -1;
+								}
+								else if (thisChar == '\\')
+								{
+									// process escape sequence
+									switch (nextChar)
+									{
+									case '\\':
+										// an escaped backslash; send a single backslash
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\\"));
+										++i; // skip special sequence character
+										break;
+									
+									case '"':
+										// an escaped double-quote; send a double-quote (for legacy reasons, this is allowed)
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\""));
+										++i; // skip special sequence character
+										break;
+									
+									case '#':
+										// number of terminal lines
+										{
+											TerminalWindowRef const		kTerminalWindow = Session_ReturnActiveTerminalWindow(session);
+											
+											
+											substitutionError = true;
+											if (nullptr == kTerminalWindow)
+											{
+												Console_WriteLine("unexpected error finding the terminal window, while handling \\# sequence");
+											}
+											else
+											{
+												TerminalScreenRef const		kTerminalScreen = TerminalWindow_ReturnScreenWithFocus(kTerminalWindow);
+												
+												
+												if (nullptr == kTerminalScreen)
+												{
+													Console_WriteLine("unexpected error finding the terminal screen, while handling \\# sequence");
+												}
+												else
+												{
+													unsigned int const			kLineCount = Terminal_ReturnRowCount(kTerminalScreen);
+													CFRetainRelease				numberCFString(CFStringCreateWithFormat
+																								(kCFAllocatorDefault, nullptr/* options */,
+																									CFSTR("%u"), kLineCount), true/* is retained */);
+													
+													
+													CFStringAppend(finalCFString.returnCFMutableStringRef(), numberCFString.returnCFStringRef());
+													substitutionError = false;
+												}
+											}
+										}
+										++i; // skip special sequence character
+										break;
+									
+									case 'e':
+										// escape; equivalent to \033
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\033"));
+										++i; // skip special sequence character
+										break;
+									
+									case 'i':
+										// IP address
+										{
+											std::vector< CFRetainRelease >		addressList;
+											
+											
+											if (Network_CopyIPAddresses(addressList))
+											{
+												// TEMPORARY - should there be a way to select among available addresses?
+												assert(false == addressList.empty());
+												CFStringAppend(finalCFString.returnCFMutableStringRef(), addressList[0].returnCFStringRef());
+											}
+											else
+											{
+												substitutionError = true;
+											}
+										}
+										++i; // skip special sequence character
+										break;
+									
+									case 'n':
+										// new-line
+										// TEMPORARY - should send the sanctioned new-line sequence for the session
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\n"));
+										++i; // skip special sequence character
+										break;
+									
+									case 'r':
+										// carriage return without line feed
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\r"));
+										++i; // skip special sequence character
+										break;
+									
+									case 't':
+										// horizontal tabulation
+										CFStringAppend(finalCFString.returnCFMutableStringRef(), CFSTR("\t"));
+										++i; // skip special sequence character
+										break;
+									
+									case '0':
+										// possibly an arbitrary character code substitution
+										readOctal = 0;
+										++i; // skip special sequence character
+										break;
+									
+									case '1':
+										// possibly an arbitrary character code substitution
+										readOctal = 1;
+										++i; // skip special sequence character
+										break;
+									
+									default:
+										// ???
+										Console_WriteValueCharacter("warning, unrecognized backslash escape", nextChar);
+										substitutionError = true;
+										break;
+									}
+								}
+								else 
+								{
+									// not an escape sequence
+									CFStringAppendCharacters(finalCFString.returnCFMutableStringRef(), &thisChar, 1/* count */);
+								}
 							}
 						}
-						++srcPtr;
+						
+						if (substitutionError)
+						{
+							Console_WriteLine("macro was not handled due to substitution errors");
+						}
+						else
+						{
+							// at last, send the edited string to the session!
+							Session_UserInputCFString(session, finalCFString.returnCFStringRef());
+							result = kMacroManager_ResultOK;
+						}
 					}
-					
-					if (pos > 0) *destPtr++ = num;
-					
-					*destPtr = '\0'; // terminate string
-					
-					// The resultant macro may be shorter than the input string due to escaped characters.
-					// So, recalculate the length of the macro and resize the handle if necessary.
-					totalByteCount = CPP_STD::strlen(*inoutDestination[inMacroNumber]) + 1;
-					
-					HUnlock(inoutDestination[inMacroNumber]);
-					memError = Memory_SetHandleSize(inoutDestination[inMacroNumber],
-													totalByteCount * sizeof(char));
-					
-					// now notify all interested listeners that a macro has changed
+					break;
+				
+				case kMacroManager_ActionHandleURL:
 					{
-						MacroDescriptor		descriptor;
+						OSStatus	error = URL_ParseCFString(actionCFString);
 						
 						
-						descriptor.set = inoutDestination;
-						descriptor.index = inMacroNumber;
-						changeNotifyForMacros(kMacros_ChangeContents, &descriptor);
+						if (noErr == error) result = kMacroManager_ResultOK;
 					}
+					result = kMacroManager_ResultOK;
+					break;
+				
+				case kMacroManager_ActionNewWindowWithCommand:
+					{
+						CFArrayRef		argsCFArray = CFStringCreateArrayBySeparatingStrings
+														(kCFAllocatorDefault, actionCFString, CFSTR(" ")/* LOCALIZE THIS? */);
+						
+						
+						if (nullptr != argsCFArray)
+						{
+							SessionRef		newSession = nullptr;
+							
+							
+							newSession = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, argsCFArray);
+							if (nullptr != newSession) result = kMacroManager_ResultOK;
+							
+							CFRelease(argsCFArray), argsCFArray = nullptr;
+						}
+					}
+					break;
+				
+				default:
+					// ???
+					break;
 				}
+				CFRelease(actionCFString), actionCFString = nullptr;
 			}
 		}
 	}
-}// setMacro
+	return result;
+}// UserInputMacro
+
+
+#pragma mark Internal Methods
+namespace {
+
+/*!
+The Preferences module calls this routine whenever a
+monitored macro setting is changed.  This allows cached
+strings to be recalculated, menus to be updated, etc.
+
+(4.0)
+*/
+void
+macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+					 ListenerModel_Event	inPreferenceTagThatChanged,
+					 void*					inPreferencesContext,
+					 void*					UNUSED_ARGUMENT(inListenerContext))
+{
+	Preferences_ContextRef		prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
+	MenuRef						macrosMenu = MenuBar_ReturnMacrosMenu();
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
+	size_t						actualSize = 0;
+	
+	
+	if (kPreferences_TagMacrosMenuVisible == inPreferenceTagThatChanged)
+	{
+		// global preference
+		Boolean		flag = false;
+		
+		
+		prefsResult = Preferences_GetData(inPreferenceTagThatChanged, sizeof(flag), &flag, &actualSize);
+		gShowMacrosMenu = flag;
+		if (gShowMacrosMenu)
+		{
+			// the menu should remain hidden if the current macro set is None
+			// (it will be shown again if the user switches the macro set)
+			if (nullptr != gCurrentMacroSet())
+			{
+				(OSStatus)ChangeMenuAttributes(macrosMenu, 0/* attributes to set */, kMenuAttrHidden/* attributes to clear */);
+			}
+		}
+		else
+		{
+			// hide menu immediately
+			(OSStatus)ChangeMenuAttributes(macrosMenu, kMenuAttrHidden/* attributes to set */, 0/* attributes to clear */);
+		}
+	}
+	else if (nullptr == prefsContext)
+	{
+		Console_WriteLine("warning, callback was invoked for nonexistent macro set");
+	}
+	else
+	{
+		switch (inPreferenceTagThatChanged)
+		{
+		case kPreferences_TagIndexedMacroAction:
+			// TEMPORARY - do nothing for now, but the plan is to eventually use
+			// this opportunity to cache all actions in an array so that no time
+			// is wasted on a query at macro invocation time
+			break;
+		
+		case kPreferences_TagIndexedMacroContents:
+			// TEMPORARY - do nothing for now, but the plan is to eventually use
+			// this opportunity to pre-scan and cache a mostly-processed string
+			// (e.g. static escape sequences translated) for repeated use at
+			// macro invocation time
+			break;
+		
+		case kPreferences_TagIndexedMacroName:
+			// update every menu item to match the macro names of the set
+			// TEMPORARY: it would be nicer to have a notifier that returns a specific index, too...
+			for (UInt32 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			{
+				CFStringRef		nameCFString = nullptr;
+				
+				
+				// retrieve name
+				prefsResult = Preferences_ContextGetDataAtIndex(prefsContext, inPreferenceTagThatChanged,
+																i/* one-based index */, sizeof(nameCFString), &nameCFString,
+																true/* search defaults too */, &actualSize);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					(OSStatus)SetMenuItemTextWithCFString(macrosMenu, i, nameCFString);
+					CFRelease(nameCFString), nameCFString = nullptr;
+				}
+			}
+			break;
+		
+		case kPreferences_TagIndexedMacroKey:
+			// update every menu item to match the macro keys of the set
+			// TEMPORARY: it would be nicer to have a notifier that returns a specific index, too...
+			for (UInt32 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			{
+				MacroManager_KeyID		macroKeyID = 0;
+				
+				
+				// retrieve key modifiers
+				prefsResult = Preferences_ContextGetDataAtIndex(prefsContext, inPreferenceTagThatChanged,
+																i/* one-based index */, sizeof(macroKeyID), &macroKeyID,
+																true/* search defaults too */, &actualSize);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
+					Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(macroKeyID);
+					
+					
+					// reset menu item
+					(OSStatus)ChangeMenuItemAttributes(macrosMenu, i, 0/* attributes to set */,
+														kMenuItemAttrUseVirtualKey/* attributes to clear */);
+					(OSStatus)SetMenuItemCommandKey(macrosMenu, i, false/* virtual key */, '\0'/* character */);
+					(OSStatus)SetMenuItemKeyGlyph(macrosMenu, i, kMenuNullGlyph);
+					
+					// apply new key equivalent
+					(OSStatus)SetMenuItemCommandKey(macrosMenu, i, kIsVirtualKey, kKeyCode);
+				}
+			}
+			break;
+		
+		case kPreferences_TagIndexedMacroKeyModifiers:
+			// update every menu item to match the macro key modifiers of the set
+			// TEMPORARY: it would be nicer to have a notifier that returns a specific index, too...
+			for (UInt32 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			{
+				UInt32		modifiers = 0;
+				
+				
+				// retrieve key modifiers
+				prefsResult = Preferences_ContextGetDataAtIndex(prefsContext, inPreferenceTagThatChanged,
+																i/* one-based index */, sizeof(modifiers), &modifiers,
+																true/* search defaults too */, &actualSize);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					UInt8		abbreviatedModifiers = kMenuNoCommandModifier;
+					
+					
+					// NOTE: if a command key has not been assigned to the item,
+					// setting its modifiers will have no visible effect
+					if (modifiers & cmdKey) abbreviatedModifiers &= ~kMenuNoCommandModifier;
+					if (modifiers & controlKey) abbreviatedModifiers |= kMenuControlModifier;
+					if (modifiers & optionKey) abbreviatedModifiers |= kMenuOptionModifier;
+					if (modifiers & shiftKey) abbreviatedModifiers |= kMenuShiftModifier;
+					(OSStatus)SetMenuItemModifiers(macrosMenu, i, abbreviatedModifiers);
+				}
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+}// macroSetChanged
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand" for
+macro set selection commands.
+
+(4.0)
+*/
+pascal OSStatus
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					UNUSED_ARGUMENT(inContextPtr))
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	{
+		HICommand	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (result == noErr)
+		{
+			// don’t claim to have handled any commands not shown below
+			result = eventNotHandledErr;
+			
+			switch (kEventKind)
+			{
+			case kEventCommandProcess:
+				// Determine if a menu command needs updating.
+				switch (received.commandID)
+				{
+				case kCommandMacroSetNone:
+					{
+						MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+						
+						
+						macrosResult = MacroManager_SetCurrentMacros(nullptr);
+						if (false == macrosResult.ok())
+						{
+							Sound_StandardAlert();
+						}
+						result = noErr;
+					}
+					break;
+				
+				case kCommandMacroSetDefault:
+					{
+						MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+						
+						
+						macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
+						if (false == macrosResult.ok())
+						{
+							Sound_StandardAlert();
+						}
+						result = noErr;
+					}
+					break;
+				
+				case kCommandMacroSetByFavoriteName:
+					{
+						// use the specified preferences
+						Boolean		isError = true;
+						
+						
+						if (received.attributes & kHICommandFromMenu)
+						{
+							CFStringRef		collectionName = nullptr;
+							
+							
+							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
+							{
+								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
+																			(kPreferences_ClassMacroSet, collectionName);
+								
+								
+								if (nullptr != namedSettings)
+								{
+									MacroManager_Result		macrosResult = kMacroManager_ResultOK;
+									
+									
+									macrosResult = MacroManager_SetCurrentMacros(namedSettings);
+									isError = (false == macrosResult.ok());
+								}
+								CFRelease(collectionName), collectionName = nullptr;
+							}
+						}
+						
+						if (isError)
+						{
+							// failed...
+							Sound_StandardAlert();
+						}
+						
+						result = noErr;
+					}
+					break;
+				
+				default:
+					// ???
+					break;
+				}
+				break;
+			
+			case kEventCommandUpdateStatus:
+				// Execute a command selected from a menu (or sent from a control, etc.).
+				//
+				// IMPORTANT: This could imply ANY form of menu selection, whether from
+				//            the menu bar, from a contextual menu, or from a pop-up menu!
+				switch (received.commandID)
+				{
+				case kCommandMacroSetNone:
+					if (received.attributes & kHICommandFromMenu)
+					{
+						MenuRef			menu = received.menu.menuRef;
+						MenuItemIndex	itemIndex = received.menu.menuItemIndex;
+						
+						
+						CheckMenuItem(menu, itemIndex, (nullptr == gCurrentMacroSet()));
+						
+						// fall through to the other handler (MenuBar module), which
+						// will also fix the active state of this item
+						result = eventNotHandledErr;
+					}
+					break;
+				
+				case kCommandMacroSetDefault:
+					if (received.attributes & kHICommandFromMenu)
+					{
+						MenuRef			menu = received.menu.menuRef;
+						MenuItemIndex	itemIndex = received.menu.menuItemIndex;
+						
+						
+						CheckMenuItem(menu, itemIndex, (returnDefaultMacroSet() == gCurrentMacroSet()));
+						
+						// fall through to the other handler (MenuBar module), which
+						// will also fix the active state of this item
+						result = eventNotHandledErr;
+					}
+					break;
+				
+				case kCommandMacroSetByFavoriteName:
+					if (received.attributes & kHICommandFromMenu)
+					{
+						MenuRef			menu = received.menu.menuRef;
+						MenuItemIndex	itemIndex = received.menu.menuItemIndex;
+						Boolean			isChecked = false;
+						
+						
+						if (nullptr != gCurrentMacroSet())
+						{
+							CFStringRef		collectionName = nullptr;
+							CFStringRef		menuItemName = nullptr;
+							
+							
+							if (noErr == CopyMenuItemTextAsCFString(menu, itemIndex, &menuItemName))
+							{
+								// the context name should not be released
+								Preferences_Result		prefsResult = Preferences_ContextGetName(gCurrentMacroSet(), collectionName);
+								
+								
+								if (kPreferences_ResultOK == prefsResult)
+								{
+									isChecked = (kCFCompareEqualTo == CFStringCompare(collectionName, menuItemName, 0/* options */));
+								}
+								CFRelease(menuItemName), menuItemName = nullptr;
+							}
+						}
+						CheckMenuItem(menu, itemIndex, isChecked);
+						
+						// fall through to the other handler (MenuBar module), which
+						// will also fix the active state of this item
+						result = eventNotHandledErr;
+					}
+					break;
+				
+				default:
+					// ???
+					break;
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+		}
+	}
+	return result;
+}// receiveHICommand
+
+
+/*!
+In order to initialize a static (global) variable immediately,
+this function was written to return a value.  Otherwise, it is
+no different than calling Preferences_GetDefaultContext()
+directly for a macro set class.
+
+(4.0)
+*/
+Preferences_ContextRef
+returnDefaultMacroSet ()
+{
+	Preferences_ContextRef		result = nullptr;
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
+	
+	
+	prefsResult = Preferences_GetDefaultContext(&result, kPreferences_ClassMacroSet);
+	assert(kPreferences_ResultOK == prefsResult);
+	return result;
+}// returnDefaultMacroSet
+
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

@@ -237,7 +237,7 @@ enum
 {
 	kPreferences_TagIndexedMacroAction					= 'mcac',	//!< data: a "kMacroManager_ActionÉ" constant
 	kPreferences_TagIndexedMacroContents				= 'mtxt',	//!< data: "CFStringRef"
-	kPreferences_TagIndexedMacroKey						= 'mcky',	//!< data: TBD
+	kPreferences_TagIndexedMacroKey						= 'mcky',	//!< data: "MacroManager_KeyID"
 	kPreferences_TagIndexedMacroKeyModifiers			= 'mmod',	//!< data: "UInt32", 0 or a bitwise-OR with any of: cmdKey, shiftKey, controlKey, optionKey
 	kPreferences_TagIndexedMacroName					= 'mnam'	//!< data: "CFStringRef"
 };
@@ -402,6 +402,7 @@ The context passed to the listeners of global preference changes.
 struct Preferences_ChangeContext
 {
 	Preferences_ContextRef		contextRef;		//!< if nullptr, the preference is global; otherwise, it occurred in this context
+	UInt32						oneBasedIndex;	//!< if 0, not an indexed setting; otherwise, the 1-based index of the setting that changed
 	Boolean						firstCall;		//!< whether or not this is the first time the preference notification has occurred
 												//!  (if so, the value of the preference reflects its initial value)
 };
@@ -604,13 +605,14 @@ void
 
 Preferences_Result
 	Preferences_ContextStartMonitoring		(Preferences_ContextRef				inContext,
+											 ListenerModel_ListenerRef			inListener,
 											 Preferences_Change					inForWhatChange,
-											 ListenerModel_ListenerRef			inListener);
+											 Boolean							inNotifyOfInitialValue = false);
 
 Preferences_Result
 	Preferences_ContextStopMonitoring		(Preferences_ContextRef				inContext,
-											 Preferences_Change					inForWhatChange,
-											 ListenerModel_ListenerRef			inListener);
+											 ListenerModel_ListenerRef			inListener,
+											 Preferences_Change					inForWhatChange);
 
 Preferences_Result
 	Preferences_StartMonitoring				(ListenerModel_ListenerRef			inListener,

@@ -233,7 +233,6 @@ enum
 	// modal dialogs and sheets
 	kConstantsRegistry_WindowDescriptorFind					= 'Find',
 	kConstantsRegistry_WindowDescriptorFormat				= 'Font',
-	kConstantsRegistry_WindowDescriptorMacroSetup			= 'Mcro',
 	kConstantsRegistry_WindowDescriptorNameNewFavorite		= 'DupF',
 	kConstantsRegistry_WindowDescriptorNewSessions			= 'NewS',
 	kConstantsRegistry_WindowDescriptorPasswordEntry		= 'Pswd',

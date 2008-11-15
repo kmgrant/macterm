@@ -126,6 +126,8 @@ public:
 	virtual
 	~My_ContextInterface ();
 	
+	Preferences_ContextRef		selfRef;	//!< convenient, redundant self-reference
+	
 	//! inserts array value into dictionary
 	void
 	addArray	(Preferences_Tag	inTag,
@@ -179,7 +181,8 @@ public:
 	//! manages callbacks that are invoked as changes are made
 	Boolean
 	addListener		(ListenerModel_ListenerRef,
-					 Preferences_Change);
+					 Preferences_Change,
+					 Boolean);
 	
 	//! inserts short integer value into dictionary
 	void
@@ -307,7 +310,6 @@ protected:
 	setImplementor	(CFKeyValueInterface*);
 
 private:
-	Preferences_ContextRef	_selfRef;			//!< convenient, redundant self-reference
 	Preferences_Class		_preferencesClass;	//!< hint as to what keys are likely to be present
 	ListenerModel_Ref		_listenerModel;		//!< if monitors are used, handles change notifications
 	CFKeyValueInterface*	_implementorPtr;	//!< how settings are saved (e.g. application preferences, an in-memory dictionary...)
@@ -496,7 +498,8 @@ namespace {
 
 Preferences_Result		assertInitialized						();
 void					changeNotify							(Preferences_Change,
-																 Preferences_ContextRef = nullptr, Boolean = false);
+																 Preferences_ContextRef = nullptr,
+																 UInt32 = 0, Boolean = false);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Preferences_Class, Preferences_Tag,
 																 UInt32, size_t, void*, size_t*);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
@@ -550,6 +553,8 @@ Preferences_Result		setTerminalPreference					(My_ContextInterfacePtr, Preferenc
 																 size_t, void const*);
 Preferences_Result		setTranslationPreference				(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
+CFStringRef				virtualKeyCreateName					(UInt16);
+Boolean					virtualKeyParseName						(CFStringRef, UInt16&, Boolean&);
 Boolean					unitTest000_Begin						();
 Boolean					unitTest001_Begin						();
 Boolean					unitTest002_Begin						();
@@ -1932,8 +1937,9 @@ if the listener could not be added
 */
 Preferences_Result
 Preferences_ContextStartMonitoring		(Preferences_ContextRef		inContext,
+										 ListenerModel_ListenerRef	inListener,
 										 Preferences_Change			inForWhatChange,
-										 ListenerModel_ListenerRef	inListener)
+										 Boolean					inNotifyOfInitialValue)
 {
 	Preferences_Result		result = kPreferences_ResultGenericFailure;
 	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -1942,7 +1948,7 @@ Preferences_ContextStartMonitoring		(Preferences_ContextRef		inContext,
 	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
-		Boolean		addOK = ptr->addListener(inListener, inForWhatChange);
+		Boolean		addOK = ptr->addListener(inListener, inForWhatChange, inNotifyOfInitialValue);
 		
 		
 		if (addOK) result = kPreferences_ResultOK;
@@ -1968,8 +1974,8 @@ if the listener could not be removed
 */
 Preferences_Result
 Preferences_ContextStopMonitoring	(Preferences_ContextRef		inContext,
-									 Preferences_Change			inForWhatChange,
-									 ListenerModel_ListenerRef	inListener)
+									 ListenerModel_ListenerRef	inListener,
+									 Preferences_Change			inForWhatChange)
 {
 	Preferences_Result		result = kPreferences_ResultGenericFailure;
 	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -2539,22 +2545,8 @@ The listener context is currently reserved and set to "nullptr".
 Some changes are specific events.  However, most change codes
 directly match preferences tags, allowing you to monitor
 changes to those preferences.  For efficiency, most changes
-do NOT trigger events: only the following tags are supported
-with notifiers:
-- kPreferences_TagArrangeWindowsUsingTabs
-- kPreferences_TagBellSound
-- kPreferences_TagCursorBlinks
-- kPreferences_TagDontDimBackgroundScreens
-- kPreferences_TagFocusFollowsMouse
-- kPreferences_TagMacrosMenuVisible
-- kPreferences_TagMapBackquote
-- kPreferences_TagMenuItemKeys
-- kPreferences_TagNewCommandShortcutEffect
-- kPreferences_TagPureInverse
-- kPreferences_TagSimplifiedUserInterface
-- kPreferences_TagTerminalCursorType
-- kPreferences_TagTerminalResizeAffectsFontSize
-- kPreferences_TagTerminalScrollDelay
+do NOT trigger events: see the code for this routine to find out
+the subset of tags you can use.
 
 (3.0)
 */
@@ -2571,7 +2563,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	// If you change the list below, also check the preference-setting
 	// code to make sure that the tag values checked here REALLY DO
 	// trigger callback invocations!  Also keep this in sync with
-	// Preferences_StopMonitoring() and the comments above.
+	// Preferences_StopMonitoring().
 	case kPreferences_TagArrangeWindowsUsingTabs:
 	case kPreferences_TagBellSound:
 	case kPreferences_TagCursorBlinks:
@@ -2607,7 +2599,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 			// value of a particular preference
 			if (inNotifyOfInitialValue)
 			{
-				changeNotify(inForWhatChange, nullptr/* context */, true/* is initial value */);
+				changeNotify(inForWhatChange, nullptr/* context */, 0/* index */, true/* is initial value */);
 			}
 		}
 		break;
@@ -2645,8 +2637,7 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	
 	switch (inForWhatChange)
 	{
-	// Keep this in sync with Preferences_StartMonitoring() and the
-	// comments in Preferences_StartMonitoring().
+	// Keep this in sync with Preferences_StartMonitoring().
 	case kPreferences_TagArrangeWindowsUsingTabs:
 	case kPreferences_TagBellSound:
 	case kPreferences_TagCursorBlinks:
@@ -2691,7 +2682,7 @@ Constructor.  Used only by subclasses.
 My_ContextInterface::
 My_ContextInterface		(Preferences_Class		inClass)
 :
-_selfRef(REINTERPRET_CAST(this, Preferences_ContextRef)),
+selfRef(REINTERPRET_CAST(this, Preferences_ContextRef)),
 _preferencesClass(inClass),
 _listenerModel(nullptr/* constructed as needed */),
 _implementorPtr(nullptr)
@@ -2721,7 +2712,8 @@ successful.
 Boolean
 My_ContextInterface::
 addListener		(ListenerModel_ListenerRef	inListener,
-				 Preferences_Change			inForWhatChange)
+				 Preferences_Change			inForWhatChange,
+				 Boolean					inNotifyOfInitialValue)
 {
 	Boolean		result = false;
 	OSStatus	error = noErr;
@@ -2738,6 +2730,12 @@ addListener		(ListenerModel_ListenerRef	inListener,
 		error = ListenerModel_AddListenerForEvent(_listenerModel, inForWhatChange, inListener);
 		if (noErr == error) result = true;
 	}
+	
+	if ((result) && (inNotifyOfInitialValue))
+	{
+		this->notifyListeners(inForWhatChange);
+	}
+	
 	return result;
 }// My_ContextInterface::addListener
 
@@ -2758,7 +2756,7 @@ notifyListeners		(Preferences_Tag	inWhatChanged)
 {
 	if ((nullptr != _listenerModel) && (0 != inWhatChanged))
 	{
-		ListenerModel_NotifyListenersOfEvent(_listenerModel, inWhatChanged, _selfRef);
+		ListenerModel_NotifyListenersOfEvent(_listenerModel, inWhatChanged, this->selfRef);
 	}
 }// My_ContextInterface::notifyListeners
 
@@ -3704,12 +3702,14 @@ listener.
 void
 changeNotify	(Preferences_Change			inWhatChanged,
 				 Preferences_ContextRef		inContextOrNull,
+				 UInt32						inOneBasedIndexOrZeroForNonIndexed,
 				 Boolean					inIsInitialValue)
 {
 	Preferences_ChangeContext	context;
 	
 	
 	context.contextRef = inContextOrNull;
+	context.oneBasedIndex = inOneBasedIndexOrZeroForNonIndexed;
 	context.firstCall = inIsInitialValue;
 	// invoke listener callback routines appropriately, from the preferences listener model
 	ListenerModel_NotifyListenersOfEvent(gPreferenceEventListenerModel, inWhatChanged, &context);
@@ -5125,6 +5125,43 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
+				case kPreferences_TagIndexedMacroAction:
+					assert(typeCFStringRef == keyValueType);
+					{
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							MacroManager_Action*	storedValuePtr = REINTERPRET_CAST
+																		(outDataPtr, MacroManager_Action*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("text"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kMacroManager_ActionSendText;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("handle URL"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kMacroManager_ActionHandleURL;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("new window with command"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kMacroManager_ActionNewWindowWithCommand;
+							}
+							else
+							{
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
 				case kPreferences_TagIndexedMacroContents:
 				case kPreferences_TagIndexedMacroName:
 					// all of these keys have Core Foundation string values
@@ -5144,6 +5181,36 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							
 							*data = valueCFString;
 							// do not release because the string is returned
+						}
+					}
+					break;
+				
+				case kPreferences_TagIndexedMacroKey:
+					{
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							MacroManager_KeyID*		storedValuePtr = REINTERPRET_CAST
+																		(outDataPtr, MacroManager_KeyID*);
+							UInt16					keyCode = 0;
+							Boolean					isVirtualKey = false;
+							
+							
+							if (virtualKeyParseName(valueCFString, keyCode, isVirtualKey))
+							{
+								*storedValuePtr = MacroManager_MakeKeyID(isVirtualKey, keyCode);
+							}
+							else
+							{
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
 						}
 					}
 					break;
@@ -5194,8 +5261,6 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagIndexedMacroAction: // UNIMPLEMENTED
-				case kPreferences_TagIndexedMacroKey: // UNIMPLEMENTED
 				default:
 					// unrecognized tag
 					result = kPreferences_ResultUnknownTagOrClass;
@@ -5474,7 +5539,7 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-key"),
 										inOneBasedIndexOrZeroForNonIndexedTag);
 		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = 0; // UNIMPLEMENTED - TBD!
+		outNonDictionaryValueSize = sizeof(MacroManager_KeyID);
 		outClass = kPreferences_ClassMacroSet;
 		break;
 	
@@ -7462,7 +7527,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7473,7 +7538,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					setMacTelnetPreference(keyName, data);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7528,7 +7593,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7569,7 +7634,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7589,7 +7654,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7618,6 +7683,15 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagKioskShowsOffSwitch:
 			case kPreferences_TagKioskShowsScrollBar:
 			case kPreferences_TagKioskUsesSuperfluousEffects:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+				}
+				break;
+			
 			case kPreferences_TagMacrosMenuVisible:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
@@ -7625,6 +7699,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7635,7 +7710,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? CFSTR("\\e") : CFSTR(""));
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7656,7 +7731,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7685,7 +7760,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 						setMacTelnetPreference(keyName, CFSTR("shell"));
 						break;
 					}
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7735,7 +7810,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7756,7 +7831,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7789,7 +7864,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 						setMacTelnetPreference(keyName, CFSTR("block"));
 						break;
 					}
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7800,7 +7875,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? CFSTR("font") : CFSTR("screen"));
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7811,7 +7886,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? CFSTR("visual") : CFSTR("audio"));
-					changeNotify(inDataPreferenceTag);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -7954,6 +8029,35 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
+			case kPreferences_TagIndexedMacroAction:
+				{
+					MacroManager_Action const	data = *(REINTERPRET_CAST(inDataPtr, MacroManager_Action const*));
+					
+					
+					switch (data)
+					{
+					case kMacroManager_ActionSendText:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("text"));
+						break;
+					
+					case kMacroManager_ActionHandleURL:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("handle URL"));
+						break;
+					
+					case kMacroManager_ActionNewWindowWithCommand:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("new window with command"));
+						break;
+					
+					default:
+						// ???
+						assert(false && "attempt to save macro with invalid action type");
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("text"));
+						break;
+					}
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
+				}
+				break;
+			
 			case kPreferences_TagIndexedMacroContents:
 			case kPreferences_TagIndexedMacroName:
 				// all of these keys have Core Foundation string values
@@ -7963,6 +8067,55 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
+				}
+				break;
+			
+			case kPreferences_TagIndexedMacroKey:
+				{
+					MacroManager_KeyID const	data = *(REINTERPRET_CAST(inDataPtr, MacroManager_KeyID const*));
+					UInt16 const				kKeyCode = MacroManager_KeyIDKeyCode(data);
+					Boolean const				kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(data);
+					
+					
+					if (kIsVirtualKey)
+					{
+						CFRetainRelease		virtualKeyName(virtualKeyCreateName(kKeyCode), true/* is retained */);
+						
+						
+						if (virtualKeyName.exists())
+						{
+							inContextPtr->addString(inDataPreferenceTag, keyName,
+													virtualKeyName.returnCFStringRef());
+						}
+						else
+						{
+							// ???
+							assert(false && "attempt to save macro with unknown virtual key code");
+							inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
+						}
+					}
+					else
+					{
+						UniChar				keyCodeAsUnicode = kKeyCode;
+						CFRetainRelease		characterCFString(CFStringCreateWithCharacters
+																(kCFAllocatorDefault, &keyCodeAsUnicode, 1),
+																true/* is retained */);
+						
+						
+						if (characterCFString.exists())
+						{
+							inContextPtr->addString(inDataPreferenceTag, keyName,
+													characterCFString.returnCFStringRef());
+						}
+						else
+						{
+							// ???
+							assert(false && "unable to translate key character into Unicode string");
+							inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
+						}
+					}
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
 				}
 				break;
 			
@@ -8008,11 +8161,10 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 							CFRelease(modifierCFArray), modifierCFArray = nullptr;
 						}
 					}
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
 				}
 				break;
 			
-			case kPreferences_TagIndexedMacroAction: // UNIMPLEMENTED
-			case kPreferences_TagIndexedMacroKey: // UNIMPLEMENTED
 			default:
 				// unrecognized tag
 				result = kPreferences_ResultUnknownTagOrClass;
@@ -8724,6 +8876,305 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 	
 	return result;
 }// setTranslationPreference
+
+
+/*!
+Creates a name that describes the specified virtual key
+code, or returns "nullptr" if nothing fits.
+
+INCOMPLETE.
+
+Virtual key codes are poorly documented, but they are
+described in older Inside Macintosh books!
+
+IMPORTANT:	This should mirror the implementation of
+			virtualKeyParseName().
+
+(4.0)
+*/
+CFStringRef
+virtualKeyCreateName	(UInt16		inVirtualKeyCode)
+{
+	CFStringRef		result = nullptr;
+	
+	
+	// INCOMPLETE!!!
+	// (yes, these really are assigned as bizarrely as they seem...)
+	switch (inVirtualKeyCode)
+	{
+	case 0x24:
+		result = CFSTR("return");
+		break;
+	
+	case 0x33:
+		result = CFSTR("backward delete");
+		break;
+	
+	case 0x35:
+		result = CFSTR("escape");
+		break;
+	
+	case 0x47:
+		result = CFSTR("clear");
+		break;
+	
+	case 0x4C:
+		result = CFSTR("enter");
+		break;
+	
+	case 0x60:
+		result = CFSTR("f5");
+		break;
+	
+	case 0x61:
+		result = CFSTR("f6");
+		break;
+	
+	case 0x62:
+		result = CFSTR("f7");
+		break;
+	
+	case 0x63:
+		result = CFSTR("f3");
+		break;
+	
+	case 0x64:
+		result = CFSTR("f8");
+		break;
+	
+	case 0x65:
+		result = CFSTR("f9");
+		break;
+	
+	case 0x67:
+		result = CFSTR("f11");
+		break;
+	
+	case 0x6D:
+		result = CFSTR("f10");
+		break;
+	
+	case 0x6F:
+		result = CFSTR("f12");
+		break;
+	
+	case 0x73:
+		result = CFSTR("home");
+		break;
+	
+	case 0x74:
+		result = CFSTR("page up");
+		break;
+	
+	case 0x75:
+		result = CFSTR("forward delete");
+		break;
+	
+	case 0x76:
+		result = CFSTR("f4");
+		break;
+	
+	case 0x77:
+		result = CFSTR("end");
+		break;
+	
+	case 0x78:
+		result = CFSTR("f2");
+		break;
+	
+	case 0x79:
+		result = CFSTR("page down");
+		break;
+	
+	case 0x7A:
+		result = CFSTR("f1");
+		break;
+	
+	case 0x7B:
+		result = CFSTR("left arrow");
+		break;
+	
+	case 0x7C:
+		result = CFSTR("right arrow");
+		break;
+	
+	case 0x7D:
+		result = CFSTR("down arrow");
+		break;
+	
+	case 0x7E:
+		result = CFSTR("left arrow");
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+	
+	if (nullptr != result) CFRetain(result);
+	return result;
+}// virtualKeyCreateName
+
+
+/*!
+Parses a name that might have been originally created
+with virtualKeyCreateName(), and fills in information
+about the key (character or virtual) that it describes.
+Returns true only if the name is recognized.
+
+INCOMPLETE.
+
+A valid string would be a key with a single character,
+e.g. "A", but it could also be a descriptive name like
+"home" or "f12".
+
+Virtual key codes are poorly documented, but they are
+described in older Inside Macintosh books!
+
+IMPORTANT:	This should mirror the implementation of
+			virtualKeyCreateName().
+
+(4.0)
+*/
+Boolean
+virtualKeyParseName	(CFStringRef	inName,
+					 UInt16&		outCharacterOrKeyCode,
+					 Boolean&		outIsVirtualKey)
+{
+	Boolean		result = true;
+	
+	
+	if (1 == CFStringGetLength(inName))
+	{
+		outCharacterOrKeyCode = STATIC_CAST(CFStringGetCharacterAtIndex(inName, 0), UInt16);
+		outIsVirtualKey = false;
+	}
+	else
+	{
+		CFOptionFlags const		kCompareFlags = kCFCompareCaseInsensitive;
+		
+		
+		outIsVirtualKey = true;
+		
+		// INCOMPLETE!!!
+		// (yes, these really are assigned as bizarrely as they seem...)
+		if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("return"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x24;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("backward delete"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x33;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("escape"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x35;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("clear"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x47;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("enter"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x4C;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f5"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x60;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f6"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x61;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f7"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x62;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f3"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x63;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f8"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x64;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f9"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x65;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f11"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x67;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f10"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x6D;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f12"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x6F;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("home"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x73;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page up"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x74;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("forward delete"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x75;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f4"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x76;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("end"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x77;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f2"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x78;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("page down"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x79;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f1"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x7A;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("left arrow"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x7B;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("right arrow"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x7C;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("down arrow"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x7D;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("up arrow"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x7E;
+		}
+		else
+		{
+			// ???
+			result = false;
+			outCharacterOrKeyCode = 0;
+			outIsVirtualKey = false;
+		}
+	}
+	return result;
+}// virtualKeyParseName
+
+
+Boolean					virtualKeyParseName						(CFStringRef, UInt16&, Boolean&);
 
 } // anonymous namespace
 

@@ -458,20 +458,6 @@ installObjectAccessors ()
 	}
 	if (noErr == result)
 	{
-		upp = NewOSLAccessorUPP(GetElementAE_StringFromMacroSet);
-		obtainedClass = cStringClass;
-		referenceClass = cMyInternalToken;
-		result = AEInstallObjectAccessor(obtainedClass, referenceClass, upp, 0L, false/* is system handler */);
-	}
-	if (noErr == result)
-	{
-		upp = NewOSLAccessorUPP(GetElementAE_MacroSetFromNull);
-		obtainedClass = cMyMacroSet;
-		referenceClass = typeNull;
-		result = AEInstallObjectAccessor(obtainedClass, referenceClass, upp, 0L, false/* is system handler */);
-	}
-	if (noErr == result)
-	{
 		// install accessors for all window classes, and classes that can be derived from windows
 		upp = NewOSLAccessorUPP(GetElementAE_WindowFromNull);
 		obtainedClass = cWindow;

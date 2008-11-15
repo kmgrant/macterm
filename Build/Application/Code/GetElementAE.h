@@ -71,25 +71,7 @@ OSStatus
 	GetElementAE_ApplicationImplicit		(AEDesc*			outObjectOfDesiredClass);
 
 pascal OSErr
-	GetElementAE_MacroSetFromNull			(DescType			inDesiredClass,
-											 AEDesc const*		inFromWhat,
-											 DescType			inFromWhatClass,
-											 DescType			inFormOfReference,
-											 AEDesc const*		inReference,
-											 AEDesc*			outObjectOfDesiredClass,
-											 long				inData);
-
-pascal OSErr
 	GetElementAE_SessionFromNull			(DescType			inDesiredClass,
-											 AEDesc const*		inFromWhat,
-											 DescType			inFromWhatClass,
-											 DescType			inFormOfReference,
-											 AEDesc const*		inReference,
-											 AEDesc*			outObjectOfDesiredClass,
-											 long				inData);
-
-pascal OSErr
-	GetElementAE_StringFromMacroSet			(DescType			inDesiredClass,
 											 AEDesc const*		inFromWhat,
 											 DescType			inFromWhatClass,
 											 DescType			inFormOfReference,

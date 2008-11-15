@@ -564,11 +564,6 @@ ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef		inWhichWindow,
 				keyPhrase = kHelpSystem_KeyPhraseFormatting;
 				break;
 			
-			case kConstantsRegistry_WindowDescriptorMacroSetup:
-				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
-				keyPhrase = kHelpSystem_KeyPhraseMacros;
-				break;
-			
 			case kConstantsRegistry_WindowDescriptorPreferences:
 				buildEmptyContextualMenu(inoutMenu, inWhichWindow);
 				keyPhrase = kHelpSystem_KeyPhrasePreferences;

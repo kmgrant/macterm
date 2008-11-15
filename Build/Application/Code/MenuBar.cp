@@ -70,7 +70,7 @@
 #include "Folder.h"
 #include "InfoWindow.h"
 #include "Keypads.h"
-#include "MacroSetupWindow.h"
+#include "MacroManager.h"
 #include "MenuBar.h"
 #include "Preferences.h"
 #include "ProgressDialog.h"
@@ -313,6 +313,14 @@ MenuBar_Init ()
 		}
 	}
 	
+	// initialize macro selections so that the module will handle menu commands
+	{
+		MacroManager_Result		macrosResult = MacroManager_SetCurrentMacros(MacroManager_ReturnDefaultMacros());
+		
+		
+		assert(macrosResult.ok());
+	}
+	
 	// since MacTelnet provides Show/Hide capability, make the display delay very short
 	// and turn tags off initially
 	(OSStatus)HMSetTagDelay(5L/* milliseconds */);
@@ -415,11 +423,26 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 	{
 		enum
 		{
+			// TEMPORARY - LOCALIZE THIS
+			kMacrosMenuTitleWidthApproximation = 66,
 			kWindowMenuTitleWidthApproximation = 72, // pixels
 			kWindowMenuTitleLeftEdgeNormalApproximation = 400, // pixel offset
 			kWindowMenuTitleLeftEdgeSimpleModeApproximation = 272 // pixel offset
 		};
+		UInt16			macrosMenuWidth = kMacrosMenuTitleWidthApproximation;
+		OSStatus		error = noErr;
+		MenuAttributes	menuAttributes = 0;
 		
+		
+		// the Macros menu is not always visible, so account for its location
+		error = GetMenuAttributes(MenuBar_ReturnMacrosMenu(), &menuAttributes);
+		if (noErr == error)
+		{
+			if (menuAttributes & kMenuAttrHidden)
+			{
+				macrosMenuWidth = 0;
+			}
+		}
 		
 		switch (inMenuBarMenuSpecifier)
 		{
@@ -429,6 +452,7 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 			// not finding it now)
 			*outMenuBarMenuTitleRect = (**(GetMainDevice())).gdRect;
 			outMenuBarMenuTitleRect->bottom = GetMBarHeight();
+			outMenuBarMenuTitleRect->left += macrosMenuWidth;
 			outMenuBarMenuTitleRect->left += (gSimplifiedMenuBar)
 												? kWindowMenuTitleLeftEdgeSimpleModeApproximation
 												: kWindowMenuTitleLeftEdgeNormalApproximation;
@@ -791,6 +815,18 @@ MenuBar_ReturnFontMenu ()
 {
 	return GetMenuRef(kPopUpMenuIDFont);
 }// ReturnFontMenu
+
+
+/*!
+Returns a handle to the menu to use for macros.
+
+(4.0)
+*/
+MenuRef
+MenuBar_ReturnMacrosMenu ()
+{
+	return GetMenuRef(kMenuIDMacros);
+}// ReturnMacrosMenu
 
 
 /*!
@@ -1477,8 +1513,6 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSaveText, stateTrackerStandardEditItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandCaptureToFile, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEndCaptureToFile, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandImportMacroSet, nullptr/* no state tracker necessary */);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandExportCurrentMacroSet, nullptr/* no state tracker necessary */);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrint, stateTrackerPrintingItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrintOne, stateTrackerPrintingItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPrintScreen, stateTrackerPrintingItems);
@@ -1546,6 +1580,20 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTranslationTableDefault, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFixCharacterTranslation, stateTrackerGenericSessionItems);
 	
+	// Macros
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro1, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro2, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro3, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro4, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro5, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro6, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro7, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro8, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro9, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro10, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro11, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro12, stateTrackerGenericSessionItems);
+	
 	// Window
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMinimizeWindow, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandZoomWindow, stateTrackerShowHideItems);
@@ -1561,8 +1609,6 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPreviousWindow, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowConnectionStatus, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideConnectionStatus, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowMacros, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideMacros, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowCommandLine, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowKeypad, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowFunction, stateTrackerShowHideItems);
@@ -2021,7 +2067,9 @@ setMenusHaveKeyEquivalents	(Boolean	inMenusHaveKeyEquivalents,
 			removeMenuItemModifiers(GetMenuRef(kMenuIDTerminal));
 			removeMenuItemModifiers(GetMenuRef(kMenuIDKeys));
 			removeMenuItemModifiers(GetMenuRef(kMenuIDWindow));
-			removeMenuItemModifiers(GetMenuRef(kMenuIDKeywords));
+			// note...do NOT remove modifiers from the Macros menu, even if it
+			// is visible, as macros now rely on the menu key matching system
+			// to operate!!!
 		}
 	}
 	
@@ -3301,6 +3349,18 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 	case kCommandClearEntireScrollback:
 	case kCommandResetGraphicsCharacters:
 	case kCommandResetTerminal:
+	case kCommandSendMacro1:
+	case kCommandSendMacro2:
+	case kCommandSendMacro3:
+	case kCommandSendMacro4:
+	case kCommandSendMacro5:
+	case kCommandSendMacro6:
+	case kCommandSendMacro7:
+	case kCommandSendMacro8:
+	case kCommandSendMacro9:
+	case kCommandSendMacro10:
+	case kCommandSendMacro11:
+	case kCommandSendMacro12:
 	case kCommandChangeWindowTitle:
 	case kCommandStackWindows:
 	case kCommandNextWindow:
@@ -3535,18 +3595,6 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 	case kCommandHideConnectionStatus:
 		result = true;
 		setMenuItemVisibility(inMenu, inItemNumber, InfoWindow_IsVisible());
-		break;
-	
-	case kCommandShowMacros:
-		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								false == IsWindowVisible(MacroSetupWindow_ReturnWindow()));
-		break;
-	
-	case kCommandHideMacros:
-		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber,
-								IsWindowVisible(MacroSetupWindow_ReturnWindow()));
 		break;
 	
 	case kCommandShowCommandLine:

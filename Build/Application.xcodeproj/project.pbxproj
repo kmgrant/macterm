@@ -104,7 +104,6 @@
 		0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD6055432A400ACDF3A /* FileUtilities.cp */; };
 		0AC6BB3C0A8C0BA100AFF37A /* TerminalView.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE28055432A400ACDF3A /* TerminalView.cp */; };
 		0AC6BB3D0A8C0BA100AFF37A /* URLAccessAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE39055432A400ACDF3A /* URLAccessAE.cp */; };
-		0AC6BB3E0A8C0BA100AFF37A /* MacroSetupWindow.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF8055432A400ACDF3A /* MacroSetupWindow.cp */; };
 		0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC6055432A400ACDF3A /* Console.cp */; };
 		0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB9055432A400ACDF3A /* AppleEventUtilities.cp */; };
 		0AC6BB410A8C0BA100AFF37A /* PrefPanelKiosk.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF4B5460A1D61E400D187A3 /* PrefPanelKiosk.cp */; };
@@ -269,7 +268,6 @@
 		0A4603FD0554376100ACDF3A /* Local.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Local.h; path = Application/Code/Local.h; sourceTree = SOURCE_ROOT; };
 		0A4603FE0554376100ACDF3A /* Localization.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Localization.h; path = Application/Code/Localization.h; sourceTree = SOURCE_ROOT; };
 		0A4603FF0554376100ACDF3A /* RegionUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = RegionUtilities.h; path = Application/Code/RegionUtilities.h; sourceTree = "<group>"; };
-		0A4604000554376100ACDF3A /* MacroSetupWindow.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MacroSetupWindow.h; path = Application/Code/MacroSetupWindow.h; sourceTree = SOURCE_ROOT; };
 		0A4604020554376100ACDF3A /* MainEntryPoint.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MainEntryPoint.h; path = Application/Code/MainEntryPoint.h; sourceTree = SOURCE_ROOT; };
 		0A4604080554376100ACDF3A /* MenuBar.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MenuBar.h; path = Application/Code/MenuBar.h; sourceTree = SOURCE_ROOT; };
 		0A46040B0554376100ACDF3A /* NetEvents.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = NetEvents.h; path = Application/Code/NetEvents.h; sourceTree = SOURCE_ROOT; };
@@ -371,7 +369,6 @@
 		0A46FDF4055432A400ACDF3A /* Localization.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Localization.cp; path = Application/Code/Localization.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF6055432A400ACDF3A /* RegionUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = RegionUtilities.cp; path = Application/Code/RegionUtilities.cp; sourceTree = "<group>"; };
-		0A46FDF8055432A400ACDF3A /* MacroSetupWindow.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MacroSetupWindow.cp; path = Application/Code/MacroSetupWindow.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = Application/Code/MainEntryPoint.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDFB055432A400ACDF3A /* MenuBar.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MenuBar.cp; path = Application/Code/MenuBar.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileSelectionDialogs.cp; path = Shared/Code/FileSelectionDialogs.cp; sourceTree = "<group>"; };
@@ -445,7 +442,6 @@
 		0A82CE16069A3A030047E652 /* DuplicateDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = DuplicateDialog.h; path = Application/Code/DuplicateDialog.h; sourceTree = "<group>"; };
 		0A84509C0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/DuplicateDialog.nib; sourceTree = "<group>"; };
 		0A84509E0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/FindDialog.nib; sourceTree = "<group>"; };
-		0A8450A40554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MacroSetupWindow.nib; sourceTree = "<group>"; };
 		0A8450A60554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefsWindow.nib; sourceTree = "<group>"; };
 		0A8450A80554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ProgressDialog.nib; sourceTree = "<group>"; };
 		0A8450AA0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/TEKWindow.nib; sourceTree = "<group>"; };
@@ -694,7 +690,6 @@
 				0A46FDF3055432A400ACDF3A /* Local.cp */,
 				0A46FDF4055432A400ACDF3A /* Localization.cp */,
 				0A03DBC7063F6BA400C38B78 /* MacroManager.cp */,
-				0A46FDF8055432A400ACDF3A /* MacroSetupWindow.cp */,
 				0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */,
 				0A46FDFB055432A400ACDF3A /* MenuBar.cp */,
 				0A46FDFE055432A400ACDF3A /* NetEvents.cp */,
@@ -771,7 +766,6 @@
 				0A4603FD0554376100ACDF3A /* Local.h */,
 				0A4603FE0554376100ACDF3A /* Localization.h */,
 				0A03DBC9063F6BCC00C38B78 /* MacroManager.h */,
-				0A4604000554376100ACDF3A /* MacroSetupWindow.h */,
 				0A4604020554376100ACDF3A /* MainEntryPoint.h */,
 				0A4604080554376100ACDF3A /* MenuBar.h */,
 				0A46040B0554376100ACDF3A /* NetEvents.h */,
@@ -935,7 +929,6 @@
 				0A3617680DD285390081A445 /* KeypadFunctionKeys.nib */,
 				0ACA5E8D0DD3B4DB003B62C7 /* KeypadVT220Keys.nib */,
 				0A6E225806CF42F0004AC0A4 /* KioskPasswordDialog.nib */,
-				0A8450A30554CB8E00CFF440 /* MacroSetupWindow.nib */,
 				0A9CC37906DC470D00DCD12E /* PrefPanels.nib */,
 				0A4123140ACE525B0067D333 /* PrefPanelFormats.nib */,
 				0A4123160ACE525B0067D333 /* PrefPanelMacros.nib */,
@@ -1354,7 +1347,6 @@
 				0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */,
 				0AC6BB3C0A8C0BA100AFF37A /* TerminalView.cp in Sources */,
 				0AC6BB3D0A8C0BA100AFF37A /* URLAccessAE.cp in Sources */,
-				0AC6BB3E0A8C0BA100AFF37A /* MacroSetupWindow.cp in Sources */,
 				0AC6BB3F0A8C0BA100AFF37A /* Console.cp in Sources */,
 				0AC6BB400A8C0BA100AFF37A /* AppleEventUtilities.cp in Sources */,
 				0AC6BB410A8C0BA100AFF37A /* PrefPanelKiosk.cp in Sources */,
@@ -1522,14 +1514,6 @@
 				0A84509E0554CB8E00CFF440 /* English */,
 			);
 			name = FindDialog.nib;
-			sourceTree = "<group>";
-		};
-		0A8450A30554CB8E00CFF440 /* MacroSetupWindow.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A8450A40554CB8E00CFF440 /* English */,
-			);
-			name = MacroSetupWindow.nib;
 			sourceTree = "<group>";
 		};
 		0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */ = {

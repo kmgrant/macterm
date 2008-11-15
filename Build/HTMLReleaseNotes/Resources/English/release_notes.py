@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081115',
     '20081109',
     '20081108',
     '20081107',
@@ -189,6 +190,14 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081115': [
+		'Expanded macros are now implemented: allowing arbitrary key combinations, rapid switching between sets, and more.',
+		'Preferences window Macros pane can now be used to edit most aspects of macros.',
+		'Fixed the commands for choosing macro sets via the Map menu, including None which now turns off macros completely.',
+		'The "Display a macros menu" preference now properly determines whether or not the Macros menu is visible.',
+		'The menu items for importing and exporting macros have been temporarily removed.',
+		'The old "Show Macro Editor" window has been permanently removed.',
+	],
 	'20081109': [
 		"Fixed the floating command line to use a cursor color that will not blend in with the user's custom background.",
 	],

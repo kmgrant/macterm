@@ -246,26 +246,6 @@ CoreSuiteAE_CountElementsOfContainer	(DescType		inTypeOfCountedElements,
 				*outCount = SessionFactory_ReturnCount();
 				break;
 			
-			case cMyMacroSet:
-				// count all macro sets
-				*outCount = 0L;
-				if (inContainerClass == typeNull)
-				{
-					// this value is currently a constant
-					*outCount = MACRO_SET_COUNT;
-				}
-				break;
-			
-			case cMyMacro:
-				// count all macros in a set
-				*outCount = 0L;
-				if (inContainerClass == cMyMacroSet)
-				{
-					// this value is currently a constant
-					*outCount = MACRO_COUNT;
-				}
-				break;
-			
 			case cMyApplicationPreferences:
 			case cMyClipboardWindow:
 			case cMyApplication:

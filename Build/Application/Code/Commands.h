@@ -135,8 +135,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSaveText						'SvTx'
 #define kCommandCaptureToFile					'Capt'
 #define kCommandEndCaptureToFile				'CapE'
-#define kCommandImportMacroSet					'IMcr'
-#define kCommandExportCurrentMacroSet			'EMcr'
 #define kCommandPageSetup						kHICommandPageSetup
 #define kCommandPrint							kHICommandPrint
 #define kCommandPrintOne						'Pr1C'
@@ -227,8 +225,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPreviousWindowHideCurrent		'PrWH'
 #define kCommandShowConnectionStatus			'ShCS'
 #define kCommandHideConnectionStatus			'HiCS'
-#define kCommandShowMacros						'ShMc'
-#define kCommandHideMacros						'HiMc'
 #define kCommandShowCommandLine					'ShCL'
 #define kCommandShowControlKeys					'ShCK'
 #define kCommandShowFunction					'ShFn'
@@ -382,9 +378,6 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandLookUpSelectedHostName			'Look'		// multiple interfaces
 #define kCommandTerminalDefault					'TrmD'		// multiple interfaces
 #define kCommandTerminalByFavoriteName			'TFav'		// multiple interfaces
-#define kCommandChangeMacroKeysToCommandKeypad	'MKCK'		// “Macro Setup” window
-#define kCommandChangeMacroKeysToFunctionKeys	'MKFK'		// “Macro Setup” window
-#define kCommandShowAdvancedMacroInformation	'AdvM'		// “Macro Setup” window
 #define kCommandShowHidePrefCollectionsDrawer	'SPCD'		// “Preferences“ window
 #define kCommandDisplayPrefPanelFormats			'SPrF'		// “Preferences“ window
 #define kCommandDisplayPrefPanelFormatsANSI		'SPFA'		// multiple interfaces

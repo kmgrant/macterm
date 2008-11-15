@@ -607,27 +607,40 @@ h5. Enter Text
 
 The Contents will be typed into the active terminal view as if
 the keyboard were used; however, any special sequences will
-first be substituted with their current values.  The possible
-special sequences are:
+first be substituted with their current values.
+
+If your macro fails to send any text, there may be errors in its
+special sequences.  You can use the Console application to see
+any errors that MacTelnet may have printed regarding your macro.
+
+The possible special sequences are:
 
 |_<{padding-right:0.5em}. Code|_<{padding-left:0.5em}. Meaning|
-|<. \"|<{padding-left:0.5em}. double-quote (")|
 |<. \\|<{padding-left:0.5em}. backslash (\)|
 |<. \t|<{padding-left:0.5em}. horizontal tab|
 |<. \r|<{padding-left:0.5em}. carriage return|
 |<. \n|<{padding-left:0.5em}. line feed|
 |<. \e|<{padding-left:0.5em}. escape (^[)|
 |<. \0nn|<{padding-left:0.5em}. arbitrary ASCII in octal; e.g. "\004" is ^D|
+|<. \1nn|<{padding-left:0.5em}. arbitrary ASCII in octal; e.g. "\177" is delete|
 
 bq. To see the octal versions of all ASCII characters,
 look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
 MacTelnet window and runs "man ascii").
+
+For legacy reasons, you can also escape a double-quote (\"), but
+this is no longer necessary.
 
 MacTelnet also recognizes codes that represent information
 to be inserted at the time a macro is actually used:
 
 |<. \i|<{padding-left:0.5em}. dynamically substitute an IP address of the computer|
 |<. \#|<{padding-left:0.5em}. dynamically substitute the number of terminal lines|
+
+Currently, there is no way to choose which IP address is actually
+sent with "\i".  But you can use Window >> Show IP Addresses to
+see all the IP addresses that your computer has, and drag the
+desired one into a terminal window.
 
 h2(#translations). Translations
 

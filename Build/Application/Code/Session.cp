@@ -4986,147 +4986,63 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	switch (virtualKeyCode)
 	{
 	case 0x7A: // F1
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro1);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF6);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF6);
 		break;
 	
 	case 0x78: // F2
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro2);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF7);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF7);
 		break;
 	
 	case 0x63: // F3
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro3);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF8);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF8);
 		break;
 	
 	case 0x76: // F4
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro4);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF9);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF9);
 		break;
 	
 	case 0x60: // F5
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro5);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF10);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF10);
 		break;
 	
 	case 0x61: // F6
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro6);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF11);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF11);
 		break;
 	
 	case 0x62: // F7
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro7);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF12);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF12);
 		break;
 	
 	case 0x64: // F8
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro8);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF13);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF13);
 		break;
 	
 	case 0x65: // F9
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro9);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF14);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF14);
 		break;
 	
 	case 0x6D: // F10
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro10);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF15);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF15);
 		break;
 	
 	case 0x67: // F11
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro11);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF16);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF16);
 		break;
 	
 	case 0x6F: // F12
-		if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-		{
-			result = Commands_ExecuteByID(kCommandSendMacro12);
-		}
-		else
-		{
-			// TEMPORARY: only makes sense for VT220 terminals
-			Session_UserInputKey(session, VSF17);
-		}
+		// TEMPORARY: only makes sense for VT220 terminals
+		Session_UserInputKey(session, VSF17);
 		break;
 	
 	case 0x69: // Print Screen (F13)
@@ -5244,90 +5160,6 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		{
 			switch (characterCode)
 			{
-			case '0':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro1);
-				}
-				break;
-			
-			case '1':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro2);
-				}
-				break;
-			
-			case '2':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro3);
-				}
-				break;
-			
-			case '3':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro4);
-				}
-				break;
-			
-			case '4':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro5);
-				}
-				break;
-			
-			case '5':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro6);
-				}
-				break;
-			
-			case '6':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro7);
-				}
-				break;
-			
-			case '7':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro8);
-				}
-				break;
-			
-			case '8':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro9);
-				}
-				break;
-			
-			case '9':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro10);
-				}
-				break;
-			
-			case '=':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro11);
-				}
-				break;
-			
-			case '/':
-				if ((commandDown) && (Macros_ReturnMode() == kMacroManager_InvocationMethodCommandDigit))
-				{
-					result = Commands_ExecuteByID(kCommandSendMacro12);
-				}
-				break;
-			
 			case '\015': // CR
 				Session_SendNewline(session, kSession_EchoCurrentSessionValue);
 				result = true;

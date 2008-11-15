@@ -145,6 +145,12 @@ public:
 	My_MacrosPanelUI	(Panel_Ref, HIWindowRef);
 	~My_MacrosPanelUI	();
 	
+	void
+	getKeyTypeAndCharacterCodeFromPref	(MacroManager_KeyID, UInt32&, UniChar&);
+	
+	void
+	getPrefFromKeyTypeAndCharacterCode	(UInt32, UniChar, MacroManager_KeyID&);
+	
 	static SInt32
 	panelChanged	(Panel_Ref, Panel_Message, void*);
 	
@@ -160,6 +166,9 @@ public:
 	void
 	saveFieldPreferences	(Preferences_ContextRef, UInt32);
 	
+	Boolean
+	saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef, UInt32);
+	
 	void
 	setDataBrowserColumnWidths ();
 	
@@ -170,6 +179,9 @@ public:
 	setKeyType		(UInt32);
 	
 	void
+	setOrdinaryKeyCharacter		(UniChar);
+	
+	void
 	setOrdinaryKeyFieldEnabled	(Boolean);
 	
 	Panel_Ref							panel;						//!< the panel using this UI
@@ -177,6 +189,7 @@ public:
 	Float32								idealHeight;				//!< best size in pixels
 	My_MacrosDataBrowserCallbacks		listCallbacks;				//!< used to provide data for the list
 	HIViewWrap							mainView;
+	UInt32								keyType;					//!< cache of selected menu command ID
 
 protected:
 	HIViewWrap
@@ -185,9 +198,9 @@ protected:
 private:
 	CarbonEventHandlerWrap				_menuCommandsHandler;		//!< responds to menu selections
 	CarbonEventHandlerWrap				_fieldNameInputHandler;		//!< saves field settings when they change
+	CarbonEventHandlerWrap				_fieldKeyCharInputHandler;	//!< saves field settings when they change
 	CarbonEventHandlerWrap				_fieldContentsInputHandler;	//!< saves field settings when they change
 	CommonEventHandlers_HIViewResizer	_containerResizer;			//!< invoked when the panel is resized
-	ListenerModel_ListenerRef			_macroSetChangeListener;	//!< invoked when macros change externally
 };
 typedef My_MacrosPanelUI*	My_MacrosPanelUIPtr;
 
@@ -220,7 +233,6 @@ pascal Boolean		compareDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBr
 														 DataBrowserPropertyID);
 void				deltaSizePanelContainerHIView		(HIViewRef, Float32, Float32, void*);
 void				disposePanel						(Panel_Ref, void*);
-void				macroSetChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal void			monitorDataBrowserItems				(HIViewRef, DataBrowserItemID, DataBrowserItemNotification);
 pascal OSStatus		receiveHICommand					(EventHandlerCallRef, EventRef, void*);
 
@@ -380,10 +392,14 @@ idealHeight					(0.0),
 listCallbacks				(),
 mainView					(createContainerView(inPanel, inOwningWindow)
 								<< HIViewWrap_AssertExists),
+keyType						(0),
 _menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 								this/* user data */),
 _fieldNameInputHandler		(GetControlEventTarget(HIViewWrap(idMyFieldMacroName, inOwningWindow)), receiveFieldChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+								this/* user data */),
+_fieldKeyCharInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldMacroKeyCharacter, inOwningWindow)), receiveFieldChanged,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 								this/* user data */),
 _fieldContentsInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldMacroText, inOwningWindow)), receiveFieldChanged,
@@ -391,8 +407,7 @@ _fieldContentsInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldMacroText,
 								this/* user data */),
 _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 										kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
-								deltaSizePanelContainerHIView, this/* context */),
-_macroSetChangeListener		(nullptr)
+								deltaSizePanelContainerHIView, this/* context */)
 {
 	assert(_menuCommandsHandler.isInstalled());
 	assert(_fieldNameInputHandler.isInstalled());
@@ -400,14 +415,6 @@ _macroSetChangeListener		(nullptr)
 	assert(_containerResizer.isInstalled());
 	
 	this->setDataBrowserColumnWidths();
-	
-	// now that the views exist, it is safe to monitor macro activity
-	this->_macroSetChangeListener = ListenerModel_NewStandardListener(macroSetChanged, this/* context */);
-	assert(nullptr != this->_macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeActiveSetPlanned, this->_macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeActiveSet, this->_macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeContents, this->_macroSetChangeListener);
-	Macros_StartMonitoring(kMacros_ChangeMode, this->_macroSetChangeListener);
 }// My_MacrosPanelUI 2-argument constructor
 
 
@@ -419,12 +426,6 @@ Tears down a My_MacrosPanelUI structure.
 My_MacrosPanelUI::
 ~My_MacrosPanelUI ()
 {
-	// remove event handlers
-	Macros_StopMonitoring(kMacros_ChangeActiveSetPlanned, this->_macroSetChangeListener);
-	Macros_StopMonitoring(kMacros_ChangeActiveSet, this->_macroSetChangeListener);
-	Macros_StopMonitoring(kMacros_ChangeContents, this->_macroSetChangeListener);
-	Macros_StopMonitoring(kMacros_ChangeMode, this->_macroSetChangeListener);
-	ListenerModel_ReleaseListener(&this->_macroSetChangeListener);
 }// My_MacrosPanelUI destructor
 
 
@@ -523,8 +524,8 @@ createContainerView		(Panel_Ref		inPanel,
 		}
 		
 		// insert as many rows as there are macros in a set
-		error = AddDataBrowserItems(macrosList, kDataBrowserNoItem/* parent item */, MACRO_COUNT, nullptr/* IDs */,
-									kDataBrowserItemNoProperty/* pre-sort property */);
+		error = AddDataBrowserItems(macrosList, kDataBrowserNoItem/* parent item */, kMacroManager_MaximumMacroSetSize,
+									nullptr/* IDs */, kDataBrowserItemNoProperty/* pre-sort property */);
 		assert_noerr(error);
 		
 		// attach data that would not be specifiable in a NIB
@@ -590,6 +591,296 @@ createContainerView		(Panel_Ref		inPanel,
 	
 	return result;
 }// My_MacrosPanelUI::createContainerView
+
+
+/*!
+This utility can tell you what values to pass to
+setKeyType() and setOrdinaryKeyFieldEnabled(),
+respectively, for the given key ID (which is the
+value that is actually saved in Preferences).  The
+key type and character code will both be zero if
+there is an error.
+
+See also getPrefFromKeyTypeAndCharacterCode(), whose
+implementation should mirror this one.
+
+(4.0)
+*/
+void
+My_MacrosPanelUI::
+getKeyTypeAndCharacterCodeFromPref	(MacroManager_KeyID		inKeyID,
+									 UInt32&				outKeyType,
+									 UniChar&				outCharacterCodeOrZeroForVirtualKey)
+{
+	UInt16 const	kCharacterOrKeyCode = MacroManager_KeyIDKeyCode(inKeyID);
+	Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(inKeyID);
+	
+	
+	if (false == kIsVirtualKey)
+	{
+		outKeyType = kCommandSetMacroKeyTypeOrdinaryChar;
+		outCharacterCodeOrZeroForVirtualKey = kCharacterOrKeyCode;
+	}
+	else
+	{
+		// virtual key code
+		outCharacterCodeOrZeroForVirtualKey = 0;
+		switch (kCharacterOrKeyCode)
+		{
+		case 0x33:
+			outKeyType = kCommandSetMacroKeyTypeBackwardDelete;
+			break;
+		
+		case 0x75:
+			outKeyType = kCommandSetMacroKeyTypeForwardDelete;
+			break;
+		
+		case 0x73:
+			outKeyType = kCommandSetMacroKeyTypeHome;
+			break;
+		
+		case 0x77:
+			outKeyType = kCommandSetMacroKeyTypeEnd;
+			break;
+		
+		case 0x74:
+			outKeyType = kCommandSetMacroKeyTypePageUp;
+			break;
+		
+		case 0x79:
+			outKeyType = kCommandSetMacroKeyTypePageDown;
+			break;
+		
+		case 0x7E:
+			outKeyType = kCommandSetMacroKeyTypeUpArrow;
+			break;
+		
+		case 0x7D:
+			outKeyType = kCommandSetMacroKeyTypeDownArrow;
+			break;
+		
+		case 0x7B:
+			outKeyType = kCommandSetMacroKeyTypeLeftArrow;
+			break;
+		
+		case 0x7C:
+			outKeyType = kCommandSetMacroKeyTypeRightArrow;
+			break;
+		
+		case 0x47:
+			outKeyType = kCommandSetMacroKeyTypeClear;
+			break;
+		
+		case 0x35:
+			outKeyType = kCommandSetMacroKeyTypeEscape;
+			break;
+		
+		case 0x24:
+			outKeyType = kCommandSetMacroKeyTypeReturn;
+			break;
+		
+		case 0x4C:
+			outKeyType = kCommandSetMacroKeyTypeEnter;
+			break;
+		
+		case 0x7A:
+			outKeyType = kCommandSetMacroKeyTypeF1;
+			break;
+		
+		case 0x78:
+			outKeyType = kCommandSetMacroKeyTypeF2;
+			break;
+		
+		case 0x63:
+			outKeyType = kCommandSetMacroKeyTypeF3;
+			break;
+		
+		case 0x76:
+			outKeyType = kCommandSetMacroKeyTypeF4;
+			break;
+		
+		case 0x60:
+			outKeyType = kCommandSetMacroKeyTypeF5;
+			break;
+		
+		case 0x61:
+			outKeyType = kCommandSetMacroKeyTypeF6;
+			break;
+		
+		case 0x62:
+			outKeyType = kCommandSetMacroKeyTypeF7;
+			break;
+		
+		case 0x64:
+			outKeyType = kCommandSetMacroKeyTypeF8;
+			break;
+		
+		case 0x65:
+			outKeyType = kCommandSetMacroKeyTypeF9;
+			break;
+		
+		case 0x6D:
+			outKeyType = kCommandSetMacroKeyTypeF10;
+			break;
+		
+		case 0x67:
+			outKeyType = kCommandSetMacroKeyTypeF11;
+			break;
+		
+		case 0x6F:
+			outKeyType = kCommandSetMacroKeyTypeF12;
+			break;
+		
+		default:
+			// ???
+			outKeyType = 0;
+			outCharacterCodeOrZeroForVirtualKey = 0;
+			break;
+		}
+	}
+}// My_MacrosPanelUI::getKeyTypeAndCharacterCodeFromPref
+
+
+/*!
+This utility can tell you the equivalent preference
+setting for a given combination of command ID (also
+known as key type) and, for ordinary keys, a character
+code.  Pass zero for the character code if it is a
+special key, since this is described by the key type.
+The key ID will be zero if there is an error.
+
+You typically use this to help convert UI settings
+into a code for storing in preferences.
+
+See also getKeyTypeAndCharacterCodeFromPref(), whose
+implementation should mirror this one.
+
+(4.0)
+*/
+void
+My_MacrosPanelUI::
+getPrefFromKeyTypeAndCharacterCode	(UInt32					inKeyType,
+									 UniChar				inCharacterCodeIfApplicable,
+									 MacroManager_KeyID&	outKeyID)
+{
+	// Virtual key codes are not well documented!  But they
+	// can be found in old Inside Macintosh books.
+	switch (inKeyType)
+	{
+	case kCommandSetMacroKeyTypeOrdinaryChar:
+		outKeyID = MacroManager_MakeKeyID(false/* is virtual key */, inCharacterCodeIfApplicable);
+		break;
+	
+	case kCommandSetMacroKeyTypeBackwardDelete:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x33);
+		break;
+	
+	case kCommandSetMacroKeyTypeForwardDelete:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x75);
+		break;
+	
+	case kCommandSetMacroKeyTypeHome:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x73);
+		break;
+	
+	case kCommandSetMacroKeyTypeEnd:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x77);
+		break;
+	
+	case kCommandSetMacroKeyTypePageUp:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x74);
+		break;
+	
+	case kCommandSetMacroKeyTypePageDown:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x79);
+		break;
+	
+	case kCommandSetMacroKeyTypeUpArrow:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x7E);
+		break;
+	
+	case kCommandSetMacroKeyTypeDownArrow:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x7D);
+		break;
+	
+	case kCommandSetMacroKeyTypeLeftArrow:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x7B);
+		break;
+	
+	case kCommandSetMacroKeyTypeRightArrow:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x7C);
+		break;
+	
+	case kCommandSetMacroKeyTypeClear:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x47);
+		break;
+	
+	case kCommandSetMacroKeyTypeEscape:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x35);
+		break;
+	
+	case kCommandSetMacroKeyTypeReturn:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x24);
+		break;
+	
+	case kCommandSetMacroKeyTypeEnter:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x4C);
+		break;
+	
+	case kCommandSetMacroKeyTypeF1:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x7A);
+		break;
+	
+	case kCommandSetMacroKeyTypeF2:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x78);
+		break;
+	
+	case kCommandSetMacroKeyTypeF3:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x63);
+		break;
+	
+	case kCommandSetMacroKeyTypeF4:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x76);
+		break;
+	
+	case kCommandSetMacroKeyTypeF5:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x60);
+		break;
+	
+	case kCommandSetMacroKeyTypeF6:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x61);
+		break;
+	
+	case kCommandSetMacroKeyTypeF7:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x62);
+		break;
+	
+	case kCommandSetMacroKeyTypeF8:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x64);
+		break;
+	
+	case kCommandSetMacroKeyTypeF9:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x65);
+		break;
+	
+	case kCommandSetMacroKeyTypeF10:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x6D);
+		break;
+	
+	case kCommandSetMacroKeyTypeF11:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x67);
+		break;
+	
+	case kCommandSetMacroKeyTypeF12:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x6F);
+		break;
+	
+	default:
+		// ???
+		outKeyID = 0;
+		break;
+	}
+}// My_MacrosPanelUI::getPrefFromKeyTypeAndCharacterCode
 
 
 /*!
@@ -764,8 +1055,30 @@ readPreferences		(Preferences_ContextRef		inSettings,
 		}
 		
 		// set key type
-		// INCOMPLETE
-		//this->setOrdinaryKeyFieldEnabled(true);
+		{
+			MacroManager_KeyID		macroKey = 0;
+			
+			
+			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroKey,
+															inOneBasedIndex, sizeof(macroKey), &macroKey,
+															false/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				UInt32		prefKeyType = 0;
+				UniChar		prefKeyChar = 0;
+				
+				
+				getKeyTypeAndCharacterCodeFromPref(macroKey, prefKeyType, prefKeyChar);
+				this->setKeyType(prefKeyType);
+				this->setOrdinaryKeyCharacter(prefKeyChar);
+			}
+			else
+			{
+				Console_WriteLine("warning, unable to find existing macro key setting");
+				this->setKeyType(0);
+				this->setOrdinaryKeyCharacter(0);
+			}
+		}
 		
 		// set modifier buttons
 		{
@@ -902,7 +1215,9 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 			}
 		}
 		
-		// set key - UNIMPLEMENTED
+		// set key; this is also technically invoked when the key type menu
+		// changes, since it is jointly dependent on the field setting
+		this->saveKeyTypeAndCharacterPreferences(inoutSettings, inOneBasedIndex);
 		
 		// set action text
 		{
@@ -920,6 +1235,69 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 		}
 	}
 }// My_MacrosPanelUI::saveFieldPreferences
+
+
+/*!
+Since the key type can be Òordinary characterÓ, which
+must then take into account the text of a separate field,
+this special method exists to save both at once.
+
+Returns true only if the save was successful.
+
+(4.0)
+*/
+Boolean
+My_MacrosPanelUI::
+saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef		inoutSettings,
+									 UInt32						inOneBasedIndex)
+{
+	Boolean		result = false;
+	
+	
+	assert(0 != inOneBasedIndex);
+	if (nullptr != inoutSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		MacroManager_KeyID		keyID = 0;
+		UniChar					keyChar = 0;
+		
+		
+		// for ordinary keys, read the character typed in the text field
+		if (kCommandSetMacroKeyTypeOrdinaryChar == this->keyType)
+		{
+			CFStringRef		ordinaryCharCFString = nullptr;
+			
+			
+			GetControlTextAsCFString(HIViewWrap(idMyFieldMacroKeyCharacter, kOwningWindow), ordinaryCharCFString);
+			if (0 != CFStringGetLength(ordinaryCharCFString))
+			{
+				keyChar = CFStringGetCharacterAtIndex(ordinaryCharCFString, 0);
+				if (1 != CFStringGetLength(ordinaryCharCFString))
+				{
+					Console_WriteLine("warning, more than one character entered for macro key, using only the first character");
+				}
+			}
+			else
+			{
+				Console_WriteLine("warning, ordinary character requested for macro, but no character was entered");
+			}
+		}
+		
+		getPrefFromKeyTypeAndCharacterCode(this->keyType, keyChar, keyID);
+		prefsResult = Preferences_ContextSetDataAtIndex(inoutSettings, kPreferences_TagIndexedMacroKey,
+														inOneBasedIndex, sizeof(keyID), &keyID);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			result = true;
+		}
+		else
+		{
+			Console_WriteValuePair("warning, failed to set key equivalent of macro with index, error", inOneBasedIndex, prefsResult);
+		}
+	}
+	return result;
+}// My_MacrosPanelUI::saveKeyTypeAndCharacterPreferences
 
 
 /*!
@@ -999,18 +1377,49 @@ setKeyType		(UInt32		inKeyCommandID)
 	HIViewWrap			viewWrap;
 	
 	
-	viewWrap = HIViewWrap(idMyFieldMacroKeyCharacter, kOwningWindow);
-	(OSStatus)DialogUtilities_SetPopUpItemByCommand(HIViewWrap(idMyPopUpMenuMacroKeyType, kOwningWindow),
-													inKeyCommandID);
+	viewWrap = HIViewWrap(idMyPopUpMenuMacroKeyType, kOwningWindow);
+	(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inKeyCommandID);
+	this->keyType = inKeyCommandID;
 	if (kCommandSetMacroKeyTypeOrdinaryChar == inKeyCommandID)
 	{
 		this->setOrdinaryKeyFieldEnabled(true);
 	}
 	else
 	{
+		viewWrap = HIViewWrap(idMyFieldMacroKeyCharacter, kOwningWindow);
+		SetControlTextWithCFString(viewWrap, CFSTR(""));
 		this->setOrdinaryKeyFieldEnabled(false);
 	}
 }// My_MacrosPanelUI::setKeyType
+
+
+/*!
+Fills in the field for ordinary keys.  Normally you should
+do this in tandem with a call to setKeyType() where the
+type is "kCommandSetMacroKeyTypeOrdinaryChar".
+
+(4.0)
+*/
+void
+My_MacrosPanelUI::
+setOrdinaryKeyCharacter		(UniChar	inCharacter)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	HIViewWrap			viewWrap;
+	CFRetainRelease		charCFString(CFStringCreateWithCharacters(kCFAllocatorDefault, &inCharacter, 1),
+										true/* is retained */);
+	
+	
+	viewWrap = HIViewWrap(idMyFieldMacroKeyCharacter, kOwningWindow);
+	if ((charCFString.exists()) && (0 != inCharacter)/* ignore zeroes from past errors */)
+	{
+		SetControlTextWithCFString(viewWrap, charCFString.returnCFStringRef());
+	}
+	else
+	{
+		SetControlTextWithCFString(viewWrap, CFSTR(""));
+	}
+}// My_MacrosPanelUI::setOrdinaryKeyCharacter
 
 
 /*!
@@ -1229,62 +1638,6 @@ disposePanel	(Panel_Ref		UNUSED_ARGUMENT(inPanel),
 
 
 /*!
-Invoked whenever interesting macro activity occurs.
-This routine responds by updating the macro list
-to be sure it displays accurate information.
-
-(3.0)
-*/
-void
-macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-					 ListenerModel_Event	inMacrosChange,
-					 void*					UNUSED_ARGUMENT(inEventContextPtr),
-					 void*					inMyMacrosPanelUIPtr)
-{
-	My_MacrosPanelUIPtr		interfacePtr = REINTERPRET_CAST(inMyMacrosPanelUIPtr, My_MacrosPanelUIPtr);
-	
-	
-	switch (inMacrosChange)
-	{
-	case kMacros_ChangeActiveSetPlanned:
-		// Just before the active macro set changes, save any
-		// pending changes to the current one (open edits, etc.).
-		// UNIMPLEMENTED
-		break;
-	
-	case kMacros_ChangeActiveSet:
-		// If the active set changes, the displayed content will
-		// change also; re-sort the list (which will automatically
-		// read the updated macro values), then redraw the list.
-		// Also ensure the selected tab is that of the active set.
-		interfacePtr->refreshDisplay();
-		break;
-	
-	case kMacros_ChangeContents:
-		// If any macro changes, the displayed content will change
-		// also; re-sort the list (which will automatically read the
-		// updated macro value from its set), then redraw the list.
-		// NOTE: Technically, "inEventContextPtr" provides information
-		//       on the particular macro that changed.  Future
-		//       efficiency improvements would include not re-sorting
-		//       the list if the user isnÕt currently sorting
-		//       according to macro content, and only refreshing the
-		//       part of the display that contains the changed macro.
-		interfacePtr->refreshDisplay();
-		break;
-	
-	case kMacros_ChangeMode:
-		// Obsolete; the Macro Manager will no longer have a mode, as
-		// each macro will be able to have its own unique key equivalent.
-		break;
-	
-	default:
-		break;
-	}
-}// macroSetChanged
-
-
-/*!
 Responds to changes in the data browser.
 
 (3.1)
@@ -1470,8 +1823,19 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandSetMacroKeyTypeF10:
 			case kCommandSetMacroKeyTypeF11:
 			case kCommandSetMacroKeyTypeF12:
-				interfacePtr->setKeyType(received.commandID);
-				result = noErr;
+				{
+					My_MacrosPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																		My_MacrosPanelDataPtr);
+					
+					
+					// update menu state
+					interfacePtr->setKeyType(received.commandID);
+					
+					// save preferences
+					(Boolean)interfacePtr->saveKeyTypeAndCharacterPreferences(dataPtr->dataModel, dataPtr->currentIndex);
+					
+					result = noErr;
+				}
 				break;
 			
 			default:

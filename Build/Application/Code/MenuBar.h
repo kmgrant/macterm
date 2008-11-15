@@ -134,6 +134,9 @@ void
 MenuRef
 	MenuBar_ReturnFontMenu							();
 
+MenuRef
+	MenuBar_ReturnMacrosMenu						();
+
 //@}
 
 //!\name Responding to Commands

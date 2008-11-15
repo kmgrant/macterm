@@ -399,125 +399,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			TerminalView_DisplaySaveSelectedTextUI(activeView);
 			break;
 		
-		case kCommandImportMacroSet:
-			{
-				Boolean		doImport = false;
-				
-				
-				// only warn the user if there are any macros in the active set that can be destroyed
-				if (Macros_AllEmpty(Macros_ReturnActiveSet())) doImport = true;
-				else
-				{
-					InterfaceLibAlertRef	box = nullptr;
-					UIStrings_Result		stringResult = kUIStrings_ResultOK;
-					CFStringRef				dialogText = nullptr;
-					CFStringRef				helpText = nullptr;
-					Boolean					releaseDialogText = false;
-					Boolean					releaseHelpText = false;
-					
-					
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroImportWarningPrimaryText, dialogText);
-					releaseDialogText = (stringResult.ok());
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroImportWarningHelpText, helpText);
-					releaseHelpText = (stringResult.ok());
-					
-					box = Alert_New();
-					Alert_SetHelpButton(box, false);
-					Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-					Alert_SetTextCFStrings(box, dialogText, helpText);
-					Alert_SetType(box, kAlertCautionAlert);
-					Sound_StandardAlert();
-					Alert_Display(box);
-					if (Alert_ItemHit(box) == kAlertStdAlertOKButton) doImport = true;
-					Alert_Dispose(&box);
-					
-					if (releaseDialogText)
-					{
-						CFRelease(dialogText), dialogText = nullptr;
-					}
-					if (releaseHelpText)
-					{
-						CFRelease(helpText), helpText = nullptr;
-					}
-				}
-				
-				if (doImport)
-				{
-					MacroSet						temp = Macros_NewSet();
-					MacroManager_InvocationMethod   mode = kMacroManager_InvocationMethodCommandDigit;
-					
-					
-					if (Macros_ImportFromText(temp, (FSSpec*)nullptr, &mode))
-					{
-						// Then the user did not cancel and no errors occurred,
-						// so the macros must have imported successfully.  Tell
-						// the user the good news.
-						Macros_Copy(temp, Macros_ReturnActiveSet());
-						Macros_SetMode(mode);
-					}
-					Macros_DisposeSet(&temp);
-				}
-			}
-			break;
-		
-		case kCommandExportCurrentMacroSet:
-			// only stop the user if there are no macros in the active set (and therefore no macros to export)
-			if (Macros_AllEmpty(Macros_ReturnActiveSet()))
-			{
-				InterfaceLibAlertRef	box = nullptr;
-				UIStrings_Result		stringResult = kUIStrings_ResultOK;
-				CFStringRef				dialogText = nullptr;
-				CFStringRef				helpText = nullptr;
-				CFStringRef				openEditorText = nullptr;
-				Boolean					releaseDialogText = false;
-				Boolean					releaseHelpText = false;
-				Boolean					releaseOpenEditorText = false;
-				Boolean					doShowEditor = false;
-				
-				
-				stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroExportNothingPrimaryText, dialogText);
-				releaseDialogText = (stringResult.ok());
-				stringResult = UIStrings_Copy(kUIStrings_AlertWindowMacroExportNothingHelpText, helpText);
-				releaseHelpText = (stringResult.ok());
-				stringResult = UIStrings_Copy(kUIStrings_ButtonOpenMacroEditor, openEditorText);
-				releaseOpenEditorText = (stringResult.ok());
-				
-				// send a Display Alert Apple Event
-				box = Alert_New();
-				Alert_SetHelpButton(box, false);
-				Alert_SetParamsFor(box, kAlert_StyleOK);
-				Alert_SetButtonText(box, kAlertStdAlertOtherButton, openEditorText);
-				Alert_SetTextCFStrings(box, dialogText, helpText);
-				Alert_SetType(box, kAlertStopAlert);
-				Sound_StandardAlert();
-				Alert_Display(box);
-				if (Alert_ItemHit(box) == kAlertStdAlertOtherButton) doShowEditor = true;
-				Alert_Dispose(&box);
-				
-				if (releaseDialogText)
-				{
-					CFRelease(dialogText), dialogText = nullptr;
-				}
-				if (releaseHelpText)
-				{
-					CFRelease(helpText), helpText = nullptr;
-				}
-				if (releaseOpenEditorText)
-				{
-					CFRelease(openEditorText), openEditorText = nullptr;
-				}
-				
-				if (doShowEditor)
-				{
-					Commands_ExecuteByID(kCommandShowMacros);
-				}
-			}
-			else
-			{
-				Macros_ExportToText(Macros_ReturnActiveSet(), nullptr/* no file; prompt user */, Macros_ReturnMode());
-			}
-			break;
-		
 		case kCommandNewDuplicateSession:
 			{
 				SessionRef		newSession = nullptr;
@@ -1029,6 +910,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
+		//case kCommandMacroSetNone:
+		//case kCommandMacroSetDefault:
+		//case kCommandMacroSetByFavoriteName:
+		//	see MacroManager.cp
+		//	break;
+		
 		case kCommandShowNetworkNumbers:
 			// in the Cocoa implementation this really means “show or activate”
 			AddressDialog_Display();
@@ -1239,15 +1126,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see PrefsWindow.cp
 		//	break;
 		
-		//kCommandShowMacros:
-		//kCommandHideMacros:
-		//	see MacroSetupWindow.cp
-		//	break;
-		
-		//kCommandShowOrHideMacros:
-		//	see MacroSetupWindow.cp
-		//	break;
-		
 		case kCommandShowControlKeys:
 			// in the Cocoa implementation this really means “show or activate”
 			Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
@@ -1322,123 +1200,51 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 	#endif
 		
 		case kCommandSendMacro1:
-			MacroManager_UserInputMacroString(frontSession, 0/* zero-based macro number */);
+			MacroManager_UserInputMacro(0/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro2:
-			MacroManager_UserInputMacroString(frontSession, 1/* zero-based macro number */);
+			MacroManager_UserInputMacro(1/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro3:
-			MacroManager_UserInputMacroString(frontSession, 2/* zero-based macro number */);
+			MacroManager_UserInputMacro(2/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro4:
-			MacroManager_UserInputMacroString(frontSession, 3/* zero-based macro number */);
+			MacroManager_UserInputMacro(3/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro5:
-			MacroManager_UserInputMacroString(frontSession, 4/* zero-based macro number */);
+			MacroManager_UserInputMacro(4/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro6:
-			MacroManager_UserInputMacroString(frontSession, 5/* zero-based macro number */);
+			MacroManager_UserInputMacro(5/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro7:
-			MacroManager_UserInputMacroString(frontSession, 6/* zero-based macro number */);
+			MacroManager_UserInputMacro(6/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro8:
-			MacroManager_UserInputMacroString(frontSession, 7/* zero-based macro number */);
+			MacroManager_UserInputMacro(7/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro9:
-			MacroManager_UserInputMacroString(frontSession, 8/* zero-based macro number */);
+			MacroManager_UserInputMacro(8/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro10:
-			MacroManager_UserInputMacroString(frontSession, 9/* zero-based macro number */);
+			MacroManager_UserInputMacro(9/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro11:
-			MacroManager_UserInputMacroString(frontSession, 10/* zero-based macro number */);
+			MacroManager_UserInputMacro(10/* zero-based macro number */);
 			break;
 		
 		case kCommandSendMacro12:
-			MacroManager_UserInputMacroString(frontSession, 11/* zero-based macro number */);
-			break;
-		
-		case kCommandChangeMacroKeysToCommandKeypad:
-		case kCommandChangeMacroKeysToFunctionKeys:
-			{
-				// change the mode; since the Macro Setup window listens
-				// for macro mode changes, this will trigger changes to
-				// the window’s radio buttons and text labels
-				Macros_SetMode((inCommandID == kCommandChangeMacroKeysToFunctionKeys)
-								? kMacroManager_InvocationMethodFunctionKeys
-								: kMacroManager_InvocationMethodCommandDigit);
-				
-				// now send an event back so that scripts can record this
-				// (man, what a ton of code for one simple thing, huh?)
-				{
-					OSStatus		error = noErr;
-					AppleEvent		setDataEvent;
-					AppleEvent		reply;
-					FourCharCode	newKeys = (inCommandID == kCommandChangeMacroKeysToFunctionKeys)
-												? kTelnetEnumeratedClassMacroSetKeyEquivalentsFunctionKeys
-												: kTelnetEnumeratedClassMacroSetKeyEquivalentsCommandDigit;
-					
-					
-					error = RecordAE_CreateRecordableAppleEvent(kAECoreSuite, kAESetData, &setDataEvent);
-					if (error == noErr)
-					{
-						AEDesc		containerDesc; // never changes, in this case
-						AEDesc		keyDesc;
-						AEDesc		objectDesc;
-						AEDesc		propertyDesc;
-						AEDesc		valueDesc;
-						
-						
-						(OSStatus)AppleEventUtilities_InitAEDesc(&containerDesc);
-						(OSStatus)AppleEventUtilities_InitAEDesc(&keyDesc);
-						(OSStatus)AppleEventUtilities_InitAEDesc(&objectDesc);
-						(OSStatus)AppleEventUtilities_InitAEDesc(&propertyDesc);
-						(OSStatus)AppleEventUtilities_InitAEDesc(&valueDesc);
-						
-						// send a request for "macro set <index>", which resides in a null container;
-						// then, request the "key equivalents" property, and finally, issue an event
-						// that will change its value
-						(OSStatus)BasicTypesAE_CreateSInt32Desc(Macros_ReturnActiveSetNumber(), &keyDesc);
-						error = CreateObjSpecifier(cMyMacroSet, &containerDesc,
-													formAbsolutePosition, &keyDesc, true/* dispose inputs */,
-													&objectDesc);
-						if (error != noErr) Console_WriteValue("macro set access error", error);
-						(OSStatus)BasicTypesAE_CreatePropertyIDDesc(pMyMacroSetKeyEquivalents, &keyDesc);
-						error = CreateObjSpecifier(cProperty, &objectDesc,
-													formPropertyID, &keyDesc, true/* dispose inputs */,
-													&propertyDesc);
-						if (error != noErr) Console_WriteValue("property access error", error);
-						if (error == noErr)
-						{
-							// reference to the property to be set - REQUIRED
-							(OSStatus)AEPutParamDesc(&setDataEvent, keyDirectObject, &propertyDesc);
-							
-							// the property’s new value - REQUIRED
-							(OSStatus)BasicTypesAE_CreateEnumerationDesc(newKeys, &valueDesc);
-							(OSStatus)AEPutParamDesc(&setDataEvent, keyAEParamMyTo, &valueDesc);
-							
-							// send the event, which will record it into any open script and actually change the value
-							(OSStatus)AESend(&setDataEvent, &reply, kAENoReply | kAENeverInteract | kAEDontExecute,
-												kAENormalPriority, kAEDefaultTimeout, nullptr/* idle routine */,
-												nullptr/* filter routine */);
-						}
-						AEDisposeDesc(&propertyDesc);
-						AEDisposeDesc(&valueDesc);
-					}
-					AEDisposeDesc(&setDataEvent);
-				}
-			}
+			MacroManager_UserInputMacro(11/* zero-based macro number */);
 			break;
 		
 		case kCommandTerminalViewPageUp:

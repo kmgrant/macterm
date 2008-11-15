@@ -2,19 +2,26 @@
 	\brief Lists methods to access the strings associated with
 	keyboard equivalents.
 	
-	The entire macro implementation has been re-written in
-	MacTelnet 3.0 to be abstract, efficient and very powerful.
-	The macro code has now been separated into two levels: high
-	level ("MacroSetupWindow.cp") and low level (this file).
+	The MacTelnet 4 implementation of macros is even more
+	sophisticated than the one from 3.0 (which itself was a
+	rewrite of older approaches!).  All limits on the number
+	of possible sets have now been removed.  Macros can now
+	have actions other than sending text; for instance, they
+	can open URLs.  And, they now support many more key
+	combinations!
 	
-	MacTelnet 3.0 allows up to five sets of macros in memory at
-	once, and allows the user to use any one set at once.  This
-	code has now been written in such a way that it should be
-	possible to change the number of macro sets supported, as
-	well as the number of macros in each set, without too much
-	trouble.  Note, however, that if you change the number of
-	macros in each set you will have to adapt the user interface
-	code to allow users to enter additional macros.
+	The Preferences module now handles low-level access to
+	basic macro information.  Therefore, you can modify, read,
+	or monitor macro setting using the now-familiar Preferences
+	APIs.
+	
+	Similarly, the preferences window is the front-end for
+	macro editing, so there is no longer a special window
+	(however, there is "PrefPanelMacros.cp").
+	
+	This module provides access to the current macro set,
+	automatically triggering all necessary side effects such
+	as updating menu key equivalents.
 */
 /*###############################################################
 
@@ -52,16 +59,25 @@
 
 // library includes
 #include <ListenerModel.h>
+#include <ResultCode.template.h>
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
+#include "Preferences.h"
 #include "SessionRef.typedef.h"
 
 
 
 #pragma mark Constants
+
+/*!
+Possible return values from MacroManager module routines.
+*/
+typedef ResultCode< UInt16 >	MacroManager_Result;
+MacroManager_Result const	kMacroManager_ResultOK(0);					//!< no error
+MacroManager_Result const	kMacroManager_ResultGenericFailure(1);		//!< unspecified error occurred
 
 enum MacroManager_Action
 {
@@ -70,148 +86,81 @@ enum MacroManager_Action
 	kMacroManager_ActionNewWindowWithCommand		= 2			//!< macro content is a Unix command line to be executed in a new terminal window
 };
 
-typedef SInt32 MacroManager_InvocationMethod;
-enum
-{
-	kMacroManager_InvocationMethodCommandDigit		= 0,		//!< macros are invocable with command-0 to command-9, command-= and command-/
-	kMacroManager_InvocationMethodFunctionKeys		= 1			//!< macros are invocable with F1 to F12
-};
-
-enum Macros_Change
-{
-	kMacros_ChangeActiveSetPlanned	= 'Plan',	//!< the active macro set will change (context: nullptr)
-	kMacros_ChangeActiveSet			= 'Actv',	//!< the active macro set has changed (context: nullptr)
-	kMacros_ChangeContents			= 'Text',	//!< the contents of some macro has changed (context:
-												//!  MacroDescriptorPtr)
-	kMacros_ChangeMode				= 'Mode'	//!< the macro invocation mode has changed (context:
-												//!  MacroManager_InvocationMethod*)
-};
-
-enum
-{
-	MACRO_COUNT			= 12,		//!< number of macros supported in a given set
-	MACRO_SET_COUNT		= 5			//!< number of sets (of MACRO_COUNT macros each) to choose from
-};
+UInt16 const kMacroManager_MaximumMacroSetSize = 12;	//!< TEMPORARY: arbitrary upper limit on macro set length, for simplicity in other code
 
 #pragma mark Types
 
-typedef UInt16		MacroIndex;			//!< a zero-based macro number (maximum value is therefore MACRO_COUNT - 1)
-typedef Handle*		MacroSet;			//!< a reference to a collection of text strings, as well as information on
-										//!  which keys invoke those strings
-typedef UInt16		MacroSetNumber;		//!< a ONE-based set ID (maximum value is therefore MACRO_SET_COUNT)
+/*!
+This is used to identify key equivalents.  A code can be either
+a character or a virtual key code, so a flag is attached (in bit
+17) to indicate which it is.  The upper 15 bits are currently
+not used.
 
-struct MacroDescriptor
-{
-	MacroSet		set;	//!< which set the macro is from
-	MacroIndex		index;	//!< position of the macro within the set it is in
-};
-typedef MacroDescriptor*	MacroDescriptorPtr;
+MacroManager_KeyIDIsVirtualKey() and MacroManager_KeyIDKeyCode()
+can be used to scan the information encoded in this value, and
+MacroManager_MakeKeyID() is convenient for construction.
+*/
+typedef UInt32				MacroManager_KeyID;
+MacroManager_KeyID const	kMacroManager_KeyIDIsVirtualKeyMask = 0x00010000;
+MacroManager_KeyID const	kMacroManager_KeyIDKeyCodeMask = 0x0000ffff;
 
 
 
 #pragma mark Public Methods
 
-/*###############################################################
-	INITIALIZING AND FINISHING WITH MACRO SETS
-###############################################################*/
+//!\name Managing the Active Macro Set
+//@{
 
-// CALL THIS ROUTINE ONCE, BEFORE ANY OTHER MACRO SET ROUTINE
-void
-	Macros_Init							();
+Preferences_ContextRef
+	MacroManager_ReturnCurrentMacros	();
 
-// CALL THIS ROUTINE AFTER YOU ARE PERMANENTLY DONE WITH MACRO SETS
-void
-	Macros_Done							();
+Preferences_ContextRef
+	MacroManager_ReturnDefaultMacros	();
 
-/*###############################################################
-	CREATING AND DESTROYING MACRO SETS
-###############################################################*/
+MacroManager_Result
+	MacroManager_SetCurrentMacros		(Preferences_ContextRef		inMacroSetOrNullForNone = nullptr);
 
-MacroSet
-	Macros_NewSet						();
+//@}
 
-void
-	Macros_DisposeSet					(MacroSet*							inoutSetToDestroy);
+//!\name Using Macros
+//@{
 
-/*###############################################################
-	GLOBAL MACRO ROUTINES
-###############################################################*/
+MacroManager_Result
+	MacroManager_UserInputMacro			(UInt16						inZeroBasedMacroIndex,
+										 SessionRef					inTargetSessionOrNullForActiveSession = nullptr,
+										 Preferences_ContextRef		inMacroSetOrNullForActiveSet = nullptr);
 
-MacroSet
-	Macros_ReturnActiveSet				();
+//@}
 
-MacroSetNumber
-	Macros_ReturnActiveSetNumber		();
+//!\name Utilities
+//@{
 
-MacroManager_InvocationMethod
-	Macros_ReturnMode					();
+inline Boolean
+	MacroManager_KeyIDIsVirtualKey		(MacroManager_KeyID			inKeyID)
+	{
+		return (0L != (inKeyID & kMacroManager_KeyIDIsVirtualKeyMask));
+	}
 
-Boolean
-	MacroManager_UserInputMacroString	(SessionRef							inSession,
-										 MacroIndex							inZeroBasedMacroNumber);
+inline UInt16
+	MacroManager_KeyIDKeyCode			(MacroManager_KeyID			inKeyID)
+	{
+		return (inKeyID & kMacroManager_KeyIDKeyCodeMask);
+	}
 
-// WARNING - THE MAXIMUM VALUE (ONE-BASED) YOU CAN SPECIFY IS ÒMACRO_SET_COUNTÓ
-void
-	Macros_SetActiveSetNumber			(MacroSetNumber						inNewActiveSetNumber);
+inline MacroManager_KeyID
+	MacroManager_MakeKeyID				(Boolean					inIsVirtualKey,
+										 UInt16						inKeyCode)
+	{
+		MacroManager_KeyID		result = inKeyCode;
+		MacroManager_KeyID		flagBit = inIsVirtualKey;
+		
+		
+		flagBit <<= 16;
+		result |= flagBit;
+		return result;
+	}
 
-void
-	Macros_SetMode						(MacroManager_InvocationMethod		inNewMode);
-
-/*###############################################################
-	NOTIFICATION OF CHANGES
-###############################################################*/
-
-void
-	Macros_StartMonitoring				(Macros_Change						inForWhatChange,
-										 ListenerModel_ListenerRef			inListener);
-
-void
-	Macros_StopMonitoring				(Macros_Change						inForWhatChange,
-										 ListenerModel_ListenerRef			inListener);
-
-/*###############################################################
-	UTILITIES FOR GETTING AND SETTING MACROS
-###############################################################*/
-
-// IF YOU PASS A NULL FILE, THE USER IS QUERIED (VIA NAVIGATION SERVICES) TO SPECIFY A FILE
-void
-	Macros_ExportToText					(MacroSet							inSet,
-										 FSSpec*							inFileSpecPtrOrNull,
-										 MacroManager_InvocationMethod		inMacroModeOfExportedSet);
-
-void
-	Macros_Get							(MacroSet							inFromWhichSet,
-										 MacroIndex							inZeroBasedMacroNumber,
-										 char*								outValue,
-										 SInt16								inRoom);
-
-// IF YOU PASS A NULL FILE, THE USER IS QUERIED (VIA NAVIGATION SERVICES) TO SPECIFY A FILE
-Boolean
-	Macros_ImportFromText				(MacroSet							inSet,
-										 FSSpec const*						inFileSpecPtrOrNull,
-										 MacroManager_InvocationMethod*		outMacroModeOfImportedSet);
-
-void
-	Macros_ParseTextBuffer				(MacroSet							inSet,
-										 UInt8*								inBuffer,
-										 Size								inSize,
-										 MacroManager_InvocationMethod*		outMacroModeOfImportedSet);
-
-void
-	Macros_Set							(MacroSet							inFromWhichSet,
-										 MacroIndex							inZeroBasedMacroNumber,
-										 char const*						inValue);
-
-/*###############################################################
-	OTHER MACRO UTILITIES
-###############################################################*/
-
-Boolean
-	Macros_AllEmpty						(MacroSet							inSet);
-
-void
-	Macros_Copy							(MacroSet							inSource,
-										 MacroSet							inDestination);
+//@}
 
 #endif
 

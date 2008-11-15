@@ -275,11 +275,7 @@ Session::handle_file	(std::string	inPathname)
 							fileInfo.filetype == kApplicationFileTypeMacroSet) ||
 						(extensionName == ".macros"))
 			{
-				MacroManager_InvocationMethod		mode = kMacroManager_InvocationMethodCommandDigit;
-				
-				
-				(Boolean)Macros_ImportFromText(Macros_ReturnActiveSet(), &fileSpec, &mode);
-				Macros_SetMode(mode);
+				// UNIMPLEMENTED - import macros from text
 			}
 			else if (extensionName == ".term")
 			{

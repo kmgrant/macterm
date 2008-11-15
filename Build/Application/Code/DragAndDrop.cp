@@ -54,7 +54,6 @@
 #include "DragAndDrop.h"
 #include "EventLoop.h"
 #include "MacroManager.h"
-#include "MacroSetupWindow.h"
 #include "RegionUtilities.h"
 
 
@@ -134,7 +133,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 #pragma mark Internal Method Prototypes
 
 static Boolean			isGraphiteTheme		();
-static pascal OSErr		receiveDropHandler	(WindowRef, void*, DragRef);
 static pascal OSErr		trackingHandler		(DragTrackingMessage, WindowRef, void*, DragRef);
 
 
@@ -168,17 +166,6 @@ DragAndDrop_Init ()
 		
 		
 		error = InstallTrackingHandler(trackingProc, nullptr, nullptr);
-		
-		if (error == noErr)
-		{
-			// install the receiving handler
-			error = InstallReceiveHandler(NewDragReceiveHandlerUPP(receiveDropHandler), nullptr, nullptr);
-			if (error != noErr)
-			{
-				// an error occurred installing the receiving handler - remove the tracking handler, too
-				RemoveTrackingHandler(trackingProc, nullptr);
-			}
-		}
 		
 		// if any error occurred, turn off Drag Manager support (avoids potential problems)
 		if (error != noErr)
@@ -724,89 +711,6 @@ isGraphiteTheme ()
 	
 	return result;
 }// isGraphiteTheme
-
-
-/*!
-This method is called by the Drag Manager when
-a drop occurs over one of MacTelnet’s windows.
-
-(2.6)
-*/
-static pascal OSErr
-receiveDropHandler	(WindowRef		inWindow,
-					 void*			UNUSED_ARGUMENT(inUserContext),
-					 DragRef		inDragRef)
-{	
-	OSErr		result = noErr;
-	
-	
-	if (inWindow == nullptr) result = noErr; // do NOTHING unless a window is a target
-	else if ((!gDropDestinationCanAcceptItems) || (!gDropCursorInContent)) result = dragNotAcceptedErr;
-	else
-	{
-		Handle					dataH = nullptr;
-		DragAttributes			attributes = 0L;
-		Size					textSize = 0;
-		short					mouseDownModifiers = 0,
-								mouseUpModifiers = 0;
-		WindowInfo_Descriptor	windowDescriptor = kWindowInfo_InvalidDescriptor;
-		
-		
-		SetPortWindowPort(inWindow);
-		
-		// determine the MacTelnet window descriptor, if possible
-		{
-			WindowInfo_Ref		windowFeaturesRef = nullptr;
-			
-			
-			windowFeaturesRef = WindowInfo_ReturnFromWindow(inWindow);
-			if (windowFeaturesRef != nullptr)
-			{
-				windowDescriptor = WindowInfo_ReturnWindowDescriptor(windowFeaturesRef);
-			}
-		}
-		
-		// no text yet
-		dataH = nullptr;
-		
-		GetDragAttributes(inDragRef, &attributes);
-		GetDragModifiers(inDragRef, 0L, &mouseDownModifiers, &mouseUpModifiers);
-		
-		// loop through all of the drag items contained in this drag
-		// and collect the text into the accumulation handle
-		result = DragAndDrop_GetDraggedTextAsNewHandle(inDragRef, &dataH);
-		
-		// get the length of all that was accumulated
-		textSize = GetHandleSize(dataH);
-		
-		// if text was actually received, insert it into the destination
-		if ((result == noErr) && (textSize > 0))
-		{
-			if (attributes & kDragHasLeftSenderWindow)
-			{
-				HideDragHilite(inDragRef);
-				Cursors_UseArrow(); // additional visual feedback
-			}
-			
-			HLock(dataH);
-	
-			// send the text to the window
-			if (windowDescriptor == kConstantsRegistry_WindowDescriptorMacroSetup)
-			{
-				// try to import macros into Macro Setup dialog’s text fields
-				MacroSetupWindow_ReceiveDrop(inDragRef, REINTERPRET_CAST(*dataH, UInt8*), textSize);
-			}
-			HUnlock(dataH);
-		}
-		
-		if (dataH != nullptr)
-		{
-			Memory_DisposeHandle(&dataH);
-		}
-	}
-	
-	return result;
-}// receiveDropHandler
 
 
 /*!

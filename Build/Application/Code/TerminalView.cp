@@ -3247,8 +3247,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 													false/* call immediately to get initial value */);
 		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
 													false/* call immediately to get initial value */);
-		prefsResult = Preferences_ContextStartMonitoring(this->configuration, kPreferences_ChangeContextBatchMode,
-															this->screen.preferenceMonitor);
+		prefsResult = Preferences_ContextStartMonitoring(this->configuration, this->screen.preferenceMonitor,
+															kPreferences_ChangeContextBatchMode);
 	}
 }// initialize
 
@@ -3283,8 +3283,8 @@ TerminalView::
 	// stop receiving preference change notifications
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType);
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, kPreferences_ChangeContextBatchMode,
-															this->screen.preferenceMonitor);
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->screen.preferenceMonitor,
+															kPreferences_ChangeContextBatchMode);
 	ListenerModel_ReleaseListener(&this->screen.preferenceMonitor);
 	
 	// remove idle timer

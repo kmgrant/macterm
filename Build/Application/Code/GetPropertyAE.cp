@@ -93,10 +93,6 @@ static OSErr	accessPropertyOfClassDialogReply			(ObjectClassesAE_TokenPtr, AEDes
 															 PropertyAccessMechanism);
 static OSErr	accessPropertyOfClassFormat					(ObjectClassesAE_TokenPtr, AEDesc*,
 															 PropertyAccessMechanism);
-static OSErr	accessPropertyOfClassMacro					(ObjectClassesAE_TokenPtr, AEDesc*,
-															 PropertyAccessMechanism);
-static OSErr	accessPropertyOfClassMacroSet				(ObjectClassesAE_TokenPtr, AEDesc*,
-															 PropertyAccessMechanism);
 static OSErr	accessPropertyOfClassProxyServer			(ObjectClassesAE_TokenPtr, AEDesc*,
 															 PropertyAccessMechanism);
 static OSErr	accessPropertyOfClassSessionWindow			(ObjectClassesAE_TokenPtr, AEDesc*,
@@ -961,135 +957,6 @@ accessPropertyOfClassFormat		(ObjectClassesAE_TokenPtr   inTokenPtr,
 	Console_EndFunction();
 	return result;
 }// accessPropertyOfClassFormat
-
-
-/*!
-Used to determine the data size, or acquire, or
-modify, the property whose token is given.  The
-token encodes the container class, as well, which
-should be "cMyMacro".
-
-(3.0)
-*/
-static OSErr
-accessPropertyOfClassMacro		(ObjectClassesAE_TokenPtr   inTokenPtr,
-								 AEDesc*					inoutDataDescriptor,
-								 PropertyAccessMechanism	inPropertyAccessMechanism)
-{
-	OSErr   result = noErr;
-	
-	
-	return result;
-}// accessPropertyOfClassMacro
-
-
-/*!
-Used to determine the data size, or acquire, or
-modify, the property whose token is given.  The
-token encodes the container class, as well, which
-should be "cMyMacroSet".
-
-(3.0)
-*/
-static OSErr
-accessPropertyOfClassMacroSet		(ObjectClassesAE_TokenPtr   inTokenPtr,
-									 AEDesc*					inoutDataDescriptor,
-									 PropertyAccessMechanism	inPropertyAccessMechanism)
-{
-	OSErr						result = noErr;
-	ObjectClassesAE_PropertyPtr	propertyPtr = &inTokenPtr->as.property;
-	UInt16						macroSetNumber = 0;
-	//Boolean					canModifyProperty = true;	// change this flag when appropriate to restrict access
-	
-	
-	Console_BeginFunction();
-	Console_WriteLine("AppleScript: macro set property");
-	
-	// access the macro set to which this property belongs
-	macroSetNumber = propertyPtr->container.data.macroSet.number;
-	
-	// make ABSOLUTELY SURE the macro set is not screwed up (otherwise, the system could crash)
-	if ((macroSetNumber < 1) || (macroSetNumber > MACRO_SET_COUNT))
-	{
-		Console_WriteLine("WARNING: invalid macro set for get-macro-set-property");
-		result = errAEEventNotHandled;
-	}
-	
-	// verify that it’s a property, and verify its container class type
-	if (result == noErr)
-	{
-		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
-					GenesisAE_FirstClassIs(propertyPtr->container.eventClass, cMyMacroSet)) ? noErr
-				: errAEEventNotHandled;
-	}
-	
-	// get the data
-	if (result == noErr)
-	{
-		switch (propertyPtr->dataType)
-		{
-		case pMyMacroSetKeyEquivalents:
-			Console_WriteLine("key equivalents");
-			if (inPropertyAccessMechanism == kPropertyAccessSize)
-			{
-				result = BasicTypesAE_CreateSizeDesc(sizeof(FourCharCode), inoutDataDescriptor);
-			}
-			else if (inPropertyAccessMechanism == kPropertyAccessObtain)
-			{
-				FourCharCode	keys = kTelnetEnumeratedClassMacroSetKeyEquivalentsCommandDigit;
-				UInt16			oldActiveSetNumber = Macros_ReturnActiveSetNumber();
-				
-				
-				Macros_SetActiveSetNumber(macroSetNumber);
-				if (Macros_ReturnMode() == kMacroManager_InvocationMethodFunctionKeys)
-				{
-					// if the macro set uses function keys instead, change the default
-					keys = kTelnetEnumeratedClassMacroSetKeyEquivalentsFunctionKeys;
-				}
-				Macros_SetActiveSetNumber(oldActiveSetNumber);
-				result = BasicTypesAE_CreateEnumerationDesc(keys, inoutDataDescriptor);
-			}
-			else if (inPropertyAccessMechanism == kPropertyAccessModify)
-			{
-				FourCharCode	newKeys = kTelnetEnumeratedClassMacroSetKeyEquivalentsCommandDigit;
-				
-				
-				// make the data match the type in the Dictionary
-				result = AECoerceDesc(inoutDataDescriptor, typeEnumerated, inoutDataDescriptor);
-				if (result == noErr)
-				{
-					Size		actualSize = 0L;
-					
-					
-					result = AppleEventUtilities_CopyDescriptorData(inoutDataDescriptor, (Ptr)&newKeys,
-																	sizeof(newKeys), &actualSize);
-					if (result == noErr)
-					{
-						// update the macro set’s key equivalents
-						UInt16		oldActiveSetNumber = Macros_ReturnActiveSetNumber();
-						
-						
-						Macros_SetActiveSetNumber(macroSetNumber);
-						Macros_SetMode((newKeys == kTelnetEnumeratedClassMacroSetKeyEquivalentsFunctionKeys)
-										? kMacroManager_InvocationMethodFunctionKeys : kMacroManager_InvocationMethodCommandDigit);
-						// rebuild macro display if necessary to show new key equivalents - INCOMPLETE
-						Macros_SetActiveSetNumber(oldActiveSetNumber);
-					}
-				}
-			}
-			else result = errAEEventNotHandled;
-			break;
-		
-		default:
-			result = errAECantSupplyType;
-			break;
-		}
-	}
-	
-	Console_WriteValue("result", result);
-	Console_EndFunction();
-	return result;
-}// accessPropertyOfClassMacroSet
 
 
 /*!
@@ -2098,14 +1965,6 @@ tokenAccess		(AEDesc const*				inTokenDescriptor,
 			
 			case cMyFormat:
 				result = accessPropertyOfClassFormat(&token, inoutDataDescriptor, inAccessMechanism);
-				break;
-			
-			case cMyMacro:
-				result = accessPropertyOfClassMacro(&token, inoutDataDescriptor, inAccessMechanism);
-				break;
-			
-			case cMyMacroSet:
-				result = accessPropertyOfClassMacroSet(&token, inoutDataDescriptor, inAccessMechanism);
 				break;
 			
 			case cMyProxyServerConfiguration:

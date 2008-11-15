@@ -266,22 +266,6 @@ enum UIStrings_HelpSystemCFString
 	kUIStrings_HelpSystemTopicHelpWithTerminalSettings	= 'Term'
 };
 
-/*!
-Macro Setup Window String Table ("MacroSetupWindow.strings")
-
-These strings are used in the Macro Setup window.  Note
-that most strings are specified in the NIB, the list
-below contains strings that cannot be specified there.
-*/
-enum UIStrings_MacroSetupWindowCFString
-{
-	kUIStrings_MacroSetupWindowSetName1					= 'McS1',
-	kUIStrings_MacroSetupWindowSetName2					= 'McS2',
-	kUIStrings_MacroSetupWindowSetName3					= 'McS3',
-	kUIStrings_MacroSetupWindowSetName4					= 'McS4',
-	kUIStrings_MacroSetupWindowSetName5					= 'McS5'
-};
-
 // see "UIStrings_PrefsWindow.h" for declaration of "UIStrings_PreferencesWindowCFString"
 
 /*!
@@ -421,10 +405,6 @@ UIStrings_Result
 
 UIStrings_Result
 	UIStrings_Copy						(UIStrings_HelpSystemCFString					inWhichString,
-										 CFStringRef&									outString);
-
-UIStrings_Result
-	UIStrings_Copy						(UIStrings_MacroSetupWindowCFString				inWhichString,
 										 CFStringRef&									outString);
 
 // see "UIStrings_PrefsWindow.h" for a declaration that accepts "UIStrings_PreferencesWindowCFString"
