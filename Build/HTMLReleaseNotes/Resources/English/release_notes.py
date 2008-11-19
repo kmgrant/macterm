@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081118',
     '20081115',
     '20081109',
     '20081108',
@@ -190,6 +191,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081118': [
+		'Preferences window Macros pane now correctly displays macro names in the list, which is also where they are now edited.',
+	],
 	'20081115': [
 		'Expanded macros are now implemented: allowing arbitrary key combinations, rapid switching between sets, and more.',
 		'Preferences window Macros pane can now be used to edit most aspects of macros.',

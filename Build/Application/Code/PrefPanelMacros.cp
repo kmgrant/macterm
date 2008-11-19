@@ -104,7 +104,6 @@ In addition, they MUST be unique across all panels.
 HIViewID const	idMyUserPaneMacroSetList				= { 'MLst', 0/* ID */ };
 HIViewID const	idMyDataBrowserMacroSetList				= { 'McDB', 0/* ID */ };
 HIViewID const	idMySeparatorSelectedMacro				= { 'SSMc', 0/* ID */ };
-HIViewID const	idMyFieldMacroName						= { 'FMNm', 0/* ID */ };
 HIViewID const	idMyPopUpMenuMacroKeyType				= { 'MKTy', 0/* ID */ };
 HIViewID const	idMyFieldMacroKeyCharacter				= { 'MKCh', 0/* ID */ };
 HIViewID const	idMyButtonInvokeWithModifierCommand		= { 'McMC', 0/* ID */ };
@@ -197,7 +196,6 @@ protected:
 
 private:
 	CarbonEventHandlerWrap				_menuCommandsHandler;		//!< responds to menu selections
-	CarbonEventHandlerWrap				_fieldNameInputHandler;		//!< saves field settings when they change
 	CarbonEventHandlerWrap				_fieldKeyCharInputHandler;	//!< saves field settings when they change
 	CarbonEventHandlerWrap				_fieldContentsInputHandler;	//!< saves field settings when they change
 	CommonEventHandlers_HIViewResizer	_containerResizer;			//!< invoked when the panel is resized
@@ -371,6 +369,7 @@ switchDataModel		(Preferences_ContextRef		inNewContext,
 	if (0 != inNewIndex) this->currentIndex = inNewIndex;
 	if (nullptr != this->interfacePtr)
 	{
+		this->interfacePtr->refreshDisplay();
 		this->interfacePtr->readPreferences(this->dataModel, this->currentIndex);
 	}
 }// My_MacrosPanelData::switchDataModel
@@ -396,9 +395,6 @@ keyType						(0),
 _menuCommandsHandler		(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 								this/* user data */),
-_fieldNameInputHandler		(GetControlEventTarget(HIViewWrap(idMyFieldMacroName, inOwningWindow)), receiveFieldChanged,
-								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
-								this/* user data */),
 _fieldKeyCharInputHandler	(GetControlEventTarget(HIViewWrap(idMyFieldMacroKeyCharacter, inOwningWindow)), receiveFieldChanged,
 								CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 								this/* user data */),
@@ -410,7 +406,6 @@ _containerResizer			(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH
 								deltaSizePanelContainerHIView, this/* context */)
 {
 	assert(_menuCommandsHandler.isInstalled());
-	assert(_fieldNameInputHandler.isInstalled());
 	assert(_fieldContentsInputHandler.isInstalled());
 	assert(_containerResizer.isInstalled());
 	
@@ -1038,22 +1033,6 @@ readPreferences		(Preferences_ContextRef		inSettings,
 		size_t					actualSize = 0;
 		
 		
-		// INCOMPLETE
-		
-		// set name
-		{
-			CFStringRef		nameCFString = nullptr;
-			
-			
-			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroName,
-															inOneBasedIndex, sizeof(nameCFString), &nameCFString,
-															true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				SetControlTextWithCFString(HIViewWrap(idMyFieldMacroName, kOwningWindow), nameCFString);
-			}
-		}
-		
 		// set key type
 		{
 			MacroManager_KeyID		macroKey = 0;
@@ -1199,21 +1178,6 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
-		
-		// set name
-		{
-			CFStringRef		nameCFString = nullptr;
-			
-			
-			GetControlTextAsCFString(HIViewWrap(idMyFieldMacroName, kOwningWindow), nameCFString);
-			
-			prefsResult = Preferences_ContextSetDataAtIndex(inoutSettings, kPreferences_TagIndexedMacroName,
-															inOneBasedIndex, sizeof(nameCFString), &nameCFString);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Console_WriteValue("warning, failed to set name of macro with index", inOneBasedIndex);
-			}
-		}
 		
 		// set key; this is also technically invoked when the key type menu
 		// changes, since it is jointly dependent on the field setting
@@ -1458,8 +1422,26 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 							 DataBrowserItemDataRef		inItemData,
 							 Boolean					inSetValue)
 {
-	OSStatus	result = noErr;
+	OSStatus				result = noErr;
+	My_MacrosPanelDataPtr	panelDataPtr = nullptr;
+	Panel_Ref				owningPanel = nullptr;
 	
+	
+	{
+		UInt32			actualSize = 0;
+		OSStatus		getPropertyError = GetControlProperty(inDataBrowser, AppResources_ReturnCreatorCode(),
+																kConstantsRegistry_ControlPropertyTypeOwningPanel,
+																sizeof(owningPanel), &actualSize, &owningPanel);
+		
+		
+		if (noErr == getPropertyError)
+		{
+			// IMPORTANT: If this callback ever supports more than one panel, the
+			// panel descriptor can be read at this point to determine the type.
+			panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(owningPanel),
+											My_MacrosPanelDataPtr);
+		}
+	}
 	
 	if (false == inSetValue)
 	{
@@ -1471,7 +1453,22 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		case kMyDataBrowserPropertyIDMacroName:
 			// return the text string for the macro name
-			// UNIMPLEMENTED
+			{
+				SInt32				macroIndex = STATIC_CAST(inItemID, SInt32);
+				CFStringRef			nameCFString = nullptr;
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
+				size_t				actualSize = 0;
+				
+				
+				prefsResult = Preferences_ContextGetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
+																macroIndex, sizeof(nameCFString), &nameCFString,
+																false/* search defaults too */, &actualSize);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					result = SetDataBrowserItemDataText(inItemData, nameCFString);
+					CFRelease(nameCFString), nameCFString = nullptr;
+				}
+			}
 			break;
 		
 		case kMyDataBrowserPropertyIDMacroNumber:
@@ -1495,6 +1492,7 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		
 		default:
 			// ???
+			result = paramErr;
 			break;
 		}
 	}
@@ -1511,8 +1509,21 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				result = GetDataBrowserItemDataText(inItemData, &newName);
 				if (noErr == result)
 				{
-					// fix macro name - UNIMPLEMENTED
-					result = noErr;
+					// fix macro name
+					SInt32				macroIndex = STATIC_CAST(inItemID, SInt32);
+					Preferences_Result	prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextSetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
+																	macroIndex, sizeof(newName), &newName);
+					if (kPreferences_ResultOK == prefsResult)
+					{
+						result = noErr;
+					}
+					else
+					{
+						result = errDataBrowserItemNotFound;
+					}
 				}
 			}
 			break;
@@ -1544,8 +1555,26 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 							 DataBrowserItemID			inItemTwo,
 							 DataBrowserPropertyID		inSortProperty)
 {
-	Boolean		result = false;
+	Boolean					result = false;
+	My_MacrosPanelDataPtr	panelDataPtr = nullptr;
+	Panel_Ref				owningPanel = nullptr;
 	
+	
+	{
+		UInt32			actualSize = 0;
+		OSStatus		getPropertyError = GetControlProperty(inDataBrowser, AppResources_ReturnCreatorCode(),
+																kConstantsRegistry_ControlPropertyTypeOwningPanel,
+																sizeof(owningPanel), &actualSize, &owningPanel);
+		
+		
+		if (noErr == getPropertyError)
+		{
+			// IMPORTANT: If this callback ever supports more than one panel, the
+			// panel descriptor can be read at this point to determine the type.
+			panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(owningPanel),
+											My_MacrosPanelDataPtr);
+		}
+	}
 	
 	switch (inSortProperty)
 	{
@@ -1555,7 +1584,22 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 			CFStringRef		string2 = nullptr;
 			
 			
-			// INCOMPLETE
+			if (nullptr != panelDataPtr)
+			{
+				SInt32				macroIndex1 = STATIC_CAST(inItemOne, SInt32);
+				SInt32				macroIndex2 = STATIC_CAST(inItemTwo, SInt32);
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
+				size_t				actualSize = 0;
+				
+				
+				// ignore results, the strings are checked below
+				prefsResult = Preferences_ContextGetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
+																macroIndex1, sizeof(string1), &string1,
+																false/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
+																macroIndex2, sizeof(string2), &string2,
+																false/* search defaults too */, &actualSize);
+			}
 			
 			// check for nullptr, because CFStringCompare() will not deal with it
 			if ((nullptr == string1) && (nullptr != string2)) result = true;
@@ -1564,6 +1608,15 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 			{
 				result = (kCFCompareLessThan == CFStringCompare(string1, string2,
 																kCFCompareCaseInsensitive | kCFCompareLocalized/* options */));
+			}
+			
+			if (nullptr != string1)
+			{
+				CFRelease(string1), string1 = nullptr;
+			}
+			if (nullptr != string2)
+			{
+				CFRelease(string2), string2 = nullptr;
 			}
 		}
 		break;
