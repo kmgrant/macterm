@@ -349,9 +349,11 @@ static void				getScreenPaletteColor			(TerminalViewPtr, TerminalView_ColorIndex
 static void				getScreenOrigin					(TerminalViewPtr, SInt16*, SInt16*);
 static void				getScreenOriginFloat			(TerminalViewPtr, Float32&, Float32&);
 static Handle			getSelectedTextAsNewHandle		(TerminalViewPtr, UInt16, TerminalView_TextFlags);
+static HIShapeRef		getSelectedTextAsNewHIShape		(TerminalViewPtr, Float32 = 0.0);
 static RgnHandle		getSelectedTextAsNewRegion		(TerminalViewPtr);
 static RgnHandle	getSelectedTextAsNewRegionOnScreen	(TerminalViewPtr);
 static size_t			getSelectedTextSize				(TerminalViewPtr);
+static HIShapeRef		getVirtualRangeAsNewHIShape		(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Float32, Boolean);
 static RgnHandle		getVirtualRangeAsNewRegion		(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
 static RgnHandle	getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
 static void				getVirtualVisibleRegion			(TerminalViewPtr, SInt16*, SInt16*, SInt16*, SInt16*);
@@ -5421,6 +5423,26 @@ getSelectedTextAsNewHandle	(TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
+Like getVirtualRangeAsNewHIShape(), except specifically for the
+current text selection.  Automatically takes into account
+rectangular shape, if applicable.
+
+(4.0)
+*/
+static HIShapeRef
+getSelectedTextAsNewHIShape		(TerminalViewPtr	inTerminalViewPtr,
+								 Float32			inInsets)
+{
+	HIShapeRef		result = getVirtualRangeAsNewHIShape(inTerminalViewPtr, inTerminalViewPtr->text.selection.range.first,
+															inTerminalViewPtr->text.selection.range.second, inInsets,
+															inTerminalViewPtr->text.selection.isRectangular);
+	
+	
+	return result;
+}// getSelectedTextAsNewHIShape
+
+
+/*!
 Internal version of TerminalView_ReturnSelectedTextAsNewRegion().
 
 DEPRECATED.  Use getSelectedTextAsNewRegionOnScreen() instead.
@@ -5485,6 +5507,152 @@ getSelectedTextSize		(TerminalViewPtr	inTerminalViewPtr)
 	
 	return result;
 }// getSelectedTextSize
+
+
+/*!
+Returns a new shape locating the specified area of the terminal
+view, relative to its content view: for example, the first
+character in the top-left corner has origin (0, 0) in pixels.
+You must release the shape when finished with it.
+
+For convenience, an insets parameter is allowed that will return
+a shape that is larger or smaller by this amount in all
+directions; pass 0.0 to not adjust the shape.
+
+(4.0)
+*/
+static HIShapeRef
+getVirtualRangeAsNewHIShape		(TerminalViewPtr			inTerminalViewPtr,
+								 TerminalView_Cell const&	inSelectionStart,
+								 TerminalView_Cell const&	inSelectionPastEnd,
+								 Float32					inInsets,
+								 Boolean					inIsRectangular)
+{
+	HIShapeRef			result = nullptr;
+	HIRect				screenBounds;
+	TerminalView_Cell	selectionStart;
+	TerminalView_Cell	selectionPastEnd;
+	OSStatus			error = noErr;
+	
+	
+	// find clipping region
+	error = HIViewGetBounds(inTerminalViewPtr->contentHIView, &screenBounds);
+	assert_noerr(error);
+	
+	selectionStart = inSelectionStart;
+	selectionPastEnd = inSelectionPastEnd;
+	
+	// normalize coordinates with respect to visible area of virtual screen
+	{
+		SInt16		top = 0;
+		SInt16		left = 0;
+		
+		
+		getVirtualVisibleRegion(inTerminalViewPtr, &left, &top, nullptr/* right */, nullptr/* bottom */);
+		selectionStart.second -= top;
+		selectionStart.first -= left;
+		selectionPastEnd.second -= top;
+		selectionPastEnd.first -= left;
+	}
+	
+	if ((INTEGER_ABSOLUTE(selectionPastEnd.second - selectionStart.second) <= 1) ||
+		(inIsRectangular))
+	{
+		// then the area to be highlighted is a rectangle; this simplifies things...
+		CGRect		clippedRect;
+		CGRect		selectionBounds;
+		
+		
+		// make the points the “right way around”, in case the first point is
+		// technically to the right of or below the second point
+		sortAnchors(selectionStart, selectionPastEnd, true/* is a rectangular selection */);
+		
+		// set up rectangle bounding area to be highlighted
+		selectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
+										selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
+										(selectionPastEnd.first - selectionStart.first) * inTerminalViewPtr->text.font.widthPerCharacter,
+										(selectionPastEnd.second - selectionStart.second) * inTerminalViewPtr->text.font.heightPerCharacter);
+		
+		// the final selection region is the portion of the full rectangle
+		// that fits within the current screen boundaries
+		clippedRect = CGRectIntegral(CGRectIntersection(selectionBounds, screenBounds));
+		if (inInsets)
+		{
+			clippedRect = CGRectInset(clippedRect, inInsets, inInsets);
+		}
+		result = HIShapeCreateWithRect(&clippedRect);
+	}
+	else
+	{
+		// then the area to be highlighted is irregularly shaped; this is more complex...
+		HIMutableShapeRef	mutableResult = nullptr;
+		HIShapeRef			rectShape = nullptr;
+		CGRect				clippedRect;
+		CGRect				partialSelectionBounds;
+		
+		
+		mutableResult = HIShapeCreateMutable();
+		
+		// make the points the “right way around”, in case the first point is
+		// technically to the right of or below the second point
+		sortAnchors(selectionStart, selectionPastEnd, false/* is a rectangular selection */);
+		
+		// bounds of first (possibly partial) line to be highlighted
+		{
+			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
+			partialSelectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter + inInsets,
+												selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
+												inTerminalViewPtr->screen.viewWidthInPixels -
+													selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter -
+													2.0 * inInsets,
+												inTerminalViewPtr->text.font.heightPerCharacter/* no insets here, due to shrunk mid-section */);
+			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
+			rectShape = HIShapeCreateWithRect(&clippedRect);
+			if (nullptr != rectShape)
+			{
+				HIShapeUnion(mutableResult, rectShape, mutableResult);
+				CFRelease(rectShape), rectShape = nullptr;
+			}
+		}
+		
+		// bounds of last (possibly partial) line to be highlighted
+		{
+			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
+			partialSelectionBounds = CGRectMake(inInsets,
+												(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter - inInsets,
+												selectionPastEnd.first * inTerminalViewPtr->text.font.widthPerCharacter - 2.0 * inInsets,
+												inTerminalViewPtr->text.font.heightPerCharacter/* no insets here, due to shrunk mid-section */);
+			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
+			rectShape = HIShapeCreateWithRect(&clippedRect);
+			if (nullptr != rectShape)
+			{
+				HIShapeUnion(mutableResult, rectShape, mutableResult);
+				CFRelease(rectShape), rectShape = nullptr;
+			}
+		}
+		
+		if ((selectionPastEnd.second - selectionStart.second) > 2)
+		{
+			// highlight extends across more than two lines - fill in the space in between
+			partialSelectionBounds = CGRectMake(inInsets,
+												(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
+												inTerminalViewPtr->screen.viewWidthInPixels - 2.0 * inInsets,
+												(selectionPastEnd.second - selectionStart.second - 2/* skip first and last lines */) *
+													inTerminalViewPtr->text.font.heightPerCharacter - 2.0 * inInsets);
+			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
+			rectShape = HIShapeCreateWithRect(&clippedRect);
+			if (nullptr != rectShape)
+			{
+				HIShapeUnion(mutableResult, rectShape, mutableResult);
+				CFRelease(rectShape), rectShape = nullptr;
+			}
+		}
+		
+		result = mutableResult;
+	}
+	
+	return result;
+}// getVirtualRangeAsNewHIShape
 
 
 /*!
@@ -7493,23 +7661,43 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// have drawn the active selection)
 						if ((false == viewPtr->isActive) && viewPtr->text.selection.exists)
 						{
-							RgnHandle	selectionRegion = getSelectedTextAsNewRegionOnScreen(viewPtr);
+							HIShapeRef		selectionShape = getSelectedTextAsNewHIShape(viewPtr, 1.0/* inset */);
 							
 							
-							if (nullptr != selectionRegion)
+							if (nullptr != selectionShape)
 							{
-								RGBColor	highlightColor;
+								RGBColor		highlightColorRGB;
+								CGDeviceColor	highlightColorDevice;
+								OSStatus		error = noErr;
 								
+								
+								// TEMPORARY - account for QuickDraw/Quartz differences until conversion is complete
+								{
+									HIMutableShapeRef		offsetCopy = HIShapeCreateMutableCopy(selectionShape);
+									
+									
+									if (nullptr != offsetCopy)
+									{
+										HIShapeOffset(offsetCopy, -1.0, -1.0);
+										
+										CFRelease(selectionShape), selectionShape = nullptr;
+										selectionShape = offsetCopy;
+									}
+								}
 								
 								// draw outline
-								PenNormal();
-								PenSize(2, 2); // make thick outline frame on Mac OS X
-								LMGetHiliteRGB(&highlightColor);
-								RGBForeColor(&highlightColor);
-								FrameRgn(selectionRegion);
+								CGContextSetLineWidth(drawingContext, 2.0); // make thick outline frame on Mac OS X
+								CGContextSetLineCap(drawingContext, kCGLineCapRound);
+								LMGetHiliteRGB(&highlightColorRGB);
+								highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
+								CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
+															highlightColorDevice.blue, 1.0/* alpha */);
+								error = HIShapeReplacePathInCGContext(selectionShape, drawingContext);
+								assert_noerr(error);
+								CGContextStrokePath(drawingContext);
 								
 								// free allocated memory
-								Memory_DisposeRegion(&selectionRegion);
+								CFRelease(selectionShape), selectionShape = nullptr;
 							}
 						}
 						
