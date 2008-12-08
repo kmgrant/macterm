@@ -252,6 +252,7 @@ struct TerminalView
 		SInt16			currentRenderedLine;		// only defined while drawing; the row that is currently being drawn
 		Boolean			currentRenderBlinking;		// only defined while drawing; if true, at least one section is blinking
 		Boolean			currentRenderDragColors;	// only defined while drawing; if true, drag highlight text colors are used
+		Boolean			currentRenderNoBackground;	// only defined while drawing; if true, text is using the ordinary background color
 		CGContextRef	currentRenderContext;		// only defined while drawing; if not nullptr, the context from the view draw event
 		SInt16			viewWidthInPixels;			// size of window view (window could be smaller than the screen size);
 		SInt16			viewHeightInPixels;			//   always identical to the current dimensions of the content view
@@ -327,15 +328,13 @@ static void				copySelectedTextIfUserPreference(TerminalViewPtr);
 static OSStatus			createWindowColorPalette		(TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 static Boolean			cursorBlinks					(TerminalViewPtr);
 static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
-static void				drawRowSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, TerminalTextAttributes,
-														 UniChar const*, Rect&);
 static Boolean			drawSection						(TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
 static void				drawTerminalScreenRunOp			(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
 														 UInt16, TerminalTextAttributes, void*);
-static void				drawTerminalText				(TerminalViewPtr, CGContextRef, Rect const*, UniChar const*, CFIndex,
+static void				drawTerminalText				(TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, UniChar const*, CFIndex,
 														 TerminalTextAttributes);
 static void				drawVTGraphicsGlyph				(TerminalViewPtr, CGContextRef, Rect const*, UniChar, Boolean);
-static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, Boolean);
+static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 static void				eventNotifyForView				(TerminalViewConstPtr, TerminalView_Event, void*);
 static Terminal_LineRef	findRowIterator					(TerminalViewPtr, UInt16);
 static Boolean			findVirtualCellFromLocalPoint	(TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
@@ -344,7 +343,7 @@ static SInt16			getRowCharacterWidth			(TerminalViewPtr, UInt16);
 static void				getRowSectionBounds				(TerminalViewPtr, UInt16, UInt16, SInt16, Rect*);
 static void				getScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
 static void				getScreenColorEntries			(TerminalViewPtr, TerminalTextAttributes,
-														 TerminalView_ColorIndex*, TerminalView_ColorIndex*);
+														 TerminalView_ColorIndex*, TerminalView_ColorIndex*, Boolean*);
 static void				getScreenPaletteColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
 static void				getScreenOrigin					(TerminalViewPtr, SInt16*, SInt16*);
 static void				getScreenOriginFloat			(TerminalViewPtr, Float32&, Float32&);
@@ -406,7 +405,7 @@ static void				sortAnchors						(TerminalView_Cell&, TerminalView_Cell&, Boolean
 static pascal OSErr		supplyTextSelectionToDrag		(FlavorType, void*, DragItemRef, DragRef);
 static void				trackTextSelection				(TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
 static void				useTerminalTextAttributes		(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
-static void				useTerminalTextColors			(TerminalViewPtr, CGContextRef, TerminalTextAttributes, Boolean = true);
+static void				useTerminalTextColors			(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
 static void				visualBell						(TerminalViewRef);
 
 #pragma mark Variables
@@ -4005,70 +4004,6 @@ dragTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 
 
 /*!
-Renders a portion of text from the current rendering line.
-Any text that falls within the current text selection for
-the specified terminal screen is automatically highlighted;
-all of the text will otherwise use the given attributes.
-The area is also subtracted from any existing invalid
-region.  For convenience, the section boundaries are
-returned.
-
-This routine expects to be called while the current
-graphics port origin is equal to the screen origin.
-
-LOCALIZE THIS:	The terminal buffer should be rendered
-				right-to-left in right-to-left locales.
-
-For optimal performance MacTelnet 3.0 does not set up or
-preserve port state in this routine; it is only used
-once, iteratively to render a block of the screen so it
-is more efficient to do the port setup elsewhere.
-
-(2.6)
-*/
-static void
-drawRowSection	(TerminalViewPtr			inTerminalViewPtr,
-				 CGContextRef				inDrawingContext,
-				 SInt16						inZeroBasedStartingColumnNumber,
-				 SInt16						inCharacterCount,
-				 TerminalTextAttributes		inAttributes,
-				 UniChar const*				inTextBufferPtr,
-				 Rect&						outRowSectionBounds)
-{
-	// set up the rectangle bounding the text being drawn
-	getRowSectionBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
-						inZeroBasedStartingColumnNumber, inCharacterCount, &outRowSectionBounds);
-	if (EmptyRect(&outRowSectionBounds))
-	{
-		Console_WriteValueFloat4("warning, attempt to draw empty row section",
-									outRowSectionBounds.left, outRowSectionBounds.top,
-									outRowSectionBounds.right, outRowSectionBounds.bottom);
-	}
-	
-	// for better performance on Mac OS X, make the intended drawing area
-	// part of the QuickDraw port’s dirty region
-	if (outRowSectionBounds.bottom >= 0)
-	{
-		CGrafPtr	currentPort = nullptr;
-		GDHandle	currentDevice = nullptr;
-		
-		
-		GetGWorld(&currentPort, &currentDevice);
-		(OSStatus)QDAddRectToDirtyRegion(currentPort, &outRowSectionBounds);
-	}
-	
-	// draw text
-	MoveTo(outRowSectionBounds.left,
-			outRowSectionBounds.top +
-				(STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
-												? inTerminalViewPtr->text.font.doubleMetrics.ascent
-												: inTerminalViewPtr->text.font.normalMetrics.ascent));
-	drawTerminalText(inTerminalViewPtr, inDrawingContext, &outRowSectionBounds, inTextBufferPtr,
-						inCharacterCount, inAttributes);
-}// drawRowSection
-
-
-/*!
 Redraws the specified part of the given view.  Returns
 "true" only if the text was drawn successfully.
 
@@ -4258,25 +4193,33 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 							 void*						inTerminalViewPtr)
 {
 	TerminalViewPtr		viewPtr = REINTERPRET_CAST(inTerminalViewPtr, TerminalViewPtr);
-#if 0
-	Boolean				debug = true;
-#else
-	Boolean				debug = false;
-#endif
+	CGRect				sectionBounds;
 	
+	
+	// set up context foreground and background colors appropriately
+	// for the specified terminal attributes; this takes into account
+	// things like bold and highlighted text, etc.
+	useTerminalTextColors(viewPtr, viewPtr->screen.currentRenderContext, inAttributes);
 	
 	// erase and redraw the current rendering line, but only the
 	// specified range (starting column and character count)
-	eraseSection(viewPtr, viewPtr->screen.currentRenderContext, inZeroBasedStartColumnNumber,
-					inZeroBasedStartColumnNumber + inLineTextBufferLength, debug);
+	eraseSection(viewPtr, viewPtr->screen.currentRenderContext,
+					inZeroBasedStartColumnNumber, inZeroBasedStartColumnNumber + inLineTextBufferLength,
+					sectionBounds);
+	
+	// draw the text or graphics
 	if ((nullptr != inLineTextBufferOrNull) && (0 != inLineTextBufferLength))
 	{
-		Rect	sectionBounds;
+		Rect	intBounds;
 		
 		
-		drawRowSection(viewPtr, viewPtr->screen.currentRenderContext, inZeroBasedStartColumnNumber,
-						inLineTextBufferLength/* number of characters */, inAttributes, inLineTextBufferOrNull,
-						sectionBounds);
+		// TEMPORARY - for QuickDraw use only
+		SetRect(&intBounds, STATIC_CAST(sectionBounds.origin.x, short), STATIC_CAST(sectionBounds.origin.y, short),
+				STATIC_CAST(sectionBounds.origin.x + sectionBounds.size.width, short),
+				STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
+		
+		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
+							inLineTextBufferOrNull, inLineTextBufferLength/* number of characters */, inAttributes);
 		
 		// since blinking forces frequent redraws, do not do it more
 		// than necessary; keep track of any blink attributes, and
@@ -4284,7 +4227,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 		// timer when it is not needed
 		if (STYLE_BLINKING(inAttributes))
 		{
-			RectRgn(gInvalidationScratchRegion(), &sectionBounds);
+			RectRgn(gInvalidationScratchRegion(), &intBounds);
 			UnionRgn(gInvalidationScratchRegion(), viewPtr->animation.rendering.region,
 						viewPtr->animation.rendering.region);
 			
@@ -4316,20 +4259,38 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 
 
 /*!
-Draws the specified text using the given attributes,
-at the current pen location of the specified graphics
-port.  The pen location should match the baseline of
-the font.
+Draws the specified text using the given attributes, at a pen
+location appropriate for fitting within the given boundaries.
+If the cursor falls anywhere in the given area and is in a
+visible state, it is drawn automatically.
 
-If the cursor falls anywhere in the given area and
-is in a visible state, it is drawn automatically.
+Although this function will set up text attributes such as
+font, color, graphics line width, etc., it will NOT set colors.
+The context must already be set up to use the desired stroke
+and fill colors.
+
+For optimal performance the graphics context state may not be
+saved or restored; it could be returned in any state.
+
+NOTE:	Despite the Unicode input, this routine is currently
+		transitioning from QuickDraw and does not render all
+		characters properly.
+
+IMPORTANT:	The "inOldQuickDrawBoundaries" parameter should be
+			equivalent to "inBoundaries", and will be removed
+			in the future.  It is only for convenience when
+			supporting old QuickDraw calls.  Also, QuickDraw
+			code needs to correctly outset the bottom-right
+			corner when making certain calls (e.g. filling
+			rectangles, but not framing rectangles).
 
 (3.0)
 */
 static void
 drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 					 CGContextRef				inDrawingContext,
-					 Rect const*				inBoundaries,
+					 CGRect const&				inBoundaries,
+					 Rect const&				inOldQuickDrawBoundaries,
 					 UniChar const*				inTextBufferPtr,
 					 CFIndex					inCharacterCount,
 					 TerminalTextAttributes		inAttributes)
@@ -4346,16 +4307,28 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 	if (nullptr != oldMacRomanBufferForQuickDraw)
 	{
 		// draw all of the text, but scan for sub-sections that could be ANSI graphics
-		SInt16				terminalFontID = 0;
-		SInt16				terminalFontSize = 0;
-		Style				terminalFontStyle = normal;
+		SInt16		terminalFontID = 0;
+		SInt16		terminalFontSize = 0;
+		Style		terminalFontStyle = normal;
+		PenState	penState;
 		
 		
-		// set up the current graphics port appropriately; the port’s settings
-		// subsequently determine EVERYTHING: the font, style, color, and even
-		// whether or not the text should be drawn double-width or as VT graphics
-		// glyphs (this is because pseudo-font-sizes and other tricks are used
-		// to communicate terminal mode information through the QuickDraw port)
+		// for better performance on Mac OS X, make the intended drawing area
+		// part of the QuickDraw port’s dirty region
+		if (inOldQuickDrawBoundaries.bottom >= 0)
+		{
+			CGrafPtr	currentPort = nullptr;
+			GDHandle	currentDevice = nullptr;
+			
+			
+			GetGWorld(&currentPort, &currentDevice);
+			(OSStatus)QDAddRectToDirtyRegion(currentPort, &inOldQuickDrawBoundaries);
+		}
+		
+		// set up the specified graphics context (and current QuickDraw port, for
+		// legacy calls); the colors should already be set by the caller, but
+		// this will add proper settings for font, style, etc. and set internal
+		// flags that determine whether or not to use double-width and graphics
 		useTerminalTextAttributes(inTerminalViewPtr, inDrawingContext, inAttributes);
 		
 		// get current font information (used to determine what the text should
@@ -4372,11 +4345,12 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			terminalFontStyle = GetPortTextFace(currentPort);
 		}
 		
-		if (false == inTerminalViewPtr->screen.currentRenderDragColors)
-		{
-			// fill background appropriately
-			EraseRect(inBoundaries);
-		}
+		// position pen at start of text, on font baseline
+		MoveTo(inOldQuickDrawBoundaries.left,
+				inOldQuickDrawBoundaries.top +
+					(STYLE_IS_DOUBLE_HEIGHT_BOTTOM(inAttributes)
+													? inTerminalViewPtr->text.font.doubleMetrics.ascent
+													: inTerminalViewPtr->text.font.normalMetrics.ascent));
 		
 		// if bold or large text or graphics are being drawn, do it one character
 		// at a time; bold fonts typically increase the font spacing, and double-
@@ -4404,7 +4378,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 				{
 					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], true/* is double width */);
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i], true/* is double width */);
 				}
 				else
 				{
@@ -4429,7 +4403,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 				{
 					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, inBoundaries, inTextBufferPtr[i], false/* is double width */);
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i], false/* is double width */);
 				}
 				else
 				{
@@ -4453,7 +4427,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			Rect	intersection;
 			
 			
-			if (SectRect(inBoundaries, &inTerminalViewPtr->screen.cursor.bounds, &intersection) &&
+			if (SectRect(&inOldQuickDrawBoundaries, &inTerminalViewPtr->screen.cursor.bounds, &intersection) &&
 				(kMyCursorStateVisible == inTerminalViewPtr->screen.cursor.currentState))
 			{
 				RectRgn(gInvalidationScratchRegion(), &inTerminalViewPtr->screen.cursor.bounds);
@@ -4772,20 +4746,18 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 
 /*!
 Erases a rectangular portion of the current rendering
-line of the screen display, preserving highlighted
-areas.
+line of the screen display, unless the renderer is in
+“no background” mode (which implies that the entire
+background is handled by whatever is rendered behind
+it).
 
-This routine expects to be called while the current
-graphics port origin is equal to the screen origin.
+Either way, the boundaries of the specified area are
+returned for convenience, to avoid repeating that
+calculation in the calling code.
 
-If "inDebug" is true, the background is painted in
-some obscene obvious color instead of the correct one.
-
-For optimal performance MacTelnet 3.0 does not set
-up or preserve port state in this routine; it is
-only used once, iteratively to render a block of
-the screen so it is more efficient to do the port
-setup elsewhere.
+You should call useTerminalTextColors() before using
+this routine, or otherwise ensure that the fill color
+of the specified context is configured appropriately.
 
 (2.6)
 */
@@ -4793,53 +4765,27 @@ static void
 eraseSection	(TerminalViewPtr	inTerminalViewPtr,
 				 CGContextRef		inDrawingContext,
 				 SInt16				inLeftmostColumnToErase,
-				 SInt16				inRightmostColumnToErase,
-				 Boolean			inDebug)
+				 SInt16				inPastRightmostColumnToErase,
+				 CGRect&			outRowSectionBounds)
 {
-	if (false == inTerminalViewPtr->screen.currentRenderDragColors)
+	Rect	intBounds;
+	
+	
+	getRowSectionBounds(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine,
+						inLeftmostColumnToErase, inPastRightmostColumnToErase - inLeftmostColumnToErase,
+						&intBounds);
+	outRowSectionBounds = CGRectMake(intBounds.left, intBounds.top, intBounds.right - intBounds.left,
+										intBounds.bottom - intBounds.top);
+	if (CGRectIsEmpty(outRowSectionBounds))
 	{
-		CGrafPtr	currentPort = nullptr;
-		GDHandle	currentDevice = nullptr;
-		Boolean		isColor = false;
-		UInt32		colorDepth = 0;
-		Rect		rect;
-		SInt16		widthPerCharacter = 0;
-		
-		
-		GetGWorld(&currentPort, &currentDevice);
-		colorDepth = ColorUtilities_ReturnCurrentDepth(currentPort);
-		isColor = IsPortColor(currentPort);
-		
-		// determine the line’s rectangle (e.g. taking into account double-sized text)
-		widthPerCharacter = getRowCharacterWidth(inTerminalViewPtr, inTerminalViewPtr->screen.currentRenderedLine);
-		SetRect(&rect, inLeftmostColumnToErase * widthPerCharacter,
-						inTerminalViewPtr->screen.currentRenderedLine * inTerminalViewPtr->text.font.heightPerCharacter,
-						(inRightmostColumnToErase + 1) * widthPerCharacter - 1,
-						(inTerminalViewPtr->screen.currentRenderedLine + 1) * inTerminalViewPtr->text.font.heightPerCharacter + 1);
-		if (rect.left < 0) rect.left = 0;
-		if (rect.right >= inTerminalViewPtr->screen.viewWidthInPixels - 1)
-		{
-			rect.right = inTerminalViewPtr->screen.maxViewWidthInPixels - 2;
-		}
-		if (rect.bottom >= inTerminalViewPtr->screen.viewHeightInPixels - 2)
-		{
-			rect.bottom = inTerminalViewPtr->screen.maxViewHeightInPixels + 1;
-		}
-		
-		// before erasing make sure the terminal background is painted
-		// underneath, instead of (say) the window background
-		if (inDebug)
-		{
-			RGBColor	yellow = { RGBCOLOR_INTENSITY_MAX, RGBCOLOR_INTENSITY_MAX, 0 };
-			
-			
-			RGBBackColor(&yellow);
-		}
-		else
-		{
-			useTerminalTextColors(inTerminalViewPtr, inDrawingContext, 0/* attributes */, false/* set text color */);
-		}
-		EraseRect(&rect);
+		Console_WriteValueFloat4("warning, attempt to erase empty row section",
+									outRowSectionBounds.origin.x, outRowSectionBounds.origin.y,
+									outRowSectionBounds.size.width, outRowSectionBounds.size.height);
+	}
+	
+	if (false == inTerminalViewPtr->screen.currentRenderNoBackground)
+	{
+		EraseRect(&intBounds);
 	}
 }// eraseSection
 
@@ -5216,17 +5162,25 @@ Returns the entry indices, into the specified screen’s
 window palette, of the correct foreground and background
 colors for the specified text style attributes.
 
+If "outNoBackgroundPtr" is set to true, it means that the
+returned background color is normal, which is effectively
+no color if the foreground is rendered over top of a
+background view.
+
 (3.0)
 */
 static void
 getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalTextAttributes		inAttributes,
 						 TerminalView_ColorIndex*	outForeColorEntryPtr,
-						 TerminalView_ColorIndex*	outBackColorEntryPtr)
+						 TerminalView_ColorIndex*	outBackColorEntryPtr,
+						 Boolean*					outNoBackgroundPtr)
 {
 	TerminalView_ColorIndex		fg = kTerminalView_ColorIndexNormalText;
 	TerminalView_ColorIndex		bg = kTerminalView_ColorIndexNormalBackground;
 	
+	
+	*outNoBackgroundPtr = false; // initially...
 	
 	// choose foreground color...
 	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */STYLE_USE_ANSI_FOREGROUND(inAttributes))
@@ -5259,7 +5213,26 @@ getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 		// the text will still be recognizeable as boldface
 		if (STYLE_BLINKING(inAttributes)) bg = kTerminalView_ColorIndexBlinkingBackground;
 		else if (STYLE_BOLD(inAttributes)) bg = kTerminalView_ColorIndexBoldBackground;
-		else bg = kTerminalView_ColorIndexNormalBackground;
+		else
+		{
+			bg = kTerminalView_ColorIndexNormalBackground;
+			*outNoBackgroundPtr = true;
+		}
+	}
+	
+	// to invert, swap the colors and make sure the background is drawn
+	if (STYLE_INVERSE_VIDEO(inAttributes))
+	{
+		std::swap< TerminalView_ColorIndex >(fg, bg);
+		*outNoBackgroundPtr = false;
+	}
+	
+	// if the entire screen is in reverse video mode, it currently
+	// cannot let “matching” background colors fall through (because
+	// the background still renders the ordinary color)
+	if (inTerminalViewPtr->screen.isReverseVideo)
+	{
+		*outNoBackgroundPtr = false;
 	}
 	
 	if (STYLE_CONCEALED(inAttributes)) fg = bg; // make “invisible” by using same colors for everything
@@ -9861,10 +9834,6 @@ settings) of the current QuickDraw port and the specified
 Core Graphics port, based on the requested attributes and the
 active state of the terminal’s container view.
 
-If "inUseForegroundColor" is set to "true", the appropriate
-text color will also be set up; otherwise, only the background
-is changed.
-
 In general, only style and dimming affect color.
 
 IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
@@ -9876,21 +9845,20 @@ IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
 static void
 useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 						 CGContextRef				inDrawingContext,
-						 TerminalTextAttributes		inAttributes,
-						 Boolean					inUseForegroundColor)
+						 TerminalTextAttributes		inAttributes)
 {
 	TerminalView_ColorIndex		fg = 0;
 	TerminalView_ColorIndex		bg = 0;
 	RGBColor					colorRGB;
-	RGBColor					preservedForeColor;
 	Boolean						usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
 	
 	
-	// find the correct colors in the color table
-	getScreenColorEntries(inTerminalViewPtr, inAttributes, &fg, &bg);
+	// IMPORTANT: Drawing code is currently transitioning to Core Graphics;
+	// so, not all QuickDraw settings are completely replaced yet, and some
+	// are even made redundantly in both contexts.
 	
-	// remember previous setting in case it needs to be restored
-	GetForeColor(&preservedForeColor);
+	// find the correct colors in the color table
+	getScreenColorEntries(inTerminalViewPtr, inAttributes, &fg, &bg, &inTerminalViewPtr->screen.currentRenderNoBackground);
 	
 	// set up foreground color
 	if (usingDragHighlightColors)
@@ -9900,18 +9868,23 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		colorRGB.green = 0;
 		colorRGB.blue = 0;
 		RGBForeColor(&colorRGB);
+		CGContextSetRGBStrokeColor(inDrawingContext, 0/* red */, 0/* green */, 0/* blue */, 1.0/* alpha */);
+		
+		// ...and allow background (which will be the drag highlight) to show through
+		inTerminalViewPtr->screen.currentRenderNoBackground = true;
 	}
 	else
 	{
-		getScreenPaletteColor(inTerminalViewPtr, STYLE_INVERSE_VIDEO(inAttributes) ? bg : fg, &colorRGB);
+		getScreenPaletteColor(inTerminalViewPtr, fg, &colorRGB);
 		RGBForeColor(&colorRGB);
+		// set Core Graphics color below...
 	}
 	
 	// set up background color; note that in drag highlighting mode,
 	// the background color is preset by the highlight renderer
 	if (false == usingDragHighlightColors)
 	{
-		getScreenPaletteColor(inTerminalViewPtr, STYLE_INVERSE_VIDEO(inAttributes) ? fg : bg, &colorRGB);
+		getScreenPaletteColor(inTerminalViewPtr, bg, &colorRGB);
 		RGBBackColor(&colorRGB);
 		
 		// “darken” the colors if text is selected, but only in the foreground;
@@ -9919,6 +9892,8 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		// selected text should NOT have any special appearance in that case
 		if (STYLE_SELECTED(inAttributes) && inTerminalViewPtr->isActive)
 		{
+			inTerminalViewPtr->screen.currentRenderNoBackground = false;
+			
 			if (gPreferenceProxies.invertSelections) UseInvertedColors();
 			else UseSelectionColors();
 		}
@@ -9929,6 +9904,8 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		unless ((inTerminalViewPtr->isActive) || (gPreferenceProxies.dontDimTerminals) ||
 				(STYLE_SELECTED(inAttributes) && !gApplicationIsSuspended))
 		{
+			inTerminalViewPtr->screen.currentRenderNoBackground = false;
+			
 			// dim screen
 			UseInactiveColors();
 			
@@ -9944,6 +9921,8 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		// give search results a special appearance
 		if (STYLE_SEARCH_RESULT(inAttributes))
 		{
+			inTerminalViewPtr->screen.currentRenderNoBackground = false;
+			
 			UseSelectionColors();
 			UseLighterColors();
 		}
@@ -9982,12 +9961,21 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 				RGBForeColor(&colorRGB);
 			}
 		}
-	}
-	
-	// do not change the foreground unless this was requested
-	unless (inUseForegroundColor)
-	{
-		RGBForeColor(&preservedForeColor);
+		
+		// take advantage of the color blending done in the QuickDraw
+		// port for now, and simply “steal” the colors for the CG context
+		{
+			CGDeviceColor		floatRGB;
+			
+			
+			GetForeColor(&colorRGB);
+			floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
+			CGContextSetRGBStrokeColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, 1.0/* alpha */);
+			
+			GetBackColor(&colorRGB);
+			floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
+			CGContextSetRGBFillColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, 1.0/* alpha */);
+		}
 	}
 }// useTerminalTextColors
 
@@ -9996,7 +9984,11 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 Sets the screen variable for the current text attributes to be
 the specified attributes, and sets QuickDraw and Core Graphics
 settings appropriately for the requested attributes (text font,
-size, style, color, inverse video, etc.).
+size, style, etc.).  Also updates internal flags for the current
+render to indicate whether or not to use double-size text and
+VT graphics.
+
+This does NOT set colors; see useTerminalTextColors().
 
 IMPORTANT:	This is ONLY for use by drawTerminalText(), in
 			order to set up the drawing port properly.  Note
@@ -10132,24 +10124,9 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 			}
 		}
 		
-		// set up text modes: inverse or normal video?
-		if (inTerminalViewPtr->screen.currentRenderDragColors)
-		{
-			// do not render the background color, so that the drag
-			// highlight background shows through behind the text
-			TextMode(srcOr);
-		}
-		else
-		{
-			// render both foreground and background colors
-			TextMode(srcCopy);
-		}
-		
-		// set up pen modes: inverse or normal video?
+		// set text mode and pen mode
+		TextMode(srcOr); // do not render background color
 		PenMode(patCopy);
-		
-		// set up port to use the right colors based on the text attributes
-		useTerminalTextColors(inTerminalViewPtr, inDrawingContext, inAttributes);
 	}
 }// useTerminalTextAttributes
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081207',
     '20081118',
     '20081115',
     '20081109',
@@ -191,6 +192,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081207': [
+		'Terminal view renderer is now more efficient when drawing text that uses the normal background color.',
+	],
 	'20081118': [
 		'Preferences window Macros pane now correctly displays macro names in the list, which is also where they are now edited.',
 	],
