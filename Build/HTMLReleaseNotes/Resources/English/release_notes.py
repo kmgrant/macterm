@@ -196,6 +196,7 @@ notes_by_version = {
 	'20081208': [
 		'Terminal view renderer is now more efficient at rendering small changes to the contents of the screen.',
 		'Fixed a rendering glitch that caused lines to be erased in certain cases, such as in text editors.',
+		'MacTelnet Help updated to correct some minor points and expand on Preferences documentation.',
 	],
 	'20081207': [
 		'Terminal view renderer is now more efficient when drawing text that uses the normal background color.',

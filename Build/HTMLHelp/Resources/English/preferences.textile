@@ -47,18 +47,26 @@ while it has no windows open.
 
 h5(#usetabs). Use tabs to arrange windows
 
-Once enabled, all new windows (but not existing ones) will use
-tabs.
+Once enabled, all new windows (but not existing ones) will be
+given tab adornments and will stick together automatically.
 
-MacTelnet tabs are quite unique, in that they are still windows.
-Aside from being "glued" together and having a tab adornment,
-they are separate windows, so they retain a lot of flexibility.
-For example, a sheet open on one tab will not block other tabs.
+New windows are added to the tab group of the active window.
+A tab can be moved to a new group by clicking the up-arrow
+button on its tab, or using Window >> Move to New Workspace.
 
-Currently, new tabs always appear in the most recently created
-"workspace".  By default there is one workspace, but clicking the
-up-arrow button in a tab or using Window >> Move to New Workspace
-will separate the tab into a new workspace.
+**Tip:** If you're using more than one display, or Spaces, it
+is handy to have a tab group for each space.
+
+It is important to notice that MacTelnet tabs are normal
+windows, so they are independent and can be modified in the
+usual ways.  The _only_ exception is that all the windows in
+the group will move together.
+
+If a sheet is open on one tab, you can still reach other tabs
+by clicking on them with the mouse.
+
+You can also drag and drop between tabs: simply move the mouse
+over a tab to activate its window.
 
 h4. Text
 
@@ -128,9 +136,9 @@ cursor; a solid square is typical, but you may wish to have the
 standard Mac vertical bar, a horizontal underline, or thicker
 versions of either (more noticeable on LCD displays).
 
-h5(#cursorflash). Flashing
+h5(#cursorflash). Flash
 
-The cursor blinks on and off periodically when Flashing is set,
+The cursor blinks on and off periodically when Flash is set,
 which may make it easier to see.  But, see also the Find Cursor
 command in the Edit menu, which locates the cursor on demand.
 
@@ -247,7 +255,7 @@ using the Terminal menu.
 In Unix sessions, you typically will set a "TERM" environment
 variable that is consistent with the Terminal setting.
 
-h4. Remote Sessions Only
+h4. Remote Only
 
 These fields are only required when connecting to a server, and
 can be left blank if your Resource is a local Unix command.
@@ -264,10 +272,6 @@ FTP connections are only for uploading and downloading files).
 
 The target host must be running a server accepting connections
 for the protocol you choose.
-
-The Options button is used to customize settings that are not
-common to all protocols.  Currently, no protocols have Options
-interfaces.
 
 h5. Host
 
@@ -436,6 +440,10 @@ Backspace.
 Note that you can temporarily choose the alternate mapping by
 using shift-Delete or command-Delete in a terminal window.
 
+Note further that MacTelnet's Macros are very flexible and could
+be configured to set your own custom mapping for Delete (or many
+other keys).
+
 h4. New Line
 
 Since some systems or applications recognize different characters
@@ -486,6 +494,251 @@ so that MacTelnet behaves correctly when you use an application
 in a terminal window.  Custom and collection Sessions can
 associate a Terminal collection with them, ensuring that these
 important settings are always made for you.
+
+h3. Options
+
+h4. General
+
+h5. Wrap lines (no truncation)
+
+If the cursor is at the end of a line and another character is
+written, this cause the cursor to automatically wrap to the
+beginning of the next line.  In addition, if this was the very
+bottom line, the content scrolls up one line.  (Certain
+terminal emulators may handle this slightly differently.)
+
+If wrapping is disabled, the final character is simply
+obliterated each time a new character arrives, until an
+explicit new-line sequence is read or the cursor is relocated
+by the application.
+
+This sets the default for Terminal >> Line Wrap.
+
+h5. Do not strip high bit of bytes
+
+Specifies that the data is 8 bits instead of 7 bits.  The
+MacTelnet 4.0 daily builds currently do not handle this
+setting reliably.
+
+h5. Save lines when screen clears
+
+If an application requests a full screen clear, this causes
+the entire content of the screen to first be copied into the
+scrollback buffer (as if it "scrolled off the top") before
+clearing the screen.
+
+Otherwise, the screen is cleared and anything on it is lost.
+
+This sets the default for Terminal >> Save Lines on Clear.
+
+h4. Keyboard
+
+h5. Normal keypad top row
+
+Prevents the clear, =, /, and * keypad keys from being mapped
+respectively to the PF1, PF2, PF3 and PF4 keys of a VT220
+terminal.
+
+h5. Local page keys
+
+Prevents the home, end, page up and page down keys from sending
+commands to the application running in the terminal; instead,
+they affect the local terminal display.  Specifically, a local
+"home" scrolls to the very top, an "end" scrolls to the very
+bottom, a "page up" scrolls the content down by a screenful,
+and a "page down" scrolls the content upward by a screenful.
+
+h3. Emulation
+
+h4. Base Emulator
+
+This selects which terminal emulator implementation in MacTelnet
+will be used to interpret commands (encoded as special sequences
+in transmitted text).
+
+h5. None ("Dumb")
+
+A "dumb terminal" doesn't actually emulate anything, though it
+will make sure every character it receives is visible.  For
+example, the character with ASCII code 200 is printed as the
+string "<200>", and ASCII code 27 prints as "^[".  This is
+useful when communicating with certain kinds of servers, or
+when debugging commands.
+
+Advanced users should note that MacTelnet's Python interface
+lets you customize the "pretty printing" of the dumb terminal.
+
+h5. VT100
+
+This is an accurate emulation of Digital Equipment Corporation's
+VT100 terminal device, including its VT52 compatibility mode,
+terminal LEDs, and other less common features.
+
+h5. VT102
+
+Largely compatible with any system that wants a VT100, this
+device has additional capabilities such as print streaming.
+Currently, MacTelnet's 4.0 daily builds do not completely
+implement this terminal, and it may be difficult to use with
+all applications that require VT102.  Using VT100 first is
+recommended.
+
+h5. VT220
+
+Also a superset of others in the VT series such as VT100, this
+device has additional capabilities like special keyboard keys.
+Currently, the best way to access these features is via the
+Window menu (floating key palettes), as the emulator itself is
+not completely tested.
+
+h4. Identity
+
+A standard identifier for the terminal emulator's supported
+features (sometimes called an answer-back message).
+
+Applications may rely on this to determine if they should even
+bother to send certain command sequences.  For instance, if
+you identify as "vt100", an application isn't likely to send
+commands that only a VT102 supports.
+
+This name is suggested for you automatically when you choose
+a Base Emulator.  Note, however, that you may still need to
+change it depending on any Emulation Tweaks (below).
+
+This should be reflected in the "TERM" environment variable
+on Unix-like systems, and MacTelnet tries to set this for you.
+
+h4. Emulation Tweaks
+
+MacTelnet allows you to customize some of the features of its
+emulators.  There are a couple of main reasons for this:
+
+* Some applications rely on bugs in common emulators or
+  the original devices, and won't work unless MacTelnet
+  is also buggy.
+
+* Certain newer terminals are supersets of older types
+  (for instance, XTerm is a VT100), and can work
+  "reasonably well" if popular features are supported.
+
+The tweaks currently allowed are:
+
+h5. VT100
+
+h6. Fix Line Wrapping Bug
+
+Some applications have come to rely on text wrapping occurring
+in an idealized way, instead of how it actually is on a VT100
+device.  The typical symptom is a full-screen application that
+scrolls up one line instead of occupying the whole terminal
+gracefully.  A temporary work-around is to use the menu option
+Terminal >> Line Wrap.  This emulation tweak is not fully
+implemented.
+
+h5. XTerm
+
+h6. Color
+
+Enables the 16 colors commonly called "ANSI colors", which can
+be customized in MacTelnet's Formats preferences.  This allows
+an application to give text a specific foreground and background
+color, instead of relying on terminal defaults.
+
+For this to work, your Identity may need to be "xterm-color".
+
+h6. Graphics Characters
+
+Enables a special set of graphics characters, such as lines and
+symbols.  Note that Terminal >> Reset Graphics Characters is a
+special "soft reset" that turns off only the character set, in
+case an application accidentally leaves your whole window in an
+unreadable state of rendering graphics!
+
+For this to work, your Identity may need to be "xterm".
+
+h6. Window Alteration
+
+Allows applications to change the title of your terminal window,
+as well as its minimized state, position, size, and other
+attributes.  This is not completely supported by MacTelnet 4.0
+daily builds yet, but it will be soon.
+
+For this to work, your Identity may need to be "xterm".
+
+h3. Screen
+
+Screen settings determine how much text can be stored, how much
+is visible, and how quickly it can be augmented.
+
+**Note:** These settings are under evaluation and may move to
+other preferences categories in the future.
+
+h4. Width
+
+The maximum number of columns of text (equivalent to characters,
+in Western locales, when in single-width) that are stored and
+visible on each line.  Currently, MacTelnet won't horizontally
+scroll terminals, so this is also the display width.
+
+If a window is reduced in size, it may internally retain the
+entire original line.  A line that is made double-size will
+only display half of its capacity.
+
+h4. Height
+
+The maximum number of _visible_ lines of text.  This refers to
+normal size only; double-size lines implicitly occupy two lines
+out of the buffer.
+
+If a window is reduced in size, it may completely lose the
+contents of the bottom lines that were cut off.
+
+h4. Scrollback
+
+It is often useful to refer back to previous text written to a
+terminal, so there is an option to save it.  In addition, note
+that Terminal >> Delete Entire Scrollback Buffer can be used at
+any time during a session to wipe out the saved lines.
+
+There are a few options available:
+
+h5. Off
+
+Does not save any lines, and therefore displays no scroll bar
+in the terminal.
+
+h5. Fixed Size
+
+Allocates no more than the given amount.  If measured in rows,
+each row might occupy as much memory as the maximum width
+requires, plus space for auxiliary data (Unicode characters,
+attributes, etc.).  If measured in kilobytes, divides the given
+buffer size by the requirements for each character of width, so
+that the buffer doesn't use any more memory.
+
+h5. Unlimited
+
+The scrollback size is dynamically allocated in progressively
+larger chunks to keep up with demand; it is never discarded.
+
+h5. Distributed
+
+The specified amount of space is globally shared across all
+other terminal windows that also have the Distributed setting,
+and they effectively share memory.  If a terminal hasn't been
+used in awhile, its oldest scrollback lines are recycled by
+the windows that actually are being used.
+
+h4. Scrolling Speed
+
+An artificial delay imposed on the emulator's data processing
+loop, to slow down the terminal.  This may help readability
+for fast-moving streams, or it may just be useful for
+emulating a user's slow connection to an application.
+
+Note that there is also Terminal >> Suspend (Scroll Lock) and
+the associated key equivalents, to temporarily stop a command
+from displaying any more data.
 
 h2(#formats). Formats
 
@@ -542,49 +795,77 @@ choose a name from the list in the drawer, and then
 edit that collection's settings in the main Preferences
 window.
 
-All macro sets use the same key equivalents, so only one set can
-be available at a time.  When a terminal window is active, use
-the Map menu to choose the current macro set.
+bq. Each set in this category has an additional list
+of items.  First choose a set from the drawer, then
+choose an item from the numbered list, before editing.
+You can also edit the names of the numbered items, as
+you would for any item in the Finder.
 
-h3. Global Options
+Macro sets are completely arbitrary actions that you can bind
+to almost any key combinations you wish!  In addition, you can
+choose to display them in a menu (see General preferences).
 
-h4. Invoke With
+Only macros from the active set, if any, are enabled.  The
+active set is selected with the Map menu.  If the "None"
+set is chosen, macros are disabled and the Macros menu is
+temporarily hidden.
 
-h5. Command + keypad
+If a macro set is active, any of its macros can be used by
+typing a key equivalent (the macro's main key, plus some
+optional combination of modifiers).  In addition, if the
+preference is set to display a Macros menu, all of the
+current macros' names are shown in the menu along with their
+key equivalents.
 
-Macros are invoked by combining the command (cloverleaf) key
-with keypad keys (such as numbers).
+h3. Macro List
 
-h5. Function keys
+This displays the number of macros in the set (currently fixed
+at 12), and their names.
 
-Macros are invoked using the first twelve function keys at the
-top of your keyboard.
-
-h5. Menu
-
-Macros are always available from the keyboard, but this option
-displays them in a top-level menu as well.  The menu changes as
-you swap macro sets with the Map menu.
+The names can be edited by clicking and hovering on them, or
+selecting an item and pressing Return.  Names are currently
+only used in the Macros menu (if enabled).
 
 h3. Selected Macro
 
-The intent is to allow macro editing by selecting a macro from
-the list, and either changing it inline or using the fields
-below the list.
-
-Currently, you must use Window >> Show Macro Editor to
-display an older interface to perform certain edits.  (This
-will be removed soon.)
-
-h4. Macro Name
-
-The name of the macro when it is displayed in a menu.  This is
-not currently used otherwise.
+To edit a macro, select it from the list and then modify its
+fields in this section.  Changes take effect immediately (so,
+you could test in a terminal window at the same time, provided
+you made this the current macro set via the Map menu).
 
 h4. Invoke With
 
 The key or combination of keys that will trigger the macro
-action.  Currently this can only be set globally, see above.
+action.
+
+If "Ordinary Key" is selected, you should type one character
+into the field next to the pop-up menu to indicate which key.
+For example, "K" indicates that typing the K key will activate
+the macro.
+
+Alternately, you can choose from a number of "special" keys
+in the menu.
+
+No matter which keys you choose, you have to be mindful of
+what may already be in use by MacTelnet, your computer's
+defaults, or the application you're going to run in the
+terminal.  In general, it's not a good idea to choose very
+simple key combinations.
+
+**Important:** Whether or not you intend to use the Macros
+menu, displaying it initially is recommended so that you can
+see how your key equivalent will be interpreted.  Certain
+combinations are "special" and will not be available to you.
+
+h4. Modifiers
+
+Any combination of zero to four standard modifier keys that
+must be held down _in addition_ to the "Invoke With" key,
+before the macro will be activated.
+
+Modifiers are highly recommended!  Most keys are needed for
+other things by default, and shouldn't invoke macros by
+themselves.
 
 h4. Action
 
@@ -641,6 +922,12 @@ Currently, there is no way to choose which IP address is actually
 sent with "\i".  But you can use Window >> Show IP Addresses to
 see all the IP addresses that your computer has, and drag the
 desired one into a terminal window.
+
+h5. Enter Text Verbatim
+
+The Contents will be typed into the active terminal view as if
+the keyboard were used, and *no* special sequences will be
+substituted.
 
 h2(#translations). Translations
 
