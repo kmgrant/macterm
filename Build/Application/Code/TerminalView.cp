@@ -7515,6 +7515,8 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 					RgnHandle	optionalTargetRegion = nullptr;
 					HIRect		floatBounds;
+					HIRect		floatClipBounds;
+					Rect		clipBounds;
 					
 					
 					SetPort(drawingPort);
@@ -7527,23 +7529,20 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (noErr == CarbonEventUtilities_GetEventParameter(inEvent, kEventParamRgnHandle, typeQDRgnHandle,
 																		optionalTargetRegion))
 					{
-						Rect	clipBounds;
-						HIRect	floatClipBounds;
-						
-						
 						SetClip(optionalTargetRegion);
 						GetRegionBounds(optionalTargetRegion, &clipBounds);
 						floatClipBounds = CGRectMake(clipBounds.left, clipBounds.top, clipBounds.right - clipBounds.left,
 														clipBounds.bottom - clipBounds.top);
-						CGContextClipToRect(drawingContext, floatClipBounds);
 					}
 					else
 					{
 						SetRectRgn(gInvalidationScratchRegion(), 0, 0, STATIC_CAST(floatBounds.size.width, SInt16),
 									STATIC_CAST(floatBounds.size.height, SInt16));
 						SetClip(gInvalidationScratchRegion());
-						CGContextClipToRect(drawingContext, floatBounds);
+						GetRegionBounds(gInvalidationScratchRegion(), &clipBounds);
+						floatClipBounds = floatBounds;
 					}
+					CGContextClipToRect(drawingContext, floatClipBounds);
 					
 					if ((partCode == kTerminalView_ContentPartText) ||
 						(partCode == kControlEntireControl) ||
@@ -7591,10 +7590,8 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							viewPtr->screen.currentRenderDragColors = dragHighlight;
 						}
 						
-						// initialize current render
-						viewPtr->screen.currentRenderBlinking = false;
-						
 						// draw text and graphics
+					#if 0
 						{
 							SInt16		startColumn = 0;
 							SInt16		pastTheEndColumn = 0;
@@ -7602,6 +7599,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							SInt16		pastTheEndRow = 0;
 							
 							
+							// draw EVERYTHING
 							getVirtualVisibleRegion(viewPtr, &startColumn, &startRow, &pastTheEndColumn, &pastTheEndRow);
 							if (pastTheEndColumn > startColumn)
 							{
@@ -7620,9 +7618,31 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 														startRow - viewPtr->screen.topVisibleEdgeInRows,
 														pastTheEndColumn - viewPtr->screen.leftVisibleEdgeInColumns,
 														pastTheEndRow - viewPtr->screen.topVisibleEdgeInRows);
-								viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
 							}
 						}
+					#else
+						{
+							// draw only the requested area; convert from pixels to screen cells
+							Point const			kTopLeftAnchor = { clipBounds.top, clipBounds.left };
+							Point const			kBottomRightAnchor = { clipBounds.bottom, clipBounds.right };
+							TerminalView_Cell	leftTopCell;
+							TerminalView_Cell	rightBottomCell;
+							SInt16				deltaColumn = 0;
+							SInt16				deltaRow = 0;
+							
+							
+							// figure out what cells to draw
+							(Boolean)findVirtualCellFromLocalPoint(viewPtr, kTopLeftAnchor, leftTopCell, deltaColumn, deltaRow);
+							(Boolean)findVirtualCellFromLocalPoint(viewPtr, kBottomRightAnchor, rightBottomCell, deltaColumn, deltaRow);
+							
+							// draw the text in the clipped area
+							(Boolean)drawSection(viewPtr, drawingContext, leftTopCell.first - viewPtr->screen.leftVisibleEdgeInColumns,
+													leftTopCell.second - viewPtr->screen.topVisibleEdgeInRows,
+													rightBottomCell.first + 1/* past-the-end */ - viewPtr->screen.leftVisibleEdgeInColumns,
+													rightBottomCell.second + 1/* past-the-end */ - viewPtr->screen.topVisibleEdgeInRows);
+						}
+					#endif
+						viewPtr->text.attributes = kInvalidTerminalTextAttributes; // forces attributes to reset themselves properly
 						
 						// if, after drawing all text, no text is actually blinking,
 						// then disable the animation timer (so unnecessary refreshes

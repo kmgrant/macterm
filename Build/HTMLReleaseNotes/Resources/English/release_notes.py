@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081208',
     '20081207',
     '20081118',
     '20081115',
@@ -192,6 +193,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081208': [
+		'Terminal view renderer is now more efficient at rendering small changes to the contents of the screen.',
+		'Fixed a rendering glitch that caused lines to be erased in certain cases, such as in text editors.',
+	],
 	'20081207': [
 		'Terminal view renderer is now more efficient when drawing text that uses the normal background color.',
 	],
@@ -233,7 +238,7 @@ notes_by_version = {
 		'Terminal window tabs now open in the same tab group as the frontmost window, instead of always choosing the latest tab group.',
 	],
 	'20080911': [
-		'Fixed Terminal view text selections to once again be modifiable using standard key equivalents such as shift-right-arrow.',
+		'Fixed terminal view text selections to once again be modifiable using standard key equivalents such as shift-right-arrow.',
 	],
 	'20080905': [
 		'Preferences window Macros pane interface for selecting the base key has been slightly tweaked.',
