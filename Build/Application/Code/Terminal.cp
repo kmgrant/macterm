@@ -7124,7 +7124,7 @@ bufferEraseLineWithUpdate		(My_ScreenBufferPtr		inDataPtr,
 		
 		
 		range.screen = inDataPtr->selfRef;
-		range.firstRow = 0;
+		range.firstRow = postWrapCursorY;
 		range.firstColumn = 0;
 		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
 		range.rowCount = 1;
@@ -7777,7 +7777,7 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 			
 			
 			range.screen = inDataPtr->selfRef;
-			range.firstRow = inDataPtr->current.cursorY;
+			range.firstRow = preWriteCursorY;
 			if (preWriteCursorY != inDataPtr->current.cursorY)
 			{
 				// more than one line; just draw all lines completely

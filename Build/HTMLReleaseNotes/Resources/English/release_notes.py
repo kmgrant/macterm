@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081209',
     '20081208',
     '20081207',
     '20081118',
@@ -193,6 +194,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081209': [
+		'Fixed a serious terminal view rendering bug, where a wrapping cursor could cause only the wrapped remnant of text to be drawn.',
+		'Fixed the VT100 cursor-line-erase variant to invalidate the proper region, otherwise the erase may not occur right away.',
+	],
 	'20081208': [
 		'Terminal view renderer is now more efficient at rendering small changes to the contents of the screen.',
 		'Fixed a rendering glitch that caused lines to be erased in certain cases, such as in text editors.',
