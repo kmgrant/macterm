@@ -139,6 +139,13 @@ enum
 };
 
 /*!
+This delta value is used to shift the alpha used for
+cursor rendering, and for simplicity it is defined in
+terms of the existing blink timer.
+*/
+Float32 const		kTerminalView_BlinkAlphaDelta = 1.0 / STATIC_CAST(kTerminalView_ColorCountBlinkPulseColors, Float32);
+
+/*!
 Determines the shape of the cursor, when rendered.
 */
 enum TerminalView_CursorType
@@ -419,10 +426,6 @@ void
 void
 	TerminalView_MoveCursorWithArrowKeys		(TerminalViewRef			inView,
 												 Point						inLocalMouse);
-
-// IF THE CURSOR IS SET TO FLASH, THIS ROUTINE HIDES THE CURSOR UNTIL THE IDLING ROUTINE REDRAWS IT
-void
-	TerminalView_ObscureCursor					(TerminalViewRef			inView);
 
 //@}
 

@@ -48,6 +48,7 @@
 #include <AlertMessages.h>
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
+#include <CGContextSaveRestore.h>
 #include <ColorUtilities.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
@@ -206,6 +207,12 @@ struct TerminalView
 			SInt16					stageDelta;	// +1 or -1, current direction of change
 			RgnHandle				region;		// used to optimize redraws during animation
 		} rendering;
+		
+		struct
+		{
+			Float32					blinkAlpha;	// between 1.0 (opaque) and 0.0 (transparent), cursor flashing stage
+			Float32					blinkAlphaDelta;	// +/-kTerminalView_BlinkAlphaDelta, current direction of change
+		} cursor;
 	} animation;
 	
 	struct
@@ -317,11 +324,10 @@ typedef LockAcquireRelease< TerminalViewRef, TerminalView >		TerminalViewAutoLoc
 
 #pragma mark Internal Method Prototypes
 
-static pascal void		animateBlinkingPaletteEntries	(EventLoopTimerRef, void*);
+static pascal void		animateBlinkingItems			(EventLoopTimerRef, void*);
 static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static EventTime		calculateAnimationStageDelay	(TerminalViewPtr, My_TimeIntervalList::size_type);
 static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
-static pascal void		contentHIViewIdleTimer			(EventLoopTimerRef, EventLoopIdleTimerMessage, void*);
 static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef, Boolean);
 static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef);
 static void				copySelectedTextIfUserPreference(TerminalViewPtr);
@@ -405,7 +411,7 @@ static void				sortAnchors						(TerminalView_Cell&, TerminalView_Cell&, Boolean
 static pascal OSErr		supplyTextSelectionToDrag		(FlavorType, void*, DragItemRef, DragRef);
 static void				trackTextSelection				(TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
 static void				useTerminalTextAttributes		(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
-static void				useTerminalTextColors			(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
+static void				useTerminalTextColors			(TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
 static void				visualBell						(TerminalViewRef);
 
 #pragma mark Variables
@@ -414,7 +420,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 {
 	HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
 	EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
-	EventLoopIdleTimerUPP		gTerminalViewPaneIdleTimerUPP = nullptr;
 	ListenerModel_ListenerRef	gMainEventLoopEventListener = nullptr;
 	ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
 	struct MyPreferenceProxies	gPreferenceProxies;
@@ -476,8 +481,6 @@ from this module.
 void
 TerminalView_Init ()
 {
-	gTerminalViewPaneIdleTimerUPP = NewEventLoopIdleTimerUPP(contentHIViewIdleTimer);
-	
 	// register a Human Interface Object class with Mac OS X
 	// so that terminal view text areas can be easily created
 	{
@@ -586,8 +589,6 @@ TerminalView_Done ()
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
-	
-	DisposeEventLoopIdleTimerUPP(gTerminalViewPaneIdleTimerUPP), gTerminalViewPaneIdleTimerUPP = nullptr;
 }// Done
 
 
@@ -1380,23 +1381,6 @@ TerminalView_MoveCursorWithArrowKeys	(TerminalViewRef	inView,
 		Sound_StandardAlert();
 	}
 }// MoveCursorWithArrowKeys
-
-
-/*!
-If the user has the cursor flashing preference set, this
-routine will hide the specified terminal screen’s cursor.
-This helps to avoid drawing glitches prior to scrolling.
-
-(3.0)
-*/
-void
-TerminalView_ObscureCursor	(TerminalViewRef	inView)
-{
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
-	
-	
-	if (cursorBlinks(viewPtr)) setCursorVisibility(viewPtr, false/* visible */);
-}// ObscureCursor
 
 
 /*!
@@ -3186,6 +3170,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		this->animation.rendering.stage = 0;
 		this->animation.rendering.stageDelta = +1;
 		this->animation.rendering.region = Memory_NewRegion();
+		this->animation.cursor.blinkAlpha = 1.0;
+		this->animation.cursor.blinkAlphaDelta = -kTerminalView_BlinkAlphaDelta;
 	}
 	
 	// install a monitor on the container that finds out about
@@ -3213,12 +3199,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	
 	// show all HIViews
 	HIViewSetVisible(this->encompassingHIView, true/* visible */);
-	
-	// flash the cursor if necessary
-	(OSStatus)InstallEventLoopIdleTimer(GetCurrentEventLoop(), kEventDurationSecond * 0.5/* time before first fire */,
-										TicksToEventTime(GetCaretTime())/* time between fires */,
-										gTerminalViewPaneIdleTimerUPP, this->selfRef/* user data */,
-										&this->screen.cursor.flashTimer);
 	
 	// ask to be notified of terminal bells
 	this->screen.bellHandler = ListenerModel_NewStandardListener(audioEvent, this->selfRef/* context */);
@@ -3307,7 +3287,9 @@ TerminalView::
 
 
 /*!
-Changes the blinking text colors of a terminal view.
+Changes the blinking text colors of a terminal view,
+and modifies the cursor-flashing alpha channel.
+
 This very efficient and simple animation scheme
 allows text to “really blink”, because this routine
 is called regularly by a timer.
@@ -3315,13 +3297,11 @@ is called regularly by a timer.
 Timers that draw must save and restore the current
 graphics port.
 
-Mac OS X only.
-
 (3.0)
 */
 static pascal void
-animateBlinkingPaletteEntries	(EventLoopTimerRef		inTimer,
-								 void*					inTerminalViewRef)
+animateBlinkingItems	(EventLoopTimerRef		inTimer,
+						 void*					inTerminalViewRef)
 {
 	TerminalViewRef			ref = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
 	TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), ref);
@@ -3332,12 +3312,17 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		inTimer,
 		RGBColor	currentColor;
 		
 		
+		// for simplicity, keep the cursor and text blinks in sync
+		(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->animation.rendering.delays[ptr->animation.rendering.stage]);
+		
+		//
+		// blinking text
+		//
+		
 		// update the rendered text color of the screen
 		getScreenPaletteColor(ptr, kTerminalView_ColorIndexFirstBlinkPulseColor + ptr->animation.rendering.stage,
 								&currentColor);
 		setScreenPaletteColor(ptr, kTerminalView_ColorIndexBlinkingText, &currentColor);
-		
-		(OSStatus)SetEventLoopTimerNextFireTime(inTimer, ptr->animation.rendering.delays[ptr->animation.rendering.stage]);
 		
 		// figure out which color is next; the color cycling goes up and
 		// down the list continuously, thus creating a pulsing effect
@@ -3355,8 +3340,29 @@ animateBlinkingPaletteEntries	(EventLoopTimerRef		inTimer,
 		
 		// invalidate only the appropriate (blinking) parts of the screen
 		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->contentHIView, ptr->animation.rendering.region, true);
+		
+		//
+		// cursor
+		//
+		
+		// adjust the alpha setting to be used for cursor-drawing
+		ptr->animation.cursor.blinkAlpha += ptr->animation.cursor.blinkAlphaDelta;
+		if (ptr->animation.cursor.blinkAlpha < 0.0)
+		{
+			ptr->animation.cursor.blinkAlphaDelta = +kTerminalView_BlinkAlphaDelta;
+			ptr->animation.cursor.blinkAlpha = 0.0;
+		}
+		else if (ptr->animation.cursor.blinkAlpha >= 1.0)
+		{
+			ptr->animation.cursor.blinkAlphaDelta = -kTerminalView_BlinkAlphaDelta;
+			ptr->animation.cursor.blinkAlpha = 1.0;
+		}
+		
+		// invalidate the cursor
+		RectRgn(gInvalidationScratchRegion(), &ptr->screen.cursor.bounds);
+		(OSStatus)HIViewSetNeedsDisplayInRegion(ptr->contentHIView, gInvalidationScratchRegion(), true);
 	}
-}// animateBlinkingPaletteEntries
+}// animateBlinkingItems
 
 
 /*!
@@ -3482,79 +3488,6 @@ calculateDoubleSize		(TerminalViewPtr	inTerminalViewPtr,
 	TextFace(preservedFontStyle);
 	SetGWorld(oldPort, oldDevice);
 }// calculateDoubleSize
-
-
-/*!
-A standard Carbon Event Idle Timer that ensures the
-cursor blinks at regular intervals.  The cursor only
-blinks when the user can actually type in a view.
-
-Timers that draw must save and restore the current
-graphics port.
-
-(3.0)
-*/
-static pascal void
-contentHIViewIdleTimer	(EventLoopTimerRef			UNUSED_ARGUMENT(inTimer),
-						 EventLoopIdleTimerMessage	inState,
-						 void*						inTerminalViewRef)
-{
-	TerminalViewRef			ref = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	TerminalViewAutoLocker	ptr(gTerminalViewPtrLocks(), ref);
-	
-	
-	switch (inState)
-	{
-	// when user focus returns, start flashing the cursor again
-	case kEventLoopIdleTimerStarted:
-		ptr->screen.cursor.idleFlash = cursorBlinks(ptr) && (!gApplicationIsSuspended) &&
-										(GetUserFocusWindow() == HIViewGetWindow(ptr->contentHIView));
-		break;
-	
-	// when stopping idle, force the cursor to be visible and
-	// stop flashing; when idling, draw the cursor in a different
-	// state than it was in previously
-	case kEventLoopIdleTimerStopped:
-	case kEventLoopIdleTimerIdling:
-		{
-			GDHandle	oldDevice = nullptr;
-			CGrafPtr	oldPort = nullptr;
-			
-			
-			// save current port
-			GetGWorld(&oldPort, &oldDevice);
-			
-			if (kEventLoopIdleTimerStopped == inState)
-			{
-				// when user is not idle, keep cursor visible
-				setCursorVisibility(ptr, true/* visible */);
-				ptr->screen.cursor.idleFlash = false;
-			}
-			else if (ptr->screen.cursor.idleFlash)
-			{
-				// toggle the visible state of the cursor
-				switch (ptr->screen.cursor.currentState)
-				{
-				case kMyCursorStateVisible:
-					setCursorVisibility(ptr, false/* visible */);
-					break;
-				
-				case kMyCursorStateInvisible:
-				default:
-					setCursorVisibility(ptr, true/* visible */);
-					break;
-				}
-			}
-			
-			// restore port
-			SetGWorld(oldPort, oldDevice);
-		}
-		break;
-	
-	default:
-		break;
-	}
-}// contentHIViewIdleTimer
 
 
 /*!
@@ -3928,7 +3861,7 @@ createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
 		
 		// install a timer to modify blinking text color entries periodically
 		assert(nullptr != inTerminalViewPtr->selfRef);
-		inTerminalViewPtr->animation.timer.upp = NewEventLoopTimerUPP(animateBlinkingPaletteEntries);
+		inTerminalViewPtr->animation.timer.upp = NewEventLoopTimerUPP(animateBlinkingItems);
 		(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
 										kEventDurationForever/* time between fires - set later */,
 										inTerminalViewPtr->animation.timer.upp,
@@ -4199,7 +4132,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 	// set up context foreground and background colors appropriately
 	// for the specified terminal attributes; this takes into account
 	// things like bold and highlighted text, etc.
-	useTerminalTextColors(viewPtr, viewPtr->screen.currentRenderContext, inAttributes);
+	useTerminalTextColors(viewPtr, viewPtr->screen.currentRenderContext, inAttributes, 1.0/* alpha */);
 	
 	// erase and redraw the current rendering line, but only the
 	// specified range (starting column and character count)
@@ -7647,7 +7580,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// if, after drawing all text, no text is actually blinking,
 						// then disable the animation timer (so unnecessary refreshes
 						// are not done); otherwise, install it
-						setBlinkingTimerActive(viewPtr, viewPtr->screen.currentRenderBlinking);
+						setBlinkingTimerActive(viewPtr, cursorBlinks(viewPtr) || (viewPtr->screen.currentRenderBlinking));
 						
 						// if inactive, render the text selection as an outline
 						// (if active, the call above to draw the text will also
@@ -7716,13 +7649,27 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					
 					// kTerminalView_ContentPartCursor
-					if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 					{
-						// draw the cursor
-						Rect	viewRelativeCursorBounds = viewPtr->screen.cursor.bounds/* view-relative */;
+						CGContextSaveRestore	_(drawingContext);
+						CGRect					cursorFloatBounds = CGRectMake(viewPtr->screen.cursor.bounds.left,
+																				viewPtr->screen.cursor.bounds.top,
+																				viewPtr->screen.cursor.bounds.right -
+																					viewPtr->screen.cursor.bounds.left
+																					- 2/* TEMPORARY Quartz/QD conversion */,
+																				viewPtr->screen.cursor.bounds.bottom -
+																					viewPtr->screen.cursor.bounds.top
+																					- 2/* TEMPORARY Quartz/QD conversion */);
 						
 						
-						InvertRect(&viewRelativeCursorBounds);
+						if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
+						{
+							// flip colors and paint at the current blink alpha value
+							useTerminalTextColors(viewPtr, drawingContext, 0x00000040/* attributes for inverse video */,
+													cursorBlinks(viewPtr)
+													? viewPtr->animation.cursor.blinkAlpha
+													: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
+							CGContextFillRect(drawingContext, cursorFloatBounds);
+						}
 					}
 					
 					// kTerminalView_ContentPartCursorGhost
@@ -7732,7 +7679,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						Rect	viewRelativeCursorBounds = viewPtr->screen.cursor.ghostBounds/* view-relative */;
 						
 						
-						InvertRect(&viewRelativeCursorBounds);
+						//InvertRect(&viewRelativeCursorBounds);
 					}
 				}
 			}
@@ -8049,6 +7996,12 @@ receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCall
 				TerminalView_CellRange	oldSelectionRange = viewPtr->text.selection.range;
 				Boolean					selectionChanged = false;
 				
+				
+				// take the opportunity to reset the cursor state, so it is fully visible as
+				// keys are being pressed; also reset the stage so that the timing is right
+				viewPtr->animation.cursor.blinkAlpha = 1.0;
+				viewPtr->animation.cursor.blinkAlphaDelta = -kTerminalView_BlinkAlphaDelta;
+				viewPtr->animation.rendering.stage = 0;
 				
 				// ignore Caps Lock and extra keys for the sake of the comparisons below...
 				modifiers &= (cmdKey | shiftKey | optionKey | controlKey);
@@ -9441,10 +9394,12 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 	enum
 	{
 		// cursor dimensions, in pixels
-		kTerminalCursorUnderscoreHeight = 1,
-		kTerminalCursorThickUnderscoreHeight = 2,
-		kTerminalCursorVerticalLineWidth = 1,
-		kTerminalCursorThickVerticalLineWidth = 2
+		// (NOTE: these currently hack in Quartz/QuickDraw conversion factors
+		// and will eventually change)
+		kTerminalCursorUnderscoreHeight = 4,
+		kTerminalCursorThickUnderscoreHeight = 6,
+		kTerminalCursorVerticalLineWidth = 4,
+		kTerminalCursorThickVerticalLineWidth = 6
 	};
 	
 	
@@ -9854,6 +9809,10 @@ settings) of the current QuickDraw port and the specified
 Core Graphics port, based on the requested attributes and the
 active state of the terminal’s container view.
 
+You may pass a desired alpha value, that ONLY affects the
+Core Graphics context, and automatically uses that value when
+setting colors.
+
 In general, only style and dimming affect color.
 
 IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
@@ -9865,7 +9824,8 @@ IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
 static void
 useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 						 CGContextRef				inDrawingContext,
-						 TerminalTextAttributes		inAttributes)
+						 TerminalTextAttributes		inAttributes,
+						 Float32					inDesiredAlpha)
 {
 	TerminalView_ColorIndex		fg = 0;
 	TerminalView_ColorIndex		bg = 0;
@@ -9888,7 +9848,7 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 		colorRGB.green = 0;
 		colorRGB.blue = 0;
 		RGBForeColor(&colorRGB);
-		CGContextSetRGBStrokeColor(inDrawingContext, 0/* red */, 0/* green */, 0/* blue */, 1.0/* alpha */);
+		CGContextSetRGBStrokeColor(inDrawingContext, 0/* red */, 0/* green */, 0/* blue */, inDesiredAlpha);
 		
 		// ...and allow background (which will be the drag highlight) to show through
 		inTerminalViewPtr->screen.currentRenderNoBackground = true;
@@ -9990,11 +9950,11 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 			
 			GetForeColor(&colorRGB);
 			floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
-			CGContextSetRGBStrokeColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, 1.0/* alpha */);
+			CGContextSetRGBStrokeColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
 			
 			GetBackColor(&colorRGB);
 			floatRGB = ColorUtilities_CGDeviceColorMake(colorRGB);
-			CGContextSetRGBFillColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, 1.0/* alpha */);
+			CGContextSetRGBFillColor(inDrawingContext, floatRGB.red, floatRGB.green, floatRGB.blue, inDesiredAlpha);
 		}
 	}
 }// useTerminalTextColors

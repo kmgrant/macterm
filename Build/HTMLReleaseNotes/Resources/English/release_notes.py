@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081210',
     '20081209',
     '20081208',
     '20081207',
@@ -194,6 +195,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081210': [
+		'Terminal view cursor, if set to blink, now pulses with an effect similar to that of blinking terminal text.',
+		'Terminal view cursor now has an anti-aliased appearance, which makes it seem brighter on dark backgrounds.',
+		'Terminal view cursor now has an alpha channel so that it can use the text color without making text unreadable.',
+	],
 	'20081209': [
 		'Fixed a serious terminal view rendering bug, where a wrapping cursor could cause only the wrapped remnant of text to be drawn.',
 		'Fixed the VT100 cursor-line-erase variant to invalidate the proper region, otherwise the erase may not occur right away.',
