@@ -199,6 +199,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20081213': [
 		'Preferences window collections can now be reordered using new buttons in the drawer.',
+		'Fixed Preferences window crashes that could occur when using items created by the Duplicate Collection command.',
 	],
 	'20081212': [
 		'Macros can now perform actions besides text entry, including: verbatim text entry, opening a URL, or running a command in a new window.',

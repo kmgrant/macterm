@@ -146,6 +146,7 @@ void				chooseContext					(Preferences_ContextRef);
 void				choosePanel						(UInt16);
 Boolean				createCollection				(CFStringRef = nullptr);
 void				displayCollectionRenameUI		(DataBrowserItemID);
+Boolean				duplicateCollection				(Preferences_ContextRef);
 void				findBestPanelSize				(HISize const&, HISize&);
 void				handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 void				handleNewFooterSize				(HIViewRef, Float32, Float32, void*);
@@ -858,6 +859,55 @@ displayCollectionRenameUI	(DataBrowserItemID		inItemToRename)
 	(OSStatus)SetDataBrowserEditItem(gDataBrowserForCollections, inItemToRename,
 										kMyDataBrowserPropertyIDSets);
 }// displayCollectionRenameUI
+
+
+/*!
+Creates a new item in the collections list for the current
+preferences class, optionally initializing its name.  Returns
+true only if successful.
+
+IMPORTANT:	This should behave similarly to createCollection(),
+			having the same side effects on the UI and any
+			saved preferences on disk.
+
+(3.1)
+*/
+Boolean
+duplicateCollection		(Preferences_ContextRef		inReferenceContext)
+{
+	// duplicate a data browser item; this is accomplished by
+	// creating and immediately saving a new named context
+	// (a preferences callback elsewhere in this file is
+	// then notified by the Preferences module of the change)
+	Preferences_ContextRef		newContext = Preferences_NewCloneContext(inReferenceContext, false/* detach */);
+	Boolean						result = false;
+	
+	
+	if (nullptr != newContext)
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextSave(newContext);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext, DataBrowserItemID);
+			
+			
+			// success!
+			Preferences_ReleaseContext(&newContext);
+			result = true;
+			
+			// automatically switch to editing the new item; ignore
+			// errors for now because this is not critical to creating
+			// the actual item
+			selectCollection(kNewItemID);
+			displayCollectionRenameUI(kNewItemID);
+		}
+	}
+	
+	return result;
+}// duplicateCollection
 
 
 /*!
@@ -1877,7 +1927,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandPreferencesDuplicateFavorite:
 					{
-						// make a copy of the selected data browser item
+						// make a copy of the selected data browser item; this is
+						// accomplished by creating and immediately saving a new
+						// named context (a preferences callback elsewhere in this
+						// file is then notified by the Preferences module of the
+						// change)
 						DataBrowserItemID	selectedID = returnCurrentSelection();
 						Boolean				isError = false;
 						
@@ -1892,26 +1946,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (nullptr == referenceContext) isError = true;
 							else
 							{
-								Preferences_ContextRef	newContext = nullptr;
-								
-								
-								newContext = Preferences_NewCloneContext(referenceContext);
-								if (nullptr == newContext) isError = true;
-								else
-								{
-									DataBrowserItemID const		kNewItemID = REINTERPRET_CAST(newContext,
-																								DataBrowserItemID);
-									
-									
-									// success!
-									result = noErr;
-									
-									// automatically switch to editing the new item; ignore
-									// errors for now because this is not critical to creating
-									// the actual item
-									selectCollection(kNewItemID);
-									displayCollectionRenameUI(kNewItemID);
-								}
+								if (duplicateCollection(referenceContext)) isError = false;
+								else isError = true;
 							}
 						}
 						
@@ -1949,6 +1985,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							{
 								Preferences_Result		prefsResult = kPreferences_ResultOK;
 								
+								
+								// first end any editing session...it appears the data browser
+								// can crash if the user happens to move the item being renamed
+								removeCollectionRenameUI();
 								
 								// reposition the context in the list of contexts
 								prefsResult = Preferences_ContextRepositionRelativeToSelf
