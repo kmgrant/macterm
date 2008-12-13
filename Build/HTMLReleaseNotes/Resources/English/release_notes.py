@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081213',
     '20081212',
     '20081210',
     '20081209',
@@ -196,6 +197,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081213': [
+		'Preferences window collections can now be reordered using new buttons in the drawer.',
+	],
 	'20081212': [
 		'Macros can now perform actions besides text entry, including: verbatim text entry, opening a URL, or running a command in a new window.',
 		'Preferences window Macros pane now supports F13, F14, F15 and F16 as macro keys.',

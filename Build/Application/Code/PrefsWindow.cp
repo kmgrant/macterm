@@ -111,6 +111,8 @@ HIViewID const		idMyStaticTextListTitle			= { 'Titl', 0/* ID */ };
 HIViewID const		idMyDataBrowserCollections		= { 'Favs', 0/* ID */ };
 HIViewID const		idMyButtonAddCollection			= { 'NewC', 0/* ID */ };
 HIViewID const		idMyButtonRemoveCollection		= { 'DelC', 0/* ID */ };
+HIViewID const		idMyButtonMoveCollectionUp		= { 'MvUC', 0/* ID */ };
+HIViewID const		idMyButtonMoveCollectionDown	= { 'MvDC', 0/* ID */ };
 HIViewID const		idMyButtonManipulateCollection	= { 'MnpC', 0/* ID */ };
 FourCharCode const	kMyDataBrowserPropertyIDSets	= 'Sets';
 
@@ -198,6 +200,8 @@ HIViewWrap								gDataBrowserTitle;
 HIViewWrap								gDataBrowserForCollections;
 HIViewWrap								gCollectionAddButton;
 HIViewWrap								gCollectionRemoveButton;
+HIViewWrap								gCollectionMoveUpButton;
+HIViewWrap								gCollectionMoveDownButton;
 HIViewWrap								gCollectionManipulateMenuButton;
 SInt16									gPanelChoiceListLastRowIndex = -1;
 MyPanelDataList&						gPanelList ()	{ static MyPanelDataList x; return x; }
@@ -1059,6 +1063,8 @@ init ()
 		gDataBrowserForCollections = (drawerWindow.returnHIViewWithID(idMyDataBrowserCollections) << HIViewWrap_AssertExists);
 		gCollectionAddButton = (drawerWindow.returnHIViewWithID(idMyButtonAddCollection) << HIViewWrap_AssertExists);
 		gCollectionRemoveButton = (drawerWindow.returnHIViewWithID(idMyButtonRemoveCollection) << HIViewWrap_AssertExists);
+		gCollectionMoveUpButton = (drawerWindow.returnHIViewWithID(idMyButtonMoveCollectionUp) << HIViewWrap_AssertExists);
+		gCollectionMoveDownButton = (drawerWindow.returnHIViewWithID(idMyButtonMoveCollectionDown) << HIViewWrap_AssertExists);
 		gCollectionManipulateMenuButton = (drawerWindow.returnHIViewWithID(idMyButtonManipulateCollection) << HIViewWrap_AssertExists);
 		
 		// set up the data browser
@@ -1166,6 +1172,26 @@ init ()
 				
 				error = HIObjectSetAuxiliaryAccessibilityAttribute
 						(gCollectionRemoveButton.returnHIObjectRef(), 0/* sub-component identifier */,
+							kAXDescriptionAttribute, accessibilityDescCFString);
+				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+			}
+			if (UIStrings_Copy(kUIStrings_ButtonMoveUpAccessibilityDesc, accessibilityDescCFString).ok())
+			{
+				OSStatus		error = noErr;
+				
+				
+				error = HIObjectSetAuxiliaryAccessibilityAttribute
+						(gCollectionMoveUpButton.returnHIObjectRef(), 0/* sub-component identifier */,
+							kAXDescriptionAttribute, accessibilityDescCFString);
+				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
+			}
+			if (UIStrings_Copy(kUIStrings_ButtonMoveDownAccessibilityDesc, accessibilityDescCFString).ok())
+			{
+				OSStatus		error = noErr;
+				
+				
+				error = HIObjectSetAuxiliaryAccessibilityAttribute
+						(gCollectionMoveDownButton.returnHIObjectRef(), 0/* sub-component identifier */,
 							kAXDescriptionAttribute, accessibilityDescCFString);
 				CFRelease(accessibilityDescCFString), accessibilityDescCFString = nullptr;
 			}
@@ -1427,11 +1453,42 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 			{
 				if (0 == rowIndex)
 				{
+					// cannot operate on the Default item
 					DeactivateControl(gCollectionRemoveButton);
+					DeactivateControl(gCollectionMoveUpButton);
+					DeactivateControl(gCollectionMoveDownButton);
 				}
 				else
 				{
+					UInt32		itemCount = 0;
+					
+					
+					error = GetDataBrowserItemCount(inDataBrowser, kDataBrowserNoItem/* container */, false/* recurse */,
+													kDataBrowserItemAnyState, &itemCount);
+					assert_noerr(error);
+					
+					// any other item can be removed
 					ActivateControl(gCollectionRemoveButton);
+					
+					// only the first item (below Default) cannot be moved
+					if (1 == rowIndex)
+					{
+						DeactivateControl(gCollectionMoveUpButton);
+					}
+					else
+					{
+						ActivateControl(gCollectionMoveUpButton);
+					}
+					
+					// the last item cannot be moved down
+					if (rowIndex >= (itemCount - 1))
+					{
+						DeactivateControl(gCollectionMoveDownButton);
+					}
+					else
+					{
+						ActivateControl(gCollectionMoveDownButton);
+					}
 				}
 			}
 		}
@@ -1869,6 +1926,46 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandPreferencesRenameFavorite:
 					// switch to editing the specified item
 					displayCollectionRenameUI(returnCurrentSelection());
+					break;
+				
+				case kCommandPreferencesMoveFavoriteUp:
+				case kCommandPreferencesMoveFavoriteDown:
+					{
+						// reposition a data browser item; this requires changing its
+						// underlying order in the contexts list of the Preferences module
+						DataBrowserItemID	selectedID = returnCurrentSelection();
+						Boolean				isError = false;
+						
+						
+						if (0 == selectedID) isError = true;
+						else
+						{
+							Preferences_ContextRef		movedContext = REINTERPRET_CAST(selectedID,
+																						Preferences_ContextRef);
+							
+							
+							if (nullptr == movedContext) isError = true;
+							else
+							{
+								Preferences_Result		prefsResult = kPreferences_ResultOK;
+								
+								
+								// reposition the context in the list of contexts
+								prefsResult = Preferences_ContextRepositionRelativeToSelf
+												(movedContext, (kCommandPreferencesMoveFavoriteUp == received.commandID) ? -1 : +1);
+								if (kPreferences_ResultOK != prefsResult) isError = true;
+								else
+								{
+									// success!
+									result = noErr;
+								}
+							}
+						}
+						
+						// refresh the data browser to show the new order
+						rebuildList();
+						selectCollection(selectedID);
+					}
 					break;
 				
 				case kCommandShowHidePrefCollectionsDrawer:

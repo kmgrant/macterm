@@ -438,7 +438,7 @@ class My_ContextFavorite:
 public My_ContextInterface
 {
 public:
-	My_ContextFavorite	(Preferences_Class, CFStringRef);
+	My_ContextFavorite	(Preferences_Class, CFStringRef, CFStringRef = nullptr);
 	
 	//!\name New Methods In This Class
 	//@{
@@ -446,6 +446,10 @@ public:
 	//! returns the common prefix for any domain of a collection in the given class
 	static CFStringRef
 	returnClassDomainNamePrefix	(Preferences_Class);
+	
+	//! rearrange this context relative to another context
+	Preferences_Result
+	shift	(My_ContextFavorite*, Boolean = false);
 	
 	//! test routine
 	static Boolean
@@ -1051,6 +1055,12 @@ specifications, or returns an existing one that matches.
 The reference is automatically retained, but you need to
 invoke Preferences_ReleaseContext() when finished.
 
+The domain name should be "nullptr" unless this is being
+called as part of the initialization loop (as that is the
+only time it is not possible to automatically determine
+the proper domain).  Only the Preferences module should
+set the domain.
+
 If any problems occur, nullptr is returned; otherwise,
 a reference to the new context is returned.
 
@@ -1080,7 +1090,8 @@ WARNING:	Despite the name, the 2nd parameter does
 */
 Preferences_ContextRef
 Preferences_NewContextFromFavorites		(Preferences_Class		inClass,
-										 CFStringRef			inNameOrNullToAutoGenerateUniqueName)
+										 CFStringRef			inNameOrNullToAutoGenerateUniqueName,
+										 CFStringRef			inDomainNameIfInitializingOrNull)
 {
 	Preferences_ContextRef		result = nullptr;
 	Boolean						releaseName = false;
@@ -1112,7 +1123,8 @@ Preferences_NewContextFromFavorites		(Preferences_Class		inClass,
 			if (getListOfContexts(inClass, listPtr))
 			{
 				My_ContextFavoritePtr	newDictionary = new My_ContextFavorite
-															(inClass, inNameOrNullToAutoGenerateUniqueName);
+															(inClass, inNameOrNullToAutoGenerateUniqueName,
+																inDomainNameIfInitializingOrNull);
 				
 				
 				contextPtr = newDictionary;
@@ -1763,6 +1775,169 @@ Preferences_ContextRename	(Preferences_ContextRef		inContext,
 	}
 	return result;
 }// ContextRename
+
+
+/*!
+Changes the position of a context in the list of contexts
+for its class; this will become permanent the next time
+application preferences are synchronized.
+
+The specified reference context must be in the same class
+as the original (otherwise they would not be in the same
+list).  If "inInsertBefore" is true, the first context is
+moved to the position before the reference context; otherwise
+it is moved to the position immediately after the reference
+context.
+
+This triggers the "kPreferences_ChangeNumberOfContexts"
+event; while technically it is not changing the number of
+contexts, handlers that would care about the size of the
+list probably also care when it has been rearranged.
+
+This call invalidates results you may have previously had
+through calls like Preferences_InsertContextNamesInMenu()
+and Preferences_CreateContextNameArray(); you may wish to
+use those routines again to achieve the correct ordering.
+
+\retval kPreferences_ResultOK
+if the context is successfully moved
+
+\retval kPreferences_ResultInvalidContextReference
+if one of the specified contexts does not exist
+
+\retval kPreferences_ResultGenericFailure
+if other failures occur
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextRepositionRelativeToContext	(Preferences_ContextRef		inContext,
+												 Preferences_ContextRef		inReferenceContext,
+												 Boolean					inInsertBefore)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	My_ContextAutoLocker	referencePtr(gMyContextPtrLocks(), inReferenceContext);
+	
+	
+	if ((nullptr == ptr) || (nullptr == referencePtr)) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		// first change the in-memory version of the list
+		My_ContextFavoritePtr		derivedPtr = STATIC_CAST(&*ptr, My_ContextFavoritePtr);
+		My_ContextFavoritePtr		derivedReferencePtr = STATIC_CAST(&*referencePtr, My_ContextFavoritePtr);
+		My_FavoriteContextList*		listPtr = nullptr;
+		
+		
+		if (false == getListOfContexts(derivedPtr->returnClass(), listPtr)) result = kPreferences_ResultGenericFailure;
+		else
+		{
+			My_FavoriteContextList::iterator		toMovedContextPtr = std::find_if
+																		(listPtr->begin(), listPtr->end(),
+																			std::bind2nd
+																			(std::equal_to< My_ContextFavoritePtr >(),
+																				derivedPtr));
+			My_FavoriteContextList::iterator		toRefContextPtr = std::find_if
+																		(listPtr->begin(), listPtr->end(),
+																			std::bind2nd
+																			(std::equal_to< My_ContextFavoritePtr >(),
+																				derivedReferencePtr));
+			
+			
+			if ((listPtr->end() == toMovedContextPtr) || (listPtr->end() == toRefContextPtr))
+			{
+				result = kPreferences_ResultInvalidContextReference;
+			}
+			else
+			{
+				listPtr->erase(toMovedContextPtr);
+				toRefContextPtr = std::find_if(listPtr->begin(), listPtr->end(),
+												std::bind2nd(std::equal_to< My_ContextFavoritePtr >(), derivedReferencePtr));
+				assert(listPtr->end() != toRefContextPtr);
+				if (false == inInsertBefore) std::advance(toRefContextPtr, +1);
+				listPtr->insert(toRefContextPtr, derivedPtr);
+			}
+		}
+		
+		// now change the saved version of the list
+		result = derivedPtr->shift(derivedReferencePtr, inInsertBefore);
+		
+		changeNotify(kPreferences_ChangeNumberOfContexts);
+	}
+	return result;
+}// ContextRepositionRelativeToContext
+
+
+/*!
+Changes the position of a context in the list of contexts
+for its class; this will become permanent the next time
+application preferences are synchronized.
+
+The delta is +1 to move the item down the list by one, or
+-1 to move it up the list by one.  If moving the context
+would fall off the end of the list, this routine does
+nothing.
+
+Preferences_ContextRepositionRelativeToContext() is called
+by this routine, so all of the side effects of that call apply.
+
+\retval kPreferences_ResultOK
+if the context is successfully moved
+
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist in its class list
+
+\retval kPreferences_ResultGenericFailure
+if other failures occur
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextRepositionRelativeToSelf		(Preferences_ContextRef		inContext,
+												 SInt32						inDelta)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	
+	
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
+	else if (0 != inDelta)
+	{
+		My_ContextFavoritePtr		derivedPtr = STATIC_CAST(&*ptr, My_ContextFavoritePtr);
+		My_FavoriteContextList*		listPtr = nullptr;
+		
+		
+		if (false == getListOfContexts(derivedPtr->returnClass(), listPtr)) result = kPreferences_ResultGenericFailure;
+		else
+		{
+			// find the position of the specified context in the list
+			My_FavoriteContextList::iterator	toContextPtr = std::find_if
+																(listPtr->begin(), listPtr->end(),
+																	std::bind2nd
+																	(std::equal_to< My_ContextFavoritePtr >(),
+																		derivedPtr));
+			
+			
+			if (listPtr->end() == toContextPtr) result = kPreferences_ResultInvalidContextReference;
+			else
+			{
+				SInt32 const								kSizeAsInt = STATIC_CAST(listPtr->size(), SInt32);
+				My_FavoriteContextList::size_type const		kOldItemIndex = std::distance(listPtr->begin(), toContextPtr);
+				SInt32										newItemIndex = STATIC_CAST(kOldItemIndex, SInt32) + inDelta;
+				
+				
+				if (newItemIndex < 0) newItemIndex = 0;
+				if (newItemIndex >= kSizeAsInt) newItemIndex = kSizeAsInt - 1;
+				
+				std::advance(toContextPtr, newItemIndex - kOldItemIndex);
+				
+				result = Preferences_ContextRepositionRelativeToContext
+							(inContext, (*toContextPtr)->selfRef, (inDelta < 0)/* insert before */);
+			}
+		}
+	}
+	return result;
+}// ContextRepositionRelativeToSelf
 
 
 /*!
@@ -3316,15 +3491,16 @@ Constructor.  See Preferences_NewContextFromFavorites().
 */
 My_ContextFavorite::
 My_ContextFavorite	(Preferences_Class	inClass,
-					 CFStringRef		inName)
+					 CFStringRef		inFavoriteName,
+					 CFStringRef		inDomainName)
 :
 My_ContextInterface(inClass),
-_contextName(inName),
-_domainName(createDomainName(inClass, inName)),
+_contextName(inFavoriteName),
+_domainName((nullptr != inDomainName) ? inDomainName : createDomainName(inClass, inFavoriteName)),
 _dictionary(_domainName.returnCFStringRef())
 {
 	setImplementor(&_dictionary);
-}// My_ContextFavorite 2-argument constructor
+}// My_ContextFavorite 3-argument constructor
 
 
 /*!
@@ -3636,6 +3812,73 @@ save ()
 	}
 	return result;
 }// My_ContextFavorite::save
+
+
+/*!
+Changes the location of this context in the global list of
+contexts for its class.  Has the side effect of synchronizing
+any other modified application-wide preferences (but will not
+save contextual preferences).
+
+The context is inserted just before or after the given
+reference, depending on the value of "inInsertBefore".
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultGenericFailure
+if preferences could not be fully saved for any reason
+
+(3.1)
+*/
+Preferences_Result
+My_ContextFavorite::
+shift	(My_ContextFavoritePtr		inRelativeTo,
+		 Boolean					inInsertBefore)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef const		kSelfDomainName = _domainName.returnCFStringRef();
+	CFStringRef const		kRefDomainName = inRelativeTo->_domainName.returnCFStringRef();
+	CFArrayRef				favoritesListCFArray = nullptr;
+	
+	
+	// ensure the domain name is in the list
+	result = copyClassDomainCFArray(returnClass(), favoritesListCFArray);
+	assert(kPreferences_ResultOK == result);
+	if (kPreferences_ResultOK == result)
+	{
+		CFIndex const		kOriginalIndexOfSelf = findDomainIndexInArray(favoritesListCFArray, kSelfDomainName);
+		CFIndex const		kOriginalIndexOfRef = findDomainIndexInArray(favoritesListCFArray, kRefDomainName);
+		assert(kOriginalIndexOfSelf >= 0);
+		assert(kOriginalIndexOfRef >= 0);
+		CFRetainRelease		favoritesList(favoritesListCFArray, true/* is retained */);
+		CFRetainRelease		mutableFavoritesList(CFArrayCreateMutableCopy
+													(kCFAllocatorDefault, 1 + CFArrayGetCount(favoritesListCFArray)/* capacity */,
+														favoritesListCFArray), true/* is retained */);
+		CFIndex				newIndexOfRef = -1;
+		
+		
+		if (false == mutableFavoritesList.exists()) throw std::bad_alloc();
+		
+		// first erase the current domain
+		CFArrayRemoveValueAtIndex(mutableFavoritesList.returnCFMutableArrayRef(), kOriginalIndexOfSelf);
+		
+		// after removing, determine the new index of the reference point
+		// and insert the item where it is supposed to be
+		newIndexOfRef = findDomainIndexInArray(mutableFavoritesList.returnCFArrayRef(), kRefDomainName);
+		assert(newIndexOfRef >= 0);
+		if (false == inInsertBefore) ++newIndexOfRef;
+		CFArrayInsertValueAtIndex(mutableFavoritesList.returnCFMutableArrayRef(), newIndexOfRef, kSelfDomainName);
+		overwriteClassDomainCFArray(this->returnClass(), mutableFavoritesList.returnCFMutableArrayRef());
+	}
+	
+	// save changes to the list
+	if (false == CFPreferencesAppSynchronize(_dictionary.returnTargetApplication()))
+	{
+		result = kPreferences_ResultGenericFailure;
+	}
+	return result;
+}// My_ContextFavorite::shift
 
 
 /*!
@@ -4023,7 +4266,7 @@ createAllPreferencesContextsFromDisk ()
 				CFStringRef const		kDomainName = CFUtilities_StringCast(CFArrayGetValueAtIndex
 																				(namesInClass, i));
 				CFStringRef const		kFavoriteName = findDomainUserSpecifiedName(kDomainName);
-				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(*toClass, kFavoriteName);
+				Preferences_ContextRef	newContext = Preferences_NewContextFromFavorites(*toClass, kFavoriteName, kDomainName);
 				
 				
 				assert(nullptr != newContext);

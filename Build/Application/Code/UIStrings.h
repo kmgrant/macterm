@@ -134,6 +134,8 @@ enum UIStrings_ButtonCFString
 	kUIStrings_ButtonEditTextHistoryAccessibilityDesc	= 'HiMA',
 	kUIStrings_ButtonHelpAccessibilityDesc				= 'HlpA',
 	kUIStrings_ButtonMakeOneLine						= 'OneL',
+	kUIStrings_ButtonMoveDownAccessibilityDesc			= 'MDAA',
+	kUIStrings_ButtonMoveUpAccessibilityDesc			= 'MUAA',
 	kUIStrings_ButtonNo									= ' No ',
 	kUIStrings_ButtonOK									= ' OK ',
 	kUIStrings_ButtonOpenMacroEditor					= 'OMcE',

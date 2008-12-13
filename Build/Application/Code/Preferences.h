@@ -365,8 +365,8 @@ enum
 															//!  for updating user interface elements; UNDER EVALUATION: now
 															//!  that context-specific callbacks are possible, this event may
 															//!  be converted to that set
-	kPreferences_ChangeNumberOfContexts		= ('SvCC')		//!< the number of collections (regardless of class) has changed;
-															//!  this may be important for updating user interface elements
+	kPreferences_ChangeNumberOfContexts		= ('SvCC')		//!< the number of collections (regardless of class) or their order
+															//!  has changed; this may be important for updating user interfaces
 };
 /*!
 Lists the kinds of changes that only trigger notification when
@@ -441,7 +441,8 @@ Preferences_ContextRef
 
 Preferences_ContextRef
 	Preferences_NewContextFromFavorites		(Preferences_Class					inClass,
-											 CFStringRef						inNameOrNullToAutoGenerateUniqueName = nullptr);
+											 CFStringRef						inNameOrNullToAutoGenerateUniqueName = nullptr,
+											 CFStringRef						inDomainNameIfInitializingOrNull = nullptr);
 
 Preferences_ContextRef
 	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext,
@@ -472,33 +473,42 @@ Preferences_Result
 //@{
 
 Preferences_Result
-	Preferences_ContextGetName				(Preferences_ContextRef				inContext,
-											 CFStringRef&						outNewName);
+	Preferences_ContextGetName						(Preferences_ContextRef				inContext,
+													 CFStringRef&						outNewName);
 
 Preferences_Result
-	Preferences_ContextRename				(Preferences_ContextRef				inContext,
-											 CFStringRef						inNewName);
+	Preferences_ContextRename						(Preferences_ContextRef				inContext,
+													 CFStringRef						inNewName);
 
 Preferences_Result
-	Preferences_CreateContextNameArray		(Preferences_Class					inClass,
-											 CFArrayRef&						outNewArrayOfNewCFStrings);
+	Preferences_ContextRepositionRelativeToContext	(Preferences_ContextRef				inContext,
+													 Preferences_ContextRef				inReferenceContext,
+													 Boolean							inInsertBefore = false);
 
 Preferences_Result
-	Preferences_CreateUniqueContextName		(Preferences_Class					inClass,
-											 CFStringRef&						outNewName,
-											 CFStringRef						inBaseNameOrNull = nullptr);
+	Preferences_ContextRepositionRelativeToSelf		(Preferences_ContextRef				inContext,
+													 SInt32								inDelta);
+
+Preferences_Result
+	Preferences_CreateContextNameArray				(Preferences_Class					inClass,
+													 CFArrayRef&						outNewArrayOfNewCFStrings);
+
+Preferences_Result
+	Preferences_CreateUniqueContextName				(Preferences_Class					inClass,
+													 CFStringRef&						outNewName,
+													 CFStringRef						inBaseNameOrNull = nullptr);
 
 Boolean
-	Preferences_GetContextsInClass			(Preferences_Class					inClass,
-											 std::vector< Preferences_ContextRef >&);
+	Preferences_GetContextsInClass					(Preferences_Class					inClass,
+													 std::vector< Preferences_ContextRef >&);
 
 Preferences_Result
-	Preferences_InsertContextNamesInMenu	(Preferences_Class					inClass,
-											 MenuRef							inoutMenuRef,
-											 MenuItemIndex						inAfterItemIndex,
-											 UInt32								inInitialIndent,
-											 UInt32								inCommandID,
-											 MenuItemIndex&						outHowManyItemsAdded);
+	Preferences_InsertContextNamesInMenu			(Preferences_Class					inClass,
+													 MenuRef							inoutMenuRef,
+													 MenuItemIndex						inAfterItemIndex,
+													 UInt32								inInitialIndent,
+													 UInt32								inCommandID,
+													 MenuItemIndex&						outHowManyItemsAdded);
 
 //@}
 
