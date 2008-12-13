@@ -8958,12 +8958,28 @@ virtualKeyCreateName	(UInt16		inVirtualKeyCode)
 		result = CFSTR("f11");
 		break;
 	
+	case 0x69:
+		result = CFSTR("f13");
+		break;
+	
+	case 0x6A:
+		result = CFSTR("f16");
+		break;
+	
+	case 0x6B:
+		result = CFSTR("f14");
+		break;
+	
 	case 0x6D:
 		result = CFSTR("f10");
 		break;
 	
 	case 0x6F:
 		result = CFSTR("f12");
+		break;
+	
+	case 0x71:
+		result = CFSTR("f15");
 		break;
 	
 	case 0x73:
@@ -9114,6 +9130,18 @@ virtualKeyParseName	(CFStringRef	inName,
 		{
 			outCharacterOrKeyCode = 0x67;
 		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f13"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x69;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f16"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x6A;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f14"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x6B;
+		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f10"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x6D;
@@ -9121,6 +9149,10 @@ virtualKeyParseName	(CFStringRef	inName,
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f12"), kCompareFlags))
 		{
 			outCharacterOrKeyCode = 0x6F;
+		}
+		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("f15"), kCompareFlags))
+		{
+			outCharacterOrKeyCode = 0x71;
 		}
 		else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("home"), kCompareFlags))
 		{

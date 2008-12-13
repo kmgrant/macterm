@@ -437,9 +437,13 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetMacroKeyTypeF7				'MKF7'		// “Preferences” window
 #define kCommandSetMacroKeyTypeF8				'MKF8'		// “Preferences” window
 #define kCommandSetMacroKeyTypeF9				'MKF9'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF10				'MKFA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF11				'MKFB'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF12				'MKFC'		// “Preferences” window
+#define kCommandSetMacroKeyTypeF10				'MKFa'		// “Preferences” window
+#define kCommandSetMacroKeyTypeF11				'MKFb'		// “Preferences” window
+#define kCommandSetMacroKeyTypeF12				'MKFc'		// “Preferences” window
+#define kCommandSetMacroKeyTypeF13				'MKFd'		// “Preferences” window
+#define kCommandSetMacroKeyTypeF14				'MKFe'		// “Preferences” window
+#define kCommandSetMacroKeyTypeF15				'MKFf'		// “Preferences” window
+#define kCommandSetMacroKeyTypeF16				'MKFg'		// “Preferences” window
 #define kCommandSetMacroKeyModifierCommand		'McMC'		// “Preferences” window
 #define kCommandSetMacroKeyModifierControl		'McML'		// “Preferences” window
 #define kCommandSetMacroKeyModifierOption		'McMO'		// “Preferences” window

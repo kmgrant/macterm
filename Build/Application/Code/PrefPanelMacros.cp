@@ -722,8 +722,24 @@ getKeyTypeAndCharacterCodeFromPref	(MacroManager_KeyID		inKeyID,
 			outKeyType = kCommandSetMacroKeyTypeF11;
 			break;
 		
+		case 0x69:
+			outKeyType = kCommandSetMacroKeyTypeF13;
+			break;
+		
+		case 0x6A:
+			outKeyType = kCommandSetMacroKeyTypeF16;
+			break;
+		
+		case 0x6B:
+			outKeyType = kCommandSetMacroKeyTypeF14;
+			break;
+		
 		case 0x6F:
 			outKeyType = kCommandSetMacroKeyTypeF12;
+			break;
+		
+		case 0x71:
+			outKeyType = kCommandSetMacroKeyTypeF15;
 			break;
 		
 		default:
@@ -868,6 +884,22 @@ getPrefFromKeyTypeAndCharacterCode	(UInt32					inKeyType,
 	
 	case kCommandSetMacroKeyTypeF12:
 		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x6F);
+		break;
+	
+	case kCommandSetMacroKeyTypeF13:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x69);
+		break;
+	
+	case kCommandSetMacroKeyTypeF14:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x6B);
+		break;
+	
+	case kCommandSetMacroKeyTypeF15:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x71);
+		break;
+	
+	case kCommandSetMacroKeyTypeF16:
+		outKeyID = MacroManager_MakeKeyID(true/* is virtual key */, 0x6A);
 		break;
 	
 	default:
@@ -1876,6 +1908,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandSetMacroKeyTypeF10:
 			case kCommandSetMacroKeyTypeF11:
 			case kCommandSetMacroKeyTypeF12:
+			case kCommandSetMacroKeyTypeF13:
+			case kCommandSetMacroKeyTypeF14:
+			case kCommandSetMacroKeyTypeF15:
+			case kCommandSetMacroKeyTypeF16:
 				{
 					My_MacrosPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
 																		My_MacrosPanelDataPtr);

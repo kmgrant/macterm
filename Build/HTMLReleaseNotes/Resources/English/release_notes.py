@@ -197,6 +197,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20081212': [
+		'Preferences window Macros pane now supports F13, F14, F15 and F16 as macro keys.',
 		'Terminal view animation now only occurs for terminals in the active window, to reduce idle CPU usage.',
 	],
 	'20081210': [
