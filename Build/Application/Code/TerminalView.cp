@@ -7580,7 +7580,8 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// if, after drawing all text, no text is actually blinking,
 						// then disable the animation timer (so unnecessary refreshes
 						// are not done); otherwise, install it
-						setBlinkingTimerActive(viewPtr, cursorBlinks(viewPtr) || (viewPtr->screen.currentRenderBlinking));
+						setBlinkingTimerActive(viewPtr, (viewPtr->isActive) && (cursorBlinks(viewPtr) ||
+																				(viewPtr->screen.currentRenderBlinking)));
 						
 						// if inactive, render the text selection as an outline
 						// (if active, the call above to draw the text will also

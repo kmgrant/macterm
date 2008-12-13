@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081212',
     '20081210',
     '20081209',
     '20081208',
@@ -195,6 +196,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081212': [
+		'Terminal view animation now only occurs for terminals in the active window, to reduce idle CPU usage.',
+	],
 	'20081210': [
 		'Terminal view cursor, if set to blink, now pulses with an effect similar to that of blinking terminal text.',
 		'Terminal view cursor now has an anti-aliased appearance, which makes it seem brighter on dark backgrounds.',
