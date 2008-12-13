@@ -81,10 +81,15 @@ MacroManager_Result const	kMacroManager_ResultGenericFailure(1);		//!< unspecifi
 
 enum MacroManager_Action
 {
-	kMacroManager_ActionSendTextVerbatim			= 0,		//!< macro content is a string (no metacharacters allowed) of text to send as-is
-	kMacroManager_ActionSendTextProcessingEscapes	= 1,		//!< macro content is a string (perhaps with metacharacters) of text to send
-	kMacroManager_ActionHandleURL					= 2,		//!< macro content is a URL to be opened
-	kMacroManager_ActionNewWindowWithCommand		= 3			//!< macro content is a Unix command line to be executed in a new terminal window
+	// IMPORTANT: For simplicity, these are made the same as command IDs used to set them in the UI.
+	// But, you should use the utility routines below to convert between them anyway.
+	kMacroManager_ActionSendTextVerbatim			= kCommandSetMacroActionEnterTextVerbatim,	//!< macro content is a string to send as-is (no
+																								//!  metacharacters allowed)
+	kMacroManager_ActionSendTextProcessingEscapes	= kCommandSetMacroActionEnterText,			//!< macro content is a string to send (perhaps
+																								//!  with metacharacters to be substituted)
+	kMacroManager_ActionHandleURL					= kCommandSetMacroActionOpenURL,			//!< macro content is a URL to be opened
+	kMacroManager_ActionNewWindowWithCommand		= kCommandSetMacroActionNewWindowCommand	//!< macro content is a Unix command line to be
+																								//!  executed in a new terminal window
 };
 
 UInt16 const kMacroManager_MaximumMacroSetSize = 12;	//!< TEMPORARY: arbitrary upper limit on macro set length, for simplicity in other code
@@ -135,6 +140,18 @@ MacroManager_Result
 
 //!\name Utilities
 //@{
+
+inline MacroManager_Action
+	MacroManager_ActionForCommand		(UInt32						inSetMacroActionCommandID)
+	{
+		return STATIC_CAST(inSetMacroActionCommandID, MacroManager_Action);
+	}
+
+inline UInt32
+	MacroManager_CommandForAction		(MacroManager_Action		inAction)
+	{
+		return STATIC_CAST(inAction, UInt32);
+	}
 
 inline Boolean
 	MacroManager_KeyIDIsVirtualKey		(MacroManager_KeyID			inKeyID)

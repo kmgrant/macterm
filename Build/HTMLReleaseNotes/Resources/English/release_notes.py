@@ -197,6 +197,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20081212': [
+		'Macros can now perform actions besides text entry, including: verbatim text entry, opening a URL, or running a command in a new window.',
 		'Preferences window Macros pane now supports F13, F14, F15 and F16 as macro keys.',
 		'Terminal view animation now only occurs for terminals in the active window, to reduce idle CPU usage.',
 	],

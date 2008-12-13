@@ -169,6 +169,9 @@ public:
 	saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef, UInt32);
 	
 	void
+	setAction	(UInt32);
+	
+	void
 	setDataBrowserColumnWidths ();
 	
 	void
@@ -1110,6 +1113,31 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			}
 		}
 		
+		// set action
+		{
+			MacroManager_Action		actionPerformed = kMacroManager_ActionSendTextProcessingEscapes;
+			
+			
+			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroAction,
+															inOneBasedIndex, sizeof(actionPerformed), &actionPerformed,
+															false/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				// initialize; do not fall back on defaults because there is
+				// probably no correlation between the actions that happen
+				// to be used on default macros, and the content of other sets!
+				actionPerformed = kMacroManager_ActionSendTextProcessingEscapes;
+			}
+			
+			// update UI
+			{
+				UInt32		commandForAction = MacroManager_CommandForAction(actionPerformed);
+				
+				
+				this->setAction(commandForAction);
+			}
+		}
+		
 		// set action text
 		{
 			CFStringRef		actionCFString = nullptr;
@@ -1294,6 +1322,28 @@ saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef		inoutSettings,
 	}
 	return result;
 }// My_MacrosPanelUI::saveKeyTypeAndCharacterPreferences
+
+
+/*!
+Updates the views that represent the current macro action,
+based on the given set-macro-action command ID.
+
+Note that MacroManager_CommandForAction() can be used to
+find the command ID for an action type.
+
+(4.0)
+*/
+void
+My_MacrosPanelUI::
+setAction		(UInt32		inSetMacroActionCommandID)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	HIViewWrap			viewWrap;
+	
+	
+	viewWrap = HIViewWrap(idMyPopUpMenuMacroAction, kOwningWindow);
+	(OSStatus)DialogUtilities_SetPopUpItemByCommand(viewWrap, inSetMacroActionCommandID);
+}// My_MacrosPanelUI::setAction
 
 
 /*!
@@ -1922,6 +1972,32 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					
 					// save preferences
 					(Boolean)interfacePtr->saveKeyTypeAndCharacterPreferences(dataPtr->dataModel, dataPtr->currentIndex);
+					
+					result = noErr;
+				}
+				break;
+			
+			case kCommandSetMacroActionEnterText:
+			case kCommandSetMacroActionEnterTextVerbatim:
+			case kCommandSetMacroActionOpenURL:
+			case kCommandSetMacroActionNewWindowCommand:
+				{
+					My_MacrosPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																		My_MacrosPanelDataPtr);
+					MacroManager_Action		actionForCommand = MacroManager_ActionForCommand(received.commandID);
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
+					
+					
+					// update menu state
+					interfacePtr->setAction(received.commandID);
+					
+					// save preferences
+					prefsResult = Preferences_ContextSetDataAtIndex(dataPtr->dataModel, kPreferences_TagIndexedMacroAction,
+																	dataPtr->currentIndex, sizeof(actionForCommand), &actionForCommand);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_WriteLine("warning, unable to save action setting");
+					}
 					
 					result = noErr;
 				}
