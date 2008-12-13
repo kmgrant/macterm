@@ -269,7 +269,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		size_t					actualSize = 0;
 		CFStringRef				actionCFString = nullptr;
-		MacroManager_Action		actionPerformed = kMacroManager_ActionSendText;
+		MacroManager_Action		actionPerformed = kMacroManager_ActionSendTextProcessingEscapes;
 		
 		
 		// retrieve action type
@@ -278,7 +278,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 		// only on a cached array at this point
 		prefsResult = Preferences_ContextGetDataAtIndex(context, kPreferences_TagIndexedMacroAction,
 														inZeroBasedMacroIndex + 1/* one-based */,
-														sizeof(actionCFString), &actionCFString,
+														sizeof(actionPerformed), &actionPerformed,
 														true/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
@@ -291,7 +291,13 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 			{
 				switch (actionPerformed)
 				{
-				case kMacroManager_ActionSendText:
+				case kMacroManager_ActionSendTextVerbatim:
+					// send string to the session as-is
+					Session_UserInputCFString(session, actionCFString);
+					result = kMacroManager_ResultOK;
+					break;
+				
+				case kMacroManager_ActionSendTextProcessingEscapes:
 					{
 						// TEMPORARY - translate everything here for now, but the plan is to
 						// eventually monitor preference changes and pre-scan and cache a

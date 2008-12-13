@@ -81,9 +81,10 @@ MacroManager_Result const	kMacroManager_ResultGenericFailure(1);		//!< unspecifi
 
 enum MacroManager_Action
 {
-	kMacroManager_ActionSendText					= 0,		//!< macro content is a string (perhaps with metacharacters) of text to send
-	kMacroManager_ActionHandleURL					= 1,		//!< macro content is a URL to be opened
-	kMacroManager_ActionNewWindowWithCommand		= 2			//!< macro content is a Unix command line to be executed in a new terminal window
+	kMacroManager_ActionSendTextVerbatim			= 0,		//!< macro content is a string (no metacharacters allowed) of text to send as-is
+	kMacroManager_ActionSendTextProcessingEscapes	= 1,		//!< macro content is a string (perhaps with metacharacters) of text to send
+	kMacroManager_ActionHandleURL					= 2,		//!< macro content is a URL to be opened
+	kMacroManager_ActionNewWindowWithCommand		= 3			//!< macro content is a Unix command line to be executed in a new terminal window
 };
 
 UInt16 const kMacroManager_MaximumMacroSetSize = 12;	//!< TEMPORARY: arbitrary upper limit on macro set length, for simplicity in other code

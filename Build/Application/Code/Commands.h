@@ -446,6 +446,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetMacroKeyModifierShift		'McMS'		// “Preferences” window
 #define kCommandSetMacroKeyAllowOnlyInMacroMode	'XRMM'		// “Preferences” window
 #define kCommandSetMacroActionEnterText			'MAET'		// “Preferences” window
+#define kCommandSetMacroActionEnterTextVerbatim	'MAEV'		// “Preferences” window
 #define kCommandSetMacroActionOpenURL			'MAOU'		// “Preferences” window
 #define kCommandSetMacroActionNewWindowCommand	'MANW'		// “Preferences” window
 #define kCommandSetMacroActionBeginMacroMode	'MAMM'		// “Preferences” window

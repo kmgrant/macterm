@@ -5141,9 +5141,13 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 																		(outDataPtr, MacroManager_Action*);
 							
 							
-							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("text"), kCFCompareCaseInsensitive))
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("verbatim"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kMacroManager_ActionSendText;
+								*storedValuePtr = kMacroManager_ActionSendTextVerbatim;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("text"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kMacroManager_ActionSendTextProcessingEscapes;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("handle URL"), kCFCompareCaseInsensitive))
 							{
@@ -8036,7 +8040,11 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					switch (data)
 					{
-					case kMacroManager_ActionSendText:
+					case kMacroManager_ActionSendTextVerbatim:
+						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("verbatim"));
+						break;
+					
+					case kMacroManager_ActionSendTextProcessingEscapes:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("text"));
 						break;
 					
