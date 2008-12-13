@@ -457,6 +457,20 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 												? kWindowMenuTitleLeftEdgeSimpleModeApproximation
 												: kWindowMenuTitleLeftEdgeNormalApproximation;
 			outMenuBarMenuTitleRect->right = outMenuBarMenuTitleRect->left + kWindowMenuTitleWidthApproximation;
+			
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+			{
+				// since the values are based on an unscaled screen, multiply accordingly
+				Float32		scaleFactor = HIGetScaleFactor();
+				
+				
+				outMenuBarMenuTitleRect->left = STATIC_CAST(outMenuBarMenuTitleRect->left, Float32) * scaleFactor;
+				outMenuBarMenuTitleRect->top = STATIC_CAST(outMenuBarMenuTitleRect->top, Float32) * scaleFactor;
+				outMenuBarMenuTitleRect->right = STATIC_CAST(outMenuBarMenuTitleRect->right, Float32) * scaleFactor;
+				outMenuBarMenuTitleRect->bottom = STATIC_CAST(outMenuBarMenuTitleRect->bottom, Float32) * scaleFactor;
+			}
+		#endif
+			
 			result = true;
 			break;
 		
