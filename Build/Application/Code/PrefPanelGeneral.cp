@@ -138,6 +138,8 @@ static HIViewID const	idMyRadioButtonNotifyDisplayMessage			= { 'NotM', 0/* ID *
 
 #pragma mark Types
 
+class My_GeneralPanelUI;
+
 /*!
 Implements the “Notification” tab.
 */
@@ -198,7 +200,7 @@ struct My_GeneralTabSpecial:
 public HIViewWrap
 {
 public:
-	My_GeneralTabSpecial	(HIWindowRef);
+	My_GeneralTabSpecial	(My_GeneralPanelUI*, HIWindowRef);
 	
 	CarbonEventHandlerWrap		buttonCommandsHandler;		//!< invoked when a button is clicked
 
@@ -217,6 +219,9 @@ protected:
 	operator =	(CFRetainRelease const&);
 
 private:
+	CarbonEventHandlerWrap				fieldOriginLeftInputHandler;
+	CarbonEventHandlerWrap				fieldOriginTopInputHandler;
+	CarbonEventHandlerWrap				fieldSpacesPerTabInputHandler;
 	CommonEventHandlers_HIViewResizer	containerResizer;
 	HIViewWrap							labelCursor;
 	HIViewWrap							checkBoxCursorFlashing;
@@ -233,6 +238,7 @@ struct My_GeneralPanelUI
 public:
 	My_GeneralPanelUI	(Panel_Ref, HIWindowRef);
 	
+	Panel_Ref							panel;				//!< the panel using this UI
 	My_GeneralTabOptions				optionsTab;
 	My_GeneralTabSpecial				specialTab;
 	My_GeneralTabNotification			notificationTab;
@@ -258,9 +264,10 @@ Contains the panel reference and its user interface
 struct My_GeneralPanelData
 {
 	My_GeneralPanelData ();
+	~My_GeneralPanelData ();
 	
-	Panel_Ref			panel;			//!< the panel this data is for
-	My_GeneralPanelUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
+	Panel_Ref				panel;			//!< the panel this data is for
+	My_GeneralPanelUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
 };
 typedef My_GeneralPanelData*	My_GeneralPanelDataPtr;
 
@@ -268,11 +275,11 @@ typedef My_GeneralPanelData*	My_GeneralPanelDataPtr;
 
 static void				changePreferenceUpdateScreenTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
 static void				deltaSizePanelContainerHIView					(HIViewRef, Float32, Float32, void*);
-static void				disposePanel									(Panel_Ref, void*);
 static SInt32			panelChanged									(Panel_Ref, Panel_Message, void*);
 static pascal OSStatus	receiveHICommand								(EventHandlerCallRef, EventRef, void*);
+static pascal OSStatus	receiveFieldChanged								(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus	receiveViewHit									(EventHandlerCallRef, EventRef, void*);
-static void				savePreferenceForField							(Panel_Ref, HIViewRef);
+static void				saveFieldPreferences							(My_GeneralPanelUIPtr);
 static void				showTabPane										(My_GeneralPanelUIPtr, UInt16);
 static Boolean			updateCheckBoxPreference						(My_GeneralPanelUIPtr, HIViewRef);
 
@@ -347,6 +354,18 @@ interfacePtr(nullptr)
 
 
 /*!
+Tears down a My_GeneralPanelData structure.
+
+(4.0)
+*/
+My_GeneralPanelData::
+~My_GeneralPanelData ()
+{
+	if (nullptr != this->interfacePtr) delete this->interfacePtr;
+}// My_GeneralPanelData destructor
+
+
+/*!
 Initializes a My_GeneralPanelUI structure.
 
 (3.1)
@@ -356,8 +375,9 @@ My_GeneralPanelUI	(Panel_Ref		inPanel,
 					 HIWindowRef	inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+panel				(inPanel),
 optionsTab			(inOwningWindow),
-specialTab			(inOwningWindow),
+specialTab			(this, inOwningWindow),
 notificationTab		(inOwningWindow),
 tabView				(createTabsView(inOwningWindow)
 						<< HIViewWrap_AssertExists),
@@ -1112,7 +1132,8 @@ Initializes a My_GeneralTabSpecial structure.
 (3.1)
 */
 My_GeneralTabSpecial::
-My_GeneralTabSpecial	(HIWindowRef	inOwningWindow)
+My_GeneralTabSpecial	(My_GeneralPanelUIPtr	inOwningUI,
+						 HIWindowRef			inOwningWindow)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 HIViewWrap							(createPaneView(inOwningWindow)
@@ -1120,6 +1141,15 @@ HIViewWrap							(createPaneView(inOwningWindow)
 buttonCommandsHandler				(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 										nullptr/* user data */),
+fieldOriginLeftInputHandler			(GetControlEventTarget(HIViewWrap(idMyFieldStackingOriginLeft, inOwningWindow)), receiveFieldChanged,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+										inOwningUI/* user data */),
+fieldOriginTopInputHandler			(GetControlEventTarget(HIViewWrap(idMyFieldStackingOriginTop, inOwningWindow)), receiveFieldChanged,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+										inOwningUI/* user data */),
+fieldSpacesPerTabInputHandler		(GetControlEventTarget(HIViewWrap(idMyFieldCopyUsingSpacesForTabs, inOwningWindow)), receiveFieldChanged,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
+										inOwningUI/* user data */),
 containerResizer					(*this, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
 										My_GeneralTabSpecial::deltaSize, this/* context */),
 labelCursor							(idMyLabelTerminalCursor, HIViewGetWindow(*this)),
@@ -1516,25 +1546,6 @@ deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 
 
 /*!
-Cleans up a panel that is about to be destroyed.
-
-(3.0)
-*/
-static void
-disposePanel	(Panel_Ref		UNUSED_ARGUMENT(inPanel),
-				 void*			inDataPtr)
-{
-	My_GeneralPanelDataPtr		dataPtr = REINTERPRET_CAST(inDataPtr, My_GeneralPanelDataPtr);
-	
-	
-	// destroy UI, if present
-	if (nullptr != dataPtr->interfacePtr) delete dataPtr->interfacePtr;
-	
-	delete dataPtr;
-}// disposePanel
-
-
-/*!
 This routine, of standard PanelChangedProcPtr form,
 is invoked by the Panel module whenever a property
 of one of the preferences dialog’s panels changes.
@@ -1569,16 +1580,11 @@ panelChanged	(Panel_Ref			inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			void*		panelAuxiliaryDataPtr = inDataPtr;
+			My_GeneralPanelDataPtr	panelDataPtr = REINTERPRET_CAST(inDataPtr, My_GeneralPanelDataPtr);
 			
 			
-			// list here all fields in the panel (only necessary for “passive”
-			// views; buttons, checkboxes, etc. update preferences as they are
-			// changed and trigger commands or other event callbacks)
-			savePreferenceForField(inPanel, HIViewWrap(idMyFieldStackingOriginLeft, Panel_ReturnOwningWindow(inPanel)));
-			savePreferenceForField(inPanel, HIViewWrap(idMyFieldCopyUsingSpacesForTabs, Panel_ReturnOwningWindow(inPanel)));
-			
-			disposePanel(inPanel, panelAuxiliaryDataPtr);
+			saveFieldPreferences(panelDataPtr->interfacePtr);
+			delete panelDataPtr;
 		}
 		break;
 	
@@ -1593,10 +1599,12 @@ panelChanged	(Panel_Ref			inPanel,
 	
 	case kPanel_MessageFocusLost: // notification that a control is no longer focused
 		{
-			HIViewRef const*	controlPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_GeneralPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																	My_GeneralPanelDataPtr);
 			
 			
-			savePreferenceForField(inPanel, *controlPtr);
+			saveFieldPreferences(panelDataPtr->interfacePtr);
 		}
 		break;
 	
@@ -1635,6 +1643,38 @@ panelChanged	(Panel_Ref			inPanel,
 	
 	return result;
 }// panelChanged
+
+
+/*!
+Embellishes "kEventTextInputUnicodeForKeyEvent" of
+"kEventClassTextInput" for the fields in this panel by saving
+their preferences when new text arrives.
+
+(4.0)
+*/
+static pascal OSStatus
+receiveFieldChanged		(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					inMyGeneralPanelUIPtr)
+{
+	UInt32 const			kEventClass = GetEventClass(inEvent);
+	UInt32 const			kEventKind = GetEventKind(inEvent);
+	assert(kEventClass == kEventClassTextInput);
+	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
+	My_GeneralPanelUIPtr	interfacePtr = REINTERPRET_CAST(inMyGeneralPanelUIPtr, My_GeneralPanelUIPtr);
+	assert(nullptr != interfacePtr);
+	OSStatus				result = eventNotHandledErr;
+	
+	
+	// first ensure the keypress takes effect (that is, it updates
+	// whatever text field it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// now synchronize the post-input change with preferences
+	saveFieldPreferences(interfacePtr);
+	
+	return result;
+}// receiveFieldChanged
 
 
 /*!
@@ -1842,25 +1882,19 @@ text field).
 (3.0)
 */
 static void
-savePreferenceForField	(Panel_Ref	inPanel,
-						 HIViewRef	inView)
+saveFieldPreferences	(My_GeneralPanelUIPtr	inInterfacePtr)
 {
-	My_GeneralPanelDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel), My_GeneralPanelDataPtr);
-	My_GeneralPanelUIPtr	interfacePtr = dataPtr->interfacePtr;
-	assert(nullptr != interfacePtr);
-	
-	
-	if ((nullptr != inView) && (nullptr != dataPtr))
+	if (nullptr != inInterfacePtr)
 	{
-		HIViewIDWrap	viewID(HIViewWrap(inView).identifier());
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(inInterfacePtr->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		if ((HIViewIDWrap(idMyFieldStackingOriginLeft) == viewID) ||
-			(HIViewIDWrap(idMyFieldStackingOriginTop) == viewID))
+		// save terminal window origin coordinates
 		{
-			HIViewWrap	fieldLeft(idMyFieldStackingOriginLeft, GetControlOwner(inView));
+			HIViewWrap	fieldLeft(idMyFieldStackingOriginLeft, kOwningWindow);
 			assert(fieldLeft.exists());
-			HIViewWrap	fieldTop(idMyFieldStackingOriginTop, GetControlOwner(inView));
+			HIViewWrap	fieldTop(idMyFieldStackingOriginTop, kOwningWindow);
 			assert(fieldTop.exists());
 			SInt32		value1 = 0L;
 			SInt32		value2 = 0L;
@@ -1870,22 +1904,29 @@ savePreferenceForField	(Panel_Ref	inPanel,
 			GetControlNumericalText(fieldLeft, &value1);
 			GetControlNumericalText(fieldTop, &value2);
 			SetPt(&prefValue, STATIC_CAST(value1, SInt16), STATIC_CAST(value2, SInt16));
-			Preferences_SetData(kPreferences_TagWindowStackingOrigin, sizeof(prefValue), &prefValue);
+			prefsResult = Preferences_SetData(kPreferences_TagWindowStackingOrigin, sizeof(prefValue), &prefValue);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set terminal window origin");
+			}
 			TerminalWindow_StackWindows(); // re-stack windows so the user can see the effect of the change
 		}
-		else if (HIViewIDWrap(idMyFieldCopyUsingSpacesForTabs) == viewID)
+		
+		// save spaces-per-tab
 		{
+			HIViewWrap	fieldSpaces(idMyFieldCopyUsingSpacesForTabs, kOwningWindow);
+			assert(fieldSpaces.exists());
 			SInt32		value = 0L;
 			UInt16		threshold = 0;
 			
 			
-			GetControlNumericalText(inView, &value);
+			GetControlNumericalText(fieldSpaces, &value);
 			threshold = value;
-			Preferences_SetData(kPreferences_TagCopyTableThreshold, sizeof(threshold), &threshold);
-		}
-		else
-		{
-			// not a text field - ignore
+			prefsResult = Preferences_SetData(kPreferences_TagCopyTableThreshold, sizeof(threshold), &threshold);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set spaces-per-tab");
+			}
 		}
 	}
 }// savePreferenceForField

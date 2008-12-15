@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081215',
     '20081213',
     '20081212',
     '20081210',
@@ -197,6 +198,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081215': [
+		'Preferences window General pane Special tab now correctly saves changes to text fields (such as the window origin).',
+	],
 	'20081213': [
 		'Preferences window collections can now be reordered using new buttons in the drawer.',
 		'Fixed Preferences window crashes that could occur when using items created by the Duplicate Collection command.',
