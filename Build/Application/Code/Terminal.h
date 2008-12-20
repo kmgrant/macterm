@@ -533,7 +533,7 @@ Terminal_Emulator
 CFStringRef
 	Terminal_EmulatorReturnName				(TerminalScreenRef			inScreen);
 
-void
+Terminal_Result
 	Terminal_EmulatorSet					(TerminalScreenRef			inScreen,
 											 Terminal_Emulator			inEmulator);
 

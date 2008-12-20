@@ -246,6 +246,7 @@ enum
 #pragma mark Callbacks
 namespace {
 
+struct My_Emulator;			// declared here because the callback declarations use it (defined later)
 struct My_ScreenBuffer;		// declared here because the callback declarations use it (defined later)
 
 /*!
@@ -284,7 +285,7 @@ You do not need to set a new state; the default is the
 current state.  However, for clarity it is recommended
 that you always set the state precisely on each call.
 */
-typedef UInt32 (*My_EmulatorStateDeterminantProcPtr)	(My_ScreenBuffer*		inDataPtr,
+typedef UInt32 (*My_EmulatorStateDeterminantProcPtr)	(My_Emulator*			inDataPtr,
 														 UInt8 const*			inBuffer,
 														 UInt32					inLength,
 														 My_ParserState			inCurrentState,
@@ -292,14 +293,14 @@ typedef UInt32 (*My_EmulatorStateDeterminantProcPtr)	(My_ScreenBuffer*		inDataPt
 														 Boolean&				outInterrupt);
 inline UInt32
 invokeEmulatorStateDeterminantProc	(My_EmulatorStateDeterminantProcPtr		inProc,
-									 My_ScreenBuffer*						inDataPtr,
+									 My_Emulator*							inEmulatorPtr,
 									 UInt8 const*							inBuffer,
 									 UInt32									inLength,
 									 My_ParserState							inCurrentState,
 									 My_ParserState&						outNewState,
 									 Boolean&								outInterrupt)
 {
-	return (*inProc)(inDataPtr, inBuffer, inLength, inCurrentState, outNewState, outInterrupt);
+	return (*inProc)(inEmulatorPtr, inBuffer, inLength, inCurrentState, outNewState, outInterrupt);
 }
 
 /*!
@@ -520,14 +521,36 @@ struct My_Emulator
 public:
 	typedef std::vector< SInt16 >	ParameterList;
 	
+	struct Callbacks
+	{
+	public:
+		Callbacks	();
+		Callbacks	(My_EmulatorStateDeterminantProcPtr, My_EmulatorStateTransitionProcPtr);
+		
+		My_EmulatorStateDeterminantProcPtr	stateDeterminant;		//!< figures out what the next state should be
+		My_EmulatorStateTransitionProcPtr	transitionHandler;		//!< handles new parser states, driving the terminal; varies based on the emulator
+	};
+	
 	My_Emulator		(Terminal_Emulator, CFStringRef);
 	
-	Terminal_Emulator	primaryType;		//!< VT100, VT220, etc.
-	CFRetainRelease		answerBackCFString;			//!< similar to "emulator.primaryType", but can be an arbitrary string
-	My_ParserState		currentState;		//!< state the terminal input parser is in now
-	UInt16				stateRepetitions;	//!< to guard against looping; counts repetitions of same state
-	SInt16				parameterEndIndex;	//!< zero-based last parameter position in the "values" array
-	ParameterList		parameterValues;	//!< all values provided for the current escape sequence
+	Boolean
+	changeTo	(Terminal_Emulator);
+	
+	Terminal_Emulator					primaryType;			//!< VT100, VT220, etc.
+	CFRetainRelease						answerBackCFString;		//!< similar to "primaryType", but can be an arbitrary string
+	My_ParserState						currentState;			//!< state the terminal input parser is in now
+	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
+	SInt16								parameterEndIndex;		//!< zero-based last parameter position in the "values" array
+	ParameterList						parameterValues;		//!< all values provided for the current escape sequence
+	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
+	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
+
+protected:
+	My_EmulatorStateDeterminantProcPtr
+	returnStateDeterminant		(Terminal_Emulator);
+	
+	My_EmulatorStateTransitionProcPtr
+	returnStateTransitionHandler	(Terminal_Emulator);
 };
 typedef My_Emulator*	My_EmulatorPtr;
 
@@ -565,8 +588,6 @@ public:
 	CFRetainRelease						iconTitleCFString;			//!< stores the string that the terminal considers its icon title
 	
 	ListenerModel_Ref					changeListenerModel;		//!< registry of listeners for various terminal events
-	My_EmulatorStateDeterminantProcPtr	stateDeterminant;			//!< figures out what the next state should be
-	My_EmulatorStateTransitionProcPtr	transitionHandler;			//!< handles new parser states, driving the terminal; varies based on the emulator
 	
 	/*!
 	IMPORTANT:  It may be useful (and implemented so as) to retain iterators.
@@ -695,7 +716,7 @@ characters.
 class My_DefaultEmulator
 {
 public:
-	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 };
 
@@ -707,7 +728,7 @@ character it receives.
 class My_DumbTerminal
 {
 public:
-	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 };
 
@@ -719,7 +740,7 @@ handles sequences specific to VT52 mode.
 class My_VT100
 {
 public:
-	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 	
 	class VT52
@@ -727,7 +748,7 @@ public:
 		friend class My_VT100;
 		
 	public:
-		static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+		static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 		static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 	
 	protected:
@@ -842,7 +863,7 @@ public:
 	static void		deleteLines			(My_ScreenBufferPtr);
 	static void		insertLines			(My_ScreenBufferPtr);
 	static void		loadLEDs			(My_ScreenBufferPtr);
-	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 
 protected:
@@ -864,7 +885,7 @@ terminal emulator.
 class My_VT220
 {
 public:
-	static UInt32	stateDeterminant	(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
+	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 };
 
@@ -2197,7 +2218,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				// find a new state, which may or may not interrupt the
 				// state that is currently forming
 				countRead = invokeEmulatorStateDeterminantProc
-							(dataPtr->stateDeterminant, dataPtr, ptr, i, currentState, nextState, isInterrupt);
+							(dataPtr->emulator.currentCallbacks.stateDeterminant, &dataPtr->emulator, ptr, i, currentState, nextState, isInterrupt);
 				assert(countRead <= i);
 				//Console_WriteValue("number of characters absorbed by state determinant", countRead);
 				i -= countRead; // could be zero (no-op)
@@ -2246,7 +2267,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				
 				// perform whatever action is appropriate to enter this state
 				countRead = invokeEmulatorStateTransitionProc
-							(dataPtr->transitionHandler, dataPtr, ptr, i, nextState, currentState);
+							(dataPtr->emulator.currentCallbacks.transitionHandler, dataPtr, ptr, i, nextState, currentState);
 				assert(countRead <= i);
 				//Console_WriteValue("number of characters absorbed by transition handler", countRead);
 				i -= countRead; // could be zero (no-op)
@@ -2444,51 +2465,26 @@ Terminal_EmulatorReturnName		(TerminalScreenRef	inRef)
 Changes the kind of terminal a virtual terminal
 will emulate.
 
+\retval kTerminal_ResultOK
+if the data was copied successfully
+
+\retval kTerminal_ResultInvalidID
+if the specified screen reference is invalid
+
 (3.0)
 */
-void
+Terminal_Result
 Terminal_EmulatorSet	(TerminalScreenRef	inRef,
 						 Terminal_Emulator	inEmulationType)
 {
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
+	Terminal_Result			result = kTerminal_ResultOK;
 	
 	
-	if (dataPtr != nullptr) dataPtr->emulator.primaryType = inEmulationType;
-	switch (inEmulationType)
-	{
-	case kTerminal_EmulatorVT100:
-		dataPtr->stateDeterminant = My_VT100::stateDeterminant;
-		dataPtr->transitionHandler = My_VT100::stateTransition;
-		break;
+	if (nullptr == dataPtr) result = kTerminal_ResultInvalidID;
+	else dataPtr->emulator.changeTo(inEmulationType);
 	
-	case kTerminal_EmulatorVT102:
-		dataPtr->stateDeterminant = My_VT102::stateDeterminant;
-		dataPtr->transitionHandler = My_VT102::stateTransition;
-		break;
-	
-	case kTerminal_EmulatorVT220:
-		dataPtr->stateDeterminant = My_VT220::stateDeterminant;
-		dataPtr->transitionHandler = My_VT220::stateTransition;
-		break;
-	
-	case kTerminal_EmulatorDumb:
-		dataPtr->stateDeterminant = My_DumbTerminal::stateDeterminant;
-		dataPtr->transitionHandler = My_DumbTerminal::stateTransition;
-		Terminal_SetLineWrapEnabled(inRef, true);
-		break;
-	
-	case kTerminal_EmulatorANSIBBS: // UNIMPLEMENTED
-	case kTerminal_EmulatorANSISCO: // UNIMPLEMENTED
-	case kTerminal_EmulatorVT320: // UNIMPLEMENTED
-	case kTerminal_EmulatorVT420: // UNIMPLEMENTED
-	case kTerminal_EmulatorXTermOriginal: // UNIMPLEMENTED
-	case kTerminal_EmulatorXTermColor: // UNIMPLEMENTED
-	default:
-		// ???
-		dataPtr->stateDeterminant = My_DefaultEmulator::stateDeterminant;
-		dataPtr->transitionHandler = My_DefaultEmulator::stateTransition;
-		break;
-	}
+	return result;
 }// EmulatorSet
 
 
@@ -4458,10 +4454,158 @@ answerBackCFString(inAnswerBack),
 currentState(kMy_ParserStateInitial),
 stateRepetitions(0),
 parameterEndIndex(0),
-parameterValues(kMy_MaximumANSIParameters)
+parameterValues(kMy_MaximumANSIParameters),
+currentCallbacks(returnStateDeterminant(inPrimaryEmulation), returnStateTransitionHandler(inPrimaryEmulation)),
+pushedCallbacks()
 {
 	initializeParserStateStack(this);
 }// My_Emulator default constructor
+
+
+/*!
+Changes the callbacks used to drive the emulator state machine,
+based on the desired emulation type.
+
+Returns true only if successful.
+
+(4.0)
+*/
+Boolean
+My_Emulator::
+changeTo	(Terminal_Emulator		inPrimaryEmulation)
+{
+	My_EmulatorStateDeterminantProcPtr const	kNewDeterminant = returnStateDeterminant(inPrimaryEmulation);
+	My_EmulatorStateTransitionProcPtr const		kNewTransitionHandler = returnStateTransitionHandler(inPrimaryEmulation);
+	Boolean										result = ((nullptr != kNewDeterminant) &&
+															(nullptr != kNewTransitionHandler));
+	
+	
+	return result;
+}// changeTo
+
+
+/*!
+Returns the entry point for determining emulator state,
+for the specified terminal type.
+
+(4.0)
+*/
+My_EmulatorStateDeterminantProcPtr
+My_Emulator::
+returnStateDeterminant		(Terminal_Emulator		inPrimaryEmulation)
+{
+	My_EmulatorStateDeterminantProcPtr		result = nullptr;
+	
+	
+	switch (inPrimaryEmulation)
+	{
+	case kTerminal_EmulatorVT100:
+	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
+	case kTerminal_EmulatorXTermColor: // TEMPORARY
+	case kTerminal_EmulatorANSIBBS: // TEMPORARY
+	case kTerminal_EmulatorANSISCO: // TEMPORARY
+		result = My_VT100::stateDeterminant;
+		break;
+	
+	case kTerminal_EmulatorVT102:
+		result = My_VT102::stateDeterminant;
+		break;
+	
+	case kTerminal_EmulatorVT220:
+	case kTerminal_EmulatorVT320: // TEMPORARY
+	case kTerminal_EmulatorVT420: // TEMPORARY
+		result = My_VT220::stateDeterminant;
+		break;
+	
+	case kTerminal_EmulatorDumb:
+		result = My_DumbTerminal::stateDeterminant;
+		break;
+	
+	default:
+		// ???
+		result = My_DefaultEmulator::stateDeterminant;
+		break;
+	}
+	return result;
+}// returnStateDeterminant
+
+
+/*!
+Returns the entry point for moving between emulator states,
+for the specified terminal type.
+
+(4.0)
+*/
+My_EmulatorStateTransitionProcPtr
+My_Emulator::
+returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
+{
+	My_EmulatorStateTransitionProcPtr		result = nullptr;
+	
+	
+	switch (inPrimaryEmulation)
+	{
+	case kTerminal_EmulatorVT100:
+	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
+	case kTerminal_EmulatorXTermColor: // TEMPORARY
+	case kTerminal_EmulatorANSIBBS: // TEMPORARY
+	case kTerminal_EmulatorANSISCO: // TEMPORARY
+		result = My_VT100::stateTransition;
+		break;
+	
+	case kTerminal_EmulatorVT102:
+		result = My_VT102::stateTransition;
+		break;
+	
+	case kTerminal_EmulatorVT220:
+	case kTerminal_EmulatorVT320: // TEMPORARY
+	case kTerminal_EmulatorVT420: // TEMPORARY
+		result = My_VT220::stateTransition;
+		break;
+	
+	case kTerminal_EmulatorDumb:
+		result = My_DumbTerminal::stateTransition;
+		break;
+	
+	default:
+		// ???
+		result = My_DefaultEmulator::stateTransition;
+		break;
+	}
+	return result;
+}// returnStateTransitionHandler
+
+
+/*!
+Initializes a My_Emulator::Callbacks class instance with
+null pointers.
+
+(4.0)
+*/
+My_Emulator::Callbacks::
+Callbacks ()
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+stateDeterminant(nullptr),
+transitionHandler(nullptr)
+{
+}// My_Emulator::Callbacks default constructor
+
+
+/*!
+Initializes a My_Emulator::Callbacks class instance.
+
+(4.0)
+*/
+My_Emulator::Callbacks::
+Callbacks	(My_EmulatorStateDeterminantProcPtr		inStateDeterminant,
+			 My_EmulatorStateTransitionProcPtr		inTransitionHandler)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+stateDeterminant(inStateDeterminant),
+transitionHandler(inTransitionHandler)
+{
+}// My_Emulator::Callbacks 2-argument constructor
 
 
 /*!
@@ -4482,8 +4626,6 @@ speaker(nullptr),
 windowTitleCFString(),
 iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
-stateDeterminant(/*tmp*/My_VT100::stateDeterminant/*My_DefaultEmulator::StateDeterminant*/),
-transitionHandler(/*tmp*/My_VT100::stateTransition/*My_DefaultEmulator::StateTransition*/),
 scrollbackBuffer(),
 screenBuffer(),
 tabSettings(),
@@ -4874,12 +5016,12 @@ IMPORTANT:	Even if this routine can handle a sequence
 */
 UInt32
 My_DefaultEmulator::
-stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
-					 My_ParserState			inCurrentState,
-					 My_ParserState&		outNextState,
-					 Boolean&				UNUSED_ARGUMENT(outInterrupt))
+stateDeterminant	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
+					 UInt8 const*		inBuffer,
+					 UInt32				inLength,
+					 My_ParserState		inCurrentState,
+					 My_ParserState&	outNextState,
+					 Boolean&			UNUSED_ARGUMENT(outInterrupt))
 {
 	assert(inLength > 0);
 	UInt8 const				kTriggerChar = *inBuffer; // for convenience; usually only first character matters
@@ -5323,12 +5465,12 @@ buffer.
 */
 UInt32
 My_DumbTerminal::
-stateDeterminant	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
-					 UInt8 const*			UNUSED_ARGUMENT(inBuffer),
-					 UInt32					inLength,
-					 My_ParserState			UNUSED_ARGUMENT(inCurrentState),
-					 My_ParserState&		outNextState,
-					 Boolean&				UNUSED_ARGUMENT(outInterrupt))
+stateDeterminant	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
+					 UInt8 const*		UNUSED_ARGUMENT(inBuffer),
+					 UInt32				inLength,
+					 My_ParserState		UNUSED_ARGUMENT(inCurrentState),
+					 My_ParserState&	outNextState,
+					 Boolean&			UNUSED_ARGUMENT(outInterrupt))
 {
 	assert(inLength > 0);
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
@@ -5422,12 +5564,12 @@ buffer.
 */
 UInt32
 My_VT100::
-stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
-					 My_ParserState			inCurrentState,
-					 My_ParserState&		outNextState,
-					 Boolean&				outInterrupt)
+stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
+					 UInt8 const*		inBuffer,
+					 UInt32				inLength,
+					 My_ParserState		inCurrentState,
+					 My_ParserState&	outNextState,
+					 Boolean&			outInterrupt)
 {
 	assert(inLength > 0);
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
@@ -5630,7 +5772,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 			default:
 				// this is unexpected data; choose a new state
 				Console_WriteValueCharacter("warning, VT100 in CSI parameter mode did not expect character", *inBuffer);
-				result = My_DefaultEmulator::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+				result = My_DefaultEmulator::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 																outNextState, outInterrupt);
 				break;
 			}
@@ -5644,7 +5786,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 			}
 			else
 			{
-				result = My_DefaultEmulator::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+				result = My_DefaultEmulator::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 																outNextState, outInterrupt);
 			}
 			break;
@@ -6218,12 +6360,12 @@ buffer.
 */
 UInt32
 My_VT100::VT52::
-stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
-					 My_ParserState			inCurrentState,
-					 My_ParserState&		outNextState,
-					 Boolean&				outInterrupt)
+stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
+					 UInt8 const*		inBuffer,
+					 UInt32				inLength,
+					 My_ParserState		inCurrentState,
+					 My_ParserState&	outNextState,
+					 Boolean&			outInterrupt)
 {
 	assert(inLength > 0);
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
@@ -6297,7 +6439,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 		default:
 			// this is unexpected data; choose a new state
 			Console_WriteValueCharacter("warning, VT52 did not expect an ESC to be followed by character", *inBuffer);
-			result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+			result = My_VT100::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 												outNextState, outInterrupt);
 			break;
 		}
@@ -6316,7 +6458,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 		break;
 	
 	default:
-		result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+		result = My_VT100::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 											outNextState, outInterrupt);
 		break;
 	}
@@ -6605,12 +6747,12 @@ of state analysis is done by the VT100 routine.
 */
 UInt32
 My_VT102::
-stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
-					 My_ParserState			inCurrentState,
-					 My_ParserState&		outNextState,
-					 Boolean&				outInterrupt)
+stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
+					 UInt8 const*		inBuffer,
+					 UInt32				inLength,
+					 My_ParserState		inCurrentState,
+					 My_ParserState&	outNextState,
+					 Boolean&			outInterrupt)
 {
 	assert(inLength > 0);
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
@@ -6641,14 +6783,14 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 			break;
 		
 		default:
-			result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+			result = My_VT100::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 												outNextState, outInterrupt);
 			break;
 		}
 		break;
 	
 	default:
-		result = My_VT100::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+		result = My_VT100::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 											outNextState, outInterrupt);
 		break;
 	}
@@ -6737,12 +6879,12 @@ buffer.
 */
 UInt32
 My_VT220::
-stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
-					 My_ParserState			inCurrentState,
-					 My_ParserState&		outNextState,
-					 Boolean&				outInterrupt)
+stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
+					 UInt8 const*		inBuffer,
+					 UInt32				inLength,
+					 My_ParserState		inCurrentState,
+					 My_ParserState&	outNextState,
+					 Boolean&			outInterrupt)
 {
 	assert(inLength > 0);
 	UInt32		result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
@@ -6754,7 +6896,7 @@ stateDeterminant	(My_ScreenBufferPtr		inDataPtr,
 	switch (*inBuffer)
 	{
 	default:
-		result = My_VT102::stateDeterminant(inDataPtr, inBuffer, inLength, inCurrentState,
+		result = My_VT102::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 											outNextState, outInterrupt);
 		break;
 	}
@@ -10203,8 +10345,8 @@ vt100AlignmentDisplay	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
-Switches a VT100 terminal to ANSI mode, which means it
-no longer accepts VT52 sequences.
+Switches a VT100-compatible terminal to ANSI mode, which means
+it no longer accepts VT52 sequences.
 
 (3.1)
 */
@@ -10212,11 +10354,8 @@ void
 vt100ANSIMode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = true;
-	// TEMPORARY: this will change to a mechanism that ensures the
-	// proper function is reset here based on the actual terminal type;
-	// for now, choose the “highest” terminal
-	inDataPtr->stateDeterminant = My_VT100::stateDeterminant;
-	inDataPtr->transitionHandler = My_VT100::stateTransition;
+	inDataPtr->emulator.currentCallbacks = inDataPtr->emulator.pushedCallbacks;
+	inDataPtr->emulator.pushedCallbacks = My_Emulator::Callbacks();
 	initializeParserStateStack(&inDataPtr->emulator);
 }// vt100ANSIMode
 
@@ -10981,8 +11120,8 @@ void
 vt100VT52Mode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = false;
-	inDataPtr->stateDeterminant = My_VT100::VT52::stateDeterminant;
-	inDataPtr->transitionHandler = My_VT100::VT52::stateTransition;
+	inDataPtr->emulator.pushedCallbacks = inDataPtr->emulator.currentCallbacks;
+	inDataPtr->emulator.currentCallbacks = My_Emulator::Callbacks(My_VT100::VT52::stateDeterminant, My_VT100::VT52::stateTransition);
 	initializeParserStateStack(&inDataPtr->emulator);
 }// vt100VT52Mode
 
