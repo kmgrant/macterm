@@ -528,7 +528,8 @@ Preferences_Result
 											 size_t								inDataStorageSize,
 											 void*								outDataStorage,
 											 Boolean							inSearchDefaults = false,
-											 size_t*							outActualSizePtrOrNull = nullptr);
+											 size_t*							outActualSizePtrOrNull = nullptr,
+											 Boolean*							outIsDefaultOrNull = nullptr);
 
 Preferences_Result
 	Preferences_ContextGetDataAtIndex		(Preferences_ContextRef				inStartingContext,
@@ -537,7 +538,8 @@ Preferences_Result
 											 size_t								inDataStorageSize,
 											 void*								outDataStorage,
 											 Boolean							inSearchDefaults = false,
-											 size_t*							outActualSizePtrOrNull = nullptr);
+											 size_t*							outActualSizePtrOrNull = nullptr,
+											 Boolean*							outIsDefaultOrNull = nullptr);
 
 Preferences_Result
 	Preferences_ContextSave					(Preferences_ContextRef				inContext);

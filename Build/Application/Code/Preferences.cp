@@ -1591,7 +1591,9 @@ If the data is not available in the specified context and
 "inSearchDefaults" is true, then other sources of defaults
 will be checked before returning an error.  This allows you
 to retrieve sensible default values when a specific context
-does not contain what you need.
+does not contain what you need.  If you also define the
+result "outIsDefaultOrNull", you can find out whether or not
+the returned data was read from the defaults.
 
 \retval kPreferences_ResultOK
 if data is acquired without errors; "outActualSizePtr" then
@@ -1619,11 +1621,13 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 							 size_t						inDataStorageSize,
 							 void*						outDataStorage,
 							 Boolean					inSearchDefaults,
-							 size_t*					outActualSizePtrOrNull)
+							 size_t*					outActualSizePtrOrNull,
+							 Boolean*					outIsDefaultOrNull)
 {
 	return Preferences_ContextGetDataAtIndex(inContext, inDataPreferenceTag, 0/* index */,
 												inDataStorageSize, outDataStorage,
-												inSearchDefaults, outActualSizePtrOrNull);
+												inSearchDefaults, outActualSizePtrOrNull,
+												outIsDefaultOrNull);
 }// ContextGetData
 
 
@@ -1648,12 +1652,14 @@ Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
 									 size_t						inDataStorageSize,
 									 void*						outDataStorage,
 									 Boolean					inSearchDefaults,
-									 size_t*					outActualSizePtrOrNull)
+									 size_t*					outActualSizePtrOrNull,
+									 Boolean*					outIsDefaultOrNull)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0;
+	Boolean					isDefault = false;
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
@@ -1675,6 +1681,7 @@ Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
 				Preferences_ContextRef		alternateContext = nullptr;
 				
 				
+				isDefault = true;
 				result = Preferences_GetDefaultContext(&alternateContext, ptr->returnClass());
 				if (kPreferences_ResultOK == result)
 				{
@@ -1705,6 +1712,9 @@ Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
 			}
 		}
 	}
+	
+	if (nullptr != outIsDefaultOrNull) *outIsDefaultOrNull = isDefault;
+	
 	return result;
 }// ContextGetDataAtIndex
 
