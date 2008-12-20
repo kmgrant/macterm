@@ -6626,16 +6626,21 @@ void
 My_VT102::
 deleteCharacters	(My_ScreenBufferPtr		inDataPtr)
 {
+	// “one character” is assumed if a parameter is zero, or there are no parameters,
+	// even though this is not explicitly stated in VT102 documentation
 	SInt16		i = 0;
-	UInt16		totalChars = 0;
+	UInt16		totalChars = (inDataPtr->emulator.parameterEndIndex < 0) ? 1 : 0;
 	
 	
 	for (i = 0; i <= inDataPtr->emulator.parameterEndIndex; ++i)
 	{
-		//if (inDataPtr->emulator.parameterValues[i] < 1) ++totalChars; // the manual does not say that anything happens for value 0
 		if (inDataPtr->emulator.parameterValues[i] > 0)
 		{
 			totalChars += inDataPtr->emulator.parameterValues[i];
+		}
+		else
+		{
+			++totalChars;
 		}
 	}
 	bufferRemoveCharactersAtCursorColumn(inDataPtr, totalChars);
@@ -6656,9 +6661,11 @@ deleteLines		(My_ScreenBufferPtr		inDataPtr)
 	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
 		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
 	{
+		// “one line” is assumed if a parameter is zero, or there are no parameters,
+		// even though this is not explicitly stated in VT102 documentation
 		My_ScreenBufferLineList::iterator	lineIterator;
 		SInt16								i = 0;
-		UInt16								totalLines = 0;
+		UInt16								totalLines = (inDataPtr->emulator.parameterEndIndex < 0) ? 1 : 0;
 		
 		
 		locateCursorLine(inDataPtr, lineIterator);
@@ -6667,6 +6674,10 @@ deleteLines		(My_ScreenBufferPtr		inDataPtr)
 			if (inDataPtr->emulator.parameterValues[i] > 0)
 			{
 				totalLines += inDataPtr->emulator.parameterValues[i];
+			}
+			else
+			{
+				++totalLines;
 			}
 		}
 		bufferRemoveLines(inDataPtr, totalLines, lineIterator);
@@ -6688,9 +6699,11 @@ insertLines		(My_ScreenBufferPtr		inDataPtr)
 	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
 		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
 	{
+		// “one line” is assumed if a parameter is zero, or there are no parameters,
+		// even though this is not explicitly stated in VT102 documentation
 		My_ScreenBufferLineList::iterator	lineIterator;
 		SInt16								i = 0;
-		UInt16								totalLines = 0;
+		UInt16								totalLines = (inDataPtr->emulator.parameterEndIndex < 0) ? 1 : 0;
 		
 		
 		locateCursorLine(inDataPtr, lineIterator);
@@ -6699,6 +6712,10 @@ insertLines		(My_ScreenBufferPtr		inDataPtr)
 			if (inDataPtr->emulator.parameterValues[i] > 0)
 			{
 				totalLines += inDataPtr->emulator.parameterValues[i];
+			}
+			else
+			{
+				++totalLines;
 			}
 		}
 		bufferInsertBlankLines(inDataPtr, totalLines, lineIterator);

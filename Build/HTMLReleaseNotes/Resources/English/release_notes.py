@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081219',
     '20081215',
     '20081213',
     '20081212',
@@ -198,6 +199,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081219': [
+		'Fixed the insert-line and delete-line sequences of the VT102 emulator.',
+	],
 	'20081215': [
 		'Preferences window General pane Special tab now correctly saves changes to text fields (such as the window origin).',
 	],
