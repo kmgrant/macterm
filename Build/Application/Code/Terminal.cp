@@ -527,6 +527,9 @@ public:
 		Callbacks	();
 		Callbacks	(My_EmulatorStateDeterminantProcPtr, My_EmulatorStateTransitionProcPtr);
 		
+		Boolean
+		exist () const;
+		
 		My_EmulatorStateDeterminantProcPtr	stateDeterminant;		//!< figures out what the next state should be
 		My_EmulatorStateTransitionProcPtr	transitionHandler;		//!< handles new parser states, driving the terminal; varies based on the emulator
 	};
@@ -4606,6 +4609,20 @@ stateDeterminant(inStateDeterminant),
 transitionHandler(inTransitionHandler)
 {
 }// My_Emulator::Callbacks 2-argument constructor
+
+
+/*!
+Returns true only if the callbacks are all defined.
+
+(4.0)
+*/
+Boolean
+My_Emulator::Callbacks::
+exist ()
+const
+{
+	return ((nullptr != stateDeterminant) && (nullptr != transitionHandler));
+}// My_Emulator::Callbacks::exist
 
 
 /*!
@@ -10371,8 +10388,11 @@ void
 vt100ANSIMode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = true;
-	inDataPtr->emulator.currentCallbacks = inDataPtr->emulator.pushedCallbacks;
-	inDataPtr->emulator.pushedCallbacks = My_Emulator::Callbacks();
+	if (inDataPtr->emulator.pushedCallbacks.exist())
+	{
+		inDataPtr->emulator.currentCallbacks = inDataPtr->emulator.pushedCallbacks;
+		inDataPtr->emulator.pushedCallbacks = My_Emulator::Callbacks();
+	}
 	initializeParserStateStack(&inDataPtr->emulator);
 }// vt100ANSIMode
 
