@@ -217,9 +217,11 @@ getCurrentSession ()
 
 }// anonymous namespace
 
+
 @implementation Keypads_PanelController
 
-- (void)sendCharacter:(UInt8)inCharacter
+- (void)
+sendCharacter:(UInt8)	inCharacter
 {
 	SessionRef		currentSession = getCurrentSession();
 	char			ck[1] = { inCharacter };
@@ -228,7 +230,8 @@ getCurrentSession ()
 	if (nullptr != currentSession) Session_UserInputString(currentSession, ck, sizeof(ck), false/* record */);
 }
 
-- (void)sendKey:(UInt8)inKey
+- (void)
+sendKey:(UInt8)		inKey
 {
 	SessionRef		currentSession = getCurrentSession();
 	
@@ -238,10 +241,12 @@ getCurrentSession ()
 
 @end // Keypads_PanelController
 
+
 @implementation Keypads_ControlKeysPanelController
 
 static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController = nil;
-+ (id)sharedControlKeysPanelController
++ (id)
+sharedControlKeysPanelController
 {
 	if (nil == gKeypads_ControlKeysPanelController)
 	{
@@ -250,230 +255,263 @@ static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController 
 	return gKeypads_ControlKeysPanelController;
 }
 
-- (id)init
+- (id)
+init
 {
 	self = [super initWithWindowNibName:@"KeypadControlKeys"];
 	return self;
 }
 
-- (IBAction)typeNull:(id)sender
+- (IBAction)
+typeNull:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x00];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlAtSign, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlA:(id)sender
+- (IBAction)
+typeControlA:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x01];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlA, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlB:(id)sender
+- (IBAction)
+typeControlB:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x02];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlB, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlC:(id)sender
+- (IBAction)
+typeControlC:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x03];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlC, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlD:(id)sender
+- (IBAction)
+typeControlD:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x04];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlD, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlE:(id)sender
+- (IBAction)
+typeControlE:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x05];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlE, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlF:(id)sender
+- (IBAction)
+typeControlF:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x06];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlF, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlG:(id)sender
+- (IBAction)
+typeControlG:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x07];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlG, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlH:(id)sender
+- (IBAction)
+typeControlH:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x08];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlH, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlI:(id)sender
+- (IBAction)
+typeControlI:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x09];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlI, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlJ:(id)sender
+- (IBAction)
+typeControlJ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0A];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlJ, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlK:(id)sender
+- (IBAction)
+typeControlK:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0B];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlK, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlL:(id)sender
+- (IBAction)
+typeControlL:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0C];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlL, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlM:(id)sender
+- (IBAction)
+typeControlM:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0D];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlM, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlN:(id)sender
+- (IBAction)
+typeControlN:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0E];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlN, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlO:(id)sender
+- (IBAction)
+typeControlO:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x0F];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlO, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlP:(id)sender
+- (IBAction)
+typeControlP:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x10];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlP, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlQ:(id)sender
+- (IBAction)
+typeControlQ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x11];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlQ, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlR:(id)sender
+- (IBAction)
+typeControlR:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x12];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlR, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlS:(id)sender
+- (IBAction)
+typeControlS:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x13];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlS, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlT:(id)sender
+- (IBAction)
+typeControlT:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x14];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlT, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlU:(id)sender
+- (IBAction)
+typeControlU:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x15];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlU, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlV:(id)sender
+- (IBAction)
+typeControlV:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x16];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlV, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlW:(id)sender
+- (IBAction)
+typeControlW:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x17];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlW, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlX:(id)sender
+- (IBAction)
+typeControlX:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x18];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlX, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlY:(id)sender
+- (IBAction)
+typeControlY:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x19];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlY, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlZ:(id)sender
+- (IBAction)
+typeControlZ:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1A];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlZ, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlLeftSquareBracket:(id)sender
+- (IBAction)
+typeControlLeftSquareBracket:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1B];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlLeftSquareBracket, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlBackslash:(id)sender
+- (IBAction)
+typeControlBackslash:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1C];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlBackslash, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlRightSquareBracket:(id)sender
+- (IBAction)
+typeControlRightSquareBracket:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1D];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlRightSquareBracket, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlTilde:(id)sender
+- (IBAction)
+typeControlTilde:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1E];
 	Commands_ExecuteByIDUsingEvent(kCommandKeypadControlTilde, gControlKeysEventTarget);
 }
 
-- (IBAction)typeControlQuestionMark:(id)sender
+- (IBAction)
+typeControlQuestionMark:(id)	sender
 {
 #pragma unused(sender)
 	[self sendCharacter:0x1F];
@@ -482,10 +520,12 @@ static Keypads_ControlKeysPanelController*		gKeypads_ControlKeysPanelController 
 
 @end // Keypads_ControlKeysPanelController
 
+
 @implementation Keypads_FullScreenPanelController
 
 static Keypads_FullScreenPanelController*		gKeypads_FullScreenPanelController = nil;
-+ (id)sharedFullScreenPanelController
++ (id)
+sharedFullScreenPanelController
 {
 	if (nil == gKeypads_FullScreenPanelController)
 	{
@@ -494,13 +534,15 @@ static Keypads_FullScreenPanelController*		gKeypads_FullScreenPanelController = 
 	return gKeypads_FullScreenPanelController;
 }
 
-- (id)init
+- (id)
+init
 {
 	self = [super initWithWindowNibName:@"KeypadFullScreen"];
 	return self;
 }
 
-- (IBAction)disableFullScreen:(id)sender
+- (IBAction)
+disableFullScreen:(id)	sender
 {
 #pragma unused(sender)
 	Commands_ExecuteByIDUsingEvent(kCommandKioskModeDisable, gControlKeysEventTarget);
@@ -508,10 +550,12 @@ static Keypads_FullScreenPanelController*		gKeypads_FullScreenPanelController = 
 
 @end // Keypads_FullScreenPanelController
 
+
 @implementation Keypads_FunctionKeysPanelController
 
 static Keypads_FunctionKeysPanelController*		gKeypads_FunctionKeysPanelController = nil;
-+ (id)sharedFunctionKeysPanelController
++ (id)
+sharedFunctionKeysPanelController
 {
 	if (nil == gKeypads_FunctionKeysPanelController)
 	{
@@ -520,97 +564,113 @@ static Keypads_FunctionKeysPanelController*		gKeypads_FunctionKeysPanelControlle
 	return gKeypads_FunctionKeysPanelController;
 }
 
-- (id)init
+- (id)
+init
 {
 	self = [super initWithWindowNibName:@"KeypadFunctionKeys"];
 	return self;
 }
 
-- (IBAction)typeF6:(id)sender
+- (IBAction)
+typeF6:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF6];
 }
 
-- (IBAction)typeF7:(id)sender
+- (IBAction)
+typeF7:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF7];
 }
 
-- (IBAction)typeF8:(id)sender
+- (IBAction)
+typeF8:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF8];
 }
 
-- (IBAction)typeF9:(id)sender
+- (IBAction)
+typeF9:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF9];
 }
 
-- (IBAction)typeF10:(id)sender
+- (IBAction)
+typeF10:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF10];
 }
 
-- (IBAction)typeF11:(id)sender
+- (IBAction)
+typeF11:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF11];
 }
 
-- (IBAction)typeF12:(id)sender
+- (IBAction)
+typeF12:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF12];
 }
 
-- (IBAction)typeF13:(id)sender
+- (IBAction)
+typeF13:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF13];
 }
 
-- (IBAction)typeF14:(id)sender
+- (IBAction)
+typeF14:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF14];
 }
 
-- (IBAction)typeF15:(id)sender
+- (IBAction)
+typeF15:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF15];
 }
 
-- (IBAction)typeF16:(id)sender
+- (IBAction)
+typeF16:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF16];
 }
 
-- (IBAction)typeF17:(id)sender
+- (IBAction)
+typeF17:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF17];
 }
 
-- (IBAction)typeF18:(id)sender
+- (IBAction)
+typeF18:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF18];
 }
 
-- (IBAction)typeF19:(id)sender
+- (IBAction)
+typeF19:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF19];
 }
 
-- (IBAction)typeF20:(id)sender
+- (IBAction)
+typeF20:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF20];
@@ -618,10 +678,12 @@ static Keypads_FunctionKeysPanelController*		gKeypads_FunctionKeysPanelControlle
 
 @end // Keypads_FunctionKeysPanelController
 
+
 @implementation Keypads_VT220KeysPanelController
 
 static Keypads_VT220KeysPanelController*	gKeypads_VT220KeysPanelController = nil;
-+ (id)sharedVT220KeysPanelController
++ (id)
+sharedVT220KeysPanelController
 {
 	if (nil == gKeypads_VT220KeysPanelController)
 	{
@@ -630,175 +692,204 @@ static Keypads_VT220KeysPanelController*	gKeypads_VT220KeysPanelController = nil
 	return gKeypads_VT220KeysPanelController;
 }
 
-- (id)init
+- (id)
+init
 {
 	self = [super initWithWindowNibName:@"KeypadVT220Keys"];
 	return self;
 }
 
-- (IBAction)type0:(id)sender
+- (IBAction)
+type0:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK0];
 }
 
-- (IBAction)type1:(id)sender
+- (IBAction)
+type1:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK1];
 }
 
-- (IBAction)type2:(id)sender
+- (IBAction)
+type2:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK2];
 }
 
-- (IBAction)type3:(id)sender
+- (IBAction)
+type3:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK3];
 }
 
-- (IBAction)type4:(id)sender
+- (IBAction)
+type4:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK4];
 }
 
-- (IBAction)type5:(id)sender
+- (IBAction)
+type5:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK5];
 }
 
-- (IBAction)type6:(id)sender
+- (IBAction)
+type6:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK6];
 }
 
-- (IBAction)type7:(id)sender
+- (IBAction)
+type7:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK7];
 }
 
-- (IBAction)type8:(id)sender
+- (IBAction)
+type8:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK8];
 }
 
-- (IBAction)type9:(id)sender
+- (IBAction)
+type9:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSK9];
 }
 
-- (IBAction)typeArrowDown:(id)sender
+- (IBAction)
+typeArrowDown:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSDN];
 }
 
-- (IBAction)typeArrowLeft:(id)sender
+- (IBAction)
+typeArrowLeft:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSLT];
 }
 
-- (IBAction)typeArrowRight:(id)sender
+- (IBAction)
+typeArrowRight:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSRT];
 }
 
-- (IBAction)typeArrowUp:(id)sender
+- (IBAction)
+typeArrowUp:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSUP];
 }
 
-- (IBAction)typeComma:(id)sender
+- (IBAction)
+typeComma:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKC];
 }
 
-- (IBAction)typeDecimalPoint:(id)sender
+- (IBAction)
+typeDecimalPoint:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKP];
 }
 
-- (IBAction)typeDelete:(id)sender
+- (IBAction)
+typeDelete:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSPGUP/* yes this is correct, based on key position */];
 }
 
-- (IBAction)typeEnter:(id)sender
+- (IBAction)
+typeEnter:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKE];
 }
 
-- (IBAction)typeFind:(id)sender
+- (IBAction)
+typeFind:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSHELP/* yes this is correct, based on key position */];
 }
 
-- (IBAction)typeHyphen:(id)sender
+- (IBAction)
+typeHyphen:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSKM];
 }
 
-- (IBAction)typeInsert:(id)sender
+- (IBAction)
+typeInsert:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSHOME/* yes this is correct, based on key position */];
 }
 
-- (IBAction)typePageDown:(id)sender
+- (IBAction)
+typePageDown:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSPGDN];
 }
 
-- (IBAction)typePageUp:(id)sender
+- (IBAction)
+typePageUp:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSEND/* yes this is correct, based on key position */];
 }
 
-- (IBAction)typePF1:(id)sender
+- (IBAction)
+typePF1:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF1];
 }
 
-- (IBAction)typePF2:(id)sender
+- (IBAction)
+typePF2:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF2];
 }
 
-- (IBAction)typePF3:(id)sender
+- (IBAction)
+typePF3:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF3];
 }
 
-- (IBAction)typePF4:(id)sender
+- (IBAction)
+typePF4:(id)	sender
 {
 #pragma unused(sender)
 	[self sendKey:VSF4];
 }
 
-- (IBAction)typeSelect:(id)sender
+- (IBAction)
+typeSelect:(id)		sender
 {
 #pragma unused(sender)
 	[self sendKey:VSDEL/* yes this is correct, based on key position */];

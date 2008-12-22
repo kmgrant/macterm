@@ -512,10 +512,12 @@ returnPathForFSRef	(FSRef const&	inFileOrFolder)
 
 } // anonymous namespace
 
+
 @implementation CocoaBasic_GrowlDelegate
 
 static CocoaBasic_GrowlDelegate*	gCocoaBasic_GrowlDelegate = nil;
-+ (id)sharedGrowlDelegate
++ (id)
+sharedGrowlDelegate
 {
 	if (nil == gCocoaBasic_GrowlDelegate)
 	{
@@ -524,7 +526,8 @@ static CocoaBasic_GrowlDelegate*	gCocoaBasic_GrowlDelegate = nil;
 	return gCocoaBasic_GrowlDelegate;
 }
 
-- (id)init
+- (id)
+init
 {
 	self = [super init];
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
@@ -535,23 +538,27 @@ static CocoaBasic_GrowlDelegate*	gCocoaBasic_GrowlDelegate = nil;
 	return self;
 }
 
-- (void)growlIsReady
+- (void)
+growlIsReady
 {
 	// this might only be received upon restart of Growl, not at startup;
 	// but it is handled in case Growl is started after MacTelnet starts
 	_isReady = true;
 }// growlIsReady
 
-- (BOOL)isReady
+- (BOOL)
+isReady
 {
 	return _isReady;
 }// isReady
 
 @end
 
+
 @implementation My_NoticeColorPanelChange
 
-- (void)changeColor: (id)sender
+- (void)
+changeColor:(id)	sender
 {
 #pragma unused(sender)
 	NSColor*		newColor = [[NSColorPanel sharedColorPanel] color];

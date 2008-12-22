@@ -66,7 +66,8 @@ AddressDialog_Display ()
 
 @implementation AddressDialog_AddressArrayController
 
-- (id)init
+- (id)
+init
 {
 	self = [super init];
 	// drag and drop support
@@ -84,9 +85,10 @@ NOTE: This is only called on Mac OS X 10.4 and beyond.
 
 (3.1)
 */
-- (BOOL)tableView:(NSTableView*)			inTable
-		writeRowsWithIndexes:(NSIndexSet*)	inRowIndices
-		toPasteboard:(NSPasteboard*)		inoutPasteboard
+- (BOOL)
+tableView:(NSTableView*)			inTable
+writeRowsWithIndexes:(NSIndexSet*)	inRowIndices
+toPasteboard:(NSPasteboard*)		inoutPasteboard
 {
 #pragma unused(inTable)
 	NSString*	dragData = [[self arrangedObjects] objectAtIndex:[inRowIndices firstIndex]];
@@ -101,10 +103,12 @@ NOTE: This is only called on Mac OS X 10.4 and beyond.
 
 @end // AddressDialog_AddressArrayController
 
+
 @implementation AddressDialog_PanelController
 
 static AddressDialog_PanelController*	gAddressDialog_PanelController = nil;
-+ (id)sharedAddressPanelController
++ (id)
+sharedAddressPanelController
 {
 	if (nil == gAddressDialog_PanelController)
 	{
@@ -113,14 +117,16 @@ static AddressDialog_PanelController*	gAddressDialog_PanelController = nil;
 	return gAddressDialog_PanelController;
 }
 
-- (id)init
+- (id)
+init
 {
 	self = [super initWithWindowNibName:@"AddressDialogCocoa"];
 	[self rebuildAddressList:NSApp];
 	return self;
 }
 
-- (IBAction)rebuildAddressList:(id)sender
+- (IBAction)
+rebuildAddressList:(id)		sender
 {
 #pragma unused(sender)
 	// find IP addresses and store them in the bound array

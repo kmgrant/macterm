@@ -70,7 +70,8 @@ CommandLine_Display ()
 
 @implementation CommandLine_HistoryDataSource
 
-- (id)init
+- (id)
+init
 {
 	self = [super init];
 	// arrays grow automatically, this is just an initial size
@@ -78,41 +79,51 @@ CommandLine_Display ()
 	return self;
 }
 
-- (NSMutableArray*)historyArray
-{
-	return _commandHistoryArray;
-}
-
-- (int)numberOfItemsInComboBox:(NSComboBox*)aComboBox
-{
-#pragma unused(aComboBox)
-	return [_commandHistoryArray count];
-}
-
-- (id)comboBox:(NSComboBox*)aComboBox objectValueForItemAtIndex:(int)index
-{
-#pragma unused(aComboBox)
-	return [_commandHistoryArray objectAtIndex:index];
-}
-
-- (unsigned int)comboBox:(NSComboBox*)aComboBox indexOfItemWithStringValue:(NSString*)string
-{
-#pragma unused(aComboBox)
-	return [_commandHistoryArray indexOfObject:string];
-}
-
-- (NSString*)comboBox:(NSComboBox*)aComboBox completedString:(NSString*)string
+- (NSString*)
+comboBox:(NSComboBox*)			aComboBox
+completedString:(NSString*)		string
 {
 #pragma unused(aComboBox, string)
 	// this combo box does not support completion
 	return nil;
 }
 
+- (unsigned int)
+comboBox:(NSComboBox*)					aComboBox
+indexOfItemWithStringValue:(NSString*)	string
+{
+#pragma unused(aComboBox)
+	return [_commandHistoryArray indexOfObject:string];
+}
+
+- (id)
+comboBox:(NSComboBox*)				aComboBox
+objectValueForItemAtIndex:(int)		index
+{
+#pragma unused(aComboBox)
+	return [_commandHistoryArray objectAtIndex:index];
+}
+
+- (NSMutableArray*)
+historyArray
+{
+	return _commandHistoryArray;
+}
+
+- (int)
+numberOfItemsInComboBox:(NSComboBox*)	aComboBox
+{
+#pragma unused(aComboBox)
+	return [_commandHistoryArray count];
+}
+
 @end // CommandLine_HistoryDataSource
+
 
 @implementation CommandLine_TerminalLikeComboBox
 
-- (void)textDidBeginEditing:(NSNotification*)notification
+- (void)
+textDidBeginEditing:(NSNotification*)	notification
 {
 #pragma unused(notification)
 	NSText*		fieldEditor = [self currentEditor];
@@ -134,10 +145,12 @@ CommandLine_Display ()
 
 @end // CommandLine_TerminalLikeComboBox
 
+
 @implementation CommandLine_PanelController
 
 static CommandLine_PanelController*		gCommandLine_PanelController = nil;
-+ (id)sharedCommandLinePanelController
++ (id)
+sharedCommandLinePanelController
 {
 	if (nil == gCommandLine_PanelController)
 	{
@@ -146,20 +159,23 @@ static CommandLine_PanelController*		gCommandLine_PanelController = nil;
 	return gCommandLine_PanelController;
 }
 
-- (id)init
+- (id)
+init
 {
 	self = [super initWithWindowNibName:@"CommandLineCocoa"];
 	commandLineText = [[NSString alloc] init];
 	return self;
 }
 
-- (IBAction)displayHelp:(id)sender
+- (IBAction)
+displayHelp:(id)	sender
 {
 #pragma unused(sender)
 	(HelpSystem_Result)HelpSystem_DisplayHelpFromKeyPhrase(kHelpSystem_KeyPhraseCommandLine);
 }
 
-- (IBAction)sendText:(id)sender
+- (IBAction)
+sendText:(id)	sender
 {
 #pragma unused(sender)
 	SessionRef		session = SessionFactory_ReturnUserFocusSession();
@@ -178,12 +194,14 @@ static CommandLine_PanelController*		gCommandLine_PanelController = nil;
 	}
 }
 
-- (NSColor*)textColor
+- (NSColor*)
+textColor
 {
 	return [commandLineField textColor];
 }
 
-- (void)windowDidLoad
+- (void)
+windowDidLoad
 {
 	[super windowDidLoad];
 	Preferences_Result	prefsResult = kPreferences_ResultOK;
