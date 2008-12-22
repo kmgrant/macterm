@@ -608,8 +608,12 @@ Clipboard_Contains	(CFStringRef			inUTI,
 Returns true only if the specified pasteboard contains some
 supported type of image data.
 
-This is determined from a cache that polls the system
-periodically to update the Clipboard window, 
+If the given pasteboard has changed, or has never been used
+with this module before, you must first invoke the routine
+Clipboard_SetPasteboardModified(), which will register and
+cache the pasteboard’s properties.  However, this is not
+necessary for the primary pasteboard, as changes to it are
+automatically detected.
 
 For convenience, if you specify nullptr for the source, then
 Clipboard_ReturnPrimaryPasteboard() is used.
@@ -637,11 +641,15 @@ Clipboard_ContainsGraphics	(PasteboardRef		inDataSourceOrNull)
 
 
 /*!
-Returns true only if the specified pasteboard contains some
-supported type of image data.
+Returns true only if the specified pasteboard contains a
+string of text.
 
-This is determined from a cache that polls the system
-periodically to update the Clipboard window, 
+If the given pasteboard has changed, or has never been used
+with this module before, you must first invoke the routine
+Clipboard_SetPasteboardModified(), which will register and
+cache the pasteboard’s properties.  However, this is not
+necessary for the primary pasteboard, as changes to it are
+automatically detected.
 
 For convenience, if you specify nullptr for the source, then
 Clipboard_ReturnPrimaryPasteboard() is used.
