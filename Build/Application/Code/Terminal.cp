@@ -1585,6 +1585,10 @@ Terminal_CopyLineRange	(TerminalScreenRef		inScreen,
 Copies a portion of text from the specified screen into the
 given buffer - excluding trailing whitespace on each line.
 
+DEPRECATED.  See Terminal_GetLine() and Terminal_GetLineRange(),
+which are relatively efficient routines that also return
+ranges of Unicode characters.
+
 IMPORTANT:	This concept is under evaluation.  Probably,
 			most interactions with terminal data are not
 			necessary or, at a minimum, do not require
@@ -2832,13 +2836,14 @@ if the specified row reference is invalid
 (3.1)
 */
 Terminal_Result
-Terminal_GetLine	(TerminalScreenRef		inScreen,
-					 Terminal_LineRef		inRow,
-					 UniChar const*&		outPossibleReferenceStart,
-					 UniChar const*&		outPossibleReferencePastEnd)
+Terminal_GetLine	(TerminalScreenRef			inScreen,
+					 Terminal_LineRef			inRow,
+					 UniChar const*&			outPossibleReferenceStart,
+					 UniChar const*&			outPossibleReferencePastEnd,
+					 Terminal_TextFilterFlags	inFlags)
 {
 	return Terminal_GetLineRange(inScreen, inRow, 0/* first column */, -1/* last column; negative means “very end” */,
-									outPossibleReferenceStart, outPossibleReferencePastEnd);
+									outPossibleReferenceStart, outPossibleReferencePastEnd, inFlags);
 }// GetLine
 
 
@@ -2879,12 +2884,13 @@ if the specified column is out of range and nonnegative
 (3.1)
 */
 Terminal_Result
-Terminal_GetLineRange	(TerminalScreenRef		inScreen,
-						 Terminal_LineRef		inRow,
-						 UInt16					inZeroBasedStartColumn,
-						 SInt16					inZeroBasedPastEndColumnOrNegativeForLastColumn,
-						 UniChar const*&		outReferenceStart,
-						 UniChar const*&		outReferencePastEnd)
+Terminal_GetLineRange	(TerminalScreenRef			inScreen,
+						 Terminal_LineRef			inRow,
+						 UInt16						inZeroBasedStartColumn,
+						 SInt16						inZeroBasedPastEndColumnOrNegativeForLastColumn,
+						 UniChar const*&			outReferenceStart,
+						 UniChar const*&			outReferencePastEnd,
+						 Terminal_TextFilterFlags	inFlags)
 {
 	Terminal_Result			result = kTerminal_ResultParameterError;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inScreen);
@@ -2911,6 +2917,18 @@ Terminal_GetLineRange	(TerminalScreenRef		inScreen,
 		{
 			outReferenceStart = iteratorPtr->rowIterator->textVectorBegin + inZeroBasedStartColumn;
 			outReferencePastEnd = iteratorPtr->rowIterator->textVectorBegin + kPastEndColumn;
+			if (inFlags & kTerminal_TextFilterFlagsNoEndWhitespace)
+			{
+				UniChar const*		lastCharPtr = outReferencePastEnd - 1;
+				
+				
+				// LOCALIZE THIS
+				while ((lastCharPtr != outReferenceStart) && std::isspace(*lastCharPtr))
+				{
+					--lastCharPtr;
+				}
+				outReferencePastEnd = lastCharPtr + 1;
+			}
 			result = kTerminal_ResultOK;
 		}
 	}

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081221',
     '20081219',
     '20081215',
     '20081213',
@@ -199,6 +200,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081221': [
+		'Fixed text Copy to no longer include long streams of blank space at the end of each line.',
+	],
 	'20081219': [
 		'Fixed the insert-line and delete-line sequences of the VT102 emulator.',
 	],

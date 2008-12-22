@@ -254,6 +254,15 @@ enum
 																		//!  new-line appendages in these cases
 };
 
+/*!
+Controls over read-only ranges of text.
+*/
+typedef UInt32 Terminal_TextFilterFlags;
+enum
+{
+	kTerminal_TextFilterFlagsNoEndWhitespace			= (1 << 0)		//!< skip all whitespace characters at the end of lines
+};
+
 #pragma mark Types
 
 #include "TerminalScreenRef.typedef.h"
@@ -477,7 +486,8 @@ Terminal_Result
 	Terminal_GetLine						(TerminalScreenRef			inScreen,
 											 Terminal_LineRef			inRow,
 											 UniChar const*&			outReferenceStart,
-											 UniChar const*&			outReferencePastEnd);
+											 UniChar const*&			outReferencePastEnd,
+											 Terminal_TextFilterFlags	inFlags = 0);
 
 Terminal_Result
 	Terminal_GetLineRange					(TerminalScreenRef			inScreen,
@@ -485,7 +495,8 @@ Terminal_Result
 											 UInt16						inZeroBasedStartColumn,
 											 SInt16						inZeroBasedPastEndColumnOrNegativeForLastColumn,
 											 UniChar const*&			outReferenceStart,
-											 UniChar const*&			outReferencePastEnd);
+											 UniChar const*&			outReferencePastEnd,
+											 Terminal_TextFilterFlags	inFlags = 0);
 
 //@}
 

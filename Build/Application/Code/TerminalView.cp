@@ -8796,7 +8796,7 @@ returnSelectedTextAsNewUnicode	(TerminalViewPtr			inTerminalViewPtr,
 						// first line is anchored at the end (LOCALIZE THIS)
 						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 																kSelectionStart.first, -1/* end column */,
-																textBegin, textPastEnd);
+																textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
 						assert(kTerminal_ResultOK == textGrabResult);
 						
 					}
@@ -8805,14 +8805,14 @@ returnSelectedTextAsNewUnicode	(TerminalViewPtr			inTerminalViewPtr,
 						// last line is anchored at the beginning (LOCALIZE THIS)
 						textGrabResult = Terminal_GetLineRange(inTerminalViewPtr->screen.ref, lineIterator,
 																0/* start column */, kSelectionPastEnd.first,
-																textBegin, textPastEnd);
+																textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
 						assert(kTerminal_ResultOK == textGrabResult);
 					}
 					else
 					{
 						// middle lines span the whole width
 						textGrabResult = Terminal_GetLine(inTerminalViewPtr->screen.ref, lineIterator,
-															textBegin, textPastEnd);
+															textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
 						assert(kTerminal_ResultOK == textGrabResult);
 					}
 				}
