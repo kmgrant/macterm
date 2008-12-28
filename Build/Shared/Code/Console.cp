@@ -365,7 +365,7 @@ Console_WriteValueCFString	(char const*	inLabel,
 	std::ostringstream	s;
 	
 	
-	s << inLabel << " = ";
+	s << inLabel << " = \"";
 	if (inValue != nullptr)
 	{
 		CFStringEncoding const	kEncoding = kCFStringEncodingMacRoman;
@@ -380,6 +380,7 @@ Console_WriteValueCFString	(char const*	inLabel,
 	{
 		s << "<null>";
 	}
+	s << "\"";
 	std::string		sString = s.str();
 	Console_WriteLine(sString.c_str());
 }// Console_WriteValueCFString
