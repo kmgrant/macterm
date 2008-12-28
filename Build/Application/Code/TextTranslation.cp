@@ -249,6 +249,52 @@ TextTranslation_ConvertBufferToNewHandle	(UInt8*			inText,
 
 
 /*!
+This is like CFStringCreateWithBytes(), except on failure it
+will loop up to "inByteMaxBacktrack" times; each time the tail
+of the buffer is reduced by one byte, in an attempt to find a
+proper translation.  (Setting the backtrack to 0 is equivalent
+to calling CFStringCreateWithBytes() directly.)  The number of
+bytes successfully used is returned in "outBytesUsed", though
+this only has meaning if the string result is defined.
+
+This is very useful when a byte stream is a “slice” of a larger
+or infinite stream, since a slice could end with only part of
+an encoded character (e.g. the final byte turns out to be the
+first byte of a multi-byte character, the rest of which is
+missing, which would normally cause the entire translation to
+fail).
+
+IMPORTANT:	It is almost always better to use this routine in
+			place of a call to CFStringCreateWithBytes().
+
+(4.0)
+*/
+CFStringRef
+TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
+											 UInt8 const*			inBytes,
+											 CFIndex				inByteCount,
+											 CFStringEncoding		inEncoding,
+											 Boolean				inIsExternalRepresentation,
+											 CFIndex&				outBytesUsed,
+											 CFIndex				inByteMaxBacktrack)
+{
+	CFStringRef		result = nullptr;
+	
+	
+	// keep trying with smaller buffers until translation succeeds
+	// or too many iterations have occurred
+	outBytesUsed = inByteCount;
+	for (CFIndex i = 0; ((nullptr == result) && (outBytesUsed > 0) && (i < (1 + inByteMaxBacktrack))); ++i)
+	{
+		result = CFStringCreateWithBytes(inAllocator, inBytes, outBytesUsed, inEncoding, inIsExternalRepresentation);
+		if (nullptr == result) --outBytesUsed;
+	}
+	
+	return result;
+}// PersistentCFStringCreate
+
+
+/*!
 Returns the number of character sets that
 TextTranslation_AppendCharacterSetsToMenu()
 would add.

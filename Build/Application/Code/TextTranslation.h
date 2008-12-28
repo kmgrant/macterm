@@ -79,6 +79,15 @@ void
 	TextTranslation_AppendCharacterSetsToMenu	(MenuRef				inToWhichMenu,
 												 UInt16					inIndentationLevel);
 
+CFStringRef
+	TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
+												 UInt8 const*			inBytes,
+												 CFIndex				inByteCount,
+												 CFStringEncoding		inEncoding,
+												 Boolean				inIsExternalRepresentation,
+												 CFIndex&				outBytesUsed,
+												 CFIndex				inByteMaxBacktrack = 6);
+
 // GUARANTEED TO MATCH NUMBER OF ITEMS APPENDED WITH TextTranslation_AppendCharacterSetsToMenu(), ABOVE
 UInt16
 	TextTranslation_ReturnCharacterSetCount		();
