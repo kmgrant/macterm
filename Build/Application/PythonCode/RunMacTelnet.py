@@ -101,11 +101,25 @@ def get_dumb_rendering( char_utf8 ):
 	special meaning.
 	
 	"""
-	result = "<?>"
-	if char_utf8 in string.printable: result = char_utf8
-	elif ord(char_utf8) < ord('@'): result = "^%c" % chr(ord('@') + ord(char_utf8))
-	#elif char_utf8 == chr(27): return "<ESC>"
-	else: result = "<%c>" % ord(char_utf8)
+	result = '<?>' # must use UTF-8 encoding
+	u_obj = unicode(char_utf8, encoding='UTF-8')
+	try:
+		as_ascii = u_obj.decode('ascii')
+		if len(as_ascii) == 0: result = '<0>'
+		elif ord(as_ascii) == 27: result = '<ESC>'
+		# a "proper" control symbol is preferred, but MacTelnet cannot render
+		# higher Unicode characters just yet...
+		#elif ord(as_ascii) < ord(' '): result = "⌃%c" % chr(ord('@') + ord(as_ascii))
+		elif ord(as_ascii) < ord(' '): result = "^%c" % chr(ord('@') + ord(as_ascii))
+		elif (as_ascii in string.printable): result = char_utf8
+		else: result = "<%i>" % ord(as_ascii)
+		print "return", result
+	except UnicodeDecodeError, e:
+		print str(e)
+		result = '<!>'
+	except Exception, e:
+		print str(e)
+		result = '<!>'
 	return result
 Terminal.dumb_strings_init(get_dumb_rendering)
 

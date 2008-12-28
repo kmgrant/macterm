@@ -79,6 +79,7 @@
 #include "Terminal.h"
 #include "TerminalSpeaker.h"
 #include "TerminalView.h"
+#include "TextTranslation.h"
 #include "VTKeys.h"
 
 
@@ -253,10 +254,13 @@ struct My_ScreenBuffer;		// declared here because the callback declarations use 
 Emulator State Determinant Routine
 
 Specifies the next state for the parser, based on the given
-data and/or current state.  The number of characters read
-is returned; this is generally 1, but may be zero or more
-if you used look-ahead to set a more precise next state or
-do not wish to consume any characters.
+data and/or current state.  The number of bytes read is
+returned; this is generally 1, but may be zero or more if
+you used look-ahead to set a more precise next state or do
+not wish to consume any bytes.
+
+The specified buffer should use the default text encoding of
+the given emulator.
 
 WARNING:	The specified buffer is a limited slice of the
 			overall data stream.  It is not guaranteed to
@@ -311,9 +315,12 @@ what the next state should be, this routine *performs an
 action* based on the *current* state.  Some context is given
 (like the previous state), in case this matters to you.
 
-The number of characters read is returned; this is generally
-0, but may be more if you use look-ahead to absorb data (e.g.
-the echo state).
+The specified buffer should use the default text encoding of
+the given screen’s current emulator.
+
+The number of bytes read is returned; this is generally 0, but
+may be more if you use look-ahead to absorb data (e.g. the echo
+state).
 */
 typedef UInt32 (*My_EmulatorStateTransitionProcPtr)	(My_ScreenBuffer*	inDataPtr,
 													 UInt8 const*		inBuffer,
@@ -371,7 +378,7 @@ invokeScreenLineOperationProc	(My_ScreenLineOperationProcPtr	inUserRoutine,
 namespace {
 
 typedef UniChar*								My_TextIterator;
-typedef std::map< UTF8Char, std::string >		My_PrintableByUTF8Char;
+typedef std::map< UniChar, CFRetainRelease >	My_PrintableByUniChar;
 
 typedef std::vector< char >						My_TabStopList;
 typedef std::vector< TerminalTextAttributes >   My_TextAttributesList;
@@ -540,6 +547,7 @@ public:
 	changeTo	(Terminal_Emulator);
 	
 	Terminal_Emulator					primaryType;			//!< VT100, VT220, etc.
+	CFStringEncoding					inputTextEncoding;		//!< specifies the encoding used by the input data stream
 	CFRetainRelease						answerBackCFString;		//!< similar to "primaryType", but can be an arbitrary string
 	My_ParserState						currentState;			//!< state the terminal input parser is in now
 	UInt16								stateRepetitions;		//!< to guard against looping; counts repetitions of same state
@@ -929,7 +937,7 @@ void						clearEscapeSequenceParameters			(My_ScreenBufferPtr);
 void						cursorRestore							(My_ScreenBufferPtr);
 void						cursorSave								(My_ScreenBufferPtr);
 void						cursorWrapIfNecessaryGetLocation		(My_ScreenBufferPtr, SInt16*, My_ScreenRowIndex*);
-void						echoData								(My_ScreenBufferPtr, UInt8 const*, UInt32);
+void						echoCFString							(My_ScreenBufferPtr, CFStringRef);
 void						emulatorFrontEndOld						(My_ScreenBufferPtr, UInt8 const*, SInt32);
 void						eraseRightHalfOfLine					(My_ScreenBufferPtr, My_ScreenBufferLine&);
 Terminal_Result				forEachLineDo							(TerminalScreenRef, Terminal_LineRef, UInt16,
@@ -1013,7 +1021,7 @@ dest_char_seq_iter			whitespaceSensitiveCopy					(src_char_seq_const_iter, src_c
 #pragma mark Variables
 namespace {
 
-My_PrintableByUTF8Char&		gDumbTerminalRenderings ()	{ static My_PrintableByUTF8Char x; return x; }
+My_PrintableByUniChar&		gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
 
 } // anonymous namespace
 
@@ -2605,6 +2613,9 @@ Terminal_FileCaptureInProgress	(TerminalScreenRef		inRef)
 Writes the specified text to the capture file of the
 specified screen.
 
+The data is assumed to use the input text encoding of
+the given screen’s emulator.
+
 This functionality has been re-written in MacTelnet 3.0
 (like so many other god damned things).  This time, the
 impetus was to make file captures safe from buffer
@@ -3737,7 +3748,7 @@ Terminal_SetBellEnabled		(TerminalScreenRef	inRef,
 /*!
 Sets the string that will be printed by a dumb terminal
 (kTerminal_EmulatorDumb) when the specified character is
-to be displayed.
+to be displayed.  The description must be in UTF-8 encoding.
 
 Normally, any character that is considered “printable”
 should be echoed as-is, so this is the default behavior
@@ -3746,10 +3757,18 @@ if no mapping has been given for a printable character.
 (3.1)
 */
 void
-Terminal_SetDumbTerminalRendering	(UTF8Char		inCharacter,
+Terminal_SetDumbTerminalRendering	(UniChar		inCharacter,
 									 char const*	inDescription)
 {
-	gDumbTerminalRenderings()[inCharacter] = inDescription;
+	CFStringRef		descriptionCFString = CFStringCreateWithCString(kCFAllocatorDefault, inDescription, kCFStringEncodingUTF8);
+	
+	
+	if (nullptr == descriptionCFString) Console_WriteLine("warning, unexpected error creating UTF-8 string for description");
+	else
+	{
+		gDumbTerminalRenderings()[inCharacter] = descriptionCFString;
+		CFRelease(descriptionCFString), descriptionCFString = nullptr;
+	}
 }// SetDumbTerminalRendering
 
 
@@ -3840,6 +3859,36 @@ Terminal_SetSpeechEnabled	(TerminalScreenRef	inRef,
 		TerminalSpeaker_SetMuted(dataPtr->speaker, !inIsEnabled);
 	}
 }// SetSpeechEnabled
+
+
+/*!
+Specifies the encoding of text streams read by the terminal
+emulator.  This does *not* indicate the internal buffer
+encoding, which might be Unicode regardless.
+
+\retval kTerminal_ResultOK
+if the encoding is set successfully
+
+\retval kTerminal_ResultInvalidID
+if the given terminal screen reference is invalid
+
+(4.0)
+*/
+Terminal_Result
+Terminal_SetTextEncoding	(TerminalScreenRef		inRef,
+							 CFStringEncoding		inNewEncoding)
+{
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	Terminal_Result		result = kTerminal_ResultInvalidID;
+	
+	
+	if (nullptr != dataPtr)
+	{
+		dataPtr->emulator.inputTextEncoding = inNewEncoding;
+		result = kTerminal_ResultOK;
+	}
+	return result;
+}// SetTextEncoding
 
 
 /*!
@@ -4471,6 +4520,7 @@ My_Emulator		(Terminal_Emulator		inPrimaryEmulation,
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 primaryType(inPrimaryEmulation),
+inputTextEncoding(kCFStringEncodingUTF8),
 answerBackCFString(inAnswerBack),
 currentState(kMy_ParserStateInitial),
 stateRepetitions(0),
@@ -5424,57 +5474,121 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	{
 	case kMy_ParserStateEcho:
 		// echo state, where characters are simply taken at face value
+		if (inLength > 0)
 		{
-			UInt8 const*	bufferIterator = inBuffer;
+			CFIndex				bytesRequired = 0;
+			CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
+													(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
+														false/* is external representation */, bytesRequired),
+													true/* is retained */);
 			
 			
-			// suck up a contiguous block of “printable” characters
-			while ((result < inLength) && (std::isprint(*bufferIterator)))
+			if (false == bufferAsCFString.exists()) Console_WriteLine("warning, unexpected error interpreting terminal data");
+			else
 			{
-				++bufferIterator;
-				++result;
-			}
-			
-			// send the data wherever it needs to go
-			echoData(inDataPtr, inBuffer, result);
-			// 3.0 - test speech (this implementation will be greatly enhanced in the near future
-			unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
-			{
-				Boolean		doSpeak = false;
+				CFIndex const		kLength = CFStringGetLength(bufferAsCFString.returnCFStringRef());
+				assert(kLength > 0);
+				UniChar const*		bufferIterator = nullptr;
+				UniChar const*		bufferPtr = CFStringGetCharactersPtr(bufferAsCFString.returnCFStringRef());
+				UniChar*			deletedBufferPtr = nullptr;
+				CFIndex				numberOfPrintableCharacters = 0;
 				
 				
-				switch (inDataPtr->speech.mode)
+				if (nullptr == bufferPtr)
 				{
-				case kTerminal_SpeechModeSpeakAlways:
-					doSpeak = true;
-					break;
-				
-				case kTerminal_SpeechModeSpeakWhenActive:
-					//doSpeak = IsWindowHilited(the screen window);
-					break;
-				
-				case kTerminal_SpeechModeSpeakWhenInactive:
-					//doSpeak = !IsWindowHilited(the screen window);
-					break;
-				
-				default:
-					doSpeak = false;
-					break;
+					// not ideal, but if the internal buffer is not a Unicode array,
+					// it must be copied before it can be interpreted that way
+					deletedBufferPtr = new UniChar[kLength];
+					CFStringGetCharacters(bufferAsCFString.returnCFStringRef(), CFRangeMake(0, kLength), deletedBufferPtr);
+					bufferPtr = deletedBufferPtr;
 				}
 				
-				if (doSpeak)
+				// suck up a contiguous block of “printable” characters
+				bufferIterator = bufferPtr;
+				while ((numberOfPrintableCharacters < kLength) && (std::isprint(*bufferIterator)/* LOCALIZE THIS */))
 				{
-					TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
+					++bufferIterator;
+					++numberOfPrintableCharacters;
+				}
+				
+				// now it is necessary to determine how many bytes, in the original
+				// encoding, are being “used” by absorbing this many Unicode characters
+				{
+					CFIndex		printableCharactersByteCount = 0;
+					CFIndex		conversionResult = CFStringGetBytes(bufferAsCFString.returnCFStringRef(),
+																	CFRangeMake(0, numberOfPrintableCharacters),
+																	inDataPtr->emulator.inputTextEncoding, 0/* loss byte */,
+																	false/* is external representation */,
+																	nullptr/* buffer, or nullptr to not copy data */,
+																	0/* buffer size, ignored for empty buffers */, &printableCharactersByteCount);
 					
 					
-					// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
-					//             this really should be changed to use speech callbacks instead
-					do
+					if (0 == conversionResult)
 					{
-						// stop and speak when a new line is found, or
-						// when there is just no more room for characters
-						speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
-					} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
+						Console_WriteLine("warning, unexpected error finding actual bytes used by echoed characters; skipping over ALL data");
+						result = inLength;
+					}
+					else
+					{
+						result = printableCharactersByteCount;
+					}
+				}
+				
+				// send the data wherever it needs to go
+				{
+					CFRetainRelease		humanReadableCFString(CFStringCreateWithCharacters(kCFAllocatorDefault,
+																							bufferPtr, numberOfPrintableCharacters),
+																true/* is retained */);
+					
+					
+					echoCFString(inDataPtr, humanReadableCFString.returnCFStringRef());
+				}
+				
+				// 3.0 - test speech (this implementation will be greatly enhanced in the near future
+				unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
+				{
+					Boolean		doSpeak = false;
+					
+					
+					switch (inDataPtr->speech.mode)
+					{
+					case kTerminal_SpeechModeSpeakAlways:
+						doSpeak = true;
+						break;
+					
+					case kTerminal_SpeechModeSpeakWhenActive:
+						//doSpeak = IsWindowHilited(the screen window);
+						break;
+					
+					case kTerminal_SpeechModeSpeakWhenInactive:
+						//doSpeak = !IsWindowHilited(the screen window);
+						break;
+					
+					default:
+						doSpeak = false;
+						break;
+					}
+					
+					if (doSpeak)
+					{
+						TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
+						
+						
+						// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
+						//             this really should be changed to use speech callbacks instead
+						do
+						{
+							// stop and speak when a new line is found, or
+							// when there is just no more room for characters
+							// UNIMPLEMENTED - need to update for use with CFString (use Cocoa, probably)
+							//speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
+						} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
+					}
+				}
+				
+				if (nullptr != deletedBufferPtr)
+				{
+					delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
 				}
 			}
 		}
@@ -5549,34 +5663,68 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	{
 	case kMy_ParserStateEcho:
 		// determine a human-readable description for each character, and print it
+		// (NOTE: it may be useful to have a “really really dumb” terminal variant
+		// that interprets every byte, ignoring text encoding settings...)
+		if (inLength > 0)
 		{
-			UInt8 const*		bufferIterator = inBuffer;
-			std::ostringstream	humanReadableStream;
+			CFIndex				bytesRequired = 0;
+			CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
+													(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
+														false/* is external representation */, bytesRequired),
+													true/* is retained */);
 			
 			
-			// suck up a contiguous block of “non-printable” characters
-			while (result < inLength)
+			if (false == bufferAsCFString.exists()) Console_WriteLine("warning, unexpected error interpreting dumb terminal data");
+			else
 			{
-				if (gDumbTerminalRenderings().end() != gDumbTerminalRenderings().find(*bufferIterator))
-				{
-					// print whatever was registered as the proper rendering
-					humanReadableStream << gDumbTerminalRenderings()[*bufferIterator];
-				}
-				else
-				{
-					// print the ASCII code, e.g. 200 becomes "<200>"
-					humanReadableStream << "<" << STATIC_CAST(*bufferIterator, UInt32) << ">";
-				}
-				++bufferIterator;
-				++result;
-			}
-			
-			// send the data wherever it needs to go
-			{
-				std::string		humanReadable = humanReadableStream.str();
+				CFIndex const		kLength = CFStringGetLength(bufferAsCFString.returnCFStringRef());
+				UniChar const*		bufferIterator = nullptr;
+				UniChar const*		bufferPtr = CFStringGetCharactersPtr(bufferAsCFString.returnCFStringRef());
+				UniChar*			deletedBufferPtr = nullptr;
+				CFRetainRelease		humanReadableCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* maximum length or 0 for no limit */),
+															true/* is retained */);
+				CFIndex				characterIndex = 0;
 				
 				
-				echoData(inDataPtr, REINTERPRET_CAST(humanReadable.c_str(), UInt8 const*), humanReadable.size());
+				// consume only as many bytes as were valid
+				result = bytesRequired;
+				
+				if (nullptr == bufferPtr)
+				{
+					// not ideal, but if the internal buffer is not a Unicode array,
+					// it must be copied before it can be interpreted that way
+					deletedBufferPtr = new UniChar[kLength];
+					CFStringGetCharacters(bufferAsCFString.returnCFStringRef(), CFRangeMake(0, kLength), deletedBufferPtr);
+					bufferPtr = deletedBufferPtr;
+				}
+				
+				// create a printable interpretation of every character
+				bufferIterator = bufferPtr;
+				while (characterIndex < kLength)
+				{
+					if (gDumbTerminalRenderings().end() != gDumbTerminalRenderings().find(*bufferIterator))
+					{
+						// print whatever was registered as the proper rendering
+						CFStringAppend(humanReadableCFString.returnCFMutableStringRef(),
+										gDumbTerminalRenderings()[*bufferIterator].returnCFStringRef());
+					}
+					else
+					{
+						// print the numerical value, e.g. 200 becomes "<200>"
+						CFStringAppendFormat(humanReadableCFString.returnCFMutableStringRef(), nullptr/* format options */,
+												CFSTR("<%u>"), STATIC_CAST(*bufferIterator, unsigned int));
+					}
+					++bufferIterator;
+					++characterIndex;
+				}
+				
+				// send the data wherever it needs to go
+				echoCFString(inDataPtr, humanReadableCFString.returnCFStringRef());
+				
+				if (nullptr != deletedBufferPtr)
+				{
+					delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
+				}
 			}
 		}
 		break;
@@ -5969,12 +6117,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	
 	case kStateControlCANSUB:
 		// abort control sequence (if any) and emit error character
-		{
-			UInt8	errorChar[] = { '?' };
-			
-			
-			echoData(inDataPtr, errorChar, 1/* length */);
-		}
+		echoCFString(inDataPtr, CFSTR("?"));
 		break;
 	
 	case kStateCSI:
@@ -7882,28 +8025,55 @@ cursorWrapIfNecessaryGetLocation	(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Treats the specified block of characters as “verbatim”,
-sending them wherever they need to go (any open print
-jobs or capture files, the terminal, etc.).
+Treats the specified string as “verbatim”, sending the
+characters wherever they need to go (any open print jobs
+or capture files, the terminal, etc.).
 
-(3.1)
+(4.0)
 */
 void
-echoData	(My_ScreenBufferPtr		inDataPtr,
-			 UInt8 const*			inBuffer,
-			 UInt32					inLength)
+echoCFString	(My_ScreenBufferPtr		inDataPtr,
+				 CFStringRef			inString)
 {
+	CFIndex const		kLength = CFStringGetLength(inString);
+	
+	
 	// send to printer, if a job is in progress
 	if (inDataPtr->printing.enabled)
 	{
-		SInt32		bytesToPrintBytesPrinted = inLength;
-		
-		
-		TelnetPrinting_Spool(&inDataPtr->printing, inBuffer, &bytesToPrintBytesPrinted);
+		// spool string to printer temporary file
+		// UNIMPLEMENTED
 	}
 	
 	// append to capture file, if one is open
-	Terminal_FileCaptureWriteData(inDataPtr->selfRef, inBuffer/* data to write */, inLength/* buffer length */);
+	{
+		// TEMPORARY - traditionally file captures have been implicitly encoded;
+		// now that the input is a CFString, its content must be temporarily
+		// back-converted to a regular buffer of bytes for compatibility with
+		// the old API (in the future, the API needs to be updated to, say,
+		// write a text file in UTF-8 format)
+		CFIndex		bytesNeeded = 0;
+		CFIndex		conversionResult = CFStringGetBytes(inString, CFRangeMake(0, kLength),
+														kCFStringEncodingMacRoman, '?'/* loss byte */,
+														true/* is external representation */,
+														nullptr/* buffer; do not use, just find size */, 0/* buffer size, ignored */,
+														&bytesNeeded);
+		
+		
+		if (conversionResult > 0)
+		{
+			UInt8*	buffer = new UInt8[bytesNeeded];
+			
+			
+			conversionResult = CFStringGetBytes(inString, CFRangeMake(0, kLength),
+												kCFStringEncodingMacRoman, '?'/* loss byte */,
+												true/* is external representation */,
+												buffer, bytesNeeded, &bytesNeeded);
+			assert(conversionResult > 0);
+			Terminal_FileCaptureWriteData(inDataPtr->selfRef, buffer, bytesNeeded);
+			delete [] buffer;
+		}
+	}
 	
 	// add each character to the terminal at the current
 	// cursor position, advancing the cursor each time
@@ -7912,14 +8082,25 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 		My_ScreenBufferLineList::iterator	cursorLineIterator;
 		register SInt16						preWriteCursorX = inDataPtr->current.cursorX;
 		register My_ScreenRowIndex			preWriteCursorY = inDataPtr->current.cursorY;
+		UniChar const*						bufferPtr = CFStringGetCharactersPtr(inString);
+		UniChar*							deletedBufferPtr = nullptr;
 		
+		
+		if (nullptr == bufferPtr)
+		{
+			// not ideal, but if the internal buffer is not a Unicode array,
+			// it must be copied before it can be interpreted that way
+			deletedBufferPtr = new UniChar[kLength];
+			CFStringGetCharacters(inString, CFRangeMake(0, kLength), deletedBufferPtr);
+			bufferPtr = deletedBufferPtr;
+		}
 		
 		// WARNING: This is done once here, for efficiency, and is only
 		//          repeated below if the cursor actually moves vertically
 		//          (as evidenced by some moveCursor...() call that would
 		//          affect the cursor row).  Keep this in sync!!!
 		locateCursorLine(inDataPtr, cursorLineIterator);
-		for (UInt8 const* bufferIterator = inBuffer; bufferIterator != (inBuffer + inLength); ++bufferIterator)
+		for (UniChar const* bufferIterator = bufferPtr; bufferIterator != (bufferPtr + kLength); ++bufferIterator)
 		{
 			// debug
 			//Console_WriteValueCharacter("echo", *bufferIterator);
@@ -7989,8 +8170,13 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 			//Console_WriteValuePair("text changed event: add data for #rows, #columns", range.rowCount, range.columnCount);
 			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 		}
+		
+		if (nullptr != deletedBufferPtr)
+		{
+			delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
+		}
 	}
-}// echoData
+}// echoCFString
 
 
 /*!

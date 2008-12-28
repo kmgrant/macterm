@@ -584,7 +584,7 @@ void
 											 Boolean					inIsEnabled);
 
 void
-	Terminal_SetDumbTerminalRendering		(UTF8Char					inCharacter,
+	Terminal_SetDumbTerminalRendering		(UniChar					inCharacter,
 											 char const*				inDescription);
 
 void
@@ -594,6 +594,10 @@ void
 void
 	Terminal_SetSaveLinesOnClear			(TerminalScreenRef			inScreen,
 											 Boolean					inClearScreenSavesLines);
+
+Terminal_Result
+	Terminal_SetTextEncoding				(TerminalScreenRef			inScreen,
+											 CFStringEncoding			inNewEncoding);
 
 Terminal_Result
 	Terminal_UserInputOffsetCursor			(TerminalScreenRef			inScreen,
