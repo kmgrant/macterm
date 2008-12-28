@@ -90,9 +90,6 @@ SRC_APP_PROJ_TOP := $(CURDIR)/Application
 SRC_BUGREPORTER_PROJ_TOP := $(CURDIR)/BugReporter
 SRC_PREFSCONVERTER_PROJ_TOP := $(CURDIR)/PrefsConverter
 
-SRC_APP_BUILD_TOP_LEOPARD := $(SYMROOT)/ForLeopardDebug
-SRC_APP_BUILD_TOP_TIGER := $(SYMROOT)/ForTigerDebug
-SRC_APP_BUILD_TOP_PANTHER := $(SYMROOT)/ForPantherDebug
 SRC_APP_CODE_TOP := $(SRC_APP_PROJ_TOP)/Code
 SRC_APP_PYCODE_TOP := $(SRC_APP_PROJ_TOP)/PythonCode
 SRC_APP_RESOURCES_TOP := $(SRC_APP_PROJ_TOP)/Resources
@@ -102,11 +99,8 @@ SRC_PREFSCONVERTER_BUILD_TOP := $(SYMROOT)/ForDebugging
 SRC_PREFSCONVERTER_TOP := $(SRC_PREFSCONVERTER_BUILD_TOP)/PrefsConverter.app
 SRC_PY_TOP := $(SYMROOT)/$(PY_CONFIG)/PyMacTelnet.framework
 SRC_GROWL_TOP := $(GROWL_SDK_ROOT)/Frameworks/Growl.framework
-SRC_QUILLS_TOP_TIGER := $(SRC_APP_BUILD_TOP_TIGER)/Quills.framework
-SRC_QUILLS_TOP_PANTHER := $(SRC_APP_BUILD_TOP_PANTHER)/Quills.framework
-SRC_SWIG_TOP_LEOPARD := $(SRC_APP_BUILD_TOP_LEOPARD)
-SRC_SWIG_TOP_TIGER := $(SRC_APP_BUILD_TOP_TIGER)
-SRC_SWIG_TOP_PANTHER := $(SRC_APP_BUILD_TOP_PANTHER)
+SRC_QUILLS_TOP_TIGER := $(SYMROOT)/ForTigerDebug/Quills.framework
+SRC_QUILLS_TOP_PANTHER := $(SYMROOT)/ForPantherDebug/Quills.framework
 
 DEST_APP_TOP := $(CURDIR)/MacTelnet.app/Contents
 DEST_APP_FW_TOP := $(DEST_APP_TOP)/Frameworks
@@ -213,7 +207,6 @@ English.lproj/KeypadFullScreen.nib \
 English.lproj/KeypadFunctionKeys.nib \
 English.lproj/KeypadVT220Keys.nib \
 English.lproj/KioskPasswordDialog.nib \
-English.lproj/MacroSetupWindow.nib \
 English.lproj/MainMenuHelp.nib \
 English.lproj/MainMenus.nib \
 English.lproj/MenuForDockIcon.nib \
@@ -239,10 +232,10 @@ $(APP_RESOURCES_BUNDLES) \
 # and not create a redundant destination directory
 $(DEST_APP_RESOURCES_TOP)/%: $(SRC_APP_RESOURCES_TOP)/%
 	$(MKDIR_P) $(dir $@)
-	@if [ -d "$^" ] ; then \
-		$(RSYNC) --archive --exclude=.svn/ $^/ $@ ; \
+	@if [ -d "$<" ] ; then \
+		$(RSYNC) --archive --exclude=.svn/ $</ $@ ; \
 	else \
-		$(RSYNC) --archive --exclude=.svn/ $^ $@ ; \
+		$(RSYNC) --archive --exclude=.svn/ $< $@ ; \
 	fi
 
 #
@@ -289,31 +282,34 @@ endif
 	fi
 	$(RM) -R $(DEST_QUILLS_TOP)
 
-$(SRC_SWIG_TOP_PANTHER)/%.py: $(SWIG_DEPENDENCIES)
+$(SYMROOT)/ForPantherDebug/_Quills.so \
+$(SYMROOT)/ForPantherDebug/Quills.py: $(SWIG_DEPENDENCIES)
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
 
 # reinstalls a SWIG wrapper when it changes
-$(DEST_SWIG_TOP_PANTHER)/%: $(SRC_SWIG_TOP_PANTHER)/%
+$(DEST_SWIG_TOP_PANTHER)/%: $(SYMROOT)/ForPantherDebug/%
 	$(MKDIR_P) $(dir $@)
-	$(COPY) $^ $@
+	$(COPY) $< $@
 
-$(SRC_SWIG_TOP_TIGER)/%.py: $(SWIG_DEPENDENCIES)
+$(SYMROOT)/ForTigerDebug/_Quills.so \
+$(SYMROOT)/ForTigerDebug/Quills.py: $(SWIG_DEPENDENCIES)
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
 
 # reinstalls a SWIG wrapper when it changes
-$(DEST_SWIG_TOP_TIGER)/%: $(SRC_SWIG_TOP_TIGER)/%
+$(DEST_SWIG_TOP_TIGER)/%: $(SYMROOT)/ForTigerDebug/%
 	$(MKDIR_P) $(dir $@)
-	$(COPY) $^ $@
+	$(COPY) $< $@
 
-$(SRC_SWIG_TOP_LEOPARD)/%.py: $(SWIG_DEPENDENCIES)
+$(SYMROOT)/ForLeopardDebug/_Quills.so \
+$(SYMROOT)/ForLeopardDebug/Quills.py: $(SWIG_DEPENDENCIES)
 	@# Python versions are different on each Mac OS, so the lightweight
 	@# SWIG wrapper code *does* have to be compiled for each separately
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForLeopardDebug
 
 # reinstalls a SWIG wrapper when it changes
-$(DEST_SWIG_TOP_LEOPARD)/%: $(SRC_SWIG_TOP_LEOPARD)/%
+$(DEST_SWIG_TOP_LEOPARD)/%: $(SYMROOT)/ForLeopardDebug/%
 	$(MKDIR_P) $(dir $@)
-	$(COPY) $^ $@
+	$(COPY) $< $@
 
 .PHONY: install-swig-wrappers
 install-swig-wrappers: \
@@ -326,14 +322,14 @@ $(LEOPARD_SWIG_WRAPPERS)
 clean-swig-wrappers:
 ifeq ($(strip $(FOR_PANTHER)),yes)
 	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
-	$(RM) $(SRC_SWIG_TOP_PANTHER)/Quills.py
+	$(RM) $(SYMROOT)/ForPantherDebug/Quills.py
 endif
 ifeq ($(strip $(FOR_TIGER)),yes)
 	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
-	$(RM) $(SRC_SWIG_TOP_TIGER)/Quills.py
+	$(RM) $(SYMROOT)/ForTigerDebug/Quills.py
 endif
 	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForLeopardDebug
-	$(RM) $(SRC_SWIG_TOP_LEOPARD)/Quills.py
+	$(RM) $(SYMROOT)/ForLeopardDebug/Quills.py
 	echo '$(PANTHER_SWIG_WRAPPERS) $(PANTHER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
 	-$(RMDIR) $(DEST_SWIG_TOP_PANTHER)
 	echo '$(TIGER_SWIG_WRAPPERS) $(TIGER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
@@ -425,7 +421,7 @@ clean-py-framework
 # reinstalls Python programs when their code changes
 $(DEST_APP_MACOS_TOP)/%: $(SRC_APP_PYCODE_TOP)/%
 	$(MKDIR_P) $(dir $@)
-	$(COPY) $^ $@
+	$(COPY) $< $@
 
 # This rule sets up virtual paths in the bundle that point to (or
 # create wrappers for) interpreter executables.  For more on the
@@ -589,9 +585,9 @@ clean:
 	$(RM) $(DEST_APP_TOP)/Info.plist
 	-$(RMDIR) $(SRC_PREFSCONVERTER_BUILD_TOP)
 	-$(RMDIR) $(SRC_BUGREPORTER_BUILD_TOP)
-	-$(RMDIR) $(SRC_APP_BUILD_TOP_LEOPARD)
-	-$(RMDIR) $(SRC_APP_BUILD_TOP_TIGER)
-	-$(RMDIR) $(SRC_APP_BUILD_TOP_PANTHER)
+	-$(RMDIR) $(SYMROOT)/ForLeopardDebug
+	-$(RMDIR) $(SYMROOT)/ForTigerDebug
+	-$(RMDIR) $(SYMROOT)/ForPantherDebug
 	-$(RMDIR) $(DEST_APP_TOP)
 	-$(RMDIR) $(dir $(DEST_APP_TOP))
 	@echo
