@@ -4235,15 +4235,33 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 													true/* is retained */);
 	char const*			oldMacRomanBufferForQuickDraw = CFStringGetCStringPtr(oldMacRomanBufferCFString.returnCFStringRef(),
 																				kCFStringEncodingMacRoman);
+	UInt8*				deletedBufferPtr = nullptr;
 	
 	
-	if (nullptr != oldMacRomanBufferForQuickDraw)
+	if (nullptr == oldMacRomanBufferForQuickDraw)
+	{
+		// TEMPORARY (convert renderer to Unicode!)
+		// not ideal, but if the internal buffer is not a byte array,
+		// it must be copied before it can be interpreted that way
+		deletedBufferPtr = new UInt8[inCharacterCount];
+		
+		CFIndex		bytesUsed = 0;
+		CFIndex		conversionResult = CFStringGetBytes(oldMacRomanBufferCFString.returnCFStringRef(), CFRangeMake(0, inCharacterCount),
+														kCFStringEncodingMacRoman, '?'/* loss byte */, false/* is external representation */,
+														deletedBufferPtr, inCharacterCount, &bytesUsed);
+		oldMacRomanBufferForQuickDraw = REINTERPRET_CAST(deletedBufferPtr, char*);
+	}
+	
+	if (nullptr == oldMacRomanBufferForQuickDraw)
+	{
+		Console_WriteLine("warning, failed to render entire range because Mac Roman buffer was not found");
+	}
+	else
 	{
 		// draw all of the text, but scan for sub-sections that could be ANSI graphics
 		SInt16		terminalFontID = 0;
 		SInt16		terminalFontSize = 0;
 		Style		terminalFontStyle = normal;
-		PenState	penState;
 		
 		
 		// for better performance on Mac OS X, make the intended drawing area
@@ -4367,6 +4385,11 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 				(OSStatus)HIViewSetNeedsDisplayInRegion(inTerminalViewPtr->contentHIView, gInvalidationScratchRegion(), true);
 			}
 		}
+	}
+	
+	if (nullptr != deletedBufferPtr)
+	{
+		delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
 	}
 }// drawTerminalText
 
