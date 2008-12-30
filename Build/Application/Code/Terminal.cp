@@ -5483,7 +5483,14 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 													true/* is retained */);
 			
 			
-			if (false == bufferAsCFString.exists()) Console_WriteLine("warning, unexpected error interpreting terminal data");
+			if (false == bufferAsCFString.exists())
+			{
+				// SKIP a character; this LOSES DATA, however it is “spin control”; clearly
+				// there was a parsing problem, and if at least one byte is not skipped
+				// the next attempt will simply run into the same issue
+				Console_WriteValueCharacter("warning, unexpected error interpreting terminal data, SKIPPING problematic byte", *inBuffer);
+				result = 1/* number of bytes */;
+			}
 			else
 			{
 				CFIndex const		kLength = CFStringGetLength(bufferAsCFString.returnCFStringRef());
@@ -5674,7 +5681,14 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 													true/* is retained */);
 			
 			
-			if (false == bufferAsCFString.exists()) Console_WriteLine("warning, unexpected error interpreting dumb terminal data");
+			if (false == bufferAsCFString.exists())
+			{
+				// SKIP a character; this LOSES DATA, however it is “spin control”; clearly
+				// there was a parsing problem, and if at least one byte is not skipped
+				// the next attempt will simply run into the same issue
+				Console_WriteValueCharacter("warning, unexpected error interpreting dumb terminal data, SKIPPING problematic byte", *inBuffer);
+				result = 1/* number of bytes */;
+			}
 			else
 			{
 				CFIndex const		kLength = CFStringGetLength(bufferAsCFString.returnCFStringRef());
