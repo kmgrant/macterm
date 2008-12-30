@@ -113,7 +113,6 @@ def get_dumb_rendering( char_utf8 ):
 		elif ord(as_ascii) < ord(' '): result = "^%c" % chr(ord('@') + ord(as_ascii))
 		elif (as_ascii in string.printable): result = char_utf8
 		else: result = "<%i>" % ord(as_ascii)
-		print "return", result
 	except UnicodeDecodeError, e:
 		print str(e)
 		result = '<!>'
