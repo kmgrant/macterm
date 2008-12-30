@@ -987,7 +987,7 @@ inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
 void						tabStopClearAll							(My_ScreenBufferPtr);
 UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr);
 void						tabStopInitialize						(My_ScreenBufferPtr);
-UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar);
+UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TerminalTextAttributes);
 void						vt100AlignmentDisplay					(My_ScreenBufferPtr);
 void						vt100ANSIMode							(My_ScreenBufferPtr);
 void						vt100CursorBackward						(My_ScreenBufferPtr);
@@ -8124,7 +8124,8 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			{
 				bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 			}
-			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *bufferIterator);
+			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *bufferIterator,
+																									inDataPtr->current.attributeBits);
 			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = inDataPtr->current.attributeBits;
 			if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
 			{
@@ -8409,7 +8410,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					{
 						bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 					}
-					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c);
+					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c, attrib);
 					cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = attrib;
 					++c;
 					--ctr;
@@ -10537,11 +10538,18 @@ of the current character set of the specified screen
 (character sets G0 or G1, for VT terminals).  The
 new code is returned, which may be unchanged.
 
-(3.0)
+The attributes are now provided too, which allows
+the internal storage of an original character to be
+more appropriate; e.g. an ASCII-encoded graphics
+character may be stored as the Unicode character
+that has the intended glyph.
+
+(4.0)
 */
 inline UniChar
-translateCharacter	(My_ScreenBufferPtr		inDataPtr,
-					 UniChar				inCharacter)
+translateCharacter	(My_ScreenBufferPtr			inDataPtr,
+					 UniChar					inCharacter,
+					 TerminalTextAttributes		inAttributes)
 {
 	UniChar		result = inCharacter;
 	
@@ -10562,6 +10570,166 @@ translateCharacter	(My_ScreenBufferPtr		inDataPtr,
 		// ???
 		break;
 	}
+	
+	if (inAttributes & kTerminalTextAttributeVTGraphics)
+	{
+		Boolean const	kIsBold = ((inAttributes & 0x00000001) != 0);
+		Boolean const	kVT52 = (false == inDataPtr->modeANSIEnabled);
+		
+		
+		// if text was originally encoded with graphics attributes, internally
+		// store the equivalent Unicode character so that cool stuff like
+		// copy and paste of text will do the right thing (the renderer may
+		// still choose not to rely on Unicode fonts for rendering them);
+		// INCOMPLETE: this might need terminal-emulator-specific code
+		// IMPORTANT: old drawing code currently requires that non-graphical
+		// symbols below (e.g. degrees, plus-minus, etc.) successfully
+		// translate to the Mac Roman encoding
+		switch (inCharacter)
+		{
+		case '`':
+			result = 0x25CA; // filled diamond; using hollow (lozenge) for now, Unicode 0x2666 is better
+			break;
+		
+		case 'a':
+			result = 0x2593; // checkerboard
+			break;
+		
+		case 'b':
+			result = 0x21E5; // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+			break;
+		
+		case 'c':
+			result = 0x21DF; // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+			break;
+		
+		case 'd':
+			result = 0x2190; // carriage return (international symbol is an arrow pointing right to left)
+			break;
+		
+		case 'e':
+			result = 0x2193; // line feed (international symbol is an arrow pointing top to bottom)
+			break;
+		
+		case 'f':
+			result = 0x00B0; // degrees (same in VT52)
+			break;
+		
+		case 'g':
+			result = 0x00B1; // plus or minus (same in VT52)
+			break;
+		
+		case 'h':
+			result = 0x21B5; // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+			break;
+		
+		case 'i':
+			result = 0x2913; // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+			break;
+		
+		case 'j':
+			if (kVT52)
+			{
+				result = 0x00F7; // division
+			}
+			else
+			{
+				result = (kIsBold) ? 0x251B : 0x2518; // hook mid-top to mid-left
+			}
+			break;
+		
+		case 'k':
+			result = (kIsBold) ? 0x2513 : 0x2510; // hook mid-left to mid-bottom
+			break;
+		
+		case 'l':
+			result = (kIsBold) ? 0x250F : 0x250C; // hook mid-right to mid-bottom
+			break;
+		
+		case 'm':
+			result = (kIsBold) ? 0x2517 : 0x2514; // hook mid-top to mid-right
+			break;
+		
+		case 'n':
+			result = (kIsBold) ? 0x254B : 0x253C; // cross
+			break;
+		
+		case 'o':
+			result = 0x23BA; // top line
+			break;
+		
+		case 'p':
+			result = 0x23BB; // line between top and middle regions
+			break;
+		
+		case 'q':
+			result = (kIsBold) ? 0x2501 : 0x2500; // middle line
+			break;
+		
+		case 'r':
+			result = 0x23BC; // line between middle and bottom regions
+			break;
+		
+		case 's':
+			result = 0x23BD; // bottom line
+			break;
+		
+		case 't':
+			result = (kIsBold) ? 0x2523 : 0x251C; // cross minus the left piece
+			break;
+		
+		case 'u':
+			result = (kIsBold) ? 0x252B : 0x2524; // cross minus the right piece
+			break;
+		
+		case 'v':
+			result = (kIsBold) ? 0x253B : 0x2534; // cross minus the bottom piece
+			break;
+		
+		case 'w':
+			result = (kIsBold) ? 0x2533 : 0x252C; // cross minus the top piece
+			break;
+		
+		case 'x':
+			result = (kIsBold) ? 0x2503 : 0x2502; // vertical line
+			break;
+		
+		case 'y':
+			result = 0x2264; // less than or equal to
+			break;
+		
+		case 'z':
+			result = 0x2265; // greater than or equal to
+			break;
+		
+		case '{':
+			result = 0x03C0; // pi
+			break;
+		
+		case '|':
+			result = 0x2260; // not equal to
+			break;
+		
+		case '}':
+			result = 0x00A3; // British pounds (currency) symbol
+			break;
+		
+		case '~':
+			if (kVT52)
+			{
+				result = 0x00B6; // pilcrow (paragraph) sign
+			}
+			else
+			{
+				result = 0x2027; // centered dot
+			}
+			break;
+		
+		default:
+			break;
+		}
+	}
+	
 	return result;
 }// translateCharacter
 

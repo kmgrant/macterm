@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081229',
     '20081221',
     '20081219',
     '20081215',
@@ -200,6 +201,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081229': [
+		'Internal changes to improve support for arbitrary text encodings.',
+		'The Copy command now produces an accurate Unicode equivalent when text selections have VT graphics characters.',
+	],
 	'20081221': [
 		'Fixed text Copy to no longer include long streams of blank space at the end of each line.',
 	],

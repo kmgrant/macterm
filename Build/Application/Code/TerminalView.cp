@@ -339,7 +339,7 @@ static void				drawTerminalScreenRunOp			(TerminalScreenRef, UniChar const*, UIn
 														 UInt16, TerminalTextAttributes, void*);
 static void				drawTerminalText				(TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, UniChar const*, CFIndex,
 														 TerminalTextAttributes);
-static void				drawVTGraphicsGlyph				(TerminalViewPtr, CGContextRef, Rect const*, UniChar, Boolean);
+static void				drawVTGraphicsGlyph				(TerminalViewPtr, CGContextRef, Rect const*, UniChar, char, Boolean);
 static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 static void				eventNotifyForView				(TerminalViewConstPtr, TerminalView_Event, void*);
 static Terminal_LineRef	findRowIterator					(TerminalViewPtr, UInt16);
@@ -426,8 +426,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	Boolean						gApplicationIsSuspended = false;
 	Boolean						gTerminalViewInitialized = false;
 	TerminalViewPtrLocker&		gTerminalViewPtrLocks ()				{ static TerminalViewPtrLocker x; return x; }
-	std::map< UniChar, UInt8 >&	gUnicodeToVT52GraphicsCharacterMap ()	{ static std::map< UniChar, UInt8 > x; return x; }
-	std::map< UniChar, UInt8 >&	gUnicodeToVT100GraphicsCharacterMap ()	{ static std::map< UniChar, UInt8 > x; return x; }
 	DragSendDataUPP				gTerminalViewDragSendUPP ()				{ static DragSendDataUPP x = NewDragSendDataUPP(supplyTextSelectionToDrag); return x; }
 	RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = Memory_NewRegion(); assert(nullptr != x); return x; }
 }
@@ -513,32 +511,6 @@ TerminalView_Init ()
 											GetEventTypeCount(whenHIObjectEventOccurs), whenHIObjectEventOccurs,
 											nullptr/* constructor data */, &gTerminalTextViewHIObjectClassRef);
 		assert_noerr(error);
-	}
-	
-	// set up mappings between VT graphics ASCII characters and special
-	// symbols to Mac Roman (what is currently used for rendering);
-	// (TEMPORARY: this mapping will not be necessary once the renderer
-	// and backing store both use Unicode directly)
-	{
-		UInt16		mappingCount = 0;
-		
-		
-		mappingCount = 0;
-		gUnicodeToVT52GraphicsCharacterMap()['f'] = '\x00a1'; ++mappingCount; // degrees
-		gUnicodeToVT52GraphicsCharacterMap()['g'] = '\x00b1'; ++mappingCount; // plus or minus
-		gUnicodeToVT52GraphicsCharacterMap()['j'] = '\x00d6'; ++mappingCount; // division
-		gUnicodeToVT52GraphicsCharacterMap()['~'] = '\x00a6'; ++mappingCount; // paragraph/pilcrow
-		assert(gUnicodeToVT52GraphicsCharacterMap().size() == mappingCount); // MUST MATCH NUMBER OF CREATED MAP ENTRIES ABOVE
-		mappingCount = 0;
-		gUnicodeToVT100GraphicsCharacterMap()['`'] = '\x00d7'; ++mappingCount; // filled diamond; using hollow (lozenge) for now, Unicode 0x2666 is better
-		gUnicodeToVT100GraphicsCharacterMap()['f'] = '\x00a1'; ++mappingCount; // degrees
-		gUnicodeToVT100GraphicsCharacterMap()['g'] = '\x00b1'; ++mappingCount; // plus or minus
-		gUnicodeToVT100GraphicsCharacterMap()['y'] = '\x00b2'; ++mappingCount; // less than or equal to
-		gUnicodeToVT100GraphicsCharacterMap()['z'] = '\x00b3'; ++mappingCount; // greater than or equal to
-		gUnicodeToVT100GraphicsCharacterMap()['{'] = '\x00b9'; ++mappingCount; // pi
-		gUnicodeToVT100GraphicsCharacterMap()['|'] = '\x00ad'; ++mappingCount; // not equal to
-		gUnicodeToVT100GraphicsCharacterMap()['}'] = '\x00a3'; ++mappingCount; // British pounds (currency) symbol
-		assert(gUnicodeToVT100GraphicsCharacterMap().size() == mappingCount); // MUST MATCH NUMBER OF CREATED MAP ENTRIES ABOVE
 	}
 	
 	// set up a callback to receive interesting events
@@ -4249,7 +4221,10 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 		CFIndex		conversionResult = CFStringGetBytes(oldMacRomanBufferCFString.returnCFStringRef(), CFRangeMake(0, inCharacterCount),
 														kCFStringEncodingMacRoman, '?'/* loss byte */, false/* is external representation */,
 														deletedBufferPtr, inCharacterCount, &bytesUsed);
-		oldMacRomanBufferForQuickDraw = REINTERPRET_CAST(deletedBufferPtr, char*);
+		if (conversionResult > 0)
+		{
+			oldMacRomanBufferForQuickDraw = REINTERPRET_CAST(deletedBufferPtr, char*);
+		}
 	}
 	
 	if (nullptr == oldMacRomanBufferForQuickDraw)
@@ -4329,7 +4304,8 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 				{
 					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i], true/* is double width */);
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i],
+										oldMacRomanBufferForQuickDraw[i], true/* is double width */);
 				}
 				else
 				{
@@ -4354,7 +4330,8 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 				if (terminalFontID == kArbitraryVTGraphicsPseudoFontID)
 				{
 					// draw a graphics character
-					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i], false/* is double width */);
+					drawVTGraphicsGlyph(inTerminalViewPtr, inDrawingContext, &inOldQuickDrawBoundaries, inTextBufferPtr[i],
+										oldMacRomanBufferForQuickDraw[i], false/* is double width */);
 				}
 				else
 				{
@@ -4401,6 +4378,11 @@ where a font character would be inserted.  All other
 text-related aspects of the specified port are used to
 affect graphics (such as the presence of a bold face).
 
+The specified Unicode character is redundantly specified
+as a pre-translated Mac Roman character (or some loss
+byte if none is appropriate), for the TEMPORARY use of
+old drawing code that must use QuickDraw.
+
 Due to the difficulty of creating vector-based fonts
 that line graphics up properly, and the lousy look
 of scaled-up bitmapped fonts, MacTelnet renders most
@@ -4416,6 +4398,7 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 						 CGContextRef		inDrawingContext,
 						 Rect const*		inBoundaries,
 						 UniChar			inUnicode,
+						 char				inMacRomanForQuickDraw, // DEPRECATED
 						 Boolean			inIsDoubleWidth)
 {
 	Rect		cellRect;
@@ -4472,227 +4455,226 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 	SetPt(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
 			cellTop + INTEGER_HALVED(cellBottom - cellTop));
 	
-	if (gUnicodeToVT100GraphicsCharacterMap().end() !=
-		gUnicodeToVT100GraphicsCharacterMap().find(inUnicode))
+	switch (inUnicode)
 	{
-		// this is in Mac Roman encoding
-		UInt8	buffer[] = { gUnicodeToVT100GraphicsCharacterMap()[inUnicode] };
-		
-		
-		DrawText(buffer, 0/* offset */, sizeof(buffer)); // draw text using current font, size, color, etc.
-	}
-	else
-	{
-		switch (inUnicode)
+	case 0x2593: // checkerboard
 		{
-		case 'a': // checkerboard
-			{
-				PenState	penState;
-				Pattern		checkerPat = { { 0x33, 0x33, 0xCC, 0xCC, 0x33, 0x33, 0xCC, 0xCC } }; // “fat” checkboard pattern
-				
-				
-				GetPenState(&penState);
-				PenPat(&checkerPat);
-				PaintRect(&cellRect);
-				SetPenState(&penState);
-			}
-			break;
-		
-		case 'b': // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
-			// draw horizontal line
-			MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-			LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-			// draw top part of arrowhead
-			LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
-					cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			// draw bottom part of arrowhead
-			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-			LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
-					cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-			// draw end line
-			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			LineTo(cellRight - lineWidth/* break from adjacent characters */, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-			break;
-		
-		case 'c': // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
-			// draw vertical line
-			MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-			LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-			// draw top part of arrowhead
-			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-			// draw bottom part of arrowhead
-			MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-			// draw lines across arrow
-			MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellCenter.v);
-			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellCenter.v);
-			break;
-		
-		case 'd': // carriage return (international symbol is an arrow pointing right to left)
-			// draw horizontal line
-			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-			LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-			// draw top part of arrowhead
-			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-					cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			// draw bottom part of arrowhead
-			MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-					cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-			break;
-		
-		case 'e': // line feed (international symbol is an arrow pointing top to bottom)
-			// draw vertical line
-			MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-			LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-			// draw top part of arrowhead
-			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-			// draw bottom part of arrowhead
-			MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-			break;
-		
-		case 'h': // new line (international symbol is an arrow that hooks from mid-top to mid-left)
-			// draw vertical component
-			MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop);
-			LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
-			// draw horizontal component
-			LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-			// draw top part of arrowhead
-			LineTo(cellCenter.h, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			// draw bottom part of arrowhead
-			MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
-			LineTo(cellCenter.h, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
-			break;
-		
-		case 'i': // vertical tab (international symbol is a down-pointing arrow with a terminating line)
-			// draw vertical line
-			MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
-			LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-			// draw top part of arrowhead
-			LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
-					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-			// draw bottom part of arrowhead
-			MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
-			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-					cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
-			// draw end line
-			MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellBottom - lineHeight/* break from adjacent characters */);
-			LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
-					cellBottom - lineHeight/* break from adjacent characters */);
-			break;
-		
-		case 'j': // hook mid-top to mid-left
-			MoveTo(cellLeft, cellCenter.v);
-			LineTo(cellCenter.h, cellCenter.v);
-			LineTo(cellCenter.h, cellTop);
-			break;
-		
-		case 'k': // hook mid-left to mid-bottom
-			MoveTo(cellLeft, cellCenter.v);
-			LineTo(cellCenter.h, cellCenter.v);
-			LineTo(cellCenter.h, cellBottom);
-			break;
-		
-		case 'l': // hook mid-right to mid-bottom
-			MoveTo(cellRight, cellCenter.v);
-			LineTo(cellCenter.h, cellCenter.v);
-			LineTo(cellCenter.h, cellBottom);
-			break;
-		
-		case 'm': // hook mid-top to mid-right
-			MoveTo(cellCenter.h, cellTop);
-			LineTo(cellCenter.h, cellCenter.v);
-			LineTo(cellRight, cellCenter.v);
-			break;
-		
-		case 'n': // cross
-			MoveTo(cellCenter.h, cellTop);
-			LineTo(cellCenter.h, cellBottom);
-			MoveTo(cellLeft, cellCenter.v);
-			LineTo(cellRight, cellCenter.v);
-			break;
-		
-		case 'o': // top line
-			MoveTo(cellLeft, cellTop);
-			LineTo(cellRight, cellTop);
-			break;
-		
-		case 'p': // line between top and middle regions
-			MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			LineTo(cellRight, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-			break;
-		
-		case 'q': // middle line
-			MoveTo(cellLeft, cellCenter.v);
-			LineTo(cellRight, cellCenter.v);
-			break;
-		
-		case 'r': // line between middle and bottom regions
-			MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
-			LineTo(cellRight, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
-			break;
-		
-		case 's': // bottom line
-			MoveTo(cellLeft, cellBottom - lineHeight);
-			LineTo(cellRight, cellBottom - lineHeight);
-			break;
-		
-		case 't': // cross minus the left piece
-			MoveTo(cellCenter.h, cellTop);
-			LineTo(cellCenter.h, cellBottom);
-			MoveTo(cellCenter.h, cellCenter.v);
-			LineTo(cellRight, cellCenter.v);
-			break;
-		
-		case 'u': // cross minus the right piece
-			MoveTo(cellCenter.h, cellTop);
-			LineTo(cellCenter.h, cellBottom);
-			MoveTo(cellLeft, cellCenter.v);
-			LineTo(cellCenter.h, cellCenter.v);
-			break;
-		
-		case 'v': // cross minus the bottom piece
-			MoveTo(cellCenter.h, cellTop);
-			LineTo(cellCenter.h, cellCenter.v);
-			MoveTo(cellLeft, cellCenter.v);
-			LineTo(cellRight, cellCenter.v);
-			break;
-		
-		case 'w': // cross minus the top piece
-			MoveTo(cellCenter.h, cellCenter.v);
-			LineTo(cellCenter.h, cellBottom);
-			MoveTo(cellLeft, cellCenter.v);
-			LineTo(cellRight, cellCenter.v);
-			break;
-		
-		case 'x': // vertical line
-			MoveTo(cellCenter.h, cellTop);
-			LineTo(cellCenter.h, cellBottom);
-			break;
-		
-		case '~': // centered dot
-			MoveTo(cellCenter.h, cellCenter.v);
-			Line(0, 0);
-			break;
-		
-		default:
-			// non-graphics character
-			{
-				// this is in Mac Roman encoding
-				UInt8	text[] = { STATIC_CAST(inUnicode, UInt8) };
-				
-				
-				DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
-			}
-			break;
+			PenState	penState;
+			Pattern		checkerPat = { { 0x33, 0x33, 0xCC, 0xCC, 0x33, 0x33, 0xCC, 0xCC } }; // “fat” checkboard pattern
+			
+			
+			GetPenState(&penState);
+			PenPat(&checkerPat);
+			PaintRect(&cellRect);
+			SetPenState(&penState);
 		}
+		break;
+	
+	case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+		// draw horizontal line
+		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+		// draw top part of arrowhead
+		LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
+				cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		// draw bottom part of arrowhead
+		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+		LineTo(cellCenter.h + INTEGER_HALVED(cellRight - cellCenter.h),
+				cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+		// draw end line
+		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+		break;
+	
+	case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+		// draw vertical line
+		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
+		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+		// draw top part of arrowhead
+		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		// draw bottom part of arrowhead
+		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		// draw lines across arrow
+		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellCenter.v);
+		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h), cellCenter.v);
+		break;
+	
+	case 0x2190: // carriage return (international symbol is an arrow pointing right to left)
+		// draw horizontal line
+		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+		LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+		// draw top part of arrowhead
+		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+				cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		// draw bottom part of arrowhead
+		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+				cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+		break;
+	
+	case 0x2193: // line feed (international symbol is an arrow pointing top to bottom)
+		// draw vertical line
+		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
+		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+		// draw top part of arrowhead
+		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		// draw bottom part of arrowhead
+		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		break;
+	
+	case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+		// draw vertical component
+		MoveTo(cellRight - lineWidth/* break from adjacent characters */, cellTop);
+		LineTo(cellRight - lineWidth/* break from adjacent characters */, cellCenter.v);
+		// draw horizontal component
+		LineTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+		// draw top part of arrowhead
+		LineTo(cellCenter.h, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		// draw bottom part of arrowhead
+		MoveTo(cellLeft + lineWidth/* break from adjacent characters */, cellCenter.v);
+		LineTo(cellCenter.h, cellBottom - INTEGER_HALVED(cellBottom - cellCenter.v));
+		break;
+	
+	case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+		// draw vertical line
+		MoveTo(cellCenter.h, cellTop + lineHeight/* break from adjacent characters */);
+		LineTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+		// draw top part of arrowhead
+		LineTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft),
+				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		// draw bottom part of arrowhead
+		MoveTo(cellCenter.h, cellBottom - lineHeight/* break from adjacent characters */);
+		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+				cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		// draw end line
+		MoveTo(cellLeft + INTEGER_HALVED(cellCenter.h - cellLeft), cellBottom - lineHeight/* break from adjacent characters */);
+		LineTo(cellRight - INTEGER_HALVED(cellRight - cellCenter.h),
+				cellBottom - lineHeight/* break from adjacent characters */);
+		break;
+	
+	case 0x2518: // hook mid-top to mid-left
+	case 0x251B: // bold version
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellCenter.h, cellCenter.v);
+		LineTo(cellCenter.h, cellTop);
+		break;
+	
+	case 0x2510: // hook mid-left to mid-bottom
+	case 0x2513: // bold version
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellCenter.h, cellCenter.v);
+		LineTo(cellCenter.h, cellBottom);
+		break;
+	
+	case 0x250C: // hook mid-right to mid-bottom
+	case 0x250F: // bold version
+		MoveTo(cellRight, cellCenter.v);
+		LineTo(cellCenter.h, cellCenter.v);
+		LineTo(cellCenter.h, cellBottom);
+		break;
+	
+	case 0x2514: // hook mid-top to mid-right
+	case 0x2517: // bold version
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellCenter.v);
+		LineTo(cellRight, cellCenter.v);
+		break;
+	
+	case 0x253C: // cross
+	case 0x254B: // bold version
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellBottom);
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellRight, cellCenter.v);
+		break;
+	
+	case 0x23BA: // top line
+		MoveTo(cellLeft, cellTop);
+		LineTo(cellRight, cellTop);
+		break;
+	
+	case 0x23BB: // line between top and middle regions
+		MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		LineTo(cellRight, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		break;
+	
+	case 0x2500: // middle line
+	case 0x2501: // bold version
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellRight, cellCenter.v);
+		break;
+	
+	case 0x23BC: // line between middle and bottom regions
+		MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
+		LineTo(cellRight, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
+		break;
+	
+	case 0x23BD: // bottom line
+		MoveTo(cellLeft, cellBottom - lineHeight);
+		LineTo(cellRight, cellBottom - lineHeight);
+		break;
+	
+	case 0x251C: // cross minus the left piece
+	case 0x2523: // bold version
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellBottom);
+		MoveTo(cellCenter.h, cellCenter.v);
+		LineTo(cellRight, cellCenter.v);
+		break;
+	
+	case 0x2524: // cross minus the right piece
+	case 0x252B: // bold version
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellBottom);
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellCenter.h, cellCenter.v);
+		break;
+	
+	case 0x2534: // cross minus the bottom piece
+	case 0x253B: // bold version
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellCenter.v);
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellRight, cellCenter.v);
+		break;
+	
+	case 0x252C: // cross minus the top piece
+	case 0x2533: // bold version
+		MoveTo(cellCenter.h, cellCenter.v);
+		LineTo(cellCenter.h, cellBottom);
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellRight, cellCenter.v);
+		break;
+	
+	case 0x2502: // vertical line
+	case 0x2503: // bold version
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellBottom);
+		break;
+	
+	case 0x2027: // centered dot
+		MoveTo(cellCenter.h, cellCenter.v);
+		Line(0, 0);
+		break;
+	
+	default:
+		// non-graphics character
+		{
+			// this is in Mac Roman encoding
+			UInt8	text[] = { inMacRomanForQuickDraw };
+			
+			
+			DrawText(text, 0/* offset */, 1/* character count */); // draw text using current font, size, color, etc.
+		}
+		break;
 	}
 	
 	// restore font
