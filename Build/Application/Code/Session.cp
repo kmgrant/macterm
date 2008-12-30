@@ -3864,10 +3864,15 @@ Session_UserInputCFString	(SessionRef		inRef,
 		try
 		{
 			SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-			char*				stringBuffer = new char[1 + CFStringGetLength(inStringBuffer)];
+			char*				stringBuffer = new char[1 + CFStringGetMaximumSizeForEncoding
+															(CFStringGetLength(inStringBuffer), ptr->writeEncoding)];
 			
 			
-			if (CFStringGetCString(inStringBuffer, stringBuffer, sizeof(stringBuffer), ptr->writeEncoding))
+			if (false == CFStringGetCString(inStringBuffer, stringBuffer, sizeof(stringBuffer), ptr->writeEncoding))
+			{
+				Console_WriteLine("warning, text cannot be converted into the encoding used by this terminal");
+			}
+			else
 			{
 				Session_TerminalWriteCString(inRef, stringBuffer);
 			}
@@ -5750,28 +5755,36 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 				case kEventControlDragEnter:
 					// entry point for a new drag in this view
 					{
-						Boolean		acceptDrag = false;
-						UInt16		numberOfItems = 0;
+						PasteboardRef	dragPasteboard = nullptr;
+						Boolean			acceptDrag = false;
 						
 						
-						// figure out if this drag can be accepted
-						if (noErr == CountDragItems(dragRef, &numberOfItems))
+						result = GetDragPasteboard(dragRef, &dragPasteboard);
+						if (noErr == result)
 						{
 							Boolean		haveSingleFile = false;
 							Boolean		haveText = false;
+							UInt16		numberOfItems = 0;
 							
 							
-							// check to see if exactly one file is being dragged
-							if (1 == numberOfItems)
+							// read and cache information about this pasteboard
+							Clipboard_SetPasteboardModified(dragPasteboard);
+							
+							// figure out if this drag can be accepted
+							if (noErr == CountDragItems(dragRef, &numberOfItems))
 							{
-								FlavorFlags		flavorFlags = 0L;
-								ItemReference	dragItem = 0;
-								
-								
-								GetDragItemReferenceNumber(dragRef, 1/* index */, &dragItem);
-								if (noErr == GetFlavorFlags(dragRef, dragItem, kDragFlavorTypeHFS, &flavorFlags))
+								// check to see if exactly one file is being dragged
+								if (1 == numberOfItems)
 								{
-									haveSingleFile = true;
+									FlavorFlags		flavorFlags = 0L;
+									ItemReference	dragItem = 0;
+									
+									
+									GetDragItemReferenceNumber(dragRef, 1/* index */, &dragItem);
+									if (noErr == GetFlavorFlags(dragRef, dragItem, kDragFlavorTypeHFS, &flavorFlags))
+									{
+										haveSingleFile = true;
+									}
 								}
 							}
 							
@@ -5780,58 +5793,37 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 							// accepted)
 							unless (haveSingleFile)
 							{
-								UInt16		oneBasedIndexIntoDragItemList = 0;
-								
-								
-								haveText = true; // initially...
-								for (oneBasedIndexIntoDragItemList = 1;
-										oneBasedIndexIntoDragItemList <= numberOfItems;
-										++oneBasedIndexIntoDragItemList)
-								{
-									FlavorFlags		flavorFlags = 0L;
-									ItemReference	dragItem = 0;
-									
-									
-									GetDragItemReferenceNumber(dragRef, oneBasedIndexIntoDragItemList, &dragItem);
-									
-									// determine if this is a text item
-									if (GetFlavorFlags(dragRef, dragItem, kDragFlavorTypeMacRomanText, &flavorFlags)
-										!= noErr)
-									{
-										haveText = false;
-										break;
-									}
-								}
+								haveText = Clipboard_ContainsText(dragPasteboard);
 							}
 							
 							// determine rules for accepting the drag
 							acceptDrag = ((haveText) || (haveSingleFile));
-							
-							// if the window is inactive, start a hover timer to auto-activate the window
-							if ((acceptDrag) && (false == IsWindowActive(TerminalWindow_ReturnWindow(ptr->terminalWindow))))
-							{
-								(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-																kEventDurationSecond/* arbitrary */,
-																kEventDurationForever/* time between fires - this timer does not repeat */,
-																ptr->autoActivateDragTimerUPP, ptr->selfRef/* user data */,
-																&ptr->autoActivateDragTimer);
-							}
-							
-						#if 0
-							// if the drag can be accepted, remind the user where the cursor is
-							// (as any drop will be sent to that location, not the mouse location)
-							if (acceptDrag)
-							{
-								TerminalView_ZoomToCursor(TerminalWindow_ReturnViewWithFocus
-															(Session_ReturnActiveTerminalWindow(session)),
-															true/* quick animation */);
-							}
-						#endif
-							
-							// finally, update the event!
-							result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
-														typeBoolean, sizeof(acceptDrag), &acceptDrag);
 						}
+						
+						// if the window is inactive, start a hover timer to auto-activate the window
+						if ((acceptDrag) && (false == IsWindowActive(TerminalWindow_ReturnWindow(ptr->terminalWindow))))
+						{
+							(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
+															kEventDurationSecond/* arbitrary */,
+															kEventDurationForever/* time between fires - this timer does not repeat */,
+															ptr->autoActivateDragTimerUPP, ptr->selfRef/* user data */,
+															&ptr->autoActivateDragTimer);
+						}
+						
+					#if 0
+						// if the drag can be accepted, remind the user where the cursor is
+						// (as any drop will be sent to that location, not the mouse location)
+						if (acceptDrag)
+						{
+							TerminalView_ZoomToCursor(TerminalWindow_ReturnViewWithFocus
+														(Session_ReturnActiveTerminalWindow(session)),
+														true/* quick animation */);
+						}
+					#endif
+						
+						// finally, update the event!
+						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
+													typeBoolean, sizeof(acceptDrag), &acceptDrag);
 					}
 					break;
 				
@@ -6590,102 +6582,112 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// is the drop in the terminal area?
 		if (TerminalWindow_EventInside(terminalWindow, inEvent))
 		{
-			Handle		textToInsert = nullptr;
-			Boolean		cursorMovesPriorToDrops = false;
+			PasteboardRef	dragPasteboard = nullptr;
 			
 			
-			// retrieve the text (if text), or construct text (if a file)
-			if (DragAndDrop_DragIsExactlyOneFile(inDrag))
+			result = GetDragPasteboard(inDrag, &dragPasteboard);
+			if (noErr == result)
 			{
-				// file drag; figure out the Unix pathname and insert that as if it were typed
-				HFSFlavor		fileInfo;
-				Size			dataSize = 0;
-				ItemReference	draggedFile = 0;
+				CFStringRef		stringToInsert = nullptr;
+				CFStringRef		stringUTI = nullptr;
+				Handle			textToInsert = nullptr; // TEMPORARY
 				
 				
-				GetDragItemReferenceNumber(inDrag, 1/* index */, &draggedFile);
-				result = GetFlavorDataSize(inDrag, draggedFile, kDragFlavorTypeHFS, &dataSize);
-				if (result == noErr)
+				// read and cache information about this pasteboard
+				Clipboard_SetPasteboardModified(dragPasteboard);
+				
+				// retrieve the text (if text), or construct text (if a file)
+				if (DragAndDrop_DragIsExactlyOneFile(inDrag))
 				{
-					Str255		pathname;
+					// file drag; figure out the Unix pathname and insert that as if it were typed
+					HFSFlavor		fileInfo;
+					Size			dataSize = 0;
+					ItemReference	draggedFile = 0;
 					
 					
-					// get the file information
-					dataSize = sizeof(fileInfo);
-					GetFlavorData(inDrag, draggedFile, kDragFlavorTypeHFS, &fileInfo,
-									&dataSize, 0L/* offset */);
-					
-					// construct a POSIX path for the HFS file
-					result = FileUtilities_GetPOSIXPathnameFromFSSpec
-							(&fileInfo.fileSpec, pathname, false/* is directory */);
-					
-					// copy the data into a handle, since that’s what’s used for other text drags
-					if (result != noErr) Console_WriteValue("pathname error", result);
-					else
+					GetDragItemReferenceNumber(inDrag, 1/* index */, &draggedFile);
+					result = GetFlavorDataSize(inDrag, draggedFile, kDragFlavorTypeHFS, &dataSize);
+					if (result == noErr)
 					{
-						// assume the user is running a shell, and escape the pathname
-						// from the shell by surrounding it with apostrophes (the new
-						// buffer must be large enough to hold 2 apostrophes)
-						textToInsert = Memory_NewHandle((2 + PLstrlen(pathname)) * sizeof(unsigned char));
-						if (textToInsert != nullptr)
-						{
-							(*textToInsert)[0] = '\'';
-							BlockMoveData(1 + pathname, 1 + *textToInsert,
-											PLstrlen(pathname) * sizeof(unsigned char));
-							(*textToInsert)[1 + PLstrlen(pathname)] = '\'';
-						}
-						Console_WriteValuePString("dropped path", pathname);
+						Str255		pathname;
 						
-						// success!
-						result = noErr;
+						
+						// get the file information
+						dataSize = sizeof(fileInfo);
+						GetFlavorData(inDrag, draggedFile, kDragFlavorTypeHFS, &fileInfo,
+										&dataSize, 0L/* offset */);
+						
+						// construct a POSIX path for the HFS file
+						result = FileUtilities_GetPOSIXPathnameFromFSSpec
+								(&fileInfo.fileSpec, pathname, false/* is directory */);
+						
+						// copy the data into a handle, since that’s what’s used for other text drags
+						if (result != noErr) Console_WriteValue("pathname error", result);
+						else
+						{
+							// assume the user is running a shell, and escape the pathname
+							// from the shell by surrounding it with apostrophes (the new
+							// buffer must be large enough to hold 2 apostrophes)
+							textToInsert = Memory_NewHandle((2 + PLstrlen(pathname)) * sizeof(unsigned char));
+							if (textToInsert != nullptr)
+							{
+								(*textToInsert)[0] = '\'';
+								BlockMoveData(1 + pathname, 1 + *textToInsert,
+												PLstrlen(pathname) * sizeof(unsigned char));
+								(*textToInsert)[1 + PLstrlen(pathname)] = '\'';
+							}
+							Console_WriteValuePString("dropped path", pathname);
+							
+							// success!
+							result = noErr;
+						}
 					}
 				}
-			}
-			else if (DragAndDrop_DragContainsOnlyTextItems(inDrag))
-			{
-				// text drag; combine all text items and insert the block as if it were typed
-				if (DragAndDrop_GetDraggedTextAsNewHandle(inDrag, &textToInsert) != noErr)
+				else if (Clipboard_ContainsText(dragPasteboard))
 				{
-					textToInsert = nullptr; // invalidate handle
+					// text drag; combine all text items and insert the block as if it were typed
+					(Boolean)Clipboard_CreateCFStringFromPasteboard(stringToInsert, stringUTI, dragPasteboard);
 				}
-			}
-			else
-			{
-				// ???
-				Sound_StandardAlert();
-			}
-			
-			if (textToInsert != nullptr)
-			{
-				size_t	actualSize = 0L;
-				
-				
-				// if the user preference is set, first move the cursor to the drop location
-				unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
-											sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops,
-											&actualSize) == kPreferences_ResultOK)
+				else
 				{
-					cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
-				}
-				if (cursorMovesPriorToDrops)
-				{
-					// move cursor based on the local point
-					TerminalView_MoveCursorWithArrowKeys(TerminalWindow_ReturnViewWithFocus(terminalWindow),
-															mouseLocation);
+					// ???
+					Sound_StandardAlert();
 				}
 				
-				// “type” the text
-				HLock(textToInsert);
+				if (nullptr != stringToInsert)
 				{
-					Session_UserInputString(inRef, *textToInsert, GetHandleSize(textToInsert), false/* record */);
+					Boolean		cursorMovesPriorToDrops = false;
+					size_t		actualSize = 0L;
+					
+					
+					// if the user preference is set, first move the cursor to the drop location
+					unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
+												sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops,
+												&actualSize) == kPreferences_ResultOK)
+					{
+						cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
+					}
+					if (cursorMovesPriorToDrops)
+					{
+						// move cursor based on the local point
+						TerminalView_MoveCursorWithArrowKeys(TerminalWindow_ReturnViewWithFocus(terminalWindow),
+																mouseLocation);
+					}
+					
+					// “type” the text
+					Session_UserInputCFString(inRef, stringToInsert, false/* record */);
 					
 					// success!
 					result = noErr;
+					
+					// clean up
+					CFRelease(stringToInsert), stringToInsert = nullptr;
 				}
-				HUnlock(textToInsert);
 				
-				// clean up
-				Memory_DisposeHandle(&textToInsert);
+				if (nullptr != stringUTI)
+				{
+					CFRelease(stringUTI), stringUTI = nullptr;
+				}
 			}
 		}
 	}

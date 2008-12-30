@@ -408,7 +408,6 @@ static void				setUpCursorBounds				(TerminalViewPtr, SInt16, SInt16, Rect*,
 static void				setUpCursorGhost				(TerminalViewPtr, Point);
 static void				setUpScreenFontMetrics			(TerminalViewPtr);
 static void				sortAnchors						(TerminalView_Cell&, TerminalView_Cell&, Boolean);
-static pascal OSErr		supplyTextSelectionToDrag		(FlavorType, void*, DragItemRef, DragRef);
 static void				trackTextSelection				(TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
 static void				useTerminalTextAttributes		(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
 static void				useTerminalTextColors			(TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
@@ -426,7 +425,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	Boolean						gApplicationIsSuspended = false;
 	Boolean						gTerminalViewInitialized = false;
 	TerminalViewPtrLocker&		gTerminalViewPtrLocks ()				{ static TerminalViewPtrLocker x; return x; }
-	DragSendDataUPP				gTerminalViewDragSendUPP ()				{ static DragSendDataUPP x = NewDragSendDataUPP(supplyTextSelectionToDrag); return x; }
 	RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = Memory_NewRegion(); assert(nullptr != x); return x; }
 }
 
@@ -3874,34 +3872,28 @@ dragTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 					 EventRecord*		inoutEventPtr,
 					 Boolean*			outDragWasDropped)
 {
-	OSStatus	result = noErr;
-	DragRef		dragRef = nullptr;
+	OSStatus		result = noErr;
+	PasteboardRef	dragPasteboard = nullptr;
+	DragRef			dragRef = nullptr;
 	
 	
 	*outDragWasDropped = true;
 	
-	result = NewDrag(&dragRef);
-	if (result == noErr)
+	result = PasteboardCreate(kPasteboardUniqueName, &dragPasteboard);
+	if (noErr == result)
 	{
-		// set a callback that will supply the text selection if and when
-		// it is actually needed (i.e. dropped somewhere)
-		result = SetDragSendProc(dragRef, gTerminalViewDragSendUPP(), inTerminalViewPtr->selfRef/* user data */);
-		if (result == noErr)
+		Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodStandard, dragPasteboard);
+		result = NewDragWithPasteboard(dragPasteboard, &dragRef);
+		if (noErr == result)
 		{
-			result = AddDragItemFlavor(dragRef, 1/* item ID */, kDragFlavorTypeMacRomanText,
-										nullptr/* no data; callback is used */, 0/* size; not applicable */,
-										0/* flavor flags */);
-			if (result == noErr)
-			{
-				SInt16		oldCursor = Cursors_UseArrow();
-				
-				
-				result = TrackDrag(dragRef, inoutEventPtr, inoutGlobalDragOutlineRegion);
-				Cursors_Use(oldCursor);
-			}
+			SInt16		oldCursor = Cursors_UseArrow();
+			
+			
+			result = TrackDrag(dragRef, inoutEventPtr, inoutGlobalDragOutlineRegion);
+			Cursors_Use(oldCursor);
 		}
-		DisposeDrag(dragRef), dragRef = nullptr;
 	}
+	DisposeDrag(dragRef), dragRef = nullptr;
 	
 	Cursors_UseArrow();
 	return result;
@@ -9634,39 +9626,6 @@ sortAnchors		(TerminalView_Cell&		inoutPoint1,
 		}
 	}
 }// sortAnchors
-
-
-/*!
-Supplies the currently-selected text of the given
-terminal view, to the given drag.  It is assumed that
-the text selection cannot be changed during a drag.
-
-(3.1)
-*/
-static pascal OSErr
-supplyTextSelectionToDrag	(FlavorType		inType,
-							 void*			inTerminalViewRef,
-							 DragItemRef	inItemRef,
-							 DragRef		inDragRef)
-{
-	OSErr					result = noErr;
-	TerminalViewRef			view = REINTERPRET_CAST(inTerminalViewRef, TerminalViewRef);
-	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
-	Handle					textH = getSelectedTextAsNewHandle(viewPtr, 0, 0/* flags */);
-	
-	
-	if ((textH != (char**)-1L) && (textH != nullptr))
-	{
-		Size	textSize = GetHandleSize(textH);
-		
-		
-		// since the Drag Manager will cache the data, it can be
-		// deleted immediately after it has been set in the drag
-		result = SetDragItemFlavorData(inDragRef, inItemRef, inType, *textH, textSize, 0/* offset */);
-		Memory_DisposeHandle(&textH);
-	}
-	return result;
-}// supplyTextSelectionToDrag
 
 
 /*!

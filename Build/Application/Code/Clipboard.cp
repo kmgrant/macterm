@@ -932,12 +932,20 @@ Clipboard_ReturnWindow ()
 
 
 /*!
-Although this module can track pasteboard changes made by
-other applications, an oddity is that local changes are
-not trackable.  So if you use a method other than one of
-this moduleÕs APIs to change a pasteboard, and you want
-the Clipboard window to render those changes, you should
-call this routine.
+Reads and caches information about the specified pasteboard,
+and if the pasteboard is actually the Clipboard, triggers an
+update of the Clipboard window.
+
+IMPORTANT:	For efficiency, this routine is not automatically
+			called for queries such as Clipboard_ContainsText().
+			You must call this routine yourself at least once
+			per pasteboard you use, and also whenever those
+			pasteboards change, for query results to be correct.
+
+NOTE:	Changes made to the primary pasteboard by other
+		applications are (eventually) found automatically.
+		But changes made by this application are only found
+		when this routine is called.
 
 (3.1)
 */
@@ -978,8 +986,8 @@ Clipboard_SetWindowVisible	(Boolean	inIsVisible)
 
 
 /*!
-Pastes text from the clipboard into the specified session.
-If the clipboard does not have any text, this does nothing.
+Pastes text from a pasteboard into the specified session.
+If the pasteboard does not have any text, this does nothing.
 
 The modifier can be used to alter what is actually pasted.
 
@@ -987,16 +995,22 @@ The modifier can be used to alter what is actually pasted.
 */
 void
 Clipboard_TextFromScrap		(SessionRef				inSession,
-							 Clipboard_Modifier		inModifier)
+							 Clipboard_Modifier		inModifier,
+							 PasteboardRef			inDataSourceOrNull)
 {
 	CFStringRef		clipboardString = nullptr;
 	CFStringRef		actualTypeName = nullptr;
 	
 	
+	if (nullptr == inDataSourceOrNull)
+	{
+		inDataSourceOrNull = Clipboard_ReturnPrimaryPasteboard();
+	}
+	
 	// IMPORTANT: It may be desirable to allow customization for what
 	//            identifies a line of text.  Currently, this is assumed.
 	
-	if (Clipboard_CreateCFStringFromPasteboard(clipboardString, actualTypeName))
+	if (Clipboard_CreateCFStringFromPasteboard(clipboardString, actualTypeName, inDataSourceOrNull))
 	{
 		if (kClipboard_ModifierOneLine == inModifier)
 		{
@@ -1043,24 +1057,29 @@ selected.  If the selection mode is rectangular,
 the text is copied line-by-line according to the
 rows it crosses.
 
-If the copy method is standard, the text is
-copied to the clipboard intact.  If the ÒtableÓ
-method is used, the text is first parsed to
-replace tab characters with multiple spaces,
-and then the text is copied.  If ÒinlineÓ is
-specified (possibly in addition to table mode),
-each line is concatenated together to form a
-single line.
+If the copy method is standard, the text is copied
+to the pasteboard intact.  If the ÒtableÓ method
+is used, the text is first parsed to replace tab
+characters with multiple spaces, and then the text
+is copied.  If ÒinlineÓ is specified (possibly in
+addition to table mode), each line is concatenated
+together to form a single line.
 
 (3.0)
 */
 void
 Clipboard_TextToScrap	(TerminalViewRef		inView,
-						 Clipboard_CopyMethod	inHowToCopy)
+						 Clipboard_CopyMethod	inHowToCopy,
+						 PasteboardRef			inDataTargetOrNull)
 {
 	CFStringRef		textToCopy = nullptr;			// where to store the characters
 	short			tableThreshold = 0;		// zero for normal, nonzero for copy table mode
 	
+	
+	if (nullptr == inDataTargetOrNull)
+	{
+		inDataTargetOrNull = Clipboard_ReturnPrimaryPasteboard();
+	}
 	
 	if (inHowToCopy & kClipboard_CopyMethodTable)
 	{
@@ -1088,12 +1107,12 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 	{
 		if (CFStringGetLength(textToCopy) > 0)
 		{
-			(OSStatus)addCFStringToPasteboard(textToCopy);
+			(OSStatus)addCFStringToPasteboard(textToCopy, inDataTargetOrNull);
 		}
 		CFRelease(textToCopy), textToCopy = nullptr;
 	}
 	
-	gClipboardLocalChanges()[Clipboard_ReturnPrimaryPasteboard()] = true;
+	gClipboardLocalChanges()[inDataTargetOrNull] = true;
 }// TextToScrap
 
 
@@ -1201,11 +1220,6 @@ to notice clipboard changes, this timer periodically polls the
 system to figure out when the clipboard has changed.  If it
 does change, the clipboard window is updated.
 
-IMPORTANT:	This CANNOT detect changes that are made by the
-			current application, only changes made by any other
-			application.  (WTF, Apple?)  For a work-around, see
-			Clipboard_SetPasteboardModified().
-
 (3.1)
 */
 pascal void
@@ -1217,7 +1231,8 @@ clipboardUpdatesTimer	(EventLoopTimerRef	UNUSED_ARGUMENT(inTimer),
 	
 	
 	// The modification flag ONLY refers to changes made by OTHER applications.
-	// Changes to the local pasteboard by MacTelnet must be tracked separately.
+	// Changes to the local pasteboard by MacTelnet are therefore tracked in a
+	// separate map.
 	if ((flags & kPasteboardModified) ||
 		(gClipboardLocalChanges().end() != gClipboardLocalChanges().find(kPasteboard)))
 	{
@@ -1556,12 +1571,21 @@ receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDragRef, typeDragRef, dragRef);
 			if (noErr == result)
 			{
+				PasteboardRef		dragPasteboard = nullptr;
+				
+				
+				result = GetDragPasteboard(dragRef, &dragPasteboard);
+				assert_noerr(result);
+				
+				// read and cache information about this pasteboard
+				Clipboard_SetPasteboardModified(dragPasteboard);
+				
 				switch (kEventKind)
 				{
 				case kEventControlDragEnter:
 					// indicate whether or not this drag is interesting
 					{
-						Boolean		acceptDrag = DragAndDrop_DragContainsOnlyTextItems(dragRef);
+						Boolean		acceptDrag = Clipboard_ContainsText(dragPasteboard);
 						
 						
 						result = SetEventParameter(inEvent, kEventParamControlWouldAcceptDrop,
@@ -1596,39 +1620,31 @@ receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				case kEventControlDragReceive:
 					// handle the drop (by copying the data to the clipboard)
 					{
-						Handle		textToCopy = nullptr;
+						CFStringRef			copiedTextCFString;
+						CFStringRef			copiedTextUTI;
+						Boolean				copyOK = Clipboard_CreateCFStringFromPasteboard
+														(copiedTextCFString, copiedTextUTI, dragPasteboard);
 						
 						
-						// TEMPORARY - this ought to work for any text in any character set!
-						result = DragAndDrop_GetDraggedTextAsNewHandle(dragRef, &textToCopy);
-						if (noErr == result)
+						if (false == copyOK)
 						{
-							HLock(textToCopy);
-							
+							Console_WriteLine("warning, failed to copy the dragged text!");
+							result = resNotFound;
+						}
+						else
+						{
 							// put the text on the clipboard
-							(OSStatus)ClearCurrentScrap();
+							result = addCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
+							if (noErr == result)
 							{
-								ScrapRef	currentScrap = nullptr;
+								// force a view update, as obviously it is now out of date
+								updateClipboard(Clipboard_ReturnPrimaryPasteboard());
 								
-								
-								if (noErr == GetCurrentScrap(&currentScrap))
-								{
-									// copy to clipboard
-									(OSStatus)PutScrapFlavor(currentScrap, kScrapFlavorTypeText,
-																kScrapFlavorMaskNone, GetHandleSize(textToCopy),
-																*textToCopy);
-									
-									// force a view update, as obviously it is now out of date
-									(OSStatus)HIViewSetNeedsDisplay(view, true);
-								}
+								// success!
+								result = noErr;
 							}
-							
-							// clean up
-							HUnlock(textToCopy);
-							Memory_DisposeHandle(&textToCopy);
-							
-							// success!
-							result = noErr;
+							CFRelease(copiedTextCFString), copiedTextCFString = nullptr;
+							CFRelease(copiedTextUTI), copiedTextUTI = nullptr;
 						}
 					}
 					break;
@@ -1914,12 +1930,13 @@ textToScrap		(Handle		inTextHandle)
 
 
 /*!
-Copies recognizable data (if any) from the specified
-pasteboard and arranges to update the Clipboard window
-accordingly.  Also updates internal state that enables
-other Clipboard APIs to be relatively fast.
+Updates internal state so that other API calls from this
+module actually work with the given pasteboard!
 
-Currently, the Clipboard window is only capable of
+If the given pasteboard is the primary pasteboard, this
+also copies recognizable data (if any) from the specified
+pasteboard and arranges to update the Clipboard window
+accordingly.  The Clipboard window is only capable of
 rendering one pasteboard at a time.
 
 IMPORTANT:	This API should be called whenever the
@@ -1930,58 +1947,61 @@ IMPORTANT:	This API should be called whenever the
 void
 updateClipboard		(PasteboardRef		inPasteboard)
 {
-	// display an appropriate renderer
-	HIViewWrap		textView(idMyUserPaneDragParent, gClipboardWindow);
 	HIViewWrap		imageView(idMyImageData, gClipboardWindow);
+	HIViewWrap		textView(idMyUserPaneDragParent, gClipboardWindow);
 	CGImageRef		imageToRender = nullptr;
 	CFStringRef		textToRender = nullptr;
 	CFStringRef		typeIdentifier = nullptr;
 	
 	
-	if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier))
-	{
-		// image
-		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
-		
-		gCurrentRenderData.clear();
-		HIImageViewSetImage(imageView, imageToRender);
-		HIViewSetVisible(imageView, true);
-		HIViewSetNeedsDisplay(imageView, true);
-		
-		setDataTypeInformation(typeIdentifier,
-								CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender));
-		setScalingInformation(CGImageGetWidth(imageToRender), CGImageGetHeight(imageToRender));
-		
-		CFRelease(imageToRender), imageToRender = nullptr;
-		CFRelease(typeIdentifier), typeIdentifier = nullptr;
-	}
-	else if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier))
+	if (Clipboard_CreateCFStringFromPasteboard(textToRender, typeIdentifier, inPasteboard))
 	{
 		// text
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeText;
-		
-		gCurrentRenderData = textToRender;
-		HIViewSetVisible(imageView, false);
-		HIViewSetNeedsDisplay(textView, true);
-		
-		setDataTypeInformation(typeIdentifier, CFStringGetLength(textToRender) * sizeof(UniChar));
-		setScalingInformation(0, 0);
-		
+		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
+		{
+			gCurrentRenderData = textToRender;
+			(OSStatus)HIViewSetVisible(imageView, false);
+			(OSStatus)HIViewSetNeedsDisplay(textView, true);
+			
+			setDataTypeInformation(typeIdentifier, CFStringGetLength(textToRender) * sizeof(UniChar));
+			setScalingInformation(0, 0);
+		}
 		CFRelease(textToRender), textToRender = nullptr;
+		CFRelease(typeIdentifier), typeIdentifier = nullptr;
+	}
+	else if (Clipboard_CreateCGImageFromPasteboard(imageToRender, typeIdentifier, inPasteboard))
+	{
+		// image
+		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeGraphics;
+		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
+		{
+			gCurrentRenderData.clear();
+			(OSStatus)HIImageViewSetImage(imageView, imageToRender);
+			(OSStatus)HIViewSetVisible(imageView, true);
+			(OSStatus)HIViewSetNeedsDisplay(imageView, true);
+			
+			setDataTypeInformation(typeIdentifier,
+									CGImageGetHeight(imageToRender) * CGImageGetBytesPerRow(imageToRender));
+			setScalingInformation(CGImageGetWidth(imageToRender), CGImageGetHeight(imageToRender));
+		}
+		CFRelease(imageToRender), imageToRender = nullptr;
 		CFRelease(typeIdentifier), typeIdentifier = nullptr;
 	}
 	else
 	{
 		// unknown, or empty
 		gClipboardDataGeneralTypes()[inPasteboard] = kMy_TypeUnknown;
-		
-		gCurrentRenderData.clear();
-		HIViewSetVisible(imageView, false);
-		HIViewSetNeedsDisplay(textView, true);
-		
-		// TEMPORARY: could determine actual UTI here
-		setDataTypeInformation(nullptr, 0);
-		setScalingInformation(0, 0);
+		if (Clipboard_ReturnPrimaryPasteboard() == inPasteboard)
+		{
+			gCurrentRenderData.clear();
+			(OSStatus)HIViewSetVisible(imageView, false);
+			(OSStatus)HIViewSetNeedsDisplay(textView, true);
+			
+			// TEMPORARY: could determine actual UTI here
+			setDataTypeInformation(nullptr, 0);
+			setScalingInformation(0, 0);
+		}
 	}
 }// updateClipboard
 

@@ -71,14 +71,7 @@ Boolean
 //@{
 
 Boolean
-	DragAndDrop_DragContainsOnlyTextItems	(DragRef		inDrag);
-
-Boolean
 	DragAndDrop_DragIsExactlyOneFile		(DragRef		inDrag);
-
-OSStatus
-	DragAndDrop_GetDraggedTextAsNewHandle	(DragRef		inDrag,
-											 Handle*		outTextHandlePtr);
 
 UInt16
 	DragAndDrop_ReturnDragItemCount			(DragRef		inDrag);

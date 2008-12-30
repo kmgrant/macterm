@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20081230',
     '20081229',
     '20081221',
     '20081219',
@@ -201,6 +202,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20081230': [
+		'Terminal view drag-and-drop now copies Unicode strings, for better interoperability with other applications.',
+	],
 	'20081229': [
 		'Internal changes to improve support for arbitrary text encodings.',
 		'The Copy command now produces an accurate Unicode equivalent when text selections have VT graphics characters.',

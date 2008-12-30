@@ -163,11 +163,13 @@ void
 
 void
 	Clipboard_TextFromScrap					(SessionRef					inSession,
-											 Clipboard_Modifier			inFilter = kClipboard_ModifierNone);
+											 Clipboard_Modifier			inFilter = kClipboard_ModifierNone,
+											 PasteboardRef				inDataSourceOrNull = nullptr);
 
 void
 	Clipboard_TextToScrap					(TerminalViewRef			inView,
-											 Clipboard_CopyMethod		inHowToCopy);
+											 Clipboard_CopyMethod		inHowToCopy,
+											 PasteboardRef				inDataTargetOrNull = nullptr);
 
 void
 	Clipboard_TextType						(TerminalViewRef			inSource,
