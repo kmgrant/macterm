@@ -18,7 +18,7 @@ __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '24 August 2006'
 __version__ = '3.1.0'
 
-from com_mactelnet_ParseURL import \
+from pymactelnet.ParseURL import \
 	file as _parse_file, \
 	ftp as _parse_ftp, \
 	sftp as _parse_sftp, \
@@ -268,5 +268,5 @@ def x_man_page(url):
 		pass
 
 def _test():
-	import doctest, com_mactelnet_HandleURL
-	return doctest.testmod(com_mactelnet_HandleURL)
+	import doctest, pymactelnet.HandleURL
+	return doctest.testmod(pymactelnet.HandleURL)

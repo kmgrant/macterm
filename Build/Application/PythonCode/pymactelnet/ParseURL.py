@@ -27,7 +27,7 @@ __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '24 August 2006'
 __version__ = '3.1.0'
 
-from com_mactelnet_Util import \
+from pymactelnet.Util import \
 	slash_free_path as _slash_free_path, \
 	sort_dict as _sort_dict
 
@@ -333,8 +333,8 @@ def x_man_page(url):
 	return result
 
 def _test():
-	import doctest, com_mactelnet_ParseURL
-	return doctest.testmod(com_mactelnet_ParseURL)
+	import doctest, pymactelnet.ParseURL
+	return doctest.testmod(pymactelnet.ParseURL)
 
 if __name__ == '__main__':
 	_test()

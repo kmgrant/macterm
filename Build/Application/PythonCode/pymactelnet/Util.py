@@ -99,8 +99,8 @@ def sort_dict(keys_values):
 	return result
 
 def _test():
-	import doctest, com_mactelnet_Util
-	return doctest.testmod(com_mactelnet_Util)
+	import doctest, pymactelnet.Util
+	return doctest.testmod(pymactelnet.Util)
 
 if __name__ == '__main__':
 	_test()

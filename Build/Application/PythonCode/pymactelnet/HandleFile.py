@@ -33,5 +33,5 @@ def script(pathname):
 		pass
 
 def _test():
-	import doctest, com_mactelnet_HandleFile
-	return doctest.testmod(com_mactelnet_HandleFile)
+	import doctest, pymactelnet.HandleFile
+	return doctest.testmod(pymactelnet.HandleFile)

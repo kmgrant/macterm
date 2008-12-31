@@ -44,8 +44,8 @@ pymactelnet_pylib_dir = os.path.join(pymactelnet_current_version_dir, "lib", "py
 
 # now import utility modules
 sys.path.insert(0, pymactelnet_pylib_dir)
-import com_mactelnet_Util
-mac_os_name = com_mactelnet_Util.mac_os_name()
+import pymactelnet.Util
+mac_os_name = pymactelnet.Util.mac_os_name()
 
 # notes on the platform-dependent setup below...
 #

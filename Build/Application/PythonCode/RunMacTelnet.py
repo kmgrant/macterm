@@ -17,8 +17,8 @@ __version__ = '3.1.0'
 
 import os, string
 
-import com_mactelnet_HandleFile as HandleFile
-import com_mactelnet_HandleURL as HandleURL
+import pymactelnet.HandleFile as HandleFile
+import pymactelnet.HandleURL as HandleURL
 try:
 	from Quills import Base, Events, Session, Terminal
 except ImportError, err:
@@ -63,14 +63,14 @@ def run_module_tests( mod ):
 	(failures, test_count) = mod._test()
 	if not failures: print "MacTelnet: %s module: SUCCESSFUL unit test (total tests: %d)" % (mod.__name__, test_count)
 if do_testing:
-	import com_mactelnet_Util
-	run_module_tests(com_mactelnet_Util)
+	import pymactelnet.Util
+	run_module_tests(pymactelnet.Util)
 if do_testing:
-	import com_mactelnet_ParseURL
-	run_module_tests(com_mactelnet_ParseURL)
+	import pymactelnet.ParseURL
+	run_module_tests(pymactelnet.ParseURL)
 if do_testing:
-	import com_mactelnet_HandleURL
-	run_module_tests(com_mactelnet_HandleURL)
+	import pymactelnet.HandleURL
+	run_module_tests(pymactelnet.HandleURL)
 
 # register MacTelnet features that are actually implemented in Python!
 Session.on_urlopen_call(HandleURL.file, 'file')
