@@ -31,7 +31,7 @@
 /*###############################################################
 
 	Data Access Library 2.0
-	© 1998-2008 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -57,6 +57,11 @@
 
 #ifndef __CFRETAINRELEASE__
 #define __CFRETAINRELEASE__
+
+// Mac includes
+#include <ApplicationServices/ApplicationServices.h>
+#include <Carbon/Carbon.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 
 
@@ -110,6 +115,9 @@ public:
 	inline
 	CFRetainRelease (HIObjectRef, bool = false);
 	
+	inline
+	CFRetainRelease (PasteboardRef, bool = false);
+	
 	virtual inline
 	~CFRetainRelease ();
 	
@@ -161,6 +169,9 @@ public:
 	inline HIObjectRef
 	returnHIObjectRef () const;
 	
+	inline PasteboardRef
+	returnPasteboardRef () const;
+	
 	inline void
 	setCFMutableArrayRef (CFMutableArrayRef, bool = false);
 	
@@ -195,6 +206,7 @@ private:
 			CFBundleRef				bundle;
 			CFMutableDictionaryRef	dictionary;
 			CFMutableStringRef		string;
+			PasteboardRef			pasteboard;
 		} _modifiable;
 	} _typeAs;
 	
@@ -540,6 +552,38 @@ _isMutable(false)
 
 
 /*!
+Creates a new reference using the value of an
+existing one that is a Pasteboard type.
+
+CFRetain() is called on the reference unless
+"inIsAlreadyRetained" is true.  Regardless,
+CFRelease() is called at destruction or
+reassignment time.  This allows "inType" to
+come directly from a function call that creates
+a Core Foundation type.
+
+(2.1)
+*/
+CFRetainRelease::
+CFRetainRelease		(PasteboardRef	inType,
+					 bool			inIsAlreadyRetained)
+:
+_isMutable(true)
+{
+	_typeAs._modifiable.pasteboard = inType;
+	assert(_typeAs._modifiable.pasteboard == inType);
+	if (nullptr != _typeAs._modifiable.pasteboard)
+	{
+		assert(CFGetTypeID(_typeAs._modifiable.pasteboard) == PasteboardGetTypeID());
+		if (false == inIsAlreadyRetained)
+		{
+			CFRetain(_typeAs._modifiable.pasteboard);
+		}
+	}
+}// pasteboard type constructor
+
+
+/*!
 Calls CFRelease() on the reference kept by this
 class instance, if any.
 
@@ -821,6 +865,22 @@ const
 {
 	return _typeAs._constant.humanInterfaceObject;
 }// returnHIObjectRef
+
+
+/*!
+Returns the PasteboardRef that this class instance is
+storing (and has retained), or nullptr if the internal
+reference is empty.
+
+(2.1)
+*/
+PasteboardRef
+CFRetainRelease::
+returnPasteboardRef ()
+const
+{
+	return _typeAs._modifiable.pasteboard;
+}// returnPasteboardRef
 
 
 /*!
