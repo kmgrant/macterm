@@ -37,7 +37,6 @@
 
 // library includes
 #include <CFRetainRelease.h>
-#include <CFUtilities.h>
 #include <Console.h>
 
 // MacTelnet includes
@@ -46,19 +45,6 @@
 #include "MainEntryPoint.h"
 #include "QuillsBase.h"
 
-
-
-#pragma mark Types
-namespace Quills {
-
-struct CFTypeImpl
-{
-	CFTypeImpl	(CFTypeRef, bool);
-	
-	CFRetainRelease		retainer;
-};
-
-} // namespace Quills
 
 
 #pragma mark Public Methods
@@ -173,46 +159,6 @@ Base::version ()
 	}
 	return result;
 }// version
-
-
-/*!
-See header or "pydoc" for Python docstrings.
-
-(4.0)
-*/
-CFType::CFType	(void*		inCFTypeRef,
-				 bool		inIsRetained)
-:
-ref(inCFTypeRef),
-_impl(new CFTypeImpl(inCFTypeRef, inIsRetained))
-{
-}// CFType 1-argument constructor
-
-
-/*!
-See header or "pydoc" for Python docstrings.
-
-(4.0)
-*/
-CFType::~CFType ()
-{
-	if (nullptr != _impl) delete _impl;
-}// CFType destructor
-
-
-} // namespace Quills
-
-
-#pragma mark Internal Methods
-namespace Quills {
-
-CFTypeImpl::
-CFTypeImpl	(CFTypeRef	inCFTypeRef,
-			 bool		inIsRetained)
-:
-retainer(inCFTypeRef, inIsRetained)
-{
-} // CFTypeImpl 1-argument constructor
 
 } // namespace Quills
 

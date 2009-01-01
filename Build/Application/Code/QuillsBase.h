@@ -84,45 +84,6 @@ private:
 	Base (); // class is not instantiated
 };
 
-class CFTypeImpl;
-class CFType
-{
-public:
-#if SWIG
-%feature("kwargs") CFType;
-%feature("docstring",
-"Hold a direct reference to a Core Foundation type, that can\n\
-come from any source (like other bindings to OS frameworks).\n\
-\n\
-Normally, the type is automatically retained with CFRetain()\n\
-and automatically released with CFRelease() when it goes out\n\
-of scope.  But if the reference is already retained once, e.g.\n\
-you are passing in the result of a create-object API, you can\n\
-set 'already_retained' to True and no CFRetain() occurs.  In\n\
-either case, however, CFRelease() is always done.\n\
-") CFType;
-#endif
-	CFType	(void*		ref,
-			 bool		already_retained = false);
-	
-#if SWIG
-%feature("docstring",
-"The direct reference given at construction time.  If you set\n\
-this to a new value, you assume complete responsibility for\n\
-ensuring the reference cannot be released while it is still in\n\
-use.  (The original reference given at construction time will\n\
-be automatically released when the object goes out of scope.)\n\
-") ref;
-#endif
-	CFTypeRef		ref;
-
-protected:
-	~CFType ();
-
-private:
-	CFTypeImpl*		_impl;
-};
-
 } // namespace Quills
 
 #endif

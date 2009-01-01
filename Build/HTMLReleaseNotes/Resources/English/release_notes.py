@@ -19,7 +19,6 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
-    '20081231',
     '20081230',
     '20081229',
     '20081221',
@@ -203,9 +202,6 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
-	'20081231': [
-		'Added CFType class to Quills, which is a convenient way to use Core Foundation types with the API.',
-	],
 	'20081230': [
 		'Terminal view drag-and-drop now copies Unicode strings, for better interoperability with other applications.',
 	],
