@@ -475,6 +475,9 @@
 		0A9B31980D538EF000C1616D /* MemoryBlockReferenceTracker.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MemoryBlockReferenceTracker.template.h; path = Shared/Code/MemoryBlockReferenceTracker.template.h; sourceTree = "<group>"; };
 		0A9B319E0D538EFA00C1616D /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
 		0A9CC37A06DC470D00DCD12E /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanels.nib; sourceTree = "<group>"; };
+		0AA42A290F0C95B80057B393 /* Template-MacTelnet-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-MacTelnet-Info.plist"; path = "Application/Resources/Template-MacTelnet-Info.plist"; sourceTree = "<group>"; };
+		0AA42A2A0F0C95BD0057B393 /* Template-PyMacTelnet.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-PyMacTelnet.framework-Info.plist"; path = "Application/Resources/Template-PyMacTelnet.framework-Info.plist"; sourceTree = "<group>"; };
+		0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "Template-Quills.framework-Info.plist"; path = "Application/Resources/Template-Quills.framework-Info.plist"; sourceTree = "<group>"; };
 		0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; name = GrowlRegistrationTicket.growlRegDict; path = Application/Resources/GrowlRegistrationTicket.growlRegDict; sourceTree = "<group>"; };
 		0AAB2D0707EAD07000CFAFF1 /* IconForLEDOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOff.icns; path = Application/Resources/IconForLEDOff.icns; sourceTree = "<group>"; };
 		0AAB2D0807EAD07000CFAFF1 /* IconForLEDOn.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForLEDOn.icns; path = Application/Resources/IconForLEDOn.icns; sourceTree = "<group>"; };
@@ -654,6 +657,9 @@
 				0AD0B0A60A9EABDF002064BA /* AppleScript */,
 				0AC6BDB90A8C130400AFF37A /* Python */,
 				0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */,
+				0AA42A290F0C95B80057B393 /* Template-MacTelnet-Info.plist */,
+				0AA42A2A0F0C95BD0057B393 /* Template-PyMacTelnet.framework-Info.plist */,
+				0AA42A2B0F0C95C20057B393 /* Template-Quills.framework-Info.plist */,
 				0AA6A2AA0DF4CF1C00B2B598 /* GrowlRegistrationTicket.growlRegDict */,
 				0AD62711055DEB7000843EA9 /* MacTelnetPrefix.pch */,
 				0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */,
