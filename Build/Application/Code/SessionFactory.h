@@ -2,17 +2,20 @@
 	\brief Construction mechanism for sessions (terminal
 	windows that run local or remote processes).
 	
-	This module provides a number of ways to construct new
-	Session objects, as well as utilities for managing the
-	global set of all sessions currently in use.
+	Note that although this is a very useful, high-level
+	API, it is still better to use Quills::Session when
+	creating new sessions.  If a session is not created
+	through Quills, it is invisible to all scripting code
+	and will not (for instance) trigger the user callback
+	for “new session”, among other things.
 	
-	IMPORTANT:	This is the manager for Session objects.
-				It is highly recommended that you NEVER
-				create Session objects in any other way,
-				because this module provides a way for the
-				rest of the program to figure out what
-				sessions are running (for example, to
-				display a list of open sessions).
+	Note, also, that you should not call Session_New()
+	directly.  This module assumes it is aware of “all”
+	sessions, and the rest of the program relies on that.
+	For instance, the list of open sessions displayed in
+	various user interface elements is only accurate if
+	Session Factory ultimately created all sessions.
+	(Quills uses the Session Factory.)
 */
 /*###############################################################
 
@@ -182,9 +185,6 @@ void
 
 //!\name Creating Sessions
 //@{
-
-// NOTE: QUILLS INTERFACES ARE ALSO AVAILABLE FOR THIS:
-//	Quills::Session::handle_url()
 
 SessionRef
 	SessionFactory_NewCloneSession					(TerminalWindowRef				inTerminalWindowOrNullToMakeNewWindow,
