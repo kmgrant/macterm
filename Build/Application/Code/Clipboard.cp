@@ -400,7 +400,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 	
 	
 	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
-							outUTI, itemID, inPasteboardOrNull))
+							outUTI, itemID, kPasteboard))
 	{
 		CFDataRef	textData = nullptr;
 		OSStatus	error = noErr;
@@ -506,7 +506,7 @@ Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
 	
 	
 	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.image"), kUTTypeImage),
-							outUTI, itemID, inPasteboardOrNull))
+							outUTI, itemID, kPasteboard))
 	{
 		CFDataRef	imageData = nullptr;
 		
