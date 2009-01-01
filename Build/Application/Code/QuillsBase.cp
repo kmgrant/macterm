@@ -3,7 +3,7 @@
 	QuillsBase.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2008 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,6 +46,19 @@
 #include "MainEntryPoint.h"
 #include "QuillsBase.h"
 
+
+
+#pragma mark Types
+namespace Quills {
+
+struct CFTypeImpl
+{
+	CFTypeImpl	(CFTypeRef, bool);
+	
+	CFRetainRelease		retainer;
+};
+
+} // namespace Quills
 
 
 #pragma mark Public Methods
@@ -161,6 +174,45 @@ Base::version ()
 	return result;
 }// version
 
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+CFType::CFType	(void*		inCFTypeRef,
+				 bool		inIsRetained)
+:
+ref(inCFTypeRef),
+_impl(new CFTypeImpl(inCFTypeRef, inIsRetained))
+{
+}// CFType 1-argument constructor
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+CFType::~CFType ()
+{
+	if (nullptr != _impl) delete _impl;
+}// CFType destructor
+
+
+} // namespace Quills
+
+
+#pragma mark Internal Methods
+namespace Quills {
+
+CFTypeImpl::
+CFTypeImpl	(CFTypeRef	inCFTypeRef,
+			 bool		inIsRetained)
+:
+retainer(inCFTypeRef, inIsRetained)
+{
+} // CFTypeImpl 1-argument constructor
 
 } // namespace Quills
 
