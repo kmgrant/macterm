@@ -118,7 +118,7 @@
 		0AC6BB490A8C0BA100AFF37A /* AlertMessages.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDB8055432A400ACDF3A /* AlertMessages.cp */; };
 		0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE25055432A400ACDF3A /* Terminal.cp */; };
 		0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */; };
-		0AC6BB4E0A8C0BA100AFF37A /* FormatDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDB055432A400ACDF3A /* FormatDialog.cp */; };
+		0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */; };
 		0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */; };
 		0AC6BB520A8C0BA100AFF37A /* ICGluePPC.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */; };
 		0AC6BB530A8C0BA100AFF37A /* CoreSuiteAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDCB055432A400ACDF3A /* CoreSuiteAE.cp */; };
@@ -252,7 +252,7 @@
 		0A4603E10554376100ACDF3A /* FileUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = FileUtilities.h; path = Application/Code/FileUtilities.h; sourceTree = SOURCE_ROOT; };
 		0A4603E20554376100ACDF3A /* FindDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = FindDialog.h; path = Application/Code/FindDialog.h; sourceTree = SOURCE_ROOT; };
 		0A4603E50554376100ACDF3A /* Folder.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Folder.h; path = Application/Code/Folder.h; sourceTree = "<group>"; };
-		0A4603E60554376100ACDF3A /* FormatDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = FormatDialog.h; path = Application/Code/FormatDialog.h; sourceTree = SOURCE_ROOT; };
+		0A4603E60554376100ACDF3A /* PrefsContextDialog.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefsContextDialog.h; path = Application/Code/PrefsContextDialog.h; sourceTree = "<group>"; };
 		0A4603E80554376100ACDF3A /* GenericThreads.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = GenericThreads.h; path = Application/Code/GenericThreads.h; sourceTree = SOURCE_ROOT; };
 		0A4603E90554376100ACDF3A /* GenesisAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = GenesisAE.h; path = Application/Code/GenesisAE.h; sourceTree = "<group>"; };
 		0A4603EA0554376100ACDF3A /* GetElementAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = GetElementAE.h; path = Application/Code/GetElementAE.h; sourceTree = "<group>"; };
@@ -351,7 +351,7 @@
 		0A46FDD6055432A400ACDF3A /* FileUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileUtilities.cp; path = Application/Code/FileUtilities.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDD7055432A400ACDF3A /* FindDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FindDialog.cp; path = Application/Code/FindDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDDA055432A400ACDF3A /* Folder.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Folder.cp; path = Application/Code/Folder.cp; sourceTree = "<group>"; };
-		0A46FDDB055432A400ACDF3A /* FormatDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FormatDialog.cp; path = Application/Code/FormatDialog.cp; sourceTree = SOURCE_ROOT; };
+		0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefsContextDialog.cp; path = Application/Code/PrefsContextDialog.cp; sourceTree = "<group>"; };
 		0A46FDDC055432A400ACDF3A /* GenericThreads.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GenericThreads.cp; path = Application/Code/GenericThreads.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDDD055432A400ACDF3A /* GenesisAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GenesisAE.cp; path = Application/Code/GenesisAE.cp; sourceTree = "<group>"; };
 		0A46FDDE055432A400ACDF3A /* GetElementAE.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = GetElementAE.cp; path = Application/Code/GetElementAE.cp; sourceTree = "<group>"; };
@@ -374,7 +374,7 @@
 		0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = Application/Code/MainEntryPoint.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDFB055432A400ACDF3A /* MenuBar.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MenuBar.cp; path = Application/Code/MenuBar.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDFD055432A400ACDF3A /* FileSelectionDialogs.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = FileSelectionDialogs.cp; path = Shared/Code/FileSelectionDialogs.cp; sourceTree = "<group>"; };
-		0A46FDFE055432A400ACDF3A /* NetEvents.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NetEvents.cp; path = Application/Code/NetEvents.cp; sourceTree = SOURCE_ROOT; };
+		0A46FDFE055432A400ACDF3A /* NetEvents.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NetEvents.cp; path = Application/Code/NetEvents.cp; sourceTree = "<group>"; };
 		0A46FDFF055432A400ACDF3A /* Network.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Network.cp; path = Application/Code/Network.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE00055432A400ACDF3A /* NewSessionDialog.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = NewSessionDialog.cp; path = Application/Code/NewSessionDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE01055432A400ACDF3A /* Panel.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Panel.cp; path = Application/Code/Panel.cp; sourceTree = SOURCE_ROOT; };
@@ -684,7 +684,6 @@
 				0A46FDD6055432A400ACDF3A /* FileUtilities.cp */,
 				0A46FDD7055432A400ACDF3A /* FindDialog.cp */,
 				0A46FDDA055432A400ACDF3A /* Folder.cp */,
-				0A46FDDB055432A400ACDF3A /* FormatDialog.cp */,
 				0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */,
 				0A2890DC0D68017D0017D99E /* GenericPanelTabs.cp */,
 				0A46FDDC055432A400ACDF3A /* GenericThreads.cp */,
@@ -762,7 +761,6 @@
 				0A4603E10554376100ACDF3A /* FileUtilities.h */,
 				0A4603E20554376100ACDF3A /* FindDialog.h */,
 				0A4603E50554376100ACDF3A /* Folder.h */,
-				0A4603E60554376100ACDF3A /* FormatDialog.h */,
 				0ACA57D40AEADDF300B5F482 /* GenericDialog.h */,
 				0A2890DE0D68019E0017D99E /* GenericPanelTabs.h */,
 				0A4603E80554376100ACDF3A /* GenericThreads.h */,
@@ -1056,6 +1054,7 @@
 				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */,
 				0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */,
 				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */,
+				0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */,
 				0A46FE08055432A400ACDF3A /* PrefsWindow.cp */,
 			);
 			name = Preferences;
@@ -1073,6 +1072,7 @@
 				0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */,
 				0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */,
 				0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */,
+				0A4603E60554376100ACDF3A /* PrefsContextDialog.h */,
 				0A4604190554376100ACDF3A /* PrefsWindow.h */,
 			);
 			name = Preferences;
@@ -1378,7 +1378,7 @@
 				0AC6BB490A8C0BA100AFF37A /* AlertMessages.cp in Sources */,
 				0AC6BB4B0A8C0BA100AFF37A /* Terminal.cp in Sources */,
 				0AC6BB4D0A8C0BA100AFF37A /* DialogAdjust.cp in Sources */,
-				0AC6BB4E0A8C0BA100AFF37A /* FormatDialog.cp in Sources */,
+				0AC6BB4E0A8C0BA100AFF37A /* PrefsContextDialog.cp in Sources */,
 				0AC6BB500A8C0BA100AFF37A /* CFKeyValueInterface.cp in Sources */,
 				0AC6BB520A8C0BA100AFF37A /* ICGluePPC.cp in Sources */,
 				0AC6BB530A8C0BA100AFF37A /* CoreSuiteAE.cp in Sources */,

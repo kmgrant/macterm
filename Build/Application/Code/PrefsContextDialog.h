@@ -1,11 +1,17 @@
-/*!	\file FormatDialog.h
-	\brief Implements a dialog for editing font, size and color
-	information for a terminal window.
+/*!	\file PrefsContextDialog.h
+	\brief Implements a dialog that can host any panel capable
+	of editing settings in a "Preferences_ContextRef" (namely,
+	those normally used in the Preferences window).
+	
+	This is an extremely convenient way to edit a temporary
+	copy of settings that could also have global defaults.
+	The vast majority of terminal-specific sheets are
+	therefore trivial to implement.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -33,34 +39,40 @@
 
 #include "UniversalDefines.h"
 
-#ifndef __FORMATDIALOG__
-#define __FORMATDIALOG__
+#ifndef __PREFSCONTEXTDIALOG__
+#define __PREFSCONTEXTDIALOG__
 
 // Mac includes
 #include <CoreServices/CoreServices.h>
 
 // MacTelnet includes
+#include "GenericDialog.h"
+#include "Panel.h"
 #include "Preferences.h"
 
 
 
 #pragma mark Types
 
-typedef struct FormatDialog_OpaqueStruct*	FormatDialog_Ref;
+typedef struct PrefsContextDialog_OpaqueStruct*		PrefsContextDialog_Ref;
 
 
 
 #pragma mark Public Methods
 
-FormatDialog_Ref
-	FormatDialog_New						(HIWindowRef						inParentWindowOrNullForModalDialog,
+PrefsContextDialog_Ref
+	PrefsContextDialog_New					(HIWindowRef						inParentWindowOrNullForModalDialog,
+											 Panel_Ref							inHostedPanel,
 											 Preferences_ContextRef				inoutData);
 
 void
-	FormatDialog_Dispose					(FormatDialog_Ref*					inoutDialogPtr);
+	PrefsContextDialog_Dispose				(PrefsContextDialog_Ref*			inoutDialogPtr);
 
 void
-	FormatDialog_Display					(FormatDialog_Ref					inDialog);
+	PrefsContextDialog_Display				(PrefsContextDialog_Ref				inDialog);
+
+GenericDialog_Ref
+	PrefsContextDialog_ReturnGenericDialog	(PrefsContextDialog_Ref				inDialog);
 
 #endif
 

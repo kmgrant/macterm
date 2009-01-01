@@ -86,11 +86,12 @@ extern "C"
 #include "EventInfoWindowScope.h"
 #include "EventLoop.h"
 #include "FindDialog.h"
-#include "FormatDialog.h"
 #include "GenericThreads.h"
 #include "HelpSystem.h"
 #include "Keypads.h"
 #include "Preferences.h"
+#include "PrefPanelFormats.h"
+#include "PrefsContextDialog.h"
 #include "SessionFactory.h"
 #include "SizeDialog.h"
 #include "Terminal.h"
@@ -3761,13 +3762,14 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormat:
 					{
 						// display a format customization dialog
-						FormatDialog_Ref	dialog = nullptr;
+						PrefsContextDialog_Ref		dialog = nullptr;
+						Panel_Ref					prefsPanel = PrefPanelFormats_New();
 						
 						
 						// display the sheet
-						dialog = FormatDialog_New(GetUserFocusWindow(),
-													TerminalView_ReturnConfiguration(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
-						FormatDialog_Display(dialog); // automatically disposed when the user clicks a button
+						dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
+														TerminalView_ReturnConfiguration(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
+						PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
 						
 						result = noErr;
 					}
