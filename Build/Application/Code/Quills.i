@@ -8,11 +8,8 @@ allowing you to directly access core functionality from scripts!"
 %include "stl.i"
 
 // instantiate template types relied upon by Quills
-namespace std
-{
-	%template(float_list) vector<double>;
-	%template(string_list) vector<string>;
-}
+%template(_float_list) std::vector< double >;
+%template(_string_list) std::vector< std::string >;
 
 // IMPORTANT: The above %template instantiations MUST be declared prior
 // to any #includes that may directly or indirectly use system headers.
