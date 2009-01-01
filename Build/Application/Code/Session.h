@@ -408,7 +408,8 @@ Session_Result
 											 UInt8								inKeyOrASCII);
 
 Session_Result
-	Session_UserInputPaste					(SessionRef							inRef);
+	Session_UserInputPaste					(SessionRef							inRef,
+											 PasteboardRef						inSourceOrNull = nullptr);
 
 void
 	Session_UserInputQueueCharacter			(SessionRef							inRef,

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090101',
     '20081230',
     '20081229',
     '20081221',
@@ -202,6 +203,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090101': [
+		'Terminal view drag-and-drop now uses the same implementation as Paste, allowing such things as Multi-Line Paste warnings.',
+	],
 	'20081230': [
 		'Terminal view drag-and-drop now copies Unicode strings, for better interoperability with other applications.',
 	],

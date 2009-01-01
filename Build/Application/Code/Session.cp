@@ -289,7 +289,7 @@ struct My_PasteAlertInfo
 {
 	// sent to pasteWarningCloseNotifyProc()
 	SessionRef			sessionForPaste;
-	CFRetainRelease		clipboardData;
+	CFRetainRelease		sourcePasteboard;
 };
 typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
 
@@ -4046,10 +4046,12 @@ Session_UserInputKey	(SessionRef		inRef,
 
 
 /*!
-Allows the user to “type” whatever text is on the Clipboard.
+Allows the user to “type” whatever text is on the Clipboard
+(or, if not nullptr, the specified pasteboard; useful for
+handling drags, for instance).
 
 With some terminal applications (like shells), pasting in more
-than one line can cause unexpected results.  So, if the Clipboard
+than one line can cause unexpected results.  So, if the given
 text is multi-line, the user is warned and given options on how
 to perform the Paste.  This also means that this function could
 return before the Paste actually occurs.
@@ -4060,8 +4062,12 @@ always; no other return codes currently defined
 (3.1)
 */
 Session_Result
-Session_UserInputPaste	(SessionRef		inRef)
+Session_UserInputPaste	(SessionRef			inRef,
+						 PasteboardRef		inSourceOrNull)
 {
+	PasteboardRef const		kPasteboard = (nullptr == inSourceOrNull)
+											? Clipboard_ReturnPrimaryPasteboard()
+											: inSourceOrNull;
 	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
 	My_PasteAlertInfoPtr	pasteAlertInfoPtr = new My_PasteAlertInfo;
 	CFStringRef				pastedCFString = nullptr;
@@ -4070,13 +4076,13 @@ Session_UserInputPaste	(SessionRef		inRef)
 	
 	
 	pasteAlertInfoPtr->sessionForPaste = inRef;
-	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI))
+	if (Clipboard_CreateCFStringFromPasteboard(pastedCFString, pastedDataUTI, kPasteboard))
 	{
 		// examine the Clipboard; if the data contains new-lines, warn the user
 		Boolean		displayWarning = false;
 		
 		
-		pasteAlertInfoPtr->clipboardData = pastedCFString;
+		pasteAlertInfoPtr->sourcePasteboard = kPasteboard;
 		
 		// determine if this is a multi-line paste
 		{
@@ -4095,8 +4101,7 @@ Session_UserInputPaste	(SessionRef		inRef)
 			if (nullptr != allocatedBuffer) delete [] allocatedBuffer, allocatedBuffer = nullptr;
 		}
 		
-		// if text is available, proceed
-		if (pasteAlertInfoPtr->clipboardData.exists())
+		// now, paste (perhaps displaying a warning first)
 		{
 			AlertMessages_BoxRef	box = Alert_New();
 			
@@ -5615,12 +5620,14 @@ pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 		{
 			// first join the text into one line (replace new-line sequences
 			// with single spaces), then Paste
-			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierOneLine);
+			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierOneLine,
+									dataPtr->sourcePasteboard.returnPasteboardRef());
 		}
 		else if (inItemHit == kAlertStdAlertOtherButton)
 		{
 			// regular Paste, use verbatim what is on the Clipboard
-			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierNone);
+			Clipboard_TextFromScrap(sessionPtr->selfRef, kClipboard_ModifierNone,
+									dataPtr->sourcePasteboard.returnPasteboardRef());
 		}
 		
 		// clean up
@@ -6588,106 +6595,35 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			result = GetDragPasteboard(inDrag, &dragPasteboard);
 			if (noErr == result)
 			{
-				CFStringRef		stringToInsert = nullptr;
-				CFStringRef		stringUTI = nullptr;
-				Handle			textToInsert = nullptr; // TEMPORARY
+				Session_Result		pasteResult = kSession_ResultOK;
+				Boolean				cursorMovesPriorToDrops = false;
+				size_t				actualSize = 0L;
 				
 				
-				// read and cache information about this pasteboard
-				Clipboard_SetPasteboardModified(dragPasteboard);
-				
-				// retrieve the text (if text), or construct text (if a file)
-				if (DragAndDrop_DragIsExactlyOneFile(inDrag))
+				// if the user preference is set, first move the cursor to the drop location
+				unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
+											sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops,
+											&actualSize) == kPreferences_ResultOK)
 				{
-					// file drag; figure out the Unix pathname and insert that as if it were typed
-					HFSFlavor		fileInfo;
-					Size			dataSize = 0;
-					ItemReference	draggedFile = 0;
-					
-					
-					GetDragItemReferenceNumber(inDrag, 1/* index */, &draggedFile);
-					result = GetFlavorDataSize(inDrag, draggedFile, kDragFlavorTypeHFS, &dataSize);
-					if (result == noErr)
-					{
-						Str255		pathname;
-						
-						
-						// get the file information
-						dataSize = sizeof(fileInfo);
-						GetFlavorData(inDrag, draggedFile, kDragFlavorTypeHFS, &fileInfo,
-										&dataSize, 0L/* offset */);
-						
-						// construct a POSIX path for the HFS file
-						result = FileUtilities_GetPOSIXPathnameFromFSSpec
-								(&fileInfo.fileSpec, pathname, false/* is directory */);
-						
-						// copy the data into a handle, since that’s what’s used for other text drags
-						if (result != noErr) Console_WriteValue("pathname error", result);
-						else
-						{
-							// assume the user is running a shell, and escape the pathname
-							// from the shell by surrounding it with apostrophes (the new
-							// buffer must be large enough to hold 2 apostrophes)
-							textToInsert = Memory_NewHandle((2 + PLstrlen(pathname)) * sizeof(unsigned char));
-							if (textToInsert != nullptr)
-							{
-								(*textToInsert)[0] = '\'';
-								BlockMoveData(1 + pathname, 1 + *textToInsert,
-												PLstrlen(pathname) * sizeof(unsigned char));
-								(*textToInsert)[1 + PLstrlen(pathname)] = '\'';
-							}
-							Console_WriteValuePString("dropped path", pathname);
-							
-							// success!
-							result = noErr;
-						}
-					}
+					cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
 				}
-				else if (Clipboard_ContainsText(dragPasteboard))
+				if (cursorMovesPriorToDrops)
 				{
-					// text drag; combine all text items and insert the block as if it were typed
-					(Boolean)Clipboard_CreateCFStringFromPasteboard(stringToInsert, stringUTI, dragPasteboard);
+					// move cursor based on the local point
+					TerminalView_MoveCursorWithArrowKeys(TerminalWindow_ReturnViewWithFocus(terminalWindow),
+															mouseLocation);
 				}
-				else
+				
+				// “type” the text; this could trigger the “multi-line paste” alert
+				pasteResult = Session_UserInputPaste(inRef, dragPasteboard);
+				if (false == pasteResult.ok())
 				{
-					// ???
+					Console_WriteLine("warning, unable to complete paste from drag");
 					Sound_StandardAlert();
 				}
 				
-				if (nullptr != stringToInsert)
-				{
-					Boolean		cursorMovesPriorToDrops = false;
-					size_t		actualSize = 0L;
-					
-					
-					// if the user preference is set, first move the cursor to the drop location
-					unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops,
-												sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops,
-												&actualSize) == kPreferences_ResultOK)
-					{
-						cursorMovesPriorToDrops = false; // assume a value, if a preference can’t be found
-					}
-					if (cursorMovesPriorToDrops)
-					{
-						// move cursor based on the local point
-						TerminalView_MoveCursorWithArrowKeys(TerminalWindow_ReturnViewWithFocus(terminalWindow),
-																mouseLocation);
-					}
-					
-					// “type” the text
-					Session_UserInputCFString(inRef, stringToInsert, false/* record */);
-					
-					// success!
-					result = noErr;
-					
-					// clean up
-					CFRelease(stringToInsert), stringToInsert = nullptr;
-				}
-				
-				if (nullptr != stringUTI)
-				{
-					CFRelease(stringUTI), stringUTI = nullptr;
-				}
+				// success!
+				result = noErr;
 			}
 		}
 	}
