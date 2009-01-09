@@ -896,14 +896,15 @@ any errors that MacTelnet may have printed regarding your macro.
 
 The possible special sequences are:
 
-|_<{padding-right:0.5em}. Code|_<{padding-left:0.5em}. Meaning|
-|<. \\|<{padding-left:0.5em}. backslash (\)|
-|<. \t|<{padding-left:0.5em}. horizontal tab|
-|<. \r|<{padding-left:0.5em}. carriage return|
-|<. \n|<{padding-left:0.5em}. line feed|
-|<. \e|<{padding-left:0.5em}. escape (^[)|
-|<. \0nn|<{padding-left:0.5em}. arbitrary ASCII in octal; e.g. "\004" is ^D|
-|<. \1nn|<{padding-left:0.5em}. arbitrary ASCII in octal; e.g. "\177" is delete|
+table(deftable).
+(def). |_<(key). Code|_<(desc). Meaning|
+(def). |<(key). @\\@|(desc)<. backslash (@\@)|
+(def). |<(key). @\t@|(desc)<. horizontal tab|
+(def). |<(key). @\r@|(desc)<. carriage return|
+(def). |<(key). @\n@|(desc)<. line feed|
+(def). |<(key). @\e@|(desc)<. escape (@^[@)|
+(def). |<(key). @\0nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\004@" is @^D@|
+(def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\177@" is delete|
 
 bq. To see the octal versions of all ASCII characters,
 look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
@@ -915,8 +916,9 @@ this is no longer necessary.
 MacTelnet also recognizes codes that represent information
 to be inserted at the time a macro is actually used:
 
-|<. \i|<{padding-left:0.5em}. dynamically substitute an IP address of the computer|
-|<. \#|<{padding-left:0.5em}. dynamically substitute the number of terminal lines|
+table(deftable).
+(def). |<(key). @\i@|(desc)<. dynamically substitute an IP address of the computer|
+(def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
 
 Currently, there is no way to choose which IP address is actually
 sent with "\i".  But you can use Window >> Show IP Addresses to

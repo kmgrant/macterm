@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090108',
     '20090101',
     '20081230',
     '20081229',
@@ -203,6 +204,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090108': [
+		'MacTelnet Help now uses a slightly different style for table views, to improve readability.',
+	],
 	'20090101': [
 		'Terminal view drag-and-drop now uses the same implementation as Paste, allowing such things as Multi-Line Paste warnings.',
 	],

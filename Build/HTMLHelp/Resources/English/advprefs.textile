@@ -53,262 +53,268 @@ h2(#keys). Preference Keys
 
 h3(#general). General
 
-|@key-map-backquote@|_string_: @\e@ or _empty_|
-|\2((. Using this key sends a backquote character to the session.|
-|@kiosk-effects-enabled@|_true or false_|
-|\2((. Full-screen terminals are altered to look more like real terminal screens.|
-|@kiosk-force-quit-enabled@|_true or false_|
-|\2((. The "Force Quit" system command is available in Full Screen mode.|
-|@kiosk-menu-bar-visible@|_true or false_|
-|\2((. The menu bar can be reached in Full Screen mode by moving the mouse to the top of the screen.|
-|@kiosk-off-switch-visible@|_true or false_|
-|\2((. A floating window is visible to turn off Full Screen mode.|
-|@kiosk-scroll-bar-visible@|_true or false_|
-|\2((. The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
-|@menu-command-set-simplified@|_true or false_|
-|\2((. "Complex" or rarely needed items are hidden in the menu bar.|
-|@menu-key-equivalents@|_true or false_|
-|\2((. Menu items in the menu bar can display and respond to keyboard equivalents.|
-|@menu-macros-visible@|_true or false_|
-|\2((. Macros are available in the menu bar.|
-|@new-means@|_string_: @default@, @dialog@, @log-in shell@ or @shell@|
-|\2((. The default command-N key equivalent creates this type of session.|
-|@no-auto-close@|_true or false_|
-|\2((. The window stays open after the process exits for any reason.|
-|@no-auto-new@|_true or false_|
-|\2((. A new window is not opened automatically when no other windows are open.|
-|@spaces-per-tab@|_integer_|
-|\2((. "Copy with Tab Substitution" uses this many spaces in place of each tab it finds.|
-|@terminal-auto-copy-on-select@|_true or false_|
-|\2((. Text is copied to the Clipboard as soon as it is selected via mouse or keyboard.|
-|@terminal-cursor-auto-move-on-drop@|_true or false_|
-|\2((. Cursor movement sequences are sent to the terminal prior to text drag-and-drop to position the cursor beneath the mouse.|
-|@terminal-cursor-blinking@|_true or false_|
-|\2((. The text input marker in terminals flashes on and off.|
-|@terminal-cursor-shape@|_string_: @block@, @underline@, @thick underline@, @vertical bar@ or @thick vertical bar@|
-|\2((. The appearance of the text input marker in terminals.|
-|@terminal-focus-follows-mouse@|_true or false_|
-|\2((. The terminal view beneath the mouse always accepts keyboard input regardless of which window is in front.|
-|@terminal-format-random@|_true or false_|
-|\2((. Each new window selects one of the Format collections at random (affects font and colors).|
-|@terminal-inverse-selections@|_true or false_|
-|\2((. Selected text inverts the screen colors instead of using a darkening or lightening effect.|
-|@terminal-resize-affects@|_string_: @screen@ or @font@|
-|\2((. Resizing a terminal view will alter its screen dimensions or its font size to best fit the new area.|
-|@terminal-use-tabs@|_true or false_|
-|\2((. Windows stick together and have tabs.|
-|@terminal-when-bell@|_string_: @audio@, @audio+visual@ or @visual@|
-|\2((. Terminal bells have this effect when the source terminal is frontmost.|
-|@terminal-when-bell-in-background@|_string_: @ignore@ or @notify@|
-|\2((. Terminal bells have this effect when the application is not frontmost.|
-|@terminal-when-bell-sound-basename@|_string_|
-|\2((. Terminal bells play this sound; found in any Library/Sounds folder; no extension (e.g. ".aiff").|
-|@terminal-when-cursor-near-right-margin@|_string_: @bell@ or @ignore@|
-|\2((. When user input moves the cursor close to the right edge, an audio event occurs.|
-|@when-alert-in-background@|_string_: @ignore@, @badge@, @animate@ or @alert@|
-|\2((. This is the type of notification used for alert messages when the application is not frontmost.|
-|@window-clipboard-visible@|_true or false_|
-|\2((. This window should be displayed when the application launches.|
-|@window-commandline-visible@|_true or false_|
-|\2((. This window should be displayed when the application launches.|
-|@window-controlkeys-visible@|_true or false_|
-|\2((. This window should be displayed when the application launches.|
-|@window-functionkeys-visible@|_true or false_|
-|\2((. This window should be displayed when the application launches.|
-|@window-sessioninfo-visible@|_true or false_|
-|\2((. This window should be displayed when the application launches.|
-|@window-sessioninfo-column-order@|_array of string_|
-|\2((. Set implicitly as the user moves columns in the Session Info window.|
-|@window-terminal-toolbar-invisible@|_true or false_|
-|\2((. When a window first opens, its toolbar buttons are hidden.|
-|@window-vt220-visible@|_true or false_|
-|\2((. This window should be displayed when the application launches.|
-|@window-terminal-position-pixels@|_array of integer_: two values, horizontal and vertical pixel offsets from main display top-left|
-|\2((. Where to place the first terminal window, and where to start for "Arrange All in Front".|
+table(deftable).
+(deftop). |(key). @key-map-backquote@|(types). _string_: @\e@ or _empty_|
+(defbottom). |(desc)\2. Using this key sends a backquote character to the session.|
+(deftop). |(key). @kiosk-effects-enabled@|(types). _true or false_|
+(defbottom). |(desc)\2. Full-screen terminals are altered to look more like real terminal screens.|
+(deftop). |(key). @kiosk-force-quit-enabled@|(types). _true or false_|
+(defbottom). |(desc)\2. The "Force Quit" system command is available in Full Screen mode.|
+(deftop). |(key). @kiosk-menu-bar-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. The menu bar can be reached in Full Screen mode by moving the mouse to the top of the screen.|
+(deftop). |(key). @kiosk-off-switch-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. A floating window is visible to turn off Full Screen mode.|
+(deftop). |(key). @kiosk-scroll-bar-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
+(deftop). |(key). @menu-command-set-simplified@|(types). _true or false_|
+(defbottom). |(desc)\2. "Complex" or rarely needed items are hidden in the menu bar.|
+(deftop). |(key). @menu-key-equivalents@|(types). _true or false_|
+(defbottom). |(desc)\2. Menu items in the menu bar can display and respond to keyboard equivalents.|
+(deftop). |(key). @menu-macros-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. Macros are available in the menu bar.|
+(deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@|(types). 
+(defbottom). |(desc)\2. The default command-N key equivalent creates this type of session.|
+(deftop). |(key). @no-auto-close@|(types). _true or false_|
+(defbottom). |(desc)\2. The window stays open after the process exits for any reason.|
+(deftop). |(key). @no-auto-new@|(types). _true or false_|
+(defbottom). |(desc)\2. A new window is not opened automatically when no other windows are open.|
+(deftop). |(key). @spaces-per-tab@|(types). _integer_|
+(defbottom). |(desc)\2. "Copy with Tab Substitution" uses this many spaces in place of each tab it finds.|
+(deftop). |(key). @terminal-auto-copy-on-select@|(types). _true or false_|
+(defbottom). |(desc)\2. Text is copied to the Clipboard as soon as it is selected via mouse or keyboard.|
+(deftop). |(key). @terminal-cursor-auto-move-on-drop@|(types). _true or false_|
+(defbottom). |(desc)\2. Cursor movement sequences are sent to the terminal prior to text drag-and-drop to position the cursor beneath the mouse.|
+(deftop). |(key). @terminal-cursor-blinking@|(types). _true or false_|
+(defbottom). |(desc)\2. The text input marker in terminals flashes on and off.|
+(deftop). |(key). @terminal-cursor-shape@|(types). _string_: @block@, @underline@, @thick underline@, @vertical bar@ or @thick vertical bar@|(types). 
+(defbottom). |(desc)\2. The appearance of the text input marker in terminals.|
+(deftop). |(key). @terminal-focus-follows-mouse@|(types). _true or false_|
+(defbottom). |(desc)\2. The terminal view beneath the mouse always accepts keyboard input regardless of which window is in front.|
+(deftop). |(key). @terminal-format-random@|(types). _true or false_|
+(defbottom). |(desc)\2. Each new window selects one of the Format collections at random (affects font and colors).|
+(deftop). |(key). @terminal-inverse-selections@|(types). _true or false_|
+(defbottom). |(desc)\2. Selected text inverts the screen colors instead of using a darkening or lightening effect.|
+(deftop). |(key). @terminal-resize-affects@|(types). _string_: @screen@ or @font@|(types). 
+(defbottom). |(desc)\2. Resizing a terminal view will alter its screen dimensions or its font size to best fit the new area.|
+(deftop). |(key). @terminal-use-tabs@|(types). _true or false_|
+(defbottom). |(desc)\2. Windows stick together and have tabs.|
+(deftop). |(key). @terminal-when-bell@|(types). _string_: @audio@, @audio+visual@ or @visual@|(types). 
+(defbottom). |(desc)\2. Terminal bells have this effect when the source terminal is frontmost.|
+(deftop). |(key). @terminal-when-bell-in-background@|(types). _string_: @ignore@ or @notify@|(types). 
+(defbottom). |(desc)\2. Terminal bells have this effect when the application is not frontmost.|
+(deftop). |(key). @terminal-when-bell-sound-basename@|(types). _string_|
+(defbottom). |(desc)\2. Terminal bells play this sound; found in any Library/Sounds folder; no extension (e.g. ".aiff").|
+(deftop). |(key). @terminal-when-cursor-near-right-margin@|(types). _string_: @bell@ or @ignore@|(types). 
+(defbottom). |(desc)\2. When user input moves the cursor close to the right edge, an audio event occurs.|
+(deftop). |(key). @when-alert-in-background@|(types). _string_: @ignore@, @badge@, @animate@ or @alert@|(types). 
+(defbottom). |(desc)\2. This is the type of notification used for alert messages when the application is not frontmost.|
+(deftop). |(key). @window-clipboard-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. This window should be displayed when the application launches.|
+(deftop). |(key). @window-commandline-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. This window should be displayed when the application launches.|
+(deftop). |(key). @window-controlkeys-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. This window should be displayed when the application launches.|
+(deftop). |(key). @window-functionkeys-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. This window should be displayed when the application launches.|
+(deftop). |(key). @window-sessioninfo-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. This window should be displayed when the application launches.|
+(deftop). |(key). @window-sessioninfo-column-order@|(types). _array of string_|
+(defbottom). |(desc)\2. Set implicitly as the user moves columns in the Session Info window.|
+(deftop). |(key). @window-terminal-toolbar-invisible@|(types). _true or false_|
+(defbottom). |(desc)\2. When a window first opens, its toolbar buttons are hidden.|
+(deftop). |(key). @window-vt220-visible@|(types). _true or false_|
+(defbottom). |(desc)\2. This window should be displayed when the application launches.|
+(deftop). |(key). @window-terminal-position-pixels@|(types). _array of integer_: two values, horizontal and vertical pixel offsets from main display top-left|
+(defbottom). |(desc)\2. Where to place the first terminal window, and where to start for "Arrange All in Front".|
 
 h3(#sessions). Session Collections
 
-|@command-key-interrupt-process@|_string_: two characters, a caret and any control key character|
-|\2((. Using this key sequence interrupts whatever process is currently running in the window.|
-|@command-key-resume-output@|_string_: two characters, a caret and any control key character|
-|\2((. Using this key sequence unlocks scroll ("XON"), resuming output in the window.|
-|@command-key-suspend-output@|_string_: two characters, a caret and any control key character|
-|\2((. Using this key sequence locks scroll ("XOFF"), suspending output in the window.|
-|@command-line-token-strings@|_array of string_|
-|\2((. This Unix command and arguments are executed to start the session.  _Not_ interpreted (for that, write your own shell script!).|
-|@data-receive-buffer-size-bytes@|_integer_|
-|\2((. Fewer than this many bytes remain cached before being processed by the terminal.|
-|@data-receive-idle-seconds@|_integer_|
-|\2((. Sessions set to notify on idle, do so after a few seconds of inactivity, according to this value.|
-|@data-send-keepalive-period-minutes@|_integer_|
-|\2((. Sessions set to send a keep-alive character on idle, do so every few minutes, according to this value.|
-|@data-send-local-echo-enabled@|_true or false_|
-|\2((. Text input is immediately processed by the terminal.|
-|@data-send-local-echo-half-duplex@|_true or false_|
-|\2((. The running process is instructed not to echo data coming from text input.|
-|@data-send-paste-block-size-bytes@|_integer_|
-|\2((. "Large" pastes in throttled mode are split into chunks no larger than this number of bytes.|
-|@data-send-paste-method@|_string_: @normal@ or @throttled@|
-|\2((. Pastes are sent to the session all at once or split into chunks.|
-|@key-map-delete@|_string_: @backspace@ or @delete@|
-|\2((. Using the Delete key sends this instruction (backspace or delete) to the session.|
-|@key-map-new-line@|_string_: @\015\000@ or @\015\012@|
-|\2((. Using the Return or Enter key sends this sequence (character codes in C-style octal) to the session.|
-|@server-host@|_string_: TCP/IP host name, or IPv4 or IPv6 address|
-|\2((. The machine where the desired remote server is located.|
-|@server-port@|_integer_: TCP/IP port number|
-|\2((. The port on the host machine that the desired remote server is using; can derive default from protocol.|
-|@server-protocol@|_string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@|
-|\2((. The protocol used for a remote connection.|
-|@server-user-id@|_string_: typically all-lowercase and one word, for log-in|
-|\2((. The ID used for logging in to the remote server.|
-|@tek-mode@|_string_: @off@, @4014@ or @4105@|
-|\2((. Vector graphics commands received from the session are disabled or assumed to use this command set.|
-|@tek-page-clears-screen@|_true or false_|
-|\2((. A PAGE command in TEK data causes the active graphics window to be erased instead of opening a new active window.|
-|@terminal-capture-auto-start@|_true or false_|
-|\2((. File captures begin automatically when the session starts.|
-|@terminal-favorite@|_string_|
-|\2((. This Terminal collection is used by default when the session starts.|
+table(deftable).
+(deftop). |(key). @command-key-interrupt-process@|(types). _string_: two characters, a caret and any control key character|
+(defbottom). |(desc)\2. Using this key sequence interrupts whatever process is currently running in the window.|
+(deftop). |(key). @command-key-resume-output@|(types). _string_: two characters, a caret and any control key character|
+(defbottom). |(desc)\2. Using this key sequence unlocks scroll ("XON"), resuming output in the window.|
+(deftop). |(key). @command-key-suspend-output@|(types). _string_: two characters, a caret and any control key character|
+(defbottom). |(desc)\2. Using this key sequence locks scroll ("XOFF"), suspending output in the window.|
+(deftop). |(key). @command-line-token-strings@|(types). _array of string_|
+(defbottom). |(desc)\2. This Unix command and arguments are executed to start the session.  _Not_ interpreted (for that, write your own shell script!).|
+(deftop). |(key). @data-receive-buffer-size-bytes@|(types). _integer_|
+(defbottom). |(desc)\2. Fewer than this many bytes remain cached before being processed by the terminal.|
+(deftop). |(key). @data-receive-idle-seconds@|(types). _integer_|
+(defbottom). |(desc)\2. Sessions set to notify on idle, do so after a few seconds of inactivity, according to this value.|
+(deftop). |(key). @data-send-keepalive-period-minutes@|(types). _integer_|
+(defbottom). |(desc)\2. Sessions set to send a keep-alive character on idle, do so every few minutes, according to this value.|
+(deftop). |(key). @data-send-local-echo-enabled@|(types). _true or false_|
+(defbottom). |(desc)\2. Text input is immediately processed by the terminal.|
+(deftop). |(key). @data-send-local-echo-half-duplex@|(types). _true or false_|
+(defbottom). |(desc)\2. The running process is instructed not to echo data coming from text input.|
+(deftop). |(key). @data-send-paste-block-size-bytes@|(types). _integer_|
+(defbottom). |(desc)\2. "Large" pastes in throttled mode are split into chunks no larger than this number of bytes.|
+(deftop). |(key). @data-send-paste-method@|(types). _string_: @normal@ or @throttled@|(types). 
+(defbottom). |(desc)\2. Pastes are sent to the session all at once or split into chunks.|
+(deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@|(types). 
+(defbottom). |(desc)\2. Using the Delete key sends this instruction (backspace or delete) to the session.|
+(deftop). |(key). @key-map-new-line@|(types). _string_: @\015\000@ or @\015\012@|(types). 
+(defbottom). |(desc)\2. Using the Return or Enter key sends this sequence (character codes in C-style octal) to the session.|
+(deftop). |(key). @server-host@|(types). _string_: TCP/IP host name, or IPv4 or IPv6 address|
+(defbottom). |(desc)\2. The machine where the desired remote server is located.|
+(deftop). |(key). @server-port@|(types). _integer_: TCP/IP port number|
+(defbottom). |(desc)\2. The port on the host machine that the desired remote server is using; can derive default from protocol.|
+(deftop). |(key). @server-protocol@|(types). _string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@|(types). 
+(defbottom). |(desc)\2. The protocol used for a remote connection.|
+(deftop). |(key). @server-user-id@|(types). _string_: typically all-lowercase and one word, for log-in|
+(defbottom). |(desc)\2. The ID used for logging in to the remote server.|
+(deftop). |(key). @tek-mode@|(types). _string_: @off@, @4014@ or @4105@|(types). 
+(defbottom). |(desc)\2. Vector graphics commands received from the session are disabled or assumed to use this command set.|
+(deftop). |(key). @tek-page-clears-screen@|(types). _true or false_|
+(defbottom). |(desc)\2. A PAGE command in TEK data causes the active graphics window to be erased instead of opening a new active window.|
+(deftop). |(key). @terminal-capture-auto-start@|(types). _true or false_|
+(defbottom). |(desc)\2. File captures begin automatically when the session starts.|
+(deftop). |(key). @terminal-favorite@|(types). _string_|
+(defbottom). |(desc)\2. This Terminal collection is used by default when the session starts.|
 
 h3(#terminals). Terminal Collections
 
-|@command-key-emacs-move-down@|_string_: @down-arrow@ or _empty_|
-|\2((. Using this key triggers a cursor movement in the EMACS text editor.|
-|@command-key-emacs-move-left@|_string_: @left-arrow@ or _empty_|
-|\2((. Using this key triggers a cursor movement in the EMACS text editor.|
-|@command-key-emacs-move-right@|_string_: @right-arrow@ or _empty_|
-|\2((. Using this key triggers a cursor movement in the EMACS text editor.|
-|@command-key-emacs-move-up@|_string_: @up-arrow@ or _empty_|
-|\2((. Using this key triggers a cursor movement in the EMACS text editor.|
-|@command-key-terminal-end@|_string_: @end@ or _empty_|
-|\2((. Using this key causes the local terminal display to scroll without notifying the session.|
-|@command-key-terminal-home@|_string_: @home@ or _empty_|
-|\2((. Using this key causes the local terminal display to scroll without notifying the session.|
-|@command-key-terminal-page-down@|_string_: @page-down@ or _empty_|
-|\2((. Using this key causes the local terminal display to scroll without notifying the session.|
-|@command-key-terminal-page-up@|_string_: @page-up@ or _empty_|
-|\2((. Using this key causes the local terminal display to scroll without notifying the session.|
-|@command-key-vt220-pf1@|_string_: @keypad-clear@ or _empty_|
-|\2((. Using this key triggers a VT220 function key or a normal keypad key.|
-|@command-key-vt220-pf2@|_string_: @keypad-=@ or _empty_|
-|\2((. Using this key triggers a VT220 function key or a normal keypad key.|
-|@command-key-vt220-pf3@|_string_: @keypad-/@ or _empty_|
-|\2((. Using this key triggers a VT220 function key or a normal keypad key.|
-|@command-key-vt220-pf4@|_string_: @keypad-*@ or _empty_|
-|\2((. Using this key triggers a VT220 function key or a normal keypad key.|
-|@data-receive-do-not-strip-high-bit@|_true or false_|
-|\2((. Characters are considered to be 8 bits.|
-|@key-map-emacs-meta@|_string_: @control+command@ or @option@ or _empty_|
-|\2((. This Mac keyboard input is interpreted as a meta keypress in the EMACS text editor.|
-|@terminal-clear-saves-lines@|_true or false_|
-|\2((. A session request to clear the screen will first copy screen lines to the scrollback before obliterating them.|
-|@terminal-emulator-answerback@|_string_|
-|\2((. The name sent to the session when asked about terminal type; defaults to the current emulator name.|
-|@terminal-emulator-type@|_string_: @dumb@, @vt100@, @vt102@, or @vt220@|
-|\2((. Default behavior (such as which sequences are read, and what effects they have) follows the specification of this terminal.|
-|@terminal-emulator-vt100-fix-line-wrapping-bug@|_true or false_|
-|\2((. Avoids strict VT100 emulation, preventing a real bug in VT100s that causes the last terminal line to scroll when wrapped.|
-|@terminal-emulator-xterm-enable-color@|_true or false_|
-|\2((. ANSI colors are allowed (regardless of terminal type).|
-|@terminal-emulator-xterm-enable-graphics@|_true or false_|
-|\2((. Graphics characters are allowed (regardless of terminal type).|
-|@terminal-emulator-xterm-enable-window-alteration-sequences@|_true or false_|
-|\2((. A session can request that windows be renamed or iconified, etc.|
-|@terminal-line-wrap@|_true or false_|
-|\2((. Text inserted while the cursor is at the right margin will move the cursor to home on the next line instead of truncating.|
-|@terminal-screen-dimensions-columns@|_integer_|
-|\2((. The screen is this many columns wide.|
-|@terminal-screen-dimensions-rows@|_integer_|
-|\2((. The main screen (excluding scrollback) is this many rows high.|
-|@terminal-scroll-delay-milliseconds@|_integer_|
-|\2((. Instead of being as fast as possible, scroll activity is delayed by this number of milliseconds to improve readability.|
-|@terminal-scrollback-size-lines@|_integer_|
-|\2((. For scrollbacks of fixed or distributed type, the maximum number of lines used by this screen.|
-|@terminal-scrollback-type@|_string_: @off@, @unlimited@, @distributed@ or @fixed@|
-|\2((. Scrollback memory is not allocated at all, or is allocated in the specified way.|
+table(deftable).
+(deftop). |(key). @command-key-emacs-move-down@|(types). _string_: @down-arrow@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(deftop). |(key). @command-key-emacs-move-left@|(types). _string_: @left-arrow@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(deftop). |(key). @command-key-emacs-move-right@|(types). _string_: @right-arrow@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(deftop). |(key). @command-key-emacs-move-up@|(types). _string_: @up-arrow@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(deftop). |(key). @command-key-terminal-end@|(types). _string_: @end@ or _empty_|
+(defbottom). |(desc)\2. Using this key causes the local terminal display to scroll without notifying the session.|
+(deftop). |(key). @command-key-terminal-home@|(types). _string_: @home@ or _empty_|
+(defbottom). |(desc)\2. Using this key causes the local terminal display to scroll without notifying the session.|
+(deftop). |(key). @command-key-terminal-page-down@|(types). _string_: @page-down@ or _empty_|
+(defbottom). |(desc)\2. Using this key causes the local terminal display to scroll without notifying the session.|
+(deftop). |(key). @command-key-terminal-page-up@|(types). _string_: @page-up@ or _empty_|
+(defbottom). |(desc)\2. Using this key causes the local terminal display to scroll without notifying the session.|
+(deftop). |(key). @command-key-vt220-pf1@|(types). _string_: @keypad-clear@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a VT220 function key or a normal keypad key.|
+(deftop). |(key). @command-key-vt220-pf2@|(types). _string_: @keypad-=@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a VT220 function key or a normal keypad key.|
+(deftop). |(key). @command-key-vt220-pf3@|(types). _string_: @keypad-/@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a VT220 function key or a normal keypad key.|
+(deftop). |(key). @command-key-vt220-pf4@|(types). _string_: @keypad-*@ or _empty_|
+(defbottom). |(desc)\2. Using this key triggers a VT220 function key or a normal keypad key.|
+(deftop). |(key). @data-receive-do-not-strip-high-bit@|(types). _true or false_|
+(defbottom). |(desc)\2. Characters are considered to be 8 bits.|
+(deftop). |(key). @key-map-emacs-meta@|(types). _string_: @control+command@ or @option@ or _empty_|
+(defbottom). |(desc)\2. This Mac keyboard input is interpreted as a meta keypress in the EMACS text editor.|
+(deftop). |(key). @terminal-clear-saves-lines@|(types). _true or false_|
+(defbottom). |(desc)\2. A session request to clear the screen will first copy screen lines to the scrollback before obliterating them.|
+(deftop). |(key). @terminal-emulator-answerback@|(types). _string_|
+(defbottom). |(desc)\2. The name sent to the session when asked about terminal type; defaults to the current emulator name.|
+(deftop). |(key). @terminal-emulator-type@|(types). _string_: @dumb@, @vt100@, @vt102@, or @vt220@|(types). 
+(defbottom). |(desc)\2. Default behavior (such as which sequences are read, and what effects they have) follows the specification of this terminal.|
+(deftop). |(key). @terminal-emulator-vt100-fix-line-wrapping-bug@|(types). _true or false_|
+(defbottom). |(desc)\2. Avoids strict VT100 emulation, preventing a real bug in VT100s that causes the last terminal line to scroll when wrapped.|
+(deftop). |(key). @terminal-emulator-xterm-enable-color@|(types). _true or false_|
+(defbottom). |(desc)\2. ANSI colors are allowed (regardless of terminal type).|
+(deftop). |(key). @terminal-emulator-xterm-enable-graphics@|(types). _true or false_|
+(defbottom). |(desc)\2. Graphics characters are allowed (regardless of terminal type).|
+(deftop). |(key). @terminal-emulator-xterm-enable-window-alteration-sequences@|(types). _true or false_|
+(defbottom). |(desc)\2. A session can request that windows be renamed or iconified, etc.|
+(deftop). |(key). @terminal-line-wrap@|(types). _true or false_|
+(defbottom). |(desc)\2. Text inserted while the cursor is at the right margin will move the cursor to home on the next line instead of truncating.|
+(deftop). |(key). @terminal-screen-dimensions-columns@|(types). _integer_|
+(defbottom). |(desc)\2. The screen is this many columns wide.|
+(deftop). |(key). @terminal-screen-dimensions-rows@|(types). _integer_|
+(defbottom). |(desc)\2. The main screen (excluding scrollback) is this many rows high.|
+(deftop). |(key). @terminal-scroll-delay-milliseconds@|(types). _integer_|
+(defbottom). |(desc)\2. Instead of being as fast as possible, scroll activity is delayed by this number of milliseconds to improve readability.|
+(deftop). |(key). @terminal-scrollback-size-lines@|(types). _integer_|
+(defbottom). |(desc)\2. For scrollbacks of fixed or distributed type, the maximum number of lines used by this screen.|
+(deftop). |(key). @terminal-scrollback-type@|(types). _string_: @off@, @unlimited@, @distributed@ or @fixed@|(types). 
+(defbottom). |(desc)\2. Scrollback memory is not allocated at all, or is allocated in the specified way.|
 
 h3(#formats). Format Collections
 
-|@terminal-color-ansi-black-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-blue-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-cyan-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-green-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-magenta-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-red-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-white-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-yellow-normal-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for non-boldface text.|
-|@terminal-color-ansi-black-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-ansi-blue-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-ansi-cyan-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-ansi-green-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-ansi-magenta-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-ansi-red-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-ansi-white-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-ansi-yellow-bold-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. A basic (ANSI) palette color for boldface text.|
-|@terminal-color-blinking-background-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. Base color for rendering blinking text (which is animated).|
-|@terminal-color-blinking-foreground-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. Base color for rendering blinking text (which is animated).|
-|@terminal-color-bold-background-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. Color for rendering boldface text.|
-|@terminal-color-bold-foreground-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. Color for rendering boldface text.|
-|@terminal-color-normal-background-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. Color for rendering almost all text.|
-|@terminal-color-normal-foreground-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. Color for rendering almost all text.|
-|@terminal-color-matte-background-rgb@|_array of float_: exactly 3 numbers between 0 and 1 inclusive|
-|\2((. Color for rendering the border.|
-|@terminal-font-family@|_string_|
-|\2((. This font is used for the majority of text rendering.|
-|@terminal-font-size-points@|_integer_|
-|\2((. Text uses this size unless overridden by "terminal-resize-affects".|
-|@terminal-margin-bottom-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
-|@terminal-margin-left-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
-|@terminal-margin-right-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
-|@terminal-margin-top-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
-|@terminal-padding-bottom-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
-|@terminal-padding-left-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
-|@terminal-padding-right-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
-|@terminal-padding-top-em@|_float_: multiplied by the current font's "m" width|
-|\2((. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
+table(deftable).
+(deftop). |(key). @terminal-color-ansi-black-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-blue-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-cyan-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-green-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-magenta-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-red-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-white-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-yellow-normal-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for non-boldface text.|
+(deftop). |(key). @terminal-color-ansi-black-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-ansi-blue-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-ansi-cyan-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-ansi-green-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-ansi-magenta-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-ansi-red-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-ansi-white-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-ansi-yellow-bold-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. A basic (ANSI) palette color for boldface text.|
+(deftop). |(key). @terminal-color-blinking-background-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. Base color for rendering blinking text (which is animated).|
+(deftop). |(key). @terminal-color-blinking-foreground-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. Base color for rendering blinking text (which is animated).|
+(deftop). |(key). @terminal-color-bold-background-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. Color for rendering boldface text.|
+(deftop). |(key). @terminal-color-bold-foreground-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. Color for rendering boldface text.|
+(deftop). |(key). @terminal-color-normal-background-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. Color for rendering almost all text.|
+(deftop). |(key). @terminal-color-normal-foreground-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. Color for rendering almost all text.|
+(deftop). |(key). @terminal-color-matte-background-rgb@|(types). _array of float_: exactly 3 numbers between 0 and 1 inclusive|
+(defbottom). |(desc)\2. Color for rendering the border.|
+(deftop). |(key). @terminal-font-family@|(types). _string_|
+(defbottom). |(desc)\2. This font is used for the majority of text rendering.|
+(deftop). |(key). @terminal-font-size-points@|(types). _integer_|
+(defbottom). |(desc)\2. Text uses this size unless overridden by "terminal-resize-affects".|
+(deftop). |(key). @terminal-margin-bottom-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-margin-left-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-margin-right-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-margin-top-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-padding-bottom-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-padding-left-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-padding-right-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
+(deftop). |(key). @terminal-padding-top-em@|(types). _float_: multiplied by the current font's "m" width|
+(defbottom). |(desc)\2. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
 
 h3(#macros). Macro Collections
 
+table(deftable).
 |\2. _this table is incomplete_ |
 
 h3(#translations). Translation Collections
 
-|@terminal-backup-font-family@|_string_|
-|\2((. This font is used whenever the current Format font is missing a glyph.|
-|@terminal-text-encoding-name@|_string_|
-|\2((. The IANA registry name of the text encoding to use; if both a name and ID exist, the name is used unless it is invalid.|
-|@terminal-text-encoding-id@|_integer_|
-|\2((. The CFString-assigned number for the text encoding to use; if both a name and ID exist, the name is used unless it is invalid.|
+table(deftable).
+(deftop). |(key). @terminal-backup-font-family@|(types). _string_|
+(defbottom). |(desc)\2. This font is used whenever the current Format font is missing a glyph.|
+(deftop). |(key). @terminal-text-encoding-name@|(types). _string_|
+(defbottom). |(desc)\2. The IANA registry name of the text encoding to use; if both a name and ID exist, the name is used unless it is invalid.|
+(deftop). |(key). @terminal-text-encoding-id@|(types). _integer_|
+(defbottom). |(desc)\2. The CFString-assigned number for the text encoding to use; if both a name and ID exist, the name is used unless it is invalid.|
 
 </div>
 

@@ -84,7 +84,7 @@ a:hover
 	color:				white;
 	text-decoration:	none;
 	
-	border-bottom-color:#999;
+	border-bottom-color:#666;
 }
 
 /* the background is a high-bandwidth image that will only be useful to color display users */
@@ -359,6 +359,7 @@ h6
 {
 	background:			white;
 	color:				black;
+	max-width:			45em;
 	
 	margin-top:			1.0em;
 	border-top:			0;
@@ -394,8 +395,188 @@ blockquote
 	margin-left:		2em;
 	border-left:		dashed #aae 0.1em;
 	padding-left:		1.5em;
-	width:				65%;
+	width:				auto;
 	padding-right:		1.5em;
 	border-right:		0;
 	margin-right:		0;
+}
+
+.deftable
+{
+	border-collapse:	collapse;
+	
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
+	height:				auto;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
+	
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
+	width:				auto;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
+}
+
+.def td,
+.deftop td,
+.defbottom td,
+.def th,
+.deftop th,
+.defbottom th
+{
+	margin-top:			0;
+	border-top:			0;
+	padding-top:		0;
+	height:				auto;
+	padding-bottom:		0;
+	border-bottom:		0;
+	margin-bottom:		0;
+	
+	margin-left:		0;
+	border-left:		0;
+	padding-left:		0;
+	width:				auto;
+	padding-right:		0;
+	border-right:		0;
+	margin-right:		0;
+}
+
+.def td.key,
+.deftop td.key,
+.defbottom td.key,
+.def th.key,
+.deftop th.key,
+.defbottom th.key
+{
+	white-space:		nowrap;
+	
+	padding-left:		2em;
+	padding-right:		2em;
+}
+
+.def td.key code,
+.deftop td.key code,
+.defbottom td.key code
+{
+	font-size:			smaller;
+}
+
+.def td.key,
+.deftop td.key,
+.defbottom td.key
+{
+	background:			white;
+	color:				black;
+}
+
+.def td.key
+{
+	border-top:			solid black 0.15em;
+	border-bottom:		solid black 0.15em;
+	
+	border-left:		solid #bbb 0.1em;
+}
+
+.deftop td.key
+{
+	border-top:			solid black 0.15em;
+	border-left:		solid #bbb 0.1em;
+}
+
+.defbottom td.key
+{
+	border-top:			solid black 0.15em;
+	border-left:		solid #bbb 0.1em;
+}
+
+.def td.types,
+.deftop td.types,
+.defbottom td.types,
+.def th.types,
+.deftop th.types,
+.defbottom th.types
+{
+	padding-left:		2em;
+	padding-right:		2em;
+}
+
+.def td.types,
+.deftop td.types,
+.defbottom td.types
+{
+	background:			#ddd;
+	color:				black;
+}
+
+.def td.types
+{
+	border-top:			solid black 0.15em;
+	border-bottom:		solid black 0.15em;
+	
+	border-right:		solid #bbb 0.1em;
+}
+
+.deftop td.types
+{
+	border-top:			solid black 0.15em;
+	border-right:		solid #bbb 0.1em;
+}
+
+.defbottom td.types
+{
+	border-bottom:		solid black 0.15em;
+	border-right:		solid #bbb 0.1em;
+}
+
+.def td.desc,
+.def th.desc
+{
+	padding-left:		2em;
+	padding-right:		2em;
+}
+
+.deftop td.desc,
+.defbottom td.desc,
+.deftop th.desc,
+.defbottom th.desc
+{
+	padding-left:		6em;
+	padding-right:		2em;
+}
+
+.def td.desc,
+.deftop td.desc,
+.defbottom td.desc
+{
+	background:			#eee;
+	color:				black;
+}
+
+.def td.desc
+{
+	border-top:			solid black 0.15em;
+	border-bottom:		solid black 0.15em;
+	
+	border-right:		solid #bbb 0.1em;
+}
+
+.deftop td.desc
+{
+	border-top:			solid black 0.15em;
+	
+	border-left:		solid #bbb 0.1em;
+	border-right:		solid #bbb 0.1em;
+}
+
+.defbottom td.desc
+{
+	border-bottom:		solid black 0.15em;
+	
+	border-left:		solid #bbb 0.1em;
+	border-right:		solid #bbb 0.1em;
 }
