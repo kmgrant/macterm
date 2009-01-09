@@ -3,7 +3,7 @@
 	AlertMessages.cp
 	
 	Interface Library 1.2
-	© 1998-2008 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -48,7 +48,6 @@
 #include <NIBLoader.h>
 
 // resource includes
-#include "DialogResources.h"
 #include "GeneralResources.h"
 #include "SpacingConstants.r"
 

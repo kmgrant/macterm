@@ -3,7 +3,7 @@
 	IconManager.cp
 	
 	Interface Library 2.0
-	© 1998-2008 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -39,9 +39,6 @@
 // library includes
 #include <IconManager.h>
 #include <MemoryBlocks.h>
-
-// resource includes
-#include "DialogResources.h"
 
 // MacTelnet includes
 #include "AppResources.h"
