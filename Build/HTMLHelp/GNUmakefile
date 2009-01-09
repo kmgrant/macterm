@@ -156,7 +156,7 @@ clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-
 	echo "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head>" >> $@
 	$(KV_TO_HEAD) -xml $*/index.kv >> $@
 	echo "</head><body>" >> $@
-	$(GENERATOR) $*/index.textile >> $@
+	$(GENERATOR) $*/index.textile | sed 's/\>\>/\&gt;\&gt;/g' >> $@
 	echo "</body></html>" >> $@
 	echo >> $@
 	$(end_target)
@@ -168,7 +168,7 @@ clean-%: clean-install-images-% clean-install-stylesheets-% clean-install-plist-
 	$(KV_TO_HEAD) $< >> $@
 	$(KV_TO_HEAD) $*.kv >> $@
 	echo "</head><body>" >> $@
-	$(GENERATOR) $*.textile >> $@
+	$(GENERATOR) $*.textile | sed 's/\>\>/\&gt;\&gt;/g' >> $@
 	echo "</body></html>" >> $@
 	echo >> $@
 	@# textile produces XHTML output, convert to HTML
