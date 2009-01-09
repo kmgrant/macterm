@@ -953,7 +953,7 @@ class Textiler:
         extending  = 0
 
         # We capture the \n's because they are important inside "pre..".
-        blocks = re.split(r'''(\n{2,})''', self.text)
+        blocks = re.split(r'''((\n\s*){2,})''', self.text)
         output = []
         for block in blocks:
             # Check for the clear signature.

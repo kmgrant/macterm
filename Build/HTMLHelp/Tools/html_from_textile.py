@@ -16,7 +16,7 @@ except:
     prog = x.tb_frame.f_code.co_filename
     dir = os.path.dirname(prog)
 
-sys.path.append(os.path.join(dir, 'textile-2.0.10'))
+sys.path.append(os.path.join(dir, 'textile-2.0.11'))
 import textile
 
 if len(sys.argv) < 2: raise KeyError('not enough arguments')
