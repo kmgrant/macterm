@@ -446,10 +446,7 @@ the notification lets the user know that itÕs there.
 Your application must call Alert_ServiceNotification()
 whenever a ÒresumeÓ event is detected in your event
 loop, in order to service notifications posted by the
-Alert module.  The Alert module assumes that it will
-find a small icon ('SICN') resource with an ID number
-of "kAlert_NotificationSICNResourceID" that it can use
-as a Notification Manager icon in the process menu.
+Alert module.
 
 Another Alert module alert box can be visible while
 this method is invoked, and all displayed alerts will
@@ -934,14 +931,11 @@ simply display the alert normally, and let the user
 discover its presence on his or her own.  The next
 level is to display a diamond mark in the process
 menu that identifies the presence of an alert box in
-the application.  Another option is to also flash an
-icon (of ID "kAlert_NotificationSICNResourceID" and
-type 'SICN', in the application resource file) in the
-process menuÕs title area.  The last level is to do
-all of the above things, and also display a message
-(specified with Alert_SetNotificationMessage()) that
-tells the user your application requires his or her
-attention.
+the application.  Another option is to also bounce the
+Dock icon.  The last level is to do all of the above
+things, and also display a message (specified with
+Alert_SetNotificationMessage()) that tells the user
+your application requires his or her attention.
 
 (1.0)
 */
@@ -1327,9 +1321,7 @@ backgroundNotification ()
 			gNotificationPtr->qType = nmType;
 			gNotificationPtr->nmMark = 0; // index of menu item to mark
 			UseResFile(gApplicationResourceFile);
-			gNotificationPtr->nmIcon = (gNotificationPreferences < kAlert_NotifyDisplayIconAndDiamondMark)
-											? nullptr
-											: GetResource('SICN', kAlert_NotificationSICNResourceID);
+			gNotificationPtr->nmIcon = nullptr;
 			gNotificationPtr->nmSound = nullptr;
 			if (gNotificationPreferences < kAlert_NotifyAlsoDisplayAlert)
 			{

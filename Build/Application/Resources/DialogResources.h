@@ -36,13 +36,6 @@
 #define __DIALOGRESOURCES__
 
 /*
-small icon resource IDs
-*/
-
-// 'SICN' resource for Notification Manager postings
-#define kAlert_NotificationSICNResourceID		12000
-
-/*
 icon suite resource IDs
 */
 
