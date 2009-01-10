@@ -56,6 +56,7 @@
 #include <StringUtilities.h>
 
 // MacTelnet includes
+#include "AppResources.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "InfoWindow.h"
@@ -2262,6 +2263,38 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							// UNIMPLEMENTED!!!
 							result = eventNotHandledErr;
 						}
+					}
+					break;
+				
+				case kCommandSessionByWindowName:
+					// this relies on the property of the menu command to use
+					// the right Session, so it won’t work without a menu
+					if (received.attributes & kHICommandFromMenu)
+					{
+						SessionRef		session = nullptr;
+						UInt32			actualSize = 0;
+						OSStatus		error = noErr;
+						
+						
+						// find the window corresponding to the selected menu item
+						error = GetMenuItemProperty(received.menu.menuRef, received.menu.menuItemIndex,
+													AppResources_ReturnCreatorCode(), kConstantsRegistry_MenuItemPropertyTypeSessionRef,
+													sizeof(session), &actualSize, &session);
+						if (noErr == error)
+						{
+							TerminalWindowRef	terminalWindow = nullptr;
+							HIWindowRef			window = nullptr;
+							
+							
+							// first make the window visible if it was obscured
+							window = Session_ReturnActiveWindow(session);
+							terminalWindow = Session_ReturnActiveTerminalWindow(session);
+							if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
+							
+							// now select the window
+							EventLoop_SelectBehindDialogWindows(window);
+						}
+						result = noErr;
 					}
 					break;
 				

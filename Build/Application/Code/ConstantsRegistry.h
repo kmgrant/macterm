@@ -78,6 +78,16 @@ enum
 };
 
 /*!
+This list contains all tags used with the SetMenuItemProperty()
+API; kept in one place so they are known to be unique.
+*/
+enum
+{
+	// use AppResources_ReturnCreatorCode() to set the creator code of these properties
+	kConstantsRegistry_MenuItemPropertyTypeSessionRef				= 'Sess',	//!< data: SessionRef
+};
+
+/*!
 Panel descriptors, which help to identify panels when given
 only an opaque reference to one.  See "Panel.h".
 

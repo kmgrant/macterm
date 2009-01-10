@@ -53,7 +53,6 @@
 
 // resource includes
 #include "ApplicationVersion.h"
-#include "DialogResources.h"
 #include "GeneralResources.h"
 #include "MenuResources.h"
 
@@ -91,17 +90,6 @@
 namespace {
 
 SInt16 const	kInsertMenuAfterAllOthers = 0;	// for use with InsertMenu (a constant Menus.h REALLY SHOULD HAVE)
-
-typedef SInt16 My_WindowMenuMarkType;
-enum
-{
-	kMy_WindowMenuMarkTypeEnableIcon		= -3,	// a command, not a mark... (session reference must be defined)
-	kMy_WindowMenuMarkTypeDisableIcon		= -2,	// a command, not a mark... (session reference must be defined)
-	kMy_WindowMenuMarkTypeDispose			= -1,	// a command, not a mark... (global - session reference should be nullptr)
-	kMy_WindowMenuMarkTypeSessionLive		= 0,	// (session reference must be defined)
-	kMy_WindowMenuMarkTypeSessionOpening	= 1,	// (session reference must be defined)
-	kMy_WindowMenuMarkTypeSessionDead		= 2		// (session reference must be defined)
-};
 
 } // anonymous namespace
 
@@ -152,14 +140,14 @@ MenuItemIndex		getMenuAndMenuItemIndexByCommandID		(UInt32, MenuRef*);
 void				getMenuItemAdjustmentProc				(MenuRef, MenuItemIndex, MenuCommandStateTrackerProcPtr*);
 void				getMenusAndMenuItemIndicesByCommandID	(UInt32, MenuRef*, MenuRef*, MenuItemIndex*,
 																MenuItemIndex*);
-HIWindowRef			getWindowFromWindowMenuItemIndex		(MenuItemIndex);
-MenuItemIndex		getWindowMenuItemIndexForSession		(SessionRef);
 void				installMenuItemStateTrackers			();
 void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				removeMenuItemModifier					(MenuRef, MenuItemIndex);
 void				removeMenuItemModifiers					(MenuRef);
 MenuItemIndex		returnFirstWindowItemAnchor				(MenuRef);
+SessionRef			returnMenuItemSession					(MenuRef, MenuItemIndex);
 SessionRef			returnTEKSession						();
+MenuItemIndex		returnWindowMenuItemIndexForSession		(SessionRef);
 void				sessionCountChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				sessionStateChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				sessionWindowStateChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -179,7 +167,6 @@ void				setUpSessionFavoritesMenu				(MenuRef);
 void				setUpScriptsMenu						(MenuRef);
 void				setUpTranslationTablesMenu				(MenuRef);
 void				setUpWindowMenu							(MenuRef);
-void				setWindowMenuItemMark					(MenuRef, MenuItemIndex, My_WindowMenuMarkType);
 void				setWindowMenuItemMarkForSession			(SessionRef, MenuRef = nullptr, MenuItemIndex = 0);
 void				simplifyMenuBar							(Boolean);
 Boolean				stateTrackerCheckableItems				(UInt32, MenuRef, MenuItemIndex);
@@ -359,9 +346,6 @@ MenuBar_Done ()
 	SessionFactory_StopMonitoringSessions(kSession_ChangeWindowObscured, gSessionWindowStateChangeEventListener);
 	SessionFactory_StopMonitoringSessions(kSession_ChangeWindowTitle, gSessionWindowStateChangeEventListener);
 	ListenerModel_ReleaseListener(&gSessionWindowStateChangeEventListener);
-	
-	// perform other cleanup
-	setWindowMenuItemMark(nullptr/* menu is N/A */, 0/* item is N/A */, kMy_WindowMenuMarkTypeDispose);
 }// Done
 
 
@@ -609,39 +593,6 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 	
 	switch (menuID)
 	{
-	case kMenuIDWindow:
-		{
-			// find the window corresponding to the selected menu item;
-			// search the session list matching the menu item order
-			// (currently, the order in which sessions are created)
-			SessionRef		session = nullptr;
-			
-			
-			error = SessionFactory_GetSessionWithZeroBasedIndex
-					(inMenuItemIndex - returnFirstWindowItemAnchor(inMenu),
-						kSessionFactory_ListInCreationOrder, &session);
-			if (error == kSessionFactory_ResultOK)
-			{
-				TerminalWindowRef	terminalWindow = nullptr;
-				HIWindowRef			window = nullptr;
-				
-				
-				// first make the window visible if it was obscured
-				window = Session_ReturnActiveWindow(session);
-				terminalWindow = Session_ReturnActiveTerminalWindow(session);
-				if (nullptr != terminalWindow) TerminalWindow_SetObscured(terminalWindow, false);
-				
-				// now select the window
-				EventLoop_SelectBehindDialogWindows(window);
-			}
-			else
-			{
-				// item is a regular command, not a window
-				(Boolean)MenuBar_HandleMenuCommandByID(commandID);
-			}
-		}
-		break;
-	
 	case kMenuIDScripts:
 		// execute script using name of menu item
 		executeScriptByMenuEvent(inMenu, inMenuItemIndex);
@@ -1011,7 +962,7 @@ addWindowMenuItemForSession		(SessionRef							inSession,
 	
 	error = InsertMenuItemTextWithCFString(inMenuInfoPtr->menu, inWindowName/* item name */,
 											inMenuInfoPtr->afterItemIndex, kMenuItemAttrIgnoreMeta/* attributes */,
-											0/* command ID */);
+											kCommandSessionByWindowName/* command ID */);
 	if (noErr == error)
 	{
 		// set icon appropriately for the state
@@ -1021,6 +972,12 @@ addWindowMenuItemForSession		(SessionRef							inSession,
 		// checkmark set automatically, etc.
 		MenuBar_SetMenuItemStateTrackerProc(inMenuInfoPtr->menu, inMenuInfoPtr->afterItemIndex + 1,
 											stateTrackerWindowMenuWindowItems);
+		
+		// attach the given session as a property of the new item
+		error = SetMenuItemProperty(inMenuInfoPtr->menu, inMenuInfoPtr->afterItemIndex + 1,
+									AppResources_ReturnCreatorCode(), kConstantsRegistry_MenuItemPropertyTypeSessionRef,
+									sizeof(inSession), &inSession);
+		assert_noerr(error);
 		
 		// all done adding this item!
 		result = true;
@@ -1434,53 +1391,6 @@ getMenusAndMenuItemIndicesByCommandID	(UInt32				inCommandID,
 
 
 /*!
-Returns the session corresponding to an item index
-from the Window menu.
-
-(3.0)
-*/
-HIWindowRef
-getWindowFromWindowMenuItemIndex	(MenuItemIndex		inIndex)
-{
-	SessionFactory_Result	error = kSessionFactory_ResultOK;
-	SessionRef				session = nullptr;
-	HIWindowRef				result = nullptr;
-	
-	
-	error = SessionFactory_GetSessionWithZeroBasedIndex
-			(inIndex - returnFirstWindowItemAnchor(GetMenuRef(kMenuIDWindow)),
-				kSessionFactory_ListInCreationOrder, &session);
-	if (error == kSessionFactory_ResultOK) result = Session_ReturnActiveWindow(session);
-	return result;
-}// getWindowFromWindowMenuItemIndex
-
-
-/*!
-Returns the index of the item in the Window menu
-corresponding to the specified session’s window.
-
-(3.0)
-*/
-MenuItemIndex
-getWindowMenuItemIndexForSession	(SessionRef		inSession)
-{
-	SessionFactory_Result	error = kSessionFactory_ResultOK;
-	UInt16					sessionIndex = 0;
-	MenuItemIndex			result = 0;
-	
-	
-	error = SessionFactory_GetZeroBasedIndexOfSession
-				(inSession, kSessionFactory_ListInCreationOrder, &sessionIndex);
-	if (kSessionFactory_ResultOK == error)
-	{
-		result = returnFirstWindowItemAnchor(GetMenuRef(kMenuIDWindow)) + sessionIndex;
-	}
-	
-	return result;
-}// getWindowMenuItemIndexForSession
-
-
-/*!
 After the global set of menus has been created (probably
 by getting menus from resources), use this method to
 install item state trackers in each one.  If you ever
@@ -1781,6 +1691,34 @@ returnFirstWindowItemAnchor		(MenuRef	inWindowMenu)
 
 
 /*!
+If the specified menu item has an associated SessionRef,
+it is returned; otherwise, nullptr is returned.  This
+should work for the session items in the Window menu.
+
+(4.0)
+*/
+SessionRef
+returnMenuItemSession	(MenuRef		inMenu,
+						 MenuItemIndex	inIndex)
+{
+	SessionRef		result = nullptr;
+	UInt32			actualSize = 0;
+	OSStatus		error = noErr;
+	
+	
+	// find the session corresponding to the selected menu item
+	error = GetMenuItemProperty(inMenu, inIndex, AppResources_ReturnCreatorCode(),
+								kConstantsRegistry_MenuItemPropertyTypeSessionRef,
+								sizeof(result), &actualSize, &result);
+	if (noErr != error)
+	{
+		result = nullptr;
+	}
+	return result;
+}// returnMenuItemSession
+
+
+/*!
 Returns the session currently applicable to TEK commands;
 defined if the focus window is either a session terminal,
 or a vector graphic that came from a session.
@@ -1810,6 +1748,44 @@ returnTEKSession ()
 	}
 	return result;
 }// returnTEKSession
+
+
+/*!
+Returns the index of the item in the Window menu
+corresponding to the specified session’s window.
+
+(4.0)
+*/
+MenuItemIndex
+returnWindowMenuItemIndexForSession		(SessionRef		inSession)
+{
+	MenuRef const			kMenu = GetMenuRef(kMenuIDWindow);
+	MenuItemIndex const		kStartItem = returnFirstWindowItemAnchor(kMenu);
+	MenuItemIndex const		kPastEndItem = kStartItem + SessionFactory_ReturnCount();
+	OSStatus				error = noErr;
+	MenuItemIndex			result = 0;
+	
+	
+	for (MenuItemIndex i = kStartItem; i != kPastEndItem; ++i)
+	{
+		SessionRef		itemSession = nullptr;
+		UInt32			actualSize = 0;
+		
+		
+		// find the session corresponding to the selected menu item
+		error = GetMenuItemProperty(kMenu, i, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_MenuItemPropertyTypeSessionRef,
+									sizeof(itemSession), &actualSize, &itemSession);
+		if (noErr == error)
+		{
+			if (itemSession == inSession)
+			{
+				result = i;
+			}
+		}
+	}
+	return result;
+}// returnWindowMenuItemIndexForSession
 
 
 /*!
@@ -1949,7 +1925,7 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (Session_GetWindowUserDefinedTitle(session, text) == kSession_ResultOK)
 			{
-				MenuItemIndex	itemIndex = getWindowMenuItemIndexForSession(session);
+				MenuItemIndex	itemIndex = returnWindowMenuItemIndexForSession(session);
 				
 				
 				if (itemIndex > 0) SetMenuItemTextWithCFString(GetMenuRef(kMenuIDWindow), itemIndex, text);
@@ -2905,132 +2881,6 @@ setUpWindowMenu		(MenuRef	inMenu)
 
 
 /*!
-Worker routine for setWindowMenuItemMarkForSession().
-
-Use this method to set the item mark for the menu item
-representing the specified session so the mark reflects
-the connection state.  In MacTelnet 3.0, connection
-menu items are now “marked” with icons.  Consequently,
-their use requires allocation of memory.  At shutdown
-time, call this method with a menu mark equal to
-"kMy_WindowMenuMarkTypeDispose" to dispose of any memory
-that this routine might allocate.  (This is automatically
-performed by MenuBar_Done().)
-
-IMPORTANT:	The value of "inSessionOrNull" may only be
-			nullptr when the mark type reflects a global
-			operation - currently, the only global
-			operation is "kMy_WindowMenuMarkTypeDispose".
-
-(3.0)
-*/
-void
-setWindowMenuItemMark	(MenuRef				inMenu,
-						 MenuItemIndex			inItemIndex,
-						 My_WindowMenuMarkType	inMarkType)
-{
-	static IconSuiteRef		liveConnectionIcons = nullptr;
-	static IconSuiteRef		openingConnectionIcons = nullptr;
-	static IconSuiteRef		deadConnectionIcons = nullptr;
-	
-	
-	if (inMarkType == kMy_WindowMenuMarkTypeDispose)
-	{
-		// destroy allocated icons
-		if (nullptr != liveConnectionIcons)
-		{
-			(OSStatus)DisposeIconSuite(liveConnectionIcons, false/* dispose icon data */), liveConnectionIcons = nullptr;
-		}
-		if (nullptr != openingConnectionIcons)
-		{
-			(OSStatus)DisposeIconSuite(openingConnectionIcons, false/* dispose icon data */), openingConnectionIcons = nullptr;
-		}
-		if (nullptr != deadConnectionIcons)
-		{
-			(OSStatus)DisposeIconSuite(deadConnectionIcons, false/* dispose icon data */), deadConnectionIcons = nullptr;
-		}
-	}
-	else
-	{
-		// the menu and item must be properly defined for these cases!
-		assert(nullptr != inMenu);
-		assert(0 != inItemIndex);
-		OSStatus		error = noErr;
-		Boolean			doSet = false;
-		IconSuiteRef	icons = nullptr;
-		
-		
-		// set up icons as necessary
-		switch (inMarkType)
-		{
-		case kMy_WindowMenuMarkTypeSessionLive:
-			if (nullptr == liveConnectionIcons)
-			{
-				error = GetIconSuite(&liveConnectionIcons, kIconSuiteConnectionActive, kSelectorAllSmallData);
-				doSet = (noErr == error);
-				unless (doSet) liveConnectionIcons = nullptr;
-			}
-			else doSet = true;
-			icons = liveConnectionIcons;
-			break;
-		
-		case kMy_WindowMenuMarkTypeSessionOpening:
-			if (nullptr == openingConnectionIcons)
-			{
-				error = GetIconSuite(&openingConnectionIcons, kIconSuiteConnectionOpening, kSelectorAllSmallData);
-				doSet = (noErr == error);
-				unless (doSet) openingConnectionIcons = nullptr;
-			}
-			else doSet = true;
-			icons = openingConnectionIcons;
-			break;
-		
-		case kMy_WindowMenuMarkTypeSessionDead:
-			if (nullptr == deadConnectionIcons)
-			{
-				error = GetIconSuite(&deadConnectionIcons, kIconSuiteConnectionDead, kSelectorAllSmallData);
-				doSet = (noErr == error);
-				unless (doSet) deadConnectionIcons = nullptr;
-			}
-			else doSet = true;
-			icons = deadConnectionIcons;
-			break;
-		
-		case kMy_WindowMenuMarkTypeDisableIcon:
-		case kMy_WindowMenuMarkTypeEnableIcon:
-		default:
-			break;
-		}
-		
-		if (inMarkType == kMy_WindowMenuMarkTypeEnableIcon)
-		{
-			// set the style of the item to normal, undoing the style setting of "kMy_WindowMenuMarkTypeDisableIcon"
-			SetItemStyle(inMenu, inItemIndex, normal);
-			
-			// enabling the icon itself is only possible with Mac OS 8.5 or later
-			EnableMenuItemIcon(inMenu, inItemIndex);
-		}
-		else if (inMarkType == kMy_WindowMenuMarkTypeDisableIcon)
-		{
-			// set the style of the item to italic, which makes it more obvious that a window is hidden
-			SetItemStyle(inMenu, inItemIndex, italic);
-			
-			// disabling the icon itself is only possible with Mac OS 8.5 or later
-			DisableMenuItemIcon(inMenu, inItemIndex);
-		}
-		else
-		{
-			if (doSet)
-			{
-				// set icon of Window menu item
-				error = SetMenuItemIconHandle(inMenu, inItemIndex, kMenuIconSuiteType, icons);
-			}
-		}
-	}
-}// setWindowMenuItemMark
-
-
-/*!
 Looks at the terminal window obscured state, session
 status, and anything else about the given session
 that is significant from a state point of view, and
@@ -3051,38 +2901,30 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 									 MenuItemIndex	inItemIndexOrZero)
 {
 	assert(nullptr != inSession);
-	My_WindowMenuMarkType	menuMark = kMy_WindowMenuMarkTypeSessionLive;
+	Session_Result			sessionResult = kSession_ResultOK;
+	IconRef					stateIconRef = nullptr;
 	MenuRef					menu = (nullptr == inWindowMenuOrNull)
 									? GetMenuRef(kMenuIDWindow)
 									: inWindowMenuOrNull;
 	MenuItemIndex			itemIndex = (0 == inItemIndexOrZero)
-										? getWindowMenuItemIndexForSession(inSession)
+										? returnWindowMenuItemIndexForSession(inSession)
 										: inItemIndexOrZero;
 	
 	
-	// first, set the icon
-	switch (Session_ReturnState(inSession))
+	sessionResult = Session_CopyStateIconRef(inSession, stateIconRef);
+	if (false == sessionResult.ok())
 	{
-	case kSession_StateBrandNew:
-	case kSession_StateInitialized:
-		menuMark = kMy_WindowMenuMarkTypeSessionOpening;
-		break;
-	
-	case kSession_StateDead:
-	case kSession_StateImminentDisposal:
-		menuMark = kMy_WindowMenuMarkTypeSessionDead;
-		break;
-	
-	case kSession_StateActiveUnstable:
-	case kSession_StateActiveStable:
-		menuMark = kMy_WindowMenuMarkTypeSessionLive;
-		break;
-	
-	default:
-		// ???
-		break;
+		Console_WriteLine("warning, unable to copy session icon for menu item");
 	}
-	setWindowMenuItemMark(menu, itemIndex, menuMark);
+	else
+	{
+		OSStatus	error = noErr;
+		
+		
+		// ownership of the handle and icon is transferred to the Menu Manager here
+		error = SetMenuItemIconHandle(menu, itemIndex, kMenuIconRefType,
+										REINTERPRET_CAST(stateIconRef, Handle)/* yep, this is what you have to do...sigh */);
+	}
 	
 	// now, set the disabled/enabled state
 	{
@@ -3091,11 +2933,19 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 		
 		if (TerminalWindow_IsObscured(terminalWindow))
 		{
-			setWindowMenuItemMark(menu, itemIndex, kMy_WindowMenuMarkTypeDisableIcon);
+			// set the style of the item to italic, which makes it more obvious that a window is hidden
+			SetItemStyle(menu, itemIndex, italic);
+			
+			// disabling the icon itself is only possible with Mac OS 8.5 or later
+			DisableMenuItemIcon(menu, itemIndex);
 		}
 		else
 		{
-			setWindowMenuItemMark(menu, itemIndex, kMy_WindowMenuMarkTypeEnableIcon);
+			// set the style of the item to normal, undoing the style setting of "kMy_WindowMenuMarkTypeDisableIcon"
+			SetItemStyle(menu, itemIndex, normal);
+			
+			// enabling the icon itself is only possible with Mac OS 8.5 or later
+			EnableMenuItemIcon(menu, itemIndex);
 		}
 	}
 }// setWindowMenuItemMarkForSession
@@ -3852,33 +3702,32 @@ stateTrackerWindowMenuWindowItems	(UInt32			UNUSED_ARGUMENT(inCommandID),
 									 MenuRef		inMenu,
 									 MenuItemIndex	inItemNumber)
 {
-	WindowRef	screenWindow = getWindowFromWindowMenuItemIndex(inItemNumber);
+	SessionRef	itemSession = returnMenuItemSession(inMenu, inItemNumber);
 	Boolean		result = true;
 	
 	
-	if (IsWindowHilited(screenWindow))
+	if (nullptr != itemSession)
 	{
-		// check the active window in the menu
-		CheckMenuItem(inMenu, inItemNumber, true);
+		HIWindowRef const	kSessionActiveWindow = Session_ReturnActiveWindow(itemSession);
+		
+		
+		if (IsWindowHilited(kSessionActiveWindow))
+		{
+			// check the active window in the menu
+			CheckMenuItem(inMenu, inItemNumber, true);
+		}
+		else
+		{
+			// remove any mark, initially
+			CheckMenuItem(inMenu, inItemNumber, false);
+			
+			// use the Mac OS X convention of bullet-marking windows with unsaved changes
+			if (IsWindowModified(kSessionActiveWindow)) SetItemMark(inMenu, inItemNumber, kBulletCharCode);
+			
+			// use the Mac OS X convention of diamond-marking minimized windows
+			if (IsWindowCollapsed(kSessionActiveWindow)) SetItemMark(inMenu, inItemNumber, kDiamondCharCode);
+		}
 	}
-	else
-	{
-		SInt16		zeroBasedIndex = (inItemNumber - returnFirstWindowItemAnchor(inMenu));
-		
-		
-		// remove any mark, initially
-		CheckMenuItem(inMenu, inItemNumber, false);
-		
-		// the first 9 items are numbered, for the user’s convenience
-		if (zeroBasedIndex < 10) SetItemMark(inMenu, inItemNumber, '1' + zeroBasedIndex);
-		
-		// use the Mac OS X convention of bullet-marking windows with unsaved changes
-		if (IsWindowModified(screenWindow)) SetItemMark(inMenu, inItemNumber, kBulletCharCode);
-		
-		// use the Mac OS X convention of diamond-marking minimized windows
-		if (IsWindowCollapsed(screenWindow)) SetItemMark(inMenu, inItemNumber, kDiamondCharCode);
-	}
-	
 	return result;
 }// stateTrackerWindowMenuWindowItems
 

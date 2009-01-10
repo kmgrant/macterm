@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090109',
     '20090108',
     '20090101',
     '20081230',
@@ -204,6 +205,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090109': [
+		'Fixed Window menu session items to display the proper icons and marks.',
+		'Fixed Window menu bug where choosing a session menu item would sometimes activate the wrong session.',
+	],
 	'20090108': [
 		'MacTelnet Help now uses a slightly different style for table views, to improve readability.',
 	],
