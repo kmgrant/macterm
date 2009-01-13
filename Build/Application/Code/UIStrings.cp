@@ -1004,6 +1004,11 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
+	case kUIStrings_PreferencesWindowAddToFavoritesButton:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Add to Preferences"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowAddToFavoritesButton"));
+		break;
+	
 	case kUIStrings_PreferencesWindowCollectionsDrawerDescription:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Shows or hides a customizable list of collections for the displayed preference category."), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowCollectionsDrawerDescription"));

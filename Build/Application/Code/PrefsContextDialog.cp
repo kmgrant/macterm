@@ -36,11 +36,17 @@
 
 // library includes
 #include <AlertMessages.h>
+#include <CarbonEventHandlerWrap.template.h>
+#include <CarbonEventUtilities.template.h>
 #include <MemoryBlockPtrLocker.template.h>
+#include <SoundSystem.h>
 
 // MacTelnet includes
 #include "GenericDialog.h"
+#include "Panel.h"
 #include "PrefsContextDialog.h"
+#include "UIStrings.h"
+#include "UIStrings_PrefsWindow.h"
 
 
 
@@ -55,9 +61,10 @@ struct My_PrefsContextDialog
 	
 	PrefsContextDialog_Ref		selfRef;			// identical to address of structure, but typed as ref
 	Boolean						wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
-	Preferences_ContextRef		originalDataModel;	// data used to initialize the dialog, and store any changes made
+	Preferences_ContextRef		originalDataModel;	// data used to initialize the dialog; updated when the dialog is accepted
 	Preferences_ContextRef		temporaryDataModel;	// data used to initialize the dialog, and store any changes made
 	GenericDialog_Ref			genericDialog;		// handles most of the work
+	CarbonEventHandlerWrap		commandHandler;		// responds to certain command events in the panelÕs window
 };
 typedef My_PrefsContextDialog*		My_PrefsContextDialogPtr;
 
@@ -76,7 +83,8 @@ My_PrefsContextDialogPtrLocker&		gPrefsContextDialogPtrLocks()  { static My_Pref
 #pragma mark Internal Method Prototypes
 namespace {
 
-void	handleDialogClose	(GenericDialog_Ref, Boolean);
+void				handleDialogClose	(GenericDialog_Ref, Boolean);
+pascal OSStatus		receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -210,10 +218,29 @@ originalDataModel	(inoutData),
 temporaryDataModel	(Preferences_NewCloneContext(inoutData, true/* must detach */)),
 genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, inHostedPanel,
 										temporaryDataModel, handleDialogClose,
-										Panel_SendMessageGetHelpKeyPhrase(inHostedPanel)))
+										Panel_SendMessageGetHelpKeyPhrase(inHostedPanel))),
+commandHandler		(GetWindowEventTarget(Panel_ReturnOwningWindow(GenericDialog_ReturnHostedPanel(genericDialog))),
+						receiveHICommand,
+						CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+						this/* user data */)
 {
 	// note that the cloned context is implicitly retained
 	Preferences_RetainContext(this->originalDataModel);
+	
+	// add a button for copying the context to user defaults
+	{
+		CFStringRef			buttonCFString = nullptr;
+		UIStrings_Result	stringResult = UIStrings_Copy
+											(kUIStrings_PreferencesWindowAddToFavoritesButton, buttonCFString);
+		
+		
+		if (stringResult.ok())
+		{
+			// this command is received by the local handler
+			GenericDialog_AddButton(genericDialog, buttonCFString, kCommandPreferencesNewFavorite);
+			CFRelease(buttonCFString), buttonCFString = nullptr;
+		}
+	}
 	
 	// remember reference for use in the callback
 	GenericDialog_SetImplementation(genericDialog, this);
@@ -259,6 +286,107 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 		prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel, dataPtr->originalDataModel);
 	}
 }// handleDialogClose
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for this sheet.
+
+(3.1)
+*/
+pascal OSStatus
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inContextPtr)
+{
+	UInt32 const			kEventClass = GetEventClass(inEvent);
+	UInt32 const			kEventKind = GetEventKind(inEvent);
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	My_PrefsContextDialog*	dataPtr = REINTERPRET_CAST(inContextPtr, My_PrefsContextDialog*);
+	HICommand				received;
+	OSStatus				result = eventNotHandledErr;
+	
+	
+	// determine the command in question
+	result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+	
+	// if the command information was found, proceed
+	if (noErr == result)
+	{
+		// donÕt claim to have handled any commands not shown below
+		result = eventNotHandledErr;
+		
+		switch (kEventKind)
+		{
+		case kEventCommandProcess:
+			// execute a command
+			switch (received.commandID)
+			{
+			case kCommandPreferencesNewFavorite:
+				// in this context, this command actually means Ònew favorite
+				// using the settings from this windowÓ
+				{
+					// create and immediately save a new named context, which
+					// triggers callbacks to update Favorites lists, etc.
+					Preferences_ContextRef const	kReferenceContext = dataPtr->temporaryDataModel;
+					Preferences_ContextRef			newContext = Preferences_NewContextFromFavorites
+																	(Preferences_ContextReturnClass(kReferenceContext),
+																		nullptr/* name, or nullptr to auto-generate */);
+					
+					
+					if (nullptr == newContext)
+					{
+						Sound_StandardAlert();
+						Console_WriteLine("warning, unable to create a new Favorite for copying local changes");
+					}
+					else
+					{
+						Preferences_Result		prefsResult = kPreferences_ResultOK;
+						
+						
+						prefsResult = Preferences_ContextSave(newContext);
+						if (kPreferences_ResultOK != prefsResult)
+						{
+							Sound_StandardAlert();
+							Console_WriteLine("warning, unable to save the new context!");
+						}
+						else
+						{
+							prefsResult = Preferences_ContextCopy(kReferenceContext, newContext);
+							if (kPreferences_ResultOK != prefsResult)
+							{
+								Sound_StandardAlert();
+								Console_WriteLine("warning, unable to copy local changes into the new Favorite!");
+							}
+							else
+							{
+								// trigger an automatic switch to focus a related part of the Preferences window
+								Commands_ExecuteByIDUsingEvent
+								(Panel_ReturnShowCommandID(GenericDialog_ReturnHostedPanel(dataPtr->genericDialog)));
+								
+								// success!
+							}
+						}
+						Preferences_ReleaseContext(&newContext);
+					}
+					result = noErr;
+				}
+				break;
+			
+			default:
+				// ???
+				break;
+			}
+			break;
+		
+		default:
+			// ???
+			break;
+		}
+	}
+	return result;
+}// receiveHICommand
 
 } // anonymous namespace
 

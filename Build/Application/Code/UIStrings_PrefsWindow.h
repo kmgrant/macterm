@@ -11,7 +11,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -55,12 +55,11 @@
 /*!
 Preferences Window String Table ("PreferencesWindow.strings")
 
-If a string is not listed here, it may be available as a Pascal string
-constant above, or it may not yet be supported by this module (and so
-access to it is scattered throughout the code).
+Identifies localizable strings used in preferences panels.
 */
 enum UIStrings_PreferencesWindowCFString
 {
+	kUIStrings_PreferencesWindowAddToFavoritesButton			= 'AFBt',
 	kUIStrings_PreferencesWindowCollectionsDrawerDescription	= 'CDDs',
 	kUIStrings_PreferencesWindowCollectionsDrawerShowHideName	= 'SHCD',
 	kUIStrings_PreferencesWindowDefaultFavoriteName				= 'DefF',

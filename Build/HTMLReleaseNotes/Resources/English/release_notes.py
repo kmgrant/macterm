@@ -207,6 +207,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090112': [
+		'Custom Format sheet now has an "Add to Preferences" button, allowing window fonts/colors to be quickly saved as a new collection.',
 		'Several new startup lines have been added, and the incorrect version string was removed from the rotation.',
 	],
 	'20090109': [
