@@ -1708,12 +1708,12 @@ UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 			switch (numberList[0])
 			{
 			case 0:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("No PC comes close."),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("Terminals do not have to be boring!"),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			
 			case 1:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Available in one great flavor."),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("Not a perfect shell, but a really good one."),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			
@@ -1728,33 +1728,33 @@ UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 				break;
 			
 			case 4:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Source code is also available."),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("Source code is available."),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			
 			case 5:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Not just telnet anymore."),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("Power and polish."),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			
 			case 6:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Free software, in every way."),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("Extensible with Python."),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			
 			case 7:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("It's no iPod, but still cool."),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("Not available for Windows."),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			
 			case 8:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Even a command line needs style."),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("If you can think of a new name, tell me!"),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			
 			case 9:
 			default:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Version 3.1"),
+				outString = CFCopyLocalizedStringFromTable(CFSTR("Please tell the authors what you think!"),
 															CFSTR("SplashScreen"), CFSTR("chosen at random"));
 				break;
 			}

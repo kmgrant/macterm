@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090112',
     '20090109',
     '20090108',
     '20090101',
@@ -205,6 +206,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090112': [
+		'Several new startup lines have been added, and the incorrect version string was removed from the rotation.',
+	],
 	'20090109': [
 		'Fixed Window menu session items to display the proper icons and marks.',
 		'Fixed Window menu bug where choosing a session menu item would sometimes activate the wrong session.',
