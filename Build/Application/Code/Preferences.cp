@@ -1951,6 +1951,28 @@ Preferences_ContextRepositionRelativeToSelf		(Preferences_ContextRef		inContext,
 
 
 /*!
+Returns the class ID used to create the specified context.
+"kPreferences_ClassGeneral" is returned if there is no way
+to tell what the class is.
+
+(4.0)
+*/
+Preferences_Class
+Preferences_ContextReturnClass		(Preferences_ContextRef		inContext)
+{
+	Preferences_Class		result = kPreferences_ClassGeneral;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	
+	
+	if (nullptr != ptr)
+	{
+		result = ptr->returnClass();
+	}
+	return result;
+}// ContextReturnClass
+
+
+/*!
 Saves any in-memory preferences data model changes to
 disk, and updates the in-memory model with any new
 settings on disk.  This has the side effect of saving

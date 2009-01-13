@@ -541,6 +541,9 @@ Preferences_Result
 											 size_t*							outActualSizePtrOrNull = nullptr,
 											 Boolean*							outIsDefaultOrNull = nullptr);
 
+Preferences_Class
+	Preferences_ContextReturnClass			(Preferences_ContextRef				inContext);
+
 Preferences_Result
 	Preferences_ContextSave					(Preferences_ContextRef				inContext);
 
