@@ -319,9 +319,6 @@ void
 	SessionFactory_StopMonitoringSessions			(Session_Change					inForWhatChange,
 													 ListenerModel_ListenerRef		inListener);
 
-void
-	SessionFactory_UpdatePalettes					(Preferences_Tag				inColorToChange);
-
 //@}
 
 #endif

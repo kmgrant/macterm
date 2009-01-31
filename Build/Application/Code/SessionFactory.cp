@@ -106,7 +106,6 @@ void					startTrackingSession			(SessionRef, TerminalWindowRef);
 void					startTrackingTerminalWindow		(TerminalWindowRef);
 void					stopTrackingSession				(SessionRef);
 void					stopTrackingTerminalWindow		(TerminalWindowRef);
-void					updatePaletteTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
 
 } // anonymous namespace
 
@@ -1808,35 +1807,6 @@ SessionFactory_StopMonitoringSessions	(Session_Change				inForWhatChange,
 }// StopMonitoringSessions
 
 
-/*!
-When ANSI colors have changed, use this routine to
-update each windowÕs palette accordingly.
-
-The specified preference tag is used to change just
-one color, since it is more typical for the user to
-adjust one at a time (using a modeless dialog, for
-instance).  If you must change multiple colors, you
-will need to call this multiple times.
-
-Nothing will happen unless you pass in a preference
-tag that actually corresponds to an ANSI color.
-
-(3.1)
-*/
-void
-SessionFactory_UpdatePalettes	(Preferences_Tag	inColorToChange)
-{
-	CGrafPtr	oldPort = nullptr;
-	GDHandle	oldDevice = nullptr;
-	
-	
-	GetGWorld(&oldPort, &oldDevice);
-	SessionFactory_ForEveryTerminalWindowDo(updatePaletteTerminalWindowOp, nullptr/* data 1 - unused */,
-											inColorToChange/* data 2 */, nullptr/* result - unused */);
-	SetGWorld(oldPort, oldDevice);
-}// UpdatePalettes
-
-
 #pragma mark Internal Methods
 namespace {
 
@@ -2636,135 +2606,6 @@ stopTrackingTerminalWindow		(TerminalWindowRef		inTerminalWindow)
 						targetList.end());
 	assert(targetList.end() == std::find(targetList.begin(), targetList.end(), inTerminalWindow));
 }// stopTrackingTerminalWindow
-
-
-/*!
-Updates the palette of colors for a terminal window
-for the specified color preference.
-
-On output, the current port may be changed.
-
-(3.0)
-*/
-void
-updatePaletteTerminalWindowOp	(TerminalWindowRef		inTerminalWindow,
-								 void*					UNUSED_ARGUMENT(inData1),
-								 SInt32					inColorToChange,
-								 void*					UNUSED_ARGUMENT(inoutResultPtr))
-{
-	Preferences_Tag				colorID = STATIC_CAST(inColorToChange, Preferences_Tag);
-	TerminalView_ColorIndex		colorIndex = 0;
-	Boolean						doUpdate = true;
-	
-	
-	// change all window palettes to include the updated ANSI color
-	switch (colorID)
-	{
-	case kPreferences_TagTerminalColorANSIBlack:
-		colorIndex = kTerminalView_ColorIndexNormalANSIBlack;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIRed:
-		colorIndex = kTerminalView_ColorIndexNormalANSIRed;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIGreen:
-		colorIndex = kTerminalView_ColorIndexNormalANSIGreen;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIYellow:
-		colorIndex = kTerminalView_ColorIndexNormalANSIYellow;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIBlue:
-		colorIndex = kTerminalView_ColorIndexNormalANSIBlue;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIMagenta:
-		colorIndex = kTerminalView_ColorIndexNormalANSIMagenta;
-		break;
-	
-	case kPreferences_TagTerminalColorANSICyan:
-		colorIndex = kTerminalView_ColorIndexNormalANSICyan;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIWhite:
-		colorIndex = kTerminalView_ColorIndexNormalANSIWhite;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIBlackBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSIBlack;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIRedBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSIRed;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIGreenBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSIGreen;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIYellowBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSIYellow;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIBlueBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSIBlue;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIMagentaBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSIMagenta;
-		break;
-	
-	case kPreferences_TagTerminalColorANSICyanBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSICyan;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIWhiteBold:
-		colorIndex = kTerminalView_ColorIndexEmphasizedANSIWhite;
-		break;
-	
-	default:
-		// ???
-		doUpdate = false;
-		break;
-	}
-	
-	if (doUpdate)
-	{
-		RGBColor	colorRGB;
-		size_t		actualSize = 0;
-		
-		
-		if (kPreferences_ResultOK == Preferences_GetData(colorID, sizeof(colorRGB), &colorRGB, &actualSize))
-		{
-			UInt16 const	kViewCount = TerminalWindow_ReturnViewCount(inTerminalWindow);
-			
-			
-			if (kViewCount > 0)
-			{
-				try
-				{
-					TerminalViewRef*	views = new TerminalViewRef[kViewCount];
-					WindowRef			window = TerminalWindow_ReturnWindow(inTerminalWindow);
-					
-					
-					TerminalWindow_GetViews(inTerminalWindow, kViewCount, views, nullptr/* actual count */);
-					for (UInt16 i = 0; i < kViewCount; ++i)
-					{
-						TerminalView_SetColor(views[i], colorIndex, &colorRGB);
-					}
-					delete [] views;
-					RegionUtilities_RedrawWindowOnNextUpdate(window);
-				}
-				catch (std::bad_alloc)
-				{
-					// ignore
-				}
-			}
-		}
-	}
-}// updatePaletteTerminalWindowOp
 
 } // anonymous namespace
 
