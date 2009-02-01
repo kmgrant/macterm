@@ -1596,6 +1596,10 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 			// each time through the loop, read a bit more data from the
 			// pseudo-terminal device, up to the maximum limit of the buffer
 			numberOfBytesRead = read(contextPtr->masterTTY, buffer, kBufferSize);
+			
+			// TEMPORARY HACK - REMOVE HIGH ASCII
+			//for (unsigned char* foo = (unsigned char*)buffer; (char*)foo != (buffer + kBufferSize); ++foo) { if (*foo > 127) *foo = '?'; }
+			
 			if (numberOfBytesRead <= 0)
 			{
 				// error or EOF (process quit)
