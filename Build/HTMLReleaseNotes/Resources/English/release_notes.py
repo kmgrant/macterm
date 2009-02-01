@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090201',
     '20090112',
     '20090109',
     '20090108',
@@ -206,6 +207,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090201': [
+		'Terminals now have 256 colors, but an application might only use them if Identity ($TERM) is set to "xterm-256color".',
+	],
 	'20090112': [
 		'Custom Format sheet now has an "Add to Preferences" button, allowing window fonts/colors to be quickly saved as a new collection.',
 		'Several new startup lines have been added, and the incorrect version string was removed from the rotation.',

@@ -1184,6 +1184,11 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug"));
 		break;
 	
+	case kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm 256 Colors"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled"));
+		break;
+	
 	case kUIStrings_PreferencesWindowTerminalsXTermColorEnabled:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("XTerm Color"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowTerminalsXTermColorEnabled"));

@@ -299,6 +299,7 @@ enum
 	kPreferences_TagTerminalScrollDelay					= 'scrd',	//!< data: "EventTime" in MILLISECONDS
 	kPreferences_TagVT100FixLineWrappingBug				= 'vlwr',	//!< data: "Boolean"
 	kPreferences_TagXTermColorEnabled					= 'xtcl',	//!< data: "Boolean"
+	kPreferences_TagXTerm256ColorsEnabled				= 'x256',	//!< data: "Boolean"
 	kPreferences_TagXTermGraphicsEnabled				= 'xtgr',	//!< data: "Boolean"
 	kPreferences_TagXTermWindowAlterationEnabled		= 'xtwn'	//!< data: "Boolean"
 };

@@ -83,67 +83,23 @@ enum TerminalView_Result
 };
 
 /*!
-Indices into the color palette of a terminal window; the
-implementation demands that these be consecutive and zero-based
-(the value for each color constant matches the index, into the
-palette of a terminal window, corresponding to that color).
+Identifiers for the “custom” colors of a terminal view.
 */
 typedef SInt16 TerminalView_ColorIndex;
 enum
 {
-	// black and white are the first two entries (0 and 1)
-	kTerminalView_ColorIndexBlack					= 0,	//!< black MUST be first
-	kTerminalView_ColorIndexWhite					= 1,	//!< white MUST be second
-	kTerminalView_ColorIndexNormalText				= 2,
-	kTerminalView_ColorIndexNormalBackground		= 3,
-	kTerminalView_ColorIndexBlinkingText			= 4,
-	kTerminalView_ColorIndexBlinkingBackground		= 5,
-	kTerminalView_ColorIndexBoldText				= 6,
-	kTerminalView_ColorIndexBoldBackground			= 7,
-	kTerminalView_ColorIndexMatteBackground			= 8,
-	// the ORDER of these colors must be the same as the numerical order of the
-	// ANSI standard values (0 = black, 1 = red, etc., 6 = cyan, 7 = white)
-	kTerminalView_ColorIndexNormalANSIBlack			= 9,
-	kTerminalView_ColorIndexNormalANSIRed			= 10,
-	kTerminalView_ColorIndexNormalANSIGreen			= 11,
-	kTerminalView_ColorIndexNormalANSIYellow		= 12,
-	kTerminalView_ColorIndexNormalANSIBlue			= 13,
-	kTerminalView_ColorIndexNormalANSIMagenta		= 14,
-	kTerminalView_ColorIndexNormalANSICyan			= 15,
-	kTerminalView_ColorIndexNormalANSIWhite			= 16,
-	// the ORDER of these colors must be the same as the numerical order of the
-	// ANSI standard values (0 = black, 1 = red, etc., 6 = cyan, 7 = white)
-	kTerminalView_ColorIndexEmphasizedANSIBlack		= 17,
-	kTerminalView_ColorIndexEmphasizedANSIRed		= 18,
-	kTerminalView_ColorIndexEmphasizedANSIGreen		= 19,
-	kTerminalView_ColorIndexEmphasizedANSIYellow	= 20,
-	kTerminalView_ColorIndexEmphasizedANSIBlue		= 21,
-	kTerminalView_ColorIndexEmphasizedANSIMagenta	= 22,
-	kTerminalView_ColorIndexEmphasizedANSICyan		= 23,
-	kTerminalView_ColorIndexEmphasizedANSIWhite		= 24,
-	// these colors are automatically set and should not be modified otherwise;
-	// to recalculate them, change "kTerminalView_ColorIndexBlinkingText" or
-	// "kTerminalView_ColorIndexBlinkingBackground"
-	kTerminalView_ColorIndexFirstBlinkPulseColor	= 25,
-	kTerminalView_ColorIndexLastBlinkPulseColor		= 34,
-	// counts of the above constants
-	kTerminalView_ColorCountRequiredEntries			= 2,
-	kTerminalView_ColorCountNonANSIColors			= 7,
-	kTerminalView_ColorCountNormalANSIColors		= 8,
-	kTerminalView_ColorCountEmphasizedANSIColors	= 8,
-	kTerminalView_ColorCountBlinkPulseColors		= kTerminalView_ColorIndexLastBlinkPulseColor -
-														kTerminalView_ColorIndexFirstBlinkPulseColor + 1,
+	kTerminalView_ColorIndexNormalText				= 0,
+	kTerminalView_ColorIndexNormalBackground		= 1,
+	kTerminalView_ColorIndexBlinkingText			= 2,
+	kTerminalView_ColorIndexBlinkingBackground		= 3,
+	kTerminalView_ColorIndexBoldText				= 4,
+	kTerminalView_ColorIndexBoldBackground			= 5,
+	kTerminalView_ColorIndexMatteBackground			= 6,
+	
 	// useful constants
 	kTerminalView_ColorIndexFirstValid				= kTerminalView_ColorIndexNormalText,
-	kTerminalView_ColorIndexLastValid				= kTerminalView_ColorIndexEmphasizedANSIWhite
+	kTerminalView_ColorIndexLastValid				= kTerminalView_ColorIndexMatteBackground
 };
-
-/*!
-This delta value is used to shift the alpha used for
-cursor rendering, and for simplicity it is defined in
-terms of the existing blink timer.
-*/
-Float32 const		kTerminalView_BlinkAlphaDelta = 1.0 / STATIC_CAST(kTerminalView_ColorCountBlinkPulseColors, Float32);
 
 /*!
 Determines the shape of the cursor, when rendered.

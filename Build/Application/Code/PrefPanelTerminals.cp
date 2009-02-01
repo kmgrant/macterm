@@ -96,6 +96,7 @@ HIViewID const	idMyFieldScrollback				= { 'Sbak', 0/* ID */ };
 HIViewID const	idMyPopUpMenuScrollbackUnits	= { 'SbkU', 0/* ID */ };
 HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
+HIViewID const	idMyHelpTextTweaks				= { 'TwkH', 0/* ID */ };
 
 // The following cannot use any of Apple’s reserved IDs (0 to 1023).
 enum
@@ -689,6 +690,7 @@ createContainerView		(Panel_Ref		inPanel,
 			DataBrowserItemID const		kTweakTags[] =
 										{
 											kPreferences_TagVT100FixLineWrappingBug,
+											kPreferences_TagXTerm256ColorsEnabled,
 											kPreferences_TagXTermColorEnabled,
 											kPreferences_TagXTermGraphicsEnabled,
 											kPreferences_TagXTermWindowAlterationEnabled
@@ -771,11 +773,11 @@ deltaSize	(HIViewRef		inContainer,
 	
 	
 	// INCOMPLETE
-	viewWrap = HIViewWrap(idMyPopUpMenuEmulationType, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyFieldAnswerBackMessage, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyDataBrowserHacks, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyHelpTextTweaks, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	
 	dataPtr->setEmulationTweaksDataBrowserColumnWidths();

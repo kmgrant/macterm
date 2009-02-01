@@ -621,6 +621,10 @@ emulators.  There are a couple of main reasons for this:
   (for instance, XTerm is a VT100), and can work
   "reasonably well" if popular features are supported.
 
+Applications may ignore tweaks unless you also set the Identity
+to tell them that the feature is supported.  Each tweak below
+suggests an Identity that will enable it.
+
 The tweaks currently allowed are:
 
 h5. VT100
@@ -637,14 +641,28 @@ implemented.
 
 h5. XTerm
 
+h6. 256 Colors
+
+Enables all 256 new XTerm colors, which includes the 16 basic
+"ANSI colors" that can be customized in MacTelnet's Formats
+preferences.  This allows an application to give text a specific
+foreground and background color, instead of relying on terminal
+defaults.
+
+Note that this feature could significantly increase the memory
+requirements for a terminal.
+
+For this to work, your Identity may need to be "xterm-256color".
+
 h6. Color
 
-Enables the 16 colors commonly called "ANSI colors", which can
-be customized in MacTelnet's Formats preferences.  This allows
-an application to give text a specific foreground and background
-color, instead of relying on terminal defaults.
+Enables *only* the 16 basic colors commonly called "ANSI colors",
+which can be customized in MacTelnet's Formats preferences.
+This allows an application to give text a specific foreground
+and background color, instead of relying on terminal defaults.
 
-For this to work, your Identity may need to be "xterm-color".
+For this to work, your Identity may need to be "xterm-color" or
+equivalent.
 
 h6. Graphics Characters
 
@@ -654,7 +672,8 @@ special "soft reset" that turns off only the character set, in
 case an application accidentally leaves your whole window in an
 unreadable state of rendering graphics!
 
-For this to work, your Identity may need to be "xterm".
+For this to work, your Identity may need to be "xterm" or
+equivalent.
 
 h6. Window Alteration
 
@@ -663,7 +682,8 @@ as well as its minimized state, position, size, and other
 attributes.  This is not completely supported by MacTelnet 4.0
 daily builds yet, but it will be soon.
 
-For this to work, your Identity may need to be "xterm".
+For this to work, your Identity may need to be "xterm" or
+equivalent.
 
 h3. Screen
 

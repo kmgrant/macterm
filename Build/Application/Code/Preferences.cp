@@ -6468,6 +6468,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassTerminal;
 		break;
 	
+	case kPreferences_TagXTerm256ColorsEnabled:
+		outKeyName = CFSTR("terminal-emulator-xterm-enable-color-256");
+		outKeyValueType = typeNetEvents_CFBooleanRef;
+		outNonDictionaryValueSize = sizeof(Boolean);
+		outClass = kPreferences_ClassTerminal;
+		break;
+	
 	case kPreferences_TagXTermColorEnabled:
 		outKeyName = CFSTR("terminal-emulator-xterm-enable-color");
 		outKeyValueType = typeNetEvents_CFBooleanRef;
@@ -6932,6 +6939,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagTerminalClearSavesLines:
 				case kPreferences_TagTerminalLineWrap:
 				case kPreferences_TagVT100FixLineWrappingBug:
+				case kPreferences_TagXTerm256ColorsEnabled:
 				case kPreferences_TagXTermColorEnabled:
 				case kPreferences_TagXTermGraphicsEnabled:
 				case kPreferences_TagXTermWindowAlterationEnabled:
@@ -9057,6 +9065,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				break;
 			
 			case kPreferences_TagVT100FixLineWrappingBug:
+			case kPreferences_TagXTerm256ColorsEnabled:
 			case kPreferences_TagXTermColorEnabled:
 			case kPreferences_TagXTermGraphicsEnabled:
 			case kPreferences_TagXTermWindowAlterationEnabled:

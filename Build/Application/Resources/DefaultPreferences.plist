@@ -4,8 +4,8 @@
 <!--
 	DefaultPreferences.plist
 	
-	MacTelnet 3.1
-	© 1998-2008 by Kevin Grant
+	MacTelnet 4.0
+	© 1998-2009 by Kevin Grant
 	
 	This file defines MacTelnet's default preferences.  It has EXACTLY
 	the same format as the main Core Foundation Preferences file (i.e.
@@ -430,6 +430,8 @@
 	<key>terminal-emulator-vt100-fix-line-wrapping-bug</key>
 	<true/>
 	<key>terminal-emulator-xterm-enable-color</key>
+	<true/>
+	<key>terminal-emulator-xterm-enable-color-256</key>
 	<true/>
 	<key>terminal-emulator-xterm-enable-graphics</key>
 	<true/>

@@ -168,6 +168,7 @@ enum
 	kTerminal_EmulatorTypeXTerm = ((1 << kTerminal_EmulatorTypeByteShift) & kTerminal_EmulatorTypeMask),
 		kTerminal_EmulatorVariantXTermOriginal = ((0x00 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
 		kTerminal_EmulatorVariantXTermColor = ((0x01 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
+		kTerminal_EmulatorVariantXTerm256Color = ((0x02 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
 	kTerminal_EmulatorTypeDumb = ((2 << kTerminal_EmulatorTypeByteShift) & kTerminal_EmulatorTypeMask),
 		kTerminal_EmulatorVariantDumb1 = ((0x00 << kTerminal_EmulatorVariantByteShift) & kTerminal_EmulatorVariantMask),
 	kTerminal_EmulatorTypeANSI = ((3 << kTerminal_EmulatorTypeByteShift) & kTerminal_EmulatorTypeMask),
@@ -186,6 +187,7 @@ enum
 	kTerminal_EmulatorVT420 = kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT420,
 	kTerminal_EmulatorXTermOriginal = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTermOriginal,	// xterm terminals
 	kTerminal_EmulatorXTermColor = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTermColor,
+	kTerminal_EmulatorXTerm256Color = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTerm256Color,
 	kTerminal_EmulatorDumb = kTerminal_EmulatorTypeDumb | kTerminal_EmulatorVariantDumb1					// ÒdumbÓ terminals
 };
 

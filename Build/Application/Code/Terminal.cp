@@ -3,7 +3,7 @@
 	Terminal.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,6 +36,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 
 // standard-C++ includes
 #include <algorithm>
@@ -526,7 +527,8 @@ parameters collected and any pending operations.
 struct My_Emulator
 {
 public:
-	typedef std::vector< SInt16 >	ParameterList;
+	typedef std::vector< SInt16 >			ParameterList;
+	typedef std::set< Preferences_Tag >		TagSet;
 	
 	struct Callbacks
 	{
@@ -546,6 +548,9 @@ public:
 	Boolean
 	changeTo	(Terminal_Emulator);
 	
+	Boolean
+	supportsVariant		(Preferences_Tag);
+	
 	Terminal_Emulator					primaryType;			//!< VT100, VT220, etc.
 	CFStringEncoding					inputTextEncoding;		//!< specifies the encoding used by the input data stream
 	CFRetainRelease						answerBackCFString;		//!< similar to "primaryType", but can be an arbitrary string
@@ -555,6 +560,7 @@ public:
 	ParameterList						parameterValues;		//!< all values provided for the current escape sequence
 	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
 	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
+	TagSet								supportedVariants;		//!< tags identifying minor features, e.g. "kPreferences_TagXTerm256ColorsEnabled"
 
 protected:
 	My_EmulatorStateDeterminantProcPtr
@@ -588,6 +594,9 @@ public:
 	
 	UInt16
 	returnScrollbackRows	(Preferences_ContextRef);
+	
+	Boolean
+	returnXTerm256	(Preferences_ContextRef);
 	
 	Preferences_ContextRef				configuration;
 	My_Emulator							emulator;					//!< handles all parsing of the data stream
@@ -2362,6 +2371,10 @@ Terminal_EmulatorReturnDefaultName		(Terminal_Emulator	inEmulationType)
 		result = CFSTR("xterm-color");
 		break;
 	
+	case kTerminal_EmulatorXTerm256Color:
+		result = CFSTR("xterm-256color");
+		break;
+	
 	case kTerminal_EmulatorXTermOriginal:
 		result = CFSTR("xterm");
 		break;
@@ -2432,6 +2445,10 @@ Terminal_EmulatorReturnForName		(CFStringRef	inName)
 	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("xterm-color"), kCFCompareCaseInsensitive | kCFCompareBackwards))
 	{
 		result = kTerminal_EmulatorXTermColor;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(inName, CFSTR("xterm-256color"), kCFCompareCaseInsensitive | kCFCompareBackwards))
+	{
+		result = kTerminal_EmulatorXTerm256Color;
 	}
 	else
 	{
@@ -2761,10 +2778,14 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 				// found new style run; so handle the previous run
 				if (styleRunLength > 0)
 				{
+					TerminalTextAttributes		rangeAttributes = previousAttributes;
+					
+					
+					STYLE_ADD(rangeAttributes, lineIterator->globalAttributes);
 					Terminal_InvokeScreenRunProc(inDoWhat, inRef, lineIterator->textVectorBegin + runStartCharacterIndex/* starting point */,
 													styleRunLength/* length */, inStartRow,
 													runStartCharacterIndex/* zero-based start column */,
-													previousAttributes | lineIterator->globalAttributes, inContextPtr);
+													rangeAttributes, inContextPtr);
 				}
 				
 				// reset for next run
@@ -2785,9 +2806,9 @@ Terminal_ForEachLikeAttributeRunDo	(TerminalScreenRef			inRef,
 				
 				
 				// the “selected” attribute is special; it persists regardless
-				if (previousAttributes & kTerminalTextAttributeSelected)
+				if (STYLE_SELECTED(previousAttributes))
 				{
-					attributesForRemainder |= kTerminalTextAttributeSelected;
+					STYLE_ADD(attributesForRemainder, kTerminalTextAttributeSelected);
 				}
 				
 				Terminal_InvokeScreenRunProc(inDoWhat, inRef, nullptr/* starting point */, styleRunLength/* length */,
@@ -3970,7 +3991,6 @@ Terminal_Result
 Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 								 UInt16				inNewNumberOfLinesHigh)
 {
-//return kTerminal_ResultOK; // TMP
 	Terminal_Result			result = kTerminal_ResultOK;
 	My_ScreenBufferPtr		dataPtr = getVirtualScreenData(inRef);
 	
@@ -4527,7 +4547,8 @@ stateRepetitions(0),
 parameterEndIndex(0),
 parameterValues(kMy_MaximumANSIParameters),
 currentCallbacks(returnStateDeterminant(inPrimaryEmulation), returnStateTransitionHandler(inPrimaryEmulation)),
-pushedCallbacks()
+pushedCallbacks(),
+supportedVariants()
 {
 	initializeParserStateStack(this);
 }// My_Emulator default constructor
@@ -4556,6 +4577,27 @@ changeTo	(Terminal_Emulator		inPrimaryEmulation)
 
 
 /*!
+Returns true only if this terminal emulator has been configured
+to support the specified variant.
+
+Currently, the only expected tags are those identifying special
+terminal features, e.g. "kPreferences_TagXTerm256ColorsEnabled",
+"kPreferences_TagVT100FixLineWrappingBug".
+
+(4.0)
+*/
+Boolean
+My_Emulator::
+supportsVariant		(Preferences_Tag	inTag)
+{
+	Boolean		result = (this->supportedVariants.end() != this->supportedVariants.find(inTag));
+	
+	
+	return result;
+}// supportsVariant
+
+
+/*!
 Returns the entry point for determining emulator state,
 for the specified terminal type.
 
@@ -4573,6 +4615,7 @@ returnStateDeterminant		(Terminal_Emulator		inPrimaryEmulation)
 	case kTerminal_EmulatorVT100:
 	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
 	case kTerminal_EmulatorXTermColor: // TEMPORARY
+	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
 	case kTerminal_EmulatorANSIBBS: // TEMPORARY
 	case kTerminal_EmulatorANSISCO: // TEMPORARY
 		result = My_VT100::stateDeterminant;
@@ -4619,6 +4662,7 @@ returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
 	case kTerminal_EmulatorVT100:
 	case kTerminal_EmulatorXTermOriginal: // TEMPORARY
 	case kTerminal_EmulatorXTermColor: // TEMPORARY
+	case kTerminal_EmulatorXTerm256Color: // TEMPORARY
 	case kTerminal_EmulatorANSIBBS: // TEMPORARY
 	case kTerminal_EmulatorANSISCO: // TEMPORARY
 		result = My_VT100::stateTransition;
@@ -4778,6 +4822,11 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	// speech setup
 	this->speech.mode = kTerminal_SpeechModeSpeakAlways;
 	this->speech.buffer[0] = '\0'; // initially empty
+	
+	if (returnXTerm256(inTerminalConfig))
+	{
+		this->emulator.supportedVariants.insert(kPreferences_TagXTerm256ColorsEnabled);
+	}
 	
 	// IMPORTANT: Within constructors, calls to routines expecting a *self reference* should be
 	//            *last*; otherwise, there’s no telling whether or not the data that the routine
@@ -4949,6 +4998,29 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 	
 	return result;
 }// returnScrollbackRows
+
+
+/*!
+Reads "kPreferences_TagXTerm256ColorsEnabled" from a
+Preferences context, and returns either that value or the
+default of true if none was found.
+
+(4.0)
+*/
+Boolean
+My_ScreenBuffer::
+returnXTerm256	(Preferences_ContextRef		inTerminalConfig)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Boolean					result = true;
+	
+	
+	prefsResult = Preferences_ContextGetData(inTerminalConfig, kPreferences_TagXTerm256ColorsEnabled,
+												sizeof(result), &result);
+	if (kPreferences_ResultOK != prefsResult) result = true; // arbitrary
+	
+	return result;
+}// returnXTerm256
 
 
 /*!
@@ -6093,12 +6165,12 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 		{
 			// set attribute
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
+			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 		}
 		else
 		{
 			// clear attribute
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
+			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 		}
 		break;
 	
@@ -6108,12 +6180,12 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 		{
 			// set attribute
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
+			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 		}
 		else
 		{
 			// clear attribute
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
+			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 		}
 		break;
 	
@@ -6389,7 +6461,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
 			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 		}
 		break;
 	
@@ -6404,7 +6476,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
 			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 		}
 		break;
 	
@@ -6418,7 +6490,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			if (kStateSCSG1SG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
 			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
+			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
 		}
 		break;
 	
@@ -6432,7 +6504,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			if (kStateSCSG1ACRStd == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
 			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 		}
 		break;
 	
@@ -6446,7 +6518,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			if (kStateSCSG1ACRSG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
 			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
-			inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
+			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
 		}
 		break;
 	
@@ -6472,22 +6544,73 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 				// Other values are basically recognized because they are
 				// compatible with VT100 and are very often used (ANSI
 				// colors in particular).
-				if (p == 0) inDataPtr->current.attributeBits &= 0xFFFF0000; // all style bits off
-				else if (p < 9) inDataPtr->current.attributeBits |= styleOfVTParameter(p); // set attribute
+				if (p == 0) STYLE_REMOVE(inDataPtr->current.attributeBits, kAllStyleOrColorTerminalTextAttributes); // all style bits off
+				else if (p < 9) STYLE_ADD(inDataPtr->current.attributeBits, styleOfVTParameter(p)); // set attribute
 				else if (p == 10) { /* set normal font - unsupported */ }
 				else if (p == 11) { /* set alternate font - unsupported */ }
 				else if (p == 12) { /* set alternate font, shifting by 128 - unsupported */ }
-				else if (p == 22) inDataPtr->current.attributeBits &= ~styleOfVTParameter(1); // clear bold (oddball - 22, not 21)
-				else if ((p > 22) && (p < 29)) inDataPtr->current.attributeBits &= ~styleOfVTParameter(p - 20); // clear attribute
+				else if (p == 22) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
+				else if ((p > 22) && (p < 29)) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(p - 20)); // clear attribute
 				else
 				{
 					if ((p >= 30) && (p < 38))
 					{
-						inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x0700) | ((p - 30) << 8) | 0x0800;
+						STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.attributeBits, p - 30);
 					}
 					else if ((p >= 40) && (p < 48))
 					{
-						inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x7000) | ((p - 40) << 12) | 0x8000;
+						STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.attributeBits, p - 40);
+					}
+					else if ((38 == p) || (48 == p))
+					{
+						if (inDataPtr->emulator.supportsVariant(kPreferences_TagXTerm256ColorsEnabled))
+						{
+							//Console_WriteLine("request to set one of 256 background or foreground colors");
+							if (2 != (inDataPtr->emulator.parameterEndIndex - i))
+							{
+								Console_WriteLine("warning, expected exactly 3 parameters for 256-color-mode request");
+							}
+							else
+							{
+								Boolean const	kSetForeground = (38 == p);
+								SInt16 const	kParam2 = inDataPtr->emulator.parameterValues[i + 1];
+								SInt16 const	kParam3 = inDataPtr->emulator.parameterValues[i + 2];
+								SInt16 const	kColorParam = kParam3;
+								
+								
+								if (5 != kParam2)
+								{
+									Console_WriteValue("warning, unrecognized parameter for type of color (expected 5)", kParam2);
+								}
+								else
+								{
+									if (kSetForeground)
+									{
+										STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.attributeBits, kColorParam);
+									}
+									else
+									{
+										STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.attributeBits, kColorParam);
+									}
+								}
+								++i; // skip next parameter (2)
+								++i; // skip next parameter (3)
+							}
+						}
+					}
+					else if (39 == p)
+					{
+						// generally means “reset foreground”
+						STYLE_CLEAR_FOREGROUND_INDEX(inDataPtr->current.attributeBits);
+					}
+					else if (49 == p)
+					{
+						// generally means “reset background”
+						STYLE_CLEAR_BACKGROUND_INDEX(inDataPtr->current.attributeBits);
+					}
+					else
+					{
+						Console_WriteValue("current terminal in SGR mode does not support parameter", p);
 					}
 				}
 				++i;
@@ -7886,8 +8009,8 @@ changeLineGlobalAttributes	(My_ScreenBufferPtr			inDataPtr,
 	// now remember these changes so that the cursor can inherit them automatically;
 	// currently attributes for scrollback lines do not exist, but negative indices
 	// are allowed; to avoid array overflow, check for nonnegativity here
-	inRow.globalAttributes &= ~inClearTheseAttributes;
-	inRow.globalAttributes |= inSetTheseAttributes;
+	STYLE_REMOVE(inRow.globalAttributes, inClearTheseAttributes);
+	STYLE_ADD(inRow.globalAttributes, inSetTheseAttributes);
 }// changeLineGlobalAttributes
 
 
@@ -7913,8 +8036,8 @@ changeLineRangeAttributes	(My_ScreenBufferPtr			inDataPtr,
 	// update attributes for the specified columns of the given line
 	for (i = inZeroBasedStartColumn; i < pastTheEndColumn; ++i)
 	{
-		inRow.attributeVector[i] &= ~inClearTheseAttributes;
-		inRow.attributeVector[i] |= inSetTheseAttributes;
+		STYLE_REMOVE(inRow.attributeVector[i], inClearTheseAttributes);
+		STYLE_ADD(inRow.attributeVector[i], inSetTheseAttributes);
 	}
 	
 	// update current attributes too, if the cursor is in the given range
@@ -7926,11 +8049,11 @@ changeLineRangeAttributes	(My_ScreenBufferPtr			inDataPtr,
 		locateCursorLine(inDataPtr, cursorLineIterator);
 		if (inRow == *cursorLineIterator)
 		{
-			inDataPtr->current.attributeBits &= ~inClearTheseAttributes;
-			inDataPtr->current.attributeBits |= inSetTheseAttributes;
+			STYLE_REMOVE(inDataPtr->current.attributeBits, inClearTheseAttributes);
+			STYLE_ADD(inDataPtr->current.attributeBits, inSetTheseAttributes);
 			
 			// ...however, do not propagate text highlighting to text rendered from now on
-			inDataPtr->current.attributeBits &= ~kTerminalTextAttributeSelected;
+			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeSelected);
 		}
 	}
 	
@@ -8266,12 +8389,12 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 				{
 					// set attribute
-					inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
+					STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 				}
 				else
 				{
 					// clear attribute
-					inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
+					STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 				}
 				break;
 			
@@ -8280,12 +8403,12 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 				{
 					// set attribute
-					inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics;
+					STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 				}
 				else
 				{
 					// clear attribute
-					inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics;
+					STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
 				}
 				break;
 			
@@ -8871,22 +8994,22 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						// Other values are basically recognized because they are
 						// compatible with VT100 and are very often used (ANSI
 						// colors in particular).
-						if (p == 0) inDataPtr->current.attributeBits &= 0xFFFF0000; // all style bits off
-						else if (p < 9) inDataPtr->current.attributeBits |= styleOfVTParameter(p); // set attribute
+						if (p == 0) STYLE_REMOVE(inDataPtr->current.attributeBits, kAllStyleOrColorTerminalTextAttributes); // all style bits off
+						else if (p < 9) STYLE_ADD(inDataPtr->current.attributeBits, styleOfVTParameter(p)); // set attribute
 						else if (p == 10) { /* set normal font - unsupported */ }
 						else if (p == 11) { /* set alternate font - unsupported */ }
 						else if (p == 12) { /* set alternate font, shifting by 128 - unsupported */ }
-						else if (p == 22) inDataPtr->current.attributeBits &= ~styleOfVTParameter(1); // clear bold (oddball - 22, not 21)
-						else if ((p > 22) && (p < 29)) inDataPtr->current.attributeBits &= ~styleOfVTParameter(p - 20); // clear attribute
+						else if (p == 22) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
+						else if ((p > 22) && (p < 29)) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(p - 20)); // clear attribute
 						else
 						{
-							if ((p >= 30) && (p < 38))
+							if ((p >= 30) && (p <= 38))
 							{
-								inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x0700) | ((p - 30) << 8) | 0x0800;
+								STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.attributeBits, p - 30);
 							}
-							else if ((p >= 40) && (p < 48))
+							else if ((p >= 40) && (p <= 48))
 							{
-								inDataPtr->current.attributeBits = (inDataPtr->current.attributeBits & ~0x7000) | ((p - 40) << 12) | 0x8000;
+								STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.attributeBits, p - 40);
 							}
 						}
 						++i;
@@ -9237,7 +9360,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				characterSetInfoPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
 				characterSetInfoPtr->source = kMy_CharacterROMNormal;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+				STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 				goto ShortCut;
 			
 			case 'B':
@@ -9245,28 +9368,28 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				characterSetInfoPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
 				characterSetInfoPtr->source = kMy_CharacterROMNormal;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+				STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 				goto ShortCut;
 			
 			case '0':
 				// normal ROM, graphics mode
 				characterSetInfoPtr->source = kMy_CharacterROMNormal;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOn;
-				inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
+				STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
 				goto ShortCut;
 			
 			case '1':
 				// alternate ROM, no graphics
 				characterSetInfoPtr->source = kMy_CharacterROMAlternate;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				inDataPtr->current.attributeBits &= ~kTerminalTextAttributeVTGraphics; // clear graphics attribute
+				STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 				goto ShortCut;
 			
 			case '2':
 				// alternate ROM, graphics mode
 				characterSetInfoPtr->source = kMy_CharacterROMAlternate;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOn;
-				inDataPtr->current.attributeBits |= kTerminalTextAttributeVTGraphics; // set graphics attribute
+				STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
 				goto ShortCut;				
 			
 			default:
@@ -10209,7 +10332,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 		// chance of having to save the top line into scrollback
 		inDataPtr->mayNeedToSaveToScrollback = false;
 	}
-	inDataPtr->current.attributeBits &= ~(cursorLineIterator->globalAttributes);
+	STYLE_REMOVE(inDataPtr->current.attributeBits, cursorLineIterator->globalAttributes);
 	
 	// don’t allow the cursor to fall off the screen
 	{
@@ -10224,7 +10347,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 	// cursor has moved, so find the data for its new row
 	locateCursorLine(inDataPtr, cursorLineIterator);
 	
-	inDataPtr->current.attributeBits |= cursorLineIterator->globalAttributes;
+	STYLE_ADD(inDataPtr->current.attributeBits, cursorLineIterator->globalAttributes);
 	if ((0 == inDataPtr->current.cursorY) && (0 == inDataPtr->current.cursorX))
 	{
 		// if the cursor moves into the home position, flag this
@@ -10571,9 +10694,9 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		break;
 	}
 	
-	if (inAttributes & kTerminalTextAttributeVTGraphics)
+	if (STYLE_USE_VT_GRAPHICS(inAttributes))
 	{
-		Boolean const	kIsBold = ((inAttributes & 0x00000001) != 0);
+		Boolean const	kIsBold = STYLE_BOLD(inAttributes);
 		Boolean const	kVT52 = (false == inDataPtr->modeANSIEnabled);
 		
 		

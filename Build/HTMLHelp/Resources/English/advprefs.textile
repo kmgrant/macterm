@@ -213,7 +213,9 @@ table(deftable).
 (deftop). |(key). @terminal-emulator-vt100-fix-line-wrapping-bug@|(types). _true or false_|
 (defbottom). |(desc)\2. Avoids strict VT100 emulation, preventing a real bug in VT100s that causes the last terminal line to scroll when wrapped.|
 (deftop). |(key). @terminal-emulator-xterm-enable-color@|(types). _true or false_|
-(defbottom). |(desc)\2. ANSI colors are allowed (regardless of terminal type).|
+(defbottom). |(desc)\2. 16 ANSI colors are allowed (regardless of terminal type).|
+(deftop). |(key). @terminal-emulator-xterm-enable-color-256@|(types). _true or false_|
+(defbottom). |(desc)\2. 256 standard colors are allowed (regardless of terminal type).|
 (deftop). |(key). @terminal-emulator-xterm-enable-graphics@|(types). _true or false_|
 (defbottom). |(desc)\2. Graphics characters are allowed (regardless of terminal type).|
 (deftop). |(key). @terminal-emulator-xterm-enable-window-alteration-sequences@|(types). _true or false_|

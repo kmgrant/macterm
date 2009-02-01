@@ -3,7 +3,7 @@
 	TerminalView.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -112,6 +112,50 @@ enum
 	kMyBasicColorCount						= 7		//!< set to the number of indices in this list
 };
 
+/*!
+The number of blink colors is the number of animation stages
+used to blink.
+*/
+UInt16 const		kMy_BlinkingColorCount		= 10;
+
+/*!
+This delta value is used to shift the alpha used for
+cursor rendering, and for simplicity it is defined in
+terms of the existing blink timer.
+*/
+Float32 const		kTerminalView_BlinkAlphaDelta = 1.0 / STATIC_CAST(kMy_BlinkingColorCount, Float32);
+
+/*!
+Indices into the "customColors" array of the main structure.
+Valid indices range from 0 to 256, and depending on the terminal
+configuration the upper limit may CHANGE (typically to 16 colors,
+or none at all!).  Check the array size before using it!!!
+*/
+enum
+{
+	// the ORDER of the first 16 colors must be the same as the ANSI
+	// standard (and XTerm 256-color) values: 0 = black, 1 = red,
+	// 2 = green, 3 = yellow, 4 = blue, 5 = magenta, 6 = cyan, 7 = white,
+	// and repeated for the emphasized versions
+	kTerminalView_ColorIndexNormalANSIBlack			= 0,
+	kTerminalView_ColorIndexNormalANSIRed			= 1,
+	kTerminalView_ColorIndexNormalANSIGreen			= 2,
+	kTerminalView_ColorIndexNormalANSIYellow		= 3,
+	kTerminalView_ColorIndexNormalANSIBlue			= 4,
+	kTerminalView_ColorIndexNormalANSIMagenta		= 5,
+	kTerminalView_ColorIndexNormalANSICyan			= 6,
+	kTerminalView_ColorIndexNormalANSIWhite			= 7,
+	kTerminalView_ColorIndexEmphasizedANSIBlack		= 8,
+	kTerminalView_ColorIndexEmphasizedANSIRed		= 9,
+	kTerminalView_ColorIndexEmphasizedANSIGreen		= 10,
+	kTerminalView_ColorIndexEmphasizedANSIYellow	= 11,
+	kTerminalView_ColorIndexEmphasizedANSIBlue		= 12,
+	kTerminalView_ColorIndexEmphasizedANSIMagenta	= 13,
+	kTerminalView_ColorIndexEmphasizedANSICyan		= 14,
+	kTerminalView_ColorIndexEmphasizedANSIWhite		= 15,
+	kMy_CoreColorCount								= 256
+};
+
 enum
 {
 	/*!
@@ -158,7 +202,28 @@ struct MyPreferenceProxies
 
 typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
 typedef std::vector< CGDeviceColor >			My_CGColorList;
+typedef std::map< UInt16, CGDeviceColor >		My_CGColorByIndex; // a map is necessary because "vector" cannot handle 256 sequential color structures
 typedef std::vector< EventTime >				My_TimeIntervalList;
+
+/*!
+Calculates mappings between XTerm encoded color values and
+the roughly 256 equivalent RGB triplets or gray scales.
+*/
+class My_XTerm256Table
+{
+public:
+	typedef std::vector< SInt16 >			RGBLevels;
+	typedef std::map< UInt8, RGBLevels >	RGBLevelsByIndex;
+	typedef std::map< UInt8, SInt16 >		GrayLevelByIndex;
+	
+	My_XTerm256Table ();
+	
+	void
+	makeRGBColor	(UInt8, UInt8, UInt8, RGBColor&);
+	
+	GrayLevelByIndex	grayLevels;
+	RGBLevelsByIndex	colorLevels;
+};
 
 // TEMPORARY: This structure is transitioning to C++, and so initialization
 // and maintenance of it is downright ugly for the time being.  It *will*
@@ -166,7 +231,7 @@ typedef std::vector< EventTime >				My_TimeIntervalList;
 struct TerminalView
 {
 	TerminalView	(HIViewRef);
-	~TerminalView();
+	~TerminalView	();
 	
 	void
 	initialize		(TerminalScreenRef, Preferences_ContextRef);
@@ -215,10 +280,9 @@ struct TerminalView
 		} cursor;
 	} animation;
 	
-	struct
-	{
-		My_CGColorList		deviceColors;	// colors used for drawing with Core Graphics
-	} palette;
+	My_CGColorByIndex	coreColors;		// the (up to) 256 standard colors used, e.g. in color XTerms; base 16 are ANSI colors
+	My_CGColorList		customColors;	// the colors currently used to render based on purpose, e.g. normal, bold, blinking, matte
+	My_CGColorList		blinkColors;	// an automatically generated set of intermediate colors for blink animation
 	
 	struct
 	{
@@ -243,7 +307,6 @@ struct TerminalView
 			Rect				ghostBounds;	// the exact view-relative rectangle of a dragged cursor’s outline region
 			MyCursorState		currentState;	// whether the cursor is visible
 			MyCursorState		ghostState;		// whether the cursor ghost is visible
-			EventLoopTimerRef	flashTimer;		// timer to flash the terminal cursor regularly
 			Boolean				idleFlash;		// is timer currently animating anything?
 		} cursor;
 		
@@ -279,7 +342,7 @@ struct TerminalView
 	
 	struct
 	{
-		UInt32			attributes;			// current text attribute flags, affecting color of terminal text, etc.
+		TerminalTextAttributes		attributes;	// current text attribute flags, affecting color of terminal text, etc.
 		
 		TECObjectRef	converterFromMacRoman;	// used for certain VT graphics glyphs that use Roman characters
 		TECObjectRef	converterFromInternet;	// used for other text
@@ -344,13 +407,14 @@ static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, 
 static void				eventNotifyForView				(TerminalViewConstPtr, TerminalView_Event, void*);
 static Terminal_LineRef	findRowIterator					(TerminalViewPtr, UInt16);
 static Boolean			findVirtualCellFromLocalPoint	(TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
+static void				getBlinkAnimationColor			(TerminalViewPtr, UInt16, RGBColor*);
 static void				getRowBounds					(TerminalViewPtr, UInt16, Rect*);
 static SInt16			getRowCharacterWidth			(TerminalViewPtr, UInt16);
 static void				getRowSectionBounds				(TerminalViewPtr, UInt16, UInt16, SInt16, Rect*);
 static void				getScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
-static void				getScreenColorEntries			(TerminalViewPtr, TerminalTextAttributes,
-														 TerminalView_ColorIndex*, TerminalView_ColorIndex*, Boolean*);
-static void				getScreenPaletteColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
+static void				getScreenColorsForAttributes	(TerminalViewPtr, TerminalTextAttributes, RGBColor*, RGBColor*, Boolean*);
+static Boolean			getScreenCoreColor				(TerminalViewPtr, UInt16, RGBColor*);
+static void				getScreenCustomColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
 static void				getScreenOrigin					(TerminalViewPtr, SInt16*, SInt16*);
 static void				getScreenOriginFloat			(TerminalViewPtr, Float32&, Float32&);
 static Handle			getSelectedTextAsNewHandle		(TerminalViewPtr, UInt16, TerminalView_TextFlags);
@@ -395,13 +459,15 @@ static void				screenBufferChanged				(ListenerModel_Ref, ListenerModel_Event, v
 static void				screenCursorChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void				screenToLocal					(TerminalViewPtr, SInt16*, SInt16*);
 static void				screenToLocalRect				(TerminalViewPtr, Rect*);
+static void				setBlinkAnimationColor			(TerminalViewPtr, UInt16, RGBColor const*);
 static void				setBlinkingTimerActive			(TerminalViewPtr, Boolean);
 static void				setCursorGhostVisibility		(TerminalViewPtr, Boolean);
 static void				setCursorVisibility				(TerminalViewPtr, Boolean);
 static void				setFontAndSize					(TerminalViewPtr, ConstStringPtr, UInt16, Boolean = true);
 static SInt16			setPortScreenPort				(TerminalViewPtr);
 static void				setScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
-static void				setScreenPaletteColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
+static void				setScreenCoreColor				(TerminalViewPtr, UInt16, RGBColor const*);
+static void				setScreenCustomColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
 static void				setUpCursorBounds				(TerminalViewPtr, SInt16, SInt16, Rect*,
 														 TerminalView_CursorType =
 															kTerminalView_CursorTypeCurrentPreferenceValue);
@@ -426,44 +492,8 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	Boolean						gTerminalViewInitialized = false;
 	TerminalViewPtrLocker&		gTerminalViewPtrLocks ()				{ static TerminalViewPtrLocker x; return x; }
 	RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = Memory_NewRegion(); assert(nullptr != x); return x; }
+	My_XTerm256Table&			gColorGrid ()							{ static My_XTerm256Table x; return x; }
 }
-
-
-
-/*!
-TerminalTextAttributes Bit Accessors
-
-The bits that these accessors refer to are documented in
-"TerminalTextAttributes.typedef.h".
-
-IMPORTANT: Attribute bits are also manipulated in Terminal.cp.  Do not
-           re-arrange bits here without also verifying that they are set
-           correctly during the emulator’s parsing loop.
-*/
-static inline Boolean STYLE_BOLD						(TerminalTextAttributes x) { return ((x & 0x00000001) != 0); }
-static inline Boolean STYLE_ITALIC						(TerminalTextAttributes x) { return ((x & 0x00000004) != 0); }
-static inline Boolean STYLE_UNDERLINE					(TerminalTextAttributes x) { return ((x & 0x00000008) != 0); }
-static inline Boolean STYLE_BLINKING					(TerminalTextAttributes x) { return ((x & 0x00000010) != 0); }
-static inline Boolean STYLE_INVERSE_VIDEO				(TerminalTextAttributes x) { return ((x & 0x00000040) != 0); }
-static inline Boolean STYLE_CONCEALED					(TerminalTextAttributes x) { return ((x & 0x00000080) != 0); }
-
-static inline Boolean STYLE_USE_ANSI_FOREGROUND			(TerminalTextAttributes x) { return ((x & 0x00000800) != 0); }
-static inline Boolean STYLE_USE_ANSI_BACKGROUND			(TerminalTextAttributes x) { return ((x & 0x00008000) != 0); }
-
-// careful, when testing a multiple-bit field, make sure only the desired values are set to 1!
-static inline Boolean STYLE_IS_DOUBLE_WIDTH_ONLY		(TerminalTextAttributes x) { return ((x & kMaskTerminalTextAttributeDoubleText) ==
-																								kTerminalTextAttributeDoubleWidth); }
-static inline Boolean STYLE_IS_DOUBLE_HEIGHT_TOP		(TerminalTextAttributes x) { return ((x & kMaskTerminalTextAttributeDoubleText) ==
-																								kTerminalTextAttributeDoubleHeightTop); }
-static inline Boolean STYLE_IS_DOUBLE_HEIGHT_BOTTOM		(TerminalTextAttributes x) { return ((x & kMaskTerminalTextAttributeDoubleText) ==
-																								kTerminalTextAttributeDoubleHeightBottom); }
-
-static inline Boolean STYLE_USE_VT_GRAPHICS				(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeVTGraphics) != 0); }
-
-static inline Boolean STYLE_SEARCH_RESULT				(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeSearchResult) != 0); }
-
-static inline Boolean STYLE_SELECTED					(TerminalTextAttributes x) { return ((x & kTerminalTextAttributeSelected) != 0); }
-
 
 
 #pragma mark Public Methods
@@ -1779,10 +1809,10 @@ TerminalView_ReverseVideo	(TerminalViewRef	inView,
 		viewPtr->screen.isReverseVideo = !viewPtr->screen.isReverseVideo;
 		
 		// flip the background and foreground color positions
-		getScreenPaletteColor(viewPtr, kTerminalView_ColorIndexNormalText, &oldTextColor);
-		getScreenPaletteColor(viewPtr, kTerminalView_ColorIndexNormalBackground, &oldBackgroundColor);
-		setScreenPaletteColor(viewPtr, kTerminalView_ColorIndexNormalText, &oldBackgroundColor);
-		setScreenPaletteColor(viewPtr, kTerminalView_ColorIndexNormalBackground, &oldTextColor);
+		getScreenCustomColor(viewPtr, kTerminalView_ColorIndexNormalText, &oldTextColor);
+		getScreenCustomColor(viewPtr, kTerminalView_ColorIndexNormalBackground, &oldBackgroundColor);
+		setScreenCustomColor(viewPtr, kTerminalView_ColorIndexNormalText, &oldBackgroundColor);
+		setScreenCustomColor(viewPtr, kTerminalView_ColorIndexNormalBackground, &oldTextColor);
 		
 		// update the screen
 		(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
@@ -2893,6 +2923,91 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 #pragma mark Internal Methods
 
 /*!
+Initializes all tables, after which they can be used to
+conveniently translate received parameter values in XTerm
+256-color syntax, into RGB or gray values.
+
+(4.0)
+*/
+My_XTerm256Table::
+My_XTerm256Table ()
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+grayLevels(),
+colorLevels()
+{
+	// most colors are defined as a 6x6x6 cube
+	SInt16 const	kCubeBase = 16; // first index
+	for (SInt16 red = 0; red < 6; ++red)
+	{
+		for (SInt16 green = 0; green < 6; ++green)
+		{
+			for (SInt16 blue = 0; blue < 6; ++blue)
+			{
+				UInt8 const		kIndex = kCubeBase + (36 * red) + (6 * green) + blue;
+				SInt16 const	kRedLevel = (red) ? (55 + 40 * red) : 0;
+				SInt16 const	kGreenLevel = (green) ? (55 + 40 * green) : 0;
+				SInt16 const	kBlueLevel = (blue) ? (55 + 40 * blue) : 0;
+				RGBLevels		levels;
+				
+				
+				levels.reserve(3);
+				levels.push_back(kRedLevel);
+				levels.push_back(kGreenLevel);
+				levels.push_back(kBlueLevel);
+				assert(3 == levels.size());
+				this->colorLevels[kIndex] = levels;
+			}
+		}
+	}
+	
+	// some colors are simply levels of gray
+	SInt16 const	kGrayBase = 232; // first index
+	for (SInt16 gray = 0; gray < 24; ++gray)
+	{
+		UInt8 const		kIndex = kGrayBase + gray;
+		SInt16 const	kGrayLevel = 8 + 10 * gray;
+		
+		
+		this->grayLevels[kIndex] = kGrayLevel;
+	}
+}// My_XTerm256Table
+
+
+/*!
+Fills in a QuickDraw RGBColor structure with appropriate
+values based on the given 8-bit components.
+
+(4.0)
+*/
+void
+My_XTerm256Table::
+makeRGBColor	(UInt8		inRed,
+				 UInt8		inGreen,
+				 UInt8		inBlue,
+				 RGBColor&	outColor)
+{
+	Float32		fullIntensityFraction = 0.0;
+	
+	
+	fullIntensityFraction = inRed;
+	fullIntensityFraction /= 255;
+	fullIntensityFraction *= RGBCOLOR_INTENSITY_MAX;
+	outColor.red = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = inGreen;
+	fullIntensityFraction /= 255;
+	fullIntensityFraction *= RGBCOLOR_INTENSITY_MAX;
+	outColor.green = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = inBlue;
+	fullIntensityFraction /= 255;
+	fullIntensityFraction *= RGBCOLOR_INTENSITY_MAX;
+	outColor.blue = STATIC_CAST(fullIntensityFraction, unsigned short);
+}// My_XTerm256Table::makeRGBColor
+
+
+/*!
 Constructor.  See receiveTerminalHIObjectEvents().
 
 WARNING:	This constructor leaves the class uninitialized!
@@ -3131,8 +3246,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	
 	// initialize blink animation
 	{
-		assert(false == this->palette.deviceColors.empty());
-		this->animation.rendering.delays.resize(this->palette.deviceColors.size());
+		this->animation.rendering.delays.resize(kMy_BlinkingColorCount);
 		for (My_TimeIntervalList::size_type i = 0; i < this->animation.rendering.delays.size(); ++i)
 		{
 			this->animation.rendering.delays[i] = calculateAnimationStageDelay(this, i);
@@ -3238,9 +3352,6 @@ TerminalView::
 															kPreferences_ChangeContextBatchMode);
 	ListenerModel_ReleaseListener(&this->screen.preferenceMonitor);
 	
-	// remove idle timer
-	(OSStatus)RemoveEventLoopTimer(this->screen.cursor.flashTimer), this->screen.cursor.flashTimer = nullptr;
-	
 	// remove timer
 	RemoveEventLoopTimer(this->animation.timer.ref), this->animation.timer.ref = nullptr;
 	DisposeEventLoopTimerUPP(this->animation.timer.upp), this->animation.timer.upp = nullptr;
@@ -3290,9 +3401,8 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 		//
 		
 		// update the rendered text color of the screen
-		getScreenPaletteColor(ptr, kTerminalView_ColorIndexFirstBlinkPulseColor + ptr->animation.rendering.stage,
-								&currentColor);
-		setScreenPaletteColor(ptr, kTerminalView_ColorIndexBlinkingText, &currentColor);
+		getBlinkAnimationColor(ptr, ptr->animation.rendering.stage, &currentColor);
+		setScreenCustomColor(ptr, kTerminalView_ColorIndexBlinkingText, &currentColor);
 		
 		// figure out which color is next; the color cycling goes up and
 		// down the list continuously, thus creating a pulsing effect
@@ -3302,10 +3412,10 @@ animateBlinkingItems	(EventLoopTimerRef		inTimer,
 			ptr->animation.rendering.stageDelta = +1;
 			ptr->animation.rendering.stage = 0;
 		}
-		else if (ptr->animation.rendering.stage >= kTerminalView_ColorCountBlinkPulseColors)
+		else if (ptr->animation.rendering.stage >= kMy_BlinkingColorCount)
 		{
 			ptr->animation.rendering.stageDelta = -1;
-			ptr->animation.rendering.stage = kTerminalView_ColorCountBlinkPulseColors - 1;
+			ptr->animation.rendering.stage = kMy_BlinkingColorCount - 1;
 		}
 		
 		// invalidate only the appropriate (blinking) parts of the screen
@@ -3474,7 +3584,8 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 						 Preferences_ContextRef		inSource,
 						 Boolean					inSearchForDefaults)
 {
-	TerminalView_ColorIndex		currentIndex = 0;
+	TerminalView_ColorIndex		currentColorID = 0;
+	UInt16						currentIndex = 0;
 	Preferences_Tag				currentPrefsTag = '----';
 	RGBColor					colorValue;
 	UInt16						result = 0;
@@ -3484,66 +3595,66 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	// basic colors
 	//
 	
-	currentIndex = kTerminalView_ColorIndexNormalText;
+	currentColorID = kTerminalView_ColorIndexNormalText;
 	currentPrefsTag = kPreferences_TagTerminalColorNormalForeground;
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
-	currentIndex = kTerminalView_ColorIndexNormalBackground;
+	currentColorID = kTerminalView_ColorIndexNormalBackground;
 	currentPrefsTag = kPreferences_TagTerminalColorNormalBackground;
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
-	currentIndex = kTerminalView_ColorIndexBlinkingText;
+	currentColorID = kTerminalView_ColorIndexBlinkingText;
 	currentPrefsTag = kPreferences_TagTerminalColorBlinkingForeground;
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
-	currentIndex = kTerminalView_ColorIndexBlinkingBackground;
+	currentColorID = kTerminalView_ColorIndexBlinkingBackground;
 	currentPrefsTag = kPreferences_TagTerminalColorBlinkingBackground;
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
-	currentIndex = kTerminalView_ColorIndexBoldText;
+	currentColorID = kTerminalView_ColorIndexBoldText;
 	currentPrefsTag = kPreferences_TagTerminalColorBoldForeground;
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
-	currentIndex = kTerminalView_ColorIndexBoldBackground;
+	currentColorID = kTerminalView_ColorIndexBoldBackground;
 	currentPrefsTag = kPreferences_TagTerminalColorBoldBackground;
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
-	currentIndex = kTerminalView_ColorIndexMatteBackground;
+	currentColorID = kTerminalView_ColorIndexMatteBackground;
 	currentPrefsTag = kPreferences_TagTerminalColorMatteBackground;
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenBaseColor(inTerminalViewPtr, currentColorID, &colorValue);
 		++result;
 	}
 	
@@ -3556,7 +3667,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3565,7 +3676,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3574,7 +3685,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3583,7 +3694,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3592,7 +3703,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3601,7 +3712,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3610,7 +3721,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3619,7 +3730,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3628,7 +3739,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3637,7 +3748,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3646,7 +3757,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3655,7 +3766,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3664,7 +3775,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3673,7 +3784,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3682,7 +3793,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3691,7 +3802,7 @@ copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, currentPrefsTag,
 															sizeof(colorValue), &colorValue, inSearchForDefaults))
 	{
-		setScreenBaseColor(inTerminalViewPtr, currentIndex, &colorValue);
+		setScreenCoreColor(inTerminalViewPtr, currentIndex, &colorValue);
 		++result;
 	}
 	
@@ -3800,45 +3911,27 @@ createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
 							 Preferences_ContextRef		inFormat,
 							 Boolean					inSearchForDefaults)
 {
-	OSStatus		result = noErr;
-	size_t const	kNumberOfPaletteEntries = (kTerminalView_ColorCountRequiredEntries +
-												kTerminalView_ColorCountNonANSIColors +
-												kTerminalView_ColorCountBlinkPulseColors +
-												kTerminalView_ColorCountNormalANSIColors +
-												kTerminalView_ColorCountEmphasizedANSIColors);
+	OSStatus	result = noErr;
 	
 	
-	// create a Core Graphics palette for future use
-	inTerminalViewPtr->palette.deviceColors.resize(kNumberOfPaletteEntries);
+	// create palettes for future use
+	inTerminalViewPtr->customColors.resize(kTerminalView_ColorIndexLastValid - kTerminalView_ColorIndexFirstValid + 1);
+	inTerminalViewPtr->blinkColors.resize(kMy_BlinkingColorCount);
 	
-	{
-		RGBColor	colorValue;
-		
-		
-		// the first two entries MUST be black and white; otherwise, other HIView colors are screwed up
-		colorValue.red = 0;
-		colorValue.green = 0;
-		colorValue.blue = 0;
-		setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexBlack, &colorValue);
-		colorValue.red = RGBCOLOR_INTENSITY_MAX;
-		colorValue.green = RGBCOLOR_INTENSITY_MAX;
-		colorValue.blue = RGBCOLOR_INTENSITY_MAX;
-		setScreenPaletteColor(inTerminalViewPtr, kTerminalView_ColorIndexWhite, &colorValue);
-		
-		// set up window’s colors; note that this will set the non-ANSI colors,
-		// the blinking colors, and the ANSI colors
-		(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat, inSearchForDefaults);
-		
-		// install a timer to modify blinking text color entries periodically
-		assert(nullptr != inTerminalViewPtr->selfRef);
-		inTerminalViewPtr->animation.timer.upp = NewEventLoopTimerUPP(animateBlinkingItems);
-		(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
-										kEventDurationForever/* time between fires - set later */,
-										inTerminalViewPtr->animation.timer.upp,
-										inTerminalViewPtr->selfRef/* user data */,
-										&inTerminalViewPtr->animation.timer.ref);
-		inTerminalViewPtr->animation.timer.isActive = false;
-	}
+	// set up window’s colors; note that this will set the non-ANSI colors,
+	// the blinking colors, and the ANSI colors
+	(UInt16)copyColorPreferences(inTerminalViewPtr, inFormat, inSearchForDefaults);
+	
+	// install a timer to modify blinking text color entries periodically
+	assert(nullptr != inTerminalViewPtr->selfRef);
+	inTerminalViewPtr->animation.timer.upp = NewEventLoopTimerUPP(animateBlinkingItems);
+	(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(), kEventDurationForever/* time before first fire */,
+									kEventDurationForever/* time between fires - set later */,
+									inTerminalViewPtr->animation.timer.upp,
+									inTerminalViewPtr->selfRef/* user data */,
+									&inTerminalViewPtr->animation.timer.ref);
+	inTerminalViewPtr->animation.timer.isActive = false;
+	
 	return result;
 }// createWindowColorPalette
 
@@ -4907,6 +5000,34 @@ findVirtualCellFromLocalPoint	(TerminalViewPtr		inTerminalViewPtr,
 
 
 /*!
+Given a stage of blink animation, returns its rendering color.
+
+(4.0)
+*/
+static inline void
+getBlinkAnimationColor	(TerminalViewPtr	inTerminalViewPtr,
+						 UInt16				inAnimationStage,
+						 RGBColor*			outColorPtr)
+{
+	CGDeviceColor	deviceColor = inTerminalViewPtr->blinkColors[inAnimationStage];
+	Float32			fullIntensityFraction = 0.0;
+	
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= deviceColor.red;
+	outColorPtr->red = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= deviceColor.green;
+	outColorPtr->green = STATIC_CAST(fullIntensityFraction, unsigned short);
+	
+	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+	fullIntensityFraction *= deviceColor.blue;
+	outColorPtr->blue = STATIC_CAST(fullIntensityFraction, unsigned short);
+}// getBlinkAnimationColor
+
+
+/*!
 Calculates the boundaries of the given row in pixels
 relative to the SCREEN, so if you passed row 0, the
 top-left corner of the rectangle would be (0, 0), but
@@ -5000,7 +5121,7 @@ getRowCharacterWidth	(TerminalViewPtr	inTerminalViewPtr,
 	if (rowIterator != nullptr)
 	{
 		(Terminal_Result)Terminal_GetLineGlobalAttributes(inTerminalViewPtr->screen.ref, rowIterator, &globalAttributes);
-		if ((globalAttributes & kMaskTerminalTextAttributeDoubleText) != 0) result = INTEGER_DOUBLED(result);
+		if (STYLE_IS_DOUBLE_ANY(globalAttributes)) result = INTEGER_DOUBLED(result);
 		releaseRowIterator(inTerminalViewPtr, &rowIterator);
 	}
 	return result;
@@ -5088,38 +5209,54 @@ getScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 
 
 /*!
-Returns the entry indices, into the specified screen’s
-window palette, of the correct foreground and background
-colors for the specified text style attributes.
+Returns the RGB foreground and background colors to use for
+the specified text style attributes.
 
 If "outNoBackgroundPtr" is set to true, it means that the
 returned background color is normal, which is effectively
 no color if the foreground is rendered over top of a
 background view.
 
-(3.0)
+(4.0)
 */
 static void
-getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
-						 TerminalTextAttributes		inAttributes,
-						 TerminalView_ColorIndex*	outForeColorEntryPtr,
-						 TerminalView_ColorIndex*	outBackColorEntryPtr,
-						 Boolean*					outNoBackgroundPtr)
+getScreenColorsForAttributes	(TerminalViewPtr			inTerminalViewPtr,
+								 TerminalTextAttributes		inAttributes,
+								 RGBColor*					outForeColorPtr,
+								 RGBColor*					outBackColorPtr,
+								 Boolean*					outNoBackgroundPtr)
 {
-	TerminalView_ColorIndex		fg = kTerminalView_ColorIndexNormalText;
-	TerminalView_ColorIndex		bg = kTerminalView_ColorIndexNormalBackground;
+	Boolean		isCustom = false;
 	
 	
 	*outNoBackgroundPtr = false; // initially...
 	
-	// choose foreground color...
-	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */STYLE_USE_ANSI_FOREGROUND(inAttributes))
+	// choose foreground color
+	isCustom = false; // initially...
+	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */STYLE_USE_FOREGROUND_INDEX(inAttributes))
 	{
-		fg = STYLE_BOLD(inAttributes) ? kTerminalView_ColorIndexEmphasizedANSIBlack : kTerminalView_ColorIndexNormalANSIBlack;
-		fg += ((inAttributes >> 8) & 0x07); // ANSI color
+		// one of the “core” 256 colors was chosen
+		UInt16		fg = kTerminalView_ColorIndexNormalANSIBlack + STYLE_FOREGROUND_INDEX(inAttributes);
+		
+		
+		if (STYLE_BOLD(inAttributes) && (fg <= kTerminalView_ColorIndexNormalANSIWhite))
+		{
+			// “magically” use the emphasized color for text that is actually bold
+			fg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
+		}
+		isCustom = getScreenCoreColor(inTerminalViewPtr, fg, outForeColorPtr);
+		if (false == isCustom)
+		{
+			// depending on terminal state, this might indicate an error...
+			// TEMPORARY - need to add more checks here
+		}
 	}
-	else
+	if (false == isCustom)
 	{
+		// ordinary color, based on style
+		TerminalView_ColorIndex		fg = kTerminalView_ColorIndexNormalText;
+		
+		
 		// the blinking text color is favored because MacTelnet 3.0 has
 		// “real” bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
@@ -5127,16 +5264,36 @@ getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 		if (STYLE_BLINKING(inAttributes)) fg = kTerminalView_ColorIndexBlinkingText;
 		else if (STYLE_BOLD(inAttributes)) fg = kTerminalView_ColorIndexBoldText;
 		else fg = kTerminalView_ColorIndexNormalText;
+		
+		getScreenCustomColor(inTerminalViewPtr, fg, outForeColorPtr);
 	}
 	
-	// choose background color...
-	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */STYLE_USE_ANSI_BACKGROUND(inAttributes))
+	// choose background color
+	isCustom = false; // initially...
+	if (/*(inTerminalViewPtr->screen.areANSIColorsEnabled) && */STYLE_USE_BACKGROUND_INDEX(inAttributes))
 	{
-		bg = STYLE_BOLD(inAttributes) ? kTerminalView_ColorIndexEmphasizedANSIBlack : kTerminalView_ColorIndexNormalANSIBlack;
-		bg += ((inAttributes >> 12) & 0x07); // ANSI color
+		// one of the “core” 256 colors was chosen
+		UInt16		bg = kTerminalView_ColorIndexNormalANSIBlack + STYLE_BACKGROUND_INDEX(inAttributes);
+		
+		
+		if (STYLE_BOLD(inAttributes) && (bg <= kTerminalView_ColorIndexNormalANSIWhite))
+		{
+			// “magically” use the emphasized color for text that is actually bold
+			bg += (kTerminalView_ColorIndexEmphasizedANSIBlack - kTerminalView_ColorIndexNormalANSIBlack);
+		}
+		isCustom = getScreenCoreColor(inTerminalViewPtr, bg, outBackColorPtr);
+		if (false == isCustom)
+		{
+			// depending on terminal state, this might indicate an error...
+			// TEMPORARY - need to add more checks here
+		}
 	}
-	else
+	if (false == isCustom)
 	{
+		// ordinary color, based on style
+		TerminalView_ColorIndex		bg = kTerminalView_ColorIndexNormalBackground;
+		
+		
 		// the blinking text color is favored because MacTelnet 3.0 has
 		// “real” bold text; therefore, if some text happens to be both
 		// boldface and blinking, using the blinking text color ensures
@@ -5148,12 +5305,13 @@ getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 			bg = kTerminalView_ColorIndexNormalBackground;
 			*outNoBackgroundPtr = true;
 		}
+		getScreenCustomColor(inTerminalViewPtr, bg, outBackColorPtr);
 	}
 	
 	// to invert, swap the colors and make sure the background is drawn
 	if (STYLE_INVERSE_VIDEO(inAttributes))
 	{
-		std::swap< TerminalView_ColorIndex >(fg, bg);
+		std::swap< RGBColor >(*outForeColorPtr, *outBackColorPtr);
 		*outNoBackgroundPtr = false;
 	}
 	
@@ -5165,24 +5323,94 @@ getScreenColorEntries	(TerminalViewPtr			inTerminalViewPtr,
 		*outNoBackgroundPtr = false;
 	}
 	
-	if (STYLE_CONCEALED(inAttributes)) fg = bg; // make “invisible” by using same colors for everything
-	if (outForeColorEntryPtr != nullptr) *outForeColorEntryPtr = fg;
-	if (outBackColorEntryPtr != nullptr) *outBackColorEntryPtr = bg;
-}// getScreenColorEntries
+	if (STYLE_CONCEALED(inAttributes)) *outForeColorPtr = *outBackColorPtr; // make “invisible” by using same colors for everything
+}// getScreenColorsForAttributes
 
 
 /*!
-Returns a color from a screen window’s palette, given
-an external color specifier.
+Given an index from 0 to 255, returns the appropriate color
+for rendering.
+
+NOTE that depending on the terminal configuration, not all
+color indices may be valid; in fact, none of them may be.
+Returns true only if the specified index is valid.
+
+See also getScreenCustomColor(), which returns the colors
+most often needed for rendering.
+
+(4.0)
+*/
+static inline Boolean
+getScreenCoreColor	(TerminalViewPtr	inTerminalViewPtr,
+					 UInt16				inColorEntryNumber,
+					 RGBColor*			outColorPtr)
+{
+	My_CGColorByIndex&	colors = inTerminalViewPtr->coreColors;
+	My_XTerm256Table&	sourceGrid = gColorGrid();
+	Boolean				result = false;
+	
+	
+	if (colors.end() != colors.find(inColorEntryNumber))
+	{
+		// one of the basic 16 colors
+		CGDeviceColor	deviceColor = colors[inColorEntryNumber];
+		Float32			fullIntensityFraction = 0.0;
+		
+		
+		fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+		fullIntensityFraction *= deviceColor.red;
+		outColorPtr->red = STATIC_CAST(fullIntensityFraction, unsigned short);
+		
+		fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+		fullIntensityFraction *= deviceColor.green;
+		outColorPtr->green = STATIC_CAST(fullIntensityFraction, unsigned short);
+		
+		fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
+		fullIntensityFraction *= deviceColor.blue;
+		outColorPtr->blue = STATIC_CAST(fullIntensityFraction, unsigned short);
+		
+		result = true;
+	}
+	else if (sourceGrid.colorLevels.end() !=
+				sourceGrid.colorLevels.find(inColorEntryNumber))
+	{
+		// one of the many other standard colors
+		//Console_WriteValueFloat4("color", sourceGrid.colorLevels[inColorEntryNumber][0],
+		//							sourceGrid.colorLevels[inColorEntryNumber][1],
+		//							sourceGrid.colorLevels[inColorEntryNumber][2],
+		//							0);
+		sourceGrid.makeRGBColor(sourceGrid.colorLevels[inColorEntryNumber][0],
+								sourceGrid.colorLevels[inColorEntryNumber][1],
+								sourceGrid.colorLevels[inColorEntryNumber][2], *outColorPtr);
+		result = true;
+	}
+	else if (sourceGrid.grayLevels.end() !=
+				sourceGrid.grayLevels.find(inColorEntryNumber))
+	{
+		// one of the standard grays
+		//Console_WriteValue("gray", sourceGrid.grayLevels[inColorEntryNumber]);
+		sourceGrid.makeRGBColor(sourceGrid.grayLevels[inColorEntryNumber],
+								sourceGrid.grayLevels[inColorEntryNumber],
+								sourceGrid.grayLevels[inColorEntryNumber], *outColorPtr);
+		result = true;
+	}
+	return result;
+}// getScreenCoreColor
+
+
+/*!
+Given a color identifier, returns its rendering color.
+
+See also getScreenCoreColor().
 
 (3.0)
 */
 static inline void
-getScreenPaletteColor	(TerminalViewPtr			inTerminalViewPtr,
+getScreenCustomColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor*					outColorPtr)
 {
-	CGDeviceColor	deviceColor = inTerminalViewPtr->palette.deviceColors[inColorEntryNumber];
+	CGDeviceColor	deviceColor = inTerminalViewPtr->customColors[inColorEntryNumber];
 	Float32			fullIntensityFraction = 0.0;
 	
 	
@@ -5197,7 +5425,7 @@ getScreenPaletteColor	(TerminalViewPtr			inTerminalViewPtr,
 	fullIntensityFraction = RGBCOLOR_INTENSITY_MAX;
 	fullIntensityFraction *= deviceColor.blue;
 	outColorPtr->blue = STATIC_CAST(fullIntensityFraction, unsigned short);
-}// getScreenPaletteColor
+}// getScreenCustomColor
 
 
 /*!
@@ -7662,7 +7890,7 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 						{
 							// flip colors and paint at the current blink alpha value
-							useTerminalTextColors(viewPtr, drawingContext, 0x00000040/* attributes for inverse video */,
+							useTerminalTextColors(viewPtr, drawingContext, kTerminalTextAttributeInverseVideo,
 													cursorBlinks(viewPtr)
 													? viewPtr->animation.cursor.blinkAlpha
 													: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);
@@ -9020,6 +9248,23 @@ screenToLocalRect	(TerminalViewPtr	inTerminalViewPtr,
 
 
 /*!
+Copies a color into the blink animation palette for the
+specified (zero-based) animation stage.  The animation timer
+will use this palette to find colors as needed.
+
+(4.0)
+*/
+static inline void
+setBlinkAnimationColor	(TerminalViewPtr	inTerminalViewPtr,
+						 UInt16				inAnimationStage,
+						 RGBColor const*	inColorPtr)
+{
+	assert(inAnimationStage < STATIC_CAST(inTerminalViewPtr->blinkColors.size(), UInt16));
+	inTerminalViewPtr->blinkColors[inAnimationStage] = ColorUtilities_CGDeviceColorMake(*inColorPtr);
+}// setBlinkAnimationColor
+
+
+/*!
 Starts or stops a timer that periodically refreshes
 blinking text.  Since this is potentially expensive,
 this routine exists so that the timer is only running
@@ -9254,7 +9499,7 @@ setPortScreenPort	(TerminalViewPtr	inTerminalViewPtr)
 Changes a color the user perceives is in use; these are
 stored internally in the view data structure.  Also
 updates the palette automatically, so you don’t have to
-call setScreenPaletteColor() too.
+call setScreenCustomColor() too.
 
 (3.0)
 */
@@ -9340,17 +9585,33 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 		// in the sequence matches the base foreground color, just
 		// for simplicity in the animation code
 		colorValue = inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingText];
-		for (TerminalView_ColorIndex i = kTerminalView_ColorIndexLastBlinkPulseColor;
-				i >= kTerminalView_ColorIndexFirstBlinkPulseColor; --i)
+		for (SInt16 i = kMy_BlinkingColorCount - 1; i >= 0; --i)
 		{
 			(Boolean)GetGray(device, &inTerminalViewPtr->text.colors[kMyBasicColorIndexBlinkingBackground],
 								&colorValue/* both input and output */);
-			setScreenPaletteColor(inTerminalViewPtr, i, &colorValue);
+			setBlinkAnimationColor(inTerminalViewPtr, i, &colorValue);
 		}
 	}
 	
-	setScreenPaletteColor(inTerminalViewPtr, inColorEntryNumber, inColorPtr);
+	setScreenCustomColor(inTerminalViewPtr, inColorEntryNumber, inColorPtr);
 }// setScreenBaseColor
+
+
+/*!
+Copies a color into a screen window’s color palette.
+
+Most core colors are not meant to be customized, but
+the base 16 (ANSI) colors typically are.
+
+(4.0)
+*/
+static inline void
+setScreenCoreColor	(TerminalViewPtr	inTerminalViewPtr,
+					 UInt16				inColorEntryNumber,
+					 RGBColor const*	inColorPtr)
+{
+	inTerminalViewPtr->coreColors[inColorEntryNumber] = ColorUtilities_CGDeviceColorMake(*inColorPtr);
+}// setScreenCoreColor
 
 
 /*!
@@ -9366,12 +9627,13 @@ rendering colors.
 (3.0)
 */
 static inline void
-setScreenPaletteColor	(TerminalViewPtr			inTerminalViewPtr,
+setScreenCustomColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor const*			inColorPtr)
 {
-	inTerminalViewPtr->palette.deviceColors[inColorEntryNumber] = ColorUtilities_CGDeviceColorMake(*inColorPtr);
-}// setScreenPaletteColor
+	assert(inColorEntryNumber < STATIC_CAST(inTerminalViewPtr->customColors.size(), TerminalView_ColorIndex));
+	inTerminalViewPtr->customColors[inColorEntryNumber] = ColorUtilities_CGDeviceColorMake(*inColorPtr);
+}// setScreenCustomColor
 
 
 /*!
@@ -9792,10 +10054,9 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalTextAttributes		inAttributes,
 						 Float32					inDesiredAlpha)
 {
-	TerminalView_ColorIndex		fg = 0;
-	TerminalView_ColorIndex		bg = 0;
-	RGBColor					colorRGB;
-	Boolean						usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
+	RGBColor	backgroundRGB;
+	RGBColor	colorRGB;
+	Boolean		usingDragHighlightColors = (inTerminalViewPtr->screen.currentRenderDragColors);
 	
 	
 	// IMPORTANT: Drawing code is currently transitioning to Core Graphics;
@@ -9803,7 +10064,8 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 	// are even made redundantly in both contexts.
 	
 	// find the correct colors in the color table
-	getScreenColorEntries(inTerminalViewPtr, inAttributes, &fg, &bg, &inTerminalViewPtr->screen.currentRenderNoBackground);
+	getScreenColorsForAttributes(inTerminalViewPtr, inAttributes, &colorRGB, &backgroundRGB,
+									&inTerminalViewPtr->screen.currentRenderNoBackground);
 	
 	// set up foreground color
 	if (usingDragHighlightColors)
@@ -9820,7 +10082,6 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 	}
 	else
 	{
-		getScreenPaletteColor(inTerminalViewPtr, fg, &colorRGB);
 		RGBForeColor(&colorRGB);
 		// set Core Graphics color below...
 	}
@@ -9829,8 +10090,7 @@ useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 	// the background color is preset by the highlight renderer
 	if (false == usingDragHighlightColors)
 	{
-		getScreenPaletteColor(inTerminalViewPtr, bg, &colorRGB);
-		RGBBackColor(&colorRGB);
+		RGBBackColor(&backgroundRGB);
 		
 		// “darken” the colors if text is selected, but only in the foreground;
 		// in the background, the view renders an outline of the selection, so
