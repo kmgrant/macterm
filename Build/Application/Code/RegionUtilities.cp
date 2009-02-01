@@ -38,12 +38,6 @@
 
 
 
-#pragma mark Internal Method Prototypes
-
-static GDHandle		findWindowDevice	(WindowRef);
-
-
-
 #pragma mark Public Methods
 
 /*!
@@ -154,44 +148,29 @@ RegionUtilities_CenterRectIn	(Rect*			inoutInner,
 
 
 /*!
-This powerful routine iterates through the
-device list, determines the monitor that
-contains the largest chunk of the given
-windowÕs structure region, and then returns
-the available window space for that device.
-On Mac OS 9 and earlier, this will usually
-be the entire chunk of the desktop that
-crosses the device, unless itÕs the main
-device, in which case the region will have
-the menu bar height subtracted from it.  On
-Mac OS X, the Dock (among other things)
-may also impact the available space.
+Combines a call to GetWindowGreatestAreaDevice() and
+GetAvailableWindowPositioningBounds().
 
-This routine is very useful for implementing
-operations such as zooming windows, since
-you typically need the available space to
-make zoomed-state calculations.
+This routine is very useful for implementing operations
+such as zooming windows, since you typically need the
+available space to make zoomed-state calculations.
 
 (3.0)
 */
 void
-RegionUtilities_GetPositioningBounds	(WindowRef	inWindow,
-										 Rect*		outRectPtr)
+RegionUtilities_GetPositioningBounds	(HIWindowRef	inWindow,
+										 Rect*			outRectPtr)
 {
-#if TARGET_API_MAC_OS8
-	// on Mac OS 9 and earlier, there is no distinction between the
-	// device rectangle and the available positioning bounds
-	RegionUtilities_GetWindowDeviceGrayRect(inWindow, outRectPtr);
-#else
-	// on Mac OS X, there is a special API for this purpose
-	if (outRectPtr != nullptr)
+	if (nullptr != outRectPtr)
 	{
-		GDHandle	windowDevice = findWindowDevice(inWindow);
+		GDHandle	windowDevice = nullptr;
+		OSStatus	error = GetWindowGreatestAreaDevice(inWindow, kWindowContentRgn, &windowDevice,
+														nullptr/* screen size */);
 		
 		
-		(OSStatus)GetAvailableWindowPositioningBounds(windowDevice, outRectPtr);
+		if (noErr != error) windowDevice = GetMainDevice();
+		error = GetAvailableWindowPositioningBounds(windowDevice, outRectPtr);
 	}
-#endif
 }// GetPositioningBounds
 
 
@@ -447,50 +426,5 @@ RegionUtilities_SetWindowUpToDate	(WindowRef	inWindow)
 	(Rect*)GetPortBounds(GetWindowPort(inWindow), &windowPortRect);
 	(OSStatus)ValidWindowRect(inWindow, &windowPortRect);
 }// SetWindowUpToDate
-
-
-#pragma mark Internal Methods
-
-/*!
-Scans the device list for the monitor that
-contains the largest piece of the given
-window, and then returns that device.  The
-window must be visible!
-
-(3.0)
-*/
-static GDHandle
-findWindowDevice	(WindowRef	inWindow)
-{
-	GDHandle	result = nullptr;
-	GDHandle	device = nullptr;
-	Rect		windowRect;
-	Rect		areaRect;
-	SInt32		area = 0L;
-	SInt32		areaMax = 0L;
-	
-	
-	// obtain global structure rectangle of the window
-	(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &windowRect);
-	
-	// check for monitors in use - find the one containing the largest chunk of the window
-	for (device = GetDeviceList(); (device != nullptr); device = GetNextDevice(device))
-	{
-		if (TestDeviceAttribute(device, screenDevice) && TestDeviceAttribute(device, screenActive))
-		{
-			(Boolean)SectRect(&(**device).gdRect, &windowRect, &areaRect);
-			
-			area = (SInt32)(areaRect.bottom - areaRect.top) * (areaRect.right - areaRect.left);
-			if (area > areaMax)
-			{
-				areaMax = area;
-				result = device;
-			}
-		}
-	}
-	if (result == nullptr) result = GetMainDevice();
-	
-	return result;
-}// findWindowDevice
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
