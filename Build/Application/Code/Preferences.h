@@ -521,6 +521,15 @@ Preferences_Result
 											 Preferences_ContextRef				inDestinationContext);
 
 Preferences_Result
+	Preferences_ContextDeleteData			(Preferences_ContextRef				inContext,
+											 Preferences_Tag					inDataPreferenceTag);
+
+Preferences_Result
+	Preferences_ContextDeleteDataAtIndex	(Preferences_ContextRef				inContext,
+											 Preferences_Tag					inDataPreferenceTag,
+											 UInt32								inOneBasedIndexOrZeroForNonIndexedTag);
+
+Preferences_Result
 	Preferences_ContextDeleteSaved			(Preferences_ContextRef				inContext);
 
 Preferences_Result

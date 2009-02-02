@@ -214,6 +214,13 @@ public:
 		notifyListeners(inTag);
 	}
 	
+	//! removes an arbitrary value from the dictionary
+	virtual void
+	deleteValue		(CFStringRef	inKey)
+	{
+		_implementorPtr->deleteValue(inKey);
+	}
+	
 	//! delete this key-value set from application preferences
 	virtual Preferences_Result
 	destroy () NO_METHOD_IMPL = 0;
@@ -1540,6 +1547,80 @@ Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
 
 
 /*!
+Completely removes a preference corresponding to the specified
+tag, making it “undefined”.  Subsequent queries that are set to
+fall back on defaults, will do so because the context will no
+longer have a value for the given setting.
+
+Note that any data removed via this routine will be permanently
+removed from disk eventually (via Preferences_Done()).  You can
+choose to save explicitly with Preferences_Save(), but that is
+not strictly necessary unless you are paranoid that the
+application will crash before Preferences_Done() is invoked.
+
+\retval kPreferences_ResultOK
+if the data is deleted properly
+
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist
+
+\retval kPreferences_ResultUnknownTagOrClass
+if the specified tag is not understood
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextDeleteData	(Preferences_ContextRef		inContext,
+								 Preferences_Tag			inDataPreferenceTag)
+{
+	return Preferences_ContextDeleteDataAtIndex(inContext, inDataPreferenceTag, 0/* index */);
+}// ContextDeleteData
+
+
+/*!
+Like Preferences_ContextDeleteData(), except the specified tag
+is for a setting that is actually an ordered set; so, you must
+state which item you want using a one-based index.
+
+The tag should generally have a "kPreferences_TagIndexed…" name.
+
+For the convenience of the implementation, 0 is accepted as an
+index value to indicate that the tag is not in fact indexed
+after all.  But, it is better to use
+Preferences_ContextDeleteData() with non-indexed tags.
+
+IMPORTANT:	The index value is currently ignored for all classes
+			except macro sets, and should be set to 0 for any
+			other preference tag.
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextDeleteDataAtIndex	(Preferences_ContextRef		inContext,
+										 Preferences_Tag			inDataPreferenceTag,
+										 UInt32						inOneBasedIndexOrZeroForNonIndexedTag)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0;
+	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	
+	
+	result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
+									keyName, keyValueType, actualSize, dataClass);
+	if (kPreferences_ResultOK == result)
+	{
+		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+		
+		
+		ptr->deleteValue(keyName);
+	}
+	return result;
+}// ContextDeleteDataAtIndex
+
+
+/*!
 Deletes the specified context from in-memory structures;
 this will become permanent the next time application
 preferences are synchronized.
@@ -2012,8 +2093,7 @@ Preferences_ContextSave		(Preferences_ContextRef		inContext)
 
 
 /*!
-Sets a preference corresponding to the specified tag.  See also
-Preferences_SetWindowArrangementData().
+Sets a preference corresponding to the specified tag.
 
 Note that any data you set via this routine will be permanently
 saved to disk eventually (via Preferences_Done()).  You can
@@ -3165,7 +3245,7 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		result &= Console_Assert("nonexistent long integer is exactly zero", 0 == inTestObjectPtr->returnLong(CFSTR("long does not exist")));
 	}
 	
-	// string values
+	// string values and deleted values
 	{
 		CFStringRef			kString1 = CFSTR("my first test string");
 		CFStringRef			kString2 = CFSTR("This is a somewhat more interesting test string.  Hopefully it still works!");
@@ -3182,6 +3262,9 @@ unitTest	(My_ContextInterface*	inTestObjectPtr)
 		result &= Console_Assert("returned string 2 exists", copiedString.exists());
 		result &= Console_Assert("returned string 2 is correct",
 									kCFCompareEqualTo == CFStringCompare(copiedString.returnCFStringRef(), kString2, 0/* options */));
+		inTestObjectPtr->deleteValue(CFSTR("__test_string_key_2__"));
+		copiedString = inTestObjectPtr->returnStringCopy(CFSTR("__test_string_key_2__"));
+		result &= Console_Assert("string 2 has been deleted", false == copiedString.exists());
 	}
 	
 	return result;
