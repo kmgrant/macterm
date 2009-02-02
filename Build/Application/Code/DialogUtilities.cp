@@ -2081,6 +2081,52 @@ DialogUtilities_SetPopUpItemByCommand	(HIViewRef		inPopUpMenuView,
 
 
 /*!
+Finds the menu attached to the specified view, determines
+the first item in it matching the given text, and updates
+the control value to match.
+
+\retval noErr
+if the value was set successfully
+
+\retval errUnknownControl
+if the view is invalid or it has no menu
+
+\retval controlPropertyNotFoundErr
+if the specified text was not found in any menu item, and
+the fallback selection was (successfully) applied instead
+
+(4.0)
+*/
+OSStatus
+DialogUtilities_SetPopUpItemByText	(HIViewRef		inPopUpMenuView,
+									 CFStringRef	inText,
+									 MenuItemIndex	inFallbackSelection)
+{
+	OSStatus	result = errUnknownControl;
+	MenuRef		menu = GetControlPopupMenuRef(inPopUpMenuView);
+	
+	
+	if (nullptr != menu)
+	{
+		MenuItemIndex	itemIndex = MenuBar_ReturnMenuItemIndexByItemText(menu, inText);
+		
+		
+		if (0 == itemIndex)
+		{
+			SetControl32BitValue(inPopUpMenuView, inFallbackSelection);
+			result = controlPropertyNotFoundErr;
+		}
+		else
+		{
+			SetControl32BitValue(inPopUpMenuView, itemIndex);
+			result = noErr;
+		}
+	}
+	return result;
+}// SetPopUpItemByText
+
+
+/*!
 Call this routine on the Help button control of every window.
 This routine checks to see if all necessary components for
 contextual help are available (disabling the button if help

@@ -303,6 +303,11 @@ OSStatus
 	DialogUtilities_SetPopUpItemByCommand	(HIViewRef				inPopUpMenuView,
 											 UInt32					inMenuCommandID);
 
+OSStatus
+	DialogUtilities_SetPopUpItemByText		(HIViewRef				inPopUpMenuView,
+											 CFStringRef			inText,
+											 MenuItemIndex			inFallbackSelection = 1);
+
 HIViewWrap&
 	DialogUtilities_SetUpHelpButton			(HIViewWrap&			inoutView);
 
