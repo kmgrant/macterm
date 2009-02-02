@@ -1895,12 +1895,6 @@ installedActions()
 											whenCommandExecuted, REINTERPRET_CAST(this, TerminalWindowRef)/* user data */,
 											&this->commandHandler/* event handler reference */);
 		assert_noerr(error);
-		
-		// this technically is only needed once; but the attempt is made for each new
-		// terminal window, so ignore the errors in installing it multiple times
-		(OSStatus)InstallApplicationEventHandler(this->commandUPP, GetEventTypeCount(whenCommandExecuted),
-													whenCommandExecuted, nullptr/* user data */,
-													nullptr/* event handler reference */);
 	}
 	
 	// install a callback that tells the Window Manager the proper behavior for clicks in background terminal windows
