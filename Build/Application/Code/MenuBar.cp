@@ -223,6 +223,10 @@ MenuBar_Init ()
 						(gPreferenceChangeEventListener, kPreferences_ChangeNumberOfContexts,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_StartMonitoring
+						(gPreferenceChangeEventListener, kPreferences_ChangeContextName,
+							false/* notify of initial value */);
+		assert(kPreferences_ResultOK == prefsResult);
 	}
 	
 	// set up a callback to receive session count change notifications
@@ -1619,6 +1623,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case kPreferences_ChangeNumberOfContexts:
+	case kPreferences_ChangeContextName:
 		// regenerate menu items
 		// TEMPORARY: maybe this should be more granulated than it is
 		setUpDynamicMenus();
