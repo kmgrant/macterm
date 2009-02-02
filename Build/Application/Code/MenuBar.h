@@ -207,7 +207,7 @@ MenuRef
 
 MenuItemIndex
 	MenuBar_ReturnMenuItemIndexByItemText			(MenuRef						inMenu,
-													 ConstStringPtr					inItemText);
+													 CFStringRef					inItemText);
 
 MenuID
 	MenuBar_ReturnUniqueMenuID						();

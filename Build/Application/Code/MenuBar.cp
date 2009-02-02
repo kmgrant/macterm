@@ -799,14 +799,14 @@ Determines the item index of a menu item that has
 the specified identical text.  If the item is not
 in the menu, 0 is returned.
 
-(3.0)
+(4.0)
 */
 MenuItemIndex
-MenuBar_ReturnMenuItemIndexByItemText	(MenuRef			inMenu,
-										 ConstStringPtr		inItemText)
+MenuBar_ReturnMenuItemIndexByItemText	(MenuRef		inMenu,
+										 CFStringRef	inItemText)
 {
 	MenuItemIndex const		kItemCount = CountMenuItems(inMenu);
-	Str255					itemString;
+	CFStringRef				itemCFString = nullptr;
 	MenuItemIndex			i = 0;
 	MenuItemIndex			result = 0;
 	
@@ -814,11 +814,21 @@ MenuBar_ReturnMenuItemIndexByItemText	(MenuRef			inMenu,
 	// look for an identical item
 	for (i = 1; i <= kItemCount; ++i)
 	{
-		GetMenuItemText(inMenu, i, itemString);
-		if (PLstrlen(itemString) > 0) unless (PLstrcmp(itemString, inItemText))
+		OSStatus	error = CopyMenuItemTextAsCFString(inMenu, i, &itemCFString);
+		
+		
+		if (noErr == error)
 		{
-			result = i;
-			break;
+			Boolean		stopNow = (kCFCompareEqualTo == CFStringCompare(itemCFString, inItemText,
+																		0/* options */));
+			
+			
+			CFRelease(itemCFString), itemCFString = nullptr;
+			if (stopNow)
+			{
+				result = i;
+				break;
+			}
 		}
 	}
 	
