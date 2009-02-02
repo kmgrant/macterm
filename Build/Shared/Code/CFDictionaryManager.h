@@ -5,8 +5,8 @@
 */
 /*###############################################################
 
-	Data Access Library 2.0
-	© 1998-2008 by Kevin Grant
+	Data Access Library 2.1
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -96,6 +96,9 @@ public:
 	
 	inline void
 	addValue	(CFStringRef, CFPropertyListRef);
+	
+	inline void
+	deleteValue	(CFStringRef);
 	
 	CFArrayRef
 	returnArrayCopy	(CFStringRef) const;
@@ -248,6 +251,20 @@ addValue	(CFStringRef		inKey,
 	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to add a value to an immutable dictionary");
 	CFDictionarySetValue(_dictionary.returnCFMutableDictionaryRef(), inKey, inValue);
 }// addValue
+
+
+/*!
+Removes a key value from the dictionary.
+
+(2.1)
+*/
+void
+CFDictionaryManager::
+deleteValue		(CFStringRef	inKey)
+{
+	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to remove a value from an immutable dictionary");
+	CFDictionaryRemoveValue(_dictionary.returnCFMutableDictionaryRef(), inKey);
+}// deleteValue
 
 
 /*!

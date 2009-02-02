@@ -9,8 +9,8 @@
 */
 /*###############################################################
 
-	Data Access Library 2.0
-	© 1998-2008 by Kevin Grant
+	Data Access Library 2.1
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -99,6 +99,10 @@ public:
 	virtual void
 	addValue	(CFStringRef		inKey,
 				 CFPropertyListRef	inValue) = 0;
+	
+	//! removes a value from the dictionary
+	virtual void
+	deleteValue		(CFStringRef	inKey) = 0;
 	
 	//! retrieves an array value from the dictionary (use only if the value really is an array!); release it yourself!
 	virtual CFArrayRef
@@ -198,6 +202,12 @@ public:
 				 CFPropertyListRef	inValue)
 	{
 		_delegate.addValue(inKey, inValue);
+	}
+	
+	virtual void
+	deleteValue		(CFStringRef	inKey)
+	{
+		_delegate.deleteValue(inKey);
 	}
 	
 	virtual CFArrayRef
@@ -314,6 +324,10 @@ public:
 	addValue	(CFStringRef		inKey,
 				 CFPropertyListRef	inValue);
 	
+	//! removes an arbitrary value from the dictionary
+	inline void
+	deleteValue		(CFStringRef	inKey);
+	
 	//! retrieves an array value from the dictionary (use only if the value really is an array!)
 	inline CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey) const;
@@ -415,6 +429,10 @@ public:
 	inline void
 	addValue	(CFStringRef		inKey,
 				 CFPropertyListRef	inValue);
+	
+	//! removes an arbitrary value from Core Foundation Preferences
+	inline void
+	deleteValue		(CFStringRef	inKey);
 	
 	//! retrieves an array value from global preferences (use only if the value really is an array!)
 	inline CFArrayRef
@@ -589,6 +607,19 @@ addValue	(CFStringRef		inKey,
 {
 	_dataDictionary.addValue(inKey, inValue);
 }// addValue
+
+
+/*!
+Removes a key value from the dictionary.
+
+(2.1)
+*/
+void
+CFKeyValueDictionary::
+deleteValue		(CFStringRef	inKey)
+{
+	_dataDictionary.deleteValue(inKey);
+}// deleteValue
 
 
 /*!
@@ -860,6 +891,20 @@ addValue	(CFStringRef		inKey,
 {
 	CFPreferencesSetAppValue(inKey, inValue, _targetApplication.returnCFStringRef());
 }// addValue
+
+
+/*!
+Removes a key value from the global application
+preferences.
+
+(2.1)
+*/
+void
+CFKeyValuePreferences::
+deleteValue		(CFStringRef	inKey)
+{
+	CFPreferencesSetAppValue(inKey, nullptr/* value */, _targetApplication.returnCFStringRef());
+}// deleteValue
 
 
 /*!
