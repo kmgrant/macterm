@@ -247,6 +247,7 @@ Tags for use with kPreferences_ClassSession.
 */
 enum
 {
+	kPreferences_TagAssociatedFormatFavorite			= 'frmt',	//!< data: "CFStringRef" (a kPreferences_ClassFormat context name)
 	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a kPreferences_ClassTerminal context name)
 	kPreferences_TagAutoCaptureToFile					= 'capt',	//!< data: "Boolean"
 	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "Preferences_AliasID"

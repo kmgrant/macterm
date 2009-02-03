@@ -5734,6 +5734,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassGeneral;
 		break;
 	
+	case kPreferences_TagAssociatedFormatFavorite:
+		outKeyName = CFSTR("format-favorite");
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(CFStringRef);
+		outClass = kPreferences_ClassSession;
+		break;
+	
 	case kPreferences_TagAssociatedTerminalFavorite:
 		outKeyName = CFSTR("terminal-favorite");
 		outKeyValueType = typeCFStringRef;
@@ -6633,6 +6640,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
+				case kPreferences_TagAssociatedFormatFavorite:
 				case kPreferences_TagAssociatedTerminalFavorite:
 				case kPreferences_TagServerHost:
 				case kPreferences_TagServerUserID:
@@ -8713,6 +8721,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
+			case kPreferences_TagAssociatedFormatFavorite:
 			case kPreferences_TagAssociatedTerminalFavorite:
 			case kPreferences_TagServerHost:
 			case kPreferences_TagServerUserID:

@@ -152,6 +152,8 @@ table(deftable).
 (defbottom). |(desc)\2. "Large" pastes in throttled mode are split into chunks no larger than this number of bytes.|
 (deftop). |(key). @data-send-paste-method@|(types). _string_: @normal@ or @throttled@|(types). 
 (defbottom). |(desc)\2. Pastes are sent to the session all at once or split into chunks.|
+(deftop). |(key). @format-favorite@|(types). _string_|
+(defbottom). |(desc)\2. This Format collection is used by default when the session starts.|
 (deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@|(types). 
 (defbottom). |(desc)\2. Using the Delete key sends this instruction (backspace or delete) to the session.|
 (deftop). |(key). @key-map-new-line@|(types). _string_: @\015\000@ or @\015\012@|(types). 

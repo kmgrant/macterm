@@ -90,6 +90,7 @@ namespace {
 
 pascal OSStatus			appendDataForProcessing			(EventHandlerCallRef, EventRef, void*);
 void					changeNotifyGlobal				(SessionFactory_Change, void*);
+Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_ContextRef);
 TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr);
 Boolean					displayTerminalWindow			(TerminalWindowRef);
@@ -469,6 +470,11 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 	{
 		Boolean		displayOK = false;
 		
+		
+		if (false == configureSessionTerminalWindow(terminalWindow, inContext))
+		{
+			Console_WriteLine("warning, unable to reconfigure terminal window");
+		}
 		
 		result = Session_New();
 		if (nullptr != result)
@@ -1109,6 +1115,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 	SessionRef				result = nullptr;
 	TerminalWindowRef		terminalWindow = inTerminalWindowOrNullToMakeNewWindow;
 	Preferences_ContextRef	associatedTerminalContext = nullptr;
+	Preferences_ContextRef	associatedFormatContext = nullptr;
 	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
 	
@@ -1127,9 +1134,24 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		}
 	}
 	
+	// read the format associated with the session, and use it
+	// to configure either the specified terminal window or the
+	// newly-created window, accordingly
+	{
+		CFStringRef		associatedFormatName = nullptr;
+		
+		
+		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
+														sizeof(associatedFormatName), &associatedFormatName);
+		if (kPreferences_ResultOK == preferencesResult)
+		{
+			associatedFormatContext = Preferences_NewContextFromFavorites(kPreferences_ClassFormat, associatedFormatName);
+		}
+	}
+	
 	if (nullptr == inTerminalWindowOrNullToMakeNewWindow)
 	{
-		terminalWindow = createTerminalWindow(associatedTerminalContext);
+		terminalWindow = createTerminalWindow(associatedTerminalContext, associatedFormatContext);
 	}
 	else
 	{
@@ -1950,7 +1972,63 @@ changeNotifyGlobal		(SessionFactory_Change	inWhatChanged,
 
 
 /*!
+Using a *session* context, configures the specified
+terminal window appropriately.
+
+This works by checking for any “associated format” in
+the given context, finds the context with that name,
+and copies its settings.
+
+Returns true only if successful.
+
+(4.0)
+*/
+Boolean
+configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
+								 Preferences_ContextRef		inSessionContext)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	CFStringRef				associatedFormatName = nullptr;
+	size_t					actualSize = 0;
+	Boolean					result = false;
+	
+	
+	// copy settings to the terminal window; note that a session context
+	// will not directly contain view settings such as fonts and colors,
+	// but it may contain the name of a context to use for this
+	prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
+												sizeof(associatedFormatName), &associatedFormatName,
+												false/* search defaults too */, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		Preferences_ContextRef		associatedFormat = Preferences_NewContextFromFavorites
+														(kPreferences_ClassFormat, associatedFormatName);
+		
+		
+		if (nullptr == associatedFormat)
+		{
+			Console_WriteValueCFString("warning, associated Format not found", associatedFormatName);
+		}
+		else
+		{
+			result = TerminalWindow_ReconfigureViewsInGroup
+						(inTerminalWindow, kTerminalWindow_ViewGroupActive, associatedFormat);
+			Preferences_ReleaseContext(&associatedFormat);
+		}
+		CFRelease(associatedFormatName), associatedFormatName = nullptr;
+	}
+	return result;
+}// configureSessionTerminalWindow
+
+
+/*!
 Internal version of SessionFactory_NewTerminalWindowUserFavorite().
+
+TEMPORARY - The context parameters are probably overkill, since
+in most cases a terminal window (new or not) needs to be
+reconfigured a certain way.  This usually means that a new window
+used for a new session will ultimately be “configured twice”.
 
 (3.0)
 */

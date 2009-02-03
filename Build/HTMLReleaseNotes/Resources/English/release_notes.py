@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090202',
     '20090201',
     '20090112',
     '20090109',
@@ -207,6 +208,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090202': [
+		'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a default Format association.',
+	],
 	'20090201': [
 		'Terminals now have 256 colors, but an application might only use them if Identity ($TERM) is set to "xterm-256color".',
 	],

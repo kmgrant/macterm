@@ -257,7 +257,8 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 			
 			
 			session = SessionFactory_NewSessionArbitraryCommand
-						(dataPtr->terminalWindow/* could be nullptr to make a new window */, argumentListCFArray);
+						(dataPtr->terminalWindow/* could be nullptr to make a new window */, argumentListCFArray,
+							dataPtr->temporaryDataModel);
 			CFRelease(argumentListCFArray), argumentListCFArray = nullptr;
 		}
 	}
