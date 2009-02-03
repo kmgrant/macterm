@@ -778,6 +778,41 @@ TerminalWindow_IsObscured	(TerminalWindowRef	inRef)
 
 
 /*!
+Changes the settings of every view in the specified group,
+to include the recognized settings of given context.  You might
+use this, for example, to do a batch-mode change of all the
+fonts and colors of a terminal window’s views.
+
+Currently, the only supported group is the active view,
+"kTerminalWindow_ViewGroupActive".
+
+Returns true only if successful.
+
+(4.0)
+*/
+Boolean
+TerminalWindow_ReconfigureViewsInGroup	(TerminalWindowRef			inRef,
+										 TerminalWindow_ViewGroup	inViewGroup,
+										 Preferences_ContextRef		inContext)
+{
+	Boolean		result = false;
+	
+	
+	if (kTerminalWindow_ViewGroupActive == inViewGroup)
+	{
+		Preferences_ContextRef		currentSettings = TerminalView_ReturnConfiguration
+														(TerminalWindow_ReturnViewWithFocus(inRef));
+		Preferences_Result			copyResult = kPreferences_ResultOK;
+		
+		
+		copyResult = Preferences_ContextCopy(inContext, currentSettings);
+		result = (kPreferences_ResultOK == copyResult);
+	}
+	return result;
+}// ReconfigureViewsInGroup
+
+
+/*!
 Returns the Terminal Window associated with the specified
 window, if any.  A window that is not a terminal window
 will cause a nullptr return value.
