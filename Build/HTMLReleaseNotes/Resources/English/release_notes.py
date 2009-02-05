@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090204',
     '20090202',
     '20090201',
     '20090112',
@@ -208,6 +209,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090204': [
+		'The "telnet" URL handler now includes a -K (no-automatic-login) option, for consistency with other things that spawn telnet sessions.',
+	],
 	'20090202': [
 		'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a default Format association.',
 	],

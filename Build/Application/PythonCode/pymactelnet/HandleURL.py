@@ -224,7 +224,7 @@ def telnet(url):
 		user = url_info.get('user', None)
 		port = url_info.get('port', None)
 		if host is not None:
-			args = ['/usr/bin/telnet'];
+			args = ['/usr/bin/telnet', '-K'];
 			if user is not None: args.extend(['-l', user])
 			args.append(host)
 			if port is not None: args.append(str(port)) # standalone port
