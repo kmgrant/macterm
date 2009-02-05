@@ -68,7 +68,8 @@ void
 void
 	RegionUtilities_GetWindowMaximumBounds		(WindowRef			inWindow,
 												 Rect*				outNewBoundsPtr,
-												 Rect*				outOldBoundsPtrOrNull);
+												 Rect*				outOldBoundsPtrOrNull,
+												 Boolean			inNoInsets = false);
 
 #define LocalToGlobalRegion(r)	RegionUtilities_LocalToGlobal(r)
 void

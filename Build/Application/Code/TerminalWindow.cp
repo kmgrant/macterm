@@ -3699,7 +3699,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									Rect	maxBounds;
 									
 									
-									RegionUtilities_GetWindowMaximumBounds(window, &maxBounds, nullptr/* previous bounds */);
+									RegionUtilities_GetWindowMaximumBounds(window, &maxBounds, nullptr/* previous bounds */, true/* no insets */);
 									(OSStatus)SetWindowBounds(window, kWindowContentRgn, &maxBounds);
 								}
 								SetPort(oldPort);

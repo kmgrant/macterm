@@ -210,6 +210,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090204': [
+		'Terminal windows in Full Screen mode no longer leave space between the window frame and the screen edges.',
 		'The "telnet" URL handler now includes a -K (no-automatic-login) option, for consistency with other things that spawn telnet sessions.',
 		'Fixed the Full Screen "off switch" window.',
 	],
