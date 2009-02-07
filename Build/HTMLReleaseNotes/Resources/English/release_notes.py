@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090207',
     '20090204',
     '20090202',
     '20090201',
@@ -209,6 +210,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090207': [
+		'Added Terminal.set_dumb_string_for_char(int, str) to Quills, allowing Python to define how a dumb terminal renders a character.',
+		'Removed Terminal.dumb_strings_init(func) from Quills, replacing with pure Python code in the front end.',
+	],
 	'20090204': [
 		'Terminal windows in Full Screen mode no longer leave space between the window frame and the screen edges.',
 		'The "telnet" URL handler now includes a -K (no-automatic-login) option, for consistency with other things that spawn telnet sessions.',

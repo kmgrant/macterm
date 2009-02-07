@@ -93,7 +93,7 @@ Session.on_fileopen_call(HandleFile.script, 'zsh')
 # if desired, override what string is sent after keep-alive timers expire
 #Session.set_keep_alive_transmission(".")
 
-def get_dumb_rendering( char_utf8 ):
+def get_dumb_rendering( ord_unicode_16 ):
 	"""Return the string that dumb terminals should use to
 	render the specified character.  The idea is for EVERY
 	character to have a visible representation, whereas
@@ -102,25 +102,24 @@ def get_dumb_rendering( char_utf8 ):
 	
 	"""
 	result = '<?>' # must use UTF-8 encoding
-	u_obj = unicode(char_utf8, encoding='UTF-8')
-	try:
-		as_ascii = u_obj.decode('ascii')
-		if len(as_ascii) == 0: result = '<0>'
-		elif ord(as_ascii) == 27: result = '<ESC>'
+	if ord_unicode_16 < 128:
+		as_ascii = ord_unicode_16
+		if as_ascii == 27: result = '<ESC>'
 		# a "proper" control symbol is preferred, but MacTelnet cannot render
 		# higher Unicode characters just yet...
-		#elif ord(as_ascii) < ord(' '): result = "⌃%c" % chr(ord('@') + ord(as_ascii))
-		elif ord(as_ascii) < ord(' '): result = "^%c" % chr(ord('@') + ord(as_ascii))
-		elif (as_ascii in string.printable): result = char_utf8
-		else: result = "<%i>" % ord(as_ascii)
-	except UnicodeDecodeError, e:
-		print str(e)
-		result = '<!>'
-	except Exception, e:
-		print str(e)
-		result = '<!>'
+		#elif as_ascii < ord(' '): result = '⌃%c' % chr(ord('@') + as_ascii)
+		elif as_ascii < ord(' '): result = '^%c' % chr(ord('@') + as_ascii)
+		elif (chr(as_ascii) in string.printable): result = chr(as_ascii)
+		else: result = '<%i>' % as_ascii
+	else:
+		result = '<u%i>' % ord_unicode_16
 	return result
-Terminal.dumb_strings_init(get_dumb_rendering)
+for i in range(0, 256):
+	try:
+		Terminal.set_dumb_string_for_char(i, get_dumb_rendering(i))
+	except Exception, e:
+		print "warning, exception while setting character code %i:" % i, e
+		pass
 
 # banner
 print "MacTelnet: Full initialization complete."

@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -53,39 +53,23 @@ namespace Quills {
 
 class Terminal
 {
-};
-
-// callback support
+public:	
 #if SWIG
-%extend Terminal {
 %feature("docstring",
-"Determine an appropriate dumb-terminal rendering for every\n\
-character code, by repeatedly calling the specified function.\n\
+"Specifies an appropriate dumb-terminal rendering for the given\n\
+character code.\n\
 \n\
-The function is called once for each character, and should\n\
-return the string appropriate for rendering that character in\n\
-a dumb terminal.\n\
-") dumb_strings_init;
-	// NOTE: "PyObject* inPythonFunction" is typemapped in Quills.i;
-	// "CallPythonStringReturnString" is defined in Quills.i
-	static void
-	dumb_strings_init	(PyObject*		inPythonFunction)
-	{
-		std::string		descriptionString;
-		char			buffer[2];
-		
-		
-		// call the routine for every character code
-		for (UInt16 i = 0; i <= UCHAR_MAX; ++i)
-		{
-			buffer[0] = STATIC_CAST(i, char);
-			buffer[1] = '\0';
-			descriptionString = CallPythonStringReturnString(reinterpret_cast< void* >(inPythonFunction), buffer);
-			Terminal_SetDumbTerminalRendering(i, descriptionString.c_str());
-		}
-	}
-}
+Normally, you should just call dumb_strings_init() to register\n\
+a callback that is automatically consulted for each character\n\
+code in turn.  If dumb_strings_init() is called after this\n\
+function, your changes will be overridden by the callback; but\n\
+you can call this routine after registering a callback to make\n\
+minor corrections.\n\
+") set_dumb_string_for_char;
 #endif
+	static void set_dumb_string_for_char	(unsigned short		unicode,
+											 std::string		rendering_utf8);
+};
 
 class BasicPalette
 {
