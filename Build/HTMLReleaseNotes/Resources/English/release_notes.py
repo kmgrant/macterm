@@ -213,6 +213,7 @@ notes_by_version = {
 	'20090207': [
 		'Added Terminal.set_dumb_string_for_char(int, str) to Quills, allowing Python to define how a dumb terminal renders a character.',
 		'Removed Terminal.dumb_strings_init(func) from Quills, replacing with pure Python code in the front end.',
+		'Quills no longer "loses" exceptions raised from either Python or C++.',
 	],
 	'20090204': [
 		'Terminal windows in Full Screen mode no longer leave space between the window frame and the screen edges.',

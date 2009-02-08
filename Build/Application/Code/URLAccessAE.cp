@@ -179,7 +179,16 @@ handleURL	(AEDesc const*		inFromWhichObject,
 							std::string		urlString(*handle, *handle + GetHandleSize(handle));
 							
 							
-							Quills::Session::handle_url(urlString);
+							try
+							{
+								Quills::Session::handle_url(urlString);
+							}
+							catch (std::exception const&	e)
+							{
+								Console_WriteValueCString("warning, caught exception while trying to handle URL from Apple Event", e.what());
+								resultCode = 1; // failure
+								errorCausingNonzeroResult = eventNotHandledErr;
+							}
 						}
 						else
 						{

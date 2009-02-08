@@ -423,7 +423,15 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 									}
 									else
 									{
-										Quills::Session::handle_file(REINTERPRET_CAST(pathBuffer, char const*));
+										try
+										{
+											Quills::Session::handle_file(REINTERPRET_CAST(pathBuffer, char const*));
+										}
+										catch (std::exception const&	e)
+										{
+											Console_WriteValueCString("warning, caught exception while trying to handle opened file", e.what());
+											error = eventNotHandledErr;
+										}
 									}
 								}
 							#else

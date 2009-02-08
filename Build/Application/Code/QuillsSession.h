@@ -6,7 +6,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -110,6 +110,21 @@ This function returns nothing and is asynchronous; you can,\n\
 however, use a routine like on_new_call() to be notified of\n\
 new sessions when they appear.\n\
 ") handle_file;
+
+// do not lose exceptions that may be raised by callbacks
+%exception handle_file
+{
+	Console_WriteValueCString("exception caught in function", "$symname");
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	catch (...)
+	{
+		SWIG_exception(SWIG_UnknownError, "Unknown exception");
+	}
+}
 #endif
 	static void handle_file (std::string	pathname);
 	
@@ -124,6 +139,21 @@ This function returns nothing and is asynchronous; you can,\n\
 however, use a routine like on_new_call() to be notified of\n\
 new sessions when they appear.\n\
 ") handle_url;
+
+// do not lose exceptions that may be raised by callbacks
+%exception handle_url
+{
+	Console_WriteValueCString("exception caught in function", "$symname");
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	catch (...)
+	{
+		SWIG_exception(SWIG_UnknownError, "Unknown exception");
+	}
+}
 #endif
 	static void handle_url (std::string		url);
 	

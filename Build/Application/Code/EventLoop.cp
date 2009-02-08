@@ -2551,7 +2551,15 @@ receiveServicePerformEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 							std::string		urlString(*handle, *handle + GetHandleSize(handle));
 							
 							
-							Quills::Session::handle_url(urlString);
+							try
+							{
+								Quills::Session::handle_url(urlString);
+							}
+							catch (std::exception const&	e)
+							{
+								Console_WriteValueCString("warning, caught exception while trying to handle URL for Service", e.what());
+								result = eventNotHandledErr;
+							}
 						}
 						Memory_DisposeHandle(&handle);
 					}
