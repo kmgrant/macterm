@@ -130,6 +130,7 @@ public:
 	CarbonEventHandlerWrap					_fontPanelHandler;			//!< invoked when the font panel changes
 	CarbonEventHandlerWrap					_viewClickHandler;			//!< invoked when a tab is clicked
 	CommonEventHandlers_HIViewResizer		_containerResizer;			//!< invoked when the panel is resized
+	Boolean									_disableMonitorRoutine;		//!< a hack to ignore update spam from buggy OS calls
 	
 	void
 	loseFocus	();
@@ -549,8 +550,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		size_t					actualSize = 0;
 		
 		
-		// INCOMPLETE
-		
 		// select character set
 		{
 			CFStringEncoding	selectedEncoding = kCFStringEncodingInvalidId;
@@ -629,6 +628,14 @@ setEncoding		(CFStringEncoding	inEncoding,
 		OSStatus			error = noErr;
 		
 		
+		// there is a very stupid data browser bug where ÒassignÓ doesnÕt seem to mean
+		// ÒassignÓ; one must first explicitly clear the selection, then set a new one;
+		// HOWEVER, this triggers an even stupider bug where the monitoring routine is
+		// spammed as if dozens of items were selected in turn, so a flag is set to
+		// prevent that callback from doing anything during this phase (sigh...)
+		this->_disableMonitorRoutine = true;
+		error = SetDataBrowserSelectedItems(kDataBrowser, 0/* number of items */, nullptr, kDataBrowserItemsAssign);
+		this->_disableMonitorRoutine = false;
 		error = SetDataBrowserSelectedItems(kDataBrowser, 1/* number of items */, itemList, kDataBrowserItemsAssign);
 		error = RevealDataBrowserItem(kDataBrowser, itemList[0]/* item to reveal */,
 										kMy_DataBrowserPropertyIDBaseCharacterSet,
@@ -869,6 +876,7 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 	Panel_Ref						owningPanel = nullptr;
 	UInt32							actualSize = 0;
 	OSStatus						getPropertyError = noErr;
+	Boolean							proceed = true;
 	
 	
 	getPropertyError = GetControlProperty(inDataBrowser, AppResources_ReturnCreatorCode(),
@@ -880,39 +888,48 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 										My_TranslationsPanelDataPtr);
 	}
 	
-	switch (inMessage)
+	if (nullptr != panelDataPtr)
 	{
-	case kDataBrowserItemSelected:
-		{
-			Preferences_Result		prefsResult = kPreferences_ResultOK;
-			CFStringEncoding		newEncoding = TextTranslation_ReturnIndexedCharacterSet(inItemID);
-			CFStringRef				newEncodingName = CFStringConvertEncodingToIANACharSetName(newEncoding);
-			
-			
-			assert_noerr(getPropertyError);
-			
-			// save preferences
-			prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagTextEncodingID,
-														sizeof(newEncoding), &newEncoding);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Console_WriteLine("warning, failed to save encoding ID");
-			}
-			prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagTextEncodingIANAName,
-														sizeof(newEncodingName), &newEncodingName);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Console_WriteLine("warning, failed to save encoding IANA name");
-			}
-			
-			// update the panel views to match the newly-selected item
-			panelDataPtr->_interfacePtr->setEncoding(newEncoding, false/* update data browser */);
-		}
-		break;
+		proceed = (false == panelDataPtr->_interfacePtr->_disableMonitorRoutine);
+	}
 	
-	default:
-		// not all messages are supported
-		break;
+	if (proceed)
+	{
+		switch (inMessage)
+		{
+		case kDataBrowserItemSelected:
+			if (kDataBrowserNoItem != inItemID)
+			{
+				Preferences_Result		prefsResult = kPreferences_ResultOK;
+				CFStringEncoding		newEncoding = TextTranslation_ReturnIndexedCharacterSet(inItemID);
+				CFStringRef				newEncodingName = CFStringConvertEncodingToIANACharSetName(newEncoding);
+				
+				
+				assert_noerr(getPropertyError);
+				
+				// save preferences
+				prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagTextEncodingID,
+															sizeof(newEncoding), &newEncoding);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					Console_WriteLine("warning, failed to save encoding ID");
+				}
+				prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagTextEncodingIANAName,
+															sizeof(newEncodingName), &newEncodingName);
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					Console_WriteLine("warning, failed to save encoding IANA name");
+				}
+				
+				// update the panel views to match the newly-selected item
+				panelDataPtr->_interfacePtr->setEncoding(newEncoding, false/* update data browser */);
+			}
+			break;
+		
+		default:
+			// not all messages are supported
+			break;
+		}
 	}
 }// monitorDataBrowserItems
 
@@ -1014,7 +1031,11 @@ panelChanged	(Panel_Ref		inPanel,
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
 			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTranslation);
 			assert(kPreferences_ResultOK == prefsResult);
-			if (newContext != defaultContext) panelDataPtr->_interfacePtr->readPreferences(defaultContext); // reset to known state first
+			if (newContext != defaultContext)
+			{
+				panelDataPtr->_dataModel = defaultContext; // must be in sync for certain callbacks
+				panelDataPtr->_interfacePtr->readPreferences(defaultContext); // reset to known state first
+			}
 			panelDataPtr->_dataModel = newContext;
 			panelDataPtr->_interfacePtr->readPreferences(newContext);
 		}

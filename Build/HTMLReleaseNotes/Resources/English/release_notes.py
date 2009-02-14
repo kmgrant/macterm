@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090213',
     '20090207',
     '20090204',
     '20090202',
@@ -210,6 +211,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090213': [
+		'Fixed various bugs in the Preferences window Translations pane.',
+	],
 	'20090207': [
 		'Added Terminal.set_dumb_string_for_char(int, str) to Quills, allowing Python to define how a dumb terminal renders a character.',
 		'Removed Terminal.dumb_strings_init(func) from Quills, replacing with pure Python code in the front end.',
