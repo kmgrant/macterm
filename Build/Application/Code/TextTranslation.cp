@@ -3,7 +3,7 @@
 	TextTranslation.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -57,31 +57,37 @@
 
 
 #pragma mark Types
+namespace {
 
-struct MyTextEncodingInfo
+struct My_TextEncodingInfo
 {
 	CFRetainRelease		name;
 	CFStringEncoding	textEncoding;
 	CFStringEncoding	menuItemEncoding;
 	TextEncodingBase	base;
 };
-typedef MyTextEncodingInfo*		MyTextEncodingInfoPtr;
+typedef My_TextEncodingInfo*	My_TextEncodingInfoPtr;
 
-typedef std::vector< MyTextEncodingInfoPtr >	MyTextEncodingInfoList;
+typedef std::vector< My_TextEncodingInfoPtr >	My_TextEncodingInfoList;
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	TextEncodingBase			gPreferredEncodingBase = kCFStringEncodingMacRoman;
-	MyTextEncodingInfoList&		gTextEncodingInfoList ()	{ static MyTextEncodingInfoList x; return x; }
-}
+TextEncodingBase			gPreferredEncodingBase = kCFStringEncodingMacRoman;
+My_TextEncodingInfoList&	gTextEncodingInfoList ()	{ static My_TextEncodingInfoList x; return x; }
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static void			clearCharacterSetList		();
-static void			fillInCharacterSetList		();
-static bool			textEncodingInfoComparer	(MyTextEncodingInfoPtr, MyTextEncodingInfoPtr);
+void	clearCharacterSetList		();
+void	fillInCharacterSetList		();
+bool	textEncodingInfoComparer	(My_TextEncodingInfoPtr, My_TextEncodingInfoPtr);
+
+} // anonymous namespace
 
 
 
@@ -127,9 +133,9 @@ void
 TextTranslation_AppendCharacterSetsToMenu	(MenuRef	inToWhichMenu,
 											 UInt16		inIndentationLevel)
 {
-	MyTextEncodingInfoPtr					dataPtr = nullptr;
-	MyTextEncodingInfoList::const_iterator	textEncodingInfoIterator;
-	MenuItemIndex							currentMenuItemIndex = CountMenuItems(inToWhichMenu);
+	My_TextEncodingInfoPtr						dataPtr = nullptr;
+	My_TextEncodingInfoList::const_iterator		textEncodingInfoIterator;
+	MenuItemIndex								currentMenuItemIndex = CountMenuItems(inToWhichMenu);
 	
 	
 	for (textEncodingInfoIterator = gTextEncodingInfoList().begin();
@@ -147,6 +153,53 @@ TextTranslation_AppendCharacterSetsToMenu	(MenuRef	inToWhichMenu,
 		}
 	}
 }// AppendCharacterSetsToMenu
+
+
+/*!
+Returns the text encoding preference stored in the given
+context, preferring kPreferences_TagTextEncodingIANAName
+but using kPreferences_TagTextEncodingID if necessary.
+
+If neither of these is available, the default value is
+returned.  You can set it to "kCFStringEncodingInvalidId"
+if you want to detect this failure.
+
+(4.0)
+*/
+CFStringEncoding
+TextTranslation_ContextReturnEncoding	(Preferences_ContextRef		inContext,
+										 CFStringEncoding			inEncodingDefault)
+{
+	CFStringEncoding	result = kCFStringEncodingInvalidId;
+	CFStringRef			selectedEncodingIANAName = nullptr;
+	Preferences_Result	prefsResult = kPreferences_ResultOK;
+	size_t				actualSize = 0;
+	
+	
+	// first search for a name; prefer this as a way to express the
+	// desired character set, but fall back on a simple encoding ID
+	prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTextEncodingIANAName, sizeof(selectedEncodingIANAName),
+												&selectedEncodingIANAName, true/* search defaults too */, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		result = CFStringConvertIANACharSetNameToEncoding(selectedEncodingIANAName);
+		CFRelease(selectedEncodingIANAName), selectedEncodingIANAName = nullptr;
+	}
+	
+	if (kCFStringEncodingInvalidId == result)
+	{
+		// the name was not found, or could not be resolved; look for an ID
+		prefsResult = Preferences_ContextGetData(inContext, kPreferences_TagTextEncodingID, sizeof(result),
+													&result, true/* search defaults too */, &actualSize);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			// nothing found - guess!!!
+			result = inEncodingDefault;
+		}
+	}
+	
+	return result;
+}// ContextReturnEncoding
 
 
 /*!
@@ -324,10 +377,10 @@ If the index can’t be found, 0 is returned.
 UInt16
 TextTranslation_ReturnCharacterSetIndex		(CFStringEncoding	inTextEncoding)
 {
-	UInt16									result = 0;
-	SInt16									i = 1;
-	MyTextEncodingInfoPtr					dataPtr = nullptr;
-	MyTextEncodingInfoList::const_iterator	textEncodingInfoIterator;
+	UInt16										result = 0;
+	SInt16										i = 1;
+	My_TextEncodingInfoPtr						dataPtr = nullptr;
+	My_TextEncodingInfoList::const_iterator		textEncodingInfoIterator;
 	
 	
 	// look for matching encoding information
@@ -359,7 +412,7 @@ CFStringEncoding
 TextTranslation_ReturnIndexedCharacterSet	(UInt16		inOneBasedIndex)
 {
 	CFStringEncoding		result = kCFStringEncodingMacRoman;
-	MyTextEncodingInfoPtr	dataPtr = nullptr;
+	My_TextEncodingInfoPtr	dataPtr = nullptr;
 	
 	
 	// look for matching encoding information
@@ -371,6 +424,7 @@ TextTranslation_ReturnIndexedCharacterSet	(UInt16		inOneBasedIndex)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Deletes all of the character set information
@@ -379,11 +433,11 @@ rebuilding the list, or deleting it permanently.
 
 (3.0)
 */
-static void
+void
 clearCharacterSetList ()
 {
-	MyTextEncodingInfoPtr				dataPtr = nullptr;
-	MyTextEncodingInfoList::iterator	textEncodingInfoIterator;
+	My_TextEncodingInfoPtr				dataPtr = nullptr;
+	My_TextEncodingInfoList::iterator	textEncodingInfoIterator;
 	
 	
 	// destroy all encoding information structures in the global list
@@ -407,13 +461,13 @@ NOTE:	MacTelnet should re-invoke this method
 
 (3.0)
 */
-static void
+void
 fillInCharacterSetList ()
 {
 	CFStringEncoding			currentEncoding = GetApplicationTextEncoding();
 	TextEncodingBase			oldBase = kTextEncodingMacUnicode; // arbitrary; must differ from "currentBase" for initial loop
 	TextEncodingBase			currentBase = kTextEncodingMacRoman;
-	MyTextEncodingInfoPtr		dataPtr = nullptr;
+	My_TextEncodingInfoPtr		dataPtr = nullptr;
 	CFStringEncoding const*		availableEncodings = nullptr;
 	CFStringRef					encodingName = nullptr;
 	UInt32						loopTerminator = 0L;
@@ -437,7 +491,7 @@ fillInCharacterSetList ()
 			// add data to list
 			try
 			{
-				dataPtr = new MyTextEncodingInfo;
+				dataPtr = new My_TextEncodingInfo;
 			}
 			catch (std::bad_alloc)
 			{
@@ -453,11 +507,11 @@ fillInCharacterSetList ()
 				dataPtr->name.setCFTypeRef(encodingName);
 				//Console_WriteValueCFString("adding", encodingName);
 				{
-					MyTextEncodingInfoList::size_type	length = gTextEncodingInfoList().size();
+					My_TextEncodingInfoList::size_type const	kLength = gTextEncodingInfoList().size();
 					
 					
 					gTextEncodingInfoList().push_back(dataPtr);
-					assert(gTextEncodingInfoList().size() == (1 + length));
+					assert(gTextEncodingInfoList().size() == (1 + kLength));
 				}
 			}
 		}
@@ -478,7 +532,7 @@ fillInCharacterSetList ()
 /*!
 A standard comparison function that expects
 both of its operands to be of type
-"MyTextEncodingInfoPtr".  If the first
+"My_TextEncodingInfoPtr".  If the first
 name belongs before the second one in an
 ascending order, then -1 is returned.  If the
 reverse is true, 1 is returned.  Otherwise,
@@ -486,12 +540,12 @@ the names seem to be equal, so 0 is returned.
 
 (3.0)
 */
-static bool
-textEncodingInfoComparer	(MyTextEncodingInfoPtr		inMyTextEncodingInfoPtr1,
-							 MyTextEncodingInfoPtr		inMyTextEncodingInfoPtr2)
+bool
+textEncodingInfoComparer	(My_TextEncodingInfoPtr		inMyTextEncodingInfoPtr1,
+							 My_TextEncodingInfoPtr		inMyTextEncodingInfoPtr2)
 {
-	MyTextEncodingInfoPtr	dataPtr1 = inMyTextEncodingInfoPtr1;
-	MyTextEncodingInfoPtr	dataPtr2 = inMyTextEncodingInfoPtr2;
+	My_TextEncodingInfoPtr	dataPtr1 = inMyTextEncodingInfoPtr1;
+	My_TextEncodingInfoPtr	dataPtr2 = inMyTextEncodingInfoPtr2;
 	bool					result = 0;
 	
 	
@@ -516,5 +570,7 @@ textEncodingInfoComparer	(MyTextEncodingInfoPtr		inMyTextEncodingInfoPtr1,
 	}
 	return result;
 }// textEncodingInfoComparer
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

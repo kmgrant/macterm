@@ -1,17 +1,11 @@
 /*!	\file TextTranslation.h
 	\brief Lists methods for character translation (i.e. between
 	what the user sees and what is transmitted on the network).
-	
-	Written by Roland Månsson (Lund University Computing Center,
-	Sweden, roland_m@ldc.lu.se).  Modified by Pascal Maes (UCL/
-	ELEC, Place du Levant, 3, B-1348 Louvain-la-Neuve).  Updated
-	for Text Encoding Converter support, and new API created by
-	Kevin Grant.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,6 +40,9 @@
 #include <Carbon/Carbon.h>
 #include <CoreServices/CoreServices.h>
 
+// MacTelnet includes
+#include "Preferences.h"
+
 
 
 #pragma mark Public Methods
@@ -78,6 +75,10 @@ OSStatus
 void
 	TextTranslation_AppendCharacterSetsToMenu	(MenuRef				inToWhichMenu,
 												 UInt16					inIndentationLevel);
+
+CFStringEncoding
+	TextTranslation_ContextReturnEncoding		(Preferences_ContextRef	inContext,
+												 CFStringEncoding		inEncodingDefault = kCFStringEncodingInvalidId);
 
 CFStringRef
 	TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,

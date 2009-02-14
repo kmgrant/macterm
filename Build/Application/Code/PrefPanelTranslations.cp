@@ -552,32 +552,9 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		
 		// select character set
 		{
-			CFStringEncoding	selectedEncoding = kCFStringEncodingInvalidId;
-			CFStringRef			selectedEncodingIANAName = nullptr;
+			CFStringEncoding	selectedEncoding = TextTranslation_ContextReturnEncoding
+													(inSettings, kCFStringEncodingUTF8/* fallback */);
 			
-			
-			// first search for a name; prefer this as a way to express the
-			// desired character set, but fall back on a simple encoding ID
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTextEncodingIANAName, sizeof(selectedEncodingIANAName),
-														&selectedEncodingIANAName, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				selectedEncoding = CFStringConvertIANACharSetNameToEncoding(selectedEncodingIANAName);
-				CFRelease(selectedEncodingIANAName), selectedEncodingIANAName = nullptr;
-			}
-			
-			if (kCFStringEncodingInvalidId == selectedEncoding)
-			{
-				// the name was not found, or could not be resolved; look for an ID
-				prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagTextEncodingID, sizeof(selectedEncoding),
-															&selectedEncoding, true/* search defaults too */, &actualSize);
-				if (kPreferences_ResultOK != prefsResult)
-				{
-					// nothing found - guess!!!
-					Console_WriteLine("warning, no valid encoding preference found, assuming UTF-8");
-					selectedEncoding = kCFStringEncodingUTF8;
-				}
-			}
 			
 			this->setEncoding(selectedEncoding);
 		}
