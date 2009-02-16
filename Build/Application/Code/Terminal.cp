@@ -3487,6 +3487,31 @@ Terminal_ReturnSpeaker		(TerminalScreenRef	inRef)
 
 
 /*!
+Returns the encoding of text streams read by the terminal
+emulator.  This does *not* indicate the internal buffer
+encoding, which might be Unicode regardless.
+
+Returns "kCFStringEncodingInvalidId" if for any reason the
+encoding cannot be found.
+
+(4.0)
+*/
+CFStringEncoding
+Terminal_ReturnTextEncoding		(TerminalScreenRef		inRef)
+{
+	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
+	CFStringEncoding	result = kCFStringEncodingInvalidId;
+	
+	
+	if (nullptr != dataPtr)
+	{
+		result = dataPtr->emulator.inputTextEncoding;
+	}
+	return result;
+}// ReturnTextEncoding
+
+
+/*!
 Returns "true" only if the specified screen should
 be rendered in reverse video mode - that is, with
 the foreground and background colors swapped prior

@@ -575,6 +575,9 @@ Preferences_ContextRef
 UInt16
 	Terminal_ReturnNextTabDistance			(TerminalScreenRef			inScreen);
 
+CFStringEncoding
+	Terminal_ReturnTextEncoding				(TerminalScreenRef			inScreen);
+
 Boolean
 	Terminal_ReverseVideoIsEnabled			(TerminalScreenRef			inScreen);
 
