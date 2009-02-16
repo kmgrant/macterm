@@ -164,6 +164,8 @@ If neither of these is available, the default value is
 returned.  You can set it to "kCFStringEncodingInvalidId"
 if you want to detect this failure.
 
+See also TextTranslation_ContextSetEncoding().
+
 (4.0)
 */
 CFStringEncoding
@@ -200,6 +202,50 @@ TextTranslation_ContextReturnEncoding	(Preferences_ContextRef		inContext,
 	
 	return result;
 }// ContextReturnEncoding
+
+
+/*!
+Sets text encoding preferences in the given context: both
+kPreferences_TagTextEncodingIANAName and
+kPreferences_TagTextEncodingID.
+
+Returns true only if successful.
+
+See also TextTranslation_ContextReturnEncoding().
+
+(4.0)
+*/
+Boolean
+TextTranslation_ContextSetEncoding	(Preferences_ContextRef		inContext,
+									 CFStringEncoding			inEncodingToSet)
+{
+	Boolean				result = false;
+	CFStringRef			selectedEncodingIANAName = CFStringConvertEncodingToIANACharSetName(inEncodingToSet);
+	Preferences_Result	prefsResult = kPreferences_ResultOK;
+	
+	
+	// set name; this is preferred by readers since it is easier to
+	// tell at a glance what the preference actually is
+	if (nullptr != selectedEncodingIANAName)
+	{
+		prefsResult = Preferences_ContextSetData(inContext, kPreferences_TagTextEncodingIANAName,
+													sizeof(selectedEncodingIANAName), &selectedEncodingIANAName);
+		if (kPreferences_ResultOK == prefsResult) result = true;
+		
+		CFRelease(selectedEncodingIANAName), selectedEncodingIANAName = nullptr;
+	}
+	
+	// set the “machine readable” encoding number; this is very
+	// convenient for programmers, but in practice is only read
+	// if a name preference does not exist
+	{
+		prefsResult = Preferences_ContextSetData(inContext, kPreferences_TagTextEncodingID,
+													sizeof(inEncodingToSet), &inEncodingToSet);
+		if (kPreferences_ResultOK == prefsResult) result = true;
+	}
+	
+	return result;
+}// ContextSetEncoding
 
 
 /*!

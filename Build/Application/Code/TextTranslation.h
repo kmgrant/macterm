@@ -80,6 +80,10 @@ CFStringEncoding
 	TextTranslation_ContextReturnEncoding		(Preferences_ContextRef	inContext,
 												 CFStringEncoding		inEncodingDefault = kCFStringEncodingInvalidId);
 
+Boolean
+	TextTranslation_ContextSetEncoding			(Preferences_ContextRef	inContext,
+												 CFStringEncoding		inEncodingToSet);
+
 CFStringRef
 	TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
 												 UInt8 const*			inBytes,
