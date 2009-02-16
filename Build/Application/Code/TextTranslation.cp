@@ -231,8 +231,6 @@ TextTranslation_ContextSetEncoding	(Preferences_ContextRef		inContext,
 		prefsResult = Preferences_ContextSetData(inContext, kPreferences_TagTextEncodingIANAName,
 													sizeof(selectedEncodingIANAName), &selectedEncodingIANAName);
 		if (kPreferences_ResultOK == prefsResult) result = true;
-		
-		CFRelease(selectedEncodingIANAName), selectedEncodingIANAName = nullptr;
 	}
 	
 	// set the “machine readable” encoding number; this is very
