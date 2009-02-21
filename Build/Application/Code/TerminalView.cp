@@ -236,7 +236,8 @@ struct TerminalView
 	void
 	initialize		(TerminalScreenRef, Preferences_ContextRef);
 	
-	Preferences_ContextRef	configuration;		// various settings from an external source; not kept up to date, see TerminalView_ReturnConfiguration()
+	Preferences_ContextRef	encodingConfig;		// various settings from an external source; not kept up to date, see TerminalView_ReturnTranslationConfiguration()
+	Preferences_ContextRef	formatConfig;		// various settings from an external source; not kept up to date, see TerminalView_ReturnFormatConfiguration()
 	std::set< Preferences_Tag >		configFilter;	// settings that this view ignores when they are changed globally by the user
 	ListenerModel_Ref	changeListenerModel;	// listeners for various types of changes to this data
 	TerminalView_DisplayMode	displayMode;	// how the content fills the display area
@@ -342,16 +343,12 @@ struct TerminalView
 	
 	struct
 	{
-		TerminalTextAttributes		attributes;	// current text attribute flags, affecting color of terminal text, etc.
-		
-		TECObjectRef	converterFromMacRoman;	// used for certain VT graphics glyphs that use Roman characters
-		TECObjectRef	converterFromInternet;	// used for other text
+		TerminalTextAttributes		attributes;		// current text attribute flags, affecting color of terminal text, etc.
 		
 		struct
 		{
-			Boolean			isMonospaced;	// whether every character in the font is the same width (expected to be true)
-			Str255			familyName;		// font name (as might appear in a Font menu)
-			TextEncoding	encoding;		// specification of font’s character set
+			Boolean				isMonospaced;	// whether every character in the font is the same width (expected to be true)
+			Str255				familyName;		// font name (as might appear in a Font menu)
 			struct Metrics
 			{
 				SInt16		ascent;			// number of pixels highest character extends above the base line
@@ -394,6 +391,7 @@ static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
 static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef, Boolean);
 static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef);
 static void				copySelectedTextIfUserPreference(TerminalViewPtr);
+static void				copyTranslationPreferences		(TerminalViewPtr, Preferences_ContextRef);
 static OSStatus			createWindowColorPalette		(TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 static Boolean			cursorBlinks					(TerminalViewPtr);
 static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
@@ -600,7 +598,7 @@ drive it.
 The font, colors, etc. are based on the default preferences
 context, where any settings in "inFormatOrNull" will
 override the defaults.  You can access this configuration
-later with TerminalView_ReturnConfiguration().
+later with TerminalView_ReturnFormatConfiguration().
 
 Since this is entirely associated with an HIObject, the
 view automatically goes away whenever the HIView from
@@ -1450,64 +1448,6 @@ TerminalView_PtInSelection	(TerminalViewRef	inView,
 
 
 /*!
-Returns a variety of preferences unique to this view.
-
-You can make changes to this context ONLY if you do it in “batch
-mode” with Preferences_ContextCopy().  In other words, even to
-make a single change, you must first add the change to a new
-temporary context, then use Preferences_ContextCopy() to read
-the temporary settings into the context returned by this routine.
-Batch mode changes are detected by the Terminal View and used to
-automatically update the display and internal caches.
-
-Note that you cannot expect all possible tags to be present;
-be prepared to not find what you look for.  In addition, tags
-that are present in one view may be absent in another.
-
-You cannot change the font size if the display mode is
-currently setting the size automatically.  Use the
-TerminalView_ReturnDisplayMode() routine to determine
-what the display mode is.
-
-(3.1)
-*/
-Preferences_ContextRef
-TerminalView_ReturnConfiguration	(TerminalViewRef	inView)
-{
-	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
-	Preferences_Result			prefsResult = kPreferences_ResultOK;
-	Preferences_ContextRef		result = viewPtr->configuration;
-	
-	
-	// since many settings are represented internally, this context
-	// will not contain the latest information; update the context
-	// based on current settings
-	
-	// IMPORTANT: There is a trick here...because NO internal
-	// routines in this module mess with fonts or colors outside
-	// of initialization and user changes, it is NOT necessary to
-	// resync those preferences here: they will already be accurate.
-	// HOWEVER, if an internal routine were added that (say) messed
-	// with internally-stored colors for some reason, then it WOULD
-	// be necessary to call Preferences_ContextSetData() here to
-	// ensure the latest cached values are in the context.
-	
-	// font size is messed with programmatically (e.g. Make Text Bigger)
-	// so its current value is resynced with the context regardless
-	{
-		SInt16		fontSize = viewPtr->text.font.normalMetrics.size;
-		
-		
-		prefsResult = Preferences_ContextSetData(result, kPreferences_TagFontSize,
-													sizeof(fontSize), &fontSize);
-		assert(kPreferences_ResultOK == prefsResult);
-	}
-	
-	return result;
-}// ReturnConfiguration
-
-
-/*!
 Returns the Mac OS HIView that is the root of the
 specified screen.  With the container, you can safely
 position a screen anywhere in a window and the
@@ -1573,6 +1513,64 @@ TerminalView_ReturnDragFocusHIView	(TerminalViewRef	inView)
 	result = viewPtr->contentHIView;
 	return result;
 }// ReturnDragFocusHIView
+
+
+/*!
+Returns a variety of font/color preferences unique to this view.
+
+You can make changes to this context ONLY if you do it in “batch
+mode” with Preferences_ContextCopy().  In other words, even to
+make a single change, you must first add the change to a new
+temporary context, then use Preferences_ContextCopy() to read
+the temporary settings into the context returned by this routine.
+Batch mode changes are detected by the Terminal View and used to
+automatically update the display and internal caches.
+
+Note that you cannot expect all possible tags to be present;
+be prepared to not find what you look for.  In addition, tags
+that are present in one view may be absent in another.
+
+You cannot change the font size if the display mode is
+currently setting the size automatically.  Use the
+TerminalView_ReturnDisplayMode() routine to determine
+what the display mode is.
+
+(3.1)
+*/
+Preferences_ContextRef
+TerminalView_ReturnFormatConfiguration		(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
+	Preferences_ContextRef		result = viewPtr->formatConfig;
+	
+	
+	// since many settings are represented internally, this context
+	// will not contain the latest information; update the context
+	// based on current settings
+	
+	// IMPORTANT: There is a trick here...because NO internal
+	// routines in this module mess with fonts or colors outside
+	// of initialization and user changes, it is NOT necessary to
+	// resync those preferences here: they will already be accurate.
+	// HOWEVER, if an internal routine were added that (say) messed
+	// with internally-stored colors for some reason, then it WOULD
+	// be necessary to call Preferences_ContextSetData() here to
+	// ensure the latest cached values are in the context.
+	
+	// font size is messed with programmatically (e.g. Make Text Bigger)
+	// so its current value is resynced with the context regardless
+	{
+		SInt16		fontSize = viewPtr->text.font.normalMetrics.size;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagFontSize,
+													sizeof(fontSize), &fontSize);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	return result;
+}// ReturnFormatConfiguration
 
 
 /*!
@@ -1703,6 +1701,43 @@ TerminalView_ReturnSelectedTextSize		(TerminalViewRef	inView)
 	}
 	return result;
 }// ReturnSelectedTextSize
+
+
+/*!
+Returns text encoding preferences unique to this view.
+
+You can make changes to this context ONLY if you do it in “batch
+mode” with Preferences_ContextCopy().  In other words, even to
+make a single change, you must first add the change to a new
+temporary context, then use Preferences_ContextCopy() to read
+the temporary settings into the context returned by this routine.
+Batch mode changes are detected by the Terminal View and used to
+automatically update the display and internal caches.
+
+Note that you cannot expect all possible tags to be present;
+be prepared to not find what you look for.  In addition, tags
+that are present in one view may be absent in another.
+
+(4.0)
+*/
+Preferences_ContextRef
+TerminalView_ReturnTranslationConfiguration		(TerminalViewRef	inView)
+{
+	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+	Preferences_ContextRef		result = viewPtr->encodingConfig;
+	Boolean						setOK = false;
+	
+	
+	// since many settings are represented internally, this context
+	// will not contain the latest information; update the context
+	// based on current settings
+	
+	// set encoding name and ID
+	setOK = TextTranslation_ContextSetEncoding(result, Terminal_ReturnTextEncoding(viewPtr->screen.ref));
+	if (false == setOK) Console_WriteLine("warning, unable to set the text encoding in the terminal view translation configuration");
+	
+	return result;
+}// ReturnTranslationConfiguration
 
 
 /*!
@@ -3021,7 +3056,8 @@ TerminalView::
 TerminalView	(HIViewRef		inSuperclassViewInstance)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-configuration(nullptr), // set later
+encodingConfig(nullptr), // set later
+formatConfig(nullptr), // set later
 configFilter(),
 changeListenerModel(nullptr), // set later
 displayMode(kTerminalView_DisplayModeNormal), // set later
@@ -3046,14 +3082,14 @@ Initializer.  See the constructor as well as
 receiveTerminalHIObjectEvents().
 
 IMPORTANT:	Settings that are read from "inFormat" here
-			and cached in the class, need to also be
-			updated in TerminalView_ReturnConfiguration()
+			and cached in the class, need to also be updated
+			in TerminalView_ReturnFormatConfiguration()
 			before a context is returned from that API!
 			This ensures that external editors are seeing
 			accurate settings.  Put another way, the calls
 			to Preferences_ContextGetData() here should be
 			balanced by Preferences_ContextSetData() calls
-			in TerminalView_ReturnConfiguration().
+			in TerminalView_ReturnFormatConfiguration().
 
 (3.1)
 */
@@ -3063,8 +3099,19 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 				 Preferences_ContextRef		inFormat)
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
-	this->configuration = Preferences_NewCloneContext(inFormat, true/* detach */);
-	assert(nullptr != this->configuration);
+	
+	this->encodingConfig = Preferences_NewContext(kPreferences_ClassTranslation);
+	assert(nullptr != this->encodingConfig);
+	{
+		Boolean		setOK = TextTranslation_ContextSetEncoding(this->encodingConfig, kCFStringEncodingUTF8);
+		
+		
+		assert(setOK);
+	}
+	
+	this->formatConfig = Preferences_NewCloneContext(inFormat, true/* detach */);
+	assert(nullptr != this->formatConfig);
+	
 	this->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
 													kConstantsRegistry_ListenerModelDescriptorTerminalViewChanges);
 	
@@ -3173,17 +3220,6 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		
 		// set up font and character set information
 		PLstrcpy(this->text.font.familyName, fontName);
-		if (Localization_GetFontTextEncoding(this->text.font.familyName, &this->text.font.encoding) != noErr)
-		{
-			// not really accurate, but what can really be done here?
-			this->text.font.encoding = kTheMacRomanTextEncoding;
-		}
-		if (TECCreateConverter(&this->text.converterFromMacRoman, kTheMacRomanTextEncoding,
-								this->text.font.encoding) != noErr)
-		{
-			// failed to make converter
-			this->text.converterFromMacRoman = nullptr;
-		}
 		
 		// set font size to automatically fill in initial font metrics, etc.
 		setFontAndSize(this, fontName, fontSize);
@@ -3312,7 +3348,9 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 													false/* call immediately to get initial value */);
 		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
 													false/* call immediately to get initial value */);
-		prefsResult = Preferences_ContextStartMonitoring(this->configuration, this->screen.preferenceMonitor,
+		prefsResult = Preferences_ContextStartMonitoring(this->encodingConfig, this->screen.preferenceMonitor,
+															kPreferences_ChangeContextBatchMode);
+		prefsResult = Preferences_ContextStartMonitoring(this->formatConfig, this->screen.preferenceMonitor,
 															kPreferences_ChangeContextBatchMode);
 	}
 }// initialize
@@ -3348,7 +3386,9 @@ TerminalView::
 	// stop receiving preference change notifications
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType);
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize);
-	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->screen.preferenceMonitor,
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->encodingConfig, this->screen.preferenceMonitor,
+															kPreferences_ChangeContextBatchMode);
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->formatConfig, this->screen.preferenceMonitor,
 															kPreferences_ChangeContextBatchMode);
 	ListenerModel_ReleaseListener(&this->screen.preferenceMonitor);
 	
@@ -3363,7 +3403,8 @@ TerminalView::
 	
 	Memory_DisposeRegion(&this->animation.rendering.region);
 	ListenerModel_Dispose(&this->changeListenerModel);
-	Preferences_ReleaseContext(&this->configuration);
+	Preferences_ReleaseContext(&this->encodingConfig);
+	Preferences_ReleaseContext(&this->formatConfig);
 }// TerminalView destructor
 
 
@@ -3835,19 +3876,6 @@ copyFontPreferences		(TerminalViewPtr			inTerminalViewPtr,
 															sizeof(fontName), fontName))
 	{
 		PLstrcpy(inTerminalViewPtr->text.font.familyName, fontName);
-		if (noErr != Localization_GetFontTextEncoding(inTerminalViewPtr->text.font.familyName,
-														&inTerminalViewPtr->text.font.encoding))
-		{
-			// not really accurate, but what can really be done here?
-			inTerminalViewPtr->text.font.encoding = kTheMacRomanTextEncoding;
-		}
-		// set up font and character set information
-		if (noErr != TECCreateConverter(&inTerminalViewPtr->text.converterFromMacRoman, kTheMacRomanTextEncoding,
-										inTerminalViewPtr->text.font.encoding))
-		{
-			// failed to make converter
-			inTerminalViewPtr->text.converterFromMacRoman = nullptr;
-		}
 	}
 	
 	if (inTerminalViewPtr->displayMode != kTerminalView_DisplayModeZoom)
@@ -3893,6 +3921,36 @@ copySelectedTextIfUserPreference	(TerminalViewPtr	inTerminalViewPtr)
 		if (copySelectedText) Clipboard_TextToScrap(inTerminalViewPtr->selfRef, kClipboard_CopyMethodTable);
 	}
 }// copySelectedTextIfUserPreference
+
+
+/*!
+Attempts to read all supported text translation tags from
+the given preference context.
+
+(4.0)
+*/
+static void
+copyTranslationPreferences	(TerminalViewPtr			inTerminalViewPtr,
+							 Preferences_ContextRef		inSource)
+{
+#if 0
+	// TEMPORARY - this setting cannot be changed in terminals until
+	// more work is done on their internal translation of text
+	CFStringEncoding	newInputEncoding = TextTranslation_ContextReturnEncoding
+											(inSource, kCFStringEncodingUTF8/* default */);
+	
+	
+	Terminal_SetTextEncoding(inTerminalViewPtr->screen.ref, newInputEncoding);
+	
+	Console_WriteValue("terminal input text encoding changed to", newInputEncoding);
+	{
+		CFStringRef		nameCFString = CFStringConvertEncodingToIANACharSetName(newInputEncoding);
+		
+		
+		Console_WriteValueCFString("terminal input text encoding changed to (name)", nameCFString);
+	}
+#endif
+}// copyTranslationPreferences
 
 
 /*!
@@ -6961,8 +7019,15 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			{
 				// batch mode; multiple things have changed, so check for the new values
 				// of everything that is understood by a terminal view
-				(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
-				(UInt16)copyFontPreferences(viewPtr, prefsContext);
+				if (kPreferences_ClassTranslation == Preferences_ContextReturnClass(prefsContext))
+				{
+					copyTranslationPreferences(viewPtr, prefsContext);
+				}
+				else
+				{
+					(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
+					(UInt16)copyFontPreferences(viewPtr, prefsContext);
+				}
 				(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
 				(OSStatus)HIViewSetNeedsDisplay(viewPtr->focusAndPaddingHIView, true);
 				(OSStatus)HIViewSetNeedsDisplay(viewPtr->backgroundHIView, true);
@@ -9394,31 +9459,6 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 	{
 		// remember font selection
 		PLstrcpy(inViewPtr->text.font.familyName, inFontFamilyNameOrNull);
-		
-		// determine the character set associated with this font
-		if (Localization_GetFontTextEncoding(inViewPtr->text.font.familyName, &inViewPtr->text.font.encoding) != noErr)
-		{
-			// not really accurate, but what can really be done here?
-			inViewPtr->text.font.encoding = kTheMacRomanTextEncoding;
-		}
-		
-		// create new converters between important character sets and the
-		// character set of this font, disposing any existing converters
-		if (inViewPtr->text.converterFromMacRoman != nullptr)
-		{
-			TECDisposeConverter(inViewPtr->text.converterFromMacRoman);
-			inViewPtr->text.converterFromMacRoman = nullptr;
-		}
-		if (TECCreateConverter(&inViewPtr->text.converterFromMacRoman,
-								// the following encoding must match the font used to write this source file,
-								// because the assumption is that the “correct” characters are in this font
-								// and must be translated into whatever font the user actually has selected
-								kTheMacRomanTextEncoding,
-								inViewPtr->text.font.encoding) != noErr)
-		{
-			// failed to make converter
-			inViewPtr->text.converterFromMacRoman = nullptr;
-		}
 	}
 	
 	if (inFontSizeOrZero > 0)

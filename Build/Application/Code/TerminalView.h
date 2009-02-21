@@ -449,7 +449,10 @@ void
 												 UInt16*					outFontSizeOrNull);
 
 Preferences_ContextRef
-	TerminalView_ReturnConfiguration			(TerminalViewRef			inView);
+	TerminalView_ReturnFormatConfiguration		(TerminalViewRef			inView);
+
+Preferences_ContextRef
+	TerminalView_ReturnTranslationConfiguration	(TerminalViewRef			inView);
 
 void
 	TerminalView_ReverseVideo					(TerminalViewRef			inView,

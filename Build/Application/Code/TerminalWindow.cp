@@ -90,6 +90,7 @@ extern "C"
 #include "Keypads.h"
 #include "Preferences.h"
 #include "PrefPanelFormats.h"
+#include "PrefPanelTranslations.h"
 #include "PrefsContextDialog.h"
 #include "SessionFactory.h"
 #include "SizeDialog.h"
@@ -800,7 +801,7 @@ TerminalWindow_ReconfigureViewsInGroup	(TerminalWindowRef			inRef,
 	
 	if (kTerminalWindow_ViewGroupActive == inViewGroup)
 	{
-		Preferences_ContextRef		currentSettings = TerminalView_ReturnConfiguration
+		Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
 														(TerminalWindow_ReturnViewWithFocus(inRef));
 		Preferences_Result			copyResult = kPreferences_ResultOK;
 		
@@ -3729,7 +3730,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormatDefault:
 					{
 						// reformat frontmost window using the Default preferences
-						Preferences_ContextRef		currentSettings = TerminalView_ReturnConfiguration
+						Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
 																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
 						Preferences_ContextRef		defaultSettings = nullptr;
 						Boolean						isError = true;
@@ -3753,7 +3754,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFormatByFavoriteName:
 					{
 						// reformat frontmost window using the specified preferences
-						Preferences_ContextRef		currentSettings = TerminalView_ReturnConfiguration
+						Preferences_ContextRef		currentSettings = TerminalView_ReturnFormatConfiguration
 																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
 						Boolean						isError = true;
 						
@@ -3796,7 +3797,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						// display the sheet
 						dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
-														TerminalView_ReturnConfiguration(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
+														TerminalView_ReturnFormatConfiguration
+														(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
 						PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
 						
 						result = noErr;
@@ -3869,6 +3871,84 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// display the sheet
 						dialog = SizeDialog_New(terminalWindow, updateScreenSizeDialogCloseNotifyProc);
 						SizeDialog_Display(dialog); // automatically disposed when the user clicks a button
+						
+						result = noErr;
+					}
+					break;
+				
+				case kCommandTranslationTableDefault:
+					{
+						// change character set of frontmost window according to Default preferences
+						Preferences_ContextRef		currentSettings = TerminalView_ReturnTranslationConfiguration
+																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
+						Preferences_ContextRef		defaultSettings = nullptr;
+						Boolean						isError = true;
+						
+						
+						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, kPreferences_ClassTranslation))
+						{
+							isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
+						}
+						
+						if (isError)
+						{
+							// failed...
+							Sound_StandardAlert();
+						}
+						
+						result = noErr;
+					}
+					break;
+				
+				case kCommandTranslationTableByFavoriteName:
+					{
+						// change character set of frontmost window according to the specified preferences
+						Preferences_ContextRef		currentSettings = TerminalView_ReturnTranslationConfiguration
+																		(TerminalWindow_ReturnViewWithFocus(terminalWindow));
+						Boolean						isError = true;
+						
+						
+						if (received.attributes & kHICommandFromMenu)
+						{
+							CFStringRef		collectionName = nullptr;
+							
+							
+							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
+							{
+								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
+																			(kPreferences_ClassTranslation, collectionName);
+								
+								
+								if (nullptr != namedSettings)
+								{
+									isError = (kPreferences_ResultOK != Preferences_ContextCopy(namedSettings, currentSettings));
+								}
+								CFRelease(collectionName), collectionName = nullptr;
+							}
+						}
+						
+						if (isError)
+						{
+							// failed...
+							Sound_StandardAlert();
+						}
+						
+						result = noErr;
+					}
+					break;
+				
+				case kCommandSetTranslationTable:
+					{
+						// display a translation customization dialog
+						PrefsContextDialog_Ref		dialog = nullptr;
+						Panel_Ref					prefsPanel = PrefPanelTranslations_New();
+						
+						
+						// display the sheet
+						dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
+														TerminalView_ReturnTranslationConfiguration
+														(TerminalWindow_ReturnViewWithFocus(terminalWindow)));
+						PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
 						
 						result = noErr;
 					}

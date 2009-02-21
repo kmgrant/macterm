@@ -941,18 +941,6 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			// other text-selection-related commands
 			ContextSensitiveMenu_NewItemGroup(inMenu);
 			
-			if (1 == TerminalView_ReturnSelectedTextSize(view))
-			{
-				// when a single character is selected, provide an option to remap it
-				ContextSensitiveMenu_InitItem(&itemInfo);
-				itemInfo.commandID = kCommandFixCharacterTranslation;
-				if (UIStrings_Copy(kUIStrings_ContextualMenuFixCharacterTranslation, itemInfo.commandText).ok())
-				{
-					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Fix Character Translation…”
-					CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
-				}
-			}
-			
 			ContextSensitiveMenu_InitItem(&itemInfo);
 			itemInfo.commandID = kCommandPrintOne;
 			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectionNow, itemInfo.commandText).ok())

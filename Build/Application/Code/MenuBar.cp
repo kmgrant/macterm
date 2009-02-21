@@ -1514,9 +1514,8 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSetKeys, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMacroSetNone, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMacroSetDefault, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTranslationTableNone, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTranslationTableDefault, stateTrackerGenericSessionItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandFixCharacterTranslation, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSetTranslationTable, stateTrackerGenericSessionItems);
 	
 	// Macros
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSendMacro1, stateTrackerGenericSessionItems);
@@ -2784,61 +2783,54 @@ void
 setUpTranslationTablesMenu	(MenuRef	inMenu)
 {
 	OSStatus		error = noErr;
-	MenuItemIndex	noneIndex = 0;
 	MenuItemIndex	defaultIndex = 0;
-	MenuItemIndex	customIndex = 0;
 	
 	
 	// find the key item to use as an anchor point
-	error = GetIndMenuItemWithCommandID(inMenu, kCommandTranslationTableNone, 1/* which match to return */,
-										&inMenu, &noneIndex);
+	error = GetIndMenuItemWithCommandID(inMenu, kCommandTranslationTableDefault, 1/* which match to return */,
+										&inMenu, &defaultIndex);
 	if (noErr == error)
 	{
-		// find the key item to use as an anchor point
-		error = GetIndMenuItemWithCommandID(inMenu, kCommandTranslationTableDefault, 1/* which match to return */,
+		// erase previous items
+		if (0 != gNumberOfTranslationTableMenuItemsAdded)
+		{
+			(OSStatus)DeleteMenuItems(inMenu, defaultIndex + 1/* first item */, gNumberOfTranslationTableMenuItemsAdded);
+		}
+		
+		// add the names of all translation tables to the menu;
+		// update global count of items added at that location
+		gNumberOfTranslationTableMenuItemsAdded = 0;
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslation, inMenu,
+																	defaultIndex, 1/* indentation level */,
+																	kCommandTranslationTableByFavoriteName,
+																	gNumberOfTranslationTableMenuItemsAdded);
+		
+		// also fix the indentation of the Default choice, as this
+		// cannot be set in the NIB and will be wrong (again) if
+		// the indicated menu has been reloaded recently
+		(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
+		
+		// also indent the customization item
+		error = GetIndMenuItemWithCommandID(inMenu, kCommandSetTranslationTable, 1/* which match to return */,
 											&inMenu, &defaultIndex);
 		if (noErr == error)
 		{
-			// erase previous items
-			if (0 != gNumberOfTranslationTableMenuItemsAdded)
-			{
-				(OSStatus)DeleteMenuItems(inMenu, defaultIndex + 1/* first item */, gNumberOfTranslationTableMenuItemsAdded);
-			}
-			
-			// add the names of all translation tables to the menu;
-			// update global count of items added at that location
-			gNumberOfTranslationTableMenuItemsAdded = 0;
-			(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslation, inMenu,
-																		defaultIndex, 1/* indentation level */,
-																		kCommandTranslationTableByFavoriteName,
-																		gNumberOfTranslationTableMenuItemsAdded);
-			
-			// ensure these items are inactive except for terminal windows
-			for (UInt32 i = 1; i <= gNumberOfTranslationTableMenuItemsAdded; ++i)
-			{
-				MenuItemIndex	itemIndex = 0;
-				
-				
-				error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandTranslationTableByFavoriteName,
-													i/* which matching item to return */,
-													nullptr/* matching menu */, &itemIndex);
-				if (noErr == error)
-				{
-					MenuBar_SetMenuItemStateTrackerProc(inMenu, itemIndex, stateTrackerGenericSessionItems);
-				}
-			}
+			(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
 		}
 		
-		// also fix the indentation of the None and Default choices, as
-		// these cannot be set in the NIB and will be wrong (again) if
-		// the indicated menu has been reloaded recently
-		(OSStatus)SetMenuItemIndent(inMenu, noneIndex, 1/* number of indents */);
-		(OSStatus)SetMenuItemIndent(inMenu, defaultIndex, 1/* number of indents */);
-		error = GetIndMenuItemWithCommandID(inMenu, kCommandFixCharacterTranslation, 1/* which match to return */,
-											&inMenu, &customIndex);
-		if (noErr == error)
+		// ensure these items are inactive except for terminal windows
+		for (UInt32 i = 1; i <= gNumberOfTranslationTableMenuItemsAdded; ++i)
 		{
-			(OSStatus)SetMenuItemIndent(inMenu, customIndex, 1/* number of indents */);
+			MenuItemIndex	itemIndex = 0;
+			
+			
+			error = GetIndMenuItemWithCommandID(inMenu/* starting point */, kCommandTranslationTableByFavoriteName,
+												i/* which matching item to return */,
+												nullptr/* matching menu */, &itemIndex);
+			if (noErr == error)
+			{
+				MenuBar_SetMenuItemStateTrackerProc(inMenu, itemIndex, stateTrackerGenericSessionItems);
+			}
 		}
 	}
 }// setUpTranslationTablesMenu
@@ -3221,10 +3213,9 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 	case kCommandMacroSetNone:
 	case kCommandMacroSetDefault:
 	case kCommandMacroSetByFavoriteName:
-	case kCommandTranslationTableNone:
 	case kCommandTranslationTableDefault:
 	case kCommandTranslationTableByFavoriteName:
-	case kCommandFixCharacterTranslation:
+	case kCommandSetTranslationTable:
 	case kCommandClearEntireScrollback:
 	case kCommandResetGraphicsCharacters:
 	case kCommandResetTerminal:

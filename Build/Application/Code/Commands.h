@@ -204,10 +204,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandMacroSetNone					'XMcr'
 #define kCommandMacroSetDefault					'McrD'
 #define kCommandMacroSetByFavoriteName			'MFav'
-#define kCommandTranslationTableNone			'XXlt'
 #define kCommandTranslationTableDefault			'XltD'
 #define kCommandTranslationTableByFavoriteName	'XFav'
-#define kCommandFixCharacterTranslation			'FixT'
+#define kCommandSetTranslationTable				'Xlat'
 
 // Window menu
 // WARNING: These are referenced by value in the MainMenus.nib file!

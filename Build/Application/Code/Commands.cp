@@ -916,6 +916,12 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	see MacroManager.cp
 		//	break;
 		
+		//case kCommandTranslationTableDefault:
+		//case kCommandTranslationTableByFavoriteName:
+		//case kCommandSetTranslationTable:
+		//	see TerminalWindow.cp
+		//	break;
+		
 		case kCommandShowNetworkNumbers:
 			// in the Cocoa implementation this really means “show or activate”
 			AddressDialog_Display();

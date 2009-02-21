@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090221',
     '20090213',
     '20090207',
     '20090204',
@@ -211,6 +212,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090221': [
+		'Custom Translation sheet is now implemented, however terminals currently ignore the setting (pending other code changes).',
+	],
 	'20090213': [
 		'Fixed various bugs in the Preferences window Translations pane.',
 	],

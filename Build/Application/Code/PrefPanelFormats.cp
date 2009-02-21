@@ -874,7 +874,7 @@ colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
 			
 			
 			// update the sample area
-			Preferences_ContextCopy(dataPtr->dataModel, TerminalView_ReturnConfiguration(interfacePtr->terminalView));
+			Preferences_ContextCopy(dataPtr->dataModel, TerminalView_ReturnFormatConfiguration(interfacePtr->terminalView));
 			
 			isOK = (kPreferences_ResultOK == prefsResult);
 		}
@@ -1257,7 +1257,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		setColorBox(inSettings, kPreferences_TagTerminalColorMatteBackground, HIViewWrap(idMyBevelButtonMatteBackground, kOwningWindow));
 		
 		// update the sample area
-		Preferences_ContextCopy(inSettings, TerminalView_ReturnConfiguration(this->terminalView));
+		Preferences_ContextCopy(inSettings, TerminalView_ReturnFormatConfiguration(this->terminalView));
 	}
 }// My_FormatsPanelNormalUI::readPreferences
 
@@ -1478,7 +1478,7 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			}
 			
 			// update the sample area
-			Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnConfiguration(normalDataPtr->terminalView));
+			Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnFormatConfiguration(normalDataPtr->terminalView));
 		}
 		break;
 	
