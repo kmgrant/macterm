@@ -42,8 +42,11 @@ has quit.
 
 h5(#noautonew). No automatic new windows
 
-Prevents a new shell from being created if MacTelnet is activated
-while it has no windows open.
+Prevents a new session from being created at startup, or when the
+application is activated and no windows are open.
+
+Note that the type of session created will implicitly match the
+"Command-N Key Equivalent" preference.
 
 h5(#usetabs). Use tabs to arrange windows
 
@@ -173,7 +176,9 @@ h4(#commandN). Command-N Key Equivalent
 
 MacTelnet has several ways to create sessions, and you may wish
 to use one of them more than others.  You can map command-N as a
-short-cut to whichever one you use most.
+short-cut to whichever one you use most.  This also implicitly
+determines the behavior of any automatically-opened windows (such
+as, at startup time).
 
 h3(#generalnotification). Notification
 

@@ -190,7 +190,24 @@ RequiredAE_HandleApplicationOpen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEvent
 	// spawn a unique shell anyway)
 	unless ((quellAutoNew) || FlagManager_Test(kFlagUserOverrideAutoNew))
 	{
-		Commands_ExecuteByIDUsingEvent(kCommandNewSessionShell);
+		// handle the case where MacTelnet has no open windows and the user
+		// double-clicks its icon in the Finder
+		UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
+		
+		
+		// assume that the user is mapping command-N to the same type of session
+		// that would be appropriate for opening by default on startup or re-open
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
+									sizeof(newCommandID), &newCommandID,
+									&actualSize))
+		{
+			// assume a value if it cannot be found
+			newCommandID = kCommandNewSessionDefaultFavorite;
+		}
+		
+		// no open windows - respond by spawning a new session
+		Commands_ExecuteByIDUsingEvent(newCommandID);
 	}
 	
 	(OSStatus)AppleEventUtilities_AddErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
@@ -249,9 +266,9 @@ RequiredAE_HandleApplicationReopen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEve
 	Console_WriteLine("AppleScript: “application re-opened” event");
 	
 	// get the user’s “don’t auto-new” application preference, if possible
-	if (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
-							&quellAutoNew, &actualSize) !=
-		kPreferences_ResultOK)
+	if (kPreferences_ResultOK !=
+		Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
+							&quellAutoNew, &actualSize))
 	{
 		// assume a value if it cannot be found
 		quellAutoNew = false;
@@ -259,12 +276,26 @@ RequiredAE_HandleApplicationReopen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEve
 	
 	unless (quellAutoNew)
 	{
-		// handle the case where MacTelnet has no open windows and the user
-		// double-clicks its icon in the Finder
-		if (EventLoop_ReturnRealFrontWindow() == nullptr)
+		if (nullptr == EventLoop_ReturnRealFrontWindow())
 		{
-			// no open windows - respond by spawning a shell
-			Commands_ExecuteByID(kCommandNewSessionShell);
+			// handle the case where MacTelnet has no open windows and the user
+			// double-clicks its icon in the Finder
+			UInt32		newCommandID = kCommandNewSessionDefaultFavorite;
+			
+			
+			// assume that the user is mapping command-N to the same type of session
+			// that would be appropriate for opening by default on startup or re-open
+			unless (kPreferences_ResultOK ==
+					Preferences_GetData(kPreferences_TagNewCommandShortcutEffect,
+										sizeof(newCommandID), &newCommandID,
+										&actualSize))
+			{
+				// assume a value if it cannot be found
+				newCommandID = kCommandNewSessionDefaultFavorite;
+			}
+			
+			// no open windows - respond by spawning a new session
+			Commands_ExecuteByIDUsingEvent(newCommandID);
 		}
 	}
 	
@@ -272,6 +303,7 @@ RequiredAE_HandleApplicationReopen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEve
 	Console_EndFunction();
 	
 	(OSStatus)AppleEventUtilities_AddErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	
 	return result;
 }// HandleApplicationReopen
 
