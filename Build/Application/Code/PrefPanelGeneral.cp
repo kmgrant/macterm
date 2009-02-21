@@ -2071,6 +2071,12 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 				result = true;
 			}
+			else if (HIViewIDWrap(idMyCheckBoxDoNotAutoCreateWindows) == viewID)
+			{
+				Preferences_SetData(kPreferences_TagDontAutoNewOnApplicationReopen,
+									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+				result = true;
+			}
 			else if (HIViewIDWrap(idMyCheckBoxFocusFollowsMouse) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagFocusFollowsMouse,
