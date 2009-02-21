@@ -2162,11 +2162,17 @@ might return.
 TerminalView_Result
 TerminalView_ScrollToEnd	(TerminalViewRef	inView)
 {
-	TerminalView_Result		result = kTerminalView_ResultOK;
+	TerminalViewAutoLocker		viewPtr(gTerminalViewPtrLocks(), inView);
+	TerminalView_Result			result = kTerminalView_ResultOK;
 	
 	
-	// scroll as far as possible
-	result = TerminalView_ScrollRowsTowardTopEdge(inView, 32765);
+	if (viewPtr == nullptr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		// scroll as far as possible
+		result = TerminalView_ScrollRowsTowardTopEdge(inView, Terminal_ReturnRowCount(viewPtr->screen.ref) +
+														Terminal_ReturnInvisibleRowCount(viewPtr->screen.ref));
+	}
 	return result;
 }// ScrollToEnd
 

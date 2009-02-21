@@ -213,6 +213,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090221': [
+		'Fixed Terminal window "end" keypresses to properly scroll to the bottom (just as "home" has always scrolled to the beginning).',
 		'Fixed Preferences window General pane to now save the "No automatic new windows" setting.',
 		'Automatic new windows (such as, at startup time) now use the command-N mapping to decide what to do.',
 		'Custom Translation sheet is now implemented, however terminals currently ignore the setting (pending other code changes).',
