@@ -2103,7 +2103,7 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 		EventLoop_SelectBehindDialogWindows(window);
 		
 		// focus the first view of the first tab
-		terminalWindowResult = TerminalWindow_GetViewsInGroup(inTerminalWindow, kTerminalWindow_ViewGroup1, 1/* array length */,
+		terminalWindowResult = TerminalWindow_GetViewsInGroup(inTerminalWindow, kTerminalWindow_ViewGroupEverything, 1/* array length */,
 																&view, nullptr/* actual count */);
 		if (terminalWindowResult == kTerminalWindow_ResultOK)
 		{

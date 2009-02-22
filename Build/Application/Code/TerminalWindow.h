@@ -92,18 +92,13 @@ enum TerminalWindow_Change
 
 /*!
 Unique descriptors for collections of terminal views.  For example,
-these might be used to describe the collection of views for a single
-tab, or the collection of all views in the entire window, etc.
+these might be used to describe the collection of all views in the
+entire window, or only the currently focused view, etc.
 */
 enum TerminalWindow_ViewGroup
 {
 	kTerminalWindow_ViewGroupEverything		= '****',	//!< contains EVERY view in the window
 	kTerminalWindow_ViewGroupActive			= 'Frnt',	//!< contains all views in the visible tab
-	kTerminalWindow_ViewGroup1				= 'Tab1',	//!< contains all views in the first tab
-	kTerminalWindow_ViewGroup2				= 'Tab2',	//!< contains all views in the second tab
-	kTerminalWindow_ViewGroup3				= 'Tab3',	//!< contains all views in the third tab
-	kTerminalWindow_ViewGroup4				= 'Tab4',	//!< contains all views in the fourth tab
-	kTerminalWindow_ViewGroup5				= 'Tab5'	//!< contains all views in the fifth tab
 };
 
 Float32 const	kTerminalWindow_DefaultMetaTabWidth = 0.0;	//!< tells TerminalWindow_SetTabWidth() to restore a standard width

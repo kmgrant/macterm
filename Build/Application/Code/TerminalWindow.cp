@@ -686,14 +686,7 @@ terminal window that belong to the specified group.
 
 By specifying a group filter, you can automatically
 retrieve an ordered list of views pertinent to your
-purpose.  For example, if you are implementing a tab
-switcher, passing "kTerminalWindow_ViewGroup3" or some
-other more specific group lets you access the views
-that should appear on a particular tab.  Basically,
-since you are communicating a certain amount of context
-to the Terminal Window module, you can receive a set of
-views that makes sense for what you are doing - and in
-the order you would need them to be in.
+purpose.
 
 Use TerminalWindow_GetViewCountInGroup() to determine
 an appropriate size for your array, then allocate an
@@ -724,11 +717,6 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 	{
 	case kTerminalWindow_ViewGroupEverything:
 	case kTerminalWindow_ViewGroupActive:
-	case kTerminalWindow_ViewGroup1:
-	case kTerminalWindow_ViewGroup2:
-	case kTerminalWindow_ViewGroup3:
-	case kTerminalWindow_ViewGroup4:
-	case kTerminalWindow_ViewGroup5:
 		if (outViewArray != nullptr)
 		{
 			TerminalWindowAutoLocker			ptr(gTerminalWindowPtrLocks(), inRef);
@@ -1000,15 +988,6 @@ TerminalWindow_ReturnViewCountInGroup	(TerminalWindowRef			inRef,
 		// currently, only one tab per window so the result is the same
 		result = ptr->allViews.size();
 		assert(result == TerminalWindow_ReturnViewCount(inRef));
-		break;
-	
-	case kTerminalWindow_ViewGroup1:
-	case kTerminalWindow_ViewGroup2:
-	case kTerminalWindow_ViewGroup3:
-	case kTerminalWindow_ViewGroup4:
-	case kTerminalWindow_ViewGroup5:
-		// not currently used
-		result = 0;
 		break;
 	
 	default:
@@ -3124,11 +3103,7 @@ handleNewSize	(WindowRef	inWindow,
 		{
 			TerminalWindow_ViewGroup const	kViewGroupArray[] =
 											{
-												kTerminalWindow_ViewGroup1,
-												kTerminalWindow_ViewGroup2,
-												kTerminalWindow_ViewGroup3,
-												kTerminalWindow_ViewGroup4,
-												kTerminalWindow_ViewGroup5
+												kTerminalWindow_ViewGroupEverything
 											};
 			UInt16 const					kNumberOfViews = TerminalWindow_ReturnViewCount(terminalWindow);
 			TerminalViewRef*				viewArray = new TerminalViewRef[kNumberOfViews];
