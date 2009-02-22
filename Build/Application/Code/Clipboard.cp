@@ -1840,8 +1840,6 @@ setDataTypeInformation	(CFStringRef	inUTI,
 				{
 					CFRelease(unitsCFString), unitsCFString = nullptr;
 				}
-				
-				CFShow(finalCFString); // TMP
 			}
 			
 			CFRelease(contentTypeCFString), contentTypeCFString = nullptr;
