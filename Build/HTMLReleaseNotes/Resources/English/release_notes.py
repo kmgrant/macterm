@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090223',
     '20090221',
     '20090213',
     '20090207',
@@ -212,6 +213,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090223': [
+		'Full Screen mode now respects the "Terminal Resize Effect" preference; and, as with resizes, the Option key switches behavior.',
+	],
 	'20090221': [
 		'Fixed Terminal window "end" keypresses to properly scroll to the bottom (just as "home" has always scrolled to the beginning).',
 		'Fixed Preferences window General pane to now save the "No automatic new windows" setting.',

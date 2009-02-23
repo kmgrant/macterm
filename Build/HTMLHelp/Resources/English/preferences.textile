@@ -154,6 +154,10 @@ workspace, window locations are preserved and ignore this origin.
 
 h4(#spacesfortab). Window Resize Effect
 
+The Window Resize Effect determines how terminal windows are
+altered when resized explicitly with the mouse, or implicitly
+when entering Full Screen mode.
+
 When window resizes affect terminal screen size, MacTelnet
 dynamically calculates the maximum number of rows and columns
 that can fit in the current window size (at current font size).
@@ -164,7 +168,8 @@ terminal font) to fit the current number of rows and columns in
 the current window size.
 
 You can hold down the Option key prior to starting a window
-resize to temporarily switch this preference.
+resize or entering Full Screen mode, to temporarily switch this
+preference.
 
 h4(#spacesfortab). Copy With Tab Substitution
 

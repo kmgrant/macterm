@@ -360,7 +360,8 @@ enum UIStrings_UndoCFString
 	kUIStrings_UndoDimensionChanges				= 'UndD',
 	kUIStrings_RedoDimensionChanges				= 'RedD',
 	kUIStrings_UndoFormatChanges				= 'UndF',
-	kUIStrings_RedoFormatChanges				= 'RedF'
+	kUIStrings_RedoFormatChanges				= 'RedF',
+	kUIStrings_UndoFullScreen					= 'UndZ'
 };
 
 /*!

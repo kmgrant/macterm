@@ -241,11 +241,12 @@ Context data for the context ID "kUndoableContextIdentifierTerminalFullScreenCha
 */
 struct UndoDataFullScreenChanges
 {
-	Undoables_ActionRef		action;				//!< used to manage the Undo command
-	TerminalWindowRef		terminalWindow;		//!< which window was reformatted
-	UInt16					fontSize;			//!< the old font size (ignored if "undoFontSize" is false)
-	Float32					oldContentLeft;		//!< old location in pixels, left edge of content area
-	Float32					oldContentTop;		//!< old location in pixels, top edge of content area
+	Undoables_ActionRef			action;				//!< used to manage the Undo command
+	TerminalWindowRef			terminalWindow;		//!< which window was reformatted
+	TerminalView_DisplayMode	oldMode;			//!< previous terminal resize effect
+	TerminalView_DisplayMode	newMode;			//!< full-screen terminal resize effect
+	UInt16						oldFontSize;		//!< font size prior to full-screen
+	Rect						oldContentBounds;	//!< old window boundaries, content area
 };
 typedef UndoDataFullScreenChanges*		UndoDataFullScreenChangesPtr;
 
@@ -297,7 +298,7 @@ static void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
 static void					handleNewSize					(WindowRef, Float32, Float32, void*);
 static void					handlePendingUpdates			();
 static void					installUndoFontSizeChanges		(TerminalWindowRef, Boolean, Boolean);
-static void					installUndoFullScreenChanges	(TerminalWindowRef);
+static void					installUndoFullScreenChanges	(TerminalWindowRef, TerminalView_DisplayMode, TerminalView_DisplayMode);
 static void					installUndoScreenDimensionChanges	(TerminalWindowRef);
 static pascal OSStatus		receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
@@ -330,7 +331,6 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	TerminalWindowPtrLocker&	gTerminalWindowPtrLocks ()		{ static TerminalWindowPtrLocker x; return x; }
 	SInt16**					gTopLeftCorners = nullptr;
 	SInt16						gNumberOfTransitioningWindows = 0;	// used only by TerminalWindow_StackWindows()
-	TerminalWindowRef&			gKioskTerminalWindow ()			{ static TerminalWindowRef x = nullptr; return x; }
 	IconRef&					gBellOffIcon ()					{ static IconRef x = createBellOffIcon(); return x; }
 	IconRef&					gBellOnIcon ()					{ static IconRef x = createBellOnIcon(); return x; }
 	IconRef&					gFullScreenIcon ()				{ static IconRef x = createFullScreenIcon(); return x; }
@@ -3261,14 +3261,18 @@ and window location when the user chooses Undo.
 (3.1)
 */
 static void
-installUndoFullScreenChanges	(TerminalWindowRef	inTerminalWindow)
+installUndoFullScreenChanges	(TerminalWindowRef			inTerminalWindow,
+								 TerminalView_DisplayMode	inPreFullScreenMode,
+								 TerminalView_DisplayMode	inFullScreenMode)
 {
 	OSStatus						error = noErr;
 	UndoDataFullScreenChangesPtr	dataPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(UndoDataFullScreenChanges)),
 																UndoDataFullScreenChangesPtr); // disposed in the action method
+	CFStringRef						undoCFString = nullptr;
+	UIStrings_Result				stringResult = UIStrings_Copy(kUIStrings_UndoFullScreen, undoCFString);
 	
 	
-	if (dataPtr == nullptr) error = memFullErr;
+	if (nullptr == dataPtr) error = memFullErr;
 	else
 	{
 		// initialize context structure
@@ -3276,22 +3280,28 @@ installUndoFullScreenChanges	(TerminalWindowRef	inTerminalWindow)
 		
 		
 		dataPtr->terminalWindow = inTerminalWindow;
-		TerminalWindow_GetFontAndSize(inTerminalWindow, nullptr/* font name */, &dataPtr->fontSize);
+		dataPtr->oldMode = inPreFullScreenMode;
+		dataPtr->newMode = inFullScreenMode;
+		TerminalWindow_GetFontAndSize(inTerminalWindow, nullptr/* font name */, &dataPtr->oldFontSize);
 		GetWindowBounds(TerminalWindow_ReturnWindow(inTerminalWindow), kWindowContentRgn, &windowBounds);
-		dataPtr->oldContentLeft = windowBounds.left;
-		dataPtr->oldContentTop = windowBounds.top;
+		dataPtr->oldContentBounds = windowBounds;
 	}
-	dataPtr->action = Undoables_NewAction(CFSTR("")/* undo name - not applicable (not exposed to users) */,
-											nullptr /* redo name; this is not redoable */, reverseFullScreenChanges,
-											kUndoableContextIdentifierTerminalFullScreenChanges, dataPtr);
+	dataPtr->action = Undoables_NewAction(undoCFString/* undo name */, nullptr/* redo name; this is not redoable */,
+											reverseFullScreenChanges, kUndoableContextIdentifierTerminalFullScreenChanges,
+											dataPtr);
 	Undoables_AddAction(dataPtr->action);
-	if (error != noErr) Console_WriteValue("Warning: Could not make font size and/or location change undoable, error", error);
+	if (noErr != error) Console_WriteValue("warning, could not make font size and/or location change undoable, error", error);
 	else
 	{
 		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inTerminalWindow);
 		
 		
 		ptr->installedActions.push_back(dataPtr->action);
+	}
+	
+	if (nullptr != undoCFString)
+	{
+		CFRelease(undoCFString), undoCFString = nullptr;
 	}
 }// installUndoFullScreenChanges
 
@@ -3596,10 +3606,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									SelectWindow(window); // return focus to the terminal window
 								}
 								
-								// set a global with the terminal window that is full screen,
-								// so that its scroll bar can be displayed later (a bit of a hack...)
-								gKioskTerminalWindow() = terminalWindow;
-								
 								// finally, set a global flag indicating the mode is in effect
 								FlagManager_Set(kFlagKioskMode, true);
 							}
@@ -3609,92 +3615,47 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								RegionUtilities_GetPositioningBounds(window, &deviceBounds);
 							}
 							
-							// retrieve initial values so they can be restored later
+							// terminal views are mostly capable of handling text zoom or row/column resize
+							// on their own, as a side effect of changing dimensions in the right mode; so
+							// it is just a matter of setting the window size, and then setting up an
+							// appropriate Undo command (which is used to turn off Full Screen later)
 							{
-								CGrafPtr	windowPort = nullptr;
-								CGrafPtr	oldPort = nullptr;
-								GDHandle	device = nullptr;
-								FontInfo	info;
-								Str255		fontName;		// current terminal font
-								UInt16		fontSize = 0;	// current font size (will change)
-								SInt16		preservedFontID = 0;
-								SInt16		preservedFontSize = 0;
-								Style		preservedFontStyle = 0;
-								UInt16		visibleColumns = 0;
-								UInt16		visibleRows = 0;
-								SInt16		screenInteriorWidth = 0;
-								SInt16		screenInteriorHeight = 0;
+								TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
+								Rect							maxBounds;
 								
-								
-								TerminalWindow_GetFontAndSize(terminalWindow, fontName, &fontSize);
-								TerminalWindow_GetScreenDimensions(terminalWindow, &visibleColumns, &visibleRows);
-								
-								GetGWorld(&oldPort, &device);
-								SetPortWindowPort(window);
-								GetGWorld(&windowPort, &device);
-								preservedFontID = GetPortTextFont(windowPort);
-								preservedFontSize = GetPortTextSize(windowPort);
-								preservedFontStyle = GetPortTextFace(windowPort);
-								
-								// determine the rectangle that *will* be the optimal new terminal screen area
-								getViewSizeFromWindowSize(ptr, deviceBounds.right - deviceBounds.left,
-															deviceBounds.bottom - deviceBounds.top,
-															&screenInteriorWidth, &screenInteriorHeight);
-								
-								// choose an appropriate font size to best fill the screen; favor maximum
-								// width over height, but reduce the font size if the characters overrun
-								// the bottom of the screen
-								TextFontByName(fontName);
-								TextSize(fontSize);
-								while ((CharWidth('A') * visibleColumns) < screenInteriorWidth)
-								{
-									TextSize(++fontSize);
-								}
-								do
-								{
-									TextSize(--fontSize);
-									GetFontInfo(&info);
-								} while (((info.ascent + info.descent + info.leading) * visibleRows) >= screenInteriorHeight);
-								
-								// undo the damage...
-								TextFont(preservedFontID);
-								TextSize(preservedFontSize);
-								TextFace(preservedFontStyle);
 								
 								// resize the window and fill its monitor
 								if (modalFullScreen)
 								{
-									installUndoFullScreenChanges(terminalWindow);
+									Boolean const					kSwapModes = EventLoop_IsOptionKeyDown();
+									TerminalView_DisplayMode const	kNewMode = (false == kSwapModes)
+																				? kOldMode
+																				: (kTerminalView_DisplayModeZoom == kOldMode)
+																					? kTerminalView_DisplayModeNormal
+																					: kTerminalView_DisplayModeZoom;
+									
+									
+									installUndoFullScreenChanges(terminalWindow, kOldMode, kNewMode);
+									if (kSwapModes)
+									{
+										TerminalView_SetDisplayMode(ptr->allViews.front(), kNewMode);
+									}
 								}
 								else
 								{
 									installUndoFontSizeChanges(terminalWindow, false/* undo font */, true/* undo font size */);
+									TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
 								}
-								TerminalWindow_SetFontAndSize(terminalWindow, fontName, fontSize);
-								{
-									Rect	maxBounds;
-									
-									
-									RegionUtilities_GetWindowMaximumBounds(window, &maxBounds, nullptr/* previous bounds */, true/* no insets */);
-									(OSStatus)SetWindowBounds(window, kWindowContentRgn, &maxBounds);
-								}
-								SetPort(oldPort);
+								RegionUtilities_GetWindowMaximumBounds(window, &maxBounds, nullptr/* previous bounds */, true/* no insets */);
+								(OSStatus)SetWindowBounds(window, kWindowContentRgn, &maxBounds);
+								
+								TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
 							}
 						}
 						else
 						{
 							// end Kiosk Mode
-							FlagManager_Set(kFlagKioskMode, false);
-							Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
-							if (nullptr != ptr) (OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, true);
-							assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
-							
-							// undo font size changes, which is supposed to move the userÕs
-							// window back to where it was, at the original font size
 							Commands_ExecuteByID(kCommandUndo);
-							
-							gKioskTerminalWindow() = nullptr;
-							
 							result = noErr;
 						}
 						
@@ -5116,7 +5077,9 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 				TerminalWindow_GetFontAndSize(dataPtr->terminalWindow, oldFontName, &oldFontSize);
 				
 				// change the font and/or size of the window
-				TerminalWindow_SetFontAndSize(dataPtr->terminalWindow, dataPtr->fontName, dataPtr->fontSize);
+				TerminalWindow_SetFontAndSize(dataPtr->terminalWindow,
+												(dataPtr->undoFont) ? dataPtr->fontName : nullptr,
+												(dataPtr->undoFontSize) ? dataPtr->fontSize : 0);
 				
 				// save the preserved dimensions
 				dataPtr->fontSize = oldFontSize;
@@ -5156,18 +5119,40 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 			if (dataPtr != nullptr) Memory_DisposePtr(REINTERPRET_CAST(&dataPtr, Ptr*));
 			break;
 		
-		case kUndoables_ActionInstructionRedo:
 		case kUndoables_ActionInstructionUndo:
-		default:
+			// exit Full Screen mode and restore the window
 			{
-				// change the location
-				MoveWindow(TerminalWindow_ReturnWindow(dataPtr->terminalWindow),
-							STATIC_CAST(dataPtr->oldContentLeft, SInt16),
-							STATIC_CAST(dataPtr->oldContentTop, SInt16), false/* activate */);
+				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), dataPtr->terminalWindow);
 				
-				// change the font and/or size of the window
-				TerminalWindow_SetFontAndSize(dataPtr->terminalWindow, nullptr/* font name */, dataPtr->fontSize);
+				
+				FlagManager_Set(kFlagKioskMode, false);
+				Keypads_SetVisible(kKeypads_WindowTypeFullScreen, false);
+				if (nullptr != ptr) (OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, true);
+				assert_noerr(SetSystemUIMode(kUIModeNormal, 0/* options */));
+				
+				// some mode changes do not require font size restoration; and, the boundaries
+				// may need to change before or after the display mode is restored, due to the
+				// side effects of window resizes in each mode
+				TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->newMode);
+				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal == dataPtr->oldMode))
+				{
+					TerminalWindow_SetFontAndSize(dataPtr->terminalWindow, nullptr/* font name */, dataPtr->oldFontSize);
+				}
+				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal != dataPtr->newMode))
+				{
+					TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->oldMode);
+				}
+				SetWindowBounds(TerminalWindow_ReturnWindow(dataPtr->terminalWindow), kWindowContentRgn, &dataPtr->oldContentBounds);
+				if ((dataPtr->oldMode != dataPtr->newMode) && (kTerminalView_DisplayModeNormal == dataPtr->newMode))
+				{
+					TerminalView_SetDisplayMode(ptr->allViews.front(), dataPtr->oldMode);
+				}
 			}
+			break;
+		
+		case kUndoables_ActionInstructionRedo:
+		default:
+			// ???
 			break;
 		}
 	}

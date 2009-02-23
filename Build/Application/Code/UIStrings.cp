@@ -1667,6 +1667,11 @@ UIStrings_Copy	(UIStrings_UndoCFString		inWhichString,
 													CFSTR("Undo"), CFSTR("kUIStrings_RedoFormatChanges"));
 		break;
 	
+	case kUIStrings_UndoFullScreen:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Undo Full Screen"),
+													CFSTR("Undo"), CFSTR("kUIStrings_UndoFullScreen"));
+		break;
+	
 	default:
 		// ???
 		result = kUIStrings_ResultNoSuchString;
