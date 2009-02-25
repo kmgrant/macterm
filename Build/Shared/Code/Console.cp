@@ -368,7 +368,7 @@ Console_WriteValueCFString	(char const*	inLabel,
 	s << inLabel << " = \"";
 	if (inValue != nullptr)
 	{
-		CFStringEncoding const	kEncoding = kCFStringEncodingMacRoman;
+		CFStringEncoding const	kEncoding = kCFStringEncodingUTF8;
 		size_t const			kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
 												(CFStringGetLength(inValue), kEncoding);
 		char*					valueString = new char[kBufferSize];
