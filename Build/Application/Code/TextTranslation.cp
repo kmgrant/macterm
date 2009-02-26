@@ -375,15 +375,33 @@ TextTranslation_PersistentCFStringCreate	(CFAllocatorRef			inAllocator,
 											 CFIndex&				outBytesUsed,
 											 CFIndex				inByteMaxBacktrack)
 {
+	Boolean const	kDebug = false;
 	CFStringRef		result = nullptr;
 	
 	
 	// keep trying with smaller buffers until translation succeeds
 	// or too many iterations have occurred
 	outBytesUsed = inByteCount;
+	if (kDebug)
+	{
+		Console_WriteValue("attempt to translate persistently to encoding", inEncoding);
+	}
 	for (CFIndex i = 0; ((nullptr == result) && (outBytesUsed > 0) && (i < (1 + inByteMaxBacktrack))); ++i)
 	{
 		result = CFStringCreateWithBytes(inAllocator, inBytes, outBytesUsed, inEncoding, inIsExternalRepresentation);
+		if (kDebug)
+		{
+			Console_WriteValue("against byte array of size", outBytesUsed);
+			Console_WriteValueCFString("result", result);
+		}
+		
+		// ignore empty strings
+		if ((nullptr != result) && (0 == CFStringGetLength(result)))
+		{
+			CFRelease(result), result = nullptr;
+		}
+		
+		// if translation fails, start over with one less byte
 		if (nullptr == result) --outBytesUsed;
 	}
 	
