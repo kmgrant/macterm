@@ -2875,22 +2875,6 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 	// send the appropriate character to the Unix process
 	if (inScrollLock)
 	{
-	#if 0
-		{
-			CFStringRef		userNotificationCFString = nullptr;
-			
-			
-			// 3.1 - dump a string that says “[Suspend Output]”
-			if (UIStrings_Copy(kUIStrings_TerminalSuspendOutput, userNotificationCFString).ok())
-			{
-				Session_TerminalWriteCString(inRef, "\033[3;5m"); // italic, blinking
-				Session_TerminalWriteCFString(inRef, userNotificationCFString);
-				Session_TerminalWriteCString(inRef, "\033[23;25m"); // remove italic, blinking
-				CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
-			}
-		}
-	#endif
-		
 		// display a help tag over the cursor in an unobtrusive location
 		// that confirms for the user that a suspend has in fact occurred
 		{
@@ -2925,22 +2909,6 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 	}
 	else
 	{
-	#if 0
-		{
-			CFStringRef		userNotificationCFString = nullptr;
-			
-			
-			// 3.1 - dump a string that says “[Resume Output]”
-			if (UIStrings_Copy(kUIStrings_TerminalResumeOutput, userNotificationCFString).ok())
-			{
-				Session_TerminalWriteCString(inRef, "\033[3m"); // italic
-				Session_TerminalWriteCFString(inRef, userNotificationCFString);
-				Session_TerminalWriteCString(inRef, "\033[23m"); // remove italic
-				CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
-			}
-		}
-	#endif
-		
 		// hide the help tag displayed by the Suspend
 		(OSStatus)HMHideTag();
 		
@@ -3740,26 +3708,6 @@ Session_TerminalWriteCString	(SessionRef		inRef,
 
 
 /*!
-Writes the specified string to the local terminal,
-without transmitting it to the network.  The terminal
-emulator will interpret the string and adjust the
-display appropriately if any commands are embedded
-(otherwise, text is inserted).
-
-(3.1)
-*/
-void
-Session_TerminalWriteCFString	(SessionRef		inRef,
-								 CFStringRef	inCFString)
-{
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	
-	
-	Terminal_EmulatorProcessCFString(ptr->dataPtr->vs, inCFString);
-}// TerminalWriteCFString
-
-
-/*!
 Returns the clock time (in seconds) for the computer
 back when the specified session’s command was run.
 You can use TimeString() or DateString() on the
@@ -3908,22 +3856,6 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 	// clear the Suspend state from MacTelnet’s point of view,
 	// since the process already considers the pipe reopened
 	Session_SetNetworkSuspended(inRef, false);
-	
-#if 0
-	{
-		CFStringRef		userNotificationCFString = nullptr;
-		
-		
-		// 3.0 - get a string that says “[Interrupt Process]”
-		if (UIStrings_Copy(kUIStrings_TerminalInterruptProcess, userNotificationCFString).ok())
-		{
-			Session_TerminalWriteCString(inRef, "\033[3m"); // italic
-			Session_TerminalWriteCFString(inRef, userNotificationCFString);
-			Session_TerminalWriteCString(inRef, "\033[23m"); // remove italic
-			CFRelease(userNotificationCFString), userNotificationCFString = nullptr;
-		}
-	}
-#endif
 	
 	// display a help tag over the cursor in an unobtrusive location
 	// that confirms for the user that an interrupt has in fact occurred

@@ -497,10 +497,6 @@ void
 	Session_TerminalWriteCString			(SessionRef							inRef,
 											 char const*						inCString);
 
-void
-	Session_TerminalWriteCFString			(SessionRef							inRef,
-											 CFStringRef						inCFString);
-
 //@}
 
 //!\name Miscellaneous

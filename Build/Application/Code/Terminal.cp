@@ -103,7 +103,7 @@ enum
 {
 	// key states
 	kMy_ParserStateInitial						= 'init',	//!< the very first state, no characters have yet been entered
-	kMy_ParserStateEcho							= 'echo',	//!< no sense could be made of the input, so let it fall through to display
+	kMy_ParserStateAccumulateForEcho			= 'echo',	//!< no sense could be made of the input, so gather it for later translation and display
 	
 	// generic states - these are automatically handled by the default state determinant based on the data stream
 	kMy_ParserStateSeenNull						= 'Ctl@',	//!< generic state used to define emulator-specific states, below
@@ -250,6 +250,38 @@ namespace {
 
 struct My_Emulator;			// declared here because the callback declarations use it (defined later)
 struct My_ScreenBuffer;		// declared here because the callback declarations use it (defined later)
+
+/*!
+Emulator Echo-Data Routine
+
+Translates the given data from the specified screen’s input
+text encoding, and sends it to the screen (probably using the
+utility function echoCFString()).
+
+This is a separate emulator function because it is occasionally
+important for emulators to customize it, e.g. a “dumb” terminal.
+
+WARNING:	The specified buffer is a limited slice of the
+			overall data stream.  It is not guaranteed to
+			terminate at the end of a full sequence of
+			characters that you are interested in, so naïve
+			translation will not work.  You must be prepared
+			to “backtrack” and ignore zero or more bytes at
+			the end of the buffer, to find a valid segment.
+			TextTranslation_PersistentCFStringCreate() is
+			very useful for this!
+*/
+typedef UInt32 (*My_EmulatorEchoDataProcPtr)	(My_ScreenBuffer*	inDataPtr,
+												 UInt8 const*		inBuffer,
+												 UInt32				inLength);
+inline UInt32
+invokeEmulatorEchoDataProc	(My_EmulatorEchoDataProcPtr		inProc,
+							 My_ScreenBuffer*				inDataPtr,
+							 UInt8 const*					inBuffer,
+							 UInt32							inLength)
+{
+	return (*inProc)(inDataPtr, inBuffer, inLength);
+}
 
 /*!
 Emulator State Determinant Routine
@@ -534,11 +566,14 @@ public:
 	{
 	public:
 		Callbacks	();
-		Callbacks	(My_EmulatorStateDeterminantProcPtr, My_EmulatorStateTransitionProcPtr);
+		Callbacks	(My_EmulatorEchoDataProcPtr,
+					 My_EmulatorStateDeterminantProcPtr,
+					 My_EmulatorStateTransitionProcPtr);
 		
 		Boolean
 		exist () const;
 		
+		My_EmulatorEchoDataProcPtr			dataWriter;				//!< translates data and dumps it to the screen
 		My_EmulatorStateDeterminantProcPtr	stateDeterminant;		//!< figures out what the next state should be
 		My_EmulatorStateTransitionProcPtr	transitionHandler;		//!< handles new parser states, driving the terminal; varies based on the emulator
 	};
@@ -563,6 +598,9 @@ public:
 	TagSet								supportedVariants;		//!< tags identifying minor features, e.g. "kPreferences_TagXTerm256ColorsEnabled"
 
 protected:
+	My_EmulatorEchoDataProcPtr
+	returnDataWriter	(Terminal_Emulator);
+	
 	My_EmulatorStateDeterminantProcPtr
 	returnStateDeterminant		(Terminal_Emulator);
 	
@@ -625,6 +663,7 @@ public:
 	My_ScreenBufferLineList				screenBuffer;				//!< a double-ended queue containing all the visible text for the terminal;
 																	//!  insertion or deletion from either end is fast, other operations are slow;
 																	//!  NOTE you should ONLY modify this using insertNewLines()!
+	std::string							bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
 	
 	My_TabStopList						tabSettings;				//!< array of characters representing tab stops; values are either kMy_TabClear
 																	//!  (for most columns), or kMy_TabSet at tab columns
@@ -736,6 +775,7 @@ characters.
 class My_DefaultEmulator
 {
 public:
+	static UInt32	echoData			(My_ScreenBufferPtr, UInt8 const*, UInt32);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 };
@@ -748,6 +788,7 @@ character it receives.
 class My_DumbTerminal
 {
 public:
+	static UInt32	echoData			(My_ScreenBufferPtr, UInt8 const*, UInt32);
 	static UInt32	stateDeterminant	(My_EmulatorPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState&, Boolean&);
 	static UInt32	stateTransition		(My_ScreenBufferPtr, UInt8 const*, UInt32, My_ParserState, My_ParserState);
 };
@@ -2090,69 +2131,6 @@ Terminal_EmulatorIsVT220	(TerminalScreenRef		inRef)
 
 /*!
 Sends a stream of characters originating in a
-Core Foundation string to the specified screen’s
-terminal emulator, interpreting escape sequences,
-etc. which may affect the terminal display.
-
-USE WITH CARE.  Generally, you send data to this
-routine that comes directly from a program that
-knows what it’s doing.  There are more elegant
-ways to have specific effects on terminal screens
-in an emulator-independent fashion; you should
-use those routines before hacking up a string as
-input to this routine.
-
-\retval kTerminal_ResultOK
-if the text is processed without errors
-
-\retval kTerminal_ResultInvalidID
-if the given terminal screen reference is invalid
-
-\retval kTerminal_ResultNotEnoughMemory
-if a text buffer cannot be allocated
-
-(3.1)
-*/
-Terminal_Result
-Terminal_EmulatorProcessCFString	(TerminalScreenRef	inRef,
-									 CFStringRef		inString)
-{
-	// TEMPORARY:	This is being handled backwards, stuffing the CFString data
-	//				into an array and processing it that way, ignoring any
-	//				special encoding.  This MUST be fixed, but it requires a
-	//				lot more CFString-aware code, first.
-	Handle				buffer = Memory_NewHandle(CFStringGetLength(inString) * sizeof(UniChar));
-	Terminal_Result		result = kTerminal_ResultOK;
-	
-	
-	if (buffer == nullptr) result = kTerminal_ResultNotEnoughMemory;
-	else
-	{
-		CFIndex		actualSize = 0;
-		CFIndex		numberOfCharactersCopied = CFStringGetBytes(inString, CFRangeMake(0, CFStringGetLength(inString)),
-																kCFStringEncodingMacRoman/* TEMPORARY - should be terminal-dependent */,
-																0/* loss byte, or 0 for no lossy conversion */,
-																false/* is external representation */,
-																REINTERPRET_CAST(*buffer, UInt8*), GetHandleSize(buffer), &actualSize);
-		
-		
-		if (numberOfCharactersCopied < CFStringGetLength(inString))
-		{
-			// error...
-		}
-		if (actualSize > GetHandleSize(buffer))
-		{
-			// error...
-		}
-		result = Terminal_EmulatorProcessData(inRef, REINTERPRET_CAST(*buffer, UInt8 const*), GetHandleSize(buffer));
-		DisposeHandle(buffer), buffer = nullptr;
-	}
-	return result;
-}// EmulatorProcessCFString
-
-
-/*!
-Sends a stream of characters originating in a
 C-style string to the specified screen’s terminal
 emulator, interpreting escape sequences, etc.
 which may affect the terminal display.
@@ -2239,12 +2217,16 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				Boolean			isInterrupt = false;
 				
 				
+				// debugging only
+				//Console_WriteValueCharacter("received", *ptr);
+				
 				// find a new state, which may or may not interrupt the
 				// state that is currently forming
 				countRead = invokeEmulatorStateDeterminantProc
-							(dataPtr->emulator.currentCallbacks.stateDeterminant, &dataPtr->emulator, ptr, i, currentState, nextState, isInterrupt);
+							(dataPtr->emulator.currentCallbacks.stateDeterminant, &dataPtr->emulator,
+								ptr, i, currentState, nextState, isInterrupt);
 				assert(countRead <= i);
-				//Console_WriteValue("number of characters absorbed by state determinant", countRead);
+				//Console_WriteValue("number of characters absorbed by state determinant", countRead); // debug
 				i -= countRead; // could be zero (no-op)
 				ptr += countRead; // could be zero (no-op)
 				
@@ -2258,7 +2240,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					// exclude the echo data, because this is the one state
 					// that can be expected to remain for a long period of
 					// time (e.g. long strings of printable text)
-					if (nextState != kMy_ParserStateEcho)
+					if (nextState != kMy_ParserStateAccumulateForEcho)
 					{
 						++dataPtr->emulator.stateRepetitions;
 						if (dataPtr->emulator.stateRepetitions > 100/* arbitrary */)
@@ -2289,11 +2271,59 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					dataPtr->emulator.stateRepetitions = 0;
 				}
 				
+				if (kMy_ParserStateAccumulateForEcho == nextState)
+				{
+					// gather a byte for later use in display, but do not display yet;
+					// while it would be nice to feed the raw data stream into the
+					// translation APIs, translators might not stop when they see
+					// special characters such as control characters; so, the terminal
+					// emulator (above) has the first crack at the byte to see if there
+					// is any special meaning, and the byte is cached only if the
+					// terminal allows the byte to be echoed; the echo does not actually
+					// occur until a future byte triggers a non-echo state; at that
+					// time, the cached array of bytes is sent to the translator and
+					// converted into human-readable text
+					dataPtr->bytesToEcho.push_back(*ptr);
+					--i;
+					++ptr;
+				}
+				
+				// if the new state is no longer echo accumulation, or this chunk of the
+				// infinite stream ended with echo-ready data, flush as much as possible
+				if ((kMy_ParserStateAccumulateForEcho != nextState) || (0 == i))
+				{
+					if (false == dataPtr->bytesToEcho.empty())
+					{
+						std::string::size_type const	kOldSize = dataPtr->bytesToEcho.size();
+						UInt32							bytesUsed = invokeEmulatorEchoDataProc
+																	(dataPtr->emulator.currentCallbacks.dataWriter, dataPtr,
+																		REINTERPRET_CAST(dataPtr->bytesToEcho.c_str(), UInt8 const*),
+																		kOldSize);
+						
+						
+						// it is possible for this chunk of the stream to terminate with
+						// an incomplete encoding of bytes, so preserve anything that
+						// could not be echoed this time around
+						assert(bytesUsed <= kOldSize);
+						if (0 == bytesUsed)
+						{
+							// special case...some kind of error, no bytes were translated;
+							// dump the buffer, which LOSES DATA, but this is a spin control
+							Console_WriteLine("echoing unexpected failed, SKIPPING entire cache of bytes as a precaution");
+							dataPtr->bytesToEcho.clear();
+						}
+						else
+						{
+							dataPtr->bytesToEcho = dataPtr->bytesToEcho.substr(bytesUsed/* offset */, kOldSize - bytesUsed/* length */);
+						}
+					}
+				}
+				
 				// perform whatever action is appropriate to enter this state
 				countRead = invokeEmulatorStateTransitionProc
 							(dataPtr->emulator.currentCallbacks.transitionHandler, dataPtr, ptr, i, nextState, currentState);
 				assert(countRead <= i);
-				//Console_WriteValue("number of characters absorbed by transition handler", countRead);
+				//Console_WriteValue("number of characters absorbed by transition handler", countRead); // debug
 				i -= countRead; // could be zero (no-op)
 				ptr += countRead; // could be zero (no-op)
 				
@@ -4571,7 +4601,9 @@ currentState(kMy_ParserStateInitial),
 stateRepetitions(0),
 parameterEndIndex(0),
 parameterValues(kMy_MaximumANSIParameters),
-currentCallbacks(returnStateDeterminant(inPrimaryEmulation), returnStateTransitionHandler(inPrimaryEmulation)),
+currentCallbacks(returnDataWriter(inPrimaryEmulation),
+					returnStateDeterminant(inPrimaryEmulation),
+					returnStateTransitionHandler(inPrimaryEmulation)),
 pushedCallbacks(),
 supportedVariants()
 {
@@ -4591,35 +4623,60 @@ Boolean
 My_Emulator::
 changeTo	(Terminal_Emulator		inPrimaryEmulation)
 {
+	My_EmulatorEchoDataProcPtr const			kNewDataWriter = returnDataWriter(inPrimaryEmulation);
 	My_EmulatorStateDeterminantProcPtr const	kNewDeterminant = returnStateDeterminant(inPrimaryEmulation);
 	My_EmulatorStateTransitionProcPtr const		kNewTransitionHandler = returnStateTransitionHandler(inPrimaryEmulation);
-	Boolean										result = ((nullptr != kNewDeterminant) &&
+	Boolean										result = ((nullptr != kNewDataWriter) &&
+															(nullptr != kNewDeterminant) &&
 															(nullptr != kNewTransitionHandler));
 	
 	
+	if (result)
+	{
+		this->currentCallbacks = My_Emulator::Callbacks(kNewDataWriter, kNewDeterminant, kNewTransitionHandler);
+	}
 	return result;
 }// changeTo
 
 
 /*!
-Returns true only if this terminal emulator has been configured
-to support the specified variant.
-
-Currently, the only expected tags are those identifying special
-terminal features, e.g. "kPreferences_TagXTerm256ColorsEnabled",
-"kPreferences_TagVT100FixLineWrappingBug".
+Returns the entry point for determining how to echo data,
+for the specified terminal type.
 
 (4.0)
 */
-Boolean
+My_EmulatorEchoDataProcPtr
 My_Emulator::
-supportsVariant		(Preferences_Tag	inTag)
+returnDataWriter	(Terminal_Emulator		inPrimaryEmulation)
 {
-	Boolean		result = (this->supportedVariants.end() != this->supportedVariants.find(inTag));
+	My_EmulatorEchoDataProcPtr		result = nullptr;
 	
 	
+	switch (inPrimaryEmulation)
+	{
+	case kTerminal_EmulatorDumb:
+		result = My_DumbTerminal::echoData;
+		break;
+	
+	case kTerminal_EmulatorVT100:
+	case kTerminal_EmulatorXTermOriginal:
+	case kTerminal_EmulatorXTermColor:
+	case kTerminal_EmulatorXTerm256Color:
+	case kTerminal_EmulatorANSIBBS:
+	case kTerminal_EmulatorANSISCO:
+	case kTerminal_EmulatorVT102:
+	case kTerminal_EmulatorVT220:
+	case kTerminal_EmulatorVT320:
+	case kTerminal_EmulatorVT420:
+	default:
+		// Echoing data with correct translation, etc. is not trivial and
+		// it is not recommended that most emulators try to do this any
+		// differently than the default emulator.
+		result = My_DefaultEmulator::echoData;
+		break;
+	}
 	return result;
-}// supportsVariant
+}// returnDataWriter
 
 
 /*!
@@ -4717,6 +4774,27 @@ returnStateTransitionHandler	(Terminal_Emulator		inPrimaryEmulation)
 
 
 /*!
+Returns true only if this terminal emulator has been configured
+to support the specified variant.
+
+Currently, the only expected tags are those identifying special
+terminal features, e.g. "kPreferences_TagXTerm256ColorsEnabled",
+"kPreferences_TagVT100FixLineWrappingBug".
+
+(4.0)
+*/
+Boolean
+My_Emulator::
+supportsVariant		(Preferences_Tag	inTag)
+{
+	Boolean		result = (this->supportedVariants.end() != this->supportedVariants.find(inTag));
+	
+	
+	return result;
+}// supportsVariant
+
+
+/*!
 Initializes a My_Emulator::Callbacks class instance with
 null pointers.
 
@@ -4726,6 +4804,7 @@ My_Emulator::Callbacks::
 Callbacks ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+dataWriter(nullptr),
 stateDeterminant(nullptr),
 transitionHandler(nullptr)
 {
@@ -4738,10 +4817,12 @@ Initializes a My_Emulator::Callbacks class instance.
 (4.0)
 */
 My_Emulator::Callbacks::
-Callbacks	(My_EmulatorStateDeterminantProcPtr		inStateDeterminant,
+Callbacks	(My_EmulatorEchoDataProcPtr				inDataWriter,
+			 My_EmulatorStateDeterminantProcPtr		inStateDeterminant,
 			 My_EmulatorStateTransitionProcPtr		inTransitionHandler)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+dataWriter(inDataWriter),
 stateDeterminant(inStateDeterminant),
 transitionHandler(inTransitionHandler)
 {
@@ -4758,7 +4839,7 @@ My_Emulator::Callbacks::
 exist ()
 const
 {
-	return ((nullptr != stateDeterminant) && (nullptr != transitionHandler));
+	return ((nullptr != dataWriter) && (nullptr != stateDeterminant) && (nullptr != transitionHandler));
 }// My_Emulator::Callbacks::exist
 
 
@@ -4782,6 +4863,7 @@ iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
 scrollbackBuffer(),
 screenBuffer(),
+bytesToEcho(),
 tabSettings(),
 captureFileRefNum(0),
 bellDisabled(false),
@@ -5167,6 +5249,98 @@ structureInitialize ()
 
 
 /*!
+Translates the specified buffer into Unicode (from the input
+text encoding of the terminal), and echoes it to the screen.
+Also pipes the data to additional targets, such as spoken voice,
+if so enabled in the terminal.
+
+This implementation expects to be used with terminals whose
+state determinants will pre-filter the data stream to not have
+control characters, etc.  It will ignore text that it cannot
+translate correctly!
+
+Returns the number of characters successfully echoed.
+
+(4.0)
+*/
+UInt32
+My_DefaultEmulator::
+echoData	(My_ScreenBufferPtr		inDataPtr,
+			 UInt8 const*			inBuffer,
+			 UInt32					inLength)
+{
+	UInt32		result = inLength;
+	
+	
+	if (inLength > 0)
+	{
+		CFIndex				bytesRequired = 0;
+		CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
+												(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
+													false/* is external representation */, bytesRequired, inLength/* maximum trim/repeat */),
+												true/* is retained */);
+		
+		
+		if (false == bufferAsCFString.exists())
+		{
+			// TEMPORARY: this should probably be handled better
+			Console_WriteLine("warning, unexpected error interpreting terminal data, SKIPPING the bad data segment!");
+			Console_WriteValueCharacter("current terminal text encoding", inDataPtr->emulator.inputTextEncoding);
+			result = 0;
+		}
+		else
+		{
+			// send the data wherever it needs to go
+			echoCFString(inDataPtr, bufferAsCFString.returnCFStringRef());
+			
+			// 3.0 - test speech (this implementation will be greatly enhanced in the near future
+			unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
+			{
+				Boolean		doSpeak = false;
+				
+				
+				switch (inDataPtr->speech.mode)
+				{
+				case kTerminal_SpeechModeSpeakAlways:
+					doSpeak = true;
+					break;
+				
+				case kTerminal_SpeechModeSpeakWhenActive:
+					//doSpeak = IsWindowHilited(the screen window);
+					break;
+				
+				case kTerminal_SpeechModeSpeakWhenInactive:
+					//doSpeak = !IsWindowHilited(the screen window);
+					break;
+				
+				default:
+					doSpeak = false;
+					break;
+				}
+				
+				if (doSpeak)
+				{
+					TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
+					
+					
+					// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
+					//             this really should be changed to use speech callbacks instead
+					do
+					{
+						// stop and speak when a new line is found, or
+						// when there is just no more room for characters
+						// UNIMPLEMENTED - need to update for use with CFString (use Cocoa, probably)
+						//speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
+					} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
+				}
+			}
+		}
+	}
+	return result;
+}// My_DefaultEmulator::echoData
+
+
+/*!
 A standard "My_EmulatorStateDeterminantProcPtr" that sets
 default states based on the characters of the given buffer.
 
@@ -5209,7 +5383,7 @@ stateDeterminant	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
 	UInt8 const				kTriggerChar = *inBuffer; // for convenience; usually only first character matters
 	// if no specific next state seems appropriate, the character will either
 	// be printed (if possible) or be re-evaluated from the initial state
-	My_ParserState const	kDefaultNextState = std::isprint(kTriggerChar) ? kMy_ParserStateEcho : kMy_ParserStateInitial;
+	My_ParserState const	kDefaultNextState = kMy_ParserStateAccumulateForEcho;
 	UInt32					result = 1; // the first character is *usually* “used”, so 1 is the default (it may change)
 	
 	
@@ -5219,7 +5393,7 @@ stateDeterminant	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
 	switch (inCurrentState)
 	{
 	case kMy_ParserStateInitial:
-	case kMy_ParserStateEcho:
+	case kMy_ParserStateAccumulateForEcho:
 		outNextState = kDefaultNextState;
 		result = 0; // do not absorb the unknown
 		break;
@@ -5545,17 +5719,16 @@ stateDeterminant	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
 /*!
 Every "My_EmulatorStateTransitionProcPtr" callback should
 default to the result of invoking this routine with its
-arguments.  This allows special states to be handled
-regardless of the emulator, such as the echo state.
+arguments.
 
 (3.1)
 */
 UInt32
 My_DefaultEmulator::
-stateTransition		(My_ScreenBufferPtr		inDataPtr,
-					 UInt8 const*			inBuffer,
-					 UInt32					inLength,
-					 My_ParserState			inNewState,
+stateTransition		(My_ScreenBufferPtr		UNUSED_ARGUMENT(inDataPtr),
+					 UInt8 const*			UNUSED_ARGUMENT(inBuffer),
+					 UInt32					UNUSED_ARGUMENT(inLength),
+					 My_ParserState			UNUSED_ARGUMENT(inNewState),
 					 My_ParserState			UNUSED_ARGUMENT(inPreviousState))
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
@@ -5566,147 +5739,105 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	//Console_WriteValueFourChars(">>>     standard handler transition to state  ", inNewState);
 	
 	// decide what to do based on the proposed transition
-	// INCOMPLETE
-	switch (inNewState)
-	{
-	case kMy_ParserStateEcho:
-		// echo state, where characters are simply taken at face value
-		if (inLength > 0)
-		{
-			CFIndex				bytesRequired = 0;
-			CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
-													(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
-														false/* is external representation */, bytesRequired),
-													true/* is retained */);
-			
-			
-			if (false == bufferAsCFString.exists())
-			{
-				// SKIP a character; this LOSES DATA, however it is “spin control”; clearly
-				// there was a parsing problem, and if at least one byte is not skipped
-				// the next attempt will simply run into the same issue
-				Console_WriteValueCharacter("warning, unexpected error interpreting terminal data, SKIPPING problematic byte", *inBuffer);
-				result = 1/* number of bytes */;
-			}
-			else
-			{
-				CFIndex const		kLength = CFStringGetLength(bufferAsCFString.returnCFStringRef());
-				assert(kLength > 0);
-				UniChar const*		bufferIterator = nullptr;
-				UniChar const*		bufferPtr = CFStringGetCharactersPtr(bufferAsCFString.returnCFStringRef());
-				UniChar*			deletedBufferPtr = nullptr;
-				CFIndex				numberOfPrintableCharacters = 0;
-				
-				
-				if (nullptr == bufferPtr)
-				{
-					// not ideal, but if the internal buffer is not a Unicode array,
-					// it must be copied before it can be interpreted that way
-					deletedBufferPtr = new UniChar[kLength];
-					CFStringGetCharacters(bufferAsCFString.returnCFStringRef(), CFRangeMake(0, kLength), deletedBufferPtr);
-					bufferPtr = deletedBufferPtr;
-				}
-				
-				// suck up a contiguous block of “printable” characters
-				bufferIterator = bufferPtr;
-				while ((numberOfPrintableCharacters < kLength) && (std::isprint(*bufferIterator)/* LOCALIZE THIS */))
-				{
-					++bufferIterator;
-					++numberOfPrintableCharacters;
-				}
-				
-				// now it is necessary to determine how many bytes, in the original
-				// encoding, are being “used” by absorbing this many Unicode characters
-				{
-					CFIndex		printableCharactersByteCount = 0;
-					CFIndex		conversionResult = CFStringGetBytes(bufferAsCFString.returnCFStringRef(),
-																	CFRangeMake(0, numberOfPrintableCharacters),
-																	inDataPtr->emulator.inputTextEncoding, 0/* loss byte */,
-																	false/* is external representation */,
-																	nullptr/* buffer, or nullptr to not copy data */,
-																	0/* buffer size, ignored for empty buffers */, &printableCharactersByteCount);
-					
-					
-					if (0 == conversionResult)
-					{
-						Console_WriteLine("warning, unexpected error finding actual bytes used by echoed characters; skipping over ALL data");
-						result = inLength;
-					}
-					else
-					{
-						result = printableCharactersByteCount;
-					}
-				}
-				
-				// send the data wherever it needs to go
-				{
-					CFRetainRelease		humanReadableCFString(CFStringCreateWithCharacters(kCFAllocatorDefault,
-																							bufferPtr, numberOfPrintableCharacters),
-																true/* is retained */);
-					
-					
-					echoCFString(inDataPtr, humanReadableCFString.returnCFStringRef());
-				}
-				
-				// 3.0 - test speech (this implementation will be greatly enhanced in the near future
-				unless (TerminalSpeaker_IsMuted(inDataPtr->speaker) || TerminalSpeaker_IsGloballyMuted())
-				{
-					Boolean		doSpeak = false;
-					
-					
-					switch (inDataPtr->speech.mode)
-					{
-					case kTerminal_SpeechModeSpeakAlways:
-						doSpeak = true;
-						break;
-					
-					case kTerminal_SpeechModeSpeakWhenActive:
-						//doSpeak = IsWindowHilited(the screen window);
-						break;
-					
-					case kTerminal_SpeechModeSpeakWhenInactive:
-						//doSpeak = !IsWindowHilited(the screen window);
-						break;
-					
-					default:
-						doSpeak = false;
-						break;
-					}
-					
-					if (doSpeak)
-					{
-						TerminalSpeaker_Result		speakerResult = kTerminalSpeaker_ResultOK;
-						
-						
-						// TEMPORARY - spin lock, to keep asynchronous speech from jumbling multi-line text;
-						//             this really should be changed to use speech callbacks instead
-						do
-						{
-							// stop and speak when a new line is found, or
-							// when there is just no more room for characters
-							// UNIMPLEMENTED - need to update for use with CFString (use Cocoa, probably)
-							//speakerResult = TerminalSpeaker_SynthesizeSpeechFromBuffer(inDataPtr->speaker, inBuffer, result);
-						} while (speakerResult == kTerminalSpeaker_ResultSpeechSynthesisTryAgain);
-					}
-				}
-				
-				if (nullptr != deletedBufferPtr)
-				{
-					delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
-				}
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		//Console_WriteValueFourChars("WARNING, no known actions associated with new terminal state", inNewState);
-		// the trigger character would also be skipped in this case
-		break;
-	}
+	//Console_WriteValueFourChars("WARNING, no known actions associated with new terminal state", inNewState);
+	// the trigger character would also be skipped in this case
 	
 	return result;
 }// My_DefaultEmulator::stateTransition
+
+
+/*!
+Translates the specified buffer into Unicode (from the input
+text encoding of the terminal), and echoes a representation of
+those bytes to the stream.
+
+By definition, a dumb terminal can render any byte, as nothing
+is “special” or invisible.
+
+Returns the number of characters successfully echoed.
+
+(4.0)
+*/
+UInt32
+My_DumbTerminal::
+echoData	(My_ScreenBufferPtr		inDataPtr,
+			 UInt8 const*			inBuffer,
+			 UInt32					inLength)
+{
+	UInt32		result = inLength;
+	
+	
+	if (inLength > 0)
+	{
+		CFIndex				bytesRequired = 0;
+		CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
+												(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
+													false/* is external representation */, bytesRequired, inLength/* maximum trim/repeat */),
+												true/* is retained */);
+		CFRetainRelease		humanReadableCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* maximum length or 0 for no limit */),
+													true/* is retained */);
+		UniChar*			deletedBufferPtr = nullptr;
+		
+		
+		if (false == bufferAsCFString.exists())
+		{
+			// TEMPORARY: this should probably be handled better
+			Console_WriteLine("warning, unexpected error interpreting dumb terminal data, SKIPPING the bad data segment!");
+			Console_WriteValueCharacter("current terminal text encoding", inDataPtr->emulator.inputTextEncoding);
+			
+			// echo a single byte so that it will be skipped next time
+			CFStringAppendFormat(humanReadableCFString.returnCFMutableStringRef(), nullptr/* format options */,
+									CFSTR("<!%u>"), STATIC_CAST(*inBuffer, unsigned int));
+			result = 1;
+		}
+		else
+		{
+			CFIndex const		kLength = CFStringGetLength(bufferAsCFString.returnCFStringRef());
+			UniChar const*		bufferIterator = nullptr;
+			UniChar const*		bufferPtr = CFStringGetCharactersPtr(bufferAsCFString.returnCFStringRef());
+			CFIndex				characterIndex = 0;
+			
+			
+			if (nullptr == bufferPtr)
+			{
+				// not ideal, but if the internal buffer is not a Unicode array,
+				// it must be copied before it can be interpreted that way
+				deletedBufferPtr = new UniChar[kLength];
+				CFStringGetCharacters(bufferAsCFString.returnCFStringRef(), CFRangeMake(0, kLength), deletedBufferPtr);
+				bufferPtr = deletedBufferPtr;
+			}
+			
+			// create a printable interpretation of every character
+			bufferIterator = bufferPtr;
+			while (characterIndex < kLength)
+			{
+				if (gDumbTerminalRenderings().end() != gDumbTerminalRenderings().find(*bufferIterator))
+				{
+					// print whatever was registered as the proper rendering
+					CFStringAppend(humanReadableCFString.returnCFMutableStringRef(),
+									gDumbTerminalRenderings()[*bufferIterator].returnCFStringRef());
+				}
+				else
+				{
+					// print the numerical value, e.g. 200 becomes "<200>"
+					CFStringAppendFormat(humanReadableCFString.returnCFMutableStringRef(), nullptr/* format options */,
+											CFSTR("<%u>"), STATIC_CAST(*bufferIterator, unsigned int));
+				}
+				++bufferIterator;
+				++characterIndex;
+			}
+		}
+		
+		// send the data wherever it needs to go
+		echoCFString(inDataPtr, humanReadableCFString.returnCFStringRef());
+		
+		if (nullptr != deletedBufferPtr)
+		{
+			delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
+		}
+	}
+	return result;
+}// My_DumbTerminal::echoData
 
 
 /*!
@@ -5730,7 +5861,8 @@ stateDeterminant	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
 	
 	
 	// dumb terminals echo everything
-	outNextState = kMy_ParserStateEcho;
+	outNextState = kMy_ParserStateAccumulateForEcho;
+	result = 0; // do not absorb, it will be handled by the emulator loop
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< dumb terminal in state", inCurrentState);
@@ -5753,7 +5885,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 					 UInt8 const*			inBuffer,
 					 UInt32					inLength,
 					 My_ParserState			inNewState,
-					 My_ParserState			UNUSED_ARGUMENT(inPreviousState))
+					 My_ParserState			inPreviousState)
 {
 	UInt32		result = 0; // usually, no characters are consumed at the transition stage
 	
@@ -5763,87 +5895,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	//Console_WriteValueFourChars(">>>     dumb terminal transition to state  ", inNewState);
 	
 	// decide what to do based on the proposed transition
-	switch (inNewState)
-	{
-	case kMy_ParserStateEcho:
-		// determine a human-readable description for each character, and print it
-		// (NOTE: it may be useful to have a “really really dumb” terminal variant
-		// that interprets every byte, ignoring text encoding settings...)
-		if (inLength > 0)
-		{
-			CFIndex				bytesRequired = 0;
-			CFRetainRelease		bufferAsCFString(TextTranslation_PersistentCFStringCreate
-													(kCFAllocatorDefault, inBuffer, inLength, inDataPtr->emulator.inputTextEncoding,
-														false/* is external representation */, bytesRequired),
-													true/* is retained */);
-			
-			
-			if (false == bufferAsCFString.exists())
-			{
-				// SKIP a character; this LOSES DATA, however it is “spin control”; clearly
-				// there was a parsing problem, and if at least one byte is not skipped
-				// the next attempt will simply run into the same issue
-				Console_WriteValueCharacter("warning, unexpected error interpreting dumb terminal data, SKIPPING problematic byte", *inBuffer);
-				result = 1/* number of bytes */;
-			}
-			else
-			{
-				CFIndex const		kLength = CFStringGetLength(bufferAsCFString.returnCFStringRef());
-				UniChar const*		bufferIterator = nullptr;
-				UniChar const*		bufferPtr = CFStringGetCharactersPtr(bufferAsCFString.returnCFStringRef());
-				UniChar*			deletedBufferPtr = nullptr;
-				CFRetainRelease		humanReadableCFString(CFStringCreateMutable(kCFAllocatorDefault, 0/* maximum length or 0 for no limit */),
-															true/* is retained */);
-				CFIndex				characterIndex = 0;
-				
-				
-				// consume only as many bytes as were valid
-				result = bytesRequired;
-				
-				if (nullptr == bufferPtr)
-				{
-					// not ideal, but if the internal buffer is not a Unicode array,
-					// it must be copied before it can be interpreted that way
-					deletedBufferPtr = new UniChar[kLength];
-					CFStringGetCharacters(bufferAsCFString.returnCFStringRef(), CFRangeMake(0, kLength), deletedBufferPtr);
-					bufferPtr = deletedBufferPtr;
-				}
-				
-				// create a printable interpretation of every character
-				bufferIterator = bufferPtr;
-				while (characterIndex < kLength)
-				{
-					if (gDumbTerminalRenderings().end() != gDumbTerminalRenderings().find(*bufferIterator))
-					{
-						// print whatever was registered as the proper rendering
-						CFStringAppend(humanReadableCFString.returnCFMutableStringRef(),
-										gDumbTerminalRenderings()[*bufferIterator].returnCFStringRef());
-					}
-					else
-					{
-						// print the numerical value, e.g. 200 becomes "<200>"
-						CFStringAppendFormat(humanReadableCFString.returnCFMutableStringRef(), nullptr/* format options */,
-												CFSTR("<%u>"), STATIC_CAST(*bufferIterator, unsigned int));
-					}
-					++bufferIterator;
-					++characterIndex;
-				}
-				
-				// send the data wherever it needs to go
-				echoCFString(inDataPtr, humanReadableCFString.returnCFStringRef());
-				
-				if (nullptr != deletedBufferPtr)
-				{
-					delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
-				}
-			}
-		}
-		break;
-	
-	default:
-		Console_WriteValueFourChars("warning, dumb terminal cannot transition to unexpected state", inNewState);
-		break;
-	}
+	result = My_DefaultEmulator::stateTransition(inDataPtr, inBuffer, inLength, inNewState, inPreviousState);
 	
 	return result;
 }// My_DumbTerminal::stateTransition
@@ -10719,6 +10771,21 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		break;
 	}
 	
+	// TEMPORARY - the renderer does not handle most Unicode characters,
+	// but programs sometimes choose “unnecessarily exotic” variations
+	// of characters that would lead to unknown-character renderings when
+	// it is pretty easy to choose sensible ASCII equivalents...
+	switch (inCharacter)
+	{
+	case 0x2212: // minus sign
+	case 0x2010: // hyphen
+		result = '-';
+		break;
+	
+	default:
+		break;
+	}
+	
 	if (STYLE_USE_VT_GRAPHICS(inAttributes))
 	{
 		Boolean const	kIsBold = STYLE_BOLD(inAttributes);
@@ -11692,7 +11759,10 @@ vt100VT52Mode	(My_ScreenBufferPtr		inDataPtr)
 {
 	inDataPtr->modeANSIEnabled = false;
 	inDataPtr->emulator.pushedCallbacks = inDataPtr->emulator.currentCallbacks;
-	inDataPtr->emulator.currentCallbacks = My_Emulator::Callbacks(My_VT100::VT52::stateDeterminant, My_VT100::VT52::stateTransition);
+	inDataPtr->emulator.currentCallbacks = My_Emulator::Callbacks
+											(My_DefaultEmulator::echoData,
+												My_VT100::VT52::stateDeterminant,
+												My_VT100::VT52::stateTransition);
 	initializeParserStateStack(&inDataPtr->emulator);
 }// vt100VT52Mode
 

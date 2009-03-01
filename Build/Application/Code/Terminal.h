@@ -623,10 +623,6 @@ Boolean
 //@{
 
 Terminal_Result
-	Terminal_EmulatorProcessCFString		(TerminalScreenRef			inScreen,
-											 CFStringRef				inCString);
-
-Terminal_Result
 	Terminal_EmulatorProcessCString			(TerminalScreenRef			inScreen,
 											 char const*				inCString);
 

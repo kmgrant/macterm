@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090301',
     '20090223',
     '20090221',
     '20090213',
@@ -213,6 +214,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090301': [
+		'Terminal views now respect specified text translations, though the renderer cannot display every character yet.',
+	],
 	'20090223': [
 		'Full Screen mode now respects the "Terminal Resize Effect" preference; and, as with resizes, the Option key switches behavior.',
 	],

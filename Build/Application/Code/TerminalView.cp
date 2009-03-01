@@ -3939,9 +3939,6 @@ static void
 copyTranslationPreferences	(TerminalViewPtr			inTerminalViewPtr,
 							 Preferences_ContextRef		inSource)
 {
-#if 0
-	// TEMPORARY - this setting cannot be changed in terminals until
-	// more work is done on their internal translation of text
 	CFStringEncoding	newInputEncoding = TextTranslation_ContextReturnEncoding
 											(inSource, kCFStringEncodingUTF8/* default */);
 	
@@ -3955,7 +3952,6 @@ copyTranslationPreferences	(TerminalViewPtr			inTerminalViewPtr,
 		
 		Console_WriteValueCFString("terminal input text encoding changed to (name)", nameCFString);
 	}
-#endif
 }// copyTranslationPreferences
 
 
