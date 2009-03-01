@@ -72,6 +72,7 @@ struct EventInfoControlScope_KeyPress
 {
 	ControlRef			control;			//!< which control is focused
 	SInt16				characterCode;		//!< code uniquifying the character corresponding to the key pressed
+	SInt16				characterCode2;		//!< if nonzero, the key press represents a sequence of two characters to send
 	SInt16				virtualKeyCode;		//!< code uniquifying the key pressed
 	Boolean				commandDown;		//!< the state of the Command modifier key
 	Boolean				controlDown;		//!< the state of the Control modifier key

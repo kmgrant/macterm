@@ -325,7 +325,6 @@ static IconRef				createSessionStateDeadIcon			();
 static void					dataArrived							(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 static pascal void			detectLongLife						(EventLoopTimerRef, void*);
-static void					getKeyEventCharacters				(SInt16, SInt16, EventModifiers, SInt16*, SInt16*);
 static Boolean				handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 static Boolean				isReadOnly							(SessionPtr);
@@ -4797,68 +4796,6 @@ detectLongLife	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 
 
 /*!
-Invokes the KeyTranslate() function using the data
-from the specified event record.  The state of the
-key is automatically extracted from the type of
-event, which must be "keyUp", "keyDown" or "autoKey".
-Also extracted are the modifier key states (high
-byte of "modifiers" field).
-
-Calls to this routine are chained; state is preserved
-so that previous key events might impact the result
-(e.g. one key event is option-E, the aigu accent;
-if the subsequent key event is E, the pair of
-characters are returned together, where the accent
-is the prefix character).  Automatically, if the
-current key translation ('KCHR') resource is
-different than the one used for the last call to
-KeyTranslate(), this routine resets the state to
-ensure past characters are ignored.
-
-On output, the two character codes are returned
-individually.  Pass nullptr for the last parameter
-if you are not interested in its value, but keep
-in mind that international keyboards will not work
-properly if you ignore the prefix value.  IGNORING
-THE SECOND CHARACTER CODE IS A VERY BAD IDEA.
-
-(3.0)
-*/
-static void
-getKeyEventCharacters	(SInt16				inVirtualKeyCode,
-						 SInt16				UNUSED_ARGUMENT(inCharacterCode),
-						 EventModifiers		inModifiers,
-						 SInt16*			outPrimaryCharacterCodePtr,
-						 SInt16*			outPrefixCharacterCodePtrOrNull)
-{
-	UInt16				keyTranslateInput = 0;
-	UInt32				correspondingCharacterCodes = 0L;
-	static UInt32		keyTranslateState = 0L;
-	static void*		resourceKCHRCachePtr = nullptr;
-	EventModifiers		changedModifiers = inModifiers;
-	
-	
-	keyTranslateInput = (UInt16)inVirtualKeyCode;
-	changedModifiers &= 0xFF00; // ignore low byte
-	keyTranslateInput |= changedModifiers;
-	keyTranslateInput |= btnState; // set key press/release!!!
-	if (REINTERPRET_CAST(GetScriptManagerVariable(smKCHRCache), void*) != resourceKCHRCachePtr)
-	{
-		// the state only resets when the 'KCHR' changes
-		resourceKCHRCachePtr = REINTERPRET_CAST(GetScriptManagerVariable(smKCHRCache), void*);
-		keyTranslateState = 0L;
-	}
-	correspondingCharacterCodes = KeyTranslate(resourceKCHRCachePtr, keyTranslateInput, &keyTranslateState);
-	*outPrimaryCharacterCodePtr = (correspondingCharacterCodes & 0x0000FFFF);
-	if (outPrefixCharacterCodePtrOrNull != nullptr)
-	{
-		correspondingCharacterCodes >>= 16; // look at upper bytes
-		*outPrefixCharacterCodePtrOrNull = (correspondingCharacterCodes & 0x0000FFFF);
-	}
-}// getKeyEventCharacters
-
-
-/*!
 Invoked whenever a monitored key-down event from the main
 event loop occurs (see Session_New() to see how this routine
 is registered).
@@ -4903,6 +4840,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	SessionAutoLocker					ptr(gSessionPtrLocks(), session);
 	ConnectionDataPtr					connectionDataPtr = nullptr; // TEMPORARY, until transition to SessionRef
 	static SInt16						characterCode = '\0'; // ASCII
+	static SInt16						characterCode2 = '\0'; // ASCII
 	static SInt16						virtualKeyCode = '\0'; // see p.2-43 of "IM:MTE" for a set of virtual key codes
 	static Boolean						commandDown = false;
 	static Boolean						controlDown = false;
@@ -4914,6 +4852,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	connectionDataPtr = ptr->dataPtr;
 	
 	characterCode = keyPressInfoPtr->characterCode;
+	characterCode2 = keyPressInfoPtr->characterCode2;
 	virtualKeyCode = keyPressInfoPtr->virtualKeyCode;
 	commandDown = keyPressInfoPtr->commandDown;
 	controlDown = keyPressInfoPtr->controlDown;
@@ -5081,20 +5020,23 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	if (false == result)
 	{
 		// if no key-based action occurred, look for character-based actions
-		if (characterCode == connectionDataPtr->controlKey.suspend)
+		if (0 == characterCode2)
 		{
-			Session_SetNetworkSuspended(session, true);
-			result = true;
-		}
-		if (characterCode == connectionDataPtr->controlKey.resume) 
-		{
-			Session_SetNetworkSuspended(session, false);
-			result = true;
-		}
-		if (characterCode == connectionDataPtr->controlKey.interrupt)  
-		{
-			Session_UserInputInterruptProcess(session);
-			result = true;
+			if (characterCode == connectionDataPtr->controlKey.suspend)
+			{
+				Session_SetNetworkSuspended(session, true);
+				result = true;
+			}
+			if (characterCode == connectionDataPtr->controlKey.resume) 
+			{
+				Session_SetNetworkSuspended(session, false);
+				result = true;
+			}
+			if (characterCode == connectionDataPtr->controlKey.interrupt)  
+			{
+				Session_UserInputInterruptProcess(session);
+				result = true;
+			}
 		}
 		
 		// now check for constant character matches
@@ -5117,15 +5059,10 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				// no key-based or character-based actions have occurred;
 				// fine, the key should be respected ÒverbatimÓ (send the
 				// one or two characters it represents to the session)
-				UInt8			charactersToSend[2];
-				UInt8*			characterPtr = charactersToSend;
-				size_t			theSize = sizeof(charactersToSend);
-				EventModifiers	modifiers = 0;
+				UInt8		charactersToSend[2];
+				UInt8*		characterPtr = charactersToSend;
+				size_t		theSize = sizeof(charactersToSend);
 				
-				
-				if (commandDown) modifiers |= cmdKey;
-				if (optionDown) modifiers |= optionKey;
-				if (controlDown) modifiers |= controlKey;
 				
 				// perform one final substitution: the meta key in EMACS
 				if (metaDown)
@@ -5136,22 +5073,10 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						characterCode |= 0x40;
 					}
 				}
-				else if (shiftDown)
-				{
-					// this key state is ignored in meta key processing
-					modifiers |= shiftKey;
-				}
 				
 				// determine the equivalent characters for the given key presses
-				{
-					SInt16		prefixChar = 0;
-					SInt16		primaryChar = 0;
-					
-					
-					getKeyEventCharacters(virtualKeyCode, characterCode, modifiers, &primaryChar, &prefixChar);
-					charactersToSend[0] = STATIC_CAST(prefixChar, UInt8);
-					charactersToSend[1] = STATIC_CAST(primaryChar, UInt8);
-				}
+				charactersToSend[0] = STATIC_CAST(characterCode, UInt8);
+				charactersToSend[1] = STATIC_CAST(characterCode2, UInt8);
 				
 				if (metaDown)
 				{
@@ -5163,6 +5088,10 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				{
 					// no prefix was given; skip it
 					characterPtr = &charactersToSend[1];
+					theSize = sizeof(characterPtr[0]);
+				}
+				else if (0 == charactersToSend[1])
+				{
 					theSize = sizeof(characterPtr[0]);
 				}
 				
@@ -5989,6 +5918,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			if ((error == noErr) && (numberOfCharacters > 0))
 			{
 				controlKeyPressInfo.characterCode = characterCodes[0];
+				controlKeyPressInfo.characterCode2 = characterCodes[1];
 				
 				// filter out tab key presses, they have significance to terminals
 				if (characterCodes[0] == 0x09)
@@ -6017,7 +5947,8 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 		case 3:
 			// corrects known bug in system key mapping
 			// NOTE: This is based on old NCSA Telnet code.  Does this even *matter* anymore?
-			if (controlKeyPressInfo.virtualKeyCode == 0x34)
+			if ((controlKeyPressInfo.virtualKeyCode == 0x34) ||
+				(controlKeyPressInfo.virtualKeyCode == 0x4C))
 			{
 				// fix for PowerBook 540Õs bad KCHR; map control-C to Return
 				controlKeyPressInfo.characterCode = 13;
