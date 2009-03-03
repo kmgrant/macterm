@@ -88,7 +88,6 @@
 #include "RasterGraphicsScreen.h"
 #include "RecordAE.h"
 #include "SessionFactory.h"
-#include "SplashScreenDialog.h"
 #include "TerminalBackground.h"
 #include "TerminalView.h"
 #include "Terminology.h"
@@ -117,9 +116,6 @@ in a particular dependency order.
 void
 Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 {
-	Boolean		splashScreenInitialized = false;
-	
-	
 	// seed random number generator; calls to random() should not be
 	// used for anything particularly important, arc4random() is better
 	::srandom(TickCount());
@@ -182,22 +178,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	
 	// display initialization progress
 	DrawMenuBar();
-	
-	if (Local_StandardInputIsATerminal())
-	{
-		// if the standard input stream is a terminal, then it is
-		// likely that a debugger is being run; so, the splash screen
-		// should be disabled (otherwise it just gets in the way)
-		DebugStr("\pMacTelnet: Not displaying the splash screen because stdin is a TTY.");
-	}
-	else
-	{
-		// display splash screen dialog; steal a few cycles to give the
-		// fade-in effect a decent chance of completing
-		SplashScreenDialog_Init();
-		SplashScreenDialog_Display();
-		splashScreenInitialized = true;
-	}
 	
 	// set wait cursor
 	Cursors_UseWatch();
@@ -336,12 +316,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 					Memory_DisposePtr(REINTERPRET_CAST(&array, Ptr*));
 				}
 			}
-		}
-		
-		if (splashScreenInitialized)
-		{
-			// remove the splash screen - done asynchronously on Mac OS X
-			SplashScreenDialog_Done();
 		}
 	}
 	

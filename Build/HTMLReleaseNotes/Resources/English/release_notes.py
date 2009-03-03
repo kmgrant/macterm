@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090303',
     '20090301',
     '20090223',
     '20090221',
@@ -214,6 +215,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090303': [
+		'Removed the splash screen.',
+	],
 	'20090301': [
 		'Terminal views now respect specified text translations, though the renderer cannot display every character yet.',
 		'Fixed an incorrect mapping for the Enter key which could cause an Interrupt Process to be sent.',

@@ -172,30 +172,6 @@ AppResources_GetDockTileAttentionPicture	(PicHandle&		outPicture,
 
 
 /*!
-Locates and opens the splash screen picture file in
-the Mac OS X application bundle, returning a new
-CGImage for it.  Use CFRelease() on the image when
-finished.
-
-\retval noErr
-if the picture was created successfully
-
-\retval resNotFound
-if the picture could not be created for any reason
-
-(3.1)
-*/
-AppResources_Result
-AppResources_GetSplashScreenPicture		(CGImageRef&	outPicture)
-{
-	AppResources_Result		result = createImageFromBundleFile(CFSTR("SplashScreen"), outPicture);
-	
-	
-	return result;
-}// GetSplashScreenPicture
-
-
-/*!
 Locates and opens the picture files in the Mac OS X
 application bundle that form the specified frame of the
 toolbar “poof” animation, renders them in memory using

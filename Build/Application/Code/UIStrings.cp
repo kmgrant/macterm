@@ -740,13 +740,6 @@ UIStrings_Copy	(UIStrings_FileOrFolderCFString		inWhichString,
 		CFRetain(outString);
 		break;
 	
-	case kUIStrings_FileNameSplashScreenPicture:
-		// localization of this string is unnecessary; however an explicit retain is now
-		// needed because the caller is required to release the string later on
-		outString = CFSTR("SplashScreen.pict");
-		CFRetain(outString);
-		break;
-	
 	case kUIStrings_FileNameToolbarPoofFrame1Picture:
 		// localization of this string is unnecessary; however an explicit retain is now
 		// needed because the caller is required to release the string later on
@@ -1712,69 +1705,24 @@ UIStrings_CopyRandom	(UIStrings_StringClass		inWhichStringClass,
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichStringClass)
 	{
-	case kUIStrings_StringClassSplashScreen:
-		{
-			std::vector< UInt16 >	numberList(10/* number of available strings below */);
-			RandomWrap				generator;
+	//case kUIStrings_StringClassXYZ:
+		//{
+			//std::vector< UInt16 >	numberList(10/* number of available strings below */);
+			//RandomWrap				generator;
 			
 			
-			__gnu_cxx::iota(numberList.begin(), numberList.end(), 0/* starting value */);
-			std::random_shuffle(numberList.begin(), numberList.end(), generator);
-			switch (numberList[0])
-			{
-			case 0:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Terminals do not have to be boring!"),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 1:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Not a perfect shell, but a really good one."),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 2:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Unix, only Mac-like."),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 3:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("No blue screens (unless formatted that way)."),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 4:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Source code is available."),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 5:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Power and polish."),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 6:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Extensible with Python."),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 7:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Not available for Windows."),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 8:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("If you can think of a new name, tell me!"),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			
-			case 9:
-			default:
-				outString = CFCopyLocalizedStringFromTable(CFSTR("Please tell the authors what you think!"),
-															CFSTR("SplashScreen"), CFSTR("chosen at random"));
-				break;
-			}
-		}
-		break;
+			//__gnu_cxx::iota(numberList.begin(), numberList.end(), 0/* starting value */);
+			//std::random_shuffle(numberList.begin(), numberList.end(), generator);
+			//switch (numberList[0])
+			//{
+			//case 0:
+			//default:
+			//	outString = CFCopyLocalizedStringFromTable(CFSTR("whatever the string is"),
+			//												CFSTR("StringTableName"), CFSTR("comment"));
+			//	break;
+			//}
+		//}
+		//break;
 	
 	default:
 		// ???

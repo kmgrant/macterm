@@ -188,8 +188,7 @@ IconForSessionStatusDead.icns \
 IconForStackWindows.icns \
 IconForTerminal.icns \
 English.lproj/DockTileAttention.pict \
-English.lproj/DockTileAttentionMask.pict \
-English.lproj/SplashScreen.png
+English.lproj/DockTileAttentionMask.pict
 APP_RESOURCES_BUNDLES := \
 English.lproj/Help \
 English.lproj/Credits.html \
@@ -218,7 +217,6 @@ English.lproj/PrefPanelTerminals.nib \
 English.lproj/PrefsWindow.nib \
 English.lproj/ProgressDialog.nib \
 English.lproj/SizeDialog.nib \
-English.lproj/SplashScreen.nib \
 English.lproj/TEKWindow.nib \
 English.lproj/TerminalWindow.nib \
 English.lproj/WindowTitleDialog.nib

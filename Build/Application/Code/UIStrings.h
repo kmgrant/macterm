@@ -225,7 +225,6 @@ enum UIStrings_FileOrFolderCFString
 	kUIStrings_FileDefaultSession						= 'DefS',
 	kUIStrings_FileNameDockTileAttentionPicture			= '!Pic',
 	kUIStrings_FileNameDockTileAttentionMask			= '!Msk',
-	kUIStrings_FileNameSplashScreenPicture				= 'Titl',
 	kUIStrings_FileNameToolbarPoofFrame1Picture			= 'Pf1P',
 	kUIStrings_FileNameToolbarPoofFrame1Mask			= 'Pf1M',
 	kUIStrings_FileNameToolbarPoofFrame2Picture			= 'Pf2P',
@@ -372,7 +371,7 @@ to return any string out of a table.
 */
 enum UIStrings_StringClass
 {
-	kUIStrings_StringClassSplashScreen			= 'SpSc'
+	//kUIStrings_StringClassXYZ						= 'CXYZ'
 };
 
 

@@ -368,7 +368,7 @@ receiveSplashScreenDraw		(EventHandlerCallRef	inHandlerCallRef,
 					bzero(&textInfo, sizeof(textInfo));
 					textInfo.version = 0;
 					textInfo.state = kThemeStateActive;
-					textInfo.fontID = kThemeAlertHeaderFont;
+					textInfo.fontID = kThemeMenuTitleFont; // arbitrary
 					textInfo.horizontalFlushness = kHIThemeTextHorizontalFlushCenter;
 					textInfo.verticalFlushness = kHIThemeTextVerticalFlushCenter;
 					textInfo.options = 0;
