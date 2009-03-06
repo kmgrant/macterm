@@ -73,12 +73,25 @@ StringUtilities_CFToUTF8	(CFStringRef	inCFString,
 	outBuffer.clear();
 	if (nullptr != inCFString)
 	{
-		char const* const	kCharPtr = CFStringGetCStringPtr(inCFString, kCFStringEncodingUTF8);
+		CFStringEncoding const		kDesiredEncoding = kCFStringEncodingUTF8;
+		char const* const			kCharPtr = CFStringGetCStringPtr(inCFString, kDesiredEncoding);
 		
 		
 		if (nullptr != kCharPtr)
 		{
 			outBuffer = std::string(kCharPtr);
+		}
+		else
+		{
+			// direct access failed; try copying
+			size_t const	kBufferSize = 1 + CFStringGetMaximumSizeForEncoding
+												(CFStringGetLength(inCFString), kDesiredEncoding);
+			char*			buffer = new char[kBufferSize];
+			
+			
+			CFStringGetCString(inCFString, buffer, kBufferSize, kDesiredEncoding);
+			outBuffer = buffer;
+			delete [] buffer;
 		}
 	}
 }// CFToUTF8
