@@ -66,6 +66,15 @@ HOW TO BUILD
      (it relies on binary compatibility to support Leopard).  The
      unifying makefile explicitly requests only configurations
      that are necessary.
+  
+  IMPORTANT: The build system currently will only rebuild the
+  entire Python wrapper when the SWIG file "Quills.i" is changed.
+  However, that is NOT the only file that affects the wrapper: in
+  particular, if you ever change Quills*.{cp,h}, you should also
+  "touch" Quills.i so that the wrapper is rebuilt with your
+  changes.  Note that rebuilding the wrapper takes a very long
+  time, in part because it is recompiled for each target Python
+  environment and compute architecture.
 
 HOW TO CUSTOMIZE THE BUILD
   It is possible to tweak the makefile or environment to change
@@ -77,13 +86,6 @@ HOW TO CUSTOMIZE THE BUILD
   Run "make help" from the Build directory to see options that
   can be tweaked through the command line.  Other settings may
   require GNUmakefile edits or changes to the .xcconfig files.
-  
-  NOTE: The SWIG wrappers are currently rebuilt pessimistically
-  through "FORCE" rules in the GNUmakefile, to guarantee that
-  they reflect any code changes.  However, in practice, these
-  take a long time to compile and rarely change.  You may wish
-  to disable the "FORCE" dependencies in the GNUmakefile (one
-  per SWIG platform) if you are not changing Quills code.
 
                                      Kevin Grant (kevin@ieee.org)
                                         Lead Developer, MacTelnet
