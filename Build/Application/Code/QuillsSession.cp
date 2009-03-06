@@ -35,6 +35,7 @@
 #include <algorithm>
 #include <functional>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -114,21 +115,36 @@ Session		(std::vector< std::string >		inArgV,
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 _session(nullptr)
 {
-	// create a nullptr-terminated array of C strings
-	std::vector< std::string >::size_type const		argc = inArgV.size();
-	char const**									args = new char const* [1 + argc];
-	
-	
-	std::transform(inArgV.begin(), inArgV.end(), args, find_cstr());
-	args[argc] = nullptr;
-	_session = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, args/* command */,
-															nullptr/* preferences context */,
-															inWorkingDirectory.empty()
-																? nullptr
-																: inWorkingDirectory.c_str());
-	delete [] args;
-	
-	if (nullptr != gSessionOpenedCallbackInvoker) (*gSessionOpenedCallbackInvoker)(gSessionOpenedPythonCallback);
+	try
+	{
+		// create a nullptr-terminated array of C strings
+		std::vector< std::string >::size_type const		argc = inArgV.size();
+		char const**									args = new char const* [1 + argc];
+		
+		
+		std::transform(inArgV.begin(), inArgV.end(), args, find_cstr());
+		args[argc] = nullptr;
+		_session = SessionFactory_NewSessionArbitraryCommand(nullptr/* terminal window */, args/* command */,
+																nullptr/* preferences context */,
+																inWorkingDirectory.empty()
+																	? nullptr
+																	: inWorkingDirectory.c_str());
+		delete [] args;
+		
+		if (nullptr != gSessionOpenedCallbackInvoker) (*gSessionOpenedCallbackInvoker)(gSessionOpenedPythonCallback);
+	}
+	catch (...)
+	{
+		// WARNING: The constructors for objects that are exposed to scripts
+		// cannot throw exceptions, because ownership rules imply an object
+		// is always created and released.  Instead, the object “exists” in
+		// a state that simply triggers exceptions when certain methods are
+		// later called on the object.  This also helps in cases where an
+		// object may asynchronously become invalid (e.g. a connection dying
+		// when a script still holds a reference).
+		Console_WriteLine("warning, unexpected exception in Session constructor");
+		_session = nullptr;
+	}
 }// default constructor
 
 
@@ -143,7 +159,11 @@ Session::pseudo_terminal_device_name ()
 	std::string		result;
 	
 	
-	if (nullptr != _session)
+	if (nullptr == _session)
+	{
+		throw std::runtime_error("specified session does not have this information");
+	}
+	else
 	{
 		CFStringRef		deviceNameCFString = Session_ReturnPseudoTerminalDeviceNameCFString(_session);
 		
@@ -165,7 +185,11 @@ Session::resource_location_string ()
 	std::string		result;
 	
 	
-	if (nullptr != _session)
+	if (nullptr == _session)
+	{
+		throw std::runtime_error("specified session does not have this information");
+	}
+	else
 	{
 		CFStringRef		resourceLocationCFString = Session_ReturnResourceLocationCFString(_session);
 		
@@ -187,7 +211,11 @@ Session::state_string ()
 	std::string		result;
 	
 	
-	if (nullptr != _session)
+	if (nullptr == _session)
+	{
+		throw std::runtime_error("specified session does not have this information");
+	}
+	else
 	{
 		CFStringRef		stateCFString = nullptr;
 		Session_Result	sessionResult = Session_GetStateString(_session, stateCFString);

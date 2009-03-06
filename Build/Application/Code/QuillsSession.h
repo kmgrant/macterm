@@ -73,6 +73,17 @@ immediately interpreted by the local terminal of the session!\n\
 \n\
 The character encoding is UTF-8.\n\
 ") pseudo_terminal_device_name;
+
+// raise Python exception if C++ throws anything
+%exception pseudo_terminal_device_name
+{
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	SWIG_CATCH_UNKNOWN
+}
 #endif
 	std::string pseudo_terminal_device_name ();
 	
@@ -83,6 +94,17 @@ will usually be its Unix command line.\n\
 \n\
 The character encoding is UTF-8.\n\
 ") resource_location_string;
+
+// raise Python exception if C++ throws anything
+%exception resource_location_string
+{
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	SWIG_CATCH_UNKNOWN
+}
 #endif
 	std::string resource_location_string ();
 	
@@ -93,6 +115,17 @@ session.  For example, a session might be 'Running'.\n\
 \n\
 The character encoding is UTF-8.\n\
 ") state_string;
+
+// raise Python exception if C++ throws anything
+%exception state_string
+{
+	try
+	{
+		$action
+	}
+    SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
+	SWIG_CATCH_UNKNOWN
+}
 #endif
 	std::string state_string ();
 	
@@ -114,16 +147,12 @@ new sessions when they appear.\n\
 // do not lose exceptions that may be raised by callbacks
 %exception handle_file
 {
-	Console_WriteValueCString("exception caught in function", "$symname");
 	try
 	{
 		$action
 	}
     SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	catch (...)
-	{
-		SWIG_exception(SWIG_UnknownError, "Unknown exception");
-	}
+	SWIG_CATCH_UNKNOWN
 }
 #endif
 	static void handle_file (std::string	pathname);
@@ -143,16 +172,12 @@ new sessions when they appear.\n\
 // do not lose exceptions that may be raised by callbacks
 %exception handle_url
 {
-	Console_WriteValueCString("exception caught in function", "$symname");
 	try
 	{
 		$action
 	}
     SWIG_CATCH_STDEXCEPT // catch various std::exception derivatives
-	catch (...)
-	{
-		SWIG_exception(SWIG_UnknownError, "Unknown exception");
-	}
+	SWIG_CATCH_UNKNOWN
 }
 #endif
 	static void handle_url (std::string		url);
