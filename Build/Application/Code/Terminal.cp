@@ -2309,7 +2309,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						{
 							// special case...some kind of error, no bytes were translated;
 							// dump the buffer, which LOSES DATA, but this is a spin control
-							Console_WriteLine("echoing unexpected failed, SKIPPING entire cache of bytes as a precaution");
+							Console_WriteLine("echoing unexpectedly failed, SKIPPING entire cache of bytes as a precaution");
 							dataPtr->bytesToEcho.clear();
 						}
 						else
