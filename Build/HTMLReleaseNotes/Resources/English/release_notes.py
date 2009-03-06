@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090306',
     '20090303',
     '20090301',
     '20090223',
@@ -215,6 +216,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090306': [
+		'Quills.Session APIs now have proper exception protection, translating into Python exceptions where appropriate.',
+		'Fixed Quills.Session.pseudo_terminal_device_name() API to no longer return an empty string.',
+		'Fixed Quills.Session.resource_location_string() API to no longer return an empty string.',
+		'Fixed Quills.Session.state_string() API to no longer return an empty string.',
+	],
 	'20090303': [
 		'Removed the splash screen.',
 	],
