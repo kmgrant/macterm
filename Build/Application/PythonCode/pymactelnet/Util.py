@@ -2,12 +2,13 @@
 # vim: set fileencoding=UTF-8 :
 """Utility routines that are highly generic.
 
+mac_os_name -- return a name like Panther, Tiger, Leopard, etc.
 slash_free_path -- remove all leading and trailing slashes
 sort_dict -- for testing, return deterministic "dict" description
 """
 __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '30 December 2006'
-__version__ = '3.1.0'
+__version__ = '4.0.0'
 
 def mac_os_name():
 	"""mac_os_name() -> string

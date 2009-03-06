@@ -25,7 +25,7 @@ x_man_page -- handle URLs of the form "x-man-page://section/cmd"
 """
 __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '24 August 2006'
-__version__ = '3.1.0'
+__version__ = '4.0.0'
 
 from pymactelnet.Util import \
 	slash_free_path as _slash_free_path, \

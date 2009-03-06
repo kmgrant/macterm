@@ -13,7 +13,7 @@ more information at MacTelnet.com.
 """
 __author__ = 'Kevin Grant <kevin@ieee.org>'
 __date__ = '24 August 2006'
-__version__ = '3.1.0'
+__version__ = '4.0.0'
 
 import os, string
 
