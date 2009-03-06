@@ -87,26 +87,33 @@ _Quills_PyExceptionDesc		(PyObject*		inType,
 	if (NULL != inType)
 	{
 		// this is arbitrary; the more cases that are here, the more “helpful” the message;
-		// should be in reverse inheritance order as documented by "pydoc exceptions"
-		if (PyErr_GivenExceptionMatches(inType, PyExc_ArithmeticError))
+		// should follow the inheritance tree documented by "pydoc exceptions"
+		if (PyErr_GivenExceptionMatches(inType, PyExc_Exception))
 		{
-			result = "<ArithmeticError derivative>";
-		}
-		else if (PyErr_GivenExceptionMatches(inType, PyExc_ImportError))
-		{
-			result = "ImportError";
-		}
-		else if (PyErr_GivenExceptionMatches(inType, PyExc_LookupError))
-		{
-			result = "<LookupError derivative>";
-		}
-		else if (PyErr_GivenExceptionMatches(inType, PyExc_SyntaxError))
-		{
-			result = "SyntaxError";
-		}
-		else if (PyErr_GivenExceptionMatches(inType, PyExc_Exception))
-		{
-			result = "<Exception derivative>";
+			if (PyErr_GivenExceptionMatches(inType, PyExc_ArithmeticError))
+			{
+				result = "<ArithmeticError derivative>";
+			}
+			else if (PyErr_GivenExceptionMatches(inType, PyExc_ImportError))
+			{
+				result = "ImportError";
+			}
+			else if (PyErr_GivenExceptionMatches(inType, PyExc_LookupError))
+			{
+				result = "<LookupError derivative>";
+			}
+			else if (PyErr_GivenExceptionMatches(inType, PyExc_RuntimeError))
+			{
+				result = "RuntimeError";
+			}
+			else if (PyErr_GivenExceptionMatches(inType, PyExc_SyntaxError))
+			{
+				result = "SyntaxError";
+			}
+			else
+			{
+				result = "<Exception derivative>";
+			}
 		}
 		else
 		{
