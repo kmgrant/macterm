@@ -792,11 +792,17 @@ h3. Normal
 Settings that apply to all text, unless overridden by some more
 specific property.
 
+To edit most settings, click on a box and the standard system
+panel (Fonts or Colors) will appear.
+
+Character width is normally 100%, but you can choose to make the
+text cells of a terminal slightly narrower or wider (useful with
+certain fonts).  It is important to realize that if the width is
+not 100%, the renderer may have to use less optimal methods of
+placing text, which could make text scrolling noticeably slower.
+
 Color settings have two entries, the leftmost box is the text
 (foreground) color and the rightmost box is the background color.
-
-To edit any setting, click on a box and the standard system panel
-(Fonts or Colors) will appear.
 
 h3. ANSI Colors
 

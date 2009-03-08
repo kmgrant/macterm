@@ -3,7 +3,7 @@
 	Preferences.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2004 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -4775,6 +4775,22 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
+				case kPreferences_TagFontCharacterWidthMultiplier:
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						Float32* const	data = REINTERPRET_CAST(outDataPtr, Float32*);
+						
+						
+						*data = inContextPtr->returnFloat(keyName);
+						if (0 == *data)
+						{
+							// failed; make default
+							*data = 1.0; // arbitrary
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+					}
+					break;
+				
 				case kPreferences_TagFontName:
 					{
 						assert(typeCFStringRef == keyValueType);
@@ -5865,6 +5881,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outKeyValueType = typeNetEvents_CFBooleanRef;
 		outNonDictionaryValueSize = sizeof(Boolean);
 		outClass = kPreferences_ClassGeneral;
+		break;
+	
+	case kPreferences_TagFontCharacterWidthMultiplier:
+		outKeyName = CFSTR("terminal-font-width-multiplier");
+		outKeyValueType = typeNetEvents_CFNumberRef;
+		outNonDictionaryValueSize = sizeof(Float32);
+		outClass = kPreferences_ClassFormat;
 		break;
 	
 	case kPreferences_TagFontName:
@@ -7774,6 +7797,16 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
+			case kPreferences_TagFontCharacterWidthMultiplier:
+				{
+					Float32 const* const	data = REINTERPRET_CAST(inDataPtr, Float32 const*);
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addFloat(inDataPreferenceTag, keyName, *data);
+				}
+				break;
+			
 			case kPreferences_TagFontName:
 				{
 					ConstStringPtr const	data = REINTERPRET_CAST(inDataPtr, ConstStringPtr);

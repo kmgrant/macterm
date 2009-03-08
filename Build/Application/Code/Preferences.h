@@ -146,6 +146,7 @@ enum
 {
 	kPreferences_TagFontName							= 'font',	//!< data: "Str255"
 	kPreferences_TagFontSize							= 'fsiz',	//!< data: "SInt16"
+	kPreferences_TagFontCharacterWidthMultiplier		= 'cwid',	//!< data: "Float32"
 	// NOTE: These match menu command IDs for convenience in color boxes.
 	kPreferences_TagTerminalColorMatteBackground		= kCommandColorMatteBackground,		//!< data: "RGBColor"
 	kPreferences_TagTerminalColorBlinkingForeground		= kCommandColorBlinkingForeground,	//!< data: "RGBColor"

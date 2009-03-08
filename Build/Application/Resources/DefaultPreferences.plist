@@ -443,6 +443,8 @@
 	<string>Monaco</string>
 	<key>terminal-font-size-points</key>
 	<integer>12</integer>
+	<key>terminal-font-width-multiplier</key>
+	<real>1.0</real>
 	<key>terminal-format-random</key>
 	<false/>
 	<key>terminal-inverse-selections</key>

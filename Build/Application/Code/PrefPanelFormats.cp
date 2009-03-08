@@ -94,7 +94,9 @@ In addition, they MUST be unique across all panels.
 */
 HIViewID const	idMyButtonFontName					= { 'Font', 0/* ID */ };
 HIViewID const	idMyButtonFontSize					= { 'Size', 0/* ID */ };
+HIViewID const	idMySliderFontCharacterWidth		= { 'CWid', 0/* ID */ };
 HIViewID const	idMyStaticTextNonMonospacedWarning	= { 'WMno', 0/* ID */ };
+HIViewID const	idMyHelpTextCharacterWidth			= { 'HChW', 0/* ID */ };
 HIViewID const	idMyBevelButtonNormalText			= { 'NTxt', 0/* ID */ };
 HIViewID const	idMyBevelButtonNormalBackground		= { 'NBkg', 0/* ID */ };
 HIViewID const	idMyBevelButtonBoldText				= { 'BTxt', 0/* ID */ };
@@ -192,11 +194,20 @@ struct My_FormatsPanelNormalUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
+	static pascal OSStatus
+	receiveSliderChanged	(EventHandlerCallRef, EventRef, void*);
+	
+	void
+	saveFieldPreferences	(Preferences_ContextRef);
+	
 	void
 	setFontName		(StringPtr);
 	
 	void
 	setFontSize		(SInt16);
+	
+	void
+	setFontWidthScaleFactor		(Float32);
 
 protected:
 	HIViewWrap
@@ -214,6 +225,7 @@ protected:
 private:
 	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a button is clicked
 	CarbonEventHandlerWrap				_fontPanelHandler;			//!< invoked when font panel events occur
+	CarbonEventHandlerWrap				_sliderChangeHandler;		//!< saves slider setting when it changes
 	CarbonEventHandlerWrap				_windowFocusHandler;		//!< invoked when the window loses keyboard focus
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
@@ -691,7 +703,11 @@ panelChanged	(Panel_Ref		inPanel,
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
 			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
 			assert(kPreferences_ResultOK == prefsResult);
-			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			if (newContext != defaultContext)
+			{
+				panelDataPtr->dataModel = defaultContext;
+				panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			}
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -822,6 +838,9 @@ _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 _fontPanelHandler		(GetControlEventTarget(HIViewWrap(idMyButtonFontName, inOwningWindow)), receiveFontChange,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassFont), kEventFontPanelClosed, kEventFontSelection),
 							this/* user data */),
+_sliderChangeHandler	(GetControlEventTarget(HIViewWrap(idMySliderFontCharacterWidth, inOwningWindow)), receiveSliderChanged,
+								CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlValueFieldChanged),
+								this/* user data */),
 _windowFocusHandler		(GetWindowEventTarget(inOwningWindow), receiveWindowFocusChange,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassWindow), kEventWindowFocusRelinquish),
 							this/* user data */),
@@ -1057,6 +1076,8 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyStaticTextNonMonospacedWarning, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyHelpTextCharacterWidth, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyUserPaneSampleTerminalView, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, inDeltaY);
 	viewWrap = HIViewWrap(idMyHelpTextSampleTerminalView, kPanelWindow);
@@ -1120,7 +1141,11 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageDestroyed: // request to dispose of private data structures
 		{
-			delete (REINTERPRET_CAST(inDataPtr, My_FormatsPanelNormalDataPtr));
+			My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(inDataPtr, My_FormatsPanelNormalDataPtr);
+			
+			
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			delete panelDataPtr;
 		}
 		break;
 	
@@ -1136,9 +1161,11 @@ panelChanged	(Panel_Ref		inPanel,
 	case kPanel_MessageFocusLost: // notification that a view is no longer focused
 		{
 			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
+			My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_FormatsPanelNormalDataPtr);
 			
 			
-			// do nothing
+			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 		}
 		break;
 	
@@ -1182,7 +1209,11 @@ panelChanged	(Panel_Ref		inPanel,
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
 			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
 			assert(kPreferences_ResultOK == prefsResult);
-			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			if (newContext != defaultContext)
+			{
+				panelDataPtr->dataModel = defaultContext;
+				panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			}
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
 		}
@@ -1247,6 +1278,19 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			}
 		}
 		
+		// set font character width scaling
+		{
+			Float32		scaleFactor = 1.0;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontCharacterWidthMultiplier, sizeof(scaleFactor),
+														&scaleFactor, true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setFontWidthScaleFactor(scaleFactor);
+			}
+		}
+		
 		// read each color, skipping ones that are not defined
 		setColorBox(inSettings, kPreferences_TagTerminalColorNormalForeground, HIViewWrap(idMyBevelButtonNormalText, kOwningWindow));
 		setColorBox(inSettings, kPreferences_TagTerminalColorNormalBackground, HIViewWrap(idMyBevelButtonNormalBackground, kOwningWindow));
@@ -1260,6 +1304,88 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		Preferences_ContextCopy(inSettings, TerminalView_ReturnFormatConfiguration(this->terminalView));
 	}
 }// My_FormatsPanelNormalUI::readPreferences
+
+
+/*!
+Embellishes "kEventControlValueFieldChanged" of
+"kEventClassControl" for the slider in this panel by saving
+the new preference value.
+
+(4.0)
+*/
+pascal OSStatus
+My_FormatsPanelNormalUI::
+receiveSliderChanged	(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					inMyFormatsPanelNormalUIPtr)
+{
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	assert(kEventClassControl == kEventClass);
+	assert(kEventControlValueFieldChanged == kEventKind);
+	My_FormatsPanelNormalUI*	interfacePtr = REINTERPRET_CAST(inMyFormatsPanelNormalUIPtr, My_FormatsPanelNormalUI*);
+	OSStatus					result = eventNotHandledErr;
+	
+	
+	// first ensure the value change takes effect (that is, it updates
+	// whatever view it is for)
+	result = CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// now synchronize the change with preferences
+	{
+		My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																		My_FormatsPanelNormalDataPtr);
+		
+		
+		interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+		
+		// update the sample area
+		Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnFormatConfiguration(interfacePtr->terminalView));
+	}
+	
+	return result;
+}// My_FormatsPanelNormalUI::receiveSliderChanged
+
+
+/*!
+Saves every setting to the data model that may change outside
+of easily-detectable means (e.g. not buttons, but things like
+sliders).
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
+{
+	if (nullptr != inoutSettings)
+	{
+		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		// set character width scaling
+		{
+			SInt32		scaleDiscreteValue = GetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow));
+			Float32		equivalentScale = 1.0;
+			
+			
+			// warning, this MUST be consistent with the NIB and setFontWidthScaleFactor()
+			if (1 == scaleDiscreteValue) equivalentScale = 0.8;
+			else if (2 == scaleDiscreteValue) equivalentScale = 0.9;
+			else if (4 == scaleDiscreteValue) equivalentScale = 1.1;
+			else if (5 == scaleDiscreteValue) equivalentScale = 1.2;
+			else equivalentScale = 1.0;
+			
+			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagFontCharacterWidthMultiplier,
+														sizeof(equivalentScale), &equivalentScale);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_WriteLine("warning, failed to set font character width multiplier");
+			}
+		}
+	}
+}// My_FormatsPanelNormalUI::saveFieldPreferences
 
 
 /*!
@@ -1295,6 +1421,56 @@ setFontSize		(SInt16		inFontSize)
 	NumToString(inFontSize, sizeString);
 	SetControlTitle(HIViewWrap(idMyButtonFontSize, kOwningWindow), sizeString);
 }// My_FormatsPanelNormalUI::setFontSize
+
+
+/*!
+Updates the font character width display based on the
+given setting.
+
+If the value does not exactly match a slider tick, the
+closest matching value will be chosen.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+setFontWidthScaleFactor		(Float32	inFontWidthScaleFactor)
+{
+	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+	Float32 const		kTolerance = 0.05;
+	
+	
+	// floating point numbers are not exact values, they technically are
+	// discrete at a very fine granularity; so do not use pure equality,
+	// use a range with a small tolerance to choose a matching number
+	if (inFontWidthScaleFactor < (0.8/* warning: must be consistent with NIB labels and tick marks */ + kTolerance))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 1/* first slider value, 80% */);
+	}
+	else if ((inFontWidthScaleFactor >= (0.8/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inFontWidthScaleFactor < (0.9/* warning: must be consistent with NIB label */ + kTolerance)))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 2/* next slider value */);
+	}
+	else if ((inFontWidthScaleFactor >= (0.9/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inFontWidthScaleFactor < (1.0/* warning: must be consistent with NIB label */ + kTolerance)))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 3/* middle slider value */);
+	}
+	else if ((inFontWidthScaleFactor >= (1.0/* warning: must be consistent with NIB label */ + kTolerance)) &&
+				(inFontWidthScaleFactor < (1.1/* warning: must be consistent with NIB label */ + kTolerance)))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 4/* next slider value */);
+	}
+	else if (inFontWidthScaleFactor >= (1.1/* warning: must be consistent with NIB label */ + kTolerance))
+	{
+		SetControl32BitValue(HIViewWrap(idMySliderFontCharacterWidth, kOwningWindow), 5/* last slider value, 120% */);
+	}
+	else
+	{
+		assert(false && "scale factor value should have triggered one of the preceding if/else cases");
+	}
+}// My_FormatsPanelNormalUI::setFontWidthScaleFactor
 
 
 /*!

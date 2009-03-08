@@ -288,6 +288,8 @@ table(deftable).
 (defbottom). |(desc)\2. This font is used for the majority of text rendering.|
 (deftop). |(key). @terminal-font-size-points@|(types). _integer_|
 (defbottom). |(desc)\2. Text uses this size unless overridden by "terminal-resize-affects".|
+(deftop). |(key). @terminal-font-width-multiplier@|(types). _float_|
+(defbottom). |(desc)\2. Scale factor for columns in terminals.  Rendering may be slower when this is not set to 1.0.|
 (deftop). |(key). @terminal-margin-bottom-em@|(types). _float_: multiplied by the current font's "m" width|
 (defbottom). |(desc)\2. Amount of space between the outer edge of the terminal and its keyboard focus ring.|
 (deftop). |(key). @terminal-margin-left-em@|(types). _float_: multiplied by the current font's "m" width|

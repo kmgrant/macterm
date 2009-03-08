@@ -355,6 +355,7 @@ struct TerminalView
 				SInt16		size;			// point size of text written in the font indicated by "familyName"
 			} normalMetrics,	// metrics for text meant to fit in a single cell (normal)
 			  doubleMetrics;	// metrics for text meant to fit in 4 cells, not 1 cell (double-width/height)
+			Float32			scaleWidthPerCharacter;	// a multiplier (normally 1.0) to force characters from the font to fit in a different width
 			SInt16			widthPerCharacter;	// number of pixels wide each character is (multiply by 2 on double-width lines);
 												// generally, you should call getRowCharacterWidth() instead of referencing this!
 			SInt16			heightPerCharacter;	// number of pixels high each character is (multiply by 2 if double-height text)
@@ -461,7 +462,7 @@ static void				setBlinkAnimationColor			(TerminalViewPtr, UInt16, RGBColor const
 static void				setBlinkingTimerActive			(TerminalViewPtr, Boolean);
 static void				setCursorGhostVisibility		(TerminalViewPtr, Boolean);
 static void				setCursorVisibility				(TerminalViewPtr, Boolean);
-static void				setFontAndSize					(TerminalViewPtr, ConstStringPtr, UInt16, Boolean = true);
+static void				setFontAndSize					(TerminalViewPtr, ConstStringPtr, UInt16, Float32 = 0, Boolean = true);
 static SInt16			setPortScreenPort				(TerminalViewPtr);
 static void				setScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
 static void				setScreenCoreColor				(TerminalViewPtr, UInt16, RGBColor const*);
@@ -3215,6 +3216,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		Preferences_Result	preferencesResult = kPreferences_ResultOK;
 		Str255				fontName;
 		SInt16				fontSize = 0;
+		Float32				charWidthScale = 1.0;
 		
 		
 		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontName,
@@ -3223,12 +3225,15 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontSize,
 														sizeof(fontSize), &fontSize, true/* search defaults too */);
 		assert(kPreferences_ResultOK == preferencesResult);
+		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontCharacterWidthMultiplier,
+														sizeof(charWidthScale), &charWidthScale, true/* search defaults too */);
+		assert(kPreferences_ResultOK == preferencesResult);
 		
 		// set up font and character set information
 		PLstrcpy(this->text.font.familyName, fontName);
 		
 		// set font size to automatically fill in initial font metrics, etc.
-		setFontAndSize(this, fontName, fontSize);
+		setFontAndSize(this, fontName, fontSize, charWidthScale);
 	}
 	
 	// initialize focus area
@@ -3876,6 +3881,7 @@ copyFontPreferences		(TerminalViewPtr			inTerminalViewPtr,
 	UInt16		result = 0;
 	Str255		fontName;
 	SInt16		fontSize = 0;
+	Float32		charWidthScale = 1.0;
 	
 	
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontName,
@@ -3893,8 +3899,18 @@ copyFontPreferences		(TerminalViewPtr			inTerminalViewPtr,
 		}
 	}
 	
+	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontCharacterWidthMultiplier,
+															sizeof(charWidthScale), &charWidthScale))
+	{
+		++result;
+	}
+	else
+	{
+		charWidthScale = 0; // do not change
+	}
+	
 	// set font size to automatically fill in initial font metrics, etc.
-	setFontAndSize(inTerminalViewPtr, inTerminalViewPtr->text.font.familyName, fontSize);
+	setFontAndSize(inTerminalViewPtr, inTerminalViewPtr->text.font.familyName, fontSize, charWidthScale);
 	
 	return result;
 }// copyFontPreferences
@@ -4462,9 +4478,11 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 			}
 		}
 		else if ((terminalFontStyle & bold) || (terminalFontID == kArbitraryVTGraphicsPseudoFontID) ||
-					!inTerminalViewPtr->text.font.isMonospaced)
+					(false == inTerminalViewPtr->text.font.isMonospaced) ||
+					(1.0 != inTerminalViewPtr->text.font.scaleWidthPerCharacter))
 		{
-			// proportional font, or bold; force the text to use monospaced font metrics
+			// proportional font, or bold, or otherwise non-standard width; force the text
+			// to draw one character at a time so that the character offset can be corrected
 			register SInt16		i = 0;
 			Point				oldPen;
 			
@@ -6314,7 +6332,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			// which are used later to center the view rectangle; but do not
 			// notify listeners, since this routine is itself a response to a
 			// change in another property (view size)
-			setFontAndSize(viewPtr, nullptr/* font */, fontSize, false/* notify listeners */);
+			setFontAndSize(viewPtr, nullptr/* font */, fontSize, 0/* scale for character width, or zero */, false/* notify listeners */);
 			
 			Localization_RestorePortFontState(&fontState);
 			SetGWorld(oldPort, oldDevice);
@@ -9451,6 +9469,7 @@ static void
 setFontAndSize		(TerminalViewPtr	inViewPtr,
 					 ConstStringPtr		inFontFamilyNameOrNull,
 					 UInt16				inFontSizeOrZero,
+					 Float32			inCharacterWidthScalingOrZero,
 					 Boolean			inNotifyListeners)
 {
 	CGrafPtr	oldPort = nullptr;
@@ -9466,6 +9485,11 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 	if (inFontSizeOrZero > 0)
 	{
 		inViewPtr->text.font.normalMetrics.size = inFontSizeOrZero;
+	}
+	
+	if (inCharacterWidthScalingOrZero > 0)
+	{
+		inViewPtr->text.font.scaleWidthPerCharacter = inCharacterWidthScalingOrZero;
 	}
 	
 	// set the font metrics (including double size)
@@ -9853,9 +9877,15 @@ setUpScreenFontMetrics	(TerminalViewPtr	inTerminalViewPtr)
 	}
 	else
 	{
-		Float32		reduction = 0.8 * fontInfo.widMax;
+		inTerminalViewPtr->text.font.widthPerCharacter = fontInfo.widMax;
+	}
+	
+	// scale the font width according to user preferences
+	{
+		Float32		reduction = inTerminalViewPtr->text.font.widthPerCharacter;
 		
 		
+		reduction *= inTerminalViewPtr->text.font.scaleWidthPerCharacter;
 		inTerminalViewPtr->text.font.widthPerCharacter = STATIC_CAST(reduction, SInt16);
 	}
 	
