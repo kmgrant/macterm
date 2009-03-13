@@ -883,7 +883,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 														GetControl32BitMinimum(inTemplateControl),
 														GetControl32BitMaximum(inTemplateControl),
 														kControlSliderPointsDownOrRight, numberOfTickMarks,
-														false/* live tracking */, nullptr/* action routine */,
+														true/* live tracking */, nullptr/* action routine */,
 														&outNewControl);
 					}
 					break;
