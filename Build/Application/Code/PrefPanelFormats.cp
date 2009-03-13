@@ -3,7 +3,7 @@
 	PrefPanelFormats.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -174,12 +174,13 @@ struct My_FormatsPanelNormalUI
 {
 	My_FormatsPanelNormalUI		(Panel_Ref, HIWindowRef);
 	
-	Panel_Ref			panel;			//!< the panel using this UI
-	Float32				idealWidth;		//!< best size in pixels
-	Float32				idealHeight;	//!< best size in pixels
-	TerminalScreenRef	terminalScreen;	//!< used to store sample text
-	TerminalViewRef		terminalView;	//!< used to render a sample
-	HIViewWrap			terminalHIView;	//!< container of sample
+	Panel_Ref			panel;				//!< the panel using this UI
+	Float32				idealWidth;			//!< best size in pixels
+	Float32				idealHeight;		//!< best size in pixels
+	TerminalScreenRef	terminalScreen;		//!< used to store sample text
+	TerminalViewRef		terminalView;		//!< used to render a sample
+	HIViewWrap			terminalHIView;		//!< container of sample
+	ControlActionUPP	sliderActionUPP;	//!< for live tracking
 	HIViewWrap			mainView;
 	
 	static void
@@ -193,9 +194,6 @@ struct My_FormatsPanelNormalUI
 	
 	void
 	readPreferences		(Preferences_ContextRef);
-	
-	static pascal OSStatus
-	receiveSliderChanged	(EventHandlerCallRef, EventRef, void*);
 	
 	void
 	saveFieldPreferences	(Preferences_ContextRef);
@@ -221,11 +219,13 @@ protected:
 	
 	static void
 	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	static void
+	sliderProc	(HIViewRef, HIViewPartCode);
 
 private:
 	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a button is clicked
 	CarbonEventHandlerWrap				_fontPanelHandler;			//!< invoked when font panel events occur
-	CarbonEventHandlerWrap				_sliderChangeHandler;		//!< saves slider setting when it changes
 	CarbonEventHandlerWrap				_windowFocusHandler;		//!< invoked when the window loses keyboard focus
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 };
@@ -830,6 +830,7 @@ idealHeight				(0.0),
 terminalScreen			(createSampleTerminalScreen()),
 terminalView			(TerminalView_NewHIViewBased(this->terminalScreen)),
 terminalHIView			(setUpSampleTerminalHIView(this->terminalView, this->terminalScreen)),
+sliderActionUPP			(NewControlActionUPP(sliderProc)),
 mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
@@ -838,9 +839,6 @@ _buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 _fontPanelHandler		(GetControlEventTarget(HIViewWrap(idMyButtonFontName, inOwningWindow)), receiveFontChange,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassFont), kEventFontPanelClosed, kEventFontSelection),
 							this/* user data */),
-_sliderChangeHandler	(GetControlEventTarget(HIViewWrap(idMySliderFontCharacterWidth, inOwningWindow)), receiveSliderChanged,
-								CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlValueFieldChanged),
-								this/* user data */),
 _windowFocusHandler		(GetWindowEventTarget(inOwningWindow), receiveWindowFocusChange,
 							CarbonEventSetInClass(CarbonEventClass(kEventClassWindow), kEventWindowFocusRelinquish),
 							this/* user data */),
@@ -972,6 +970,21 @@ createContainerView		(Panel_Ref		inPanel,
 			assert(button.exists());
 			ColorBox_AttachToBevelButton(button);
 			ColorBox_SetColorChangeNotifyProc(button, My_FormatsPanelNormalUI::colorBoxChangeNotify, this/* context */);
+		}
+	}
+	
+	// install live tracking on the slider
+	{
+		HIViewWrap		slider(idMySliderFontCharacterWidth, inOwningWindow);
+		
+		
+		error = SetControlProperty(slider, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeOwningPanel,
+									sizeof(inPanel), &inPanel);
+		if (noErr == error)
+		{
+			assert(nullptr != this->sliderActionUPP);
+			SetControlAction(HIViewWrap(idMySliderFontCharacterWidth, inOwningWindow), this->sliderActionUPP);
 		}
 	}
 	
@@ -1307,47 +1320,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 
 
 /*!
-Embellishes "kEventControlValueFieldChanged" of
-"kEventClassControl" for the slider in this panel by saving
-the new preference value.
-
-(4.0)
-*/
-pascal OSStatus
-My_FormatsPanelNormalUI::
-receiveSliderChanged	(EventHandlerCallRef	inHandlerCallRef,
-						 EventRef				inEvent,
-						 void*					inMyFormatsPanelNormalUIPtr)
-{
-	UInt32 const				kEventClass = GetEventClass(inEvent);
-	UInt32 const				kEventKind = GetEventKind(inEvent);
-	assert(kEventClassControl == kEventClass);
-	assert(kEventControlValueFieldChanged == kEventKind);
-	My_FormatsPanelNormalUI*	interfacePtr = REINTERPRET_CAST(inMyFormatsPanelNormalUIPtr, My_FormatsPanelNormalUI*);
-	OSStatus					result = eventNotHandledErr;
-	
-	
-	// first ensure the value change takes effect (that is, it updates
-	// whatever view it is for)
-	result = CallNextEventHandler(inHandlerCallRef, inEvent);
-	
-	// now synchronize the change with preferences
-	{
-		My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
-																		My_FormatsPanelNormalDataPtr);
-		
-		
-		interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
-		
-		// update the sample area
-		Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnFormatConfiguration(interfacePtr->terminalView));
-	}
-	
-	return result;
-}// My_FormatsPanelNormalUI::receiveSliderChanged
-
-
-/*!
 Saves every setting to the data model that may change outside
 of easily-detectable means (e.g. not buttons, but things like
 sliders).
@@ -1517,6 +1489,40 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 	
 	return result;
 }// My_FormatsPanelNormalUI::setUpSampleTerminalHIView
+
+
+/*!
+A standard control action routine for the slider; responds by
+immediately saving the new value in the preferences context
+and triggering updates to other views.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+sliderProc	(HIViewRef			inSlider,
+			 HIViewPartCode		UNUSED_ARGUMENT(inSliderPart))
+{
+	Panel_Ref		panel = nullptr;
+	UInt32			actualSize = 0;
+	OSStatus		error = GetControlProperty(inSlider, AppResources_ReturnCreatorCode(),
+												kConstantsRegistry_ControlPropertyTypeOwningPanel,
+												sizeof(panel), &actualSize, &panel);
+	
+	
+	if (noErr == error)
+	{
+		// now synchronize the change with preferences
+		My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(panel),
+																		My_FormatsPanelNormalDataPtr);
+		
+		
+		panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+		
+		// update the sample area
+		Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnFormatConfiguration(panelDataPtr->interfacePtr->terminalView));
+	}
+}// sliderProc
 
 
 /*!

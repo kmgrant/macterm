@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090312',
     '20090307',
     '20090306',
     '20090303',
@@ -217,6 +218,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090312': [
+		'Preferences window Formats pane Character Width slider now uses "live" tracking.',
+	],
 	'20090307': [
 		'Preferences window Formats pane now has a Character Width setting, useful when a font has an undesirable default cell width.',
 	],
