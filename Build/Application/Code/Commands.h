@@ -369,13 +369,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEditFontAndSize					'EdFS'		// multiple interfaces
 #define kCommandEditBackupFont					'EdBF'		// multiple interfaces
 #define kCommandUseBackupFont					'XUBF'		// multiple interfaces
-#define kCommandNewProtocolSelectedFTP			'NPFT'		// multiple interfaces
-#define kCommandNewProtocolSelectedSFTP			'NPSF'		// multiple interfaces
-#define kCommandNewProtocolSelectedSSH1			'NPS1'		// multiple interfaces
-#define kCommandNewProtocolSelectedSSH2			'NPS2'		// multiple interfaces
-#define kCommandNewProtocolSelectedTELNET		'NPTN'		// multiple interfaces
 #define kCommandShowProtocolOptions				'POpt'		// multiple interfaces
 #define kCommandLookUpSelectedHostName			'Look'		// multiple interfaces
+#define kCommandEditCommandLine					'ECmd'		// multiple interfaces
 #define kCommandTerminalDefault					'TrmD'		// multiple interfaces
 #define kCommandTerminalByFavoriteName			'TFav'		// multiple interfaces
 #define kCommandShowHidePrefCollectionsDrawer	'SPCD'		// “Preferences“ window

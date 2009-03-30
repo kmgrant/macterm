@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090330',
     '20090312',
     '20090307',
     '20090306',
@@ -218,6 +219,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090330': [
+		'Preferences window Sessions pane Resource tab (and Custom New Session sheet) are now simpler, and use a separate panel for servers.',
+		'Automatically-discovered services (via Bonjour) may now be used, from the new Servers panel!',
+	],
 	'20090312': [
 		'Preferences window Formats pane Character Width slider now uses "live" tracking.',
 	],

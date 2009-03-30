@@ -255,6 +255,24 @@ as Preferences do.
 
 h3(#sessionresource). Resource
 
+h4. Command
+
+A Resource is actually defined entirely by its command line
+field.  For local Unix commands, just type in whatever you want
+to run.
+
+For remote sessions, you can either enter a command yourself, or
+use the "Connect to Server..." button to help you.  This button
+opens the Servers panel.  Note that edits in the Servers panel
+overwrite the command line field!  To learn more about the
+Servers panel, review "its documentation":windows.html#serverbrowser.
+
+It is important to note that MacTelnet splits this line into
+words (on whitespace), and does not interpret *any* characters:
+not even those common to Unix shells like "~", "|" and ">".  If
+you want to run a more complex command, you can save it in a
+script for the target shell, and ask MacTelnet to run the script.
+
 h4. Terminal
 
 Specifies the Terminals collection that will be used to set up
@@ -264,70 +282,6 @@ using the Terminal menu.
 
 In Unix sessions, you typically will set a "TERM" environment
 variable that is consistent with the Terminal setting.
-
-h4. Remote Only
-
-These fields are only required when connecting to a server, and
-can be left blank if your Resource is a local Unix command.
-
-Note also that editing fields in this section will overwrite the
-Unix command line portion of the panel.
-
-h5. Protocol
-
-A protocol determines the local command that MacTelnet uses to
-establish the connection.  This also determines how secure the
-connection is, and the purpose of the connection (for instance,
-FTP connections are only for uploading and downloading files).
-
-The target host must be running a server accepting connections
-for the protocol you choose.
-
-h5. Host
-
-The domain name or IP address (version 4 or version 6) of the
-server you want to connect to.
-
-Storing IP addresses is not recommended, because addresses are
-usually changed more frequently than domain names.  On the other
-hand, not all servers have domain names.
-
-You can use Look Up to test a domain name, which will replace
-the name with its current IP address (version 6, if available).
-
-h5. Port
-
-Since more than one server can be running on a computer, the port
-number specifies which one you want.
-
-Usually, you can rely on the port number that is automatically
-chosen when you select a Protocol.
-
-h5. User ID
-
-You can choose to remember the user identification that is
-requested by the server each time you connect.
-
-MacTelnet does not remember passwords for you.  You will be
-prompted for a password when you connect, if the server requires
-one.
-
-h4. Command Line
-
-A Resource is actually defined entirely by its command line
-field.  For local Unix commands, just type in whatever you want
-to run.
-
-For remote sessions, you will notice that the command line was
-already defined for you, as you edited the Remote Sessions Only
-fields.  Advanced users can further edit this command line if
-necessary.
-
-It is important to note that MacTelnet splits this line into
-words (on whitespace), and does not interpret *any* characters:
-not even those common to Unix shells like "~", "|" and ">".  If
-you want to run a more complex command, you can save it in a
-script for the target shell, and ask MacTelnet to run the script.
 
 h3(#sessiondataflow). Data Flow
 

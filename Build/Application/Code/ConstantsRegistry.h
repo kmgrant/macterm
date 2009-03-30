@@ -88,6 +88,22 @@ enum
 };
 
 /*!
+Used in Cocoa with NSError, to specify a domain for all
+application-generated errors.  The enumeration that follows
+is for error codes.
+
+For example:
+	[NSError errorWithDomain:(NSString*)kConstantsRegistry_NSErrorDomainAppDefault
+		code:kConstantsRegistry_NSErrorBadUserID . . .]
+*/
+CFStringRef const kConstantsRegistry_NSErrorDomainAppDefault				= CFSTR("com.mactelnet.errors");
+enum
+{
+	kConstantsRegistry_NSErrorBadPortNumber		= 1,
+	kConstantsRegistry_NSErrorBadUserID			= 2,
+};
+
+/*!
 Panel descriptors, which help to identify panels when given
 only an opaque reference to one.  See "Panel.h".
 

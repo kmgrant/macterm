@@ -4,7 +4,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -46,6 +46,7 @@ enum
 {
 	typeNetEvents_EventQueueRef			= 'TEQ&',	//!< "EventQueueRef"
 	typeNetEvents_PreferencesContextRef	= 'TTSR',	//!< "Preferences_ContextRef"
+	typeNetEvents_SessionProtocol		= 'TSPr',	//!< "Session_Protocol"
 	typeNetEvents_SessionRef			= 'TSn&',	//!< "SessionRef"
 	typeNetEvents_SessionState			= 'TSSt',	//!< "Session_State"
 	typeNetEvents_StructHostEntPtr		= 'TSHE',	//!< "struct hostent*"
@@ -64,12 +65,16 @@ enum
 	kEventParamNetEvents_DirectSession				= 'PSn&',	//!< the session directly impacted by an event (data: typeNetEvents_SessionRef)
 	kEventParamNetEvents_DispatcherQueue			= 'PDQ&',	//!< queue to submit follow-up events to, for 2-way communication
 																//!  (data: typeNetEvents_CarbonEventQueueRef)
+	kEventParamNetEvents_HostName					= 'PHst',	//!< host name or IP address (data: typeCFStringRef, auto-retain/release!)
 	kEventParamNetEvents_NewSessionState			= 'PSnS',	//!< what to change a session state to (data: typeNetEvents_SessionState)
+	kEventParamNetEvents_PortNumber					= 'PPrt',	//!< port number (data: typeUInt16)
+	kEventParamNetEvents_Protocol					= 'PPro',	//!< protocol (data: typeNetEvents_SessionProtocol)
 	kEventParamNetEvents_SessionData				= 'PSnD',	//!< data to process in a session (data: typeVoidPtr)
 	kEventParamNetEvents_SessionDataSize			= 'PSDS',	//!< size of data buffer given in "kEventParamNetEvents_SessionData"
 																//!  (data: typeUInt32)
 	kEventParamNetEvents_TerminalDataSource			= 'PTDS',	//!< where terminal data comes from (data: typeNetEvents_TerminalScreenRef)
-	kEventParamNetEvents_TerminalFormatPreferences	= 'PTFP'	//!< format settings for font, size, etc. (data: typeNetEvents_PreferencesContextRef)
+	kEventParamNetEvents_TerminalFormatPreferences	= 'PTFP',	//!< format settings for font, size, etc. (data: typeNetEvents_PreferencesContextRef)
+	kEventParamNetEvents_UserID						= 'PUsr',	//!< user login name (data: typeCFStringRef, auto-retain/release!)
 };
 
 //!\name Domain Name System Carbon Events
@@ -95,13 +100,82 @@ Discussion:
   Handling this event allows lookups to be asynchronous.
 
 Parameters:
-  
   <-- kEventParamNetEvents_DirectHostEnt (out, typeNetEvents_StructHostEntPtr)
-        The results of the lookup; call DNR_Dispose() to free memory.
+		The results of the lookup; call DNR_Dispose() to free memory.
 */
 enum
 {
-	kEventNetEvents_HostLookupComplete	= 'KDLC'
+	kEventNetEvents_HostLookupComplete = 'KDLC'
+};
+
+//!\name Server Browser Carbon Events
+//@{
+
+/*!
+kEventClassNetEvents_ServerBrowser quick reference:
+
+kEventNetEvents_ServerBrowserChanged
+*/
+enum
+{
+	kEventClassNetEvents_ServerBrowser = 'SvBr'
+};
+
+/*!
+kEventClassNetEvents_ServerBrowser / kEventNetEvents_ServerBrowserNewData
+
+Summary:
+  Issued when the user changes anything in the browser panel.
+  This is only sent to the current event target of the panel, as
+  set by ServerBrowser_SetEventTarget().
+
+Discussion:
+  Although there is only one instance of the browser panel, all
+  updated parameter values are given because the user could
+  switch to another target at any time.
+
+Parameters:
+  --> kEventParamNetEvents_Protocol (in, typeNetEvents_SessionProtocol)
+		Optional; the new protocol.  May not be defined if the
+		user did not actually change this value.
+  
+  --> kEventParamNetEvents_HostName (in, typeCFStringRef)
+		Optional; the new host name.  May not be defined if the
+		user did not actually change this value.
+  
+  --> kEventParamNetEvents_PortNumber (in, typeUInt32)
+		Optional; the new port number.  May not be defined if the
+		user did not actually change this value.
+  
+  --> kEventParamNetEvents_UserID (in, typeCFStringRef)
+		Optional; the new user ID.  May not be defined if the
+		user did not actually change this value.
+*/
+enum
+{
+	kEventNetEvents_ServerBrowserNewData = 'SBND'
+};
+
+/*!
+kEventClassNetEvents_ServerBrowser / kEventNetEvents_ServerBrowserNewEventTarget
+
+Summary:
+  Issued to the current event target of the browser panel when a
+  new target is about to be chosen.  This is also sent if the
+  panel is hidden, as removing the panel automatically clears the
+  event target.
+
+Discussion:
+  This can be used, for instance, to update a GUI element, to
+  reflect the fact that the panel will no longer affect the
+  element.
+
+Parameters:
+  None
+*/
+enum
+{
+	kEventNetEvents_ServerBrowserNewEventTarget = 'SBET'
 };
 
 //@}
@@ -138,16 +212,15 @@ Discussion:
   (presumably the one in the thread that dispatched this event).
 
 Parameters:
-  
   --> kEventParamNetEvents_DirectSession (in, typeNetEvents_SessionRef)
-        The session that data arrived for.
+		The session that data arrived for.
   
   --> kEventParamNetEvents_SessionData (in, typeVoidPtr)
 		A pointer to the session data to process.
   
   --> kEventParamNetEvents_SessionDataSize (in, typeUInt32)
-        The size of the session data buffer.
-
+		The size of the session data buffer.
+  
   --> kEventParamNetEvents_DispatcherQueue (in, typeNetEvents_CarbonEventQueueRef)
 		The queue to be notified when data is finally processed.
 */
@@ -170,13 +243,13 @@ Discussion:
 
 Parameters:
   --> kEventParamNetEvents_DirectSession (in, typeNetEvents_SessionRef)
-        The session that data was processed in.
+		The session that data was processed in.
   
   <-- kEventParamNetEvents_SessionData (in, typeVoidPtr)
-        A pointer to the session data that was processed.
+		A pointer to the session data that was processed.
   
   <-- kEventParamNetEvents_SessionDataSize (in, typeUInt32)
-        The number of bytes NOT processed.
+		The number of bytes NOT processed.
 */
 enum
 {
@@ -197,13 +270,13 @@ Discussion:
 
 Parameters:
   --> kEventParamNetEvents_DirectSession (in, typeNetEvents_SessionRef)
-        The session to change the state of.
+		The session to change the state of.
   
   --> kEventParamNetEvents_NewSessionState (in, typeNetEvents_SessionState)
-        The new session state.
+		The new session state.
   
   --> kEventParamNetEvents_DispatcherQueue (in, typeNetEvents_CarbonEventQueueRef)
-        Optional; the queue that wants to receive response events.
+		Optional; the queue that wants to receive response events.
 */
 enum
 {

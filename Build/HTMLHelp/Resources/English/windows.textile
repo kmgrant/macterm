@@ -36,6 +36,60 @@ What you can do with a graphics window:
 * Focus on one part by dragging a rectangle with the mouse.  You
   can undo this focus by double-clicking the image.
 
+h2(#serverbrowser). Server Browser
+
+The Servers panel appears when the "Connect to Server..." button
+is clicked (either in the File >> Custom New Session... sheet, or
+when editing the equivalent panel in the Preferences window).
+Changes to the panel will automatically write an appropriate
+command line, in the window whose button was most recently used
+to activate the panel.
+
+What you can do with the Servers panel:
+
+* Browse for any services that were discovered by your computer.
+* Enter connection details manually.
+
+A remote application is accessed over a *connection* (which uses
+a particular "protocol") to an exact *port* (number) on a *host*
+(computer).  You can also identify yourself with a *user ID*, if
+the server requires one.
+
+To start, make a selection from the "Connection:" menu.  This
+will automatically assign a default port number.  (You may need
+to ask an administrator which choice is appropriate.)
+
+It may be possible to simply browse for a service instead of
+entering connection details manually.  To try this, click the
+"Find a Server..." button, which will display a drawer that
+begins to list anything that was found by your computer for the
+type of Connection you selected in the menu.  Click any item in
+the list to copy its Host and Port information.  Double-click
+to automatically close the drawer in the process.
+
+If the service you want is not listed, you need to fill in the
+panel manually.  (You may want to ask an administrator for help.)
+
+In the Host field, you can enter a name like "apple.com" if one
+is applicable; if you have only an address, like "123.45.67.123",
+enter that instead.  The Look Up button can be used to check if a
+server name is valid (if so, it is transformed into a numeric
+address; otherwise, it is unchanged).
+
+bq. MacTelnet supports IP version 6 addresses too, so
+you could also enter something like
+"0000:0000:0000:0000:0000:ffff:9d16:0164".
+
+The Port field may not require changing...it is set automatically
+when you choose a Connection type.  But some servers use a custom
+port number, so adjust the value if necessary.
+
+The User ID is how the server identifies you.  If not provided,
+the name of your local Home folder is used (one-word,
+all-lowercase).  Note that if a password is also required to
+access the server, you will be prompted for that at connection
+time; you cannot enter it initially in the configuration sheet.
+
 h2(#sessioninfo). Session Info
 
 Displays the status of all windows at once, including whether or

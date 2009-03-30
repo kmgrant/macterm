@@ -23,43 +23,11 @@ from the File menu; for others, use File >> Open.
 A Custom New Session opens a terminal window and a sheet to allow
 configuration.
 
-If you need special terminal settings that are saved as a
-Favorite, you can choose to enable them now with the Terminal
-menu.  Or, defer settings until after the session starts.  (Some
-settings cannot be changed later.)
+This sheet is identical to the equivalent panel of the Preferences
+window, so just review the "preferences documentation":preferences.html#sessionresource for more.
 
-Your remote application will be accessible using a certain
-protocol - ask your administrator if none of the options (**SSH**
-1 or 2, **TELNET**, **SFTP** or **FTP**) seems appropriate.
-
-There will be a "server" for your remote application, uniquely
-identified by a combination of **host** and **port**.  In the
-Host field, you can enter a name (like "apple.com") if one is
-applicable; if you have only an address (like "123.45.67.123"),
-enter that instead.  The Look Up button can be used to check if a
-server name is valid (if so, it is transformed into a numeric
-address; otherwise, it is unchanged).
-
-bq. MacTelnet supports IP version 6 addresses too, so
-you could also enter something like
-"0000:0000:0000:0000:0000:ffff:9d16:0164".
-
-The Port field may not require changing...it is set automatically
-when you choose a Protocol.  But some servers use a custom port
-number, so adjust the value if necessary.
-
-The User ID is what the server uses to identify you.  If not
-provided, the name of your local Home folder is used (one-word,
-all-lowercase).  Note that if a password is also required to
-access the server, you will be prompted for that at connection
-time; you cannot enter it initially in the configuration sheet.
-
-bq. You'll notice that your changes set up a Unix
-command line.  This is because MacTelnet relies on
-Apple's installed commands to connect to your server.
-Advanced users may wish to add extra options here; see
-the Unix manual pages for each command to learn what is
-available.
+Unlike Preferences, changes to the sheet are temporary and can
+be either discarded or committed using the sheet's buttons.
 
 h2(#unix). Local Sessions: Running Unix Commands
 
@@ -75,8 +43,7 @@ commands interactively.
 Session Preferences), will open that session.
 
 * File >> Custom New Session... can also be used; simply ignore
-the Remote Sessions Only section, and enter command line text at
-the bottom of the dialog.
+the "Connect to Server..." button, and enter command line text.
 
 * Hold down Option to see File >> Log-In Shell.  This invokes a
 shell in log-in mode (with shell-dependent settings) that will

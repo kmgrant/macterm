@@ -216,6 +216,7 @@ English.lproj/PrefPanelSessions.nib \
 English.lproj/PrefPanelTerminals.nib \
 English.lproj/PrefsWindow.nib \
 English.lproj/ProgressDialog.nib \
+English.lproj/ServerBrowserCocoa.nib \
 English.lproj/SizeDialog.nib \
 English.lproj/TEKWindow.nib \
 English.lproj/TerminalWindow.nib \

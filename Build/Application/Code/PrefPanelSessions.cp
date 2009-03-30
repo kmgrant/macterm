@@ -75,6 +75,7 @@ extern "C"
 #include "Panel.h"
 #include "Preferences.h"
 #include "PrefPanelSessions.h"
+#include "ServerBrowser.h"
 #include "Session.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
@@ -93,19 +94,12 @@ the NIBs from the package "PrefPanelSessions.nib".
 
 In addition, they MUST be unique across all panels.
 */
+HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
+HIViewID const	idMyButtonConnectToServer		= { 'CtoS', 0/* ID */ };
+HIViewID const	idMyHelpTextConnectToServer		= { 'ConH', 0/* ID */ };
 HIViewID const	idMyPopUpMenuTerminal			= { 'Term', 0/* ID */ };
 HIViewID const	idMyPopUpMenuFormat				= { 'Frmt', 0/* ID */ };
 HIViewID const	idMyHelpTextPresets				= { 'THlp', 0/* ID */ };
-HIViewID const	idMySeparatorPresets			= { 'BotD', 0/* ID */ };
-HIViewID const	idMySeparatorRemoteSessionsOnly	= { 'RmSD', 0/* ID */ };
-HIViewID const	idMyPopUpMenuProtocol			= { 'Prot', 0/* ID */ };
-HIViewID const	idMyFieldHostName				= { 'Host', 0/* ID */ };
-HIViewID const	idMyButtonLookUpHostName		= { 'Look', 0/* ID */ };
-HIViewID const	idMyChasingArrowsDNSWait		= { 'Wait', 0/* ID */ };
-HIViewID const	idMyFieldPortNumber				= { 'Port', 0/* ID */ };
-HIViewID const	idMyFieldUserID					= { 'User', 0/* ID */ };
-HIViewID const	idMyFieldCommandLine			= { 'CmdL', 0/* ID */ };
-HIViewID const	idMyHelpTextCommandLine			= { 'CmdH', 0/* ID */ };
 HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
 HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
 HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
@@ -226,22 +220,16 @@ struct My_SessionsPanelResourceUI
 	Float32				idealWidth;			//!< best size in pixels
 	Float32				idealHeight;		//!< best size in pixels
 	HIViewWrap			mainView;
-	Session_Protocol	selectedProtocol;	//!< indicates the protocol new remote sessions should use
-	
-	void
-	lookupDoneUI ();
-	
-	Boolean
-	lookupHostName ();
-	
-	void
-	lookupWaitUI ();
 	
 	static SInt32
 	panelChanged	(Panel_Ref, Panel_Message, void*);
 	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	UInt16
+	readPreferencesForRemoteServers		(Preferences_ContextRef, Boolean, Session_Protocol&,
+										 CFStringRef&, UInt16&, CFStringRef&);
 	
 	void
 	rebuildFavoritesMenu	(HIViewID const&, UInt32, Preferences_Class,
@@ -253,11 +241,12 @@ struct My_SessionsPanelResourceUI
 	void
 	rebuildTerminalMenu ();
 	
-	MenuItemIndex
-	returnProtocolMenuCommandIndex	(UInt32);
-	
 	void
 	saveFieldPreferences	(Preferences_ContextRef);
+	
+	UInt16
+	savePreferencesForRemoteServers		(Preferences_ContextRef, Session_Protocol,
+										 CFStringRef, UInt16, CFStringRef);
 	
 	void
 	setAssociatedFormat		(CFStringRef);
@@ -268,23 +257,8 @@ struct My_SessionsPanelResourceUI
 	void
 	setCommandLine	(CFStringRef);
 	
-	void
-	setHost		(CFStringRef);
-	
-	void
-	setPort		(UInt16);
-	
-	void
-	setProtocol		(Session_Protocol);
-	
-	void
-	setUserID	(CFStringRef);
-	
 	Boolean
-	updateCommandLine ();
-	
-	void
-	updatePortNumberField ();
+	updateCommandLine	(Session_Protocol, CFStringRef, UInt16, CFStringRef);
 
 protected:
 	HIViewWrap
@@ -294,17 +268,11 @@ protected:
 	deltaSize	(HIViewRef, Float32, Float32, void*);
 
 private:
-	HIViewWrap							_fieldHostName;					//!< the name, IP address or other identifier for the remote host
-	HIViewWrap							_fieldPortNumber;				//!< the port number on which to attempt a connection on the host
-	HIViewWrap							_fieldUserID;					//!< the (usually 8-character) login name to use for the server
 	HIViewWrap							_fieldCommandLine;				//!< text of Unix command line to run
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 	CarbonEventHandlerWrap				_buttonCommandsHandler;			//!< invoked when a button is clicked
 	CarbonEventHandlerWrap				_whenCommandLineChangedHandler;	//!< invoked when the command line field changes
-	CarbonEventHandlerWrap				_whenHostNameChangedHandler;	//!< invoked when the host name field changes
-	CarbonEventHandlerWrap				_whenPortNumberChangedHandler;	//!< invoked when the port number field changes
-	CarbonEventHandlerWrap				_whenUserIDChangedHandler;		//!< invoked when the user ID field changes
-	CarbonEventHandlerWrap				_whenLookupCompleteHandler;		//!< invoked when a DNS query finally returns
+	CarbonEventHandlerWrap				_whenServerPanelChangedHandler;	//!< invoked when the server browser panel changes
 	ListenerModel_ListenerRef			_whenFavoritesChangedHandler;	//!< used to manage Terminal and Format pop-up menus
 	MenuItemIndex						_numberOfTerminalItemsAdded;	//!< used to manage Terminal pop-up menu
 	MenuItemIndex						_numberOfFormatItemsAdded;		//!< used to manage Format pop-up menu
@@ -377,10 +345,9 @@ namespace {
 
 void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
 void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-pascal OSStatus		receiveFieldChangedHostSetup			(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHICommand						(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveLookupComplete					(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus		receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
 
@@ -1503,16 +1470,6 @@ idealWidth						(0.0),
 idealHeight						(0.0),
 mainView						(createContainerView(inPanel, inOwningWindow)
 									<< HIViewWrap_AssertExists),
-selectedProtocol				(kSession_ProtocolSSH1), // TEMPORARY: probably should read NIB and determine default menu item to find protocol value
-_fieldHostName					(HIViewWrap(idMyFieldHostName, inOwningWindow)
-									<< HIViewWrap_AssertExists
-									<< HIViewWrap_InstallKeyFilter(HostNameLimiter)),
-_fieldPortNumber				(HIViewWrap(idMyFieldPortNumber, inOwningWindow)
-									<< HIViewWrap_AssertExists
-									<< HIViewWrap_InstallKeyFilter(NumericalLimiter)),
-_fieldUserID					(HIViewWrap(idMyFieldUserID, inOwningWindow)
-									<< HIViewWrap_AssertExists
-									<< HIViewWrap_InstallKeyFilter(NoSpaceLimiter)),
 _fieldCommandLine				(HIViewWrap(idMyFieldCommandLine, inOwningWindow)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_InstallKeyFilter(UnixCommandLineLimiter)),
@@ -1524,18 +1481,9 @@ _buttonCommandsHandler			(GetWindowEventTarget(inOwningWindow), receiveHICommand
 _whenCommandLineChangedHandler	(GetControlEventTarget(this->_fieldCommandLine), receiveFieldChangedInCommandLine,
 									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 									this/* user data */),
-_whenHostNameChangedHandler		(GetControlEventTarget(this->_fieldHostName), receiveFieldChangedHostSetup,
-									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
-									this/* user data */),
-_whenPortNumberChangedHandler	(GetControlEventTarget(this->_fieldPortNumber), receiveFieldChangedHostSetup,
-									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
-									this/* user data */),
-_whenUserIDChangedHandler		(GetControlEventTarget(this->_fieldUserID), receiveFieldChangedHostSetup,
-									CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
-									this/* user data */),
-_whenLookupCompleteHandler		(GetApplicationEventTarget(), receiveLookupComplete,
-									CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_DNS),
-															kEventNetEvents_HostLookupComplete),
+_whenServerPanelChangedHandler	(GetWindowEventTarget(inOwningWindow), receiveServerBrowserEvent,
+									CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_ServerBrowser),
+															kEventNetEvents_ServerBrowserNewData, kEventNetEvents_ServerBrowserNewEventTarget),
 									this/* user data */),
 _whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
 _numberOfTerminalItemsAdded		(0),
@@ -1547,7 +1495,6 @@ _numberOfFormatItemsAdded		(0)
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
-	this->lookupDoneUI();
 	prefsResult = Preferences_StartMonitoring
 					(this->_whenFavoritesChangedHandler, kPreferences_ChangeNumberOfContexts,
 						true/* notify of initial value */);
@@ -1643,124 +1590,13 @@ deltaSize	(HIViewRef		inContainer,
 	HIViewWrap						viewWrap;
 	
 	
+	viewWrap = HIViewWrap(idMyHelpTextConnectToServer, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	viewWrap = HIViewWrap(idMyHelpTextPresets, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMySeparatorPresets, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMySeparatorRemoteSessionsOnly, kPanelWindow);
-	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMyChasingArrowsDNSWait, kPanelWindow);
-	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMyButtonLookUpHostName, kPanelWindow);
-	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
-	dataPtr->_fieldHostName << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	viewWrap = HIViewWrap(idMyHelpTextCommandLine, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	dataPtr->_fieldCommandLine << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	// INCOMPLETE
 }// My_SessionsPanelResourceUI::deltaSize
-
-
-/*!
-Changes the state of one or more panel views to reflect a
-domain name resolution having completed.
-
-See also lookupWaitUI().
-
-(3.1)
-*/
-void
-My_SessionsPanelResourceUI::
-lookupDoneUI ()
-{
-	HIWindowRef const	kPanelWindow = HIViewGetWindow(this->mainView);
-	HIViewWrap			viewWrap;
-	
-	
-	viewWrap = HIViewWrap(idMyChasingArrowsDNSWait, kPanelWindow);
-	
-	// it is possible this could be invoked late by a callback after the
-	// user interface goes away, so do not update without checking first
-	if (viewWrap.exists())
-	{
-		viewWrap << HIViewWrap_SetVisibleState(false);
-	}
-}// My_SessionsPanelResourceUI::lookupDoneUI
-
-
-/*!
-Performs a DNR lookup of the host given in the dialog
-boxÕs main text field, and when complete replaces the
-contents of the text field with the resolved IP address
-(as a string).
-
-Returns true if the lookup succeeded.
-
-(3.1)
-*/
-Boolean
-My_SessionsPanelResourceUI::
-lookupHostName ()
-{
-	CFStringRef		textCFString = nullptr;
-	Boolean			result = false;
-	
-	
-	GetControlTextAsCFString(_fieldHostName, textCFString);
-	if (CFStringGetLength(textCFString) <= 0)
-	{
-		// there has to be some text entered there; let the user
-		// know that a blank is unacceptable
-		Sound_StandardAlert();
-	}
-	else
-	{
-		char	hostName[256];
-		
-		
-		lookupWaitUI();
-		if (CFStringGetCString(textCFString, hostName, sizeof(hostName), kCFStringEncodingMacRoman))
-		{
-			DNR_Result		lookupAttemptResult = kDNR_ResultOK;
-			
-			
-			lookupAttemptResult = DNR_New(hostName, false/* use IP version 4 addresses (defaults to IPv6) */);
-			if (false == lookupAttemptResult.ok())
-			{
-				// could not even initiate, so restore UI
-				lookupDoneUI();
-			}
-			else
-			{
-				// okay so far...
-				result = true;
-			}
-		}
-	}
-	
-	return result;
-}// My_SessionsPanelResourceUI::lookupHostName
-
-
-/*!
-Changes the state of one or more panel views to reflect a
-domain name resolution in progress.
-
-See also lookupDoneUI().
-
-(3.1)
-*/
-void
-My_SessionsPanelResourceUI::
-lookupWaitUI ()
-{
-	HIWindowRef const	kPanelWindow = HIViewGetWindow(this->mainView);
-	HIViewWrap			viewWrap;
-	
-	
-	viewWrap = HIViewWrap(idMyChasingArrowsDNSWait, kPanelWindow);
-	viewWrap << HIViewWrap_SetVisibleState(true);
-}// My_SessionsPanelResourceUI::lookupWaitUI
 
 
 /*!
@@ -1802,6 +1638,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			ServerBrowser_SetVisible(false);
 			delete panelDataPtr;
 		}
 		break;
@@ -1862,6 +1699,12 @@ panelChanged	(Panel_Ref		inPanel,
 			Preferences_ContextRef				oldContext = REINTERPRET_CAST(dataSetsPtr->oldDataSet, Preferences_ContextRef);
 			Preferences_ContextRef				newContext = REINTERPRET_CAST(dataSetsPtr->newDataSet, Preferences_ContextRef);
 			
+			
+			// force the Servers panel to no longer be associated with this data,
+			// by resetting it; this will automatically trigger appropriate UI
+			// changes (namely, removing highlighting from the button that opened
+			// the panel)
+			ServerBrowser_RemoveEventTarget();
 			
 			if (nullptr != oldContext)
 			{
@@ -1948,58 +1791,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			}
 		}
 		
-		// set protocol
-		{
-			Session_Protocol	givenProtocol = kSession_ProtocolSSH1;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(givenProtocol),
-														&givenProtocol, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				this->setProtocol(givenProtocol);
-			}
-		}
-		
-		// set host name
-		{
-			CFStringRef		hostCFString = nullptr;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerHost, sizeof(hostCFString),
-														&hostCFString, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				this->setHost(hostCFString);
-			}
-		}
-		
-		// set port number
-		{
-			UInt16		portNumber = 0;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerPort, sizeof(portNumber),
-														&portNumber, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				this->setPort(portNumber);
-			}
-		}
-		
-		// set user ID
-		{
-			CFStringRef		userCFString = nullptr;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerUserID, sizeof(userCFString),
-														&userCFString, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				this->setUserID(userCFString);
-			}
-		}
-		
 		// set command line
 		{
 			CFArrayRef		argumentListCFArray = nullptr;
@@ -2024,11 +1815,106 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			{
 				// ONLY if no actual command line was stored, generate a
 				// command line based on other settings (like host name)
-				this->updateCommandLine();
+				Session_Protocol	givenProtocol = kSession_ProtocolSSH1;
+				CFStringRef			hostCFString = nullptr;
+				UInt16				portNumber = 0;
+				CFStringRef			userCFString = nullptr;
+				UInt16				preferenceCountOK = 0;
+				Boolean				updateOK = false;
+				
+				
+				preferenceCountOK = this->readPreferencesForRemoteServers(inSettings, true/* search defaults too */,
+																			givenProtocol, hostCFString, portNumber, userCFString);
+				if (4 != preferenceCountOK)
+				{
+					Console_WriteLine("warning, unable to read one or more remote server preferences!");
+				}
+				updateOK = this->updateCommandLine(givenProtocol, hostCFString, portNumber, userCFString);
+				if (false == updateOK)
+				{
+					Console_WriteLine("warning, unable to update some part of command line based on given preferences!");
+				}
+				
+				CFRelease(hostCFString), hostCFString = nullptr;
+				CFRelease(userCFString), userCFString = nullptr;
 			}
 		}
 	}
 }// My_SessionsPanelResourceUI::readPreferences
+
+
+/*!
+Reads all preferences from the specified context that define a
+remote server, optionally using global defaults as a fallback
+for undefined settings.
+
+Every result is defined, even if it is an empty string or a
+zero value.  CFRelease() should be called on all strings.
+
+Returns the number of preferences read successfully, which is
+normally 4.  Any unsuccessful reads will have arbitrary values.
+
+(4.0)
+*/
+UInt16
+My_SessionsPanelResourceUI::
+readPreferencesForRemoteServers		(Preferences_ContextRef		inSettings,
+									 Boolean					inSearchDefaults,
+									 Session_Protocol&			outProtocol,
+									 CFStringRef&				outHostNameCopy,
+									 UInt16&					outPortNumber,
+									 CFStringRef&				outUserIDCopy)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	size_t					actualSize = 0;
+	UInt16					result = 0;
+	
+	
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerProtocol, sizeof(outProtocol),
+												&outProtocol, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outProtocol = kSession_ProtocolSSH1; // arbitrary
+	}
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerHost, sizeof(outHostNameCopy),
+												&outHostNameCopy, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outHostNameCopy = CFSTR(""); // arbitrary
+		CFRetain(outHostNameCopy);
+	}
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerPort, sizeof(outPortNumber),
+												&outPortNumber, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outPortNumber = 22; // arbitrary
+	}
+	prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagServerUserID, sizeof(outUserIDCopy),
+												&outUserIDCopy, inSearchDefaults, &actualSize);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		outUserIDCopy = CFSTR(""); // arbitrary
+		CFRetain(outUserIDCopy);
+	}
+	
+	return result;
+}// My_SessionsPanelResourceUI::readPreferencesForRemoteServers
 
 
 /*!
@@ -2121,28 +2007,6 @@ rebuildTerminalMenu ()
 
 
 /*!
-Returns the item index in the protocol pop-up menu
-that matches the specified command.
-
-(3.1)
-*/
-MenuItemIndex
-My_SessionsPanelResourceUI::
-returnProtocolMenuCommandIndex	(UInt32		inCommandID)
-{
-	MenuItemIndex	result = 0;
-	OSStatus		error = GetIndMenuItemWithCommandID(GetControlPopupMenuHandle
-														(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(this->mainView))),
-														inCommandID, 1/* 1 = return first match */,
-														nullptr/* menu */, &result);
-	assert_noerr(error);
-	
-	
-	return result;
-}// My_SessionsPanelResourceUI::returnProtocolMenuCommandIndex
-
-
-/*!
 Saves every text field in the panel to the data model.
 It is necessary to treat fields specially because they
 do not have obvious state changes (as, say, buttons do);
@@ -2159,53 +2023,6 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
-		
-		// set server host
-		{
-			CFStringRef		hostCFString = nullptr;
-			
-			
-			GetControlTextAsCFString(_fieldHostName, hostCFString);
-			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerHost,
-														sizeof(hostCFString), &hostCFString);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Console_WriteLine("warning, failed to set server host");
-			}
-			if (nullptr != hostCFString) CFRelease(hostCFString), hostCFString = nullptr;
-		}
-		
-		// set server port
-		{
-			SInt32		dummyInteger = 0;
-			UInt16		portNumber = 0;
-			
-			
-			GetControlNumericalText(_fieldPortNumber, &dummyInteger);
-			portNumber = STATIC_CAST(dummyInteger, UInt16);
-			
-			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerPort,
-														sizeof(portNumber), &portNumber);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Console_WriteLine("warning, failed to set server port");
-			}
-		}
-		
-		// set user name
-		{
-			CFStringRef		userCFString = nullptr;
-			
-			
-			GetControlTextAsCFString(_fieldUserID, userCFString);
-			prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerUserID,
-														sizeof(userCFString), &userCFString);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Console_WriteLine("warning, failed to set server user ID");
-			}
-			if (nullptr != userCFString) CFRelease(userCFString), userCFString = nullptr;
-		}
 		
 		// set command line
 		{
@@ -2237,6 +2054,76 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 		}
 	}
 }// My_SessionsPanelResourceUI::saveFieldPreferences
+
+
+/*!
+Saves the given preferences to the specified context.
+
+Returns the number of preferences saved successfully, which is
+normally 4.
+
+(4.0)
+*/
+UInt16
+My_SessionsPanelResourceUI::
+savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
+									 Session_Protocol			inProtocol,
+									 CFStringRef				inHostName,
+									 UInt16						inPortNumber,
+									 CFStringRef				inUserID)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	SInt16					portAsSInt16 = STATIC_CAST(inPortNumber, SInt16);
+	UInt16					result = 0;
+	
+	
+	// host name
+	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerHost,
+												sizeof(inHostName), &inHostName);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		Console_WriteLine("warning, unable to save host name setting");
+	}
+	// protocol
+	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerProtocol,
+												sizeof(inProtocol), &inProtocol);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		Console_WriteLine("warning, unable to save protocol setting");
+	}
+	// port number
+	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerPort,
+												sizeof(portAsSInt16), &portAsSInt16);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		Console_WriteLine("warning, unable to save port number setting");
+	}
+	// user ID
+	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerUserID,
+												sizeof(inUserID), &inUserID);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	else
+	{
+		Console_WriteLine("warning, unable to save user name setting");
+	}
+	
+	return result;
+}// My_SessionsPanelResourceUI::savePreferencesForRemoteServers
 
 
 /*!
@@ -2318,8 +2205,8 @@ Changes the command line field.
 
 IMPORTANT:	Normally, this is for initialization; it overwrites
 			the entire field with a set value.  Most of the time
-			it is more appropriate to use updateCommandLine() in
-			response to changes to other (such as, the host).
+			it is more appropriate to use updateCommandLine() to
+			respond to other changes (such as, the host).
 
 (3.1)
 */
@@ -2332,103 +2219,16 @@ setCommandLine		(CFStringRef	inCommandLine)
 
 
 /*!
-Changes the host name field.
+Since everything is ÒreallyÓ a local Unix command, this
+routine uses the given remote options and updates the
+command line field with appropriate values.
 
-(3.1)
-*/
-void
-My_SessionsPanelResourceUI::
-setHost		(CFStringRef	inHostName)
-{
-	SetControlTextWithCFString(_fieldHostName, inHostName);
-}// My_SessionsPanelResourceUI::setHost
+Note that the port number should be redundantly specified
+as both a number and a string.
 
-
-/*!
-Changes the port number field.
-
-IMPORTANT:	Normally, this is for initialization; it overwrites
-			the entire field with a set value.  Most of the time
-			it is more appropriate to use updatePortNumberField()
-			in response to other changes (such as, the protocol).
-
-(3.1)
-*/
-void
-My_SessionsPanelResourceUI::
-setPort		(UInt16		inPortNumber)
-{
-	SetControlNumericalText(_fieldPortNumber, inPortNumber);
-}// My_SessionsPanelResourceUI::setPort
-
-
-/*!
-Changes the currently selected protocol menu item.
-
-(3.1)
-*/
-void
-My_SessionsPanelResourceUI::
-setProtocol		(Session_Protocol	inProtocol)
-{
-	MenuItemIndex	itemIndex = 0;
-	UInt32			commandID = 0;
-	
-	
-	switch (inProtocol)
-	{
-	case kSession_ProtocolFTP:
-		commandID = kCommandNewProtocolSelectedFTP;
-		break;
-	
-	case kSession_ProtocolSFTP:
-		commandID = kCommandNewProtocolSelectedSFTP;
-		break;
-	
-	case kSession_ProtocolSSH1:
-		commandID = kCommandNewProtocolSelectedSSH1;
-		break;
-	
-	case kSession_ProtocolSSH2:
-		commandID = kCommandNewProtocolSelectedSSH2;
-		break;
-	
-	case kSession_ProtocolTelnet:
-		commandID = kCommandNewProtocolSelectedTELNET;
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	
-	itemIndex = this->returnProtocolMenuCommandIndex(commandID);
-	if (0 != itemIndex)
-	{
-		SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(this->mainView)),
-								itemIndex);
-	}
-}// My_SessionsPanelResourceUI::setProtocol
-
-
-/*!
-Changes the user ID field.
-
-(3.1)
-*/
-void
-My_SessionsPanelResourceUI::
-setUserID	(CFStringRef	inUserID)
-{
-	SetControlTextWithCFString(_fieldUserID, inUserID);
-}// My_SessionsPanelResourceUI::setUserID
-
-
-/*!
-Since everything is ÒreallyÓ a local Unix command,
-this routine scans the Remote Session options and
-updates the command line field with appropriate
-values.
+Every value should be defined, but if a string is empty
+or the port number is 0, it is skipped in the resulting
+command line.
 
 Returns "true" only if the update was successful.
 
@@ -2446,34 +2246,35 @@ See also setCommandLine().
 */
 Boolean
 My_SessionsPanelResourceUI::
-updateCommandLine ()
+updateCommandLine	(Session_Protocol	inProtocol,
+					 CFStringRef		inHostName,
+					 UInt16				inPortNumber,
+					 CFStringRef		inUserID)
 {
-	Boolean					result = true;
-	CFStringRef				hostNameCFString = nullptr;
 	CFMutableStringRef		newCommandLineCFString = CFStringCreateMutable(kCFAllocatorDefault,
 																			0/* length, or 0 for unlimited */);
+	Str31					portString;
+	Boolean					result = false;
 	
 	
 	// the host field is required when updating the command line
-	GetControlTextAsCFString(this->_fieldHostName, hostNameCFString);
-	if ((nullptr == hostNameCFString) || (0 == CFStringGetLength(hostNameCFString)))
+	if ((nullptr != inHostName) && (0 == CFStringGetLength(inHostName)))
 	{
-		hostNameCFString = nullptr;
+		inHostName = nullptr;
 	}
 	
-	if ((nullptr == newCommandLineCFString) || (nullptr == hostNameCFString))
+	PLstrcpy(portString, "\p");
+	if (0 != inPortNumber) NumToString(STATIC_CAST(inPortNumber, SInt32), portString);
+	
+	if ((nullptr != newCommandLineCFString) && (nullptr != inHostName))
 	{
-		// failed to create string!
-		result = false;
-	}
-	else
-	{
-		CFStringRef		portNumberCFString = nullptr;
-		CFStringRef		userIDCFString = nullptr;
-		Boolean			standardLoginOptionAppend = false;
-		Boolean			standardHostNameAppend = false;
-		Boolean			standardPortAppend = false;
-		Boolean			standardIPv6Append = false;
+		CFRetainRelease		portNumberCFString(CFStringCreateWithPascalStringNoCopy
+												(kCFAllocatorDefault, portString, kCFStringEncodingASCII, kCFAllocatorNull),
+												true/* is retained */);
+		Boolean				standardLoginOptionAppend = false;
+		Boolean				standardHostNameAppend = false;
+		Boolean				standardPortAppend = false;
+		Boolean				standardIPv6Append = false;
 		
 		
 		// see what is available
@@ -2481,33 +2282,34 @@ updateCommandLine ()
 		//       from all field values first, since otherwise the user
 		//       could enter a non-empty but blank value that would become
 		//       a broken command line.
-		GetControlTextAsCFString(this->_fieldPortNumber, portNumberCFString);
-		if ((nullptr == portNumberCFString) || (0 == CFStringGetLength(portNumberCFString)))
+		if ((false == portNumberCFString.exists()) || (0 == CFStringGetLength(portNumberCFString.returnCFStringRef())))
 		{
-			portNumberCFString = nullptr;
+			portNumberCFString.clear();
 		}
-		GetControlTextAsCFString(this->_fieldUserID, userIDCFString);
-		if ((nullptr == userIDCFString) || (0 == CFStringGetLength(userIDCFString)))
+		if ((nullptr != inUserID) && (0 == CFStringGetLength(inUserID)))
 		{
-			userIDCFString = nullptr;
+			inUserID = nullptr;
 		}
+		
+		// TEMPORARY - convert all of this logic to Python!
 		
 		// set command based on the protocol, and add arguments
 		// based on the specific command and the available data
-		switch (this->selectedProtocol)
+		result = true; // initially...
+		switch (inProtocol)
 		{
 		case kSession_ProtocolFTP:
 			CFStringAppend(newCommandLineCFString, CFSTR("/usr/bin/ftp"));
-			if (nullptr != hostNameCFString)
+			if (nullptr != inHostName)
 			{
 				// ftp uses "user@host" format
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
-				if (nullptr != userIDCFString)
+				if (nullptr != inUserID)
 				{
-					CFStringAppend(newCommandLineCFString, userIDCFString);
+					CFStringAppend(newCommandLineCFString, inUserID);
 					CFStringAppend(newCommandLineCFString, CFSTR("@"));
 				}
-				CFStringAppend(newCommandLineCFString, hostNameCFString);
+				CFStringAppend(newCommandLineCFString, inHostName);
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			standardPortAppend = true; // ftp supports a standalone server port number argument
@@ -2515,23 +2317,23 @@ updateCommandLine ()
 		
 		case kSession_ProtocolSFTP:
 			CFStringAppend(newCommandLineCFString, CFSTR("/usr/bin/sftp"));
-			if (nullptr != hostNameCFString)
+			if (nullptr != inHostName)
 			{
 				// ftp uses "user@host" format
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
-				if (nullptr != userIDCFString)
+				if (nullptr != inUserID)
 				{
-					CFStringAppend(newCommandLineCFString, userIDCFString);
+					CFStringAppend(newCommandLineCFString, inUserID);
 					CFStringAppend(newCommandLineCFString, CFSTR("@"));
 				}
-				CFStringAppend(newCommandLineCFString, hostNameCFString);
+				CFStringAppend(newCommandLineCFString, inHostName);
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
-			if (nullptr != portNumberCFString)
+			if (portNumberCFString.exists())
 			{
 				// sftp uses "-oPort=port" to specify the port number
 				CFStringAppend(newCommandLineCFString, CFSTR(" -oPort="));
-				CFStringAppend(newCommandLineCFString, portNumberCFString);
+				CFStringAppend(newCommandLineCFString, portNumberCFString.returnCFStringRef());
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			break;
@@ -2539,7 +2341,7 @@ updateCommandLine ()
 		case kSession_ProtocolSSH1:
 		case kSession_ProtocolSSH2:
 			CFStringAppend(newCommandLineCFString, CFSTR("/usr/bin/ssh"));
-			if (kSession_ProtocolSSH2 == this->selectedProtocol)
+			if (kSession_ProtocolSSH2 == inProtocol)
 			{
 				// -2: protocol version 2
 				CFStringAppend(newCommandLineCFString, CFSTR(" -2 "));
@@ -2549,11 +2351,11 @@ updateCommandLine ()
 				// -1: protocol version 1
 				CFStringAppend(newCommandLineCFString, CFSTR(" -1 "));
 			}
-			if (nullptr != portNumberCFString)
+			if (portNumberCFString.exists())
 			{
 				// ssh uses "-p port" to specify the port number
 				CFStringAppend(newCommandLineCFString, CFSTR(" -p "));
-				CFStringAppend(newCommandLineCFString, portNumberCFString);
+				CFStringAppend(newCommandLineCFString, portNumberCFString.returnCFStringRef());
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			standardIPv6Append = true; // ssh supports a "-6" argument if the host is exactly in IP version 6 format
@@ -2582,33 +2384,34 @@ updateCommandLine ()
 			// appends options in ÒstandardÓ form if supported by the protocol
 			// (if MOST commands do not have an option, append it in the above
 			// switch, instead)
-			if ((standardIPv6Append) && (CFStringFind(hostNameCFString, CFSTR(":"), 0/* options */).length > 0))
+			if ((standardIPv6Append) && (nullptr != inHostName) &&
+				(CFStringFind(inHostName, CFSTR(":"), 0/* options */).length > 0))
 			{
 				// -6: address is in IPv6 format
 				CFStringAppend(newCommandLineCFString, CFSTR(" -6 "));
 			}
-			if ((standardLoginOptionAppend) && (nullptr != userIDCFString))
+			if ((standardLoginOptionAppend) && (nullptr != inUserID))
 			{
 				// standard form is a Unix command accepting a "-l" option
 				// followed by the user ID for login
 				CFStringAppend(newCommandLineCFString, CFSTR(" -l "));
-				CFStringAppend(newCommandLineCFString, userIDCFString);
+				CFStringAppend(newCommandLineCFString, inUserID);
 			}
-			if ((standardHostNameAppend) && (nullptr != hostNameCFString))
+			if ((standardHostNameAppend) && (nullptr != inHostName))
 			{
 				// standard form is a Unix command accepting a standalone argument
 				// that is the host name of the server to connect to
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
-				CFStringAppend(newCommandLineCFString, hostNameCFString);
+				CFStringAppend(newCommandLineCFString, inHostName);
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
-			if ((standardPortAppend) && (nullptr != portNumberCFString))
+			if ((standardPortAppend) && (portNumberCFString.exists()))
 			{
 				// standard form is a Unix command accepting a standalone argument
 				// that is the port number on the server to connect to, AFTER the
 				// standalone host name option
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
-				CFStringAppend(newCommandLineCFString, portNumberCFString);
+				CFStringAppend(newCommandLineCFString, portNumberCFString.returnCFStringRef());
 				CFStringAppend(newCommandLineCFString, CFSTR(" "));
 			}
 			
@@ -2621,6 +2424,7 @@ updateCommandLine ()
 			{
 				SetControlTextWithCFString(this->_fieldCommandLine, newCommandLineCFString);
 				(OSStatus)HIViewSetNeedsDisplay(this->_fieldCommandLine, true);
+				result = true;
 			}
 		}
 		
@@ -2636,49 +2440,6 @@ updateCommandLine ()
 	
 	return result;
 }// My_SessionsPanelResourceUI::updateCommandLine
-
-
-/*!
-Sets the value of the port number field to match the
-currently-selected protocol.  Use this to ÒclearÓ its
-value appropriately.
-
-(3.1)
-*/
-void
-My_SessionsPanelResourceUI::
-updatePortNumberField ()
-{
-	SInt16		newPort = 0;
-	
-	
-	switch (this->selectedProtocol)
-	{
-	case kSession_ProtocolFTP:
-		newPort = 21;
-		break;
-	
-	case kSession_ProtocolSFTP:
-	case kSession_ProtocolSSH1:
-	case kSession_ProtocolSSH2:
-		newPort = 22;
-		break;
-	
-	case kSession_ProtocolTelnet:
-		newPort = 23;
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	
-	if (0 != newPort)
-	{
-		SetControlNumericalText(this->_fieldPortNumber, newPort);
-		(OSStatus)HIViewSetNeedsDisplay(this->_fieldPortNumber, true);
-	}
-}// My_SessionsPanelResourceUI::updatePortNumberField
 
 
 /*!
@@ -2751,53 +2512,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// preferenceChanged
-
-
-/*!
-Embellishes "kEventTextInputUnicodeForKeyEvent" of
-"kEventClassTextInput" for the remote session fields
-in the Resource tab.  Since a command line is
-constructed based on user entries, every change
-requires an update to the command line field.  This
-also saves the preferences for text field data.
-
-(3.1)
-*/
-pascal OSStatus
-receiveFieldChangedHostSetup	(EventHandlerCallRef	inHandlerCallRef,
-								 EventRef				inEvent,
-								 void*					inMySessionsTabResourcePtr)
-{
-	OSStatus						result = eventNotHandledErr;
-	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
-	UInt32 const					kEventClass = GetEventClass(inEvent);
-	UInt32 const					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassTextInput);
-	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
-	
-	// first ensure the keypress takes effect (that is, it updates
-	// whatever text field it is for)
-	result = CallNextEventHandler(inHandlerCallRef, inEvent);
-	
-	// for remote-host fields, synchronize the post-input change with the command line field;
-	// it is not appropriate to do this for changes to the command line itself, as the user
-	// may be trying to enter a custom Unix command, so there is a separate handler for that
-	// field (see receiveFieldChangedInCommandLine())
-	resourceInterfacePtr->updateCommandLine();
-	
-	// synchronize the post-input change with preferences
-	{
-		My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
-																			My_SessionsPanelResourceDataPtr);
-		
-		
-		resourceInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
-	}
-	
-	return result;
-}// receiveFieldChangedHostSetup
 
 
 /*!
@@ -2995,71 +2709,6 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 				}
 				break;
 			
-			case kCommandNewProtocolSelectedFTP:
-			case kCommandNewProtocolSelectedSFTP:
-			case kCommandNewProtocolSelectedSSH1:
-			case kCommandNewProtocolSelectedSSH2:
-			case kCommandNewProtocolSelectedTELNET:
-				// a new protocol menu item was chosen
-				{
-					MenuItemIndex const					kItemIndex = resourceInterfacePtr->returnProtocolMenuCommandIndex(received.commandID);
-					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
-																					My_SessionsPanelResourceDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					switch (received.commandID)
-					{
-					case kCommandNewProtocolSelectedFTP:
-						resourceInterfacePtr->selectedProtocol = kSession_ProtocolFTP;
-						break;
-					
-					case kCommandNewProtocolSelectedSFTP:
-						resourceInterfacePtr->selectedProtocol = kSession_ProtocolSFTP;
-						break;
-					
-					case kCommandNewProtocolSelectedSSH1:
-						resourceInterfacePtr->selectedProtocol = kSession_ProtocolSSH1;
-						break;
-					
-					case kCommandNewProtocolSelectedSSH2:
-						resourceInterfacePtr->selectedProtocol = kSession_ProtocolSSH2;
-						break;
-					
-					case kCommandNewProtocolSelectedTELNET:
-						resourceInterfacePtr->selectedProtocol = kSession_ProtocolTelnet;
-						break;
-					
-					default:
-						// ???
-						break;
-					}
-					SetControl32BitValue(HIViewWrap(idMyPopUpMenuProtocol, HIViewGetWindow(resourceInterfacePtr->mainView)), kItemIndex);
-					resourceInterfacePtr->updatePortNumberField();
-					(Boolean)resourceInterfacePtr->updateCommandLine();
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagServerProtocol,
-																sizeof(resourceInterfacePtr->selectedProtocol),
-																&resourceInterfacePtr->selectedProtocol);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						Console_WriteLine("warning, unable to save protocol setting");
-					}
-					result = noErr;
-				}
-				break;
-			
-			case kCommandLookUpSelectedHostName:
-				if (resourceInterfacePtr->lookupHostName())
-				{
-					result = noErr;
-				}
-				else
-				{
-					Sound_StandardAlert();
-					result = resNotFound;
-				}
-				break;
-			
 			case kCommandShowCommandLine:
 				// this normally means Òshow command line floaterÓ, but in the context
 				// of an active New Session sheet, it means Òselect command line fieldÓ
@@ -3068,6 +2717,38 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					
 					
 					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
+					result = noErr;
+				}
+				break;
+			
+			case kCommandEditCommandLine:
+				// show the server browser panel and target the command line field
+				{
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					HIWindowRef							window = HIViewGetWindow(resourceInterfacePtr->mainView);
+					HIViewWrap							panelDisplayButton(idMyButtonConnectToServer, window);
+					Session_Protocol					dataModelProtocol = kSession_ProtocolSSH1;
+					CFStringRef							dataModelHostName = nullptr;
+					UInt16								dataModelPort = 0;
+					CFStringRef							dataModelUserID = nullptr;
+					UInt16								preferenceCountOK = 0;
+					
+					
+					preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers
+										(dataPtr->dataModel, true/* search defaults too */,
+											dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
+					if (4 != preferenceCountOK)
+					{
+						Console_WriteLine("warning, unable to read one or more remote server preferences!");
+					}
+					SetControl32BitValue(panelDisplayButton, kControlCheckBoxCheckedValue);
+					ServerBrowser_SetVisible(true);
+					ServerBrowser_SetEventTarget(GetWindowEventTarget(window), dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
+					
+					CFRelease(dataModelHostName), dataModelHostName = nullptr;
+					CFRelease(dataModelUserID), dataModelUserID = nullptr;
+					
 					result = noErr;
 				}
 				break;
@@ -3129,61 +2810,134 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 
 
 /*!
-Handles "kEventNetEvents_HostLookupComplete" of
-"kEventClassNetEvents_DNS" by updating the text
-field containing the remote host name.
+Implements "kEventNetEvents_ServerBrowserNewData" and
+"kEventNetEvents_ServerBrowserNewEventTarget" of
+"kEventClassNetEvents_ServerBrowser" for the Resource tab.
 
-(3.1)
+When data is changed, the command line is rewritten to use the
+new protocol, remote server, port number, and user ID from the
+panel.
+
+When the event target is changed, the highlighting is removed
+from the button that originally spawned the server browser panel.
+
+(4.0)
 */
 pascal OSStatus
-receiveLookupComplete	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					inMySessionsTabResourcePtr)
+receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+							 EventRef				inEvent,
+							 void*					inMySessionsPanelResourceUIPtr)
 {
 	OSStatus						result = eventNotHandledErr;
-	My_SessionsPanelResourceUI*		ptr = REINTERPRET_CAST(inMySessionsTabResourcePtr, My_SessionsPanelResourceUI*);
+	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsPanelResourceUIPtr, My_SessionsPanelResourceUI*);
 	UInt32 const					kEventClass = GetEventClass(inEvent);
 	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
 	
-	assert(kEventClass == kEventClassNetEvents_DNS);
-	assert(kEventKind == kEventNetEvents_HostLookupComplete);
+	assert(kEventClass == kEventClassNetEvents_ServerBrowser);
+	assert((kEventKind == kEventNetEvents_ServerBrowserNewData) ||
+			(kEventKind == kEventNetEvents_ServerBrowserNewEventTarget));
+	
+	switch (kEventKind)
 	{
-		struct hostent*		lookupDataPtr = nullptr;
-		
-		
-		// find the lookup results
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_DirectHostEnt,
-														typeNetEvents_StructHostEntPtr, lookupDataPtr);
-		if (noErr == result)
+	case kEventNetEvents_ServerBrowserNewData:
+		// update command line field
 		{
-			// NOTE: The lookup data could be a linked list of many matches.
-			// The first is used arbitrarily.
-			if ((nullptr != lookupDataPtr->h_addr_list) && (nullptr != lookupDataPtr->h_addr_list[0]))
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																				My_SessionsPanelResourceDataPtr);
+			Session_Protocol					newProtocol = kSession_ProtocolSSH1; // arbitrary initial value
+			Session_Protocol					existingProtocol = kSession_ProtocolSSH1; // arbitrary initial value
+			CFStringRef							newHostName = nullptr;
+			CFStringRef							existingHostName = nullptr;
+			UInt32								newPortNumber = 0;
+			UInt16								existingPortNumber = 0;
+			CFStringRef							newUserID = nullptr;
+			CFStringRef							existingUserID = nullptr;
+			UInt16								preferenceCountOK = 0;
+			OSStatus							error = noErr;
+			Boolean								updateOK = false;
+			
+			
+			// first set defaults
+			preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers(panelDataPtr->dataModel, true/* search defaults too */,
+																						existingProtocol, existingHostName,
+																						existingPortNumber, existingUserID);
+			if (4 != preferenceCountOK) // TEMPORARY - should this be an assertion?
 			{
-				CFStringRef		addressCFString = DNR_CopyResolvedHostAsCFString(lookupDataPtr, 0/* which address */);
-				
-				
-				if (nullptr != addressCFString)
-				{
-					HIViewWrap		fieldHostName(idMyFieldHostName, HIViewGetWindow(ptr->mainView));
-					
-					
-					assert(fieldHostName.exists());
-					SetControlTextWithCFString(fieldHostName, addressCFString);
-					CFRelease(addressCFString);
-					(OSStatus)HIViewSetNeedsDisplay(fieldHostName, true);
-					result = noErr;
-				}
+				Console_WriteLine("warning, unable to set defaults for one or more remote server preferences!");
 			}
-			DNR_Dispose(&lookupDataPtr);
+			
+			// now read any updated values; note that CFStrings in events are automatically released
+			error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_Protocol, typeNetEvents_SessionProtocol,
+															newProtocol);
+			if (noErr != error)
+			{
+				//Console_WriteLine("no protocol found in event"); // debug - this is not an error
+				newProtocol = existingProtocol;
+			}
+			error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_HostName, typeCFStringRef,
+															newHostName);
+			if (noErr != error)
+			{
+				//Console_WriteLine("no host name found in event"); // debug - this is not an error
+				newHostName = existingHostName;
+			}
+			error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_PortNumber, typeUInt32,
+															newPortNumber);
+			if (noErr != error)
+			{
+				//Console_WriteLine("no port number found in event"); // debug - this is not an error
+				newPortNumber = existingPortNumber;
+			}
+			error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamNetEvents_UserID, typeCFStringRef,
+															newUserID);
+			if (noErr != error)
+			{
+				//Console_WriteLine("no user ID found in event"); // debug - this is not an error
+				newUserID = existingUserID;
+			}
+			
+			// finally, update the user interface to incorporate the changes
+			updateOK = resourceInterfacePtr->updateCommandLine(newProtocol, newHostName, newPortNumber, newUserID);
+			if (false == updateOK) // TEMPORARY - should this be an assertion?
+			{
+				Console_WriteLine("warning, unable to update some part of command line based on panel settings!");
+			}
+			preferenceCountOK = resourceInterfacePtr->savePreferencesForRemoteServers
+														(panelDataPtr->dataModel, newProtocol, newHostName,
+															newPortNumber, newUserID);
+			if (4 != preferenceCountOK)
+			{
+				Console_WriteValue("warning, some remote server settings could not be saved; 4 exist, saved", preferenceCountOK);
+			}
+			resourceInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+			
+			CFRelease(existingHostName), existingHostName = nullptr;
+			CFRelease(existingUserID), existingUserID = nullptr;
+			
+			result = noErr;
 		}
+		break;
+	
+	case kEventNetEvents_ServerBrowserNewEventTarget:
+		// remove highlighting from the panel-spawning button
+		{
+			HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
+			HIViewWrap		panelDisplayButton(idMyButtonConnectToServer, window);
+			
+			
+			SetControl32BitValue(panelDisplayButton, kControlCheckBoxUncheckedValue);
+			result = noErr;
+		}
+		break;
+	
+	default:
+		// ???
+		result = eventNotHandledErr;
+		break;
 	}
-	
-	ptr->lookupDoneUI();
-	
 	return result;
-}// receiveLookupComplete
+}// receiveServerBrowserEvent
 
 } // anonymous namespace
 

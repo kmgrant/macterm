@@ -138,6 +138,7 @@
 		0AD0B3780A9EB88E002064BA /* QuillsEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */; };
 		0AD0B3C10A9EBDF4002064BA /* QuillsPrefs.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD0B3C00A9EBDF4002064BA /* QuillsPrefs.cp */; };
 		0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */; };
+		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };
 		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; };
 		0AFA782C0B470144001FCE83 /* ParseURL.py in Populate lib-python2.3-pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* Util.py in Populate lib-python2.3-pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* Util.py */; };
@@ -489,6 +490,7 @@
 		0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelFormats.h; path = Application/Code/PrefPanelFormats.h; sourceTree = "<group>"; };
 		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelSessions.cp; path = Application/Code/PrefPanelSessions.cp; sourceTree = "<group>"; };
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelTerminals.cp; path = Application/Code/PrefPanelTerminals.cp; sourceTree = "<group>"; };
+		0AC0D8B00F7408AD004F9709 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ServerBrowserCocoa.nib; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC57BC50B1AE73B000F0250 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MainMenus.nib; sourceTree = "<group>"; };
 		0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsTerminal.cp; path = Application/Code/QuillsTerminal.cp; sourceTree = "<group>"; };
@@ -523,6 +525,8 @@
 		0ADB0D3305A7FBD90054A4E9 /* DefaultPreferences.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = DefaultPreferences.plist; path = Application/Resources/DefaultPreferences.plist; sourceTree = "<group>"; };
 		0ADC6B4108739552000A7EFC /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MainMenuHelp.nib; sourceTree = "<group>"; };
 		0ADEFCCD06C34E1B00814772 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/Clipboard.nib; sourceTree = "<group>"; };
+		0AE103AE0F71D003003127C7 /* ServerBrowser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ServerBrowser.h; path = Application/Code/ServerBrowser.h; sourceTree = "<group>"; };
+		0AE103B00F71D018003127C7 /* ServerBrowser.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = ServerBrowser.mm; path = Application/Code/ServerBrowser.mm; sourceTree = "<group>"; };
 		0AE1F16B0AF3E2C000D2DC13 /* QuillsCallbacks.typedef.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = QuillsCallbacks.typedef.h; path = Application/Code/QuillsCallbacks.typedef.h; sourceTree = "<group>"; };
 		0AE1F38D0AF41DA200D2DC13 /* MacTelnet */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = MacTelnet; path = Application/PythonCode/MacTelnet; sourceTree = "<group>"; };
 		0AE2859B0B8D6E7000E2253A /* IconForKeypadEnter.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadEnter.icns; path = Application/Resources/IconForKeypadEnter.icns; sourceTree = "<group>"; };
@@ -704,6 +708,7 @@
 				0A46FE0D055432A400ACDF3A /* RasterGraphicsKernel.cp */,
 				0A46FE0E055432A400ACDF3A /* RasterGraphicsScreen.cp */,
 				0A46FDF6055432A400ACDF3A /* RegionUtilities.cp */,
+				0AE103B00F71D018003127C7 /* ServerBrowser.mm */,
 				0A46FE14055432A400ACDF3A /* Session.cp */,
 				0A46FE15055432A400ACDF3A /* SessionDescription.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.cp */,
@@ -778,6 +783,7 @@
 				0A46041E0554376100ACDF3A /* RasterGraphicsKernel.h */,
 				0A46041F0554376100ACDF3A /* RasterGraphicsScreen.h */,
 				0A4603FF0554376100ACDF3A /* RegionUtilities.h */,
+				0AE103AE0F71D003003127C7 /* ServerBrowser.h */,
 				0A4604250554376100ACDF3A /* Session.h */,
 				0A4604260554376100ACDF3A /* SessionDescription.h */,
 				0A4604280554376100ACDF3A /* SessionFactory.h */,
@@ -947,6 +953,7 @@
 				0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */,
 				0A8450AF0554CB8E00CFF440 /* WindowTitleDialog.nib */,
 				0ACDC7900DDA5688000AE3CD /* AddressDialogCocoa.nib */,
+				0AC0D8AF0F7408AD004F9709 /* ServerBrowserCocoa.nib */,
 			);
 			name = NIBs;
 			sourceTree = "<group>";
@@ -1388,6 +1395,7 @@
 				0A36176B0DD286240081A445 /* Keypads.mm in Sources */,
 				0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */,
 				0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */,
+				0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1576,6 +1584,14 @@
 				0AB64A94057819E5005702BA /* English */,
 			);
 			name = InfoWindow.nib;
+			sourceTree = "<group>";
+		};
+		0AC0D8AF0F7408AD004F9709 /* ServerBrowserCocoa.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0AC0D8B00F7408AD004F9709 /* English */,
+			);
+			name = ServerBrowserCocoa.nib;
 			sourceTree = "<group>";
 		};
 		0AC57BC40B1AE73B000F0250 /* MainMenus.nib */ = {
