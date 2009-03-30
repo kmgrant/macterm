@@ -695,9 +695,9 @@ init
 		hidesProgress = YES;
 		hidesUserIDError = YES;
 		protocolIndexes = [[NSIndexSet alloc] init];
-		hostName = [[NSMutableString alloc] initWithCapacity:30/* a hint, not a limit */];
-		portNumber = [[NSMutableString alloc] initWithCapacity:6/* a hint, not a limit */];
-		userID = [[NSMutableString alloc] initWithCapacity:8/* a hint, not a limit */];
+		hostName = [[[NSString alloc] initWithString:@""] autorelease];
+		portNumber = [[[NSString alloc] initWithString:@""] autorelease];
+		userID = [[[NSString alloc] initWithString:@""] autorelease];
 		errorMessage = [[NSString string] retain];
 	}
 	return self;
@@ -712,9 +712,6 @@ dealloc
 	[browser release];
 	[discoveredHostIndexes release];
 	[protocolIndexes release];
-	[hostName release];
-	[portNumber release];
-	[userID release];
 	[errorMessage release];
 	[super dealloc];
 }// dealloc
@@ -990,8 +987,15 @@ hostName
 - (void)
 setHostName:(NSString*)		aString
 {
-	[hostName autorelease];
-	hostName = [aString copy];
+	if (nil == aString)
+	{
+		hostName = [@"" retain];
+	}
+	else
+	{
+		[hostName autorelease];
+		hostName = [aString copy];
+	}
 	[self notifyOfChangeInValueReturnedBy:@selector(hostName)];
 }// setHostName:
 
@@ -1045,8 +1049,15 @@ portNumber
 - (void)
 setPortNumber:(NSString*)	aString
 {
-	[portNumber autorelease];
-	portNumber = [aString copy];
+	if (nil == aString)
+	{
+		portNumber = [@"" retain];
+	}
+	else
+	{
+		[portNumber autorelease];
+		portNumber = [aString copy];
+	}
 	[self setHidesPortNumberError:YES];
 	[self notifyOfChangeInValueReturnedBy:@selector(portNumber)];
 }// setPortNumber:
@@ -1125,8 +1136,15 @@ userID
 - (void)
 setUserID:(NSString*)	aString
 {
-	[userID autorelease];
-	userID = [aString copy];
+	if (nil == aString)
+	{
+		userID = [@"" retain];
+	}
+	else
+	{
+		[userID autorelease];
+		userID = [aString copy];
+	}
 	[self setHidesUserIDError:YES];
 	[self notifyOfChangeInValueReturnedBy:@selector(userID)];
 }// setUserID:
