@@ -3,7 +3,7 @@
 	Console.cp
 	
 	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -587,6 +587,30 @@ Console_WriteValueStdString	(char const*			inLabel,
 	std::string		sString = s.str();
 	Console_WriteLine(sString.c_str());
 }// WriteValueStdString
+
+
+/*!
+Return true if Console_Warning() calls should trigger a crash
+that is traceable in a debugger (useful in ultra-debug mode
+near a final release); otherwise, return false to just make
+warnings print their message to the console.
+
+This is a function here instead of in the header, because it
+may be tweaked frequently and the header is used A LOT.  This
+simple flag change should not cause the entire project to be
+recompiled.
+
+(4.0)
+*/
+Boolean
+__Console_WarningsTriggerCrashTraces ()
+{
+#if 0
+	return true;
+#else
+	return false;
+#endif
+}// WarningsTriggerCrashTraces
 
 #endif /* ifndef NDEBUG */
 

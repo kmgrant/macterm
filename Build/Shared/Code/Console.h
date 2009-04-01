@@ -15,7 +15,7 @@
 /*###############################################################
 
 	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -148,6 +148,9 @@ Boolean
 	Console_Assert					(char const*		inAssertionName,
 									 Boolean			inCondition);
 
+Boolean
+	__Console_WarningsTriggerCrashTraces	();
+
 inline bool __Console_CrashTraceably ()
 {
 	// force a crash so that backtracing to the offending line is easier
@@ -178,6 +181,13 @@ inline bool __Console_AssertNoErrHelper (OSStatus e, char const* t, char const* 
 #endif
 #define assert_noerr(e)  \
     ((void) ((e == ::noErr) ? 0 : __Console_AssertNoErrHelper(e, #e, __FILE__, __LINE__)))
+
+// usage: e.g. Console_Warning(Console_WriteValue, "message", 25); // Console_WriteValue("message", 25);
+// the first argument is a function, and all remaining arguments are the function parameters
+// IMPORTANT: the "args..." and " , ##" syntax only work in GNU compilers
+#define Console_Warning(f, t, args...)  \
+	do { char s[256]; snprintf(s, sizeof(s), "warning, %s", t); f(s    , ## args); \
+	     if (__Console_WarningsTriggerCrashTraces()) __Console_CrashTraceably(); } while (0)
 
 void
 	Console_WriteHorizontalRule		();
