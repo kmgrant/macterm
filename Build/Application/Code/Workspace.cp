@@ -165,8 +165,8 @@ Workspace_Dispose	(Workspace_Ref*		inoutRefPtr)
 {
 	if (gWorkspacePtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked workspace; outstanding locks",
-							gWorkspacePtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked workspace; outstanding locks",
+						gWorkspacePtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{

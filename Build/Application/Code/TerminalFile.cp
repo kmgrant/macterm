@@ -229,8 +229,8 @@ TerminalFile_Dispose	(TerminalFileRef*	inoutTermFilePtr)
 {
 	if (gTerminalFilePtrLocks().isLocked(*inoutTermFilePtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked terminal file; outstanding locks",
-							gTerminalFilePtrLocks().returnLockCount(*inoutTermFilePtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked terminal file; outstanding locks",
+						gTerminalFilePtrLocks().returnLockCount(*inoutTermFilePtr));
 	}
 	else
 	{

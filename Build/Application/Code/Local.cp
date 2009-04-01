@@ -263,7 +263,7 @@ Local_KillProcess	(Local_ProcessRef*	inoutRefPtr)
 				int		killResult = kill(ptr->_processID, SIGKILL);
 				
 				
-				if (0 != killResult) Console_WriteValue("warning, unable to kill process: Unix error", errno);
+				if (0 != killResult) Console_Warning(Console_WriteValue, "unable to kill process: Unix error", errno);
 				else
 				{
 					// successful kill, ID is no longer valid
@@ -272,15 +272,15 @@ Local_KillProcess	(Local_ProcessRef*	inoutRefPtr)
 			}
 			else
 			{
-				Console_WriteValue("warning, attempt to run kill with special pid", ptr->_processID);
+				Console_Warning(Console_WriteValue, "attempt to run kill with special pid", ptr->_processID);
 			}
 		}
 	}
 	
 	if (gProcessPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked process data; outstanding locks",
-							gProcessPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked process data; outstanding locks",
+						gProcessPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{
@@ -732,7 +732,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		// set user’s TTY to raw mode
 		if (kLocal_ResultOK != putTTYInRawMode(STDIN_FILENO))
 		{
-			Console_WriteLine("warning, error entering TTY raw-mode");
+			Console_Warning(Console_WriteLine, "error entering TTY raw-mode");
 		}
 		
 		// reset user’s TTY on exit

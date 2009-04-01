@@ -135,8 +135,8 @@ NewSessionDialog_Dispose	(NewSessionDialog_Ref*	inoutRefPtr)
 {
 	if (gNewSessionDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked new session dialog; outstanding locks",
-							gNewSessionDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked new session dialog; outstanding locks",
+						gNewSessionDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{
@@ -248,7 +248,7 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 		if (kPreferences_ResultOK != prefsResult)
 		{
 			Sound_StandardAlert();
-			Console_WriteLine("warning, unexpected problem retrieving the command line from the panel!");
+			Console_Warning(Console_WriteLine, "unexpected problem retrieving the command line from the panel!");
 		}
 		else
 		{

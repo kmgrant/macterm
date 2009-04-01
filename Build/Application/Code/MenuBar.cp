@@ -2921,7 +2921,7 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 	sessionResult = Session_CopyStateIconRef(inSession, stateIconRef);
 	if (false == sessionResult.ok())
 	{
-		Console_WriteLine("warning, unable to copy session icon for menu item");
+		Console_Warning(Console_WriteLine, "unable to copy session icon for menu item");
 	}
 	else
 	{

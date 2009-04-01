@@ -142,7 +142,7 @@ _session(nullptr)
 		// later called on the object.  This also helps in cases where an
 		// object may asynchronously become invalid (e.g. a connection dying
 		// when a script still holds a reference).
-		Console_WriteLine("warning, unexpected exception in Session constructor");
+		Console_Warning(Console_WriteLine, "unexpected exception in Session constructor");
 		_session = nullptr;
 	}
 }// default constructor

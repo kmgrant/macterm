@@ -289,7 +289,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 				if (array == nullptr)
 				{
 					// warn user - unimplemented
-					Console_WriteLine("warning, unable to allocate file spec. array for startup items");
+					Console_Warning(Console_WriteLine, "unable to allocate file spec. array for startup items");
 				}
 				else
 				{

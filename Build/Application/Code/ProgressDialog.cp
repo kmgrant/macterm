@@ -133,8 +133,8 @@ ProgressDialog_Dispose		(ProgressDialog_Ref*	inoutRefPtr)
 {
 	if (gProgressDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked progress dialog; outstanding locks",
-							gProgressDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked progress dialog; outstanding locks",
+						gProgressDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{

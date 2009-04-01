@@ -1038,7 +1038,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 														sizeof(messageCFString), &messageCFString);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteLine("warning, failed to set answer-back message");
+				Console_Warning(Console_WriteLine, "failed to set answer-back message");
 			}
 		}
 	}
@@ -1836,7 +1836,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 														sizeof(dimension), &dimension);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteLine("warning, failed to set screen columns");
+				Console_Warning(Console_WriteLine, "failed to set screen columns");
 			}
 		}
 		
@@ -1852,7 +1852,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 														sizeof(dimension), &dimension);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteLine("warning, failed to set screen rows");
+				Console_Warning(Console_WriteLine, "failed to set screen rows");
 			}
 		}
 		
@@ -1869,7 +1869,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 														sizeof(dimension), &dimension);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteLine("warning, failed to set screen scrollback");
+				Console_Warning(Console_WriteLine, "failed to set screen scrollback");
 			}
 		}
 	}
@@ -2234,7 +2234,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																sizeof(newEmulator), &newEmulator);
 					if (kPreferences_ResultOK != prefsResult)
 					{
-						Console_WriteLine("warning, failed to set terminal emulator");
+						Console_Warning(Console_WriteLine, "failed to set terminal emulator");
 					}
 					
 					// only when setting from the menu, resync the answerback message
@@ -2246,7 +2246,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																	sizeof(kAnswerBackMessage), &kAnswerBackMessage);
 						if ((nullptr == kAnswerBackMessage) || (kPreferences_ResultOK != prefsResult))
 						{
-							Console_WriteLine("warning, failed to set terminal answer-back message");
+							Console_Warning(Console_WriteLine, "failed to set terminal answer-back message");
 						}
 					}
 					
@@ -2292,7 +2292,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																sizeof(newScrollbackType), &newScrollbackType);
 					if (kPreferences_ResultOK != prefsResult)
 					{
-						Console_WriteLine("warning, failed to set screen scrollback type");
+						Console_Warning(Console_WriteLine, "failed to set screen scrollback type");
 					}
 					
 					result = noErr; // event is handled

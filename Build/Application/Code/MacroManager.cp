@@ -535,7 +535,7 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 									
 									default:
 										// ???
-										Console_WriteValueCharacter("warning, unrecognized backslash escape", nextChar);
+										Console_Warning(Console_WriteValueCharacter, "unrecognized backslash escape", nextChar);
 										substitutionError = true;
 										break;
 									}
@@ -649,7 +649,7 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	}
 	else if (nullptr == prefsContext)
 	{
-		Console_WriteLine("warning, callback was invoked for nonexistent macro set");
+		Console_Warning(Console_WriteLine, "callback was invoked for nonexistent macro set");
 	}
 	else
 	{

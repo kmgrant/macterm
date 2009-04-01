@@ -1827,12 +1827,12 @@ readPreferences		(Preferences_ContextRef		inSettings)
 																			givenProtocol, hostCFString, portNumber, userCFString);
 				if (4 != preferenceCountOK)
 				{
-					Console_WriteLine("warning, unable to read one or more remote server preferences!");
+					Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
 				}
 				updateOK = this->updateCommandLine(givenProtocol, hostCFString, portNumber, userCFString);
 				if (false == updateOK)
 				{
-					Console_WriteLine("warning, unable to update some part of command line based on given preferences!");
+					Console_Warning(Console_WriteLine, "unable to update some part of command line based on given preferences!");
 				}
 				
 				CFRelease(hostCFString), hostCFString = nullptr;
@@ -2049,7 +2049,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 			}
 			if (false == saveOK)
 			{
-				Console_WriteLine("warning, failed to set command line");
+				Console_Warning(Console_WriteLine, "failed to set command line");
 			}
 		}
 	}
@@ -2086,7 +2086,7 @@ savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
 	}
 	else
 	{
-		Console_WriteLine("warning, unable to save host name setting");
+		Console_Warning(Console_WriteLine, "unable to save host name setting");
 	}
 	// protocol
 	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerProtocol,
@@ -2097,7 +2097,7 @@ savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
 	}
 	else
 	{
-		Console_WriteLine("warning, unable to save protocol setting");
+		Console_Warning(Console_WriteLine, "unable to save protocol setting");
 	}
 	// port number
 	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerPort,
@@ -2108,7 +2108,7 @@ savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
 	}
 	else
 	{
-		Console_WriteLine("warning, unable to save port number setting");
+		Console_Warning(Console_WriteLine, "unable to save port number setting");
 	}
 	// user ID
 	prefsResult = Preferences_ContextSetData(inoutSettings, kPreferences_TagServerUserID,
@@ -2119,7 +2119,7 @@ savePreferencesForRemoteServers		(Preferences_ContextRef		inoutSettings,
 	}
 	else
 	{
-		Console_WriteLine("warning, unable to save user name setting");
+		Console_Warning(Console_WriteLine, "unable to save user name setting");
 	}
 	
 	return result;
@@ -2153,7 +2153,8 @@ setAssociatedFormat		(CFStringRef	inContextNameOrNull)
 		error = DialogUtilities_SetPopUpItemByText(popUpMenuButton, inContextNameOrNull, kFallbackValue);
 		if (controlPropertyNotFoundErr == error)
 		{
-			Console_WriteValueCFString("warning, unable to find menu item for requested Format context", inContextNameOrNull);
+			Console_Warning(Console_WriteValueCFString, "unable to find menu item for requested Format context",
+							inContextNameOrNull);
 		}
 		else
 		{
@@ -2190,7 +2191,8 @@ setAssociatedTerminal	(CFStringRef	inContextNameOrNull)
 		error = DialogUtilities_SetPopUpItemByText(popUpMenuButton, inContextNameOrNull, kFallbackValue);
 		if (controlPropertyNotFoundErr == error)
 		{
-			Console_WriteValueCFString("warning, unable to find menu item for requested Terminal context", inContextNameOrNull);
+			Console_Warning(Console_WriteValueCFString, "unable to find menu item for requested Terminal context",
+							inContextNameOrNull);
 		}
 		else
 		{
@@ -2740,7 +2742,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 											dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
 					if (4 != preferenceCountOK)
 					{
-						Console_WriteLine("warning, unable to read one or more remote server preferences!");
+						Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
 					}
 					SetControl32BitValue(panelDisplayButton, kControlCheckBoxCheckedValue);
 					ServerBrowser_SetVisible(true);
@@ -2770,7 +2772,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 																sizeof(newMode), &newMode);
 					if (kPreferences_ResultOK != prefsResult)
 					{
-						Console_WriteLine("warning, unable to save TEK mode setting");
+						Console_Warning(Console_WriteLine, "unable to save TEK mode setting");
 					}
 					result = noErr;
 				}
@@ -2791,7 +2793,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 																sizeof(kIsSet), &kIsSet);
 					if (kPreferences_ResultOK != prefsResult)
 					{
-						Console_WriteLine("warning, unable to save TEK PAGE setting");
+						Console_Warning(Console_WriteLine, "unable to save TEK PAGE setting");
 					}
 				}
 				break;
@@ -2864,7 +2866,7 @@ receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 																						existingPortNumber, existingUserID);
 			if (4 != preferenceCountOK) // TEMPORARY - should this be an assertion?
 			{
-				Console_WriteLine("warning, unable to set defaults for one or more remote server preferences!");
+				Console_Warning(Console_WriteLine, "unable to set defaults for one or more remote server preferences!");
 			}
 			
 			// now read any updated values; note that CFStrings in events are automatically released
@@ -2901,14 +2903,15 @@ receiveServerBrowserEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 			updateOK = resourceInterfacePtr->updateCommandLine(newProtocol, newHostName, newPortNumber, newUserID);
 			if (false == updateOK) // TEMPORARY - should this be an assertion?
 			{
-				Console_WriteLine("warning, unable to update some part of command line based on panel settings!");
+				Console_Warning(Console_WriteLine, "unable to update some part of command line based on panel settings!");
 			}
 			preferenceCountOK = resourceInterfacePtr->savePreferencesForRemoteServers
 														(panelDataPtr->dataModel, newProtocol, newHostName,
 															newPortNumber, newUserID);
 			if (4 != preferenceCountOK)
 			{
-				Console_WriteValue("warning, some remote server settings could not be saved; 4 exist, saved", preferenceCountOK);
+				Console_Warning(Console_WriteValue, "some remote server settings could not be saved; 4 exist, saved",
+								preferenceCountOK);
 			}
 			resourceInterfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 			

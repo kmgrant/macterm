@@ -653,7 +653,7 @@ TerminalView_NewHIViewBased		(TerminalScreenRef			inScreenDataSource,
 			{
 				error = SetEventParameter(initializationEvent, kEventParamNetEvents_TerminalFormatPreferences,
 											typeNetEvents_PreferencesContextRef, sizeof(inFormatOrNull), &inFormatOrNull);
-				if (noErr != error) Console_WriteValue("warning, failed to use given format with new view, error", error);
+				if (noErr != error) Console_Warning(Console_WriteValue, "failed to use given format with new view, error", error);
 			}
 			
 			// now construct!
@@ -1735,7 +1735,7 @@ TerminalView_ReturnTranslationConfiguration		(TerminalViewRef	inView)
 	
 	// set encoding name and ID
 	setOK = TextTranslation_ContextSetEncoding(result, Terminal_ReturnTextEncoding(viewPtr->screen.ref));
-	if (false == setOK) Console_WriteLine("warning, unable to set the text encoding in the terminal view translation configuration");
+	if (false == setOK) Console_Warning(Console_WriteLine, "unable to set the text encoding in the terminal view translation configuration");
 	
 	return result;
 }// ReturnTranslationConfiguration
@@ -4390,7 +4390,7 @@ drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 	
 	if (nullptr == oldMacRomanBufferForQuickDraw)
 	{
-		Console_WriteLine("warning, failed to render entire range because Mac Roman buffer was not found");
+		Console_Warning(Console_WriteLine, "failed to render entire range because Mac Roman buffer was not found");
 	}
 	else
 	{
@@ -4879,9 +4879,9 @@ eraseSection	(TerminalViewPtr	inTerminalViewPtr,
 										intBounds.bottom - intBounds.top);
 	if (CGRectIsEmpty(outRowSectionBounds))
 	{
-		Console_WriteValueFloat4("warning, attempt to erase empty row section",
-									outRowSectionBounds.origin.x, outRowSectionBounds.origin.y,
-									outRowSectionBounds.size.width, outRowSectionBounds.size.height);
+		Console_Warning(Console_WriteValueFloat4, "attempt to erase empty row section",
+						outRowSectionBounds.origin.x, outRowSectionBounds.origin.y,
+						outRowSectionBounds.size.width, outRowSectionBounds.size.height);
 	}
 	
 	if (false == inTerminalViewPtr->screen.currentRenderNoBackground)
@@ -7214,7 +7214,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
 						if (kPreferences_ResultOK != prefsResult)
 						{
-							Console_WriteLine("warning, failed to find default context for new view");
+							Console_Warning(Console_WriteLine, "failed to find default context for new view");
 						}
 						else
 						{
@@ -7245,8 +7245,8 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 			//Console_WriteLine("HI OBJECT destruct terminal view");
 			if (gTerminalViewPtrLocks().isLocked(view))
 			{
-				Console_WriteValue("warning, attempt to dispose of locked terminal view; outstanding locks",
-									gTerminalViewPtrLocks().returnLockCount(view));
+				Console_Warning(Console_WriteValue, "attempt to dispose of locked terminal view; outstanding locks",
+								gTerminalViewPtrLocks().returnLockCount(view));
 			}
 			else
 			{

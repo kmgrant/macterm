@@ -1087,7 +1087,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			}
 			else
 			{
-				Console_WriteLine("warning, unable to find existing macro key setting");
+				Console_Warning(Console_WriteLine, "unable to find existing macro key setting");
 				this->setKeyType(0);
 				this->setOrdinaryKeyCharacter(0);
 			}
@@ -1107,7 +1107,7 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			}
 			else
 			{
-				Console_WriteLine("warning, unable to find existing modifier key settings");
+				Console_Warning(Console_WriteLine, "unable to find existing modifier key settings");
 				this->setKeyModifiers(0);
 			}
 		}
@@ -1253,7 +1253,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 															inOneBasedIndex, sizeof(actionCFString), &actionCFString);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteValue("warning, failed to set action text of macro with index", inOneBasedIndex);
+				Console_Warning(Console_WriteValue, "failed to set action text of macro with index", inOneBasedIndex);
 			}
 		}
 	}
@@ -1298,12 +1298,12 @@ saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef		inoutSettings,
 				keyChar = CFStringGetCharacterAtIndex(ordinaryCharCFString, 0);
 				if (1 != CFStringGetLength(ordinaryCharCFString))
 				{
-					Console_WriteLine("warning, more than one character entered for macro key, using only the first character");
+					Console_Warning(Console_WriteLine, "more than one character entered for macro key, using only the first character");
 				}
 			}
 			else
 			{
-				Console_WriteLine("warning, ordinary character requested for macro, but no character was entered");
+				Console_Warning(Console_WriteLine, "ordinary character requested for macro, but no character was entered");
 			}
 		}
 		
@@ -1316,7 +1316,8 @@ saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef		inoutSettings,
 		}
 		else
 		{
-			Console_WriteValuePair("warning, failed to set key equivalent of macro with index, error", inOneBasedIndex, prefsResult);
+			Console_Warning(Console_WriteValuePair, "failed to set key equivalent of macro with index, error",
+							inOneBasedIndex, prefsResult);
 		}
 	}
 	return result;
@@ -1818,7 +1819,7 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 			}
 			else
 			{
-				Console_WriteLine("warning, unexpected problem determining selected macro!");
+				Console_Warning(Console_WriteLine, "unexpected problem determining selected macro!");
 				Sound_StandardAlert();
 			}
 		}
@@ -1886,7 +1887,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																	false/* search defaults */);
 					if (kPreferences_ResultOK != prefsResult)
 					{
-						Console_WriteLine("warning, unable to find existing modifier key settings");
+						Console_Warning(Console_WriteLine, "unable to find existing modifier key settings");
 					}
 					
 					switch (received.commandID)
@@ -1924,7 +1925,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																	dataPtr->currentIndex, sizeof(allModifiers), &allModifiers);
 					if (kPreferences_ResultOK != prefsResult)
 					{
-						Console_WriteLine("warning, unable to save modifier key settings");
+						Console_Warning(Console_WriteLine, "unable to save modifier key settings");
 					}
 					result = noErr;
 				}
@@ -1995,7 +1996,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																	dataPtr->currentIndex, sizeof(actionForCommand), &actionForCommand);
 					if (kPreferences_ResultOK != prefsResult)
 					{
-						Console_WriteLine("warning, unable to save action setting");
+						Console_Warning(Console_WriteLine, "unable to save action setting");
 					}
 					
 					result = noErr;

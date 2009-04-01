@@ -131,7 +131,7 @@ GenericThreads_Init ()
 		error = GetCurrentThread(&applicationThreadID);
 		if (error != noErr)
 		{
-			Console_WriteValue("warning, could not determine thread ID, error", error);
+			Console_Warning(Console_WriteValue, "could not determine thread ID, error", error);
 			applicationThreadID = kApplicationThreadID;
 		}
 		error = newThreadListEntry(applicationThreadID, kGenericThreadDescriptorMainThread,
@@ -266,7 +266,7 @@ GenericThreads_NewCoOpWithOptions	(ThreadEntryUPP 			inThreadEntry,
 			if (result == noErr)
 			{
 				result = SetThreadTerminator(threadID, gThreadTerminationUPP, nullptr/* argument */);
-				if (result != noErr) Console_WriteValue("warning, failed to set thread terminator, error", result);
+				if (result != noErr) Console_Warning(Console_WriteValue, "failed to set thread terminator, error", result);
 				result = newThreadListEntry(threadID, inThreadDescriptorOfNewThread, whereToPutReturnValue,
 											&newThread);
 				if ((result != noErr) || (newThread == nullptr)) Console_WriteLine("thread creation failed");

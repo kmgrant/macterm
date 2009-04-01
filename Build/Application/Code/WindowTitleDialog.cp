@@ -342,8 +342,8 @@ WindowTitleDialog_Dispose	(WindowTitleDialog_Ref*		inoutRefPtr)
 {
 	if (gWindowTitleDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked window title dialog; outstanding locks",
-							gWindowTitleDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked window title dialog; outstanding locks",
+						gWindowTitleDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{

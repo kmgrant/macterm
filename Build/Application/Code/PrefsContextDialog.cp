@@ -143,8 +143,8 @@ PrefsContextDialog_Dispose	(PrefsContextDialog_Ref*	inoutRefPtr)
 {
 	if (gPrefsContextDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked preferences context dialog; outstanding locks",
-							gPrefsContextDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked preferences context dialog; outstanding locks",
+						gPrefsContextDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{
@@ -338,7 +338,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (nullptr == newContext)
 					{
 						Sound_StandardAlert();
-						Console_WriteLine("warning, unable to create a new Favorite for copying local changes");
+						Console_Warning(Console_WriteLine, "unable to create a new Favorite for copying local changes");
 					}
 					else
 					{
@@ -349,7 +349,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (kPreferences_ResultOK != prefsResult)
 						{
 							Sound_StandardAlert();
-							Console_WriteLine("warning, unable to save the new context!");
+							Console_Warning(Console_WriteLine, "unable to save the new context!");
 						}
 						else
 						{
@@ -357,7 +357,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (kPreferences_ResultOK != prefsResult)
 							{
 								Sound_StandardAlert();
-								Console_WriteLine("warning, unable to copy local changes into the new Favorite!");
+								Console_Warning(Console_WriteLine, "unable to copy local changes into the new Favorite!");
 							}
 							else
 							{

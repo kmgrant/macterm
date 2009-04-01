@@ -167,8 +167,8 @@ public:
 		
 		if (gListenerValidRefs().end() == gListenerValidRefs().find(inListener))
 		{
-			Console_WriteValueAddress("warning, attempt to notify nonexistent Boolean listener",
-										inListener);
+			Console_Warning(Console_WriteValueAddress, "attempt to notify nonexistent Boolean listener",
+							inListener);
 		}
 		else
 		{
@@ -250,8 +250,8 @@ public:
 		
 		if (gListenerValidRefs().end() == gListenerValidRefs().find(inListener))
 		{
-			Console_WriteValueAddress("warning, attempt to notify nonexistent OSStatus listener",
-										inListener);
+			Console_Warning(Console_WriteValueAddress, "attempt to notify nonexistent OSStatus listener",
+							inListener);
 		}
 		else
 		{
@@ -307,8 +307,8 @@ public:
 		
 		if (gListenerValidRefs().end() == gListenerValidRefs().find(inListener))
 		{
-			Console_WriteValueAddress("warning, attempt to notify nonexistent standard listener",
-										inListener);
+			Console_Warning(Console_WriteValueAddress, "attempt to notify nonexistent standard listener",
+							inListener);
 		}
 		else
 		{
@@ -434,8 +434,8 @@ ListenerModel_Dispose	(ListenerModel_Ref*		inoutRefPtr)
 {
 	if (gListenerModelPtrLocks().isLocked(*inoutRefPtr))
 	{
-		//Console_WriteValue("warning, attempt to dispose of locked listener model; outstanding locks",
-		//					gListenerModelPtrLocks().returnLockCount(*inoutRefPtr));
+		//Console_Warning(Console_WriteValue, "attempt to dispose of locked listener model; outstanding locks",
+		//				gListenerModelPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{
@@ -568,7 +568,7 @@ ListenerModel_RetainListener	(ListenerModel_ListenerRef		inRef)
 	if ((nullptr == inRef) ||
 		(gListenerValidRefs().end() == gListenerValidRefs().find(inRef)))
 	{
-		Console_WriteValueAddress("warning, attempt to retain a nonexistent listener", inRef);
+		Console_Warning(Console_WriteValueAddress, "attempt to retain a nonexistent listener", inRef);
 	}
 	else
 	{
@@ -593,8 +593,8 @@ ListenerModel_ReleaseListener	(ListenerModel_ListenerRef*		inoutRefPtr)
 		if ((nullptr == *inoutRefPtr) ||
 			(gListenerValidRefs().end() == gListenerValidRefs().find(*inoutRefPtr)))
 		{
-			Console_WriteValueAddress("warning, attempt to release a nonexistent listener",
-										*inoutRefPtr);
+			Console_Warning(Console_WriteValueAddress, "attempt to release a nonexistent listener",
+							*inoutRefPtr);
 		}
 		else
 		{
@@ -793,8 +793,8 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 	if ((nullptr == ptr) ||
 		(gListenerModelValidRefs().end() == gListenerModelValidRefs().find(inForWhichModel)))
 	{
-		Console_WriteValueAddress("warning, attempt to notify listeners in nonexistent model",
-									inForWhichModel);
+		Console_Warning(Console_WriteValueAddress, "attempt to notify listeners in nonexistent model",
+						inForWhichModel);
 		result = kListenerModel_ResultInvalidModelReference;
 	}
 	else
@@ -922,15 +922,15 @@ ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 	if ((nullptr == ptr) ||
 		(gListenerModelValidRefs().end() == gListenerModelValidRefs().find(inFromWhichModel)))
 	{
-		Console_WriteValueAddress("warning, attempt to remove listener from nonexistent model",
-									inFromWhichModel);
+		Console_Warning(Console_WriteValueAddress, "attempt to remove listener from nonexistent model",
+						inFromWhichModel);
 		result = kListenerModel_ResultInvalidModelReference;
 	}
 	else if ((nullptr == inListenerToRemove) ||
 				(gListenerValidRefs().end() == gListenerValidRefs().find(inListenerToRemove)))
 	{
-		Console_WriteValueAddress("warning, attempt to remove nonexistent listener",
-									inListenerToRemove);
+		Console_Warning(Console_WriteValueAddress, "attempt to remove nonexistent listener",
+						inListenerToRemove);
 		result = kListenerModel_ResultInvalidListenerReference;
 	}
 	else

@@ -1537,7 +1537,7 @@ Terminal_ChangeRangeAttributes	(TerminalScreenRef			inRef,
 						{
 							if (currentLine == iteratorPtr->sourceList.end())
 							{
-								Console_WriteLine("warning, exceeded row boundaries when changing attributes of a range");
+								Console_Warning(Console_WriteLine, "exceeded row boundaries when changing attributes of a range");
 								break;
 							}
 							
@@ -3839,7 +3839,7 @@ Terminal_SetDumbTerminalRendering	(UniChar		inCharacter,
 	CFStringRef		descriptionCFString = CFStringCreateWithCString(kCFAllocatorDefault, inDescription, kCFStringEncodingUTF8);
 	
 	
-	if (nullptr == descriptionCFString) Console_WriteLine("warning, unexpected error creating UTF-8 string for description");
+	if (nullptr == descriptionCFString) Console_Warning(Console_WriteLine, "unexpected error creating UTF-8 string for description");
 	else
 	{
 		gDumbTerminalRenderings()[inCharacter] = descriptionCFString;
@@ -5284,8 +5284,8 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 		if (false == bufferAsCFString.exists())
 		{
 			// TEMPORARY: this should probably be handled better
-			Console_WriteLine("warning, unexpected error interpreting terminal data, SKIPPING the bad data segment!");
 			Console_WriteValueCharacter("current terminal text encoding", inDataPtr->emulator.inputTextEncoding);
+			Console_Warning(Console_WriteLine, "unexpected error interpreting terminal data, SKIPPING the bad data segment!");
 			result = 0;
 		}
 		else
@@ -5782,8 +5782,8 @@ echoData	(My_ScreenBufferPtr		inDataPtr,
 		if (false == bufferAsCFString.exists())
 		{
 			// TEMPORARY: this should probably be handled better
-			Console_WriteLine("warning, unexpected error interpreting dumb terminal data, SKIPPING the bad data segment!");
 			Console_WriteValueCharacter("current terminal text encoding", inDataPtr->emulator.inputTextEncoding);
+			Console_Warning(Console_WriteLine, "unexpected error interpreting dumb terminal data, SKIPPING the bad data segment!");
 			
 			// echo a single byte so that it will be skipped next time
 			CFStringAppendFormat(humanReadableCFString.returnCFMutableStringRef(), nullptr/* format options */,
@@ -6117,7 +6117,7 @@ stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
 			
 			default:
 				// this is unexpected data; choose a new state
-				Console_WriteValueCharacter("warning, VT100 in CSI parameter mode did not expect character", *inBuffer);
+				Console_Warning(Console_WriteValueCharacter, "VT100 in CSI parameter mode did not expect character", *inBuffer);
 				result = My_DefaultEmulator::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 																outNextState, outInterrupt);
 				break;
@@ -6645,7 +6645,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 							//Console_WriteLine("request to set one of 256 background or foreground colors");
 							if (2 != (inDataPtr->emulator.parameterEndIndex - i))
 							{
-								Console_WriteLine("warning, expected exactly 3 parameters for 256-color-mode request");
+								Console_Warning(Console_WriteLine, "expected exactly 3 parameters for 256-color-mode request");
 							}
 							else
 							{
@@ -6657,7 +6657,8 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 								
 								if (5 != kParam2)
 								{
-									Console_WriteValue("warning, unrecognized parameter for type of color (expected 5)", kParam2);
+									Console_Warning(Console_WriteValue, "unrecognized parameter for type of color (expected 5)",
+													kParam2);
 								}
 								else
 								{
@@ -6830,7 +6831,7 @@ stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
 		
 		default:
 			// this is unexpected data; choose a new state
-			Console_WriteValueCharacter("warning, VT52 did not expect an ESC to be followed by character", *inBuffer);
+			Console_Warning(Console_WriteValueCharacter, "VT52 did not expect an ESC to be followed by character", *inBuffer);
 			result = My_VT100::stateDeterminant(inEmulatorPtr, inBuffer, inLength, inCurrentState,
 												outNextState, outInterrupt);
 			break;
@@ -7265,7 +7266,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 		}
 		else
 		{
-			Console_WriteLine("warning, VT102 media copy did not recognize the given parameters");
+			Console_Warning(Console_WriteLine, "VT102 media copy did not recognize the given parameters");
 		}
 		break;
 	
@@ -11724,7 +11725,7 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 		
 		if (newValue >= inDataPtr->screenBuffer.size())
 		{
-			Console_WriteLine("warning, emulator was given a scrolling region bottom row that is too large; truncating");
+			Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is too large; truncating");
 			newValue = inDataPtr->screenBuffer.size() - 1;
 		}
 		setScrollingRegionBottom(inDataPtr, newValue);

@@ -151,8 +151,8 @@ TerminalSpeaker_Dispose   (TerminalSpeaker_Ref*		inoutRefPtr)
 {
 	if (gTerminalSpeakerPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked terminal speaker; outstanding locks",
-							gTerminalSpeakerPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked terminal speaker; outstanding locks",
+						gTerminalSpeakerPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{

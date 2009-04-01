@@ -1906,7 +1906,7 @@ saveFieldPreferences	(My_GeneralPanelUIPtr	inInterfacePtr)
 			prefsResult = Preferences_SetData(kPreferences_TagWindowStackingOrigin, sizeof(prefValue), &prefValue);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteLine("warning, failed to set terminal window origin");
+				Console_Warning(Console_WriteLine, "failed to set terminal window origin");
 			}
 			TerminalWindow_StackWindows(); // re-stack windows so the user can see the effect of the change
 		}
@@ -1924,7 +1924,7 @@ saveFieldPreferences	(My_GeneralPanelUIPtr	inInterfacePtr)
 			prefsResult = Preferences_SetData(kPreferences_TagCopyTableThreshold, sizeof(threshold), &threshold);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteLine("warning, failed to set spaces-per-tab");
+				Console_Warning(Console_WriteLine, "failed to set spaces-per-tab");
 			}
 		}
 	}

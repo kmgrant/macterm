@@ -214,8 +214,8 @@ GenericDialog_Dispose	(GenericDialog_Ref*	inoutRefPtr)
 {
 	if (gGenericDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked generic dialog; outstanding locks",
-							gGenericDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked generic dialog; outstanding locks",
+						gGenericDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{
@@ -558,7 +558,7 @@ userDataPtr						(nullptr)
 	if (kPanel_ResponseSizeProvided != Panel_SendMessageGetIdealSize(this->hostedPanel, this->panelIdealSize))
 	{
 		// some problem setting the size; choose one arbitrarily
-		Console_WriteLine("warning, unable to determine ideal size of dialog panel");
+		Console_Warning(Console_WriteLine, "unable to determine ideal size of dialog panel");
 		panelIdealSize = CGSizeMake(400.0, 250.0); // arbitrary
 	}
 	windowInitialSize = CGSizeMake(panelMarginsTopLeft.width + this->panelIdealSize.width + panelMarginsBottomRight.width,

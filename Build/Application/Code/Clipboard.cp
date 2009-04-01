@@ -465,7 +465,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 				if (nullptr == outCFString)
 				{
 					// WARNING: in this case, the encoding cannot be known, so choose to show nothing
-					Console_WriteValueCFString("warning, unknown text encoding and unable to translate", outUTI);
+					Console_Warning(Console_WriteValueCFString, "unknown text encoding and unable to translate", outUTI);
 					outCFString = CFSTR("?");
 					CFRetain(outCFString);	
 				}
@@ -1617,15 +1617,15 @@ receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 				case kEventControlDragReceive:
 					// handle the drop (by copying the data to the clipboard)
 					{
-						CFStringRef			copiedTextCFString;
-						CFStringRef			copiedTextUTI;
-						Boolean				copyOK = Clipboard_CreateCFStringFromPasteboard
-														(copiedTextCFString, copiedTextUTI, dragPasteboard);
+						CFStringRef		copiedTextCFString;
+						CFStringRef		copiedTextUTI;
+						Boolean			copyOK = Clipboard_CreateCFStringFromPasteboard
+													(copiedTextCFString, copiedTextUTI, dragPasteboard);
 						
 						
 						if (false == copyOK)
 						{
-							Console_WriteLine("warning, failed to copy the dragged text!");
+							Console_Warning(Console_WriteLine, "failed to copy the dragged text!");
 							result = resNotFound;
 						}
 						else

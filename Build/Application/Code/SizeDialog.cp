@@ -303,8 +303,8 @@ SizeDialog_Dispose	(SizeDialog_Ref*	inoutRefPtr)
 {
 	if (gSizeDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteValue("warning, attempt to dispose of locked terminal resize dialog; outstanding locks",
-							gSizeDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked terminal resize dialog; outstanding locks",
+						gSizeDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{

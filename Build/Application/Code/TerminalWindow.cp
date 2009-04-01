@@ -392,7 +392,7 @@ TerminalWindow_Dispose   (TerminalWindowRef*	inoutRefPtr)
 {
 	if (gTerminalWindowPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteLine("warning, attempt to dispose of locked terminal window");
+		Console_Warning(Console_WriteLine, "attempt to dispose of locked terminal window");
 	}
 	else
 	{
@@ -616,7 +616,7 @@ TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
 	{
 		result = kTerminalWindow_ResultInvalidReference;
-		Console_WriteValueAddress("warning, attempt to TerminalWindow_GetTabWidth() with invalid reference", inRef);
+		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_GetTabWidth() with invalid reference", inRef);
 		outWidthInPixels = 0;
 	}
 	else
@@ -1353,7 +1353,7 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
 	{
 		result = kTerminalWindow_ResultInvalidReference;
-		Console_WriteValueAddress("warning, attempt to TerminalWindow_SetTabPosition() with invalid reference", inRef);
+		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_SetTabPosition() with invalid reference", inRef);
 	}
 	else
 	{
@@ -1434,7 +1434,7 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 	if (gTerminalWindowValidRefs().end() == gTerminalWindowValidRefs().find(inRef))
 	{
 		result = kTerminalWindow_ResultInvalidReference;
-		Console_WriteValueAddress("warning, attempt to TerminalWindow_SetTabWidth() with invalid reference", inRef);
+		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_SetTabWidth() with invalid reference", inRef);
 	}
 	else
 	{
@@ -3290,7 +3290,7 @@ installUndoFullScreenChanges	(TerminalWindowRef			inTerminalWindow,
 											reverseFullScreenChanges, kUndoableContextIdentifierTerminalFullScreenChanges,
 											dataPtr);
 	Undoables_AddAction(dataPtr->action);
-	if (noErr != error) Console_WriteValue("warning, could not make font size and/or location change undoable, error", error);
+	if (noErr != error) Console_Warning(Console_WriteValue, "could not make font size and/or location change undoable, error", error);
 	else
 	{
 		TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inTerminalWindow);

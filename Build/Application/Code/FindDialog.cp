@@ -360,7 +360,7 @@ FindDialog_Dispose   (FindDialog_Ref*	inoutRefPtr)
 {
 	if (gFindDialogPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_WriteLine("warning, attempt to dispose of locked Find dialog");
+		Console_Warning(Console_WriteLine, "attempt to dispose of locked Find dialog");
 	}
 	else
 	{

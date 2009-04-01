@@ -338,8 +338,8 @@ CocoaBasic_GrowlNotify	(CFStringRef	inNotificationName,
 		returnDescriptor = [scriptObject executeAndReturnError:&errorDict];
 		if (nullptr == returnDescriptor)
 		{
-			Console_WriteLine("warning, unable to send notification via AppleScript, error:");
 			NSLog(@"%@", errorDict);
+			Console_Warning(Console_WriteLine, "unable to send notification via AppleScript, error:");
 		}
 		[scriptObject release];
 	#endif

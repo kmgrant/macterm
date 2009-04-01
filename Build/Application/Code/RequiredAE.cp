@@ -461,7 +461,8 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 										}
 										catch (std::exception const&	e)
 										{
-											Console_WriteValueCString("warning, caught exception while trying to handle opened file", e.what());
+											Console_Warning(Console_WriteValueCString, "caught exception while trying to handle opened file",
+															e.what());
 											error = eventNotHandledErr;
 										}
 									}

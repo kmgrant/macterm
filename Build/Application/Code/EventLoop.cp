@@ -2557,7 +2557,8 @@ receiveServicePerformEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 							}
 							catch (std::exception const&	e)
 							{
-								Console_WriteValueCString("warning, caught exception while trying to handle URL for Service", e.what());
+								Console_Warning(Console_WriteValueCString, "caught exception while trying to handle URL for Service",
+												e.what());
 								result = eventNotHandledErr;
 							}
 						}

@@ -172,8 +172,8 @@ SpecialKeySequencesDialog_Dispose	(SpecialKeySequencesDialog_Ref*		inoutRefPtr)
 	
 	if (gSpecialKeysDialogPtrLocks().returnLockCount(*inoutRefPtr) > 1/* auto-locker keeps at least one lock */)
 	{
-		Console_WriteValue("warning, attempt to dispose of locked dialog; outstanding locks",
-							gSpecialKeysDialogPtrLocks().returnLockCount(*inoutRefPtr));
+		Console_Warning(Console_WriteValue, "attempt to dispose of locked dialog; outstanding locks",
+						gSpecialKeysDialogPtrLocks().returnLockCount(*inoutRefPtr));
 	}
 	else
 	{

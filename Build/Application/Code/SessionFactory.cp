@@ -473,7 +473,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 		
 		if (false == configureSessionTerminalWindow(terminalWindow, inContext))
 		{
-			Console_WriteLine("warning, unable to reconfigure terminal window");
+			Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
 		}
 		
 		result = Session_New();
@@ -1252,7 +1252,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowO
 	prefsResult = Preferences_GetDefaultContext(&sessionContext, kPreferences_ClassSession);
 	if (kPreferences_ResultOK != prefsResult)
 	{
-		Console_WriteLine("warning, unable to initialize dialog with Session Default preferences!");
+		Console_Warning(Console_WriteLine, "unable to initialize dialog with Session Default preferences!");
 	}
 	
 	if (nullptr == terminalWindow)
@@ -2008,7 +2008,7 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 		
 		if (nullptr == associatedFormat)
 		{
-			Console_WriteValueCFString("warning, associated Format not found", associatedFormatName);
+			Console_Warning(Console_WriteValueCFString, "associated Format not found", associatedFormatName);
 		}
 		else
 		{

@@ -976,8 +976,8 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 				
 				default:
 					// not all types are supported (add more if needed)
-					Console_WriteValueFourChars("warning, do not know how to duplicate interface element of type",
-												templateControlInfo.kind);
+					Console_Warning(Console_WriteValueFourChars, "do not know how to duplicate interface element of type",
+									templateControlInfo.kind);
 					result = unimpErr;
 					break;
 				}

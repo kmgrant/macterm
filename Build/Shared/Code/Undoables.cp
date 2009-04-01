@@ -254,7 +254,7 @@ Undoables_DisposeAction		(Undoables_ActionRef*	inoutRefPtr)
 {
 	if (gUndoDataPtrLocks().isLocked(*inoutRefPtr))
 	{
-		//Console_WriteLine("warning, attempt to dispose of locked undoable action");
+		//Console_Warning(Console_WriteLine, "attempt to dispose of locked undoable action");
 	}
 	else
 	{

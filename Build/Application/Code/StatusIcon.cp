@@ -286,7 +286,7 @@ StatusIcon_AddStageFromIconRef	(StatusIconRef						inRef,
 		if (!addAnimationStage(ptr, newAnimationStage2(inDescriptor, inBundleResourceNameNoExtension, inCreator,
 														inType, inAnimationDelayInTicks)))
 		{
-			Console_WriteLine("warning, unable to add icon reference as animation frame");
+			Console_Warning(Console_WriteLine, "unable to add icon reference as animation frame");
 		}
 	}
 }// AddStageFromIconRef
@@ -328,7 +328,7 @@ StatusIcon_AddStageFromIconSuite	(StatusIconRef						inRef,
 		if (!addAnimationStage(ptr, newAnimationStage(inDescriptor, inResourceFile, inIconSuiteResourceID,
 														true/* is icon suite */, inAnimationDelayInTicks)))
 		{
-			Console_WriteLine("warning, unable to add icon suite as animation frame");
+			Console_Warning(Console_WriteLine, "unable to add icon suite as animation frame");
 		}
 	}
 }// AddStageFromIconSuite
@@ -370,7 +370,7 @@ StatusIcon_AddStageFromOldColorIcon		(StatusIconRef						inRef,
 		if (!addAnimationStage(ptr, newAnimationStage(inDescriptor, inResourceFile, inIconResourceID,
 														false/* is icon suite */, inAnimationDelayInTicks)))
 		{
-			Console_WriteLine("warning, unable to add old color icon as animation frame");
+			Console_Warning(Console_WriteLine, "unable to add old color icon as animation frame");
 		}
 	}
 }// AddStageFromOldColorIcon

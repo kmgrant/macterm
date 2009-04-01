@@ -185,7 +185,8 @@ handleURL	(AEDesc const*		inFromWhichObject,
 							}
 							catch (std::exception const&	e)
 							{
-								Console_WriteValueCString("warning, caught exception while trying to handle URL from Apple Event", e.what());
+								Console_Warning(Console_WriteValueCString, "caught exception while trying to handle URL from Apple Event",
+												e.what());
 								resultCode = 1; // failure
 								errorCausingNonzeroResult = eventNotHandledErr;
 							}

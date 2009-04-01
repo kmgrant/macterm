@@ -1353,7 +1353,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 														sizeof(equivalentScale), &equivalentScale);
 			if (kPreferences_ResultOK != prefsResult)
 			{
-				Console_WriteLine("warning, failed to set font character width multiplier");
+				Console_Warning(Console_WriteLine, "failed to set font character width multiplier");
 			}
 		}
 	}

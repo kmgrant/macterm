@@ -889,13 +889,13 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 															sizeof(newEncoding), &newEncoding);
 				if (kPreferences_ResultOK != prefsResult)
 				{
-					Console_WriteLine("warning, failed to save encoding ID");
+					Console_Warning(Console_WriteLine, "failed to save encoding ID");
 				}
 				prefsResult = Preferences_ContextSetData(panelDataPtr->_dataModel, kPreferences_TagTextEncodingIANAName,
 															sizeof(newEncodingName), &newEncodingName);
 				if (kPreferences_ResultOK != prefsResult)
 				{
-					Console_WriteLine("warning, failed to save encoding IANA name");
+					Console_Warning(Console_WriteLine, "failed to save encoding IANA name");
 				}
 				
 				// update the panel views to match the newly-selected item

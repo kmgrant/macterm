@@ -731,7 +731,7 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 	
 	if (gSessionPtrLocks().returnLockCount(*inoutRefPtr) > 0)
 	{
-		Console_WriteLine("warning, attempt to dispose of locked session");
+		Console_Warning(Console_WriteLine, "attempt to dispose of locked session");
 	}
 	else
 	{
@@ -1097,7 +1097,7 @@ void
 Session_DisplayPrintJobDialog	(SessionRef		inRef)
 {
 	// UNIMPLEMENTED
-	Console_WriteLine("warning, unimplemented");
+	Console_Warning(Console_WriteLine, "unimplemented");
 }// DisplayPrintJobDialog
 
 
@@ -3817,7 +3817,7 @@ Session_UserInputCFString	(SessionRef		inRef,
 			
 			if (false == CFStringGetCString(inStringBuffer, stringBuffer, sizeof(stringBuffer), ptr->writeEncoding))
 			{
-				Console_WriteLine("warning, text cannot be converted into the encoding used by this terminal");
+				Console_Warning(Console_WriteLine, "text cannot be converted into the encoding used by this terminal");
 			}
 			else
 			{
@@ -6481,7 +6481,7 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				pasteResult = Session_UserInputPaste(inRef, dragPasteboard);
 				if (false == pasteResult.ok())
 				{
-					Console_WriteLine("warning, unable to complete paste from drag");
+					Console_Warning(Console_WriteLine, "unable to complete paste from drag");
 					Sound_StandardAlert();
 				}
 				
@@ -6537,7 +6537,7 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			if (error)
 			{
-				//Console_WriteLine("warning, unable to notify listeners of obscured-state change");
+				//Console_Warning(Console_WriteLine, "unable to notify listeners of obscured-state change");
 			}
 		}
 		break;
@@ -6578,7 +6578,7 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			{
 				// warn the user somehow?
 				// unimplemented
-				Console_WriteLine("warning, unable to transmit screen dimension changes to window processes");
+				Console_Warning(Console_WriteLine, "unable to transmit screen dimension changes to window processes");
 			}
 		}
 		break;

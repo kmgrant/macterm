@@ -187,7 +187,7 @@ Alert_Init	(short		inApplicationResourceFile)
 													&iconFile, &result))
 			{
 				// failed!
-				Console_WriteLine("warning, failed to register application icon for use in alert messages");
+				Console_Warning(Console_WriteLine, "failed to register application icon for use in alert messages");
 			}
 		}
 	}

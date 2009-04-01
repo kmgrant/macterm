@@ -504,14 +504,14 @@ netServiceDidResolveAddress:(NSNetService*)		resolvingService
 					}
 					else
 					{
-						Console_WriteLine("warning, unable to resolve address data that was apparently the right type");
+						Console_Warning(Console_WriteLine, "unable to resolve address data that was apparently the right type");
 					}
 				}
 				break;
 			
 			default:
 				// ???
-				Console_WriteLine("warning, cannot resolve address because preferred address family is unsupported");
+				Console_Warning(Console_WriteLine, "cannot resolve address because preferred address family is unsupported");
 				break;
 			}
 			
@@ -812,7 +812,7 @@ rediscoverServices
 	{
 		if (nil == theProtocol)
 		{
-			Console_WriteLine("warning, cannot rediscover services because no protocol is yet defined");
+			Console_Warning(Console_WriteLine, "cannot rediscover services because no protocol is yet defined");
 		}
 		else
 		{
@@ -1290,7 +1290,8 @@ netServiceBrowser:(NSNetServiceBrowser*)	aNetServiceBrowser
 didNotSearch:(NSDictionary*)				errorInfo
 {
 #pragma unused(aNetServiceBrowser)
-	Console_WriteValue("warning, search for services failed with error", [[errorInfo objectForKey:NSNetServicesErrorCode] intValue]);
+	Console_Warning(Console_WriteValue, "search for services failed with error",
+					[[errorInfo objectForKey:NSNetServicesErrorCode] intValue]);
 }// netServiceBrowser:didNotSearch:
 
 
@@ -1480,7 +1481,7 @@ notifyOfChangeInValueReturnedBy:(SEL)	valueGetter
 			}
 			else
 			{
-				Console_WriteLine("warning, invalid selector passed to notifyOfChangeInValueReturnedBy:");
+				Console_Warning(Console_WriteLine, "invalid selector passed to notifyOfChangeInValueReturnedBy:");
 				doPost = false;
 			}
 			
