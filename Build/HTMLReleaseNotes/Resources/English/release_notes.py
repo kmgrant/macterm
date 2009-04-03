@@ -221,6 +221,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090402': [
+		'Fixed Custom New Session sheet to start with keyboard focus on the command line.',
 		'Fixed or polished various bits of code related to starting processes and terminals.',
 		'Session exits are now handled more cleanly, with a modeless alert if a process has exited with nonzero status or a crashing signal.',
 		'Growl notification "Session ended" is now available, to find out about normal process exits.',
