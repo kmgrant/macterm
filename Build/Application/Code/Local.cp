@@ -3,7 +3,7 @@
 	Local.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,7 +36,7 @@
 #include <cstdlib>
 
 // standard-C++ includes
-#include <map>
+#include <set>
 #include <string>
 
 // UNIX includes
@@ -64,6 +64,7 @@ extern "C"
 }
 
 // library includes
+#include <AlertMessages.h>
 #include <CarbonEventUtilities.template.h>
 #include <Console.h>
 #include <MemoryBlockPtrLocker.template.h>
@@ -71,6 +72,7 @@ extern "C"
 
 // MacTelnet includes
 #include "AppResources.h"
+#include "CocoaBasic.h"
 #include "ConnectionData.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
@@ -79,6 +81,7 @@ extern "C"
 #include "Network.h"
 #include "Session.h"
 #include "Terminal.h"
+#include "UIStrings.h"
 
 
 
@@ -99,7 +102,7 @@ namespace {
 typedef Local_TerminalID		My_TTYMasterID;
 typedef Local_TerminalID		My_TTYSlaveID;
 
-typedef std::map< pid_t, Local_TerminalID >	My_UnixProcessIDToTTYMap;
+typedef std::set< pid_t >	My_UnixProcessIDSet;
 
 /*!
 Thread context passed to threadForLocalProcessDataLoop().
@@ -150,8 +153,10 @@ void			printTerminalControlStructure		(struct termios const*);
 Local_Result	putTTYInOriginalMode				(Local_TerminalID);
 void			putTTYInOriginalModeAtExit			();
 Local_Result	putTTYInRawMode						(Local_TerminalID);
+void			receiveSignal						(int);
 Local_Result	sendTerminalResizeMessage			(Local_TerminalID, struct winsize const*);
 void*			threadForLocalProcessDataLoop		(void*);
+pascal void		watchForExitsTimer					(EventLoopTimerRef, void*);
 
 } // anonymous namespace
 
@@ -161,10 +166,61 @@ namespace {
 My_ProcessPtrLocker&		gProcessPtrLocks ()		{ static My_ProcessPtrLocker x; return x; }
 struct termios				gCachedTerminalAttributes;
 MyTTYState					gTTYState = kMyTTYStateReset;
-Boolean						gInDebuggingMode = Local_StandardInputIsATerminal();	//!< true if terminal I/O is possible for debugging
+Boolean						gInDebuggingMode = Local_StandardInputIsATerminal(); //!< true if terminal I/O is possible for debugging
 
 //! used to help atexit() handlers know which terminal to touch
-My_UnixProcessIDToTTYMap&	gUnixProcessIDToTTYMap ()	{ static My_UnixProcessIDToTTYMap x; return x; }
+Local_TerminalID			gTerminalToRestore = 0;
+My_UnixProcessIDSet&		gChildProcessIDs ()			{ static My_UnixProcessIDSet x; return x; }
+EventLoopTimerRef&			gExitWatchTimer ()
+							{
+								static EventLoopTimerRef	x = nullptr;
+								static EventLoopTimerUPP	upp = nullptr;
+								
+								
+								if (nullptr == x)
+								{
+									OSStatus	error = noErr;
+									
+									
+									upp = NewEventLoopTimerUPP(watchForExitsTimer);
+									error = InstallEventLoopTimer(GetCurrentEventLoop(),
+																	kEventDurationNoWait/* start time */,
+																	3 * kEventDurationSecond/* time between fires - arbitrary (what is best?) */,
+																	upp, nullptr/* user data */, &x);
+									assert_noerr(error);
+								}
+								return x;
+							}
+sigset_t&					gSignalsBlockedInThreads ()
+							{
+								// call this from the main thread, to prevent any other thread from being
+								// chosen as the handler of signals, by setting a mask up front; any threads
+								// spawned hereafter will inherit the same mask
+								static sigset_t		x = 0;
+								
+								
+								if (0 == x)
+								{
+									int		maskResult = 0;
+									
+									
+									// add virtually all signals here (minus ones that cannot be blocked,
+									// such as SIGKILL, and ones that are never asynchronous, such as SIGSEGV)
+									sigemptyset(&x);
+									sigaddset(&x, SIGABRT);
+									sigaddset(&x, SIGINT);
+									sigaddset(&x, SIGTERM);
+									maskResult = pthread_sigmask(SIG_BLOCK, &x, nullptr/* old set */);
+									if (0 != maskResult)
+									{
+										int const	kActualError = errno;
+										
+										
+										Console_Warning(Console_WriteValue, "pthread_sigmask() failed, error", kActualError);
+									}
+								}
+								return x;
+							}
 
 } // anonymous namespace
 
@@ -641,11 +697,6 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 	//             way as they affect remote ones
 	std::memset(&terminalControl, 0, sizeof(terminalControl));
 	fillInTerminalControlStructure(&terminalControl); // TEMP
-	if (gInDebuggingMode)
-	{
-		// in debugging mode, show the terminal configuration
-		printTerminalControlStructure(&terminalControl);
-	}
 	
 	// spawn a child process attached to a pseudo-terminal device; the child
 	// will be used to run the shell, and the shell’s I/O will be handled in
@@ -704,7 +755,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			// start in the wrong directory
 			if (0 != chdir(targetDir))
 			{
-				Console_WriteValueCString("Aborting, failed to chdir() to ", targetDir);
+				Console_WriteValueCString("aborting, failed to chdir() to ", targetDir);
 				abort();
 			}
 			
@@ -721,25 +772,46 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				
 				
 				(int)execvp(argvCopy[0], argvCopy); // should not return
-				abort(); // almost no chance this line will be run, but if it does, just kill the child process
 			}
+			
+			abort(); // almost no chance this line will be run, but if it does, just kill the child process
 		}
 		
 		//
 		// this is executed inside the parent process
 		//
 		
-		// set user’s TTY to raw mode
-		if (kLocal_ResultOK != putTTYInRawMode(STDIN_FILENO))
-		{
-			Console_Warning(Console_WriteLine, "error entering TTY raw-mode");
-		}
+		gChildProcessIDs().insert(processID);
+		Console_WriteValue("spawned process ID", processID);
 		
-		// reset user’s TTY on exit
-		if (-1 != atexit(putTTYInOriginalModeAtExit))
+		// prevent threads from being the receivers of signals
+		gSignalsBlockedInThreads();
+		
+		// try to detect an immediately-failed process
+		gExitWatchTimer();
+		
+		// avoid special processing of data, allow the terminal to see it all (raw mode)
 		{
-			// insert TTY information into map so the atexit() handler can find it
-			gUnixProcessIDToTTYMap()[getpid()] = STDIN_FILENO;
+			// arrange for user’s TTY to be fixed at exit time
+			gTerminalToRestore = STDIN_FILENO;
+			if (-1 == atexit(putTTYInOriginalModeAtExit))
+			{
+				int const		kActualError = errno;
+				
+				
+				Console_Warning(Console_WriteValue, "unable to register atexit() routine for TTY mode", kActualError);
+			}
+			
+			// set user’s TTY to raw mode
+			{
+				Local_Result	rawSwitchResult = putTTYInRawMode(gTerminalToRestore);
+				
+				
+				if (kLocal_ResultOK != rawSwitchResult)
+				{
+					Console_Warning(Console_WriteValue, "error entering TTY raw-mode", rawSwitchResult);
+				}
+			}
 		}
 		
 		// start a thread for data processing so that MacTelnet’s main event loop can still run
@@ -1108,6 +1180,29 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 	Local_Result	localResult = kLocal_ResultOK;
 	
 	
+	// first flush standard output and standard error, so anything
+	// left over is not dumped into a new terminal window or something
+	{
+		int		syncResult = fsync(STDOUT_FILENO);
+		
+		
+		if (0 != syncResult)
+		{
+			int const	kActualError = errno;
+			
+			
+			Console_Warning(Console_WriteValue, "fsync(stdout) failed, errno", kActualError);
+		}
+		syncResult = fsync(STDERR_FILENO);
+		if (0 != syncResult)
+		{
+			int const	kActualError = errno;
+			
+			
+			Console_Warning(Console_WriteValue, "fsync(stderr) failed, errno", kActualError);
+		}
+	}
+	
 	// create master and slave teletypewriters (represented by
 	// file descriptors under UNIX); use the slave teletypewriter
 	// to receive all output from the child process (it is expected
@@ -1148,6 +1243,12 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 					if (-1 == tcsetattr(slaveTTY, TCSANOW/* when to apply changes */, inSlaveTerminalControlPtrOrNull))
 					{
 						abort();
+					}
+					if (gInDebuggingMode)
+					{
+						// in debugging mode, show the terminal configuration
+						Console_WriteLine("printing initial terminal configuration for process");
+						printTerminalControlStructure(inSlaveTerminalControlPtrOrNull);
 					}
 				}
 				if (nullptr != inSlaveTerminalSizePtrOrNull)
@@ -1355,6 +1456,9 @@ putTTYInOriginalMode	(Local_TerminalID		inTTY)
 	{
 		if (-1 == tcsetattr(inTTY, TCSAFLUSH/* when to apply changes */, &gCachedTerminalAttributes))
 		{
+			//int const	kActualError = errno;
+			
+			
 			// error
 			result = kLocal_ResultTermCapError;
 		}
@@ -1370,9 +1474,8 @@ putTTYInOriginalMode	(Local_TerminalID		inTTY)
 
 
 /*!
-A standard atexit() handler; figures out the TTY
-for the current process and resets it to whatever
-state it was in originally, before being put in
+A standard atexit() handler; resets a modified terminal to
+whatever state it was in originally, before being put in
 “raw mode” by MacTelnet.
 
 (3.0)
@@ -1380,20 +1483,9 @@ state it was in originally, before being put in
 void
 putTTYInOriginalModeAtExit ()
 {
-	pid_t								currentProcessID = getpid();
-	My_UnixProcessIDToTTYMap::iterator	unixProcessIDToTTYIterator = gUnixProcessIDToTTYMap().find(currentProcessID);
-	
-	
-	if (gUnixProcessIDToTTYMap().end() != unixProcessIDToTTYIterator)
+	if (gTerminalToRestore >= 0)
 	{
-		Local_TerminalID const		terminalID = unixProcessIDToTTYIterator->first;
-		
-		
-		if (terminalID >= 0)
-		{
-			(Local_Result)putTTYInOriginalMode(terminalID);
-		}
-		gUnixProcessIDToTTYMap().erase(unixProcessIDToTTYIterator);
+		(Local_Result)putTTYInOriginalMode(gTerminalToRestore);
 	}
 }// putTTYInOriginalModeAtExit
 
@@ -1426,7 +1518,14 @@ putTTYInRawMode		(Local_TerminalID		inTTY)
 	
 	
 	// cache the current device attributes, they will be restored when the process dies
-	if (-1 == tcgetattr(inTTY, &gCachedTerminalAttributes)) result = kLocal_ResultTermCapError;
+	if (-1 == tcgetattr(inTTY, &gCachedTerminalAttributes))
+	{
+		int const		kActualError = errno;
+		
+		
+		Console_Warning(Console_WriteValuePair, "unable to cache terminal attributes: TTY,error", inTTY, kActualError);
+		result = kLocal_ResultTermCapError;
+	}
 	else
 	{
 		//
@@ -1504,24 +1603,55 @@ putTTYInRawMode		(Local_TerminalID		inTTY)
 		// Now update the pseudo-terminal device.
 		if (-1 == tcsetattr(inTTY, TCSAFLUSH/* when to apply changes */, &terminalControl))
 		{
+			int const		kActualError = errno;
+			
+			
+			Console_Warning(Console_WriteValuePair, "unable to update terminal attributes: TTY,error", inTTY, kActualError);
 			result = kLocal_ResultTermCapError;
 		}
 		else
 		{
 			// success!
 			gTTYState = kMyTTYStateRaw;
-		}
-		
-		if (gInDebuggingMode)
-		{
-			// in debugging mode, show the terminal configuration
-			Console_WriteLine("printing raw-mode terminal configuration");
-			printTerminalControlStructure(&terminalControl);
+			if (gInDebuggingMode)
+			{
+				// in debugging mode, show the terminal configuration
+				Console_WriteLine("printing raw-mode terminal configuration");
+				printTerminalControlStructure(&terminalControl);
+			}
 		}
 	}
 	
 	return result;
 }// putTTYInRawMode
+
+
+/*!
+Responds to certain signals by simply absorbing them.
+
+IMPORTANT:	A signal handler can only make system calls that
+			are safe to execute asynchronously.  This actually
+			omits something as innocuous as printf(), forcing
+			one to rely on write() (say) for debugging.
+
+NOTE:	If the specified signal is synchronous, such as a
+		segmentation fault, this handler will run in the thread
+		that caused the signal.  Other signals, however, could
+		trigger this handler while in ANY thread that does not
+		explicitly mask off signals.  Look for a call to
+		pthread_sigmask().
+
+(4.0)
+*/
+void
+receiveSignal	(int	UNUSED_ARGUMENT(inSignal))
+{
+	char	buffer[] = "MacTelnet: caught signal\n";
+	
+	
+	// safe printf()...
+	write(STDERR_FILENO, buffer, sizeof(buffer) - 1);
+}// receiveSignal
 
 
 /*!
@@ -1732,6 +1862,204 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 	
 	return nullptr;
 }// threadForLocalProcessDataLoop
+
+
+/*!
+This is invoked periodically to see if any child process has exited.
+If some unusual exit occurs, the user is notified in the background.
+
+Timers that draw must save and restore the current graphics port.
+
+(4.0)
+*/
+pascal void
+watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
+					 void*					UNUSED_ARGUMENT(inContext))
+{
+	static Boolean		gFirstCall = true;
+	int					currentStatus = 0;
+	pid_t				waitResult = waitpid(-1/* process or group, -1 is “any child” */, &currentStatus, WNOHANG/* options */);
+	
+	
+	if (gFirstCall)
+	{
+		sig_t		signalResult = nullptr;
+		
+		
+		// install signal handlers to prevent the OS from popping up error
+		// dialogs just because some child process aborted
+		gFirstCall = false;
+		signalResult = signal(SIGABRT, receiveSignal);
+		if (SIG_ERR == signalResult)
+		{
+			Console_Warning(Console_WriteLine, "unable to install signal handler");
+		}
+	}
+	
+	if (0 == waitResult)
+	{
+		// no status yet...okay...
+	}
+	else
+	{
+		// process may have failed - if it is a “real” problem, tell the user
+		// INCOMPLETE - it is possible to be more specific here, if information is cached and
+		// looked up based on process ID (e.g. window, process name, session info)
+		pid_t const		kProcessID = waitResult;
+		
+		
+		// only pay attention to reports for processes that were spawned by this module
+		if (gChildProcessIDs().end() != gChildProcessIDs().find(kProcessID))
+		{
+			CFStringRef			dialogTextTemplateCFString = nullptr;
+			CFStringRef			dialogTextCFString = nullptr;
+			CFStringRef			growlNotificationName = nullptr; // not released
+			CFStringRef			growlNotificationTitle = nullptr;
+			UIStrings_Result	stringResult = kUIStrings_ResultOK;
+			Boolean				canDisplayAlert = false;
+			Boolean				canNotifyGrowl = false;
+			
+			
+			if (WIFEXITED(currentStatus))
+			{
+				int const	kExitCode = WEXITSTATUS(currentStatus);
+				
+				
+				canNotifyGrowl = true;
+				if (0 != kExitCode)
+				{
+					// failed exit
+					canDisplayAlert = true;
+					Console_WriteValuePair("process exit: pid,code", kProcessID, kExitCode);
+					
+					growlNotificationName = CFSTR("Session failed"); // MUST match "Growl Registration Ticket.growlRegDict"
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessDieTitle, growlNotificationTitle);
+					if (false == stringResult.ok())
+					{
+						growlNotificationTitle = growlNotificationName;
+						CFRetain(growlNotificationTitle);
+					}
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessDieTemplate, dialogTextTemplateCFString);
+					if (stringResult.ok())
+					{
+						// WARNING: this format must agree with how the original template string is defined
+						dialogTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
+																		dialogTextTemplateCFString, kExitCode);
+					}
+				}
+				else
+				{
+					// successful exit
+					canDisplayAlert = false;
+					
+					growlNotificationName = CFSTR("Session ended"); // MUST match "Growl Registration Ticket.growlRegDict"
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessExitTitle, growlNotificationTitle);
+					if (false == stringResult.ok())
+					{
+						growlNotificationTitle = growlNotificationName;
+						CFRetain(growlNotificationTitle);
+					}
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessExitPrimaryText, dialogTextCFString);
+				}
+			}
+			else if (WIFSIGNALED(currentStatus))
+			{
+				int const	kSignal = WTERMSIG(currentStatus);
+				
+				
+				canNotifyGrowl = true;
+				canDisplayAlert = true;
+				switch (kSignal)
+				{
+				// not all termination signals should be reported
+				case SIGKILL:
+				case SIGALRM:
+				case SIGTERM:
+					canNotifyGrowl = false;
+					canDisplayAlert = false;
+					break;
+				
+				default:
+					break;
+				}
+				
+				Console_WriteValuePair("process exit: pid,signal", kProcessID, kSignal);
+				growlNotificationName = CFSTR("Session failed"); // MUST match "Growl Registration Ticket.growlRegDict"
+				stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessDieTitle, growlNotificationTitle);
+				if (false == stringResult.ok())
+				{
+					growlNotificationTitle = growlNotificationName;
+					CFRetain(growlNotificationTitle);
+				}
+				stringResult = UIStrings_Copy(kUIStrings_AlertWindowNotifyProcessSignalTemplate, dialogTextTemplateCFString);
+				if (stringResult.ok())
+				{
+					// WARNING: this format must agree with how the original template string is defined
+					dialogTextCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
+																	dialogTextTemplateCFString, kSignal);
+				}
+			}
+			else if (WIFSTOPPED(currentStatus))
+			{
+				// ignore (could examine WSTOPSIG(currentStatus))
+				// NOTE: this should never happen anyway, as MacTelnet does not use ptrace() or the WUNTRACED option
+			}
+			else
+			{
+				Console_WriteValuePair("process returned unknown status", kProcessID, currentStatus);
+				assert(false && "process returned unknown status");
+			}
+			
+			// display a non-blocking alert to the user, or post a Growl notification;
+			// note that some events fall back to a modeless alert message when Growl
+			// is not available, but others simply do nothing (since an alert can be
+			// excessive)
+			if ((canNotifyGrowl) || (canDisplayAlert))
+			{
+				Boolean const	kDisplayGrowl = CocoaBasic_GrowlIsAvailable();
+				Boolean const	kDisplayNormal = (false == kDisplayGrowl);
+				
+				
+				if ((kDisplayGrowl) && (canNotifyGrowl))
+				{
+					// page Growl
+					CocoaBasic_GrowlNotify(growlNotificationName, growlNotificationTitle, dialogTextCFString/* description */);
+				}
+				
+				if ((kDisplayNormal) && (canDisplayAlert))
+				{
+					InterfaceLibAlertRef	box = Alert_New();
+					
+					
+					Alert_SetParamsFor(box, kAlert_StyleOK);
+					Alert_SetType(box, kAlertNoteAlert);
+					
+					if (nullptr != dialogTextCFString)
+					{
+						Alert_SetTextCFStrings(box, dialogTextCFString, CFSTR(""));
+					}
+					
+					// show the message; it is disposed asynchronously
+					Alert_MakeModeless(box, Alert_StandardCloseNotifyProc, nullptr/* context */);
+					Alert_Display(box);
+				}
+			}
+				
+			if (nullptr != growlNotificationTitle)
+			{
+				CFRelease(growlNotificationTitle), growlNotificationTitle = nullptr;
+			}
+			if (nullptr != dialogTextCFString)
+			{
+				CFRelease(dialogTextCFString), dialogTextCFString = nullptr;
+			}
+			if (nullptr != dialogTextTemplateCFString)
+			{
+				CFRelease(dialogTextTemplateCFString), dialogTextTemplateCFString = nullptr;
+			}
+		}
+	}
+}// watchForExitsTimer
 
 } // anonymous namespace
 

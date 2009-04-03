@@ -4,8 +4,8 @@
 <!--
 	Growl Registration Ticket.growlRegDict
 	
-	MacTelnet 3.1
-	© 1998-2008 by Kevin Grant
+	MacTelnet 4.0
+	© 1998-2009 by Kevin Grant
 	
 	This file is used to configure Growl.  See "http://www.growl.info/".
 	(All possible key values are described in "GrowlDefines.h".)
@@ -18,18 +18,24 @@
 <plist version="1.0">
 <dict>
 	<key>TicketVersion</key>
-	<integer>1</integer>
+	<integer>2</integer>
 	<key>ApplicationName</key><!-- this is required because it otherwise deduces the name "python" -->
 	<string>MacTelnet</string>
 	<key>AllNotifications</key>
 	<array>
 		<string>Session active</string>
+		<string>Session ended</string>
+		<string>Session failed</string>
 		<string>Session idle</string>
 	</array>
 	<key>NotificationDescriptions</key>
 	<dict>
 		<key>Session active</key>
 		<string>When data arrives, in windows requesting "Notify on Next Activity"</string>
+		<key>Session ended</key>
+		<string>When a main window process exits successfully</string>
+		<key>Session failed</key>
+		<string>When a main window process exits because of an unexpected signal or a nonzero exit code</string>
 		<key>Session idle</key>
 		<string>When data has not arrived for awhile, in windows requesting "Notify on Inactivity"</string>
 	</dict>

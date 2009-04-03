@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090402',
     '20090330',
     '20090312',
     '20090307',
@@ -219,6 +220,13 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090402': [
+		'Fixed or polished various bits of code related to starting processes and terminals.',
+		'Session exits are now handled more cleanly, with a modeless alert if a process has exited with nonzero status or a crashing signal.',
+		'Growl notification "Session ended" is now available, to find out about normal process exits.',
+		'Growl notification "Session failed" is now available, to find out about unexpected process exits (and to quell the default alert).',
+		'MacTelnet Help now has a section on the available Growl notifications.',
+	],
 	'20090330': [
 		'Preferences window Sessions pane Resource tab (and Custom New Session sheet) are now simpler, and use a separate panel for servers.',
 		'Automatically-discovered services (via Bonjour) may now be used, from the new Servers panel!',

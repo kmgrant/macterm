@@ -41,9 +41,10 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 
 </dd>
 
-<dt>Automation</dt><dd>
+<dt>Integrating With Other Applications</dt><dd>
 
 * "using Automator with MacTelnet":content/automator.html
+* "using Growl Notifications with MacTelnet":content/growl.html
 
 </dd>
 

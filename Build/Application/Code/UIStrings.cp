@@ -171,6 +171,31 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 													CFSTR("kUIStrings_AlertWindowNotifyInactivityTitle"));
 		break;
 	
+	case kUIStrings_AlertWindowNotifyProcessDieTemplate:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Process exited unsuccessfully (code %1$d)."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyProcessDieTemplate; %1$d is the nonzero exit status code"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifyProcessDieTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Session Failed"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyProcessDieTitle"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifyProcessExitPrimaryText:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Process exited successfully."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyProcessExitPrimaryText"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifyProcessExitTitle:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Session Ended"), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyProcessExitTitle"));
+		break;
+	
+	case kUIStrings_AlertWindowNotifyProcessSignalTemplate:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Process unexpectedly quit (exited with signal %1$d)."), CFSTR("Alerts"),
+													CFSTR("kUIStrings_AlertWindowNotifyProcessSignalTemplate; %1$d is the signal number"));
+		break;
+	
 	case kUIStrings_AlertWindowPasteLinesWarningName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Multi-Line Paste"), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowPasteLinesWarningName"));
