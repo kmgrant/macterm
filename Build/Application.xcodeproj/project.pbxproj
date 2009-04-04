@@ -47,7 +47,6 @@
 		0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */; };
 		0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */; };
 		0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE1055432A400ACDF3A /* HelpSystem.cp */; };
-		0AC6BAFE0A8C0BA000AFF37A /* ScriptInterfaceAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A88D05D07EA8BA1003FB644 /* ScriptInterfaceAE.cp */; };
 		0AC6BAFF0A8C0BA000AFF37A /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */; };
 		0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFE055432A400ACDF3A /* NetEvents.cp */; };
 		0AC6BB010A8C0BA000AFF37A /* ListUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF2055432A400ACDF3A /* ListUtilities.cp */; };
@@ -140,6 +139,10 @@
 		0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AD8B2D50DDA2CC100D5AA59 /* AddressDialog.mm */; };
 		0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE103B00F71D018003127C7 /* ServerBrowser.mm */; };
 		0AE852730D9463B400B6834B /* CocoaUserDefaults.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */; };
+		0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */; };
+		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
+		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
+		0AF502390F872D590068CB19 /* CollectionWrap.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502380F872D590068CB19 /* CollectionWrap.cp */; };
 		0AFA782C0B470144001FCE83 /* ParseURL.py in Populate lib-python2.3-pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* ParseURL.py */; };
 		0AFA782D0B470144001FCE83 /* Util.py in Populate lib-python2.3-pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* Util.py */; };
 		0AFA782E0B470144001FCE83 /* HandleURL.py in Populate lib-python2.3-pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* HandleURL.py */; };
@@ -433,7 +436,6 @@
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
 		0A719D51055D963A009B0A88 /* GeneralResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = GeneralResources.h; path = Application/Resources/GeneralResources.h; sourceTree = "<group>"; };
 		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
-		0A73DB9608C568D90099BA73 /* MacTelnet.help */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MacTelnet.help; path = HTMLHelp/MacTelnet.help; sourceTree = SOURCE_ROOT; };
 		0A7530D20580470F00BCC5E4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MenuForDockIcon.nib; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
@@ -448,8 +450,6 @@
 		0A8738310A5F5F59002CACA9 /* UIStrings_PrefsWindow.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = UIStrings_PrefsWindow.h; path = Application/Code/UIStrings_PrefsWindow.h; sourceTree = "<group>"; };
 		0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelSessions.h; path = Application/Code/PrefPanelSessions.h; sourceTree = "<group>"; };
 		0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelTerminals.h; path = Application/Code/PrefPanelTerminals.h; sourceTree = "<group>"; };
-		0A88D05D07EA8BA1003FB644 /* ScriptInterfaceAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ScriptInterfaceAE.cp; path = Application/Code/ScriptInterfaceAE.cp; sourceTree = "<group>"; };
-		0A88D06207EA8BDD003FB644 /* ScriptInterfaceAE.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = ScriptInterfaceAE.h; path = Application/Code/ScriptInterfaceAE.h; sourceTree = "<group>"; };
 		0A8ACEC30B8C375A00D01058 /* IconForStackWindows.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForStackWindows.icns; path = Application/Resources/IconForStackWindows.icns; sourceTree = "<group>"; };
 		0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RandomWrap.h; path = Shared/Code/RandomWrap.h; sourceTree = "<group>"; };
 		0A984182083452E6002E1BCE /* TerminalBackground.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = TerminalBackground.cp; path = Application/Code/TerminalBackground.cp; sourceTree = "<group>"; };
@@ -546,6 +546,15 @@
 		0AF4B5450A1D61C700D187A3 /* PrefPanelKiosk.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = PrefPanelKiosk.h; path = Application/Code/PrefPanelKiosk.h; sourceTree = "<group>"; };
 		0AF4B5460A1D61E400D187A3 /* PrefPanelKiosk.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelKiosk.cp; path = Application/Code/PrefPanelKiosk.cp; sourceTree = "<group>"; };
 		0AF4B5820A1D80FF00D187A3 /* IconForPrefPanelKiosk.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelKiosk.icns; path = Application/Resources/IconForPrefPanelKiosk.icns; sourceTree = "<group>"; };
+		0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFRetainRelease.h; path = Shared/Code/CFRetainRelease.h; sourceTree = "<group>"; };
+		0AF5022F0F872CC30068CB19 /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
+		0AF502300F872D150068CB19 /* CGContextSaveRestore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CGContextSaveRestore.h; path = Shared/Code/CGContextSaveRestore.h; sourceTree = "<group>"; };
+		0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CGContextSaveRestore.cp; path = Shared/Code/CGContextSaveRestore.cp; sourceTree = "<group>"; };
+		0AF502330F872D420068CB19 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
+		0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
+		0AF502380F872D590068CB19 /* CollectionWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CollectionWrap.cp; path = Shared/Code/CollectionWrap.cp; sourceTree = "<group>"; };
+		0AF5023A0F872DB90068CB19 /* CollectionWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CollectionWrap.h; path = Shared/Code/CollectionWrap.h; sourceTree = "<group>"; };
+		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
 		0AF5080509006B3D00E6FE79 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/SizeDialog.nib; sourceTree = "<group>"; };
 		0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadSelect.icns; path = Application/Resources/IconForKeypadSelect.icns; sourceTree = "<group>"; };
 		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
@@ -590,8 +599,14 @@
 			children = (
 				0A33CD0907FAC0A600248DDF /* CFDictionaryManager.cp */,
 				0A33CD0607FAC09700248DDF /* CFKeyValueInterface.cp */,
+				0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */,
+				0AF502330F872D420068CB19 /* CFUtilities.cp */,
+				0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */,
 				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
 				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
+				0AF502380F872D590068CB19 /* CollectionWrap.cp */,
+				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
+				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */,
 				0A46FDCC055432A400ACDF3A /* Cursors.cp */,
 				0A46FDCE055432A400ACDF3A /* DialogAdjust.cp */,
@@ -615,8 +630,14 @@
 				0A4603BE0554376100ACDF3A /* CarbonEventUtilities.template.h */,
 				0A9B31860D538E5B00C1616D /* CFDictionaryManager.h */,
 				0A9B31880D538E6300C1616D /* CFKeyValueInterface.h */,
+				0AF5022E0F872CAF0068CB19 /* CFRetainRelease.h */,
+				0AF5022F0F872CC30068CB19 /* CFUtilities.h */,
+				0AF502300F872D150068CB19 /* CGContextSaveRestore.h */,
 				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
 				0AE852740D9463B900B6834B /* CocoaUserDefaults.h */,
+				0AF5023A0F872DB90068CB19 /* CollectionWrap.h */,
+				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
+				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
 				0A9B318A0D538E6F00C1616D /* Cursors.h */,
 				0A4603D50554376100ACDF3A /* DialogAdjust.h */,
@@ -638,6 +659,7 @@
 				0AFD12B7087A148B00439BEA /* NIBLoader.h */,
 				0A90CD8C0DAD28F300B6E89E /* RandomWrap.h */,
 				0A9B319E0D538EFA00C1616D /* Releases.h */,
+				0AF5023B0F872DF80068CB19 /* ResultCode.template.h */,
 				0A9B31820D538E4400C1616D /* SoundSystem.h */,
 				0A9B31800D538E3C00C1616D /* StringUtilities.h */,
 				0A9B317E0D538E2800C1616D /* TextDataFile.h */,
@@ -666,11 +688,9 @@
 				0A46FE12055432A400ACDF3A /* AppResources.cp */,
 				0A46FDBC055432A400ACDF3A /* Clipboard.cp */,
 				0A46FDC0055432A400ACDF3A /* ColorBox.cp */,
-				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A35F5130DEDD9E300F16B03 /* CommandLine.mm */,
 				0A46FDC3055432A400ACDF3A /* Commands.cp */,
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
-				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */,
 				0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */,
 				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
@@ -738,12 +758,10 @@
 				0A4604230554376100ACDF3A /* AppResources.h */,
 				0A4603C00554376100ACDF3A /* Clipboard.h */,
 				0A4603C40554376100ACDF3A /* ColorBox.h */,
-				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
 				0A4603C60554376100ACDF3A /* CommandLine.h */,
 				0A4603C70554376100ACDF3A /* Commands.h */,
 				0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */,
 				0A4603CA0554376100ACDF3A /* ConnectionData.h */,
-				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
 				0A4603CF0554376100ACDF3A /* ContextualMenuBuilder.h */,
 				0A4603D30554376100ACDF3A /* Cursors.h */,
@@ -824,7 +842,6 @@
 				0A4A783A055B3D1D0011CC82 /* DockTileAttention.pict */,
 				0AFF112F0AF4202B006CCA34 /* NIBs */,
 				0AFF136B0AF42045006CCA34 /* Required Frameworks */,
-				0A73DB9608C568D90099BA73 /* MacTelnet.help */,
 				0A46FE73055433CA00ACDF3A /* Products */,
 				0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */,
 				0A69E5200DDBAC4100DA7874 /* Panther.xcconfig */,
@@ -902,8 +919,6 @@
 				0A4604200554376100ACDF3A /* RecordAE.h */,
 				0A46FE11055432A400ACDF3A /* RequiredAE.cp */,
 				0A4604220554376100ACDF3A /* RequiredAE.h */,
-				0A88D05D07EA8BA1003FB644 /* ScriptInterfaceAE.cp */,
-				0A88D06207EA8BDD003FB644 /* ScriptInterfaceAE.h */,
 				0A46FE39055432A400ACDF3A /* URLAccessAE.cp */,
 				0A4604550554376100ACDF3A /* URLAccessAE.h */,
 			);
@@ -1303,7 +1318,6 @@
 				0AC6BAF90A8C0BA000AFF37A /* CFDictionaryManager.cp in Sources */,
 				0AC6BAFA0A8C0BA000AFF37A /* MemoryBlocks.cp in Sources */,
 				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */,
-				0AC6BAFE0A8C0BA000AFF37A /* ScriptInterfaceAE.cp in Sources */,
 				0AC6BAFF0A8C0BA000AFF37A /* MainEntryPoint.cp in Sources */,
 				0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */,
 				0AC6BB010A8C0BA000AFF37A /* ListUtilities.cp in Sources */,
@@ -1396,6 +1410,10 @@
 				0AD8B2D60DDA2CC100D5AA59 /* AddressDialog.mm in Sources */,
 				0A35F5140DEDD9E300F16B03 /* CommandLine.mm in Sources */,
 				0AE103B10F71D018003127C7 /* ServerBrowser.mm in Sources */,
+				0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */,
+				0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */,
+				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
+				0AF502390F872D590068CB19 /* CollectionWrap.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
