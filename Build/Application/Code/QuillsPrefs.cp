@@ -3,7 +3,7 @@
 	QuillsPrefs.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -37,6 +37,7 @@
 
 // Mac includes
 #include <Carbon/Carbon.h>
+#include <StringUtilities.h>
 
 // MacTelnet includes
 #include "Preferences.h"
@@ -84,17 +85,11 @@ Prefs::list_collections		(Prefs::Class	inForWhichClass)
 			if (nullptr != nameCFString)
 			{
 				assert(CFStringGetTypeID() == CFGetTypeID(nameCFString));
-				char const*		nameCString = CFStringGetCStringPtr
-												(nameCFString, kCFStringEncodingMacRoman);
+				std::string		nameStdString;
 				
 				
-				if (nullptr != nameCString)
-				{
-					std::string		nameStdString(nameCString);
-					
-					
-					result.push_back(nameStdString);
-				}
+				StringUtilities_CFToUTF8(nameCFString, nameStdString);
+				result.push_back(nameStdString);
 			}
 		}
 		CFRelease(nameCFArray), nameCFArray = nullptr;
