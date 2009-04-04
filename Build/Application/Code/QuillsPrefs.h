@@ -10,7 +10,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -66,6 +66,8 @@ public:
 %feature("docstring",
 "Returns a list of collection names for preferences saved in the\n\
 given category, if any.\n\
+\n\
+Each string is in UTF-8 encoding.\n\
 ") list_collections;
 #endif
 	static std::vector< std::string > list_collections (Class	inClass);
