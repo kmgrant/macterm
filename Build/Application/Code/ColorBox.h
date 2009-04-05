@@ -10,9 +10,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -49,7 +49,7 @@
 /*!
 Color Box Color Change Notification Method
 
-This type of routine is invoked whenever a color boxÕs
+This type of routine is invoked whenever a color boxâ€™s
 content color is changed as the result of a user action
 (as specified in ColorBox_SetColor()).
 
@@ -96,7 +96,7 @@ void
 											 RGBColor const*				inColorPtr,
 											 Boolean						inIsUserAction = false);
 
-// CALL IN RESPONSE TO A CLICK - DISPLAYS A COLOR PICKER FOR THE USER, AUTOMATICALLY UPDATING THE BUTTONÕS COLOR
+// CALL IN RESPONSE TO A CLICK - DISPLAYS A COLOR PICKER FOR THE USER, AUTOMATICALLY UPDATING THE BUTTONâ€™S COLOR
 void
 	ColorBox_UserSetColor					(HIViewRef						inView);
 

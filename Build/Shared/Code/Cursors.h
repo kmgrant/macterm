@@ -11,7 +11,7 @@
 	If you consistently use this module to manage the mouse
 	cursor, you can reliably determine the current shape of the
 	cursor and revert back to it as needed, significantly
-	reducing the complexity of cursor-handling code.  ThatÕs
+	reducing the complexity of cursor-handling code.  Thatâ€™s
 	because each cursor-setting routine returns the ID of the
 	cursor that was last set using this module.
 	
@@ -21,7 +21,7 @@
 /*###############################################################
 
 	Interface Library 2.0
-	© 1998-2007 by Kevin Grant
+	Â© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

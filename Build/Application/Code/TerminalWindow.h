@@ -14,9 +14,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -69,12 +69,12 @@ enum TerminalWindow_Result
 };
 
 /*!
-Setting changes that MacTelnet allows other modules to “listen” for,
+Setting changes that MacTelnet allows other modules to ‚Äúlisten‚Äù for,
 via TerminalWindow_StartMonitoring().
 */
 enum TerminalWindow_Change
 {
-	kTerminalWindow_ChangeIconTitle			= 'NIcT',	//!< the title of a monitored Terminal Window’s
+	kTerminalWindow_ChangeIconTitle			= 'NIcT',	//!< the title of a monitored Terminal Window‚Äôs
 														//!  collapsed Dock tile has changed (context:
 														//!  TerminalWindowRef)
 	

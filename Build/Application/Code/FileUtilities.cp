@@ -3,9 +3,9 @@
 	FileUtilities.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2006 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -109,7 +109,7 @@ FileUtilities_ConvertFSRefToFSSpec	(FSRef const&	inFSRef,
 Determines if the specified file is an alias, and if
 so, modifies the file specification to point to the
 original file (if possible).  It does this by checking
-for the Òis aliasÓ Finder Info bit, and if set, by
+for the â€œis aliasâ€ Finder Info bit, and if set, by
 reading the first alias resource in the file, and if
 successful, by resolving the alias record in that
 resource.  In other words, it resolves the damned
@@ -213,8 +213,8 @@ FileUtilities_ReturnDirectoryIDFromFSSpec	(FSSpec const*		inFSSpecPtr)
 
 
 /*!
-This routine can be used to determine the Òlast
-modifiedÓ time of a directory described by a
+This routine can be used to determine the â€œlast
+modifiedâ€ time of a directory described by a
 file system specification record.  You can use
 this routine to determine if the user has added
 or removed files from a directory (by saving
@@ -397,13 +397,13 @@ FileUtilities_GetPathnameFromDirectoryID	(long		inDirectoryID,
 Use this routine to obtain a Pascal string
 representation of a directory pathname,
 knowing only its file system specification.
-If either the Òfile nameÓ of the given file
+If either the â€œfile nameâ€ of the given file
 specification is the name of a directory,
 or if the file name is blank, then the
 resultant path will refer to either a
 directory or a volume.
 
-If the specified directory canÕt be found,
+If the specified directory canâ€™t be found,
 the OS error code "dirNFErr" is returned;
 otherwise, "noErr" is returned.  If a call to
 PBGetCatInfoSync() fails, this routine may
@@ -471,7 +471,7 @@ FileUtilities_GetPathnameFromFSSpec		(FSSpec const*	inDirectorySpecPtr,
 		if (catName)
 		{
 			// for file specifications that include a filename, append the name onto the end
-			// of the parent directoryÕs pathname specification
+			// of the parent directoryâ€™s pathname specification
 			PLstrcat(outFullPathNameString, file.name);
 			if (inIsDirectory) PLstrcat(outFullPathNameString, STRING_PATHNAME_DELIMITER);
 		}
@@ -486,7 +486,7 @@ Use this routine to obtain a Pascal string
 representation of a directory pathname in
 the Unix file system, knowing only its HFS
 file system specification.  If either the
-Òfile nameÓ of the given file specification
+â€œfile nameâ€ of the given file specification
 is the name of a directory, or if the file
 name is blank, then the resultant path will
 refer to either a directory or a volume.
@@ -557,7 +557,7 @@ FileUtilities_GetTypedFilesInDirectory	(FSSpec const*		inDirectorySpecPtr,
 /*!
 This routine launches an application with standard
 launch flags and (under OS 8.5 or later) the
-Òlaunch applicationÓ Finder theme sound.  If any
+â€œlaunch applicationâ€ Finder theme sound.  If any
 problems occur, an error code is returned; if not,
 "noErr" is returned.
 
@@ -590,12 +590,12 @@ FileUtilities_LaunchApplicationFromFSSpec	(FSSpec*	inFSSpecPtr)
 
 /*!
 Use this convenient routine to fire an Apple Event
-back to MacTelnet (that is hence recordable) to ÒopenÓ
-the specified file via an Òopen documentsÓ event.  If
+back to MacTelnet (that is hence recordable) to â€œopenâ€
+the specified file via an â€œopen documentsâ€ event.  If
 you are opening a file for any reason, you should
 generally handle it by calling this routine, and then
-ÒreallyÓ open the file within the implementation of
-the Òopen documentsÓ Apple Event handler.
+â€œreallyâ€ open the file within the implementation of
+the â€œopen documentsâ€ Apple Event handler.
 
 (3.1)
 */
@@ -606,8 +606,8 @@ FileUtilities_OpenDocument	(FSRef const&	inFSRef)
 	AEDescList		docList;
 	
 	
-	// Create a ÒlistÓ of documents containing only the specified file, add the fileÕs
-	// OS data structure and then send it back to MacTelnet as an Òopen documentsÓ event.
+	// Create a â€œlistâ€ of documents containing only the specified file, add the fileâ€™s
+	// OS data structure and then send it back to MacTelnet as an â€œopen documentsâ€ event.
 	// A list is used because it is more versatile.
 	result = AppleEventUtilities_InitAEDesc(&docList);
 	if (noErr == result)
@@ -642,8 +642,8 @@ FileUtilities_OpenDocument	(FSSpec const*		inFSSpecPtr)
 	AEDescList		docList;
 	
 	
-	// Create a ÒlistÓ of documents containing only the specified file, add the fileÕs
-	// OS data structure and then send it back to MacTelnet as an Òopen documentsÓ event.
+	// Create a â€œlistâ€ of documents containing only the specified file, add the fileâ€™s
+	// OS data structure and then send it back to MacTelnet as an â€œopen documentsâ€ event.
 	// A list is used because it is more versatile.
 	result = AppleEventUtilities_InitAEDesc(&docList);
 	if (noErr == result)
@@ -667,7 +667,7 @@ FileUtilities_OpenDocument	(FSSpec const*		inFSSpecPtr)
 
 /*!
 Sends the entire given list of files back to the
-current application in an Òopen documentsÓ event,
+current application in an â€œopen documentsâ€ event,
 which will cause the files to be opened (as well
 as having the action recorded into scripts, if
 recording is in progress).
@@ -684,7 +684,7 @@ FileUtilities_OpenDocuments		(AEDescList const&	inList)
 	AppleEvent	openDocumentsEvent;
 	
 	
-	// send the list back to MacTelnet as an Òopen documentsÓ event
+	// send the list back to MacTelnet as an â€œopen documentsâ€ event
 	result = AppleEventUtilities_InitAEDesc(&openDocumentsEvent);
 	if (noErr == result)
 	{
@@ -701,7 +701,7 @@ FileUtilities_OpenDocuments		(AEDescList const&	inList)
 				result = AppleEventUtilities_InitAEDesc(&dummyReply);
 				if (noErr == result)
 				{
-					// finally, send the Òopen documentsÓ event!
+					// finally, send the â€œopen documentsâ€ event!
 					result = AESend(&openDocumentsEvent, &dummyReply, kAENoReply | kAEAlwaysInteract,
 									kAENormalPriority, kAEDefaultTimeout, nullptr/* idle routine */,
 									nullptr/* filter routine */);
@@ -759,7 +759,7 @@ FileUtilities_PersistentCreate		(FSSpec*		inoutFSSpecPtr,
 				if (!i) result = FSpCreate(&file, inCreator, inType, inScriptTag); // first try creating the specified file
 				else
 				{
-					// try to create a similar file (like ÒFile 1Ó, ÒFile 2Ó, etc.)
+					// try to create a similar file (like â€œFile 1â€, â€œFile 2â€, etc.)
 					StringSubstitutionSpec const	metaMappings[] =
 													{
 														{ "\p%a", originalFileName },
@@ -995,7 +995,7 @@ threadedGetFilesInDirectory		(FSSpec const*		inDirectorySpecPtr,
 			if (bufferPtr != nullptr)
 			{
 				// Perform a basic search, for all files, allocating (if possible) a
-				// fairly generous Òhelper bufferÓ to make this as quick as possible.
+				// fairly generous â€œhelper bufferâ€ to make this as quick as possible.
 				paramBlockPtr->ioCompletion = nullptr;
 				paramBlockPtr->ioNamePtr = nullptr;
 				paramBlockPtr->ioVRefNum = inDirectorySpecPtr->vRefNum;
@@ -1009,7 +1009,7 @@ threadedGetFilesInDirectory		(FSSpec const*		inDirectorySpecPtr,
 				paramBlockPtr->ioSearchBits = fsSBFlParID;
 				if (inRequireSignatures) paramBlockPtr->ioSearchBits |= fsSBFlFndrInfo;
 				
-				// set up the criteria for ÒmatchingÓ files
+				// set up the criteria for â€œmatchingâ€ files
 				{
 					lowerRangePtr->hFileInfo.ioNamePtr =
 						upperRangePtr->hFileInfo.ioNamePtr = nullptr;
@@ -1166,7 +1166,7 @@ threadedGetFilesInDirectory2	(FSSpec const*	inDirectorySpecPtr,
 				Boolean		accepted = true;
 				
 				
-				// why isnÕt this getting set properly by PBHGetFInfoSync()? (also see FSpGetFInfo below)
+				// why isnâ€™t this getting set properly by PBHGetFInfoSync()? (also see FSpGetFInfo below)
 				inFileArrayStoragePtr[*inoutFileMaxCountFileActualCountPtr].parID = directoryID;
 				
 				// tmp
@@ -1177,7 +1177,7 @@ threadedGetFilesInDirectory2	(FSSpec const*	inDirectorySpecPtr,
 					// user wants only specific file type and creator
 					if (FSpGetFInfo(&inFileArrayStoragePtr[*inoutFileMaxCountFileActualCountPtr],
 									&paramBlockPtr->fileParam.ioFlFndrInfo) == noErr)
-									// explicit FSpGetFInfo() call done because PBHGetFInfoSync() doesnÕt seem
+									// explicit FSpGetFInfo() call done because PBHGetFInfoSync() doesnâ€™t seem
 									// to be returning the correct file specification (and therefore the wrong FInfo)
 					{
 						accepted = ((paramBlockPtr->fileParam.ioFlFndrInfo.fdType == inDesiredTypeSignature) &&
@@ -1198,7 +1198,7 @@ threadedGetFilesInDirectory2	(FSSpec const*	inDirectorySpecPtr,
 			// if the time is up, abort the search
 			if ((TickCount() - originalTicks) > inMaximumDelayTime) result = userCanceledErr;
 		}
-		if (result == fnfErr) result = noErr; // file-not-found isnÕt an error in this case
+		if (result == fnfErr) result = noErr; // file-not-found isnâ€™t an error in this case
 		
 		Memory_DisposePtr(REINTERPRET_CAST(&paramBlockPtr, Ptr*));
 	}

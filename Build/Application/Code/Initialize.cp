@@ -3,9 +3,9 @@
 	Initialize.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -107,7 +107,7 @@ static void		initMacOSToolbox		();
 #pragma mark Public Methods
 
 /*!
-This routine initializes the operating system’s
+This routine initializes the operating system‚Äôs
 components, as well as every application module,
 in a particular dependency order.
 
@@ -134,7 +134,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 	// initialize memory manager, start up toolbox managers, etc.
 	initMacOSToolbox();
 	
-	// on Mac OS X the following call also stops the bouncing of MacTelnet’s Dock icon
+	// on Mac OS X the following call also stops the bouncing of MacTelnet‚Äôs Dock icon
 	FlushEvents(everyEvent/* events to flush */, 0/* events to not flush */);
 	
 	// QuickTime?
@@ -242,7 +242,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		}
 		
 	#ifndef NDEBUG
-		// write an initial header to the console that describes the user’s runtime environment
+		// write an initial header to the console that describes the user‚Äôs runtime environment
 		{
 			std::ostringstream	messageBuffer;
 			long				gestaltResult = 0L;
@@ -270,7 +270,7 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		}
 	#endif
 		
-		// Open every file in the “Startup Items” folder, by sending Apple Events back
+		// Open every file in the ‚ÄúStartup Items‚Äù folder, by sending Apple Events back
 		// to MacTelnet for each one.
 		{
 			enum
@@ -389,7 +389,7 @@ Initialize_ApplicationShutdown ()
 
 /*!
 This method initializes key modules (both
-internally and from MacTelnet’s libraries),
+internally and from MacTelnet‚Äôs libraries),
 installs Apple Event handlers for the
 Apple Events that MacTelnet supports and
 requires, and reads user preferences.
@@ -426,7 +426,7 @@ initApplicationCore ()
 			// then the text reads from the right side of a page to the left (the opposite of North America)
 			flags |= kLocalization_InitFlagReadTextRightToLeft;
 		}
-		if (false/* I can’t think of an appropriate Script Manager variable for determining this */)
+		if (false/* I can‚Äôt think of an appropriate Script Manager variable for determining this */)
 		{
 			// then the text reads from the bottom of a page to the top (the opposite of North America)
 			flags |= kLocalization_InitFlagReadTextBottomToTop;
@@ -472,7 +472,7 @@ reserve.
 
 If errors occur at this stage, this method may
 not return.  If this routine actually returns,
-then the user’s computer is at least minimally
+then the user‚Äôs computer is at least minimally
 capable of running MacTelnet 3.0.  However, more
 tests are done in initApplicationCore()...
 
@@ -481,7 +481,7 @@ tests are done in initApplicationCore()...
 static void
 initMacOSToolbox ()
 {
-	// initialize MacTelnet’s memory module, providing a grow zone for emergency situations;
+	// initialize MacTelnet‚Äôs memory module, providing a grow zone for emergency situations;
 	// NOTE: this will probably already have been called indirectly at static initialization
 	// time (for operator new[], etc.) so the following call may have no effect
 	Memory_Init();
@@ -519,7 +519,7 @@ initMacOSToolbox ()
 	
 	InitCursor();
 	
-	// initialization of the Alert module must be done here, otherwise startup error alerts can’t be displayed
+	// initialization of the Alert module must be done here, otherwise startup error alerts can‚Äôt be displayed
 	AppResources_SetResFile(kAppResources_FileIDPreferences, -1);
 	Alert_Init(CurResFile());
 	

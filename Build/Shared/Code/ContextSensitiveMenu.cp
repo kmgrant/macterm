@@ -3,7 +3,7 @@
 	ContextSensitiveMenu.cp
 	
 	Contexts Library 2.0
-	© 1998-2007 by Kevin Grant
+	Â© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -211,7 +211,7 @@ ContextSensitiveMenu_AddItemProvisionally	(MenuRef								inToWhichMenu,
 					// update the count of contextual items added to this menu
 					if ((kTotalAddedItemCount) && (!kGroupAddedItemCount))
 					{
-						// if any items are preceding this one and itÕs the first in its group, add a divider automatically
+						// if any items are preceding this one and itâ€™s the first in its group, add a divider automatically
 						(OSStatus)InsertMenuItemTextWithCFString(inToWhichMenu, CFSTR(""), kEndOfContextualMenu,
 																	kMenuItemAttrSeparator, 0/* command ID */);
 					}
@@ -250,7 +250,7 @@ call this routine to clean up.
 void
 ContextSensitiveMenu_DoneAddingItems	(MenuRef	UNUSED_ARGUMENT(inWhichMenu))
 {
-	// okay, this routine doesnÕt do anything - but forcing a completion routine increases flexibility for the future
+	// okay, this routine doesnâ€™t do anything - but forcing a completion routine increases flexibility for the future
 }// DoneAddingItems
 
 

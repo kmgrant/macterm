@@ -3,9 +3,9 @@
 	DNR.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2007 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -94,8 +94,8 @@ format.
 
 The domain name resolver has been re-written in MacTelnet 3.1
 to use BSD calls (sigh, to replace the one rewritten in 3.0 to
-use Open Transport natively...when will the next “wave of the
-future” hit?).
+use Open Transport natively...when will the next ‚Äúwave of the
+future‚Äù hit?).
 
 (3.1)
 */
@@ -108,7 +108,7 @@ DNR_New		(char const*	inHostNameCString,
 	int					error = 0;
 	
 	
-	// start a thread for DNS lookup so that MacTelnet’s main event loop can still run
+	// start a thread for DNS lookup so that MacTelnet‚Äôs main event loop can still run
 	error = pthread_attr_init(&attr);
 	if (0 != error) result = kDNR_ResultThreadError;
 	else
@@ -260,7 +260,7 @@ DNR_CopyResolvedHostAsCFString	(struct hostent const*	inDNR,
 /*!
 A POSIX thread (which can be preempted) that handles
 otherwise-synchronous DNS lookups.  Using preemptive
-threads for this allows MacTelnet to “block” waiting
+threads for this allows MacTelnet to ‚Äúblock‚Äù waiting
 for data, without actually halting other important
 things like the main event loop!
 
@@ -303,7 +303,7 @@ threadForDNS	(void*		inDNSThreadContextPtr)
 			
 			
 			// if the lookup failed, it will have returned nothing;
-			// a lack of host info is the handler’s hint that there
+			// a lack of host info is the handler‚Äôs hint that there
 			// was a problem with the DNS lookup
 			if (nullptr != hostData)
 			{

@@ -7,10 +7,10 @@
 	creating new sessions.  If a session is not created
 	through Quills, it is invisible to all scripting code
 	and will not (for instance) trigger the user callback
-	for “new session”, among other things.
+	for ‚Äúnew session‚Äù, among other things.
 	
 	Note, also, that you should not call Session_New()
-	directly.  This module assumes it is aware of “all”
+	directly.  This module assumes it is aware of ‚Äúall‚Äù
 	sessions, and the rest of the program relies on that.
 	For instance, the list of open sessions displayed in
 	various user interface elements is only accurate if
@@ -20,9 +20,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -72,7 +72,7 @@ enum SessionFactory_Result
 
 /*!
 Setting changes that MacTelnet allows other modules to
-“listen” for, via SessionFactory_StartMonitoring().
+‚Äúlisten‚Äù for, via SessionFactory_StartMonitoring().
 */
 typedef FourCharCode SessionFactory_Change;
 enum
@@ -83,7 +83,7 @@ enum
 /*!
 Types of session lists maintained by this module.  You
 use these when adding or removing sessions, and when
-using indexing (such as, “the first session whose...”).
+using indexing (such as, ‚Äúthe first session whose...‚Äù).
 */
 typedef FourCharCode SessionFactory_List;
 enum

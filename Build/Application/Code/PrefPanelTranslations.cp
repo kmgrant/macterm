@@ -3,9 +3,9 @@
 	PrefPanelTranslations.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -88,7 +88,7 @@ HIViewID const	idMyCheckBoxUseBackupFont				= { 'XUBF', 0/* ID */ };
 HIViewID const	idMyButtonBackupFontName				= { 'UFNm', 0/* ID */ };
 HIViewID const	idMyHelpTextBackupFontTest				= { 'HFTs', 0/* ID */ };
 
-// The following cannot use any of Apple’s reserved IDs (0 to 1023).
+// The following cannot use any of Apple‚Äôs reserved IDs (0 to 1023).
 enum
 {
 	kMy_DataBrowserPropertyIDBaseCharacterSet		= 'Base'
@@ -605,8 +605,8 @@ setEncoding		(CFStringEncoding	inEncoding,
 		OSStatus			error = noErr;
 		
 		
-		// there is a very stupid data browser bug where “assign” doesn’t seem to mean
-		// “assign”; one must first explicitly clear the selection, then set a new one;
+		// there is a very stupid data browser bug where ‚Äúassign‚Äù doesn‚Äôt seem to mean
+		// ‚Äúassign‚Äù; one must first explicitly clear the selection, then set a new one;
 		// HOWEVER, this triggers an even stupider bug where the monitoring routine is
 		// spammed as if dozens of items were selected in turn, so a flag is set to
 		// prevent that callback from doing anything during this phase (sigh...)
@@ -781,7 +781,7 @@ compareDataBrowserItems		(HIViewRef					UNUSED_ARGUMENT(inDataBrowser),
 
 /*!
 Adjusts the views in preference panels to match the
-specified change in dimensions of a panel’s container.
+specified change in dimensions of a panel‚Äôs container.
 
 (3.1)
 */
@@ -914,7 +914,7 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 /*!
 This routine, of standard PanelChangedProcPtr form,
 is invoked by the Panel module whenever a property
-of one of the preferences dialog’s panels changes.
+of one of the preferences dialog‚Äôs panels changes.
 
 (3.1)
 */
@@ -1018,7 +1018,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *(REINTERPRET_CAST(inDataPtr, Boolean*));
 			

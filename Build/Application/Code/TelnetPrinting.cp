@@ -3,9 +3,9 @@
 	TelnetPrinting.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -162,7 +162,7 @@ TelnetPrinting_Begin	(TerminalPrintingInfoPtr	inPrintingInfoPtr)
 Ends printer redirection, as requested by a
 directive from a remote terminal application.
 The contents of the temporary file (which was
-capturing “data to print”) will be read and sent
+capturing ‚Äúdata to print‚Äù) will be read and sent
 to the printer.
 
 This routine has been rewritten in MacTelnet 3.0
@@ -218,7 +218,7 @@ TelnetPrinting_End		(TerminalPrintingInfoPtr	inPrintingInfoPtr)
 				if ((error = UniversalPrint_ReturnLastResult(printRecordRef)) != noErr) failed = true;
 				else
 				{
-					printPages(printRecordRef, (StringPtr)nullptr/* don’t print title */,
+					printPages(printRecordRef, (StringPtr)nullptr/* don‚Äôt print title */,
 								inPrintingInfoPtr->wrapColumnCount, nullptr, inPrintingInfoPtr->temporaryFileRefNum);
 					UniversalPrint_EndDocument(printRecordRef);
 					if ((error = UniversalPrint_ReturnLastResult(printRecordRef)) != noErr) {/* error */}
@@ -243,12 +243,12 @@ TelnetPrinting_End		(TerminalPrintingInfoPtr	inPrintingInfoPtr)
 
 
 /*!
-To display the standard “Page Setup” dialog box
+To display the standard ‚ÄúPage Setup‚Äù dialog box
 and store any changes in a resource file, use
-this method.  The dialog’s settings are initially
-based on the contents of MacTelnet’s printing
+this method.  The dialog‚Äôs settings are initially
+based on the contents of MacTelnet‚Äôs printing
 resource from the specified source file.  If no
-resource can be found, then the user’s changes
+resource can be found, then the user‚Äôs changes
 (if any) are stored in the given resource file as
 a new resource; otherwise, the original resource
 is merely updated.
@@ -467,7 +467,7 @@ printPages		(UniversalPrint_ContextRef	inPrintingRef,
 	ProgressDialog_Display(idleDialog);
 	ProgressDialog_SetProgressIndicator(idleDialog, kProgressDialog_IndicatorIndeterminate);
 	
-	// Printer drivers automatically “guess” the document name by looking
+	// Printer drivers automatically ‚Äúguess‚Äù the document name by looking
 	// at the title of the frontmost window.  Therefore, setting the title
 	// of the progress dialog to be the given title will allow drivers to
 	// correctly display the title of the printed data.  Since the idle
@@ -624,7 +624,7 @@ later with UniversalPrint_DisposeContext().
 
 Always call this routine prior to starting a
 print job, from within a UniversalPrint_Init()-
-UniversalPrint_Done() loop, so that the user’s
+UniversalPrint_Done() loop, so that the user‚Äôs
 Page Setup and Print settings are used, and so
 that the default print idle procedure is able
 to let the user cancel the print job.
@@ -674,7 +674,7 @@ TelnetPrinting_ReturnNewPrintRecord ()
 
 /*!
 Spools the specified data to disk, scanning for
-the special “end printer redirection” character.
+the special ‚Äúend printer redirection‚Äù character.
 If the redirection ends, the spooling is stopped
 and printingEnd() is invoked.
 
@@ -700,9 +700,9 @@ TelnetPrinting_Spool	(TerminalPrintingInfoPtr	inPrintingInfoPtr,
 		inPrintingInfoPtr->bufferTail = (inPrintingInfoPtr->bufferTail << 8) + *pc;
 		if (inPrintingInfoPtr->bufferTail == kEndOfPrintingSignal)
 		{
-			// “printer redirection end” signal received
+			// ‚Äúprinter redirection end‚Äù signal received
 			ready = true;
-			--characterSpoolCount; // don’t count the redirection signal as a printed character
+			--characterSpoolCount; // don‚Äôt count the redirection signal as a printed character
 		}
 		++characterSpoolCount;
 		++pc;
@@ -724,7 +724,7 @@ that applies to every character following it
 up to the next meta-character (to reformat text
 in boldface, for instance).
 
-UNIMPLEMENTED.  Still in the “idea” stage.  But
+UNIMPLEMENTED.  Still in the ‚Äúidea‚Äù stage.  But
 you can call this routine in useful places in
 preparation for it actually doing something. :)
 

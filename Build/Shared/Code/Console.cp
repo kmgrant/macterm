@@ -3,7 +3,7 @@
 	Console.cp
 	
 	Data Access Library 1.4
-	© 1998-2009 by Kevin Grant
+	¬© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -140,7 +140,7 @@ Console_Assert	(char const*	inAssertionName,
 
 /*!
 Signals the start of a new function in the
-console’s output.  This lets you organize printed
+console‚Äôs output.  This lets you organize printed
 statements, since the console increases the
 indentation level of everything that is subsequently
 written to the console.  To end the output for a
@@ -166,7 +166,7 @@ Console_BeginFunction ()
 
 
 /*!
-Signals the end of a function in the console’s
+Signals the end of a function in the console‚Äôs
 output that was originally indented with a call
 to Console_BeginFunction().
 
@@ -353,7 +353,7 @@ Console_WriteValueBitFlags		(char const*	inLabel,
 
 /*!
 Writes the value of a Core Foundation string.  A
-string of the form "label = “value”" is written
+string of the form "label = ‚Äúvalue‚Äù" is written
 to the console (with a new-line).
 
 (3.0)
@@ -388,7 +388,7 @@ Console_WriteValueCFString	(char const*	inLabel,
 
 /*!
 Writes the type of a Core Foundation object.  A
-string of the form "label = “type”" is written
+string of the form "label = ‚Äútype‚Äù" is written
 to the console (with a new-line).
 
 (3.1)
@@ -459,7 +459,7 @@ Console_WriteValueCharacter		(char const*	inLabel,
 
 /*!
 Writes the value of a null-terminated string variable.
-A string of the form "label = “value”" is written to
+A string of the form "label = ‚Äúvalue‚Äù" is written to
 the console (with a new-line).
 
 (3.0)
@@ -542,7 +542,7 @@ Console_WriteValuePair	(char const*	inLabel,
 
 /*!
 Writes the value of a Pascal string variable.  A
-string of the form "label = “value”" is written
+string of the form "label = ‚Äúvalue‚Äù" is written
 to the console (with a new-line).
 
 (3.0)
@@ -573,7 +573,7 @@ Console_WriteValuePString	(char const*		inLabel,
 
 /*!
 Writes the value of a std::string variable.  A string
-of the form "label = “value”" is written to the console
+of the form "label = ‚Äúvalue‚Äù" is written to the console
 (with a new-line).
 
 (3.1)

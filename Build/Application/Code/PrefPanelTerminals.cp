@@ -3,9 +3,9 @@
 	PrefPanelTerminals.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -98,7 +98,7 @@ HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
 HIViewID const	idMyHelpTextTweaks				= { 'TwkH', 0/* ID */ };
 
-// The following cannot use any of Apple’s reserved IDs (0 to 1023).
+// The following cannot use any of Apple‚Äôs reserved IDs (0 to 1023).
 enum
 {
 	kMy_DataBrowserPropertyIDTweakIsEnabled		= 'TwOn',
@@ -126,7 +126,7 @@ struct My_EmulationTweaksDataBrowserCallbacks
 };
 
 /*!
-Implements the “Emulation” tab.
+Implements the ‚ÄúEmulation‚Äù tab.
 */
 struct My_TerminalsPanelEmulationUI
 {
@@ -177,7 +177,7 @@ private:
 typedef My_TerminalsPanelEmulationUI*	My_TerminalsPanelEmulationUIPtr;
 
 /*!
-Implements the “Options” tab.
+Implements the ‚ÄúOptions‚Äù tab.
 */
 struct My_TerminalsPanelOptionsUI
 {
@@ -207,7 +207,7 @@ private:
 typedef My_TerminalsPanelOptionsUI*		My_TerminalsPanelOptionsUIPtr;
 
 /*!
-Implements the “Screen” tab.
+Implements the ‚ÄúScreen‚Äù tab.
 */
 struct My_TerminalsPanelScreenUI
 {
@@ -869,7 +869,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldn’t be...
+			// this notification is currently ignored, but shouldn‚Äôt be...
 		}
 		break;
 	
@@ -893,7 +893,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -1365,7 +1365,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldn’t be...
+			// this notification is currently ignored, but shouldn‚Äôt be...
 		}
 		break;
 	
@@ -1389,7 +1389,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -1652,7 +1652,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldn’t be...
+			// this notification is currently ignored, but shouldn‚Äôt be...
 		}
 		break;
 	
@@ -1676,7 +1676,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			

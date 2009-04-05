@@ -3,7 +3,7 @@
 	UniversalPrint.cp
 	
 	Universal Printing Library 1.1
-	© 1998-2008 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -244,7 +244,7 @@ retained via the opaque reference, so you need only
 call the corresponding UniversalPrint_EndDocument()
 method with the same opaque reference to end a
 document.  The UniversalPrint_BeginPage() and
-UniversalPrint_EndPage() routines automatically “know”
+UniversalPrint_EndPage() routines automatically ‚Äúknow‚Äù
 the document as well, so you can invoke those routines
 between document opening and closing and get the
 expected results.
@@ -330,7 +330,7 @@ effect.  On the other hand, you generally call this
 routine from an idle procedure, and Carbon handles
 manual print spooling, etc. anyway.  Since a print
 job is likely to be spooled to disk and printed
-under Carbon’s control, and not your application’s
+under Carbon‚Äôs control, and not your application‚Äôs
 explicit loop, you are never responsible for the
 cancellation of a print job anyway.  The user can
 always drag documents out of a desktop printer to
@@ -368,7 +368,7 @@ a Mac OS 8 architecture, the structure dictates
 that a handle to a filled-in printing record
 must be provided.  For the Mac OS X architecture
 the structure requires two handles, respectively
-to “flattened” print settings and “flattened”
+to ‚Äúflattened‚Äù print settings and ‚Äúflattened‚Äù
 page format data.  If the structure contains an
 unknown architecture, "cfragArchitectureErr" is
 returned by UniversalPrint_ReturnLastResult().
@@ -377,7 +377,7 @@ IMPORTANT:	A Pre-Carbon version of this library
 			will fail to retrieve data stored in
 			a Carbon Printing Manager format,
 			whereas the reverse is not true.  If
-			the data can’t be read, the error
+			the data can‚Äôt be read, the error
 			"cfragArchitectureErr" is returned by
 			UniversalPrint_ReturnLastResult().
 
@@ -405,7 +405,7 @@ UniversalPrint_CopyFromSaved	(UniversalPrint_ContextRef			inRef,
 		
 		case kUniversalPrint_ArchitectureMacOSX:
 		#if TARGET_API_MAC_OS8
-			// a non-Carbon version of the library can’t translate a Mac OS X printing record
+			// a non-Carbon version of the library can‚Äôt translate a Mac OS X printing record
 			ptr->lastResult = cfragArchitectureErr;
 		#else
 			{
@@ -417,7 +417,7 @@ UniversalPrint_CopyFromSaved	(UniversalPrint_ContextRef			inRef,
 				PMPageFormat	unflattenedPageFormat;
 				
 				
-				// unflatten the given handles, and then fire them off to the sister routines for “installation”
+				// unflatten the given handles, and then fire them off to the sister routines for ‚Äúinstallation‚Äù
 				ptr->lastResult = PMUnflattenPrintSettings(printSettingsHandle, &unflattenedPrintSettings);
 				if (ptr->lastResult == noErr)
 				{
@@ -457,7 +457,7 @@ IMPORTANT:	A Pre-Carbon version of this library
 			will fail to store data in a Carbon
 			Printing Manager format, whereas the
 			reverse is not true.  If the data
-			can’t be written, the error
+			can‚Äôt be written, the error
 			"cfragArchitectureErr" is returned
 			by UniversalPrint_ReturnLastResult().
 
@@ -490,7 +490,7 @@ UniversalPrint_CopyToSaved	(UniversalPrint_ContextRef			inRef,
 						ptr->lastResult = Memory_SetHandleSize(givenHandle, GetHandleSize(tempHandle));
 						if (ptr->lastResult == noErr)
 						{
-							// note that a simple block-move doesn’t require a locked handle
+							// note that a simple block-move doesn‚Äôt require a locked handle
 							BlockMoveData(*tempHandle, *givenHandle, SIZE_OF_TPRINT);
 						}
 					}
@@ -910,7 +910,7 @@ UniversalPrint_MakeTraditionalPrintData		(UniversalPrint_ContextRef	inRef,
 		if (*outTHPrintPtr == nullptr) ptr->lastResult = memFullErr;
 		if (ptr->lastResult == noErr)
 		{
-			// note that a simple block-move doesn’t require a locked handle
+			// note that a simple block-move doesn‚Äôt require a locked handle
 			BlockMoveData(*(ptr->recordHandle), *((THPrint)*outTHPrintPtr), SIZE_OF_TPRINT);
 		}
 	#else
@@ -997,9 +997,9 @@ UniversalPrint_PageSetupSheetDisplay	(UniversalPrint_ContextRef			inRef,
 /*!
 Returns a constant describing the printing
 architecture that this library supports.
-The “traditional” architecture refers to
+The ‚Äútraditional‚Äù architecture refers to
 the Print Manager in place for Mac OS 8.6
-and earlier.  The “Mac OS X” architecture
+and earlier.  The ‚ÄúMac OS X‚Äù architecture
 refers to the Carbon printing architecture
 that is in place in Mac OS 9.
 
@@ -1007,7 +1007,7 @@ Since this library handles printing totally
 transparently, you only need to check this
 architecture setting to ensure that the
 installed printing library will run on the
-user’s system.  A Mac OS 8 version will not
+user‚Äôs system.  A Mac OS 8 version will not
 run under Mac OS X, and vice-versa; however,
 either version can be used under Mac OS 9.
 
@@ -1032,10 +1032,10 @@ UniversalPrint_ReturnArchitecture ()
 Returns the error code generated from the last
 printing function invoked.  The meaning and
 range of values will depend on the architecture
-(Mac OS 8 or Mac OS X) of this library’s
+(Mac OS 8 or Mac OS X) of this library‚Äôs
 implementation.  In the rare event that this
 library needs to make multiple printing-related
-calls to perform a function, the “last” result
+calls to perform a function, the ‚Äúlast‚Äù result
 will actually refer to the error returned from
 the first call that fails.
 
@@ -1108,7 +1108,7 @@ UniversalPrint_SetIdleProc	(UniversalPrint_ContextRef		inRef,
 /*!
 To set the number of copies to print, use this
 method.  Under Mac OS 8, this is usually done
-to implement a “print now” command, bypassing
+to implement a ‚Äúprint now‚Äù command, bypassing
 the print job dialog.  The "inLock" setting is
 ignored under Mac OS 8.
 
@@ -1137,7 +1137,7 @@ UniversalPrint_SetNumberOfCopies	(UniversalPrint_ContextRef	inRef,
 /*!
 To set the number of copies to print, use this
 method.  Under Mac OS 8, this is usually done
-to implement a “print now” command, bypassing
+to implement a ‚Äúprint now‚Äù command, bypassing
 the print job dialog.  The "inLock" setting is
 ignored under Mac OS 8.
 
@@ -1289,7 +1289,7 @@ flattenAndCopy		(PMPrintSettings			inPrintSettingsToFlatten,
 				result = Memory_SetHandleSize(inoutPrintSettingsFlattenedCopy, GetHandleSize(tempHandle));
 				if (result == noErr)
 				{
-					// note that a simple block-move doesn’t require a locked handle
+					// note that a simple block-move doesn‚Äôt require a locked handle
 					BlockMoveData(*tempHandle, *inoutPrintSettingsFlattenedCopy, GetHandleSize(tempHandle));
 				}
 			}
@@ -1310,7 +1310,7 @@ flattenAndCopy		(PMPrintSettings			inPrintSettingsToFlatten,
 				result = Memory_SetHandleSize(inoutPageFormatFlattenedCopy, GetHandleSize(tempHandle));
 				if (result == noErr)
 				{
-					// note that a simple block-move doesn’t require a locked handle
+					// note that a simple block-move doesn‚Äôt require a locked handle
 					BlockMoveData(*tempHandle, *inoutPageFormatFlattenedCopy, GetHandleSize(tempHandle));
 				}
 			}

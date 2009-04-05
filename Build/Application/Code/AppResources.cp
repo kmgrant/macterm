@@ -3,9 +3,9 @@
 	AppResources.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -124,7 +124,7 @@ AppResources_GetArbitraryResourceFileFSRef	(CFStringRef	inName,
 /*!
 Locates and opens the picture files in the Mac OS X
 application bundle that combine to make an application
-dock tile overlay of an “attention” icon, renders them
+dock tile overlay of an ‚Äúattention‚Äù icon, renders them
 in memory using QuickDraw and returns handles to them
 (you might subsequently call a routine like
 Embedding_BuildCGImageFromPictureAndMask() to combine
@@ -139,7 +139,7 @@ if the pictures were created successfully
 
 \retval any Mac OS File Manager error
 if there are problems opening the file (e.g. "fnfErr"
-if the file can’t be found)
+if the file can‚Äôt be found)
 
 (3.0)
 */
@@ -174,7 +174,7 @@ AppResources_GetDockTileAttentionPicture	(PicHandle&		outPicture,
 /*!
 Locates and opens the picture files in the Mac OS X
 application bundle that form the specified frame of the
-toolbar “poof” animation, renders them in memory using
+toolbar ‚Äúpoof‚Äù animation, renders them in memory using
 QuickDraw and returns handles to the frame and its mask.
 You might subsequently call a routine like
 Embedding_BuildCGImageFromPictureAndMask() to combine
@@ -192,7 +192,7 @@ if the specified animation stage index is not valid
 
 \retval any Mac OS File Manager error
 if there are problems opening the file (e.g. "fnfErr" if
-the file can’t be found)
+the file can‚Äôt be found)
 
 (3.0)
 */
@@ -396,7 +396,7 @@ AppResources_ReturnCreatorCode ()
 
 
 /*!
-To determine a resource file’s reference number
+To determine a resource file‚Äôs reference number
 given its resource file descriptor, use this
 method.
 
@@ -432,7 +432,7 @@ method.
 
 WARNING:	This is only done once for each type
 			of resource file, at the start of
-			your program when you’ve determined
+			your program when you‚Äôve determined
 			the descriptors of important open
 			resource files.  Unless you use one
 			or more Resource Manager routines to
@@ -561,7 +561,7 @@ createPictureFromFile	(SInt16			inFileReferenceNumber,
 
 
 /*!
-Attempts to open an application in this application’s
+Attempts to open an application in this application‚Äôs
 bundle that has the specified name.
 
 (3.0)
@@ -626,7 +626,7 @@ launchResourceApplication	(CFStringRef	inName)
 			}
 		}
 	#else
-		// do not use Launch Services, because it cannot “block” and
+		// do not use Launch Services, because it cannot ‚Äúblock‚Äù and
 		// wait for the launched application to actually quit (there
 		// may be some other way to do this, such as setting up some
 		// kind of Carbon Event handler, but that seems too complex

@@ -3,21 +3,21 @@
 	a set of possible values.
 	
 	Icons only animate if they are set to animate; but, you can
-	still create a series of “animation cells” for icons that
+	still create a series of ‚Äúanimation cells‚Äù for icons that
 	do not animate continuously.  StatusIcon_SetNextCell() can
 	then be used to update the icon display in a controlled
 	manner.  Typically you create a series of icons representing
-	all possible states of a Status Icon, make them all “stages
-	of animation”, and then call StatusIcon_SetNextCell() to
+	all possible states of a Status Icon, make them all ‚Äústages
+	of animation‚Äù, and then call StatusIcon_SetNextCell() to
 	specify the current state.  The idle handler takes care of
 	updating the display whether or not animation is occurring.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or

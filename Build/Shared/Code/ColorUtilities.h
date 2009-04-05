@@ -4,12 +4,12 @@
 	
 	You will find useful methods for accessing information
 	required to use Mac OS Appearance theme-brush-based routines.
-	There is also a simple way to “completely” save the current
-	graphics port’s state, in a way sufficient for any “damage”
-	that a theme brush can cause when drawing.  Finally, there’s
+	There is also a simple way to ‚Äúcompletely‚Äù save the current
+	graphics port‚Äôs state, in a way sufficient for any ‚Äúdamage‚Äù
+	that a theme brush can cause when drawing.  Finally, there‚Äôs
 	a cool routine that lets you automatically display the most
 	powerful Color Picker dialog available.  A few useful methods
-	have been thrown in that will allow you to use “standard”
+	have been thrown in that will allow you to use ‚Äústandard‚Äù
 	patterns without actually accessing QuickDraw global
 	variables, very useful in preparation for the opaque
 	QuickDraw structures of Mac OS X.
@@ -17,13 +17,13 @@
 	Color Pen State portions of this file are from the OS
 	Technologies group at Apple Computer Inc. (source: SDK for
 	Appearance 1.0), and are written by Ed Voas with some
-	modifications by Kevin Grant.  © 1997-1999 by Apple
+	modifications by Kevin Grant.  ¬© 1997-1999 by Apple
 	Computer, Inc., all rights reserved.
 */
 /*###############################################################
 
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

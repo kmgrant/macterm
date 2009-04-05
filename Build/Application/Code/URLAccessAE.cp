@@ -3,9 +3,9 @@
 	URLAccessAE.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2002 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2002 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -78,7 +78,7 @@ URLAccessAE_HandleUniformResourceLocator		(AppleEvent const*	inAppleEventPtr,
 	
 	(OSStatus)AppleEventUtilities_InitAEDesc(&directObject);
 	
-	Console_WriteLine("AppleScript: “handle URL” event");
+	Console_WriteLine("AppleScript: ‚Äúhandle URL‚Äù event");
 	
 	error = AEGetParamDesc(inAppleEventPtr, keyDirectObject, typeWildCard, &directObject);
 	

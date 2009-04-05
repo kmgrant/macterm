@@ -3,9 +3,9 @@
 	QuillsBase.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2009 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -38,6 +38,7 @@
 // library includes
 #include <CFRetainRelease.h>
 #include <Console.h>
+#include <StringUtilities.h>
 
 // MacTelnet includes
 #include "AppResources.h"
@@ -148,14 +149,7 @@ Base::version ()
 	if (nullptr != bundleVersionCFString)
 	{
 		assert(CFStringGetTypeID() == CFGetTypeID(bundleVersionCFString));
-		char const*		bundleVersionCString = CFStringGetCStringPtr
-												(bundleVersionCFString, kCFStringEncodingMacRoman);
-		
-		
-		if (nullptr != bundleVersionCString)
-		{
-			result = bundleVersionCString;
-		}
+		StringUtilities_CFToUTF8(bundleVersionCFString, result);
 	}
 	return result;
 }// version

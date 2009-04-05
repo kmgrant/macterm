@@ -3,7 +3,7 @@
 	dialog box management, and window content control management.
 	
 	Actually, this module contains a ton of routines that really
-	should be part of the Mac OS, but arenÕt.
+	should be part of the Mac OS, but arenâ€™t.
 	
 	NOTE:	Over time, this header has increasingly become a
 			dumping ground for APIs that do not seem to have a
@@ -12,9 +12,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -216,7 +216,7 @@ pascal ControlKeyFilterResult
 ControlKeyFilterUPP
 	HostNameLimiterKeyFilterUPP				();
 
-//! since the Carbon implementation of IsControlHilited() isnÕt smart enough to consider the inactive case, this API exists...
+//! since the Carbon implementation of IsControlHilited() isnâ€™t smart enough to consider the inactive case, this API exists...
 #define IsControlActiveAndHilited(inControlHandle)			((GetControlHilite(inControlHandle) > 0) && (GetControlHilite(inControlHandle) < 255))
 
 pascal ControlKeyFilterResult
@@ -344,7 +344,7 @@ ControlKeyFilterUPP
 
 /*!
 This is a functor that returns true if the specified
-HIViewRefÕs ID is equal to the one given at construction
+HIViewRefâ€™s ID is equal to the one given at construction
 time.
 
 Model of STL Predicate.

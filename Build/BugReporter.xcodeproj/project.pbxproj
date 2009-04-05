@@ -39,15 +39,15 @@
 /* End PBXBuildRule section */
 
 /* Begin PBXFileReference section */
-		0A2EA0E008E0F28A00108992 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
-		0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = BugReporterPrefix.pch; path = BugReporter/Code/BugReporterPrefix.pch; sourceTree = "<group>"; };
-		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
-		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
-		0A3C025C08123ACD0088580A /* Releases.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = Releases.cp; path = Shared/Code/Releases.cp; sourceTree = "<group>"; };
-		0A3C026308123ADE0088580A /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
+		0A2EA0E008E0F28A00108992 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
+		0A33CC4D07FABA6500248DDF /* BugReporterPrefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = BugReporterPrefix.pch; path = BugReporter/Code/BugReporterPrefix.pch; sourceTree = "<group>"; };
+		0A33CC5507FABAF800248DDF /* UniversalDefines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = UniversalDefines.h; path = Shared/Code/UniversalDefines.h; sourceTree = "<group>"; };
+		0A3C0112081208530088580A /* CFUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CFUtilities.h; path = Shared/Code/CFUtilities.h; sourceTree = "<group>"; };
+		0A3C025C08123ACD0088580A /* Releases.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Releases.cp; path = Shared/Code/Releases.cp; sourceTree = "<group>"; };
+		0A3C026308123ADE0088580A /* Releases.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Releases.h; path = Shared/Code/Releases.h; sourceTree = "<group>"; };
 		0AA742C806E45F2D00CBC7B5 /* BugReporter.nib */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = BugReporter.nib; path = BugReporter/Resources/English.lproj/BugReporter.nib; sourceTree = "<group>"; };
 		0AA742CA06E45F5A00CBC7B5 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = BugReporter/Resources/IconForBundle.icns; sourceTree = "<group>"; };
-		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = BugReporter/Code/MainEntryPoint.cp; sourceTree = "<group>"; };
+		0AA742CC06E45FBC00CBC7B5 /* MainEntryPoint.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MainEntryPoint.cp; path = BugReporter/Code/MainEntryPoint.cp; sourceTree = "<group>"; };
 		20286C33FDCF999611CA2CEA /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
 		4A9504C8FFE6A3BC11CA0CBA /* ApplicationServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ApplicationServices.framework; path = /System/Library/Frameworks/ApplicationServices.framework; sourceTree = "<absolute>"; };
 		4A9504CAFFE6A41611CA0CBA /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = /System/Library/Frameworks/CoreServices.framework; sourceTree = "<absolute>"; };

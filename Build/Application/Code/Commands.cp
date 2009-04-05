@@ -3,9 +3,9 @@
 	Commands.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -416,7 +416,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		
 		case kCommandHandleURL:
 			// open the appropriate helper application for the URL in the selected
-			// text (which may be MacTelnet itself), and send a Òhandle URLÓ event
+			// text (which may be MacTelnet itself), and send a â€œhandle URLâ€ event
 			if (isSession) URL_HandleForScreenView(activeScreen, activeView);
 			else Sound_StandardAlert();
 			break;
@@ -596,7 +596,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 																		&copyEvent);
 						if (noErr == error)
 						{
-							// include Òcopy using spaces for tabsÓ option
+							// include â€œcopy using spaces for tabsâ€ option
 							{
 								Boolean		copyTable = (inCommandID == kCommandCopyTable);
 								
@@ -617,7 +617,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			if ((inCommandID == kCommandCut) || (inCommandID == kCommandClear))
 			{
 				// delete selection -- unimplemented, impossible to implement?
-				// at least, impossible until MacTelnet supports ÒgenericÓ
+				// at least, impossible until MacTelnet supports â€œgenericâ€
 				// terminal windows (i.e. windows that are not tied to read-only
 				// concepts like connections to remote servers)
 				if (isDialog)
@@ -824,10 +824,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 							unless (Session_TEKHasTargetGraphic(sessionForGraphic))
 							{
 								// then there is no current TEK window for this screen - make one
-								// (this also makes it one of the sessionÕs data targets)
+								// (this also makes it one of the sessionâ€™s data targets)
 								unless (Session_TEKCreateTargetGraphic(sessionForGraphic))
 								{
-									// error - canÕt create TEK window; get out of TEK mode
+									// error - canâ€™t create TEK window; get out of TEK mode
 									// UNIMPLEMENTED
 								}
 							}
@@ -923,7 +923,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	break;
 		
 		case kCommandShowNetworkNumbers:
-			// in the Cocoa implementation this really means Òshow or activateÓ
+			// in the Cocoa implementation this really means â€œshow or activateâ€
 			AddressDialog_Display();
 			break;
 		
@@ -1117,7 +1117,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	break;
 		
 		case kCommandShowCommandLine:
-			// in the Cocoa implementation this really means Òshow or activateÓ
+			// in the Cocoa implementation this really means â€œshow or activateâ€
 			CommandLine_Display();
 			break;
 		
@@ -1133,17 +1133,17 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		//	break;
 		
 		case kCommandShowControlKeys:
-			// in the Cocoa implementation this really means Òshow or activateÓ
+			// in the Cocoa implementation this really means â€œshow or activateâ€
 			Keypads_SetVisible(kKeypads_WindowTypeControlKeys, true);
 			break;
 		
 		case kCommandShowFunction:
-			// in the Cocoa implementation this really means Òshow or activateÓ
+			// in the Cocoa implementation this really means â€œshow or activateâ€
 			Keypads_SetVisible(kKeypads_WindowTypeFunctionKeys, true);
 			break;
 		
 		case kCommandShowKeypad:
-			// in the Cocoa implementation this really means Òshow or activateÓ
+			// in the Cocoa implementation this really means â€œshow or activateâ€
 			Keypads_SetVisible(kKeypads_WindowTypeVT220Keys, true);
 			break;
 		
@@ -1194,7 +1194,7 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 														&actualSize);
 				unless (preferencesResult == kPreferences_ResultOK)
 				{
-					isVisible = false; // assume a value, if preference canÕt be found
+					isVisible = false; // assume a value, if preference canâ€™t be found
 				}
 				
 				isVisible = !isVisible;
@@ -1377,7 +1377,7 @@ Commands_HandleCreateToolbarItem	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 		// if the command information was found, proceed
 		if (noErr == result)
 		{
-			// donÕt claim to have handled any commands not shown below
+			// donâ€™t claim to have handled any commands not shown below
 			result = eventNotHandledErr;
 			
 			switch (kEventKind)
@@ -1787,7 +1787,7 @@ changeNotifyForCommandExecution		(UInt32		inCommand)
 	
 	context.commandID = inCommand;
 	
-	// invoke listener callback routines appropriately, from the specified commandÕs implementation listener model
+	// invoke listener callback routines appropriately, from the specified commandâ€™s implementation listener model
 	ListenerModel_NotifyListenersOfEvent(gCommandExecutionListenerModel(), inCommand, &context);
 }// changeNotifyForCommandExecution
 
@@ -1848,9 +1848,9 @@ translateScreenLine		(TerminalScreenRef	inFromWhichScreen,
 	//TextTranslation_ConvertTextFromMac((UInt8*)inoutLineTextBuffer, inLineTextBufferLength,
 	//									translationInfoPtr->newTable);
 	#else
-	// temp - test Text Encoding Converter stuff (doesnÕt really work yet)
+	// temp - test Text Encoding Converter stuff (doesnâ€™t really work yet)
 	{
-		// translate the lineÕs text into a new buffer, then copy it overtop
+		// translate the lineâ€™s text into a new buffer, then copy it overtop
 		{
 			Handle		h = nullptr;
 			OSStatus	error = noErr;

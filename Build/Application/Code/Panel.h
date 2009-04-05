@@ -2,7 +2,7 @@
 	\brief Abstract interface to allow panel-based dialog
 	boxes to be easily constructed.
 	
-	Use the methods listed in this file to implement a panelÕs
+	Use the methods listed in this file to implement a panelâ€™s
 	interface to its dialog, and then it can easily be used in
 	any dialog box that supports this same interface to panels.
 	
@@ -15,9 +15,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2007 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -87,7 +87,7 @@ panel.  A flexible dialog box will send every kind of
 change notification, even seemingly unimportant ones
 (such as changing the active state), so that any kind
 of panel is definitely able to work in the dialog.
-All dialogs must send the Òone timeÓ property changes
+All dialogs must send the â€œone timeâ€ property changes
 in a logical order.
 
 NOTE:	Carbon Events has made previous parts of this
@@ -95,7 +95,7 @@ NOTE:	Carbon Events has made previous parts of this
 		to be something important missing here, look
 		for an equivalent Carbon Event (e.g. install
 		a kEventClassControl/kEventControlBoundsChanged
-		event on the panelÕs container view to find out
+		event on the panelâ€™s container view to find out
 		when the panel size changes).
 
 The possible messages are as follows:
@@ -130,7 +130,7 @@ kPanel_MessageFocusLost
 kPanel_MessageGetEditType
 	Sent to determine how a panel behaves: by default it
 	is modeless and any changes to its fields affect a
-	single set of data immediately.  But, an ÒinspectorÓ
+	single set of data immediately.  But, an â€œinspectorâ€
 	type of panel is expected to be able to auto-save and
 	reset its fields when the active data set is changed
 	(see the kPanel_MessageNewDataSet event for more info).
@@ -184,7 +184,7 @@ kPanel_MessageNewVisibility
 	provide audible feedback, it may be important to know
 	when the panel is no longer showing.  The dialog is
 	free to fire this message when the panel may not be
-	ÒreallyÓ invisible, but is obscured in some way (such
+	â€œreallyâ€ invisible, but is obscured in some way (such
 	as by another, larger control in the same window).
 */
 typedef UInt32 Panel_Message;
@@ -206,7 +206,7 @@ enum
 		kPanel_ResponseSizeNotProvided = (0 >> 0),			// result code of the above
 	kPanel_MessageNewAppearanceTheme = 'athm',			// data: -> nullptr
 	kPanel_MessageNewDataSet = 'cset',					// data: -> Panel_DataSetTransition*
-	kPanel_MessageNewVisibility = 'visb'				// data: -> Boolean*, Òis now visible?Ó
+	kPanel_MessageNewVisibility = 'visb'				// data: -> Boolean*, â€œis now visible?â€
 };
 typedef SInt32 (*Panel_ChangeProcPtr)	(Panel_Ref		inRef,
 										 Panel_Message	inMessage,
@@ -396,7 +396,7 @@ void
 
 /*!
 This is a functor that adjusts the width and/or height
-of a panelÕs container view.
+of a panelâ€™s container view.
 
 Model of STL Unary Function.
 

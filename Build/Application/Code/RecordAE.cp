@@ -3,9 +3,9 @@
 	RecordAE.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2007 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -106,7 +106,7 @@ RecordAE_Init ()
 	// Script Editor, to automatically write scripts based on what users do
 	// in MacTelnet!
 	gSelfProcessID.highLongOfPSN = 0;
-	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
+	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don‚Äôt use GetCurrentProcess()!
 	error = AECreateDesc(typeProcessSerialNumber, &gSelfProcessID, sizeof(gSelfProcessID), &gSelfAddress);
 	if (error == noErr)
 	{
@@ -128,7 +128,7 @@ RecordAE_Init ()
 	}
 	
 	// Also, since these events are only sent if a recording begins while
-	// the program is running, the proper setup still won’t occur if the
+	// the program is running, the proper setup still won‚Äôt occur if the
 	// user happens to be recording something already when the program
 	// starts up.  To detect this case, ask the Apple Event Manager.
 	{
@@ -173,7 +173,7 @@ RecordAE_Done ()
 
 /*!
 Creates an Apple Event using AECreateAppleEvent(), with
-the most likely parameters for “send to self” events:
+the most likely parameters for ‚Äúsend to self‚Äù events:
 RecordAE_GetSelfAddress(), kAutoGenerateReturnID, and
 kAnyTransactionID.
 
@@ -223,7 +223,7 @@ handleRecordingBegunEvent	(AppleEvent const*	inAppleEventPtr,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “recording begun” event");
+	Console_WriteLine("AppleScript: ‚Äúrecording begun‚Äù event");
 	
 	result = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
 	
@@ -252,7 +252,7 @@ handleRecordingTerminatedEvent	(AppleEvent const*	inAppleEventPtr,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “recording terminated” event");
+	Console_WriteLine("AppleScript: ‚Äúrecording terminated‚Äù event");
 	
 	result = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
 	
@@ -273,8 +273,8 @@ for any window, while a script is recording.  A fake
 event is sent back that causes an appropriate command
 to appear in a recording script.
 
-IMPORTANT:  The “closed” event is handled here, as opposed
-			to the “closing” event; this is because many
+IMPORTANT:  The ‚Äúclosed‚Äù event is handled here, as opposed
+			to the ‚Äúclosing‚Äù event; this is because many
 			handlers tend to override the closing-event
 			completely, which would mean this is never
 			invoked when it should be.  Technically it is
@@ -432,7 +432,7 @@ receiveWindowCollapsedOrExpanded	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 						// reference to the window to be minimized or restored - REQUIRED
 						(OSStatus)AEPutParamDesc(&setDataEvent, keyDirectObject, &propertyDesc);
 						
-						// the property’s new value - REQUIRED
+						// the property‚Äôs new value - REQUIRED
 						(OSStatus)BasicTypesAE_CreateBooleanDesc((kEventKind == kEventWindowCollapsed), &valueDesc);
 						(OSStatus)AEPutParamDesc(&setDataEvent, keyAEParamMyTo, &valueDesc);
 						
@@ -526,7 +526,7 @@ receiveWindowZoomed		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						// reference to the window to be minimized or restored - REQUIRED
 						(OSStatus)AEPutParamDesc(&setDataEvent, keyDirectObject, &propertyDesc);
 						
-						// the property’s new value - REQUIRED
+						// the property‚Äôs new value - REQUIRED
 						(OSStatus)BasicTypesAE_CreateBooleanDesc
 									(IsWindowInStandardState(window, nullptr/* ideal size */, nullptr/* ideal standard state */),
 										&valueDesc);

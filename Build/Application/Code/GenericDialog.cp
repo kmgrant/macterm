@@ -3,9 +3,9 @@
 	GenericDialog.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -120,7 +120,7 @@ struct My_GenericDialog
 	NIBWindow								dialogWindow;					//!< acts as the Mac OS window for the dialog
 	HIViewWrap								userPaneForMargins;				//!< used to determine location of, and space around, the hosted panel
 	HIViewWrap								buttonHelp;						//!< displays context-sensitive help on this dialog
-	HIViewWrap								buttonOK;						//!< accepts the userÕs changes
+	HIViewWrap								buttonOK;						//!< accepts the userâ€™s changes
 	HIViewWrap								buttonCancel;					//!< aborts
 	HIViewWrap								buttonOther;					//!< optional
 	CarbonEventHandlerWrap					buttonHICommandsHandler;		//!< invoked when a dialog button is clicked
@@ -833,7 +833,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldnÕt be able to select menu commands while the window is open
+				// wouldnâ€™t be able to select menu commands while the window is open
 				result = eventNotHandledErr;
 				break;
 			}

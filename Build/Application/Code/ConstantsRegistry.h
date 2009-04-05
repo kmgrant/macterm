@@ -10,9 +10,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -320,7 +320,7 @@ enum
 
 /*!
 Listener Model descriptors, identifying objects that manage,
-abstractly, ÒlistenersÓ for events, and then notify the
+abstractly, â€œlistenersâ€ for events, and then notify the
 listeners when events actually take place.  See "ListenerModel.h".
 
 The main benefit behind these identifiers is for cases where the
@@ -375,7 +375,7 @@ enum
 	kFlagOS10_5API					= (kFlagManager_FirstValidFlag + 8),	//!< is Mac OS 10.5 or later in use?
 	kFlagOS10_6API					= (kFlagManager_FirstValidFlag + 9),	//!< is Mac OS 10.6 or later in use?
 	kFlagQuickTime					= (kFlagManager_FirstValidFlag + 10),	//!< is QuickTime (any version) installed?
-	kFlagSuspended					= (kFlagManager_FirstValidFlag + 11),	//!< is MacTelnetÕs process in the background?
+	kFlagSuspended					= (kFlagManager_FirstValidFlag + 11),	//!< is MacTelnetâ€™s process in the background?
 	kFlagThreadManager				= (kFlagManager_FirstValidFlag + 12),	//!< is the Thread Manager (any version) installed?
 	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 13)	//!< skip auto-new-window on application launch?
 };

@@ -3,9 +3,9 @@
 	MainEntryPoint.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -135,7 +135,7 @@ MainEntryPoint_ImmediatelyQuit ()
 /*!
 Call this method when the program is about to quit,
 so things can be cleaned up.  This method sets the
-“done” flag, so the program will shut down virtually
+‚Äúdone‚Äù flag, so the program will shut down virtually
 right after this method returns and the next event
 loop occurs.
 

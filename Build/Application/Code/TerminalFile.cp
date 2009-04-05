@@ -3,9 +3,9 @@
 	TerminalFile.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -255,7 +255,7 @@ is not a valid terminal file reference, if inSettingsType is not
 a valid settings type or not contained in inTermFile, if 
 inSettingsIndex is out of range, if any tag in inTagArray is not 
 a valid tag, if any value pointer in outValueArray is nullptr (the 
-pointerÕs value can be nullptr but not the pointer itself), or if 
+pointerâ€™s value can be nullptr but not the pointer itself), or if 
 inAttributeCount is out of range.
 
 (3.0)
@@ -600,7 +600,7 @@ TerminalFile_GetAttributes	(TerminalFileRef					inTermFile,
 This method gets the count of the settings for the specified
 settings type.  For example, if you have two sets of window
 settings in your terminal file, this function will return 2.
-If the settings type isnÕt in the file at all or the given
+If the settings type isnâ€™t in the file at all or the given
 settings type is invalid, 0 is returned.
 
 (3.0)

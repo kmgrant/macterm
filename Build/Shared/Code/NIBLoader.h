@@ -9,7 +9,7 @@
 /*###############################################################
 
 	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -50,7 +50,7 @@
 #pragma mark Types
 
 /*!
-Opens a NIB bundle in the applicationÕs main bundle
+Opens a NIB bundle in the applicationâ€™s main bundle
 that matches the given base name (i.e. bundle name
 without a ".nib" extension).  On destruction, the
 NIB reference is disposed of.

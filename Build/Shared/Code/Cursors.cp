@@ -3,7 +3,7 @@
 	Cursors.cp
 	
 	Interface Library 1.1
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -238,7 +238,7 @@ most recently set using this module, use this
 method.  If you consistently use this module
 to change the cursor *everywhere* in your
 program, then you can use this method to
-effectively get the “current” cursor, which
+effectively get the ‚Äúcurrent‚Äù cursor, which
 has many advantages.
 
 (1.0)
@@ -882,7 +882,7 @@ Cursors_UseWatch ()
 #pragma mark Internal Methods
 
 /*!
-To specify the ID of the “current”
+To specify the ID of the ‚Äúcurrent‚Äù
 cursor, use this method.  This helps
 to keep track of what the shape of
 the mouse pointer most likely is

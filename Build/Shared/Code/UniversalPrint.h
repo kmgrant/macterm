@@ -3,7 +3,7 @@
 	using either the Mac OS 8 or Mac OS X printing managers,
 	depending upon which version of this library is installed.
 	
-	By using this library’s interface for your printing needs,
+	By using this library‚Äôs interface for your printing needs,
 	you only have to write one set of source code (one that
 	interfaces with this library), and yet your application can
 	use either of the two printing architectures transparently!
@@ -20,7 +20,7 @@
 /*###############################################################
 
 	Universal Printing Library 1.1
-	© 1998-2007 by Kevin Grant
+	¬© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -63,7 +63,7 @@ typedef struct UniversalPrint_OpaqueContext*	UniversalPrint_ContextRef;
 #if TARGET_API_MAC_OS8
 #	define SIZE_OF_TPRINT		sizeof(TPrint)
 #else
-	// Carbon doesn’t define this type, but its size is defined in <Printing.h>
+	// Carbon doesn‚Äôt define this type, but its size is defined in <Printing.h>
 #	define SIZE_OF_TPRINT		(2 + 14 + 8 + 8 + 14 + 16 + 20 + 120)
 #endif
 
@@ -78,8 +78,8 @@ enum
 typedef UInt16 UniversalPrint_Mode;
 enum
 {
-	kUniversalPrint_ModeNormal = 0,		// “show job dialog”
-	kUniversalPrint_ModeOneCopy = 1		// “don’t show job dialog”
+	kUniversalPrint_ModeNormal = 0,		// ‚Äúshow job dialog‚Äù
+	kUniversalPrint_ModeOneCopy = 1		// ‚Äúdon‚Äôt show job dialog‚Äù
 };
 
 struct UniversalPrint_SavedContext
@@ -149,7 +149,7 @@ UniversalPrint_InvokeSheetDoneProc	(UniversalPrint_SheetDoneProcPtr	inUserRoutin
 	INITIALIZING AND FINISHING WITH PRINTING
 ###############################################################*/
 
-// CALL THIS ROUTINE ONCE, BEFORE ANY OTHER PRINTING ROUTINE; TO GET THE PRINTING DRIVER’S
+// CALL THIS ROUTINE ONCE, BEFORE ANY OTHER PRINTING ROUTINE; TO GET THE PRINTING DRIVER‚ÄôS
 // RESOURCE FILE (MAC OS 8.x) INVOKE CurResFile() IMMEDIATELY AFTER A CALL TO THIS ROUTINE
 void
 	UniversalPrint_Init					();

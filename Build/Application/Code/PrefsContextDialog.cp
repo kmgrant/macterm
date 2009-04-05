@@ -3,9 +3,9 @@
 	PrefsContextDialog.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -64,7 +64,7 @@ struct My_PrefsContextDialog
 	Preferences_ContextRef		originalDataModel;	// data used to initialize the dialog; updated when the dialog is accepted
 	Preferences_ContextRef		temporaryDataModel;	// data used to initialize the dialog, and store any changes made
 	GenericDialog_Ref			genericDialog;		// handles most of the work
-	CarbonEventHandlerWrap		commandHandler;		// responds to certain command events in the panel’s window
+	CarbonEventHandlerWrap		commandHandler;		// responds to certain command events in the panel‚Äôs window
 };
 typedef My_PrefsContextDialog*		My_PrefsContextDialogPtr;
 
@@ -318,7 +318,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	// if the command information was found, proceed
 	if (noErr == result)
 	{
-		// don’t claim to have handled any commands not shown below
+		// don‚Äôt claim to have handled any commands not shown below
 		result = eventNotHandledErr;
 		
 		switch (kEventKind)
@@ -328,8 +328,8 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			switch (received.commandID)
 			{
 			case kCommandPreferencesNewFavorite:
-				// in this context, this command actually means “new favorite
-				// using the settings from this window”
+				// in this context, this command actually means ‚Äúnew favorite
+				// using the settings from this window‚Äù
 				{
 					// create and immediately save a new named context, which
 					// triggers callbacks to update Favorites lists, etc.

@@ -3,7 +3,7 @@
 	ListenerModel.cp
 	
 	Data Access Library 1.3
-	© 1998-2007 by Kevin Grant
+	¬© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -367,7 +367,7 @@ The listener model style defines both the type
 of callbacks you can install into the model,
 and how those callbacks are used when notifying
 callbacks of events.  You cannot add a listener
-to a model if the listener’s type is inconsistent
+to a model if the listener‚Äôs type is inconsistent
 with the style of the model.
 
 The model cannot be used for anything until you
@@ -523,7 +523,7 @@ is invoked when one or more events occur, and locks it
 automatically (so, an implicit ListenerModel_RetainListener()
 call is made).  If any problems occur, nullptr is returned.
 
-You can’t directly add callback functions to a listener
+You can‚Äôt directly add callback functions to a listener
 model; you must first create an abstract representation
 of the callback by calling this routine, and then pass
 the returned reference to other functions that work
@@ -616,7 +616,7 @@ on the model for the specified event.
 
 IMPORTANT:	A listener will fail to be installed unless its type is
 			consistent with the style of the model.  For example, a
-			“logical OR” model can’t work if its callbacks return no
+			‚Äúlogical OR‚Äù model can‚Äôt work if its callbacks return no
 			values.
 
 (1.0)

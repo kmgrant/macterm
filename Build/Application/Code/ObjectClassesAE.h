@@ -2,13 +2,13 @@
 	\brief Lists all of the Apple Event object classes, and
 	defines the (internal) token classes.
 	
-	See "Terminology.h" for constants describing MacTelnet’s
+	See "Terminology.h" for constants describing MacTelnet‚Äôs
 	classes, all of which begin with "cMy".
 	
 	IMPORTANT:	Remember, a structure only needs to contain the
 				data that is required in order to *find out* the
 				information its OSL object representation
-				“contains”.  For example, the data structure for
+				‚Äúcontains‚Äù.  For example, the data structure for
 				the OSL window class only contains a Mac OS
 				window pointer, because all of the properties of
 				the scriptable "window" class (visibility, close
@@ -18,14 +18,14 @@
 				against having to update data in more than one
 				place!!!  AppleScript support is supposed to
 				*supplement* the application, not burden it!
-				NEVER store any “real” data in an OSL object.
+				NEVER store any ‚Äúreal‚Äù data in an OSL object.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -214,7 +214,7 @@ struct ObjectClassesAE_Word
 };
 
 /*!
-A basic structure tying a token’s data structure
+A basic structure tying a token‚Äôs data structure
 with its Apple Event descriptor type.
 */
 struct ObjectClassesAE_Object
@@ -228,9 +228,9 @@ struct ObjectClassesAE_Object
 	// object from others of its class.
 	//
 	// Since MacTelnet implements inheritance by making the
-	// first part of a subclass’ data structure a copy of the
+	// first part of a subclass‚Äô data structure a copy of the
 	// data structure of its parent class, it is possible to
-	// “upcast” a more refined version of a class simply by
+	// ‚Äúupcast‚Äù a more refined version of a class simply by
 	// referencing the parent class in the union "data".  For
 	// example, if "eventClass" is cMyTerminalWindow, you can
 	// safely refer to either "terminalWindow" or "window" in

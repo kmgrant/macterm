@@ -11,7 +11,7 @@
 	Newer MacTelnet preferences are in XML format.
 	
 	MacTelnet Preferences Converter
-		© 2004 by Kevin Grant.
+		¬© 2004 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -88,7 +88,7 @@ struct ApplicationPrefs
 	UInt8				windowsDontGoAway,			// Connection windows remain open after a connection closes?
 						backgroundNotification,		// Terminal bells cause a Notification Manager posting?
 						menusHaveKeyEquivalents,	// Show (and recognize) key shortcuts for menus?
-						remapBackquoteToEscape,		// Remap “`” to escape?
+						remapBackquoteToEscape,		// Remap ‚Äú`‚Äù to escape?
 						cursorBlinks,				// Blink the cursor?
 						menusShowKeypadAndFunction,	// no longer used, reserved for backwards compatibility
 						visualBell,					// Bell never sounds?
@@ -120,7 +120,7 @@ struct ApplicationPrefs
 	UInt16				openTimeout,				// no longer used, Time to Open Connections in seconds
 						sendTimeout;				// no longer used, Time to Send Data (and receive ACK) in seconds
 	
-	UInt8				simplifiedUserInterface,	// Use “Simplified User Interface” mode?
+	UInt8				simplifiedUserInterface,	// Use ‚ÄúSimplified User Interface‚Äù mode?
 						directConnect;				// no longer used, reserved for backwards compatibility
 	
 	UInt16				notificationPrefs;			// A "kAlert_Notify..." constant.
@@ -130,7 +130,7 @@ struct ApplicationPrefs
 	SInt32				sherlockDirID;
 	Str31				sherlockName;				// used only in alpha releases, so it can be re-used
 	
-	SInt16				sherlockAliasID;			// this is used if Sherlock or Find File can’t be found
+	SInt16				sherlockAliasID;			// this is used if Sherlock or Find File can‚Äôt be found
 	
 	UInt16				align3;						// to align the next section to 32 bits.
 	
@@ -165,14 +165,14 @@ struct WindowPrefs
 {
 	UInt16			version;					// The version number of this resource.
 	Rect			screenBounds;				// (No longer used.) The screen boundaries when this resource was saved.
-	WinPref			macroSetupDialog;			// Layout preferences for the “Macro Setup” dialog box (now a modeless window).
-	WinPref			openConnectionsDialog;		// Layout preferences for the “New Sessions” dialog box (now a sheet).
-	WinPref			commandLineWindow;			// Layout preferences for the “Message Window” windoid.
-	WinPref			keypadWindow;				// Layout preferences for the “VT220 Keypad” windoid.
-	WinPref			functionWindow;				// Layout preferences for the “Function” windoid.
-	WinPref			macrosWindow;				// Unused layout preferences for the (now removed) “Macros” windoid.
-	WinPref			controlKeysWindow;			// Layout preferences for the “Control Keys” windoid.
-	WinPref			preferencesWindow;			// Layout preferences for the “Preferences” dialog window.
+	WinPref			macroSetupDialog;			// Layout preferences for the ‚ÄúMacro Setup‚Äù dialog box (now a modeless window).
+	WinPref			openConnectionsDialog;		// Layout preferences for the ‚ÄúNew Sessions‚Äù dialog box (now a sheet).
+	WinPref			commandLineWindow;			// Layout preferences for the ‚ÄúMessage Window‚Äù windoid.
+	WinPref			keypadWindow;				// Layout preferences for the ‚ÄúVT220 Keypad‚Äù windoid.
+	WinPref			functionWindow;				// Layout preferences for the ‚ÄúFunction‚Äù windoid.
+	WinPref			macrosWindow;				// Unused layout preferences for the (now removed) ‚ÄúMacros‚Äù windoid.
+	WinPref			controlKeysWindow;			// Layout preferences for the ‚ÄúControl Keys‚Äù windoid.
+	WinPref			preferencesWindow;			// Layout preferences for the ‚ÄúPreferences‚Äù dialog window.
 	WinPref			unused[6];					// Space for future windows.
 };
 typedef WindowPrefs*		WindowPrefsPtr;
@@ -211,7 +211,7 @@ struct TerminalPrefs
 					metaKey,				// EMACS meta key - simulated with Macintosh key combinations
 					usesEMACSArrows,		// Arrow keys and mouse position are EMACS flavor
 					mapsPageJumpKeys,		// Map PageUp, PageDown, Home, End. (MAT == Mark Tamsky)
-					usesEightBits,			// Don’t strip the high bit
+					usesEightBits,			// Don‚Äôt strip the high bit
 					savesOnClear;			// Save cleared lines
 	
 	Str63			normalFont;				// Font to use to display text
@@ -241,7 +241,7 @@ struct SessionPrefs
 	UInt16			version;				// version of this structure
 		
 	UInt16			port;					// port to connect to
-	SInt16			modeForTEK;				// a "kTektronixMode…" constant (see tekdefs.h)
+	SInt16			modeForTEK;				// a "kTektronixMode‚Ä¶" constant (see tekdefs.h)
 	SInt16			pasteMethod;			// a "kClipboard_PasteMethod..." constant
 	UInt16			pasteBlockSize;			// size of blocks to paste if using block mode
 	UInt16			pad1;

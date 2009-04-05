@@ -3,9 +3,9 @@
 	Folder.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -60,7 +60,7 @@ static void		transformFolderFSSpec		(FSSpec*);
 
 /*!
 Fills in a new-style file system specification record with
-information for a particular folder.  If the folder doesnÕt
+information for a particular folder.  If the folder doesnâ€™t
 exist, it is created.
 
 The name information for the resultant file record is left
@@ -86,7 +86,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 	
 	switch (inFolderType)
 	{
-	case kFolder_RefApplicationSupport: // the ÒMacTelnetÓ folder inside the Application Support folder
+	case kFolder_RefApplicationSupport: // the â€œMacTelnetâ€ folder inside the Application Support folder
 		result = Folder_GetFSRef(kFolder_RefMacApplicationSupport, parentFolderRef);
 		if (noErr == result)
 		{
@@ -121,46 +121,46 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 		}
 		break;
 	
-	case kFolder_RefFavorites: // the ÒFavoritesÓ folder inside the MacTelnet preferences folder
+	case kFolder_RefFavorites: // the â€œFavoritesâ€ folder inside the MacTelnet preferences folder
 		result = Folder_GetFSRef(kFolder_RefPreferences, parentFolderRef);
 		if (noErr == result)
 		{
 			UInt32		unusedDirID = 0L;
 			
 			
-			// if no Favorites folder exists in MacTelnetÕs preferences folder, create it
+			// if no Favorites folder exists in MacTelnetâ€™s preferences folder, create it
 			result = UIStrings_CreateFileOrDirectory(parentFolderRef, kUIStrings_FolderNameApplicationFavorites,
 														outFolderFSRef, &unusedDirID);
 		}
 		break;
 	
-	case kFolder_RefPreferences: // the ÒMacTelnet PreferencesÓ folder inside the system ÒPreferencesÓ folder
+	case kFolder_RefPreferences: // the â€œMacTelnet Preferencesâ€ folder inside the system â€œPreferencesâ€ folder
 		result = Folder_GetFSRef(kFolder_RefMacPreferences, parentFolderRef);
 		if (noErr == result)
 		{
 			UInt32		unusedDirID = 0L;
 			
 			
-			// if no MacTelnet Preferences folder exists in the current userÕs Preferences folder, create it
+			// if no MacTelnet Preferences folder exists in the current userâ€™s Preferences folder, create it
 			result = UIStrings_CreateFileOrDirectory(parentFolderRef, kUIStrings_FolderNameApplicationPreferences,
 														outFolderFSRef, &unusedDirID);
 		}
 		break;
 	
-	case kFolder_RefScriptsMenuItems: // the MacTelnet ÒScripts Menu ItemsÓ folder, in MacTelnetÕs preferences folder
+	case kFolder_RefScriptsMenuItems: // the MacTelnet â€œScripts Menu Itemsâ€ folder, in MacTelnetâ€™s preferences folder
 		result = Folder_GetFSRef(kFolder_RefPreferences, parentFolderRef);
 		if (noErr == result)
 		{
 			UInt32		unusedDirID = 0L;
 			
 			
-			// if no Scripts Menu Items folder exists in the current userÕs Preferences folder, create it
+			// if no Scripts Menu Items folder exists in the current userâ€™s Preferences folder, create it
 			result = UIStrings_CreateFileOrDirectory(parentFolderRef, kUIStrings_FolderNameApplicationScriptsMenuItems,
 														outFolderFSRef, &unusedDirID);
 		}
 		break;
 	
-	case kFolder_RefStartupItems: // the MacTelnet ÒStartup ItemsÓ folder, in MacTelnetÕs preferences folder
+	case kFolder_RefStartupItems: // the MacTelnet â€œStartup Itemsâ€ folder, in MacTelnetâ€™s preferences folder
 		result = Folder_GetFSRef(kFolder_RefPreferences, parentFolderRef);
 		if (noErr == result)
 		{
@@ -173,7 +173,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 		}
 		break;
 	
-	case kFolder_RefUserLogs: // the ÒLogsÓ folder inside the userÕs home directory
+	case kFolder_RefUserLogs: // the â€œLogsâ€ folder inside the userâ€™s home directory
 		result = Folder_GetFSRef(kFolder_RefMacLibrary, parentFolderRef);
 		if (noErr == result)
 		{
@@ -186,7 +186,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 		}
 		break;
 	
-	case kFolder_RefUserMacroFavorites: // the ÒMacro SetsÓ folder inside MacTelnetÕs Favorites folder (in preferences)
+	case kFolder_RefUserMacroFavorites: // the â€œMacro Setsâ€ folder inside MacTelnetâ€™s Favorites folder (in preferences)
 		result = Folder_GetFSRef(kFolder_RefFavorites, parentFolderRef);
 		if (noErr == result)
 		{
@@ -199,7 +199,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 		}
 		break;
 	
-	case kFolder_RefRecentSessions: // the ÒRecent SessionsÓ folder inside MacTelnetÕs Application Support folder
+	case kFolder_RefRecentSessions: // the â€œRecent Sessionsâ€ folder inside MacTelnetâ€™s Application Support folder
 		result = Folder_GetFSRef(kFolder_RefApplicationSupport, parentFolderRef);
 		if (noErr == result)
 		{
@@ -212,7 +212,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 		}
 		break;
 	
-	case kFolder_RefMacApplicationSupport: // the Mac OS ÒApplication SupportÓ folder for the current user
+	case kFolder_RefMacApplicationSupport: // the Mac OS â€œApplication Supportâ€ folder for the current user
 		result = FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &outFolderFSRef);
 		break;
 	
@@ -220,23 +220,23 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 		result = FSFindFolder(kUserDomain, kDesktopFolderType, kCreateFolder, &outFolderFSRef);
 		break;
 	
-	case kFolder_RefMacFavorites: // the Mac OS ÒFavoritesÓ folder for the current user
+	case kFolder_RefMacFavorites: // the Mac OS â€œFavoritesâ€ folder for the current user
 		result = FSFindFolder(kUserDomain, kFavoritesFolderType, kCreateFolder, &outFolderFSRef);
 		break;
 	
-	case kFolder_RefMacHelp: // the Mac OS ÒHelpÓ folder for the current user
+	case kFolder_RefMacHelp: // the Mac OS â€œHelpâ€ folder for the current user
 		result = FSFindFolder(kUserDomain, kHelpFolderType, kCreateFolder, &outFolderFSRef);
 		break;
 	
-	case kFolder_RefMacLibrary: // the Mac OS ÒLibraryÓ folder for the current user
+	case kFolder_RefMacLibrary: // the Mac OS â€œLibraryâ€ folder for the current user
 		result = FSFindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder, &outFolderFSRef);
 		break;
 	
-	case kFolder_RefMacPreferences: // the Mac OS ÒPreferencesÓ folder for the current user
+	case kFolder_RefMacPreferences: // the Mac OS â€œPreferencesâ€ folder for the current user
 		result = FSFindFolder(kUserDomain, kPreferencesFolderType, kCreateFolder, &outFolderFSRef);
 		break;
 	
-	case kFolder_RefMacTemporaryItems: // the invisible Mac OS ÒTemporary ItemsÓ folder
+	case kFolder_RefMacTemporaryItems: // the invisible Mac OS â€œTemporary Itemsâ€ folder
 		result = FSFindFolder(kUserDomain, kTemporaryFolderType, kCreateFolder, &outFolderFSRef);
 		break;
 	
@@ -257,7 +257,7 @@ Folder_GetFSRef		(Folder_Ref		inFolderType,
 /*!
 Fills in a file system specification record with
 information for a particular folder.  If the folder
-doesnÕt exist, it is created.
+doesnâ€™t exist, it is created.
 
 The name information for the resultant file
 specification record is left blank, so that you may
@@ -286,7 +286,7 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 	{
 		switch (inFolderType)
 		{
-		case kFolder_RefApplicationSupport: // the ÒMacTelnetÓ folder inside the Application Support folder
+		case kFolder_RefApplicationSupport: // the â€œMacTelnetâ€ folder inside the Application Support folder
 			result = Folder_GetFSSpec(kFolder_RefMacApplicationSupport, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -301,13 +301,13 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				// if no MacTelnet folder exists in the Application Support folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefFavorites: // the ÒFavoritesÓ folder inside the MacTelnet preferences folder
+		case kFolder_RefFavorites: // the â€œFavoritesâ€ folder inside the MacTelnet preferences folder
 			result = Folder_GetFSSpec(kFolder_RefPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -317,16 +317,16 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				result = UIStrings_MakeFSSpec(outFolderFSSpecPtr->vRefNum, outFolderFSSpecPtr->parID,
 												kUIStrings_FolderNameApplicationFavorites, outFolderFSSpecPtr);
 				
-				// if no Favorites folder exists in MacTelnetÕs preferences folder, create it
+				// if no Favorites folder exists in MacTelnetâ€™s preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefPreferences: // the ÒMacTelnet PreferencesÓ folder inside the system ÒPreferencesÓ folder
+		case kFolder_RefPreferences: // the â€œMacTelnet Preferencesâ€ folder inside the system â€œPreferencesâ€ folder
 			result = Folder_GetFSSpec(kFolder_RefMacPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -336,16 +336,16 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				result = UIStrings_MakeFSSpec(outFolderFSSpecPtr->vRefNum, outFolderFSSpecPtr->parID,
 												kUIStrings_FolderNameApplicationPreferences, outFolderFSSpecPtr);
 				
-				// if no MacTelnet Preferences folder exists in the current userÕs Preferences folder, create it
+				// if no MacTelnet Preferences folder exists in the current userâ€™s Preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefScriptsMenuItems: // the MacTelnet ÒScripts Menu ItemsÓ folder, in MacTelnetÕs preferences folder
+		case kFolder_RefScriptsMenuItems: // the MacTelnet â€œScripts Menu Itemsâ€ folder, in MacTelnetâ€™s preferences folder
 			result = Folder_GetFSSpec(kFolder_RefPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -355,16 +355,16 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				result = UIStrings_MakeFSSpec(outFolderFSSpecPtr->vRefNum, outFolderFSSpecPtr->parID,
 												kUIStrings_FolderNameApplicationScriptsMenuItems, outFolderFSSpecPtr);
 				
-				// if no Scripts Menu Items folder exists in the current userÕs Preferences folder, create it
+				// if no Scripts Menu Items folder exists in the current userâ€™s Preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefStartupItems: // the MacTelnet ÒStartup ItemsÓ folder, in MacTelnetÕs preferences folder
+		case kFolder_RefStartupItems: // the MacTelnet â€œStartup Itemsâ€ folder, in MacTelnetâ€™s preferences folder
 			result = Folder_GetFSSpec(kFolder_RefPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -377,13 +377,13 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				// if no Startup Items folder exists in the MacTelnet Preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefUserLogs: // the ÒLogsÓ folder inside the userÕs home directory
+		case kFolder_RefUserLogs: // the â€œLogsâ€ folder inside the userâ€™s home directory
 			// on Mac OS X, logs go into ~/Library/Logs
 			result = Folder_GetFSSpec(kFolder_RefMacLibrary, outFolderFSSpecPtr);
 			if (noErr == result)
@@ -397,13 +397,13 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				// if no Logs folder exists in the Library folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefUserMacroFavorites: // the ÒMacro SetsÓ folder inside MacTelnetÕs Favorites folder (in preferences)
+		case kFolder_RefUserMacroFavorites: // the â€œMacro Setsâ€ folder inside MacTelnetâ€™s Favorites folder (in preferences)
 			result = Folder_GetFSSpec(kFolder_RefFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -416,13 +416,13 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				// if no folder exists in the Favorites folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefRecentSessions: // the ÒRecent SessionsÓ folder inside MacTelnetÕs Application Support folder
+		case kFolder_RefRecentSessions: // the â€œRecent Sessionsâ€ folder inside MacTelnetâ€™s Application Support folder
 			result = Folder_GetFSSpec(kFolder_RefApplicationSupport, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -435,13 +435,13 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 				// if no folder exists in the MacTelnet Preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the ÒparentÓ directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the â€œparentâ€ directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kFolder_RefMacApplicationSupport: // the Mac OS ÒApplication SupportÓ folder for the current user
+		case kFolder_RefMacApplicationSupport: // the Mac OS â€œApplication Supportâ€ folder for the current user
 			result = FindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
@@ -453,31 +453,31 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 			outFolderFSSpecPtr->name[0] = 0;
 			break;
 		
-		case kFolder_RefMacFavorites: // the Mac OS ÒFavoritesÓ folder for the current user
+		case kFolder_RefMacFavorites: // the Mac OS â€œFavoritesâ€ folder for the current user
 			result = FindFolder(kUserDomain, kFavoritesFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
 			break;
 		
-		case kFolder_RefMacHelp: // the Mac OS ÒHelpÓ folder for the current user
+		case kFolder_RefMacHelp: // the Mac OS â€œHelpâ€ folder for the current user
 			result = FindFolder(kUserDomain, kHelpFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
 			break;
 		
-		case kFolder_RefMacLibrary: // the Mac OS ÒLibraryÓ folder for the current user
+		case kFolder_RefMacLibrary: // the Mac OS â€œLibraryâ€ folder for the current user
 			result = FindFolder(kUserDomain, kDomainLibraryFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
 			break;
 		
-		case kFolder_RefMacPreferences: // the Mac OS ÒPreferencesÓ folder for the current user
+		case kFolder_RefMacPreferences: // the Mac OS â€œPreferencesâ€ folder for the current user
 			result = FindFolder(kUserDomain, kPreferencesFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
 			break;
 		
-		case kFolder_RefMacTemporaryItems: // the invisible Mac OS ÒTemporary ItemsÓ folder
+		case kFolder_RefMacTemporaryItems: // the invisible Mac OS â€œTemporary Itemsâ€ folder
 			result = FindFolder(kUserDomain, kTemporaryFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
@@ -504,8 +504,8 @@ Folder_GetFSSpec	(Folder_Ref		inFolderType,
 
 /*!
 Transforms a folder specification so that the
-Òfile nameÓ of the folder is empty, and the
-Òparent IDÓ is the ID of the folder itself.
+â€œfile nameâ€ of the folder is empty, and the
+â€œparent IDâ€ is the ID of the folder itself.
 This is very useful, since it then becomes
 easy to create file specifications for files
 *inside* the folder (and yet the folder

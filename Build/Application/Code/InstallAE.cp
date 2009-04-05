@@ -3,9 +3,9 @@
 	InstallAE.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -288,7 +288,7 @@ installDataHandlers ()
 /*!
 This routine installs Apple Event handlers for
 the MacTelnet Suite, but in particular for those
-events which are not in MacTelnetÕs Dictionary.
+events which are not in MacTelnetâ€™s Dictionary.
 These events are used to do things that are
 useful for MacTelnet Help, but which are not in
 general useful for scripts (such as displaying

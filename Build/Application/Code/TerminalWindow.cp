@@ -3,9 +3,9 @@
 	TerminalWindow.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2009 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -204,7 +204,7 @@ struct TerminalWindow
 	EventHandlerUPP				windowResizeEmbellishUPP;				// wrapper for window resize callback
 	EventHandlerRef				windowResizeEmbellishHandler;			// invoked whenever a terminal window is resized
 	EventHandlerUPP				growBoxClickUPP;						// wrapper for grow box click callback
-	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal windowÕs grow box is clicked
+	EventHandlerRef				growBoxClickHandler;					// invoked whenever a terminal windowâ€™s grow box is clicked
 	EventHandlerUPP				toolbarEventUPP;						// wrapper for toolbar callback
 	EventHandlerRef				toolbarEventHandler;					// invoked whenever a toolbar needs an item created, etc.
 	ListenerModel_ListenerRef	sessionStateChangeEventListener;		// responds to changes in a session
@@ -554,7 +554,7 @@ TerminalWindow_GetScreens	(TerminalWindowRef		inRef,
 		
 		
 		// based on the available space given by the caller,
-		// find where the list Òpast-the-endÓ is
+		// find where the list â€œpast-the-endâ€ is
 		std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allScreens.size()));
 		
 		// copy all possible screen buffer references
@@ -667,7 +667,7 @@ TerminalWindow_GetViews		(TerminalWindowRef	inRef,
 		
 		
 		// based on the available space given by the caller,
-		// find where the list Òpast-the-endÓ is
+		// find where the list â€œpast-the-endâ€ is
 		std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allViews.size()));
 		
 		// copy all possible view references
@@ -725,7 +725,7 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 			
 			
 			// based on the available space given by the caller,
-			// find where the list Òpast-the-endÓ is
+			// find where the list â€œpast-the-endâ€ is
 			std::advance(maxIterator, INTEGER_MINIMUM(inArrayLength, ptr->allViews.size()));
 			
 			// copy all possible view references
@@ -750,7 +750,7 @@ TerminalWindow_GetViewsInGroup	(TerminalWindowRef			inRef,
 Returns "true" only if the specified window is obscured,
 meaning it is invisible to the user but technically
 considered a visible window.  This is the state used by
-the ÒHide Front WindowÓ command.
+the â€œHide Front Windowâ€ command.
 
 (3.0)
 */
@@ -770,7 +770,7 @@ TerminalWindow_IsObscured	(TerminalWindowRef	inRef)
 Changes the settings of every view in the specified group,
 to include the recognized settings of given context.  You might
 use this, for example, to do a batch-mode change of all the
-fonts and colors of a terminal windowÕs views.
+fonts and colors of a terminal windowâ€™s views.
 
 Currently, the only supported group is the active view,
 "kTerminalWindow_ViewGroupActive".
@@ -1058,7 +1058,7 @@ size is not changed.
 The font and size are currently tied to the window
 dimensions, so adjusting these parameters will force
 the window to resize to use the new space.  In the
-future, it may make more sense to leave the userÕs
+future, it may make more sense to leave the userâ€™s
 chosen size intact (at least, when the new view size
 will fit within the current window).
 
@@ -1104,7 +1104,7 @@ TerminalWindow_SetFontAndSize	(TerminalWindowRef		inRef,
 
 /*!
 Set to "true" if you want to hide the specified window
-(as in the ÒHide Front WindowÓ command).  An obscured
+(as in the â€œHide Front Windowâ€ command).  An obscured
 window is invisible to the user but technically
 considered a visible window.
 
@@ -1115,7 +1115,7 @@ IMPORTANT:	Currently, this function ought to be the
 			preferred way to show a terminal window,
 			otherwise there are corner cases where a
 			window could become visible and usable but
-			still be ÒmarkedÓ as hidden.  This should
+			still be â€œmarkedâ€ as hidden.  This should
 			be reimplemented to use window event
 			handlers so that the obscured state is
 			corrected whenever a window is redisplayed
@@ -1169,7 +1169,7 @@ The screen size is currently tied to the window
 dimensions, so adjusting these parameters will
 force the window to resize to use the new space.
 In the future, it may make more sense to leave
-the userÕs chosen size intact (at least, when the
+the userâ€™s chosen size intact (at least, when the
 new view size will fit within the current window).
 
 As a convenience, you may choose to send the resize
@@ -1217,7 +1217,7 @@ TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 
 
 /*!
-Renames a terminal windowÕs minimized Dock tile, notifying
+Renames a terminal windowâ€™s minimized Dock tile, notifying
 listeners that the window title has changed.
 
 (3.0)
@@ -1365,7 +1365,7 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 		else
 		{
 			// drawers are managed in terms of start and end offsets as opposed to
-			// a ÒwidthÓ, so some roundabout calculations are done to find offsets
+			// a â€œwidthâ€, so some roundabout calculations are done to find offsets
 			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
 			HIWindowRef		parentWindow = ptr->window;
 			Rect			currentTabBounds;
@@ -1384,7 +1384,7 @@ TerminalWindow_SetTabPosition	(TerminalWindowRef	inRef,
 			//trailingOffset = (float)(currentParentBounds.right - currentParentBounds.left -
 			//							(currentTabBounds.right - currentTabBounds.left) - leadingOffset);
 			
-			// force a ÒresizeÓ to cause the tab position to update immediately
+			// force a â€œresizeâ€ to cause the tab position to update immediately
 			// (TEMPORARY: is there a better way to do this?)
 			++currentParentBounds.right;
 			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
@@ -1446,7 +1446,7 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 		else
 		{
 			// drawers are managed in terms of start and end offsets as opposed to
-			// a ÒwidthÓ, so some roundabout calculations are done to find offsets
+			// a â€œwidthâ€, so some roundabout calculations are done to find offsets
 			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
 			HIWindowRef		parentWindow = GetDrawerParent(tabWindow);
 			Rect			currentParentBounds;
@@ -1461,7 +1461,7 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 			trailingOffset = (float)(currentParentBounds.right - currentParentBounds.left -
 										inWidthInPixels - leadingOffset);
 			
-			// force a ÒresizeÓ to cause the tab position to update immediately
+			// force a â€œresizeâ€ to cause the tab position to update immediately
 			// (TEMPORARY: is there a better way to do this?)
 			++currentParentBounds.right;
 			SetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
@@ -1575,7 +1575,7 @@ TerminalWindow_StartMonitoring	(TerminalWindowRef			inRef,
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
-	// add a listener to the specified targetÕs listener model for the given setting change
+	// add a listener to the specified targetâ€™s listener model for the given setting change
 	error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
 }// StartMonitoring
 
@@ -1601,7 +1601,7 @@ TerminalWindow_StopMonitoring	(TerminalWindowRef			inRef,
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
 	
 	
-	// add a listener to the specified targetÕs listener model for the given setting change
+	// add a listener to the specified targetâ€™s listener model for the given setting change
 	ListenerModel_RemoveListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
 }// StopMonitoring
 
@@ -1680,7 +1680,7 @@ installedActions()
 	
 	
 	// get defaults if no contexts provided; if these cannot be found
-	// for some reason, thatÕs fine because defaults are set in case
+	// for some reason, thatâ€™s fine because defaults are set in case
 	// of errors later on
 	if (nullptr == inTerminalInfoOrNull)
 	{
@@ -2013,7 +2013,7 @@ installedActions()
 									&headersCollapsed, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			headersCollapsed = false; // assume headers arenÕt collapsed, if preference canÕt be found
+			headersCollapsed = false; // assume headers arenâ€™t collapsed, if preference canâ€™t be found
 		}
 		unless (headersCollapsed)
 		{
@@ -2205,7 +2205,7 @@ TerminalWindow::
 /*!
 When a window is staggered, it is given an onscreen
 index indicating what stagger position (relative to
-the first windowÕs location) it occupies.  To determine
+the first windowâ€™s location) it occupies.  To determine
 the global coordinates that the top-left corner of the
 specified window would occupy if it were in the
 specified position, use this method.
@@ -2234,11 +2234,11 @@ calculateIndexedWindowPosition	(TerminalWindowPtr	inPtr,
 		size_t		actualSize = 0;
 		
 		
-		// determine the userÕs preferred stacking origin
+		// determine the userâ€™s preferred stacking origin
 		unless (Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
 									&stackingOrigin, &actualSize) == kPreferences_ResultOK)
 		{
-			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference canÕt be found
+			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference canâ€™t be found
 		}
 		
 		// the stagger amount on Mac OS X is set by the Aqua Human Interface Guidelines
@@ -2344,13 +2344,13 @@ changeNotifyForTerminalWindow	(TerminalWindowPtr		inPtr,
 								 TerminalWindow_Change	inWhatChanged,
 								 void*					inContextPtr)
 {
-	// invoke listener callback routines appropriately, from the specified terminal windowÕs listener model
+	// invoke listener callback routines appropriately, from the specified terminal windowâ€™s listener model
 	ListenerModel_NotifyListenersOfEvent(inPtr->changeListenerModel, inWhatChanged, inContextPtr);
 }// changeNotifyForTerminalWindow
 
 
 /*!
-Registers the Òbell offÓ icon reference with the system,
+Registers the â€œbell offâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -2380,7 +2380,7 @@ createBellOffIcon ()
 
 
 /*!
-Registers the Òbell onÓ icon reference with the system,
+Registers the â€œbell onâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -2410,7 +2410,7 @@ createBellOnIcon ()
 
 
 /*!
-Registers the Òfull screenÓ icon reference with the system,
+Registers the â€œfull screenâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -2440,7 +2440,7 @@ createFullScreenIcon ()
 
 
 /*!
-Registers the Òhide windowÓ icon reference with the system,
+Registers the â€œhide windowâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -2470,7 +2470,7 @@ createHideWindowIcon ()
 
 
 /*!
-Registers the ÒLED offÓ icon reference with the system,
+Registers the â€œLED offâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -2500,7 +2500,7 @@ createLEDOffIcon ()
 
 
 /*!
-Registers the ÒLED onÓ icon reference with the system,
+Registers the â€œLED onâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -2530,7 +2530,7 @@ createLEDOnIcon ()
 
 
 /*!
-Registers the Òscroll lock offÓ icon reference with the
+Registers the â€œscroll lock offâ€ icon reference with the
 system, and returns a reference to the new icon.
 
 (3.1)
@@ -2560,7 +2560,7 @@ createScrollLockOffIcon ()
 
 
 /*!
-Registers the Òscroll lock onÓ icon reference with the
+Registers the â€œscroll lock onâ€ icon reference with the
 system, and returns a reference to the new icon.
 
 (3.1)
@@ -2591,7 +2591,7 @@ createScrollLockOnIcon ()
 
 /*!
 Creates a floating window that looks like a tab, used to
-ÒattachÓ to an existing terminal window in tab view.
+â€œattachâ€ to an existing terminal window in tab view.
 
 Also installs a resize handler to ensure the drawer is
 no bigger than its default size (otherwise, the Toolbox
@@ -2628,7 +2628,7 @@ createTabWindow		(TerminalWindowPtr		inPtr)
 			assert(inPtr->tabDrawerWindowResizeHandler.isInstalled());
 			
 			// if the global default width has not yet been initialized, set it;
-			// initialize this windowÕs tab width field to the global default
+			// initialize this windowâ€™s tab width field to the global default
 			if (0.0 == gDefaultTabWidth)
 			{
 				error = GetWindowBounds(tabWindow, kWindowStructureRgn, &currentBounds);
@@ -2930,7 +2930,7 @@ Returns the width and height of the screen interior
 (i.e. not including insets) of a terminal window
 whose content region has the specified dimensions.
 The resultant dimensions subtract out the size of any
-window header (unless itÕs collapsed), the scroll
+window header (unless itâ€™s collapsed), the scroll
 bars, and the terminal screen insets (padding).
 
 See also getWindowSizeFromViewSize(), which does the
@@ -3000,7 +3000,7 @@ getWindowSizeFromViewSize	(TerminalWindowPtr	inPtr,
 /*!
 Responds to a close of the Find dialog sheet in a terminal
 window.  Currently, this just retains the keyword string
-so that Find Again can be used, and remembers the userÕs
+so that Find Again can be used, and remembers the userâ€™s
 most recent checkbox settings.
 
 (3.0)
@@ -3094,10 +3094,10 @@ handleNewSize	(WindowRef	inWindow,
 		//SetControlBounds(ptr->controls.scrollBarH, &controlBounds);
 		HIViewSetFrame(ptr->controls.scrollBarH, &floatBounds);
 		
-		// change the screen sizes to match the userÕs window size as well as possible,
+		// change the screen sizes to match the userâ€™s window size as well as possible,
 		// notifying listeners of the change (to trigger actions such as sending messages
 		// to the Unix process in the window, etc.); the number of columns in each screen
-		// will be changed to closely match the overall width, but only the last screenÕs
+		// will be changed to closely match the overall width, but only the last screenâ€™s
 		// line count will be changed; in the event that there are tabs, only views
 		// belonging to the same group will be scaled together during the resizing
 		{
@@ -3163,7 +3163,7 @@ handleNewSize	(WindowRef	inWindow,
 		// TEMPORARY: analyze this further, see if this behavior is really desirable
 		changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeScreenDimensions, terminalWindow/* context */);
 		
-		// update the scroll barsÕ values to reflect the new screen size
+		// update the scroll barsâ€™ values to reflect the new screen size
 		updateScrollBars(ptr);
 		
 		// redraw controls
@@ -3196,7 +3196,7 @@ handlePendingUpdates ()
 	// flushing to the display; so would WaitNextEvent(),
 	// but this is nice because it does not pull any
 	// events from the queue (after all, this routine
-	// couldnÕt handle the events if they were pulled)
+	// couldnâ€™t handle the events if they were pulled)
 	isEvent = EventAvail(updateMask, &updateEvent);
 }// handlePendingUpdates
 
@@ -3354,7 +3354,7 @@ installUndoScreenDimensionChanges	(TerminalWindowRef		inTerminalWindow)
 
 /*!
 Handles "kEventControlClick" of "kEventClassControl"
-for a terminal windowÕs grow box.
+for a terminal windowâ€™s grow box.
 
 (3.1)
 */
@@ -3407,7 +3407,7 @@ receiveGrowBoxClick		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					if (nullptr != focusedView)
 					{
 						// when the option key is held down, the resize behavior is inverted;
-						// this MUST BE UNDONE, but it is undone within the Òresize endedÓ
+						// this MUST BE UNDONE, but it is undone within the â€œresize endedâ€
 						// event handler; see receiveWindowResize()
 						TerminalView_SetDisplayMode(focusedView,
 													(kTerminalView_DisplayModeNormal ==
@@ -3452,7 +3452,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the command information was found, proceed
 		if (result == noErr)
 		{
-			// donÕt claim to have handled any commands not shown below
+			// donâ€™t claim to have handled any commands not shown below
 			result = eventNotHandledErr;
 			
 			switch (kEventKind)
@@ -3599,7 +3599,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								// entire screen is available, so use it
 								RegionUtilities_GetWindowDeviceGrayRect(window, &deviceBounds);
 								
-								// show Òoff switchÓ if user has requested it
+								// show â€œoff switchâ€ if user has requested it
 								if (showOffSwitch)
 								{
 									Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
@@ -4177,7 +4177,7 @@ receiveToolbarEvent		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the command information was found, proceed
 		if (noErr == result)
 		{
-			// donÕt claim to have handled any commands not shown below
+			// donâ€™t claim to have handled any commands not shown below
 			result = eventNotHandledErr;
 			
 			switch (kEventKind)
@@ -4660,8 +4660,8 @@ receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 					UInt32		modifiers = 0;
 					
 					
-					// try to vary the cursor according to key modifiers, but itÕs no
-					// catastrophe if this information isnÕt available
+					// try to vary the cursor according to key modifiers, but itâ€™s no
+					// catastrophe if this information isnâ€™t available
 					(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
 					
 					// finally, set the cursor
@@ -4737,7 +4737,7 @@ receiveWindowDragCompleted	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 					
 					
 					// toggle twice; the first should close the drawer at its
-					// ÒwrongÓ location, the 2nd should open it on the right edge
+					// â€œwrongâ€ location, the 2nd should open it on the right edge
 					error = CloseDrawer(tabWindow, false/* asynchronously */);
 					if (noErr == error)
 					{
@@ -4977,7 +4977,7 @@ receiveWindowResize		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							// here the title is set directly, instead of via the
 							// TerminalWindow_SetWindowTitle() routine, because
-							// it is a ÒsecretÓ and temporary change to the title
+							// it is a â€œsecretâ€ and temporary change to the title
 							// that will be undone when resizing completes
 							SetWindowTitleWithCFString(ptr->window, newTitle);
 						}
@@ -5041,7 +5041,7 @@ size of a terminal screen.
 Note that it will really be nice to get all of
 the AppleScript stuff working, so junk like this
 does not have to be done using Copy-and-Paste
-codingª, and can be made into a recordable event.
+codingâ„¢, and can be made into a recordable event.
 
 (3.0)
 */
@@ -5050,7 +5050,7 @@ reverseFontChanges	(Undoables_ActionInstruction	inDoWhat,
 					 Undoables_ActionRef			inApplicableAction,
 					 void*							inContextPtr)
 {
-	// this routine only recognizes one kind of context - be absolutely sure thatÕs what was given!
+	// this routine only recognizes one kind of context - be absolutely sure thatâ€™s what was given!
 	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFontSizeChanges);
 	
 	{
@@ -5104,7 +5104,7 @@ reverseFullScreenChanges	(Undoables_ActionInstruction	inDoWhat,
 							 Undoables_ActionRef			inApplicableAction,
 							 void*							inContextPtr)
 {
-	// this routine only recognizes one kind of context - be absolutely sure thatÕs what was given!
+	// this routine only recognizes one kind of context - be absolutely sure thatâ€™s what was given!
 	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalFullScreenChanges);
 	
 	{
@@ -5171,7 +5171,7 @@ reverseScreenDimensionChanges	(Undoables_ActionInstruction	inDoWhat,
 								 Undoables_ActionRef			inApplicableAction,
 								 void*							inContextPtr)
 {
-	// this routine only recognizes one kind of context - be absolutely sure thatÕs what was given!
+	// this routine only recognizes one kind of context - be absolutely sure thatâ€™s what was given!
 	assert(Undoables_ReturnActionID(inApplicableAction) == kUndoableContextIdentifierTerminalDimensionChanges);
 	
 	{
@@ -5259,11 +5259,11 @@ scrollProc	(HIViewRef			inScrollBarClicked,
 		{
 			switch (inPartCode)
 			{
-			case kControlUpButtonPart: // Òup arrowÓ on a horizontal scroll bar means Òleft arrowÓ
+			case kControlUpButtonPart: // â€œup arrowâ€ on a horizontal scroll bar means â€œleft arrowâ€
 				(Terminal_Result)TerminalView_ScrollColumnsTowardRightEdge(view, 1/* number of columns to scroll */);
 				break;
 			
-			case kControlDownButtonPart: // Òdown arrowÓ on a horizontal scroll bar means Òright arrowÓ
+			case kControlDownButtonPart: // â€œdown arrowâ€ on a horizontal scroll bar means â€œright arrowâ€
 				(Terminal_Result)TerminalView_ScrollColumnsTowardLeftEdge(view, 1/* number of columns to scroll */);
 				break;
 			
@@ -5422,7 +5422,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					}
 				}
 				// add or remove window adornments as appropriate; once a session has died
-				// its window (if left open by the user) wonÕt display a warning, so the
+				// its window (if left open by the user) wonâ€™t display a warning, so the
 				// adornment is removed in that case, although its title is then changed
 				if (Session_StateIsActiveStable(session)) setWarningOnWindowClose(ptr, true);
 				if (Session_StateIsDead(session))
@@ -5620,7 +5620,7 @@ terminal window to match the size required to fit
 the specified width and height in pixels.
 
 Once this is done, you can make the window this
-size by zooming ÒoutÓ, or by passing "true" for
+size by zooming â€œoutâ€, or by passing "true" for
 "inResizeWindow".
 
 (3.0)
@@ -5667,7 +5667,7 @@ also appears in the close box.
 
 NOTE:	This does NOT force a warning message to
 		appear, this call is nothing more than an
-		adornment.  Making the windowÕs behavior
+		adornment.  Making the windowâ€™s behavior
 		consistent with the adornment is up to you.
 
 (3.0)
@@ -5692,8 +5692,8 @@ setWarningOnWindowClose		(TerminalWindowPtr	inPtr,
 
 /*!
 This routine, of "SessionFactory_TerminalWindowOpProcPtr"
-form, arranges the specified window in one of the Òfree
-slotsÓ for staggered terminal windows.
+form, arranges the specified window in one of the â€œfree
+slotsâ€ for staggered terminal windows.
 
 (3.0)
 */
@@ -5749,7 +5749,7 @@ stackWindowTerminalWindowOp		(TerminalWindowRef	inTerminalWindow,
 				OSStatus	error = noErr;
 				
 				
-				// TransitionWindow() requires the structure region, but the ÒlocationÓ is
+				// TransitionWindow() requires the structure region, but the â€œlocationâ€ is
 				// that of the content region; so, it is necessary to figure out both what
 				// the new structure origin will be, and the dimensions of that region.
 				// This may fail if the window is not visible anymore.
@@ -5916,7 +5916,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case kTerminal_ChangeWindowFrameTitle:
-		// set windowÕs title to match
+		// set windowâ€™s title to match
 		{
 			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
 			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
@@ -5939,7 +5939,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case kTerminal_ChangeWindowIconTitle:
-		// set windowÕs alternate (Dock icon) title to match
+		// set windowâ€™s alternate (Dock icon) title to match
 		{
 			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
 			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
@@ -6104,7 +6104,7 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 											scrollVRangeMinimum, scrollVRangePastMaximum);
 		assert(kTerminalView_ResultOK == rangeResult);
 		
-		// update controlsÕ maximum and minimum values; the vertical scroll bar
+		// update controlsâ€™ maximum and minimum values; the vertical scroll bar
 		// is special, in that its maximum value is zero (this ensures the main
 		// area is pinned in view even if new scrollback rows show up, etc.)
 		scrollBarView = inPtr->controls.scrollBarH;

@@ -3,9 +3,9 @@
 	Clipboard.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -85,7 +85,7 @@ namespace {
 IMPORTANT
 
 The following values MUST agree with the view IDs in
-the “Window” NIB from the package "Clipboard.nib".
+the ‚ÄúWindow‚Äù NIB from the package "Clipboard.nib".
 */
 HIViewID const	idMyLabelDataDescription	= { 'Info', 0/* ID */ };
 HIViewID const	idMyUserPaneDragParent		= { 'Frme', 0/* ID */ };
@@ -214,7 +214,7 @@ Clipboard_Init ()
 	WindowInfo_SetWindowPotentialDropTarget(gClipboardWindowInfo, true/* can receive data via drag-and-drop */);
 	WindowInfo_SetForWindow(clipboardWindow, gClipboardWindowInfo);
 	
-	// specify a different title for the Dock’s menu, one which doesn’t include the application name
+	// specify a different title for the Dock‚Äôs menu, one which doesn‚Äôt include the application name
 	{
 		CFStringRef			titleCFString = nullptr;
 		UIStrings_Result	stringResult = kUIStrings_ResultOK;
@@ -292,7 +292,7 @@ Clipboard_Init ()
 									sizeof(windowIsVisible), &windowIsVisible,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			windowIsVisible = false; // assume invisible if the preference can’t be found
+			windowIsVisible = false; // assume invisible if the preference can‚Äôt be found
 		}
 		Clipboard_SetWindowVisible(windowIsVisible);
 	}
@@ -442,7 +442,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 				TranslationRef		translationInfo = nullptr;
 				
 				
-				// don’t give up just yet...attempt to translate this data into something presentable
+				// don‚Äôt give up just yet...attempt to translate this data into something presentable
 				outCFString = nullptr;
 				error = TranslationCreate(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
 											kTranslationDataTranslation, &translationInfo);
@@ -608,7 +608,7 @@ supported type of image data.
 If the given pasteboard has changed, or has never been used
 with this module before, you must first invoke the routine
 Clipboard_SetPasteboardModified(), which will register and
-cache the pasteboard’s properties.  However, this is not
+cache the pasteboard‚Äôs properties.  However, this is not
 necessary for the primary pasteboard, as changes to it are
 automatically detected.
 
@@ -644,7 +644,7 @@ string of text.
 If the given pasteboard has changed, or has never been used
 with this module before, you must first invoke the routine
 Clipboard_SetPasteboardModified(), which will register and
-cache the pasteboard’s properties.  However, this is not
+cache the pasteboard‚Äôs properties.  However, this is not
 necessary for the primary pasteboard, as changes to it are
 automatically detected.
 
@@ -845,7 +845,7 @@ Clipboard_IsOneLineInBuffer		(UInt8 const*	inTextPtr,
 	for (CFIndex i = 0; ((result) && (i < inLength)); ++i)
 	{
 		// NOTE: It may be useful to provide a mechanism for customizing
-		//       these rules for determining what makes a “line” of text.
+		//       these rules for determining what makes a ‚Äúline‚Äù of text.
 		if (('\r' == inTextPtr[i]) || ('\n' == inTextPtr[i]))
 		{
 			result = false;
@@ -874,7 +874,7 @@ Clipboard_IsOneLineInBuffer		(UInt16 const*	inTextPtr,
 	for (CFIndex i = 0; ((result) && (i < inLength)); ++i)
 	{
 		// NOTE: It may be useful to provide a mechanism for customizing
-		//       these rules for determining what makes a “line” of text.
+		//       these rules for determining what makes a ‚Äúline‚Äù of text.
 		if (('\r' == inTextPtr[i]) || ('\n' == inTextPtr[i]))
 		{
 			result = false;
@@ -1055,10 +1055,10 @@ the text is copied line-by-line according to the
 rows it crosses.
 
 If the copy method is standard, the text is copied
-to the pasteboard intact.  If the “table” method
+to the pasteboard intact.  If the ‚Äútable‚Äù method
 is used, the text is first parsed to replace tab
 characters with multiple spaces, and then the text
-is copied.  If “inline” is specified (possibly in
+is copied.  If ‚Äúinline‚Äù is specified (possibly in
 addition to table mode), each line is concatenated
 together to form a single line.
 
@@ -1083,7 +1083,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 		size_t	actualSize = 0L;
 		
 		
-		// get the user’s “one tab equals X spaces” preference, if possible
+		// get the user‚Äôs ‚Äúone tab equals X spaces‚Äù preference, if possible
 		unless (Preferences_GetData(kPreferences_TagCopyTableThreshold,
 									sizeof(tableThreshold), &tableThreshold,
 									&actualSize) == kPreferences_ResultOK)
@@ -1119,14 +1119,14 @@ leaving a copy on the clipboard (replacing anything
 there).  If nothing is selected, this routine does
 nothing.
 
-Intelligently, MacTelnet automatically uses “inline”
+Intelligently, MacTelnet automatically uses ‚Äúinline‚Äù
 copy-and-paste for this type of operation, since
-virtually the only reason to use “type” would be to
+virtually the only reason to use ‚Äútype‚Äù would be to
 copy and paste a command line from the scrollback
 buffer.  If a command line spans multiple lines, it
 would normally have new-line sequences inserted to
 preserve the formatting, which is undesirable when
-pasting what “should” be seen as a single line.
+pasting what ‚Äúshould‚Äù be seen as a single line.
 
 (3.0)
 */
@@ -1763,7 +1763,7 @@ setDataTypeInformation	(CFStringRef	inUTI,
 			// now create the description string
 			{
 				// adjust the size value so the number displayed to the user is not too big and ugly;
-				// construct a size string, with appropriate units and the word “about”, if necessary
+				// construct a size string, with appropriate units and the word ‚Äúabout‚Äù, if necessary
 				CFStringRef							aboutCFString = CFSTR("");
 				CFStringRef							unitsCFString = CFSTR("");
 				UIStrings_ClipboardWindowCFString	unitsStringCode = kUIStrings_ClipboardWindowUnitsBytes;
@@ -1791,7 +1791,7 @@ setDataTypeInformation	(CFStringRef	inUTI,
 				}
 				
 				// if the size value is not exact, insert a word into the
-				// string; e.g. “about 3 MB”
+				// string; e.g. ‚Äúabout 3 MB‚Äù
 				if (approximation)
 				{
 					stringResult = UIStrings_Copy(kUIStrings_ClipboardWindowDescriptionApproximately,

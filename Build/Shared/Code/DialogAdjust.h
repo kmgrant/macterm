@@ -1,5 +1,5 @@
 /*!	\file DialogAdjust.h
-	\brief Completely handles all the “dirty work” of resizing
+	\brief Completely handles all the ‚Äúdirty work‚Äù of resizing
 	windows or dialog boxes.
 	
 	Just begin either a control or dialog item adjustment,
@@ -21,7 +21,7 @@
 /*###############################################################
 
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -58,7 +58,7 @@
 typedef SInt32 DialogItemAdjustment;
 enum
 {
-	// do not use these first constants, they’re only used to define other constants
+	// do not use these first constants, they‚Äôre only used to define other constants
 	kDialogItemAdjustmentResize = (1 << 0),		// control dimension is changing
 	kDialogItemAdjustmentMove = (1 << 1),		// control position is changing
 	kDialogItemAdjustmentVerticalAxis = (1 << 2),	// vertical change (horizontal by default)

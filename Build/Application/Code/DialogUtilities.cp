@@ -3,9 +3,9 @@
 	DialogUtilities.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -138,7 +138,7 @@ pane to use).
 The new controls are appended to the given list of
 controls.
 
-This function is necessary because Apple didn’t make
+This function is necessary because Apple didn‚Äôt make
 this easy, soon enough.  Specifically, not only is there
 no CreateControlsFromNib() routine akin to the APIs for
 creating windows and menus, but the OS does not allow
@@ -209,7 +209,7 @@ DialogUtilities_CreateControlsBasedOnWindowNIB	(CFStringRef					inNIBFileBasenam
 			#endif
 				
 				// find all the views in the window, and use their characteristics
-				// to create duplicate views; this is done “backwards” (last to
+				// to create duplicate views; this is done ‚Äúbackwards‚Äù (last to
 				// first) so that the view order is preserved, e.g. with respect
 				// to the tab ordering specified in Interface Builder
 				for (; ((noErr == result) && (nullptr != templateView));
@@ -284,7 +284,7 @@ watch, call this method.  Usually, you do this
 immediately prior to displaying a dialog box on
 the screen.
 
-This routine automatically finds the “real”
+This routine automatically finds the ‚Äúreal‚Äù
 front window, deactivating all floating windows
 as well.
 
@@ -316,7 +316,7 @@ DebugSelectControlHierarchyDumpFile		(WindowRef		inForWindow)
 	Boolean		good = false;
 	
 	
-	PLstrcpy(prompt, "\pCreate a file to show the window’s control hierarchy.");
+	PLstrcpy(prompt, "\pCreate a file to show the window‚Äôs control hierarchy.");
 	PLstrcpy(title, "\pCreate Control Hierarchy Dump File");
 	PLstrcpy(fileDefaultName, "\phierarchy-dump.txt");
 	
@@ -346,7 +346,7 @@ drawing procedure, use this method.  The graphics
 port is automatically clipped to the specified
 region, preserving and restoring any previous
 clipping regions.  DeviceLoop() is called using
-the given drawing procedure, “user data”, and flags.
+the given drawing procedure, ‚Äúuser data‚Äù, and flags.
 
 IMPORTANT:	On output, the specified clip region
 			will be changed to the intersection of
@@ -385,7 +385,7 @@ DeviceLoopClipAndDraw	(RgnHandle				inoutNewClipRegion,
 		useDeviceLoop = !QDIsPortBuffered(currentPort);
 		
 		// first determine the exact area in which to draw (the intersection
-		// of the control region and the graphics port’s visible region)
+		// of the control region and the graphics port‚Äôs visible region)
 		GetClip(oldClipRgn);
 		
 		// now clip drawing in the port to the exact area where drawing should occur
@@ -423,7 +423,7 @@ If you want to draw a user pane control using a
 DeviceLoop() drawing procedure, use this method.
 
 The graphics port is automatically clipped to
-the control’s rectangle (or its even more specific
+the control‚Äôs rectangle (or its even more specific
 structure region, if an appropriate API from the
 Carbon Control Manager is available).  If you are
 drawing a control that is capable of acquiring
@@ -433,7 +433,7 @@ the clipping area is extended slightly outside
 the control boundaries to allow for a focus ring.
 
 The DeviceLoop() routine is called using the given
-drawing procedure, passing a “user data” of type
+drawing procedure, passing a ‚Äúuser data‚Äù of type
 "ControlInfoConstPtr", and flags set to zero.  In
 other words, by using this routine you gain the
 ability to automatically set up the clipping
@@ -461,7 +461,7 @@ DeviceLoopClipAndDrawControl	(ControlRef							inControl,
 		
 		
 		// first determine the exact area in which to draw (the intersection
-		// of the control region and the graphics port’s visible region)
+		// of the control region and the graphics port‚Äôs visible region)
 		error = GetControlRegion(inControl, kControlStructureMetaPart, newClipRgn);
 		if (error != noErr)
 		{
@@ -542,9 +542,9 @@ DialogUtilities_DisposeDuplicateControl		(ControlRef		inDuplicatedControl)
 
 
 /*!
-To draw a dialog item’s control completely, use
+To draw a dialog item‚Äôs control completely, use
 this method.  Note that when you set an Appearance
-control’s data, the control is not updated: thus,
+control‚Äôs data, the control is not updated: thus,
 this routine may be helpful.
 
 (3.0)
@@ -576,8 +576,8 @@ any extra data created on behalf of the control is freed.
 Currently, this only applies to pop-up menus, where a
 copy of the menu is created and inserted into the menu list.
 
-IMPORTANT:	This routine is currently implemented “as
-			needed”, so it does not support all possible
+IMPORTANT:	This routine is currently implemented ‚Äúas
+			needed‚Äù, so it does not support all possible
 			controls or arrangements.  It should be easy
 			to add support for extra stuff when that is
 			necessary.
@@ -603,7 +603,7 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 		Boolean			kindBased = true;
 		
 		
-		// copy the control’s boundaries (pretty much always needed)
+		// copy the control‚Äôs boundaries (pretty much always needed)
 		GetControlBounds(inTemplateControl, &templateBounds);
 		HIViewGetFrame(inTemplateControl, &templateFrame);
 		
@@ -1157,9 +1157,9 @@ This method will hide and show a dialog item
 repeatedly for the specified number of
 iterations, pausing the specified number of
 ticks between each visibility change.  The
-dialog item is guaranteed to “end up” visible,
-so you shouldn’t call this method for a dialog
-item that’s supposed to be hidden.
+dialog item is guaranteed to ‚Äúend up‚Äù visible,
+so you shouldn‚Äôt call this method for a dialog
+item that‚Äôs supposed to be hidden.
 
 (3.0)
 */
@@ -1175,14 +1175,14 @@ FlashDialogItem		(DialogRef			inDialog,
 	
 	
 	DrawDialog(inDialog);	// avoids problems that occur if this method is called
-								// as soon as a dialog’s window is made visible
+								// as soon as a dialog‚Äôs window is made visible
 	GetDialogItemAsControl(inDialog, inItemIndex, &control);
 	for (i = 0; i < inCount; ++i)
 	{
 		HideDialogItem(inDialog, inItemIndex);
 		Delay(inDelay, &dummy);
 		ShowDialogItem(inDialog, inItemIndex);
-		DrawOneControl(control); // ensures that the control appears “in time”
+		DrawOneControl(control); // ensures that the control appears ‚Äúin time‚Äù
 		Delay(inDelay, &dummy);
 	}
 }// FlashDialogItem
@@ -1253,7 +1253,7 @@ GetControlNumericalText		(ControlRef		inControl,
 
 
 /*!
-To get a static text or editable text control’s
+To get a static text or editable text control‚Äôs
 text contents as a four-character code, use this
 method.
 
@@ -1300,7 +1300,7 @@ GetControlText	(ControlRef			inControl,
 
 
 /*!
-Returns the specified control’s text as a CFString.
+Returns the specified control‚Äôs text as a CFString.
 
 (3.0)
 */
@@ -1404,7 +1404,7 @@ GetNewDialogWithWindowInfo		(SInt16				inDialogResourceID,
 		if (outWindowInfoRefPtr != nullptr) *outWindowInfoRefPtr = WindowInfo_New();
 		if (*outDialog != nullptr)
 		{
-			// MacTelnet has a thread that takes care of this, so don’t let the Dialog Manager do it
+			// MacTelnet has a thread that takes care of this, so don‚Äôt let the Dialog Manager do it
 			SetDialogTracksCursor(*outDialog, false);
 		}
 	}
@@ -1583,7 +1583,7 @@ NumericalLimiter		(ControlRef			UNUSED_ARGUMENT(inControl),
 		// command key is down - scan for a Paste operation
 		if ((*inCharCode == 'V') || (*inCharCode == 'v'))
 		{
-			// pasting isn’t allowed because there is no easy way to filter out non-digits
+			// pasting isn‚Äôt allowed because there is no easy way to filter out non-digits
 			result = kControlKeyFilterBlockKey;
 		}
 	}
@@ -1629,7 +1629,7 @@ OSTypeLengthLimiter		(ControlRef			inControl,
 	ControlEditTextSelectionRec		selectionRangeInfo;
 	
 	
-	// determine if text is selected - if so, don’t block any keys
+	// determine if text is selected - if so, don‚Äôt block any keys
 	selectionRangeInfo.selStart = selectionRangeInfo.selEnd = 0;
 	(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlEditTextSelectionTag,
 								sizeof(selectionRangeInfo), &selectionRangeInfo, &actualSize);
@@ -1667,7 +1667,7 @@ OSTypeLengthLimiter		(ControlRef			inControl,
 				// check the size of the TextEdit scrap
 				if ((TEGetScrapLength() + PLstrlen(text) * sizeof(UInt8)) > (4 * sizeof(UInt8)))
 				{
-					// pasting isn’t allowed because adding the scrap would make the field too big
+					// pasting isn‚Äôt allowed because adding the scrap would make the field too big
 					result = kControlKeyFilterBlockKey;
 				}
 			}
@@ -1756,7 +1756,7 @@ SetControlNumericalText		(ControlRef		inControl,
 
 
 /*!
-To set a static text or editable text control’s
+To set a static text or editable text control‚Äôs
 text contents to represent the specified four-
 character code, use this method.
 
@@ -2146,7 +2146,7 @@ DialogUtilities_SetUpHelpButton		(HIViewWrap&	inoutView)
 	unless (FlagManager_Test(kFlagOS10_3API))
 	{
 		// on Panther, Interface Builder will create a nice
-		// “purple help button”, but it is sized badly for
+		// ‚Äúpurple help button‚Äù, but it is sized badly for
 		// older Mac OS X systems; so on these older systems
 		// this routine fixes the button size so the icon is
 		// nicely centered
@@ -2294,7 +2294,7 @@ StandardDialogEventFilter	(DialogRef			inDialog,
 				
 				if (window == GetDialogWindow(inDialog))
 				{
-					// then it’s this dialog that’s being touched
+					// then it‚Äôs this dialog that‚Äôs being touched
 					if (part == inGrow)
 					{
 						WindowInfo_Ref		windowFeaturesRef = nullptr;
@@ -2356,7 +2356,7 @@ SwitchDialogDefaultItem	(DialogRef				inDialog,
 						 DialogItemIndex		inDefaultableItemIndices[],
 						 short					inDefaultableItemIndicesArraySize)
 {
-	Boolean				result = false; // nothing “handled” initially
+	Boolean				result = false; // nothing ‚Äúhandled‚Äù initially
 	//Boolean				commandDown = ((inEventPtr->modifiers & cmdKey) != 0),
 	//Boolean				optionDown = ((inEventPtr->modifiers & optionKey) != 0),
 	//Boolean				controlDown = ((inEventPtr->modifiers & controlKey) != 0),
@@ -2364,7 +2364,7 @@ SwitchDialogDefaultItem	(DialogRef				inDialog,
 	DialogItemIndex		i = 0;
 	
 	
-	if (inDefaultableItemIndicesArraySize > 1) // can’t switch items unless there are at least two!
+	if (inDefaultableItemIndicesArraySize > 1) // can‚Äôt switch items unless there are at least two!
 	{
 		switch (inEventPtr->what)
 		{
@@ -2396,7 +2396,7 @@ SwitchDialogDefaultItem	(DialogRef				inDialog,
 					}
 					for (i = start; (!done) && (!result); )
 					{
-						// set the “next” item based on whether it’s forward or reverse order
+						// set the ‚Äúnext‚Äù item based on whether it‚Äôs forward or reverse order
 						DialogItemIndex		nextItem = 0;
 						short				oldIndex = i;
 						
@@ -2520,7 +2520,7 @@ UnixCommandLineLimiterKeyFilterUPP ()
 #pragma mark Internal Methods
 
 /*!
-The “real” DeviceLoopDrawingUPP that is called by
+The ‚Äúreal‚Äù DeviceLoopDrawingUPP that is called by
 the OS from DeviceLoopClipAndDrawControl().  This
 stand-in routine performs type-casting correctly
 and re-invokes a user-defined C function that then

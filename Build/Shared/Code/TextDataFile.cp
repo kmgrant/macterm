@@ -3,7 +3,7 @@
 	TextDataFile.cp
 	
 	Data Access Library 1.3
-	© 1998-2008 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -145,14 +145,14 @@ TextDataFile_Dispose	(TextDataFile_Ref*	inoutRefPtr)
 Writes a comment to your text data file.  Since the
 order of your operations is retained, you can invoke
 this routine to write a comment immediately prior to
-invoking a routine to set a name’s value, such as
+invoking a routine to set a name‚Äôs value, such as
 TextDataFile_AddNameValue(), and the comment will
 appear immediately prior to the assignment statement
 in the resultant text file.
 
 The specified text is automatically preceded with the
 proper comment syntax (a hash mark, '#') so you
-shouldn’t include anything in "inCommentTextPtr"
+shouldn‚Äôt include anything in "inCommentTextPtr"
 except the actual text of the comment.
 
 If successful, "true" is returned.
@@ -602,14 +602,14 @@ TextDataFile_ResetPointer	(TextDataFile_Ref	inRef)
 
 /*!
 Checks the first and last characters of the specified
-string for “matching brackets”, and strips them if
+string for ‚Äúmatching brackets‚Äù, and strips them if
 they exist.  For efficiency, this is accomplished by
 modifying the existing string and returning a pointer
 into the existing string (that is, one character past
 the beginning of the given string).
 
 The following pairs are checked:
-	""	''	“”	‘’	``	[]	{}	()	<>	||
+	""	''	``	[]	{}	()	<>	||
 
 Returns "true" only if the specified string was
 changed.  Also, "outClippedStringPtr" is only defined
@@ -635,14 +635,6 @@ TextDataFile_StringStripEndBrackets		(char*		inoutStringPtr,
 			
 			case '\'':
 				result = (inoutStringPtr[stringLength - 1] == '\'');
-				break;
-			
-			case '“':
-				result = (inoutStringPtr[stringLength - 1] == '”');
-				break;
-			
-			case '‘':
-				result = (inoutStringPtr[stringLength - 1] == '’');
 				break;
 			
 			case '`':
@@ -678,7 +670,7 @@ TextDataFile_StringStripEndBrackets		(char*		inoutStringPtr,
 		{
 			// clip end caps; using a null chracter allows
 			// the rest of the original string to be the
-			// “new” string, without copying any of the data
+			// ‚Äúnew‚Äù string, without copying any of the data
 			inoutStringPtr[0] = '\0';
 			inoutStringPtr[stringLength - 1] = '\0';
 			*outClippedStringPtr = 1 + inoutStringPtr;
@@ -849,7 +841,7 @@ TextDataFile_StringToRGBColor	(char const*	inStringPtr,
 /*!
 Searches for the name-value delimiter within the
 given line of text and returns a pointer to the
-“name” part, overwriting the character that
+‚Äúname‚Äù part, overwriting the character that
 follows with a null character.  Similarly, if
 "outValuePtrOrNull" is not nullptr, the offset of
 the value string is provided.
@@ -992,7 +984,7 @@ readLine	(SInt16							inFileRefNum,
 		else if (error != noErr) sawNewLine = true; // force break on error
 		else
 		{
-			// one more byte successfully retrieved; see if it’s a newline
+			// one more byte successfully retrieved; see if it‚Äôs a newline
 			assert(bufferMaxBufferActual == 1);
 			++result;
 			

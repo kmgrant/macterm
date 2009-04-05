@@ -3,7 +3,7 @@
 	SoundSystem.cp
 	
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -45,7 +45,7 @@
 
 enum
 {
-	// The following are possible values for the Òparam1Ó field
+	// The following are possible values for the â€œparam1â€ field
 	// of a SndCommand structure, as defined for the internal
 	// sound callback routine, soundCallBack().
 	kSoundCallBackParam1SoundComplete = 1
@@ -387,7 +387,7 @@ soundCallBack	(SndChannelPtr	inChannelPtr,
 			if (inCmdPtr->param1 == kSoundCallBackParam1SoundComplete)
 			{
 				// MARK the sound for destruction - WARNING, as an interrupt-level
-				// routine, you canÕt actually dispose memory here!
+				// routine, you canâ€™t actually dispose memory here!
 				ptr->shouldNowBeDestroyed = true;
 			}
 		}

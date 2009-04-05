@@ -4,13 +4,13 @@
 	
 	Useful (read: indispensable) routines when programming
 	AppleScript into applications.  Several routines in this
-	file are derived from Apple’s sample code, and have the
+	file are derived from Apple‚Äôs sample code, and have the
 	appropriate copyrights.
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -253,7 +253,7 @@ AppleEventUtilities_CopyDescriptorDataAs	(DescType		inDesiredType,
 			Size		byteCountToCopy = AEGetDescDataSize(descPtr);
 			
 			
-			// copy the data, reporting an error (but not aborting the copy) if there’s not enough room
+			// copy the data, reporting an error (but not aborting the copy) if there‚Äôs not enough room
 			Console_WriteLine("determining how much to copy");
 			if (byteCountToCopy > inDataPtrMaximumSize)
 			{
@@ -598,7 +598,7 @@ AppleEventUtilities_ObjectExists	(AppleEvent const*	inAppleEventPtr,
 	(OSStatus)AppleEventUtilities_InitAEDesc(&replyDesc);
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “exists” event");
+	Console_WriteLine("AppleScript: ‚Äúexists‚Äù event");
 	
 	(OSStatus)AEGetParamDesc(inAppleEventPtr, keyDirectObject, typeWildCard, &directObject);
 	result = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
@@ -619,7 +619,7 @@ AppleEventUtilities_ObjectExists	(AppleEvent const*	inAppleEventPtr,
 					long		itemCount = 0L;
 					
 					
-					// for lists, objects “exist” if the list is not empty
+					// for lists, objects ‚Äúexist‚Äù if the list is not empty
 					Console_WriteLine("given a list of objects; any non-empty list should exist");
 					result = AECountItems(&directToken, &itemCount);
 					if (result == noErr)
@@ -664,7 +664,7 @@ is returned.
 Bug: (?)	It appears as though any event that states
 			it has no direct object will cause this
 			routine to report a parameter error.  I
-			can’t figure out why this would be; it
+			can‚Äôt figure out why this would be; it
 			neither appears to be in this code, nor in
 			the user terminology resource.  Any ideas?
 
@@ -688,7 +688,7 @@ AppleEventUtilities_RequiredParametersError		(AppleEvent const*	inAppleEventPtr)
 	}
 	else if (result == noErr)
 	{
-		// “missed keyword” attribute exists, so a required parameter was not provided; this is an error
+		// ‚Äúmissed keyword‚Äù attribute exists, so a required parameter was not provided; this is an error
 		result = errAEParamMissed;
 	}
 	

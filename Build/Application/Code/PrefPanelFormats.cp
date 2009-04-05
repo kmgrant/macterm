@@ -3,9 +3,9 @@
 	PrefPanelFormats.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -131,7 +131,7 @@ HIViewID const	idMyHelpTextANSIColors				= { 'HANS', 0/* ID */ };
 namespace {
 
 /*!
-Implements the “ANSI Colors” tab.
+Implements the ‚ÄúANSI Colors‚Äù tab.
 */
 struct My_FormatsPanelANSIColorsUI
 {
@@ -168,7 +168,7 @@ private:
 typedef My_FormatsPanelANSIColorsUI*	My_FormatsPanelANSIColorsUIPtr;
 
 /*!
-Implements the “Normal” tab.
+Implements the ‚ÄúNormal‚Äù tab.
 */
 struct My_FormatsPanelNormalUI
 {
@@ -685,7 +685,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldn’t be...
+			// this notification is currently ignored, but shouldn‚Äôt be...
 		}
 		break;
 	
@@ -713,7 +713,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -767,7 +767,7 @@ readPreferences		(Preferences_ContextRef		inSettings)
 
 /*!
 Restores all 16 colors to the values from the
-application’s default preferences.
+application‚Äôs default preferences.
 
 (3.1)
 */
@@ -1204,7 +1204,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldn’t be...
+			// this notification is currently ignored, but shouldn‚Äôt be...
 		}
 		break;
 	
@@ -1232,7 +1232,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -1483,7 +1483,7 @@ setUpSampleTerminalHIView	(TerminalViewRef	inTerminalView,
 										"\033[2J\033[H"); // clear screen, home cursor
 		Terminal_EmulatorProcessCString(inTerminalScreen,
 										"sel norm \033[1mbold\033[0m \033[5mblink\033[0m \033[3mital\033[0m \033[7minv\033[0m \033[4munder\033[0m"); // LOCALIZE THIS
-		// the range selected here should be as long as the length of the word “sel” above
+		// the range selected here should be as long as the length of the word ‚Äúsel‚Äù above
 		TerminalView_SelectVirtualRange(inTerminalView, std::make_pair(std::make_pair(0, 0), std::make_pair(3, 1)/* exclusive end */));
 	}
 	
@@ -1561,7 +1561,7 @@ isMonospacedFont	(Str255		inFontName)
 				thePreferredFontFamily = theSizeAndFontFamily >> 16; // high word is font family 
 				result = (thePreferredFontFamily == fontID);
 			}
-			else result = false; // this font’s script isn’t enabled
+			else result = false; // this font‚Äôs script isn‚Äôt enabled
 		}
 		else doRomanTest = true;
 	}
@@ -1877,7 +1877,7 @@ receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-The responder to a closed “reset ANSI colors?” alert.
+The responder to a closed ‚Äúreset ANSI colors?‚Äù alert.
 This routine resets the 16 displayed ANSI colors if
 the item hit is the OK button, otherwise it does not
 modify the displayed colors in any way.  The given

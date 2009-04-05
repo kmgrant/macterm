@@ -8,7 +8,7 @@
 	to gauge memory requirements, and increased stability.
 	
 	Data Access Library 1.3
-	© 1998-2005 by Kevin Grant
+	¬© 1998-2005 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -75,7 +75,7 @@ Memory_Init ()
 Destroys the memory allocated by a Mac OS Memory Manager
 handle, and then sets the handle to nullptr.  Since one
 frequently compares a handle with the value nullptr to see
-if it’s valid, it makes sense to ensure that a handle is
+if it‚Äôs valid, it makes sense to ensure that a handle is
 nullptr when it actually gets disposed.  Favor this method
 over a call to the Mac OS Memory Manager routine
 DisposeHandle().
@@ -97,7 +97,7 @@ Memory_DisposeHandle	(Handle*	inoutHandlePtr)
 Destroys the memory allocated by a Mac OS Memory Manager
 pointer, and then sets the pointer to nullptr.  Since one
 frequently compares a pointer with the value nullptr to see
-if it’s valid, it makes sense to ensure that a pointer is
+if it‚Äôs valid, it makes sense to ensure that a pointer is
 nullptr when it actually gets disposed.  Favor this method
 over a call to the Mac OS Memory Manager routine
 DisposePtr().
@@ -226,7 +226,7 @@ Memory_NewHandleInProperZone	(Size					inDesiredNumberOfBytes,
 	if (IsHandleValid(result))
 	{
 		// handles sticking around for a short period of time should be high in the heap zone;
-		// conversely, those that don’t should be locked throughout their entire existence
+		// conversely, those that don‚Äôt should be locked throughout their entire existence
 		if (kMemoryBlockLifetimeShort == inBlockLifeExpectancy) MoveHHi(result);
 		else HLock(result);
 	}
@@ -280,18 +280,18 @@ Memory_NewPtrInterruptSafe		(Size		inDesiredNumberOfBytes)
 Allocates a new QuickDraw region that can be used
 with any of the standard QuickDraw routines that
 manipulate regions.  Use Memory_DisposeRegion()
-to destroy this region when you’re done.
+to destroy this region when you‚Äôre done.
 
 There are certain conditions under which it may be
 impossible to detect failed region allocations:
 specifically, if QDError() returns "noErr" and
 memory conditions are extremely low, a region may
-in fact be garbage but not “seem like it”.  This
+in fact be garbage but not ‚Äúseem like it‚Äù.  This
 routine performs a sanity check on new regions to
 make sure there really is enough space in the grow
 zone to accommodate the region that QuickDraw
 claims to have created, and returns nullptr if an
-otherwise-“valid” region is accidentally allocated.
+otherwise-‚Äúvalid‚Äù region is accidentally allocated.
 
 (1.0)
 */
@@ -353,7 +353,7 @@ Memory_SetHandleSize	(Handle		inoutHandle,
 		if (memFullErr == result)
 		{
 			// move the Handle high in the heap, eliminate bubbles (compact memory)
-			// and try again; the Mac OS Memory Manager doesn’t do this itself for
+			// and try again; the Mac OS Memory Manager doesn‚Äôt do this itself for
 			// some reason
 			MoveHHi(inoutHandle);
 			CompactMem(maxSize);

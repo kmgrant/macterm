@@ -3,9 +3,9 @@
 	BasicTypesAE.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2002 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2002 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -48,8 +48,8 @@
 #pragma mark Public Methods
 
 /*!
-Creates an Apple Event descriptor “wrapper”
-for an absolute ordinal (“first”, “all”, etc.).
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
+for an absolute ordinal (‚Äúfirst‚Äù, ‚Äúall‚Äù, etc.).
 
 (3.0)
 */
@@ -66,7 +66,7 @@ BasicTypesAE_CreateAbsoluteOrdinalDesc	(DescType	inOrdinalValue,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a "true" or "false" value.
 
 (3.0)
@@ -84,7 +84,7 @@ BasicTypesAE_CreateBooleanDesc	(Boolean	inBooleanValue,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a class ID.
 
 (3.0)
@@ -102,7 +102,7 @@ BasicTypesAE_CreateClassIDDesc	(FourCharCode	inClassID,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for an enumerated type.
 
 (3.0)
@@ -120,7 +120,7 @@ BasicTypesAE_CreateEnumerationDesc	(FourCharCode	inEnumeration,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a file system specification record.
 
 (3.0)
@@ -138,7 +138,7 @@ BasicTypesAE_CreateFileOrFolderDesc		(FSSpec const*	inFSSpecPtr,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper” for a
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù for a
 new-style file system specification record.
 
 (3.1)
@@ -156,7 +156,7 @@ BasicTypesAE_CreateFileOrFolderDesc		(FSRef const&	inFSRef,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a list containing two object references.
 You might use this to create more interesting
 assignment statements, e.g. { obj1, obj2 } =
@@ -187,7 +187,7 @@ BasicTypesAE_CreatePairDesc		(AEDesc const*		inDesc1Ptr,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a QuickDraw Point.
 
 (3.0)
@@ -205,7 +205,7 @@ BasicTypesAE_CreatePointDesc	(Point		inPoint,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a property ID.
 
 (3.0)
@@ -223,7 +223,7 @@ BasicTypesAE_CreatePropertyIDDesc	(FourCharCode	inPropertyID,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for text, using Pascal string data.
 
 (3.0)
@@ -242,7 +242,7 @@ BasicTypesAE_CreatePStringDesc	(Str255		inPascalStringData,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a QuickDraw rectangle.
 
 (3.0)
@@ -260,7 +260,7 @@ BasicTypesAE_CreateRectDesc		(Rect const*	inRectPtr,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a QuickDraw RGB color.
 
 (3.0)
@@ -278,7 +278,7 @@ BasicTypesAE_CreateRGBColorDesc		(RGBColor const*	inColor,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a signed, short integer.
 
 (3.0)
@@ -296,7 +296,7 @@ BasicTypesAE_CreateSInt16Desc	(SInt16		inInteger,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a signed, long integer.
 
 (3.0)
@@ -314,7 +314,7 @@ BasicTypesAE_CreateSInt32Desc	(SInt32		inInteger,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for an unsigned, long integer.
 
 (3.0)
@@ -332,7 +332,7 @@ BasicTypesAE_CreateUInt32Desc	(UInt32		inInteger,
 
 
 /*!
-Creates an Apple Event descriptor “wrapper”
+Creates an Apple Event descriptor ‚Äúwrapper‚Äù
 for a list containing two unsigned, long
 integers.
 

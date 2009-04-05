@@ -3,9 +3,9 @@
 	SessionDescription.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -690,7 +690,7 @@ SessionDescription_GetStringData	(SessionDescription_Ref			inRef,
 /*!
 Displays a file selection dialog asking the user to
 open a session description file.  In MacTelnet 3.0,
-this method responds by sending an “open documents”
+this method responds by sending an ‚Äúopen documents‚Äù
 Apple Event back to MacTelnet (making it recordable),
 instead of directly parsing the file specification
 of the chosen file.
@@ -1455,7 +1455,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 			
 			
 			// a name is required, and either a host or a command;
-			// otherwise, MacTelnet 3.0 doesn’t care, it just uses
+			// otherwise, MacTelnet 3.0 doesn‚Äôt care, it just uses
 			// default values for other session attributes
 			if ((hashTable.find("name") != hashTable.end()) &&
 				((hashTable.find("host") != hashTable.end()) ||
@@ -1576,7 +1576,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 					//Macros_Set(Macros_ReturnActiveSet(), 9, valueList.at(keyNameToKeyValueArrayIndexIterator->second));
 				}
 				
-				// set “menus have key equivalents” flag
+				// set ‚Äúmenus have key equivalents‚Äù flag
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("commandkeys");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{
@@ -1656,7 +1656,7 @@ parseFile	(SInt16				inFileReferenceNumber,
 					}
 				}
 				
-				// set “TEK PAGE clears screen” setting
+				// set ‚ÄúTEK PAGE clears screen‚Äù setting
 				keyNameToKeyValueArrayIndexIterator = hashTable.find("tekclear");
 				if (keyNameToKeyValueArrayIndexIterator != hashTable.end())
 				{

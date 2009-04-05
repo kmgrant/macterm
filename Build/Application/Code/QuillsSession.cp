@@ -3,9 +3,9 @@
 	QuillsSession.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -137,7 +137,7 @@ _session(nullptr)
 	{
 		// WARNING: The constructors for objects that are exposed to scripts
 		// cannot throw exceptions, because ownership rules imply an object
-		// is always created and released.  Instead, the object “exists” in
+		// is always created and released.  Instead, the object ‚Äúexists‚Äù in
 		// a state that simply triggers exceptions when certain methods are
 		// later called on the object.  This also helps in cases where an
 		// object may asynchronously become invalid (e.g. a connection dying
@@ -422,7 +422,7 @@ Session::_on_fileopen_ext_call_py	(FunctionReturnVoidArg1VoidPtrArg2CharPtr	inRo
 									 void*										inPythonFunctionObject,
 									 std::string								inExtension)
 {
-	// there is one callback for each extension, so add/overwrite only the given extension’s callback
+	// there is one callback for each extension, so add/overwrite only the given extension‚Äôs callback
 	gFileOpenCallbackInvokerPythonObjectPairsByExtension()[inExtension] = std::make_pair(inRoutine, inPythonFunctionObject);
 }// _on_fileopen_ext_call_py
 
@@ -451,7 +451,7 @@ Session::_on_urlopen_call_py	(FunctionReturnVoidArg1VoidPtrArg2CharPtr	inRoutine
 								 void*										inPythonFunctionObject,
 								 std::string								inSchema)
 {
-	// there is one callback for each schema type, so add/overwrite only the given schema’s callback
+	// there is one callback for each schema type, so add/overwrite only the given schema‚Äôs callback
 	gURLOpenCallbackInvokerPythonObjectPairsBySchema()[inSchema] = std::make_pair(inRoutine, inPythonFunctionObject);
 }// _on_urlopen_call_py
 
@@ -465,7 +465,7 @@ void
 Session::_stop_fileopen_ext_call_py	(FunctionReturnVoidArg1VoidPtrArg2CharPtr	inRoutine,
 									 std::string								inExtension)
 {
-	// there is one callback for each schema type, so delete only the given schema’s callback
+	// there is one callback for each schema type, so delete only the given schema‚Äôs callback
 	if (gFileOpenCallbackInvokerPythonObjectPairsByExtension()[inExtension].first == inRoutine)
 	{
 		gFileOpenCallbackInvokerPythonObjectPairsByExtension().erase(inExtension);
@@ -498,7 +498,7 @@ void
 Session::_stop_urlopen_call_py	(FunctionReturnVoidArg1VoidPtrArg2CharPtr	inRoutine,
 								 std::string								inSchema)
 {
-	// there is one callback for each schema type, so delete only the given schema’s callback
+	// there is one callback for each schema type, so delete only the given schema‚Äôs callback
 	if (gURLOpenCallbackInvokerPythonObjectPairsBySchema()[inSchema].first == inRoutine)
 	{
 		gURLOpenCallbackInvokerPythonObjectPairsBySchema().erase(inSchema);

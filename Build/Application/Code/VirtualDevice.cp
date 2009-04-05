@@ -3,9 +3,9 @@
 	VirtualDevice.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -52,7 +52,7 @@ enum
 struct My_VirtualDevice
 {
 	GWorldPtr		whichWorld;		//!< GDevice created off-screen
-	CTabHandle		colorTable;		//!< graphics world’s color table
+	CTabHandle		colorTable;		//!< graphics world‚Äôs color table
 	Rect			bounds;			//!< boundary rectangle for virtual device
 };
 typedef My_VirtualDevice*	My_VirtualDevicePtr;
@@ -239,7 +239,7 @@ VirtualDevice_Dispose	(VirtualDevice_Ref*		inoutVirtualDeviceRefPtr)
 /*!
 If you need to use CopyBits() for a virtual device,
 use this routine to access the pixel map in terms
-of a bitmap.  DON’T use this routine for any other
+of a bitmap.  DON‚ÄôT use this routine for any other
 purpose, since a BitMap is only supported under
 Carbon for use with CopyBits().
 
@@ -392,7 +392,7 @@ VirtualDevice_SetColorTable		(VirtualDevice_Ref	inVirtualDeviceRef,
 				Palette2CTab(inPaletteToUseForColorTable, colorTable);
 				
 				(*colorTable)->ctSeed = GetCTSeed();					// give the table a unique seed
-				(*colorTable)->ctFlags = STATIC_CAST(0x8000, UInt16);   // high bit of 1 means “from device”
+				(*colorTable)->ctFlags = STATIC_CAST(0x8000, UInt16);   // high bit of 1 means ‚Äúfrom device‚Äù
 				
 				// make a 3-bit inverse table
 				#if 0

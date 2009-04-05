@@ -3,7 +3,7 @@
 	CFDictionaryManager.cp
 	
 	Data Access Library 2.0
-	© 1998-2008 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -110,7 +110,7 @@ addLong		(CFStringRef	inKey,
 
 
 /*!
-Returns the specified key’s value, automatically
+Returns the specified key‚Äôs value, automatically
 cast into a Core Foundation array type.  Do not
 use this unless you know the value is an array!
 
@@ -138,7 +138,7 @@ const
 
 
 /*!
-Returns the specified key’s value, automatically
+Returns the specified key‚Äôs value, automatically
 cast into a true or false value.  Do not use this
 unless you know the value is a Boolean!
 
@@ -168,7 +168,7 @@ const
 
 
 /*!
-Returns the specified key’s value, automatically
+Returns the specified key‚Äôs value, automatically
 cast into a floating-point number type.  Do not
 use this unless you know the value is a number!
 
@@ -198,13 +198,13 @@ const
 
 
 /*!
-Returns the specified key’s value, automatically
+Returns the specified key‚Äôs value, automatically
 cast into a long integer type.  Do not use this
 unless you know the value is a number!
 
 This routine has limited support for parsing a
-property that is technically a string, but “looks
-like” a number.  However, the origin as a string
+property that is technically a string, but ‚Äúlooks
+like‚Äù a number.  However, the origin as a string
 is not remembered, so changing the value later
 with addInteger() will make the key an integer
 value.
@@ -254,7 +254,7 @@ const
 
 
 /*!
-Returns the specified key’s value, automatically
+Returns the specified key‚Äôs value, automatically
 cast into a Core Foundation string type.  Do not
 use this unless you know the value is a string!
 
@@ -282,7 +282,7 @@ const
 
 
 /*!
-Returns the specified key’s value, automatically
+Returns the specified key‚Äôs value, automatically
 cast into a Core Foundation property list type.
 
 The result is retained and should be released

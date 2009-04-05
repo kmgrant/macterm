@@ -3,7 +3,7 @@
 	WindowInfo.cp
 	
 	Interface Library 2.0
-	© 1998-2008 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -222,7 +222,7 @@ To determine the smallest and largest sizes that a
 resizable dialog box can have, call this method.
 The returned rectangle pointer is specially set up
 to be ideal input to the GrowWindow() system call.
-You’re welcome.
+You‚Äôre welcome.
 
 (1.0)
 */
@@ -245,7 +245,7 @@ call this convenient method.  Using window data, this
 method automatically determines the resize constraints
 on the window, and, if the user resizes the window, the
 universal procedure pointer to invoke in order to
-handle the new window size.  The Mac OS “user state”
+handle the new window size.  The Mac OS ‚Äúuser state‚Äù
 for the window is automatically updated to reflect the
 new size.
 
@@ -273,7 +273,7 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 		Boolean						smallWindow = false;
 		
 		
-		// Obtain the “current” size of the window, so when it
+		// Obtain the ‚Äúcurrent‚Äù size of the window, so when it
 		// changes it is possible to calculate deltaX and deltaY.
 		// Then, change the rectangle so its origin is (0, 0),
 		// to make it easier to work with.  Set a flag if the
@@ -343,7 +343,7 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 				// The slop measurements force the mouse to return to its location
 				// before a window can be resized, should the mouse previously move
 				// in the opposite direction beyond the resize limitations.  If
-				// this wasn’t done, it would be possible for the cursor to drift
+				// this wasn‚Äôt done, it would be possible for the cursor to drift
 				// away from the size box, while its movements would still resize
 				// the window, which is very frustrating for users.
 				//
@@ -418,7 +418,7 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 						// when the mouse moves, change the window size
 						if (((event.message & osEvtMessageMask) >> 24) == mouseMovedMessage)
 						{
-							// It is possible to “cheat” by holding the perceived mouse
+							// It is possible to ‚Äúcheat‚Äù by holding the perceived mouse
 							// location within the resize limits, thereby making it
 							// impossible for the mouse to seem outside this area, no
 							// matter where the mouse really is.
@@ -457,7 +457,7 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 													contentRect.bottom - contentRect.top + deltaY, false);
 								WindowInfo_NotifyWindowOfResize(inWindow, deltaX, deltaY);
 								
-								// updates are slow, so don’t perform one *every* time the mouse moves
+								// updates are slow, so don‚Äôt perform one *every* time the mouse moves
 								if (!(x % 50/* arbitrary; the larger this number, the rarer the updates */))
 								{
 									SetEmptyRgn(region);
@@ -564,7 +564,7 @@ WindowInfo_GrowWindow	(HIWindowRef		inWindow,
 					for (i = 0; i < kDeltaDiv; ++i)
 					{
 						// calculate the amount to change the window size by, and avoid
-						// problems due to limited precision by ensuring the “real”
+						// problems due to limited precision by ensuring the ‚Äúreal‚Äù
 						// change in size is ultimately used (otherwise, rounding error
 						// would potentially make the window size a few pixels out)
 						width += divX;
@@ -638,7 +638,7 @@ WindowInfo_IsPotentialDropTarget	(WindowInfo_Ref		inWindowInfoRef)
 /*!
 To determine if a window is a utility window
 that can remain active even while another window
-is “frontmost”, use this method.  This simply
+is ‚Äúfrontmost‚Äù, use this method.  This simply
 returns a flag previously set by a call to
 WindowInfo_SetWindowFloating().
 
@@ -758,7 +758,7 @@ particular dialog box, call this method.
 
 WARNING: The Window Info information is assumed to
          exist in the reference constant field of the
-		 dialog’s window.  If you provide a dialog whose
+		 dialog‚Äôs window.  If you provide a dialog whose
 		 window has no Window Info but has a non-nullptr
 		 reference constant, using the resultant pointer
 		 will most likely cause a pointer referencing
@@ -884,7 +884,7 @@ WindowInfo_SetDynamicResizing		(WindowInfo_Ref		inWindowFeaturesRefOrNullToSetGl
 /*!
 To specify if a window is a utility window that
 can remain active even while another window is
-“frontmost”, use this method.  This simply sets
+‚Äúfrontmost‚Äù, use this method.  This simply sets
 a flag that can subsequently be read by a call
 to WindowInfo_IsWindowFloating().
 
@@ -926,7 +926,7 @@ particular dialog box, call this method.
 
 WARNING: The Window Info information must be placed
          in the reference constant field of the specified
-		 dialog’s window.  If you provide a window that
+		 dialog‚Äôs window.  If you provide a window that
 		 needs to use the reference constant field for
 		 something else, you cannot use Window Info.
 
@@ -971,7 +971,7 @@ To specify the method that is invoked following
 a contextual menu event, use this method.  It is
 preferable to attach a callback to a window for
 contextual menus, so that contextual menu code
-can be placed with the rest of the window’s code,
+can be placed with the rest of the window‚Äôs code,
 and not in the event loop.  Therefore, try to
 use this routine on as many windows as possible.
 

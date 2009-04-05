@@ -3,9 +3,9 @@
 	PrefPanelGeneral.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -140,7 +140,7 @@ static HIViewID const	idMyRadioButtonNotifyDisplayMessage			= { 'NotM', 0/* ID *
 class My_GeneralPanelUI;
 
 /*!
-Implements the “Notification” tab.
+Implements the ‚ÄúNotification‚Äù tab.
 */
 struct My_GeneralTabNotification:
 public HIViewWrap
@@ -169,7 +169,7 @@ private:
 };
 
 /*!
-Implements the “Options” tab.
+Implements the ‚ÄúOptions‚Äù tab.
 */
 struct My_GeneralTabOptions:
 public HIViewWrap
@@ -193,7 +193,7 @@ private:
 };
 
 /*!
-Implements the “Special” tab.
+Implements the ‚ÄúSpecial‚Äù tab.
 */
 struct My_GeneralTabSpecial:
 public HIViewWrap
@@ -709,18 +709,18 @@ const
 		unless (Preferences_GetData(kPreferences_TagVisualBell, sizeof(visualBell), &visualBell, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			visualBell = false; // assume default, if preference can’t be found
+			visualBell = false; // assume default, if preference can‚Äôt be found
 		}
 		unless (Preferences_GetData(kPreferences_TagMarginBell, sizeof(marginBell), &marginBell, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			marginBell = false; // assume default, if preference can’t be found
+			marginBell = false; // assume default, if preference can‚Äôt be found
 		}
 		unless (Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(notifyOfBeeps),
 									&notifyOfBeeps, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			notifyOfBeeps = false; // assume default, if preference can’t be found
+			notifyOfBeeps = false; // assume default, if preference can‚Äôt be found
 		}
 		
 		// add all user sounds to the list of library sounds
@@ -740,7 +740,7 @@ const
 										&userPreferredSoundName, &actualSize) ==
 					kPreferences_ResultOK)
 			{
-				userPreferredSoundName = CFSTR(""); // assume default, if preference can’t be found
+				userPreferredSoundName = CFSTR(""); // assume default, if preference can‚Äôt be found
 				releaseUserPreferredSoundName = false;
 			}
 			
@@ -807,7 +807,7 @@ const
 										&notificationPreferences, &actualSize) ==
 					kPreferences_ResultOK)
 			{
-				notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can’t be found
+				notificationPreferences = kAlert_NotifyDisplayDiamondMark; // assume default, if preference can‚Äôt be found
 			}
 			SetControl32BitValue(radioNotifyNothing, kControlRadioButtonUncheckedValue);
 			SetControl32BitValue(radioNotifyBadgeDockIcon, kControlRadioButtonUncheckedValue);
@@ -954,7 +954,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagSimplifiedUserInterface, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -966,7 +966,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagDontAutoClose, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -978,7 +978,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -990,7 +990,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1002,7 +1002,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagPureInverse, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1014,7 +1014,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagCopySelectedText, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1026,7 +1026,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagCursorMovesPriorToDrops, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1038,7 +1038,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = true; // assume a value, if preference can’t be found
+			flag = true; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1050,7 +1050,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagMapBackquote, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1062,7 +1062,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1074,7 +1074,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagFocusFollowsMouse, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1086,7 +1086,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagMacrosMenuVisible, sizeof(flag), &flag,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			flag = false; // assume a value, if preference can’t be found
+			flag = false; // assume a value, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
 	}
@@ -1283,7 +1283,7 @@ const
 		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
 									&terminalCursorType, &actualSize) == kPreferences_ResultOK)
 		{
-			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference can’t be found
+			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference can‚Äôt be found
 		}
 		
 		// IMPORTANT: this must agree with what the NIB does
@@ -1324,12 +1324,12 @@ const
 									&cursorBlinks, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			cursorBlinks = false; // assume the cursor doesn’t flash, if preference can’t be found
+			cursorBlinks = false; // assume the cursor doesn‚Äôt flash, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxCursorFlashing, inOwningWindow), BooleanToCheckBoxValue(cursorBlinks));
 	}
 	
-	// ...create stacking origin’s controls and initialize using user preferences
+	// ...create stacking origin‚Äôs controls and initialize using user preferences
 	{
 		HIViewWrap		fieldViewLeft(idMyFieldStackingOriginLeft, inOwningWindow);
 		HIViewWrap		fieldViewTop(idMyFieldStackingOriginTop, inOwningWindow);
@@ -1340,7 +1340,7 @@ const
 									&stackingOrigin, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can’t be found
+			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can‚Äôt be found
 		}
 		SetControlNumericalText(fieldViewLeft, stackingOrigin.h);
 		SetControlNumericalText(fieldViewTop, stackingOrigin.v);
@@ -1360,7 +1360,7 @@ const
 									&actualSize) ==
 				kPreferences_ResultOK)
 		{
-			affectsFontSize = false; // assume default, if preference can’t be found
+			affectsFontSize = false; // assume default, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(radioButtonScreenSize, (false == affectsFontSize)
 													? kControlRadioButtonCheckedValue
@@ -1370,7 +1370,7 @@ const
 													: kControlRadioButtonUncheckedValue);
 	}
 	
-	// ...create “Copy Using Spaces For Tabs” controls and initialize using user preferences
+	// ...create ‚ÄúCopy Using Spaces For Tabs‚Äù controls and initialize using user preferences
 	{
 		HIViewWrap	fieldView(idMyFieldCopyUsingSpacesForTabs, inOwningWindow);
 		UInt16		copyTableThreshold = 0;
@@ -1380,7 +1380,7 @@ const
 									&copyTableThreshold, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			copyTableThreshold = 4; // assume 4 spaces per tab, if preference can’t be found
+			copyTableThreshold = 4; // assume 4 spaces per tab, if preference can‚Äôt be found
 		}
 		SetControlNumericalText(fieldView, copyTableThreshold);
 		fieldView << HIViewWrap_InstallKeyFilter(NumericalLimiterKeyFilterUPP());
@@ -1400,7 +1400,7 @@ const
 									&actualSize) ==
 				kPreferences_ResultOK)
 		{
-			newCommandShortcutEffect = kCommandNewSessionShell; // assume default, if preference can’t be found
+			newCommandShortcutEffect = kCommandNewSessionShell; // assume default, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(radioButtonDefault, kControlRadioButtonUncheckedValue);
 		SetControl32BitValue(radioButtonShell, kControlRadioButtonUncheckedValue);
@@ -1473,15 +1473,15 @@ operator =	(CFRetainRelease const&		inCopy)
 
 /*!
 This method, of SessionFactory_TerminalWindowOpProcPtr
-form, will update the specified window’s terminal
+form, will update the specified window‚Äôs terminal
 screens appropriately based on the value of the
 preference indicated by the given General preference
 tag.
 
 Currently, this method only supports changing of
-the “use background picture” or “don’t dim background
-session windows” preferences.  If one of these tags
-is given, then the specified screen’s port rectangle
+the ‚Äúuse background picture‚Äù or ‚Äúdon‚Äôt dim background
+session windows‚Äù preferences.  If one of these tags
+is given, then the specified screen‚Äôs port rectangle
 is invalidated (which will cause the picture to
 appear or disappear).  In the case of a background
 picture, the per-screen flag is also updated to
@@ -1515,7 +1515,7 @@ changePreferenceUpdateScreenTerminalWindowOp	(TerminalWindowRef		inTerminalWindo
 
 
 /*!
-Adjusts the controls in the “General” preference panel
+Adjusts the controls in the ‚ÄúGeneral‚Äù preference panel
 to match the specified change in dimensions of its
 container. 
 
@@ -1547,7 +1547,7 @@ deltaSizePanelContainerHIView	(HIViewRef		UNUSED_ARGUMENT(inView),
 /*!
 This routine, of standard PanelChangedProcPtr form,
 is invoked by the Panel module whenever a property
-of one of the preferences dialog’s panels changes.
+of one of the preferences dialog‚Äôs panels changes.
 
 (3.0)
 */
@@ -1623,11 +1623,11 @@ panelChanged	(Panel_Ref			inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate control sizes
 		{
-			// this notification is currently ignored, but shouldn’t be...
+			// this notification is currently ignored, but shouldn‚Äôt be...
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -1753,7 +1753,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				break;
 			
 			case kCommandPrefBellOff:
-				// do not “handle” the event so the pop-up menu is updated, etc.
+				// do not ‚Äúhandle‚Äù the event so the pop-up menu is updated, etc.
 				{
 					CFStringRef		offCFString = CFSTR("off"); // see "Preferences.h"; this value is specially recognized
 					
@@ -1764,7 +1764,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				break;
 			
 			case kCommandPrefBellSystemAlert:
-				// play the system alert sound for the user, but do not “handle”
+				// play the system alert sound for the user, but do not ‚Äúhandle‚Äù
 				// the event so the pop-up menu is updated, etc.
 				Sound_StandardAlert();
 				{
@@ -1777,7 +1777,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				break;
 			
 			case kCommandPrefBellLibrarySound:
-				// play the indicated sound for the user, but do not “handle”
+				// play the indicated sound for the user, but do not ‚Äúhandle‚Äù
 				// the event so the pop-up menu is updated, etc.
 				if (received.attributes & kHICommandFromMenu)
 				{
@@ -1798,7 +1798,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldn’t be able to select menu commands while the window is open
+				// wouldn‚Äôt be able to select menu commands while the window is open
 				result = eventNotHandledErr;
 				break;
 			}
@@ -1981,7 +1981,7 @@ value has been toggled to its new value.
 The appropriate preference will have been updated
 in memory using Preferences_SetData().
 
-If the specified view is “known”, "true" is
+If the specified view is ‚Äúknown‚Äù, "true" is
 returned to indicate that the click was handled.
 Otherwise, "false" is returned.
 
@@ -2040,8 +2040,8 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 			{
 				Preferences_SetData(kPreferences_TagPureInverse,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
-				// there’s no real reason to do this, since background window text selections will not
-				// have an inverted appearance anyway; re-rendering them all wouldn’t change anything
+				// there‚Äôs no real reason to do this, since background window text selections will not
+				// have an inverted appearance anyway; re-rendering them all wouldn‚Äôt change anything
 				//SessionFactory_ForEveryTerminalWindowDo(changePreferenceUpdateScreenTerminalWindowOp,
 				//										nullptr/* undefined */, kPreferences_TagPureInverse,
 				//										nullptr/* undefined */);

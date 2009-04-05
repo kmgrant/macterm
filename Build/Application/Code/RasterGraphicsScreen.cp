@@ -3,9 +3,9 @@
 	RasterGraphicsScreen.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -476,7 +476,7 @@ MacRGraster		(char*		data,
 				 short		inY2,
 				 short		rowbytes)
 {
-	short		result = 0;	// ÒsuccessÓ is 0
+	short		result = 0;	// â€œsuccessâ€ is 0
 	short		currentWindowID = getCurrentICRWindowID();
 	
 	
@@ -534,7 +534,7 @@ MacRGmap	(short		start,
 			 short		length,
 			 char*		data)
 {
-	short		result = 0; // presently undefined; ÒsuccessÓ is 0
+	short		result = 0; // presently undefined; â€œsuccessâ€ is 0
 	short		i = 0;
 	char*		p = data;
 	RGBColor	color;

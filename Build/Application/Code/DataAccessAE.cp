@@ -3,9 +3,9 @@
 	DataAccessAE.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -238,19 +238,19 @@ DataAccessAE_HandleSetData		(AppleEvent const*	inAppleEventPtr,
 #pragma mark -
 
 /*!
-This routine indirectly handles all Òget dataÓ
+This routine indirectly handles all â€œget dataâ€
 Apple Events.
 
 When a script asks for data, AppleScript will
 figure out what is being said (for example,
-"window 1" means Òa window referenced by
-absolute indexÓ) and invoke an object accessor
+"window 1" means â€œa window referenced by
+absolute indexâ€) and invoke an object accessor
 to construct a token (see "GetObjectAE.cp").
 The token that is constructed is INTERNAL to
 MacTelnet, and is passed in "inFromWhichObject".
 This routine uses the token to determine the
 nature of the request, and therefore how to
-handle it.  Most ÒdataÓ is attached to a high
+handle it.  Most â€œdataâ€ is attached to a high
 level object as a property, so usually the
 token will be a property token.
 
@@ -270,12 +270,12 @@ getData		(AEDesc*	inFromWhichObject,
 	
 	(OSStatus)AppleEventUtilities_InitAEDesc(&tokenDescriptor);
 	
-	Console_WriteLine("AppleScript: Òget dataÓ event");
+	Console_WriteLine("AppleScript: â€œget dataâ€ event");
 	Console_WriteValueFourChars("desired type", inGetDataOfThisType);
 	
 	if (inFromWhichObject->descriptorType == typeObjectSpecifier)
 	{
-		// all thatÕs known is that this is an object; resolve it into a known object type
+		// all thatâ€™s known is that this is an object; resolve it into a known object type
 		// using a previously-installed OSL object accessor (see "InstallAE.cp" for details)
 		Console_WriteLine("given an object reference");
 		result = AEResolve(inFromWhichObject, kAEIDoMinimum, &tokenDescriptor);
@@ -345,7 +345,7 @@ getData		(AEDesc*	inFromWhichObject,
 
 
 /*!
-This routine indirectly handles all Òget data sizeÓ
+This routine indirectly handles all â€œget data sizeâ€
 Apple Events.
 
 (3.0)
@@ -364,12 +364,12 @@ getDataSize		(AEDesc*	inFromWhichObject,
 	
 	(OSStatus)AppleEventUtilities_InitAEDesc(&sizeInfoDescriptor);
 	
-	Console_WriteLine("AppleScript: Òget data sizeÓ event");
+	Console_WriteLine("AppleScript: â€œget data sizeâ€ event");
 	Console_WriteValueFourChars("desired type", inGetDataOfThisType);
 	
 	if (inFromWhichObject->descriptorType == typeObjectSpecifier)
 	{
-		// all thatÕs known is that this is an object; resolve it into a known object type
+		// all thatâ€™s known is that this is an object; resolve it into a known object type
 		// using a previously-installed OSL object accessor (see "InstallAE.cp" for details)
 		Console_WriteLine("given an object reference");
 		result = AEResolve(inFromWhichObject, kAEIDoMinimum, &sizeInfoDescriptor);
@@ -430,19 +430,19 @@ getDataSize		(AEDesc*	inFromWhichObject,
 
 
 /*!
-This routine indirectly handles all Òset dataÓ
+This routine indirectly handles all â€œset dataâ€
 Apple Events.
 
 When a script supplies data, AppleScript will
 figure out what is being said (for example,
-"window 1" means Òa window referenced by
-absolute indexÓ) and invoke an object accessor
+"window 1" means â€œa window referenced by
+absolute indexâ€) and invoke an object accessor
 to construct a token (see "GetObjectAE.cp").
 The token that is constructed is INTERNAL to
 MacTelnet, and is passed in "inForWhichObject".
 This routine uses the token to determine the
 nature of the request, and therefore how to
-handle it.  Most ÒdataÓ is attached to a high
+handle it.  Most â€œdataâ€ is attached to a high
 level object as a property, so usually the
 token will be a property token.
 
@@ -460,11 +460,11 @@ setData		(AEDesc const*		inForWhichObject,
 	
 	(OSStatus)AppleEventUtilities_InitAEDesc(&tokenDescriptor);
 	
-	Console_WriteLine("AppleScript: Òset dataÓ event");
+	Console_WriteLine("AppleScript: â€œset dataâ€ event");
 	
 	if (inForWhichObject->descriptorType == typeObjectSpecifier)
 	{
-		// all thatÕs known is that this is an object; resolve it into a known object type
+		// all thatâ€™s known is that this is an object; resolve it into a known object type
 		// using a previously-installed OSL object accessor (see "InstallAE.cp" for details)
 		Console_WriteLine("given an object reference");
 		result = AEResolve(inForWhichObject, kAEIDoMinimum, &tokenDescriptor);

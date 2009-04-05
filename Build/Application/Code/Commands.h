@@ -1,6 +1,6 @@
 /*!	\file Commands.h
 	\brief A list of all command IDs, and a mechanism for
-	invoking MacTelnet’s main features.
+	invoking MacTelnet‚Äôs main features.
 	
 	A command is a series of primitive actions that leads to a
 	result; usually, there is a menu item for each command (but
@@ -10,9 +10,9 @@
 	Note that although commands would seem to highly correlate
 	with AppleScript, this is NOT the case.  The scripting terms
 	tend to be more primitive and object-oriented and not as
-	limited as “execute command X”.  For example, the command
-	Minimize Window might actually be represented as “set the
-	collapsed of the window whose title is "foobar" to true”
+	limited as ‚Äúexecute command X‚Äù.  For example, the command
+	Minimize Window might actually be represented as ‚Äúset the
+	collapsed of the window whose title is "foobar" to true‚Äù
 	when recorded into a script.  Therefore code that implements
 	scripting terms should NOT use this module in general, to
 	avoid possible sources of recursion.
@@ -20,9 +20,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -97,7 +97,7 @@ Where appropriate, command IDs for actions that the OS is
 familiar with - such as creating files, closing windows,
 printing documents, etc. - match the IDs that the OS itself
 uses.  This has a number of advantages.  For one, a lot of
-things “just work right” as a result (the OS knows when to
+things ‚Äújust work right‚Äù as a result (the OS knows when to
 disable the Minimize Window menu command, for example, since
 it can tell whether the frontmost window has a minimization
 button).  Also, using standard commands means that MacTelnet
@@ -126,7 +126,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandNewSessionByFavoriteName		'NFav'
 #define kCommandNewSessionLoginShell			'NLgS'
 #define kCommandNewSessionShell					'NShS'
-#define kCommandNewSessionDialog				'New…'
+#define kCommandNewSessionDialog				'NSDg'
 #define kCommandOpenSession						kHICommandOpen
 #define kCommandCloseConnection					kHICommandClose
 #define kCommandSaveSession						kHICommandSaveAs
@@ -308,8 +308,8 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandKeypadFunction12				'VF12'
 #define kCommandKeypadFunction13				'VF13'
 #define kCommandKeypadFunction14				'VF14'
-#define kCommandKeypadFunction15				'VF15' //!< “help”
-#define kCommandKeypadFunction16				'VF16' //!< “do”
+#define kCommandKeypadFunction15				'VF15' //!< ‚Äúhelp‚Äù
+#define kCommandKeypadFunction16				'VF16' //!< ‚Äúdo‚Äù
 #define kCommandKeypadFunction17				'VF17'
 #define kCommandKeypadFunction18				'VF18'
 #define kCommandKeypadFunction19				'VF19'
@@ -374,92 +374,92 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEditCommandLine					'ECmd'		// multiple interfaces
 #define kCommandTerminalDefault					'TrmD'		// multiple interfaces
 #define kCommandTerminalByFavoriteName			'TFav'		// multiple interfaces
-#define kCommandShowHidePrefCollectionsDrawer	'SPCD'		// “Preferences“ window
-#define kCommandDisplayPrefPanelFormats			'SPrF'		// “Preferences“ window
+#define kCommandShowHidePrefCollectionsDrawer	'SPCD'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelFormats			'SPrF'		// ‚ÄúPreferences‚Äú window
 #define kCommandDisplayPrefPanelFormatsANSI		'SPFA'		// multiple interfaces
 #define kCommandDisplayPrefPanelFormatsNormal	'SPFN'		// multiple interfaces
-#define kCommandDisplayPrefPanelGeneral			'SPrG'		// “Preferences“ window
-#define kCommandDisplayPrefPanelKiosk			'SPrK'		// “Preferences“ window
-#define kCommandDisplayPrefPanelMacros			'SPrM'		// “Preferences“ window
-#define kCommandDisplayPrefPanelScripts			'SPrC'		// “Preferences“ window
-#define kCommandDisplayPrefPanelSessions		'SPrS'		// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsDataFlow	'SPSD'	// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsGraphics	'SPSG'	// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsKeyboard	'SPSK'	// “Preferences“ window
-#define kCommandDisplayPrefPanelSessionsResource	'SPSR'	// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminals		'SPrT'		// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsEmulation	'SPTE'	// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsHacks	'SPTH'		// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsOptions	'SPTO'	// “Preferences“ window
-#define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
-#define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
-#define kCommandPrefCursorBlock					'CrBl'		// “Preferences” window
-#define kCommandPrefCursorUnderline				'CrUn'		// “Preferences” window
-#define kCommandPrefCursorVerticalBar			'CrVB'		// “Preferences” window
-#define kCommandPrefCursorThickUnderline		'CrBU'		// “Preferences” window
-#define kCommandPrefCursorThickVerticalBar		'CrBV'		// “Preferences” window
-#define kCommandPrefWindowResizeSetsScreenSize	'WRSS'		// “Preferences” window
-#define kCommandPrefWindowResizeSetsFontSize	'WRFS'		// “Preferences” window
-#define kCommandPrefCommandNOpensDefault		'CNDf'		// “Preferences” window
-#define kCommandPrefCommandNOpensShell			'CNSh'		// “Preferences” window
-#define kCommandPrefCommandNOpensLogInShell		'CNLI'		// “Preferences” window
-#define kCommandPrefCommandNOpensCustomSession	'CNDg'		// “Preferences” window
-#define kCommandPrefBellOff						'NoBp'		// “Preferences” window
-#define kCommandPrefBellSystemAlert				'BpBl'		// “Preferences” window
-#define kCommandPrefBellLibrarySound			'BpLb'		// “Preferences” window
-#define kCommandToggleMacrosMenuVisibility		'McMn'		// “Preferences” window
-#define kCommandEditMacroKey					'SMKy'		// “Preferences” window
-#define kCommandSetMacroKeyTypeOrdinaryChar		'MKCh'		// “Preferences” window
-#define kCommandSetMacroKeyTypeBackwardDelete	'MKBD'		// “Preferences” window
-#define kCommandSetMacroKeyTypeForwardDelete	'MKFD'		// “Preferences” window
-#define kCommandSetMacroKeyTypeHome				'MKHm'		// “Preferences” window
-#define kCommandSetMacroKeyTypeEnd				'MKEd'		// “Preferences” window
-#define kCommandSetMacroKeyTypePageUp			'MKPU'		// “Preferences” window
-#define kCommandSetMacroKeyTypePageDown			'MKPD'		// “Preferences” window
-#define kCommandSetMacroKeyTypeUpArrow			'MKUA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeDownArrow		'MKDA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeLeftArrow		'MKLA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeRightArrow		'MKRA'		// “Preferences” window
-#define kCommandSetMacroKeyTypeClear			'MKCl'		// “Preferences” window
-#define kCommandSetMacroKeyTypeEscape			'MKEs'		// “Preferences” window
-#define kCommandSetMacroKeyTypeReturn			'MKRt'		// “Preferences” window
-#define kCommandSetMacroKeyTypeEnter			'MKEn'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF1				'MKF1'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF2				'MKF2'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF3				'MKF3'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF4				'MKF4'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF5				'MKF5'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF6				'MKF6'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF7				'MKF7'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF8				'MKF8'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF9				'MKF9'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF10				'MKFa'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF11				'MKFb'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF12				'MKFc'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF13				'MKFd'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF14				'MKFe'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF15				'MKFf'		// “Preferences” window
-#define kCommandSetMacroKeyTypeF16				'MKFg'		// “Preferences” window
-#define kCommandSetMacroKeyModifierCommand		'McMC'		// “Preferences” window
-#define kCommandSetMacroKeyModifierControl		'McML'		// “Preferences” window
-#define kCommandSetMacroKeyModifierOption		'McMO'		// “Preferences” window
-#define kCommandSetMacroKeyModifierShift		'McMS'		// “Preferences” window
-#define kCommandSetMacroKeyAllowOnlyInMacroMode	'XRMM'		// “Preferences” window
-#define kCommandSetMacroActionEnterText			'MAET'		// “Preferences” window
-#define kCommandSetMacroActionEnterTextVerbatim	'MAEV'		// “Preferences” window
-#define kCommandSetMacroActionOpenURL			'MAOU'		// “Preferences” window
-#define kCommandSetMacroActionNewWindowCommand	'MANW'		// “Preferences” window
-#define kCommandSetMacroActionBeginMacroMode	'MAMM'		// “Preferences” window
-#define kCommandPreferencesNewFavorite			'NewC'		// “Preferences” window
-#define kCommandPreferencesDuplicateFavorite	'DupC'		// “Preferences” window
-#define kCommandPreferencesRenameFavorite		'RnmC'		// “Preferences” window
-#define kCommandPreferencesDeleteFavorite		'DelC'		// “Preferences” window
-#define kCommandPreferencesMoveFavoriteUp		'MvUC'		// “Preferences” window
-#define kCommandPreferencesMoveFavoriteDown		'MvDC'		// “Preferences” window
-#define kCommandSetTEKModeDisabled				'RTNo'		// “Preferences” window
-#define kCommandSetTEKModeTEK4014				'4014'		// “Preferences” window
-#define kCommandSetTEKModeTEK4105				'4105'		// “Preferences” window
-#define kCommandSetTEKPageClearsScreen			'XPCS'		// “Preferences” window
+#define kCommandDisplayPrefPanelGeneral			'SPrG'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelKiosk			'SPrK'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelMacros			'SPrM'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelScripts			'SPrC'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelSessions		'SPrS'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelSessionsDataFlow	'SPSD'	// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelSessionsGraphics	'SPSG'	// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelSessionsKeyboard	'SPSK'	// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelSessionsResource	'SPSR'	// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelTerminals		'SPrT'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelTerminalsEmulation	'SPTE'	// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelTerminalsHacks	'SPTH'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelTerminalsOptions	'SPTO'	// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// ‚ÄúPreferences‚Äú window
+#define kCommandDisplayPrefPanelTranslations	'SPrX'		// ‚ÄúPreferences‚Äú window
+#define kCommandPrefCursorBlock					'CrBl'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCursorUnderline				'CrUn'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCursorVerticalBar			'CrVB'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCursorThickUnderline		'CrBU'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCursorThickVerticalBar		'CrBV'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefWindowResizeSetsScreenSize	'WRSS'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefWindowResizeSetsFontSize	'WRFS'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCommandNOpensDefault		'CNDf'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCommandNOpensShell			'CNSh'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCommandNOpensLogInShell		'CNLI'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefCommandNOpensCustomSession	'CNDg'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefBellOff						'NoBp'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefBellSystemAlert				'BpBl'		// ‚ÄúPreferences‚Äù window
+#define kCommandPrefBellLibrarySound			'BpLb'		// ‚ÄúPreferences‚Äù window
+#define kCommandToggleMacrosMenuVisibility		'McMn'		// ‚ÄúPreferences‚Äù window
+#define kCommandEditMacroKey					'SMKy'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeOrdinaryChar		'MKCh'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeBackwardDelete	'MKBD'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeForwardDelete	'MKFD'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeHome				'MKHm'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeEnd				'MKEd'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypePageUp			'MKPU'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypePageDown			'MKPD'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeUpArrow			'MKUA'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeDownArrow		'MKDA'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeLeftArrow		'MKLA'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeRightArrow		'MKRA'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeClear			'MKCl'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeEscape			'MKEs'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeReturn			'MKRt'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeEnter			'MKEn'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF1				'MKF1'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF2				'MKF2'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF3				'MKF3'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF4				'MKF4'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF5				'MKF5'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF6				'MKF6'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF7				'MKF7'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF8				'MKF8'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF9				'MKF9'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF10				'MKFa'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF11				'MKFb'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF12				'MKFc'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF13				'MKFd'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF14				'MKFe'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF15				'MKFf'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyTypeF16				'MKFg'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyModifierCommand		'McMC'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyModifierControl		'McML'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyModifierOption		'McMO'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyModifierShift		'McMS'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroKeyAllowOnlyInMacroMode	'XRMM'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroActionEnterText			'MAET'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroActionEnterTextVerbatim	'MAEV'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroActionOpenURL			'MAOU'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroActionNewWindowCommand	'MANW'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetMacroActionBeginMacroMode	'MAMM'		// ‚ÄúPreferences‚Äù window
+#define kCommandPreferencesNewFavorite			'NewC'		// ‚ÄúPreferences‚Äù window
+#define kCommandPreferencesDuplicateFavorite	'DupC'		// ‚ÄúPreferences‚Äù window
+#define kCommandPreferencesRenameFavorite		'RnmC'		// ‚ÄúPreferences‚Äù window
+#define kCommandPreferencesDeleteFavorite		'DelC'		// ‚ÄúPreferences‚Äù window
+#define kCommandPreferencesMoveFavoriteUp		'MvUC'		// ‚ÄúPreferences‚Äù window
+#define kCommandPreferencesMoveFavoriteDown		'MvDC'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetTEKModeDisabled				'RTNo'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetTEKModeTEK4014				'4014'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetTEKModeTEK4105				'4105'		// ‚ÄúPreferences‚Äù window
+#define kCommandSetTEKPageClearsScreen			'XPCS'		// ‚ÄúPreferences‚Äù window
 #define kCommandSetEmulatorANSIBBS				'EmAB'		// multiple interfaces
 #define kCommandSetEmulatorVT100				'E100'		// multiple interfaces
 #define kCommandSetEmulatorVT102				'E102'		// multiple interfaces
@@ -474,9 +474,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetScrollbackTypeDistributed	'ScDs'		// multiple interfaces
 #define kCommandSetScrollbackUnitsRows			'SbUR'		// multiple interfaces
 #define kCommandSetScrollbackUnitsKilobytes		'SbUK'		// multiple interfaces
-#define kCommandRetrySearch						'RFnd'		// “Find” dialog
-#define kCommandResetANSIColors					'ANSD'		// “Preferences” window
-#define kCommandOpenScriptMenuItemsFolder		'OSMI'		// “Preferences” window
+#define kCommandRetrySearch						'RFnd'		// ‚ÄúFind‚Äù dialog
+#define kCommandResetANSIColors					'ANSD'		// ‚ÄúPreferences‚Äù window
+#define kCommandOpenScriptMenuItemsFolder		'OSMI'		// ‚ÄúPreferences‚Äù window
 #define kCommandEditInterruptKey				'SIKy'		// multiple interfaces
 #define kCommandEditResumeKey					'SRKy'		// multiple interfaces
 #define kCommandEditSuspendKey					'SSKy'		// multiple interfaces
@@ -515,7 +515,7 @@ typedef Commands_ExecutionEventContext*		Commands_ExecutionEventContextPtr;
 //!\name Executing Commands
 //@{
 
-// WARNING: NOT THREAD SAFE, USE Commands_ExecuteByIDUsingEvent() TO INSERT A COMMAND INTO THE MAIN THREAD’S QUEUE
+// WARNING: NOT THREAD SAFE, USE Commands_ExecuteByIDUsingEvent() TO INSERT A COMMAND INTO THE MAIN THREAD‚ÄôS QUEUE
 Boolean
 	Commands_ExecuteByID					(UInt32						inCommandID);
 

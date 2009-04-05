@@ -17,10 +17,10 @@
 	  will certainly change as strings are added, but a focused
 	  file only changes if its underlying UI object is updated)
 	- debugging is easier (if you open a dialog and see that
-	  some of its strings arenÕt localized, you can fix it by
+	  some of its strings arenâ€™t localized, you can fix it by
 	  editing just one file - and you know exactly which file!)
 	
-	Also, since on Mac OS X you canÕt have a unique localized
+	Also, since on Mac OS X you canâ€™t have a unique localized
 	string value unless its key (English wording) is unique,
 	the goal is to collect strings that are unlikely to contain
 	any duplicates.  For example, if I stuck the "Preferences"
@@ -31,9 +31,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or

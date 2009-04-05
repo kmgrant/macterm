@@ -14,9 +14,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -56,23 +56,23 @@ typedef UInt16 Folder_Ref;
 enum
 {
 	// folders defined by MacTelnet
-	kFolder_RefApplicationSupport = 1,			// MacTelnetÕs folder in the Application Support folder.
+	kFolder_RefApplicationSupport = 1,			// MacTelnetâ€™s folder in the Application Support folder.
 	
-	kFolder_RefFavorites = 2,					// MacTelnetÕs ÒFavoritesÓ folder, in the preferences folder.
+	kFolder_RefFavorites = 2,					// MacTelnetâ€™s â€œFavoritesâ€ folder, in the preferences folder.
 	
-	kFolder_RefPreferences = 3,					// The folder ÒMacTelnet PreferencesÓ, in the preferences
+	kFolder_RefPreferences = 3,					// The folder â€œMacTelnet Preferencesâ€, in the preferences
 												//   folder of the user currently logged in.
 	
-	kFolder_RefScriptsMenuItems = 4,			// MacTelnetÕs ÒScripts Menu ItemsÓ folder.
+	kFolder_RefScriptsMenuItems = 4,			// MacTelnetâ€™s â€œScripts Menu Itemsâ€ folder.
 	
-	kFolder_RefStartupItems = 5,				// MacTelnetÕs ÒStartup ItemsÓ folder, in MacTelnetÕs
+	kFolder_RefStartupItems = 5,				// MacTelnetâ€™s â€œStartup Itemsâ€ folder, in MacTelnetâ€™s
 												//   preferences folder.
 	
 	kFolder_RefUserLogs = 6,					// where the MacTelnet Debugging Log goes, or any other log
 	
-	kFolder_RefUserMacroFavorites = 7,			// ÒMacro SetsÓ folder, in the Favorites folder.
+	kFolder_RefUserMacroFavorites = 7,			// â€œMacro Setsâ€ folder, in the Favorites folder.
 	
-	kFolder_RefRecentSessions = 8,				// ÒRecent SessionsÓ folder, in MacTelnetÕs preferences folder.
+	kFolder_RefRecentSessions = 8,				// â€œRecent Sessionsâ€ folder, in MacTelnetâ€™s preferences folder.
 	
 	// folders defined by Mac OS X
 	kFolder_RefMacApplicationSupport = 9,		// the Application Support folder
@@ -96,7 +96,7 @@ enum
 
 #pragma mark Public Methods
 
-// RETURNS A FOLDER, CREATING IT IF IT DOESNÕT EXIST (THE FILE NAME IS ALWAYS AN EMPTY STRING)
+// RETURNS A FOLDER, CREATING IT IF IT DOESNâ€™T EXIST (THE FILE NAME IS ALWAYS AN EMPTY STRING)
 OSStatus
 	Folder_GetFSRef			(Folder_Ref		inFolderType,
 							 FSRef&			outFolderFSRef);

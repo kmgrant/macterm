@@ -10,7 +10,7 @@
 /*###############################################################
 
 	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -112,7 +112,7 @@ private:
 
 /*!
 Simplifies event specifications further by allowing the
-class to be “common” to multiple kind specifications.
+class to be ‚Äúcommon‚Äù to multiple kind specifications.
 */
 class CarbonEventSetInClass: public CarbonEventSet
 {
@@ -151,7 +151,7 @@ handler, as well as removing it and cleaning it up when
 finished.
 
 Event types are given as an STL container of STL pairs of
-integers, in the order “event class, event kind”.  The
+integers, in the order ‚Äúevent class, event kind‚Äù.  The
 recommended input is a CarbonEventSet, but if you have
 other STL containers they should also work fine.  If
 CarbonEventSet is used, see CarbonEventHandlerWrap.

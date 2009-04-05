@@ -9,9 +9,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2006 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -82,7 +82,7 @@ alone, assume that the given item is the one you should
 modify and assume the item represents the given command.
 
 A state tracker should explicitly set any aspect of an
-itemÕs state that could change, such as its mark, icon,
+itemâ€™s state that could change, such as its mark, icon,
 or text.  The enabled state, however, should not be set,
 but rather returned as a Boolean flag from the function
 call (this is for convenience, as it is the most common
@@ -98,7 +98,7 @@ attached to it as its reference constant.  Each such
 method reports on the proper state for one or more
 menu items.  Then, prior to the user selecting from the
 menu bar, using a key equivalent, or opening a contextual
-menu, every commandÕs state tracking method will be
+menu, every commandâ€™s state tracking method will be
 invoked to determine the correct state for each command.
 */
 typedef Boolean (*MenuCommandStateTrackerProcPtr)	(UInt32			inCommandID,

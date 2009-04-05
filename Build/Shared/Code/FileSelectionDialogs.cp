@@ -3,7 +3,7 @@
 	FileSelectionDialogs.cp
 	
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -78,17 +78,17 @@ FileSelectionDialogs_CompleteSave	(NavReplyRecord*	inoutReplyPtr)
 Within a Navigation Services callback for a window-modal or
 modeless Carbon-based save dialog, retrieve the reply record
 and use this routine to automatically create a reference to
-the user’s save file.  If necessary, the file is created; in
+the user‚Äôs save file.  If necessary, the file is created; in
 this case, the specified creator and type codes are also
 assigned to the new file automatically (but if the file
 already exists, its type and creator are not touched).  This
 routine uses Unicode filenames.
 
 A temporary file is also created, into which you can write
-the file’s data before saving it.  This is just safer; you
+the file‚Äôs data before saving it.  This is just safer; you
 can use FSExchangeObjects() after writing data to the temporary
-file, in order to “save” the data where the user wants it, and
-then use FSDeleteObject() to delete the user’s original file
+file, in order to ‚Äúsave‚Äù the data where the user wants it, and
+then use FSDeleteObject() to delete the user‚Äôs original file
 that is then junk.
 
 Carbon only - used for modeless or window-modal save dialogs.
@@ -232,7 +232,7 @@ FileSelectionDialogs_GetDirectory	(ConstStr255Param		inPromptMessage,
 	setUpWTitleProcessName(&dialogOptions, inDialogTitle);
 	dialogOptions.preferenceKey = inPrefKey;
 	
-	// display “choose directory” dialog
+	// display ‚Äúchoose directory‚Äù dialog
 	Embedding_DeactivateFrontmostWindow();
 	result = NavChooseFolder(nullptr, &theReply, &dialogOptions, eventUPP,
 								nullptr, (NavCallBackUserData)nullptr);
@@ -344,7 +344,7 @@ FileSelectionDialogs_GetFSSpecFromAEDesc	(AEDesc const*		inAEDescPtr,
 This method can be used as a file filter procedure for a
 Navigation Services dialog box when no special handling
 whatsoever is desired.  A return value of true means
-“display query item”; a value of false means that the
+‚Äúdisplay query item‚Äù; a value of false means that the
 item should not be displayed.
 
 (1.0)
@@ -373,7 +373,7 @@ FileSelectionDialogs_NothingFilterProc	(AEDesc*				UNUSED_ARGUMENT(inItem),
 
 
 /*!
-This routine is adequate for 99% of “save file” dialog
+This routine is adequate for 99% of ‚Äúsave file‚Äù dialog
 needs on Mac OS 9.
 
 (1.0)
@@ -484,7 +484,7 @@ To automatically set up a Navigation Services
 dialog options structure to contain a window
 title consisting of the specified title, a
 colon, and the name of the current process as
-a “client name”, use this method.
+a ‚Äúclient name‚Äù, use this method.
 
 On output, the "windowTitle" and "clientName"
 fields of the NavDialogOptions structure are

@@ -3,9 +3,9 @@
 	GetElementAE.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -142,7 +142,7 @@ GetElementAE_ApplicationImplicit	(AEDesc*	outObjectOfDesiredClass)
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “application” implicitly");
+	Console_WriteLine("AppleScript: ‚Äúapplication‚Äù implicitly");
 	token.flags = 0;
 	token.genericPointer = nullptr;
 	token.as.object.data.application.process.highLongOfPSN = 0;
@@ -212,7 +212,7 @@ GetElementAE_WindowFromNull		(DescType			inDesiredClass,
 			break;
 		
 		case formTest:
-			// handled automatically by installed “count” and “compare” object callbacks
+			// handled automatically by installed ‚Äúcount‚Äù and ‚Äúcompare‚Äù object callbacks
 			break;
 		
 		default:
@@ -238,7 +238,7 @@ Since not all windows represent all objects,
 obviously you must also provide a particular window
 that can indeed be used to create the desired class
 - for example, passing the Preferences window while
-requesting a terminal window class won’t work!
+requesting a terminal window class won‚Äôt work!
 
 (3.0)
 */
@@ -340,7 +340,7 @@ getWindowByAbsolutePosition		(DescType			inDesiredClass,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “window” by absolute position");
+	Console_WriteLine("AppleScript: ‚Äúwindow‚Äù by absolute position");
 	if ((kTotalDocumentWindows > 0) || (kTotalFloatingWindows > 0))
 	{
 		Boolean			handled = false;	// recognized request?
@@ -362,7 +362,7 @@ getWindowByAbsolutePosition		(DescType			inDesiredClass,
 			}
 			else
 			{
-				// the index is “virtual”, and is defined as the index into the
+				// the index is ‚Äúvirtual‚Äù, and is defined as the index into the
 				// sum of the document and floating window counts, traversing
 				// those lists in order; therefore, the index of (1 + number of
 				// document windows) is the first floating window, etc.
@@ -370,7 +370,7 @@ getWindowByAbsolutePosition		(DescType			inDesiredClass,
 				
 				Console_WriteValue("window index", windowIndex);
 				
-				// decide what window is being specified; negative indices mean “search in reverse”
+				// decide what window is being specified; negative indices mean ‚Äúsearch in reverse‚Äù
 				if (windowIndex > 0)
 				{
 					SInt32 const	kDocumentIndex = windowIndex;
@@ -579,7 +579,7 @@ getWindowByName			(DescType			inDesiredClass,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “window” by name");
+	Console_WriteLine("AppleScript: ‚Äúwindow‚Äù by name");
 	result = AppleEventUtilities_CopyDescriptorDataAs(cStringClass, inReference, name + 1,
 														255 * sizeof(UInt8), &actualSize);
 	
@@ -635,7 +635,7 @@ getWindowByRelativePosition		(DescType			inDesiredClass,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “window” by relative position");
+	Console_WriteLine("AppleScript: ‚Äúwindow‚Äù by relative position");
 	if (EventLoop_ReturnRealFrontWindow() != nullptr)
 	{
 		DescType	windowRelationship = 0;	// kAENext or kAEPrevious

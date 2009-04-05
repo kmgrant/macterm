@@ -5,9 +5,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2006 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -46,12 +46,12 @@
 typedef UInt16 CommonEventHandlers_ChangedBoundsEdges;
 enum
 {
-	kCommonEventHandlers_ChangedBoundsEdgeLeft			= (1 << 0),		//!< set if you want to know when a viewÕs left edge changes
-	kCommonEventHandlers_ChangedBoundsEdgeTop			= (1 << 1),		//!< set if you want to know when a viewÕs top edge changes
-	kCommonEventHandlers_ChangedBoundsEdgeRight			= (1 << 2),		//!< set if you want to know when a viewÕs right edge changes
-	kCommonEventHandlers_ChangedBoundsEdgeBottom		= (1 << 3),		//!< set if you want to know when a viewÕs bottom edge changes
-	kCommonEventHandlers_ChangedBoundsEdgeSeparationH	= (1 << 4),		//!< set if you want to know when a viewÕs width changes
-	kCommonEventHandlers_ChangedBoundsEdgeSeparationV	= (1 << 5),		//!< set if you want to know when a viewÕs height changes
+	kCommonEventHandlers_ChangedBoundsEdgeLeft			= (1 << 0),		//!< set if you want to know when a viewâ€™s left edge changes
+	kCommonEventHandlers_ChangedBoundsEdgeTop			= (1 << 1),		//!< set if you want to know when a viewâ€™s top edge changes
+	kCommonEventHandlers_ChangedBoundsEdgeRight			= (1 << 2),		//!< set if you want to know when a viewâ€™s right edge changes
+	kCommonEventHandlers_ChangedBoundsEdgeBottom		= (1 << 3),		//!< set if you want to know when a viewâ€™s bottom edge changes
+	kCommonEventHandlers_ChangedBoundsEdgeSeparationH	= (1 << 4),		//!< set if you want to know when a viewâ€™s width changes
+	kCommonEventHandlers_ChangedBoundsEdgeSeparationV	= (1 << 5),		//!< set if you want to know when a viewâ€™s height changes
 	kCommonEventHandlers_ChangedBoundsAnyEdge			= kCommonEventHandlers_ChangedBoundsEdgeLeft |
 															kCommonEventHandlers_ChangedBoundsEdgeTop |
 															kCommonEventHandlers_ChangedBoundsEdgeRight |

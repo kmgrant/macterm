@@ -3,9 +3,9 @@
 	ColorBox.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2009 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -73,7 +73,7 @@ struct MyColorBoxData
 	HIViewRef						viewRef;			//!< the user pane to which this information is attached
 	EventHandlerRef					buttonDrawHandler;	//!< responds to requests to paint the color box
 	EventHandlerUPP					uppDraw;			//!< Mac OS wrapper for callback
-	RGBColor						displayedColor;		//!< which color (the ÒvalueÓ) the color box displays
+	RGBColor						displayedColor;		//!< which color (the â€œvalueâ€) the color box displays
 	ColorBox_ChangeNotifyProcPtr	notifyProcPtr;		//!< routine, if any, to call when the value is changed
 	void*							contextPtr;			//!< caller-defined context to pass to the notification routine
 };
@@ -104,7 +104,7 @@ you are finished with the color box, to dispose of data
 allocated by invoking this routine.
 
 IMPORTANT:	To properly support modeless the color panel,
-			your bevel button should have ÒstickyÓ
+			your bevel button should have â€œstickyâ€
 			behavior.  This allows the controller to
 			clearly show the user which bevel button is
 			the target of the panel.
@@ -190,11 +190,11 @@ ColorBox_AttachToBevelButton	(HIViewRef			inoutBevelButton,
 
 
 /*!
-Disposes of a bevel buttonÕs drawing routine, initially
+Disposes of a bevel buttonâ€™s drawing routine, initially
 installed using one of the ColorBox_AttachTo...() routines.
 
 The accessibility description is not removed, because this
-routine does not know if you have since replaced the buttonÕs
+routine does not know if you have since replaced the buttonâ€™s
 accessibility information with something different.
 
 (3.1)
@@ -296,7 +296,7 @@ specified routine will automatically be called if the
 color displayed by the box changes for any reason.
 For modeless windows, it may be necessary to use a
 notification routine, if you want to respond right away
-to the userÕs changes.
+to the userâ€™s changes.
 
 (3.0)
 */

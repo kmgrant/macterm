@@ -3,9 +3,9 @@
 	DialogUtilities.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -78,7 +78,7 @@ instead.
 
 Also note that sometimes you may wish to transition
 a dialog to a specific object to emphasize what is
-being affected by the user’s changes in the dialog
+being affected by the user‚Äôs changes in the dialog
 (zooming into a list item or control, for example).
 Look for APIs similar to this one that may be more
 appropriate for your dialog.
@@ -112,14 +112,14 @@ DialogTransitions_CloseImmediately	(WindowRef	inWindow)
 
 /*!
 Removes a dialog window from view while displaying a
-zoom transition from the window’s area to the lower-
+zoom transition from the window‚Äôs area to the lower-
 right-hand corner of the screen.  For users of
 Mac OS 8.5 and beyond, this routine will display a
 window transition and play the appropriate theme
 sound; otherwise, the window simply disappears.
 
 This kind of transition is used to signify that a
-dialog’s contents are being completely discarded (it
+dialog‚Äôs contents are being completely discarded (it
 looks like the dialog is being thrown into the Trash).
 
 However, you normally do not call this routine
@@ -167,7 +167,7 @@ DialogTransitions_CloseSheet	(WindowRef	inWindow,
 #if TARGET_API_MAC_CARBON
 /*!
 Removes a sheet window from view with no closing
-animation.  This is used for standard “close warning”
+animation.  This is used for standard ‚Äúclose warning‚Äù
 alerts (in which case you would immediately hide the
 parent window along with the sheet).
 
@@ -188,7 +188,7 @@ DialogTransitions_CloseSheetImmediately		(WindowRef		inWindow,
 Removes from view a dialog window that is a child
 of another window.  For users of Mac OS 8.5 and
 beyond, this routine will display a window transition
-that “comes to” the center of the control rectangle
+that ‚Äúcomes to‚Äù the center of the control rectangle
 of the specified control (within its owning window),
 and will play the appropriate theme sound.
 
@@ -213,7 +213,7 @@ DialogTransitions_CloseToControl	(WindowRef		inWindow,
 Removes from view a dialog window that is a child
 of another window.  For users of Mac OS 8.5 and
 beyond, this routine will display a window transition
-that “comes to” the given rectangle (in the local
+that ‚Äúcomes to‚Äù the given rectangle (in the local
 coordinates of the designated parent window), and
 will play the appropriate theme sound.
 
@@ -259,7 +259,7 @@ DialogTransitions_CloseToRectangle	(WindowRef		inWindow,
 Removes from view a dialog window that is a child of
 another window.  For users of Mac OS 8.5 and beyond,
 this routine will display a window transition that
-“comes to” the bounding rectangle of the specified
+‚Äúcomes to‚Äù the bounding rectangle of the specified
 window region, and will play the appropriate theme
 sound.
 
@@ -288,14 +288,14 @@ DialogTransitions_CloseToWindowRegion	(WindowRef			inWindow,
 
 /*!
 Removes a dialog window from view while displaying a
-zoom transition from the window’s area to the upper-
+zoom transition from the window‚Äôs area to the upper-
 left-hand corner of the screen.  For users of Mac OS
 8.5 and beyond, this routine will display a window
 transition and play the appropriate theme sound;
 otherwise, the window simply disappears.
 
 This kind of transition is used to signify that a
-dialog’s contents are system-wide (it looks like the
+dialog‚Äôs contents are system-wide (it looks like the
 dialog is being pulled into the Apple menu).
 
 (3.0)
@@ -343,7 +343,7 @@ DialogTransitions_Display		(WindowRef		inWindow)
 Displays and activates a dialog window that is a
 child of another window.  For users of Mac OS 8.5
 and beyond, this routine will display a window
-transition that “comes from” the center of the
+transition that ‚Äúcomes from‚Äù the center of the
 control rectangle of the specified control, and
 will play the appropriate theme sound.
 
@@ -368,7 +368,7 @@ DialogTransitions_DisplayFromControl	(WindowRef		inWindow,
 Displays and activates a dialog window that is a
 child of another window.  For users of Mac OS 8.5
 and beyond, this routine will display a window
-transition that “comes from” the specified rectangle
+transition that ‚Äúcomes from‚Äù the specified rectangle
 (in the local coordinates of the designated parent
 window), and will play the appropriate theme sound.
 
@@ -410,7 +410,7 @@ DialogTransitions_DisplayFromRectangle	(WindowRef		inWindow,
 Displays and activates a dialog window that is a
 child of another window.  For users of Mac OS 8.5
 and beyond, this routine will display a window
-transition that “comes from” the boundaries of the
+transition that ‚Äúcomes from‚Äù the boundaries of the
 specified region of the given parent window, and
 will play the appropriate theme sound.
 
@@ -528,7 +528,7 @@ DialogTransitions_DisplaySheetFromRectangle		(WindowRef		inWindow,
 
 /*!
 Closes dialog boxes in a consistent manner.
-This routine undoes any “damage” caused by a
+This routine undoes any ‚Äúdamage‚Äù caused by a
 call to dialogDisplayPreparation().
 
 (3.0)
@@ -590,7 +590,7 @@ dialogDisplayEnsureVisibility	(HIWindowRef	inWindow)
 
 
 /*!
-Prepares for a dialog’s display by dimming the
+Prepares for a dialog‚Äôs display by dimming the
 frontmost window and deactivating all floating windows.
 Later, use dialogClose() to close the dialog, and all
 effects of invoking this method will be reversed.

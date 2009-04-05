@@ -8,9 +8,9 @@
 	in MacTelnet 3.0.  It contains initialization routines for
 	setting resource file reference numbers, which are then
 	stored internally in this module.  You subsequently access
-	these reference numbers using MacTelnetÕs own descriptors,
-	which utilize more abstract concepts like Òthe preferences
-	resource fileÓ or Òthe application resource fileÓ.
+	these reference numbers using MacTelnetâ€™s own descriptors,
+	which utilize more abstract concepts like â€œthe preferences
+	resource fileâ€ or â€œthe application resource fileâ€.
 	
 	On Mac OS X this can also be used for managing files that
 	are probably located in the application bundle somewhere.
@@ -27,9 +27,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or

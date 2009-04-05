@@ -4,12 +4,12 @@
 	
 	Preferences in MacTelnet 3.0 are now accessed through a
 	layer of indirection, in part to reduce the number of code
-	modules that have access to the “guts” of preferences data
+	modules that have access to the ‚Äúguts‚Äù of preferences data
 	structures, and in part to allow this module to notify
 	interested parties when settings are changed.
 	
-	Also new in version 3.0 is the notion of a “preference
-	context”.  A context allows settings to be saved in very
+	Also new in version 3.0 is the notion of a ‚Äúpreference
+	context‚Äù.  A context allows settings to be saved in very
 	specific places, but retrieved through an automatic scan
 	of a chain of possible locations for a given setting.  For
 	example, you start with the frontmost window, and if no
@@ -22,9 +22,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -78,9 +78,9 @@ enum
 {
 	kPreferences_ResultOK = 0,								//!< no error
 	kPreferences_ResultNotInitialized = -1,					//!< Preferences_Init() has not been called at all, or not successfully
-	kPreferences_ResultUnknownTagOrClass = -2,				//!< specified preference tag or class tag isn’t valid
-	kPreferences_ResultUnknownName = -3,					//!< specified name string doesn’t match any existing preferences data
-	kPreferences_ResultInsufficientBufferSpace = -4,		//!< memory space provided isn’t large enough to hold data on disk
+	kPreferences_ResultUnknownTagOrClass = -2,				//!< specified preference tag or class tag isn‚Äôt valid
+	kPreferences_ResultUnknownName = -3,					//!< specified name string doesn‚Äôt match any existing preferences data
+	kPreferences_ResultInsufficientBufferSpace = -4,		//!< memory space provided isn‚Äôt large enough to hold data on disk
 	kPreferences_ResultBadVersionDataNotAvailable = -5,		//!< preferences file does not contain this information in any form
 	kPreferences_ResultBadVersionDataNewer = -6,			//!< preferences file contains more information than necessary
 	kPreferences_ResultBadVersionDataOlder = -7,			//!< preferences file does not contain all necessary information
@@ -134,7 +134,7 @@ enough to hold the data type indicated below for
 the tag you specify.  Similarly, with the
 Preferences_SetData...() methods, the data pointer
 you provide should refer to data of the type that
-the tag “expects”.  In each case, the data *points*
+the tag ‚Äúexpects‚Äù.  In each case, the data *points*
 to storage of the type indicated.
 */
 typedef FourCharCode Preferences_Tag;
@@ -171,11 +171,11 @@ enum
 	kPreferences_TagTerminalColorANSIMagentaBold		= kCommandColorMagentaEmphasized,	//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSICyanBold			= kCommandColorCyanEmphasized,		//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSIWhiteBold			= kCommandColorWhiteEmphasized,		//!< data: "RGBColor"
-	kPreferences_TagTerminalMarginLeft					= 'mgnl',	//!< data: "Float32", multiplies against font “m” width (even for vertical margins)
+	kPreferences_TagTerminalMarginLeft					= 'mgnl',	//!< data: "Float32", multiplies against font ‚Äúm‚Äù width (even for vertical margins)
 	kPreferences_TagTerminalMarginRight					= 'mgnr',	//!< data: "Float32"
 	kPreferences_TagTerminalMarginTop					= 'mgnt',	//!< data: "Float32"
 	kPreferences_TagTerminalMarginBottom				= 'mgnb',	//!< data: "Float32"
-	kPreferences_TagTerminalPaddingLeft					= 'padl',	//!< data: "Float32", multiplies against font “m” width (even for vertical paddings)
+	kPreferences_TagTerminalPaddingLeft					= 'padl',	//!< data: "Float32", multiplies against font ‚Äúm‚Äù width (even for vertical paddings)
 	kPreferences_TagTerminalPaddingRight				= 'padr',	//!< data: "Float32"
 	kPreferences_TagTerminalPaddingTop					= 'padt',	//!< data: "Float32"
 	kPreferences_TagTerminalPaddingBottom				= 'padb'	//!< data: "Float32"
@@ -236,7 +236,7 @@ IMPORTANT:	Indexed tag data can only be modified or
 */
 enum
 {
-	kPreferences_TagIndexedMacroAction					= 'mcac',	//!< data: a "kMacroManager_Action…" constant
+	kPreferences_TagIndexedMacroAction					= 'mcac',	//!< data: a "kMacroManager_Action‚Ä¶" constant
 	kPreferences_TagIndexedMacroContents				= 'mtxt',	//!< data: "CFStringRef"
 	kPreferences_TagIndexedMacroKey						= 'mcky',	//!< data: "MacroManager_KeyID"
 	kPreferences_TagIndexedMacroKeyModifiers			= 'mmod',	//!< data: "UInt32", 0 or a bitwise-OR with any of: cmdKey, shiftKey, controlKey, optionKey
@@ -265,12 +265,12 @@ enum
 	kPreferences_TagMapCarriageReturnToCRNull			= 'crnl',	//!< data: "Boolean"
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
 	kPreferences_TagPasteBlockSize						= 'pblk',	//!< data: "SInt16"
-	kPreferences_TagPasteMethod							= 'pstm',	//!< data: a "kClipboard_PasteMethod…" constant
+	kPreferences_TagPasteMethod							= 'pstm',	//!< data: a "kClipboard_PasteMethod‚Ä¶" constant
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
 	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
 	kPreferences_TagServerUserID						= 'user',	//!< data: "CFStringRef"
-	kPreferences_TagTektronixMode						= 'tekm',	//!< data: a "kVectorInterpreter_Mode…" constant
+	kPreferences_TagTektronixMode						= 'tekm',	//!< data: a "kVectorInterpreter_Mode‚Ä¶" constant
 	kPreferences_TagTektronixPAGEClearsScreen			= 'tkpc'	//!< data: "Boolean"
 };
 
@@ -321,13 +321,13 @@ Navigation Services preference keys.  The idea here is to
 define and use a unique key any time that may be helpful
 to the user (e.g. when choosing an application, the user
 would likely want to return to the Applications folder,
-but wouldn’t want to see Applications as a default save
+but wouldn‚Äôt want to see Applications as a default save
 location for macro sets).
 */
 enum
 {
-	kPreferences_NavPrefKeyGenericOpenFile		= 1,	//!< preference key for Open dialogs that don’t have a more specific key in the list
-	kPreferences_NavPrefKeyGenericSaveFile		= 2,	//!< preference key for Save dialogs that don’t have a more specific key in the list
+	kPreferences_NavPrefKeyGenericOpenFile		= 1,	//!< preference key for Open dialogs that don‚Äôt have a more specific key in the list
+	kPreferences_NavPrefKeyGenericSaveFile		= 2,	//!< preference key for Save dialogs that don‚Äôt have a more specific key in the list
 	kPreferences_NavPrefKeyGenericChooseFolder	= 3,	//!< preference key for Choose Folder dialogs
 	kPreferences_NavPrefKeyChooseTextEditor		= 4,	//!< preference key for any Choose dialog used to locate a text editing application
 	kPreferences_NavPrefKeyMacroStuff			= 5		//!< preference key for an Open or Save dialog that handles macros

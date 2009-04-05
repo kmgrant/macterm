@@ -4,7 +4,7 @@
 /*###############################################################
 
 	Data Access Library 1.4
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

@@ -3,9 +3,9 @@
 	GetPropertyAE.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -115,13 +115,13 @@ the specified class, use this method.  The token
 encodes all necessary information about the
 desired property and the class having the
 property.  You generally use this routine to
-help handle a Òget dataÓ Apple Event.
+help handle a â€œget dataâ€ Apple Event.
 
 The value of "inDesiredDataType" is used to
 coerce the resultant data into a form that the
 user wants.  For example, it might be possible
 to convert the actual property into some other
-kind of object - the ÒotherÓ type would be
+kind of object - the â€œotherâ€ type would be
 "inDesiredDataType".
 
 (3.0)
@@ -154,7 +154,7 @@ specified property of the specified class, use
 this method.  The token encodes all necessary
 information about the desired property and the
 class having the property.  You generally use
-this routine to help handle a Òget data sizeÓ
+this routine to help handle a â€œget data sizeâ€
 Apple Event.
 
 (3.0)
@@ -186,7 +186,7 @@ specified class, use this method.  The token
 encodes all necessary information about the
 desired property and the class having the
 property.  You generally use this routine to
-help handle a Òset dataÓ Apple Event.
+help handle a â€œset dataâ€ Apple Event.
 
 (3.0)
 */
@@ -361,7 +361,7 @@ accessPropertyOfClassApplication	(ObjectClassesAE_TokenPtr   inTokenPtr,
 	Console_BeginFunction();
 	Console_WriteValueFourChars("AppleScript: application property; class type via", propertyPtr->container.eventClass);
 	
-	// verify that itÕs a property, and verify its container class type
+	// verify that itâ€™s a property, and verify its container class type
 	if (result == noErr)
 	{
 		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
@@ -558,7 +558,7 @@ accessPropertyOfClassApplicationPreferences	(ObjectClassesAE_TokenPtr   inTokenP
 	Console_BeginFunction();
 	Console_WriteLine("AppleScript: application preferences property");
 	
-	// verify that itÕs a property, and verify its container class type
+	// verify that itâ€™s a property, and verify its container class type
 	if (result == noErr)
 	{
 		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
@@ -704,7 +704,7 @@ accessPropertyOfClassClipboardWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 	// make ABSOLUTELY SURE the clipboard window is not screwed up (otherwise, the system could crash)
 	//nothingyet
 	
-	// verify that itÕs a property, and verify its container class type
+	// verify that itâ€™s a property, and verify its container class type
 	if (result == noErr)
 	{
 		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
@@ -824,7 +824,7 @@ accessPropertyOfClassFormat		(ObjectClassesAE_TokenPtr   inTokenPtr,
 		result = errAEEventNotHandled;
 	}
 	
-	// verify that itÕs a property, and verify its container class type
+	// verify that itâ€™s a property, and verify its container class type
 	if (result == noErr)
 	{
 		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
@@ -1011,7 +1011,7 @@ accessPropertyOfClassSessionWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 		result = errAEEventNotHandled;
 	}
 	
-	// verify that itÕs a property, and verify its container class type
+	// verify that itâ€™s a property, and verify its container class type
 	if (result == noErr)
 	{
 		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
@@ -1083,7 +1083,7 @@ accessPropertyOfClassTerminalWindow		(ObjectClassesAE_TokenPtr   inTokenPtr,
 		result = errAEEventNotHandled;
 	}
 	
-	// verify that itÕs a property, and verify its container class type
+	// verify that itâ€™s a property, and verify its container class type
 	if (result == noErr)
 	{
 		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
@@ -1328,7 +1328,7 @@ accessPropertyOfClassWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 	// if the window is valid, get any Window Info associated with it
 	if (result == noErr) windowInfo = WindowInfo_ReturnFromWindow(window);
 	
-	// verify that itÕs a property, and verify its container class type
+	// verify that itâ€™s a property, and verify its container class type
 	if (result == noErr)
 	{
 		result = ((inTokenPtr->flags & kObjectClassesAE_TokenFlagsIsProperty) &&
@@ -1823,7 +1823,7 @@ accessPropertyOfClassWindow	(ObjectClassesAE_TokenPtr   inTokenPtr,
 																		sizeof(windowName), &actualSize);
 						if (result == noErr)
 						{
-							// set the length (itÕs a Pascal string) and then set the title of the window
+							// set the length (itâ€™s a Pascal string) and then set the title of the window
 							windowName[0] = ((UInt8)actualSize);
 							SetWTitle(window, windowName);
 						}
@@ -1866,7 +1866,7 @@ getPropertyByID		(DescType		inPropertyID,
 	
 	
 	Console_BeginFunction();
-	Console_WriteValueFourChars("AppleScript: ÒpropertyÓ by property ID", inPropertyID);
+	Console_WriteValueFourChars("AppleScript: â€œpropertyâ€ by property ID", inPropertyID);
 	
 	if (inFromWhat->descriptorType == cMyInternalToken)
 	{
@@ -2118,7 +2118,7 @@ tokenAccess		(AEDesc const*				inTokenDescriptor,
 					}
 					else
 					{
-						// return the windowÕs name as the specifier; not as good as an index, especially
+						// return the windowâ€™s name as the specifier; not as good as an index, especially
 						// if multiple windows have the same name, but probably good enough in most cases
 						Str255		name;
 						

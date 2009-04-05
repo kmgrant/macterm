@@ -10,7 +10,7 @@
 /*###############################################################
 
 	Interface Library 2.0
-	© 1998-2007 by Kevin Grant
+	¬© 1998-2007 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -147,7 +147,7 @@ void
 void
 	Alert_BackgroundNotification		();
 
-// CALL THIS METHOD WHEN YOUR APPLICATION DETECTS A “RESUME” EVENT
+// CALL THIS METHOD WHEN YOUR APPLICATION DETECTS A ‚ÄúRESUME‚Äù EVENT
 void
 	Alert_ServiceNotification			();
 

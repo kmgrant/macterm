@@ -21,9 +21,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -83,7 +83,7 @@ enum TerminalView_Result
 };
 
 /*!
-Identifiers for the “custom” colors of a terminal view.
+Identifiers for the ‚Äúcustom‚Äù colors of a terminal view.
 */
 typedef SInt16 TerminalView_ColorIndex;
 enum
@@ -117,18 +117,18 @@ enum TerminalView_CursorType
 /*!
 Determines how the pixel area of the container control is filled
 with terminal content.  Normally, the font is a specific size, and
-the content either fits or doesn’t fit the pixel area.  However, in
+the content either fits or doesn‚Äôt fit the pixel area.  However, in
 zoom mode, the content is forced to fit in the pixel area; the font
 size changes to whatever size makes the content best fit the area.
 */
 enum TerminalView_DisplayMode
 {
-	kTerminalView_DisplayModeNormal		= 'Norm',   //!< underlying terminal screen’s dimensions are altered to
+	kTerminalView_DisplayModeNormal		= 'Norm',   //!< underlying terminal screen‚Äôs dimensions are altered to
 													//!  best suit the pixel dimensions of the view, when resized;
 													//!  the terminal view font size is unchanged
 	kTerminalView_DisplayModeZoom		= 'Zoom'	//!< font size of text in view is altered to make the current
 													//!  rows and columns best fill the screen area, when resized;
-													//!  the underlying terminal screen’s dimensions are unchanged
+													//!  the underlying terminal screen‚Äôs dimensions are unchanged
 };
 
 /*!
@@ -145,7 +145,7 @@ enum TerminalView_Event
 
 /*!
 Special ranges of a terminal view.  Ranges always start at
-0 (the “oldest” pixel, for the vertical axis), and end at
+0 (the ‚Äúoldest‚Äù pixel, for the vertical axis), and end at
 one past the actual value (useful algorithmically).  So for
 instance, the first 10 pixels of the view would be represented
 as the range (0, 10), where 10 is one past the end (it

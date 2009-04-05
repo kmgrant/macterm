@@ -3,9 +3,9 @@
 	MenuBar.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -391,7 +391,7 @@ MenuBar_CopyMenuItemTextByCommandID	(UInt32			inCommandID,
 
 /*!
 Returns the global rectangle approximating the
-physical boundaries of the specified menu’s title
+physical boundaries of the specified menu‚Äôs title
 in the menu bar.  You might use this to show a
 zoom rectangle animation to or from a menu.
 
@@ -436,7 +436,7 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 		{
 		case kMenuBar_MenuWindow:
 			// approximate the rectangle of the Window menu, which is different in Simplified User
-			// Interface mode (there’s gotta be a beautiful way to get this just right, but I’m
+			// Interface mode (there‚Äôs gotta be a beautiful way to get this just right, but I‚Äôm
 			// not finding it now)
 			*outMenuBarMenuTitleRect = (**(GetMainDevice())).gdRect;
 			outMenuBarMenuTitleRect->bottom = GetMBarHeight();
@@ -483,7 +483,7 @@ void
 MenuBar_GetUniqueMenuItemText	(MenuRef	inMenu,
 								 Str255		inoutItemText)
 {
-	// only change the specified item text if it’s already “taken” by an item in the menu
+	// only change the specified item text if it‚Äôs already ‚Äútaken‚Äù by an item in the menu
 	while (!MenuBar_IsMenuItemUnique(inMenu, inoutItemText))
 	{
 		if ((inoutItemText[inoutItemText[0]] > '9') ||
@@ -529,7 +529,7 @@ MenuBar_GetUniqueMenuItemTextCFString	(MenuRef		inMenu,
 	if (nullptr == duplicateString) outUniqueItemText = nullptr;
 	else
 	{
-		// only change the specified item text if it’s already “taken” by an item in the menu
+		// only change the specified item text if it‚Äôs already ‚Äútaken‚Äù by an item in the menu
 		while (!MenuBar_IsMenuItemUniqueCFString(inMenu, duplicateString))
 		{
 			CFIndex const   kStringLength = CFStringGetLength(duplicateString);
@@ -575,7 +575,7 @@ It is not always possible to handle commands by ID
 this routine lets you handle them by menu and menu
 item number, instead.
 
-If you already have a menu item’s command ID, it is
+If you already have a menu item‚Äôs command ID, it is
 more efficient to call MenuBar_HandleMenuCommandByID().
 
 DEPRECATED.  Almost every menu command is now handled
@@ -610,7 +610,7 @@ MenuBar_HandleMenuCommand	(MenuRef			inMenu,
 		break;
 	}
 	
-	// if a menu item wasn’t handled, make this an obvious bug by leaving the menu title highlighted
+	// if a menu item wasn‚Äôt handled, make this an obvious bug by leaving the menu title highlighted
 	if (result) HiliteMenu(0);
 	
 	return result;
@@ -650,9 +650,9 @@ IMPORTANT:	All commands must be associated with a
 			determines item states dynamically, not
 			statically, so this routine will not read
 			the current enabled state of the item.
-			Rather, it invokes the command’s callback to
+			Rather, it invokes the command‚Äôs callback to
 			determine what the item state *should* be,
-			which ultimately is what you’re interested
+			which ultimately is what you‚Äôre interested
 			in, right???
 
 (3.0)
@@ -866,8 +866,8 @@ MenuBar_ReturnUniqueMenuID ()
 To flag whether or not the font menus are
 available, use this method.  This is only
 necessary to keep the font list rebuilding
-process reasonably “thread safe”, making
-sure the user can’t access fonts until it
+process reasonably ‚Äúthread safe‚Äù, making
+sure the user can‚Äôt access fonts until it
 is done its work.
 
 (3.0)
@@ -956,9 +956,9 @@ MenuBar_SetUpMenuItemState	(UInt32		inCommandID)
 namespace {
 
 /*!
-Adds a session’s name to the Window menu, arranging so
+Adds a session‚Äôs name to the Window menu, arranging so
 that future selections of the new menu item will cause
-the window to be selected, and so that the item’s state
+the window to be selected, and so that the item‚Äôs state
 is synchronized with that of the session and its window.
 
 Returns true only if an item was added.
@@ -1227,7 +1227,7 @@ buildMenuBar ()
 
 
 /*!
-To run a script, whose file is located in MacTelnet’s
+To run a script, whose file is located in MacTelnet‚Äôs
 Scripts Menu Items folder with a name identical to that
 of the given item of the given menu, use this method.
 
@@ -1279,7 +1279,7 @@ IMPORTANT:	There are several utility functions in this file that
 
 WARNING:	This method will only return the menu handle and item
 			number for the command appropriate for the current
-			“mode” (i.e. simplified-user-interface or otherwise).
+			‚Äúmode‚Äù (i.e. simplified-user-interface or otherwise).
 			To ensure you change all versions of a command, you
 			should use the getMenusAndMenuItemIndicesByCommandID()
 			variation of this method.  If you use the convenience
@@ -1300,7 +1300,7 @@ getMenuAndMenuItemIndexByCommandID	(UInt32		inCommandID,
 	getMenusAndMenuItemIndicesByCommandID(inCommandID, outMenu, &simplifiedUIModeMenu,
 											&result, &simplifiedUIModeMenuItemIndex);
 	
-	// If the user is in simplified-user-interface mode, then it’s the
+	// If the user is in simplified-user-interface mode, then it‚Äôs the
 	// secondary menus that are potentially important.  If the secondary
 	// menu is nullptr, however, then the primary menu is also the menu to
 	// use while in simplified-user-interface mode.
@@ -1343,8 +1343,8 @@ matched with an item index, 0 is returned in the item index pointers.
 If the specified command cannot be matched with a menu, nullptr is
 returned via the specified menu handle pointers.
 
-The “primary” menu specifications refer to the menu in normal mode,
-and the “secondary” menu specifications refer to the menu in
+The ‚Äúprimary‚Äù menu specifications refer to the menu in normal mode,
+and the ‚Äúsecondary‚Äù menu specifications refer to the menu in
 simplified-user-interface mode.  Some menus do not have versions
 for the simplified-user-interface mode, so the primary and secondary
 menus are identical in those cases.  Also, sometimes an item present
@@ -1408,9 +1408,9 @@ getMenusAndMenuItemIndicesByCommandID	(UInt32				inCommandID,
 After the global set of menus has been created (probably
 by getting menus from resources), use this method to
 install item state trackers in each one.  If you ever
-re-grab a menu “fresh” from a resource file, be sure to
+re-grab a menu ‚Äúfresh‚Äù from a resource file, be sure to
 call this method to make sure that the new menu is set up
-properly, otherwise its items’ states will not be set by
+properly, otherwise its items‚Äô states will not be set by
 a call to MenuBar_SetUpMenuItemState().
 
 Any menu command whose state (enabled, checked, item text,
@@ -1579,7 +1579,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									sizeof(gUsingTabs), &gUsingTabs,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			gUsingTabs = false; // assume tabs are not being used, if preference can’t be found
+			gUsingTabs = false; // assume tabs are not being used, if preference can‚Äôt be found
 		}
 		break;
 	
@@ -1591,7 +1591,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(flag), &flag, &actualSize) ==
 					kPreferences_ResultOK)
 			{
-				flag = true; // assume menu items have key equivalents, if preference can’t be found
+				flag = true; // assume menu items have key equivalents, if preference can‚Äôt be found
 			}
 			setMenusHaveKeyEquivalents(flag, contextPtr->firstCall);
 		}
@@ -1604,7 +1604,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									sizeof(gNewCommandShortcutEffect), &gNewCommandShortcutEffect,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite; // assume command, if preference can’t be found
+			gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite; // assume command, if preference can‚Äôt be found
 		}
 		setNewCommand(gNewCommandShortcutEffect);
 		break;
@@ -1616,7 +1616,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 									sizeof(gSimplifiedMenuBar), &gSimplifiedMenuBar,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			gSimplifiedMenuBar = false; // assume normal mode, if preference can’t be found
+			gSimplifiedMenuBar = false; // assume normal mode, if preference can‚Äôt be found
 		}
 		simplifyMenuBar(gSimplifiedMenuBar);
 		break;
@@ -1766,7 +1766,7 @@ returnTEKSession ()
 
 /*!
 Returns the index of the item in the Window menu
-corresponding to the specified session’s window.
+corresponding to the specified session‚Äôs window.
 
 (4.0)
 */
@@ -1916,7 +1916,7 @@ sessionWindowStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						Rect	structureBounds;
 						
 						
-						// make the window zoom into the Window menu’s title area, for visual feedback
+						// make the window zoom into the Window menu‚Äôs title area, for visual feedback
 						// (an error while doing this is unimportant)
 						if (noErr == GetWindowBounds(hiddenWindow, kWindowStructureRgn, &structureBounds))
 						{
@@ -2111,7 +2111,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 	unless (Preferences_GetData(kPreferences_TagMenuItemKeys, sizeof(menuCommandKeys), &menuCommandKeys,
 			&actualSize) == kPreferences_ResultOK)
 	{
-		menuCommandKeys = true; // assume menu items have key equivalents, if preference can’t be found
+		menuCommandKeys = true; // assume menu items have key equivalents, if preference can‚Äôt be found
 	}
 	
 	if (menuCommandKeys)
@@ -2163,7 +2163,7 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 												nullptr/* simple menu */,
 												&dialogItemIndex, nullptr/* simple item index */);
 		
-		// first clear the non-command-key modifiers of certain “New” commands
+		// first clear the non-command-key modifiers of certain ‚ÄúNew‚Äù commands
 		removeMenuItemModifier(defaultMenu, defaultItemIndex);
 		removeMenuItemModifier(shellMenu, shellItemIndex);
 		removeMenuItemModifier(logInShellMenu, logInShellItemIndex);
@@ -2538,7 +2538,7 @@ setUpScreenSizeFavoritesMenu	(MenuRef	inMenu)
 
 
 /*!
-Destroys and rebuilds the contents of the “Scripts”
+Destroys and rebuilds the contents of the ‚ÄúScripts‚Äù
 menu, reading all available scripts and executables
 from the Scripts Menu Items folder.
 
@@ -2555,7 +2555,7 @@ no changes have been made.
 void
 setUpScriptsMenu	(MenuRef	inMenu)
 {
-	static Boolean		gScriptsMenuRebuilding = false; // flags to keep things “thread safe”
+	static Boolean		gScriptsMenuRebuilding = false; // flags to keep things ‚Äúthread safe‚Äù
 	
 	
 	if (false == gScriptsMenuRebuilding)
@@ -2614,7 +2614,7 @@ setUpScriptsMenu	(MenuRef	inMenu)
 					assert(stringResult.ok());
 					progressDialog = ProgressDialog_New(dialogCFString, false/* modal */);
 					
-					// specify a title for the Dock’s menu
+					// specify a title for the Dock‚Äôs menu
 					stringResult = UIStrings_Copy(kUIStrings_ProgressWindowScriptsMenuIconName, dialogCFString);
 					if (stringResult.ok())
 					{
@@ -2677,7 +2677,7 @@ setUpScriptsMenu	(MenuRef	inMenu)
 								StringUtilities_PClipTail(array[i].name, 5/* length of ".scpt" */);
 							}
 							
-							// insert some item, then change its text; this avoids Menu Manager “pre-processing”
+							// insert some item, then change its text; this avoids Menu Manager ‚Äúpre-processing‚Äù
 							InsertMenuItem(menu, "\p<script>", insertAfterIndex);
 							SetMenuItemText(menu, insertAfterIndex + 1, array[i].name);
 						}
@@ -3241,7 +3241,7 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 		result = areSessionRelatedItemsEnabled();
 		if (inCommandID == kCommandFormat)
 		{
-			// this item isn’t available if the “rebuilding font list” thread is still running
+			// this item isn‚Äôt available if the ‚Äúrebuilding font list‚Äù thread is still running
 			result = (result && gFontMenusAvailable);
 		}
 		else if (inCommandID == kCommandSetScreenSize)
@@ -3468,22 +3468,22 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 		break;
 	
 	case kCommandShowCommandLine:
-		// in the Cocoa implementation this really means “show or activate”, so it is always available
+		// in the Cocoa implementation this really means ‚Äúshow or activate‚Äù, so it is always available
 		result = true;
 		break;
 	
 	case kCommandShowControlKeys:
-		// in the Cocoa implementation this really means “show or activate”, so it is always available
+		// in the Cocoa implementation this really means ‚Äúshow or activate‚Äù, so it is always available
 		result = true;
 		break;
 	
 	case kCommandShowFunction:
-		// in the Cocoa implementation this really means “show or activate”, so it is always available
+		// in the Cocoa implementation this really means ‚Äúshow or activate‚Äù, so it is always available
 		result = true;
 		break;
 	
 	case kCommandShowKeypad:
-		// in the Cocoa implementation this really means “show or activate”, so it is always available
+		// in the Cocoa implementation this really means ‚Äúshow or activate‚Äù, so it is always available
 		result = true;
 		break;
 	
@@ -3613,7 +3613,7 @@ stateTrackerStandardEditItems	(UInt32			inCommandID,
 				}
 				if (inCommandID == kCommandCopyAndPaste)
 				{
-					result = (result && (!isReadOnly)); // can’t type in a read-only window!
+					result = (result && (!isReadOnly)); // can‚Äôt type in a read-only window!
 				}
 			}
 		}
@@ -3696,7 +3696,7 @@ items in the Window menu.
 
 Although the menu reference is given, this method assumes
 you are referring to the Window menu and does not check
-that the specified menu “really is” the Window menu.
+that the specified menu ‚Äúreally is‚Äù the Window menu.
 
 Icons are currently not set using this routine; see
 MenuBar_SetWindowMenuItemMarkForSession().

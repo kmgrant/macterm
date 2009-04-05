@@ -7,7 +7,7 @@
 	when doing localization work.
 	
 	Interface Library 1.2
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -55,15 +55,15 @@
 
 #pragma mark Constants
 
-// some (bad) ÒmagicÓ numbers that are really Òpretty goodÓ estimates
+// some (bad) â€œmagicâ€ numbers that are really â€œpretty goodâ€ estimates
 enum
 {
 	kDialogTextMaxCharWidth = 7		// Width in pixels of typical-to-widest character in standard system font.
 									// You can *guarantee* that *any* string you throw at this routine will not
 									// get clipped if you set this to the width of the widest possible character
 									// in the system font.  However, this will also make the dialog box much too
-									// big in the average case.  Instead, I choose a ÒgoodÓ value that really is
-									// sufficient for any string youÕll ever use.
+									// big in the average case.  Instead, I choose a â€œgoodâ€ value that really is
+									// sufficient for any string youâ€™ll ever use.
 };
 
 #pragma mark Variables
@@ -91,7 +91,7 @@ static OSStatus		setControlFontInfo	(ControlRef, ConstStringPtr, SInt16, Style);
 This routine should be called once, before any
 other Localization Utilities routine.  It allows
 you to set flags that affect operation of all of
-the moduleÕs functions, and (optionally) to set
+the moduleâ€™s functions, and (optionally) to set
 the file descriptor of a localization resource
 file.  You only need to set the second parameter
 if you plan on using Localization_UseResourceFile().
@@ -122,7 +122,7 @@ Localization_Init	(UInt32		inFlags)
 	}
 	
 	// if process information fails, default to low-memory value
-	// (not ideal, as on Mac OS X this will not be the Òdisplay nameÓ
+	// (not ideal, as on Mac OS X this will not be the â€œdisplay nameâ€
 	// for the application, but that of its buried executable file)
 	unless (gotIt) PLstrcpy(gApplicationName, LMGetCurApName());
 	
@@ -186,7 +186,7 @@ Localization_AdjustDialogButtonArray	(DialogRef					inDialog,
 
 
 /*!
-Automatically moves and resizes a dialog boxÕs
+Automatically moves and resizes a dialog boxâ€™s
 default and/or cancel buttons so that they are
 the same size and just large enough to fit their
 button titles.  Dialog buttons are assumed to be
@@ -232,7 +232,7 @@ Localization_AdjustDialogButtons	(DialogRef		inDialog,
 
 
 /*!
-Auto-arranges a windowÕs help button to occupy the
+Auto-arranges a windowâ€™s help button to occupy the
 lower-left (for left-to-right localization) or lower-
 right (for right-to-left localization) corner of a
 window.
@@ -267,7 +267,7 @@ Localization_AdjustHelpButtonControl	(ControlRef		inControl)
 
 
 /*!
-Auto-arranges a dialog boxÕs help button to occupy
+Auto-arranges a dialog boxâ€™s help button to occupy
 the lower-left (for left-to-right localization) or
 lower-right (for right-to-left localization) corner
 of a dialog.
@@ -396,11 +396,11 @@ large number of controls in a space that is not
 strictly large enough, this routine can still be
 used to lay out controls that are overlapping.
 
-Items are arranged using a ÒcursorÓ mechanism;
+Items are arranged using a â€œcursorâ€ mechanism;
 that is, a cursor remains on a row as long as the
-rowÕs total width (for controls, spacings) is not
+rowâ€™s total width (for controls, spacings) is not
 beyond the constraint rectangle.  The height of a
-row is the height of the ÒtallestÓ control in that
+row is the height of the â€œtallestâ€ control in that
 row.  When the cursor is asked to move horizontally
 beyond the boundaries, it moves to a new grid row
 (downward in top-to-bottom locales, upward in
@@ -551,7 +551,7 @@ Localization_AutoSizeButtonControl	(ControlRef		inControl,
 			// The quick, dirty, and usually adequate way - this saves a LOT
 			// of fooling around with fonts (but maybe you would like to write
 			// a better algorithm that resets the graphics port, extracts the
-			// theme font information, does a little dance and calculates ¹ to
+			// theme font information, does a little dance and calculates Ï€ to
 			// 26 digits before returning the ideal width of the button?).
 			result = INTEGER_DOUBLED(MINIMUM_BUTTON_TITLE_CUSHION) +
 						PLstrlen(buttonString) * kDialogTextMaxCharWidth;
@@ -592,17 +592,17 @@ Localization_AutoSizeButtonItem		(DialogRef			inDialog,
 
 /*!
 Compares two character buffers to see whether
-the first buffer is Òless thanÓ the second.
+the first buffer is â€œless thanâ€ the second.
 0 is returned only if the texts are considered
 equal.
 
 You can apply case-sensitive and diacritics-
 sensitive comparison, which will return -1 if
-the first string is Òless thanÓ the second,
-or 1 if the second string is Òless thanÓ the
+the first string is â€œless thanâ€ the second,
+or 1 if the second string is â€œless thanâ€ the
 first.
 
-If you donÕt apply case-sensitive sorting, the
+If you donâ€™t apply case-sensitive sorting, the
 result is 1 if the strings are not equal.
 
 (3.0)
@@ -689,10 +689,10 @@ Localization_GetFontTextEncoding	(ConstStringPtr		inFontName,
 		scriptCode = FontToScript(fontID);
 		
 		// The Mac OS uses a giant map to determine the proper encoding for
-		// Òspecial casesÓ (such as Icelandic) that use the Roman script;
-		// in these cases, the script code alone isnÕt enough to choose the
+		// â€œspecial casesâ€ (such as Icelandic) that use the Roman script;
+		// in these cases, the script code alone isnâ€™t enough to choose the
 		// right encoding, so the system localization itself is used!  To
-		// get this behavior, the language and region must be ÒdonÕt careÓ.
+		// get this behavior, the language and region must be â€œdonâ€™t careâ€.
 		result = UpgradeScriptInfoToTextEncoding(scriptCode, kTextLanguageDontCare, kTextRegionDontCare,
 													inFontName, &encoding);
 	}
@@ -910,7 +910,7 @@ line of text in the specified theme font.  If
 no API exists (i.e. earlier than Appearance 1.1)
 to calculate the font exactly, the font constant
 is used to determine the correct value for a
-Òreasonable fontÓ (if you ask for the system
+â€œreasonable fontâ€ (if you ask for the system
 font, you get a 12-point system font height, for
 most others you get 10-point Geneva, etc.).
 
@@ -938,7 +938,7 @@ line of text in the specified theme font.  If
 no API exists (i.e. earlier than Appearance 1.1)
 to calculate the font exactly, the font constant
 is used to determine the correct value for a
-Òreasonable fontÓ (if you ask for the system
+â€œreasonable fontâ€ (if you ask for the system
 font, you get a 12-point system font height, for
 most others you get 10-point Geneva, etc.).
 
@@ -962,10 +962,10 @@ Localization_ReturnSingleLineTextWidth	(ConstStringPtr		inString,
 
 
 /*!
-Sets the specified controlÕs font, font size,
+Sets the specified controlâ€™s font, font size,
 and font style to match the indicated theme
 font.  If no API is available to determine
-the exact font, a Òreasonable approximationÓ
+the exact font, a â€œreasonable approximationâ€
 is made, usually resulting in a choice of
 either the 12-point system font or 10-point
 Geneva.
@@ -1012,7 +1012,7 @@ Localization_SetUpSingleLineTextControl		(ControlRef			inControl,
 {
 	return Localization_SetUpSingleLineTextControlMax(inControl, inTextContents,
 														inMakeRoomForCheckBoxOrRadioButtonGlyph,
-														0/* means Òno limitsÓ */,
+														0/* means â€œno limitsâ€ */,
 														kStringUtilities_TruncateAtEnd);
 }// SetUpSingleLineTextControl
 
@@ -1042,7 +1042,7 @@ Localization_SetUpSingleLineTextControlMax		(ControlRef							inControl,
 {
 	enum
 	{
-		kStringPaddingH = 8		// arbitrary horizontal extra space, in pixels, Òjust to be safeÓ
+		kStringPaddingH = 8		// arbitrary horizontal extra space, in pixels, â€œjust to be safeâ€
 	};
 	UInt16		result = 0;
 	SInt16		fontSize = 0;
@@ -1085,7 +1085,7 @@ Localization_SetUpSingleLineTextControlMax		(ControlRef							inControl,
 	result += kStringPaddingH; // add some (arbitrary) additional space to be sure
 	if (inMaximumAllowedWidth > 0)
 	{
-		// a maximum was given; be sure the text isnÕt any longer
+		// a maximum was given; be sure the text isnâ€™t any longer
 		(Boolean)StringUtilities_PTruncate(buffer, inMaximumAllowedWidth, inTruncationMethod);
 	}
 	
@@ -1150,7 +1150,7 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 	SetPortWindowPort(GetControlOwner(inControl));
 	
 	// obtain a wealth of information about the requested theme font
-	// (in the Òquick and dirtyÓ calculation, approximate character
+	// (in the â€œquick and dirtyâ€ calculation, approximate character
 	// widths are used with a small margin for error; if no such
 	// short-cut is taken, the error is less but the calculation is
 	// significantly slower)
@@ -1190,7 +1190,7 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 		textExpanseH = controlRect.right - controlRect.left;
 		#define CHEAP_TEXT_HEIGHT_CALCULATION 0
 		#if CHEAP_TEXT_HEIGHT_CALCULATION
-		// this is Òpretty goodÓ for most cases, but there is a chance that
+		// this is â€œpretty goodâ€ for most cases, but there is a chance that
 		// exceptional text will make this height calculation inadequate
 		result = (textContentsLength * charWidth / textExpanseH + 1) * fontHeight;
 		#else
@@ -1228,7 +1228,7 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 						if (lineWidth >= textExpanseH)
 						{
 							// end-of-line reached implicitly (i.e. no '\n'); check to see
-							// if itÕs the end of the word, too; if not, back up, because
+							// if itâ€™s the end of the word, too; if not, back up, because
 							// the Mac OS will wrap the remaining characters to the next line
 							if (length < textContentsLength)
 							{
@@ -1260,7 +1260,7 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 			result += (extraBlanks * fontHeight);
 		}
 		
-		// set the controlÕs height to match...
+		// set the controlâ€™s height to match...
 		SizeControl(inControl, textExpanseH, result);
 		
 		// restore port settings
@@ -1280,7 +1280,7 @@ Localization_SetUpMultiLineTextControl	(ControlRef			inControl,
 /*!
 Determines which of the two given controls is highest,
 and changes the height of the other control to match.
-The controlsÕ widths and positions are unchanged.
+The controlsâ€™ widths and positions are unchanged.
 
 (1.1)
 */
@@ -1306,7 +1306,7 @@ Localization_SizeControlsMaximumHeight	(ControlRef		inControl1,
 /*!
 Determines which of the two given controls is widest,
 and changes the width of the other control to match.
-The controlsÕ heights and positions are unchanged.
+The controlsâ€™ heights and positions are unchanged.
 
 (1.1)
 */
@@ -1339,7 +1339,7 @@ font information about the new font is returned
 
 Pass the special font code USHRT_MAX to indicate that
 you want to set up a control to use the Aqua-like
-ÒhugeÓ system font, i.e. the system font, size 14.
+â€œhugeâ€ system font, i.e. the system font, size 14.
 
 (1.0)
 */
@@ -1404,7 +1404,7 @@ Localization_UseThemeFont	(ThemeFontID	inThemeFontToUse,
 		*outFontStylePtr = (inThemeFontToUse == kThemeSmallEmphasizedSystemFont) ? bold : normal;
 	}
 	
-	// special case for Aqua-like dialogs with ÒhugeÓ title text
+	// special case for Aqua-like dialogs with â€œhugeâ€ title text
 	if (inThemeFontToUse == USHRT_MAX)
 	{
 		*outFontSizePtr = 16;
@@ -1617,7 +1617,7 @@ getControlFontInfo	(ControlFontStyleRec const*	inFontStyleRecPtr,
 /*!
 Provides a wealth of information about
 the specified theme font (or about an
-ÒappropriateÓ substitute font, if the
+â€œappropriateâ€ substitute font, if the
 exact theme font cannot be determined
 because Appearance 1.1 is not installed).
 

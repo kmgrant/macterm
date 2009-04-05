@@ -3,24 +3,24 @@
 	you to seamlessly use traditional icon suites, new Icon
 	Services icons, or other formats from a single reference!
 	
-	But more than that, it doesn’t matter *how* you describe
-	your icon - for example, if it’s convenient to specify it as
+	But more than that, it doesn‚Äôt matter *how* you describe
+	your icon - for example, if it‚Äôs convenient to specify it as
 	an old-style color icon, go ahead - on Mac OS 8.0 and 8.1, a
 	suitable icon resource will automatically be used, and yet
 	on Mac OS 9 and X Icon Services will be used to retrieve an
 	icon of higher quality.  In short, everything about the
-	“real” icon is handled at runtime.  Your code can use
+	‚Äúreal‚Äù icon is handled at runtime.  Your code can use
 	new-style specifications such as Icon Services, or old-style
 	resource-based requests, and BOTH will work on ANY version
 	of the Mac OS.  Is that powerful or what?  (This feature is
-	limited to the code’s internal knowledge of the available
+	limited to the code‚Äôs internal knowledge of the available
 	icons; feel free to extend the code to ensure other icons
 	you want to use will work in this way.)
 */
 /*###############################################################
 
 	Interface Library 2.0
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

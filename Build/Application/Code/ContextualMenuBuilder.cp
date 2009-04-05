@@ -9,7 +9,7 @@
 	only if it exists in the menu bar and is enabled.  However,
 	contextual menu items are allowed to use different item text
 	to represent a command, to appear more context-sensitive
-	(e.g. “Hide This Window”, not “Hide Frontmost Window”).
+	(e.g. ‚ÄúHide This Window‚Äù, not ‚ÄúHide Frontmost Window‚Äù).
 	
 	IMPORTANT: Contextual menu implementation requires thought.
 	           Ask yourself the following questions...
@@ -22,7 +22,7 @@
 	  your choices to those items which will most certainly be
 	  useful to the user, either because they are frequently
 	  used, or because they are naturally suited to a pop-up
-	  menu (such as “Copy”).
+	  menu (such as ‚ÄúCopy‚Äù).
 			   
 	- With the *sole* exception of possibly the Help item, never
 	  show disabled menu items in any contextual menu.  Items
@@ -35,9 +35,9 @@
 	  menu to the user!
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -193,7 +193,7 @@ ContextualMenuBuilder_DisplayMenuForView	(HIViewRef		inWhichView,
 													contentView/* destination view */);
 						if (noErr == error)
 						{
-							// the content-local mouse coordinates match QuickDraw “local”
+							// the content-local mouse coordinates match QuickDraw ‚Äúlocal‚Äù
 							// coordinates, and can finally be converted to a global point
 							globalMouse.h = STATIC_CAST(mouseLocation.x, SInt16);
 							globalMouse.v = STATIC_CAST(mouseLocation.y, SInt16);
@@ -463,7 +463,7 @@ ContextualMenuBuilder_PopulateMenuForView	(HIViewRef		inWhichView,
 			// Depending upon the view type, there may be data that can be used by contextual
 			// menu plug-ins.  The method of getting that data also depends on the view type.
 			// See what kind of view the contextual-menu-display event was for, and send that
-			// view’s data (usually the current selection) to the plug-ins via a new Apple
+			// view‚Äôs data (usually the current selection) to the plug-ins via a new Apple
 			// Event descriptor.
 			// UNIMPLEMENTED
 			
@@ -604,7 +604,7 @@ ContextualMenuBuilder_PopulateMenuForWindow		(HIWindowRef		inWhichWindow,
 			// Depending upon the window type, there may be data that can be used by contextual
 			// menu plug-ins.  The method of getting that data also depends on the window type.
 			// See what kind of window the contextual-menu-display event was for, and send that
-			// window’s data (usually the current selection) to the plug-ins via a new Apple
+			// window‚Äôs data (usually the current selection) to the plug-ins via a new Apple
 			// Event descriptor.
 			if (isConnectionWindow)
 			{
@@ -702,7 +702,7 @@ buildAboutBoxContextualMenu		(MenuRef		inMenu,
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCloseThisWindow, itemInfo.commandText).ok())
 		{
-			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Close This Window”
+			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúClose This Window‚Äù
 			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 		}
 	}
@@ -737,7 +737,7 @@ buildClipboardWindowContextualMenu	(MenuRef		inMenu,
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuOpenThisResource, itemInfo.commandText).ok())
 		{
-			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Open This Resource (URL)”
+			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúOpen This Resource (URL)‚Äù
 			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 		}
 	}
@@ -751,7 +751,7 @@ buildClipboardWindowContextualMenu	(MenuRef		inMenu,
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCloseThisWindow, itemInfo.commandText).ok())
 		{
-			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Close This Window”
+			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúClose This Window‚Äù
 			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 		}
 	}
@@ -805,7 +805,7 @@ buildSessionStatusWindowContextualMenu	(MenuRef		inMenu,
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuCloseThisWindow, itemInfo.commandText).ok())
 		{
-			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Close This Window”
+			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúClose This Window‚Äù
 			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 		}
 	}
@@ -838,7 +838,7 @@ buildTerminalBackgroundContextualMenu	(MenuRef		inMenu,
 	{
 		if (UIStrings_Copy(kUIStrings_ContextualMenuChangeBackground, itemInfo.commandText).ok())
 		{
-			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Close This Window”
+			(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúClose This Window‚Äù
 			CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 		}
 	}
@@ -854,7 +854,7 @@ builds two types of menus: one for text selections,
 and one if nothing is selected.  If text is selected,
 this routine assumes that the user will most likely
 not want any of the more-general items, such as
-“Set Window Title”.  Otherwise, these general items
+‚ÄúSet Window Title‚Äù.  Otherwise, these general items
 are available if applicable.
 
 (3.0)
@@ -893,7 +893,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuOpenThisResource, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Open This Resource (URL)”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúOpen This Resource (URL)‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -907,7 +907,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuCopyToClipboard, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Copy to Clipboard”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúCopy to Clipboard‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -922,7 +922,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			{
 				if (UIStrings_Copy(kUIStrings_ContextualMenuCopyUsingTabsForSpaces, itemInfo.commandText).ok())
 				{
-					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Copy Using Tabs For Spaces”
+					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúCopy Using Tabs For Spaces‚Äù
 					CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 				}
 			}
@@ -933,7 +933,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			{
 				if (UIStrings_Copy(kUIStrings_ContextualMenuSaveSelectedText, itemInfo.commandText).ok())
 				{
-					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Save Selected Text…”
+					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúSave Selected Text‚Ä¶‚Äù
 					CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 				}
 			}
@@ -945,7 +945,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			itemInfo.commandID = kCommandPrintOne;
 			if (UIStrings_Copy(kUIStrings_ContextualMenuPrintSelectionNow, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Print Selection Now”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúPrint Selection Now‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 			
@@ -955,7 +955,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 			{
 				if (UIStrings_Copy(kUIStrings_ContextualMenuSpeakSelectedText, itemInfo.commandText).ok())
 				{
-					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Speak Selected Text”
+					(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúSpeak Selected Text‚Äù
 					CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 				}
 			}
@@ -982,7 +982,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuPasteText, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Paste Text”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúPaste Text‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -993,7 +993,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuFindInThisWindow, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Find In This Window”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúFind In This Window‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -1007,7 +1007,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuHideThisWindow, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Hide This Window”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúHide This Window‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -1018,7 +1018,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuArrangeAllInFront, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Stack Windows”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúStack Windows‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -1032,7 +1032,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuCustomScreenDimensions, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Custom Screen Dimensions…”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúCustom Screen Dimensions‚Ä¶‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -1043,7 +1043,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuCustomFormat, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Custom Format…”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúCustom Format‚Ä¶‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -1054,7 +1054,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuSpecialKeySequences, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Special Key Sequences…”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúSpecial Key Sequences‚Ä¶‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}
@@ -1065,7 +1065,7 @@ buildTerminalWindowContextualMenu	(MenuRef		inMenu,
 		{
 			if (UIStrings_Copy(kUIStrings_ContextualMenuRenameThisWindow, itemInfo.commandText).ok())
 			{
-				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add “Rename This Window…”
+				(OSStatus)ContextSensitiveMenu_AddItem(inMenu, &itemInfo); // add ‚ÄúRename This Window‚Ä¶‚Äù
 				CFRelease(itemInfo.commandText), itemInfo.commandText = nullptr;
 			}
 		}

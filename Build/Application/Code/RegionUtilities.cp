@@ -3,7 +3,7 @@
 	RegionUtilities.cp
 	
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -85,7 +85,7 @@ RegionUtilities_AddRoundedRectangleToPath	(CGContextRef		inContext,
 			// and the line segments leading up to the curve, each call
 			// is constructing more of the shape than is first apparent.
 			// The order and starting point are also important, as the
-			// “current” point is one of 3 key points defining the
+			// ‚Äúcurrent‚Äù point is one of 3 key points defining the
 			// tangential lines for each curve.  Each equal "L" piece of
 			// the rectangle is drawn in turn, generating circular corners.
 			CGContextMoveToPoint(inContext, kScaledWidth, kScaledHalfHeight);
@@ -138,7 +138,7 @@ RegionUtilities_CenterRectIn	(Rect*			inoutInner,
 	//									(inoutInner->left + INTEGER_HALVED(inoutInner->right - inoutInner->left)),
 	//								(inOuter->top + INTEGER_HALVED(inOuter->bottom - inOuter->top)) -
 	//									(inoutInner->top + INTEGER_HALVED(inoutInner->bottom - inoutInner->top)));
-	// however, it’s possible to multiply out the above equation and reduce it
+	// however, it‚Äôs possible to multiply out the above equation and reduce it
 	// to the following, simpler form; since at first glance the simpler form
 	// is less obviously correct, the long expansion is included above for your
 	// peace of mind :)
@@ -178,10 +178,10 @@ RegionUtilities_GetPositioningBounds	(HIWindowRef	inWindow,
 This powerful routine iterates through the
 device list, determines the monitor that
 contains the largest chunk of the given
-window’s structure region, and then returns
+window‚Äôs structure region, and then returns
 the gray region of that device.  Usually,
 this will be the entire chunk of the desktop
-that crosses the device, unless it’s the
+that crosses the device, unless it‚Äôs the
 main device, in which case the region will
 have the menu bar height subtracted from it.
 
@@ -232,7 +232,7 @@ RegionUtilities_GetWindowDeviceGrayRect		(WindowRef	inWindow,
 /*!
 Determines the available window positioning
 bounds for the device that contains the largest
-part of the specified window’s structure region,
+part of the specified window‚Äôs structure region,
 and then returns the largest size the window may
 have according to the Human Interface Guidelines.
 This means that the window is capped at a maximum
@@ -258,8 +258,8 @@ RegionUtilities_GetWindowMaximumBounds	(WindowRef	inWindow,
 #if 0
 	enum
 	{
-		kMaximumReasonableWidth = 1152,	// arbitrary; no matter how big the monitor, window can’t be wider
-		kMaximumReasonableHeight = 768	// arbitrary; no matter how big the monitor, window can’t be higher
+		kMaximumReasonableWidth = 1152,	// arbitrary; no matter how big the monitor, window can‚Äôt be wider
+		kMaximumReasonableHeight = 768	// arbitrary; no matter how big the monitor, window can‚Äôt be higher
 	};
 #endif
 	Rect	maximumScreenBounds;
@@ -271,7 +271,7 @@ RegionUtilities_GetWindowMaximumBounds	(WindowRef	inWindow,
 	(OSStatus)GetWindowBounds(inWindow, kWindowContentRgn, &contentRegionBounds);
 	(OSStatus)GetWindowBounds(inWindow, kWindowStructureRgn, &structureRegionBounds);
 	
-	// figure out the largest bounding box the window’s structure region can have
+	// figure out the largest bounding box the window‚Äôs structure region can have
 	RegionUtilities_GetPositioningBounds(inWindow, &maximumScreenBounds);
 	unless (inNoInsets)
 	{
@@ -313,7 +313,7 @@ RegionUtilities_GetWindowMaximumBounds	(WindowRef	inWindow,
 /*!
 Converts a region to global coordinates by translating
 the origin of its bounding box relative to that of the
-current QuickDraw graphics port (owning window’s
+current QuickDraw graphics port (owning window‚Äôs
 content region).
 
 (2.6)
@@ -332,7 +332,7 @@ RegionUtilities_LocalToGlobal	(RgnHandle		inoutRegion)
 
 /*!
 Returns true only if the specified points are equal or
-“close”, as defined by the user interface guidelines
+‚Äúclose‚Äù, as defined by the user interface guidelines
 for the amount the mouse can move in any direction and
 still be considered in the same place (e.g. for
 processing double-clicks).
@@ -380,7 +380,7 @@ RegionUtilities_RedrawControlOnNextUpdate	(ControlRef		inControl)
 
 
 /*!
-Invalidates the entire area of a window’s graphics
+Invalidates the entire area of a window‚Äôs graphics
 port (content region).  This routine calls
 InvalWindowRect().
 
@@ -415,7 +415,7 @@ RegionUtilities_SetControlUpToDate	(ControlRef		inControl)
 
 
 /*!
-Validates the entire area of a window’s graphics
+Validates the entire area of a window‚Äôs graphics
 port (content region).  This routine calls
 ValidWindowRect().
 

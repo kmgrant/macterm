@@ -3,9 +3,9 @@
 	PrefPanelSessions.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2009 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -116,7 +116,7 @@ HIViewID const	idMyCheckBoxTEKPageClearsScreen	= { 'XPCS', 0/* ID */ };
 namespace {
 
 /*!
-Implements the ÒData FlowÓ tab.
+Implements the â€œData Flowâ€ tab.
 */
 struct My_SessionsPanelDataFlowUI
 {
@@ -145,7 +145,7 @@ private:
 };
 
 /*!
-Implements the ÒVector GraphicsÓ tab.
+Implements the â€œVector Graphicsâ€ tab.
 */
 struct My_SessionsPanelGraphicsUI
 {
@@ -180,7 +180,7 @@ private:
 };
 
 /*!
-Implements the ÒKeyboardÓ tab.
+Implements the â€œKeyboardâ€ tab.
 */
 struct My_SessionsPanelKeyboardUI
 {
@@ -209,7 +209,7 @@ private:
 };
 
 /*!
-Implements the ÒResourceÓ tab.
+Implements the â€œResourceâ€ tab.
 */
 struct My_SessionsPanelResourceUI
 {
@@ -769,7 +769,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldnÕt be...
+			// this notification is currently ignored, but shouldnâ€™t be...
 		}
 		break;
 	
@@ -793,7 +793,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panelâ€™s container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -1028,7 +1028,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldnÕt be...
+			// this notification is currently ignored, but shouldnâ€™t be...
 		}
 		break;
 	
@@ -1052,7 +1052,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panelâ€™s container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -1371,7 +1371,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldnÕt be...
+			// this notification is currently ignored, but shouldnâ€™t be...
 		}
 		break;
 	
@@ -1395,7 +1395,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panelâ€™s container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -1685,7 +1685,7 @@ panelChanged	(Panel_Ref		inPanel,
 	
 	case kPanel_MessageNewAppearanceTheme: // notification of theme switch, a request to recalculate view sizes
 		{
-			// this notification is currently ignored, but shouldnÕt be...
+			// this notification is currently ignored, but shouldnâ€™t be...
 		}
 		break;
 	
@@ -1719,7 +1719,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panelÕs container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panelâ€™s container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *((Boolean*)inDataPtr);
 			
@@ -2221,7 +2221,7 @@ setCommandLine		(CFStringRef	inCommandLine)
 
 
 /*!
-Since everything is ÒreallyÓ a local Unix command, this
+Since everything is â€œreallyâ€ a local Unix command, this
 routine uses the given remote options and updates the
 command line field with appropriate values.
 
@@ -2383,7 +2383,7 @@ updateCommandLine	(Session_Protocol	inProtocol,
 		if (result)
 		{
 			// since commands tend to follow similar conventions, this section
-			// appends options in ÒstandardÓ form if supported by the protocol
+			// appends options in â€œstandardâ€ form if supported by the protocol
 			// (if MOST commands do not have an option, append it in the above
 			// switch, instead)
 			if ((standardIPv6Append) && (nullptr != inHostName) &&
@@ -2599,7 +2599,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					// update the pop-up button
 					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
-					// delete the Òassociated FormatÓ preference, which will cause
+					// delete the â€œassociated Formatâ€ preference, which will cause
 					// a fallback to the default when it is later queried
 					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedFormatFavorite);
 					
@@ -2660,7 +2660,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					// update the pop-up button
 					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
 					
-					// delete the Òassociated TerminalÓ preference, which will cause
+					// delete the â€œassociated Terminalâ€ preference, which will cause
 					// a fallback to the default when it is later queried
 					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTerminalFavorite);
 					
@@ -2712,8 +2712,8 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 				break;
 			
 			case kCommandShowCommandLine:
-				// this normally means Òshow command line floaterÓ, but in the context
-				// of an active New Session sheet, it means Òselect command line fieldÓ
+				// this normally means â€œshow command line floaterâ€, but in the context
+				// of an active New Session sheet, it means â€œselect command line fieldâ€
 				{
 					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
 					
@@ -2800,7 +2800,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldnÕt be able to select menu commands while the window is open
+				// wouldnâ€™t be able to select menu commands while the window is open
 				result = eventNotHandledErr;
 				break;
 			}

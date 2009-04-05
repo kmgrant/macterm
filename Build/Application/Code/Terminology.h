@@ -15,9 +15,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -324,7 +324,7 @@
 #define kTelnetEventIDProcessSpawn									'TUnx'
 
 // HIDDEN events; these are only used by MacTelnet Help scripts (to do things for the user),
-// and by MacTelnetÕs libraries, in order to communicate with the debugging console.
+// and by MacTelnetâ€™s libraries, in order to communicate with the debugging console.
 #define kTelnetHiddenEventIDConsoleWriteLine						'?WrL'
 #define kTelnetHiddenEventIDDisplayDialog							'?Dlg'
 

@@ -15,7 +15,7 @@
 /*###############################################################
 
 	Contexts Library 2.0
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -87,7 +87,7 @@ ways based on the code provided.
 Although this callback is currently used for contextual menus, it
 is meant to be flexible enough to handle any generic context
 specification.  Therefore, if possible, try to write context
-discriminators in such a way as to consider menu items as “commands”
+discriminators in such a way as to consider menu items as ‚Äúcommands‚Äù
 which could represent any invocation method.
 */
 typedef Boolean (*ContextSensitiveMenu_VerifierProcPtr)	(EventRecord*		inoutEventPtr,

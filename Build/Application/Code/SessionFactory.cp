@@ -3,9 +3,9 @@
 	SessionFactory.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -144,7 +144,7 @@ namespace {
 /*!
 Examines every terminal window in the specified workspace
 and updates its tab placement to match its position in the
-workspace.  This has the effect of “nudging over” tabs
+workspace.  This has the effect of ‚Äúnudging over‚Äù tabs
 when windows disappear or are inserted.
 
 IMPORTANT: Consult "gAutoRearrangeTabs" before using this.
@@ -596,7 +596,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 /*!
 Creates a terminal window and attempts to run
 a shell process inside it, corresponding to the
-user’s preferred shell.
+user‚Äôs preferred shell.
 
 If unsuccessful, nullptr is returned and an alert
 message may be displayed to the user; otherwise,
@@ -900,7 +900,7 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 															commandLine);
 		if (kSessionDescription_ResultOK == dataAccessError)
 		{
-			// okay, that data is in the file; this means it describes a “local” session...
+			// okay, that data is in the file; this means it describes a ‚Äúlocal‚Äù session...
 			CFArrayRef		argv = CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault, commandLine,
 																			CFSTR(" ")/* separators */);
 			
@@ -921,9 +921,9 @@ SessionFactory_NewSessionFromDescription	(TerminalWindowRef			inTerminalWindowOr
 			//													hostName);
 			if (kSessionDescription_ResultOK == dataAccessError)
 			{
-				// okay, host name data is in the file; this means it describes a “remote” session...
+				// okay, host name data is in the file; this means it describes a ‚Äúremote‚Äù session...
 				// UNIMPLEMENTED
-				// (NOTE: currently on Mac OS X, all “remote” sessions are effectively local commands...)
+				// (NOTE: currently on Mac OS X, all ‚Äúremote‚Äù sessions are effectively local commands...)
 			}
 			else
 			{
@@ -1199,7 +1199,7 @@ SessionFactory_NewTerminalWindowUserFavorite	(Preferences_ContextRef		inTerminal
 
 /*!
 Returns "true" if at least one session is in use,
-regardless of state (i.e. it doesn’t have to be
+regardless of state (i.e. it doesn‚Äôt have to be
 connected yet).
 
 (3.0)
@@ -1227,7 +1227,7 @@ considerable time to complete the session creation,
 this function returns immediately; you can only use
 the return value to determine if (say) a dialog
 box was displayed correctly, NOT to determine if the
-user’s new session was created.
+user‚Äôs new session was created.
 
 If you need to know when the user is finished, install
 a listener for a Session Factory event (such as
@@ -1291,7 +1291,7 @@ When you need to perform an operation on a select subset
 of all sessions, use this method.  Session references can
 be used to obtain a wealth of information about a session
 (including pointers to other data structures), and to
-manipulate those sessions (for example, hiding a session’s
+manipulate those sessions (for example, hiding a session‚Äôs
 window).
 
 The filter flags indicate which sessions you wish to
@@ -1355,7 +1355,7 @@ defines what "inoutResultPtr" is, and the meaning of
 
 WARNING:	It is not safe to use this routine with
 			an iterator that destroys terminal
-			windows, sessions, or other “first class”
+			windows, sessions, or other ‚Äúfirst class‚Äù
 			objects.
 
 (3.0)
@@ -1550,7 +1550,7 @@ SessionFactory_MoveTerminalWindowToNewWorkspace		(TerminalWindowRef		inTerminalW
 /*!
 Returns the number of sessions that are in
 use, regardless of state (i.e. they are counted
-even if they aren’t connected yet).
+even if they aren‚Äôt connected yet).
 
 (3.0)
 */
@@ -1836,8 +1836,8 @@ namespace {
 Handles the "kEventNetEvents_SessionDataArrived" event
 of the "kEventClassNetEvents_Session" class.
 
-Invoked by Mac OS X whenever a custom “data is available
-for processing” event is posted (presumably by a
+Invoked by Mac OS X whenever a custom ‚Äúdata is available
+for processing‚Äù event is posted (presumably by a
 preemptive thread receiving data from a process, or the
 main thread receiving input from the user).
 
@@ -1975,7 +1975,7 @@ changeNotifyGlobal		(SessionFactory_Change	inWhatChanged,
 Using a *session* context, configures the specified
 terminal window appropriately.
 
-This works by checking for any “associated format” in
+This works by checking for any ‚Äúassociated format‚Äù in
 the given context, finds the context with that name,
 and copies its settings.
 
@@ -2028,7 +2028,7 @@ Internal version of SessionFactory_NewTerminalWindowUserFavorite().
 TEMPORARY - The context parameters are probably overkill, since
 in most cases a terminal window (new or not) needs to be
 reconfigured a certain way.  This usually means that a new window
-used for a new session will ultimately be “configured twice”.
+used for a new session will ultimately be ‚Äúconfigured twice‚Äù.
 
 (3.0)
 */
@@ -2207,7 +2207,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the command information was found, proceed
 		if (result == noErr)
 		{
-			// don’t claim to have handled any commands not shown below
+			// don‚Äôt claim to have handled any commands not shown below
 			result = eventNotHandledErr;
 			
 			switch (kEventKind)
@@ -2235,7 +2235,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						else
 						{
 							// this relies on the text of the menu command to use
-							// the right Favorite, so it won’t work without a menu
+							// the right Favorite, so it won‚Äôt work without a menu
 							if (received.attributes & kHICommandFromMenu)
 							{
 								// extract the name of the Favorite from the menu text;
@@ -2316,7 +2316,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandSessionByWindowName:
 					// this relies on the property of the menu command to use
-					// the right Session, so it won’t work without a menu
+					// the right Session, so it won‚Äôt work without a menu
 					if (received.attributes & kHICommandFromMenu)
 					{
 						SessionRef		session = nullptr;
@@ -2484,8 +2484,8 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 Handles "kEventNetEvents_SessionSetState" of
 "kEventClassNetEvents_Session".
 
-Invoked by Mac OS X whenever a custom “set session
-state” event is posted (presumably by a preemptive
+Invoked by Mac OS X whenever a custom ‚Äúset session
+state‚Äù event is posted (presumably by a preemptive
 thread running that session).
 
 This is functionally equivalent to invoking
@@ -2545,7 +2545,7 @@ startTrackingSession	(SessionRef				inSession,
 {
 	//Console_WriteLine("NEW SESSION CONSTRUCTED");
 	
-	// ensure that changes to the specified session invoke the Session Factory’s notifier
+	// ensure that changes to the specified session invoke the Session Factory‚Äôs notifier
 	Session_StartMonitoring(inSession, kSession_AllChanges, gSessionChangeListenerRef);
 	
 	// start listening for data; tell the session where to dump
@@ -2611,7 +2611,7 @@ stopTrackingSession		(SessionRef		inSession)
 {
 	//Console_WriteLine("SESSION DESTRUCTED");
 	
-	// ensure that changes to the specified session no longer invoke the Session Factory’s notifier
+	// ensure that changes to the specified session no longer invoke the Session Factory‚Äôs notifier
 	Session_StopMonitoring(inSession, kSession_AllChanges, gSessionChangeListenerRef);
 	
 	// remove the specified session from the creation-order list;

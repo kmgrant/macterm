@@ -1,11 +1,11 @@
 /*!	\file Undoables.h
 	\brief Full support for Undo using abstract commands.
 	
-	With the power of this module at your fingertips, there’s no
+	With the power of this module at your fingertips, there‚Äôs no
 	excuse not to support Undo and Redo in your application!
 	Using a simple but very flexible interface, you can register
 	actions as being undoable as soon as they occur.  This
-	module will retain relevant data (a “context”), as well as a
+	module will retain relevant data (a ‚Äúcontext‚Äù), as well as a
 	pointer to the action routine that can use your context to
 	perform an Undo or Redo on demand.  The code could not be
 	simpler - just use one function call in response to the user
@@ -19,7 +19,7 @@
 /*###############################################################
 
 	Contexts Library 1.1
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -61,7 +61,7 @@ enum
 {
 	kUndoables_ActionInstructionUndo	= 1,	//!< requesting procedure to undo the action that is apparently defined by the context
 	kUndoables_ActionInstructionRedo	= 2,	//!< requesting procedure to redo the action that is apparently defined by the context
-	kUndoables_ActionInstructionDispose	= 3		//!< the action is being destroyed for some reason - deallocate context’s memory, etc.
+	kUndoables_ActionInstructionDispose	= 3		//!< the action is being destroyed for some reason - deallocate context‚Äôs memory, etc.
 												//!  and then invoke Undoables_DisposeAction()
 };
 
@@ -80,8 +80,8 @@ Style of Undo to support; one at a time, or stacked.
 typedef SInt16 Undoables_UndoHandlingMechanism;
 enum
 {
-	kUndoables_UndoHandlingMechanismOnlyOne		= 0,	//!< next undoable action throws away previous; “remove” replaces Redo action
-	kUndoables_UndoHandlingMechanismMultiple	= 1		//!< next undoable action on Undo stack; “remove” moves action to Redo stack
+	kUndoables_UndoHandlingMechanismOnlyOne		= 0,	//!< next undoable action throws away previous; ‚Äúremove‚Äù replaces Redo action
+	kUndoables_UndoHandlingMechanismMultiple	= 1		//!< next undoable action on Undo stack; ‚Äúremove‚Äù moves action to Redo stack
 };
 
 #pragma mark Types

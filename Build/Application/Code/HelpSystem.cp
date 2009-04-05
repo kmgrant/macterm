@@ -3,9 +3,9 @@
 	HelpSystem.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2007 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -93,7 +93,7 @@ HelpSystem_DisplayHelpFromKeyPhrase		(HelpSystem_KeyPhrase	inKeyPhrase)
 	HelpSystem_Result	result = kHelpSystem_ResultOK;
 	
 	
-	if (inKeyPhrase == kHelpSystem_KeyPhraseDefault) result = displayMainHelp(); // same as “without context”
+	if (inKeyPhrase == kHelpSystem_KeyPhraseDefault) result = displayMainHelp(); // same as ‚Äúwithout context‚Äù
 	else result = displayHelpFromKeyPhrase(inKeyPhrase); // open help in context
 	
 	return result;
@@ -145,7 +145,7 @@ HelpSystem_DisplayHelpWithoutContext ()
 Locates the specified key phrase string, and returns
 a copy of it; thus, you must call CFRelease() when
 you are finished with it.  If you pass the value
-“kHelpSystem_KeyPhraseDefault”, the string will
+‚ÄúkHelpSystem_KeyPhraseDefault‚Äù, the string will
 match the help book name.
 
 \retval kHelpSystem_ResultOK
@@ -174,7 +174,7 @@ window level, so this means the return value
 corresponds to the key phrase of the frontmost non-
 floating window, if any.
 
-If the return value is “kHelpSystem_KeyPhraseDefault”,
+If the return value is ‚ÄúkHelpSystem_KeyPhraseDefault‚Äù,
 there is no particular context set.  This would mean
 a table-of-contents view should be displayed when help
 is provided to the user.
@@ -190,7 +190,7 @@ HelpSystem_ReturnCurrentContextKeyPhrase ()
 
 /*!
 Sets the current help context of the specified window.
-You can clear a window’s context by passing in the
+You can clear a window‚Äôs context by passing in the
 default value, "kHelpSystem_KeyPhraseDefault"; you
 should always default the value just before destroying
 the window, to ensure this module can clean up its
@@ -214,14 +214,14 @@ HelpSystem_SetWindowKeyPhrase	(WindowRef				inWindow,
 	{
 		if (windowToKeyPhraseIterator != gWindowToKeyPhraseMap().end())
 		{
-			// default key phrase; delete this window’s key phrase
+			// default key phrase; delete this window‚Äôs key phrase
 			gWindowToKeyPhraseMap().erase(windowToKeyPhraseIterator);
 			assert(gWindowToKeyPhraseMap().find(inWindow) == gWindowToKeyPhraseMap().end());
 		}
 	}
 	else
 	{
-		// register a new window’s key phrase
+		// register a new window‚Äôs key phrase
 		gWindowToKeyPhraseMap()[inWindow] = inKeyPhrase;
 		assert(gWindowToKeyPhraseMap().find(inWindow) != gWindowToKeyPhraseMap().end());
 	}

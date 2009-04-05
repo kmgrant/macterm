@@ -3,7 +3,7 @@
 	ListUtilities.cp
 	
 	Interface Library 1.1
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -122,7 +122,7 @@ void
 ListUtilities_GetUniqueItemText		(ListHandle		inListHandle,
 									 Str255			inoutItemText)
 {
-	// only change the specified item text if itÕs already ÒtakenÓ by an item in the menu
+	// only change the specified item text if itâ€™s already â€œtakenâ€ by an item in the menu
 	while (!ListUtilities_IsItemUnique(inListHandle, inoutItemText))
 	{
 		if ((inoutItemText[inoutItemText[0]] > '9') ||

@@ -6,7 +6,7 @@
 	represent anything, such as whether or not something exists.
 	
 	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -127,9 +127,9 @@ If the flag "inFlag" does not exist and is more
 than 32, this routine will create as many sets as
 needed to make that flag accessible, and then set
 it as indicated.  For this reason, all of your
-application’s flags should be consecutive and
+application‚Äôs flags should be consecutive and
 relative to "kFlagManager_FirstValidFlag", and
-the “most needed” flags should be the first 32.
+the ‚Äúmost needed‚Äù flags should be the first 32.
 
 (1.0)
 */
@@ -144,7 +144,7 @@ FlagManager_Set		(FlagManagerFlag	inFlag,
 	}
 	else
 	{
-		// more than 32 flags are allowed, but there’s a performance penalty
+		// more than 32 flags are allowed, but there‚Äôs a performance penalty
 		if (gFlagsPtr == nullptr) newFlagSet(&gFlagsPtr);
 		if (gFlagsPtr != nullptr)
 		{
@@ -190,7 +190,7 @@ FlagManager_Test	(FlagManagerFlag	inFlag)
 	Boolean		result = false;
 	
 	
-	// the first 32 flags are accessed quickly (note that a Boolean isn’t 32 bits, so "!= 0" is required!)
+	// the first 32 flags are accessed quickly (note that a Boolean isn‚Äôt 32 bits, so "!= 0" is required!)
 	if (inFlag < (1 << 5)) result = ((gRocketFlags & (1 << inFlag)) != 0);
 	else if (gFlagsPtr != nullptr)
 	{
@@ -219,7 +219,7 @@ FlagManager_Test	(FlagManagerFlag	inFlag)
 			// isolate the flag number in the set
 			flagCount %= kFlagCountPerSet;
 			
-			// get the flag (note that a Boolean isn’t 32 bits, so "!= 0" is required!)
+			// get the flag (note that a Boolean isn‚Äôt 32 bits, so "!= 0" is required!)
 			result = ((setPtr->bits & (1 << flagCount)) != 0);
 		}
 	}

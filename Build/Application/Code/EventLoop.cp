@@ -3,9 +3,9 @@
 	EventLoop.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -255,7 +255,7 @@ EventLoop_Init ()
 	EventLoop_Result	result = noErr;
 	
 	
-	// set the sleep time (3.0 - don’t use preferences value, it’s not user-specifiable anymore)
+	// set the sleep time (3.0 - don‚Äôt use preferences value, it‚Äôs not user-specifiable anymore)
 	gTicksWaitNextEvent = 60; // make this larger to increase likelihood of high-frequency timers firing on time
 	
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
@@ -273,7 +273,7 @@ EventLoop_Init ()
 												GetEventTypeCount(whenToolbarSheetOpens),
 												whenToolbarSheetOpens, nullptr/* user data */,
 												&gCarbonEventSheetOpeningHandler/* event handler reference */);
-		// don’t check for errors, it’s not critical if this handler is installed
+		// don‚Äôt check for errors, it‚Äôs not critical if this handler is installed
 	}
 #endif
 	
@@ -562,8 +562,8 @@ EventLoop_IsNextCancel ()
 
 /*!
 This routine blocks until a mouse-down event occurs
-or the “double time” has elapsed.  Returns "true"
-only if it is a “double-click” event.
+or the ‚Äúdouble time‚Äù has elapsed.  Returns "true"
+only if it is a ‚Äúdouble-click‚Äù event.
 
 Only if "true" is returned, the resulting mouse
 location in global coordinates is returned.
@@ -574,7 +574,7 @@ actually intending to click twice.
 
 Despite its name, this routine can detect triple-
 clicks, etc. simply by being used repeatedly.  It
-can also detect “one and a half clicks” because it
+can also detect ‚Äúone and a half clicks‚Äù because it
 does not wait for a subsequent mouse-up.
 
 (3.0)
@@ -610,7 +610,7 @@ EventLoop_IsNextDoubleClick		(Point*		outGlobalMouseLocationPtr)
 					STATIC_CAST(mouseDownLocation.y, SInt16));
 		}
 		result = ((error == noErr) && (!IsShowContextualMenuEvent(mouseDownEvent)));
-		ReleaseEvent(mouseDownEvent); // necessary because “pull event from queue” flag set in ReceiveNextEvent() call above
+		ReleaseEvent(mouseDownEvent); // necessary because ‚Äúpull event from queue‚Äù flag set in ReceiveNextEvent() call above
 	}
 	
 	return result;
@@ -686,9 +686,9 @@ EventLoop_RegisterButtonClickKey	(HIViewRef					inButton,
 			assert(ptr->keyEquivalentsToControls.find(inKeyEquivalent) != ptr->keyEquivalentsToControls.end());
 			
 			// check to see if the existing default or Cancel buttons for
-			// the specified control’s window match the given control; if
+			// the specified control‚Äôs window match the given control; if
 			// so and the given key equivalent is not appropriate, then
-			// the given button must no longer be “special”
+			// the given button must no longer be ‚Äúspecial‚Äù
 			if ((ptr->defaultButton == inButton) && (inKeyEquivalent != kEventLoop_KeyEquivalentDefaultButton))
 			{
 				Boolean		defaultFlag = false;
@@ -748,7 +748,7 @@ EventLoop_RegisterButtonClickKey	(HIViewRef					inButton,
 Determines the absolutely current state of the
 modifier keys and the mouse button.  The
 modifiers are somewhat incomplete (for example,
-no checking is done for the “right shift key”,
+no checking is done for the ‚Äúright shift key‚Äù,
 etc.), but all the common modifiers (command,
 control, shift, option, caps lock, and the
 mouse button) are returned.
@@ -834,7 +834,7 @@ window.
 void
 EventLoop_SelectOverRealFrontWindow		(HIWindowRef	inWindow)
 {
-	// I give up, dammit; it’s too hard to prevent
+	// I give up, dammit; it‚Äôs too hard to prevent
 	// activate events from occurring on Mac OS 8/9.
 	SelectWindow(inWindow);
 }// SelectOverRealFrontWindow
@@ -866,7 +866,7 @@ EventLoop_StartMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
 	
 	
-	// add a listener to the specified target’s listener model for the given event
+	// add a listener to the specified target‚Äôs listener model for the given event
 	result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 	if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
 	
@@ -929,7 +929,7 @@ EventLoop_StartMonitoringControl	(EventLoop_ControlEvent		inForWhatEvent,
 			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
 			
 			
-			// add a listener to the specified target’s listener model for the given event
+			// add a listener to the specified target‚Äôs listener model for the given event
 			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
 		}
@@ -992,7 +992,7 @@ EventLoop_StartMonitoringWindow		(EventLoop_WindowEvent		inForWhatEvent,
 			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 			
 			
-			// add a listener to the specified target’s listener model for the given event
+			// add a listener to the specified target‚Äôs listener model for the given event
 			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
 		}
@@ -1018,7 +1018,7 @@ EventLoop_StopMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 	My_GlobalEventTargetAutoLocker	ptr(gGlobalEventTargetHandleLocks(), gGlobalEventTarget);
 	
 	
-	// remove a listener from the specified target’s listener model for the given event
+	// remove a listener from the specified target‚Äôs listener model for the given event
 	ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 	
 	return result;
@@ -1060,7 +1060,7 @@ EventLoop_StopMonitoringControl		(EventLoop_ControlEvent		inForWhatEvent,
 			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
 			
 			
-			// remove a listener from the specified target’s listener model for the given event
+			// remove a listener from the specified target‚Äôs listener model for the given event
 			ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 		}
 	}
@@ -1103,7 +1103,7 @@ EventLoop_StopMonitoringWindow	(EventLoop_WindowEvent		inForWhatEvent,
 			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 			
 			
-			// remove a listener from the specified target’s listener model for the given event
+			// remove a listener from the specified target‚Äôs listener model for the given event
 			ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
 		}
 	}
@@ -1387,12 +1387,12 @@ eventNotifyForControl	(EventLoop_ControlEvent		inEventThatOccurred,
 		My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
 		
 		
-		// invoke listener callback routines appropriately, from the specified control’s event target
+		// invoke listener callback routines appropriately, from the specified control‚Äôs event target
 		ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inoutContextPtr,
 												REINTERPRET_CAST(&result, Boolean*));
 	}
 	
-	// also notify callbacks that don’t care which control it is
+	// also notify callbacks that don‚Äôt care which control it is
 	unless (result) eventNotifyGlobal(inEventThatOccurred, inoutContextPtr);
 	
 	return result;
@@ -1428,12 +1428,12 @@ eventNotifyForWindow	(EventLoop_WindowEvent	inEventThatOccurred,
 		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
 		
 		
-		// invoke listener callback routines appropriately, from the specified window’s event target
+		// invoke listener callback routines appropriately, from the specified window‚Äôs event target
 		ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inoutContextPtr,
 												REINTERPRET_CAST(&result, Boolean*));
 	}
 	
-	// also notify callbacks that don’t care which window it is
+	// also notify callbacks that don‚Äôt care which window it is
 	unless (result) eventNotifyGlobal(inEventThatOccurred, inoutContextPtr);
 	
 	return result;
@@ -1768,7 +1768,7 @@ handleKeyDown	(EventRecord*	inoutEventPtr)
 					{
 						// if there is no key press handler for the entire window,
 						// exhibit the default behavior, which interprets Tab and
-						// Shift-Tab to mean “alter the current user focus control”
+						// Shift-Tab to mean ‚Äúalter the current user focus control‚Äù
 						if (keyPressInfo.shiftDown)
 						{
 							error = ReverseKeyboardFocus(keyPressInfo.window);
@@ -1812,12 +1812,12 @@ handleUpdate	(EventRecord*		inoutEventPtr)
 	
 	GetGWorld(&oldPort, &oldDevice);
 	
-	// set the port to the event’s intended target
+	// set the port to the event‚Äôs intended target
 	SetPortWindowPort(windowToUpdate);
 	GetGWorld(&drawingPort, &drawingDevice);
 	if (visibleRegion != nullptr) GetPortVisibleRegion(drawingPort, visibleRegion);
 	
-	// do not waste time calculating and “drawing” windows that cannot be seen
+	// do not waste time calculating and ‚Äúdrawing‚Äù windows that cannot be seen
 	// (although receiving update events for invisible ports is very rare...)
 	if (visibleRegion != nullptr) unless (EmptyRgn(visibleRegion))
 	{
@@ -2155,7 +2155,7 @@ receiveApplicationSwitch	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		
 		
 		// scrap conversion is not tied to application switching
-		// under Carbon; instead, use the new “promise” mechanism
+		// under Carbon; instead, use the new ‚Äúpromise‚Äù mechanism
 		// provided by the Carbon Scrap Manager
 		
 		// set this global flag, which is consulted in various other files
@@ -2174,7 +2174,7 @@ receiveApplicationSwitch	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		if (resuming) Alert_ServiceNotification();
 		
 		// 3.0 - restore color look-up table for the benefit of applications
-		// that don’t use the Palette Manager
+		// that don‚Äôt use the Palette Manager
 		unless (resuming) RestoreDeviceClut(nullptr/* restore all devices */);
 		
 		// 3.0 - notify all listeners of switch events that a switch has occurred
@@ -2230,7 +2230,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				{
 				case kHICommandPreferences:
 					{
-						// set the item state for the “Preferences…” item
+						// set the item state for the ‚ÄúPreferences‚Ä¶‚Äù item
 						Boolean		enabled = false;
 						Boolean		menuKeyEquivalents = false;
 						size_t		actualSize = 0;
@@ -2259,7 +2259,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 													&menuKeyEquivalents, &actualSize) ==
 								kPreferences_ResultOK)
 						{
-							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
+							menuKeyEquivalents = true; // assume key equivalents, if preference can‚Äôt be found
 						}
 						(OSStatus)SetMenuItemCommandKey(received.menu.menuRef, received.menu.menuItemIndex,
 														false/* is virtual key code */, (menuKeyEquivalents) ? ',' : '\0');
@@ -2299,7 +2299,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 													&menuKeyEquivalents, &actualSize) ==
 								kPreferences_ResultOK)
 						{
-							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
+							menuKeyEquivalents = true; // assume key equivalents, if preference can‚Äôt be found
 						}
 						(OSStatus)SetMenuItemCommandKey(received.menu.menuRef, received.menu.menuItemIndex,
 														false/* is virtual key code */, (menuKeyEquivalents) ? '?' : '\0');
@@ -2311,7 +2311,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandShowHelpTags:
 				case kCommandHideHelpTags:
 					{
-						// set the item state for the “Show Help Tags” item
+						// set the item state for the ‚ÄúShow Help Tags‚Äù item
 						Boolean		menuKeyEquivalents = false;
 						Boolean		hideCondition = false;
 						size_t		actualSize = 0;
@@ -2337,7 +2337,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 													&menuKeyEquivalents, &actualSize) ==
 								kPreferences_ResultOK)
 						{
-							menuKeyEquivalents = true; // assume key equivalents, if preference can’t be found
+							menuKeyEquivalents = true; // assume key equivalents, if preference can‚Äôt be found
 						}
 						(OSStatus)SetMenuItemCommandKey(received.menu.menuRef, received.menu.menuItemIndex,
 														false/* is virtual key code */, (menuKeyEquivalents) ? '?' : '\0');
@@ -2348,7 +2348,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kHICommandCustomizeToolbar:
 					{
-						// set the item state for the “Show Toolbar” item
+						// set the item state for the ‚ÄúShow Toolbar‚Äù item
 						HIWindowRef		window = GetUserFocusWindow();
 						HIToolbarRef	targetToolbar = nullptr;
 						OptionBits		toolbarAttributes = 0;
@@ -2379,7 +2379,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kHICommandShowToolbar:
 				case kHICommandHideToolbar:
 					{
-						// set the item state for the “Show Toolbar” and “Hide Toolbar” items
+						// set the item state for the ‚ÄúShow Toolbar‚Äù and ‚ÄúHide Toolbar‚Äù items
 						HIWindowRef			window = GetUserFocusWindow();
 						WindowAttributes	windowAttributes = 0;
 						OSStatus			error = (nullptr == window)
@@ -2732,7 +2732,7 @@ receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
-Invoked by Mac OS X whenever a modifier key’s
+Invoked by Mac OS X whenever a modifier key‚Äôs
 state changes (e.g. option, control, command,
 or shift).  This routine updates an internal
 variable that is used by other functions

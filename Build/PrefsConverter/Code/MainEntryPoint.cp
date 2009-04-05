@@ -3,7 +3,7 @@
 	MainEntryPoint.cp
 	
 	MacTelnet Preferences Converter
-		© 2004-2008 by Kevin Grant.
+		¬© 2004-2008 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -48,8 +48,8 @@
 #pragma mark Constants
 namespace {
 
-// these should match what is in MacTelnet’s Info.plist file;
-// note also that IF MacTelnet’s identifier ever changes,
+// these should match what is in MacTelnet‚Äôs Info.plist file;
+// note also that IF MacTelnet‚Äôs identifier ever changes,
 // the old names may need to be preserved for the purpose of
 // reading older preferences
 CFStringRef const		kMacTelnetApplicationID = CFSTR("com.mactelnet.MacTelnet");
@@ -63,25 +63,25 @@ typedef SInt16 My_MacTelnetFolder;
 enum
 {
 	// folders defined by MacTelnet
-	kMy_MacTelnetFolderFavorites = 2,					// MacTelnet’s “Favorites” folder, in the preferences folder.
+	kMy_MacTelnetFolderFavorites = 2,					// MacTelnet‚Äôs ‚ÄúFavorites‚Äù folder, in the preferences folder.
 	
-	kMy_MacTelnetFolderPreferences = 4,				// The folder “MacTelnet Preferences”, in the preferences
+	kMy_MacTelnetFolderPreferences = 4,				// The folder ‚ÄúMacTelnet Preferences‚Äù, in the preferences
 												//   folder of the user currently logged in.
 	
-	kMy_MacTelnetFolderScriptsMenuItems = 5,			// MacTelnet’s “Scripts Menu Items” folder.
+	kMy_MacTelnetFolderScriptsMenuItems = 5,			// MacTelnet‚Äôs ‚ÄúScripts Menu Items‚Äù folder.
 	
-	kMy_MacTelnetFolderStartupItems = 6,				// MacTelnet’s “Startup Items” folder, in MacTelnet’s
+	kMy_MacTelnetFolderStartupItems = 6,				// MacTelnet‚Äôs ‚ÄúStartup Items‚Äù folder, in MacTelnet‚Äôs
 												//   preferences folder.
 	
-	kMy_MacTelnetFolderUserMacroFavorites = 8,		// “Macro Sets” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserMacroFavorites = 8,		// ‚ÄúMacro Sets‚Äù folder, in the Favorites folder.
 	
-	kMy_MacTelnetFolderUserProxyFavorites = 9,		// “Proxies” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserProxyFavorites = 9,		// ‚ÄúProxies‚Äù folder, in the Favorites folder.
 	
-	kMy_MacTelnetFolderUserSessionFavorites = 10,		// “Sessions” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserSessionFavorites = 10,		// ‚ÄúSessions‚Äù folder, in the Favorites folder.
 	
-	kMy_MacTelnetFolderUserTerminalFavorites = 11,	// “Terminals” folder, in the Favorites folder.
+	kMy_MacTelnetFolderUserTerminalFavorites = 11,	// ‚ÄúTerminals‚Äù folder, in the Favorites folder.
 	
-	kMy_MacTelnetFolderRecentSessions = 12,			// “Recent Sessions” folder, in MacTelnet’s preferences folder.
+	kMy_MacTelnetFolderRecentSessions = 12,			// ‚ÄúRecent Sessions‚Äù folder, in MacTelnet‚Äôs preferences folder.
 	
 	// folders defined by the Mac OS
 	kMy_MacTelnetFolderMacPreferences = -1,			// the Preferences folder for the user currently logged in
@@ -170,7 +170,7 @@ main	(int	argc,
 	
 	// install event handlers that can receive callbacks
 	// from the OS within the (blocked) main event loop;
-	// this is where all the conversion “work” is done
+	// this is where all the conversion ‚Äúwork‚Äù is done
 	{
 		Boolean		installedHandlersOK = false;
 		
@@ -454,7 +454,7 @@ actionLegacyUpdates ()
 				prefsKey = CFSTR("new-means");
 				switch (appPrefs.newCommandShortcutEffect)
 				{
-				case 'New…': // kCommandNewSessionDialog
+				case 'New‚Ä¶': // kCommandNewSessionDialog
 					setMacTelnetPreference(prefsKey, CFSTR("dialog"));
 					break;
 				
@@ -1306,7 +1306,7 @@ copyFileOrFolderCFString	(My_FolderStringType	inWhichString,
 	// IMPORTANT: The external utility program "genstrings" is not smart enough to
 	//            figure out the proper string table name if you do not inline it.
 	//            If you replace the CFSTR() calls with string constants, they will
-	//            NOT BE PARSED CORRECTLY and consequently you won’t be able to
+	//            NOT BE PARSED CORRECTLY and consequently you won‚Äôt be able to
 	//            automatically generate localizable ".strings" files.
 	switch (inWhichString)
 	{
@@ -1390,7 +1390,7 @@ getDirectoryIDFromFSSpec	(FSSpec const*		inFSSpecPtr)
 /*!
 Fills in a file system specification record with
 information for a particular folder.  If the folder
-doesn’t exist, it is created.
+doesn‚Äôt exist, it is created.
 
 The name information for the resultant file
 specification record is left blank, so that you may
@@ -1419,7 +1419,7 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 	{
 		switch (inFolderType)
 		{
-		case kMy_MacTelnetFolderFavorites: // the “Favorites” folder inside the MacTelnet preferences folder
+		case kMy_MacTelnetFolderFavorites: // the ‚ÄúFavorites‚Äù folder inside the MacTelnet preferences folder
 			result = getFolderFSSpec(kMy_MacTelnetFolderPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1429,16 +1429,16 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				result = makeLocalizedFSSpec(outFolderFSSpecPtr->vRefNum, outFolderFSSpecPtr->parID,
 												kUIStrings_FolderNameApplicationFavorites, outFolderFSSpecPtr);
 				
-				// if no Favorites folder exists in MacTelnet’s preferences folder, create it
+				// if no Favorites folder exists in MacTelnet‚Äôs preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderPreferences: // the “MacTelnet Preferences” folder inside the system “Preferences” folder
+		case kMy_MacTelnetFolderPreferences: // the ‚ÄúMacTelnet Preferences‚Äù folder inside the system ‚ÄúPreferences‚Äù folder
 			result = getFolderFSSpec(kMy_MacTelnetFolderMacPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1448,16 +1448,16 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				result = makeLocalizedFSSpec(outFolderFSSpecPtr->vRefNum, outFolderFSSpecPtr->parID,
 												kUIStrings_FolderNameApplicationPreferences, outFolderFSSpecPtr);
 				
-				// if no MacTelnet Preferences folder exists in the current user’s Preferences folder, create it
+				// if no MacTelnet Preferences folder exists in the current user‚Äôs Preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderScriptsMenuItems: // the MacTelnet “Scripts Menu Items” folder, in MacTelnet’s folder
+		case kMy_MacTelnetFolderScriptsMenuItems: // the MacTelnet ‚ÄúScripts Menu Items‚Äù folder, in MacTelnet‚Äôs folder
 			result = getFolderFSSpec(kMy_MacTelnetFolderPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1467,16 +1467,16 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				result = makeLocalizedFSSpec(outFolderFSSpecPtr->vRefNum, outFolderFSSpecPtr->parID,
 												kUIStrings_FolderNameApplicationScriptsMenuItems, outFolderFSSpecPtr);
 				
-				// if no Scripts Menu Items folder exists in the current user’s Preferences folder, create it
+				// if no Scripts Menu Items folder exists in the current user‚Äôs Preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderStartupItems: // the MacTelnet “Startup Items” folder, in MacTelnet’s preferences folder
+		case kMy_MacTelnetFolderStartupItems: // the MacTelnet ‚ÄúStartup Items‚Äù folder, in MacTelnet‚Äôs preferences folder
 			result = getFolderFSSpec(kMy_MacTelnetFolderPreferences, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1489,13 +1489,13 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				// if no Startup Items folder exists in the MacTelnet Preferences folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderUserMacroFavorites: // the “Macro Sets” folder inside MacTelnet’s Favorites folder (in preferences)
+		case kMy_MacTelnetFolderUserMacroFavorites: // the ‚ÄúMacro Sets‚Äù folder inside MacTelnet‚Äôs Favorites folder (in preferences)
 			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1508,13 +1508,13 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				// if no folder exists in the Favorites folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderUserProxyFavorites: // the “Proxies” folder inside MacTelnet’s Favorites folder (in preferences)
+		case kMy_MacTelnetFolderUserProxyFavorites: // the ‚ÄúProxies‚Äù folder inside MacTelnet‚Äôs Favorites folder (in preferences)
 			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1527,13 +1527,13 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				// if no folder exists in the Favorites folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderUserSessionFavorites: // the “Sessions” folder inside MacTelnet’s Favorites folder (in preferences)
+		case kMy_MacTelnetFolderUserSessionFavorites: // the ‚ÄúSessions‚Äù folder inside MacTelnet‚Äôs Favorites folder (in preferences)
 			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1546,13 +1546,13 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				// if no folder exists in the Favorites folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderUserTerminalFavorites: // the “Terminals” folder inside MacTelnet’s Favorites folder (in preferences)
+		case kMy_MacTelnetFolderUserTerminalFavorites: // the ‚ÄúTerminals‚Äù folder inside MacTelnet‚Äôs Favorites folder (in preferences)
 			result = getFolderFSSpec(kMy_MacTelnetFolderFavorites, outFolderFSSpecPtr);
 			if (noErr == result)
 			{
@@ -1565,13 +1565,13 @@ getFolderFSSpec		(My_MacTelnetFolder		inFolderType,
 				// if no folder exists in the Favorites folder, create it
 				(OSStatus)FSpDirCreate(outFolderFSSpecPtr, GetScriptManagerVariable(smSysScript), &unusedDirID);
 				
-				// now reconstruct the FSSpec so the “parent” directory is the directory itself, and the name is blank
+				// now reconstruct the FSSpec so the ‚Äúparent‚Äù directory is the directory itself, and the name is blank
 				// (this makes the FSSpec much more useful, because it can then be used to place files *in* a folder)
 				transformFolderFSSpec(outFolderFSSpecPtr);
 			}
 			break;
 		
-		case kMy_MacTelnetFolderMacPreferences: // the Mac OS “Preferences” folder for the current user
+		case kMy_MacTelnetFolderMacPreferences: // the Mac OS ‚ÄúPreferences‚Äù folder for the current user
 			result = FindFolder(kUserDomain, kPreferencesFolderType, kCreateFolder,
 								&(outFolderFSSpecPtr->vRefNum), &(outFolderFSSpecPtr->parID));
 			outFolderFSSpecPtr->name[0] = 0;
@@ -1770,14 +1770,14 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	
 	// set up self address for Apple Events
 	gSelfProcessID.highLongOfPSN = 0;
-	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
+	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don‚Äôt use GetCurrentProcess()!
 	error = AECreateDesc(typeProcessSerialNumber, &gSelfProcessID, sizeof(gSelfProcessID), &gSelfAddress);
 	
 	// always make this the frontmost application when it runs
 	SetFrontProcess(&gSelfProcessID);
 	
 	// figure out what version of preferences is on disk; it is also
-	// possible “no version” is there, indicating a need for legacy updates
+	// possible ‚Äúno version‚Äù is there, indicating a need for legacy updates
 	{
 		Boolean		existsAndIsValidFormat = false;
 		
@@ -1785,7 +1785,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		// The preference key used here MUST match what MacTelnet reads in,
 		// for obvious reasons.  Similarly, the application domain must match
 		// what MacTelnet used FOR THE VERSION OF PREFERENCES DESIRED.  So if
-		// MacTelnet’s identifier changes in the future, its old identifier
+		// MacTelnet‚Äôs identifier changes in the future, its old identifier
 		// will still be needed to find the old version number.
 		diskVersion = CFPreferencesGetAppIntegerValue
 						(CFSTR("prefs-version"), kMacTelnetApplicationID,
@@ -1843,7 +1843,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		// reads it back).
 		if (diskVersion < 1)
 		{
-			// Since a “lack of version” is considered version 0, this
+			// Since a ‚Äúlack of version‚Äù is considered version 0, this
 			// converter must perform all upgrades required to move
 			// legacy NCSA Telnet or MacTelnet 3.0 preferences into the
 			// XML era.
@@ -1885,7 +1885,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 			{
 				// The preference key used here MUST match what MacTelnet uses to
 				// read the value in, for obvious reasons.  Similarly, the application
-				// domain must match what is in MacTelnet’s Info.plist file.
+				// domain must match what is in MacTelnet‚Äôs Info.plist file.
 				CFPreferencesSetAppValue(CFSTR("prefs-version"), numberRef, kMacTelnetApplicationID);
 				(Boolean)CFPreferencesAppSynchronize(kMacTelnetApplicationID);
 				CFRelease(numberRef), numberRef = nullptr;
@@ -2172,7 +2172,7 @@ setMacTelnetCoordPreference		(CFStringRef	inKey,
 			if (nullptr != coords)
 			{
 				setMacTelnetPreference(inKey, coords);
-				result = true; // technically, it’s not possible to see if setMacTelnetPreference() succeeded...
+				result = true; // technically, it‚Äôs not possible to see if setMacTelnetPreference() succeeded...
 				CFRelease(coords), coords = nullptr;
 			}
 			CFRelease(topCoord), topCoord = nullptr;
@@ -2185,7 +2185,7 @@ setMacTelnetCoordPreference		(CFStringRef	inKey,
 
 
 /*!
-Updates MacTelnet’s XML preferences as requested.
+Updates MacTelnet‚Äôs XML preferences as requested.
 Also prints to standard output information about
 the data being written (if debugging is enabled).
 
@@ -2269,8 +2269,8 @@ setMacTelnetPreference	(CFStringRef		inKey,
 
 /*!
 Transforms a folder specification so that the
-“file name” of the folder is empty, and the
-“parent ID” is the ID of the folder itself.
+‚Äúfile name‚Äù of the folder is empty, and the
+‚Äúparent ID‚Äù is the ID of the folder itself.
 This is very useful, since it then becomes
 easy to create file specifications for files
 *inside* the folder (and yet the folder

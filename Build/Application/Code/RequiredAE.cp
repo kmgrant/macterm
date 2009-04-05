@@ -3,9 +3,9 @@
 	RequiredAE.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -174,7 +174,7 @@ RequiredAE_HandleApplicationOpen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEvent
 	
 	error = noErr;
 	
-	// get the user’s “don’t auto-new” application preference, if possible
+	// get the user‚Äôs ‚Äúdon‚Äôt auto-new‚Äù application preference, if possible
 	if (Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
 							&quellAutoNew, &actualSize) !=
 		kPreferences_ResultOK)
@@ -263,9 +263,9 @@ RequiredAE_HandleApplicationReopen	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEve
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “application re-opened” event");
+	Console_WriteLine("AppleScript: ‚Äúapplication re-opened‚Äù event");
 	
-	// get the user’s “don’t auto-new” application preference, if possible
+	// get the user‚Äôs ‚Äúdon‚Äôt auto-new‚Äù application preference, if possible
 	if (kPreferences_ResultOK !=
 		Preferences_GetData(kPreferences_TagDontAutoNewOnApplicationReopen, sizeof(quellAutoNew),
 							&quellAutoNew, &actualSize))
@@ -444,7 +444,7 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 								// in the future this may pass much more information to Quills, so that more
 								// sophisticated handling decisions can be made
 								{
-									// it appears to be a text file; run the user’s preferred editor on it
+									// it appears to be a text file; run the user‚Äôs preferred editor on it
 									error = FSRefMakePath(&fileRef, pathBuffer, kBufferSize);
 									if (error != noErr)
 									{
@@ -491,7 +491,7 @@ RequiredAE_HandleOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 								}
 								else if (CFStringHasSuffix(fileNameCFString.returnCFStringRef(), CFSTR(".txt")))
 								{
-									// it appears to be a text file; run the user’s preferred editor on it
+									// it appears to be a text file; run the user‚Äôs preferred editor on it
 									error = FSRefMakePath(&fileRef, pathBuffer, kBufferSize);
 									if (error != noErr)
 									{
@@ -608,7 +608,7 @@ RequiredAE_HandlePrintDocuments		(AppleEvent const*	UNUSED_ARGUMENT(inAppleEvent
 	OSStatus		error = noErr;
 	
 	
-	// this program doesn’t print files, although this behavior should probably be corrected somehow
+	// this program doesn‚Äôt print files, although this behavior should probably be corrected somehow
 	error = errAEEventNotHandled;
 	
 	(OSStatus)AppleEventUtilities_AddErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
@@ -798,7 +798,7 @@ AppleEvents_HandleAlert		(AppleEvent const*	inAppleEventPtr,
 				if (error != noErr)
 				{
 					// if no buttons are specified, ensure that the name string is set to the
-					// proper value, so that it shows up as “OK” in the dialog reply record
+					// proper value, so that it shows up as ‚ÄúOK‚Äù in the dialog reply record
 					PLstrcpy(button1Name, "\pOK"); // TEMPORARY - LOCALIZE THIS
 				}
 				else
@@ -853,7 +853,7 @@ AppleEvents_HandleAlert		(AppleEvent const*	inAppleEventPtr,
 									whichString[0] = (UInt8)(actualSize / sizeof(UInt8));
 									
 									// from an AppleScript perspective, an empty string means
-									// “skip middle button”; however, the Alert module expects
+									// ‚Äúskip middle button‚Äù; however, the Alert module expects
 									// this to be requested by passing nullptr as the string value
 									if ((i == 2) && (!PLstrcmp(whichString, EMPTY_PSTRING))) whichString = nullptr;
 								}
@@ -966,7 +966,7 @@ AppleEvents_HandleCopySelectedText	(AppleEvent const*	inAppleEventPtr,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “copy selected text” event");
+	Console_WriteLine("AppleScript: ‚Äúcopy selected text‚Äù event");
 	
 	// temp - somehow, this call produces an error, because this event specifies it has no direct object?
 	//error = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
@@ -1049,9 +1049,9 @@ each unsaved window (or, until the user cancels an alert).
 If the application shutdown occurs successfully, "noErr" is
 returned; otherwise, "userCanceledErr" is returned.
 
-WARNING:	This routine expects to handle a “quit application”
+WARNING:	This routine expects to handle a ‚Äúquit application‚Äù
 			Apple Event; you should not use ExitToShell()
-			within this routine’s implementation.
+			within this routine‚Äôs implementation.
 
 (3.0)
 */
@@ -1061,7 +1061,7 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 			 DescType			inSaveOption)
 {
 	OSStatus	result = noErr;
-	SInt16		itemHit = kAlertStdAlertOKButton; // if only 1 session is open, the user “Reviews” it
+	SInt16		itemHit = kAlertStdAlertOKButton; // if only 1 session is open, the user ‚ÄúReviews‚Äù it
 	SInt32		sessionCount = SessionFactory_ReturnCount() -
 								SessionFactory_ReturnStateCount(kSession_StateActiveUnstable); // ignore recently-opened windows
 	Boolean		doQuit = false;
@@ -1145,7 +1145,7 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 	
 	if (itemHit == kAlertStdAlertOKButton)
 	{
-		// “Review…”; so, display alerts for each open session, individually, and
+		// ‚ÄúReview‚Ä¶‚Äù; so, display alerts for each open session, individually, and
 		// quit after all alerts are closed unless the user cancels one of them.
 	#if 1
 		// A fairly simple way to handle this is to activate each window in turn,
@@ -1183,11 +1183,11 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 		//										0/* 0 = opaque, 1 = translucent */, nullptr/* result */);
 		if (cancelQuit) doQuit = false;
 	#else
-		// The easiest way to accomplish this is to send back a “close” event that
+		// The easiest way to accomplish this is to send back a ‚Äúclose‚Äù event that
 		// contains a list of all open windows.  However, this requires some state
 		// to be retained that allows modeless sheets to remain open and yet resume
 		// the quit operation once all sheets are closed.  A little complicated,
-		// TextEdit somehow does it correctly, but for now it’s not worth the trouble!
+		// TextEdit somehow does it correctly, but for now it‚Äôs not worth the trouble!
 		OSStatus	error = noErr;
 		AEDesc		closeWindowEvent;
 		
@@ -1202,7 +1202,7 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 			
 			// send a request for "every window", which resides in a null container
 			// (note that technically this should probably determine which windows are
-			// “unsaved”, and construct a list ONLY of unsaved windows, as opposed to
+			// ‚Äúunsaved‚Äù, and construct a list ONLY of unsaved windows, as opposed to
 			// all open windows)
 			{
 				AEDesc		keyDesc;
@@ -1241,7 +1241,7 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 					}
 					
 					// send the event, but do not record it into any open script because
-					// the “quit” event already completely describes what is taking place
+					// the ‚Äúquit‚Äù event already completely describes what is taking place
 					error = AESend(&closeWindowEvent, outReplyAppleEventPtr,
 									kAENoReply | kAECanInteract | kAEDontRecord,
 									kAENormalPriority, kAEDefaultTimeout, nullptr/* idle routine */,
@@ -1258,13 +1258,13 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 	}
 	else if (itemHit == kAlertStdAlertOtherButton)
 	{
-		// “Discard All”; so, no alerts are displayed, but the application still quits
+		// ‚ÄúDiscard All‚Äù; so, no alerts are displayed, but the application still quits
 		result = noErr;
 		doQuit = true;
 	}
 	else
 	{
-		// “Cancel” or Help
+		// ‚ÄúCancel‚Äù or Help
 		result = userCanceledErr;
 	}
 	
@@ -1276,7 +1276,7 @@ handleQuit	(AppleEvent const*	UNUSED_ARGUMENT(inAppleEventPtr),
 
 /*!
 Of "SessionFactory_SessionOpProcPtr" form, this routine
-slides the specified session’s window(s) into the center
+slides the specified session‚Äôs window(s) into the center
 of the screen and then displays a MODAL alert asking the
 user if the session should close.  The "inoutResultPtr"
 should be a Boolean pointer that, on output, is false
@@ -1320,7 +1320,7 @@ moveWindowAndDisplayTerminationAlertSessionOp	(SessionRef		inSession,
 
 
 /*!
-Invoked when a session’s termination warning is
+Invoked when a session‚Äôs termination warning is
 closed; 
 
 (3.0)

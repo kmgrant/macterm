@@ -3,9 +3,9 @@
 	PrefsWindow.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2009 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -168,7 +168,7 @@ OSStatus			selectCollection				(DataBrowserItemID = 0);
 void				showWindow						();
 void				sizePanels						(HISize const&);
 
-// declare the LDEF entry point (itÕs only referred to here, and is implemented in IconListDef.c)
+// declare the LDEF entry point (itâ€™s only referred to here, and is implemented in IconListDef.c)
 pascal void IconListDef(SInt16, Boolean, Rect*, Cell, SInt16, SInt16, ListHandle);
 
 } // anonymous namespace
@@ -245,7 +245,7 @@ private:
 };
 
 /*!
-Finds a panelÕs ideal size.  If invoked on several
+Finds a panelâ€™s ideal size.  If invoked on several
 panels successively, the cumulative maximum is stored.
 
 Model of STL Unary Function.
@@ -321,7 +321,7 @@ private:
 
 /*!
 Call this method in the exit routine of the program
-to ensure that this windowÕs memory allocations
+to ensure that this windowâ€™s memory allocations
 get destroyed.  You can also call this method after
 you are done using this window, but then a call to
 PrefsWindow_Display() will re-initialize the window
@@ -414,7 +414,7 @@ PrefsWindow_Remove ()
 		
 		if (GetKeyboardFocus(gPreferencesWindow, &focusControl) == noErr)
 		{
-			// if the user is editing a text field, this makes sure the changes ÒstickÓ
+			// if the user is editing a text field, this makes sure the changes â€œstickâ€
 			if (nullptr != focusControl) Panel_SendMessageFocusLost(gCurrentPanel, focusControl);
 		}
 	}
@@ -552,8 +552,8 @@ global context (if any) is being swapped out for
 the specified context.  Then, sets the global
 context to the given context.
 
-Pass nullptr to cause a full reset, a Òselect
-nothingÓ event.
+Pass nullptr to cause a full reset, a â€œselect
+nothingâ€ event.
 
 (3.1)
 */
@@ -605,7 +605,7 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 												0/* attributes to clear */);
 	}
 	
-	// get the selected itemÕs data (which ought to always be defined)
+	// get the selected itemâ€™s data (which ought to always be defined)
 	newPanelDataPtr = gPanelList()[inZeroBasedPanelNumber];
 	if ((nullptr != newPanelDataPtr) && (newPanelDataPtr->panel != gCurrentPanel))
 	{
@@ -615,7 +615,7 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 		
 		// note which panel was displayed before (if any)
 		{
-			// this panelÕs button is currently selected, so this is the panel that will disappear
+			// this panelâ€™s button is currently selected, so this is the panel that will disappear
 			if (nullptr != gCurrentPanel)
 			{
 				Panel_GetContainerView(gCurrentPanel, nowInvisibleContainer);
@@ -635,7 +635,7 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 				Panel_SendMessageNewVisibility(newPanelDataPtr->panel, false/* visible */);
 			}
 			
-			// set the title of the collections drawerÕs list to match the panel name
+			// set the title of the collections drawerâ€™s list to match the panel name
 			{
 				CFStringRef		newListTitleCFString = nullptr;
 				
@@ -676,7 +676,7 @@ choosePanel		(UInt16		inZeroBasedPanelNumber)
 					
 					// determine which is bigger...the width the user has chosen, or the ideal width;
 					// ditto for height; this becomes the most ideal size (that is, stay as close to
-					// the userÕs preferred size as possible, while still leaving room for all subviews)
+					// the userâ€™s preferred size as possible, while still leaving room for all subviews)
 					idealSize.width = std::max(idealSize.width, preferredSize.width);
 					idealSize.height = std::max(idealSize.height, preferredSize.height);
 				}
@@ -1096,7 +1096,7 @@ init ()
 		WindowInfo_SetWindowDescriptor(gPreferencesWindowInfo, kConstantsRegistry_WindowDescriptorPreferences);
 		WindowInfo_SetForWindow(gPreferencesWindow, gPreferencesWindowInfo);
 		
-		// set the item text for the DockÕs window menu
+		// set the item text for the Dockâ€™s window menu
 		{
 			CFStringRef		titleCFString = nullptr;
 			
@@ -1334,7 +1334,7 @@ init ()
 			HIViewWrap		footerView(idMyUserPaneFooter, gPreferencesWindow);
 			
 			
-			// install a callback that responds as the main windowÕs footer is resized
+			// install a callback that responds as the main windowâ€™s footer is resized
 			gPreferencesWindowFooterResizeHandler.install(footerView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH |
 																		kCommonEventHandlers_ChangedBoundsEdgeSeparationV,
 															handleNewFooterSize, nullptr/* context */);
@@ -1559,7 +1559,7 @@ monitorDataBrowserItems		(ControlRef						inDataBrowser,
 /*!
 To create a new list item for the preferences window that
 represents the specified panel, use this method.  The
-selectorÕs title and icon are acquired from the specified
+selectorâ€™s title and icon are acquired from the specified
 panel.
 
 (3.0)
@@ -1841,7 +1841,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the command information was found, proceed
 		if (result == noErr)
 		{
-			// donÕt claim to have handled any commands not shown below
+			// donâ€™t claim to have handled any commands not shown below
 			result = eventNotHandledErr;
 			
 			switch (kEventKind)

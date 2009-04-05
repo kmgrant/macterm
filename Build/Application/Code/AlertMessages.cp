@@ -3,7 +3,7 @@
 	AlertMessages.cp
 	
 	Interface Library 1.2
-	© 1998-2009 by Kevin Grant
+	Â© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -160,7 +160,7 @@ of the program (most likely), after the Alert
 module is not needed anymore.
 
 The Alert module needs the reference number of
-your applicationÕs resource file.  You usually
+your applicationâ€™s resource file.  You usually
 call Alert_Init() at startup time.
 
 (1.0)
@@ -271,7 +271,7 @@ Alert_Dispose	(InterfaceLibAlertRef*		inoutAlert)
 
 /*!
 Posts a general notification to the queue, with
-no particular message.  So this grabs the userÕs
+no particular message.  So this grabs the userâ€™s
 attention for something other than an alert
 message.  The exact form of notification depends
 on the notification preferences specified via
@@ -322,10 +322,10 @@ application supports AppleScript and can put this
 string somewhere useful for debugging purposes
 (such as in a log file).  It is also useful for
 debugging shared libraries, since they cannot
-otherwise send information to your applicationÕs
+otherwise send information to your applicationâ€™s
 debugging systems.
 
-This isnÕt really an alert routine, but it has
+This isnâ€™t really an alert routine, but it has
 similar applications to alert debugging routines,
 so it is listed here.
 
@@ -345,7 +345,7 @@ Alert_DebugSendCStringToSelf	(char const*		inSendWhat,
 		
 		
 		currentProcessID.highLongOfPSN = 0;
-		currentProcessID.lowLongOfPSN = kCurrentProcess; // donÕt use GetCurrentProcess()!
+		currentProcessID.lowLongOfPSN = kCurrentProcess; // donâ€™t use GetCurrentProcess()!
 		(OSStatus)AECreateDesc(typeProcessSerialNumber,
 								&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
 		(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
@@ -367,10 +367,10 @@ application supports AppleScript and can put this
 string somewhere useful for debugging purposes
 (such as in a log file).  It is also useful for
 debugging shared libraries, since they cannot
-otherwise send information to your applicationÕs
+otherwise send information to your applicationâ€™s
 debugging systems.
 
-This isnÕt really an alert routine, but it has
+This isnâ€™t really an alert routine, but it has
 similar applications to alert debugging routines,
 so it is listed here.
 
@@ -390,7 +390,7 @@ Alert_DebugSendStringToSelf		(ConstStringPtr		inSendWhat,
 		
 		
 		currentProcessID.highLongOfPSN = 0;
-		currentProcessID.lowLongOfPSN = kCurrentProcess; // donÕt use GetCurrentProcess()!
+		currentProcessID.lowLongOfPSN = kCurrentProcess; // donâ€™t use GetCurrentProcess()!
 		(OSStatus)AECreateDesc(typeProcessSerialNumber,
 								&currentProcessID, sizeof(ProcessSerialNumber), &currentProcessAddress);
 		(OSStatus)AECreateAppleEvent(inEventClass, inEventID, &currentProcessAddress, kAutoGenerateReturnID, kAnyTransactionID, &consoleWriteEvent);
@@ -441,9 +441,9 @@ two effects:
 If the program is in the background (as specified by
 a call to Alert_SetIsBackgrounded()), a notification
 is posted.  The alert is displayed immediately, but
-the notification lets the user know that itÕs there.
+the notification lets the user know that itâ€™s there.
 Your application must call Alert_ServiceNotification()
-whenever a ÒresumeÓ event is detected in your event
+whenever a â€œresumeâ€ event is detected in your event
 loop, in order to service notifications posted by the
 Alert module.
 
@@ -518,9 +518,9 @@ Alert_HitItem	(InterfaceLibAlertRef	inAlert,
 Determines the number of the button that was selected
 by the user.  A value of 1, 2, or 3 indicates the
 respective button positions for the default button,
-cancel button, and ÒotherÓ button.  The value 4
+cancel button, and â€œotherâ€ button.  The value 4
 indicates the help button.  If the alert times out
-(that is, it Òclosed itselfÓ), 0 is returned.
+(that is, it â€œclosed itselfâ€), 0 is returned.
 
 (1.0)
 */
@@ -548,7 +548,7 @@ arise during file copies, for example.)
 
 When you subsequently display the alert, you will actually have
 to defer handling of the alert until the notifier you specify is
-invoked.  For alerts with a single button for which you donÕt
+invoked.  For alerts with a single button for which you donâ€™t
 care about the result, just use "Alert_StandardCloseNotifyProc"
 as your notifier; for all other kinds of alerts, pass your own
 custom routine so you can tell which button was hit.
@@ -590,7 +590,7 @@ Since sheets are essentially modeless, when you
 subsequently display the alert you will actually
 have to defer handling of the alert until the
 notifier you specify is invoked.  For alerts with
-a single button for which you donÕt care about the
+a single button for which you donâ€™t care about the
 result, just use "Alert_StandardCloseNotifyProc"
 as your notifier; for all other kinds of alerts,
 pass your own custom routine so you can tell which
@@ -1148,9 +1148,9 @@ Alert_SetTextCFStrings	(InterfaceLibAlertRef	inAlert,
 
 
 /*!
-Sets the title of an alertÕs window.  The title may
+Sets the title of an alertâ€™s window.  The title may
 not show up unless an alert is also made movable.
-To remove an alertÕs title, pass nullptr.
+To remove an alertâ€™s title, pass nullptr.
 
 The given string is retained automatically and
 released when the alert is destroyed or another
@@ -1174,7 +1174,7 @@ Alert_SetTitleCFString	(InterfaceLibAlertRef	inAlert,
 
 /*!
 Use this method to set the icon for an alert.
-A ÒplainÓ alert type has no icon.
+A â€œplainâ€ alert type has no icon.
 
 (1.0)
 */
@@ -1293,7 +1293,7 @@ My_AlertMessage::
 
 /*!
 Posts a general notification to the queue, with
-no particular message.  So this grabs the userÕs
+no particular message.  So this grabs the userâ€™s
 attention for something other than an alert
 message.  The exact form of notification depends
 on the notification preferences specified via
@@ -1333,7 +1333,7 @@ backgroundNotification ()
 			gNotificationPtr->nmResp = nullptr;
 			gNotificationPtr->nmRefCon = 0L;
 			
-			// badge MacTelnetÕs Dock tile with a caution icon, if that preference is set
+			// badge MacTelnetâ€™s Dock tile with a caution icon, if that preference is set
 			if (gNotificationPreferences >= kAlert_NotifyDisplayDiamondMark) badgeApplicationDockTile();
 			
 			result = NMInstall(gNotificationPtr); // TEMP - should use AEInteractWithUser here, instead...
@@ -1346,7 +1346,7 @@ backgroundNotification ()
 
 /*!
 Overlays a caution icon in the corner of the
-applicationÕs Dock tile, to indicate an alert
+applicationâ€™s Dock tile, to indicate an alert
 condition.  This should only be done while the
 application is backgrounded and an alert has
 appeared.
@@ -1519,7 +1519,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldnÕt be able to select menu commands while the window is open
+				// wouldnâ€™t be able to select menu commands while the window is open
 				result = eventNotHandledErr;
 				break;
 			}
@@ -1599,7 +1599,7 @@ be obtained by calling Alert_ItemHit().
 
 On Mac OS X, if the alert is in fact window-modal,
 this routine will return immediately WITHOUT having
-completed handling the alert.  Instead, the alertÕs
+completed handling the alert.  Instead, the alertâ€™s
 notifier is invoked whenever the user closes the
 alert.
 
@@ -1708,7 +1708,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		
 		if (nullptr != ptr->params.defaultText)
 		{
-			// if the alert is configured to use the default title (ÒOKÓ), copy the appropriate string resource
+			// if the alert is configured to use the default title (â€œOKâ€), copy the appropriate string resource
 			if (ptr->params.defaultText == REINTERPRET_CAST(kAlertDefaultOKText, CFStringRef))
 			{
 				CFStringRef		myString = nullptr;
@@ -1732,7 +1732,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		
 		if (nullptr != ptr->params.cancelText)
 		{
-			// if the alert is configured to use the default title (ÒCancelÓ), copy the appropriate string resource
+			// if the alert is configured to use the default title (â€œCancelâ€), copy the appropriate string resource
 			if (ptr->params.cancelText == REINTERPRET_CAST(kAlertDefaultCancelText, CFStringRef))
 			{
 				CFStringRef		myString = nullptr;
@@ -1753,7 +1753,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 		
 		if (nullptr != ptr->params.otherText)
 		{
-			// if the alert is configured to use the default title (ÒDonÕt SaveÓ), copy the appropriate string resource
+			// if the alert is configured to use the default title (â€œDonâ€™t Saveâ€), copy the appropriate string resource
 			if (ptr->params.otherText == REINTERPRET_CAST(kAlertDefaultOtherText, CFStringRef))
 			{
 				CFStringRef		myString = nullptr;
@@ -1845,7 +1845,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 				GetControlBounds(ptr->textTitle, &controlRect);
 				//(OSStatus)SetControlData(ptr->textTitle, kControlEntireControl, kControlStaticTextCFStringTag,
 				//							STATIC_CAST(PLstrlen(ptr->title) * sizeof(UInt8), Size), ptr->title + 1);
-				textExpanseV = 22; // should be fixed to properly calculate dimensions, but alas, IÕve been lazy
+				textExpanseV = 22; // should be fixed to properly calculate dimensions, but alas, Iâ€™ve been lazy
 				//SizeControl(ptr->textTitle, INTERFACELIB_ALERT_DIALOG_WD - HSP_BUTTON_AND_DIALOG - controlRect.left, textExpanseV);
 				
 				// the text width is automatically set in the NIB
@@ -1940,7 +1940,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 				ControlRef		buttonControls[2] = { ptr->buttonOther, nullptr };
 				
 				
-				// use this ÒsneakyÓ approach to correctly set up the vertical component of the third button
+				// use this â€œsneakyâ€ approach to correctly set up the vertical component of the third button
 				(UInt16)Localization_ArrangeButtonArray(buttonControls, 1);
 				
 				// auto-arrange the buttons in the OK and Cancel positions
@@ -1976,7 +1976,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			HIViewWrap		helpButtonObject(ptr->buttonHelp);
 			DialogUtilities_SetUpHelpButton(helpButtonObject);
 			
-			// move the help button, if itÕs supposed to be there
+			// move the help button, if itâ€™s supposed to be there
 			if (ptr->params.helpButton) Localization_AdjustHelpButtonControl(ptr->buttonHelp);
 		}
 		
@@ -2013,7 +2013,7 @@ standardAlert	(My_AlertMessagePtr		inAlert,
 			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
 			RunAppModalLoopForWindow(ptr->dialogWindow);
 			
-			Alert_ServiceNotification(); // just in case it wasnÕt removed properly
+			Alert_ServiceNotification(); // just in case it wasnâ€™t removed properly
 			setAlertVisibility(ptr, false/* visible */, true/* animate */);
 			DisposeWindow(ptr->dialogWindow), ptr->dialogWindow = nullptr;
 		}

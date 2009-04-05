@@ -5,10 +5,10 @@
 	Color Pen State portions of this file are from the
 	OS Technologies group at Apple Computer Inc. (source: SDK
 	for Appearance 1.0), and are written by Ed Voas.  Copyright
-	© 1997 by Apple Computer, Inc., all rights reserved.
+	¬© 1997 by Apple Computer, Inc., all rights reserved.
 	
 	Interface Library 2.0
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -83,7 +83,7 @@ powerful version of the Mac OS color picker that
 is available.  There is no support, however, for
 special callback routines when using this method.
 
-The dialog assumes the application is not ColorSync™
+The dialog assumes the application is not ColorSync‚Ñ¢
 aware, detachs the dialog body from the choices,
 uses a system dialog, and is centered on the main
 screen.
@@ -227,7 +227,7 @@ ColorUtilities_ColorChooserDialogDisplay	(CFStringRef			inPrompt,
 
 
 /*!
-Returns “darker” versions of the current foreground
+Returns ‚Äúdarker‚Äù versions of the current foreground
 and background colors of the current graphics port -
 except if the background color is very close to black,
 then a brighter version of the color is returned.
@@ -273,7 +273,7 @@ GetDarkerColors		(RGBColor*		outDarkerForegroundColorOrNull,
 
 
 /*!
-Returns “lighter” versions of the current foreground
+Returns ‚Äúlighter‚Äù versions of the current foreground
 and background colors of the current graphics port.
 You can pass nullptr in place of either parameter if
 you are not interested in one of the colors.
@@ -317,7 +317,7 @@ GetLighterColors	(RGBColor*		outLighterForegroundColorOrNull,
 
 
 /*!
-Returns “selected” versions of the current foreground
+Returns ‚Äúselected‚Äù versions of the current foreground
 and background colors of the current graphics port.
 You can pass nullptr in place of either parameter if
 you are not interested in one of the colors.
@@ -348,7 +348,7 @@ GetSelectionColors	(RGBColor*		outLighterForegroundColorOrNull,
 			(background.blue > (RGBCOLOR_INTENSITY_MAX - kTolerance)))
 	{
 		// approximately monochromatic; this is what the highlight color
-		// is “traditionally” intended for, so it should look okay; use it
+		// is ‚Äútraditionally‚Äù intended for, so it should look okay; use it
 		if (outLighterForegroundColorOrNull != nullptr) *outLighterForegroundColorOrNull = foreground;
 		if (outLighterForegroundColorOrNull != nullptr) LMGetHiliteRGB(outLighterBackgroundColorOrNull);
 	}
@@ -421,7 +421,7 @@ Standardizes a graphics port for use with theme
 brushes under Appearance 1.0 (that is, slightly
 more than what PenNormal() does).
 
-© 1997-1999 by Apple Computer, Inc.
+¬© 1997-1999 by Apple Computer, Inc.
 
 (1.0)
 */
@@ -448,7 +448,7 @@ To save all pen state information that might
 get affected by using a theme brush under
 Appearance 1.0, invoke this method.
 
-© 1997-1999 by Apple Computer, Inc.
+¬© 1997-1999 by Apple Computer, Inc.
 
 (1.0)
 */
@@ -512,7 +512,7 @@ To restore all pen state information that was previously
 saved with ColorUtilities_GetColorAndPenState(), invoke
 this method.
 
-© 1997-1999 by Apple Computer, Inc.
+¬© 1997-1999 by Apple Computer, Inc.
 
 (1.0)
 */
@@ -663,7 +663,7 @@ ColorUtilities_SetWhitePenPattern ()
 
 /*!
 Uses GetDarkerColors() to determine the
-“darkened” versions of the current foreground
+‚Äúdarkened‚Äù versions of the current foreground
 and background colors of the current graphics
 port, and makes the darkened versions the
 current foreground and background colors.
@@ -687,7 +687,7 @@ UseDarkerColors ()
 
 
 /*!
-Uses GetInactiveColors() to determine the “dimmed”
+Uses GetInactiveColors() to determine the ‚Äúdimmed‚Äù
 versions of the current foreground and background
 colors of the current graphics port, and makes the
 inactive versions the current foreground and
@@ -738,7 +738,7 @@ UseInvertedColors ()
 
 
 /*!
-Uses GetLighterColors() to determine the “lighter”
+Uses GetLighterColors() to determine the ‚Äúlighter‚Äù
 versions of the current foreground and background
 colors of the current graphics port, and makes the
 lighter versions the current foreground and
@@ -763,7 +763,7 @@ UseLighterColors ()
 
 
 /*!
-Uses GetSelectionColors() to determine the “selected”
+Uses GetSelectionColors() to determine the ‚Äúselected‚Äù
 versions of the current foreground and background
 colors of the current graphics port, and makes the
 selected versions the current foreground and background

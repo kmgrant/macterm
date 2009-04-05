@@ -3,9 +3,9 @@
 	SpecialKeySequencesDialog.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2006 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -248,7 +248,7 @@ SpecialKeySequencesDialog_StandardCloseNotifyProc	(SpecialKeySequencesDialog_Ref
 	
 	if (inOKButtonPressed)
 	{
-		// update the session to reflect the userÕs changes
+		// update the session to reflect the userâ€™s changes
 		Session_ConnectionDataPtr(ptr->session)->controlKey.interrupt = ptr->interruptKey;
 		Session_ConnectionDataPtr(ptr->session)->controlKey.suspend = ptr->suspendKey;
 		Session_ConnectionDataPtr(ptr->session)->controlKey.resume = ptr->resumeKey;
@@ -688,7 +688,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldnÕt be able to select menu commands while the window is open
+				// wouldnâ€™t be able to select menu commands while the window is open
 				result = eventNotHandledErr;
 				break;
 			}

@@ -7,7 +7,7 @@
 	is specific to an application or library.  These defines
 	should be applicable to any modern Mac program.
 	
-	There is a section for “Carbon helpers”, which create
+	There is a section for ‚ÄúCarbon helpers‚Äù, which create
 	mock-up macros that mimic the proposed Carbon APIs.  When
 	compiling under the Carbon APIs, TARGET_API_MAC_CARBON is
 	defined, making the macros disappear and allowing the true
@@ -16,7 +16,7 @@
 /*###############################################################
 
 	Universal Defines
-		© 1998-2007 by Kevin Grant
+		¬© 1998-2007 by Kevin Grant
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -82,7 +82,7 @@
 
 
 /*###############################################################
-	“C IMPROVED”
+	‚ÄúC IMPROVED‚Äù
 ###############################################################*/
 
 //! C string type, defined as a NULL-terminated character array
@@ -92,7 +92,7 @@ typedef char const*		ConstCStringPtr;
 //! in C++0x, there will be a "nullptr" keyword...start using it now!
 #define nullptr 0L
 
-//! à la Perl, this is my preferred if-not term
+//! √† la Perl, this is my preferred if-not term
 #define unless(x)		if (!(x))
 
 //! these return values should be used for "pascal Boolean" functions
@@ -108,24 +108,24 @@ enum
 //!		void myMethod () NO_METHOD_IMPL;
 #define NO_METHOD_IMPL
 
-//! C++ helper to handle compilers that don’t define things in the CPP_STD:: namespace
+//! C++ helper to handle compilers that don‚Äôt define things in the CPP_STD:: namespace
 #ifdef __MACH__
 #	define CPP_STD
 #else
 #	define CPP_STD		::std
 #endif
 
-//! useful “cast operators” that are completely unnecessary, but make code
-//! more self-documenting (they clarify the programmer’s intentions)
+//! useful ‚Äúcast operators‚Äù that are completely unnecessary, but make code
+//! more self-documenting (they clarify the programmer‚Äôs intentions)
 #ifdef __cplusplus
 #define CONST_CAST(ref, intendedType)			const_cast< intendedType >(ref)
 #define VOLATILE_CAST(ref, intendedType)		const_cast< intendedType >(ref) // C++ says const_cast overrides volatile too
 #define REINTERPRET_CAST(ref, intendedType)		reinterpret_cast< intendedType >(ref)
 #define STATIC_CAST(ref, intendedType)			static_cast< intendedType >(ref)
 #else
-#define CONST_CAST(ref, intendedType)			((intendedType)(ref))	//!< “I know I am turning a constant pointer into a non-constant one”
-#define VOLATILE_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I know I am turning a volatile value into a non-volatile one”
-#define REINTERPRET_CAST(ref, intendedType)		((intendedType)(ref))	//!< “I want to look at data as something else” (e.g. integer to pointer)
+#define CONST_CAST(ref, intendedType)			((intendedType)(ref))	//!< ‚ÄúI know I am turning a constant pointer into a non-constant one‚Äù
+#define VOLATILE_CAST(ref, intendedType)		((intendedType)(ref))	//!< ‚ÄúI know I am turning a volatile value into a non-volatile one‚Äù
+#define REINTERPRET_CAST(ref, intendedType)		((intendedType)(ref))	//!< ‚ÄúI want to look at data as something else‚Äù (e.g. integer to pointer)
 #define STATIC_CAST(ref, intendedType)			((intendedType)(ref))	//!< identical to a cast in the traditional sense (e.g. "char" to "int")
 #endif
 
@@ -142,15 +142,15 @@ enum
 };
 
 //! has a value of true if the specified Mac OS application programming interface can be found,
-//! or false otherwise; this is Apple’s supported method for determining the presence of any
+//! or false otherwise; this is Apple‚Äôs supported method for determining the presence of any
 //! particular Mac OS system call at runtime
 #define API_AVAILABLE(a)	((UInt32)(a) != (UInt32)kUnresolvedCFragSymbolAddress)
 
-//! use this to “reference” a constant that is not available in current headers (for example,
+//! use this to ‚Äúreference‚Äù a constant that is not available in current headers (for example,
 //! something declared in the headers of a future OS); the 2nd parameter is ignored, the 1st
 //! value is substituted directly; this is useful both to retain the extra context provided
 //! by the named constant, and to serve as a search target if in the future it is desirable
-//! to replace instances of this macro with “real” constant references when they are available
+//! to replace instances of this macro with ‚Äúreal‚Äù constant references when they are available
 #define FUTURE_SYMBOL(v,n)	(v)
 
 //! useful integer routines, for efficiency; optimized for the PowerPC platform

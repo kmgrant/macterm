@@ -1,5 +1,9 @@
 /*###############################################################
 
+	WARNING:	The encoding of this file MUST be MacRoman, due to
+			certain string constants used in conversion
+			methods.
+	
 	StringUtilities.cp
 	
 	This file contains useful methods for string management.

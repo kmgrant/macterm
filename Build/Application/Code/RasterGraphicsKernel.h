@@ -5,9 +5,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2006 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -46,7 +46,7 @@ union arg
 // format of a window entry
 struct VRwin
 {
-	char			w_name[100];		// windowÕs name, assigned on creation
+	char			w_name[100];		// windowâ€™s name, assigned on creation
 	SInt16			w_used;				// flag - is this name an old duplicate?
 	SInt16			w_left;				// left edge
 	SInt16			w_top;				// top edge

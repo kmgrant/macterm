@@ -3,9 +3,9 @@
 	PrefPanelScripts.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -256,7 +256,7 @@ const
 
 
 /*!
-Adjusts the data browser columns in the “Scripts”
+Adjusts the data browser columns in the ‚ÄúScripts‚Äù
 preference panel.
 
 (3.1)
@@ -305,7 +305,7 @@ disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 /*!
 This routine, of standard PanelChangedProcPtr form,
 is invoked by the Panel module whenever a property
-of one of the preferences dialog’s panels changes.
+of one of the preferences dialog‚Äôs panels changes.
 
 (3.0)
 */
@@ -379,7 +379,7 @@ panelChanged	(Panel_Ref		inPanel,
 		// do nothing
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *(REINTERPRET_CAST(inDataPtr, Boolean*));
 			

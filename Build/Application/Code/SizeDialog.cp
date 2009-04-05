@@ -3,9 +3,9 @@
 	SizeDialog.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -120,7 +120,7 @@ struct My_SizeDialog
 	HIViewWrap							fieldHeight;			//!< number of rows
 	HIViewWrap							arrowsHeight;			//!< adjuster for number of rows
 	HIViewWrap							buttonHelp;				//!< displays context-sensitive help on this dialog
-	HIViewWrap							buttonResize;			//!< resizes window according to user’s configuration
+	HIViewWrap							buttonResize;			//!< resizes window according to user‚Äôs configuration
 	HIViewWrap							buttonCancel;			//!< aborts
 	CarbonEventHandlerWrap				buttonHICommandsHandler;//!< invoked when a dialog button is clicked
 	CommonEventHandlers_NumericalFieldArrowsRef	widthArrowsHandler;		//!< syncs arrows and field
@@ -215,14 +215,14 @@ closeNotifyProc					(inCloseNotifyProcPtr)
 		// determine size of screen (to initialize controls)
 		TerminalWindow_GetScreenDimensions(this->terminalWindow, &columns, &rows);
 		
-		// “width” controls; arrows are restricted by the valid range of input
+		// ‚Äúwidth‚Äù controls; arrows are restricted by the valid range of input
 		dimension = columns;
 		SetControlNumericalText(this->fieldWidth, dimension);
 		SetControl32BitMaximum(this->arrowsWidth, Terminal_ReturnAllocatedColumnCount());
 		SetControl32BitMinimum(this->arrowsWidth, kSizeMinimumWidth);
 		SetControl32BitValue(this->arrowsWidth, dimension);
 		
-		// “height” controls; arrows are restricted by the valid range of input
+		// ‚Äúheight‚Äù controls; arrows are restricted by the valid range of input
 		dimension = rows;
 		SetControlNumericalText(this->fieldHeight, dimension);
 		SetControl32BitMaximum(this->arrowsHeight, kSizeMaximumHeight);
@@ -268,7 +268,7 @@ My_SizeDialog::
 This method is used to initialize the Terminal Screen Size
 dialog box.  It creates the dialog box invisibly, and uses
 the specified screen ID to set up the controls in the
-dialog box to use the screen’s dimensions.
+dialog box to use the screen‚Äôs dimensions.
 
 (3.0)
 */
@@ -397,7 +397,7 @@ it to make the specified changes to the frontmost
 window.  THIS DOES NOT ACTUALLY EXECUTE THE EVENTS.
 You call this routine simply as a convenience for
 the user, in case he or she is recording tasks into
-a script; this causes “dimension change” commands
+a script; this causes ‚Äúdimension change‚Äù commands
 to appear in the script being recorded.
 
 (3.0)
@@ -459,7 +459,7 @@ SizeDialog_SendRecordableDimensionChangeEvents		(SInt16		inNewColumns,
 			// reference to the property to be set - REQUIRED
 			(OSStatus)AEPutParamDesc(&setDataEvent, keyDirectObject, &propertyDesc);
 			
-			// the property’s new value - REQUIRED
+			// the property‚Äôs new value - REQUIRED
 			(OSStatus)BasicTypesAE_CreateUInt32PairDesc(inNewColumns, inNewRows, &valueDesc);
 			(OSStatus)AEPutParamDesc(&setDataEvent, keyAEParamMyTo, &valueDesc);
 			
@@ -482,7 +482,7 @@ SizeDialog_SendRecordableDimensionChangeEvents		(SInt16		inNewColumns,
 /*!
 If you only need a close notification procedure
 for the purpose of disposing of the Size Dialog
-reference (and don’t otherwise care when a Size
+reference (and don‚Äôt otherwise care when a Size
 Dialog closes), you can pass this standard routine
 to SizeDialog_New() as your notification procedure.
 
@@ -664,7 +664,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldn’t be able to select menu commands while the window is open
+				// wouldn‚Äôt be able to select menu commands while the window is open
 				result = eventNotHandledErr;
 				break;
 			}

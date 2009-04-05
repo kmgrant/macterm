@@ -3,9 +3,9 @@
 	VectorCanvas.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -424,7 +424,7 @@ VectorCanvas_InvalidateView		(VectorCanvas_Ref	inRef)
 /*!
 Sets what is known as "GIN" mode; the mouse cursor changes
 to a cross, keypresses will send the mouse location, and
-mouse button clicks (with or without a “shift”) will send
+mouse button clicks (with or without a ‚Äúshift‚Äù) will send
 characters indicating the event type.  Returns 0 if successful.
 
 (3.0)

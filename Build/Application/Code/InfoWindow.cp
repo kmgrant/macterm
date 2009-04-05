@@ -3,9 +3,9 @@
 	InfoWindow.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -75,7 +75,7 @@
 #pragma mark Constants
 
 // The following MUST match what is in InfoWindow.nib!
-// They also cannot use any of Apple’s reserved IDs (0 to 1023).
+// They also cannot use any of Apple‚Äôs reserved IDs (0 to 1023).
 enum
 {
 	kMyDataBrowserPropertyIDWindow			= 'Wind',
@@ -257,7 +257,7 @@ InfoWindow_Init	()
 		}
 	}
 	
-	// create the window’s controls
+	// create the window‚Äôs controls
 	{
 		DataBrowserCallbacks	callbacks;
 		HIViewID				id;
@@ -404,9 +404,9 @@ InfoWindow_Init	()
 												400/* arbitrary maximum height */);
 	assert(gSessionStatusWindowResizeHandler.isInstalled());
 	
-	// concatenate MacTelnet’s name onto the end of the window title, so it’s obvious which
-	// application’s session status window it is; also, on Mac OS X, set the item text for
-	// the Dock’s window menu
+	// concatenate MacTelnet‚Äôs name onto the end of the window title, so it‚Äôs obvious which
+	// application‚Äôs session status window it is; also, on Mac OS X, set the item text for
+	// the Dock‚Äôs window menu
 	{
 		Str255							titleString;
 		Str255							appName;
@@ -421,7 +421,7 @@ InfoWindow_Init	()
 		StringUtilities_PBuild(titleString, sizeof(metaMappings) / sizeof(StringSubstitutionSpec), metaMappings);
 		SetWTitle(sessionStatusWindow, titleString);
 		
-		// specify a different title for the Dock’s menu, one which doesn’t include the application name
+		// specify a different title for the Dock‚Äôs menu, one which doesn‚Äôt include the application name
 		{
 			CFStringRef			titleCFString = nullptr;
 			UIStrings_Result	stringResult = UIStrings_Copy(kUIStrings_SessionInfoWindowIconName, titleCFString);
@@ -525,7 +525,7 @@ InfoWindow_Init	()
 	SessionFactory_StartMonitoringSessions(kSession_ChangeState, gSessionStateChangeEventListener);
 	SessionFactory_StartMonitoringSessions(kSession_ChangeStateAttributes, gSessionStateChangeEventListener);
 	
-	// finally, ask to be told when a “show/hide info window” command occurs
+	// finally, ask to be told when a ‚Äúshow/hide info window‚Äù command occurs
 	gInfoWindowDisplayEventListener = ListenerModel_NewOSStatusListener(showHideInfoWindow);
 	Commands_StartHandlingExecution(kCommandShowConnectionStatus, gInfoWindowDisplayEventListener);
 	Commands_StartHandlingExecution(kCommandHideConnectionStatus, gInfoWindowDisplayEventListener);
@@ -541,7 +541,7 @@ InfoWindow_Init	()
 									sizeof(windowIsVisible), &windowIsVisible,
 									&actualSize) == kPreferences_ResultOK)
 		{
-			windowIsVisible = false; // assume invisible if the preference can’t be found
+			windowIsVisible = false; // assume invisible if the preference can‚Äôt be found
 		}
 		InfoWindow_SetVisible(windowIsVisible);
 	}
@@ -824,7 +824,7 @@ accessDataBrowserItemData	(ControlRef					inDataBrowser,
 					TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(session);
 					
 					
-					// use the session’s ordinary status icon for this column,
+					// use the session‚Äôs ordinary status icon for this column,
 					// but dim the icon if the window for the session is hidden
 					result = SetDataBrowserItemDataIcon(inItemData, statusIconRef);
 					if (nullptr != terminalWindow)
@@ -1122,7 +1122,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the command information was found, proceed
 		if (noErr == result)
 		{
-			// don’t claim to have handled any commands not shown below
+			// don‚Äôt claim to have handled any commands not shown below
 			result = eventNotHandledErr;
 			
 			switch (kEventKind)
@@ -1177,7 +1177,7 @@ receiveToolbarRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the command information was found, proceed
 		if (noErr == result)
 		{
-			// don’t claim to have handled any commands not shown below
+			// don‚Äôt claim to have handled any commands not shown below
 			result = eventNotHandledErr;
 			
 			switch (kEventKind)
@@ -1317,8 +1317,8 @@ receiveWindowCursorChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef)
 			Boolean		wasSet = false;
 			
 			
-			// try to vary the cursor according to key modifiers, but it’s no
-			// catastrophe if this information isn’t available
+			// try to vary the cursor according to key modifiers, but it‚Äôs no
+			// catastrophe if this information isn‚Äôt available
 			(OSStatus)CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
 			
 			// finally, set the cursor
@@ -1483,7 +1483,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				break;
 			
 			case kSession_StateInitialized:
-				// change appropriate list item’s contents - unimplemented
+				// change appropriate list item‚Äôs contents - unimplemented
 				break;
 			
 			case kSession_StateActiveUnstable:
@@ -1515,12 +1515,12 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				break;
 			
 			case kSession_StateActiveStable:
-				// change appropriate list item’s contents
+				// change appropriate list item‚Äôs contents
 				refreshDisplay();
 				break;
 			
 			case kSession_StateDead:
-				// change appropriate list item’s contents
+				// change appropriate list item‚Äôs contents
 				refreshDisplay();
 				break;
 			
@@ -1549,7 +1549,7 @@ sessionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	case kSession_ChangeStateAttributes:
-		// change appropriate list item’s contents
+		// change appropriate list item‚Äôs contents
 		refreshDisplay();
 		break;
 	
@@ -1585,7 +1585,7 @@ setDataBrowserColumnWidths ()
 		// leave some columns fixed-size; but arbitrarily cut down even this width
 		// if the entire window is sufficiently small; note that because the
 		// available width is used for measurement, these should be cut down in
-		// order of least “importance”
+		// order of least ‚Äúimportance‚Äù
 		{
 			integerWidth = gIdealColumnWidthDevice;
 			if (availableWidth < 600/* arbitrary */) integerWidth = 0;

@@ -3,9 +3,9 @@
 	Session.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -110,7 +110,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 {
 	enum Session_Type
 	{
-		kSession_TypeLocalNonLoginShell		= 0,	// local Unix process running the userÕs preferred shell
+		kSession_TypeLocalNonLoginShell		= 0,	// local Unix process running the userâ€™s preferred shell
 		kSession_TypeLocalLoginShell		= 1		// local Unix process running /usr/bin/login
 	};
 }
@@ -126,7 +126,7 @@ typedef std::map< Session_PropertyKey, void* >		SessionAuxiliaryDataMap;
 typedef std::vector< TerminalScreenRef >	MyCaptureFileList;
 
 /*!
-A ÒsafeÓ wrapper around the help tag structure.
+A â€œsafeâ€ wrapper around the help tag structure.
 Useful for constructing it in one shot while
 initializing everything.  Pass nullptr for a tag
 string if you do not intend to use it.
@@ -223,7 +223,7 @@ struct Session
 	Boolean						readOnly;					// whether or not user input is allowed
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
-	Session_StateAttributes		statusAttributes;			// ÒtagsÓ for the status, above
+	Session_StateAttributes		statusAttributes;			// â€œtagsâ€ for the status, above
 	CFRetainRelease				statusString;				// one word (usually) describing the state succinctly
 	CFRetainRelease				resourceLocationString;		// one-liner for remote URL or local Unix command line
 	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
@@ -513,7 +513,7 @@ private:
 Writes the specified data to a given terminal,
 only all non-printable characters are changed
 to be printable.  In other words, it assumes
-the terminal is ÒdumbÓ and will not know what
+the terminal is â€œdumbâ€ and will not know what
 to do with such characters.
 
 Model of STL Unary Function.
@@ -784,7 +784,7 @@ the file; if you add a terminal screen, text will be sent
 to the terminal; if you add a graphics device, data will
 be interpreted as graphics commands, etc.
 
-ÒIncompatibleÓ types are detected automatically, and all
+â€œIncompatibleâ€ types are detected automatically, and all
 existing targets that are not compatible with the new target
 will be disabled if necessary.  This means you do not have
 to worry about targets receiving data they do not know how
@@ -874,10 +874,10 @@ Session_AddDataTarget	(SessionRef				inRef,
 
 
 /*!
-Copies the specified data into the Òread bufferÓ of
+Copies the specified data into the â€œread bufferâ€ of
 the specified session, starting one byte beyond the
 last byte currently in the buffer, and inserts an
-event in the internal queue (if there isnÕt one already)
+event in the internal queue (if there isnâ€™t one already)
 informing the session that there is data to be handled.
 
 Returns the number of bytes NOT appended; will be 0
@@ -1014,8 +1014,8 @@ Kerberos tickets.  The window remains open unless the user
 has that preference disabled, in which case this routine
 invokes killConnection(), as well.
 
-If a connection fails or is aborted ÒearlyÓ, it is usually
-destroyed with killConnection().  If the connectionÕs
+If a connection fails or is aborted â€œearlyâ€, it is usually
+destroyed with killConnection().  If the connectionâ€™s
 window is already on the screen and the connection has not
 been previously disconnected, it is usually terminated with
 Connections_Disconnect() and then ultimately killed with
@@ -1047,7 +1047,7 @@ Session_Disconnect		(SessionRef		inRef)
 
 /*!
 Displays a Save dialog for a capture file based on the
-contents of the given terminal window, handling the userÕs
+contents of the given terminal window, handling the userâ€™s
 response automatically.  The dialog could be a sheet, so
 this routine may return immediately without the user
 having responded to the save; the file capture initiation
@@ -1087,7 +1087,7 @@ Session_DisplayFileCaptureSaveDialog	(SessionRef		inRef)
 
 /*!
 Displays a Print dialog for the given terminal window,
-handling the userÕs response automatically.  The dialog
+handling the userâ€™s response automatically.  The dialog
 could be a sheet, so this routine may return immediately
 without the user having confirmed the print.
 
@@ -1103,7 +1103,7 @@ Session_DisplayPrintJobDialog	(SessionRef		inRef)
 
 /*!
 Displays a Print dialog for the given terminal window,
-handling the userÕs response automatically.  The dialog
+handling the userâ€™s response automatically.  The dialog
 could be a sheet, so this routine may return immediately
 without the user having confirmed the print.
 
@@ -1162,7 +1162,7 @@ Session_DisplayPrintPageSetupDialog		(SessionRef		inRef)
 
 /*!
 Displays the Save dialog for the given terminal window,
-handling the userÕs response automatically.  The dialog
+handling the userâ€™s response automatically.  The dialog
 could be a sheet, so this routine may return immediately
 without the user having responded to the save; the save
 (or lack thereof) is handled automatically, asynchronously,
@@ -1201,7 +1201,7 @@ Session_DisplaySaveDialog	(SessionRef		inRef)
 
 /*!
 Displays the Special Key Sequences dialog for the specified
-session, handling the userÕs response automatically.  The
+session, handling the userâ€™s response automatically.  The
 dialog could be a sheet, so this routine may return immediately
 without the user having finished; any updates will therefore
 be handled automatically, asynchronously, in that case.
@@ -1222,7 +1222,7 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 
 /*!
 Displays the Close warning alert for the given terminal
-window, handling the userÕs response automatically.  On
+window, handling the userâ€™s response automatically.  On
 Mac OS X, the dialog is a sheet (unless "inForceModalDialog"
 is true), so this routine may return immediately without
 the user having responded to the warning; the session
@@ -1386,7 +1386,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 										&willLeaveTerminalWindowOpen, &actualSize) ==
 					kPreferences_ResultOK)
 			{
-				willLeaveTerminalWindowOpen = false; // assume windows automatically close, if preference canÕt be found
+				willLeaveTerminalWindowOpen = false; // assume windows automatically close, if preference canâ€™t be found
 			}
 		}
 		
@@ -1408,7 +1408,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 			if (Alert_ItemHit(ptr->currentTerminationAlert) == kAlertStdAlertCancelButton)
 			{
 				// in the event that the user cancelled and the window
-				// was transitioned to the screen center, Òun-transitionÓ
+				// was transitioned to the screen center, â€œun-transitionâ€
 				// the most recent window back to its original location -
 				// unless of course the user has since moved the window
 				Rect	currentStructureBounds;
@@ -1454,7 +1454,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 /*!
 Determines the port number within a string
 that may contain a host name and optionally a
-port number afterwards (ˆ la New Sessions
+port number afterwards (Ã  la New Sessions
 dialog box).  The port number can be tagged
 on either with white space or a colon.
 
@@ -1696,7 +1696,7 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 
 
 /*!
-Jump-scrolls the specified sessionÕs terminal screen,
+Jump-scrolls the specified sessionâ€™s terminal screen,
 showing as much data as there is available.
 
 (3.0)
@@ -1742,7 +1742,7 @@ Session_FlushUserInputBuffer	(SessionRef		inRef)
 
 /*!
 Returns a succinct string representation of the
-specified sessionÕs state.  This is localized so
+specified sessionâ€™s state.  This is localized so
 it can be displayed in user interface elements.
 
 (3.1)
@@ -1771,7 +1771,7 @@ Session_GetStateString		(SessionRef		inRef,
 Returns the most recent user-specified window title;
 defaults to the one given in the New Sessions dialog,
 but can be updated whenever the user invokes the
-ÒRenameÉÓ menu command.
+â€œRenameâ€¦â€ menu command.
 
 If the title has never been set, nullptr may be returned.
 
@@ -1943,7 +1943,7 @@ Session_NetworkIsSuspended		(SessionRef		inRef)
 Returns "true" only if the Page Up, Page Down,
 and similar keys control the local terminal
 instead of causing commands to be sent to the
-sessionÕs process (local or remote).
+sessionâ€™s process (local or remote).
 
 (3.0)
 */
@@ -2019,7 +2019,7 @@ Session_parseIndex		(SessionRef		inRef)
 Creates a "kMyCarbonEventKindSessionDataArrived" event
 from class "kMyCarbonEventClassSession" and sends it
 to the main queue.  Use this to report input from an
-external source (such as a running process or the userÕs
+external source (such as a running process or the userâ€™s
 keyboard) that belongs to the specified session.  The
 session, in turn, will process the data appropriately
 and in the proper sequence if multiple events exist.
@@ -2050,7 +2050,7 @@ Session_PostDataArrivedEventToMainQueue		(SessionRef		inRef,
 		if (error == noErr)
 		{
 			// specify the event queue that should receive a reply; set this to
-			// the current threadÕs event queue, otherwise it is not possible
+			// the current threadâ€™s event queue, otherwise it is not possible
 			// to block this thread until the data processing is finished
 			// (see below for more)
 			error = SetEventParameter(dataArrivedEvent, kEventParamNetEvents_DispatcherQueue,
@@ -2080,7 +2080,7 @@ Session_PostDataArrivedEventToMainQueue		(SessionRef		inRef,
 							error = PostEventToQueue(GetMainEventQueue(), dataArrivedEvent, inPriority);
 							if (error == noErr)
 							{
-								// Òdata arrivedÓ event successfully queued
+								// â€œdata arrivedâ€ event successfully queued
 								result = kSession_ResultOK;
 							}
 						}
@@ -2224,7 +2224,7 @@ Session_PropertyRemove	(SessionRef				inRef,
 		
 		// erase the specified data from the internal map, and return it;
 		// note that the [] operator of a standard map will actually create
-		// an item if it doesnÕt exist; thatÕs okay, this just means the
+		// an item if it doesnâ€™t exist; thatâ€™s okay, this just means the
 		// item will be deleted immediately and the return value will be 0
 		result = ptr->auxiliaryDataMap[inAuxiliaryDataTag];
 		ptr->auxiliaryDataMap.erase(ptr->auxiliaryDataMap.find(inAuxiliaryDataTag));
@@ -2259,7 +2259,7 @@ Session_ReceiveData		(SessionRef		inRef,
 	Session_Result		result = kSession_ResultOK;
 	
 	
-	// Òcarbon copyÓ the data to all active attached targets; take care
+	// â€œcarbon copyâ€ the data to all active attached targets; take care
 	// not to do this once a session is flagged for destruction, since
 	// at that point it may not be able to handle data anymore
 	if (kSession_StateImminentDisposal != ptr->status)
@@ -2307,7 +2307,7 @@ Session_ReceiveData		(SessionRef		inRef,
 Causes the specified target to no longer be considered for
 writes to the given session.
 
-If any ÒincompatibleÓ types were disabled when the given
+If any â€œincompatibleâ€ types were disabled when the given
 target was added previously, they will be re-enabled now
 if possible.  Targets are re-enabled only if they are
 higher in precedence than other installed targets - for
@@ -2456,7 +2456,7 @@ Session_ReturnPseudoTerminalDeviceNameCFString		(SessionRef		inRef)
 
 /*!
 Returns a succinct string representation of the
-specified sessionÕs resource; for a remote session
+specified sessionâ€™s resource; for a remote session
 this is always a URL, for local sessions it is the
 Unix command line.  This can be displayed in user
 interface elements.
@@ -2511,7 +2511,7 @@ Session_ReturnStateAttributes	(SessionRef		inRef)
 
 
 /*!
-Activates the specified session, from the userÕs
+Activates the specified session, from the userâ€™s
 perspective.  For example, brings all of its
 windows to the front, showing them if they are
 obscured, etc.
@@ -2574,7 +2574,7 @@ Session_SendData	(SessionRef		inRef,
 																		ptr->writeEncoding,
 																		0/* loss byte, or 0 for no lossy conversion */,
 																		false/* is external representation */,
-																		nullptr/* no buffer means Òreturn size onlyÓ */,
+																		nullptr/* no buffer means â€œreturn size onlyâ€ */,
 																		0/* size - ignored for null buffer */,
 																		&numberOfBytesRequired);
 	SInt16		result = -1;
@@ -3046,7 +3046,7 @@ modules interested in finding out about new states
 
 IMPORTANT:	Currently, this routine does not check
 			that the specified state is a valid
-			Ònext stateÓ for the current state.
+			â€œnext stateâ€ for the current state.
 			This may have bizarre consequences;
 			for example, transitioning a session
 			from a dead state back to an active one.
@@ -3164,7 +3164,7 @@ Session_SetWatch	(SessionRef		inRef,
 Specifies the most recent user-specified window title;
 defaults to the one given in the New Sessions dialog,
 but should be updated whenever the user invokes the
-ÒRenameÉÓ menu command.
+â€œRenameâ€¦â€ menu command.
 
 NOTE:	This API is under evaluation.  If sessions are
 		allowed to send their data to multiple windows
@@ -3283,14 +3283,14 @@ Session_StartMonitoring		(SessionRef					inRef,
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
-		// add a listener to the specified targetÕs listener model for the given setting change
+		// add a listener to the specified targetâ€™s listener model for the given setting change
 		error = ListenerModel_AddListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
 	}
 }// StartMonitoring
 
 
 /*!
-Returns "true" only if the specified connectionÕs
+Returns "true" only if the specified connectionâ€™s
 status says it is active (that is, its DNS lookup
 and opening operations are complete, and it is
 still connected to a remote server).
@@ -3315,7 +3315,7 @@ Session_StateIsActive	(SessionRef		inRef)
 
 
 /*!
-Returns "true" only if the specified connectionÕs
+Returns "true" only if the specified connectionâ€™s
 status says it is active and stable.  This means
 the connection has been open for several seconds
 and has not died.
@@ -3338,7 +3338,7 @@ Session_StateIsActiveStable		(SessionRef		inRef)
 
 
 /*!
-Returns "true" only if the specified connectionÕs
+Returns "true" only if the specified connectionâ€™s
 status says it is active but unstable.  This means
 the connection has opened very recently, so it is
 not clear if it will survive.
@@ -3382,7 +3382,7 @@ Session_StateIsBrandNew		(SessionRef		inRef)
 
 
 /*!
-Returns "true" only if the specified sessionÕs status
+Returns "true" only if the specified sessionâ€™s status
 says it is dead (that is, its process has been killed
 but perhaps its window is still open).
 
@@ -3404,7 +3404,7 @@ Returns "true" only if the specified session is in the
 process of being destroyed.  This is guaranteed to be
 the final state of a Session, so when a Session enters
 this state it is appropriate to perform cleanup tasks
-(for example, removing a SessionÕs name from a list).
+(for example, removing a Sessionâ€™s name from a list).
 
 (3.0)
 */
@@ -3421,7 +3421,7 @@ Session_StateIsImminentDisposal		(SessionRef		inRef)
 
 /*!
 Returns "true" only if the specified session has JUST
-been properly initialized.  Unlike the ÒBrand NewÓ
+been properly initialized.  Unlike the â€œBrand Newâ€
 state, this state asserts that the session is now
 valid and can be generally used.  This is therefore
 an appropriate time to add the session to a menu for
@@ -3477,7 +3477,7 @@ Session_StopMonitoring	(SessionRef					inRef,
 		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
-		// remove a listener from the specified targetÕs listener model for the given setting change
+		// remove a listener from the specified targetâ€™s listener model for the given setting change
 		ListenerModel_RemoveListenerForEvent(ptr->changeListenerModel, inForWhatChange, inListener);
 	}
 }// StopMonitoring
@@ -3708,7 +3708,7 @@ Session_TerminalWriteCString	(SessionRef		inRef,
 
 /*!
 Returns the clock time (in seconds) for the computer
-back when the specified sessionÕs command was run.
+back when the specified sessionâ€™s command was run.
 You can use TimeString() or DateString() on the
 result to get a text representation.
 
@@ -3728,7 +3728,7 @@ Session_TimeOfActivation	(SessionRef		inRef)
 
 /*!
 Returns the clock time (in seconds) for the computer
-back when the specified sessionÕs command exited.
+back when the specified sessionâ€™s command exited.
 You can use TimeString() or DateString() on the
 result to get a text representation.
 
@@ -3751,7 +3751,7 @@ Determines whether or not the specified session
 started by running /usr/bin/login.
 
 Use Session_TypeIsLocalNonLoginShell() to see if
-the session is running the userÕs preferred shell
+the session is running the userâ€™s preferred shell
 directly.
 
 (3.0)
@@ -3790,7 +3790,7 @@ Session_TypeIsLocalNonLoginShell	(SessionRef		inRef)
 
 /*!
 Send a string to a session as if it were typed into
-the specified sessionÕs window.  If local echoing is
+the specified sessionâ€™s window.  If local echoing is
 enabled for the session, the string will be written
 to the local data target (usually a terminal) after
 it is sent to the remote process.
@@ -3852,7 +3852,7 @@ void
 Session_UserInputInterruptProcess	(SessionRef		inRef,
 									 Boolean		inSendToRecordingScripts)
 {
-	// clear the Suspend state from MacTelnetÕs point of view,
+	// clear the Suspend state from MacTelnetâ€™s point of view,
 	// since the process already considers the pipe reopened
 	Session_SetNetworkSuspended(inRef, false);
 	
@@ -3977,7 +3977,7 @@ Session_UserInputKey	(SessionRef		inRef,
 
 
 /*!
-Allows the user to ÒtypeÓ whatever text is on the Clipboard
+Allows the user to â€œtypeâ€ whatever text is on the Clipboard
 (or, if not nullptr, the specified pasteboard; useful for
 handling drags, for instance).
 
@@ -4147,7 +4147,7 @@ Session_UserInputQueueCharacter		(SessionRef		inRef,
 
 /*!
 Send a string to a session as if it were typed into
-the specified sessionÕs window.  If local echoing is
+the specified sessionâ€™s window.  If local echoing is
 enabled for the session, the string will be written
 to the local data target (usually a terminal) after
 it is sent to the remote process.
@@ -4338,7 +4338,7 @@ changeNotifyForSession		(SessionPtr			inPtr,
 							 Session_Change		inWhatChanged,
 							 void*				inContextPtr)
 {
-	// invoke listener callback routines appropriately, from the specified sessionÕs listener model
+	// invoke listener callback routines appropriately, from the specified sessionâ€™s listener model
 	ListenerModel_NotifyListenersOfEvent(inPtr->changeListenerModel, inWhatChanged, inContextPtr);
 }// changeNotifyForSession
 
@@ -4507,12 +4507,12 @@ connectionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				size_t		actualSize = 0L;
 				
 				
-				// get the userÕs process service preference, if possible
+				// get the userâ€™s process service preference, if possible
 				unless (Preferences_GetData(kPreferences_TagDontAutoClose,
 											sizeof(keepWindowOpen), &keepWindowOpen,
 											&actualSize) == kPreferences_ResultOK)
 				{
-					keepWindowOpen = false; // assume window should be closed, if preference canÕt be found
+					keepWindowOpen = false; // assume window should be closed, if preference canâ€™t be found
 				}
 				
 				unless (keepWindowOpen) killConnection(ptr);
@@ -4657,7 +4657,7 @@ createSessionPageFormat ()
 
 
 /*!
-Registers the Òactive sessionÓ icon reference with the system,
+Registers the â€œactive sessionâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -4687,7 +4687,7 @@ createSessionStateActiveIcon ()
 
 
 /*!
-Registers the Òdead sessionÓ icon reference with the system,
+Registers the â€œdead sessionâ€ icon reference with the system,
 and returns a reference to the new icon.
 
 (3.1)
@@ -4774,7 +4774,7 @@ session to reflect its stability.
 This special state is useful for user interface events
 such as confirmation alerts that can be more annoying
 than useful for windows that have been asked to close
-very soon after theyÕve opened.
+very soon after theyâ€™ve opened.
 
 Timers that draw must save and restore the current
 graphics port.
@@ -5057,7 +5057,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			if (false == result)
 			{
 				// no key-based or character-based actions have occurred;
-				// fine, the key should be respected ÒverbatimÓ (send the
+				// fine, the key should be respected â€œverbatimâ€ (send the
 				// one or two characters it represents to the session)
 				UInt8		charactersToSend[2];
 				UInt8*		characterPtr = charactersToSend;
@@ -5136,7 +5136,7 @@ removes its name from the Window menu.
 
 Typically, in response to a standard connection
 close, you use Session_Disconnect(), which will
-take into account the userÕs preference as to
+take into account the userâ€™s preference as to
 whether windows remain open, etc. and clean up
 auxiliary tasks initiated by that session, such
 as printing or capturing to a file.  That routine
@@ -5161,7 +5161,7 @@ killConnection		(SessionPtr		inPtr)
 		if (nullptr != inPtr->terminalWindow)
 		{
 			changeNotifyForSession(inPtr, kSession_ChangeWindowInvalid, inPtr->selfRef/* context */);
-			// WARNING: This is old-style.  A session does not really ÒownÓ a terminal window,
+			// WARNING: This is old-style.  A session does not really â€œownâ€ a terminal window,
 			// it is more logical for a responder to the invalidation event to dispose of the
 			// terminal window.
 			TerminalWindow_Dispose(&inPtr->terminalWindow);
@@ -5217,12 +5217,12 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 				size_t	actualSize = 0L;
 				
 				
-				// get the userÕs Capture File Creator preference, if possible
+				// get the userâ€™s Capture File Creator preference, if possible
 				unless (Preferences_GetData(kPreferences_TagCaptureFileCreator,
 											sizeof(captureFileCreator), &captureFileCreator, &actualSize) ==
 						kPreferences_ResultOK)
 				{
-					captureFileCreator = 'ttxt'; // default to SimpleText if a preference canÕt be found
+					captureFileCreator = 'ttxt'; // default to SimpleText if a preference canâ€™t be found
 				}
 				
 				error = FileSelectionDialogs_CreateOrFindUserSaveFile
@@ -5277,7 +5277,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								AliasHandle		alias = nullptr;
 								
 								
-								// I canÕt remember if itÕs a memory leak to forget about an alias or not...warning...
+								// I canâ€™t remember if itâ€™s a memory leak to forget about an alias or not...warning...
 								if (NewAliasMinimal(&captureFile, &alias) == noErr)
 								{
 									// TEMPORARY - one day it might be nice if MacTelnet could display the same screen
@@ -5386,7 +5386,7 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 								error = FSExchangeObjects(&temporaryFile, &saveFile);
 								if (error != noErr)
 								{
-									// if a ÒsafeÓ save fails, the volume may not support object exchange;
+									// if a â€œsafeâ€ save fails, the volume may not support object exchange;
 									// so, fall back to overwriting the original file in that case
 									error = FSOpenFork(&saveFile, 0/* fork name length */, nullptr/* fork name */, fsWrPerm, &fileRefNum);
 									if (error == noErr)
@@ -5404,8 +5404,8 @@ navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 							
 							// delete the temporary; it will either contain a partial save file
 							// that did not successfully write, or it will contain whatever the
-							// userÕs original file had (and the new file will be successfully
-							// in the userÕs selected location, instead of temporary space)
+							// userâ€™s original file had (and the new file will be successfully
+							// in the userâ€™s selected location, instead of temporary space)
 							(OSStatus)FSDeleteObject(&temporaryFile);
 						}
 						
@@ -5453,7 +5453,7 @@ pageSetupCloseNotifyProc	(PMPrintSession		inPrintSession,
 
 
 /*!
-The responder to a closed Òreally paste?Ó alert.  This routine
+The responder to a closed â€œreally paste?â€ alert.  This routine
 performs the Paste to the specified session using the verbatim
 Clipboard text if the item hit is the OK button.  If the user
 hit the Other button, the Clipboard text is slightly modified
@@ -5528,7 +5528,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 										&ptr->preferencesCache.cursorFlashes, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			ptr->preferencesCache.cursorFlashes = true; // assume a value, if preference canÕt be found
+			ptr->preferencesCache.cursorFlashes = true; // assume a value, if preference canâ€™t be found
 		}
 		break;
 	
@@ -5539,7 +5539,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 										&ptr->preferencesCache.remapBackquoteToEscape, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			ptr->preferencesCache.remapBackquoteToEscape = false; // assume a value, if preference canÕt be found
+			ptr->preferencesCache.remapBackquoteToEscape = false; // assume a value, if preference canâ€™t be found
 		}
 		break;
 	
@@ -5764,7 +5764,7 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 									&focusFollowsMouse, &actualSize) ==
 				kPreferences_ResultOK)
 		{
-			focusFollowsMouse = false; // assume a value, if preference canÕt be found
+			focusFollowsMouse = false; // assume a value, if preference canâ€™t be found
 		}
 		
 		// ignore this event if the application is not frontmost
@@ -5851,7 +5851,7 @@ receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRe
 
 /*!
 Handles "kEventTextInputUnicodeForKeyEvent" of
-"kEventClassTextInput" for a sessionÕs terminal views.
+"kEventClassTextInput" for a sessionâ€™s terminal views.
 
 (3.0)
 */
@@ -5950,7 +5950,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 			if ((controlKeyPressInfo.virtualKeyCode == 0x34) ||
 				(controlKeyPressInfo.virtualKeyCode == 0x4C))
 			{
-				// fix for PowerBook 540Õs bad KCHR; map control-C to Return
+				// fix for PowerBook 540â€™s bad KCHR; map control-C to Return
 				controlKeyPressInfo.characterCode = 13;
 			}
 			break;
@@ -6072,7 +6072,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 
 /*!
 Handles "kEventWindowClose" of "kEventClassWindow"
-for a sessionÕs terminal window.
+for a sessionâ€™s terminal window.
 
 (3.0)
 */
@@ -6110,8 +6110,8 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				// has the preference set) close the window automatically;
 				// a confirmation message is displayed UNLESS it has been less
 				// than a few seconds since the connection opened, in which
-				// case MacTelnet assumes the user doesnÕt care and bypasses
-				// the confirmation message (what can I say, IÕm a nice guy)
+				// case MacTelnet assumes the user doesnâ€™t care and bypasses
+				// the confirmation message (what can I say, Iâ€™m a nice guy)
 				Session_DisplayTerminationWarning(session);
 			}
 			
@@ -6125,7 +6125,7 @@ receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 /*!
 Embellishes "kEventWindowFocusAcquired" of "kEventClassWindow"
-for a sessionÕs terminal window, by clearing any notifications
+for a sessionâ€™s terminal window, by clearing any notifications
 set on the session.
 
 (3.1)
@@ -6468,7 +6468,7 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 											sizeof(cursorMovesPriorToDrops), &cursorMovesPriorToDrops,
 											&actualSize) == kPreferences_ResultOK)
 				{
-					cursorMovesPriorToDrops = false; // assume a value, if a preference canÕt be found
+					cursorMovesPriorToDrops = false; // assume a value, if a preference canâ€™t be found
 				}
 				if (cursorMovesPriorToDrops)
 				{
@@ -6477,7 +6477,7 @@ sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 															mouseLocation);
 				}
 				
-				// ÒtypeÓ the text; this could trigger the Òmulti-line pasteÓ alert
+				// â€œtypeâ€ the text; this could trigger the â€œmulti-line pasteâ€ alert
 				pasteResult = Session_UserInputPaste(inRef, dragPasteboard);
 				if (false == pasteResult.ok())
 				{
@@ -6591,7 +6591,7 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 /*!
-The responder to a closed Òterminate session?Ó alert.
+The responder to a closed â€œterminate session?â€ alert.
 This routine disconnects and/or closes a session if
 the item hit is the OK button, otherwise it does not
 touch the session window in any way.  The given alert
@@ -6650,7 +6650,7 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 											&leaveWindowOpen, &actualSize) ==
 						kPreferences_ResultOK)
 				{
-					leaveWindowOpen = false; // assume windows automatically close, if preference canÕt be found
+					leaveWindowOpen = false; // assume windows automatically close, if preference canâ€™t be found
 				}
 				
 				if (leaveWindowOpen)
@@ -6954,7 +6954,7 @@ watchTimerResetForSession	(SessionPtr		inPtr,
 
 
 /*!
-Invoked whenever a monitored sessionÕs window has just
+Invoked whenever a monitored sessionâ€™s window has just
 been created, or is about to be destroyed.  This routine
 responds by installing or removing window-dependent event
 handlers for the session.
@@ -7016,7 +7016,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			TerminalWindow_StartMonitoring(ptr->terminalWindow, kTerminalWindow_ChangeObscuredState,
 											ptr->terminalWindowListener);
 			{
-				// install a listener for keystrokes on each viewÕs control;
+				// install a listener for keystrokes on each viewâ€™s control;
 				// in the future, terminal windows may have multiple views,
 				// which can be focused independently
 				UInt16				viewCount = TerminalWindow_ReturnViewCount(ptr->terminalWindow);

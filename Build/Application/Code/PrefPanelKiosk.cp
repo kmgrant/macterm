@@ -3,9 +3,9 @@
 	PrefPanelKiosk.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -279,7 +279,7 @@ const
 				Preferences_GetData(kPreferences_TagKioskShowsMenuBar, sizeof(showMenuBar),
 									&showMenuBar, &actualSize))
 		{
-			showMenuBar = false; // assume a default, if preference can’t be found
+			showMenuBar = false; // assume a default, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxShowMenuBar, inOwningWindow), BooleanToCheckBoxValue(showMenuBar));
 	}
@@ -291,7 +291,7 @@ const
 				Preferences_GetData(kPreferences_TagKioskShowsScrollBar, sizeof(showScrollBar),
 									&showScrollBar, &actualSize))
 		{
-			showScrollBar = false; // assume a default, if preference can’t be found
+			showScrollBar = false; // assume a default, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxShowScrollBar, inOwningWindow), BooleanToCheckBoxValue(showScrollBar));
 	}
@@ -303,7 +303,7 @@ const
 				Preferences_GetData(kPreferences_TagKioskAllowsForceQuit, sizeof(allowForceQuit),
 									&allowForceQuit, &actualSize))
 		{
-			allowForceQuit = false; // assume a default, if preference can’t be found
+			allowForceQuit = false; // assume a default, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxAllowForceQuit, inOwningWindow), BooleanToCheckBoxValue(allowForceQuit));
 	}
@@ -315,7 +315,7 @@ const
 				Preferences_GetData(kPreferences_TagKioskUsesSuperfluousEffects, sizeof(superfluousEffects),
 									&superfluousEffects, &actualSize))
 		{
-			superfluousEffects = false; // assume a default, if preference can’t be found
+			superfluousEffects = false; // assume a default, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxSuperfluousEffects, inOwningWindow), BooleanToCheckBoxValue(superfluousEffects));
 	}
@@ -327,7 +327,7 @@ const
 				Preferences_GetData(kPreferences_TagKioskShowsOffSwitch, sizeof(showOffSwitch),
 									&showOffSwitch, &actualSize))
 		{
-			showOffSwitch = false; // assume a default, if preference can’t be found
+			showOffSwitch = false; // assume a default, if preference can‚Äôt be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxShowOffSwitchWindow, inOwningWindow), BooleanToCheckBoxValue(showOffSwitch));
 	}
@@ -338,7 +338,7 @@ const
 
 /*!
 Adjusts the views in preference panels to match the
-specified change in dimensions of a panel’s container.
+specified change in dimensions of a panel‚Äôs container.
 
 (3.1)
 */
@@ -389,7 +389,7 @@ disposePanel	(Panel_Ref	UNUSED_ARGUMENT(inPanel),
 /*!
 This routine, of standard PanelChangedProcPtr form,
 is invoked by the Panel module whenever a property
-of one of the preferences dialog’s panels changes.
+of one of the preferences dialog‚Äôs panels changes.
 
 (3.1)
 */
@@ -464,7 +464,7 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//Boolean		isNowVisible = *(REINTERPRET_CAST(inDataPtr, Boolean*));
 			
@@ -540,7 +540,7 @@ toggled to its new value.
 The appropriate preference will have been updated
 in memory using Preferences_SetData().
 
-If the specified view is “known”, "true" is
+If the specified view is ‚Äúknown‚Äù, "true" is
 returned to indicate that the click was handled.
 Otherwise, "false" is returned.
 

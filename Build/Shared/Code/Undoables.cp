@@ -3,7 +3,7 @@
 	Undoables.cp
 	
 	Contexts Library 2.0
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -84,8 +84,8 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 /*!
 Call this routine before any other in this module.
 Currently, only one Undo handling mechanism is
-supported.  If multiple Undo support (an “Undoable
-action stack”) is implemented in the future, it
+supported.  If multiple Undo support (an ‚ÄúUndoable
+action stack‚Äù) is implemented in the future, it
 would be requested using a different parameter to
 this initialization routine.
 
@@ -106,14 +106,14 @@ for both Undo and Redo.
 
 IMPORTANT:	I disagree with the pseudo-standard
 			taken by many Macintosh programs that
-			names inactive Undo “Can’t Undo”.  This
+			names inactive Undo ‚ÄúCan‚Äôt Undo‚Äù.  This
 			is wrong, period.  This introduces a
 			double-negative, because the disabled
 			state of the command obviously implies
-			that the most recent action “can’t” be
+			that the most recent action ‚Äúcan‚Äôt‚Äù be
 			done.  In English locales, the parameters
 			to this routine should be Pascal strings
-			with the terms “Undo” and “Redo”,
+			with the terms ‚ÄúUndo‚Äù and ‚ÄúRedo‚Äù,
 			respectively.
 
 (1.0)
@@ -138,7 +138,7 @@ Undoables_Init	(Undoables_UndoHandlingMechanism	inUndoHandlingMechanism,
 
 /*!
 Call this routine when you are finished using this
-module.  This routine sends “dispose” messages to
+module.  This routine sends ‚Äúdispose‚Äù messages to
 the callbacks of all actions that are still in the
 Undo and Redo stacks.
 
@@ -185,9 +185,9 @@ necessary to reverse the operation at an arbitrary
 point later on.
 
 Specify the name of the menu item to use for the
-undoable action (for example, “Undo Cut”).  If the
+undoable action (for example, ‚ÄúUndo Cut‚Äù).  If the
 action can also be redone later, provide a menu item
-name for its Redo equivalent (“Redo Cut”, in this
+name for its Redo equivalent (‚ÄúRedo Cut‚Äù, in this
 example).  To specify that an action cannot be redone,
 simply pass nullptr in the second parameter.
 
@@ -241,11 +241,11 @@ references to it invalid.  The Undo and Redo stacks
 are first searched and any references to the given
 action are removed automatically.
 
-IMPORTANT:	The “dispose” callback instruction is
+IMPORTANT:	The ‚Äúdispose‚Äù callback instruction is
 			NOT sent by this routine.  In fact, you
 			typically call this routine *in response*
 			to such an instruction, as part of your
-			callback’s clean-up code.
+			callback‚Äôs clean-up code.
 
 (2.0)
 */
@@ -395,7 +395,7 @@ the configured maximum, the action is automatically
 removed and the dispose message is sent.
 
 This should be the only action taken in response
-to the user selecting Redo from your application’s
+to the user selecting Redo from your application‚Äôs
 Edit menu.
 
 (1.0)
@@ -476,7 +476,7 @@ Invokes the top action on the Undo stack, and then
 transfers that action to the top of the Redo stack.
 
 This should be the only action taken in response
-to the user selecting Undo from your application’s
+to the user selecting Undo from your application‚Äôs
 Edit menu.
 
 (1.0)

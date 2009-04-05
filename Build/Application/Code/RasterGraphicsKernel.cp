@@ -3,9 +3,9 @@
 	RasterGraphicsKernel.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2006 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -66,15 +66,15 @@ enum
 	ESCCMD = ' ',		// escape to next level of commands
 	DELIM = ';',		// argument delimiter
 	CMDTRM = '^',		// terminator, but also a prefix (with ESC)
-	WINCMD = 'W',		// Òcreate windowÓ command
-	DESCMD = 'D',		// Òdestroy windowÓ command
-	MAPCMD = 'M',		// Òchange color map entriesÓ command
-	RLECMD = 'R',		// Òrun-length encoded dataÓ
-	PIXCMD = 'P',		// Òstandard pixel dataÓ
-	IMPCMD = 'I',		// ÒIMCOMP compressed dataÓ
-	FILCMD = 'F',		// Òsave to fileÓ command
-	CLKCMD = 'C',		// Òclick the slide cameraÓ
-	SAVCMD = 'S'		// Òsave color map to fileÓ
+	WINCMD = 'W',		// â€œcreate windowâ€ command
+	DESCMD = 'D',		// â€œdestroy windowâ€ command
+	MAPCMD = 'M',		// â€œchange color map entriesâ€ command
+	RLECMD = 'R',		// â€œrun-length encoded dataâ€
+	PIXCMD = 'P',		// â€œstandard pixel dataâ€
+	IMPCMD = 'I',		// â€œIMCOMP compressed dataâ€
+	FILCMD = 'F',		// â€œsave to fileâ€ command
+	CLKCMD = 'C',		// â€œclick the slide cameraâ€
+	SAVCMD = 'S'		// â€œsave color map to fileâ€
 };
 
 enum
@@ -855,7 +855,7 @@ unrleit		(UInt8*			buf,
 		}
 		else
 		{
-			// a repeater of the form Òfrequency, characterÓ
+			// a repeater of the form â€œfrequency, characterâ€
 			cnt &= 127; // strip high bit
 			while (cnt-- && q < endq) *q++ = *p; // generate repeats of the character
 			p++; // skip over the character
@@ -1171,7 +1171,7 @@ decode1		(char 	c)
 				break;
 				
 			default: // mistaken character in stream
-				dstate = FRIN; // assume itÕs not special...
+				dstate = FRIN; // assume itâ€™s not special...
 				result = decode1(c); // ...but be sure!
 				break;
 		}

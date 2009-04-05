@@ -3,9 +3,9 @@
 	Local.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -131,7 +131,7 @@ struct My_Process
 	pid_t				_processID;			// the process directly spawned by this session
 	Local_TerminalID	_pseudoTerminal;	// file descriptor of pseudo-terminal master
 	char const*			_slaveDeviceName;	// e.g. "/dev/ttyp0", data sent here goes to the terminal emulator (not the process)
-	char const*			_commandLine;		// buffer for parent process’ command line
+	char const*			_commandLine;		// buffer for parent process‚Äô command line
 };
 typedef My_Process*			My_ProcessPtr;
 typedef My_Process const*	My_ProcessConstPtr;
@@ -254,7 +254,7 @@ Local_DisableTerminalLocalEcho		(Local_TerminalID		inPseudoTerminalID)
 
 
 /*!
-Returns the current Unix user’s login shell preference,
+Returns the current Unix user‚Äôs login shell preference,
 as a pointer to an array of characters in C string format.
 
 \retval kLocal_ResultOK
@@ -274,14 +274,14 @@ Local_GetDefaultShell	(char**		outStringPtr)
 	if (nullptr == outStringPtr) result = kLocal_ResultParameterError;
 	else
 	{
-		// normally the password file is used to find the user’s shell;
+		// normally the password file is used to find the user‚Äôs shell;
 		// but if that fails, the SHELL environment variable is a good bet
 		struct passwd*		userInfoPtr = getpwuid(getuid());
 		
 		
 		if (nullptr != userInfoPtr)
 		{
-			// grab the user’s preferred shell from the password file
+			// grab the user‚Äôs preferred shell from the password file
 			*outStringPtr = userInfoPtr->pw_shell;
 		}
 		else
@@ -298,7 +298,7 @@ Local_GetDefaultShell	(char**		outStringPtr)
 Kills the specified process, disposes of the data and
 sets your copy of the reference to nullptr.
 
-The given process’ ID is not allowed to be less than
+The given process‚Äô ID is not allowed to be less than
 or equal to zero, as this has special significance
 to the system (kills multiple processes).
 
@@ -556,7 +556,7 @@ Local_SendTerminalResizeMessage		(Local_TerminalID	inPseudoTerminalID,
 
 
 /*!
-Calls Local_SpawnProcess() with the user’s default
+Calls Local_SpawnProcess() with the user‚Äôs default
 shell as the process (determined using getpwuid()
 or falling back to the SHELL environment variable).
 
@@ -578,7 +578,7 @@ Local_SpawnDefaultShell	(SessionRef			inUninitializedSession,
 	
 	if (nullptr != userInfoPtr)
 	{
-		// grab the user’s preferred shell from the password file
+		// grab the user‚Äôs preferred shell from the password file
 		args[0] = userInfoPtr->pw_shell;
 	}
 	else
@@ -622,12 +622,12 @@ The Unix command line is defined using the given
 argument vector, which must be terminated by a
 nullptr entry in the array.
 
-The specified session’s data will be updated with
+The specified session‚Äôs data will be updated with
 whatever information is available for the created
 process.
 
 The specified working directory is targeted only in
-the child process, meaning the caller’s working
+the child process, meaning the caller‚Äôs working
 directory is unchanged.  If it is not possible to
 change to that directory, the child process is
 aborted.
@@ -693,14 +693,14 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 	
 	// TEMPORARY - the UNIX structures are filled in with defaults that work,
 	//             but eventually MacTelnet has to map user preferences, etc.
-	//             to these so that they affect “local” terminals in the same
+	//             to these so that they affect ‚Äúlocal‚Äù terminals in the same
 	//             way as they affect remote ones
 	std::memset(&terminalControl, 0, sizeof(terminalControl));
 	fillInTerminalControlStructure(&terminalControl); // TEMP
 	
 	// spawn a child process attached to a pseudo-terminal device; the child
-	// will be used to run the shell, and the shell’s I/O will be handled in
-	// a separate preemptive thread by MacTelnet’s awesome terminal emulator
+	// will be used to run the shell, and the shell‚Äôs I/O will be handled in
+	// a separate preemptive thread by MacTelnet‚Äôs awesome terminal emulator
 	// and main event loop
 	{
 		struct winsize		terminalSize; // defined in "/usr/include/sys/ttycom.h"
@@ -761,7 +761,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			
 			// run a Unix terminal-based application program; this is accomplished
 			// using an execvp() call, which DOES NOT RETURN UNLESS there is an
-			// error; technically the return value is -1 on error, but really it’s
+			// error; technically the return value is -1 on error, but really it‚Äôs
 			// a problem if any return value is received, so an abort() is done no
 			// matter what (the abort() kills this child process, but not MacTelnet)
 			{					
@@ -792,7 +792,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		
 		// avoid special processing of data, allow the terminal to see it all (raw mode)
 		{
-			// arrange for user’s TTY to be fixed at exit time
+			// arrange for user‚Äôs TTY to be fixed at exit time
 			gTerminalToRestore = STDIN_FILENO;
 			if (-1 == atexit(putTTYInOriginalModeAtExit))
 			{
@@ -802,7 +802,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				Console_Warning(Console_WriteValue, "unable to register atexit() routine for TTY mode", kActualError);
 			}
 			
-			// set user’s TTY to raw mode
+			// set user‚Äôs TTY to raw mode
 			{
 				Local_Result	rawSwitchResult = putTTYInRawMode(gTerminalToRestore);
 				
@@ -814,7 +814,7 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			}
 		}
 		
-		// start a thread for data processing so that MacTelnet’s main event loop can still run
+		// start a thread for data processing so that MacTelnet‚Äôs main event loop can still run
 		{
 			pthread_attr_t	attr;
 			int				error = 0;
@@ -945,7 +945,7 @@ Local_WriteBytes	(int			inFileDescriptor,
 	register SInt16		clogCount = 0;
 	
 	
-	ptr = REINTERPRET_CAST(inBufferPtr, char const*); // use char*, pointer arithmetic doesn’t work on void*
+	ptr = REINTERPRET_CAST(inBufferPtr, char const*); // use char*, pointer arithmetic doesn‚Äôt work on void*
 	bytesLeft = inByteCount;
 	while (bytesLeft > 0)
 	{
@@ -1063,7 +1063,7 @@ fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 	
 	
 	//
-	// Set the same default values used by Mac OS X’s Terminal.app for STDIN;
+	// Set the same default values used by Mac OS X‚Äôs Terminal.app for STDIN;
 	// subtracting '@' from a capital letter gives its control character in
 	// ASCII (e.g. 'D' - '@' yields control-D).
 	//
@@ -1132,7 +1132,7 @@ fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 	
 	// Set the control characters.  Basically these are
 	// set to the default values, except maybe what is
-	// overridden by the user’s preferences.
+	// overridden by the user‚Äôs preferences.
 	controlCharacterArray[VEOF] = CEOF;
 	controlCharacterArray[VEOL] = STATIC_CAST(255, cc_t);
 	controlCharacterArray[VEOL2] = STATIC_CAST(255, cc_t);
@@ -1152,7 +1152,7 @@ fillInTerminalControlStructure	(struct termios*	outTerminalControlPtr)
 	controlCharacterArray[VTIME] = CTIME;
 	controlCharacterArray[VSTATUS] = STATIC_CAST(255, cc_t);
 	
-	// It’s hard to say what to put here...MacTelnet is not a
+	// It‚Äôs hard to say what to put here...MacTelnet is not a
 	// modem!  Oh well, 9600 baud is what Terminal.app uses...
 	*inputSpeedPtr = B9600;
 	*outputSpeedPtr = B9600;
@@ -1215,7 +1215,7 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 		
 		// split into child and parent processes; 0 is returned
 		// within the child, a positive number is returned within
-		// the parent (the child process’ ID), and a negative
+		// the parent (the child process‚Äô ID), and a negative
 		// number is returned if the fork fails
 		result = fork();
 		if (-1 != result)
@@ -1237,7 +1237,7 @@ forkToNewTTY	(My_TTYMasterID*		outMasterTTYPtr,
 				// this is the BSD 4.4 way to acquire the controlling terminal
 				if (-1 == ioctl(slaveTTY, TIOCSCTTY/* command */, NULL/* data */)) abort();
 				
-				// set slave’s terminal control information and terminal screen size
+				// set slave‚Äôs terminal control information and terminal screen size
 				if (nullptr != inSlaveTerminalControlPtrOrNull)
 				{
 					if (-1 == tcsetattr(slaveTTY, TCSANOW/* when to apply changes */, inSlaveTerminalControlPtrOrNull))
@@ -1343,7 +1343,7 @@ openMasterTeletypewriter	(size_t				inNameSize,
 				else
 				{
 					// only quit if there are no more devices available;
-					// other errors might be avoided by trying another “pty”
+					// other errors might be avoided by trying another ‚Äúpty‚Äù
 					if (ENOENT == errno)
 					{
 						doneSearch = true;
@@ -1476,7 +1476,7 @@ putTTYInOriginalMode	(Local_TerminalID		inTTY)
 /*!
 A standard atexit() handler; resets a modified terminal to
 whatever state it was in originally, before being put in
-“raw mode” by MacTelnet.
+‚Äúraw mode‚Äù by MacTelnet.
 
 (3.0)
 */
@@ -1545,7 +1545,7 @@ putTTYInRawMode		(Local_TerminalID		inTTY)
 		//   queue directly.
 		//
 		// - IEXTEN is disabled as implementation-defined characters
-		//   (“extended input”) are not recognized.
+		//   (‚Äúextended input‚Äù) are not recognized.
 		//
 		// - ISIG is disabled so Interrupt, Suspend and Resume do not have
 		//   special meaning when not input by the user.
@@ -1584,7 +1584,7 @@ putTTYInRawMode		(Local_TerminalID		inTTY)
 		//
 		// - CS8 is enabled to indicate that characters are 8 bits each.
 		//   What this really means is that no bits are masked, which is
-		//   another way of saying “don’t mess with the data in raw mode”.
+		//   another way of saying ‚Äúdon‚Äôt mess with the data in raw mode‚Äù.
 		terminalControl.c_cflag |= (CS8);
 		
 		// Turn OFF the following output mode flags:
@@ -1592,7 +1592,7 @@ putTTYInRawMode		(Local_TerminalID		inTTY)
 		// - OPOST is disabled, meaning nothing special happens to data that
 		//   is output.  If this were set, it would be possible to do things
 		//   like map carriage returns and tabs - again, raw mode is not for
-		//   user input, so this isn’t appropriate.
+		//   user input, so this isn‚Äôt appropriate.
 		terminalControl.c_oflag &= ~(OPOST);
 		
 		// Since ICANON is disabled, above, these must be set.  The default
@@ -1684,7 +1684,7 @@ sendTerminalResizeMessage   (Local_TerminalID			inTTY,
 A POSIX thread (which can be preempted) that handles
 the data processing loop for a particular pseudo-
 terminal device.  Using preemptive threads for this
-allows MacTelnet to “block” waiting for data, without
+allows MacTelnet to ‚Äúblock‚Äù waiting for data, without
 actually halting other important things like the main
 event loop!
 
@@ -1699,7 +1699,7 @@ WARNING:	As this is a preemptable thread, you MUST
 void*
 threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 {
-	size_t const					kBufferSize = 4096; // TEMPORARY - this should respect the user’s Network Block Size preference
+	size_t const					kBufferSize = 4096; // TEMPORARY - this should respect the user‚Äôs Network Block Size preference
 	My_DataLoopThreadContextPtr		contextPtr = REINTERPRET_CAST(inDataLoopThreadContextPtr, My_DataLoopThreadContextPtr);
 	size_t							numberOfBytesRead = 0;
 	char*							buffer = REINTERPRET_CAST(Memory_NewPtrInterruptSafe(kBufferSize), char*);
@@ -1752,7 +1752,7 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 			// because the vast majority of Mac OS APIs are NOT thread-safe.
 			// (The exception apparently is Carbon Events.)
 			//
-			// After sending a “please process this data” event, this thread
+			// After sending a ‚Äúplease process this data‚Äù event, this thread
 			// blocks until a go-ahead response is received from the main queue.
 			// The go-ahead event also returns the number of unprocessed bytes,
 			// which will determine if another post is necessary (next time
@@ -1761,12 +1761,12 @@ threadForLocalProcessDataLoop	(void*		inDataLoopThreadContextPtr)
 			// WARNING:	To simplify the code below, certain assumptions are
 			//			made.  One, that the current thread serves exactly one
 			//			session, "contextPtr->session".  Two, that no one will
-			//			ever send “data processed” events to this thread except
+			//			ever send ‚Äúdata processed‚Äù events to this thread except
 			//			for the purpose of continuing this loop.  Three, that
 			//			the thread must not terminate while events it sends are
 			//			being handled in the main thread - allowing addresses of
 			//			data in this thread to be passed in.  Violate any of the
-			//			assumptions, and I think you’ll deserve the outcome.
+			//			assumptions, and I think you‚Äôll deserve the outcome.
 			//
 			
 			// notify that data has arrived
@@ -1878,7 +1878,7 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 {
 	static Boolean		gFirstCall = true;
 	int					currentStatus = 0;
-	pid_t				waitResult = waitpid(-1/* process or group, -1 is “any child” */, &currentStatus, WNOHANG/* options */);
+	pid_t				waitResult = waitpid(-1/* process or group, -1 is ‚Äúany child‚Äù */, &currentStatus, WNOHANG/* options */);
 	
 	
 	if (gFirstCall)
@@ -1902,7 +1902,7 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 	}
 	else
 	{
-		// process may have failed - if it is a “real” problem, tell the user
+		// process may have failed - if it is a ‚Äúreal‚Äù problem, tell the user
 		// INCOMPLETE - it is possible to be more specific here, if information is cached and
 		// looked up based on process ID (e.g. window, process name, session info)
 		pid_t const		kProcessID = waitResult;

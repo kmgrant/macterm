@@ -3,7 +3,7 @@
 	Embedding.cp
 	
 	Interface Library 2.0
-	© 1998-2008 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -199,7 +199,7 @@ operating on a buffer (in other words, flickering occurs in
 this case).
 
 I believe there is a small memory leak in here someplace,
-but I’m not sure where.  Heh heh heh heh heh ha (*cough*).
+but I‚Äôm not sure where.  Heh heh heh heh heh ha (*cough*).
 
 IMPORTANT:	Only the given control is drawn in the offscreen
 			buffer, so this routine will only work for
@@ -303,7 +303,7 @@ Embedding_OffscreenControlOperationInMode	(WindowRef						inForWhichWindow,
 				// check for failures
 				if (data.result != noErr)
 				{
-					// offscreen dump failed somehow - just invoke the routine manually, with “good guesses” of unknown parameters
+					// offscreen dump failed somehow - just invoke the routine manually, with ‚Äúgood guesses‚Äù of unknown parameters
 					(OSStatus)SetUpControlBackground(control, ColorUtilities_ReturnCurrentDepth(GetWindowPort(inForWhichWindow)),
 														IsPortColor(GetWindowPort(inForWhichWindow)));
 					EraseRect(&controlBounds);
@@ -318,7 +318,7 @@ Embedding_OffscreenControlOperationInMode	(WindowRef						inForWhichWindow,
 				
 				if ((oldClipRgn != nullptr) && (newClipRgn != nullptr))
 				{
-					// Note that the following statements “really should” be conditionalized
+					// Note that the following statements ‚Äúreally should‚Äù be conditionalized
 					// beyond the preprocessor level, within a statement that checks for the
 					// presence of the Mac OS 8.5 Window Manager.  However, since Carbon
 					// *does* include the new Window Manager, and since the old routines all
@@ -398,7 +398,7 @@ To minimize the flickering caused by the
 sequential activation and deactivation of
 many controls in a window, use this routine.
 It will set or clear the activated state of
-a particular window’s root control, and
+a particular window‚Äôs root control, and
 redirect the control update to an offscreen
 graphics buffer.  When all control states
 have been drawn to the buffer, the result
@@ -492,7 +492,7 @@ a more efficient drawing model.
 
 In compositing mode, control drawing is all done
 relative to view coordinates, it cannot be done
-with any “raw” drawing routines like DrawOneControl(),
+with any ‚Äúraw‚Äù drawing routines like DrawOneControl(),
 and it cannot erase its background first.
 
 (1.3)
@@ -560,7 +560,7 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 			GetGWorld(&oldColorPort, &oldDevice);
 			SetGWorld(world, (GDHandle)nullptr);
 			
-			// get the offscreen graphics world’s pixel map
+			// get the offscreen graphics world‚Äôs pixel map
 			pixels = GetGWorldPixMap(world);
 			
 			// perform the offscreen control operation, and then do the blitter as quickly and easily as possible
@@ -588,7 +588,7 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 					rootError = GetRootControl(dataPtr->window, &root);
 					
 					// when using QuickTime, it is difficult to constrain drawing to the control alone
-					// (at least, I couldn’t find an easy way); so, unless the desired control to draw
+					// (at least, I couldn‚Äôt find an easy way); so, unless the desired control to draw
 					// is the root control (which spans the entire window), QuickTime cannot be used
 					// even if it is available
 					if (rootError == noErr) drawUsingCopyBits = ((!isQuickTimeAvailable) || (root != dataPtr->control));
@@ -605,7 +605,7 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 						DrawControlInCurrentPort(dataPtr->control);
 						SetGWorld(colorWindowPort, nullptr/* device */);
 						
-						// set background to white and foreground to black, so CopyBits() doesn’t screw anything up
+						// set background to white and foreground to black, so CopyBits() doesn‚Äôt screw anything up
 						GetForeColor(&oldForeColor);
 						GetBackColor(&oldBackColor);
 						
@@ -627,7 +627,7 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 					}
 					else
 					{
-						// Use QuickTime’s Image Compression Manager for ultra-quick (and possibly
+						// Use QuickTime‚Äôs Image Compression Manager for ultra-quick (and possibly
 						// graphics-accelerated) offscreen-to-onscreen copying (not to mention a
 						// hell of a lot less code!).  This is the only Carbon-compliant solution
 						// (although supposedly Apple is planning to tweak the hell out of the
@@ -680,7 +680,7 @@ offscreenDumpDeviceLoop		(short		inColorDepth,
 
 /*!
 This method is in standard OffscreenOperationProcPtr
-form, and will use "inIsEnabled" (“data 1”) as the
+form, and will use "inIsEnabled" (‚Äúdata 1‚Äù) as the
 enabled state (true or false) for the given control.
 If nonzero, the specified control of the specified
 window is activated; otherwise, it is deactivated.
@@ -722,7 +722,7 @@ setControlActiveOperation	(ControlRef		inSpecificControlOrRoot,
 
 /*!
 This method is in standard OffscreenOperationProcPtr
-form, and will use "inControlToDisplay" (“data 1”) as
+form, and will use "inControlToDisplay" (‚Äúdata 1‚Äù) as
 the control that should be displayed (while the
 specified control "inControlToHide" is hidden).
 

@@ -1,15 +1,15 @@
 /*!	\file MacHelpUtilities.h
 	\brief Slightly simplifies interactions with Apple Help.
 	
-	Initialize this routine with the name of your applicationÕs
-	help system, so that you donÕt have to specify it on
+	Initialize this routine with the name of your applicationâ€™s
+	help system, so that you donâ€™t have to specify it on
 	subsequent calls that perform a search and launch the
 	Help Viewer.
 */
 /*###############################################################
 
 	Contexts Library 1.1
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

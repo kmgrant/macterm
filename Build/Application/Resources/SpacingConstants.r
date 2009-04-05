@@ -2,9 +2,9 @@
 **************************************************************************
 	SpacingConstants.r
 	
-	© 1998-2004 by Kevin Grant
+	¬© 1998-2004 by Kevin Grant
 	
-	This file contains constants for “standard” dimensions and spacings
+	This file contains constants for ‚Äústandard‚Äù dimensions and spacings
 	for controls.  They are largely based on the Apple Human Interface
 	Guidelines and the Aqua Layout Guidelines.  They are used both in
 	resource files to set up window and dialog box controls consistently,
@@ -126,15 +126,15 @@ enum
 // icon sizes
 enum
 {
-	// “small” icons
+	// ‚Äúsmall‚Äù icons
 	ICON_WD_SMALL						= 32,
 	ICON_HT_SMALL						= 32,
 	
-	// “standard” icons
+	// ‚Äústandard‚Äù icons
 	ICON_WD_BIG							= 64,
 	ICON_HT_BIG							= 64,
 	
-	// “huge” icons
+	// ‚Äúhuge‚Äù icons
 	ICON_WD_HUGE						= 128,
 	ICON_HT_HUGE						= 128,
 	
@@ -157,9 +157,9 @@ enum
 	SPACE_EXTRA_CONTAINER				= 3,				// difference between the perceived edges and the actual (outset) edges
 	SPACE_EXTRA_TEXTEDIT				= 4,				// difference between the control edges and the visible (outset) edges
 	SPACE_EXTRA_TEXT_TOP				= 3,				// necessary additional space for static text below some kind of top edge
-	MINIMUM_BUTTON_TITLE_CUSHION		= 20,				// horizontal space between a button’s text title and its outer edges
-	MINIMUM_PLACARD_CUSHION				= 2,				// space between a placard’s edges and its content, ignoring bevels
-	MINIMUM_TICK_MARKS_CUSHION			= 6					// space padded to a slider’s size to make room for tick marks
+	MINIMUM_BUTTON_TITLE_CUSHION		= 20,				// horizontal space between a button‚Äôs text title and its outer edges
+	MINIMUM_PLACARD_CUSHION				= 2,				// space between a placard‚Äôs edges and its content, ignoring bevels
+	MINIMUM_TICK_MARKS_CUSHION			= 6					// space padded to a slider‚Äôs size to make room for tick marks
 };
 
 
@@ -179,11 +179,11 @@ Usage:
 */
 enum
 {
-	// space between button’s edges and dialog box interior
+	// space between button‚Äôs edges and dialog box interior
 	HSP_BUTTON_AND_DIALOG				= 24,
 	VSP_BUTTON_AND_DIALOG				= 20,
 	
-	// space between group box’s edge and dialog box interior
+	// space between group box‚Äôs edge and dialog box interior
 	HSP_GROUPBOX_AND_DIALOG				= 20,
 	VSP_GROUPBOX_AND_DIALOG				= 20,
 	
@@ -195,7 +195,7 @@ enum
 	HSP_TEXT_AND_DIALOG					= 18,
 	VSP_TEXT_AND_DIALOG					= HSP_TEXT_AND_DIALOG,
 	
-	// for any control that doesn’t have a more suitable constant above, use the ones below
+	// for any control that doesn‚Äôt have a more suitable constant above, use the ones below
 	HSP_CONTROL_AND_DIALOG				= 14,
 	VSP_CONTROL_AND_DIALOG				= HSP_CONTROL_AND_DIALOG
 };
@@ -223,7 +223,7 @@ Usage:
 // spacings between controls of the same type
 enum
 {
-	// for any control that doesn’t have a more suitable constant below, use these
+	// for any control that doesn‚Äôt have a more suitable constant below, use these
 	HSP_CONTROLS						= 12,
 	VSP_CONTROLS						= 8,
 	
@@ -292,7 +292,7 @@ enum
 	HSP_TABS_AND_CONTROL				= HSP_CONTROLS,
 	VSP_TABS_AND_CONTROL				= 18,
 	
-	// spacing between a tab control’s interior and its invisible pane
+	// spacing between a tab control‚Äôs interior and its invisible pane
 	HSP_TABPANE_AND_TAB					= 20,
 	VSP_TABPANE_AND_TAB					= 10,
 	
@@ -307,7 +307,7 @@ Standard Help Balloon Offsets
 
 Purpose:
 	To define the exact point relative to the location of a
-	control where a help balloon’s tip should be placed.  It
+	control where a help balloon‚Äôs tip should be placed.  It
 	is nice to have this consistency across all controls of
 	the same type, although that is not strictly necessary.
 	

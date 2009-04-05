@@ -15,7 +15,7 @@
 /*###############################################################
 
 	Data Access Library 1.4
-	© 1998-2009 by Kevin Grant
+	Â© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -67,7 +67,7 @@ block to test for the error condition.
 There is also a do-nothing default constructor, so
 that you can disable an assertion simply by failing
 to initialize it!  For example, if you declare some
-assertions in a class, the constructorÕs member
+assertions in a class, the constructorâ€™s member
 initialization list could contain "#ifdef DEBUG"
 lines around assertion initializers.
 */

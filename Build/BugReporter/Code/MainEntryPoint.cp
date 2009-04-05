@@ -3,7 +3,7 @@
 	MainEntryPoint.cp
 	
 	Bug Reporter
-		© 2005-2006 by Kevin Grant.
+		¬© 2005-2006 by Kevin Grant.
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -79,7 +79,7 @@ main	(int	argc,
 	
 	// install event handlers that can receive callbacks
 	// from the OS within the (blocked) main event loop;
-	// this is where all the “work” is done
+	// this is where all the ‚Äúwork‚Äù is done
 	{
 		Boolean		installedHandlersOK = false;
 		
@@ -235,7 +235,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 	
 	// set up self address for Apple Events
 	gSelfProcessID.highLongOfPSN = 0;
-	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don’t use GetCurrentProcess()!
+	gSelfProcessID.lowLongOfPSN = kCurrentProcess; // don‚Äôt use GetCurrentProcess()!
 	error = AECreateDesc(typeProcessSerialNumber, &gSelfProcessID, sizeof(gSelfProcessID), &gSelfAddress);
 	
 	// always make this the frontmost application when it runs
@@ -274,26 +274,26 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		CFBundleRef		buggyAppBundle = nullptr;
 		
 		
-		// “load” the buggy application bundle, which assumes that this app
+		// ‚Äúload‚Äù the buggy application bundle, which assumes that this app
 		// is physically located within the Resources folder of that bundle
 		// (so in particular, THIS WILL NOT WORK IN TESTING unless you
 		// PHYSICALLY MOVE the built executable into the Resources directory
 		// of a built MacTelnet.app!!!)
 		{
-			// create “...Foo.app/Contents/Resources/BugReporter.app”
+			// create ‚Äú...Foo.app/Contents/Resources/BugReporter.app‚Äù
 			CFURLRef	bugReporterBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
 			
 			
 			if (nullptr != bugReporterBundleURL)
 			{
-				// create “...Foo.app/Contents/Resources”
+				// create ‚Äú...Foo.app/Contents/Resources‚Äù
 				CFURLRef	buggyAppBundleResourcesURL = CFURLCreateCopyDeletingLastPathComponent
 															(kCFAllocatorDefault, bugReporterBundleURL);
 				
 				
 				if (nullptr != buggyAppBundleResourcesURL)
 				{
-					// create “...Foo.app/Contents”
+					// create ‚Äú...Foo.app/Contents‚Äù
 					CFURLRef	buggyAppBundleContentsURL = CFURLCreateCopyDeletingLastPathComponent
 															(kCFAllocatorDefault, buggyAppBundleResourcesURL);
 					
@@ -317,13 +317,13 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 			}
 		}
 		
-		// launch the bug report URL given in this application’s Info.plist
+		// launch the bug report URL given in this application‚Äôs Info.plist
 		// (most likely a mail URL that creates a new E-mail message)
 		if (nullptr == theURLCFString) failedToSubmitReport = true;
 		else
 		{
 			// The string is ASSUMED to be a mailto: URL that ends with a
-			// partial “body=” specification.  Here, additional information
+			// partial ‚Äúbody=‚Äù specification.  Here, additional information
 			// is generated and appended (in URL encoding format) to the
 			// string, with the expectation that it will end up in the body.
 			// Note that this extra information is NOT localized because I
@@ -336,7 +336,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 			if (nullptr == modifiedURLCFString) failedToSubmitReport = true;
 			else
 			{
-				// write an initial header to the console that describes the user’s runtime environment
+				// write an initial header to the console that describes the user‚Äôs runtime environment
 				// (again, this must be in URL-encoded format!)
 			#define BUG_REPORT_INCLUDES_PREAMBLE		1
 			#define BUG_REPORT_INCLUDES_OS_VERSION		1
@@ -411,7 +411,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 					{
 						// launch mail program with a new message pointed to the bug address
 						// and containing all of the special information above (that is, if
-						// the user’s mail program respects all mailto: URL specifications!)
+						// the user‚Äôs mail program respects all mailto: URL specifications!)
 						error = LSOpenCFURLRef(bugReporterURL, nullptr/* launched URL */);
 						if (noErr != error)
 						{
@@ -425,7 +425,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 			CFRelease(theURLCFString), theURLCFString = nullptr;
 		}
 		
-		// if even this fails, the user can’t report bugs with this program!
+		// if even this fails, the user can‚Äôt report bugs with this program!
 		if (failedToSubmitReport)
 		{
 			

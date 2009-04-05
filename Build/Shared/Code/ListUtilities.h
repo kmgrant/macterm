@@ -2,7 +2,7 @@
 	\brief Convenient APIs for List Manager lists.
 	
 	Just because Apple made it a pain to deal with lists
-	doesnÕt mean you have to burden that pain.  Use this
+	doesnâ€™t mean you have to burden that pain.  Use this
 	module to handle a number of common list-handling
 	needs, such as extracting lists from list box
 	controls, and counting items.
@@ -10,7 +10,7 @@
 /*###############################################################
 
 	Interface Library 1.3
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License

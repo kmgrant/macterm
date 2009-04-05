@@ -3,9 +3,9 @@
 	ThreadEntryPoints.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2009 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -104,7 +104,7 @@ ThreadEntryPoints_InitializeFontMenu	(void*		inMenuRefPosingAsVoidPointer)
 	
 	// remove proportional fonts from the menu
 #if 1
-	// NOTE:	Proportional fonts donÕt have to be stripped (MacTelnet is
+	// NOTE:	Proportional fonts donâ€™t have to be stripped (MacTelnet is
 	//       now able to render them if they are used); however, they
 	//       are SLOW.  Not only will the extra fonts add time opening
 	//       dialogs that have font menus (such as Terminal Editor), but
@@ -293,7 +293,7 @@ isMonospacedFont	(Str255		inFontName)
 				thePreferredFontFamily = theSizeAndFontFamily >> 16; // high word is font family 
 				result = (thePreferredFontFamily == fontID);
 			}
-			else result = false; // this fontÕs script isnÕt enabled
+			else result = false; // this fontâ€™s script isnâ€™t enabled
 		}
 		else doRomanTest = true;
 	}

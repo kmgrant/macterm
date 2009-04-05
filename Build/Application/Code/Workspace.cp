@@ -3,9 +3,9 @@
 	Workspace.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -179,7 +179,7 @@ Workspace_Dispose	(Workspace_Ref*		inoutRefPtr)
 Assigns the specified window to the workspace.  By
 assigning a window, it is detached from any other
 window groups it may be in and forced to follow the
-rules of the given workspace’s window group (for
+rules of the given workspace‚Äôs window group (for
 example, minimizing whenever any other window in
 the group is minimized).
 
@@ -247,7 +247,7 @@ Workspace_IsObscured	(Workspace_Ref	inWorkspace)
 /*!
 Unassigns the specified window from the workspace,
 such that the window is no longer constrained by
-the workspace’s window group.
+the workspace‚Äôs window group.
 
 If the window occurs in the workspace multiple
 times, all occurrences are removed.
@@ -377,8 +377,8 @@ Workspace_ReturnZeroBasedIndexOfWindow	(Workspace_Ref	inWorkspace,
 /*!
 Hides all the windows in the specified workspace from
 view, without necessarily giving them an invisible state.
-This allows the windows to continue to “act” visible
-without cluttering up the user’s screen.
+This allows the windows to continue to ‚Äúact‚Äù visible
+without cluttering up the user‚Äôs screen.
 
 This state cannot currently be nested; if you obscure a
 workspace several times and then turn off obscuring once,

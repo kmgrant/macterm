@@ -3,9 +3,9 @@
 	ProgressDialog.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -262,7 +262,7 @@ ProgressDialog_SetStatus	(ProgressDialog_Ref		inRef,
 
 
 /*!
-Sets the title of a progress dialog’s window.
+Sets the title of a progress dialog‚Äôs window.
 
 (3.1)
 */
@@ -357,7 +357,7 @@ arrangeWindow	(My_ProgressDialogPtr	inPtr)
 			assert_noerr(error);
 			
 			// position the progress window in the bottom-left corner of its screen (take into
-			// account the structure region, but the “location” is that of the content region)
+			// account the structure region, but the ‚Äúlocation‚Äù is that of the content region)
 		#if 0
 			SetRect(&contentRect,
 					screenBounds.left + kPaddingH + (contentRect.left - structureRect.left),
@@ -366,7 +366,7 @@ arrangeWindow	(My_ProgressDialogPtr	inPtr)
 					0, 0);
 		#endif
 			// position the progress window in the bottom-middle of its screen (take into
-			// account the structure region, but the “location” is that of the content region)
+			// account the structure region, but the ‚Äúlocation‚Äù is that of the content region)
 			SetRect(&contentRect,
 					INTEGER_HALVED((screenBounds.right - screenBounds.left) - (contentRect.right - contentRect.left)),
 					screenBounds.bottom - kPaddingV - (structureRect.bottom - structureRect.top) +

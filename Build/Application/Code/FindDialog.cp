@@ -3,9 +3,9 @@
 	FindDialog.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -106,7 +106,7 @@ struct My_FindDialog
 	
 	FindDialog_Ref							selfRef;					//!< identical to address of structure, but typed as ref
 	TerminalWindowRef						terminalWindow;				//!< the terminal window for which this dialog applies
-	NIBWindow								dialogWindow;				//!< the dialogÕs window
+	NIBWindow								dialogWindow;				//!< the dialogâ€™s window
 	HIViewWrap								buttonSearch;				//!< Search button
 	HIViewWrap								buttonCancel;				//!< Cancel button
 	HIViewWrap								fieldKeywords;				//!< the text field containing search keywords
@@ -114,7 +114,7 @@ struct My_FindDialog
 	HIViewWrap								textStatus;					//!< message stating the results of the search
 	HIViewWrap								iconNotFound;				//!< icon that appears when text was not found
 	HIViewWrap								arrowsSearchProgress;		//!< the progress indicator during searches
-	HIViewWrap								checkboxIgnoreCase;			//!< checkbox indicating whether ÒsimilarÓ letters match
+	HIViewWrap								checkboxIgnoreCase;			//!< checkbox indicating whether â€œsimilarâ€ letters match
 	HIViewWrap								buttonHelp;					//!< help button
 	
 	FindDialog_CloseNotifyProcPtr			closeNotifyProc;			//!< routine to call when the dialog is dismissed
@@ -468,7 +468,7 @@ FindDialog_ReturnTerminalWindow		(FindDialog_Ref		inDialog)
 /*!
 If you only need a close notification procedure
 for the purpose of disposing of the Find Dialog
-reference (and donÕt otherwise care when a Find
+reference (and donâ€™t otherwise care when a Find
 Dialog closes), you can pass this standard routine
 to FindDialog_New() as your notification procedure.
 
@@ -848,7 +848,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldnÕt be able to select menu commands while the sheet is open
+				// wouldnâ€™t be able to select menu commands while the sheet is open
 				result = eventNotHandledErr;
 				break;
 			}
@@ -864,7 +864,7 @@ for the search word history menu.  Responds by updating
 the keywords field to match the contents of the selected
 item - however, the event is then passed on so that the
 default handler can do other things (like update the
-pop-up menuÕs currently-checked item).
+pop-up menuâ€™s currently-checked item).
 
 (3.0)
 */

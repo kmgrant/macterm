@@ -20,7 +20,7 @@
 	MacTelnet 3.0.  Its revolutionary, decentralized event-
 	handling scheme is flexible enough to use Classic or Carbon
 	Events under the covers, but is still API-compatible with
-	Classic code (that doesn’t use CarbonLib), giving Classic
+	Classic code (that doesn‚Äôt use CarbonLib), giving Classic
 	code the benefits of some Carbon Events-like behaviors and
 	APIs.  And yet, compared to Carbon Events this scheme is
 	more straightforward to use because it passes around C data
@@ -31,9 +31,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -87,14 +87,14 @@ enum
 };
 
 /*!
-Events that MacTelnet allows other modules to “listen” for, via EventLoop_StartMonitoringControl().
+Events that MacTelnet allows other modules to ‚Äúlisten‚Äù for, via EventLoop_StartMonitoringControl().
 Control events always supersede window events of the same kind, and if a control event is absorbed
 by a control event listener, it is never sent to any listener for the same event on the window (or
 to the remaining control event listeners in the queue, for that matter).
 */
 enum EventLoop_ControlEvent
 {
-	kEventLoop_ControlEventClick						= '√Ctl',	//!< mouse is UP in a specific control in an active window
+	kEventLoop_ControlEventClick						= 'CCtl',	//!< mouse is UP in a specific control in an active window
 																	//!  (context: EventInfoControlScope_ClickPtr)
 	kEventLoop_ControlEventKeyPress						= 'KCtl',	//!< a key has been pressed while a specific control is focused
 																	//!  (context: EventInfoControlScope_KeyPressPtr)
@@ -103,7 +103,7 @@ enum EventLoop_ControlEvent
 };
 
 /*!
-Events that MacTelnet allows other modules to “listen” for, via EventLoop_StartMonitoringWindow().
+Events that MacTelnet allows other modules to ‚Äúlisten‚Äù for, via EventLoop_StartMonitoringWindow().
 Window events always supersede global events of the same kind, and if a window event is absorbed
 by a window event listener, it is never sent to any listener for the same event globally (or to
 the remaining window event listeners in the queue, for that matter).
@@ -114,7 +114,7 @@ enum EventLoop_WindowEvent
 																	//!  been released (context: EventInfoWindowScopeContentClickPtr)
 	kEventLoop_WindowEventKeyPress						= 'KWin',	//!< a key has been pressed in the active window
 																	//!  (context: EventInfoWindowScopeKeyPressPtr)
-	kEventLoop_WindowEventScrolling						= 'SWin',	//!< a device with scrolling capabilities such as a mouse’s
+	kEventLoop_WindowEventScrolling						= 'SWin',	//!< a device with scrolling capabilities such as a mouse‚Äôs
 																	//!  scroll wheel has initiated scrolling either horizontally,
 																	//!  vertically, or in both directions, for the active window
 																	//!  (context: EventInfoWindowScopeScrollPtr)
@@ -123,7 +123,7 @@ enum EventLoop_WindowEvent
 };
 
 /*!
-Events that MacTelnet allows other modules to “listen” for, via EventLoop_StartMonitoring().
+Events that MacTelnet allows other modules to ‚Äúlisten‚Äù for, via EventLoop_StartMonitoring().
 All control and window event types are also valid global events, so that you can monitor all
 controls or all windows for a certain kind of event.
 */

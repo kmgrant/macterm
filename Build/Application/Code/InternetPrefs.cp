@@ -3,9 +3,9 @@
 	InternetPrefs.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -48,15 +48,15 @@
 // defined in "InternetPrefs.h", and suffixes as
 // defined by the macro HELPER_BY_URL_KIND, below.
 #define kNotURLHelper		nullptr
-#define kMailtoURLHelper	"\pHelper¥mailto"
-#define kNewsURLHelper		"\pHelper¥nntp"
-#define kNntpURLHelper		"\pHelper¥nntp"
-#define kFtpURLHelper		"\pHelper¥ftp"
-#define kHttpURLHelper		"\pHelper¥http"
-#define kGopherURLHelper	"\pHelper¥gopher"
-#define kWaisURLHelper		"\pHelper¥wais"
-#define kFingerURLHelper	"\pHelper¥finger"
-#define kWhoisURLHelper		"\pHelper¥whois"
+#define kMailtoURLHelper	"\pHelperâ€¢mailto"
+#define kNewsURLHelper		"\pHelperâ€¢nntp"
+#define kNntpURLHelper		"\pHelperâ€¢nntp"
+#define kFtpURLHelper		"\pHelperâ€¢ftp"
+#define kHttpURLHelper		"\pHelperâ€¢http"
+#define kGopherURLHelper	"\pHelperâ€¢gopher"
+#define kWaisURLHelper		"\pHelperâ€¢wais"
+#define kFingerURLHelper	"\pHelperâ€¢finger"
+#define kWhoisURLHelper		"\pHelperâ€¢whois"
 // the following are handled by MacTelnet, and hence are nullptr
 #define kTelnetURLHelper	nullptr
 #define kTn3270URLHelper	nullptr
@@ -195,7 +195,7 @@ InternetPrefs_HelperApplicationForURLType		(UniformResourceLocatorType		urlKind)
 			break;
 		
 		case kQuickTimeURL:
-			result = 'TVOD'; // QuickTimeª Player
+			result = 'TVOD'; // QuickTimeâ„¢ Player
 			break;
 		
 		default:
@@ -211,7 +211,7 @@ InternetPrefs_HelperApplicationForURLType		(UniformResourceLocatorType		urlKind)
 			
 			
 			size = sizeof(icAppSpec);
-			icError = ICBegin(gInternetConfigInstance, icReadOnlyPerm); // icReadOnlyPerm = MacTelnet doesnÕt touch it
+			icError = ICBegin(gInternetConfigInstance, icReadOnlyPerm); // icReadOnlyPerm = MacTelnet doesnâ€™t touch it
 			icError |= ICGetPref(gInternetConfigInstance, key, &attr, &icAppSpec, &size);
 			icError |= ICEnd(gInternetConfigInstance);
 			

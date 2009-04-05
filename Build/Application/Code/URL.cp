@@ -3,9 +3,9 @@
 	URL.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2007 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -148,7 +148,7 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 					TerminalView_FlashSelection(inView);
 					//unless (selfHandling)
 					{
-						// display “launch application zoom rectangles” if an external helper is used
+						// display ‚Äúlaunch application zoom rectangles‚Äù if an external helper is used
 						RgnHandle	selectionRegion = TerminalView_ReturnSelectedTextAsNewRegion(inView);
 						Rect		screenRect;
 						Rect		selectionRect;
@@ -176,7 +176,7 @@ URL_HandleForScreenView		(TerminalScreenRef	UNUSED_ARGUMENT(inScreen),
 				isValidHandle = URL_SendGetURLEventToSelf(*urlH, GetHandleSize(urlH), &eventReply);
 				if (AppleEventUtilities_RetrieveReplyError(&eventReply, &urlOpenError/* error that occurred */))
 				{
-					// in the event of an error, show “dying zoom rectangles”
+					// in the event of an error, show ‚Äúdying zoom rectangles‚Äù
 					Rect	screenRect;
 					Rect	selectionRect;
 					
@@ -632,7 +632,7 @@ URL_SendGetURLEventToSelf	(void const*	inDataPtr,
 /*!
 Searches the text from the given screen surrounding
 the given point in the specified view, and if a URL
-appears to be beneath the point, the view’s text
+appears to be beneath the point, the view‚Äôs text
 selection changes to highlight the URL.
 
 Returns "true" only if a URL was found.

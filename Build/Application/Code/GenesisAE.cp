@@ -3,9 +3,9 @@
 	GenesisAE.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -65,9 +65,9 @@ static OSStatus		evolveWindow			(ObjectClassesAE_TokenPtr, DescType*);
 
 /*!
 Creates any kind of MacTelnet scripting class.
-The "Terminology.h" file, also used for MacTelnet’s
+The "Terminology.h" file, also used for MacTelnet‚Äôs
 Apple Event Terminology Extension resource, contains
-constants for all of MacTelnet’s class types.
+constants for all of MacTelnet‚Äôs class types.
 
 IMPORTANT:	Before calling this routine, fill in the
 			fields of the appropriate part of the
@@ -78,7 +78,7 @@ IMPORTANT:	Before calling this routine, fill in the
 			are provided automatically by this method.
 
 NOTE:	Classes are automatically evolved; unless
-		there is no way to derive a child class’ data
+		there is no way to derive a child class‚Äô data
 		from the clues of its parent, you should only
 		provide data for the least refined version of
 		a class (for example, describe a "window",
@@ -126,7 +126,7 @@ GenesisAE_CreateTokenFromObjectData		(DescType					inClassTypeFromTerminology,
 /*!
 Coerces an object into an internal token, if necessary.
 Use this inside an accessor function to get access to
-the internal data for an object’s container.
+the internal data for an object‚Äôs container.
 
 (3.0)
 */
@@ -146,7 +146,7 @@ GenesisAE_CreateTokenFromObjectSpecifier	(AEDesc const*				inFromWhat,
 		result = AppleEventUtilities_InitAEDesc(&containerDescriptor);
 		assert_noerr(result);
 		
-		// the class owning the requested property is provided explicitly (coercion probably isn’t needed)
+		// the class owning the requested property is provided explicitly (coercion probably isn‚Äôt needed)
 		result = AECoerceDesc(inFromWhat, cMyInternalToken, &containerDescriptor);
 		if (result != noErr)
 		{
@@ -180,7 +180,7 @@ GenesisAE_CreateTokenFromObjectSpecifier	(AEDesc const*				inFromWhat,
 
 /*!
 Determines whether an instance of the first given class
-“is also” an instance of the second class.  For example,
+‚Äúis also‚Äù an instance of the second class.  For example,
 if the minimum acceptable class type is a "window" (which
 is "cMyWindow"), and the unknown type is "cMyTerminalWindow",
 this routine returns "true" because a terminal window can
@@ -227,7 +227,7 @@ GenesisAE_FirstClassIs	(DescType	inUnknownClassTypeFromTerminology,
 			break;
 		
 		default:
-			// can’t be converted
+			// can‚Äôt be converted
 			break;
 		}
 	}
@@ -239,7 +239,7 @@ GenesisAE_FirstClassIs	(DescType	inUnknownClassTypeFromTerminology,
 
 /*!
 Object accessors create primitive types; this routine
-can be used to “evolve” an object token.  This is done
+can be used to ‚Äúevolve‚Äù an object token.  This is done
 by looking at the data for an object and determining,
 first, if its class has any subclass types, and second,
 if the data in the superclass is sufficient to create
@@ -272,7 +272,7 @@ evolve		(ObjectClassesAE_TokenPtr   inoutClassStructurePtr,
 		break;
 	
 	default:
-		// the specified token can’t be evolved any further
+		// the specified token can‚Äôt be evolved any further
 		break;
 	}
 	

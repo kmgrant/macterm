@@ -3,9 +3,9 @@
 	StatusIcon.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -302,10 +302,10 @@ various stages of animation), you must call this
 routine in the order you want those stages to be
 animated.
 
-Under Mac OS 8.5 and beyond, the specified “icon
-suite ID” will be parsed, and if the icon ID
+Under Mac OS 8.5 and beyond, the specified ‚Äúicon
+suite ID‚Äù will be parsed, and if the icon ID
 refers to an icon available via Icon Services,
-the “better” icon will be used automatically and
+the ‚Äúbetter‚Äù icon will be used automatically and
 transparently.  In other words, you can specify
 an icon as if it were a System 7 icon, and get
 Mac OS X functionality when possible without any
@@ -344,10 +344,10 @@ various stages of animation), you must call this
 routine in the order you want those stages to be
 animated.
 
-Under Mac OS 8.5 and beyond, the specified “color
-icon ID” will be parsed, and if the icon ID
+Under Mac OS 8.5 and beyond, the specified ‚Äúcolor
+icon ID‚Äù will be parsed, and if the icon ID
 refers to an icon available via Icon Services,
-the “better” icon will be used automatically and
+the ‚Äúbetter‚Äù icon will be used automatically and
 transparently.  In other words, you can specify
 an icon as if it were a System 7 icon, and get
 Mac OS X functionality when possible without any
@@ -668,7 +668,7 @@ iconUserPaneDeviceLoop		(short				inColorDepth,
 		if (ptr != nullptr)
 		{
 			// First, get the current icon animation stage from the stage list
-			// of the given status icon.  Then, plot the current stage’s icon,
+			// of the given status icon.  Then, plot the current stage‚Äôs icon,
 			// making it appear disabled if the given control is inactive.
 			IconTransformType						iconTransform = kTransformNone;
 			IconAnimationStageList::const_iterator	animationStageIterator;
@@ -934,7 +934,7 @@ newAnimationStage2	(StatusIconAnimationStageDescriptor		inDescriptor,
 /*!
 Sets the current animation stage to the beginning,
 or to nothing if there are no icons in the given
-Status Icon’s cell list.
+Status Icon‚Äôs cell list.
 
 (3.0)
 */

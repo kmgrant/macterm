@@ -1,7 +1,7 @@
 /*!	\file GenesisAE.h
-	\brief Allows tokens to “evolve” into more refined types.
+	\brief Allows tokens to ‚Äúevolve‚Äù into more refined types.
 	
-	This allows you to use a basic object’s data to construct
+	This allows you to use a basic object‚Äôs data to construct
 	the most refined possible version of it (assuming there is
 	any object type that inherits from the base type of your
 	object).  For instance, if "window 1" turns out to really
@@ -11,9 +11,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -63,7 +63,7 @@ OSStatus
 	GenesisAE_CreateTokenFromObjectSpecifier	(AEDesc const*				inFromWhat,
 												 ObjectClassesAE_TokenPtr   outTokenDataPtr);
 
-// USE THIS TO DETERMINE IF AN UNKNOWN CLASS TYPE “CAN” BE PROMOTED TO A SIMPLER (PARENT) CLASS TYPE
+// USE THIS TO DETERMINE IF AN UNKNOWN CLASS TYPE ‚ÄúCAN‚Äù BE PROMOTED TO A SIMPLER (PARENT) CLASS TYPE
 Boolean
 	GenesisAE_FirstClassIs						(DescType					inUnknownClassTypeFromTerminology,
 												 DescType					inMinimumClassTypeFromTerminology);

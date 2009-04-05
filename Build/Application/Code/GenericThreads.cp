@@ -3,9 +3,9 @@
 	GenericThreads.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -135,7 +135,7 @@ GenericThreads_Init ()
 			applicationThreadID = kApplicationThreadID;
 		}
 		error = newThreadListEntry(applicationThreadID, kGenericThreadDescriptorMainThread,
-									nullptr/* address of thread return value - nullptr means “don’t care” */,
+									nullptr/* address of thread return value - nullptr means ‚Äúdon‚Äôt care‚Äù */,
 									&newThread);
 		if ((error != noErr) || (newThread == nullptr))
 		{
@@ -489,7 +489,7 @@ allocations, space which is also used by the OS
 to manage the threads.  If this stack space runs
 out, the thread can no longer function properly,
 so you should use this method to determine how
-much free space is left on a thread’s stack.
+much free space is left on a thread‚Äôs stack.
 
 (3.0)
 */
@@ -519,7 +519,7 @@ WARNING:	If at all possible, use routines from this
 			provided only if you wish to take advantage
 			of Thread Manager calls that do not have
 			equivalents in this module.  By accessing a
-			thread’s ID, you risk future incompatibilities
+			thread‚Äôs ID, you risk future incompatibilities
 			if this module migrates away from the Thread
 			Manager.  Consider adding a new routine to
 			this module, if you need special functionality

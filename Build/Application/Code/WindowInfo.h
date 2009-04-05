@@ -16,7 +16,7 @@
 	allows standardization of the means of performing operations
 	on all your windows, while each individual window can still
 	be handled in a special way.  This class has very little
-	deduction capability: that is, you generally can’t call a
+	deduction capability: that is, you generally can‚Äôt call a
 	"get" function until you call the corresponding "set"
 	function at least once.  It is primarily a storage facility
 	that allows you to associate a tremendous wealth of
@@ -27,7 +27,7 @@
 /*###############################################################
 
 	Interface Library 2.0
-	© 1998-2008 by Kevin Grant
+	¬© 1998-2008 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -74,7 +74,7 @@ typedef SInt32 WindowInfo_Message;
 enum
 {
 	// messages applicable to a WindowContextualMenuProcPtr
-	kWindowInfo_MessageContextualMenuSetup = 1,		// request to set up a contextual menu’s items, and perform other
+	kWindowInfo_MessageContextualMenuSetup = 1,		// request to set up a contextual menu‚Äôs items, and perform other
 													//   appropriate actions (e.g. highlight subject of contextual menu event)
 	kWindowInfo_MessageContextualMenuCleanup = 2	// contextual menu is now gone; perform any necessary cleanup actions
 													//   (e.g. remove highlighting from object of contextual menu click)
@@ -90,7 +90,7 @@ typedef struct WindowInfo_OpaqueStruct*		WindowInfo_Ref;
 Window Contextual Menu Click Notification Method
 
 When a contextual menu event is detected for a window, first
-create a “bare bones” menu (containing any standard items
+create a ‚Äúbare bones‚Äù menu (containing any standard items
 you need), then invoke this notifier on the window affected
 (so appropriate items can be added if necessary), and finally
 display the menu to the user OUTSIDE of this callback routine.

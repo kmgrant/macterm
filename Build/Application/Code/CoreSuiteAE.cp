@@ -3,9 +3,9 @@
 	CoreSuiteAE.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -97,7 +97,7 @@ CoreSuiteAE_Close	(AppleEvent const*	inAppleEventPtr,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “close” event");
+	Console_WriteLine("AppleScript: ‚Äúclose‚Äù event");
 	
 	error = AppleEventUtilities_RequiredParametersError(inAppleEventPtr);
 	if (error == noErr)
@@ -121,7 +121,7 @@ CoreSuiteAE_Close	(AppleEvent const*	inAppleEventPtr,
 			if (error == errAEDescNotFound) error = noErr;
 			if (error == noErr)
 			{
-				// closes the specified object; if it’s a terminal window and save-prompting
+				// closes the specified object; if it‚Äôs a terminal window and save-prompting
 				// is specified and the window contains unsaved changes, the event will
 				// suspend until the user responds to an alert message
 				error = closeObject(inAppleEventPtr, outReplyAppleEventPtr, saveOption);
@@ -158,7 +158,7 @@ CoreSuiteAE_CountElements	(AppleEvent const*	inAppleEventPtr,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “count” event");
+	Console_WriteLine("AppleScript: ‚Äúcount‚Äù event");
 	
 	(OSStatus)AppleEventUtilities_InitAEDesc(&directObject);
 	(OSStatus)AppleEventUtilities_InitAEDesc(&replyDesc);
@@ -250,7 +250,7 @@ CoreSuiteAE_CountElementsOfContainer	(DescType		inTypeOfCountedElements,
 			case cMyClipboardWindow:
 			case cMyApplication:
 				// return 1 for objects that exist in exactly once place (who knows
-				// why they’d ever be counted, but hey, it’s gotta be correct...)
+				// why they‚Äôd ever be counted, but hey, it‚Äôs gotta be correct...)
 				*outCount = 1L;
 				break;
 			
@@ -284,7 +284,7 @@ CoreSuiteAE_SelectObject	(AppleEvent const*	inAppleEventPtr,
 	
 	
 	Console_BeginFunction();
-	Console_WriteLine("AppleScript: “select” event");
+	Console_WriteLine("AppleScript: ‚Äúselect‚Äù event");
 	
 	(OSStatus)AppleEventUtilities_InitAEDesc(&directObject);
 	(OSStatus)AppleEventUtilities_InitAEDesc(&replyDesc);

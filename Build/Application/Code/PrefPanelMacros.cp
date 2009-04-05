@@ -3,9 +3,9 @@
 	PrefPanelMacros.cp
 	
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -85,7 +85,7 @@ namespace {
 UInt16 const	kMy_MaxMacroActionColumnWidthInPixels = 120; // arbitrary
 UInt16 const	kMy_MaxMacroKeyColumnWidthInPixels = 100; // arbitrary
 
-// The following cannot use any of Apple’s reserved IDs (0 to 1023).
+// The following cannot use any of Apple‚Äôs reserved IDs (0 to 1023).
 enum
 {
 	kMyDataBrowserPropertyIDMacroName			= 'Name',
@@ -915,7 +915,7 @@ getPrefFromKeyTypeAndCharacterCode	(UInt32					inKeyType,
 /*!
 This routine, of standard PanelChangedProcPtr form,
 is invoked by the Panel module whenever a property
-of one of the preferences dialog’s panels changes.
+of one of the preferences dialog‚Äôs panels changes.
 
 (3.0)
 */
@@ -1030,13 +1030,13 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
-	case kPanel_MessageNewVisibility: // visible state of the panel’s container has changed to visible (true) or invisible (false)
+	case kPanel_MessageNewVisibility: // visible state of the panel‚Äôs container has changed to visible (true) or invisible (false)
 		{
 			//My_MacrosPanelDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnAuxiliaryDataPtr(inPanel), My_MacrosPanelDataPtr);
 			//Boolean					isNowVisible = *((Boolean*)inDataPtr);
 			
 			
-			// hack - on pre-Mac OS 9 systems, the pesky “Edit...” buttons sticks around for some reason; explicitly show/hide it
+			// hack - on pre-Mac OS 9 systems, the pesky ‚ÄúEdit...‚Äù buttons sticks around for some reason; explicitly show/hide it
 			//SetControlVisibility(panelDataPtr->controls.editButton, isNowVisible/* visibility */, isNowVisible/* draw */);
 		}
 		break;
@@ -1261,7 +1261,7 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 
 
 /*!
-Since the key type can be “ordinary character”, which
+Since the key type can be ‚Äúordinary character‚Äù, which
 must then take into account the text of a separate field,
 this special method exists to save both at once.
 
@@ -1471,7 +1471,7 @@ setOrdinaryKeyCharacter		(UniChar	inCharacter)
 /*!
 Enables or disables the views that display a completely
 arbitrary key character (as opposed to a special key
-type such as “page down”).
+type such as ‚Äúpage down‚Äù).
 
 Normally, you should use setKeyType().
 
@@ -1811,7 +1811,7 @@ monitorDataBrowserItems		(HIViewRef						inDataBrowser,
 			OSStatus						error = noErr;
 			
 			
-			// update the “selected macro” fields to match the newly-selected item
+			// update the ‚Äúselected macro‚Äù fields to match the newly-selected item
 			error = GetDataBrowserTableViewItemRow(inDataBrowser, inItemID, &rowIndex);
 			if (noErr == error)
 			{

@@ -3,9 +3,9 @@
 	DragAndDrop.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -193,7 +193,7 @@ DragAndDrop_Available ()
 
 /*!
 Returns true only if the specified drag began via
-this module’s internal tracking handler and consists
+this module‚Äôs internal tracking handler and consists
 of a single HFS file item.
 
 (3.0)
@@ -365,7 +365,7 @@ DragAndDrop_HideHighlightFrame	(CGrafPtr		inPort,
 
 
 /*!
-If the specified drag began via this module’s internal
+If the specified drag began via this module‚Äôs internal
 tracking handler, returns the number of items in that
 drag; otherwise, returns 0.
 
@@ -397,7 +397,7 @@ valid drop region.
 
 Typically, you call this routine first, then draw your content,
 then call DragAndDrop_ShowHighlightFrame() to complete.  This
-gives the frame high precedence (always “on top”) but the
+gives the frame high precedence (always ‚Äúon top‚Äù) but the
 background has least precedence.
 
 The drawing state of the given port is preserved.
@@ -447,7 +447,7 @@ valid drop region.
 
 Typically, you call this routine first, then draw your content,
 then call DragAndDrop_ShowHighlightFrame() to complete.  This
-gives the frame high precedence (always “on top”) but the
+gives the frame high precedence (always ‚Äúon top‚Äù) but the
 background has least precedence.
 
 The current port is preserved.  The drawing state of the
@@ -589,7 +589,7 @@ isGraphiteTheme ()
 This is the drag tracking handler, which handles things
 such as adding or removing drag highlighting from MacTelnet
 windows.  The Mac OS sets the current graphics port to the
-specified window’s port prior to invoking this routine.
+specified window‚Äôs port prior to invoking this routine.
 
 (2.6)
 */
@@ -756,7 +756,7 @@ trackingHandler	(DragTrackingMessage	inMessage,
 			break;
 		
 		// The following message appears as long as the mouse is in
-		// one of MacTelnet’s windows during a drag.  Window drag
+		// one of MacTelnet‚Äôs windows during a drag.  Window drag
 		// highlighting is drawn when these messages appear.
 		case kDragTrackingInWindow:
 			// NO LONGER HANDLED - SEE HIVIEW-SPECIFIC CARBON EVENT HANDLERS FOR DRAG

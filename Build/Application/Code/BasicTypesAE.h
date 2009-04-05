@@ -1,15 +1,15 @@
 /*!	\file BasicTypesAE.h
 	\brief Lists convenient functions for creating Apple Event
-	descriptor “wrappers” of commonly-used types.
+	descriptor ‚Äúwrappers‚Äù of commonly-used types.
 	
 	Indispensable for recordable applications.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -107,7 +107,7 @@ OSStatus
 	BasicTypesAE_CreateUInt32Desc			(UInt32				inInteger,
 											 AEDesc*			outDescPtr);
 
-// ALTHOUGH YOU COULD USE BasicTypesAE_CreateUInt32Desc() FOR “GET DATA SIZE”, PLEASE USE THIS INSTEAD
+// ALTHOUGH YOU COULD USE BasicTypesAE_CreateUInt32Desc() FOR ‚ÄúGET DATA SIZE‚Äù, PLEASE USE THIS INSTEAD
 #define BasicTypesAE_CreateSizeDesc			BasicTypesAE_CreateUInt32Desc
 
 OSStatus

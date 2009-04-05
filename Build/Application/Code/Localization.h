@@ -16,7 +16,7 @@
 /*###############################################################
 
 	Interface Library 1.2
-	© 1998-2006 by Kevin Grant
+	Â© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -82,11 +82,11 @@ enum
 																	//!  arrange starting at the left edge of the boundary in
 																	//!  left-to-right locales, or the right edge in right-to-left
 																	//!  locales, but if this flag is set then row items are always
-																	//!  inserted from the center, such that the rowÕs contents are
+																	//!  inserted from the center, such that the rowâ€™s contents are
 																	//!  collectively centered horizontally
 	kLocalizationRowLayoutFlagsCenterRowItemAlignment	= (1 << 3),	//!< UNIMPLEMENTED --
 																	//!  how to vertically-align the controls in a row; the default
-																	//!  is to align all row itemsÕ top edges in top-to-bottom
+																	//!  is to align all row itemsâ€™ top edges in top-to-bottom
 																	//!  locales or bottom edges in bottom-to-top locales, but if
 																	//!  this flag is set then items in the same row are arranged
 																	//!  so their vertical bisectors are the same

@@ -3,9 +3,9 @@
 	WindowTitleDialog.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -95,7 +95,7 @@ struct My_WindowTitleDialog
 	SessionRef								session;					// the session, if any, to which this applies
 	VectorCanvas_Ref						canvas;						// the canvas, if any, to which this applies
 	HIWindowRef								screenWindow;				// the terminal window for which this dialog applies
-	NIBWindow								dialogWindow;				// the dialogÕs window
+	NIBWindow								dialogWindow;				// the dialogâ€™s window
 	HIViewWrap								buttonRename;				// Rename button
 	HIViewWrap								buttonCancel;				// Cancel button
 	HIViewWrap								labelTitle;					// the label for the title text field
@@ -223,7 +223,7 @@ My_WindowTitleDialog::
 /*!
 This method is used to initialize the generic window title
 dialog box.  It creates the dialog box invisibly, and uses
-the specified windowÕs title as the initial field value.
+the specified windowâ€™s title as the initial field value.
 
 (3.0)
 */
@@ -249,10 +249,10 @@ WindowTitleDialog_New	(HIWindowRef							inParentWindow,
 /*!
 This method is used to initialize a session-specific window
 title dialog box.  It creates the dialog box invisibly, and
-uses the specified sessionÕs user-defined title as the
+uses the specified sessionâ€™s user-defined title as the
 initial field value.
 
-When the user changes the title, the sessionÕs user-defined
+When the user changes the title, the sessionâ€™s user-defined
 title is updated (which may affect the title of one or more
 windows, but this is up to the Session implementation).
 
@@ -291,10 +291,10 @@ WindowTitleDialog_NewForSession		(SessionRef								inSession,
 /*!
 This method is used to initialize a canvas-specific window
 title dialog box.  It creates the dialog box invisibly, and
-uses the specified vector canvasÕ user-defined title as the
+uses the specified vector canvasâ€™ user-defined title as the
 initial field value.
 
-When the user changes the title, the canvasÕ user-defined
+When the user changes the title, the canvasâ€™ user-defined
 title is updated (which may affect the title of one or more
 windows, but this is up to the canvas implementation).
 
@@ -383,7 +383,7 @@ WindowTitleDialog_Display	(WindowTitleDialog_Ref		inDialog)
 /*!
 If you only need a close notification procedure for
 the purpose of disposing of the window title dialog
-reference (and donÕt otherwise care when a window
+reference (and donâ€™t otherwise care when a window
 title dialog closes), you can pass this standard
 routine to WindowTitleDialog_New() as your notification
 procedure.
@@ -561,7 +561,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldnÕt be able to select menu commands while the sheet is open
+				// wouldnâ€™t be able to select menu commands while the sheet is open
 				result = eventNotHandledErr;
 				break;
 			}

@@ -3,7 +3,7 @@
 	DialogAdjust.cp
 	
 	Interface Library 2.0
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -76,7 +76,7 @@ struct AdjustmentDelta
 {
 	// This allows both delta-X and delta-Y to be
 	// passed to the offscreen graphics routine
-	// without “wasting” both "data1" and "data2".
+	// without ‚Äúwasting‚Äù both "data1" and "data2".
 	// See the adjustControlsOperation() method.
 	SInt32		deltaX,
 				deltaY;
@@ -120,7 +120,7 @@ proposed adjustments will then be invoked in a logical order by
 a call to the DialogAdjust_EndAdjustment() routine.
 
 If "inAmount" is 0, this routine automatically has no effect.
-This allows you to write “stupid code” that installs change
+This allows you to write ‚Äústupid code‚Äù that installs change
 requests for all controls, while still only registering the
 changes that would actually have an effect.
 
@@ -193,7 +193,7 @@ proposed adjustments will then be invoked in a logical order by
 a call to the DialogAdjust_EndAdjustment() routine.
 
 If "inAmount" is 0, this routine automatically has no effect.
-This allows you to write “stupid code” that installs change
+This allows you to write ‚Äústupid code‚Äù that installs change
 requests for all controls, while still only registering the
 changes that would actually have an effect.
 
@@ -312,7 +312,7 @@ DialogAdjust_EndAdjustment		(SInt32		inDialogDeltaSizeX,
 	
 	// Mac OS X 10.2 and beyond offer compositing mode in windows,
 	// which MacTelnet has always had.  Basically, the control changes
-	// can occur with a minimum of redrawing.  Ironically, MacTelnet’s
+	// can occur with a minimum of redrawing.  Ironically, MacTelnet‚Äôs
 	// compositing is actually *detrimental* to Mac OS X 10.2 windows
 	// that are compositing.  So, in that case, the control adjustments
 	// are made directly, without any special drawing on this end.  If
@@ -385,13 +385,13 @@ adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 		std::back_insert_iterator< AdjustmentExecutionOrderList >	nextAdjustment(orderedListOfAdjustments);
 		
 		
-		// hide the root, so moving controls, etc. can’t be “seen”
+		// hide the root, so moving controls, etc. can‚Äôt be ‚Äúseen‚Äù
 		//(OSStatus)SetControlVisibility(inSpecificControlOrRoot, false/* visibility */, false/* draw */);
 		
 		// Decide which operations should be performed first, based on what is
-		// likely to cause the least graphics glitches if buffering doesn’t work;
-		// rule of thumb is “resize before move if shrinking a dimension, move
-		// before resize if expanding a dimension”.
+		// likely to cause the least graphics glitches if buffering doesn‚Äôt work;
+		// rule of thumb is ‚Äúresize before move if shrinking a dimension, move
+		// before resize if expanding a dimension‚Äù.
 		//
 		// NOTE: Probably, all of these conditionals can be skipped on Mac OS X.
 		if (deltaPtr->deltaX < 0)
@@ -519,7 +519,7 @@ adjustControlsOperation		(ControlRef		inSpecificControlOrRoot,
 					}
 					if (wasControlVisible) SetControlVisibility(control, true/* visible */, true/* draw */);
 					
-					// ...and now it’s no longer needed, so get rid of it
+					// ...and now it‚Äôs no longer needed, so get rid of it
 					Memory_DisposePtr(REINTERPRET_CAST(&dataPtr, Ptr*));
 				}
 			}

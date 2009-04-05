@@ -3,9 +3,9 @@
 	Panel.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -275,7 +275,7 @@ describe a panel.  Panels should always specify this
 label so that dialogs can use it to represent a set of
 panels.  For example, labels may be used for text in
 buttons, menus, lists or tabs that select amongst all
-active panels.  Do not assume how your panel’s label
+active panels.  Do not assume how your panel‚Äôs label
 will be displayed in a user interface.
 
 The returned string is NOT retained.
@@ -470,7 +470,7 @@ Panel_ReturnShowCommandID	(Panel_Ref	inRef)
 
 /*!
 Sends the "kPanel_MessageCreateViews" to the
-specified panel’s handler, providing the handler
+specified panel‚Äôs handler, providing the handler
 the given window.
 
 See "Panel.h" for more information on this event.
@@ -493,7 +493,7 @@ Panel_SendMessageCreateViews	(Panel_Ref		inRef,
 
 /*!
 Sends the "kPanel_MessageFocusGained" to the
-specified panel’s handler, providing the handler
+specified panel‚Äôs handler, providing the handler
 the given view.
 
 See "Panel.h" for more information on this event.
@@ -516,7 +516,7 @@ Panel_SendMessageFocusGained	(Panel_Ref		inRef,
 
 /*!
 Sends the "kPanel_MessageFocusLost" to the
-specified panel’s handler, providing the handler
+specified panel‚Äôs handler, providing the handler
 the given view.
 
 See "Panel.h" for more information on this event.
@@ -539,7 +539,7 @@ Panel_SendMessageFocusLost	(Panel_Ref		inRef,
 
 /*!
 Sends the "kPanel_MessageGetEditType" to the
-specified panel’s handler, and returns the panel’s
+specified panel‚Äôs handler, and returns the panel‚Äôs
 response.
 
 See "Panel.h" for more information on this event.
@@ -566,7 +566,7 @@ Panel_SendMessageGetEditType	(Panel_Ref	inRef)
 
 /*!
 Sends the "kPanel_MessageGetGrowBoxLook" to the
-specified panel’s handler, and returns the panel’s
+specified panel‚Äôs handler, and returns the panel‚Äôs
 response.
 
 See "Panel.h" for more information on this event.
@@ -593,7 +593,7 @@ Panel_SendMessageGetGrowBoxLook		(Panel_Ref	inRef)
 
 /*!
 Sends the "kPanel_MessageGetHelpKeyPhrase" to the
-specified panel’s handler, and returns the panel’s
+specified panel‚Äôs handler, and returns the panel‚Äôs
 response.
 
 See "Panel.h" for more information on this event.
@@ -620,7 +620,7 @@ Panel_SendMessageGetHelpKeyPhrase	(Panel_Ref	inRef)
 
 /*!
 Sends the "kPanel_MessageGetIdealSize" to the
-specified panel’s handler, and returns the panel’s
+specified panel‚Äôs handler, and returns the panel‚Äôs
 response.
 
 The data is only valid if the response is
@@ -653,7 +653,7 @@ Panel_SendMessageGetIdealSize	(Panel_Ref	inRef,
 
 /*!
 Sends the "kPanel_MessageNewAppearanceTheme" to
-the specified panel’s handler.
+the specified panel‚Äôs handler.
 
 See "Panel.h" for more information on this event.
 
@@ -674,7 +674,7 @@ Panel_SendMessageNewAppearanceTheme		(Panel_Ref	inRef)
 
 /*!
 Sends the "kPanel_MessageNewDataSet" to the
-specified panel’s handler, providing the handler
+specified panel‚Äôs handler, providing the handler
 the given data set information.
 
 See "Panel.h" for more information on this event.
@@ -689,7 +689,7 @@ Panel_SendMessageNewDataSet		(Panel_Ref							inRef,
 	{
 		PanelAutoLocker				ptr(gPanelPtrLocks(), inRef);
 		// a copy is made because the data is small and is not
-		// “supposed” to be changed by the callback; this ensures
+		// ‚Äúsupposed‚Äù to be changed by the callback; this ensures
 		// any accidental changes only affect the copy below
 		Panel_DataSetTransition		mutableCopy = inNewDataSet;
 		
@@ -701,7 +701,7 @@ Panel_SendMessageNewDataSet		(Panel_Ref							inRef,
 
 /*!
 Sends the "kPanel_MessageNewVisibility" to the
-specified panel’s handler, providing the handler
+specified panel‚Äôs handler, providing the handler
 the given true/false value.
 
 See "Panel.h" for more information on this event.
@@ -915,7 +915,7 @@ Panel_SetImplementation		(Panel_Ref	inRef,
 
 /*!
 Changes the descriptor of a dialog panel, which in
-effect identifies this panel’s type.  Your descriptor
+effect identifies this panel‚Äôs type.  Your descriptor
 should not be "kPanel_InvalidKind".
 
 Descriptors can be useful in identifying auxiliary

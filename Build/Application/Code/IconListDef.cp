@@ -4,13 +4,13 @@
 	
 	A custom list definition procedure displaying icons with 
 	text labels.  Works with Icon Services, when available.
-	Note - the list definition itself doesnÕt increment or 
+	Note - the list definition itself doesnâ€™t increment or 
 	decrement the reference count of IconRefs.  This file has 
 	been slightly modified for MacTelnet (see subsequent 
 	comments).
 	
 	Icon List Definition 2.5
-		© 2001-2002 by Ian Anderson and Kevin Grant.
+		Â© 2001-2002 by Ian Anderson and Kevin Grant.
 	
 	This module is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -44,7 +44,7 @@
 // MacTelnet includes
 // SPECIAL WARNING:  Currently this file is being cross-compiled 
 // as a Classic PPC 'LDEF' code resource as well as a regular 
-// Carbon C source file.  As long as this is the case, donÕt use 
+// Carbon C source file.  As long as this is the case, donâ€™t use 
 // any functions from any non-system, non-shared library, or 
 // another source file (or the LDEF will become unreasonably 
 // large).
@@ -118,7 +118,7 @@ IconListDef		(short			inMessage,
 		// Drawing and highlighting are put together because of 
 		// text smoothing (anti-aliasing).  Simply using the 
 		// QuickDraw hilitetransfermode to paint the cell 
-		// doesnÕt work because the text will be smoothed 
+		// doesnâ€™t work because the text will be smoothed 
 		// according to the background color which would still 
 		// be white.  So instead it is necessary to: set the 
 		// background color according to whether or not the cell 
@@ -138,13 +138,13 @@ IconListDef		(short			inMessage,
 				
 				
 			#if TARGET_API_MAC_OS8	// (optimized for MacTelnet)
-				// simply point cellDataPtr to the correct byte in the cellÕs DataHandle
+				// simply point cellDataPtr to the correct byte in the cellâ€™s DataHandle
 				SInt8	oldHState = '\0';
 				
 				
 				// save handle state for later restoration; lock in case
 				// a system call that moves memory is invoked (which could
-				// invalidate the pointer if the handle wasnÕt locked)
+				// invalidate the pointer if the handle wasnâ€™t locked)
 				oldHState = HGetState((**inList).cells);
 				HLock((**inList).cells);
 				cellDataPtr = REINTERPRET_CAST(*((**inList).cells) + inDataOffset, 
@@ -181,7 +181,7 @@ IconListDef		(short			inMessage,
 
 /*!
 Determines the region that the icon and its text label will 
-occupy within a particular cellÕs boundaries.  Pass nullptr for 
+occupy within a particular cellâ€™s boundaries.  Pass nullptr for 
 either of the 2nd and 3rd parameters if you are not interested 
 in the value.
 
@@ -221,7 +221,7 @@ First checks to see if the specified List Cell is highlighted,
 then sets the background color appropriately, erases the cell (so 
 that the new background color is actually drawn), and draws the 
 icon and text label.  Because this function correctly sets the 
-highlighting, thereÕs no need for a separate function to do so.
+highlighting, thereâ€™s no need for a separate function to do so.
 
 (2.0)
 */
@@ -269,7 +269,7 @@ drawIconListCell	(ListHandle						inList,
 							REINTERPRET_CAST(inCellDataPtr->iconHandle, IconRef));
 	}
 	else
-	{	// draw the icon using Icon Utilities if Icon Services isnÕt available
+	{	// draw the icon using Icon Utilities if Icon Services isnâ€™t available
 		(OSErr)PlotIconSuite(&iconRect, kAlignNone, 
 								active ? kTransformNone : kTransformDisabled, 
 								REINTERPRET_CAST(inCellDataPtr->iconHandle, IconSuiteRef));

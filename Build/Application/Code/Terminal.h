@@ -25,9 +25,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2008 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -87,7 +87,7 @@ enum Terminal_Result
 };
 
 /*!
-Setting changes that MacTelnet allows other modules to “listen” for, via
+Setting changes that MacTelnet allows other modules to ‚Äúlisten‚Äù for, via
 Terminal_StartMonitoring().
 */
 typedef FourCharCode Terminal_Change;
@@ -178,7 +178,7 @@ enum
 enum
 {
 	// refer to a terminal type using these simpler constants
-	kTerminal_EmulatorANSIBBS = kTerminal_EmulatorTypeANSI | kTerminal_EmulatorVariantANSIBBS,				// PC (“ANSI”) terminals
+	kTerminal_EmulatorANSIBBS = kTerminal_EmulatorTypeANSI | kTerminal_EmulatorVariantANSIBBS,				// PC (‚ÄúANSI‚Äù) terminals
 	kTerminal_EmulatorANSISCO = kTerminal_EmulatorTypeANSI | kTerminal_EmulatorVariantANSISCO,
 	kTerminal_EmulatorVT100 = kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT100,					// VT terminals
 	kTerminal_EmulatorVT102 = kTerminal_EmulatorTypeVT | kTerminal_EmulatorVariantVT102,
@@ -188,7 +188,7 @@ enum
 	kTerminal_EmulatorXTermOriginal = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTermOriginal,	// xterm terminals
 	kTerminal_EmulatorXTermColor = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTermColor,
 	kTerminal_EmulatorXTerm256Color = kTerminal_EmulatorTypeXTerm | kTerminal_EmulatorVariantXTerm256Color,
-	kTerminal_EmulatorDumb = kTerminal_EmulatorTypeDumb | kTerminal_EmulatorVariantDumb1					// “dumb” terminals
+	kTerminal_EmulatorDumb = kTerminal_EmulatorTypeDumb | kTerminal_EmulatorVariantDumb1					// ‚Äúdumb‚Äù terminals
 };
 
 /*!
@@ -232,7 +232,7 @@ enum Terminal_ScrollbackType
 };
 
 /*!
-Controls over the computer’s voice when it is speaking text.
+Controls over the computer‚Äôs voice when it is speaking text.
 */
 enum Terminal_SpeechMode
 {

@@ -1,6 +1,6 @@
 /*!	\file TerminalTextAttributes.typedef.h
 	\brief Type definition header used to define a type that is
-	used too frequently to be declared in any module’s header.
+	used too frequently to be declared in any module‚Äôs header.
 	
 	This header also describes in detail the text attribute bits
 	and their valid values.
@@ -8,9 +8,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -53,10 +53,10 @@ IMPORTANT:	Do not directly access these bits, use the masks
 These bits are used to define the current text attributes when
 rendering data, and are primarily used in the emulator data
 loop and when rendering terminal screens.  The values are
-somewhat important for legacy reasons, so you can’t easily shift
+somewhat important for legacy reasons, so you can‚Äôt easily shift
 bits around.
 
-Attributes that are “line global” in nature, such as double-size
+Attributes that are ‚Äúline global‚Äù in nature, such as double-size
 text, are represented for convenience when ascertaining style of
 chunks of text that do not span an entire line; however, the
 implementation should not allow line-global attributes to vary
@@ -64,7 +64,7 @@ for any chunk of text on the same line.
 
 The lower 8 bits represent text style and things that were
 traditionally supported by NCSA Telnet 2.6.  They are generally
-designed to coincide with VT-assigned values, so you shouldn’t
+designed to coincide with VT-assigned values, so you shouldn‚Äôt
 move the bits around.
 
 The upper 16 bits are new in MacTelnet 3.0 and finally give some
@@ -128,11 +128,11 @@ customized by the user):
 	010 (2)		green			110 (6)		cyan
 	011 (3)		yellow			111 (7)		white
 On terminals that do not support all 256 colors, only these color
-indices (as well as 8-15 for “bold” equivalents) are recognized.
+indices (as well as 8-15 for ‚Äúbold‚Äù equivalents) are recognized.
 Otherwise, any number from 0 to 255 is valid.  Note that since
 256-color support was added, there is now an explicit way to
 request an emphasized version of one of the 8 base colors (add 8,
-as opposed to the “bold” bit).
+as opposed to the ‚Äúbold‚Äù bit).
 
 [2] The 2-bit double text mode values can be one of the following
 (but please use defined constants instead of these numbers):
@@ -143,7 +143,7 @@ as opposed to the “bold” bit).
 typedef UInt32 TerminalTextAttributes;
 enum
 {
-	kNoTerminalTextAttributes				= 0L,					//!< indicates that all attributes are “off”
+	kNoTerminalTextAttributes				= 0L,					//!< indicates that all attributes are ‚Äúoff‚Äù
 	kInvalidTerminalTextAttributes			= 0xFFFFFFFF,			//!< indicates the attribute bits are undefined
 	kAllStyleOrColorTerminalTextAttributes	= 0xFFFF03FF,			//!< specify ALL bits that control font style or color
 	kTerminalTextAttributeInverseVideo		= 0x00000040,			//!< are foreground and background colors flipped?

@@ -5,15 +5,15 @@
 	
 	Since UIStrings is included by many source files,
 	this separate header attempts to minimize the chance
-	many code files will appear to “need” recompiling
+	many code files will appear to ‚Äúneed‚Äù recompiling
 	after a change to a window-specific constant.
 */
 /*###############################################################
 
 	MacTelnet
-		© 1998-2009 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2009 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -95,7 +95,7 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowTerminalsCategoryName			= 'TrmT',
 	kUIStrings_PreferencesWindowTerminalsEmulationTabName		= 'TrmE',
 	// For simplicity, code in Preferences user interfaces assumes that tags can be
-	// used instead of the “proper” enumeration names, for these “named preferences”.
+	// used instead of the ‚Äúproper‚Äù enumeration names, for these ‚Äúnamed preferences‚Äù.
 	kUIStrings_PreferencesWindowTerminalsVT100FixLineWrapBug	= kPreferences_TagVT100FixLineWrappingBug,
 	kUIStrings_PreferencesWindowTerminalsXTerm256ColorsEnabled	= kPreferences_TagXTerm256ColorsEnabled,
 	kUIStrings_PreferencesWindowTerminalsXTermColorEnabled		= kPreferences_TagXTermColorEnabled,

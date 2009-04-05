@@ -3,9 +3,9 @@
 	CommonEventHandlers.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -73,7 +73,7 @@ public:
 											 void*										inContext);
 	
 	CommonEventHandlers_ChangedBoundsEdges		edgesOfInterest;		//!< flags indicating which boundary edges trigger callbacks
-	CommonEventHandlers_HIViewResizeProcPtr		procPtr;				//!< notified if the monitored controlÕs size is changed
+	CommonEventHandlers_HIViewResizeProcPtr		procPtr;				//!< notified if the monitored controlâ€™s size is changed
 	void*										context;				//!< context to pass to the resize handler
 	CarbonEventHandlerWrap						resizeEventHandler;		//!< what the system invokes when resize events occur
 };
@@ -114,7 +114,7 @@ public:
 											 Float32									inMaximumWidth,
 											 Float32									inMaximumHeight);
 	
-	CommonEventHandlers_HIWindowResizeProcPtr	procPtr;				//!< notified if the monitored windowÕs size is changed
+	CommonEventHandlers_HIWindowResizeProcPtr	procPtr;				//!< notified if the monitored windowâ€™s size is changed
 	void*										context;				//!< context to pass to the resize handler
 	Float32										minimumWidth;			//!< smallest pixel width allowed for the window
 	Float32										maximumWidth;			//!< biggest pixel width allowed for the window
@@ -152,8 +152,8 @@ static pascal OSStatus	receiveWindowResizeOrSizeQuery				(EventHandlerCallRef, E
 
 /*!
 Installs a Carbon Event handler for bounds-changed
-events on the given view, and does all the Òdirty
-workÓ of detecting view resize activity.
+events on the given view, and does all the â€œdirty
+workâ€ of detecting view resize activity.
 
 The specified handler routine is then only invoked if
 the view is being resized; and, the input to the
@@ -277,8 +277,8 @@ getWindowMaximumSize	(Float32&	outMaximumWidth,
 /*!
 Installs a Carbon Event handler for bounds-changed,
 get-maximum-size, get-minimum-size and get-ideal-size
-events on the given window, and does all the Òdirty
-workÓ of detecting window resize activity, etc.
+events on the given window, and does all the â€œdirty
+workâ€ of detecting window resize activity, etc.
 
 The specified handler routine is then only invoked if
 the window is being resized; and, the input to the
@@ -474,7 +474,7 @@ resizeEventHandler(GetWindowEventTarget(inForWhichWindow), receiveWindowResizeOr
 
 
 /*!
-Installs a Carbon Event handler for a Òlittle arrowsÓ
+Installs a Carbon Event handler for a â€œlittle arrowsâ€
 control that causes the current value of the given text
 field to change.  The text equivalent of the numerical
 value of the arrows is put into the field.
@@ -564,7 +564,7 @@ CommonEventHandlers_InstallNumericalFieldArrows		(ControlRef										inForWhich
 
 
 /*!
-Installs a Carbon Event handler for a Òlittle arrowsÓ
+Installs a Carbon Event handler for a â€œlittle arrowsâ€
 control that causes the current value of the given pop-up
 menu control to change.
 
@@ -734,7 +734,7 @@ CommonEventHandlers_RemovePopUpMenuArrows	(CommonEventHandlers_PopUpMenuArrowsRe
 
 /*!
 Handles "kEventControlHit" of "kEventClassControl" for
-the terminal menuÕs arrows.  Responds by updating the
+the terminal menuâ€™s arrows.  Responds by updating the
 current selection in the menu button.
 
 (3.1)
@@ -811,7 +811,7 @@ receiveArrowHitForNumericalField	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 
 /*!
 Handles "kEventControlHit" of "kEventClassControl" for
-the terminal menuÕs arrows.  Responds by updating the
+the terminal menuâ€™s arrows.  Responds by updating the
 current selection in the menu button.
 
 (3.1)

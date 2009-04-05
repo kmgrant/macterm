@@ -3,7 +3,7 @@
 	IconManager.cp
 	
 	Interface Library 2.0
-	© 1998-2009 by Kevin Grant
+	Â© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -252,7 +252,7 @@ IconManager_MakeIconRef		(IconManagerIconRef		inRef,
 		// get rid of any previous icon data
 		releaseIcons(ptr);
 		
-		// verify that Icon Services can be used; if it canÕt be, look for an equivalent icon suite
+		// verify that Icon Services can be used; if it canâ€™t be, look for an equivalent icon suite
 		if (gHaveIconServices)
 		{
 			// Icon Services is available; use it!
@@ -269,11 +269,11 @@ IconManager_MakeIconRef		(IconManagerIconRef		inRef,
 			if ((inIconServicesVolumeNumber == kOnSystemDisk) &&
 				(inIconServicesCreator == kSystemIconsCreator))
 			{
-				// NOTE:	This switch statement is infinitely expandable; IÕve only
+				// NOTE:	This switch statement is infinitely expandable; Iâ€™ve only
 				//			included generic icons that I need.  The list should be
 				//			made more complete as necessary, to include mappings for
 				//			other icon suites.  Heck, the implementation should
-				//			probably be different, but I donÕt have time for that!
+				//			probably be different, but I donâ€™t have time for that!
 				//
 				// If you add to this switch, also modify the inverse switch in the
 				// IconManager_MakeIconSuite() routine.
@@ -367,7 +367,7 @@ IconManager_MakeIconRefFromBundleFile	(IconManagerIconRef		inRef,
 		// get rid of any previous icon data
 		releaseIcons(ptr);
 		
-		// verify that Icon Services can be used; if it canÕt be, look for an equivalent icon suite
+		// verify that Icon Services can be used; if it canâ€™t be, look for an equivalent icon suite
 		if (gHaveIconServices)
 		{
 			FSRef	iconFile;
@@ -440,11 +440,11 @@ IconManager_MakeIconSuite	(IconManagerIconRef		inRef,
 				OSType		iconType = '----';
 				
 				
-				// NOTE:	This switch statement is infinitely expandable; IÕve only
+				// NOTE:	This switch statement is infinitely expandable; Iâ€™ve only
 				//			included generic icons that I need.  The list should be
 				//			made more complete as necessary, to include mappings for
 				//			other Icon Services icons.  Heck, the implementation should
-				//			probably be different, but I donÕt have time for that!
+				//			probably be different, but I donâ€™t have time for that!
 				//
 				// If you add to this switch, also modify the inverse switch in the
 				// IconManager_MakeIconRef() routine.
@@ -566,11 +566,11 @@ IconManager_MakeOldColorIcon	(IconManagerIconRef		inRef,
 				OSType		iconType = '----';
 				
 				
-				// NOTE:	This switch statement is infinitely expandable; IÕve only
+				// NOTE:	This switch statement is infinitely expandable; Iâ€™ve only
 				//			included generic icons that I need.  The list should be
 				//			made more complete as necessary, to include mappings for
 				//			other Icon Services icons.  Heck, the implementation should
-				//			probably be different, but I donÕt have time for that!
+				//			probably be different, but I donâ€™t have time for that!
 				//
 				// If you add to this switch, also modify the inverse switch in the
 				// IconManager_MakeIconRef() routine.
@@ -819,7 +819,7 @@ IconManager_SetMenuTitleIcon	(MenuRef				inMenu,
 	if (ptr == nullptr) result = memPCErr;
 	else
 	{
-		// Make the menuÕs title iconic.  To do this on Mac OS 8 or 9, the first two
+		// Make the menuâ€™s title iconic.  To do this on Mac OS 8 or 9, the first two
 		// bytes of the menu data must be "0x0501" and the remaining data must be an
 		// icon suite handle; on Mac OS X, use the new API for this purpose.
 	#if TARGET_API_MAC_OS8

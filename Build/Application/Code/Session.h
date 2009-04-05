@@ -18,9 +18,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		Â© 1998-2008 by Kevin Grant.
+		Â© 2001-2003 by Ian Anderson.
+		Â© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
@@ -78,7 +78,7 @@ Session_Result const	kSession_ResultInsufficientBufferSpace(4);	//!< not enough 
 #endif
 
 /*!
-Setting changes that MacTelnet allows other modules to ÒlistenÓ for,
+Setting changes that MacTelnet allows other modules to â€œlistenâ€ for,
 via Session_StartMonitoring().
 */
 typedef ListenerModel_Event		Session_Change;
@@ -90,7 +90,7 @@ enum
 	kSession_AllChanges					= '****',	//!< wildcard to indicate all events (context:
 													//!  varies)
 	
-	kSession_ChangeCloseWarningAnswered	= '!Btn',	//!< a Òsave changes before closingÓ warning message
+	kSession_ChangeCloseWarningAnswered	= '!Btn',	//!< a â€œsave changes before closingâ€ warning message
 													//!  was open, and the user finally responded by
 													//!  clicking a button (context:
 													//!  SessionCloseWarningButtonInfoPtr)
@@ -189,7 +189,7 @@ enum Session_DataTarget
 
 /*!
 Whether or not data is copied to the local terminal in
-addition to being sent to a SessionÕs data targets.
+addition to being sent to a Sessionâ€™s data targets.
 */
 enum Session_Echo
 {
@@ -215,9 +215,9 @@ Which characters will be sent when a new-line is requested.
 */
 enum Session_NewlineMode
 {
-	kSession_NewlineModeMapCRNormal	= 0,	//!< a Return key sends Òcarriage returnÓ only
-	kSession_NewlineModeMapCRNull	= 1,	//!< Berkeley 4.3; newline means Òcarriage return, nullÓ
-	kSession_NewlineModeMapCRLF		= 2		//!< newline means Òcarriage return, line feedÓ
+	kSession_NewlineModeMapCRNormal	= 0,	//!< a Return key sends â€œcarriage returnâ€ only
+	kSession_NewlineModeMapCRNull	= 1,	//!< Berkeley 4.3; newline means â€œcarriage return, nullâ€
+	kSession_NewlineModeMapCRLF		= 2		//!< newline means â€œcarriage return, line feedâ€
 };
 
 /*!
@@ -260,12 +260,12 @@ enum Session_State
 };
 
 /*!
-Sometimes, session states have ÒattributesÓ: these
+Sometimes, session states have â€œattributesâ€: these
 tags act like real states, but cannot displace any
-real state.  For example, ÒrunningÓ is a real state
+real state.  For example, â€œrunningâ€ is a real state
 and many of these attributes apply to the running
 state; it would be inappropriate to imply that a
-session were not still ÒrunningÓ while any of these
+session were not still â€œrunningâ€ while any of these
 attributes was in effect.
 */
 typedef UInt32 Session_StateAttributes;
@@ -298,7 +298,7 @@ It is assumed that the user will not want to receive any
 notifications for the session that he or she is using: if the
 application is frontmost and the current user focus session is
 the watched session, then the event is ignored.  This way, there
-are no ÒstupidÓ alerts (such as telling the user data has arrived
+are no â€œstupidâ€ alerts (such as telling the user data has arrived
 in the session where they are typing!).
 */
 enum Session_Watch
@@ -331,7 +331,7 @@ chosen an option from the Close sheet.
 */
 struct SessionCloseWarningButtonInfo
 {
-	SessionRef		session;			//!< which sessionÕs close alert was answered by the user
+	SessionRef		session;			//!< which sessionâ€™s close alert was answered by the user
 	SInt16			buttonHit;			//!< "kAlertStdAlert...Button" constant for the button selected by the user
 };
 typedef SessionCloseWarningButtonInfo*	SessionCloseWarningButtonInfoPtr;

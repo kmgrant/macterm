@@ -11,7 +11,7 @@
 	  from "ConstantsRegistry.h" corresponding to the thread
 	  you are editing).
 	
-	- After invoking a “yielding” routine from a cooperative
+	- After invoking a ‚Äúyielding‚Äù routine from a cooperative
 	  thread, you have to assume that another thread has gone
 	  and trampled on your application context (for example,
 	  details such as the current resource file and the current
@@ -19,11 +19,11 @@
 	  correct).
 	
 	- If you ever use preemptive threads (Mac OS X only), you
-	  need to surround context-critical code within a “critical
-	  section”, because you cannot otherwise be sure whether,
+	  need to surround context-critical code within a ‚Äúcritical
+	  section‚Äù, because you cannot otherwise be sure whether,
 	  or when, the OS will switch you out to another thread
 	  that might alter what you would otherwise assume to be
-	  constant.  It is probably good “thread coding practice”
+	  constant.  It is probably good ‚Äúthread coding practice‚Äù
 	  to define potentially critical sections anyway, even if
 	  you are not using (or even do not intend to use) anything
 	  but cooperative threads for your thread code.
@@ -31,9 +31,9 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
-		© 2001-2003 by Ian Anderson.
-		© 1986-1994 University of Illinois Board of Trustees
+		¬© 1998-2006 by Kevin Grant.
+		¬© 2001-2003 by Ian Anderson.
+		¬© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
 	
 	This program is free software; you can redistribute it or
