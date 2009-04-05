@@ -4618,6 +4618,10 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 	SetPt(&cellCenter, cellLeft + INTEGER_HALVED(cellRight - cellLeft),
 			cellTop + INTEGER_HALVED(cellBottom - cellTop));
 	
+	// The set of characters supported here should also be used in the
+	// translateCharacter() internal method of the Terminal module.
+	// That way, this renderer will always be called for these characters,
+	// whether or not they were originally tagged as being graphical.
 	switch (inUnicode)
 	{
 	case 0x2593: // checkerboard

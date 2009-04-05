@@ -1037,7 +1037,8 @@ inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
 void						tabStopClearAll							(My_ScreenBufferPtr);
 UInt16						tabStopGetDistanceFromCursor			(My_ScreenBufferConstPtr);
 void						tabStopInitialize						(My_ScreenBufferPtr);
-UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TerminalTextAttributes);
+UniChar						translateCharacter						(My_ScreenBufferPtr, UniChar, TerminalTextAttributes,
+																	 TerminalTextAttributes&);
 void						vt100AlignmentDisplay					(My_ScreenBufferPtr);
 void						vt100ANSIMode							(My_ScreenBufferPtr);
 void						vt100CursorBackward						(My_ScreenBufferPtr);
@@ -8297,6 +8298,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		My_ScreenBufferLineList::iterator	cursorLineIterator;
 		register SInt16						preWriteCursorX = inDataPtr->current.cursorX;
 		register My_ScreenRowIndex			preWriteCursorY = inDataPtr->current.cursorY;
+		TerminalTextAttributes				temporaryAttributes = 0;
 		UniChar const*						bufferPtr = CFStringGetCharactersPtr(inString);
 		UniChar*							deletedBufferPtr = nullptr;
 		
@@ -8326,8 +8328,9 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 				bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 			}
 			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *bufferIterator,
-																									inDataPtr->current.attributeBits);
-			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = inDataPtr->current.attributeBits;
+																									inDataPtr->current.attributeBits,
+																									temporaryAttributes);
+			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
 			if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
 			{
 				// advance the cursor position
@@ -8559,6 +8562,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			UniChar*							startPtr = nullptr;
 			My_TextIterator						startIterator = nullptr;
 			TerminalTextAttributes				attrib = 0;
+			TerminalTextAttributes				temporaryAttributes = 0;
 			register SInt16						preWriteCursorX = 0;
 			SInt16								extra = 0;
 			Boolean								wrapped = false;
@@ -8611,8 +8615,9 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					{
 						bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 					}
-					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c, attrib);
-					cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = attrib;
+					cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *c, attrib,
+																											temporaryAttributes);
+					cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
 					++c;
 					--ctr;
 					if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
@@ -10745,16 +10750,24 @@ more appropriate; e.g. an ASCII-encoded graphics
 character may be stored as the Unicode character
 that has the intended glyph.
 
+If the given character needs its attributes changed
+(typically, because it is actually graphical), those
+new attributes are returned.  The new attributes
+should ONLY apply to the given character; they do
+not indicate a new default for the character stream.
+
 (4.0)
 */
 inline UniChar
 translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 					 UniChar					inCharacter,
-					 TerminalTextAttributes		inAttributes)
+					 TerminalTextAttributes		inAttributes,
+					 TerminalTextAttributes&	outNewAttributes)
 {
 	UniChar		result = inCharacter;
 	
 	
+	outNewAttributes = inAttributes; // initially...
 	switch (inDataPtr->current.characterSetInfoPtr->translationTable)
 	{
 	case kMy_CharacterSetVT100UnitedStates:
@@ -10939,6 +10952,58 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 			{
 				result = 0x2027; // centered dot
 			}
+			break;
+		
+		default:
+			break;
+		}
+	}
+	else
+	{
+		// the original character was not explicitly identified as graphical,
+		// but it may still be best to *tag* it as such, so that a more
+		// advanced rendering can be done (default font renderings for
+		// graphics are not always as nice)
+		switch (inCharacter)
+		{
+		// this list should generally match the set of Unicode characters that
+		// are handled by the drawVTGraphicsGlyph() internal method in the
+		// Terminal View module
+		case 0x2593: // checkerboard
+		case 0x21E5: // horizontal tab (international symbol is a right-pointing arrow with a terminating line)
+		case 0x21DF: // form feed (international symbol is an arrow pointing top to bottom with two horizontal lines through it)
+		case 0x2190: // carriage return (international symbol is an arrow pointing right to left)
+		case 0x2193: // line feed (international symbol is an arrow pointing top to bottom)
+		case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
+		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
+		case 0x2518: // hook mid-top to mid-left
+		case 0x251B: // bold version
+		case 0x2510: // hook mid-left to mid-bottom
+		case 0x2513: // bold version
+		case 0x250C: // hook mid-right to mid-bottom
+		case 0x250F: // bold version
+		case 0x2514: // hook mid-top to mid-right
+		case 0x2517: // bold version
+		case 0x253C: // cross
+		case 0x254B: // bold version
+		case 0x23BA: // top line
+		case 0x23BB: // line between top and middle regions
+		case 0x2500: // middle line
+		case 0x2501: // bold version
+		case 0x23BC: // line between middle and bottom regions
+		case 0x23BD: // bottom line
+		case 0x251C: // cross minus the left piece
+		case 0x2523: // bold version
+		case 0x2524: // cross minus the right piece
+		case 0x252B: // bold version
+		case 0x2534: // cross minus the bottom piece
+		case 0x253B: // bold version
+		case 0x252C: // cross minus the top piece
+		case 0x2533: // bold version
+		case 0x2502: // vertical line
+		case 0x2503: // bold version
+		case 0x2027: // centered dot
+			STYLE_ADD(outNewAttributes, kTerminalTextAttributeVTGraphics);
 			break;
 		
 		default:

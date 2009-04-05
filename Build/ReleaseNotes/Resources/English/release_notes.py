@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090404',
     '20090402',
     '20090330',
     '20090312',
@@ -220,6 +221,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090404': [
+		'Graphics characters previously limited to VT100 will now render wherever they are requested (such as, when a Translation like "Latin-US (DOS)" asks for line drawing).',
+	],
 	'20090402': [
 		'Fixed Custom New Session sheet to start with keyboard focus on the command line.',
 		'Fixed or polished various bits of code related to starting processes and terminals.',
