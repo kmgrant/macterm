@@ -186,10 +186,6 @@ enum My_SelectionMode
 	kMy_SelectionModeChangeEnd			= 2		//!< keyboard actions morph the end anchor only
 };
 
-// the following is used to specify certain VT graphics glyphs
-TextEncoding const	kTheMacRomanTextEncoding = CreateTextEncoding(kTextEncodingMacRoman/* base */, kMacRomanDefaultVariant,
-																	kTextEncodingDefaultFormat);
-
 #pragma mark Types
 
 struct MyPreferenceProxies
@@ -349,6 +345,7 @@ struct TerminalView
 		{
 			Boolean				isMonospaced;	// whether every character in the font is the same width (expected to be true)
 			Str255				familyName;		// font name (as might appear in a Font menu)
+			CFStringEncoding	encoding;		// encoding actually used by font, which may be different than what the terminal uses!
 			struct Metrics
 			{
 				SInt16		ascent;			// number of pixels highest character extends above the base line
@@ -390,7 +387,7 @@ static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, v
 static EventTime		calculateAnimationStageDelay	(TerminalViewPtr, My_TimeIntervalList::size_type);
 static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
 static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef, Boolean);
-static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef);
+static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef, Boolean);
 static void				copySelectedTextIfUserPreference(TerminalViewPtr);
 static void				copyTranslationPreferences		(TerminalViewPtr, Preferences_ContextRef);
 static OSStatus			createWindowColorPalette		(TerminalViewPtr, Preferences_ContextRef, Boolean = true);
@@ -3213,27 +3210,10 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	
 	// copy font defaults
 	{
-		Preferences_Result	preferencesResult = kPreferences_ResultOK;
-		Str255				fontName;
-		SInt16				fontSize = 0;
-		Float32				charWidthScale = 1.0;
+		UInt16		preferenceCount = copyFontPreferences(this, inFormat, true/* search defaults too */);
 		
 		
-		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontName,
-														sizeof(fontName), fontName, true/* search defaults too */);
-		assert(kPreferences_ResultOK == preferencesResult);
-		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontSize,
-														sizeof(fontSize), &fontSize, true/* search defaults too */);
-		assert(kPreferences_ResultOK == preferencesResult);
-		preferencesResult = Preferences_ContextGetData(inFormat, kPreferences_TagFontCharacterWidthMultiplier,
-														sizeof(charWidthScale), &charWidthScale, true/* search defaults too */);
-		assert(kPreferences_ResultOK == preferencesResult);
-		
-		// set up font and character set information
-		PLstrcpy(this->text.font.familyName, fontName);
-		
-		// set font size to automatically fill in initial font metrics, etc.
-		setFontAndSize(this, fontName, fontSize, charWidthScale);
+		assert(preferenceCount > 0);
 	}
 	
 	// initialize focus area
@@ -3876,31 +3856,34 @@ Returns the number of font settings that were changed.
 */
 static UInt16
 copyFontPreferences		(TerminalViewPtr			inTerminalViewPtr,
-						 Preferences_ContextRef		inSource)
+						 Preferences_ContextRef		inSource,
+						 Boolean					inSearchDefaults)
 {
 	UInt16		result = 0;
 	Str255		fontName;
+	StringPtr	fontNamePtr = nullptr;
 	SInt16		fontSize = 0;
 	Float32		charWidthScale = 1.0;
 	
 	
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontName,
-															sizeof(fontName), fontName))
+															sizeof(fontName), fontName, inSearchDefaults))
 	{
-		PLstrcpy(inTerminalViewPtr->text.font.familyName, fontName);
+		fontNamePtr = fontName;
+		++result;
 	}
 	
 	if (inTerminalViewPtr->displayMode != kTerminalView_DisplayModeZoom)
 	{
 		if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontSize,
-																sizeof(fontSize), &fontSize))
+																sizeof(fontSize), &fontSize, inSearchDefaults))
 		{
 			++result;
 		}
 	}
 	
 	if (kPreferences_ResultOK == Preferences_ContextGetData(inSource, kPreferences_TagFontCharacterWidthMultiplier,
-															sizeof(charWidthScale), &charWidthScale))
+															sizeof(charWidthScale), &charWidthScale, inSearchDefaults))
 	{
 		++result;
 	}
@@ -3910,7 +3893,7 @@ copyFontPreferences		(TerminalViewPtr			inTerminalViewPtr,
 	}
 	
 	// set font size to automatically fill in initial font metrics, etc.
-	setFontAndSize(inTerminalViewPtr, inTerminalViewPtr->text.font.familyName, fontSize, charWidthScale);
+	setFontAndSize(inTerminalViewPtr, fontNamePtr, fontSize, charWidthScale);
 	
 	return result;
 }// copyFontPreferences
@@ -4285,7 +4268,7 @@ drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 				STATIC_CAST(sectionBounds.origin.y + sectionBounds.size.height, short));
 		
 		drawTerminalText(viewPtr, viewPtr->screen.currentRenderContext, sectionBounds, intBounds,
-							inLineTextBufferOrNull, inLineTextBufferLength/* number of characters */, inAttributes);
+							inLineTextBufferOrNull, inLineTextBufferLength, inAttributes);
 		
 		// since blinking forces frequent redraws, do not do it more
 		// than necessary; keep track of any blink attributes, and
@@ -7050,7 +7033,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				else
 				{
 					(UInt16)copyColorPreferences(viewPtr, prefsContext, false/* search for defaults */);
-					(UInt16)copyFontPreferences(viewPtr, prefsContext);
+					(UInt16)copyFontPreferences(viewPtr, prefsContext, false/* search for defaults */);
 				}
 				(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
 				(OSStatus)HIViewSetNeedsDisplay(viewPtr->focusAndPaddingHIView, true);
@@ -9494,6 +9477,20 @@ setFontAndSize		(TerminalViewPtr	inViewPtr,
 	if (inCharacterWidthScalingOrZero > 0)
 	{
 		inViewPtr->text.font.scaleWidthPerCharacter = inCharacterWidthScalingOrZero;
+	}
+	
+	// determine the encoding supported by the font
+	{
+		TextEncoding	encoding = kTextEncodingMacRoman;
+		OSStatus		error = Localization_GetFontTextEncoding(inViewPtr->text.font.familyName, &encoding);
+		
+		
+		if (noErr != error)
+		{
+			Console_Warning(Console_WriteValuePString, "unable to determine encoding used by font",
+							inViewPtr->text.font.familyName);
+		}
+		inViewPtr->text.font.encoding = encoding; // TextEncoding is compatible with CFStringEncoding
 	}
 	
 	// set the font metrics (including double size)
