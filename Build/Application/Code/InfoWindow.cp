@@ -177,6 +177,17 @@ InfoWindow_Init	()
 						FUTURE_SYMBOL(1 << 7, kWindowUnifiedTitleAndToolbarAttribute)/* attributes to set */,
 						0/* attributes to clear */);
 	}
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+	if (FlagManager_Test(kFlagOS10_5API))
+	{
+		// although the API is available on 10.4, the Spaces-related flags
+		// will only work on Leopard
+		(OSStatus)HIWindowChangeAvailability
+					(sessionStatusWindow,
+						FUTURE_SYMBOL(1 << 8, kHIWindowCanJoinAllSpaces)/* attributes to set */,
+						0/* attributes to clear */);
+	}
+#endif
 	
 	// create toolbar icons
 	{

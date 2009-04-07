@@ -1057,6 +1057,18 @@ init ()
 		Rect		panelBounds;
 		
 		
+	#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+		if (FlagManager_Test(kFlagOS10_5API))
+		{
+			// although the API is available on 10.4, the Spaces-related flags
+			// will only work on Leopard
+			(OSStatus)HIWindowChangeAvailability
+						(gPreferencesWindow,
+							FUTURE_SYMBOL(1 << 9, kHIWindowMoveToActiveSpace)/* attributes to set */,
+							0/* attributes to clear */);
+		}
+	#endif
+		
 		{
 			HIViewRef	panelUserPane = (mainWindow.returnHIViewWithID(idMyUserPaneAnyPrefPanel) << HIViewWrap_AssertExists);
 			

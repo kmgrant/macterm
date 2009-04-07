@@ -224,6 +224,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20090406': [
 		'The "Window Stacking Origin" preference is now set using a sample window, instead of text fields.',
+		'The Session Info and Preferences windows now have more intelligent behavior when Spaces is in use.',
 	],
 	'20090404': [
 		'Graphics characters previously limited to VT100 will now render wherever they are requested (such as, when a Translation like "Latin-US (DOS)" asks for line drawing).',
