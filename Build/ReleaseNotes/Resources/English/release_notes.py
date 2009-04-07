@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090406',
     '20090404',
     '20090402',
     '20090330',
@@ -221,6 +222,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090406': [
+		'The "Window Stacking Origin" preference is now set using a sample window, instead of text fields.',
+	],
 	'20090404': [
 		'Graphics characters previously limited to VT100 will now render wherever they are requested (such as, when a Translation like "Latin-US (DOS)" asks for line drawing).',
 	],

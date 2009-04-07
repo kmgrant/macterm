@@ -49,6 +49,8 @@
 #pragma mark Variables
 namespace {
 
+Preferences_Tag		gArrangeWindowBinding = 0;
+Point				gArrangeWindowStackingOrigin = { 0, 0 };
 EventTargetRef		gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon interaction
 
 }// anonymous namespace
@@ -56,6 +58,30 @@ EventTargetRef		gControlKeysEventTarget = nullptr;	//!< temporary, for Carbon in
 
 
 #pragma mark Public Methods
+
+/*!
+Binds the “Arrange Window” panel to a preferences tag,
+which determines both its new window position and the
+preference that is auto-updated as the window is moved.
+
+Set to 0 to have no binding effect.
+
+(4.0)
+*/
+void
+Keypads_SetArrangeWindowPanelBinding	(Preferences_Tag	inBinding)
+{
+	size_t		actualSize = 0;
+	
+	
+	unless (Preferences_GetData(inBinding, sizeof(gArrangeWindowStackingOrigin), &gArrangeWindowStackingOrigin, &actualSize) ==
+			kPreferences_ResultOK)
+	{
+		SetPt(&gArrangeWindowStackingOrigin, 40, 40); // assume a default, if preference can’t be found
+	}
+	gArrangeWindowBinding = inBinding;
+}// SetArrangeWindowPanelBinding
+
 
 /*!
 Returns true only if the specified panel is showing.
@@ -71,6 +97,10 @@ Keypads_IsVisible	(Keypads_WindowType		inKeypad)
 	
 	switch (inKeypad)
 	{
+	case kKeypads_WindowTypeArrangeWindow:
+		result = (YES == [[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] window] isVisible]);
+		break;
+	
 	case kKeypads_WindowTypeControlKeys:
 		result = (YES == [[[Keypads_ControlKeysPanelController sharedControlKeysPanelController] window] isVisible]);
 		break;
@@ -123,6 +153,7 @@ Keypads_SetEventTarget	(Keypads_WindowType		inFromKeypad,
 		Keypads_SetVisible(inFromKeypad, (nullptr != gControlKeysEventTarget));
 		break;
 	
+	case kKeypads_WindowTypeArrangeWindow:
 	case kKeypads_WindowTypeFullScreen:
 	case kKeypads_WindowTypeFunctionKeys:
 	case kKeypads_WindowTypeVT220Keys:
@@ -147,6 +178,19 @@ Keypads_SetVisible	(Keypads_WindowType		inKeypad,
 	
 	switch (inKeypad)
 	{
+	case kKeypads_WindowTypeArrangeWindow:
+		if (inIsVisible)
+		{
+			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] showWindow:NSApp];
+			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] setOriginToX:gArrangeWindowStackingOrigin.h
+																						andY:gArrangeWindowStackingOrigin.v];
+		}
+		else
+		{
+			[[Keypads_ArrangeWindowPanelController sharedArrangeWindowPanelController] close];
+		}
+		break;
+	
 	case kKeypads_WindowTypeControlKeys:
 		if (inIsVisible)
 		{
@@ -216,6 +260,71 @@ getCurrentSession ()
 }// getCurrentSession
 
 }// anonymous namespace
+
+
+@implementation Keypads_ArrangeWindowPanelController
+
+static Keypads_ArrangeWindowPanelController*	gKeypads_ArrangeWindowPanelController = nil;
++ (id)
+sharedArrangeWindowPanelController
+{
+	if (nil == gKeypads_ArrangeWindowPanelController)
+	{
+		gKeypads_ArrangeWindowPanelController = [[Keypads_ArrangeWindowPanelController allocWithZone:NULL] init];
+	}
+	return gKeypads_ArrangeWindowPanelController;
+}
+
+- (id)
+init
+{
+	self = [super initWithWindowNibName:@"KeypadArrangeWindow"];
+	return self;
+}
+
+- (IBAction)
+doneArranging:(id)	sender
+{
+#pragma unused(sender)
+	if (0 != gArrangeWindowBinding)
+	{
+		NSWindow*			window = [self window];
+		NSScreen*			screen = [window screen];
+		NSRect				windowFrame = [window frame];
+		NSRect				screenFrame = [screen frame];
+		SInt16				x = STATIC_CAST(windowFrame.origin.x, SInt32);
+		SInt16				y = STATIC_CAST(screenFrame.size.height - windowFrame.size.height - windowFrame.origin.y, SInt32);
+		Point				prefValue;
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		
+		
+		SetPt(&prefValue, x, y);
+		prefsResult = Preferences_SetData(kPreferences_TagWindowStackingOrigin, sizeof(prefValue), &prefValue);
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "failed to set terminal window origin");
+		}
+		TerminalWindow_StackWindows(); // re-stack windows so the user can see the effect of the change
+	}
+	Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, false);
+	// INCOMPLETE
+}
+
+- (void)
+setOriginToX:(int)	x
+andY:(int)			y // this is flipped to be measured from the top
+{
+	NSWindow*	window = [self window];
+	NSScreen*	screen = [window screen];
+	NSPoint		origin;
+	
+	
+	origin.x = x;
+	origin.y = [screen frame].size.height - [window frame].size.height - y;
+	[[self window] setFrameOrigin:origin];
+}
+
+@end // Keypads_ArrangeWindowPanelController
 
 
 @implementation Keypads_PanelController

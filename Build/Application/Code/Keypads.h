@@ -5,7 +5,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -36,6 +36,12 @@
 #ifndef __KEYPADS__
 #define __KEYPADS__
 
+// Mac includes
+#include <Carbon/Carbon.h>
+
+// MacTelnet includes
+#include "Preferences.h"
+
 
 
 #pragma mark Constants
@@ -46,7 +52,8 @@ enum
 	kKeypads_WindowTypeControlKeys		= 0,	//!< control keys (^A, ^B, etc.)
 	kKeypads_WindowTypeFunctionKeys		= 1,	//!< VT220 function keys (F6 - F20)
 	kKeypads_WindowTypeVT220Keys		= 2,	//!< VT220 keypad (PF1, PF2, etc.)
-	kKeypads_WindowTypeFullScreen		= 3		//!< controls for Full Screen mode
+	kKeypads_WindowTypeFullScreen		= 3,	//!< controls for Full Screen mode
+	kKeypads_WindowTypeArrangeWindow	= 4		//!< for specifying the location of a window
 };
 
 #pragma mark Types
@@ -183,22 +190,39 @@ changes to an interface declared in a ".mm" file.
 - (IBAction)disableFullScreen:(id)sender;
 @end
 
+/*!
+Implements the Arrange Window panel.
+
+Note that this is only in the header for the sake of
+Interface Builder, which will not synchronize with
+changes to an interface declared in a ".mm" file.
+*/
+@interface Keypads_ArrangeWindowPanelController : NSWindowController
++ (id)sharedArrangeWindowPanelController;
+// the following MUST match what is in "KeypadArrangeWindow.nib"
+- (IBAction)doneArranging:(id)sender;
+- (void)setOriginToX:(int)x andY:(int)y;
+@end
+
 #endif
 
 
 
 #pragma mark Public Methods
 
+void
+	Keypads_SetArrangeWindowPanelBinding		(Preferences_Tag		inBinding);
+
 Boolean
-	Keypads_IsVisible				(Keypads_WindowType		inKeypad);
+	Keypads_IsVisible							(Keypads_WindowType		inKeypad);
 
 void
-	Keypads_SetEventTarget			(Keypads_WindowType		inKeypad,
-									 EventTargetRef			inTarget);
+	Keypads_SetEventTarget						(Keypads_WindowType		inKeypad,
+												 EventTargetRef			inTarget);
 
 void
-	Keypads_SetVisible				(Keypads_WindowType		inKeypad,
-									 Boolean				inIsVisible);
+	Keypads_SetVisible							(Keypads_WindowType		inKeypad,
+												 Boolean				inIsVisible);
 
 #endif
 

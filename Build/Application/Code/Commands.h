@@ -20,7 +20,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -398,6 +398,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandPrefCursorVerticalBar			'CrVB'		// “Preferences” window
 #define kCommandPrefCursorThickUnderline		'CrBU'		// “Preferences” window
 #define kCommandPrefCursorThickVerticalBar		'CrBV'		// “Preferences” window
+#define kCommandPrefSetWindowLocation			'WLoc'		// “Preferences” window
 #define kCommandPrefWindowResizeSetsScreenSize	'WRSS'		// “Preferences” window
 #define kCommandPrefWindowResizeSetsFontSize	'WRFS'		// “Preferences” window
 #define kCommandPrefCommandNOpensDefault		'CNDf'		// “Preferences” window

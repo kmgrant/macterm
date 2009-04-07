@@ -201,6 +201,7 @@ English.lproj/DuplicateDialog.nib \
 English.lproj/FindDialog.nib \
 English.lproj/GenericDialog.nib \
 English.lproj/InfoWindow.nib \
+English.lproj/KeypadArrangeWindow.nib \
 English.lproj/KeypadControlKeys.nib \
 English.lproj/KeypadFullScreen.nib \
 English.lproj/KeypadFunctionKeys.nib \

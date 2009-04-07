@@ -506,6 +506,7 @@
 		0ACA57D20AEADDE700B5F482 /* GenericDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = GenericDialog.cp; path = Application/Code/GenericDialog.cp; sourceTree = "<group>"; };
 		0ACA57D40AEADDF300B5F482 /* GenericDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GenericDialog.h; path = Application/Code/GenericDialog.h; sourceTree = "<group>"; };
 		0ACA5E8E0DD3B4DB003B62C7 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KeypadVT220Keys.nib; sourceTree = "<group>"; };
+		0ACAB81D0F8AC6A5000AB4CC /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KeypadArrangeWindow.nib; sourceTree = "<group>"; };
 		0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = CocoaBasic.mm; path = Shared/Code/CocoaBasic.mm; sourceTree = "<group>"; };
 		0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CocoaBasic.h; path = Shared/Code/CocoaBasic.h; sourceTree = "<group>"; };
 		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
@@ -951,6 +952,7 @@
 				0A84509D0554CB8E00CFF440 /* FindDialog.nib */,
 				0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */,
 				0AB64A93057819E5005702BA /* InfoWindow.nib */,
+				0ACAB81C0F8AC6A5000AB4CC /* KeypadArrangeWindow.nib */,
 				0A01C0440DD411740078A3A1 /* KeypadControlKeys.nib */,
 				0A2F313C0DE7DB3300AA6D7B /* KeypadFullScreen.nib */,
 				0A3617680DD285390081A445 /* KeypadFunctionKeys.nib */,
@@ -1634,6 +1636,14 @@
 				0ACA5E8E0DD3B4DB003B62C7 /* English */,
 			);
 			name = KeypadVT220Keys.nib;
+			sourceTree = "<group>";
+		};
+		0ACAB81C0F8AC6A5000AB4CC /* KeypadArrangeWindow.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ACAB81D0F8AC6A5000AB4CC /* English */,
+			);
+			name = KeypadArrangeWindow.nib;
 			sourceTree = "<group>";
 		};
 		0ACDC7900DDA5688000AE3CD /* AddressDialogCocoa.nib */ = {

@@ -68,6 +68,7 @@
 #include "Commands.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
+#include "Keypads.h"
 #include "Panel.h"
 #include "Preferences.h"
 #include "PrefPanelGeneral.h"
@@ -113,8 +114,6 @@ static HIViewID const	idMyCheckBoxFocusFollowsMouse				= { 'FcFM', 0/* ID */ };
 static HIViewID const	idMyLabelTerminalCursor						= { 'LCrs', 0/* ID */ };
 static HIViewID const	idMyCheckBoxCursorFlashing					= { 'CurF', 0/* ID */ };
 static HIViewID const	idMySegmentedViewCursorShape				= { 'CShp', 0/* ID */ };
-static HIViewID const	idMyFieldStackingOriginLeft					= { 'WSOL', 0/* ID */ };
-static HIViewID const	idMyFieldStackingOriginTop					= { 'WSOT', 0/* ID */ };
 static HIViewID const	idMyLabelWindowResizeEffect					= { 'LWRE', 0/* ID */ };
 static HIViewID const	idMyRadioButtonResizeAffectsScreenSize		= { 'WRSS', 0/* ID */ };
 static HIViewID const	idMyRadioButtonResizeAffectsFontSize		= { 'WRFS', 0/* ID */ };
@@ -218,8 +217,6 @@ protected:
 	operator =	(CFRetainRelease const&);
 
 private:
-	CarbonEventHandlerWrap				fieldOriginLeftInputHandler;
-	CarbonEventHandlerWrap				fieldOriginTopInputHandler;
 	CarbonEventHandlerWrap				fieldSpacesPerTabInputHandler;
 	CommonEventHandlers_HIViewResizer	containerResizer;
 	HIViewWrap							labelCursor;
@@ -1140,12 +1137,6 @@ HIViewWrap							(createPaneView(inOwningWindow)
 buttonCommandsHandler				(GetWindowEventTarget(inOwningWindow), receiveHICommand,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
 										nullptr/* user data */),
-fieldOriginLeftInputHandler			(GetControlEventTarget(HIViewWrap(idMyFieldStackingOriginLeft, inOwningWindow)), receiveFieldChanged,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
-										inOwningUI/* user data */),
-fieldOriginTopInputHandler			(GetControlEventTarget(HIViewWrap(idMyFieldStackingOriginTop, inOwningWindow)), receiveFieldChanged,
-										CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
-										inOwningUI/* user data */),
 fieldSpacesPerTabInputHandler		(GetControlEventTarget(HIViewWrap(idMyFieldCopyUsingSpacesForTabs, inOwningWindow)), receiveFieldChanged,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassTextInput), kEventTextInputUnicodeForKeyEvent),
 										inOwningUI/* user data */),
@@ -1327,25 +1318,6 @@ const
 			cursorBlinks = false; // assume the cursor doesn’t flash, if preference can’t be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxCursorFlashing, inOwningWindow), BooleanToCheckBoxValue(cursorBlinks));
-	}
-	
-	// ...create stacking origin’s controls and initialize using user preferences
-	{
-		HIViewWrap		fieldViewLeft(idMyFieldStackingOriginLeft, inOwningWindow);
-		HIViewWrap		fieldViewTop(idMyFieldStackingOriginTop, inOwningWindow);
-		Point			stackingOrigin;
-		
-		
-		unless (Preferences_GetData(kPreferences_TagWindowStackingOrigin, sizeof(stackingOrigin),
-									&stackingOrigin, &actualSize) ==
-				kPreferences_ResultOK)
-		{
-			SetPt(&stackingOrigin, 40, 40); // assume a default, if preference can’t be found
-		}
-		SetControlNumericalText(fieldViewLeft, stackingOrigin.h);
-		SetControlNumericalText(fieldViewTop, stackingOrigin.v);
-		fieldViewLeft << HIViewWrap_InstallKeyFilter(NumericalLimiterKeyFilterUPP());
-		fieldViewTop << HIViewWrap_InstallKeyFilter(NumericalLimiterKeyFilterUPP());
 	}
 	
 	// set window resize preferences
@@ -1752,6 +1724,12 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				}
 				break;
 			
+			case kCommandPrefSetWindowLocation:
+				Keypads_SetArrangeWindowPanelBinding(kPreferences_TagWindowStackingOrigin);
+				Keypads_SetVisible(kKeypads_WindowTypeArrangeWindow, true);
+				result = noErr;
+				break;
+			
 			case kCommandPrefBellOff:
 				// do not “handle” the event so the pop-up menu is updated, etc.
 				{
@@ -1888,28 +1866,6 @@ saveFieldPreferences	(My_GeneralPanelUIPtr	inInterfacePtr)
 		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(inInterfacePtr->panel);
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
-		
-		// save terminal window origin coordinates
-		{
-			HIViewWrap	fieldLeft(idMyFieldStackingOriginLeft, kOwningWindow);
-			assert(fieldLeft.exists());
-			HIViewWrap	fieldTop(idMyFieldStackingOriginTop, kOwningWindow);
-			assert(fieldTop.exists());
-			SInt32		value1 = 0L;
-			SInt32		value2 = 0L;
-			Point		prefValue;
-			
-			
-			GetControlNumericalText(fieldLeft, &value1);
-			GetControlNumericalText(fieldTop, &value2);
-			SetPt(&prefValue, STATIC_CAST(value1, SInt16), STATIC_CAST(value2, SInt16));
-			prefsResult = Preferences_SetData(kPreferences_TagWindowStackingOrigin, sizeof(prefValue), &prefValue);
-			if (kPreferences_ResultOK != prefsResult)
-			{
-				Console_Warning(Console_WriteLine, "failed to set terminal window origin");
-			}
-			TerminalWindow_StackWindows(); // re-stack windows so the user can see the effect of the change
-		}
 		
 		// save spaces-per-tab
 		{
