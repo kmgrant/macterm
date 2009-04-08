@@ -1027,6 +1027,7 @@ const
 {
 	TerminalScreenRef		result = nullptr;
 	Preferences_ContextRef	terminalConfig = Preferences_NewContext(kPreferences_ClassTerminal);
+	Preferences_ContextRef	translationConfig = Preferences_NewContext(kPreferences_ClassTranslation);
 	Terminal_Result			screenCreationError = kTerminal_ResultOK;
 	
 	
@@ -1054,14 +1055,16 @@ const
 													sizeof(kForceSave), &kForceSave);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
+	assert(nullptr != translationConfig); // just use defaults for this context
 	
 	// create the screen
-	screenCreationError = Terminal_NewScreen(terminalConfig, &result);
+	screenCreationError = Terminal_NewScreen(terminalConfig, translationConfig, &result);
 	assert(kTerminal_ResultOK == screenCreationError);
 	assert(nullptr != result);
 	
 	// cleanup
 	Preferences_ReleaseContext(&terminalConfig);
+	Preferences_ReleaseContext(&translationConfig);
 	
 	return result;
 }// My_FormatsPanelNormalUI::createSampleTerminalScreen

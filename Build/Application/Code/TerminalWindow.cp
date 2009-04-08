@@ -147,7 +147,7 @@ typedef Registrar< TerminalWindowRef, TerminalWindowRefTracker >	TerminalWindowR
 
 struct TerminalWindow
 {
-	TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef);
+	TerminalWindow  (Preferences_ContextRef, Preferences_ContextRef, Preferences_ContextRef);
 	~TerminalWindow ();
 	
 	TerminalWindowRefRegistrar	refValidator;				// ensures this reference is recognized as a valid one
@@ -363,14 +363,15 @@ way; use the Session Factory module.
 */
 TerminalWindowRef
 TerminalWindow_New  (Preferences_ContextRef		inTerminalInfoOrNull,
-					 Preferences_ContextRef		inFontInfoOrNull)
+					 Preferences_ContextRef		inFontInfoOrNull,
+					 Preferences_ContextRef		inTranslationOrNull)
 {
 	TerminalWindowRef	result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull), TerminalWindowRef);
+		result = REINTERPRET_CAST(new TerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationOrNull), TerminalWindowRef);
 	}
 	catch (std::bad_alloc)
 	{
@@ -1615,7 +1616,8 @@ Constructor.  See TerminalWindow_New().
 */
 TerminalWindow::
 TerminalWindow  (Preferences_ContextRef		inTerminalInfoOrNull,
-				 Preferences_ContextRef		inFontInfoOrNull)
+				 Preferences_ContextRef		inFontInfoOrNull,
+				 Preferences_ContextRef		inTranslationInfoOrNull)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 refValidator(REINTERPRET_CAST(this, TerminalWindowRef), gTerminalWindowValidRefs()),
@@ -1688,6 +1690,12 @@ installedActions()
 		assert(kPreferences_ResultOK == preferencesResult);
 		assert(nullptr != inTerminalInfoOrNull);
 	}
+	if (nullptr == inTranslationInfoOrNull)
+	{
+		preferencesResult = Preferences_GetDefaultContext(&inTranslationInfoOrNull, kPreferences_ClassTranslation);
+		assert(kPreferences_ResultOK == preferencesResult);
+		assert(nullptr != inTranslationInfoOrNull);
+	}
 	if (nullptr == inFontInfoOrNull)
 	{
 		Boolean		chooseRandom = false;
@@ -1757,7 +1765,7 @@ installedActions()
 		Terminal_Result		terminalError = kTerminal_ResultOK;
 		
 		
-		terminalError = Terminal_NewScreen(inTerminalInfoOrNull, &newScreen);
+		terminalError = Terminal_NewScreen(inTerminalInfoOrNull, inTranslationInfoOrNull, &newScreen);
 		if (terminalError == kTerminal_ResultOK)
 		{
 			newView = TerminalView_NewHIViewBased(newScreen, inFontInfoOrNull);

@@ -5764,6 +5764,13 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 		outClass = kPreferences_ClassSession;
 		break;
 	
+	case kPreferences_TagAssociatedTranslationFavorite:
+		outKeyName = CFSTR("translation-favorite");
+		outKeyValueType = typeCFStringRef;
+		outNonDictionaryValueSize = sizeof(CFStringRef);
+		outClass = kPreferences_ClassSession;
+		break;
+	
 	case kPreferences_TagAutoCaptureToFile:
 		outKeyName = CFSTR("terminal-capture-auto-start");
 		outKeyValueType = typeNetEvents_CFBooleanRef;
@@ -6665,6 +6672,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				{
 				case kPreferences_TagAssociatedFormatFavorite:
 				case kPreferences_TagAssociatedTerminalFavorite:
+				case kPreferences_TagAssociatedTranslationFavorite:
 				case kPreferences_TagServerHost:
 				case kPreferences_TagServerUserID:
 					// all of these keys have Core Foundation string values
@@ -8756,6 +8764,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 			{
 			case kPreferences_TagAssociatedFormatFavorite:
 			case kPreferences_TagAssociatedTerminalFavorite:
+			case kPreferences_TagAssociatedTranslationFavorite:
 			case kPreferences_TagServerHost:
 			case kPreferences_TagServerUserID:
 				// all of these keys have Core Foundation string values

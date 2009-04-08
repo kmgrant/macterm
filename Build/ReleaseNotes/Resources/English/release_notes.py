@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090407',
     '20090406',
     '20090404',
     '20090402',
@@ -222,6 +223,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090407': [
+		'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a default Translation association.',
+	],
 	'20090406': [
 		'The "Window Stacking Origin" preference is now set using a sample window, instead of text fields.',
 		'The Session Info and Preferences windows now have more intelligent behavior when Spaces is in use.',

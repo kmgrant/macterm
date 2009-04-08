@@ -578,7 +578,7 @@ public:
 		My_EmulatorStateTransitionProcPtr	transitionHandler;		//!< handles new parser states, driving the terminal; varies based on the emulator
 	};
 	
-	My_Emulator		(Terminal_Emulator, CFStringRef);
+	My_Emulator		(Terminal_Emulator, CFStringRef, CFStringEncoding);
 	
 	Boolean
 	changeTo	(Terminal_Emulator);
@@ -612,7 +612,7 @@ typedef My_Emulator*	My_EmulatorPtr;
 struct My_ScreenBuffer
 {
 public:
-	My_ScreenBuffer	(Preferences_ContextRef);
+	My_ScreenBuffer	(Preferences_ContextRef, Preferences_ContextRef);
 	~My_ScreenBuffer ();
 	
 	CFStringRef
@@ -632,6 +632,9 @@ public:
 	
 	UInt16
 	returnScrollbackRows	(Preferences_ContextRef);
+	
+	CFStringEncoding
+	returnTextEncoding		(Preferences_ContextRef);
 	
 	Boolean
 	returnXTerm256	(Preferences_ContextRef);
@@ -1103,6 +1106,7 @@ if there is a serious problem creating the screen
 */
 Terminal_Result
 Terminal_NewScreen	(Preferences_ContextRef		inTerminalConfig,
+					 Preferences_ContextRef		inTranslationConfig,
 					 TerminalScreenRef*			outScreenPtr)
 {
 	Terminal_Result		result = kTerminal_ResultOK;
@@ -1113,7 +1117,7 @@ Terminal_NewScreen	(Preferences_ContextRef		inTerminalConfig,
 	{
 		try
 		{
-			*outScreenPtr = REINTERPRET_CAST(new My_ScreenBuffer(inTerminalConfig), TerminalScreenRef);
+			*outScreenPtr = REINTERPRET_CAST(new My_ScreenBuffer(inTerminalConfig, inTranslationConfig), TerminalScreenRef);
 		}
 		catch (std::bad_alloc)
 		{
@@ -4592,11 +4596,12 @@ Initializes a My_Emulator class instance.
 */
 My_Emulator::
 My_Emulator		(Terminal_Emulator		inPrimaryEmulation,
-				 CFStringRef			inAnswerBack)
+				 CFStringRef			inAnswerBack,
+				 CFStringEncoding		inInputTextEncoding)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 primaryType(inPrimaryEmulation),
-inputTextEncoding(kCFStringEncodingUTF8),
+inputTextEncoding(inInputTextEncoding),
 answerBackCFString(inAnswerBack),
 currentState(kMy_ParserStateInitial),
 stateRepetitions(0),
@@ -4852,11 +4857,12 @@ Throws a Terminal_Result if any problems occur.
 (3.0)
 */
 My_ScreenBuffer::
-My_ScreenBuffer	(Preferences_ContextRef		inTerminalConfig)
+My_ScreenBuffer	(Preferences_ContextRef		inTerminalConfig,
+				 Preferences_ContextRef		inTranslationConfig)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 configuration(Preferences_NewCloneContext(inTerminalConfig, true/* detach */)),
-emulator(returnEmulator(inTerminalConfig), returnAnswerBackMessage(inTerminalConfig)),
+emulator(returnEmulator(inTerminalConfig), returnAnswerBackMessage(inTerminalConfig), returnTextEncoding(inTranslationConfig)),
 listeningSession(nullptr),
 speaker(nullptr),
 windowTitleCFString(),
@@ -5106,6 +5112,26 @@ returnScrollbackRows	(Preferences_ContextRef		inTerminalConfig)
 	
 	return result;
 }// returnScrollbackRows
+
+
+/*!
+Reads "kPreferences_TagTextEncodingIANAName" or
+"kPreferences_TagTextEncodingID" from a Preferences context,
+and returns either that value or the default of UTF-8 if none
+was found.
+
+(4.0)
+*/
+CFStringEncoding
+My_ScreenBuffer::
+returnTextEncoding		(Preferences_ContextRef		inTranslationConfig)
+{
+	CFStringEncoding	result = kCFStringEncodingUTF8;
+	
+	
+	result = TextTranslation_ContextReturnEncoding(inTranslationConfig, result/* default */);
+	return result;
+}// returnTextEncoding
 
 
 /*!

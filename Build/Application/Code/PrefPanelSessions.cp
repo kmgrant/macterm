@@ -99,6 +99,7 @@ HIViewID const	idMyButtonConnectToServer		= { 'CtoS', 0/* ID */ };
 HIViewID const	idMyHelpTextConnectToServer		= { 'ConH', 0/* ID */ };
 HIViewID const	idMyPopUpMenuTerminal			= { 'Term', 0/* ID */ };
 HIViewID const	idMyPopUpMenuFormat				= { 'Frmt', 0/* ID */ };
+HIViewID const	idMyPopUpMenuTranslation		= { 'Xlat', 0/* ID */ };
 HIViewID const	idMyHelpTextPresets				= { 'THlp', 0/* ID */ };
 HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
 HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
@@ -242,6 +243,9 @@ struct My_SessionsPanelResourceUI
 	rebuildTerminalMenu ();
 	
 	void
+	rebuildTranslationMenu ();
+	
+	void
 	saveFieldPreferences	(Preferences_ContextRef);
 	
 	UInt16
@@ -253,6 +257,9 @@ struct My_SessionsPanelResourceUI
 	
 	void
 	setAssociatedTerminal	(CFStringRef);
+	
+	void
+	setAssociatedTranslation	(CFStringRef);
 	
 	void
 	setCommandLine	(CFStringRef);
@@ -268,14 +275,15 @@ protected:
 	deltaSize	(HIViewRef, Float32, Float32, void*);
 
 private:
+	MenuItemIndex						_numberOfFormatItemsAdded;		//!< used to manage Format pop-up menu
+	MenuItemIndex						_numberOfTerminalItemsAdded;	//!< used to manage Terminal pop-up menu
+	MenuItemIndex						_numberOfTranslationItemsAdded;	//!< used to manage Translation pop-up menu
 	HIViewWrap							_fieldCommandLine;				//!< text of Unix command line to run
 	CommonEventHandlers_HIViewResizer	_containerResizer;
 	CarbonEventHandlerWrap				_buttonCommandsHandler;			//!< invoked when a button is clicked
 	CarbonEventHandlerWrap				_whenCommandLineChangedHandler;	//!< invoked when the command line field changes
 	CarbonEventHandlerWrap				_whenServerPanelChangedHandler;	//!< invoked when the server browser panel changes
 	ListenerModel_ListenerRef			_whenFavoritesChangedHandler;	//!< used to manage Terminal and Format pop-up menus
-	MenuItemIndex						_numberOfTerminalItemsAdded;	//!< used to manage Terminal pop-up menu
-	MenuItemIndex						_numberOfFormatItemsAdded;		//!< used to manage Format pop-up menu
 };
 
 /*!
@@ -1470,6 +1478,9 @@ idealWidth						(0.0),
 idealHeight						(0.0),
 mainView						(createContainerView(inPanel, inOwningWindow)
 									<< HIViewWrap_AssertExists),
+_numberOfFormatItemsAdded		(0),
+_numberOfTerminalItemsAdded		(0),
+_numberOfTranslationItemsAdded	(0),
 _fieldCommandLine				(HIViewWrap(idMyFieldCommandLine, inOwningWindow)
 									<< HIViewWrap_AssertExists
 									<< HIViewWrap_InstallKeyFilter(UnixCommandLineLimiter)),
@@ -1485,9 +1496,7 @@ _whenServerPanelChangedHandler	(GetWindowEventTarget(inOwningWindow), receiveSer
 									CarbonEventSetInClass(CarbonEventClass(kEventClassNetEvents_ServerBrowser),
 															kEventNetEvents_ServerBrowserNewData, kEventNetEvents_ServerBrowserNewEventTarget),
 									this/* user data */),
-_whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
-_numberOfTerminalItemsAdded		(0),
-_numberOfFormatItemsAdded		(0)
+_whenFavoritesChangedHandler	(ListenerModel_NewStandardListener(preferenceChanged, this/* context */))
 {
 	assert(this->mainView.exists());
 	assert(_containerResizer.isInstalled());
@@ -1791,6 +1800,25 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			}
 		}
 		
+		// set associated Translation settings
+		{
+			CFStringRef		associatedTranslationName = nullptr;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagAssociatedTranslationFavorite,
+														sizeof(associatedTranslationName), &associatedTranslationName,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				this->setAssociatedTranslation(associatedTranslationName);
+				CFRelease(associatedTranslationName), associatedTranslationName = nullptr;
+			}
+			else
+			{
+				this->setAssociatedTranslation(nullptr);
+			}
+		}
+		
 		// set command line
 		{
 			CFArrayRef		argumentListCFArray = nullptr;
@@ -2007,6 +2035,21 @@ rebuildTerminalMenu ()
 
 
 /*!
+Deletes all the items in the Translation pop-up menu and
+rebuilds the menu based on current preferences.
+
+(4.0)
+*/
+void
+My_SessionsPanelResourceUI::
+rebuildTranslationMenu ()
+{
+	rebuildFavoritesMenu(idMyPopUpMenuTranslation, kCommandTranslationTableDefault/* anchor */, kPreferences_ClassTranslation,
+							kCommandTranslationTableByFavoriteName/* command ID of new items */, this->_numberOfTranslationItemsAdded);
+}// My_SessionsPanelResourceUI::rebuildTranslationMenu
+
+
+/*!
 Saves every text field in the panel to the data model.
 It is necessary to treat fields specially because they
 do not have obvious state changes (as, say, buttons do);
@@ -2200,6 +2243,44 @@ setAssociatedTerminal	(CFStringRef	inContextNameOrNull)
 		}
 	}
 }// My_SessionsPanelResourceUI::setAssociatedTerminal
+
+
+/*!
+Changes the Translation menu selection to the specified
+match, or chooses the Default if none is found or the
+name is not defined.
+
+(4.0)
+*/
+void
+My_SessionsPanelResourceUI::
+setAssociatedTranslation		(CFStringRef	inContextNameOrNull)
+{
+	SInt32 const	kFallbackValue = 1; // index of Default item
+	HIViewWrap		popUpMenuButton(idMyPopUpMenuTranslation, HIViewGetWindow(this->mainView));
+	
+	
+	if (nullptr == inContextNameOrNull)
+	{
+		SetControl32BitValue(popUpMenuButton, kFallbackValue);
+	}
+	else
+	{
+		OSStatus	error = noErr;
+		
+		
+		error = DialogUtilities_SetPopUpItemByText(popUpMenuButton, inContextNameOrNull, kFallbackValue);
+		if (controlPropertyNotFoundErr == error)
+		{
+			Console_Warning(Console_WriteValueCFString, "unable to find menu item for requested Translation context",
+							inContextNameOrNull);
+		}
+		else
+		{
+			assert_noerr(error);
+		}
+	}
+}// My_SessionsPanelResourceUI::setAssociatedTranslation
 
 
 /*!
@@ -2507,6 +2588,7 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kPreferences_ChangeContextName:
 		ptr->rebuildFormatMenu();
 		ptr->rebuildTerminalMenu();
+		ptr->rebuildTranslationMenu();
 		break;
 	
 	default:
@@ -2664,7 +2746,7 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					// a fallback to the default when it is later queried
 					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTerminalFavorite);
 					
-					// pass this handler through to the window, which will update the font and colors!
+					// pass this handler through to the window
 					result = eventNotHandledErr;
 				}
 				break;
@@ -2707,6 +2789,67 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					}
 					
 					// pass this handler through to the window, which will update the terminal settings!
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandTranslationTableDefault:
+				{
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// delete the “associated Translation” preference, which will cause
+					// a fallback to the default when it is later queried
+					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTranslationFavorite);
+					
+					// pass this handler through to the window
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandTranslationTableByFavoriteName:
+				{
+					Boolean		isError = true;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// determine the name of the selected item
+					if (received.attributes & kHICommandFromMenu)
+					{
+						CFStringRef		collectionName = nullptr;
+						
+						
+						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
+																received.source.menu.menuItemIndex, &collectionName))
+						{
+							My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
+																							(resourceInterfacePtr->panel),
+																							My_SessionsPanelResourceDataPtr);
+							Preferences_Result					prefsResult = kPreferences_ResultOK;
+							
+							
+							// set this name as the new preference value
+							prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagAssociatedTranslationFavorite,
+																		sizeof(collectionName), &collectionName);
+							if (kPreferences_ResultOK == prefsResult) isError = false;
+							CFRelease(collectionName), collectionName = nullptr;
+						}
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window, which will update the translation settings!
 					result = eventNotHandledErr;
 				}
 				break;

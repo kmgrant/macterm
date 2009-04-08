@@ -329,6 +329,7 @@ Terminal_InvokeScreenRunProc	(Terminal_ScreenRunProcPtr		inUserRoutine,
 
 Terminal_Result
 	Terminal_NewScreen						(Preferences_ContextRef		inTerminalConfig,
+											 Preferences_ContextRef		inTranslationConfig,
 											 TerminalScreenRef*			outScreenPtr);
 
 SInt16

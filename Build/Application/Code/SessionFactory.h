@@ -229,7 +229,8 @@ SessionRef
 
 TerminalWindowRef
 	SessionFactory_NewTerminalWindowUserFavorite	(Preferences_ContextRef			inTerminalInfoOrNull = nullptr,
-													 Preferences_ContextRef			inFontInfoOrNull = nullptr);
+													 Preferences_ContextRef			inFontInfoOrNull = nullptr,
+													 Preferences_ContextRef			inTranslationInfoOrNull = nullptr);
 
 //@}
 

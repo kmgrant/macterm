@@ -174,6 +174,8 @@ table(deftable).
 (defbottom). |(desc)\2. File captures begin automatically when the session starts.|
 (deftop). |(key). @terminal-favorite@|(types). _string_|
 (defbottom). |(desc)\2. This Terminal collection is used by default when the session starts.|
+(deftop). |(key). @translation-favorite@|(types). _string_|
+(defbottom). |(desc)\2. This Translation collection is used by default when the session starts.|
 
 h3(#terminals). Terminal Collections
 

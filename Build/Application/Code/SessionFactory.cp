@@ -92,6 +92,7 @@ pascal OSStatus			appendDataForProcessing			(EventHandlerCallRef, EventRef, void
 void					changeNotifyGlobal				(SessionFactory_Change, void*);
 Boolean					configureSessionTerminalWindow	(TerminalWindowRef, Preferences_ContextRef);
 TerminalWindowRef		createTerminalWindow			(Preferences_ContextRef = nullptr,
+														 Preferences_ContextRef = nullptr,
 														 Preferences_ContextRef = nullptr);
 Boolean					displayTerminalWindow			(TerminalWindowRef);
 void					forEachSessionInListDo			(SessionList const&, SessionFactory_SessionFilterFlags,
@@ -454,7 +455,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext)
+											? createTerminalWindow(inContext, inContext, inContext)
 											: inTerminalWindowOrNullToMakeNewWindow;
 	
 	
@@ -611,7 +612,7 @@ SessionFactory_NewSessionDefaultShell	(TerminalWindowRef			inTerminalWindowOrNul
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext)
+											? createTerminalWindow(inContext, inContext, inContext)
 											: inTerminalWindowOrNullToMakeNewWindow;
 	Boolean				displayOK = false;
 	
@@ -674,7 +675,7 @@ SessionFactory_NewSessionFromCommandFile	(TerminalWindowRef			inTerminalWindowOr
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext)
+											? createTerminalWindow(inContext, inContext, inContext)
 											: inTerminalWindowOrNullToMakeNewWindow;
 	
 	
@@ -956,7 +957,7 @@ SessionFactory_NewSessionFromTerminalFile	(TerminalWindowRef			inTerminalWindowO
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext)
+											? createTerminalWindow(inContext, inContext, inContext)
 											: inTerminalWindowOrNullToMakeNewWindow;
 	
 	
@@ -1044,7 +1045,7 @@ SessionFactory_NewSessionLoginShell		(TerminalWindowRef			inTerminalWindowOrNull
 {
 	SessionRef			result = nullptr;
 	TerminalWindowRef	terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-											? createTerminalWindow(inContext, inContext)
+											? createTerminalWindow(inContext, inContext, inContext)
 											: inTerminalWindowOrNullToMakeNewWindow;
 	
 	
@@ -1114,25 +1115,11 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 {
 	SessionRef				result = nullptr;
 	TerminalWindowRef		terminalWindow = inTerminalWindowOrNullToMakeNewWindow;
-	Preferences_ContextRef	associatedTerminalContext = nullptr;
 	Preferences_ContextRef	associatedFormatContext = nullptr;
+	Preferences_ContextRef	associatedTerminalContext = nullptr;
+	Preferences_ContextRef	associatedTranslationContext = nullptr;
 	Preferences_Result		preferencesResult = kPreferences_ResultOK;
 	
-	
-	// read the terminal associated with the session, and use it
-	// to configure either the specified terminal window or the
-	// newly-created window, accordingly
-	{
-		CFStringRef		associatedTerminalName = nullptr;
-		
-		
-		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
-														sizeof(associatedTerminalName), &associatedTerminalName);
-		if (kPreferences_ResultOK == preferencesResult)
-		{
-			associatedTerminalContext = Preferences_NewContextFromFavorites(kPreferences_ClassTerminal, associatedTerminalName);
-		}
-	}
 	
 	// read the format associated with the session, and use it
 	// to configure either the specified terminal window or the
@@ -1149,9 +1136,39 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		}
 	}
 	
+	// read the terminal associated with the session, and use it
+	// to configure either the specified terminal window or the
+	// newly-created window, accordingly
+	{
+		CFStringRef		associatedTerminalName = nullptr;
+		
+		
+		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
+														sizeof(associatedTerminalName), &associatedTerminalName);
+		if (kPreferences_ResultOK == preferencesResult)
+		{
+			associatedTerminalContext = Preferences_NewContextFromFavorites(kPreferences_ClassTerminal, associatedTerminalName);
+		}
+	}
+	
+	// read the translation associated with the session, and use it
+	// to configure either the specified terminal window or the
+	// newly-created window, accordingly
+	{
+		CFStringRef		associatedTranslationName = nullptr;
+		
+		
+		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTranslationFavorite,
+														sizeof(associatedTranslationName), &associatedTranslationName);
+		if (kPreferences_ResultOK == preferencesResult)
+		{
+			associatedTranslationContext = Preferences_NewContextFromFavorites(kPreferences_ClassTranslation, associatedTranslationName);
+		}
+	}
+	
 	if (nullptr == inTerminalWindowOrNullToMakeNewWindow)
 	{
-		terminalWindow = createTerminalWindow(associatedTerminalContext, associatedFormatContext);
+		terminalWindow = createTerminalWindow(associatedTerminalContext, associatedFormatContext, associatedTranslationContext);
 	}
 	else
 	{
@@ -1191,9 +1208,10 @@ set by the user.
 */
 TerminalWindowRef
 SessionFactory_NewTerminalWindowUserFavorite	(Preferences_ContextRef		inTerminalInfoOrNull,
-												 Preferences_ContextRef		inFontInfoOrNull)
+												 Preferences_ContextRef		inFontInfoOrNull,
+												 Preferences_ContextRef		inTranslationInfoOrNull)
 {
-	return createTerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull);
+	return createTerminalWindow(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull);
 }// NewTerminalWindowUserFavorite
 
 
@@ -1241,7 +1259,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowO
 											 Preferences_ContextRef		inContext)
 {
 	TerminalWindowRef		terminalWindow = (nullptr == inTerminalWindowOrNullToMakeNewWindow)
-												? createTerminalWindow(inContext, inContext)
+												? createTerminalWindow(inContext, inContext, inContext)
 												: inTerminalWindowOrNullToMakeNewWindow;
 	Preferences_ContextRef	sessionContext = nullptr;
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
@@ -2034,13 +2052,14 @@ used for a new session will ultimately be “configured twice”.
 */
 TerminalWindowRef
 createTerminalWindow	(Preferences_ContextRef		inTerminalInfoOrNull,
-						 Preferences_ContextRef		inFontInfoOrNull)
+						 Preferences_ContextRef		inFontInfoOrNull,
+						 Preferences_ContextRef		inTranslationInfoOrNull)
 {
 	TerminalWindowRef		result = nullptr;
 	
 	
 	// create a new terminal window to house the session
-	result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull);
+	result = TerminalWindow_New(inTerminalInfoOrNull, inFontInfoOrNull, inTranslationInfoOrNull);
 	
 	if (nullptr != result) startTrackingTerminalWindow(result);
 	return result;

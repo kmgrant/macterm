@@ -278,20 +278,33 @@ h4. Terminal
 Specifies the Terminals collection that will be used to set up
 the emulator for the session terminal window.  Most of the
 terminal settings can be changed while the session is running, by
-using the Terminal menu.
+using the Terminal menu; and the set can be modified using the
+Preferences window.
 
 In Unix sessions, you typically will set a "TERM" environment
 variable that is consistent with the Terminal setting.
 
-h3(#sessiondataflow). Data Flow
+h4. Format
+
+Specifies the Formats collection that will be used to set up
+the fonts and colors for the session terminal window.  You can
+change font and color settings while the session is running, by
+using the View menu; and the set can be modified using the
+Preferences window.
 
 h4. Translation
 
-Specifies the Translations collection that will be initially used
-to interpret text in the session.
+Specifies the Translations collection that will be used to
+interpret characters sent to the terminal; for instance, in
+order to display the right accents on letters for words in a
+particular language.  This can be changed while the session is
+running, by using the Map menu, and the set can be modified
+using the Preferences window.
 
 In Unix sessions, you typically will set a "LANG" environment
 variable that is consistent with the Translation setting.
+
+h3(#sessiondataflow). Data Flow
 
 h4. Duplication
 

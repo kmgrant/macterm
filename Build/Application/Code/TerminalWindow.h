@@ -117,7 +117,8 @@ typedef struct OpaqueTerminalWindow*	TerminalWindowRef;
 // DO NOT CREATE TERMINAL WINDOWS THIS WAY (USE SessionFactory METHODS, INSTEAD)
 TerminalWindowRef
 	TerminalWindow_New								(Preferences_ContextRef		inTerminalInfoOrNull = nullptr,
-													 Preferences_ContextRef		inFontInfoOrNull = nullptr);
+													 Preferences_ContextRef		inFontInfoOrNull = nullptr,
+													 Preferences_ContextRef		inTranslationInfoOrNull = nullptr);
 
 void
 	TerminalWindow_Dispose							(TerminalWindowRef*			inoutRefPtr);

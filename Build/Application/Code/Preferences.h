@@ -250,6 +250,7 @@ enum
 {
 	kPreferences_TagAssociatedFormatFavorite			= 'frmt',	//!< data: "CFStringRef" (a kPreferences_ClassFormat context name)
 	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a kPreferences_ClassTerminal context name)
+	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a kPreferences_ClassTranslation context name)
 	kPreferences_TagAutoCaptureToFile					= 'capt',	//!< data: "Boolean"
 	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "Preferences_AliasID"
 	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
