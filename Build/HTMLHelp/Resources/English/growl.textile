@@ -9,7 +9,7 @@ h1(pagetitle). Using Growl Notifications with MacTelnet
 
 <div class="content">
 
-MacTelnet provides several different types of notifications that
+p(#abstract). MacTelnet provides several different types of notifications that
 you can fully customize with the "Growl":http://www.growl.info/ infrastructure.
 
 h2(#notificationtypes). Customizing Notifications

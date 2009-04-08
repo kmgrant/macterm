@@ -10,7 +10,7 @@ h1(pagetitle). Preferences
 <div class="content">
 <a name="helpwithpreferences"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
-This page is arranged in the same categories as those in the
+p(#abstract). This page is arranged in the same categories as those in the
 MacTelnet Preferences window.  To access any of the settings
 mentioned here, start by choosing the "Preferences..." item in
 the MacTelnet menu.

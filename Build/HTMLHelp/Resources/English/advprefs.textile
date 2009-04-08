@@ -9,12 +9,10 @@ h1(pagetitle). Low-Level Settings
 
 <div class="content">
 
-This page describes preferences that generally require special
+p(#abstract). This page describes preferences that generally require special
 edits to make.  For example, you may need to use the command-line
 "defaults" program, or edit XML directly, instead of interacting
 with a window in MacTelnet.
-
-This document is very incomplete and will be expanded over time.
 
 * "Overview":#overview
 * "Preference Keys":#keys

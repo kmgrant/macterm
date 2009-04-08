@@ -4,11 +4,11 @@
 
 </div>
 
-p(#lastupdated). Last updated LAST_UPDATED.
-
 p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 
-<div id="mainnavigation">
+<table id="mainnavigation">
+<tr>
+<td valign="top">
 
 <dl>
 
@@ -25,32 +25,50 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 * "low-level settings":content/advprefs.html
 * "types of windows":content/windows.html
 * "terminal interaction":content/terminals.html
-* "terminal emulator specifics":content/vt.html
-
-</dd>
-
-<dt>Interesting Features</dt><dd>
-
-* "simpler user interface":content/preferences.html#simplify
-* "floating command line window":content/terminals.html#commandline
-* "rectangular text selections":content/terminals.html#select
-* "cursor location finder":content/terminals.html#findcursor
-* "full screen terminal":content/terminals.html#magnify
-* "hiding windows without closing":content/terminals.html#hide
-* "floating keypads":content/windows.html#keypads
-
-</dd>
-
-<dt>Integrating With Other Applications</dt><dd>
-
-* "using Automator with MacTelnet":content/automator.html
-* "using Growl Notifications with MacTelnet":content/growl.html
+* "emulator specifics":content/vt.html
 
 </dd>
 
 </dl>
 
-</div>
+</td>
+<td valign="top">
+
+<dl>
+
+<dt>Interesting Features</dt><dd>
+
+* "simpler user interface":content/preferences.html#simplify
+* "floating command line":content/terminals.html#commandline
+* "rectangular text selections":content/terminals.html#select
+* "cursor location finder":content/terminals.html#findcursor
+* "full screen terminal":content/terminals.html#magnify
+* "hidden windows":content/terminals.html#hide
+* "floating keypads":content/windows.html#keypads
+
+</dd>
+
+</dl>
+
+</td>
+<td valign="top">
+
+<dl>
+
+<dt>Other Applications</dt><dd>
+
+* "using Automator":content/automator.html
+* "using Growl":content/growl.html
+
+</dd>
+
+</dl>
+
+</td>
+</tr>
+</table>
+
+p(#lastupdated). Last updated LAST_UPDATED.
 
 <!-- ====|============================================|====|= -->
 

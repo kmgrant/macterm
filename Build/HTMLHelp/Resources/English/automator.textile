@@ -9,7 +9,7 @@ h1(pagetitle). Using Automator with MacTelnet
 
 <div class="content">
 
-MacTelnet support for Automator is currently limited, however
+p(#abstract). MacTelnet support for Automator is currently limited, however
 there are ways to use existing actions that you may not have
 realized.
 

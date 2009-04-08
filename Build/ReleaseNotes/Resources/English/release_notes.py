@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090408',
     '20090407',
     '20090406',
     '20090404',
@@ -223,6 +224,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090408': [
+		'MacTelnet Help style changed slightly to be more compact.',
+	],
 	'20090407': [
 		'Preferences window Sessions pane Resource tab (and Custom New Session sheet) now allow a default Translation association.',
 	],

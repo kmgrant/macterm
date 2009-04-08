@@ -123,16 +123,15 @@ h3(#magnify). Magnification
 
 Use View >> Make Text as Big as Possible to alter a terminal's
 text size based on the display that contains the largest part of
-its window!  See also View >> Full Screen, which can be used in
-tandem with this effect to create a dedicated terminal display
-(kiosk).
+its window!
+
+It is also possible to magnify text as you resize a window or
+as you enter Full Screen mode.  The result depends on your
+"Window Resize Effect" preference setting, and whether or not you
+have held down the Option key to temporarily change it.
 
 Note that Edit >> Undo can be used to cancel dimension changes
 made with the "Make Text..." commands.
-
-Depending on your "Window Resize Effect" preferences, dragging
-the size box with or without the Option key will also change the
-magnification of text.
 
 h3(#hide). Hiding Windows
 

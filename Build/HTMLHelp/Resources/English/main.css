@@ -4,18 +4,21 @@
 
 #lastupdated
 {
+	background:			#f2f2f2;
+	color:				black;
+	clear:				both;
 	font-family:		Optima, sans-serif;
 	font-size:			smaller;
 	font-weight:		bold;
 	text-align:			center;
 	
-	margin-top:			0em;
-	border-top:			solid #111 0.1em;
+	margin-top:			0;
+	border-top:			solid #aaa 0.1em;
 	padding-top:		0.3em;
 	height:				auto;
-	padding-bottom:		0.25em;
-	border-bottom:		solid #ccc 0.1em;
-	margin-bottom:		1em;
+	padding-bottom:		0.2em;
+	border-bottom:		solid #aaa 0.1em;
+	margin-bottom:		0;
 	
 	margin-left:		0em;
 	border-left:		0em;
@@ -98,7 +101,6 @@
 	margin-right:		0em;
 }
 
-#externalnavigation a:hover,
 #externalnavigation a:active
 {
 	background:			#777;
@@ -109,11 +111,6 @@
 	
 	border-left-color:	#111;
 	border-right-color:	#999;
-}
-
-#externalnavigation a:hover
-{
-	text-decoration:	none;
 }
 
 #mainnavigation
@@ -128,7 +125,7 @@
 	height:				auto;
 	padding-bottom:		0em;
 	border-bottom:		0em;
-	margin-bottom:		0em;
+	margin-bottom:		2em;
 	
 	margin-left:		0em;
 	border-left:		0em;
@@ -262,16 +259,15 @@
 
 #mainnavigation a:link,
 #mainnavigation a:visited,
-#mainnavigation a:hover,
 #mainnavigation a:active
 {
-	margin-top:			0.1em;
+	margin-top:			0.2em;
 	border-top:			solid transparent 0.1em;
-	padding-top:		0.25em;
+	padding-top:		0.1em;
 	height:				auto;
-	padding-bottom:		0.30em;
+	padding-bottom:		0.15em;
 	border-bottom:		solid transparent 0.1em;
-	margin-bottom:		0.1em;
+	margin-bottom:		0.2em;
 	
 	margin-left:		1em;
 	border-left:		solid transparent 0.3em;
@@ -294,7 +290,6 @@
 	color:				#5533cc;
 }
 
-#mainnavigation a:hover,
 #mainnavigation a:active
 {
 	background:			#777;
@@ -305,11 +300,6 @@
 	
 	border-left-color:	#111;
 	border-right-color:	#999;
-}
-
-#mainnavigation a:hover
-{
-	text-decoration:	none;
 }
 
 #footer
