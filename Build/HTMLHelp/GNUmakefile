@@ -12,7 +12,7 @@
 # Kevin Grant (kevin@ieee.org)
 # March 26, 2005
 
-DEST = $(CURDIR)
+DEST = $(CURDIR)/_Generated
 MAIN_SRC = $(CURDIR)/Resources/
 define MAIN_SRC_SUB
 $(strip $(MAIN_SRC))/$(strip $(1))

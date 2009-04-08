@@ -190,7 +190,7 @@ IconForTerminal.icns \
 English.lproj/DockTileAttention.pict \
 English.lproj/DockTileAttentionMask.pict
 APP_RESOURCES_BUNDLES := \
-English.lproj/Help \
+English.lproj/Help/index.html \
 English.lproj/Credits.html \
 English.lproj/AddressDialogCocoa.nib \
 English.lproj/AlertMessages.nib \
@@ -469,10 +469,10 @@ clean-app-dot-strings:
 
 # Component: MacTelnet Help
 
-$(DEST_APP_RESOURCES_TOP)/English.lproj/Help:
+$(DEST_APP_RESOURCES_TOP)/English.lproj/Help/index.html:
 	$(CURDIR)/HTMLHelpBuild.command
 	$(MKDIR_P) $(dir $@)
-	$(RSYNC) --archive $(CURDIR)/HTMLHelp/English/Help/ $@
+	$(RSYNC) --archive $(CURDIR)/HTMLHelp/_Generated/English/Help/ $(dir $@)
 
 # Component: Bug Reporter
 
