@@ -187,11 +187,11 @@ IconForSessionStatusActive.icns \
 IconForSessionStatusDead.icns \
 IconForStackWindows.icns \
 IconForTerminal.icns \
+English.lproj/Credits.html \
 English.lproj/DockTileAttention.pict \
 English.lproj/DockTileAttentionMask.pict
 APP_RESOURCES_BUNDLES := \
-English.lproj/Help/index.html \
-English.lproj/Credits.html \
+English.lproj/Help \
 English.lproj/AddressDialogCocoa.nib \
 English.lproj/AlertMessages.nib \
 English.lproj/Clipboard.nib \
@@ -469,10 +469,10 @@ clean-app-dot-strings:
 
 # Component: MacTelnet Help
 
-$(DEST_APP_RESOURCES_TOP)/English.lproj/Help/index.html:
+$(DEST_APP_RESOURCES_TOP)/English.lproj/Help:
 	$(CURDIR)/HTMLHelpBuild.command
 	$(MKDIR_P) $(dir $@)
-	$(RSYNC) --archive $(CURDIR)/HTMLHelp/_Generated/English/Help/ $(dir $@)
+	$(RSYNC) --archive $(CURDIR)/HTMLHelp/_Generated/English/Help/ $@
 
 # Component: Bug Reporter
 
