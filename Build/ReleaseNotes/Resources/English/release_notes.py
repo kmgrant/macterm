@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090409',
     '20090408',
     '20090407',
     '20090406',
@@ -224,6 +225,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090409': [
+		'Several additional graphics characters now have high-quality renderings.',
+	],
 	'20090408': [
 		'Fixed various border glitches in rendering graphics character cells.',
 		'Several graphics now have high-quality renderings, which can be seen when using Translations such as Latin-US (DOS).',
