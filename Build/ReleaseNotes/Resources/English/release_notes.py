@@ -226,6 +226,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090409': [
+		'The base VT100 emulator now supports ANSI save/restore cursor sequences, necessary to properly play some BBS games.',
 		'Several additional graphics characters now have high-quality renderings.',
 	],
 	'20090408': [

@@ -156,6 +156,8 @@ enum
 	kMy_ParserStateSeenESCLeftSqBracketParamsP	= 'E[;P',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsq	= 'E[;q',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsr	= 'E[;r',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamss	= 'E[;s',	//!< generic state used to define emulator-specific states, below
+	kMy_ParserStateSeenESCLeftSqBracketParamsu	= 'E[;u',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftSqBracketParamsx	= 'E[;x',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParen				= 'ESC(',	//!< generic state used to define emulator-specific states, below
 	kMy_ParserStateSeenESCLeftParenA			= 'ES(A',	//!< generic state used to define emulator-specific states, below
@@ -912,6 +914,10 @@ protected:
 		kStateSGR				= kMy_ParserStateSeenESCLeftSqBracketParamsm,	//!< select graphic rendition
 		kStateSM				= kMy_ParserStateSeenESCLeftSqBracketParamsh,	//!< set mode
 		kStateTBC				= kMy_ParserStateSeenESCLeftSqBracketParamsg,	//!< tabulation clear
+		
+		// ANSI hacks that should be in their own emulator, but for now are not
+		kStateANSISC			= kMy_ParserStateSeenESCLeftSqBracketParamss,	//!< save cursor
+		kStateANSIRC			= kMy_ParserStateSeenESCLeftSqBracketParamsu,	//!< restore cursor
 	};
 };
 
@@ -5621,6 +5627,14 @@ stateDeterminant	(My_EmulatorPtr		UNUSED_ARGUMENT(inEmulatorPtr),
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsr;
 			break;
 		
+		case 's':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamss;
+			break;
+		
+		case 'u':
+			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsu;
+			break;
+		
 		case 'x':
 			outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsx;
 			break;
@@ -6116,6 +6130,16 @@ stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
 				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsr;
 				break;
 			
+			case 's':
+				// TEMPORARY - ANSI compatibility hack, should be a separate terminal type
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamss;
+				break;
+			
+			case 'u':
+				// TEMPORARY - ANSI compatibility hack, should be a separate terminal type
+				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsu;
+				break;
+			
 			case 'x':
 				outNextState = kMy_ParserStateSeenESCLeftSqBracketParamsx;
 				break;
@@ -6474,6 +6498,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	case kStateDECOM:
 		break;
 	
+	case kStateANSIRC:
 	case kStateDECRC:
 		cursorRestore(inDataPtr);
 		break;
@@ -6488,6 +6513,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 		vt100ReportTerminalParameters(inDataPtr);
 		break;
 	
+	case kStateANSISC:
 	case kStateDECSC:
 		cursorSave(inDataPtr);
 		break;
