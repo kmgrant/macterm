@@ -103,8 +103,6 @@ enum
 
 #pragma mark Types
 
-typedef std::map< EventLoop_KeyEquivalent, HIViewRef >		EventLoopKeyEquivalentToControlMap;
-
 struct My_ViewEventTarget
 {
 	HIViewRef			control;
@@ -132,11 +130,10 @@ typedef LockAcquireRelease< My_GlobalEventTargetRef, My_GlobalEventTarget >			My
 
 struct My_WindowEventTarget
 {
-	HIWindowRef							window;
-	ListenerModel_Ref					listenerModel;
-	EventLoopKeyEquivalentToControlMap	keyEquivalentsToControls;
-	HIViewRef							defaultButton;
-	HIViewRef							cancelButton;
+	HIWindowRef				window;
+	ListenerModel_Ref		listenerModel;
+	HIViewRef				defaultButton;
+	HIViewRef				cancelButton;
 };
 typedef My_WindowEventTarget*				My_WindowEventTargetPtr;
 typedef My_WindowEventTarget const*			My_WindowEventTargetConstPtr;
@@ -148,7 +145,6 @@ typedef LockAcquireRelease< My_WindowEventTargetRef, My_WindowEventTarget >		My_
 
 #pragma mark Internal Method Prototypes
 
-static EventLoop_KeyEquivalent	createKeyboardEquivalent		(SInt16, SInt16, Boolean);
 static void						disposeGlobalEventTarget		(My_GlobalEventTargetRef*);
 static void						disposeViewEventTarget			(My_ViewEventTargetRef*);
 static void						disposeWindowEventTarget		(My_WindowEventTargetRef*);
@@ -164,10 +160,6 @@ static Boolean					handleKeyDown					(EventRecord*);
 static Boolean					handleUpdate					(EventRecord*);
 static Boolean					isAnyListenerForViewEvent		(HIViewRef, EventLoop_ControlEvent);
 static Boolean					isAnyListenerForWindowEvent		(HIWindowRef, EventLoop_WindowEvent);
-static Boolean					isCancelButton					(HIViewRef);
-static Boolean					isDefaultButton					(HIViewRef);
-static HIViewRef				matchesKeyboardEquivalent		(HIWindowRef, SInt16, SInt16, Boolean);
-static HIViewRef				matchesKeyboardEquivalent		(HIWindowRef, EventLoop_KeyEquivalent);
 static My_GlobalEventTargetRef	newGlobalEventTarget			();
 static My_WindowEventTargetRef	newStandardWindowEventTarget	(HIWindowRef);
 static My_ViewEventTargetRef	newViewEventTarget				(HIViewRef);
@@ -536,31 +528,6 @@ EventLoop_IsCommandKeyDown ()
 
 
 /*!
-This routine gets the next key event from the
-event queue and returns true if it is a "cancel"
-(command-period) event.  Use this to monitor
-the keyboard for user cancellations while a
-dialog box is displayed and/or the normal event
-loop is not running.
-
-(3.0)
-*/
-Boolean
-EventLoop_IsNextCancel ()
-{
-	Boolean			result = false;
-	EventRecord		event;
-	
-	
-	while (WaitNextEvent(keyDownMask | keyUpMask, &event, gTicksWaitNextEvent, nullptr/* mouse-moved region */))
-	{
-		if ((event.modifiers & cmdKey) && (event.message & charCodeMask) == '.') result = true;
-	}
-	return result;
-}// IsNextCancel
-
-
-/*!
 This routine blocks until a mouse-down event occurs
 or the “double time” has elapsed.  Returns "true"
 only if it is a “double-click” event.
@@ -650,101 +617,6 @@ EventLoop_IsShiftKeyDown ()
 
 
 /*!
-Arranges for the specified key to automatically
-simulate a click in the given button.  The click
-generates a real click event, so if you listen
-for clicks in a button, you will also receive
-events when a button is acted upon using the
-keyboard and the key combination indicated here.
-
-You should remove the keystroke from the registry
-before destroying the indicated control, using
-the routine EventLoop_UnregisterButtonClickKey().
-
-Returns "true" only if the key was successfully
-registered.
-
-(3.0)
-*/
-Boolean
-EventLoop_RegisterButtonClickKey	(HIViewRef					inButton,
-									 EventLoop_KeyEquivalent	inKeyEquivalent)
-{
-	Boolean						result = false;
-	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inButton));
-	
-	
-	if (ref != nullptr)
-	{
-		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-		
-		
-		// set a mapping between the given key equivalent and the given button
-		try
-		{
-			ptr->keyEquivalentsToControls[inKeyEquivalent] = inButton;
-			assert(ptr->keyEquivalentsToControls.find(inKeyEquivalent) != ptr->keyEquivalentsToControls.end());
-			
-			// check to see if the existing default or Cancel buttons for
-			// the specified control’s window match the given control; if
-			// so and the given key equivalent is not appropriate, then
-			// the given button must no longer be “special”
-			if ((ptr->defaultButton == inButton) && (inKeyEquivalent != kEventLoop_KeyEquivalentDefaultButton))
-			{
-				Boolean		defaultFlag = false;
-				
-				
-				// re-assigning key equivalent; reset default button
-				ptr->defaultButton = nullptr;
-				(OSStatus)SetControlData(inButton, kControlButtonPart, kControlPushButtonDefaultTag,
-											sizeof(defaultFlag), &defaultFlag);
-			}
-			if ((ptr->cancelButton == inButton) && (inKeyEquivalent != kEventLoop_KeyEquivalentCancelButton))
-			{
-				Boolean		cancelFlag = false;
-				
-				
-				// re-assigning key equivalent; reset Cancel button
-				ptr->cancelButton = nullptr;
-				(OSStatus)SetControlData(inButton, kControlButtonPart, kControlPushButtonCancelTag,
-											sizeof(cancelFlag), &cancelFlag);
-			}
-			
-			// if the given button is being assigned a default or Cancel
-			// key equivalent, then remember this (for efficiency whenever
-			// it is necessary to find these special buttons later);
-			// also, automatically add a default button ring, etc.
-			if (inKeyEquivalent == kEventLoop_KeyEquivalentDefaultButton)
-			{
-				Boolean		defaultFlag = true;
-				
-				
-				ptr->defaultButton = inButton;
-				(OSStatus)SetControlData(inButton, kControlButtonPart, kControlPushButtonDefaultTag,
-											sizeof(defaultFlag), &defaultFlag);
-			}
-			if (inKeyEquivalent == kEventLoop_KeyEquivalentCancelButton)
-			{
-				Boolean		cancelFlag = true;
-				
-				
-				ptr->cancelButton = inButton;
-				(OSStatus)SetControlData(inButton, kControlButtonPart, kControlPushButtonCancelTag,
-											sizeof(cancelFlag), &cancelFlag);
-			}
-			result = true;
-		}
-		catch (std::bad_alloc)
-		{
-			// not enough memory?!?!?
-		}
-	}
-	
-	return result;
-}// RegisterButtonClickKey
-
-
-/*!
 Determines the absolutely current state of the
 modifier keys and the mouse button.  The
 modifiers are somewhat incomplete (for example,
@@ -762,23 +634,6 @@ EventLoop_ReturnCurrentModifiers ()
 	// the state of a modifier key changes; so, just return that value
 	return gCarbonEventModifiers;
 }// ReturnCurrentModifiers
-
-
-/*!
-Use instead of FrontWindow() to return the frontmost
-non-floating window that might be behind a frontmost
-modal dialog box.
-
-(3.0)
-*/
-HIWindowRef
-EventLoop_ReturnRealFrontNonDialogWindow ()
-{
-	HIWindowRef		result = FrontNonFloatingWindow();
-	
-	
-	return result;
-}// ReturnRealFrontNonDialogWindow
 
 
 /*!
@@ -844,11 +699,10 @@ EventLoop_SelectOverRealFrontWindow		(HIWindowRef	inWindow)
 Arranges for a callback to be invoked whenever a global
 event occurs (such as an application switch).
 
-Use EventLoop_StopListeningForGlobalEvent() to remove
-the listener in the future.  You MUST do this prior to
-disposing of your "ListenerModel_ListenerRef", otherwise
-the application will crash when it tries to invoke the
-disposed listener.
+Use EventLoop_StopMonitoring() to remove the listener in
+the future.  You MUST do this prior to disposing of your
+"ListenerModel_ListenerRef", otherwise the application will
+crash when it tries to invoke the disposed listener.
 
 IMPORTANT:	The context passed to the listener callback
 			is reserved for passing information relevant
@@ -872,133 +726,6 @@ EventLoop_StartMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 	
 	return result;
 }// StartMonitoring
-
-
-/*!
-Arranges for a callback to be invoked whenever an event
-occurs in a control (such as a click in a frontmost
-window, or a click in a background window).  Pass nullptr
-as the control to have your notifier invoked whenever
-the specified event occurs for ANY control!
-
-Use EventLoop_StopMonitoringControl() to remove the
-listener in the future.  You MUST do this prior to
-disposing of your "ListenerModel_ListenerRef", otherwise
-the application will crash when it tries to invoke the
-disposed listener.
-
-IMPORTANT:	The context passed to the listener callback
-			is reserved for passing information relevant
-			to an event.  See "EventLoop.h" for comments
-			on what the context means for each type of
-			control event.
-
-\retval kEventLoop_ResultOK
-if no error occurred
-
-\retval kEventLoop_ResultBooleanListenerRequired
-if "inListener" is not a Boolean listener; event
-callbacks use the Boolean return value to state whether
-an event has been COMPLETELY handled (and therefore
-should be absorbed instead of being sent to additional
-callbacks)
-
-(3.0)
-*/
-EventLoop_Result
-EventLoop_StartMonitoringControl	(EventLoop_ControlEvent		inForWhatEvent,
-									 HIViewRef					inForWhichControlOrNullToReceiveEventsForAllControls,
-									 ListenerModel_ListenerRef	inListener)
-{
-	EventLoop_Result	result = noErr;
-	
-	
-	if (inForWhichControlOrNullToReceiveEventsForAllControls == nullptr)
-	{
-		// monitor all controls
-		result = EventLoop_StartMonitoring(inForWhatEvent, inListener);
-	}
-	else
-	{
-		// monitor specific control
-		My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControlOrNullToReceiveEventsForAllControls);
-		
-		
-		if (ref != nullptr)
-		{
-			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
-			
-			
-			// add a listener to the specified target’s listener model for the given event
-			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
-		}
-	}
-	return result;
-}// StartMonitoringControl
-
-
-/*!
-Arranges for a callback to be invoked whenever an event
-occurs in a window (such as an update, zoom, or close).
-Pass nullptr as the window to have your notifier invoked
-whenever the specified event occurs for ANY window!
-
-Use EventLoop_StopMonitoringWindow() to remove the
-listener in the future.  You MUST do this prior to
-disposing of your "ListenerModel_ListenerRef", otherwise
-the application will crash when it tries to invoke the
-disposed listener.
-
-IMPORTANT:	The context passed to the listener callback
-			is reserved for passing information relevant
-			to an event.  See "EventLoop.h" for comments
-			on what the context means for each type of
-			window event.
-
-\retval kEventLoop_ResultOK
-if no error occurred
-
-\retval kEventLoop_ResultBooleanListenerRequired
-if "inListener" is not a Boolean listener; event
-callbacks use the Boolean return value to state whether
-an event has been COMPLETELY handled (and therefore
-should be absorbed instead of being sent to additional
-callbacks)
-
-(3.0)
-*/
-EventLoop_Result
-EventLoop_StartMonitoringWindow		(EventLoop_WindowEvent		inForWhatEvent,
-									 HIWindowRef				inForWhichWindowOrNullToReceiveEventsForAllWindows,
-									 ListenerModel_ListenerRef	inListener)
-{
-	EventLoop_Result	result = noErr;
-	
-	
-	if (inForWhichWindowOrNullToReceiveEventsForAllWindows == nullptr)
-	{
-		// monitor all windows
-		result = EventLoop_StartMonitoring(inForWhatEvent, inListener);
-	}
-	else
-	{
-		// monitor specific window
-		My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindowOrNullToReceiveEventsForAllWindows);
-		
-		
-		if (ref != nullptr)
-		{
-			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-			
-			
-			// add a listener to the specified target’s listener model for the given event
-			result = ListenerModel_AddListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-			if (result == paramErr) result = kEventLoop_ResultBooleanListenerRequired;
-		}
-	}
-	return result;
-}// StartMonitoringWindow
 
 
 /*!
@@ -1026,92 +753,6 @@ EventLoop_StopMonitoring	(EventLoop_GlobalEvent		inForWhatEvent,
 
 
 /*!
-Arranges for a callback to no longer be invoked whenever
-an event occurs in a control (such as a mouse click).
-Pass nullptr as the control to keep your notifier from
-receiving the specified event for ANY control!
-
-\retval noErr
-always; no errors are currently defined
-
-(3.0)
-*/
-EventLoop_Result
-EventLoop_StopMonitoringControl		(EventLoop_ControlEvent		inForWhatEvent,
-									 HIViewRef					inForWhichControlOrNullToStopReceivingEventsForAllControls,
-									 ListenerModel_ListenerRef	inListener)
-{
-	EventLoop_Result	result = noErr;
-	
-	
-	if (inForWhichControlOrNullToStopReceivingEventsForAllControls == nullptr)
-	{
-		// ignore all controls
-		result = EventLoop_StopMonitoring(inForWhatEvent, inListener);
-	}
-	else
-	{
-		// ignore specific control
-		My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControlOrNullToStopReceivingEventsForAllControls);
-		
-		
-		if (ref != nullptr)
-		{
-			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
-			
-			
-			// remove a listener from the specified target’s listener model for the given event
-			ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-		}
-	}
-	return result;
-}// StopMonitoringControl
-
-
-/*!
-Arranges for a callback to no longer be invoked whenever
-an event occurs in a window (such as an update, zoom, or
-close).  Pass nullptr as the window to keep your notifier
-from receiving the specified event for ANY window!
-
-\retval noErr
-always; no errors are currently defined
-
-(3.0)
-*/
-EventLoop_Result
-EventLoop_StopMonitoringWindow	(EventLoop_WindowEvent		inForWhatEvent,
-								 HIWindowRef				inForWhichWindowOrNullToStopReceivingEventsForAllWindows,
-								 ListenerModel_ListenerRef	inListener)
-{
-	EventLoop_Result	result = noErr;
-	
-	
-	if (inForWhichWindowOrNullToStopReceivingEventsForAllWindows == nullptr)
-	{
-		// ignore all windows
-		result = EventLoop_StopMonitoring(inForWhatEvent, inListener);
-	}
-	else
-	{
-		// ignore specific window
-		My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindowOrNullToStopReceivingEventsForAllWindows);
-		
-		
-		if (ref != nullptr)
-		{
-			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-			
-			
-			// remove a listener from the specified target’s listener model for the given event
-			ListenerModel_RemoveListenerForEvent(ptr->listenerModel, inForWhatEvent, inListener);
-		}
-	}
-	return result;
-}// StopMonitoringWindow
-
-
-/*!
 Kills the main event loop, causing EventLoop_Run()
 to return.  This should be done from within the
 Quit Apple Event handler, and not usually any place
@@ -1126,132 +767,7 @@ EventLoop_Terminate ()
 }// Terminate
 
 
-/*!
-Removes any key equivalents registered for the
-specified button, so that subsequent uses of
-the keystroke will not trigger clicks in the
-button.
-
-Returns "true" only if the key was successfully
-unregistered.
-
-(3.0)
-*/
-Boolean
-EventLoop_UnregisterButtonClickKey	(HIViewRef					inButton,
-									 EventLoop_KeyEquivalent	inKeyEquivalent)
-{
-	Boolean						result = false;
-	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inButton));
-	
-	
-	if (ref != nullptr)
-	{
-		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-		
-		
-		// remove the mapping between the given key equivalent and the given button
-		if (ptr->keyEquivalentsToControls.find(inKeyEquivalent) != ptr->keyEquivalentsToControls.end())
-		{
-			ptr->keyEquivalentsToControls.erase(ptr->keyEquivalentsToControls.find(inKeyEquivalent));
-			result = (ptr->keyEquivalentsToControls.find(inKeyEquivalent) == ptr->keyEquivalentsToControls.end());
-		}
-	}
-	
-	return result;
-}// UnregisterButtonClickKey
-
-
 #pragma mark Internal Methods
-
-/*!
-Converts the specified event-based keystroke
-information into a single constant that
-describes the entire keystroke.
-
-See EventLoop.h for details on what a
-"EventLoop_KeyboardEquivalent" can be.
-
-(3.0)
-*/
-static EventLoop_KeyEquivalent
-createKeyboardEquivalent	(SInt16		inCharacterCode,
-							 SInt16		inVirtualKeyCode,
-							 Boolean	inCommandDown)
-{
-	EventLoop_KeyEquivalent		 result = '----';
-	
-	
-	if (inCommandDown)
-	{
-		// check for command-<character> equivalents
-		if (inCharacterCode == '.') result = kEventLoop_KeyEquivalentCancelButton;
-		else if (inCharacterCode != 0) result = kEventLoop_KeyEquivalentArbitraryCommandLetter | inCharacterCode;
-		else result = kEventLoop_KeyEquivalentArbitraryCommandVirtualKey | inVirtualKeyCode;
-	}
-	else
-	{
-		// consider one-key equivalents
-		switch (inCharacterCode)
-		{
-		case 0x0D: // Return
-		case 0x03: // Enter
-			result = kEventLoop_KeyEquivalentDefaultButton;
-			break;
-		
-		default:
-			// ???
-			switch (inVirtualKeyCode)
-			{
-				case 0x35: // Escape
-					result = kEventLoop_KeyEquivalentCancelButton;
-				
-				default:
-					// ???
-					break;
-			}
-			break;
-		}
-	#if 0
-		case kEventLoop_KeyEquivalentFirstLetter:
-			if (inCommandDown)
-			{
-				OSStatus		error = noErr;
-				CFStringRef		titleString = nullptr;
-				
-				
-				error = CopyControlTitleAsCFString(inControl, &titleString);
-				if (error == noErr)
-				{
-					UniChar		firstLetter = 0;
-					
-					
-					// command + first character of button title, case-insensitive
-					firstLetter = CFStringGetCharacterAtIndex(titleString, 0/* index */);
-					result = (firstLetter == inCharacterCode);
-					unless (result)
-					{
-						CFMutableStringRef		mutableString = CFStringCreateMutable(kCFAllocatorDefault,
-																						1/* length */);
-						
-						
-						if (mutableString != nullptr)
-						{
-							CFStringAppendCharacters(mutableString, &firstLetter, 1/* number of characters */);
-							CFStringLowercase(mutableString, nullptr/* locale data */);
-							firstLetter = CFStringGetCharacterAtIndex(mutableString, 0/* index */);
-							result = (firstLetter == inCharacterCode);
-							CFRelease(mutableString);
-						}
-					}
-					CFRelease(titleString);
-				}
-			}
-	#endif
-	}
-	return result;
-}// createKeyboardEquivalent
-
 
 /*!
 Destroys an event target reference created with the
@@ -1674,7 +1190,6 @@ handleKeyDown	(EventRecord*	inoutEventPtr)
 	unless (result)
 	{
 		EventInfoWindowScope_KeyPress	keyPressInfo;
-		HIViewRef						keyEquivalentControl = nullptr;
 		Boolean							someHandlerAbsorbedEvent = false;
 		
 		
@@ -1696,27 +1211,8 @@ handleKeyDown	(EventRecord*	inoutEventPtr)
 			(OSStatus)CollapseWindow(keyPressInfo.window, false);
 		}
 		
-		// determine what to do with the keystroke; perhaps the keystroke
-		// has been explicitly mapped to a button - if so, fire off an
-		// event for the matching button; otherwise, propagate the event
-		keyEquivalentControl = matchesKeyboardEquivalent(keyPressInfo.window, keyPressInfo.characterCode,
-															keyPressInfo.virtualKeyCode, keyPressInfo.commandDown);
-		if (keyEquivalentControl != nullptr)
-		{
-			// then a keyboard equivalent for a button was pressed;
-			// simulate the button click and fire off a click event
-			EventInfoControlScope_Click		clickInfo;
-			
-			
-			clickInfo.control = keyEquivalentControl;
-			clickInfo.controlPart = kControlButtonPart;
-			clickInfo.event = *inoutEventPtr;
-			FlashButtonControl(keyEquivalentControl, isDefaultButton(keyEquivalentControl),
-								isCancelButton(keyEquivalentControl));
-			someHandlerAbsorbedEvent = eventNotifyForControl(kEventLoop_ControlEventClick, clickInfo.control,
-																REINTERPRET_CAST(&clickInfo, void*)/* context */);
-		}
-		else if (isAnyListenerForWindowEvent(keyPressInfo.window, kEventLoop_WindowEventKeyPress))
+		// propagate the event
+		if (isAnyListenerForWindowEvent(keyPressInfo.window, kEventLoop_WindowEventKeyPress))
 		{
 			// notify listeners of key-press events that a window key press has occurred;
 			// as soon as a listener absorbs the event, no remaining listeners are notified
@@ -1938,107 +1434,6 @@ isAnyListenerForWindowEvent		(WindowRef					inForWhichWindow,
 	}
 	return result;
 }// isAnyListenerForWindowEvent
-
-
-/*!
-Applies a formula to figure out whether the
-specified control is the Cancel button for
-its window.
-
-(3.0)
-*/
-static Boolean
-isCancelButton		(HIViewRef		inControl)
-{
-	Boolean						result = false;
-	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inControl));
-	
-	
-	if (ref != nullptr)
-	{
-		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-		
-		
-		result = (ptr->cancelButton == inControl);
-	}
-	return result;
-}// isCancelButton
-
-
-/*!
-Applies a formula to figure out whether the
-specified control is the default button for
-its window.
-
-(3.0)
-*/
-static Boolean
-isDefaultButton		(HIViewRef		inControl)
-{
-	Boolean						result = false;
-	My_WindowEventTargetRef		ref = findWindowEventTarget(GetControlOwner(inControl));
-	
-	
-	if (ref != nullptr)
-	{
-		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-		
-		
-		result = (ptr->defaultButton == inControl);
-	}
-	return result;
-}// isDefaultButton
-
-
-/*!
-Returns nullptr unless the specified character
-or keyboard key matches any registered keystroke
-mapping for a control when the given modifier
-keys are held down.
-
-(3.0)
-*/
-static inline HIViewRef
-matchesKeyboardEquivalent	(WindowRef	inWindow,
-							 SInt16		inCharacterCode,
-							 SInt16		inVirtualKeyCode,
-							 Boolean	inCommandDown)
-{
-	return matchesKeyboardEquivalent(inWindow, createKeyboardEquivalent(inCharacterCode, inVirtualKeyCode, inCommandDown));
-}// matchesKeyboardEquivalent
-
-
-/*!
-Returns nullptr unless the specified keystroke
-information matches any registered keystroke
-mapping for a control.
-
-(3.0)
-*/
-static HIViewRef
-matchesKeyboardEquivalent	(WindowRef					inWindow,
-							 EventLoop_KeyEquivalent	inKeyEquivalent)
-{
-	My_WindowEventTargetRef		ref = findWindowEventTarget(inWindow);
-	HIViewRef					result = nullptr;
-	
-	
-	if (ref != nullptr)
-	{
-		My_WindowEventTargetAutoLocker						ptr(gWindowEventTargetPtrLocks(), ref);
-		EventLoopKeyEquivalentToControlMap::const_iterator	keyEquivalentToControlIterator;
-		
-		
-		// see if there is a mapping for the given key equivalent
-		keyEquivalentToControlIterator = ptr->keyEquivalentsToControls.find(inKeyEquivalent);
-		if (keyEquivalentToControlIterator != ptr->keyEquivalentsToControls.end())
-		{
-			result = keyEquivalentToControlIterator->second;
-		}
-	}
-	
-	return result;
-}// matchesKeyboardEquivalent
 
 
 /*!

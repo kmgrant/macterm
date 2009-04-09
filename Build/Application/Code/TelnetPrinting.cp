@@ -767,7 +767,7 @@ printIdle ()
 	
 	
 	GetGWorld(&oldPort, &oldDevice);
-	if (EventLoop_IsNextCancel()) UniversalPrint_Cancel(gPrintRecordInUse);
+	//if (EventLoop_IsNextCancel()) UniversalPrint_Cancel(gPrintRecordInUse);
 	UseResFile(oldResFile); // restore this in case it somehow got changed
 	SetGWorld(oldPort, oldDevice);
 }// printIdle
