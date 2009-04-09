@@ -8,7 +8,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -54,22 +54,6 @@
 
 
 
-#pragma mark Constants
-
-enum
-{
-	MAXFTP = 128,
-	MAXKB = 256
-};
-
-#define MHOPTS_BASE		37	// Base option for {my,his}opts (Authenticate)
-							//  {my,his} opts should only be used for telnet options
-							//  in the range starting at MHOPTS_BASE and limited
-							//  by MHOPTS_SIZE. This saves memory.
-#define MHOPTS_SIZE		2	// Number of options supported in {my,his}opts
-
-#define LINE_MODE_SLC_MAX		30			// must be identical to SLC_MAX in "Parse.h"
-
 #pragma mark Types
 
 struct ConnectionData
@@ -80,7 +64,6 @@ struct ConnectionData
 												// (instead, use Session_ReturnActiveTerminalWindow() and then
 												// TerminalWindow_GetScreenWithFocus() or
 												// TerminalWindow_GetScreens())
-	WindowRef			window;					// DIRECT ACCESS PROHIBITED; use Session_ReturnActiveWindow()
 	CFRetainRelease		alternateTitle;			// DIRECT ACCESS PROHIBITED; use Session_GetWindowUserDefinedTitle()
 	
 	SInt16				enabled;				// DIRECT ACCESS PROHIBITED; use:
@@ -112,7 +95,7 @@ struct ConnectionData
 												//		Session_SetLocalEchoHalfDuplex()
 	
 	SInt16				kblen;					// offset into buffer of character to use
-	char				kbbuf[MAXKB];			// The keyboard buffer (echo mode)
+	char				kbbuf[256];				// The keyboard buffer (echo mode)
 	
 	UInt8				parsedat[450];			// DIRECT ACCESS PROHIBITED; used only in parser (changing)
 	SInt16				parseIndex;				// DIRECT ACCESS PROHIBITED; used only in parser (changing)

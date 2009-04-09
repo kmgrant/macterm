@@ -3,7 +3,7 @@
 	Session.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -105,17 +105,18 @@
 
 
 #pragma mark Constants
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+enum Session_Type
 {
-	enum Session_Type
-	{
-		kSession_TypeLocalNonLoginShell		= 0,	// local Unix process running the user’s preferred shell
-		kSession_TypeLocalLoginShell		= 1		// local Unix process running /usr/bin/login
-	};
-}
+	kSession_TypeLocalNonLoginShell		= 0,	// local Unix process running the user’s preferred shell
+	kSession_TypeLocalLoginShell		= 1		// local Unix process running /usr/bin/login
+};
+
+} // anonymous namespace
 
 #pragma mark Types
+namespace {
 
 typedef std::map< HIViewRef, EventHandlerRef >		ControlDragDropHandlerMap;
 
@@ -252,6 +253,7 @@ struct Session
 	ConnectionDataPtr			dataPtr;					// data for this connection
 	InterfaceLibAlertRef		currentTerminationAlert;	// retained while a sheet is still open so a 2nd sheet is not displayed
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
+	HIWindowRef					window;						// redundant copy of TerminalWindow_ReturnWindow(terminalWindow)
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
 	MyTEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
 	MyRasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
@@ -307,69 +309,76 @@ struct My_WatchAlertInfo
 };
 typedef My_WatchAlertInfo*		My_WatchAlertInfoPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static pascal void			autoActivateWindow					(EventLoopTimerRef, void*);
-static void					changeNotifyForSession				(SessionPtr, Session_Change, void*);
-static void					changeStateAttributes				(SessionPtr, Session_StateAttributes,
-																	Session_StateAttributes);
-static void					configureSaveDialog					(SessionRef, NavDialogCreationOptions&);
-static void					connectionStateChanged				(ListenerModel_Ref, ListenerModel_Event,
+#pragma mark Internal Method Prototypes
+namespace {
+
+pascal void					autoActivateWindow					(EventLoopTimerRef, void*);
+void						changeNotifyForSession				(SessionPtr, Session_Change, void*);
+void						changeStateAttributes				(SessionPtr, Session_StateAttributes,
+																 Session_StateAttributes);
+void						configureSaveDialog					(SessionRef, NavDialogCreationOptions&);
+void						connectionStateChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-static My_HMHelpContentRecWrap&	createHelpTagForInterrupt		();
-static My_HMHelpContentRecWrap&	createHelpTagForResume			();
-static My_HMHelpContentRecWrap&	createHelpTagForSuspend			();
-static PMPageFormat			createSessionPageFormat				();
-static IconRef				createSessionStateActiveIcon		();
-static IconRef				createSessionStateDeadIcon			();
-static void					dataArrived							(ListenerModel_Ref, ListenerModel_Event,
+My_HMHelpContentRecWrap&	createHelpTagForInterrupt			();
+My_HMHelpContentRecWrap&	createHelpTagForResume				();
+My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
+PMPageFormat				createSessionPageFormat				();
+IconRef						createSessionStateActiveIcon		();
+IconRef						createSessionStateDeadIcon			();
+void						dataArrived							(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-static pascal void			detectLongLife						(EventLoopTimerRef, void*);
-static Boolean				handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
+pascal void					detectLongLife						(EventLoopTimerRef, void*);
+Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-static Boolean				isReadOnly							(SessionPtr);
-static void					killConnection						(SessionPtr);
-static pascal void			navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
-static pascal void			navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
-static pascal void			pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
-static void					pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
-static void					preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
+Boolean						isReadOnly							(SessionPtr);
+void						killConnection						(SessionPtr);
+pascal void					navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
+pascal void					navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
+pascal void					pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
+void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
+void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-static Boolean				queueCharacterInKeyboardBuffer		(SessionPtr, char);
-static pascal OSStatus		receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
+Boolean						queueCharacterInKeyboardBuffer		(SessionPtr, char);
+pascal OSStatus				receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-static pascal OSStatus		receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus				receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
 #endif
-static pascal OSStatus		receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus		receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
-static void					sendRecordableDataTransmitEvent		(CFStringRef, Boolean);
-static void					sendRecordableDataTransmitEvent		(char const*, SInt16, Boolean);
-static void					sendRecordableSpecialTransmitEvent	(FourCharCode, Boolean);
-static OSStatus				sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
+pascal OSStatus				receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus				receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus				receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
+HIWindowRef					returnActiveWindow					(SessionPtr);
+void						sendRecordableDataTransmitEvent		(CFStringRef, Boolean);
+void						sendRecordableDataTransmitEvent		(char const*, SInt16, Boolean);
+void						sendRecordableSpecialTransmitEvent	(FourCharCode, Boolean);
+OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
-static void					terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
+void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-static void					terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
-static void					watchClearForSession				(SessionPtr);
-static void					watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
-static void					watchNotifyForSession				(SessionPtr, Session_Watch);
-static pascal void			watchNotifyFromTimer				(EventLoopTimerRef, void*);
-static void					watchTimerResetForSession			(SessionPtr, Session_Watch);
-static void					windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
+void						terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
+void						watchClearForSession				(SessionPtr);
+void						watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
+void						watchNotifyForSession				(SessionPtr, Session_Watch);
+pascal void					watchNotifyFromTimer				(EventLoopTimerRef, void*);
+void						watchTimerResetForSession			(SessionPtr, Session_Watch);
+void						windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	SessionPtrLocker&	gSessionPtrLocks ()	{ static SessionPtrLocker x; return x; }
-	PMPageFormat&		gSessionPageFormat () { static PMPageFormat x = createSessionPageFormat(); return x; }
-	IconRef				gSessionActiveIcon () { static IconRef x = createSessionStateActiveIcon(); return x; }
-	IconRef				gSessionDeadIcon () { static IconRef x = createSessionStateDeadIcon(); return x; }
-}
+SessionPtrLocker&	gSessionPtrLocks ()	{ static SessionPtrLocker x; return x; }
+PMPageFormat&		gSessionPageFormat () { static PMPageFormat x = createSessionPageFormat(); return x; }
+IconRef				gSessionActiveIcon () { static IconRef x = createSessionStateActiveIcon(); return x; }
+IconRef				gSessionDeadIcon () { static IconRef x = createSessionStateDeadIcon(); return x; }
+
+} // anonymous namespace
 
 #pragma mark Functors
+namespace {
 
 /*!
 Appends the specified data to a file currently
@@ -603,6 +612,8 @@ private:
 	size_t			_result;
 };
 
+} // anonymous namespace
+
 
 #pragma mark Public Methods
 
@@ -661,6 +672,7 @@ Session_New		(Boolean	inIsReadOnly)
 		}
 		ptr->currentTerminationAlert = nullptr;
 		ptr->terminalWindow = nullptr;
+		ptr->window = nullptr;
 		ptr->readBufferSizeMaximum = 4096; // arbitrary, for initialization; see Session_SetDataProcessingCapacity()
 		ptr->readBufferSizeInUse = 0;
 		// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
@@ -1400,8 +1412,8 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		// return immediately without session termination (yet);
 		// ensure that the relevant window is visible and frontmost
 		// when the message appears
-		ShowWindow(ptr->dataPtr->window);
-		EventLoop_SelectBehindDialogWindows(ptr->dataPtr->window);
+		ShowWindow(returnActiveWindow(ptr));
+		EventLoop_SelectBehindDialogWindows(returnActiveWindow(ptr));
 		if (isModal)
 		{
 			Alert_Display(ptr->currentTerminationAlert);
@@ -1443,7 +1455,7 @@ Session_DisplayTerminationWarning	(SessionRef		inRef,
 		}
 		else
 		{
-			Alert_MakeWindowModal(ptr->currentTerminationAlert, ptr->dataPtr->window/* parent */, !willLeaveTerminalWindowOpen/* is window close alert */,
+			Alert_MakeWindowModal(ptr->currentTerminationAlert, returnActiveWindow(ptr)/* parent */, !willLeaveTerminalWindowOpen/* is window close alert */,
 									terminationWarningCloseNotifyProc, terminateAlertInfoPtr/* user data */);
 			Alert_Display(ptr->currentTerminationAlert); // notifier disposes the alert when the sheet eventually closes
 		}
@@ -1714,7 +1726,7 @@ Session_FlushNetwork	(SessionRef		inRef)
 	while (remainingBytesCount > 0) remainingBytesCount = Session_ProcessMoreData(inRef);
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									true); // output now
-	RegionUtilities_RedrawWindowOnNextUpdate(ptr->dataPtr->window);
+	RegionUtilities_RedrawWindowOnNextUpdate(returnActiveWindow(ptr));
 }// FlushNetwork
 
 
@@ -2429,7 +2441,7 @@ HIWindowRef
 Session_ReturnActiveWindow	(SessionRef		inRef)
 {
 	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	WindowRef			result = ptr->dataPtr->window;
+	HIWindowRef			result = returnActiveWindow(ptr);
 	
 	
 	return result;
@@ -3103,7 +3115,7 @@ Session_SetTerminalWindow	(SessionRef			inRef,
 	
 	
 	ptr->terminalWindow = inTerminalWindow;
-	ptr->dataPtr->window = TerminalWindow_ReturnWindow(inTerminalWindow);
+	ptr->window = TerminalWindow_ReturnWindow(inTerminalWindow);
 	ptr->dataPtr->vs = TerminalWindow_ReturnScreenWithFocus(inTerminalWindow);
 	if (nullptr == inTerminalWindow)
 	{
@@ -3510,7 +3522,7 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 			CFStringRef		windowTitleCFString = nullptr;
 			
 			
-			if (noErr == CopyWindowTitleAsCFString(ptr->dataPtr->window, &windowTitleCFString))
+			if (noErr == CopyWindowTitleAsCFString(returnActiveWindow(ptr), &windowTitleCFString))
 			{
 				VectorCanvas_SetTitle(VectorInterpreter_ReturnCanvas(id), windowTitleCFString);
 				CFRelease(windowTitleCFString), windowTitleCFString = nullptr;
@@ -4108,9 +4120,9 @@ Session_UserInputPaste	(SessionRef			inRef,
 				
 				// ensure that the relevant window is visible and frontmost
 				// when the message appears
-				ShowWindow(ptr->dataPtr->window);
-				EventLoop_SelectBehindDialogWindows(ptr->dataPtr->window);
-				Alert_MakeWindowModal(box, ptr->dataPtr->window/* parent */, false/* is window close alert */,
+				ShowWindow(returnActiveWindow(ptr));
+				EventLoop_SelectBehindDialogWindows(returnActiveWindow(ptr));
+				Alert_MakeWindowModal(box, returnActiveWindow(ptr)/* parent */, false/* is window close alert */,
 										pasteWarningCloseNotifyProc, pasteAlertInfoPtr/* user data */);
 				
 				// returns immediately; notifier disposes the alert when the sheet
@@ -4258,6 +4270,7 @@ Session_WatchIsOff		(SessionRef		inRef)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Constructor.  See Session_New().
@@ -4273,7 +4286,6 @@ ConnectionData ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 vs				(nullptr),
-window			(nullptr),
 alternateTitle	(),
 enabled			(true),
 bsdel			(0),
@@ -4309,7 +4321,7 @@ Timers that draw must save and restore the current graphics port.
 
 (3.1)
 */
-static pascal void
+pascal void
 autoActivateWindow	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					 void*					inSessionRef)
 {
@@ -4333,7 +4345,7 @@ IMPORTANT:	The context must make sense for the
 
 (3.0)
 */
-static void
+void
 changeNotifyForSession		(SessionPtr			inPtr,
 							 Session_Change		inWhatChanged,
 							 void*				inContextPtr)
@@ -4352,7 +4364,7 @@ specified clear attributes are cleared.
 
 (3.1)
 */
-static void
+void
 changeStateAttributes	(SessionPtr					inPtr,
 						 Session_StateAttributes	inAttributesToSet,
 						 Session_StateAttributes	inAttributesToClear)
@@ -4375,7 +4387,7 @@ This includes:
 
 (3.1)
 */
-static void
+void
 configureSaveDialog		(SessionRef					inRef,
 						 NavDialogCreationOptions&	inoutOptions)
 {
@@ -4394,7 +4406,7 @@ string appropriately.
 
 (3.0)
 */
-static void
+void
 connectionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							 ListenerModel_Event	inConnectionSettingThatChanged,
 							 void*					inEventContextPtr,
@@ -4541,7 +4553,7 @@ call its setFrame() method.
 
 (3.1)
 */
-static My_HMHelpContentRecWrap&
+My_HMHelpContentRecWrap&
 createHelpTagForInterrupt ()
 {
 	static My_HMHelpContentRecWrap		gTag;
@@ -4577,7 +4589,7 @@ call its setFrame() method.
 
 (3.1)
 */
-static My_HMHelpContentRecWrap&
+My_HMHelpContentRecWrap&
 createHelpTagForResume ()
 {
 	static My_HMHelpContentRecWrap		gTag;
@@ -4613,7 +4625,7 @@ call its setFrame() method.
 
 (3.1)
 */
-static My_HMHelpContentRecWrap&
+My_HMHelpContentRecWrap&
 createHelpTagForSuspend ()
 {
 	static My_HMHelpContentRecWrap		gTag;
@@ -4642,7 +4654,7 @@ This affects things like paper size, etc.
 
 (3.1)
 */
-static PMPageFormat
+PMPageFormat
 createSessionPageFormat ()
 {
 	PMPageFormat	result = nullptr;
@@ -4662,7 +4674,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createSessionStateActiveIcon ()
 {
 	IconRef		result = nullptr;
@@ -4692,7 +4704,7 @@ and returns a reference to the new icon.
 
 (3.1)
 */
-static IconRef
+IconRef
 createSessionStateDeadIcon ()
 {
 	IconRef		result = nullptr;
@@ -4724,7 +4736,7 @@ This can also trigger any watches set on the session.
 
 (3.1)
 */
-static void
+void
 dataArrived		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				 ListenerModel_Event	inEvent,
 				 void*					inEventContextPtr,
@@ -4783,7 +4795,7 @@ Mac OS X only.
 
 (3.0)
 */
-static pascal void
+pascal void
 detectLongLife	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				 void*					inSessionRef)
 {
@@ -4813,7 +4825,7 @@ NOTE:	This used to be a direct callback, hence its strange
 
 (3.1)
 */
-static Boolean
+Boolean
 handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inEventThatOccurred,
 						 void*					inEventContextPtr,
@@ -5122,7 +5134,7 @@ not allowing user input.
 
 (2.6)
 */
-static inline Boolean
+inline Boolean
 isReadOnly		(SessionPtr		inPtr)
 {
 	return inPtr->readOnly;
@@ -5145,7 +5157,7 @@ window should be destroyed.
 
 (2.6)
 */
-static void
+void
 killConnection		(SessionPtr		inPtr)
 {
 	if (inPtr->dataPtr != nullptr)
@@ -5190,7 +5202,7 @@ attached to a session window.
 
 (3.0)
 */
-static pascal void
+pascal void
 navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								 	 NavCBRecPtr				inParameters,
 								 	 void*						inSessionRef)
@@ -5328,7 +5340,7 @@ to a session window.
 
 (3.0)
 */
-static pascal void
+pascal void
 navigationSaveDialogEvent	(NavEventCallbackMessage	inMessage,
 						 	 NavCBRecPtr				inParameters,
 						 	 void*						inSessionRef)
@@ -5441,7 +5453,7 @@ or not the settings were kept).
 
 (3.1)
 */
-static pascal void
+pascal void
 pageSetupCloseNotifyProc	(PMPrintSession		inPrintSession,
 							 WindowRef			inWindow,
 							 Boolean			inWasAccepted)
@@ -5464,7 +5476,7 @@ The given alert is destroyed.
 
 (3.1)
 */
-static void
+void
 pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 								 SInt16					inItemHit,
 								 void*					inMy_PasteAlertInfoPtr)
@@ -5508,7 +5520,7 @@ are up to date for the changed preference.
 
 (3.0)
 */
-static void
+void
 preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inPreferenceTagThatChanged,
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -5561,7 +5573,7 @@ successfully.
 
 (3.0)
 */
-static Boolean
+Boolean
 queueCharacterInKeyboardBuffer	(SessionPtr		inPtr,
 								 char			inCharacter)
 {
@@ -5587,7 +5599,7 @@ The result is "noErr" only if the event is to be absorbed
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 								 EventRef				inEvent,
 								 void*					inSessionRef)
@@ -5737,7 +5749,7 @@ for a terminal view.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveTerminalViewEntered		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					UNUSED_ARGUMENT(inSessionRef))
@@ -5855,7 +5867,7 @@ Handles "kEventTextInputUnicodeForKeyEvent" of
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inSessionRef)
@@ -6076,7 +6088,7 @@ for a session’s terminal window.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveWindowClosing	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					inSessionRef)
@@ -6130,7 +6142,7 @@ set on the session.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					inSessionRef)
@@ -6167,6 +6179,21 @@ receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 
 
 /*!
+Returns the window most recently used by this session.
+
+(4.0)
+*/
+HIWindowRef
+returnActiveWindow	(SessionPtr		inPtr)
+{
+	HIWindowRef		result = inPtr->window;
+	
+	
+	return result;
+}// returnActiveWindow
+
+
+/*!
 Sends Apple Events back to MacTelnet that instruct
 it to send the specified data to the frontmost
 connection ("connection 1").  If desired, you can
@@ -6181,7 +6208,7 @@ will be fixed later.
 
 (3.0)
 */
-static void
+void
 sendRecordableDataTransmitEvent	(CFStringRef	inStringToType,
 								 Boolean		inExecute)
 {
@@ -6226,7 +6253,7 @@ you may not want to execute at all).
 
 (3.0)
 */
-static void
+void
 sendRecordableDataTransmitEvent		(char const*	inStringToType,
 									 SInt16			inStringLength,
 									 Boolean		inExecute)
@@ -6350,7 +6377,7 @@ error checking is done.
 
 (3.0)
 */
-static void
+void
 sendRecordableSpecialTransmitEvent	(FourCharCode	inSpecialCharacterEnumeration,
 									 Boolean		inExecute)
 {
@@ -6420,7 +6447,7 @@ See receiveTerminalViewDragDrop().
 
 (3.1)
 */
-static OSStatus
+OSStatus
 sessionDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 SessionRef				inRef,
@@ -6504,7 +6531,7 @@ of the terminal screen is now different.
 
 (3.0)
 */
-static void
+void
 terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inTerminalWindowSettingThatChanged,
 						 void*					inEventContextPtr,
@@ -6599,7 +6626,7 @@ is destroyed.
 
 (3.0)
 */
-static void
+void
 terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 									 SInt16					inItemHit,
 									 void*					inTerminateAlertInfoPtr)
@@ -6627,7 +6654,7 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 			// implicitly update the toolbar visibility preference based
 			// on the toolbar visibility of this closing window
 			{
-				Boolean		toolbarHidden = (false == IsWindowToolbarVisible(sessionPtr->dataPtr->window));
+				Boolean		toolbarHidden = (false == IsWindowToolbarVisible(returnActiveWindow(sessionPtr)));
 				
 				
 				(Preferences_Result)Preferences_SetData(kPreferences_TagHeadersCollapsed,
@@ -6683,7 +6710,7 @@ triggered notification on that session.
 
 (3.1)
 */
-static void
+void
 watchClearForSession	(SessionPtr		inPtr)
 {
 	// note the change (e.g. can cause icon displays to be updated)
@@ -6705,7 +6732,7 @@ cleared already.  The given alert is destroyed.
 
 (3.1)
 */
-static void
+void
 watchCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
 						 SInt16					inItemHit,
 						 void*					inMy_WatchAlertInfoPtr)
@@ -6740,7 +6767,7 @@ need to see an alert about the window currently being used!
 
 (3.1)
 */
-static void
+void
 watchNotifyForSession	(SessionPtr		inPtr,
 						 Session_Watch	inWhatTriggered)
 {
@@ -6865,7 +6892,7 @@ Timers that draw must save and restore the current graphics port.
 
 (3.1)
 */
-static pascal void
+pascal void
 watchNotifyFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 						 void*					inSessionRef)
 {
@@ -6889,7 +6916,7 @@ Has no effect for other kinds of watches.
 
 (3.1)
 */
-static void
+void
 watchTimerResetForSession	(SessionPtr		inPtr,
 							 Session_Watch	inWatchType)
 {
@@ -6961,7 +6988,7 @@ handlers for the session.
 
 (3.0)
 */
-static void
+void
 windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 								 ListenerModel_Event	inSessionChange,
 								 void*					inEventContextPtr,
@@ -7168,5 +7195,7 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// windowValidationStateChanged
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
