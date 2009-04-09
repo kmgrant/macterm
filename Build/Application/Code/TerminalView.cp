@@ -4717,73 +4717,158 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 		LineTo(cellCenter.h, cellTop);
 		break;
 	
+	case 0x255D: // hook mid-top to mid-left, double-line version
+		MoveTo(cellLeft, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellTop);
+		MoveTo(cellLeft, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellTop);
+		break;
+	
 	case 0x2510: // hook mid-left to mid-bottom
 	case 0x2513: // bold version
 		MoveTo(cellLeft, cellCenter.v);
 		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
+		break;
+	
+	case 0x2557: // hook mid-left to mid-bottom, double-line version
+		MoveTo(cellLeft, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
+		MoveTo(cellLeft, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
 		break;
 	
 	case 0x250C: // hook mid-right to mid-bottom
 	case 0x250F: // bold version
-		MoveTo(cellRight, cellCenter.v);
+		MoveTo(cellRight - lineWidth, cellCenter.v);
 		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
+		break;
+	
+	case 0x2554: // hook mid-right to mid-bottom, double-line version
+		MoveTo(cellRight - lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
+		MoveTo(cellRight - lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
 		break;
 	
 	case 0x2514: // hook mid-top to mid-right
 	case 0x2517: // bold version
 		MoveTo(cellCenter.h, cellTop);
 		LineTo(cellCenter.h, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
+		break;
+	
+	case 0x255A: // hook mid-top to mid-right, double-line version
+		MoveTo(cellCenter.h + lineWidth, cellTop);
+		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
+		MoveTo(cellCenter.h - lineWidth, cellTop);
+		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
 		break;
 	
 	case 0x253C: // cross
 	case 0x254B: // bold version
 		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
 		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
+		break;
+	
+	case 0x256C: // cross, double-line version
+		MoveTo(cellLeft, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellTop);
+		MoveTo(cellCenter.h + lineWidth, cellTop);
+		LineTo(cellCenter.h + lineWidth, cellCenter.v - lineHeight);
+		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
+		MoveTo(cellLeft, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
+		MoveTo(cellRight - lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellCenter.v + lineHeight);
+		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
+		break;
+	
+	case 0x256A: // cross, double-horizontal-only
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
+		MoveTo(cellLeft, cellCenter.v - lineHeight);
+		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
+		MoveTo(cellLeft, cellCenter.v + lineHeight);
+		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
+		break;
+	
+	case 0x256B: // cross, double-vertical-only
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
+		MoveTo(cellCenter.h - lineWidth, cellTop);
+		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
+		MoveTo(cellCenter.h + lineWidth, cellTop);
+		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
 		break;
 	
 	case 0x23BA: // top line
 		MoveTo(cellLeft, cellTop);
-		LineTo(cellRight, cellTop);
+		LineTo(cellRight - lineWidth, cellTop);
 		break;
 	
 	case 0x23BB: // line between top and middle regions
 		MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
-		LineTo(cellRight, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		LineTo(cellRight - lineWidth, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
 		break;
 	
 	case 0x2500: // middle line
 	case 0x2501: // bold version
 		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
+		break;
+	
+	case 0x2550: // middle line, double-line version
+		MoveTo(cellLeft, cellCenter.v - lineHeight);
+		LineTo(cellRight - lineWidth, cellCenter.v - lineHeight);
+		MoveTo(cellLeft, cellCenter.v + lineHeight);
+		LineTo(cellRight - lineWidth, cellCenter.v + lineHeight);
 		break;
 	
 	case 0x23BC: // line between middle and bottom regions
-		MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
-		LineTo(cellRight, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v) - lineHeight);
+		MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		LineTo(cellRight - lineWidth, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		break;
+	
+	case 0x2261: // equivalent to (three horizontal lines)
+		MoveTo(cellLeft, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		LineTo(cellRight - lineWidth, cellTop + INTEGER_HALVED(cellCenter.v - cellTop));
+		MoveTo(cellLeft, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
+		MoveTo(cellLeft, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
+		LineTo(cellRight - lineWidth, cellCenter.v + INTEGER_HALVED(cellBottom - cellCenter.v));
 		break;
 	
 	case 0x23BD: // bottom line
 		MoveTo(cellLeft, cellBottom - lineHeight);
-		LineTo(cellRight, cellBottom - lineHeight);
+		LineTo(cellRight - lineWidth, cellBottom - lineHeight);
 		break;
 	
 	case 0x251C: // cross minus the left piece
 	case 0x2523: // bold version
 		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
 		MoveTo(cellCenter.h, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
 		break;
 	
 	case 0x2524: // cross minus the right piece
 	case 0x252B: // bold version
 		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
 		MoveTo(cellLeft, cellCenter.v);
 		LineTo(cellCenter.h, cellCenter.v);
 		break;
@@ -4793,26 +4878,50 @@ drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 		MoveTo(cellCenter.h, cellTop);
 		LineTo(cellCenter.h, cellCenter.v);
 		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
 		break;
 	
 	case 0x252C: // cross minus the top piece
 	case 0x2533: // bold version
 		MoveTo(cellCenter.h, cellCenter.v);
-		LineTo(cellCenter.h, cellBottom);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
 		MoveTo(cellLeft, cellCenter.v);
-		LineTo(cellRight, cellCenter.v);
+		LineTo(cellRight - lineWidth, cellCenter.v);
 		break;
 	
 	case 0x2502: // vertical line
 	case 0x2503: // bold version
 		MoveTo(cellCenter.h, cellTop);
-		LineTo(cellCenter.h, cellBottom);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
+		break;
+	
+	case 0x2551: // vertical line, double-line version
+		MoveTo(cellCenter.h - lineWidth, cellTop);
+		LineTo(cellCenter.h - lineWidth, cellBottom - lineHeight);
+		MoveTo(cellCenter.h + lineWidth, cellTop);
+		LineTo(cellCenter.h + lineWidth, cellBottom - lineHeight);
 		break;
 	
 	case 0x2027: // centered dot
+	case 0x00B7: // centered dot (alternate?)
+	case 0x2219: // bullet (technically bigger than middle dot)
+	case 0x25A0: // big centered dot
 		MoveTo(cellCenter.h, cellCenter.v);
 		Line(0, 0);
+		break;
+	
+	case 0x2320: // integral sign (elongated S), top
+		MoveTo(cellCenter.h + lineWidth + lineWidth, cellTop + lineHeight + lineHeight);
+		LineTo(cellCenter.h + lineWidth + lineWidth, cellTop);
+		LineTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
+		break;
+	
+	case 0x2321: // integral sign (elongated S), bottom
+		MoveTo(cellCenter.h, cellTop);
+		LineTo(cellCenter.h, cellBottom - lineHeight);
+		LineTo(cellCenter.h - lineWidth - lineWidth, cellBottom - lineHeight);
+		LineTo(cellCenter.h - lineWidth - lineWidth, cellBottom - lineHeight - lineHeight - lineHeight);
 		break;
 	
 	default:
@@ -10344,8 +10453,8 @@ useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 			
 			// if the text is really big, drawn lines should be bigger as well, so
 			// multiply 1 pixel by a scaling factor based on the size of the text
-			scaleH = inTerminalViewPtr->text.font.widthPerCharacter / 4.0;
-			scaleV = inTerminalViewPtr->text.font.heightPerCharacter / 6.0;
+			scaleH = inTerminalViewPtr->text.font.widthPerCharacter / 5.0;
+			scaleV = inTerminalViewPtr->text.font.heightPerCharacter / 7.0;
 			PenSize(INTEGER_MAXIMUM(1, STATIC_CAST(scaleH, SInt16)), INTEGER_MAXIMUM(1, STATIC_CAST(scaleV, SInt16)));
 		}
 		

@@ -11003,32 +11003,47 @@ translateCharacter	(My_ScreenBufferPtr			inDataPtr,
 		case 0x21B5: // new line (international symbol is an arrow that hooks from mid-top to mid-left)
 		case 0x2913: // vertical tab (international symbol is a down-pointing arrow with a terminating line)
 		case 0x2518: // hook mid-top to mid-left
-		case 0x251B: // bold version
+		case 0x251B: // hook mid-top to mid-left, bold version
+		case 0x255D: // hook mid-top to mid-left, double-line version
 		case 0x2510: // hook mid-left to mid-bottom
-		case 0x2513: // bold version
+		case 0x2513: // hook mid-left to mid-bottom, bold version
+		case 0x2557: // hook mid-left to mid-bottom, double-line version
 		case 0x250C: // hook mid-right to mid-bottom
-		case 0x250F: // bold version
+		case 0x250F: // hook mid-right to mid-bottom, bold version
+		case 0x2554: // hook mid-right to mid-bottom, double-line version
 		case 0x2514: // hook mid-top to mid-right
-		case 0x2517: // bold version
+		case 0x2517: // hook mid-top to mid-right, bold version
+		case 0x255A: // hook mid-top to mid-right, double-line version
 		case 0x253C: // cross
-		case 0x254B: // bold version
+		case 0x254B: // cross, bold version
+		case 0x256A: // cross, double-horizontal-only version
+		case 0x256B: // cross, double-vertical-only version
+		case 0x256C: // cross, double-line version
 		case 0x23BA: // top line
 		case 0x23BB: // line between top and middle regions
 		case 0x2500: // middle line
-		case 0x2501: // bold version
+		case 0x2501: // middle line, bold version
+		case 0x2550: // middle line, double-line version
 		case 0x23BC: // line between middle and bottom regions
+		case 0x2261: // equivalent to
 		case 0x23BD: // bottom line
 		case 0x251C: // cross minus the left piece
-		case 0x2523: // bold version
+		case 0x2523: // cross minus the left piece, bold version
 		case 0x2524: // cross minus the right piece
-		case 0x252B: // bold version
+		case 0x252B: // cross minus the right piece, bold version
 		case 0x2534: // cross minus the bottom piece
-		case 0x253B: // bold version
+		case 0x253B: // cross minus the bottom piece, bold version
 		case 0x252C: // cross minus the top piece
-		case 0x2533: // bold version
+		case 0x2533: // cross minus the top piece, bold version
 		case 0x2502: // vertical line
-		case 0x2503: // bold version
+		case 0x2503: // vertical line, bold version
+		case 0x2551: // vertical line, double-line version
 		case 0x2027: // centered dot
+		case 0x00B7: // centered dot (alternate?)
+		case 0x2219: // bullet
+		case 0x25A0: // big centered dot
+		case 0x2320: // integral sign (elongated S), top
+		case 0x2321: // integral sign (elongated S), bottom
 			STYLE_ADD(outNewAttributes, kTerminalTextAttributeVTGraphics);
 			break;
 		

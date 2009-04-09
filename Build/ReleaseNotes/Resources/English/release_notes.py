@@ -225,6 +225,8 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090408': [
+		'Fixed various border glitches in rendering graphics character cells.',
+		'Several graphics now have high-quality renderings, which can be seen when using Translations such as Latin-US (DOS).',
 		'MacTelnet Help style changed slightly to be more compact.',
 	],
 	'20090407': [
