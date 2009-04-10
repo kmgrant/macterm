@@ -39,6 +39,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
+#include <CFRetainRelease.h>
 #include <Console.h>
 #include <ListenerModel.h>
 #include <MemoryBlocks.h>
@@ -511,13 +512,10 @@ void
 Console_WriteValueFourChars		(char const*	inLabel,
 								 FourCharCode	inValue)
 {
-	std::ostringstream	s;
-	char	type[5];
-	*(REINTERPRET_CAST(type, FourCharCode*)) = inValue;
-	type[4] = '\0'; // terminate string
-	s << inLabel << " = " << type;
-	std::string		sString = s.str();
-	Console_WriteLine(sString.c_str());
+	CFRetainRelease		typeCFString(CreateTypeStringWithOSType(inValue), true/* is retained */);
+	
+	
+	Console_WriteValueCFString(inLabel, typeCFString.returnCFStringRef());
 }// WriteValueFourChars
 
 
