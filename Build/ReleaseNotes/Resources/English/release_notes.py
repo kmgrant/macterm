@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090410',
     '20090409',
     '20090408',
     '20090407',
@@ -225,6 +226,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090410': [
+		'Terminal window text selections are now exposed to system-wide Services, allowing (for instance) a synthesizer to speak selected text, or the Finder to reveal a file or folder when its path is selected.',
+	],
 	'20090409': [
 		'The base VT100 emulator now supports ANSI save/restore cursor sequences, necessary to properly play some BBS games.',
 		'Several additional graphics characters now have high-quality renderings.',
