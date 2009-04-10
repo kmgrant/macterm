@@ -118,6 +118,10 @@ void
 //@{
 
 OSStatus
+	Clipboard_AddCFStringToPasteboard		(CFStringRef				inStringToCopy,
+											 PasteboardRef				inPasteboardOrNullForMainClipboard = nullptr);
+
+OSStatus
 	Clipboard_AEDescToScrap					(AEDesc const*				inDescPtr);
 
 Boolean

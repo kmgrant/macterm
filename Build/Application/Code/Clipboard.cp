@@ -111,7 +111,6 @@ typedef std::map< PasteboardRef, My_Type >		My_TypeByPasteboard;
 #pragma mark Internal Method Prototypes
 namespace {
 
-OSStatus			addCFStringToPasteboard					(CFStringRef, PasteboardRef = nullptr);
 pascal void			clipboardUpdatesTimer					(EventLoopTimerRef, void*);
 OSStatus			createCGImageFromComponentConnection	(GraphicsImportComponent, CGImageRef&);
 OSStatus			createCGImageFromData					(CFDataRef, CGImageRef&);
@@ -329,6 +328,54 @@ Clipboard_Done ()
 	DisposeWindow(gClipboardWindow), gClipboardWindow = nullptr;
 	WindowInfo_Dispose(gClipboardWindowInfo);
 }// Done
+
+
+/*!
+Publishes the specified data to the specified pasteboard
+(or nullptr to use the primary pasteboard).
+
+The string is converted into an external representation
+of Unicode, "kUTTypeUTF16ExternalPlainText".
+
+\retval noErr
+if the string was added successfully
+
+\retval unicodePartConvertErr
+if there was an error creating an external representation
+
+\retval (other)
+if access to the pasteboard could not be secured
+
+(3.1)
+*/
+OSStatus
+Clipboard_AddCFStringToPasteboard	(CFStringRef		inStringToCopy,
+									 PasteboardRef		inPasteboardOrNullForMainClipboard)
+{
+	OSStatus		result = noErr;
+	PasteboardRef	target = (nullptr == inPasteboardOrNullForMainClipboard)
+								? Clipboard_ReturnPrimaryPasteboard()
+								: inPasteboardOrNullForMainClipboard;
+	
+	
+	result = PasteboardClear(target);
+	if (noErr == result)
+	{
+		CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
+												(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUnicode,
+													'?'/* loss byte */);
+		
+		
+		if (nullptr == externalRepresentation) result = unicodePartConvertErr;
+		else
+		{
+			result = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
+												FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"), kUTTypeUTF16ExternalPlainText),
+												externalRepresentation, kPasteboardFlavorNoFlags);
+		}
+	}
+	return result;
+}// AddCFStringToPasteboard
 
 
 /*!
@@ -1104,7 +1151,7 @@ Clipboard_TextToScrap	(TerminalViewRef		inView,
 	{
 		if (CFStringGetLength(textToCopy) > 0)
 		{
-			(OSStatus)addCFStringToPasteboard(textToCopy, inDataTargetOrNull);
+			(OSStatus)Clipboard_AddCFStringToPasteboard(textToCopy, inDataTargetOrNull);
 		}
 		CFRelease(textToCopy), textToCopy = nullptr;
 	}
@@ -1162,54 +1209,6 @@ Clipboard_WindowIsVisible ()
 
 #pragma mark Internal Methods
 namespace {
-
-/*!
-Publishes the specified data to the specified pasteboard
-(or nullptr to use the primary pasteboard).
-
-The string is converted into an external representation
-of Unicode.
-
-\retval noErr
-if the string was added successfully
-
-\retval unicodePartConvertErr
-if there was an error creating an external representation
-
-\retval (other)
-if access to the pasteboard could not be secured
-
-(3.1)
-*/
-OSStatus
-addCFStringToPasteboard		(CFStringRef		inStringToCopy,
-							 PasteboardRef		inPasteboardOrNullForMainClipboard)
-{
-	OSStatus		result = noErr;
-	PasteboardRef	target = (nullptr == inPasteboardOrNullForMainClipboard)
-								? Clipboard_ReturnPrimaryPasteboard()
-								: inPasteboardOrNullForMainClipboard;
-	
-	
-	result = PasteboardClear(target);
-	if (noErr == result)
-	{
-		CFDataRef	externalRepresentation = CFStringCreateExternalRepresentation
-												(kCFAllocatorDefault, inStringToCopy, kCFStringEncodingUnicode,
-													'?'/* loss byte */);
-		
-		
-		if (nullptr == externalRepresentation) result = unicodePartConvertErr;
-		else
-		{
-			result = PasteboardPutItemFlavor(target, (PasteboardItemID)inStringToCopy,
-												FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"), kUTTypeUTF16ExternalPlainText),
-												externalRepresentation, kPasteboardFlavorNoFlags);
-		}
-	}
-	return result;
-}// addCFStringToPasteboard
-
 
 /*!
 Since there does not appear to be an event that can be handled
@@ -1631,7 +1630,7 @@ receiveClipboardContentDragDrop		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerC
 						else
 						{
 							// put the text on the clipboard
-							result = addCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
+							result = Clipboard_AddCFStringToPasteboard(copiedTextCFString, Clipboard_ReturnPrimaryPasteboard());
 							if (noErr == result)
 							{
 								// force a view update, as obviously it is now out of date
@@ -1901,7 +1900,7 @@ setScalingInformation	(size_t		inImageWidth,
 /*!
 Copies the specified plain text data to the clipboard.
 
-DEPRECATED, use addCFStringToPasteboard().
+DEPRECATED, use Clipboard_AddCFStringToPasteboard().
 
 (3.0)
 */
