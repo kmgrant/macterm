@@ -56,6 +56,7 @@
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
 #include <RegionUtilities.h>
+#include <StringUtilities.h>
 #include <WindowInfo.h>
 
 // resource includes
@@ -63,6 +64,7 @@
 #include "MenuResources.h"
 
 // MacTelnet includes
+#include "Clipboard.h"
 #include "Commands.h"
 #include "ConnectionData.h"
 #include "ConstantsRegistry.h"
@@ -1910,56 +1912,42 @@ receiveServicePerformEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef
 	assert(kEventClass == kEventClassService);
 	assert(kEventKind == kEventServicePerform);
 	{
-		ScrapRef	sourceScrap = nullptr;
+		PasteboardRef	sourcePasteboard = nullptr;
 		
 		
 		// grab the scrap that contains the data on which to perform the Open URL service
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamScrapRef, typeScrapRef, sourceScrap);
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamPasteboardRef, typePasteboardRef, sourcePasteboard);
 		
-		// if the scrap source was found, proceed
+		// if the source pasteboard was found, proceed
 		if (noErr == result)
 		{
-			// retrieve text from the given scrap and interpret it as a URL
-			Boolean				isAnyScrap = false;		// is any text on the clipboard?
-			ScrapFlavorFlags	scrapFlags = 0L;
+			CFStringRef		urlCFString = nullptr;
+			CFStringRef		utiCFString = nullptr;
 			
 			
-			isAnyScrap = (noErr == GetScrapFlavorFlags(sourceScrap, kScrapFlavorTypeText, &scrapFlags));
-			if (isAnyScrap)
+			// register the pasteboard
+			Clipboard_SetPasteboardModified(sourcePasteboard);
+			
+			// retrieve text from the given pasteboard and interpret it as a URL
+			if (Clipboard_CreateCFStringFromPasteboard(urlCFString, utiCFString, sourcePasteboard))
 			{
-				long	length = 0L;	// the number of bytes in the scrap
+				// handle the URL!
+				std::string		urlString;
 				
 				
-				// allocate a buffer large enough to hold the data, then copy it
-				result = GetScrapFlavorSize(sourceScrap, kScrapFlavorTypeText, &length);
-				if (noErr == result)
+				StringUtilities_CFToUTF8(urlCFString, urlString);
+				try
 				{
-					Handle		handle = Memory_NewHandle(length); // for characters
-					
-					
-					if (nullptr != handle)
-					{
-						result = GetScrapFlavorData(sourceScrap, kScrapFlavorTypeText, &length, *handle);
-						if (noErr == result)
-						{
-							// handle the URL!
-							std::string		urlString(*handle, *handle + GetHandleSize(handle));
-							
-							
-							try
-							{
-								Quills::Session::handle_url(urlString);
-							}
-							catch (std::exception const&	e)
-							{
-								Console_Warning(Console_WriteValueCString, "caught exception while trying to handle URL for Service",
-												e.what());
-								result = eventNotHandledErr;
-							}
-						}
-						Memory_DisposeHandle(&handle);
-					}
+					Quills::Session::handle_url(urlString);
 				}
+				catch (std::exception const&	e)
+				{
+					Console_Warning(Console_WriteValueCString, "caught exception while trying to handle URL for Service",
+									e.what());
+					result = eventNotHandledErr;
+				}
+				if (nullptr != urlCFString) CFRelease(urlCFString), urlCFString = nullptr;
+				CFRelease(utiCFString), utiCFString = nullptr;
 			}
 		}
 		Alert_ReportOSStatus(result);
