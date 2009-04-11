@@ -12,7 +12,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -89,10 +89,6 @@ DialogUtilities_InvokeDrawViewProc	(DialogUtilities_DrawViewProcPtr	inProc,
 
 #pragma mark Public Methods
 
-void
-	ActivateDialogItem						(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex);
-
 #define	BooleanToCheckBoxValue(a)			((a) ? (kControlCheckBoxCheckedValue) : (kControlCheckBoxUncheckedValue))
 
 #define	BooleanToRadioButtonValue(a)		((a) ? (kControlRadioButtonCheckedValue) : (kControlRadioButtonUncheckedValue))
@@ -104,10 +100,6 @@ OSStatus
 											 ControlRef						inDestinationParent,
 											 std::vector< ControlRef >&		inoutControlArray,
 											 Rect&							outIdealBounds);
-
-void
-	DeactivateDialogItem					(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex);
 
 void
 	DialogUtilities_DisposeControlsBasedOnWindowNIB		(std::vector< ControlRef > const&	inControlArray);
@@ -133,42 +125,16 @@ void
 void
 	DialogUtilities_DisposeDuplicateControl	(ControlRef				inDuplicatedControl);
 
-void
-	DrawOneDialogItem						(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex);
-
 // DISPOSE WITH DialogUtilities_DisposeDuplicateControl()
 OSStatus
 	DialogUtilities_DuplicateControl		(ControlRef				inTemplateControl,
 											 WindowRef				inDestinationWindow,
 											 ControlRef&			outNewControl);
 
-DialogItemIndex
-	FindControlDialogItemIndex				(DialogRef				inDialog,
-											 ControlRef				inControl);
-
-Boolean
-	FlashButton								(DialogRef				inDialog,
-											 short					inItemIndex);
-
 Boolean
 	FlashButtonControl						(ControlRef				inControl,
 											 Boolean				inIsDefaultButton,
 											 Boolean				inIsCancelButton);
-
-void
-	FlashDialogItem							(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 unsigned long			inDelay,
-											 short					inCount);
-
-void
-	FlipCheckBox							(DialogRef				inDialog,
-											 short					inItemIndex);
-
-void
-	FocusDialogItem							(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex);
 
 void
 	GetControlNumericalText					(ControlRef				inControl,
@@ -185,20 +151,6 @@ void
 void
 	GetControlTextAsCFString				(ControlRef				inControl,
 											 CFStringRef&			outCFString);
-
-void
-	GetDialogItemControlText				(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 Str255					outText);
-
-void
-	GetDialogItemControlTextAsCFString		(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 CFStringRef&			outText);
-
-SInt16
-	GetDialogItemValue						(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex);
 
 void
 	GetNewDialogWithWindowInfo				(SInt16					inDialogResourceID,
@@ -268,34 +220,6 @@ void
 	SetControlTextWithCFString				(ControlRef				inControl,
 											 CFStringRef			inText);
 
-void
-	SetDialogItemCenterTruncatedText		(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 ConstStringPtr			inString,
-											 ThemeFontID			inThemeFontToUse);
-
-void
-	SetDialogItemControlText				(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 ConstStringPtr			inText);
-
-// WARNING: THIS ROUTINE DOES NOT WORK PROPERLY YET
-void
-	SetDialogItemControlTextSelection		(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 SInt16					inStart,
-											 SInt16					inEnd);
-
-void
-	SetDialogItemNumericalText				(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 SInt32					inNumber);
-
-void
-	SetDialogItemValue						(DialogRef				inDialog,
-											 DialogItemIndex		inItemIndex,
-											 SInt16					inValue);
-
 OSStatus
 	DialogUtilities_SetKeyboardFocus		(HIViewRef				inView);
 
@@ -314,17 +238,6 @@ HIViewWrap&
 OSStatus
 	SetWindowAlternateTitleWithPString		(WindowRef				inWindow,
 											 ConstStringPtr			inText);
-
-pascal Boolean
-	StandardDialogEventFilter				(DialogRef				inDialog,
-											 EventRecord*			inoutEventPtr,
-											 DialogItemIndex*		outItemIndex);
-
-Boolean
-	SwitchDialogDefaultItem					(DialogRef				inDialog,
-											 EventRecord const*		inEventPtr,
-											 DialogItemIndex		inDefaultableItemIndices[],
-											 short					inDefaultableItemIndicesArraySize);
 
 void
 	TextFontByName							(ConstStringPtr			inFontName);

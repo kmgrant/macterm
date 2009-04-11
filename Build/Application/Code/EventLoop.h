@@ -146,10 +146,6 @@ pascal Boolean
 	EventLoop_HandleColorPickerUpdate			(EventRecord*						inoutEventPtr);
 
 // DEPRECATED
-Boolean
-	EventLoop_HandleEvent						(EventRecord*						inoutEventPtr);
-
-// DEPRECATED
 pascal void
 	EventLoop_HandleNavigationUpdate			(NavEventCallbackMessage			inMessage,
 												 NavCBRecPtr						inParameters,

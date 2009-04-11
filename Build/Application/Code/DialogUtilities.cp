@@ -77,6 +77,7 @@
 
 
 #pragma mark Types
+namespace {
 
 /*!
 This structure is used for DeviceLoopClipAndDrawControl().
@@ -89,33 +90,19 @@ struct My_DeviceLoopControlInfo
 };
 typedef struct My_DeviceLoopControlInfo const*		My_DeviceLoopControlInfoConstPtr;
 
+} // anonymous namespace
+
 #pragma mark Internal Method Prototypes
+namespace {
 
-static pascal void		clipAndDrawControlDeviceLoop	(short, short, GDHandle, long);
+pascal void		clipAndDrawControlDeviceLoop	(short, short, GDHandle, long);
+void			useBestHelpButtonIcon			(ControlRef);
 
-static void				useBestHelpButtonIcon			(ControlRef);
+} // anonymous namespace
 
 
 
 #pragma mark Public Methods
-
-/*!
-Enables (activates) a control, given its dialog
-box and dialog item index.
-
-(3.0)
-*/
-void
-ActivateDialogItem	(DialogRef				inDialog,
-					 DialogItemIndex		inItemIndex)
-{
-	ControlRef		control = nullptr;
-	
-	
-	(OSStatus)GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	(OSStatus)ActivateControl(control);
-}// ActivateDialogItem
-
 
 /*!
 Creates a set of controls using a dummy NIB as a basis;
@@ -233,24 +220,6 @@ DialogUtilities_CreateControlsBasedOnWindowNIB	(CFStringRef					inNIBFileBasenam
 	
 	return result;
 }// CreateControlsBasedOnWindowNIB
-
-
-/*!
-Disables (dims) a control, given its dialog
-box and dialog item index.
-
-(3.0)
-*/
-void
-DeactivateDialogItem	(DialogRef				inDialog,
-						 DialogItemIndex		inItemIndex)
-{
-	ControlRef		control = nullptr;
-	
-	
-	(OSStatus)GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	(OSStatus)DeactivateControl(control);
-}// DeactivateDialogItem
 
 
 /*!
@@ -539,28 +508,6 @@ DialogUtilities_DisposeDuplicateControl		(ControlRef		inDuplicatedControl)
 		// ???
 	}
 }// DisposeDuplicateControl
-
-
-/*!
-To draw a dialog item’s control completely, use
-this method.  Note that when you set an Appearance
-control’s data, the control is not updated: thus,
-this routine may be helpful.
-
-(3.0)
-*/
-void
-DrawOneDialogItem	(DialogRef			inDialog,
-					 DialogItemIndex	inItemIndex)
-{
-	ControlRef		control = nullptr;
-	
-	
-	if (GetDialogItemAsControl(inDialog, inItemIndex, &control) == noErr)
-	{
-		if (control != nullptr) DrawOneControl(control);
-	}
-}// DrawOneDialogItem
 
 
 /*!
@@ -1057,63 +1004,6 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 
 
 /*!
-To find the dialog item index of the item that
-corresponds to the specified control, use this
-method.  If the item cannot be found, 0 is
-returned.
-
-(3.0)
-*/
-DialogItemIndex
-FindControlDialogItemIndex		(DialogRef		inDialog,
-								 ControlRef		inControl)
-{
-	DialogItemIndex		result = 0;
-	ControlRef			test = nullptr;
-	register SInt16		i = 0;
-	
-	
-	for (i = 1; i <= CountDITL(inDialog); ++i)
-	{
-		if ((GetDialogItemAsControl(inDialog, i, &test) == noErr) && (test == inControl))
-		{
-			result = i;
-			break;
-		}
-	}
-	return result;
-}// FindControlDialogItemIndex
-
-
-/*!
-DEPRECATED.  Do not use.  All current invocations
-are in old-style dialogs that are being rewritten
-anyway.
-*/
-Boolean
-FlashButton		(DialogRef			inDialog,
-				 DialogItemIndex	inItemIndex)
-{
-	ControlRef		control = nullptr;
-	Boolean			result = false;
-	
-	
-	if (inItemIndex > 0)
-	{
-		Boolean		isDefault = false,
-					isCancel = false;
-		
-		
-		if (GetDialogDefaultItem(inDialog) == inItemIndex) isDefault = true;
-		if (GetDialogCancelItem(inDialog) == inItemIndex) isCancel = true;
-		GetDialogItemAsControl(inDialog, inItemIndex, &control);
-		result = FlashButtonControl(control, isDefault, isCancel);
-	}
-	return result;
-}// FlashButton
-
-
-/*!
 DEPRECATED.  Do not use.  All current invocations
 are in old-style dialogs that are being rewritten
 anyway.
@@ -1150,84 +1040,6 @@ FlashButtonControl	(ControlRef		inControl,
 	}
 	return result;
 }// FlashButtonControl
-
-
-/*!
-This method will hide and show a dialog item
-repeatedly for the specified number of
-iterations, pausing the specified number of
-ticks between each visibility change.  The
-dialog item is guaranteed to “end up” visible,
-so you shouldn’t call this method for a dialog
-item that’s supposed to be hidden.
-
-(3.0)
-*/
-void
-FlashDialogItem		(DialogRef			inDialog,
-					 DialogItemIndex	inItemIndex,
-					 unsigned long		inDelay,
-					 short				inCount)
-{
-	short			i = 0;
-	unsigned long	dummy = 0L;
-	ControlRef		control = nullptr;
-	
-	
-	DrawDialog(inDialog);	// avoids problems that occur if this method is called
-								// as soon as a dialog’s window is made visible
-	GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	for (i = 0; i < inCount; ++i)
-	{
-		HideDialogItem(inDialog, inItemIndex);
-		Delay(inDelay, &dummy);
-		ShowDialogItem(inDialog, inItemIndex);
-		DrawOneControl(control); // ensures that the control appears “in time”
-		Delay(inDelay, &dummy);
-	}
-}// FlashDialogItem
-
-
-/*!
-Checks an unchecked check box dialog item, or
-unchecks a checked or mixed-state check box
-dialog item.
-
-(2.6)
-*/
-void
-FlipCheckBox	(DialogRef			inDialog,
-				 DialogItemIndex	inItemIndex)
-{
-	SInt16		value = GetDialogItemValue(inDialog, inItemIndex);
-	
-	
-	SetDialogItemValue(inDialog, inItemIndex,
-						(value == kControlCheckBoxUncheckedValue)
-									? kControlCheckBoxCheckedValue
-									: kControlCheckBoxUncheckedValue);
-}// FlipCheckBox
-
-
-/*!
-Sets the keyboard focus for the specified dialog
-(which must be visible) to be the given item.
-
-If the item cannot be focused, this routine will
-silently fail.
-*/
-void
-FocusDialogItem		(DialogRef			inDialog,
-					 DialogItemIndex	inItemIndex)
-{
-	ControlRef		control = nullptr;
-	
-	
-	if (GetDialogItemAsControl(inDialog, inItemIndex, &control) == noErr)
-	{
-		(OSStatus)SetKeyboardFocus(GetDialogWindow(inDialog), control, kControlFocusNextPart);
-	}
-}// FocusDialogItem
 
 
 /*!
@@ -1315,67 +1127,6 @@ GetControlTextAsCFString	(ControlRef		inControl,
 	(OSStatus)GetControlData(inControl, kControlEditTextPart, kControlEditTextCFStringTag,
 								sizeof(outCFString), &outCFString, &actualSize);
 }// GetControlTextAsCFString
-
-
-/*!
-This method uses the GetControlData() API to
-obtain the text of an editable text dialog
-item that is actually a new Appearance control.
-
-(3.0)
-*/
-void
-GetDialogItemControlText	(DialogRef			inDialog,
-							 DialogItemIndex	inItemIndex,
-							 Str255				outText)
-{
-	ControlRef		control = nullptr;
-	
-	
-	(OSStatus)GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	GetControlText(control, outText);
-}// GetDialogItemControlText
-
-
-/*!
-This method uses the GetControlData() API to
-obtain the text of an editable text dialog
-item that is actually a new Appearance control.
-
-(3.1)
-*/
-void
-GetDialogItemControlTextAsCFString	(DialogRef			inDialog,
-									 DialogItemIndex	inItemIndex,
-									 CFStringRef&		outText)
-{
-	ControlRef		control = nullptr;
-	
-	
-	(OSStatus)GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	GetControlTextAsCFString(control, outText);
-}// GetDialogItemControlTextAsCFString
-
-
-/*!
-Determines the value of a control, given
-its dialog item information.
-
-(3.0)
-*/
-SInt16
-GetDialogItemValue	(DialogRef				inDialog,
-					 DialogItemIndex		inItemIndex)
-{
-	ControlRef		control = nullptr;
-	SInt16			result = 0;
-	
-	
-	(OSStatus)GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	result = GetControl32BitValue(control);
-	
-	return result;
-}// GetDialogItemValue
 
 
 /*!
@@ -1847,188 +1598,6 @@ SetControlTextWithCFString		(ControlRef		inControl,
 
 
 /*!
-To automatically set the text of a static text
-dialog item and truncate it to fit its boundaries,
-use this method.
-
-(3.0)
-*/
-void
-SetDialogItemCenterTruncatedText	(DialogRef			inDialog,
-									 DialogItemIndex	inItemIndex,
-									 ConstStringPtr		inString,
-									 ThemeFontID		inThemeFontToUse)
-{
-	Rect				textItemRect;
-	Handle				junk = nullptr;
-	DialogItemType		unusedType = 0;
-	GrafPtr				oldPort = nullptr;
-	Str255				fontName;
-	SInt16				preservedFontID = 0;
-	SInt16				preservedFontSize = 0,
-						fontSize = 0;
-	Style				preservedFontStyle = 0,
-						fontStyle = 0;
-	OSStatus			error = noErr;
-	
-	
-	GetPort(&oldPort);
-	SetPortWindowPort(GetDialogWindow(inDialog));
-	
-	// preserve font settings, because they need to be changed
-	{
-		GrafPtr		port = nullptr;
-		
-		
-		GetPort(&port);
-		preservedFontID = GetPortTextFont(port);
-		preservedFontSize = GetPortTextSize(port);
-		preservedFontStyle = GetPortTextFace(port);
-	}
-	
-	// find or guess the font characteristics corresponding to the given theme font
-	error = GetThemeFont(inThemeFontToUse, 0/* script code */, fontName, &fontSize, &fontStyle);
-	
-	if (error != noErr)
-	{
-		PLstrcpy(fontName, (inThemeFontToUse == kThemeSystemFont) ? "\pLucida Grande" : "\pLucida Grande");
-		fontSize = (inThemeFontToUse == kThemeSystemFont) ? 12 : 10;
-		fontStyle = (inThemeFontToUse == kThemeSmallEmphasizedSystemFont) ? bold : normal;
-	}
-	
-	// set the port font characteristics, required by StringUtilities_PTruncate()
-	{
-		SInt16		fontID = FMGetFontFamilyFromName(fontName);
-		
-		
-		TextFont(fontID);
-	}
-	TextSize(fontSize);
-	
-	// set the text of the specified control to use the truncated text
-	GetDialogItem(inDialog, inItemIndex, &unusedType, &junk, &textItemRect);
-	{
-		Str255		truncatedString;
-		
-		
-		PLstrcpy(truncatedString, inString);
-		StringUtilities_PTruncate(truncatedString, textItemRect.right - textItemRect.left,
-									kStringUtilities_TruncateAtMiddle);
-		SetDialogItemControlText(inDialog, inItemIndex, truncatedString);
-	}
-	
-	// restore previous state
-	TextFont(preservedFontID);
-	TextSize(preservedFontSize);
-	TextFace(preservedFontStyle);
-	SetPort(oldPort);
-}// SetDialogItemCenterTruncatedText
-
-
-/*!
-This method uses the SetControlData() API to
-change the text of an editable text dialog
-item that is actually a new Appearance control.
-
-Use DrawOneDialogItem() to update the control
-to reflect the change.
-
-(3.0)
-*/
-void
-SetDialogItemControlText	(DialogRef			inDialog,
-							 DialogItemIndex	inItemIndex,
-							 ConstStringPtr		inText)
-{
-	ControlRef		control = nullptr;
-	
-	
-	GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	SetControlText(control, inText);
-}// SetDialogItemControlText
-
-
-/*!
-This method uses the SetControlData() API to
-change the selected text of an editable text
-dialog item that is actually a new Appearance
-control.
-
-Use DrawOneDialogItem() to update the control
-to reflect the change.
-
-WARNING: This method does not work properly yet.
-
-(3.0)
-*/
-void
-SetDialogItemControlTextSelection	(DialogRef			inDialog,
-									 DialogItemIndex	inItemIndex,
-									 SInt16				inStart,
-									 SInt16				inEnd)
-{
-	ControlRef						control = nullptr;
-	ControlEditTextSelectionRec		selectionRangeInfo;
-	
-	
-	// put the given information into an OS-savvy format
-	selectionRangeInfo.selStart = inStart;
-	selectionRangeInfo.selEnd = inEnd;
-	
-	// set the control text selection range
-	GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	(OSStatus)SetControlData(control, kControlEditTextPart, kControlEditTextSelectionTag,
-								sizeof(selectionRangeInfo), (Ptr)&selectionRangeInfo);
-}// SetDialogItemControlTextSelection
-
-
-/*!
-To fill in a text field or static text dialog
-item with a number, use this convenient method.
-The specified signed number is first converted
-to a string, and then the resultant string is
-passed to SetDialogItemControlText().
-
-Use DrawOneDialogItem() to update the item to
-reflect the change.
-
-(3.1)
-*/
-void
-SetDialogItemNumericalText	(DialogRef			inDialog,
-							 DialogItemIndex	inItemIndex,
-							 SInt32				inNumber)
-{
-	Str255		string;
-	
-	
-	NumToString(inNumber, string);
-	SetDialogItemControlText(inDialog, inItemIndex, string);
-}// SetDialogItemNumericalText
-
-
-/*!
-Changes the value of a control, given its
-dialog item information.
-
-(3.0)
-*/
-void
-SetDialogItemValue	(DialogRef			inDialog,
-					 DialogItemIndex	inItemIndex,
-					 SInt16				inValue)
-{
-	ControlRef		control = nullptr;
-	OSStatus		error = noErr;
-	
-	
-	error = GetDialogItemAsControl(inDialog, inItemIndex, &control);
-	if (error == noErr) SetControl32BitValue(control, inValue);
-	else Sound_StandardAlert();
-}// SetDialogItemValue
-
-
-/*!
 Sets the current keyboard focus to a specific view.
 
 (3.1)
@@ -2211,238 +1780,6 @@ SetWindowAlternateTitleWithPString	(WindowRef			inWindow,
 
 
 /*!
-The modernized, standard dialog event filter
-for the rewritten dialog boxes.  This method
-handles update events as well as the standard
-key equivalents for OK- and Cancel-type buttons.
-
-(3.0)
-*/
-pascal Boolean
-StandardDialogEventFilter	(DialogRef			inDialog,
-							 EventRecord*		inoutEventPtr,
-							 DialogItemIndex*	outItemIndex)
-{
-	Boolean		result = pascal_false;
-	GrafPtr		oldPort = nullptr;
-	
-	
-	GetPort(&oldPort);
-	SetPortWindowPort(GetDialogWindow(inDialog));
-	
-	result = pascal_false; // Carbon handles TSM events implicitly, so ignore them
-	
-	unless (result)
-	{
-		switch (inoutEventPtr->what)
-		{
-		case kHighLevelEvent:
-			AEProcessAppleEvent(inoutEventPtr);
-			break;
-		
-		case updateEvt:
-			result = EventLoop_HandleEvent(inoutEventPtr);
-			break;
-		
-		case keyDown:
-			{
-				short		keyCode = 0,
-							key = 0;
-				
-				
-				key = inoutEventPtr->message & charCodeMask;
-				keyCode = (inoutEventPtr->message >> 8) & 0xff;
-				
-				// check for key presses: 0x0d == return,
-				// 0x03 == enter, 0x35 == escape
-				if ((GetDialogDefaultItem(inDialog) > 0) &&
-					((key == 0x0d) || (key == 0x03)))
-				{
-					if (FlashButton(inDialog, GetDialogDefaultItem(inDialog)))
-					{
-						*outItemIndex = GetDialogDefaultItem(inDialog);
-						result = pascal_true;
-					}
-				}
-				else if ((GetDialogCancelItem(inDialog) > 0) &&
-					(((key == '.') && (inoutEventPtr->modifiers & cmdKey)) ||
-					((key == 0x1b) && (keyCode == 0x35))))
-				{
-					if (FlashButton(inDialog, GetDialogCancelItem(inDialog)))
-					{
-						*outItemIndex = GetDialogCancelItem(inDialog);
-						result = pascal_true;
-					}
-				}
-				else if (key == 0x09)
-				{
-					OSStatus	error = noErr;
-					
-					
-					error = HIViewAdvanceFocus(HIViewGetRoot(GetDialogWindow(inDialog)), inoutEventPtr->modifiers);
-					if (error == noErr) result = pascal_true;
-				}
-			}
-			break;
-		
-		case mouseDown:
-			{
-				// check for resize events: some dialogs are resizable
-				WindowRef	window = nullptr;
-				SInt16		part = FindWindow(inoutEventPtr->where, &window);
-				
-				
-				if (window == GetDialogWindow(inDialog))
-				{
-					// then it’s this dialog that’s being touched
-					if (part == inGrow)
-					{
-						WindowInfo_Ref		windowFeaturesRef = nullptr;
-						
-						
-						// the auxiliary structure must exist in order to get the sizing information
-						if ((windowFeaturesRef = WindowInfo_ReturnFromDialog(inDialog)) != nullptr)
-						{
-							WindowInfo_GrowWindow(GetDialogWindow(inDialog), inoutEventPtr);
-						}
-						else Sound_StandardAlert();
-					}
-					else if (IsShowContextualMenuClick(inoutEventPtr))
-					{
-						(OSStatus)ContextualMenuBuilder_DisplayMenuForWindow(window, inoutEventPtr, part);
-						result = pascal_true;
-					}
-				}
-				else
-				{
-					if ((part == inDrag) && (inoutEventPtr->modifiers & cmdKey))
-					{
-						(Boolean)EventLoop_HandleEvent(inoutEventPtr);
-						result = pascal_true;
-					}
-				}
-			}
-			break;
-		
-		default:
-			break;
-		}
-	}
-	
-	unless (result) result = StdFilterProc(inDialog, inoutEventPtr, outItemIndex);
-	
-	SetPort(oldPort);
-	return result;
-}// StandardDialogEventFilter
-
-
-/*!
-This method will take the given event information
-for the specified dialog and see if a 'tab' or
-'Shift-tab' event occurred.  If one of these
-events took place, then the default item for the
-dialog may be changed, based on the list of items
-given, the number of items, and the visibility and
-enabled states of those items.
-
-Since 'tab' is reserved for dialog box focus
-switching, this method is only called for alerts.
-
-(3.0)
-*/
-Boolean
-SwitchDialogDefaultItem	(DialogRef				inDialog,
-						 EventRecord const*		inEventPtr,
-						 DialogItemIndex		inDefaultableItemIndices[],
-						 short					inDefaultableItemIndicesArraySize)
-{
-	Boolean				result = false; // nothing “handled” initially
-	//Boolean				commandDown = ((inEventPtr->modifiers & cmdKey) != 0),
-	//Boolean				optionDown = ((inEventPtr->modifiers & optionKey) != 0),
-	//Boolean				controlDown = ((inEventPtr->modifiers & controlKey) != 0),
-	Boolean				shiftDown = ((inEventPtr->modifiers & shiftKey) != 0);
-	DialogItemIndex		i = 0;
-	
-	
-	if (inDefaultableItemIndicesArraySize > 1) // can’t switch items unless there are at least two!
-	{
-		switch (inEventPtr->what)
-		{
-		case keyDown:
-		case autoKey:
-			{
-				UInt8		charASCII = '\0',
-							charCode = '\0';
-				
-				
-				charASCII = (inEventPtr->message & charCodeMask);
-				charCode = ((inEventPtr->message & keyCodeMask) >> 8);
-				
-				if (charASCII == kTabCharCode) // then the Tab key was pressed
-				{
-					ControlRef			control = nullptr;
-					DialogItemIndex		defaultItemIndex = GetDialogDefaultItem(inDialog);
-					Boolean				done = false;
-					short				start = 0;
-					
-					
-					for (i = 0; i < inDefaultableItemIndicesArraySize; ++i)
-					{
-						if (inDefaultableItemIndices[i] == defaultItemIndex)
-						{
-							start = i;
-							break;
-						}
-					}
-					for (i = start; (!done) && (!result); )
-					{
-						// set the “next” item based on whether it’s forward or reverse order
-						DialogItemIndex		nextItem = 0;
-						short				oldIndex = i;
-						
-						
-						i = (!shiftDown)
-							?	(
-									((i + 1) < inDefaultableItemIndicesArraySize)
-										? (i + 1)
-										: 0
-								)
-							:	(
-									((i - 1) >= 0)
-										? (i - 1)
-										: inDefaultableItemIndicesArraySize - 1
-								);
-						nextItem = inDefaultableItemIndices[i];
-						
-						// now change the dialog default item
-						(OSStatus)GetDialogItemAsControl(inDialog, nextItem, &control);
-						if (control != nullptr)
-						{
-							if (IsControlVisible(control) && IsControlActive(control))
-							{
-								if (oldIndex != i)
-								{
-									(OSStatus)SetDialogDefaultItem(inDialog, nextItem);
-								}
-								result = true;
-							}
-						}
-						
-						done = (i == start); // back to where we started?
-					}
-				}
-			}
-			break;
-		
-		default:
-			break;
-		}
-	}
-	return result;
-}// SwitchDialogDefaultItem
-
-
-/*!
 To change the font of the current graphics port
 to be the font with the specified name, use this
 method.
@@ -2518,6 +1855,7 @@ UnixCommandLineLimiterKeyFilterUPP ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 The “real” DeviceLoopDrawingUPP that is called by
@@ -2528,7 +1866,7 @@ does not have to worry about type-casting errors.
 
 (3.0)
 */
-static pascal void
+pascal void
 clipAndDrawControlDeviceLoop	(short		inColorDepth,
 								 short		inDeviceFlags,
 								 GDHandle	inTargetDevice,
@@ -2551,7 +1889,7 @@ system icon resource is automatically used.
 
 (3.0)
 */
-static void
+void
 useBestHelpButtonIcon	(ControlRef		inControl)
 {
 	IconManagerIconRef		icon = IconManager_NewIcon();
@@ -2561,5 +1899,7 @@ useBestHelpButtonIcon	(ControlRef		inControl)
 	(OSStatus)IconManager_SetButtonIcon(inControl, icon);
 	IconManager_DisposeIcon(&icon);
 }// useBestHelpButtonIcon
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
