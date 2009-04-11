@@ -70,7 +70,6 @@
 #include "ConnectionData.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
-#include "DragAndDrop.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"
 #include "Folder.h"
@@ -227,11 +226,6 @@ Initialize_ApplicationStartup	(CFBundleRef	inApplicationBundle)
 		InternetPrefs_Init();
 	#if RUN_MODULE_TESTS
 		//InternetPrefs_RunTests();
-	#endif
-		
-		DragAndDrop_Init();
-	#if RUN_MODULE_TESTS
-		//DragAndDrop_RunTests();
 	#endif
 		
 		{

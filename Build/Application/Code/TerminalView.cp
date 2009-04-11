@@ -9132,7 +9132,7 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 								if (dragRgn != nullptr)
 								{
 									mouseInSelection = PtInRgn(localMouse, dragRgn);
-									if ((mouseInSelection) && DragAndDrop_Available() && WaitMouseMoved(localMouse))
+									if ((mouseInSelection) && WaitMouseMoved(localMouse))
 									{
 										EventRecord		event;
 										
