@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090411',
     '20090410',
     '20090409',
     '20090408',
@@ -226,6 +227,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090411': [
+		'MacTelnet Help now includes a tutorial on how to make typical BBS games (or MUDs) work properly.',
+	],
 	'20090410': [
 		'Terminal window text selections are now exposed to system-wide Services, allowing (for instance) a synthesizer to speak selected text, or the Finder to reveal a file or folder when its path is selected.',
 	],

@@ -1,0 +1,142 @@
+<div class="navigation">
+
+* MacTELNET Help
+* "Home":./index.html
+
+</div>
+
+h1(pagetitle). Playing BBS Games
+
+<div class="content">
+
+p(#abstract). While it is possible to configure MacTelnet to work well with
+typical games, the defaults will not work well at all!  This
+tutorial will help you make settings appropriate for most games.
+
+h2. Overview
+
+Historically, many so-called BBS (Bulletin Board System) games,
+also known as MUDs (Multi-User Dungeons), expect to work on PCs
+under DOS.  They also typically rely on non-standard extensions
+to the VT100 terminal, that collectively are known as ANSI-BBS.
+
+MacTelnet's default VT100 emulator has a few of the common
+extensions that make it compatible with ANSI-BBS.  It also knows
+how to translate characters from other character sets (DOS has
+its own character set), and special graphics characters are
+rendered with high quality.
+
+h2. Configuration
+
+h3. Translation
+
+First, you must create a Translation collection (via Preferences)
+that uses the same characters as DOS typically does, such as
+special graphics.
+
+* Open the Preferences window, and go to the Translations pane.
+* Either edit the default, or (recommended) use the "+" button in
+  the drawer to create a new collection.
+* Select "Latin-US (DOS)" from the "Characters:" list.
+
+The list is based on what translation units are installed on your
+computer.  While the DOS set is always available on Mac OS X when
+sold in the U.S., it may not exist in international versions.
+
+If you acquired a translation unit in some other way, it may have
+some other name (such as, CP437 for Code Page 437).
+
+h3. Format
+
+While you do not have to change fonts or colors (configured in
+Format preferences), you should be aware of some side effects.
+
+One, there is currently a bug in MacTelnet where any font that is
+not natively encoded as Mac Roman, may incorrectly display some
+international characters.  If your game relies on things like
+accented characters, be sure to choose a more basic font (like
+Monaco).
+
+Two, MacTelnet automatically chooses a different color for text
+or backgrounds that are considered "bold" and "blinking".  If you
+do not want this effect, you should configure the Format that you
+use to have the same colors for bold, blinking, and normal text.
+
+Three, if you have customized any of the 16 "ANSI Colors" in a
+Format, note that games often draw graphics assuming that the
+original colors are in use.  The "Set to the Standard Colors..."
+button on the "ANSI Colors" tab of the Formats pane allows you to
+make these 16 colors return to their expected defaults for a PC.
+
+Four, MacTelnet supports up to 256 colors, but programs that may
+use them will often only attempt to do so when the terminal is
+identified as "xterm-256color".  Note that you cannot customize
+these 256 colors, except for the 16 that are in the "ANSI Colors"
+subset.  (Do not worry about 256 colors unless you know that your
+game can use them.)
+
+h3. Terminal
+
+You should have a Terminal set up in Preferences with a "Base
+Emulator:" set to VT100.
+
+MacTelnet automatically recognizes certain ANSI-specific add-ons
+to VT100, so if a game uses them they will be handled correctly.
+
+Note that some games assume that the screen size is 80 x 25.  If
+necessary, ensure that the screen has these dimensions.
+
+h3. Session
+
+Your game could be hosted anywhere, though it is typically on a
+remote server accessible via a simple telnet connection.  You
+probably have a "telnet://" URL, or information on a server host
+name and port number to use.
+
+If you will play this game often, you should create a new Session
+collection in Preferences.  Otherwise, you could enter the same
+configuration information in the "Custom New Session" sheet.
+
+When the Sessions pane (or sheet) is visible, you will see a
+"Command:" field.  Either directly type in the telnet command or
+other command needed to reach the game, or use the button
+"Connect to Server..." to help you compose a command.
+
+The pane also has pop-up menus that will let you choose the
+Terminal, Format and Translation that you created above.  This
+causes appropriate defaults to be set before the server is even
+contacted.
+
+Note that "environment variables" on the server side sometimes
+need to be manually synchronized with MacTelnet settings.  Talk
+to a server administrator to determine if this is true in your
+case.
+
+h2. Game Play
+
+Some MacTelnet features are particularly well suited to games.
+
+The "No window close on process exit" preference prevents windows
+from immediately closing at disconnect time.  Many game servers
+display information during logout that would otherwise disappear
+immediately.
+
+The "Full Screen" command in the MacTelnet application menu lets
+you focus entirely on the game.  Depending on the current setting
+of "Window Resize Effect", this may either change the font or
+the terminal size; hold down the Option key to temporarily do the
+opposite as you enter Full Screen.
+
+The "Command Line" window can be displayed using the Window menu.
+This allows you to type text that is only sent to the server when
+you press Return (or Enter).  It also maintains a history of the
+commands entered from that window.
+
+The Macros pane in the Preferences window can be used to create
+sets of predefined actions mapped to keys (that can then be
+enabled using the Map menu).
+
+</div>
+
+<!-- ----|--------------------------------------------|----|- -->
+
