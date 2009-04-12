@@ -478,13 +478,24 @@ receiveColorBoxDraw	(EventHandlerCallRef	inHandlerCallRef,
 					RegionUtilities_AddRoundedRectangleToPath(drawingPort, bounds, 2.0, 2.0);
 					CGContextFillPath(drawingPort);
 					
-					// brighten the border a bit (is there a function for this?)
-					redFraction *= 1.3;
-					if (redFraction > 1.0) redFraction = 1.0;
-					greenFraction *= 1.3;
-					if (greenFraction > 1.0) greenFraction = 1.0;
-					blueFraction *= 1.3;
-					if (blueFraction > 1.0) blueFraction = 1.0;
+					// set border color
+					if (kControlCheckBoxUncheckedValue == GetControl32BitValue(view))
+					{
+						// brighten the border a bit (is there a function for this?)
+						redFraction *= 1.3;
+						if (redFraction > 1.0) redFraction = 1.0;
+						greenFraction *= 1.3;
+						if (greenFraction > 1.0) greenFraction = 1.0;
+						blueFraction *= 1.3;
+						if (blueFraction > 1.0) blueFraction = 1.0;
+					}
+					else
+					{
+						// change border to indicate selected state
+						redFraction = 0.0;
+						greenFraction = 0.0;
+						blueFraction = 0.0;
+					}
 					
 					// border
 					CGContextSetRGBStrokeColor(drawingPort, redFraction, greenFraction, blueFraction, 1.0/* alpha */);
