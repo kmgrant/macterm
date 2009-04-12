@@ -90,6 +90,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 SInt16 const	kArbitraryVTGraphicsPseudoFontID = 74;					//!< should not match any real font; used to flag switch to VT graphics
 SInt16 const	kArbitraryDoubleWidthDoubleHeightPseudoFontSize = 1;	//!< should not match any real size; used to flag the *lower* half
@@ -186,7 +187,10 @@ enum My_SelectionMode
 	kMy_SelectionModeChangeEnd			= 2		//!< keyboard actions morph the end anchor only
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 struct MyPreferenceProxies
 {
@@ -387,116 +391,122 @@ typedef TerminalView const*		TerminalViewConstPtr;
 typedef MemoryBlockPtrLocker< TerminalViewRef, TerminalView >	TerminalViewPtrLocker;
 typedef LockAcquireRelease< TerminalViewRef, TerminalView >		TerminalViewAutoLocker;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static pascal void		animateBlinkingItems			(EventLoopTimerRef, void*);
-static void				audioEvent						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static EventTime		calculateAnimationStageDelay	(TerminalViewPtr, My_TimeIntervalList::size_type);
-static void				calculateDoubleSize				(TerminalViewPtr, SInt16&, SInt16&);
-static UInt16			copyColorPreferences			(TerminalViewPtr, Preferences_ContextRef, Boolean);
-static UInt16			copyFontPreferences				(TerminalViewPtr, Preferences_ContextRef, Boolean);
-static void				copySelectedTextIfUserPreference(TerminalViewPtr);
-static void				copyTranslationPreferences		(TerminalViewPtr, Preferences_ContextRef);
-static OSStatus			createWindowColorPalette		(TerminalViewPtr, Preferences_ContextRef, Boolean = true);
-static Boolean			cursorBlinks					(TerminalViewPtr);
-static OSStatus			dragTextSelection				(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
-static Boolean			drawSection						(TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
-static void				drawTerminalScreenRunOp			(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
+#pragma mark Internal Method Prototypes
+namespace {
+
+pascal void			animateBlinkingItems				(EventLoopTimerRef, void*);
+void				audioEvent							(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+EventTime			calculateAnimationStageDelay		(TerminalViewPtr, My_TimeIntervalList::size_type);
+void				calculateDoubleSize					(TerminalViewPtr, SInt16&, SInt16&);
+UInt16				copyColorPreferences				(TerminalViewPtr, Preferences_ContextRef, Boolean);
+UInt16				copyFontPreferences					(TerminalViewPtr, Preferences_ContextRef, Boolean);
+void				copySelectedTextIfUserPreference	(TerminalViewPtr);
+void				copyTranslationPreferences			(TerminalViewPtr, Preferences_ContextRef);
+OSStatus			createWindowColorPalette			(TerminalViewPtr, Preferences_ContextRef, Boolean = true);
+Boolean				cursorBlinks						(TerminalViewPtr);
+OSStatus			dragTextSelection					(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
+Boolean				drawSection							(TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
+void				drawTerminalScreenRunOp				(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
 														 UInt16, TerminalTextAttributes, void*);
-static void				drawTerminalText				(TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, UniChar const*, CFIndex,
-														 TerminalTextAttributes);
-static void				drawVTGraphicsGlyph				(TerminalViewPtr, CGContextRef, Rect const*, UniChar, char, Boolean);
-static void				eraseSection					(TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
-static void				eventNotifyForView				(TerminalViewConstPtr, TerminalView_Event, void*);
-static Terminal_LineRef	findRowIterator					(TerminalViewPtr, UInt16);
-static Boolean			findVirtualCellFromLocalPoint	(TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
-static void				getBlinkAnimationColor			(TerminalViewPtr, UInt16, RGBColor*);
-static void				getRowBounds					(TerminalViewPtr, UInt16, Rect*);
-static SInt16			getRowCharacterWidth			(TerminalViewPtr, UInt16);
-static void				getRowSectionBounds				(TerminalViewPtr, UInt16, UInt16, SInt16, Rect*);
-static void				getScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
-static void				getScreenColorsForAttributes	(TerminalViewPtr, TerminalTextAttributes, RGBColor*, RGBColor*, Boolean*);
-static Boolean			getScreenCoreColor				(TerminalViewPtr, UInt16, RGBColor*);
-static void				getScreenCustomColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
-static void				getScreenOrigin					(TerminalViewPtr, SInt16*, SInt16*);
-static void				getScreenOriginFloat			(TerminalViewPtr, Float32&, Float32&);
-static Handle			getSelectedTextAsNewHandle		(TerminalViewPtr, UInt16, TerminalView_TextFlags);
-static HIShapeRef		getSelectedTextAsNewHIShape		(TerminalViewPtr, Float32 = 0.0);
-static RgnHandle		getSelectedTextAsNewRegion		(TerminalViewPtr);
-static RgnHandle	getSelectedTextAsNewRegionOnScreen	(TerminalViewPtr);
-static size_t			getSelectedTextSize				(TerminalViewPtr);
-static HIShapeRef		getVirtualRangeAsNewHIShape		(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Float32, Boolean);
-static RgnHandle		getVirtualRangeAsNewRegion		(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
-static RgnHandle	getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
-static void				getVirtualVisibleRegion			(TerminalViewPtr, SInt16*, SInt16*, SInt16*, SInt16*);
-static void				handleMultiClick				(TerminalViewPtr, UInt16);
-static void				handleNewViewContainerBounds	(HIViewRef, Float32, Float32, void*);
-static void				highlightCurrentSelection		(TerminalViewPtr, Boolean, Boolean);
-static void				highlightVirtualRange			(TerminalViewPtr, TerminalView_CellRange const&, TerminalTextAttributes, Boolean, Boolean);
-static void				invalidateRowSection			(TerminalViewPtr, UInt16, UInt16, UInt16);
-static Boolean			isMonospacedFont				(FMFontFamily);
-static void				localToScreen					(TerminalViewPtr, SInt16*, SInt16*);
-static Boolean			mainEventLoopEvent				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static pascal void		navigationFileCaptureDialogEvent(NavEventCallbackMessage, NavCBRecPtr, void*);
-static void				offsetLeftVisibleEdge			(TerminalViewPtr, SInt16);
-static void				offsetTopVisibleEdge			(TerminalViewPtr, SInt16);
-static void				preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				preferenceChangedForView		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				recalculateCachedDimensions		(TerminalViewPtr				inTerminalViewPtr);
-static pascal OSStatus  receiveTerminalHIObjectEvents	(EventHandlerCallRef, EventRef, void*);
-static OSStatus			receiveTerminalViewActiveStateChange	(EventHandlerCallRef, EventRef, TerminalViewRef);
-static pascal OSStatus	receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef, EventRef, void*);
-static OSStatus			receiveTerminalViewDraw			(EventHandlerCallRef, EventRef, TerminalViewRef);
-static OSStatus			receiveTerminalViewFocus		(EventHandlerCallRef, EventRef, TerminalViewRef);
-static OSStatus			receiveTerminalViewGetData		(EventHandlerCallRef, EventRef, TerminalViewRef);
-static OSStatus			receiveTerminalViewHitTest		(EventHandlerCallRef, EventRef, TerminalViewRef);
-static pascal OSStatus	receiveTerminalViewRawKeyDown	(EventHandlerCallRef, EventRef, void*);
-static OSStatus			receiveTerminalViewRegionRequest(EventHandlerCallRef, EventRef, TerminalViewRef);
-static OSStatus			receiveTerminalViewTrack		(EventHandlerCallRef, EventRef, TerminalViewRef);
-static void				receiveVideoModeChange			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				redrawScreensTerminalWindowOp	(TerminalWindowRef, void*, SInt32, void*);
-static void				releaseRowIterator				(TerminalViewPtr, Terminal_LineRef*);
-static SInt32			returnNumberOfCharacters		(TerminalViewPtr);
-static CFStringRef		returnSelectedTextAsNewUnicode	(TerminalViewPtr, UInt16, TerminalView_TextFlags);
-static void				screenBufferChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				screenCursorChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void				screenToLocal					(TerminalViewPtr, SInt16*, SInt16*);
-static void				screenToLocalRect				(TerminalViewPtr, Rect*);
-static void				setBlinkAnimationColor			(TerminalViewPtr, UInt16, RGBColor const*);
-static void				setBlinkingTimerActive			(TerminalViewPtr, Boolean);
-static void				setCursorGhostVisibility		(TerminalViewPtr, Boolean);
-static void				setCursorVisibility				(TerminalViewPtr, Boolean);
-static void				setFontAndSize					(TerminalViewPtr, ConstStringPtr, UInt16, Float32 = 0, Boolean = true);
-static SInt16			setPortScreenPort				(TerminalViewPtr);
-static void				setScreenBaseColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
-static void				setScreenCoreColor				(TerminalViewPtr, UInt16, RGBColor const*);
-static void				setScreenCustomColor			(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
-static void				setUpCursorBounds				(TerminalViewPtr, SInt16, SInt16, Rect*,
-														 TerminalView_CursorType =
-															kTerminalView_CursorTypeCurrentPreferenceValue);
-static void				setUpCursorGhost				(TerminalViewPtr, Point);
-static void				setUpScreenFontMetrics			(TerminalViewPtr);
-static void				sortAnchors						(TerminalView_Cell&, TerminalView_Cell&, Boolean);
-static void				trackTextSelection				(TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
-static void				useTerminalTextAttributes		(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
-static void				useTerminalTextColors			(TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
-static void				visualBell						(TerminalViewRef);
+void				drawTerminalText					(TerminalViewPtr, CGContextRef, CGRect const&, Rect const&, UniChar const*,
+														 CFIndex, TerminalTextAttributes);
+void				drawVTGraphicsGlyph					(TerminalViewPtr, CGContextRef, Rect const*, UniChar, char, Boolean);
+void				eraseSection						(TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
+void				eventNotifyForView					(TerminalViewConstPtr, TerminalView_Event, void*);
+Terminal_LineRef	findRowIterator						(TerminalViewPtr, UInt16);
+Boolean				findVirtualCellFromLocalPoint		(TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
+void				getBlinkAnimationColor				(TerminalViewPtr, UInt16, RGBColor*);
+void				getRowBounds						(TerminalViewPtr, UInt16, Rect*);
+SInt16				getRowCharacterWidth				(TerminalViewPtr, UInt16);
+void				getRowSectionBounds					(TerminalViewPtr, UInt16, UInt16, SInt16, Rect*);
+void				getScreenBaseColor					(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
+void				getScreenColorsForAttributes		(TerminalViewPtr, TerminalTextAttributes, RGBColor*, RGBColor*, Boolean*);
+Boolean				getScreenCoreColor					(TerminalViewPtr, UInt16, RGBColor*);
+void				getScreenCustomColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor*);
+void				getScreenOrigin						(TerminalViewPtr, SInt16*, SInt16*);
+void				getScreenOriginFloat				(TerminalViewPtr, Float32&, Float32&);
+Handle				getSelectedTextAsNewHandle			(TerminalViewPtr, UInt16, TerminalView_TextFlags);
+HIShapeRef			getSelectedTextAsNewHIShape			(TerminalViewPtr, Float32 = 0.0);
+RgnHandle			getSelectedTextAsNewRegion			(TerminalViewPtr);
+RgnHandle			getSelectedTextAsNewRegionOnScreen	(TerminalViewPtr);
+size_t				getSelectedTextSize					(TerminalViewPtr);
+HIShapeRef			getVirtualRangeAsNewHIShape			(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&,
+														 Float32, Boolean);
+RgnHandle			getVirtualRangeAsNewRegion			(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
+RgnHandle			getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr, TerminalView_Cell const&, TerminalView_Cell const&, Boolean);
+void				getVirtualVisibleRegion				(TerminalViewPtr, SInt16*, SInt16*, SInt16*, SInt16*);
+void				handleMultiClick					(TerminalViewPtr, UInt16);
+void				handleNewViewContainerBounds		(HIViewRef, Float32, Float32, void*);
+void				highlightCurrentSelection			(TerminalViewPtr, Boolean, Boolean);
+void				highlightVirtualRange				(TerminalViewPtr, TerminalView_CellRange const&, TerminalTextAttributes,
+														 Boolean, Boolean);
+void				invalidateRowSection				(TerminalViewPtr, UInt16, UInt16, UInt16);
+Boolean				isMonospacedFont					(FMFontFamily);
+void				localToScreen						(TerminalViewPtr, SInt16*, SInt16*);
+Boolean				mainEventLoopEvent					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+pascal void			navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
+void				offsetLeftVisibleEdge				(TerminalViewPtr, SInt16);
+void				offsetTopVisibleEdge				(TerminalViewPtr, SInt16);
+void				preferenceChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				preferenceChangedForView			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				recalculateCachedDimensions			(TerminalViewPtr				inTerminalViewPtr);
+pascal OSStatus		receiveTerminalHIObjectEvents		(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveTerminalViewActiveStateChange(EventHandlerCallRef, EventRef, TerminalViewRef);
+pascal OSStatus		receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveTerminalViewDraw				(EventHandlerCallRef, EventRef, TerminalViewRef);
+OSStatus			receiveTerminalViewFocus			(EventHandlerCallRef, EventRef, TerminalViewRef);
+OSStatus			receiveTerminalViewGetData			(EventHandlerCallRef, EventRef, TerminalViewRef);
+OSStatus			receiveTerminalViewHitTest			(EventHandlerCallRef, EventRef, TerminalViewRef);
+pascal OSStatus		receiveTerminalViewRawKeyDown		(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveTerminalViewRegionRequest	(EventHandlerCallRef, EventRef, TerminalViewRef);
+OSStatus			receiveTerminalViewTrack			(EventHandlerCallRef, EventRef, TerminalViewRef);
+void				receiveVideoModeChange				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				redrawScreensTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
+void				releaseRowIterator					(TerminalViewPtr, Terminal_LineRef*);
+SInt32				returnNumberOfCharacters			(TerminalViewPtr);
+CFStringRef			returnSelectedTextAsNewUnicode		(TerminalViewPtr, UInt16, TerminalView_TextFlags);
+void				screenBufferChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				screenCursorChanged					(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void				screenToLocal						(TerminalViewPtr, SInt16*, SInt16*);
+void				screenToLocalRect					(TerminalViewPtr, Rect*);
+void				setBlinkAnimationColor				(TerminalViewPtr, UInt16, RGBColor const*);
+void				setBlinkingTimerActive				(TerminalViewPtr, Boolean);
+void				setCursorGhostVisibility			(TerminalViewPtr, Boolean);
+void				setCursorVisibility					(TerminalViewPtr, Boolean);
+void				setFontAndSize						(TerminalViewPtr, ConstStringPtr, UInt16, Float32 = 0, Boolean = true);
+SInt16				setPortScreenPort					(TerminalViewPtr);
+void				setScreenBaseColor					(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
+void				setScreenCoreColor					(TerminalViewPtr, UInt16, RGBColor const*);
+void				setScreenCustomColor				(TerminalViewPtr, TerminalView_ColorIndex, RGBColor const*);
+void				setUpCursorBounds					(TerminalViewPtr, SInt16, SInt16, Rect*,
+														 TerminalView_CursorType = kTerminalView_CursorTypeCurrentPreferenceValue);
+void				setUpCursorGhost					(TerminalViewPtr, Point);
+void				setUpScreenFontMetrics				(TerminalViewPtr);
+void				sortAnchors							(TerminalView_Cell&, TerminalView_Cell&, Boolean);
+void				trackTextSelection					(TerminalViewPtr, Point, EventModifiers, Point*, UInt32*);
+void				useTerminalTextAttributes			(TerminalViewPtr, CGContextRef, TerminalTextAttributes);
+void				useTerminalTextColors				(TerminalViewPtr, CGContextRef, TerminalTextAttributes, Float32 = 1.0);
+void				visualBell							(TerminalViewRef);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
-	EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
-	ListenerModel_ListenerRef	gMainEventLoopEventListener = nullptr;
-	ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
-	struct MyPreferenceProxies	gPreferenceProxies;
-	Boolean						gApplicationIsSuspended = false;
-	Boolean						gTerminalViewInitialized = false;
-	TerminalViewPtrLocker&		gTerminalViewPtrLocks ()				{ static TerminalViewPtrLocker x; return x; }
-	RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = Memory_NewRegion(); assert(nullptr != x); return x; }
-	My_XTerm256Table&			gColorGrid ()							{ static My_XTerm256Table x; return x; }
-}
+HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
+EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
+ListenerModel_ListenerRef	gMainEventLoopEventListener = nullptr;
+ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
+struct MyPreferenceProxies	gPreferenceProxies;
+Boolean						gApplicationIsSuspended = false;
+Boolean						gTerminalViewInitialized = false;
+TerminalViewPtrLocker&		gTerminalViewPtrLocks ()				{ static TerminalViewPtrLocker x; return x; }
+RgnHandle					gInvalidationScratchRegion ()			{ static RgnHandle x = Memory_NewRegion(); assert(nullptr != x); return x; }
+My_XTerm256Table&			gColorGrid ()							{ static My_XTerm256Table x; return x; }
+
+} // anonymous namespace
 
 
 #pragma mark Public Methods
@@ -2967,6 +2977,7 @@ TerminalView_ZoomToSelection	(TerminalViewRef	inView)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Initializes all tables, after which they can be used to
@@ -3419,7 +3430,7 @@ graphics port.
 
 (3.0)
 */
-static pascal void
+pascal void
 animateBlinkingItems	(EventLoopTimerRef		inTimer,
 						 void*					inTerminalViewRef)
 {
@@ -3493,7 +3504,7 @@ enabled or disabled for a terminal.
 
 (3.0)
 */
-static void
+void
 audioEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			 ListenerModel_Event	inEventThatOccurred,
 			 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -3529,7 +3540,7 @@ more interesting effects, all delays may be different.
 
 (3.1)
 */
-static EventTime
+EventTime
 calculateAnimationStageDelay	(TerminalViewPtr					inTerminalViewPtr,
 								 My_TimeIntervalList::size_type		inZeroBasedStage)
 {
@@ -3556,7 +3567,7 @@ of the specified terminal is NOT changed.
 
 (3.0)
 */
-static void
+void
 calculateDoubleSize		(TerminalViewPtr	inTerminalViewPtr,
 						 SInt16&			outPointSize,
 						 SInt16&			outAscent)
@@ -3618,7 +3629,7 @@ Returns the number of colors that were changed.
 
 (3.1)
 */
-static UInt16
+UInt16
 copyColorPreferences	(TerminalViewPtr			inTerminalViewPtr,
 						 Preferences_ContextRef		inSource,
 						 Boolean					inSearchForDefaults)
@@ -3861,7 +3872,7 @@ Returns the number of font settings that were changed.
 
 (3.1)
 */
-static UInt16
+UInt16
 copyFontPreferences		(TerminalViewPtr			inTerminalViewPtr,
 						 Preferences_ContextRef		inSource,
 						 Boolean					inSearchDefaults)
@@ -3915,7 +3926,7 @@ Use this when the user changes the text selection.
 
 (3.1)
 */
-static void
+void
 copySelectedTextIfUserPreference	(TerminalViewPtr	inTerminalViewPtr)
 {
 	if (inTerminalViewPtr->text.selection.exists)
@@ -3941,7 +3952,7 @@ the given preference context.
 
 (4.0)
 */
-static void
+void
 copyTranslationPreferences	(TerminalViewPtr			inTerminalViewPtr,
 							 Preferences_ContextRef		inSource)
 {
@@ -3972,7 +3983,7 @@ Returns "noErr" only if the palette is created successfully.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 createWindowColorPalette	(TerminalViewPtr			inTerminalViewPtr,
 							 Preferences_ContextRef		inFormat,
 							 Boolean					inSearchForDefaults)
@@ -4011,7 +4022,7 @@ takes a specific screen as a parameter.
 
 (3.0)
 */
-static Boolean
+Boolean
 cursorBlinks	(TerminalViewPtr	UNUSED_ARGUMENT(inTerminalViewPtr))
 {
 	return gPreferenceProxies.cursorBlinks;
@@ -4082,7 +4093,7 @@ IMPORTANT:	The QuickDraw port state is not saved or
 
 (3.0)
 */
-static Boolean
+Boolean
 drawSection		(TerminalViewPtr	inTerminalViewPtr,
 				 CGContextRef		inDrawingContext,
 				 UInt16				UNUSED_ARGUMENT(inZeroBasedLeftmostColumnToDraw),
@@ -4239,7 +4250,7 @@ Terminal_ForEachLikeAttributeRunDo().
 
 (3.0)
 */
-static void
+void
 drawTerminalScreenRunOp		(TerminalScreenRef			UNUSED_ARGUMENT(inScreen),
 							 UniChar const*				inLineTextBufferOrNull,
 							 UInt16						inLineTextBufferLength,
@@ -4342,7 +4353,7 @@ IMPORTANT:	The "inOldQuickDrawBoundaries" parameter should be
 
 (3.0)
 */
-static void
+void
 drawTerminalText	(TerminalViewPtr			inTerminalViewPtr,
 					 CGContextRef				inDrawingContext,
 					 CGRect const&				inBoundaries,
@@ -4546,7 +4557,7 @@ based ones prescribed by the standard VT font.
 
 (3.0)
 */
-static void
+void
 drawVTGraphicsGlyph		(TerminalViewPtr	inTerminalViewPtr,
 						 CGContextRef		inDrawingContext,
 						 Rect const*		inBoundaries,
@@ -5208,7 +5219,7 @@ of the specified context is configured appropriately.
 
 (2.6)
 */
-static void
+void
 eraseSection	(TerminalViewPtr	inTerminalViewPtr,
 				 CGContextRef		inDrawingContext,
 				 SInt16				inLeftmostColumnToErase,
@@ -5247,7 +5258,7 @@ IMPORTANT:	The context must make sense for the type of
 
 (3.0)
 */
-static void
+void
 eventNotifyForView	(TerminalViewConstPtr	inPtr,
 					 TerminalView_Event		inEvent,
 					 void*					inContextPtr)
@@ -5284,7 +5295,7 @@ IMPORTANT:  Call releaseRowIterator() when finished with the
 
 (3.0)
 */
-static Terminal_LineRef
+Terminal_LineRef
 findRowIterator		(TerminalViewPtr	inTerminalViewPtr,
 					 UInt16				inZeroBasedRowIndex)
 {
@@ -5332,7 +5343,7 @@ distance to display the point, for instance).
 
 (3.1)
 */
-static Boolean
+Boolean
 findVirtualCellFromLocalPoint	(TerminalViewPtr		inTerminalViewPtr,
 								 Point					inLocalPixelPosition,
 								 TerminalView_Cell&		outCell,
@@ -5428,7 +5439,7 @@ Given a stage of blink animation, returns its rendering color.
 
 (4.0)
 */
-static inline void
+inline void
 getBlinkAnimationColor	(TerminalViewPtr	inTerminalViewPtr,
 						 UInt16				inAnimationStage,
 						 RGBColor*			outColorPtr)
@@ -5467,7 +5478,7 @@ use screenToLocalRect().
 
 (3.0)
 */
-static void
+void
 getRowBounds	(TerminalViewPtr	inTerminalViewPtr,
 				 UInt16				inZeroBasedRowIndex,
 				 Rect*				outBoundsPtr)
@@ -5532,7 +5543,7 @@ the double-width attribute set.
 
 (3.0)
 */
-static SInt16
+SInt16
 getRowCharacterWidth	(TerminalViewPtr	inTerminalViewPtr,
 						 UInt16				inLineNumber)
 {
@@ -5569,7 +5580,7 @@ use screenToLocalRect().
 
 (3.0)
 */
-static void
+void
 getRowSectionBounds		(TerminalViewPtr	inTerminalViewPtr,
 						 UInt16				inZeroBasedRowIndex,
 						 UInt16				inZeroBasedStartingColumnNumber,
@@ -5593,7 +5604,7 @@ Returns a color stored internally in the view data structure.
 
 (3.0)
 */
-static inline void
+inline void
 getScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 					 TerminalView_ColorIndex	inColorEntryNumber,
 					 RGBColor*					outColorPtr)
@@ -5643,7 +5654,7 @@ background view.
 
 (4.0)
 */
-static void
+void
 getScreenColorsForAttributes	(TerminalViewPtr			inTerminalViewPtr,
 								 TerminalTextAttributes		inAttributes,
 								 RGBColor*					outForeColorPtr,
@@ -5764,7 +5775,7 @@ most often needed for rendering.
 
 (4.0)
 */
-static inline Boolean
+inline Boolean
 getScreenCoreColor	(TerminalViewPtr	inTerminalViewPtr,
 					 UInt16				inColorEntryNumber,
 					 RGBColor*			outColorPtr)
@@ -5829,7 +5840,7 @@ See also getScreenCoreColor().
 
 (3.0)
 */
-static inline void
+inline void
 getScreenCustomColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor*					outColorPtr)
@@ -5865,7 +5876,7 @@ and less casting.
 
 (3.0)
 */
-static void
+void
 getScreenOrigin		(TerminalViewPtr	inTerminalViewPtr,
 					 SInt16*			outScreenPositionX,
 					 SInt16*			outScreenPositionY)
@@ -5893,7 +5904,7 @@ values, suitable for a CGPoint or HIPoint.
 
 (3.1)
 */
-static void
+void
 getScreenOriginFloat	(TerminalViewPtr	inTerminalViewPtr,
 						 Float32&			outScreenPositionX,
 						 Float32&			outScreenPositionY)
@@ -5919,7 +5930,7 @@ DEPRECATED.  Use returnSelectedTextAsNewUnicode() instead.
 
 (3.0)
 */
-static Handle
+Handle
 getSelectedTextAsNewHandle	(TerminalViewPtr			inTerminalViewPtr,
 							 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
 							 TerminalView_TextFlags		inFlags)
@@ -5984,7 +5995,7 @@ rectangular shape, if applicable.
 
 (4.0)
 */
-static HIShapeRef
+HIShapeRef
 getSelectedTextAsNewHIShape		(TerminalViewPtr	inTerminalViewPtr,
 								 Float32			inInsets)
 {
@@ -6004,7 +6015,7 @@ DEPRECATED.  Use getSelectedTextAsNewRegionOnScreen() instead.
 
 (2.6)
 */
-static RgnHandle
+RgnHandle
 getSelectedTextAsNewRegion		(TerminalViewPtr	inTerminalViewPtr)
 {
 	RgnHandle	result = getVirtualRangeAsNewRegion(inTerminalViewPtr, inTerminalViewPtr->text.selection.range.first,
@@ -6023,7 +6034,7 @@ account rectangular shape, if applicable.
 
 (3.1)
 */
-static RgnHandle
+RgnHandle
 getSelectedTextAsNewRegionOnScreen		(TerminalViewPtr	inTerminalViewPtr)
 {
 	RgnHandle	result = getVirtualRangeAsNewRegionOnScreen(inTerminalViewPtr, inTerminalViewPtr->text.selection.range.first,
@@ -6041,7 +6052,7 @@ the specified window, or zero.
 
 (3.1)
 */
-static size_t
+size_t
 getSelectedTextSize		(TerminalViewPtr	inTerminalViewPtr)
 {
     size_t		result = 0L;
@@ -6076,7 +6087,7 @@ directions; pass 0.0 to not adjust the shape.
 
 (4.0)
 */
-static HIShapeRef
+HIShapeRef
 getVirtualRangeAsNewHIShape		(TerminalViewPtr			inTerminalViewPtr,
 								 TerminalView_Cell const&	inSelectionStart,
 								 TerminalView_Cell const&	inSelectionPastEnd,
@@ -6219,7 +6230,7 @@ DEPRECATED.  Use getVirtualRangeAsNewRegionOnScreen() instead.
 
 (3.1)
 */
-static RgnHandle
+RgnHandle
 getVirtualRangeAsNewRegion		(TerminalViewPtr			inTerminalViewPtr,
 								 TerminalView_Cell const&	inSelectionStart,
 								 TerminalView_Cell const&	inSelectionPastEnd,
@@ -6254,7 +6265,7 @@ pixels.  You must dispose of the region yourself.
 
 (3.1)
 */
-static RgnHandle
+RgnHandle
 getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr			inTerminalViewPtr,
 									 TerminalView_Cell const&	inSelectionStart,
 									 TerminalView_Cell const&	inSelectionPastEnd,
@@ -6384,7 +6395,7 @@ the scrollback buffer; 0 is the topmost row of the
 
 (3.0)
 */
-static void
+void
 getVirtualVisibleRegion		(TerminalViewPtr	inTerminalViewPtr,
 							 SInt16*			outLeftColumnOrNull,
 							 SInt16*			outTopRowOrNull,
@@ -6421,7 +6432,7 @@ selects an entire line.
 
 (3.0)
 */
-static void
+void
 handleMultiClick	(TerminalViewPtr	inTerminalViewPtr,
 					 UInt16				inClickCount)													
 {
@@ -6597,7 +6608,7 @@ updating sub-views.
 
 (3.0)
 */
-static void
+void
 handleNewViewContainerBounds	(HIViewRef		inHIView,
 								 Float32		UNUSED_ARGUMENT(inDeltaX),
 								 Float32		UNUSED_ARGUMENT(inDeltaY),
@@ -6745,7 +6756,7 @@ terminal view.
 
 (3.0)
 */
-static inline void
+inline void
 highlightCurrentSelection	(TerminalViewPtr	inTerminalViewPtr,
 							 Boolean			inIsHighlighted,
 							 Boolean			inRedraw)
@@ -6790,7 +6801,7 @@ LOCALIZE THIS:	The highlighting scheme should be
 
 (3.1)
 */
-static void
+void
 highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 						 TerminalView_CellRange const&	inRange,
 						 TerminalTextAttributes			inHighlightingStyle,
@@ -6895,7 +6906,7 @@ TerminalView_DrawRowSection().
 
 (3.0)
 */
-static void
+void
 invalidateRowSection	(TerminalViewPtr	inTerminalViewPtr,
 						 UInt16				inLineNumber,
 						 UInt16				inStartingColumnNumber,
@@ -6917,7 +6928,7 @@ Determines if a font is monospaced.
 
 (3.0)
 */
-static Boolean
+Boolean
 isMonospacedFont	(FMFontFamily	inFontID)
 {
 	Boolean		result = false;
@@ -6991,7 +7002,7 @@ See also screenToLocal().
 
 (3.0)
 */
-static void
+void
 localToScreen	(TerminalViewPtr	inTerminalViewPtr,
 				 SInt16*			inoutHorizontalPixelOffsetFromPortOrigin,
 				 SInt16*			inoutVerticalPixelOffsetFromPortOrigin)
@@ -7022,7 +7033,7 @@ The result is "true" only if the event is to be absorbed
 
 (3.0)
 */
-static Boolean
+Boolean
 mainEventLoopEvent	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inEventThatOccurred,
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -7058,7 +7069,7 @@ a terminal view’s window.
 
 (3.1)
 */
-static pascal void
+pascal void
 navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 								 	 NavCBRecPtr				inParameters,
 								 	 void*						inTerminalViewRef)
@@ -7174,7 +7185,7 @@ the screen is redrawn.
 
 (3.0)
 */
-static void
+void
 offsetLeftVisibleEdge	(TerminalViewPtr	inTerminalViewPtr,
 						 SInt16				inDeltaInPixels)
 {
@@ -7210,7 +7221,7 @@ the screen is redrawn.
 
 (3.0)
 */
-static void
+void
 offsetTopVisibleEdge	(TerminalViewPtr	inTerminalViewPtr,
 						 SInt16				inDeltaInPixels)
 {
@@ -7248,7 +7259,7 @@ variables are up to date for the changed preference.
 
 (3.0)
 */
-static void
+void
 preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inPreferenceTagThatChanged,
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
@@ -7314,7 +7325,7 @@ any necessary data and display elements.
 
 (3.0)
 */
-static void
+void
 preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 							 ListenerModel_Event	inPreferenceTagThatChanged,
 							 void*					inPreferencesContext,
@@ -7424,7 +7435,7 @@ cached settings ever be changed.
 
 (3.0)
 */
-static void
+void
 recalculateCachedDimensions		(TerminalViewPtr	inTerminalViewPtr)
 {
 	SInt16 const	kWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
@@ -7465,7 +7476,7 @@ Invoked by Mac OS X.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 								 EventRef				inEvent,
 								 void*					inTerminalViewRef)
@@ -7935,7 +7946,7 @@ dimmed.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewActiveStateChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										 EventRef				inEvent,
 										 TerminalViewRef		inTerminalViewRef)
@@ -7982,7 +7993,7 @@ for terminal views.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveTerminalViewContextualMenuSelect	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 										 EventRef				inEvent,
 										 void*					inTerminalViewRef)
@@ -8046,7 +8057,7 @@ view needs to be rendered.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 TerminalViewRef		inTerminalViewRef)
@@ -8360,7 +8371,7 @@ a terminal view should be changed.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewFocus	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 TerminalViewRef		inTerminalViewRef)
@@ -8470,7 +8481,7 @@ Sets the control kind.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewGetData	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef					inEvent,
 							 TerminalViewRef			UNUSED_ARGUMENT(inTerminalViewRef))
@@ -8558,7 +8569,7 @@ to a view part code (presumably due to a mouse click).
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewHitTest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 TerminalViewRef		inTerminalViewRef)
@@ -8622,7 +8633,7 @@ Invoked by Mac OS X whenever the user hits a key.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveTerminalViewRawKeyDown	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inTerminalViewRef)
@@ -8930,7 +8941,7 @@ part of a terminal view must be determined.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewRegionRequest	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									 EventRef				inEvent,
 									 TerminalViewRef		inTerminalViewRef)
@@ -9052,7 +9063,7 @@ etc.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 							 EventRef				inEvent,
 							 TerminalViewRef		inTerminalViewRef)
@@ -9328,7 +9339,7 @@ reversing the video of the terminal view to match.
 
 (3.0)
 */
-static void
+void
 receiveVideoModeChange	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inTerminalChange,
 						 void*					inEventContextPtr,
@@ -9350,7 +9361,7 @@ update event is handled.
 
 (3.0)
 */
-static void
+void
 redrawScreensTerminalWindowOp	(TerminalWindowRef		inTerminalWindow,
 								 void*					UNUSED_ARGUMENT(inData1),
 								 SInt32					UNUSED_ARGUMENT(inData2),
@@ -9373,7 +9384,7 @@ fewer references to the given iterator now exist.
 
 (3.0)
 */
-static void
+void
 releaseRowIterator  (TerminalViewPtr	UNUSED_ARGUMENT(inTerminalViewPtr),
 					 Terminal_LineRef*	inoutRefPtr)
 {
@@ -9387,7 +9398,7 @@ represented by this terminal view’s text area.
 
 (3.1)
 */
-static SInt32
+SInt32
 returnNumberOfCharacters	(TerminalViewPtr	inTerminalViewPtr)
 {
 	UInt16 const	kNumVisibleRows = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
@@ -9407,7 +9418,7 @@ IMPORTANT:	Tab substitution is currently not supported.
 
 (3.1)
 */
-static CFStringRef
+CFStringRef
 returnSelectedTextAsNewUnicode	(TerminalViewPtr			inTerminalViewPtr,
 								 UInt16						inNumberOfSpacesToReplaceWithOneTabOrZero,
 								 TerminalView_TextFlags		inFlags)
@@ -9517,7 +9528,7 @@ new rows added to the scrollback buffer).
 
 (3.0)
 */
-static void
+void
 screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inTerminalChange,
 						 void*					inEventContextPtr,
@@ -9580,7 +9591,7 @@ its rectangle is then changed and invalidated again.
 
 (3.0)
 */
-static void
+void
 screenCursorChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 						 ListenerModel_Event	inTerminalChange,
 						 void*					inEventContextPtr,
@@ -9637,7 +9648,7 @@ See also localToScreen().
 
 (3.0)
 */
-static void
+void
 screenToLocal	(TerminalViewPtr	inTerminalViewPtr,
 				 SInt16*			inoutHorizontalPixelOffsetFromScreenOrigin,
 				 SInt16*			inoutVerticalPixelOffsetFromScreenOrigin)
@@ -9669,7 +9680,7 @@ refer to the screen, they are translated correctly.
 
 (3.0)
 */
-static void
+void
 screenToLocalRect	(TerminalViewPtr	inTerminalViewPtr,
 					 Rect*				inoutScreenOriginBoundsPtr)
 {
@@ -9688,7 +9699,7 @@ will use this palette to find colors as needed.
 
 (4.0)
 */
-static inline void
+inline void
 setBlinkAnimationColor	(TerminalViewPtr	inTerminalViewPtr,
 						 UInt16				inAnimationStage,
 						 RGBColor const*	inColorPtr)
@@ -9707,7 +9718,7 @@ text actually exists in the terminal view).
 
 (3.1)
 */
-static void
+void
 setBlinkingTimerActive	(TerminalViewPtr	inTerminalViewPtr,
 						 Boolean			inIsActive)
 {
@@ -9736,7 +9747,7 @@ the actual terminal cursor during drags.
 
 (3.0)
 */
-static void
+void
 setCursorGhostVisibility	(TerminalViewPtr	inTerminalViewPtr,
 							 Boolean			inIsVisible)
 {
@@ -9772,7 +9783,7 @@ It may be invoked repeatedly.
 
 (3.0)
 */
-static void
+void
 setCursorVisibility		(TerminalViewPtr	inTerminalViewPtr,
 						 Boolean			inIsVisible)
 {
@@ -9814,7 +9825,7 @@ The screen is not redrawn.
 
 (3.0)
 */
-static void
+void
 setFontAndSize		(TerminalViewPtr	inViewPtr,
 					 ConstStringPtr		inFontFamilyNameOrNull,
 					 UInt16				inFontSizeOrZero,
@@ -9894,7 +9905,7 @@ Obsolete.
 
 (2.6)
 */
-static SInt16
+SInt16
 setPortScreenPort	(TerminalViewPtr	inTerminalViewPtr)
 {
 	SInt16		result = 0;
@@ -9932,7 +9943,7 @@ call setScreenCustomColor() too.
 
 (3.0)
 */
-static inline void
+inline void
 setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 					 TerminalView_ColorIndex	inColorEntryNumber,
 					 RGBColor const*			inColorPtr)
@@ -10034,7 +10045,7 @@ the base 16 (ANSI) colors typically are.
 
 (4.0)
 */
-static inline void
+inline void
 setScreenCoreColor	(TerminalViewPtr	inTerminalViewPtr,
 					 UInt16				inColorEntryNumber,
 					 RGBColor const*	inColorPtr)
@@ -10055,7 +10066,7 @@ rendering colors.
 
 (3.0)
 */
-static inline void
+inline void
 setScreenCustomColor	(TerminalViewPtr			inTerminalViewPtr,
 						 TerminalView_ColorIndex	inColorEntryNumber,
 						 RGBColor const*			inColorPtr)
@@ -10073,7 +10084,7 @@ row and column in the terminal screen.
 
 (3.0)
 */
-static void
+void
 setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 					 SInt16						inX,
 					 SInt16						inY,
@@ -10161,7 +10172,7 @@ NOTE:	This routine currently anchors the cursor at the
 
 (3.0)
 */
-static void
+void
 setUpCursorGhost	(TerminalViewPtr	inTerminalViewPtr,
 					 Point				inLocalMouse)
 {
@@ -10209,7 +10220,7 @@ is currently being drawn) and use the default font.
 
 (3.0)
 */
-static void
+void
 setUpScreenFontMetrics	(TerminalViewPtr	inTerminalViewPtr)
 {
 	FontInfo	fontInfo;
@@ -10280,7 +10291,7 @@ LOCALIZE THIS
 
 (3.0)
 */
-static void
+void
 sortAnchors		(TerminalView_Cell&		inoutPoint1,
 				 TerminalView_Cell&		inoutPoint2,
 				 Boolean				inRectangular)
@@ -10342,7 +10353,7 @@ are returned.
 
 (3.0)
 */
-static void
+void
 trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 					 Point				inLocalMouse,
 					 EventModifiers		inModifiers,
@@ -10483,7 +10494,7 @@ IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
 
 (3.1)
 */
-static void
+void
 useTerminalTextColors	(TerminalViewPtr			inTerminalViewPtr,
 						 CGContextRef				inDrawingContext,
 						 TerminalTextAttributes		inAttributes,
@@ -10647,7 +10658,7 @@ IMPORTANT:	Core Graphics support is INCOMPLETE.  This routine
 
 (3.1)
 */
-static void
+void
 useTerminalTextAttributes	(TerminalViewPtr			inTerminalViewPtr,
 							 CGContextRef				inDrawingContext,
 							 TerminalTextAttributes		inAttributes)
@@ -10784,7 +10795,7 @@ post a notification event.
 
 (3.0)
 */
-static void
+void
 visualBell	(TerminalViewRef	inView)
 {
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
@@ -10825,5 +10836,7 @@ visualBell	(TerminalViewRef	inView)
 	
 	if (gPreferenceProxies.notifyOfBeeps) Alert_BackgroundNotification();
 }// visualBell
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
