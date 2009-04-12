@@ -307,7 +307,6 @@ struct TerminalView
 			Boolean				idleFlash;		// is timer currently animating anything?
 		} cursor;
 		
-		SInt16			topEdgeInPixels;			// the most negative possible value for the top visible edge in pixels
 		SInt16			topVisibleEdgeInPixels;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
 													//   value directly, use offsetTopVisibleEdge()
 		SInt16			topVisibleEdgeInRows;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
@@ -321,12 +320,6 @@ struct TerminalView
 		Boolean			currentRenderDragColors;	// only defined while drawing; if true, drag highlight text colors are used
 		Boolean			currentRenderNoBackground;	// only defined while drawing; if true, text is using the ordinary background color
 		CGContextRef	currentRenderContext;		// only defined while drawing; if not nullptr, the context from the view draw event
-		SInt16			viewWidthInPixels;			// size of window view (window could be smaller than the screen size);
-		SInt16			viewHeightInPixels;			//   always identical to the current dimensions of the content view
-		SInt16			maxViewWidthInPixels;		// size of bottommost screenful (regardless of window size);
-		SInt16			maxViewHeightInPixels;		//   always identical to the maximum dimensions of the content view
-		SInt16			maxWidthInPixels;			// the largest size the terminal view content area can possibly have, which
-		SInt16			maxHeightInPixels;			//   would display every last line of the visible screen *and* scrollback!
 		Float32			paddingLeftEmScale;			// left padding between text and focus ring; multiplies against normal (undoubled) character width
 		Float32			paddingRightEmScale;		// right padding between text and focus ring; multiplies against normal (undoubled) character width
 		Float32			paddingTopEmScale;			// top padding between text and focus ring; multiplies against normal (undoubled) character height
@@ -335,6 +328,20 @@ struct TerminalView
 		Float32			marginRightEmScale;			// right margin between focus ring and container edge; multiplies against normal (undoubled) character width
 		Float32			marginTopEmScale;			// top margin between focus ring and container edge; multiplies against normal (undoubled) character height
 		Float32			marginBottomEmScale;		// bottom margin between focus ring and container edge; multiplies against normal (undoubled) character height
+		
+		struct
+		{
+			// these settings should only ever be modified by recalculateCachedDimensions(),
+			// and that routine should be called when any dependent factor, such as font,
+			// is changed; see that routine’s documentation for more information
+			SInt16			topEdgeInPixels;		// the most negative possible value for the top visible edge in pixels
+			SInt16			viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
+			SInt16			viewHeightInPixels;		//   always identical to the current dimensions of the content view
+			SInt16			maxViewWidthInPixels;	// size of bottommost screenful (regardless of window size);
+			SInt16			maxViewHeightInPixels;	//   always identical to the maximum dimensions of the content view
+			SInt16			maxWidthInPixels;		// the largest size the terminal view content area can possibly have, which
+			SInt16			maxHeightInPixels;		//   would display every last line of the visible screen *and* scrollback!
+		} cache;
 	} screen;
 	
 	struct
@@ -1033,13 +1040,13 @@ TerminalView_GetIdealSize	(TerminalViewRef	inView,
 		highPrecision = viewPtr->screen.marginLeftEmScale + viewPtr->screen.paddingLeftEmScale
 						+ viewPtr->screen.paddingRightEmScale + viewPtr->screen.marginRightEmScale;
 		highPrecision *= viewPtr->text.font.widthPerCharacter;
-		highPrecision += viewPtr->screen.viewWidthInPixels;
+		highPrecision += viewPtr->screen.cache.viewWidthInPixels;
 		outWidthInPixels = STATIC_CAST(highPrecision, SInt16);
 		
 		highPrecision = viewPtr->screen.marginTopEmScale + viewPtr->screen.paddingTopEmScale
 						+ viewPtr->screen.paddingBottomEmScale + viewPtr->screen.marginBottomEmScale;
 		highPrecision *= viewPtr->text.font.widthPerCharacter; // yes, width, because this is an “em” scale factor
-		highPrecision += viewPtr->screen.viewHeightInPixels;
+		highPrecision += viewPtr->screen.cache.viewHeightInPixels;
 		outHeightInPixels = STATIC_CAST(highPrecision, SInt16);
 		
 		result = true;
@@ -1100,13 +1107,13 @@ TerminalView_GetRange	(TerminalViewRef			inView,
 			//
 			// This range definition is chosen to be convenient for scrollbars.
 			outStartOfRange = viewPtr->screen.topVisibleEdgeInPixels/* negative for scrollback */ +
-								viewPtr->screen.maxHeightInPixels - viewPtr->screen.viewHeightInPixels;
-			outPastEndOfRange = outStartOfRange + viewPtr->screen.viewHeightInPixels;
+								viewPtr->screen.cache.maxHeightInPixels - viewPtr->screen.cache.viewHeightInPixels;
+			outPastEndOfRange = outStartOfRange + viewPtr->screen.cache.viewHeightInPixels;
 			break;
 		
 		case kTerminalView_RangeCodeScrollRegionVMaximum:
 			outStartOfRange = 0;
-			outPastEndOfRange = viewPtr->screen.maxHeightInPixels;
+			outPastEndOfRange = viewPtr->screen.cache.maxHeightInPixels;
 			break;
 		
 		default:
@@ -2022,8 +2029,8 @@ TerminalView_ScrollPixelsTo		(TerminalViewRef	inView,
 	{
 		// IMPORTANT: This routine should derive range values in the same way
 		// as TerminalView_GetRange().
-		SInt16 const	kNewValue = inStartOfRangeV - viewPtr->screen.maxHeightInPixels +
-									viewPtr->screen.viewHeightInPixels;
+		SInt16 const	kNewValue = inStartOfRangeV - viewPtr->screen.cache.maxHeightInPixels +
+									viewPtr->screen.cache.viewHeightInPixels;
 		
 		
 		// just redraw everything
@@ -3151,13 +3158,13 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	this->screen.leftVisibleEdgeInColumns = 0;
 	this->screen.topVisibleEdgeInPixels = 0;
 	this->screen.topVisibleEdgeInRows = 0;
-	this->screen.topEdgeInPixels = 0; // set later...
-	this->screen.viewWidthInPixels = 0; // set later...
-	this->screen.viewHeightInPixels = 0; // set later...
-	this->screen.maxViewWidthInPixels = 0; // set later...
-	this->screen.maxViewHeightInPixels = 0; // set later...
-	this->screen.maxWidthInPixels = 0; // set later...
-	this->screen.maxHeightInPixels = 0; // set later...
+	this->screen.cache.topEdgeInPixels = 0; // set later...
+	this->screen.cache.viewWidthInPixels = 0; // set later...
+	this->screen.cache.viewHeightInPixels = 0; // set later...
+	this->screen.cache.maxViewWidthInPixels = 0; // set later...
+	this->screen.cache.maxViewHeightInPixels = 0; // set later...
+	this->screen.cache.maxWidthInPixels = 0; // set later...
+	this->screen.cache.maxHeightInPixels = 0; // set later...
 	this->screen.backgroundPicture = nullptr;
 	this->screen.focusRingEnabled = true;
 	this->screen.isReverseVideo = 0;
@@ -5370,22 +5377,22 @@ findVirtualCellFromLocalPoint	(TerminalViewPtr		inTerminalViewPtr,
 		}
 	}
 	
-	if (outCell.second > inTerminalViewPtr->screen.viewHeightInPixels)
+	if (outCell.second > inTerminalViewPtr->screen.cache.viewHeightInPixels)
 	{
 		result = false;
-		outDeltaRow = outCell.second - inTerminalViewPtr->screen.viewHeightInPixels;
-		outCell.second = inTerminalViewPtr->screen.viewHeightInPixels;
+		outDeltaRow = outCell.second - inTerminalViewPtr->screen.cache.viewHeightInPixels;
+		outCell.second = inTerminalViewPtr->screen.cache.viewHeightInPixels;
 	}
 	
 	// TEMPORARY: this needs to take into account double-height text
 	outCell.second /= inTerminalViewPtr->text.font.heightPerCharacter;
 	outDeltaRow /= inTerminalViewPtr->text.font.heightPerCharacter;
 	
-	if (outCell.first > inTerminalViewPtr->screen.viewWidthInPixels)
+	if (outCell.first > inTerminalViewPtr->screen.cache.viewWidthInPixels)
 	{
 		result = false;
-		outDeltaColumn = outCell.first - inTerminalViewPtr->screen.viewWidthInPixels;
-		outCell.first = inTerminalViewPtr->screen.viewWidthInPixels;
+		outDeltaColumn = outCell.first - inTerminalViewPtr->screen.cache.viewWidthInPixels;
+		outCell.first = inTerminalViewPtr->screen.cache.viewWidthInPixels;
 	}
 	
 	{
@@ -6150,7 +6157,7 @@ getVirtualRangeAsNewHIShape		(TerminalViewPtr			inTerminalViewPtr,
 			// NOTE: vertical insets are applied to end caps as extensions since the middle piece vertically shrinks
 			partialSelectionBounds = CGRectMake(selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter + inInsets,
 												selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
-												inTerminalViewPtr->screen.viewWidthInPixels -
+												inTerminalViewPtr->screen.cache.viewWidthInPixels -
 													selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter -
 													2.0 * inInsets,
 												inTerminalViewPtr->text.font.heightPerCharacter/* no insets here, due to shrunk mid-section */);
@@ -6184,7 +6191,7 @@ getVirtualRangeAsNewHIShape		(TerminalViewPtr			inTerminalViewPtr,
 			// highlight extends across more than two lines - fill in the space in between
 			partialSelectionBounds = CGRectMake(inInsets,
 												(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter + inInsets,
-												inTerminalViewPtr->screen.viewWidthInPixels - 2.0 * inInsets,
+												inTerminalViewPtr->screen.cache.viewWidthInPixels - 2.0 * inInsets,
 												(selectionPastEnd.second - selectionStart.second - 2/* skip first and last lines */) *
 													inTerminalViewPtr->text.font.heightPerCharacter - 2.0 * inInsets);
 			clippedRect = CGRectIntegral(CGRectIntersection(partialSelectionBounds, screenBounds)); // clip to constraint rectangle
@@ -6330,7 +6337,7 @@ getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr			inTerminalViewPtr,
 				SetRect(&partialSelectionBounds,
 						selectionStart.first * inTerminalViewPtr->text.font.widthPerCharacter,
 						selectionStart.second * inTerminalViewPtr->text.font.heightPerCharacter,
-						inTerminalViewPtr->screen.viewWidthInPixels,
+						inTerminalViewPtr->screen.cache.viewWidthInPixels,
 						(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter);
 				SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 				RectRgn(result, &clippedRect);
@@ -6351,7 +6358,7 @@ getVirtualRangeAsNewRegionOnScreen	(TerminalViewPtr			inTerminalViewPtr,
 					SetRect(&partialSelectionBounds,
 							0,
 							(selectionStart.second + 1) * inTerminalViewPtr->text.font.heightPerCharacter,
-							inTerminalViewPtr->screen.viewWidthInPixels,
+							inTerminalViewPtr->screen.cache.viewWidthInPixels,
 							(selectionPastEnd.second - 1) * inTerminalViewPtr->text.font.heightPerCharacter);
 					SectRect(&partialSelectionBounds, &screenBounds, &clippedRect); // clip to constraint rectangle
 					RectRgn(clippedRegion, &clippedRect);
@@ -6634,7 +6641,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			
 			// choose an appropriate font size to best fill the area; favor maximum
 			// width over height, but reduce the font size if the characters overrun
-			if (viewPtr->screen.viewWidthInPixels > 0)
+			if (viewPtr->screen.cache.viewWidthInPixels > 0)
 			{
 				UInt16		loopGuard = 0;
 				
@@ -6652,7 +6659,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 			{
 				TextSize(viewPtr->text.font.normalMetrics.size);
 			}
-			if (viewPtr->screen.viewHeightInPixels > 0)
+			if (viewPtr->screen.cache.viewHeightInPixels > 0)
 			{
 				FontInfo	info;
 				UInt16		loopGuard = 0;
@@ -6704,10 +6711,10 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 									STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, this is an “em” scale */, Float32));
 		Float32 const	kPadBottom = (viewPtr->screen.paddingBottomEmScale *
 										STATIC_CAST(viewPtr->text.font.widthPerCharacter/* yes, width, this is an “em” scale */, Float32));
-		HIRect			terminalFocusFrame = CGRectMake(0, 0, kPadLeft + viewPtr->screen.viewWidthInPixels + kPadRight,
-														kPadTop + viewPtr->screen.viewHeightInPixels + kPadBottom);
-		HIRect			terminalInteriorFrame = CGRectMake(kPadLeft, kPadTop, viewPtr->screen.viewWidthInPixels,
-															viewPtr->screen.viewHeightInPixels);
+		HIRect			terminalFocusFrame = CGRectMake(0, 0, kPadLeft + viewPtr->screen.cache.viewWidthInPixels + kPadRight,
+														kPadTop + viewPtr->screen.cache.viewHeightInPixels + kPadBottom);
+		HIRect			terminalInteriorFrame = CGRectMake(kPadLeft, kPadTop, viewPtr->screen.cache.viewWidthInPixels,
+															viewPtr->screen.cache.viewHeightInPixels);
 		
 		
 		// TEMPORARY: this should in fact respect margin values too
@@ -7402,15 +7409,18 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 
 
 /*!
-Determines the current and maximum view width and
-height, and maximum possible width and height in
-pixels, based on the current font dimensions and
-the current number of columns, rows and scrollback
-buffer lines.
+Determines the current and maximum view width and height, and
+maximum possible width and height in pixels, based on the current
+font dimensions and the current number of columns, rows and
+scrollback buffer lines.
 
-It only makes sense to call this after one of the
-dependent factors, above, is changed (such as font
-size or the screen buffer size).
+It only makes sense to call this after one of the dependent
+factors, above, is changed (such as font size or the screen
+buffer size).
+
+For code clarity, EVERY metric defined by this routine should
+be in the "cache" sub-structure, and ONLY HERE should those
+cached settings ever be changed.
 
 (3.0)
 */
@@ -7424,22 +7434,22 @@ recalculateCachedDimensions		(TerminalViewPtr	inTerminalViewPtr)
 	SInt16 const	kLines = kScrollbackLines + kVisibleLines;
 	
 	
-	inTerminalViewPtr->screen.topEdgeInPixels = -(kScrollbackLines * inTerminalViewPtr->text.font.heightPerCharacter);
-	inTerminalViewPtr->screen.maxViewWidthInPixels = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
-	inTerminalViewPtr->screen.viewWidthInPixels    = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
+	inTerminalViewPtr->screen.cache.topEdgeInPixels = -(kScrollbackLines * inTerminalViewPtr->text.font.heightPerCharacter);
+	inTerminalViewPtr->screen.cache.maxViewWidthInPixels = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
+	inTerminalViewPtr->screen.cache.viewWidthInPixels    = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
 	// TEMPORARY: since some visible lines may be in double-height mode, that should be taken into account here
-	inTerminalViewPtr->screen.maxViewHeightInPixels = kVisibleLines * inTerminalViewPtr->text.font.heightPerCharacter;
-	inTerminalViewPtr->screen.viewHeightInPixels    = kVisibleLines * inTerminalViewPtr->text.font.heightPerCharacter;
-	if (inTerminalViewPtr->screen.maxViewWidthInPixels > (kWidth * inTerminalViewPtr->text.font.widthPerCharacter))
+	inTerminalViewPtr->screen.cache.maxViewHeightInPixels = kVisibleLines * inTerminalViewPtr->text.font.heightPerCharacter;
+	inTerminalViewPtr->screen.cache.viewHeightInPixels    = kVisibleLines * inTerminalViewPtr->text.font.heightPerCharacter;
+	if (inTerminalViewPtr->screen.cache.maxViewWidthInPixels > (kWidth * inTerminalViewPtr->text.font.widthPerCharacter))
 	{
-		inTerminalViewPtr->screen.maxViewWidthInPixels = (kWidth * inTerminalViewPtr->text.font.widthPerCharacter);
+		inTerminalViewPtr->screen.cache.maxViewWidthInPixels = (kWidth * inTerminalViewPtr->text.font.widthPerCharacter);
 	}
-	if (inTerminalViewPtr->screen.maxViewHeightInPixels > (kLines * inTerminalViewPtr->text.font.heightPerCharacter))
+	if (inTerminalViewPtr->screen.cache.maxViewHeightInPixels > (kLines * inTerminalViewPtr->text.font.heightPerCharacter))
 	{
-		inTerminalViewPtr->screen.maxViewHeightInPixels = (kLines * inTerminalViewPtr->text.font.heightPerCharacter);
+		inTerminalViewPtr->screen.cache.maxViewHeightInPixels = (kLines * inTerminalViewPtr->text.font.heightPerCharacter);
 	}
-	inTerminalViewPtr->screen.maxWidthInPixels = kWidth * inTerminalViewPtr->text.font.widthPerCharacter;
-	inTerminalViewPtr->screen.maxHeightInPixels = kLines * inTerminalViewPtr->text.font.heightPerCharacter;
+	inTerminalViewPtr->screen.cache.maxWidthInPixels = kWidth * inTerminalViewPtr->text.font.widthPerCharacter;
+	inTerminalViewPtr->screen.cache.maxHeightInPixels = kLines * inTerminalViewPtr->text.font.heightPerCharacter;
 }// recalculateCachedDimensions
 
 
