@@ -1397,6 +1397,7 @@ For debugging - prints the data in a UNIX "termios" structure.
 void
 printTerminalControlStructure	(struct termios const*		inTerminalControlPtr)
 {
+	Console_BlockIndent	_;
 	tcflag_t const*		inputFlagsPtr = &inTerminalControlPtr->c_iflag;
 	tcflag_t const*		outputFlagsPtr = &inTerminalControlPtr->c_oflag;
 	tcflag_t const*		hardwareControlFlagsPtr = &inTerminalControlPtr->c_cflag;
