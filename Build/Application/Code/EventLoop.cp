@@ -88,6 +88,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 /*!
 Information stored in the view event info collection.
@@ -107,7 +108,10 @@ enum
 	kMy_WindowEventInfoTypeEventTargetRef		= 'wetg'		// data: My_WindowEventTargetRef
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 struct My_ViewEventTarget
 {
@@ -149,85 +153,76 @@ typedef struct My_OpaqueWindowEventTarget**	My_WindowEventTargetRef;
 typedef MemoryBlockPtrLocker< My_WindowEventTargetRef, My_WindowEventTarget >	My_WindowEventTargetPtrLocker;
 typedef LockAcquireRelease< My_WindowEventTargetRef, My_WindowEventTarget >		My_WindowEventTargetAutoLocker;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static void						disposeGlobalEventTarget		(My_GlobalEventTargetRef*);
-static void						disposeViewEventTarget			(My_ViewEventTargetRef*);
-static void						disposeWindowEventTarget		(My_WindowEventTargetRef*);
-static void						eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
-static Boolean					eventNotifyForControl			(EventLoop_ControlEvent, HIViewRef, void*);
-static Boolean					eventNotifyForWindow			(EventLoop_WindowEvent, HIWindowRef, void*);
-static Boolean					eventTargetExistsForControl		(HIViewRef);
-static Boolean					eventTargetExistsForWindow		(HIWindowRef);
-static My_ViewEventTargetRef	findViewEventTarget				(HIViewRef);
-static My_WindowEventTargetRef	findWindowEventTarget			(HIWindowRef);
-static Boolean					isAnyListenerForViewEvent		(HIViewRef, EventLoop_ControlEvent);
-static Boolean					isAnyListenerForWindowEvent		(HIWindowRef, EventLoop_WindowEvent);
-static My_GlobalEventTargetRef	newGlobalEventTarget			();
-static My_WindowEventTargetRef	newStandardWindowEventTarget	(HIWindowRef);
-static My_ViewEventTargetRef	newViewEventTarget				(HIViewRef);
-static pascal OSStatus			receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus			receiveServicesEvent			(EventHandlerCallRef, EventRef, void*);
+#pragma mark Internal Method Prototypes
+namespace {
+
+void						disposeGlobalEventTarget		(My_GlobalEventTargetRef*);
+void						eventNotifyGlobal				(EventLoop_GlobalEvent, void*);
+My_GlobalEventTargetRef	newGlobalEventTarget			();
+pascal OSStatus			receiveApplicationSwitch		(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			receiveServicesEvent			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-static pascal OSStatus			receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			receiveSheetOpening				(EventHandlerCallRef, EventRef, void*);
 #endif
-static pascal OSStatus			receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			receiveWindowActivated			(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			updateModifiers					(EventHandlerCallRef, EventRef, void*);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	My_GlobalEventTargetRef				gGlobalEventTarget = nullptr;
-	Collection							gViewEventInfo = nullptr;
-	Collection							gWindowEventInfo = nullptr;
-	SInt16								gHaveInstalledNotification = 0;
-	UInt32								gTicksWaitNextEvent = 0L;
-	NMRec*								gBeepNotificationPtr = nullptr;
-	My_ViewEventTargetHandleLocker&		gViewEventTargetHandleLocks ()		{ static My_ViewEventTargetHandleLocker x; return x; }
-	My_GlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static My_GlobalEventTargetHandleLocker x; return x; }
-	My_WindowEventTargetPtrLocker&		gWindowEventTargetPtrLocks ()		{ static My_WindowEventTargetPtrLocker x; return x; }
-	CarbonEventHandlerWrap				gCarbonEventHICommandHandler(GetApplicationEventTarget(),
-																		receiveHICommand,
-																		CarbonEventSetInClass
-																			(CarbonEventClass(kEventClassCommand),
-																				kEventCommandProcess,
-																				kEventCommandUpdateStatus),
-																		nullptr/* user data */);
-	Console_Assertion					_1(gCarbonEventHICommandHandler.isInstalled(), __FILE__, __LINE__);
-	UInt32								gCarbonEventModifiers = 0L; // current modifier key states; updated by the callback
-	CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget(),
-																		updateModifiers,
-																		CarbonEventSetInClass
-																			(CarbonEventClass(kEventClassKeyboard),
-																				kEventRawKeyModifiersChanged),
-																		nullptr/* user data */);
-	Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
-	CarbonEventHandlerWrap				gCarbonEventServiceHandler(GetApplicationEventTarget(),
-																	receiveServicesEvent,
+My_GlobalEventTargetRef				gGlobalEventTarget = nullptr;
+SInt16								gHaveInstalledNotification = 0;
+UInt32								gTicksWaitNextEvent = 0L;
+NMRec*								gBeepNotificationPtr = nullptr;
+My_ViewEventTargetHandleLocker&		gViewEventTargetHandleLocks ()		{ static My_ViewEventTargetHandleLocker x; return x; }
+My_GlobalEventTargetHandleLocker&	gGlobalEventTargetHandleLocks ()	{ static My_GlobalEventTargetHandleLocker x; return x; }
+My_WindowEventTargetPtrLocker&		gWindowEventTargetPtrLocks ()		{ static My_WindowEventTargetPtrLocker x; return x; }
+CarbonEventHandlerWrap				gCarbonEventHICommandHandler(GetApplicationEventTarget(),
+																	receiveHICommand,
 																	CarbonEventSetInClass
-																		(CarbonEventClass(kEventClassService),
-																			kEventServiceGetTypes, kEventServiceCopy, kEventServicePerform),
+																		(CarbonEventClass(kEventClassCommand),
+																			kEventCommandProcess,
+																			kEventCommandUpdateStatus),
 																	nullptr/* user data */);
-	Console_Assertion					_3(gCarbonEventServiceHandler.isInstalled(), __FILE__, __LINE__);
-	CarbonEventHandlerWrap				gCarbonEventSwitchHandler(GetApplicationEventTarget(),
-																	receiveApplicationSwitch,
+Console_Assertion					_1(gCarbonEventHICommandHandler.isInstalled(), __FILE__, __LINE__);
+UInt32								gCarbonEventModifiers = 0L; // current modifier key states; updated by the callback
+CarbonEventHandlerWrap				gCarbonEventModifiersHandler(GetApplicationEventTarget(),
+																	updateModifiers,
 																	CarbonEventSetInClass
-																		(CarbonEventClass(kEventClassApplication),
-																			kEventAppActivated, kEventAppDeactivated),
+																		(CarbonEventClass(kEventClassKeyboard),
+																			kEventRawKeyModifiersChanged),
 																	nullptr/* user data */);
-	Console_Assertion					_4(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
-	CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventTarget(),
-																			receiveWindowActivated,
-																			CarbonEventSetInClass
-																				(CarbonEventClass(kEventClassWindow),
-																					kEventWindowActivated),
-																			nullptr/* user data */);
-	Console_Assertion					_5(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
-	EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
-	EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
-}
+Console_Assertion					_2(gCarbonEventModifiersHandler.isInstalled(), __FILE__, __LINE__);
+CarbonEventHandlerWrap				gCarbonEventServiceHandler(GetApplicationEventTarget(),
+																receiveServicesEvent,
+																CarbonEventSetInClass
+																	(CarbonEventClass(kEventClassService),
+																		kEventServiceGetTypes, kEventServiceCopy, kEventServicePerform),
+																nullptr/* user data */);
+Console_Assertion					_3(gCarbonEventServiceHandler.isInstalled(), __FILE__, __LINE__);
+CarbonEventHandlerWrap				gCarbonEventSwitchHandler(GetApplicationEventTarget(),
+																receiveApplicationSwitch,
+																CarbonEventSetInClass
+																	(CarbonEventClass(kEventClassApplication),
+																		kEventAppActivated, kEventAppDeactivated),
+																nullptr/* user data */);
+Console_Assertion					_4(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
+CarbonEventHandlerWrap				gCarbonEventWindowActivateHandler(GetApplicationEventTarget(),
+																		receiveWindowActivated,
+																		CarbonEventSetInClass
+																			(CarbonEventClass(kEventClassWindow),
+																				kEventWindowActivated),
+																		nullptr/* user data */);
+Console_Assertion					_5(gCarbonEventSwitchHandler.isInstalled(), __FILE__, __LINE__);
+EventHandlerUPP						gCarbonEventSheetOpeningUPP = nullptr;
+EventHandlerRef						gCarbonEventSheetOpeningHandler = nullptr;
+
+} // anonymous namespace
 
 
 
@@ -274,8 +269,6 @@ EventLoop_Init ()
 	
 	// create listener models to handle event notifications
 	gGlobalEventTarget = newGlobalEventTarget();
-	gViewEventInfo = NewCollection();
-	gWindowEventInfo = NewCollection();
 	
 	// the update-status handler for Preferences does not appear to be
 	// called soon enough to properly initialize its state, so it is
@@ -302,44 +295,6 @@ EventLoop_Done ()
 	
 	// destroy global event target
 	disposeGlobalEventTarget(&gGlobalEventTarget);
-	
-	// destroy any control event targets that were allocated
-	{
-		My_ViewEventTargetRef		eventTarget = nullptr;
-		SInt32						itemCount = CountTaggedCollectionItems
-												(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef);
-		SInt32						itemSizeActualSize = sizeof(eventTarget);
-		register SInt32				i = 0;
-		OSStatus					error = noErr;
-		
-		
-		for (i = 1; i <= itemCount; ++i)
-		{
-			error = GetTaggedCollectionItem(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, i,
-											&itemSizeActualSize, &eventTarget);
-			if (error == noErr) disposeViewEventTarget(&eventTarget);
-		}
-	}
-	DisposeCollection(gViewEventInfo), gViewEventInfo = nullptr;
-	
-	// destroy any window event targets that were allocated
-	{
-		My_WindowEventTargetRef		eventTarget = nullptr;
-		SInt32						itemCount = CountTaggedCollectionItems
-												(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef);
-		SInt32						itemSizeActualSize = sizeof(eventTarget);
-		register SInt32				i = 0;
-		OSStatus					error = noErr;
-		
-		
-		for (i = 1; i <= itemCount; ++i)
-		{
-			error = GetTaggedCollectionItem(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, i,
-											&itemSizeActualSize, &eventTarget);
-			if (error == noErr) disposeWindowEventTarget(&eventTarget);
-		}
-	}
-	DisposeCollection(gWindowEventInfo), gWindowEventInfo = nullptr;
 }// Done
 
 
@@ -352,7 +307,7 @@ given to other running threads.
 (3.0)
 */
 pascal Boolean
-EventLoop_HandleColorPickerUpdate	(EventRecord*		inoutEventPtr)
+EventLoop_HandleColorPickerUpdate	(EventRecord*		UNUSED_ARGUMENT(inoutEventPtr))
 {
 	Boolean		result = pascal_false; // event handled?
 	
@@ -371,8 +326,8 @@ given to other running threads.
 (3.0)
 */
 pascal void
-EventLoop_HandleNavigationUpdate	(NavEventCallbackMessage	inMessage, 
-									 NavCBRecPtr				inParameters, 
+EventLoop_HandleNavigationUpdate	(NavEventCallbackMessage	UNUSED_ARGUMENT(inMessage), 
+									 NavCBRecPtr				UNUSED_ARGUMENT(inParameters), 
 									 NavCallBackUserData		UNUSED_ARGUMENT(inUserData))
 {
 	// no longer important with Carbon Events
@@ -676,32 +631,7 @@ EventLoop_Terminate ()
 
 
 #pragma mark Internal Methods
-
-/*!
-Destroys an event target reference created with the
-newViewEventTarget() routine.
-
-(3.0)
-*/
-static void
-disposeViewEventTarget	(My_ViewEventTargetRef*		inoutRefPtr)
-{
-	if (inoutRefPtr != nullptr)
-	{
-		{
-			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), *inoutRefPtr);
-			
-			
-			if (ptr != nullptr)
-			{
-				// dispose of data members
-				ListenerModel_Dispose(&ptr->listenerModel);
-			}
-		}
-		Memory_DisposeHandle(REINTERPRET_CAST(inoutRefPtr, Handle*));
-	}
-}// disposeViewEventTarget
-
+namespace {
 
 /*!
 Destroys an event target reference created with the
@@ -709,7 +639,7 @@ newGlobalEventTarget() routine.
 
 (3.0)
 */
-static void
+void
 disposeGlobalEventTarget	(My_GlobalEventTargetRef*	inoutRefPtr)
 {
 	if (inoutRefPtr != nullptr)
@@ -730,32 +660,6 @@ disposeGlobalEventTarget	(My_GlobalEventTargetRef*	inoutRefPtr)
 
 
 /*!
-Destroys an event target reference created with the
-newWindowEventTarget() routine.
-
-(3.0)
-*/
-static void
-disposeWindowEventTarget	(My_WindowEventTargetRef*	inoutRefPtr)
-{
-	if (inoutRefPtr != nullptr)
-	{
-		{
-			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), *inoutRefPtr);
-			
-			
-			if (ptr != nullptr)
-			{
-				// dispose of data members
-				ListenerModel_Dispose(&ptr->listenerModel);
-			}
-		}
-		delete *(REINTERPRET_CAST(inoutRefPtr, My_WindowEventTargetPtr*)), *inoutRefPtr = nullptr;
-	}
-}// disposeWindowEventTarget
-
-
-/*!
 Notifies all listeners for the specified global
 event, in an appropriate order, passing the given
 context to the listener.
@@ -767,7 +671,7 @@ IMPORTANT:	The context must make sense for the
 
 (3.0)
 */
-static void
+void
 eventNotifyGlobal	(EventLoop_GlobalEvent	inEventThatOccurred,
 					 void*					inContextPtr)
 {
@@ -780,378 +684,13 @@ eventNotifyGlobal	(EventLoop_GlobalEvent	inEventThatOccurred,
 
 
 /*!
-Notifies all listeners for the specified control
-event, in an appropriate order, passing the given
-context to the listener.  For some events, the
-context may be modified - in those cases, check
-the context after invoking this routine to see if
-anything has changed.
-
-Returns "true" only if some handler completely
-handled the event.
-
-IMPORTANT:	The context must make sense for the
-			type of event; see "EventLoop.h" for
-			the type of context associated with
-			each control event type.
-
-(3.0)
-*/
-static Boolean
-eventNotifyForControl	(EventLoop_ControlEvent		inEventThatOccurred,
-						 HIViewRef					inForWhichControl,
-						 void*						inoutContextPtr)
-{
-	My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControl);
-	Boolean					result = false;
-	
-	
-	if (ref != nullptr)
-	{
-		My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
-		
-		
-		// invoke listener callback routines appropriately, from the specified control’s event target
-		ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inoutContextPtr,
-												REINTERPRET_CAST(&result, Boolean*));
-	}
-	
-	// also notify callbacks that don’t care which control it is
-	unless (result) eventNotifyGlobal(inEventThatOccurred, inoutContextPtr);
-	
-	return result;
-}// eventNotifyForControl
-
-
-/*!
-Notifies all listeners for the specified window
-event, in an appropriate order, passing the given
-context to the listener.  For some events, the
-context may be modified - in those cases, check
-the context after invoking this routine to see if
-anything has changed.
-
-IMPORTANT:	The context must make sense for the
-			type of event; see "EventLoop.h" for
-			the type of context associated with
-			each window event type.
-
-(3.0)
-*/
-static Boolean
-eventNotifyForWindow	(EventLoop_WindowEvent	inEventThatOccurred,
-						 HIWindowRef			inForWhichWindow,
-						 void*					inoutContextPtr)
-{
-	My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindow);
-	Boolean						result = false;
-	
-	
-	if (ref != nullptr)
-	{
-		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-		
-		
-		// invoke listener callback routines appropriately, from the specified window’s event target
-		ListenerModel_NotifyListenersOfEvent(ptr->listenerModel, inEventThatOccurred, inoutContextPtr,
-												REINTERPRET_CAST(&result, Boolean*));
-	}
-	
-	// also notify callbacks that don’t care which window it is
-	unless (result) eventNotifyGlobal(inEventThatOccurred, inoutContextPtr);
-	
-	return result;
-}// eventNotifyForWindow
-
-
-/*!
-Determines if the specified control has had an
-event target created for it.  Event targets store
-the list of event listeners, and other information,
-for particular controls in windows.
-
-You can use this when events occur to determine if
-there is any point in trying to notify listeners.
-Most controls will not have had listeners installed
-for them, and automatically allocating an event
-target for each control is wasteful.  In addition,
-you might need to perform some other course of
-action in the event that no target is available
-(for example, iterate over a known list of controls
-to figure out what to do in response to an event).
-
-(3.0)
-*/
-static Boolean
-eventTargetExistsForControl		(HIViewRef		inForWhichControl)
-{
-	Boolean		result = false;
-	SInt32		uniqueID = REINTERPRET_CAST(inForWhichControl, SInt32);
-	
-	
-	if (inForWhichControl != nullptr)
-	{
-		OSStatus		error = noErr;
-		
-		
-		error = GetCollectionItemInfo(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
-										REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
-										REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
-										REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*));
-		if (error == noErr) result = true;
-	}
-	return result;
-}// eventTargetExistsForControl
-
-
-/*!
-Determines if the specified window has had an event
-target created for it.  Event targets store the list
-of event listeners, and other information, for
-particular windows.
-
-You can use this when events occur to determine if
-there is any point in trying to notify listeners.
-Not all windows will have had listeners installed
-for them, so automatically allocating an event
-target for each window is wasteful.  In addition,
-you might need to perform some other course of
-action in the event that no target is available
-(for example, iterate over a known list of windows
-to figure out what to do in response to an event).
-
-(3.0)
-*/
-static Boolean
-eventTargetExistsForWindow		(WindowRef		inForWhichWindow)
-{
-	Boolean		result = false;
-	SInt32		uniqueID = REINTERPRET_CAST(inForWhichWindow, SInt32);
-	
-	
-	if (inForWhichWindow != nullptr)
-	{
-		OSStatus	error = noErr;
-		
-		
-		error = GetCollectionItemInfo(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
-										REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
-										REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
-										REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*));
-		if (error == noErr) result = true;
-	}
-	return result;
-}// eventTargetExistsForWindow
-
-
-/*!
-Creates or returns the existing event target for
-the specified control.  Event targets store the
-list of event listeners, and other information,
-for particular controls in windows.
-
-(3.0)
-*/
-static My_ViewEventTargetRef
-findViewEventTarget		(HIViewRef		inForWhichControl)
-{
-	My_ViewEventTargetRef	result = nullptr;
-	SInt32					uniqueID = REINTERPRET_CAST(inForWhichControl, SInt32);
-	OSStatus				error = noErr;
-		
-		
-	if (GetCollectionItemInfo(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
-								REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
-								REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
-								REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*)) ==
-		collectionItemNotFoundErr)
-	{
-		// no target exists for this control - create one
-		result = newViewEventTarget(inForWhichControl);
-		error = AddCollectionItem(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
-									sizeof(result), &result);
-		if (error != noErr)
-		{
-			// error!
-			Console_WriteValue("control event target add-to-collection error", error);
-			result = nullptr;
-		}
-	}
-	else
-	{
-		SInt32		itemSizeActualSize = sizeof(result);
-		
-		
-		// a target already exists for this control - return it
-		error = GetCollectionItem(gViewEventInfo, kMy_ViewEventInfoTypeEventTargetRef, uniqueID,
-									&itemSizeActualSize, &result);
-		if (error != noErr)
-		{
-			// error!
-			Console_WriteValue("control event target get-collection-item error", error);
-			result = nullptr;
-		}
-	}
-	return result;
-}// findViewEventTarget
-
-
-/*!
-Creates or returns the existing event target for
-the specified window.  Event targets store the
-list of event listeners, and other information,
-for particular windows.
-
-(3.0)
-*/
-static My_WindowEventTargetRef
-findWindowEventTarget	(WindowRef		inForWhichWindow)
-{
-	My_WindowEventTargetRef		result = nullptr;
-	SInt32						uniqueID = REINTERPRET_CAST(inForWhichWindow, SInt32);
-	OSStatus					error = noErr;
-	
-	
-	if (GetCollectionItemInfo(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
-								REINTERPRET_CAST(kCollectionDontWantIndex, SInt32*),
-								REINTERPRET_CAST(kCollectionDontWantSize, SInt32*),
-								REINTERPRET_CAST(kCollectionDontWantAttributes, SInt32*)) ==
-		collectionItemNotFoundErr)
-	{
-		// no target exists for this window - create one
-		result = newStandardWindowEventTarget(inForWhichWindow);
-		error = AddCollectionItem(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
-									sizeof(result), &result);
-		if (error != noErr)
-		{
-			// error!
-			Console_WriteValue("window event target add-to-collection error", error);
-			result = nullptr;
-		}
-	}
-	else
-	{
-		SInt32		itemSizeActualSize = sizeof(result);
-		
-		
-		// a target already exists for this window - return it
-		error = GetCollectionItem(gWindowEventInfo, kMy_WindowEventInfoTypeEventTargetRef, uniqueID,
-									&itemSizeActualSize, &result);
-		if (error != noErr)
-		{
-			// error!
-			Console_WriteValue("window event target get-collection-item error", error);
-			result = nullptr;
-		}
-	}
-	return result;
-}// findWindowEventTarget
-
-
-/*!
-Returns "true" only if there is at least one
-listener installed for the given event on the
-specified control.  Use this to determine if
-there is any handler for a particular event, or
-if you should handle the event yourself.
-
-(3.0)
-*/
-static Boolean
-isAnyListenerForViewEvent	(HIViewRef					inForWhichControl,
-							 EventLoop_ControlEvent		inForWhichEvent)
-{
-	Boolean		result = eventTargetExistsForControl(inForWhichControl);
-	
-	
-	if (result)
-	{
-		My_ViewEventTargetRef	ref = findViewEventTarget(inForWhichControl);
-		
-		
-		if (ref != nullptr)
-		{
-			My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), ref);
-			
-			
-			result = ListenerModel_IsAnyListenerForEvent(ptr->listenerModel, inForWhichEvent);
-		}
-	}
-	return result;
-}// isAnyListenerForViewEvent
-
-
-/*!
-Returns "true" only if there is at least one
-listener installed for the given event on the
-specified window.  Use this to determine if
-there is any handler for a particular event, or
-if you should handle the event yourself.
-
-(3.0)
-*/
-static Boolean
-isAnyListenerForWindowEvent		(WindowRef					inForWhichWindow,
-								 EventLoop_WindowEvent		inForWhichEvent)
-{
-	Boolean		result = eventTargetExistsForWindow(inForWhichWindow);
-	
-	
-	if (result)
-	{
-		My_WindowEventTargetRef		ref = findWindowEventTarget(inForWhichWindow);
-		
-		
-		if (ref != nullptr)
-		{
-			My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), ref);
-			
-			
-			result = ListenerModel_IsAnyListenerForEvent(ptr->listenerModel, inForWhichEvent);
-		}
-	}
-	return result;
-}// isAnyListenerForWindowEvent
-
-
-/*!
-Creates an event target reference for the specified
-control.  Control events have higher priority than
-standard windows, but lower priority than floating
-windows.
-
-Dispose of this with disposeViewEventTarget().
-
-(3.0)
-*/
-static My_ViewEventTargetRef
-newViewEventTarget	(HIViewRef		inForWhichControl)
-{
-	My_ViewEventTargetRef	result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_ViewEventTarget)),
-														My_ViewEventTargetRef);
-	
-	
-	if (result != nullptr)
-	{
-		My_ViewEventTargetAutoLocker	ptr(gViewEventTargetHandleLocks(), result);
-		
-		
-		ptr->control = inForWhichControl;
-		ptr->listenerModel = ListenerModel_New(kListenerModel_StyleLogicalOR,
-												kConstantsRegistry_ListenerModelDescriptorEventTargetForControl);
-	}
-	return result;
-}// newViewEventTarget
-
-
-/*!
 Creates the global event target, used for all events
 that do not have a more specific target.  Dispose of
 this with disposeGlobalEventTarget().
 
 (3.0)
 */
-static My_GlobalEventTargetRef
+My_GlobalEventTargetRef
 newGlobalEventTarget ()
 {
 	My_GlobalEventTargetRef		result = REINTERPRET_CAST(Memory_NewHandle(sizeof(My_GlobalEventTarget)),
@@ -1171,36 +710,6 @@ newGlobalEventTarget ()
 
 
 /*!
-Creates an event target reference for the specified
-non-floating window.  Non-floating windows have a lower
-event notification priority than floating windows do.
-
-Dispose of this with disposeWindowEventTarget().
-
-(3.0)
-*/
-static My_WindowEventTargetRef
-newStandardWindowEventTarget	(HIWindowRef	inForWhichWindow)
-{
-	My_WindowEventTargetRef		result = REINTERPRET_CAST(new My_WindowEventTarget, My_WindowEventTargetRef);
-	
-	
-	if (result != nullptr)
-	{
-		My_WindowEventTargetAutoLocker	ptr(gWindowEventTargetPtrLocks(), result);
-		
-		
-		ptr->window = inForWhichWindow;
-		ptr->listenerModel = ListenerModel_New(kListenerModel_StyleLogicalOR,
-												kConstantsRegistry_ListenerModelDescriptorEventTargetForWindow);
-		ptr->defaultButton = nullptr;
-		ptr->cancelButton = nullptr;
-	}
-	return result;
-}// newStandardWindowEventTarget
-
-
-/*!
 Handles "kEventAppActivated" and "kEventAppDeactivated"
 of "kEventClassApplication".
 
@@ -1211,7 +720,7 @@ frontmost (suspended/deactivated).
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveApplicationSwitch	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef				inEvent,
 							 void*					UNUSED_ARGUMENT(inUserData))
@@ -1265,7 +774,7 @@ of "kEventClassCommand".
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inUserData))
@@ -1576,7 +1085,7 @@ invoked for a piece of data.
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveServicesEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -1727,7 +1236,7 @@ This handler could prevent the opening by returning
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -1853,7 +1362,7 @@ by resetting the mouse cursor.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveWindowActivated	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef				inEvent,
 						 void*					UNUSED_ARGUMENT(inUserData))
@@ -1884,7 +1393,7 @@ variable that is used by other functions
 
 (3.0)
 */
-static pascal OSStatus
+pascal OSStatus
 updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					UNUSED_ARGUMENT(inUserData))
@@ -1908,5 +1417,7 @@ updateModifiers		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// updateModifiers
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
