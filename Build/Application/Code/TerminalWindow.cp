@@ -2180,20 +2180,6 @@ TerminalWindow::
 	}
 	ListenerModel_ReleaseListener(&this->terminalViewEventListener);
 	
-	// destroy all buffers (NOTE: perhaps this should be revisited, as
-	// a future feature may be to allow multiple windows to use the same
-	// buffer; if that were the case, killing one window should not
-	// necessarily throw out its buffer)
-	{
-		TerminalScreenList::const_iterator	screenIterator;
-		
-		
-		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
-		{
-			Terminal_DisposeScreen(*screenIterator);
-		}
-	}
-	
 	// throw away information about terminal window change listeners
 	ListenerModel_Dispose(&this->changeListenerModel);
 	
@@ -2206,6 +2192,20 @@ TerminalWindow::
 	if (nullptr == this->tabAndWindowGroup)
 	{
 		ReleaseWindowGroup(this->tabAndWindowGroup), this->tabAndWindowGroup = nullptr;
+	}
+	
+	// destroy all buffers (NOTE: perhaps this should be revisited, as
+	// a future feature may be to allow multiple windows to use the same
+	// buffer; if that were the case, killing one window should not
+	// necessarily throw out its buffer)
+	{
+		TerminalScreenList::const_iterator	screenIterator;
+		
+		
+		for (screenIterator = this->allScreens.begin(); screenIterator != this->allScreens.end(); ++screenIterator)
+		{
+			Terminal_DisposeScreen(*screenIterator);
+		}
 	}
 }// TerminalWindow destructor
 
