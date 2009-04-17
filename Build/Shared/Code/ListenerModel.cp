@@ -630,7 +630,12 @@ ListenerModel_AddListenerForEvent	(ListenerModel_Ref			inToWhichModel,
 	OSStatus					result = noErr;
 	
 	
-	if (nullptr == ptr) result = memPCErr;
+	if (nullptr == ptr)
+	{
+		Console_Warning(Console_WriteValueFourChars, "attempt to add listener to nonexistent model for event",
+						inForWhichEvent);
+		result = memPCErr;
+	}
 	else
 	{
 		ListenerAutoLocker	listenerPtr(gListenerPtrLocks(), inListenerToAdd);
@@ -793,8 +798,8 @@ ListenerModel_NotifyListenersOfEvent	(ListenerModel_Ref		inForWhichModel,
 	if ((nullptr == ptr) ||
 		(gListenerModelValidRefs().end() == gListenerModelValidRefs().find(inForWhichModel)))
 	{
-		Console_Warning(Console_WriteValueAddress, "attempt to notify listeners in nonexistent model",
-						inForWhichModel);
+		Console_Warning(Console_WriteValueFourChars, "attempt to notify listeners in nonexistent model of event",
+						inEventThatOccurred);
 		result = kListenerModel_ResultInvalidModelReference;
 	}
 	else
@@ -922,15 +927,15 @@ ListenerModel_RemoveListenerForEvent	(ListenerModel_Ref			inFromWhichModel,
 	if ((nullptr == ptr) ||
 		(gListenerModelValidRefs().end() == gListenerModelValidRefs().find(inFromWhichModel)))
 	{
-		Console_Warning(Console_WriteValueAddress, "attempt to remove listener from nonexistent model",
-						inFromWhichModel);
+		Console_Warning(Console_WriteValueFourChars, "attempt to remove listener from nonexistent model for event",
+						inForWhichEvent);
 		result = kListenerModel_ResultInvalidModelReference;
 	}
 	else if ((nullptr == inListenerToRemove) ||
 				(gListenerValidRefs().end() == gListenerValidRefs().find(inListenerToRemove)))
 	{
-		Console_Warning(Console_WriteValueAddress, "attempt to remove nonexistent listener",
-						inListenerToRemove);
+		Console_Warning(Console_WriteValueFourChars, "attempt to remove nonexistent listener for event",
+						inForWhichEvent);
 		result = kListenerModel_ResultInvalidListenerReference;
 	}
 	else
