@@ -454,17 +454,8 @@ actionLegacyUpdates ()
 				prefsKey = CFSTR("new-means");
 				switch (appPrefs.newCommandShortcutEffect)
 				{
-				case 'New…': // kCommandNewSessionDialog
-					setMacTelnetPreference(prefsKey, CFSTR("dialog"));
-					break;
-				
-				case '>New': // kCommandNewFavoriteSession
-					setMacTelnetPreference(prefsKey, CFSTR("default"));
-					break;
-				
-				case 'new ': // kCommandNewSession
 				default:
-					setMacTelnetPreference(prefsKey, CFSTR("shell"));
+					setMacTelnetPreference(prefsKey, CFSTR("dialog"));
 					break;
 				}
 			}
