@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090423',
     '20090411',
     '20090410',
     '20090409',
@@ -227,6 +228,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090423': [
+		'Fixed Terminal window scroll bars to no longer disappear for large scrollback sizes.',
+	],
 	'20090411': [
 		'MacTelnet Help now includes a tutorial on how to make typical BBS games (or MUDs) work properly.',
 	],

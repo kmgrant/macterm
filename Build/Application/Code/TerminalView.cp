@@ -311,7 +311,7 @@ struct TerminalView
 			Boolean				idleFlash;		// is timer currently animating anything?
 		} cursor;
 		
-		SInt16			topVisibleEdgeInPixels;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
+		SInt32			topVisibleEdgeInPixels;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
 													//   value directly, use offsetTopVisibleEdge()
 		SInt16			topVisibleEdgeInRows;		// 0 if scrolled to the main screen, negative if scrollback; do not change this
 													//   value directly, use offsetTopVisibleEdge()
@@ -340,11 +340,11 @@ struct TerminalView
 			// is changed; see that routine’s documentation for more information
 			SInt16			topEdgeInPixels;		// the most negative possible value for the top visible edge in pixels
 			SInt16			viewWidthInPixels;		// size of window view (window could be smaller than the screen size);
-			SInt16			viewHeightInPixels;		//   always identical to the current dimensions of the content view
+			SInt32			viewHeightInPixels;		//   always identical to the current dimensions of the content view
 			SInt16			maxViewWidthInPixels;	// size of bottommost screenful (regardless of window size);
-			SInt16			maxViewHeightInPixels;	//   always identical to the maximum dimensions of the content view
+			SInt32			maxViewHeightInPixels;	//   always identical to the maximum dimensions of the content view
 			SInt16			maxWidthInPixels;		// the largest size the terminal view content area can possibly have, which
-			SInt16			maxHeightInPixels;		//   would display every last line of the visible screen *and* scrollback!
+			SInt32			maxHeightInPixels;		//   would display every last line of the visible screen *and* scrollback!
 		} cache;
 	} screen;
 	
@@ -2039,7 +2039,7 @@ TerminalView_ScrollPixelsTo		(TerminalViewRef	inView,
 	{
 		// IMPORTANT: This routine should derive range values in the same way
 		// as TerminalView_GetRange().
-		SInt16 const	kNewValue = inStartOfRangeV - viewPtr->screen.cache.maxHeightInPixels +
+		SInt32 const	kNewValue = inStartOfRangeV - viewPtr->screen.cache.maxHeightInPixels +
 									viewPtr->screen.cache.viewHeightInPixels;
 		
 		
@@ -7228,7 +7228,7 @@ offsetTopVisibleEdge	(TerminalViewPtr	inTerminalViewPtr,
 	SInt16 const	kMinimum = -Terminal_ReturnInvisibleRowCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kMaximum = 0/*Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref) - 1*/;
 	SInt16 const	kOldDiscreteValue = inTerminalViewPtr->screen.topVisibleEdgeInRows;
-	SInt16			pixelValue = inTerminalViewPtr->screen.topVisibleEdgeInPixels;
+	SInt32			pixelValue = inTerminalViewPtr->screen.topVisibleEdgeInPixels;
 	SInt16			discreteValue = kOldDiscreteValue;
 	
 	
@@ -7443,24 +7443,30 @@ recalculateCachedDimensions		(TerminalViewPtr	inTerminalViewPtr)
 	SInt16 const	kVisibleWidth = Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kVisibleLines = Terminal_ReturnRowCount(inTerminalViewPtr->screen.ref);
 	SInt16 const	kLines = kScrollbackLines + kVisibleLines;
+	SInt32 const	kPossibleNewMaxViewHeight = STATIC_CAST(kLines, SInt32) *
+												STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
 	
 	
-	inTerminalViewPtr->screen.cache.topEdgeInPixels = -(kScrollbackLines * inTerminalViewPtr->text.font.heightPerCharacter);
+	inTerminalViewPtr->screen.cache.topEdgeInPixels = -(STATIC_CAST(kScrollbackLines, SInt32) *
+														STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32));
 	inTerminalViewPtr->screen.cache.maxViewWidthInPixels = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
 	inTerminalViewPtr->screen.cache.viewWidthInPixels    = kVisibleWidth * inTerminalViewPtr->text.font.widthPerCharacter;
 	// TEMPORARY: since some visible lines may be in double-height mode, that should be taken into account here
-	inTerminalViewPtr->screen.cache.maxViewHeightInPixels = kVisibleLines * inTerminalViewPtr->text.font.heightPerCharacter;
-	inTerminalViewPtr->screen.cache.viewHeightInPixels    = kVisibleLines * inTerminalViewPtr->text.font.heightPerCharacter;
+	inTerminalViewPtr->screen.cache.maxViewHeightInPixels = STATIC_CAST(kVisibleLines, SInt32) *
+															STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
+	inTerminalViewPtr->screen.cache.viewHeightInPixels = STATIC_CAST(kVisibleLines, SInt32) *
+															STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
 	if (inTerminalViewPtr->screen.cache.maxViewWidthInPixels > (kWidth * inTerminalViewPtr->text.font.widthPerCharacter))
 	{
 		inTerminalViewPtr->screen.cache.maxViewWidthInPixels = (kWidth * inTerminalViewPtr->text.font.widthPerCharacter);
 	}
-	if (inTerminalViewPtr->screen.cache.maxViewHeightInPixels > (kLines * inTerminalViewPtr->text.font.heightPerCharacter))
+	if (inTerminalViewPtr->screen.cache.maxViewHeightInPixels > kPossibleNewMaxViewHeight)
 	{
-		inTerminalViewPtr->screen.cache.maxViewHeightInPixels = (kLines * inTerminalViewPtr->text.font.heightPerCharacter);
+		inTerminalViewPtr->screen.cache.maxViewHeightInPixels = kPossibleNewMaxViewHeight;
 	}
 	inTerminalViewPtr->screen.cache.maxWidthInPixels = kWidth * inTerminalViewPtr->text.font.widthPerCharacter;
-	inTerminalViewPtr->screen.cache.maxHeightInPixels = kLines * inTerminalViewPtr->text.font.heightPerCharacter;
+	inTerminalViewPtr->screen.cache.maxHeightInPixels = STATIC_CAST(kLines, SInt32) *
+														STATIC_CAST(inTerminalViewPtr->text.font.heightPerCharacter, SInt32);
 }// recalculateCachedDimensions
 
 
