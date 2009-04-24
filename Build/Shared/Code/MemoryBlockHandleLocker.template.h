@@ -4,8 +4,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	Data Access Library 2.1
+	¬© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -43,7 +43,7 @@
 #pragma mark Types
 
 /*!
-This class can be used to “safely” acquire and release locks on a
+This class can be used to ‚Äúsafely‚Äù acquire and release locks on a
 relocatable block, because a request to unlock the handle will not
 actually call HUnlock() until all acquisitions have been undone.
 If you use this class, you should not lock or unlock the handle on
@@ -55,14 +55,9 @@ class MemoryBlockHandleLocker:
 public MemoryBlockLocker< structure_reference_type, structure_type >
 {
 public:
-	//! returns the value of the handle’s master pointer, guaranteed to be stable while the handle is locked
+	//! returns the value of the handle‚Äôs master pointer, guaranteed to be stable while the handle is locked
 	structure_type*
 	acquireLock	(structure_reference_type	inReference);
-	
-	//! nullifies a copy of the master pointer value so the caller can no longer use it; might unlock the underlying handle
-	void
-	releaseLock	(structure_reference_type	inReference,
-				 structure_type const**		inoutPtrPtr);
 	
 	//! nullifies a copy of the master pointer value so the caller can no longer use it; might unlock the underlying handle
 	void
@@ -102,30 +97,9 @@ template < typename structure_reference_type, typename structure_type >
 void
 MemoryBlockHandleLocker< structure_reference_type, structure_type >::
 releaseLock	(structure_reference_type	inReference,
-			 structure_type const**		inoutPtrPtr)
-{
-	// BE SURE THIS IMPLEMENTATION IS SYNCHRONIZED WITH THE “NON-CONSTANT” VERSION, BELOW
-	UInt16	newLockCount = 0;
-#ifndef NDEBUG
-	UInt16	oldLockCount = returnLockCount(inReference);
-#endif
-	
-	
-	assert(oldLockCount > 0);
-	newLockCount = decrementLockCount(inReference);
-	assert(newLockCount < oldLockCount);
-	if (newLockCount == 0) HUnlock(REINTERPRET_CAST(inReference, Handle));
-	if (inoutPtrPtr != nullptr) *inoutPtrPtr = nullptr;
-}// releaseLock
-
-
-template < typename structure_reference_type, typename structure_type >
-void
-MemoryBlockHandleLocker< structure_reference_type, structure_type >::
-releaseLock	(structure_reference_type	inReference,
 			 structure_type**			inoutPtrPtr)
 {
-	// BE SURE THIS IMPLEMENTATION IS SYNCHRONIZED WITH THE “CONSTANT” VERSION, ABOVE
+	// BE SURE THIS IMPLEMENTATION IS SYNCHRONIZED WITH THE ‚ÄúCONSTANT‚Äù VERSION, ABOVE
 	UInt16	newLockCount = 0;
 #ifndef NDEBUG
 	UInt16	oldLockCount = returnLockCount(inReference);

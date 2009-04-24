@@ -9,8 +9,8 @@
 */
 /*###############################################################
 
-	Data Access Library 1.4
-	© 1998-2008 by Kevin Grant
+	Data Access Library 2.1
+	© 1998-2009 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -95,11 +95,6 @@ public:
 	//! determines if there are any locks on the specified reference’s memory block
 	inline bool
 	isLocked				(structure_reference_type			inReference) const;
-	
-	//! nullifies a pointer to a constant memory block; once all locks are cleared, the block can be relocated or purged, etc.
-	virtual void
-	releaseLock				(structure_reference_type			inReference,
-							 structure_type const**				inoutPtrPtr) = 0;
 	
 	//! nullifies a pointer to a mutable memory block; once all locks are cleared, the block can be relocated or purged, etc.
 	virtual void

@@ -7,7 +7,7 @@
 /*###############################################################
 
 	Data Access Library 1.3
-	© 1998-2006 by Kevin Grant
+	¬© 1998-2006 by Kevin Grant
 	
 	This library is free software; you can redistribute it or
 	modify it under the terms of the GNU Lesser Public License
@@ -46,7 +46,7 @@
 
 /*!
 This class can be used to count locks on references.  You might
-use this to provide a “secure delete” facility, where you don’t
+use this to provide a ‚Äúsecure delete‚Äù facility, where you don‚Äôt
 delete some underlying data unless this class claims that no
 reference locks exist - and, you provide users with a way to
 acquire and release locks on your references, deferring most of
@@ -66,11 +66,6 @@ public:
 	releaseLock	(structure_reference_type	inReference);
 
 protected:
-	//! decrements the lock count by one; unused 2nd parameter
-	void
-	releaseLock	(structure_reference_type	inReference,
-				 structure_type const**		inDummyPtr);
-	
 	//! decrements the lock count by one; unused 2nd parameter
 	void
 	releaseLock	(structure_reference_type	inReference,
@@ -105,30 +100,11 @@ void
 MemoryBlockReferenceLocker< structure_reference_type, structure_type >::
 releaseLock	(structure_reference_type	inReference)
 {
-	structure_type const*	dummyPtr = nullptr;
+	structure_type*		dummyPtr = nullptr;
 	
 	
-	// use the dummy-parameter version as a “worker function”
+	// use the dummy-parameter version as a ‚Äúworker function‚Äù
 	releaseLock(inReference, &dummyPtr);
-}// releaseLock
-
-
-template < typename structure_reference_type, typename structure_type >
-void
-MemoryBlockReferenceLocker< structure_reference_type, structure_type >::
-releaseLock	(structure_reference_type	inReference,
-			 structure_type const**		UNUSED_ARGUMENT(inNull))
-{
-	// BE SURE THIS IMPLEMENTATION IS SYNCHRONIZED WITH THE “NON-CONSTANT” VERSION, BELOW
-	UInt16	newLockCount = 0;
-#ifndef NDEBUG
-	UInt16	oldLockCount = returnLockCount(inReference);
-#endif
-	
-	
-	assert(oldLockCount > 0);
-	newLockCount = decrementLockCount(inReference);
-	assert(newLockCount < oldLockCount);
 }// releaseLock
 
 
@@ -138,7 +114,6 @@ MemoryBlockReferenceLocker< structure_reference_type, structure_type >::
 releaseLock	(structure_reference_type	inReference,
 			 structure_type**			UNUSED_ARGUMENT(inNull))
 {
-	// BE SURE THIS IMPLEMENTATION IS SYNCHRONIZED WITH THE “CONSTANT” VERSION, ABOVE
 	UInt16	newLockCount = 0;
 #ifndef NDEBUG
 	UInt16	oldLockCount = returnLockCount(inReference);
