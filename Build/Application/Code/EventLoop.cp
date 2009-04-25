@@ -69,8 +69,6 @@
 #include "ConnectionData.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
-#include "EventInfoControlScope.h"
-#include "EventInfoWindowScope.h"
 #include "EventLoop.h"
 #include "HelpSystem.h"
 #include "MenuBar.h"

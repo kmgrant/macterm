@@ -249,8 +249,6 @@
 		0A4603DA0554376100ACDF3A /* DragAndDrop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DragAndDrop.h; path = Application/Code/DragAndDrop.h; sourceTree = SOURCE_ROOT; };
 		0A4603DB0554376100ACDF3A /* Embedding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Embedding.h; path = Shared/Code/Embedding.h; sourceTree = "<group>"; };
 		0A4603DC0554376100ACDF3A /* ErrorAlerts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ErrorAlerts.h; path = Application/Code/ErrorAlerts.h; sourceTree = SOURCE_ROOT; };
-		0A4603DD0554376100ACDF3A /* EventInfoControlScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventInfoControlScope.h; path = Application/Code/EventInfoControlScope.h; sourceTree = SOURCE_ROOT; };
-		0A4603DF0554376100ACDF3A /* EventInfoWindowScope.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventInfoWindowScope.h; path = Application/Code/EventInfoWindowScope.h; sourceTree = SOURCE_ROOT; };
 		0A4603E00554376100ACDF3A /* EventLoop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventLoop.h; path = Application/Code/EventLoop.h; sourceTree = SOURCE_ROOT; };
 		0A4603E10554376100ACDF3A /* FileUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileUtilities.h; path = Application/Code/FileUtilities.h; sourceTree = SOURCE_ROOT; };
 		0A4603E20554376100ACDF3A /* FindDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FindDialog.h; path = Application/Code/FindDialog.h; sourceTree = SOURCE_ROOT; };
@@ -772,8 +770,6 @@
 				0A4603DA0554376100ACDF3A /* DragAndDrop.h */,
 				0A82CE16069A3A030047E652 /* DuplicateDialog.h */,
 				0A4603DC0554376100ACDF3A /* ErrorAlerts.h */,
-				0A4603DD0554376100ACDF3A /* EventInfoControlScope.h */,
-				0A4603DF0554376100ACDF3A /* EventInfoWindowScope.h */,
 				0A4603E00554376100ACDF3A /* EventLoop.h */,
 				0A4603E10554376100ACDF3A /* FileUtilities.h */,
 				0A4603E20554376100ACDF3A /* FindDialog.h */,

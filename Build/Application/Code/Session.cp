@@ -79,7 +79,6 @@
 #include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"
-#include "EventInfoControlScope.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"
 #include "MacroManager.h"
@@ -117,6 +116,22 @@ enum Session_Type
 
 #pragma mark Types
 namespace {
+
+/*!
+Obsolete data structure.
+*/
+struct My_KeyPress
+{
+	ControlRef		control;			//!< which control is focused
+	SInt16			characterCode;		//!< code uniquifying the character corresponding to the key pressed
+	SInt16			characterCode2;		//!< if nonzero, the key press represents a sequence of two characters to send
+	SInt16			virtualKeyCode;		//!< code uniquifying the key pressed
+	Boolean			commandDown;		//!< the state of the Command modifier key
+	Boolean			controlDown;		//!< the state of the Control modifier key
+	Boolean			optionDown;			//!< the state of the Option modifier key
+	Boolean			shiftDown;			//!< the state of the Shift modifier key
+};
+typedef My_KeyPress*	My_KeyPressPtr;
 
 typedef std::map< HIViewRef, EventHandlerRef >		ControlDragDropHandlerMap;
 
@@ -4827,7 +4842,7 @@ NOTE:	This used to be a direct callback, hence its strange
 */
 Boolean
 handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-						 ListenerModel_Event	inEventThatOccurred,
+						 ListenerModel_Event	UNUSED_ARGUMENT(inEventThatOccurred),
 						 void*					inEventContextPtr,
 						 void*					inListenerContextPtr)
 {
@@ -4840,25 +4855,22 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		BScode			= 0x33,	//!< backspace virtual key code
 		KPlowest		= 0x41	//!< lowest keypad virtual key code
 	};
-	assert(inEventThatOccurred == kEventLoop_ControlEventKeyPress);
 	assert(inEventContextPtr != nullptr);
 	assert(inListenerContextPtr != nullptr);
 	
-	Boolean								result = false;
-	EventInfoControlScope_KeyPressPtr	keyPressInfoPtr = REINTERPRET_CAST
-															(inEventContextPtr,
-																EventInfoControlScope_KeyPressPtr);
-	SessionRef							session = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
-	SessionAutoLocker					ptr(gSessionPtrLocks(), session);
-	ConnectionDataPtr					connectionDataPtr = nullptr; // TEMPORARY, until transition to SessionRef
-	static SInt16						characterCode = '\0'; // ASCII
-	static SInt16						characterCode2 = '\0'; // ASCII
-	static SInt16						virtualKeyCode = '\0'; // see p.2-43 of "IM:MTE" for a set of virtual key codes
-	static Boolean						commandDown = false;
-	static Boolean						controlDown = false;
-	static Boolean						optionDown  = false;
-	static Boolean						shiftDown = false;
-	static Boolean						metaDown = false;
+	Boolean					result = false;
+	My_KeyPressPtr			keyPressInfoPtr = REINTERPRET_CAST(inEventContextPtr, My_KeyPressPtr);
+	SessionRef				session = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
+	SessionAutoLocker		ptr(gSessionPtrLocks(), session);
+	ConnectionDataPtr		connectionDataPtr = nullptr; // TEMPORARY, until transition to SessionRef
+	static SInt16			characterCode = '\0'; // ASCII
+	static SInt16			characterCode2 = '\0'; // ASCII
+	static SInt16			virtualKeyCode = '\0'; // see p.2-43 of "IM:MTE" for a set of virtual key codes
+	static Boolean			commandDown = false;
+	static Boolean			controlDown = false;
+	static Boolean			optionDown  = false;
+	static Boolean			shiftDown = false;
+	static Boolean			metaDown = false;
 	
 	
 	connectionDataPtr = ptr->dataPtr;
@@ -5881,9 +5893,9 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 	assert(kEventClass == kEventClassTextInput);
 	assert(kEventKind == kEventTextInputUnicodeForKeyEvent);
 	{
-		EventRef						originalKeyPressEvent = nullptr;
-		EventInfoControlScope_KeyPress  controlKeyPressInfo;
-		OSStatus						error = noErr;
+		EventRef		originalKeyPressEvent = nullptr;
+		My_KeyPress		controlKeyPressInfo;
+		OSStatus		error = noErr;
 		
 		
 		error = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamTextInputSendKeyboardEvent, typeEventRef,
@@ -6074,7 +6086,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 		ObscureCursor();
 		
 		// now invoke old callback
-		handleSessionKeyDown(nullptr/* unused listener model */, kEventLoop_ControlEventKeyPress,
+		handleSessionKeyDown(nullptr/* unused listener model */, 0/* unused event code */,
 								&controlKeyPressInfo/* event context */, session/* listener context */);
 	}
 	

@@ -65,30 +65,6 @@ enum
 };
 
 /*!
-Events that MacTelnet allows other modules to “listen” for, via EventLoop_StartMonitoringControl().
-Control events always supersede window events of the same kind, and if a control event is absorbed
-by a control event listener, it is never sent to any listener for the same event on the window (or
-to the remaining control event listeners in the queue, for that matter).
-*/
-enum EventLoop_ControlEvent
-{
-	kEventLoop_ControlEventKeyPress						= 'KCtl'	//!< a key has been pressed while a specific control is focused
-																	//!  (context: EventInfoControlScope_KeyPressPtr)
-};
-
-/*!
-Events that MacTelnet allows other modules to “listen” for, via EventLoop_StartMonitoringWindow().
-Window events always supersede global events of the same kind, and if a window event is absorbed
-by a window event listener, it is never sent to any listener for the same event globally (or to
-the remaining window event listeners in the queue, for that matter).
-*/
-enum EventLoop_WindowEvent
-{
-	kEventLoop_WindowEventKeyPress						= 'KWin'	//!< a key has been pressed in the active window
-																	//!  (context: EventInfoWindowScopeKeyPressPtr)
-};
-
-/*!
 Events that MacTelnet allows other modules to “listen” for, via EventLoop_StartMonitoring().
 All control and window event types are also valid global events, so that you can monitor all
 controls or all windows for a certain kind of event.
