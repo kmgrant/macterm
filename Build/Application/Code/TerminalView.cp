@@ -9175,9 +9175,9 @@ receiveTerminalViewTrack	(EventHandlerCallRef	inHandlerCallRef,
 										(OSStatus)dragTextSelection(viewPtr, dragRgn, &event, &dragged);
 										cannotBeDoubleClick = true;
 									}
-									else
+									else if (0 == (currentModifiers & shiftKey))
 									{
-										// no drag, but click inside selection; cancel the selection
+										// no drag, but unshifted click; cancel the selection
 										TerminalView_SelectNothing(viewPtr->selfRef);
 									}
 									Memory_DisposeRegion(&dragRgn);
@@ -10366,92 +10366,172 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 					 Point*				outNewLocalMousePtr,
 					 UInt32*			outNewModifiersPtr)
 {
-	TerminalView_Cell		clickedColumnRow;
-	TerminalView_Cell		previousClick;
+	TerminalView_Cell		originalCellUnderMouse;
+	TerminalView_Cell		cellUnderMouse;
+	Point					previousLocalMouse;
 	SInt16					deltaColumn = 0;
 	SInt16					deltaRow = 0;
 	CGrafPtr				oldPort = nullptr;
 	GDHandle				oldDevice = nullptr;
 	MouseTrackingResult		trackingResult = kMouseTrackingMouseDown;
-	Point					localMouse = inLocalMouse;
-	Boolean					startNewSelection = true;
+	Boolean					extendSelection = false;
 	
 	
 	GetGWorld(&oldPort, &oldDevice);
 	
-	// start by locating the cell under the mouse, scrolling to reveal it as needed
-	(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, inLocalMouse, clickedColumnRow, deltaColumn, deltaRow);
-	(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
-	
-	if (inTerminalViewPtr->text.selection.exists)
+	// determine if the old selection should go away first
+	extendSelection = (0 != (inModifiers & shiftKey));
+	if (extendSelection)
 	{
-		// the default behavior is to start a new selection; however,
-		// the shift key will instead cause the selection to be extended
-		startNewSelection = true;
-		if (inModifiers & shiftKey)
-		{
-			sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
-						inTerminalViewPtr->text.selection.isRectangular);
-			if ((clickedColumnRow.second < inTerminalViewPtr->text.selection.range.first.second) ||
-				((clickedColumnRow.second == inTerminalViewPtr->text.selection.range.first.second) &&
-					(clickedColumnRow.first < inTerminalViewPtr->text.selection.range.first.first)))
-			{
-				sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
-							inTerminalViewPtr->text.selection.isRectangular);
-			}
-			startNewSelection = false;	// in this case, DON’T cancel the selection; shift-drag means “continue”
-		}
+		originalCellUnderMouse = inTerminalViewPtr->text.selection.range.first;
 	}
-	
-	if (startNewSelection)
+	else
 	{
-		// unhighlight the old selection
-		highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
-		inTerminalViewPtr->text.selection.range.first = std::make_pair(0, 0);
-		inTerminalViewPtr->text.selection.range.second = std::make_pair(0, 0);
 		inTerminalViewPtr->text.selection.exists = false;
-		
-		// use the modifier key states to decide on the new selection mode
-		inTerminalViewPtr->text.selection.isRectangular = (0 != (inModifiers & optionKey));
+		highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
 	}
 	
-	Cursors_UseIBeam();
+	// this must be set after unhighlighting (above), since for example
+	// the user might have had a regular selection that is being replaced
+	// by a rectangular one, and the right type of region should be erased
+	inTerminalViewPtr->text.selection.isRectangular = (0 != (inModifiers & optionKey));
+	
+	if (inTerminalViewPtr->text.selection.isRectangular)
+	{
+		Cursors_UseCrosshairs();
+	}
+	else
+	{
+		Cursors_UseIBeam();
+	}
+	
 	SetPortWindowPort(HIViewGetWindow(inTerminalViewPtr->contentHIView));
 	
 	// continue tracking until the mouse is released
-	previousClick = std::make_pair(-1, -1);
+	*outNewLocalMousePtr = inLocalMouse;
+	*outNewModifiersPtr = inModifiers;
+	previousLocalMouse = inLocalMouse;
 	do
 	{
 		// find new mouse location, scroll if necessary
-		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, localMouse, clickedColumnRow, deltaColumn, deltaRow);
+		(Boolean)findVirtualCellFromLocalPoint(inTerminalViewPtr, *outNewLocalMousePtr, cellUnderMouse, deltaColumn, deltaRow);
 		(TerminalView_Result)TerminalView_ScrollAround(inTerminalViewPtr->selfRef, deltaColumn, deltaRow);
 		
-		// if the mouse moves, update the selection
+		// if the mouse moves (or the shift key is down), update the selection
+		unless (RegionUtilities_NearPoints(*outNewLocalMousePtr, previousLocalMouse) && (false == extendSelection))
 		{
-			TerminalView_Cell const		kClickedCell = std::make_pair(clickedColumnRow.first, clickedColumnRow.second);
+			// toggle the highlight state of text between the current and last mouse positions
+			highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
 			
-			
-			unless (kClickedCell == previousClick)
+			// if this is the first move (that is, the mouse was not simply clicked to delete
+			// the previous selection), start a new selection range consisting of the cell
+			// underneath the mouse
+			if (false == inTerminalViewPtr->text.selection.exists)
 			{
-				// if this is the first move (that is, the mouse was not simply clicked to delete
-				// the previous selection), start a new selection range consisting of the cell
-				// underneath the mouse
-				if (false == inTerminalViewPtr->text.selection.exists)
-				{
-					// the selection range is inclusive-start, exclusive-end, so add one to the ends...
-					inTerminalViewPtr->text.selection.range.first = kClickedCell;
-					inTerminalViewPtr->text.selection.range.second = std::make_pair
-																		(kClickedCell.first + 1, kClickedCell.second + 1);
-					inTerminalViewPtr->text.selection.exists = true;
-				}
-				
-				// toggle the highlight state of text between the current and last mouse positions
-				highlightCurrentSelection(inTerminalViewPtr, false/* is highlighted */, true/* redraw */);
-				inTerminalViewPtr->text.selection.range.second = kClickedCell;
-				highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
-				
-				previousClick = kClickedCell;
+				inTerminalViewPtr->text.selection.exists = true;
+				originalCellUnderMouse = cellUnderMouse;
+				inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
+				inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
 			}
+			else
+			{
+				// LOCALIZE THIS; implies left-to-right locale
+				if (inTerminalViewPtr->text.selection.isRectangular)
+				{
+					// rectangular selection
+					TerminalView_Cell		originalSecond = inTerminalViewPtr->text.selection.range.second;
+					CGRect					r1;
+					
+					
+					if (extendSelection)
+					{
+						// when extending, remember the section previously highlighted...
+						r1 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
+										inTerminalViewPtr->text.selection.range.first.second,
+										inTerminalViewPtr->text.selection.range.second.first -
+											inTerminalViewPtr->text.selection.range.first.first,
+										inTerminalViewPtr->text.selection.range.second.second -
+											inTerminalViewPtr->text.selection.range.first.second);
+					}
+					inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
+					inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
+					// in rectangular mode, the anchor points might not exactly match
+					// one of the mouse anchors (they could be the other two corners),
+					// so a rectangular-sort is necessary before adjustments are made
+					sortAnchors(inTerminalViewPtr->text.selection.range.first,
+								inTerminalViewPtr->text.selection.range.second,
+								true/* is rectangular */);
+					// end point’s top-left would be past-the-end for the character
+					// above and to the left, so offset in both directions to
+					// encompass the character underneath the mouse
+					++(inTerminalViewPtr->text.selection.range.second.first);
+					++(inTerminalViewPtr->text.selection.range.second.second);
+					if (extendSelection)
+					{
+						// the largest encompassing rectangle must be used when extending;
+						// this composes both the original selection and the new range,
+						// and ensures the overall rectangle is completely highlighted
+						CGRect		r2 = CGRectMake(inTerminalViewPtr->text.selection.range.first.first,
+													inTerminalViewPtr->text.selection.range.first.second,
+													inTerminalViewPtr->text.selection.range.second.first -
+														inTerminalViewPtr->text.selection.range.first.first,
+													inTerminalViewPtr->text.selection.range.second.second -
+														inTerminalViewPtr->text.selection.range.first.second);
+						CGRect		r3 = CGRectUnion(r1, r2);
+						
+						
+						inTerminalViewPtr->text.selection.range.first = std::make_pair(r3.origin.x, r3.origin.y);
+						inTerminalViewPtr->text.selection.range.second = std::make_pair(r3.origin.x + r3.size.width,
+																						r3.origin.y + r3.size.height);
+						sortAnchors(inTerminalViewPtr->text.selection.range.first,
+									inTerminalViewPtr->text.selection.range.second,
+									true/* is rectangular */);
+					}
+					else
+					{
+						if (inTerminalViewPtr->text.selection.range.first.first < originalCellUnderMouse.first)
+						{
+							// selection is moving before the initial anchor point (exclusive)...
+							--(inTerminalViewPtr->text.selection.range.second.first);
+						}
+					}
+				}
+				else
+				{
+					// Mac-like continuous selection anchors
+					if ((cellUnderMouse.second < originalCellUnderMouse.second) ||
+						((cellUnderMouse.second == originalCellUnderMouse.second) &&
+							(cellUnderMouse.first < originalCellUnderMouse.first)))
+					{
+						// selection is moving before the initial anchor point (exclusive)...
+						inTerminalViewPtr->text.selection.range.first = cellUnderMouse;
+						if (false == extendSelection)
+						{
+							inTerminalViewPtr->text.selection.range.second = originalCellUnderMouse;
+							// ...start point’s top-left would be past-the-end for the line above,
+							// so descend by one
+							++(inTerminalViewPtr->text.selection.range.second.second);
+						}
+					}
+					else
+					{
+						// selection is moving after the initial anchor point (inclusive)...
+						if (false == extendSelection)
+						{
+							inTerminalViewPtr->text.selection.range.first = originalCellUnderMouse;
+							++(inTerminalViewPtr->text.selection.range.second.first);
+						}
+						inTerminalViewPtr->text.selection.range.second = cellUnderMouse;
+						// end point’s top-left would be past-the-end for the character
+						// above and to the left, so offset in both directions to
+						// encompass the character underneath the mouse
+						++(inTerminalViewPtr->text.selection.range.second.second);
+					}
+				}
+			}
+			
+			highlightCurrentSelection(inTerminalViewPtr, true/* is highlighted */, true/* redraw */);
+			previousLocalMouse = *outNewLocalMousePtr;
 		}
 		
 		// find next mouse location
@@ -10460,24 +10540,22 @@ trackTextSelection	(TerminalViewPtr	inTerminalViewPtr,
 			
 			
 			error = TrackMouseLocationWithOptions(nullptr/* port, or nullptr for current port */, 0/* options */,
-													kEventDurationForever/* timeout */, &localMouse, outNewModifiersPtr,
+													kEventDurationForever/* timeout */, outNewLocalMousePtr, outNewModifiersPtr,
 													&trackingResult);
-			if (error != noErr) break;
+			if (noErr != error) break;
 		}
 	}
-	while (trackingResult != kMouseTrackingMouseUp);
-	
-	// update given parameters (output modifiers were set earlier)
-	*outNewLocalMousePtr = localMouse;
-	
-	// the anchors might end up out of order after the loop
-	sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
-				inTerminalViewPtr->text.selection.isRectangular);
+	while (kMouseTrackingMouseUp != trackingResult);
 	
 	SetGWorld(oldPort, oldDevice);
 	
 	inTerminalViewPtr->text.selection.exists = (inTerminalViewPtr->text.selection.range.first !=
 												inTerminalViewPtr->text.selection.range.second);
+	if (inTerminalViewPtr->text.selection.exists)
+	{
+		sortAnchors(inTerminalViewPtr->text.selection.range.first, inTerminalViewPtr->text.selection.range.second,
+					inTerminalViewPtr->text.selection.isRectangular);
+	}
 	copySelectedTextIfUserPreference(inTerminalViewPtr);
 }// trackTextSelection
 

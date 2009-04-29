@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090428',
     '20090423',
     '20090411',
     '20090410',
@@ -228,6 +229,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090428': [
+		'Fixed Terminal view text selection behavior in various ways.',
+	],
 	'20090423': [
 		'Fixed Terminal window scroll bars to no longer disappear for large scrollback sizes.',
 	],
