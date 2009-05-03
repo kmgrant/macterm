@@ -180,11 +180,19 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 	else
 	{
 		// remove monitors from the context that is about to be non-current
-		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroAction);
-		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroContents);
-		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroName);
-		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKeyModifiers);
-		prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKey);
+		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+		{
+			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i));
+			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i));
+			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i));
+			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i));
+			prefsResult = Preferences_ContextStopMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+															Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i));
+		}
 	}
 	
 	// set the new current context
@@ -210,21 +218,29 @@ MacroManager_SetCurrentMacros	(Preferences_ContextRef		inMacroSetOrNullForNone)
 		}
 		
 		// monitor Preferences for changes to macro settings that are important in the Macro Manager module
-		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroAction,
-															true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroContents,
-															true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroName,
-															true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKeyModifiers,
-															true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(), kPreferences_TagIndexedMacroKey,
-															true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
+		for (UInt16 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+		{
+			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, i),
+																true/* notify of initial value */);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, i),
+																true/* notify of initial value */);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, i),
+																true/* notify of initial value */);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, i),
+																true/* notify of initial value */);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextStartMonitoring(gCurrentMacroSet(), gMacroSetMonitor(),
+																Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, i),
+																true/* notify of initial value */);
+			assert(kPreferences_ResultOK == prefsResult);
+		}
 	}
 	
 	result = kMacroManager_ResultOK;
@@ -275,17 +291,15 @@ MacroManager_UserInputMacro		(UInt16						inZeroBasedMacroIndex,
 		// TEMPORARY - it is smarter to query this only as preferences
 		// actually change, i.e. in the monitor callback, and rely
 		// only on a cached array at this point
-		prefsResult = Preferences_ContextGetDataAtIndex(context, kPreferences_TagIndexedMacroAction,
-														inZeroBasedMacroIndex + 1/* one-based */,
-														sizeof(actionPerformed), &actionPerformed,
-														true/* search defaults too */, &actualSize);
+		prefsResult = Preferences_ContextGetData
+						(context, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, inZeroBasedMacroIndex + 1),
+							sizeof(actionPerformed), &actionPerformed, true/* search defaults too */, &actualSize);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			// retrieve action text
-			prefsResult = Preferences_ContextGetDataAtIndex(context, kPreferences_TagIndexedMacroContents,
-															inZeroBasedMacroIndex + 1/* one-based */,
-															sizeof(actionCFString), &actionCFString,
-															true/* search defaults too */, &actualSize);
+			prefsResult = Preferences_ContextGetData
+							(context, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inZeroBasedMacroIndex + 1),
+								sizeof(actionCFString), &actionCFString, true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				switch (actionPerformed)
@@ -653,7 +667,11 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	}
 	else
 	{
-		switch (inPreferenceTagThatChanged)
+		Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inPreferenceTagThatChanged);
+		Preferences_Index const		kIndexFromTag = Preferences_ReturnTagIndex(inPreferenceTagThatChanged);
+		
+		
+		switch (kTagWithoutIndex)
 		{
 		case kPreferences_TagIndexedMacroAction:
 			// TEMPORARY - do nothing for now, but the plan is to eventually use
@@ -669,67 +687,63 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			break;
 		
 		case kPreferences_TagIndexedMacroName:
-			// update every menu item to match the macro names of the set
-			// TEMPORARY: it would be nicer to have a notifier that returns a specific index, too...
-			for (UInt32 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			// update the proper menu item to match the macro name of the set
 			{
 				CFStringRef		nameCFString = nullptr;
 				
 				
 				// retrieve name
-				prefsResult = Preferences_ContextGetDataAtIndex(prefsContext, inPreferenceTagThatChanged,
-																i/* one-based index */, sizeof(nameCFString), &nameCFString,
-																true/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetData(prefsContext, inPreferenceTagThatChanged, sizeof(nameCFString),
+															&nameCFString, false/* search defaults too */, &actualSize);
 				if (kPreferences_ResultOK == prefsResult)
 				{
-					(OSStatus)SetMenuItemTextWithCFString(macrosMenu, i, nameCFString);
+					(OSStatus)SetMenuItemTextWithCFString(macrosMenu, kIndexFromTag, nameCFString);
 					CFRelease(nameCFString), nameCFString = nullptr;
+				}
+				else
+				{
+					// set a dummy value
+					(OSStatus)SetMenuItemTextWithCFString(macrosMenu, kIndexFromTag, CFSTR(""));
 				}
 			}
 			break;
 		
 		case kPreferences_TagIndexedMacroKey:
-			// update every menu item to match the macro keys of the set
-			// TEMPORARY: it would be nicer to have a notifier that returns a specific index, too...
-			for (UInt32 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			// update the proper menu item to match the macro key of the set
 			{
 				MacroManager_KeyID		macroKeyID = 0;
 				
 				
+				// reset menu item
+				(OSStatus)ChangeMenuItemAttributes(macrosMenu, kIndexFromTag, 0/* attributes to set */,
+													kMenuItemAttrUseVirtualKey/* attributes to clear */);
+				(OSStatus)SetMenuItemCommandKey(macrosMenu, kIndexFromTag, false/* virtual key */, '\0'/* character */);
+				(OSStatus)SetMenuItemKeyGlyph(macrosMenu, kIndexFromTag, kMenuNullGlyph);
+				
 				// retrieve key modifiers
-				prefsResult = Preferences_ContextGetDataAtIndex(prefsContext, inPreferenceTagThatChanged,
-																i/* one-based index */, sizeof(macroKeyID), &macroKeyID,
-																true/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetData(prefsContext, inPreferenceTagThatChanged, sizeof(macroKeyID),
+															&macroKeyID, false/* search defaults too */, &actualSize);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					UInt16 const	kKeyCode = MacroManager_KeyIDKeyCode(macroKeyID);
 					Boolean const	kIsVirtualKey = MacroManager_KeyIDIsVirtualKey(macroKeyID);
 					
 					
-					// reset menu item
-					(OSStatus)ChangeMenuItemAttributes(macrosMenu, i, 0/* attributes to set */,
-														kMenuItemAttrUseVirtualKey/* attributes to clear */);
-					(OSStatus)SetMenuItemCommandKey(macrosMenu, i, false/* virtual key */, '\0'/* character */);
-					(OSStatus)SetMenuItemKeyGlyph(macrosMenu, i, kMenuNullGlyph);
-					
 					// apply new key equivalent
-					(OSStatus)SetMenuItemCommandKey(macrosMenu, i, kIsVirtualKey, kKeyCode);
+					(OSStatus)SetMenuItemCommandKey(macrosMenu, kIndexFromTag, kIsVirtualKey, kKeyCode);
 				}
 			}
 			break;
 		
 		case kPreferences_TagIndexedMacroKeyModifiers:
-			// update every menu item to match the macro key modifiers of the set
-			// TEMPORARY: it would be nicer to have a notifier that returns a specific index, too...
-			for (UInt32 i = 1; i <= kMacroManager_MaximumMacroSetSize; ++i)
+			// update the proper menu item to match the macro key modifiers of the set
 			{
 				UInt32		modifiers = 0;
 				
 				
 				// retrieve key modifiers
-				prefsResult = Preferences_ContextGetDataAtIndex(prefsContext, inPreferenceTagThatChanged,
-																i/* one-based index */, sizeof(modifiers), &modifiers,
-																true/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetData(prefsContext, inPreferenceTagThatChanged, sizeof(modifiers),
+															&modifiers, false/* search defaults too */, &actualSize);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					UInt8		abbreviatedModifiers = kMenuNoCommandModifier;
@@ -741,7 +755,12 @@ macroSetChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					if (modifiers & controlKey) abbreviatedModifiers |= kMenuControlModifier;
 					if (modifiers & optionKey) abbreviatedModifiers |= kMenuOptionModifier;
 					if (modifiers & shiftKey) abbreviatedModifiers |= kMenuShiftModifier;
-					(OSStatus)SetMenuItemModifiers(macrosMenu, i, abbreviatedModifiers);
+					(OSStatus)SetMenuItemModifiers(macrosMenu, kIndexFromTag, abbreviatedModifiers);
+				}
+				else
+				{
+					// set a dummy value
+					(OSStatus)SetMenuItemModifiers(macrosMenu, kIndexFromTag, kMenuNoCommandModifier);
 				}
 			}
 			break;

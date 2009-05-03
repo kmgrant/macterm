@@ -22,7 +22,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -61,7 +61,7 @@
 #include <CoreServices/CoreServices.h>
 
 // library includes
-#include "ListenerModel.h"
+#include <ListenerModel.h>
 
 // MacTelnet includes
 #include "Commands.h"
@@ -136,6 +136,9 @@ Preferences_SetData...() methods, the data pointer
 you provide should refer to data of the type that
 the tag “expects”.  In each case, the data *points*
 to storage of the type indicated.
+
+See also Preferences_Index, which is interlaced
+with a tag in certain circumstances.
 */
 typedef FourCharCode Preferences_Tag;
 
@@ -196,7 +199,6 @@ enum
 	kPreferences_TagDontAutoClose						= 'wdga',	//!< data: "Boolean"
 	kPreferences_TagDontAutoNewOnApplicationReopen		= 'nonu',	//!< data: "Boolean"
 	kPreferences_TagDontDimBackgroundScreens			= 'wddb',	//!< data: "Boolean"
-	kPreferences_TagDynamicResizing						= 'dynr',	//!< data: "Boolean"
 	kPreferences_TagFocusFollowsMouse					= 'fcfm',	//!< data: "Boolean"
 	kPreferences_TagInfoWindowColumnOrdering			= 'sico',	//!< data: "CFArrayRef" (of CFStrings)
 	kPreferences_TagHeadersCollapsed					= 'hdcl',	//!< data: "Boolean"
@@ -230,17 +232,19 @@ enum
 /*!
 Tags for use with kPreferences_ClassMacroSet.
 
-IMPORTANT:	Indexed tag data can only be modified or
-			retrieved using APIs that provide an index,
-			such as Preferences_ContextGetDataAtIndex().
+IMPORTANT:	These are indexed tags, so calls to APIs must
+			use Preferences_ReturnTagVariantForIndex()
+			when defining the tag parameter.
 */
 enum
 {
-	kPreferences_TagIndexedMacroAction					= 'mcac',	//!< data: a "kMacroManager_Action…" constant
-	kPreferences_TagIndexedMacroContents				= 'mtxt',	//!< data: "CFStringRef"
-	kPreferences_TagIndexedMacroKey						= 'mcky',	//!< data: "MacroManager_KeyID"
-	kPreferences_TagIndexedMacroKeyModifiers			= 'mmod',	//!< data: "UInt32", 0 or a bitwise-OR with any of: cmdKey, shiftKey, controlKey, optionKey
-	kPreferences_TagIndexedMacroName					= 'mnam'	//!< data: "CFStringRef"
+	// indexed tags must have a zero byte to have space for tag variants;
+	// see also Preferences_ReturnTagVariantForIndex()
+	kPreferences_TagIndexedMacroAction					= 'mca\0',	//!< data: a "kMacroManager_Action…" constant
+	kPreferences_TagIndexedMacroContents				= 'mtx\0',	//!< data: "CFStringRef"
+	kPreferences_TagIndexedMacroKey						= 'mck\0',	//!< data: "MacroManager_KeyID"
+	kPreferences_TagIndexedMacroKeyModifiers			= 'mmo\0',	//!< data: "UInt32", 0 or a bitwise-OR with any of: cmdKey, shiftKey, controlKey, optionKey
+	kPreferences_TagIndexedMacroName					= 'mna\0'	//!< data: "CFStringRef"
 };
 
 /*!
@@ -285,7 +289,6 @@ These should also have localized names in
 */
 enum
 {
-	kPreferences_TagANSIColorsEnabled					= 'ansc',	//!< data: "Boolean"
 	kPreferences_TagDataReceiveDoNotStripHighBit		= '8bit',	//!< data: "Boolean"
 	kPreferences_TagEMACSMetaKey						= 'meta',	//!< data: "Session_EMACSMetaKey"
 	kPreferences_TagMapArrowsForEMACS					= 'mapE',	//!< data: "Boolean"
@@ -390,6 +393,17 @@ typedef Preferences_Tag		Preferences_Change;
 #pragma mark Types
 
 /*!
+A zero-based preferences index is added to the tag value to
+generate a unique tag that can be hashed.  So, a tag must have
+enough unused bits to allow this arithmetic (and other tags
+must not use values similar to those of indexed tags).
+
+Always use Preferences_ReturnTagVariantForIndex() to produce a
+valid tag out of a base tag and an index.
+*/
+typedef UInt8		Preferences_Index;
+
+/*!
 A context defines where to start looking for preferences data, in
 what might be a string of possible contexts in a directed graph.
 
@@ -406,7 +420,6 @@ The context passed to the listeners of global preference changes.
 struct Preferences_ChangeContext
 {
 	Preferences_ContextRef		contextRef;		//!< if nullptr, the preference is global; otherwise, it occurred in this context
-	UInt32						oneBasedIndex;	//!< if 0, not an indexed setting; otherwise, the 1-based index of the setting that changed
 	Boolean						firstCall;		//!< whether or not this is the first time the preference notification has occurred
 												//!  (if so, the value of the preference reflects its initial value)
 };
@@ -528,26 +541,11 @@ Preferences_Result
 											 Preferences_Tag					inDataPreferenceTag);
 
 Preferences_Result
-	Preferences_ContextDeleteDataAtIndex	(Preferences_ContextRef				inContext,
-											 Preferences_Tag					inDataPreferenceTag,
-											 UInt32								inOneBasedIndexOrZeroForNonIndexedTag);
-
-Preferences_Result
 	Preferences_ContextDeleteSaved			(Preferences_ContextRef				inContext);
 
 Preferences_Result
 	Preferences_ContextGetData				(Preferences_ContextRef				inStartingContext,
 											 Preferences_Tag					inDataPreferenceTag,
-											 size_t								inDataStorageSize,
-											 void*								outDataStorage,
-											 Boolean							inSearchDefaults = false,
-											 size_t*							outActualSizePtrOrNull = nullptr,
-											 Boolean*							outIsDefaultOrNull = nullptr);
-
-Preferences_Result
-	Preferences_ContextGetDataAtIndex		(Preferences_ContextRef				inStartingContext,
-											 Preferences_Tag					inDataPreferenceTag,
-											 UInt32								inOneBasedIndexOrZeroForNonIndexedTag,
 											 size_t								inDataStorageSize,
 											 void*								outDataStorage,
 											 Boolean							inSearchDefaults = false,
@@ -566,12 +564,48 @@ Preferences_Result
 											 size_t								inDataSize,
 											 void const*						inDataPtr);
 
-Preferences_Result
-	Preferences_ContextSetDataAtIndex		(Preferences_ContextRef				inContext,
-											 Preferences_Tag					inDataPreferenceTag,
-											 UInt32								inOneBasedIndexOrZeroForNonIndexedTag,
-											 size_t								inDataSize,
-											 void const*						inDataPtr);
+/*!
+For a tag produced by Preferences_ReturnTagFromVariant(),
+returns the base tag (without any index).  This is useful
+in things like "switch" statements, to catch any tag of
+a certain type.
+
+(4.0)
+*/
+inline Preferences_Tag
+	Preferences_ReturnTagFromVariant		(Preferences_Tag					inIndexedTag)
+	{
+		return (inIndexedTag & 0xFFFFFF00);
+	}
+
+/*!
+For a tag produced by Preferences_ReturnTagFromVariant(),
+returns the index only.
+
+(4.0)
+*/
+inline Preferences_Index
+	Preferences_ReturnTagIndex				(Preferences_Tag					inIndexedTag)
+	{
+		return (inIndexedTag & 0x000000FF);
+	}
+
+/*!
+Generate a tag that combines a base tag and index.
+This is only used by preferences whose tag constants
+follow the "kPreferences_TagIndexed…" convention.
+Decode later with Preferences_ReturnTagFromVariant()
+and Preferences_ReturnTagIndex().
+
+(4.0)
+*/
+inline Preferences_Tag
+	Preferences_ReturnTagVariantForIndex	(Preferences_Tag					inIndexedTag,
+											 Preferences_Index					inOneBasedIndex)
+	{
+		assert(inOneBasedIndex >= 1);
+		return (inIndexedTag + inOneBasedIndex);
+	}
 
 //@}
 

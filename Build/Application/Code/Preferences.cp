@@ -38,6 +38,28 @@
 #include <stdexcept>
 #include <vector>
 
+// pseudo-standard-C++ includes
+#if __MWERKS__
+#   include <hash_fun>
+#   include <hash_map>
+#   define hash_map_namespace Metrowerks
+#elif (__GNUC__ > 3)
+#   include <ext/hash_map>
+#   define hash_map_namespace __gnu_cxx
+#elif (__GNUC__ == 3)
+#   include <ext/stl_hash_fun.h>
+#   include <ext/hash_map>
+#   define hash_map_namespace __gnu_cxx
+#elif (__GNUC__ < 3)
+#   include <stl_hash_fun.h>
+#   include <hash_map>
+#   define hash_map_namespace
+#else
+#   include <hash_fun>
+#   include <hash_map>
+#   define hash_map_namespace
+#endif
+
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
@@ -85,6 +107,62 @@ CFStringRef const			kMy_PreferencesSubDomainMacros = CFSTR("com.mactelnet.MacTel
 CFStringRef const			kMy_PreferencesSubDomainSessions = CFSTR("com.mactelnet.MacTelnet.sessions");
 CFStringRef const			kMy_PreferencesSubDomainTerminals = CFSTR("com.mactelnet.MacTelnet.terminals");
 CFStringRef const			kMy_PreferencesSubDomainTranslations = CFSTR("com.mactelnet.MacTelnet.translations");
+
+} // anonymous namespace
+
+#pragma mark Functors Used in Type Definitions
+namespace {
+
+/*!
+This is a functor that determines if a pair of
+Core Foundation strings is identical.
+
+Model of STL Binary Predicate.
+
+(1.0)
+*/
+#pragma mark isCFStringPairEqual
+class isCFStringPairEqual:
+public std::binary_function< CFStringRef/* argument 1 */, CFStringRef/* argument 2 */, bool/* return */ >
+{
+public:
+	bool
+	operator()	(CFStringRef	inString1,
+				 CFStringRef	inString2)
+	const
+	{
+		return (kCFCompareEqualTo == CFStringCompare(inString1, inString2, 0/* compare options */));
+	}
+
+protected:
+
+private:
+};
+
+/*!
+This is a functor that determines the hash code of
+a Core Foundation string.
+
+Model of STL Unary Function.
+
+(1.0)
+*/
+#pragma mark returnCFStringHashCode
+class returnCFStringHashCode:
+public std::unary_function< CFStringRef/* argument */, size_t/* return */ >
+{
+public:
+	size_t
+	operator()	(CFStringRef	inString)
+	const
+	{
+		return STATIC_CAST(CFHash(inString), size_t);
+	}
+
+protected:
+
+private:
+};
 
 } // anonymous namespace
 
@@ -502,17 +580,71 @@ Keeps track of all named contexts in memory.
 */
 typedef std::vector< My_ContextFavoritePtr >	My_FavoriteContextList;
 
+/*!
+This class can be used to define new preferences, and
+automatically cache them in multiple hash tables for
+efficient lookups by various attributes (such as tag).
+*/
+class My_PreferenceDefinition
+{
+public:
+	static void
+	create		(Preferences_Tag, CFStringRef, FourCharCode, size_t,
+				 Preferences_Class, My_PreferenceDefinition** = nullptr);
+	
+	static void
+	createFlag	(Preferences_Tag, CFStringRef, Preferences_Class,
+				 My_PreferenceDefinition** = nullptr);
+	
+	static void
+	createIndexed	(Preferences_Tag, Preferences_Index, CFStringRef, FourCharCode,
+					 size_t, Preferences_Class);
+	
+	static void
+	createRGBColor	(Preferences_Tag, CFStringRef, Preferences_Class,
+					 My_PreferenceDefinition** = nullptr);
+	
+	static My_PreferenceDefinition*
+	findByKeyName	(CFStringRef);
+	
+	static My_PreferenceDefinition*
+	findByTag	(Preferences_Tag);
+	
+	Preferences_Tag		tag;						//!< tag that describes this setting
+	CFRetainRelease		keyName;					//!< key used to store this in XML or CFPreferences
+	FourCharCode		keyValueType;				//!< property list type of key (e.g. typeCFArrayRef)
+	size_t				nonDictionaryValueSize;		//!< bytes required for data buffers that read/write this value
+	Preferences_Class	preferenceClass;			//!< the class of context that this tag is generally used in
+	
+protected:
+	My_PreferenceDefinition		(Preferences_Tag, CFStringRef, FourCharCode, size_t, Preferences_Class);
+
+private:
+	typedef std::map< Preferences_Tag, class My_PreferenceDefinition* >		DefinitionPtrByTag;
+	typedef hash_map_namespace::hash_map
+			<
+				CFStringRef,						// key type - name string
+				class My_PreferenceDefinition*,		// value type - preference setting data pointer
+				returnCFStringHashCode,				// hash code generator
+				isCFStringPairEqual					// key comparator
+			>	DefinitionPtrByKeyName;
+	
+	static DefinitionPtrByKeyName	_definitionsByKeyName;
+	static DefinitionPtrByTag		_definitionsByTag;
+};
+My_PreferenceDefinition::DefinitionPtrByKeyName		My_PreferenceDefinition::_definitionsByKeyName;
+My_PreferenceDefinition::DefinitionPtrByTag			My_PreferenceDefinition::_definitionsByTag;
+
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
 namespace {
 
 Preferences_Result		assertInitialized						();
-void					changeNotify							(Preferences_Change,
-																 Preferences_ContextRef = nullptr,
-																 UInt32 = 0, Boolean = false);
+void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullptr,
+																 Boolean = false);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Preferences_Class, Preferences_Tag,
-																 UInt32, size_t, void*, size_t*);
+																 size_t, void*, size_t*);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Preferences_Class, CFArrayRef&);
@@ -533,10 +665,10 @@ Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Prefe
 																 size_t, void*, size_t*);
 Boolean					getListOfContexts						(Preferences_Class, My_FavoriteContextList*&);
 Preferences_Result		getMacroPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
-																 UInt32, size_t, void*, size_t*);
+																 size_t, void*, size_t*);
 Boolean					getNamedContext							(Preferences_Class, CFStringRef,
 																 My_ContextFavoritePtr&);
-Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, UInt32, CFStringRef&,
+Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, CFStringRef&,
 																 FourCharCode&, size_t&, Preferences_Class&);
 Preferences_Result		getSessionPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
@@ -549,13 +681,14 @@ Preferences_Result		overwriteClassDomainCFArray				(Preferences_Class, CFArrayRe
 void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
 void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
 OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
+OSStatus				readPreferencesDictionaryInContext		(My_ContextInterfacePtr, CFDictionaryRef, Boolean);
 OSStatus				setAliasChanged							(My_AliasInfoPtr);
 Preferences_Result		setFormatPreference						(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setGeneralPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setMacroPreference						(My_ContextInterfacePtr, Preferences_Tag,
-																 UInt32, size_t, void const*);
+																 size_t, void const*);
 Boolean					setMacTelnetCoordPreference				(CFStringRef, SInt16, SInt16);
 void					setMacTelnetPreference					(CFStringRef, CFPropertyListRef);
 Preferences_Result		setSessionPreference					(My_ContextInterfacePtr, Preferences_Tag,
@@ -597,9 +730,8 @@ My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContex
 
 } // anonymous namespace
 
-
-
 #pragma mark Functors
+namespace {
 
 /*!
 Returns true only if the specified Alias Info record
@@ -677,6 +809,8 @@ protected:
 
 private:
 };
+
+} // anonymous namespace
 
 
 #pragma mark Public Methods
@@ -783,6 +917,322 @@ Preferences_Init ()
 			}
 		}
 	}
+	
+	// Create definitions for all possible settings; these are used for
+	// efficient access later, and to guarantee no duplication.
+	// IMPORTANT: The data types used here are documented in Preferences.h,
+	//            and relied upon in other methods.  They are also used in
+	//            the PrefsConverter.  Check for consistency!
+	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
+										CFSTR("terminal-use-tabs"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavorite,
+									CFSTR("format-favorite"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagAssociatedTerminalFavorite,
+									CFSTR("terminal-favorite"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagAssociatedTranslationFavorite,
+									CFSTR("translation-favorite"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagAutoCaptureToFile,
+										CFSTR("terminal-capture-auto-start"), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagBackupFontName,
+									CFSTR("terminal-backup-font-family"), typeCFStringRef,
+									sizeof(Str255), kPreferences_ClassTranslation);
+	My_PreferenceDefinition::create(kPreferences_TagBellSound,
+									CFSTR("terminal-when-bell-sound-basename"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagCaptureFileAlias,
+									CFSTR("terminal-capture-file-alias-id"), typeNetEvents_CFNumberRef,
+									sizeof(Preferences_AliasID), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagCaptureFileCreator,
+									CFSTR("terminal-capture-file-creator-code"), typeCFStringRef,
+									sizeof(OSType), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagCommandLine,
+									CFSTR("command-line-token-strings"), typeCFArrayRef,
+									sizeof(CFArrayRef), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagCopySelectedText,
+										CFSTR("terminal-auto-copy-on-select"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagCopyTableThreshold,
+									CFSTR("spaces-per-tab"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagCursorBlinks,
+										CFSTR("terminal-cursor-blinking"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagCursorMovesPriorToDrops,
+										CFSTR("terminal-cursor-auto-move-on-drop"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagDataReceiveDoNotStripHighBit,
+										CFSTR("data-receive-do-not-strip-high-bit"), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagDataReadBufferSize,
+									CFSTR("data-receive-buffer-size-bytes"), typeNetEvents_CFNumberRef,
+									sizeof(SInt16), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagDontAutoClose,
+										CFSTR("no-auto-close"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagDontAutoNewOnApplicationReopen,
+										CFSTR("no-auto-new"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagEMACSMetaKey,
+									CFSTR("key-map-emacs-meta"), typeCFStringRef,
+									sizeof(Session_EMACSMetaKey), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createFlag(kPreferences_TagFocusFollowsMouse,
+										CFSTR("terminal-focus-follows-mouse"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagFontCharacterWidthMultiplier,
+									CFSTR("terminal-font-width-multiplier"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagFontName,
+									CFSTR("terminal-font-family"), typeCFStringRef,
+									sizeof(Str255), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagFontSize,
+									CFSTR("terminal-font-size-points"), typeNetEvents_CFNumberRef,
+									sizeof(SInt16), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityInSeconds,
+									CFSTR("data-receive-idle-seconds"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), kPreferences_ClassSession);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroAction, kMacroManager_MaximumMacroSetSize,
+											CFSTR("macro-%02u-action"), typeCFStringRef,
+											sizeof(MacroManager_Action), kPreferences_ClassMacroSet);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroContents, kMacroManager_MaximumMacroSetSize,
+											CFSTR("macro-%02u-contents-string"), typeCFStringRef,
+											sizeof(CFStringRef), kPreferences_ClassMacroSet);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKey, kMacroManager_MaximumMacroSetSize,
+											CFSTR("macro-%02u-key"), typeCFStringRef,
+											sizeof(MacroManager_KeyID), kPreferences_ClassMacroSet);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKeyModifiers, kMacroManager_MaximumMacroSetSize,
+											CFSTR("macro-%02u-modifiers"), typeCFArrayRef,
+											sizeof(UInt32), kPreferences_ClassMacroSet);
+	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroName, kMacroManager_MaximumMacroSetSize,
+											CFSTR("macro-%02u-name-string"), typeCFStringRef,
+											sizeof(CFStringRef), kPreferences_ClassMacroSet);
+	My_PreferenceDefinition::create(kPreferences_TagKeepAlivePeriodInMinutes,
+									CFSTR("data-send-keepalive-period-minutes"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagKeyInterruptProcess,
+									CFSTR("command-key-interrupt-process"), typeCFStringRef,
+									sizeof(char), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagKeyResumeOutput,
+									CFSTR("command-key-resume-output"), typeCFStringRef,
+									sizeof(char), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagKeySuspendOutput,
+									CFSTR("command-key-suspend-output"), typeCFStringRef,
+									sizeof(char), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagKioskAllowsForceQuit,
+										CFSTR("kiosk-force-quit-enabled"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsMenuBar,
+										CFSTR("kiosk-menu-bar-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsOffSwitch,
+										CFSTR("kiosk-off-switch-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsScrollBar,
+										CFSTR("kiosk-scroll-bar-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagKioskUsesSuperfluousEffects,
+										CFSTR("kiosk-effects-enabled"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
+										CFSTR("window-terminal-toolbar-invisible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagInfoWindowColumnOrdering,
+									CFSTR("window-sessioninfo-column-order"), typeCFArrayRef,
+									sizeof(CFArrayRef), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagLineModeEnabled,
+										CFSTR("line-mode-enabled"), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoEnabled,
+										CFSTR("data-send-local-echo-enabled"), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoHalfDuplex,
+										CFSTR("data-send-local-echo-half-duplex"), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagMacrosMenuVisible,
+										CFSTR("menu-macros-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEMACS,
+									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
+									sizeof(Boolean), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagMapBackquote,
+									CFSTR("key-map-backquote"), typeCFStringRef/* keystroke string, e.g. blank "" or escape "\e" */,
+									sizeof(Boolean), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagMapCarriageReturnToCRNull,
+									CFSTR("key-map-new-line"), typeCFStringRef,
+									sizeof(Boolean), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagMapDeleteToBackspace,
+									CFSTR("key-map-delete"), typeCFStringRef,
+									sizeof(Boolean), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagMapKeypadTopRowForVT220,
+									CFSTR("command-key-vt220-pf1")/* TEMPORARY - one of several key names used */, typeCFStringRef,
+									sizeof(Boolean), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagMarginBell,
+									CFSTR("terminal-when-cursor-near-right-margin"), typeCFStringRef/* "bell", "ignore" */,
+									sizeof(Boolean), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagMenuItemKeys,
+										CFSTR("menu-key-equivalents"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
+									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
+									sizeof(UInt32), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagNotification,
+									CFSTR("when-alert-in-background"), typeCFStringRef/* "alert", "animate", "badge", "ignore" */,
+									sizeof(SInt16), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagNotifyOfBeeps,
+									CFSTR("terminal-when-bell-in-background"), typeCFStringRef/* "notify", "ignore" */,
+									sizeof(Boolean), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagPageKeysControlLocalTerminal,
+									CFSTR("command-key-terminal-end")/* TEMPORARY - one of several key names used */, typeCFStringRef,
+									sizeof(Boolean), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagPasteBlockSize,
+									CFSTR("data-send-paste-block-size-bytes"), typeNetEvents_CFNumberRef,
+									sizeof(SInt16), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagPasteMethod,
+									CFSTR("data-send-paste-method"), typeCFStringRef,
+									sizeof(Clipboard_PasteMethod), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagPureInverse,
+										CFSTR("terminal-inverse-selections"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagRandomTerminalFormats,
+										CFSTR("terminal-format-random"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagServerHost,
+									CFSTR("server-host"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagServerPort,
+									CFSTR("server-port"), typeNetEvents_CFNumberRef,
+									sizeof(SInt16), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagServerProtocol,
+									CFSTR("server-protocol"), typeCFStringRef,
+									sizeof(Session_Protocol), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagServerUserID,
+									CFSTR("server-user-id"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagSimplifiedUserInterface,
+										CFSTR("menu-command-set-simplified"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagTektronixMode,
+									CFSTR("tek-mode"), typeCFStringRef,
+									sizeof(VectorInterpreter_Mode), kPreferences_ClassSession);
+	My_PreferenceDefinition::createFlag(kPreferences_TagTektronixPAGEClearsScreen,
+										CFSTR("tek-page-clears-screen"), kPreferences_ClassSession);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalAnswerBackMessage,
+									CFSTR("terminal-emulator-answerback"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createFlag(kPreferences_TagTerminalClearSavesLines,
+										CFSTR("terminal-clear-saves-lines"), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlack,
+											CFSTR("terminal-color-ansi-black-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIRed,
+											CFSTR("terminal-color-ansi-red-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIGreen,
+											CFSTR("terminal-color-ansi-green-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIYellow,
+											CFSTR("terminal-color-ansi-yellow-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlue,
+											CFSTR("terminal-color-ansi-blue-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIMagenta,
+											CFSTR("terminal-color-ansi-magenta-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSICyan,
+											CFSTR("terminal-color-ansi-cyan-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIWhite,
+											CFSTR("terminal-color-ansi-white-normal-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlackBold,
+											CFSTR("terminal-color-ansi-black-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIRedBold,
+											CFSTR("terminal-color-ansi-red-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIGreenBold,
+											CFSTR("terminal-color-ansi-green-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIYellowBold,
+											CFSTR("terminal-color-ansi-yellow-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlueBold,
+											CFSTR("terminal-color-ansi-blue-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIMagentaBold,
+											CFSTR("terminal-color-ansi-magenta-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSICyanBold,
+											CFSTR("terminal-color-ansi-cyan-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIWhiteBold,
+											CFSTR("terminal-color-ansi-white-bold-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBlinkingForeground,
+											CFSTR("terminal-color-blinking-foreground-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBlinkingBackground,
+											CFSTR("terminal-color-blinking-background-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBoldForeground,
+											CFSTR("terminal-color-bold-foreground-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBoldBackground,
+											CFSTR("terminal-color-bold-background-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorMatteBackground,
+											CFSTR("terminal-color-matte-background-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorNormalForeground,
+											CFSTR("terminal-color-normal-foreground-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorNormalBackground,
+											CFSTR("terminal-color-normal-background-rgb"), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalCursorType,
+									CFSTR("terminal-cursor-shape"),
+									typeCFStringRef/* "block", "underline", "thick underline", "vertical bar", "thick vertical bar" */,
+									sizeof(TerminalView_CursorType), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalEmulatorType,
+									CFSTR("terminal-emulator-type"), typeCFStringRef,
+									sizeof(Terminal_Emulator), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createFlag(kPreferences_TagTerminalLineWrap,
+										CFSTR("terminal-line-wrap"), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginLeft,
+									CFSTR("terminal-margin-left-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginRight,
+									CFSTR("terminal-margin-right-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginTop,
+									CFSTR("terminal-margin-top-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginBottom,
+									CFSTR("terminal-margin-bottom-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingLeft,
+									CFSTR("terminal-padding-left-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingRight,
+									CFSTR("terminal-padding-right-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingTop,
+									CFSTR("terminal-padding-top-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingBottom,
+									CFSTR("terminal-padding-bottom-em"), typeNetEvents_CFNumberRef,
+									sizeof(Float32), kPreferences_ClassFormat);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalResizeAffectsFontSize,
+									CFSTR("terminal-resize-affects"), typeCFStringRef/* "screen" or "font" */,
+									sizeof(Boolean), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenColumns,
+									CFSTR("terminal-screen-dimensions-columns"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenRows,
+									CFSTR("terminal-screen-dimensions-rows"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackRows,
+									CFSTR("terminal-scrollback-size-lines"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackType,
+									CFSTR("terminal-scrollback-type"), typeCFStringRef,
+									sizeof(Terminal_ScrollbackType), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalScrollDelay,
+									CFSTR("terminal-scroll-delay-milliseconds"), typeNetEvents_CFNumberRef,
+									sizeof(EventTime), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::create(kPreferences_TagTextEncodingIANAName,
+									CFSTR("terminal-text-encoding-name"), typeCFStringRef,
+									sizeof(CFStringRef), kPreferences_ClassTranslation);
+	My_PreferenceDefinition::create(kPreferences_TagTextEncodingID,
+									CFSTR("terminal-text-encoding-id"), typeNetEvents_CFNumberRef,
+									sizeof(CFStringEncoding), kPreferences_ClassTranslation);
+	My_PreferenceDefinition::create(kPreferences_TagVisualBell,
+									CFSTR("terminal-when-bell"), typeCFStringRef/* "visual" or "audio+visual" */,
+									sizeof(Boolean), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagWasClipboardShowing,
+										CFSTR("window-clipboard-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagWasCommandLineShowing,
+										CFSTR("window-commandline-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagWasControlKeypadShowing,
+										CFSTR("window-controlkeys-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagWasFunctionKeypadShowing,
+										CFSTR("window-functionkeys-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagWasSessionInfoShowing,
+										CFSTR("window-sessioninfo-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagWasVT220KeypadShowing,
+										CFSTR("window-vt220keys-visible"), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::create(kPreferences_TagWindowStackingOrigin,
+									CFSTR("window-terminal-position-pixels"), typeCFArrayRef/* 2 CFNumberRefs, pixels from top-left */,
+									sizeof(Point), kPreferences_ClassGeneral);
+	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
+										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createFlag(kPreferences_TagXTerm256ColorsEnabled,
+										CFSTR("terminal-emulator-xterm-enable-color-256"), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createFlag(kPreferences_TagXTermColorEnabled,
+										CFSTR("terminal-emulator-xterm-enable-color"), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createFlag(kPreferences_TagXTermGraphicsEnabled,
+										CFSTR("terminal-emulator-xterm-enable-graphics"), kPreferences_ClassTerminal);
+	My_PreferenceDefinition::createFlag(kPreferences_TagXTermWindowAlterationEnabled,
+										CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences"), kPreferences_ClassTerminal);
 	
 	// to ensure that the rest of the application can depend on its
 	// known keys being defined, ALWAYS merge in default values for
@@ -1552,6 +2002,10 @@ tag, making it “undefined”.  Subsequent queries that are set to
 fall back on defaults, will do so because the context will no
 longer have a value for the given setting.
 
+If the tag has a "kPreferences_TagIndexed…" name, you should
+call Preferences_ReturnTagVariantForIndex() to produce the
+actual tag for the specific index you are interested in.
+
 Note that any data removed via this routine will be permanently
 removed from disk eventually (via Preferences_Done()).  You can
 choose to save explicitly with Preferences_Save(), but that is
@@ -1573,42 +2027,14 @@ Preferences_Result
 Preferences_ContextDeleteData	(Preferences_ContextRef		inContext,
 								 Preferences_Tag			inDataPreferenceTag)
 {
-	return Preferences_ContextDeleteDataAtIndex(inContext, inDataPreferenceTag, 0/* index */);
-}// ContextDeleteData
-
-
-/*!
-Like Preferences_ContextDeleteData(), except the specified tag
-is for a setting that is actually an ordered set; so, you must
-state which item you want using a one-based index.
-
-The tag should generally have a "kPreferences_TagIndexed…" name.
-
-For the convenience of the implementation, 0 is accepted as an
-index value to indicate that the tag is not in fact indexed
-after all.  But, it is better to use
-Preferences_ContextDeleteData() with non-indexed tags.
-
-IMPORTANT:	The index value is currently ignored for all classes
-			except macro sets, and should be set to 0 for any
-			other preference tag.
-
-(4.0)
-*/
-Preferences_Result
-Preferences_ContextDeleteDataAtIndex	(Preferences_ContextRef		inContext,
-										 Preferences_Tag			inDataPreferenceTag,
-										 UInt32						inOneBasedIndexOrZeroForNonIndexedTag)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0;
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
-									keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -1617,7 +2043,7 @@ Preferences_ContextDeleteDataAtIndex	(Preferences_ContextRef		inContext,
 		ptr->deleteValue(keyName);
 	}
 	return result;
-}// ContextDeleteDataAtIndex
+}// ContextDeleteData
 
 
 /*!
@@ -1668,6 +2094,10 @@ Preferences_ContextDeleteSaved	(Preferences_ContextRef		inContext)
 Returns preference data corresponding to the specified tag,
 starting with the specified context.
 
+If the tag has a "kPreferences_TagIndexed…" name, you should
+call Preferences_ReturnTagVariantForIndex() to produce the
+actual tag for the specific index you are interested in.
+
 If the data is not available in the specified context and
 "inSearchDefaults" is true, then other sources of defaults
 will be checked before returning an error.  This allows you
@@ -1705,47 +2135,15 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 							 size_t*					outActualSizePtrOrNull,
 							 Boolean*					outIsDefaultOrNull)
 {
-	return Preferences_ContextGetDataAtIndex(inContext, inDataPreferenceTag, 0/* index */,
-												inDataStorageSize, outDataStorage,
-												inSearchDefaults, outActualSizePtrOrNull,
-												outIsDefaultOrNull);
-}// ContextGetData
-
-
-/*!
-Like Preferences_ContextGetData(), except the specified tag is
-for a setting that is actually an ordered set; so, you must
-state which item you want using a one-based index.
-
-The tag should generally have a "kPreferences_TagIndexed…" name.
-
-For the convenience of the implementation, 0 is accepted as an
-index value to indicate that the tag is not in fact indexed
-after all.  But, it is better to use Preferences_ContextGetData()
-with non-indexed tags.
-
-(3.1)
-*/
-Preferences_Result
-Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
-									 Preferences_Tag			inDataPreferenceTag,
-									 UInt32						inOneBasedIndexOrZeroForNonIndexedTag,
-									 size_t						inDataStorageSize,
-									 void*						outDataStorage,
-									 Boolean					inSearchDefaults,
-									 size_t*					outActualSizePtrOrNull,
-									 Boolean*					outIsDefaultOrNull)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0;
 	Boolean					isDefault = false;
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
-									keyName, keyValueType, actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -1754,8 +2152,8 @@ Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
 		if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
 		else
 		{
-			result = contextGetData(ptr, dataClass, inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
-									inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+			result = contextGetData(ptr, dataClass, inDataPreferenceTag, inDataStorageSize,
+									outDataStorage, outActualSizePtrOrNull);
 			if ((kPreferences_ResultOK != result) && (inSearchDefaults))
 			{
 				// not available...try another context
@@ -1769,8 +2167,7 @@ Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
 					My_ContextAutoLocker	alternatePtr(gMyContextPtrLocks(), alternateContext);
 					
 					
-					result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag,
-											inOneBasedIndexOrZeroForNonIndexedTag, inDataStorageSize,
+					result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag, inDataStorageSize,
 											outDataStorage, outActualSizePtrOrNull);
 					if (kPreferences_ResultOK != result)
 					{
@@ -1784,8 +2181,7 @@ Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
 							My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
 							
 							
-							result = contextGetData(rootPtr, dataClass, inDataPreferenceTag,
-													inOneBasedIndexOrZeroForNonIndexedTag, inDataStorageSize,
+							result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
 													outDataStorage, outActualSizePtrOrNull);
 						}
 					}
@@ -1797,7 +2193,7 @@ Preferences_ContextGetDataAtIndex	(Preferences_ContextRef		inContext,
 	if (nullptr != outIsDefaultOrNull) *outIsDefaultOrNull = isDefault;
 	
 	return result;
-}// ContextGetDataAtIndex
+}// ContextGetData
 
 
 /*!
@@ -2063,6 +2459,9 @@ commit changes to other specific contexts.
 \retval kPreferences_ResultOK
 if no error occurred
 
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist
+
 \retval kPreferences_ResultGenericFailure
 if preferences could not be fully saved for any reason
 
@@ -2095,6 +2494,10 @@ Preferences_ContextSave		(Preferences_ContextRef		inContext)
 /*!
 Sets a preference corresponding to the specified tag.
 
+If the tag has a "kPreferences_TagIndexed…" name, you should
+call Preferences_ReturnTagVariantForIndex() to produce the
+actual tag for the specific index you are interested in.
+
 Note that any data you set via this routine will be permanently
 saved to disk eventually (via Preferences_Done()).  You can
 choose to save explicitly with Preferences_Save(), but that is
@@ -2118,45 +2521,14 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 							 size_t						inDataSize,
 							 void const*				inDataPtr)
 {
-	return Preferences_ContextSetDataAtIndex(inContext, inDataPreferenceTag, 0/* index */,
-												inDataSize, inDataPtr);
-}// ContextSetData
-
-
-/*!
-Like Preferences_ContextSetData(), except the specified tag is
-for a setting that is actually an ordered set; so, you must
-state which item you want using a one-based index.
-
-The tag should generally have a "kPreferences_TagIndexed…" name.
-
-For the convenience of the implementation, 0 is accepted as an
-index value to indicate that the tag is not in fact indexed
-after all.  But, it is better to use Preferences_ContextSetData()
-with non-indexed tags.
-
-IMPORTANT:	The index value is currently ignored for all classes
-			except macro sets, and should be set to 0 for any
-			other preference tag.
-
-(3.0)
-*/
-Preferences_Result
-Preferences_ContextSetDataAtIndex	(Preferences_ContextRef		inContext,
-									 Preferences_Tag			inDataPreferenceTag,
-									 UInt32						inOneBasedIndexOrZeroForNonIndexedTag,
-									 size_t						inDataSize,
-									 void const*				inDataPtr)
-{
-	Preferences_Result		result = kPreferences_ResultOK;
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0;
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
@@ -2173,8 +2545,7 @@ Preferences_ContextSetDataAtIndex	(Preferences_ContextRef		inContext,
 			break;
 		
 		case kPreferences_ClassMacroSet:
-			result = setMacroPreference(ptr, inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag,
-										inDataSize, inDataPtr);
+			result = setMacroPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
 		case kPreferences_ClassSession:
@@ -2195,12 +2566,18 @@ Preferences_ContextSetDataAtIndex	(Preferences_ContextRef		inContext,
 		}
 	}
 	return result;
-}// ContextSetDataAtIndex
+}// ContextSetData
 
 
 /*!
 Arranges for a callback to be invoked every time the specified
 setting is directly changed in the given context.
+
+Note that if a tag is indexed, you have to monitor each possible
+index individually (call Preferences_ReturnTagVariantForIndex()
+to generate such a tag, and if necessary in your callback use
+Preferences_ReturnTagFromVariant()/Preferences_ReturnTagIndex()
+to “decode” the base tag and index value).
 
 It is also possible for a context to change in “batch mode”, in
 which case the change is NOT sent to individual listeners but
@@ -2566,8 +2943,7 @@ Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 	Preferences_Class			dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		result = Preferences_GetDefaultContext(&context, dataClass);
@@ -2809,8 +3185,7 @@ Preferences_SetData		(Preferences_Tag	inDataPreferenceTag,
 	Preferences_Class			dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		result = Preferences_GetDefaultContext(&context, dataClass);
@@ -2886,7 +3261,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 			// value of a particular preference
 			if (inNotifyOfInitialValue)
 			{
-				changeNotify(inForWhatChange, nullptr/* context */, 0/* index */, true/* is initial value */);
+				changeNotify(inForWhatChange, nullptr/* context */, true/* is initial value */);
 			}
 		}
 		break;
@@ -4033,6 +4408,197 @@ unitTest	(Preferences_Class	inClass,
 
 
 /*!
+Constructs a new preference definition.
+
+See create().
+
+(4.0)
+*/
+My_PreferenceDefinition::
+My_PreferenceDefinition	(Preferences_Tag		inTag,
+						 CFStringRef			inKeyName,
+						 FourCharCode			inKeyValueType,
+						 size_t					inNonDictionaryValueSize,
+						 Preferences_Class		inClass)
+:
+tag(inTag),
+keyName(inKeyName),
+keyValueType(inKeyValueType),
+nonDictionaryValueSize(inNonDictionaryValueSize),
+preferenceClass(inClass)
+{
+}// My_PreferenceDefinition constructor
+
+
+/*!
+Constructs a new preference definition and automatically
+registers it in one or more hash tables for efficient access.
+
+The specified tag should be fully documented in the header
+(Preferences.h) and "inNonDictionaryValueSize" should be
+consistent with the type given in that documentation.
+
+This may throw an exception (like std::bad_alloc) if the
+setting cannot be constructed for some strange reason.
+
+The new definition is optionally returned.  Definitions are
+registered globally and never destroyed, and they can be
+later retrieved with findByKeyName() and findByTag(), so it
+is rare to actually need the newly-created instance.
+
+Once located, a definition’s public member variables can be
+used to read the attributes of that setting (such as its
+tag).
+
+See also createIndexed().
+
+(4.0)
+*/
+void
+My_PreferenceDefinition::
+create	(Preferences_Tag			inTag,
+		 CFStringRef				inKeyName,
+		 FourCharCode				inKeyValueType,
+		 size_t						inNonDictionaryValueSize,
+		 Preferences_Class			inClass,
+		 My_PreferenceDefinition**	outResultPtrPtrOrNull)
+{
+	My_PreferenceDefinition*	newPtr = new My_PreferenceDefinition(inTag, inKeyName, inKeyValueType,
+																	 inNonDictionaryValueSize, inClass);
+	
+	// register this in the global by-name hash, allowing no duplicates
+	assert(_definitionsByKeyName.end() == _definitionsByKeyName.find(inKeyName));
+	_definitionsByKeyName[inKeyName] = newPtr;
+	assert(_definitionsByKeyName.end() != _definitionsByKeyName.find(inKeyName));
+	
+	// register this in the global by-tag hash, allowing no duplicates
+	assert(_definitionsByTag.end() == _definitionsByTag.find(inTag));
+	_definitionsByTag[inTag] = newPtr;
+	assert(_definitionsByTag.end() != _definitionsByTag.find(inTag));
+	
+	if (nullptr != outResultPtrPtrOrNull) *outResultPtrPtrOrNull = newPtr;
+}// My_PreferenceDefinition::create
+
+
+/*!
+A convenience routine that calls create() with the typical
+key value type (typeNetEvents_CFBooleanRef) and non-dictionary
+value size (sizeof(Boolean)) for flags.  This simplifies the
+construction of many preferences, as this type is very common.
+
+(4.0)
+*/
+inline void
+My_PreferenceDefinition::
+createFlag	(Preferences_Tag			inTag,
+			 CFStringRef				inKeyName,
+			 Preferences_Class			inClass,
+			 My_PreferenceDefinition**	outResultPtrPtrOrNull)
+{
+	create(inTag, inKeyName, typeNetEvents_CFBooleanRef, sizeof(Boolean), inClass,
+			outResultPtrPtrOrNull);
+}// My_PreferenceDefinition::createFlag
+
+
+/*!
+Like create(), but repeats a definition for the specified
+number of iterations, keeping all settings the same except
+for the underlying key name string.
+
+The tag must be an indexed tag, with space in its value for
+adding up to the specified number of indexes.
+
+The key name template must contain a format for an unsigned
+32-bit integer (typically, "%02u"); "inNumberOfIndexedKeys"
+is the number of key names that should be generated and
+registered as valid.
+
+(4.0)
+*/
+void
+My_PreferenceDefinition::
+createIndexed	(Preferences_Tag		inTag,
+				 Preferences_Index		inNumberOfIndexedKeys,
+				 CFStringRef			inKeyNameTemplate,
+				 FourCharCode			inKeyValueType,
+				 size_t					inNonDictionaryValueSize,
+				 Preferences_Class		inClass)
+{
+	for (Preferences_Index i = 1; i <= inNumberOfIndexedKeys; ++i)
+	{
+		CFRetainRelease		generatedKeyName(createKeyAtIndex(inKeyNameTemplate, i), true/* is retained */);
+		
+		
+		create(Preferences_ReturnTagVariantForIndex(inTag, i), generatedKeyName.returnCFStringRef(),
+				inKeyValueType, inNonDictionaryValueSize, inClass);
+	}
+}// My_PreferenceDefinition::createIndexed
+
+
+/*!
+A convenience routine that calls create() with the typical
+key value type (typeCFArrayRef) and non-dictionary value size
+(sizeof(RGBColor)) for RGB colors.  This simplifies the
+construction of many preferences, as this type is very common.
+
+The array is expected to contain 3 CFNumberRefs that have
+floating-point values between 0.0 and 1.0, for intensity,
+where white is represented by all values being 1.0.
+
+(4.0)
+*/
+inline void
+My_PreferenceDefinition::
+createRGBColor	(Preferences_Tag			inTag,
+				 CFStringRef				inKeyName,
+				 Preferences_Class			inClass,
+				 My_PreferenceDefinition**	outResultPtrPtrOrNull)
+{
+	create(inTag, inKeyName, typeCFArrayRef, sizeof(RGBColor), inClass, outResultPtrPtrOrNull);
+}// My_PreferenceDefinition::createRGBColor
+
+
+/*!
+Scans a hash table for the specified key name, and
+returns the full definition of the matching setting.
+
+(4.0)
+*/
+My_PreferenceDefinition*
+My_PreferenceDefinition::
+findByKeyName	(CFStringRef	inKeyName)
+{
+	My_PreferenceDefinition*					result = nullptr;
+	DefinitionPtrByKeyName::const_iterator		toDefPtr = _definitionsByKeyName.find(inKeyName);
+	
+	
+	//Console_WriteValueCFString("find preference by key name", inKeyName); // debug
+	if (toDefPtr != _definitionsByKeyName.end()) result = toDefPtr->second;
+	return result;
+}// My_PreferenceDefinition::findByKeyName
+
+
+/*!
+Scans a hash table for the specified key name, and
+returns the full definition of the matching setting
+(or nullptr if none is found).
+
+(4.0)
+*/
+My_PreferenceDefinition*
+My_PreferenceDefinition::
+findByTag	(Preferences_Tag	inTag)
+{
+	My_PreferenceDefinition*				result = nullptr;
+	DefinitionPtrByTag::const_iterator		toDefPtr = _definitionsByTag.find(inTag);
+	
+	
+	if (_definitionsByTag.end() != toDefPtr) result = toDefPtr->second;
+	return result;
+}// My_PreferenceDefinition::findByTag
+
+
+/*!
 Ensures that the Preferences module has been
 properly initialized.  If Preferences_Init()
 needs to be called, it is called.
@@ -4060,14 +4626,12 @@ listener.
 void
 changeNotify	(Preferences_Change			inWhatChanged,
 				 Preferences_ContextRef		inContextOrNull,
-				 UInt32						inOneBasedIndexOrZeroForNonIndexed,
 				 Boolean					inIsInitialValue)
 {
 	Preferences_ChangeContext	context;
 	
 	
 	context.contextRef = inContextOrNull;
-	context.oneBasedIndex = inOneBasedIndexOrZeroForNonIndexed;
 	context.firstCall = inIsInitialValue;
 	// invoke listener callback routines appropriately, from the preferences listener model
 	ListenerModel_NotifyListenersOfEvent(gPreferenceEventListenerModel, inWhatChanged, &context);
@@ -4075,11 +4639,7 @@ changeNotify	(Preferences_Change			inWhatChanged,
 
 
 /*!
-Internal version of Preferences_ContextGetDataAtIndex().
-
-IMPORTANT:	The index value is currently ignored for all classes
-			except macro sets, and should be set to 0 for any
-			other preference tag.
+Internal version of Preferences_ContextGetData().
 
 (3.1)
 */
@@ -4087,7 +4647,6 @@ Preferences_Result
 contextGetData		(My_ContextInterfacePtr		inContextPtr,
 					 Preferences_Class			inDataClass,
 					 Preferences_Tag			inDataPreferenceTag,
-					 UInt32						inOneBasedIndexOrZeroForNonIndexedTag,
 					 size_t						inDataStorageSize,
 					 void*						outDataStorage,
 					 size_t*					outActualSizePtrOrNull)
@@ -4106,8 +4665,7 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 		break;
 	
 	case kPreferences_ClassMacroSet:
-		result = getMacroPreference(inContextPtr, inDataPreferenceTag, inOneBasedIndexOrZeroForNonIndexedTag, inDataStorageSize,
-									outDataStorage, outActualSizePtrOrNull);
+		result = getMacroPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
 	case kPreferences_ClassSession:
@@ -4467,10 +5025,10 @@ it (unless the result is nullptr to indicate an error).
 */
 CFStringRef
 createKeyAtIndex	(CFStringRef	inTemplate,
-					 UInt32			inIndex)
+					 UInt32			inOneBasedIndex)
 {
 	CFStringRef		result = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */,
-														inTemplate, inIndex);
+														inTemplate, inOneBasedIndex);
 	
 	
 	return result;
@@ -4765,8 +5323,7 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassFormat;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-										actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassFormat);
@@ -4955,8 +5512,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassGeneral;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-										actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassGeneral);
@@ -5049,12 +5605,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							*outUInt16Ptr = 8; // arbitrary
 							result = kPreferences_ResultBadVersionDataNotAvailable;
 						}
-					}
-					break;
-				
-				case kPreferences_TagDynamicResizing:
-					{
-						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = true; // no longer a preference
 					}
 					break;
 				
@@ -5473,7 +6023,6 @@ if the given preference tag is not valid
 Preferences_Result	
 getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					 Preferences_Tag				inDataPreferenceTag,
-					 UInt32							inOneBasedIndex,
 					 size_t							inDataSize,
 					 void*							outDataPtr,
 					 size_t*						outActualSizePtrOrNull)
@@ -5489,15 +6038,17 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassMacroSet;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndex, keyName, keyValueType,
-										actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassMacroSet);
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
-				switch (inDataPreferenceTag)
+				Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inDataPreferenceTag);
+				
+				
+				switch (kTagWithoutIndex)
 				{
 				case kPreferences_TagIndexedMacroAction:
 					assert(typeCFStringRef == keyValueType);
@@ -5692,25 +6243,24 @@ getNamedContext		(Preferences_Class			inClass,
 
 
 /*!
-Returns information about the dictionary key used to
-store the given preferences tag’s data, the type of
-data expected in a dictionary, the size of the data
-type MacTelnet uses to read or write the data via
-APIs such as Preferences_ContextGetData(), and an
+Returns information about the dictionary key used to store the
+given preferences tag’s data, the type of data expected in a
+dictionary, the size of the data type used to read or write the
+data via APIs such as Preferences_ContextGetData(), and an
 indication of what class the tag belongs to.
 
-If the tag is actually an indexed tag, provide the
-one-based index of the specific instance you are
-interested in.  Usually, the index is 0 to indicate
-a non-indexed tag.
+If the tag is actually an indexed tag, it should already have
+been “varied” (by adding the index), so that the proper key name
+is returned.
 
-If no particular class dictionary is required, then
-"outClass" will be "kPreferences_ClassGeneral".  In
-this case ONLY, Core Foundation Preferences may be
-used to store or retrieve the key value directly in
-the application’s globals.  However, keys intended
-for storage in user Favorites will have a different
+If no particular class dictionary is required, then "outClass"
+will be "kPreferences_ClassGeneral".  In this case ONLY, you
+may use Core Foundation Preferences to store or retrieve the
+key value directly in the application’s globals.  However, keys
+intended for storage in user Favorites will have a different
 class, and must be set in a specific domain.
+
+See also Preferences_Init() and My_PreferenceDefinition.
 
 \retval kPreferences_ResultOK
 if the information was found successfully
@@ -5722,904 +6272,28 @@ if the given preference tag is not valid
 */
 Preferences_Result
 getPreferenceDataInfo	(Preferences_Tag		inTag,
-						 UInt32					inOneBasedIndexOrZeroForNonIndexedTag,
 						 CFStringRef&			outKeyName,
 						 FourCharCode&			outKeyValueType,
 						 size_t&				outNonDictionaryValueSize,
 						 Preferences_Class&		outClass)
 {
-	Preferences_Result		result = kPreferences_ResultOK;
+	Preferences_Result			result = kPreferences_ResultOK;
+	My_PreferenceDefinition*	definitionPtr = nullptr;
 	
 	
-	// IMPORTANT: The data types used here are documented in Preferences.h,
-	//            and relied upon in other methods.  They are also used in
-	//            MacTelnetPrefsConverter.  Check for consistency!
-	switch (inTag)
+	definitionPtr = My_PreferenceDefinition::findByTag(inTag);
+	if (nullptr != definitionPtr)
 	{
-	case kPreferences_TagANSIColorsEnabled:
-		outKeyName = CFSTR("terminal-emulator-xterm-enable-color");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagArrangeWindowsUsingTabs:
-		outKeyName = CFSTR("terminal-use-tabs");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagAssociatedFormatFavorite:
-		outKeyName = CFSTR("format-favorite");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagAssociatedTerminalFavorite:
-		outKeyName = CFSTR("terminal-favorite");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagAssociatedTranslationFavorite:
-		outKeyName = CFSTR("translation-favorite");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagAutoCaptureToFile:
-		outKeyName = CFSTR("terminal-capture-auto-start");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagBackupFontName:
-		outKeyName = CFSTR("terminal-backup-font-family");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Str255);
-		outClass = kPreferences_ClassTranslation;
-		break;
-	
-	case kPreferences_TagBellSound:
-		outKeyName = CFSTR("terminal-when-bell-sound-basename");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagCaptureFileAlias:
-		outKeyName = CFSTR("terminal-capture-file-alias-id");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Preferences_AliasID);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagCaptureFileCreator:
-		outKeyName = CFSTR("terminal-capture-file-creator-code");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(OSType);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagCommandLine:
-		outKeyName = CFSTR("command-line-token-strings");
-		outKeyValueType = typeCFArrayRef;
-		outNonDictionaryValueSize = sizeof(CFArrayRef);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagCopySelectedText:
-		outKeyName = CFSTR("terminal-auto-copy-on-select");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagCopyTableThreshold:
-		outKeyName = CFSTR("spaces-per-tab");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(UInt16);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagCursorBlinks:
-		outKeyName = CFSTR("terminal-cursor-blinking");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagCursorMovesPriorToDrops:
-		outKeyName = CFSTR("terminal-cursor-auto-move-on-drop");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagDataReceiveDoNotStripHighBit:
-		outKeyName = CFSTR("data-receive-do-not-strip-high-bit");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagDataReadBufferSize:
-		outKeyName = CFSTR("data-receive-buffer-size-bytes");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(SInt16);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagDontAutoClose:
-		outKeyName = CFSTR("no-auto-close");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagDontAutoNewOnApplicationReopen:
-		outKeyName = CFSTR("no-auto-new");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagDynamicResizing:
-		outKeyName = CFSTR(""); // not used
-		outKeyValueType = typeNetEvents_CFBooleanRef; // not used
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagEMACSMetaKey:
-		outKeyName = CFSTR("key-map-emacs-meta");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Session_EMACSMetaKey);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagFocusFollowsMouse:
-		outKeyName = CFSTR("terminal-focus-follows-mouse");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagFontCharacterWidthMultiplier:
-		outKeyName = CFSTR("terminal-font-width-multiplier");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagFontName:
-		outKeyName = CFSTR("terminal-font-family");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Str255);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagFontSize:
-		outKeyName = CFSTR("terminal-font-size-points");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(SInt16);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagIdleAfterInactivityInSeconds:
-		outKeyName = CFSTR("data-receive-idle-seconds");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(UInt16);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagIndexedMacroAction:
-		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-action"),
-										inOneBasedIndexOrZeroForNonIndexedTag);
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(MacroManager_Action);
-		outClass = kPreferences_ClassMacroSet;
-		break;
-	
-	case kPreferences_TagIndexedMacroContents:
-		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-contents-string"),
-										inOneBasedIndexOrZeroForNonIndexedTag);
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassMacroSet;
-		break;
-	
-	case kPreferences_TagIndexedMacroKey:
-		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-key"),
-										inOneBasedIndexOrZeroForNonIndexedTag);
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(MacroManager_KeyID);
-		outClass = kPreferences_ClassMacroSet;
-		break;
-	
-	case kPreferences_TagIndexedMacroKeyModifiers:
-		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-modifiers"),
-										inOneBasedIndexOrZeroForNonIndexedTag);
-		outKeyValueType = typeCFArrayRef;
-		outNonDictionaryValueSize = sizeof(UInt32);
-		outClass = kPreferences_ClassMacroSet;
-		break;
-	
-	case kPreferences_TagIndexedMacroName:
-		outKeyName = createKeyAtIndex(CFSTR("macro-%02u-name-string"),
-										inOneBasedIndexOrZeroForNonIndexedTag);
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassMacroSet;
-		break;
-	
-	case kPreferences_TagKeepAlivePeriodInMinutes:
-		outKeyName = CFSTR("data-send-keepalive-period-minutes");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(UInt16);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagKeyInterruptProcess:
-		outKeyName = CFSTR("command-key-interrupt-process");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(char);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagKeyResumeOutput:
-		outKeyName = CFSTR("command-key-resume-output");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(char);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagKeySuspendOutput:
-		outKeyName = CFSTR("command-key-suspend-output");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(char);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagKioskAllowsForceQuit:
-		outKeyName = CFSTR("kiosk-force-quit-enabled");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagKioskShowsMenuBar:
-		outKeyName = CFSTR("kiosk-menu-bar-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagKioskShowsOffSwitch:
-		outKeyName = CFSTR("kiosk-off-switch-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagKioskShowsScrollBar:
-		outKeyName = CFSTR("kiosk-scroll-bar-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagKioskUsesSuperfluousEffects:
-		outKeyName = CFSTR("kiosk-effects-enabled");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagHeadersCollapsed:
-		outKeyName = CFSTR("window-terminal-toolbar-invisible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagInfoWindowColumnOrdering:
-		outKeyName = CFSTR("window-sessioninfo-column-order");
-		outKeyValueType = typeCFArrayRef;
-		outNonDictionaryValueSize = sizeof(CFArrayRef);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagLineModeEnabled:
-		outKeyName = CFSTR("line-mode-enabled");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagLocalEchoEnabled:
-		outKeyName = CFSTR("data-send-local-echo-enabled");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagLocalEchoHalfDuplex:
-		outKeyName = CFSTR("data-send-local-echo-half-duplex");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagMacrosMenuVisible:
-		outKeyName = CFSTR("menu-macros-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagMapArrowsForEMACS:
-		outKeyName = CFSTR("command-key-emacs-move-down");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagMapBackquote:
-		outKeyName = CFSTR("key-map-backquote");
-		outKeyValueType = typeCFStringRef; // any keystroke string (commonly, blank "" or escape "\e")
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagMapCarriageReturnToCRNull:
-		outKeyName = CFSTR("key-map-new-line");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagMapDeleteToBackspace:
-		outKeyName = CFSTR("key-map-delete");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagMapKeypadTopRowForVT220:
-		outKeyName = CFSTR("command-key-vt220-pf1");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagMarginBell:
-		outKeyName = CFSTR("terminal-when-cursor-near-right-margin");
-		outKeyValueType = typeCFStringRef; // one of: "bell", "ignore"
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagMenuItemKeys:
-		outKeyName = CFSTR("menu-key-equivalents");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagNewCommandShortcutEffect:
-		outKeyName = CFSTR("new-means");
-		outKeyValueType = typeCFStringRef; // one of: "shell", "dialog", "default"
-		outNonDictionaryValueSize = sizeof(UInt32);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagNotification:
-		outKeyName = CFSTR("when-alert-in-background");
-		outKeyValueType = typeCFStringRef; // one of: "alert", "animate", "badge", "ignore"
-		outNonDictionaryValueSize = sizeof(SInt16);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagNotifyOfBeeps:
-		outKeyName = CFSTR("terminal-when-bell-in-background");
-		outKeyValueType = typeCFStringRef; // one of: "notify", "ignore"
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagPageKeysControlLocalTerminal:
-		outKeyName = CFSTR("command-key-terminal-end");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagPasteBlockSize:
-		outKeyName = CFSTR("data-send-paste-block-size-bytes");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(SInt16);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagPasteMethod:
-		outKeyName = CFSTR("data-send-paste-method");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Clipboard_PasteMethod);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagPureInverse:
-		outKeyName = CFSTR("terminal-inverse-selections");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagRandomTerminalFormats:
-		outKeyName = CFSTR("terminal-format-random");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagServerHost:
-		outKeyName = CFSTR("server-host");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagServerPort:
-		outKeyName = CFSTR("server-port");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(SInt16);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagServerProtocol:
-		outKeyName = CFSTR("server-protocol");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Session_Protocol);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagServerUserID:
-		outKeyName = CFSTR("server-user-id");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagSimplifiedUserInterface:
-		outKeyName = CFSTR("menu-command-set-simplified");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagTektronixMode:
-		outKeyName = CFSTR("tek-mode");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(VectorInterpreter_Mode);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagTektronixPAGEClearsScreen:
-		outKeyName = CFSTR("tek-page-clears-screen");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassSession;
-		break;
-	
-	case kPreferences_TagTerminalAnswerBackMessage:
-		outKeyName = CFSTR("terminal-emulator-answerback");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalClearSavesLines:
-		outKeyName = CFSTR("terminal-clear-saves-lines");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIBlack:
-		outKeyName = CFSTR("terminal-color-ansi-black-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIRed:
-		outKeyName = CFSTR("terminal-color-ansi-red-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIGreen:
-		outKeyName = CFSTR("terminal-color-ansi-green-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIYellow:
-		outKeyName = CFSTR("terminal-color-ansi-yellow-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIBlue:
-		outKeyName = CFSTR("terminal-color-ansi-blue-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIMagenta:
-		outKeyName = CFSTR("terminal-color-ansi-magenta-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSICyan:
-		outKeyName = CFSTR("terminal-color-ansi-cyan-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIWhite:
-		outKeyName = CFSTR("terminal-color-ansi-white-normal-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIBlackBold:
-		outKeyName = CFSTR("terminal-color-ansi-black-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIRedBold:
-		outKeyName = CFSTR("terminal-color-ansi-red-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIGreenBold:
-		outKeyName = CFSTR("terminal-color-ansi-green-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIYellowBold:
-		outKeyName = CFSTR("terminal-color-ansi-yellow-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIBlueBold:
-		outKeyName = CFSTR("terminal-color-ansi-blue-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIMagentaBold:
-		outKeyName = CFSTR("terminal-color-ansi-magenta-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSICyanBold:
-		outKeyName = CFSTR("terminal-color-ansi-cyan-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorANSIWhiteBold:
-		outKeyName = CFSTR("terminal-color-ansi-white-bold-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorBlinkingForeground:
-		outKeyName = CFSTR("terminal-color-blinking-foreground-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorBlinkingBackground:
-		outKeyName = CFSTR("terminal-color-blinking-background-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorBoldForeground:
-		outKeyName = CFSTR("terminal-color-bold-foreground-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorBoldBackground:
-		outKeyName = CFSTR("terminal-color-bold-background-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorMatteBackground:
-		outKeyName = CFSTR("terminal-color-matte-background-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorNormalForeground:
-		outKeyName = CFSTR("terminal-color-normal-foreground-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalColorNormalBackground:
-		outKeyName = CFSTR("terminal-color-normal-background-rgb");
-		outKeyValueType = typeCFArrayRef; // containing 3 CFNumberRefs, floating point between 0 and 1
-		outNonDictionaryValueSize = sizeof(RGBColor);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalCursorType:
-		outKeyName = CFSTR("terminal-cursor-shape");
-		outKeyValueType = typeCFStringRef; // one of: "block", "underline", "thick underline", "vertical bar", "thick vertical bar"
-		outNonDictionaryValueSize = sizeof(TerminalView_CursorType);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagTerminalEmulatorType:
-		outKeyName = CFSTR("terminal-emulator-type");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Terminal_Emulator);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalLineWrap:
-		outKeyName = CFSTR("terminal-line-wrap");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalMarginLeft:
-		outKeyName = CFSTR("terminal-margin-left-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalMarginRight:
-		outKeyName = CFSTR("terminal-margin-right-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalMarginTop:
-		outKeyName = CFSTR("terminal-margin-top-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalMarginBottom:
-		outKeyName = CFSTR("terminal-margin-bottom-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalPaddingLeft:
-		outKeyName = CFSTR("terminal-padding-left-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalPaddingRight:
-		outKeyName = CFSTR("terminal-padding-right-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalPaddingTop:
-		outKeyName = CFSTR("terminal-padding-top-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalPaddingBottom:
-		outKeyName = CFSTR("terminal-padding-bottom-em");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(Float32);
-		outClass = kPreferences_ClassFormat;
-		break;
-	
-	case kPreferences_TagTerminalResizeAffectsFontSize:
-		outKeyName = CFSTR("terminal-resize-affects");
-		outKeyValueType = typeCFStringRef; // one of: "screen", "font"
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagTerminalScreenColumns:
-		outKeyName = CFSTR("terminal-screen-dimensions-columns");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(UInt16);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalScreenRows:
-		outKeyName = CFSTR("terminal-screen-dimensions-rows");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(UInt16);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalScreenScrollbackRows:
-		outKeyName = CFSTR("terminal-scrollback-size-lines");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(UInt16);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalScreenScrollbackType:
-		outKeyName = CFSTR("terminal-scrollback-type");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(Terminal_ScrollbackType);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTerminalScrollDelay:
-		outKeyName = CFSTR("terminal-scroll-delay-milliseconds");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(EventTime);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagTextEncodingIANAName:
-		outKeyName = CFSTR("terminal-text-encoding-name");
-		outKeyValueType = typeCFStringRef;
-		outNonDictionaryValueSize = sizeof(CFStringRef);
-		outClass = kPreferences_ClassTranslation;
-		break;
-	
-	case kPreferences_TagTextEncodingID:
-		outKeyName = CFSTR("terminal-text-encoding-id");
-		outKeyValueType = typeNetEvents_CFNumberRef;
-		outNonDictionaryValueSize = sizeof(CFStringEncoding);
-		outClass = kPreferences_ClassTranslation;
-		break;
-	
-	case kPreferences_TagVisualBell:
-		outKeyName = CFSTR("terminal-when-bell");
-		outKeyValueType = typeCFStringRef; // one of: "visual", "audio+visual"
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagWasClipboardShowing:
-		outKeyName = CFSTR("window-clipboard-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagWasCommandLineShowing:
-		outKeyName = CFSTR("window-commandline-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagWasControlKeypadShowing:
-		outKeyName = CFSTR("window-controlkeys-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagWasFunctionKeypadShowing:
-		outKeyName = CFSTR("window-functionkeys-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagWasSessionInfoShowing:
-		outKeyName = CFSTR("window-sessioninfo-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagWasVT220KeypadShowing:
-		outKeyName = CFSTR("window-vt220-keys-visible");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagWindowStackingOrigin:
-		outKeyName = CFSTR("window-terminal-position-pixels");
-		outKeyValueType = typeCFArrayRef; // containing 2 CFNumberRefs, short integers as pixel values
-		outNonDictionaryValueSize = sizeof(Point);
-		outClass = kPreferences_ClassGeneral;
-		break;
-	
-	case kPreferences_TagVT100FixLineWrappingBug:
-		outKeyName = CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagXTerm256ColorsEnabled:
-		outKeyName = CFSTR("terminal-emulator-xterm-enable-color-256");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagXTermColorEnabled:
-		outKeyName = CFSTR("terminal-emulator-xterm-enable-color");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagXTermGraphicsEnabled:
-		outKeyName = CFSTR("terminal-emulator-xterm-enable-graphics");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	case kPreferences_TagXTermWindowAlterationEnabled:
-		outKeyName = CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences");
-		outKeyValueType = typeNetEvents_CFBooleanRef;
-		outNonDictionaryValueSize = sizeof(Boolean);
-		outClass = kPreferences_ClassTerminal;
-		break;
-	
-	default:
-		// ???
+		// with the global hash tables, this mapping is easy; simply
+		// find the corresponding definition and return all information
+		outKeyName = definitionPtr->keyName.returnCFStringRef();
+		outKeyValueType = definitionPtr->keyValueType;
+		outNonDictionaryValueSize = definitionPtr->nonDictionaryValueSize;
+		outClass = definitionPtr->preferenceClass;
+	}
+	else
+	{
 		result = kPreferences_ResultUnknownTagOrClass;
-		break;
 	}
 	return result;
 }// getPreferenceDataInfo
@@ -6660,8 +6334,7 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassSession;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-										actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassSession);
@@ -7046,8 +6719,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassTerminal;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-										actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassTerminal);
@@ -7056,7 +6728,6 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 			{
 				switch (inDataPreferenceTag)
 				{
-				case kPreferences_TagANSIColorsEnabled:
 				case kPreferences_TagDataReceiveDoNotStripHighBit:
 				case kPreferences_TagTerminalClearSavesLines:
 				case kPreferences_TagTerminalLineWrap:
@@ -7354,8 +7025,7 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 		Preferences_Class	dataClass = kPreferences_ClassTranslation;
 		
 		
-		result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-										actualSize, dataClass);
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
 			assert(dataClass == kPreferences_ClassTranslation);
@@ -7680,9 +7350,10 @@ readMacTelnetCoordPreference	(CFStringRef	inKey,
 
 
 /*!
-Overrides stored preference values using master preferences
-from the given dictionary (which may have come from a
-"DefaultPreferences.plist" file, for example).
+Updates stored preference values using master preferences from
+the given dictionary.  If merging, conflicting keys are
+skipped; otherwise, they are replaced with the new dictionary
+values.
 
 All of the keys in the specified dictionary must be of type
 CFStringRef.
@@ -7695,6 +7366,34 @@ currently always returned; there is no way to detect errors
 OSStatus
 readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 							 Boolean			inMerge)
+{
+	My_ContextInterfacePtr		contextPtr = nullptr;
+	Boolean						gotContext = getDefaultContext(kPreferences_ClassGeneral, contextPtr);
+	
+	
+	assert(gotContext);
+	return readPreferencesDictionaryInContext(contextPtr, inPreferenceDictionary, inMerge);
+}// readPreferencesDictionary
+
+
+/*!
+Updates stored preference values in the specified context, using
+master preferences from the given dictionary.  If merging,
+conflicting keys are skipped; otherwise, they are replaced with
+the new dictionary values.
+
+All of the keys in the specified dictionary must be of type
+CFStringRef.
+
+\retval noErr
+currently always returned; there is no way to detect errors
+
+(4.0)
+*/
+OSStatus
+readPreferencesDictionaryInContext		(My_ContextInterfacePtr		inContextPtr,
+										 CFDictionaryRef			inPreferenceDictionary,
+										 Boolean					inMerge)
 {
 	// the keys can have their values copied directly into the application
 	// preferences property list; they are identical in format and even use
@@ -7716,7 +7415,7 @@ readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 		if (inMerge)
 		{
 			// when merging, do not replace any key that is already defined
-			CFPropertyListRef	foundValue = CFPreferencesCopyAppValue(kKey, kCFPreferencesCurrentApplication);
+			CFPropertyListRef	foundValue = inContextPtr->returnValueCopy(kKey);
 			
 			
 			if (nullptr != foundValue)
@@ -7734,15 +7433,31 @@ readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 		{
 			if (CFDictionaryGetValueIfPresent(inPreferenceDictionary, kKey, &keyValue))
 			{
-				//Console_WriteValueCFString("using DefaultPreferences.plist value for key", kKey); // debug
-				CFPreferencesSetAppValue(kKey, keyValue, kCFPreferencesCurrentApplication);
+				My_PreferenceDefinition*	definitionPtr = My_PreferenceDefinition::findByKeyName(kKey);
+				
+				
+				if (nullptr == definitionPtr)
+				{
+					static Preferences_Index	gDummyIndex = 0;
+					Preferences_Tag				dummyTag = Preferences_ReturnTagVariantForIndex('DUM\0', gDummyIndex++);
+					
+					
+					Console_Warning(Console_WriteValueCFString, "using anonymous tag for unknown preference dictionary key", kKey);
+					inContextPtr->addValue(dummyTag, kKey, keyValue);
+				}
+				else
+				{
+					//Console_WriteValueCFString("using given dictionary value for key", kKey); // debug
+					assert(kCFCompareEqualTo == CFStringCompare(kKey, definitionPtr->keyName.returnCFStringRef(), 0/* options */));
+					inContextPtr->addValue(definitionPtr->tag, definitionPtr->keyName.returnCFStringRef(), keyValue);
+				}
 			}
 		}
 	}
 	delete [] keys;
 	
 	return result;
-}// readPreferencesDictionary
+}// readPreferencesDictionaryInContext
 
 
 /*!
@@ -7795,8 +7510,7 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassFormat;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassFormat);
@@ -7929,8 +7643,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassGeneral;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassGeneral);
@@ -8054,15 +7767,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
-				}
-				break;
-			
-			case kPreferences_TagDynamicResizing:
-				{
-					//Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					WindowInfo_SetDynamicResizing(nullptr, true/* no longer a preference */);
 				}
 				break;
 			
@@ -8427,7 +8131,6 @@ In this method, 0 is an invalid index.
 Preferences_Result	
 setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					 Preferences_Tag			inDataPreferenceTag,
-					 UInt32						inOneBasedIndex,
 					 size_t						inDataSize,
 					 void const*				inDataPtr)
 {
@@ -8438,15 +8141,17 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassMacroSet;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, inOneBasedIndex, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassMacroSet);
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
-			switch (inDataPreferenceTag)
+			Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inDataPreferenceTag);
+			
+			
+			switch (kTagWithoutIndex)
 			{
 			case kPreferences_TagIndexedMacroAction:
 				{
@@ -8477,7 +8182,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("text"));
 						break;
 					}
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -8490,7 +8195,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeCFStringRef == keyValueType);
 					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -8538,7 +8243,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 							inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
 						}
 					}
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -8584,7 +8289,7 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 							CFRelease(modifierCFArray), modifierCFArray = nullptr;
 						}
 					}
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef, inOneBasedIndex);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			
@@ -8752,8 +8457,7 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassSession;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassSession);
@@ -8996,8 +8700,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassTerminal;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassTerminal);
@@ -9006,16 +8709,6 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
-			case kPreferences_TagANSIColorsEnabled:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
-				}
-				break;
-			
 			case kPreferences_TagDataReceiveDoNotStripHighBit:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
@@ -9245,8 +8938,7 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 	Preferences_Class		dataClass = kPreferences_ClassTranslation;
 	
 	
-	result = getPreferenceDataInfo(inDataPreferenceTag, 0/* index, or zero */, keyName, keyValueType,
-									actualSize, dataClass);
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
 		assert(dataClass == kPreferences_ClassTranslation);

@@ -153,7 +153,7 @@ public:
 	panelChanged	(Panel_Ref, Panel_Message, void*);
 	
 	void
-	readPreferences		(Preferences_ContextRef, UInt32);
+	readPreferences		(Preferences_ContextRef, Preferences_Index);
 	
 	static pascal OSStatus
 	receiveFieldChanged		(EventHandlerCallRef, EventRef, void*);
@@ -213,12 +213,12 @@ struct My_MacrosPanelData
 	My_MacrosPanelData ();
 	
 	void
-	switchDataModel		(Preferences_ContextRef, UInt32);
+	switchDataModel		(Preferences_ContextRef, Preferences_Index);
 	
 	Panel_Ref				panel;			//!< the panel this data is for
 	My_MacrosPanelUI*		interfacePtr;	//!< if not nullptr, the panel user interface is active
 	Preferences_ContextRef	dataModel;		//!< source of initializations and target of changes
-	UInt32					currentIndex;	//!< which index (one-based) in the data model to use for macro-specific settings
+	Preferences_Index		currentIndex;	//!< which index (one-based) in the data model to use for macro-specific settings
 };
 typedef My_MacrosPanelData*		My_MacrosPanelDataPtr;
 
@@ -365,7 +365,7 @@ asked to refresh itself.
 void
 My_MacrosPanelData::
 switchDataModel		(Preferences_ContextRef		inNewContext,
-					 UInt32						inNewIndex)
+					 Preferences_Index			inNewIndex)
 {
 	if (nullptr != inNewContext) this->dataModel = inNewContext;
 	if (0 != inNewIndex) this->currentIndex = inNewIndex;
@@ -1057,7 +1057,7 @@ Updates the display based on the given settings.
 void
 My_MacrosPanelUI::
 readPreferences		(Preferences_ContextRef		inSettings,
-					 UInt32						inOneBasedIndex)
+					 Preferences_Index			inOneBasedIndex)
 {
 	assert(0 != inOneBasedIndex);
 	if (nullptr != inSettings)
@@ -1072,9 +1072,9 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			MacroManager_KeyID		macroKey = 0;
 			
 			
-			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroKey,
-															inOneBasedIndex, sizeof(macroKey), &macroKey,
-															false/* search defaults too */, &actualSize);
+			prefsResult = Preferences_ContextGetData
+							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, inOneBasedIndex),
+								sizeof(macroKey), &macroKey, false/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				UInt32		prefKeyType = 0;
@@ -1098,9 +1098,9 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			UInt32		modifiers = 0;
 			
 			
-			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroKeyModifiers,
-															inOneBasedIndex, sizeof(modifiers), &modifiers,
-															false/* search defaults too */, &actualSize);
+			prefsResult = Preferences_ContextGetData
+							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKeyModifiers, inOneBasedIndex),
+								sizeof(modifiers), &modifiers, false/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setKeyModifiers(modifiers);
@@ -1117,9 +1117,9 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			MacroManager_Action		actionPerformed = kMacroManager_ActionSendTextProcessingEscapes;
 			
 			
-			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroAction,
-															inOneBasedIndex, sizeof(actionPerformed), &actionPerformed,
-															false/* search defaults too */, &actualSize);
+			prefsResult = Preferences_ContextGetData
+							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroAction, inOneBasedIndex),
+								sizeof(actionPerformed), &actionPerformed, false/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK != prefsResult)
 			{
 				// initialize; do not fall back on defaults because there is
@@ -1142,9 +1142,9 @@ readPreferences		(Preferences_ContextRef		inSettings,
 			CFStringRef		actionCFString = nullptr;
 			
 			
-			prefsResult = Preferences_ContextGetDataAtIndex(inSettings, kPreferences_TagIndexedMacroContents,
-															inOneBasedIndex, sizeof(actionCFString), &actionCFString,
-															true/* search defaults too */, &actualSize);
+			prefsResult = Preferences_ContextGetData
+							(inSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inOneBasedIndex),
+								sizeof(actionCFString), &actionCFString, true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				SetControlTextWithCFString(HIViewWrap(idMyFieldMacroText, kOwningWindow), actionCFString);
@@ -1249,8 +1249,9 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings,
 			
 			GetControlTextAsCFString(HIViewWrap(idMyFieldMacroText, kOwningWindow), actionCFString);
 			
-			prefsResult = Preferences_ContextSetDataAtIndex(inoutSettings, kPreferences_TagIndexedMacroContents,
-															inOneBasedIndex, sizeof(actionCFString), &actionCFString);
+			prefsResult = Preferences_ContextSetData
+							(inoutSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroContents, inOneBasedIndex),
+								sizeof(actionCFString), &actionCFString);
 			if (kPreferences_ResultOK != prefsResult)
 			{
 				Console_Warning(Console_WriteValue, "failed to set action text of macro with index", inOneBasedIndex);
@@ -1308,8 +1309,9 @@ saveKeyTypeAndCharacterPreferences	(Preferences_ContextRef		inoutSettings,
 		}
 		
 		getPrefFromKeyTypeAndCharacterCode(this->keyType, keyChar, keyID);
-		prefsResult = Preferences_ContextSetDataAtIndex(inoutSettings, kPreferences_TagIndexedMacroKey,
-														inOneBasedIndex, sizeof(keyID), &keyID);
+		prefsResult = Preferences_ContextSetData
+						(inoutSettings, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroKey, inOneBasedIndex),
+							sizeof(keyID), &keyID);
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			result = true;
@@ -1536,15 +1538,15 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 		case kMyDataBrowserPropertyIDMacroName:
 			// return the text string for the macro name
 			{
-				SInt32				macroIndex = STATIC_CAST(inItemID, SInt32);
+				Preferences_Index	macroIndex = STATIC_CAST(inItemID, Preferences_Index);
 				CFStringRef			nameCFString = nullptr;
 				Preferences_Result	prefsResult = kPreferences_ResultOK;
 				size_t				actualSize = 0;
 				
 				
-				prefsResult = Preferences_ContextGetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
-																macroIndex, sizeof(nameCFString), &nameCFString,
-																false/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetData
+								(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex),
+									sizeof(nameCFString), &nameCFString, false/* search defaults too */, &actualSize);
 				if (kPreferences_ResultOK == prefsResult)
 				{
 					result = SetDataBrowserItemDataText(inItemData, nameCFString);
@@ -1592,12 +1594,13 @@ accessDataBrowserItemData	(HIViewRef					inDataBrowser,
 				if (noErr == result)
 				{
 					// fix macro name
-					SInt32				macroIndex = STATIC_CAST(inItemID, SInt32);
+					Preferences_Index	macroIndex = STATIC_CAST(inItemID, Preferences_Index);
 					Preferences_Result	prefsResult = kPreferences_ResultOK;
 					
 					
-					prefsResult = Preferences_ContextSetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
-																	macroIndex, sizeof(newName), &newName);
+					prefsResult = Preferences_ContextSetData
+									(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex),
+										sizeof(newName), &newName);
 					if (kPreferences_ResultOK == prefsResult)
 					{
 						result = noErr;
@@ -1675,12 +1678,12 @@ compareDataBrowserItems		(HIViewRef					inDataBrowser,
 				
 				
 				// ignore results, the strings are checked below
-				prefsResult = Preferences_ContextGetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
-																macroIndex1, sizeof(string1), &string1,
-																false/* search defaults too */, &actualSize);
-				prefsResult = Preferences_ContextGetDataAtIndex(panelDataPtr->dataModel, kPreferences_TagIndexedMacroName,
-																macroIndex2, sizeof(string2), &string2,
-																false/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetData
+								(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex1),
+									sizeof(string1), &string1, false/* search defaults too */, &actualSize);
+				prefsResult = Preferences_ContextGetData
+								(panelDataPtr->dataModel, Preferences_ReturnTagVariantForIndex(kPreferences_TagIndexedMacroName, macroIndex2),
+									sizeof(string2), &string2, false/* search defaults too */, &actualSize);
 			}
 			
 			// check for nullptr, because CFStringCompare() will not deal with it
@@ -1882,9 +1885,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
 					
 					
-					prefsResult = Preferences_ContextGetDataAtIndex(dataPtr->dataModel, kPreferences_TagIndexedMacroKeyModifiers,
-																	dataPtr->currentIndex, sizeof(allModifiers), &allModifiers,
-																	false/* search defaults */);
+					prefsResult = Preferences_ContextGetData
+									(dataPtr->dataModel, Preferences_ReturnTagVariantForIndex
+															(kPreferences_TagIndexedMacroKeyModifiers, dataPtr->currentIndex),
+										sizeof(allModifiers), &allModifiers, false/* search defaults */);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						Console_Warning(Console_WriteLine, "unable to find existing modifier key settings");
@@ -1921,8 +1925,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					interfacePtr->setKeyModifiers(allModifiers);
 					
 					// save preferences
-					prefsResult = Preferences_ContextSetDataAtIndex(dataPtr->dataModel, kPreferences_TagIndexedMacroKeyModifiers,
-																	dataPtr->currentIndex, sizeof(allModifiers), &allModifiers);
+					prefsResult = Preferences_ContextSetData
+									(dataPtr->dataModel, Preferences_ReturnTagVariantForIndex
+															(kPreferences_TagIndexedMacroKeyModifiers, dataPtr->currentIndex),
+										sizeof(allModifiers), &allModifiers);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						Console_Warning(Console_WriteLine, "unable to save modifier key settings");
@@ -1992,8 +1998,10 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					interfacePtr->setAction(received.commandID);
 					
 					// save preferences
-					prefsResult = Preferences_ContextSetDataAtIndex(dataPtr->dataModel, kPreferences_TagIndexedMacroAction,
-																	dataPtr->currentIndex, sizeof(actionForCommand), &actionForCommand);
+					prefsResult = Preferences_ContextSetData
+									(dataPtr->dataModel, Preferences_ReturnTagVariantForIndex
+															(kPreferences_TagIndexedMacroAction, dataPtr->currentIndex),
+										sizeof(actionForCommand), &actionForCommand);
 					if (kPreferences_ResultOK != prefsResult)
 					{
 						Console_Warning(Console_WriteLine, "unable to save action setting");

@@ -224,9 +224,7 @@
 	<string>f12</string>
 	<key>macro-12-modifiers</key>
 	<array/>
-	<key>macro-menu-name-string</key>
-	<string>Macros</string>
-	<key>macro-menu-visible</key>
+	<key>menu-macros-visible</key>
 	<false/>
 	<key>macro-order</key>
 	<array>
@@ -477,8 +475,6 @@
 	<integer>24</integer>
 	<key>terminal-scroll-delay-milliseconds</key>
 	<integer>1000</integer>
-	<key>terminal-scrollback-enabled</key>
-	<true/>
 	<key>terminal-scrollback-size-lines</key>
 	<integer>200</integer>
 	<key>terminal-text-encoding-name</key>
@@ -495,45 +491,11 @@
 	<string>ignore</string>
 	<key>window-clipboard-visible</key>
 	<false/>
-	<key>window-commandline-position-pixels</key>
-	<array>
-		<integer>50</integer>
-		<integer>300</integer>
-	</array>
-	<key>window-commandline-size-pixels</key>
-	<array>
-		<integer>400</integer>
-		<integer>0</integer>
-	</array>
 	<key>window-commandline-visible</key>
 	<false/>
-	<key>window-controlkeys-position-pixels</key>
-	<array>
-		<integer>350</integer>
-		<integer>70</integer>
-	</array>
 	<key>window-controlkeys-visible</key>
 	<false/>
-	<key>window-functionkeys-position-pixels</key>
-	<array>
-		<integer>350</integer>
-		<integer>70</integer>
-	</array>
 	<key>window-functionkeys-visible</key>
-	<false/>
-	<key>window-leds-visible</key>
-	<false/>
-	<key>window-macroeditor-position-pixels</key>
-	<array>
-		<integer>140</integer>
-		<integer>70</integer>
-	</array>
-	<key>window-macroeditor-size-pixels</key>
-	<array>
-		<integer>600</integer>
-		<integer>400</integer>
-	</array>
-	<key>window-macroeditor-visible</key>
 	<false/>
 	<key>window-preferences-position-pixels</key>
 	<array>
@@ -556,11 +518,6 @@
 	</array>
 	<key>window-terminal-toolbar-invisible</key>
 	<false />
-	<key>window-vt220keys-position-pixels</key>
-	<array>
-		<integer>350</integer>
-		<integer>70</integer>
-	</array>
 	<key>window-vt220keys-visible</key>
 	<false/>
 </dict>
