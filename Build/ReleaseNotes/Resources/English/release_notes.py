@@ -235,6 +235,7 @@ notes_by_version = {
 		'Fixed Terminal window resizes to no longer change the application-defined scrolling region, when in origin mode.',
 		'Fixed VT100 emulator cursor movement to not leave the scrolling region, when in origin mode.',
 		'Fixed VT100 emulator cursor position report to return numbers relative to the scrolling region, when in origin mode.',
+		'Terminal speed has been significantly improved by using inline buffers for Unicode translation.',
 	],
 	'20090428': [
 		'Fixed Terminal view text selection behavior in various ways.',

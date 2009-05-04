@@ -8360,35 +8360,30 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		register SInt16						preWriteCursorX = inDataPtr->current.cursorX;
 		register My_ScreenRowIndex			preWriteCursorY = inDataPtr->current.cursorY;
 		TerminalTextAttributes				temporaryAttributes = 0;
-		UniChar const*						bufferPtr = CFStringGetCharactersPtr(inString);
-		UniChar*							deletedBufferPtr = nullptr;
+		CFStringInlineBuffer				inlineBuffer;
 		
 		
-		if (nullptr == bufferPtr)
-		{
-			// not ideal, but if the internal buffer is not a Unicode array,
-			// it must be copied before it can be interpreted that way
-			deletedBufferPtr = new UniChar[kLength];
-			CFStringGetCharacters(inString, CFRangeMake(0, kLength), deletedBufferPtr);
-			bufferPtr = deletedBufferPtr;
-		}
+		CFStringInitInlineBuffer(inString, &inlineBuffer, CFRangeMake(0, kLength));
 		
 		// WARNING: This is done once here, for efficiency, and is only
 		//          repeated below if the cursor actually moves vertically
 		//          (as evidenced by some moveCursor...() call that would
 		//          affect the cursor row).  Keep this in sync!!!
 		locateCursorLine(inDataPtr, cursorLineIterator);
-		for (UniChar const* bufferIterator = bufferPtr; bufferIterator != (bufferPtr + kLength); ++bufferIterator)
+		for (CFIndex i = 0; i < kLength; ++i)
 		{
+			UniChar const	kThisCharacter = CFStringGetCharacterFromInlineBuffer(&inlineBuffer, i);
+			
+			
 			// debug
-			//Console_WriteValueCharacter("echo", *bufferIterator);
+			//Console_WriteValueCharacter("echo", kThisCharacter);
 			
 			// write characters on a single line
 			if (inDataPtr->modeInsertNotReplace)
 			{
 				bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 			}
-			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, *bufferIterator,
+			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, kThisCharacter,
 																									inDataPtr->current.attributeBits,
 																									temporaryAttributes);
 			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
@@ -8449,11 +8444,6 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			//Console_WriteValuePair("text changed event: add data starting at row, column", range.firstRow, range.firstColumn);
 			//Console_WriteValuePair("text changed event: add data for #rows, #columns", range.rowCount, range.columnCount);
 			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
-		}
-		
-		if (nullptr != deletedBufferPtr)
-		{
-			delete [] deletedBufferPtr, deletedBufferPtr = nullptr;
 		}
 	}
 }// echoCFString
