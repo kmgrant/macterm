@@ -4112,9 +4112,14 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 			dataPtr->screenBuffer.resize(dataPtr->screenBuffer.size() + kLineDelta);
 		}
 		
-		// reset scrolling region
-		setScrollingRegionTop(dataPtr, 0);
-		setScrollingRegionBottom(dataPtr, inNewNumberOfLinesHigh - 1);
+		// if not in origin mode, make sure the scrolling region is up to date
+		// (if in origin mode, assume an application has set this for an important
+		// reason, and leave it alone!)
+		if (false == dataPtr->modeOriginRedefined)
+		{
+			setScrollingRegionTop(dataPtr, 0);
+			setScrollingRegionBottom(dataPtr, inNewNumberOfLinesHigh - 1);
+		}
 		
 		// reset visible region
 		dataPtr->visibleBoundary.firstRow = 0;
@@ -7104,6 +7109,8 @@ My_VT102::
 deleteLines		(My_ScreenBufferPtr		inDataPtr)
 {
 	// do nothing if the cursor is outside the scrolling region
+	// TEMPORARY - the cursor is supposed to be within the region,
+	// so this test may not be necessary
 	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
 		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
 	{
@@ -7142,6 +7149,8 @@ My_VT102::
 insertLines		(My_ScreenBufferPtr		inDataPtr)
 {
 	// do nothing if the cursor is outside the scrolling region
+	// TEMPORARY - the cursor is supposed to be within the region,
+	// so this test may not be necessary
 	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
 		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
 	{
@@ -10403,14 +10412,13 @@ moveCursorUpToEdge	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
-Changes the horizontal column of the cursor in
-the specified terminal screen.  All cursor-dependent
-data is automatically synchronized if necessary.
+Changes the column of the cursor, within the boundaries of
+the screen.  All cursor-dependent data is automatically
+synchronized if necessary.
 
-IMPORTANT:	ALWAYS use moveCursor...() routines
-			to set the cursor value; otherwise,
-			cursor-dependent stuff could become
-			out of sync.
+IMPORTANT:	ALWAYS use moveCursor...() routines to set the
+			cursor value; otherwise, cursor-dependent stuff
+			could become out of sync.
 
 (3.0)
 */
@@ -10441,14 +10449,13 @@ moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 
 
 /*!
-Changes the horizontal column of the cursor in the
-specified terminal screen.  All cursor-dependent
-data is automatically synchronized if necessary.
+Changes the row of the cursor, within the boundaries of the
+screen and any current margins.  All cursor-dependent data is
+automatically synchronized if necessary.
 
-IMPORTANT:	ALWAYS use moveCursor...() routines
-			to set the cursor value; otherwise,
-			cursor-dependent stuff could become
-			out of sync.
+IMPORTANT:	ALWAYS use moveCursor...() routines to set the
+			cursor value; otherwise, cursor-dependent stuff
+			could become out of sync.
 
 (3.0)
 */
@@ -10474,8 +10481,20 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 		SInt16		newCursorY = inNewY;
 		
 		
-		newCursorY = std::max< SInt16 >(newCursorY, 0);
-		newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->screenBuffer.size() - 1);
+		// TEMPORARY: the scrolling region “should” always be accurate,
+		// regardless of the current origin mode, so it is supposed to
+		// work as the only boundary check; but verifying this will
+		// require some extensive code review
+		if (inDataPtr->modeOriginRedefined)
+		{
+			newCursorY = std::max< SInt16 >(newCursorY, inDataPtr->scrollingRegion.firstRow);
+			newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->scrollingRegion.lastRow);
+		}
+		else
+		{
+			newCursorY = std::max< SInt16 >(newCursorY, 0);
+			newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->screenBuffer.size() - 1);
+		}
 		inDataPtr->current.cursorY = newCursorY;
 	}
 	
@@ -11420,10 +11439,13 @@ vt100DeviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
 				reportedCursorY = inDataPtr->screenBuffer.size() - 1;
 			}
 			
-			// TEMPORARY (3.0) - I think there is a bug here, DECOM (origin mode) must
-			//                   be respected, offsetting the reported cursor location
-			//                   relative to the topmost scrolling row if applicable
+			// in origin mode, report relative to the current scroll range
+			if (inDataPtr->modeOriginRedefined)
+			{
+				reportedCursorY -= inDataPtr->scrollingRegion.firstRow;
+			}
 			
+			// the reported numbers are one-based, not zero-based
 			++reportedCursorX;
 			++reportedCursorY;
 			
@@ -11905,7 +11927,11 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	}
 	
 	// home the cursor, but relative to any current top margin
-	moveCursor(inDataPtr, 0, (inDataPtr->modeOriginRedefined) ? inDataPtr->scrollingRegion.firstRow : 0);
+	// (this limit is enforced by moveCursorY())
+	moveCursor(inDataPtr, 0, 0);
+	
+	//Console_WriteValuePair("scrolling region rows are now", inDataPtr->scrollingRegion.firstRow, inDataPtr->scrollingRegion.lastRow); // debug
+	//Console_WriteValuePair("origin mode enable flag and cursor row", inDataPtr->modeOriginRedefined, inDataPtr->current.cursorY); // debug
 }// vt100SetTopAndBottomMargins
 
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090504',
     '20090428',
     '20090423',
     '20090411',
@@ -229,6 +230,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090504': [
+		'Fixed Terminal window resizes to no longer change the application-defined scrolling region, when in origin mode.',
+		'Fixed VT100 emulator cursor movement to not leave the scrolling region, when in origin mode.',
+		'Fixed VT100 emulator cursor position report to return numbers relative to the scrolling region, when in origin mode.',
+	],
 	'20090428': [
 		'Fixed Terminal view text selection behavior in various ways.',
 	],
