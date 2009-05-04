@@ -52,7 +52,6 @@
 #include "AppleEventUtilities.h"
 #include "AppResources.h"
 #include "MacroManager.h"
-#include "Preferences.h"
 #include "SessionFactory.h"
 #include "QuillsSession.h"
 #include "URL.h"
@@ -304,19 +303,7 @@ Session::handle_file	(std::string	inPathname)
 							fileInfo.filetype == kApplicationFileTypeMacroSet) ||
 						(extensionName == "macros"))
 			{
-				Preferences_ContextRef		macrosContext = Preferences_NewContextFromXMLFileRef(kPreferences_ClassMacroSet, fileRef);
-				
-				
-				if (nullptr == macrosContext)
-				{
-					Console_Warning(Console_WriteLine, "unable to create preferences context from macros file");
-				}
-				else
-				{
-					Console_WriteLine("created context successfully");
-					// read data - UNIMPLEMENTED
-					Preferences_ReleaseContext(&macrosContext);
-				}
+				// UNIMPLEMENTED - import macros from text
 			}
 			else if (extensionName == "term")
 			{
