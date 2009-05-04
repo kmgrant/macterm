@@ -7438,7 +7438,7 @@ readPreferencesDictionaryInContext		(My_ContextInterfacePtr		inContextPtr,
 				
 				if (nullptr == definitionPtr)
 				{
-					static Preferences_Index	gDummyIndex = 0;
+					static Preferences_Index	gDummyIndex = 1;
 					Preferences_Tag				dummyTag = Preferences_ReturnTagVariantForIndex('DUM\0', gDummyIndex++);
 					
 					
