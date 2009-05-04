@@ -231,6 +231,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090504': [
+		'Fixed file opens to properly handle extensions, so file type and creator are no longer implicitly required.',
 		'Fixed Terminal window resizes to no longer change the application-defined scrolling region, when in origin mode.',
 		'Fixed VT100 emulator cursor movement to not leave the scrolling region, when in origin mode.',
 		'Fixed VT100 emulator cursor position report to return numbers relative to the scrolling region, when in origin mode.',

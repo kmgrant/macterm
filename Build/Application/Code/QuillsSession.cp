@@ -52,6 +52,7 @@
 #include "AppleEventUtilities.h"
 #include "AppResources.h"
 #include "MacroManager.h"
+#include "Preferences.h"
 #include "SessionFactory.h"
 #include "QuillsSession.h"
 #include "URL.h"
@@ -287,25 +288,37 @@ Session::handle_file	(std::string	inPathname)
 			}
 			
 			if ((fileInfo.creator == 'ToyS' || fileInfo.filetype == 'osas') ||
-						(extensionName == ".scpt"))
+				(extensionName == "scpt"))
 			{
 				// it appears to be a script; run it
 				AppleEventUtilities_ExecuteScriptFile(&fileSpec, true/* notify user of errors */);
 			}
 			else if ((fileInfo.creator == AppResources_ReturnCreatorCode() &&
-							fileInfo.filetype == kApplicationFileTypeSessionDescription) ||
-						(extensionName == ".session"))
+						fileInfo.filetype == kApplicationFileTypeSessionDescription) ||
+						(extensionName == "session"))
 			{
 				// read a configuration set
 				SessionDescription_ReadFromFile(&fileSpec);
 			}
 			else if ((//fileInfo.creator == AppResources_ReturnCreatorCode() &&
 							fileInfo.filetype == kApplicationFileTypeMacroSet) ||
-						(extensionName == ".macros"))
+						(extensionName == "macros"))
 			{
-				// UNIMPLEMENTED - import macros from text
+				Preferences_ContextRef		macrosContext = Preferences_NewContextFromXMLFileRef(kPreferences_ClassMacroSet, fileRef);
+				
+				
+				if (nullptr == macrosContext)
+				{
+					Console_Warning(Console_WriteLine, "unable to create preferences context from macros file");
+				}
+				else
+				{
+					Console_WriteLine("created context successfully");
+					// read data - UNIMPLEMENTED
+					Preferences_ReleaseContext(&macrosContext);
+				}
 			}
-			else if (extensionName == ".term")
+			else if (extensionName == "term")
 			{
 				// it appears to be a Terminal XML property list file; parse it
 				SessionFactory_NewSessionFromTerminalFile(nullptr/* existing terminal window to use */,
