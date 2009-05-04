@@ -699,6 +699,7 @@ Preferences_Result		setTranslationPreference				(My_ContextInterfacePtr, Prefere
 																 size_t, void const*);
 CFStringRef				virtualKeyCreateName					(UInt16);
 Boolean					virtualKeyParseName						(CFStringRef, UInt16&, Boolean&);
+OSStatus				writePreferencesDictionaryFromContext	(My_ContextInterfacePtr, CFMutableDictionaryRef, Boolean);
 Boolean					unitTest000_Begin						();
 Boolean					unitTest001_Begin						();
 Boolean					unitTest002_Begin						();
@@ -1613,6 +1614,157 @@ Preferences_NewContextFromFavorites		(Preferences_Class		inClass,
 
 
 /*!
+Creates a new preferences context in the given class using
+XML data (presumably read from a file, but technically the
+same as Preferences_ContextSaveAsXMLData()).  The data must
+represent a root dictionary.
+
+The new context is isolated, not part of the ordinary list
+of contexts stored in user preferences.  The reference is
+automatically retained, but you need to invoke
+Preferences_ReleaseContext() when finished.
+
+Since the context is isolated it does not need a name, it
+is not registered in the list of known contexts, and
+creating it does not trigger any notifications (for example,
+there is no kPreferences_ChangeNumberOfContexts event).
+
+If any problems occur, nullptr is returned; otherwise, a
+reference to the new context is returned.
+
+WARNING:	It is typical for a file to contain several
+			different classes of preferences, so (as usual)
+			the given class is, at best, a hint.  In the
+			future, it probably makes sense to not use
+			preferences classes as much, if at all, and
+			simply rely on the existence of a key.
+
+(4.0)
+*/
+Preferences_ContextRef
+Preferences_NewContextFromXMLData	(Preferences_Class		inClass,
+									 CFDataRef				inData)
+{
+	Preferences_ContextRef		result = nullptr;
+	
+	
+	try
+	{
+		My_ContextInterfacePtr		contextPtr = nullptr;
+		My_ContextCFDictionaryPtr	newDictionary = new My_ContextCFDictionary(inClass);
+		
+		
+		contextPtr = newDictionary;
+		
+		if (nullptr != contextPtr)
+		{
+			result = REINTERPRET_CAST(contextPtr, Preferences_ContextRef);
+			Preferences_RetainContext(result);
+			
+			// now read the data!
+			{
+				CFStringRef			errorCFString = nullptr;
+				CFPropertyListRef	root = CFPropertyListCreateFromXMLData
+											(kCFAllocatorDefault, inData, kCFPropertyListImmutable,
+												&errorCFString);
+				
+				
+				if (nullptr == root)
+				{
+					if (nullptr != errorCFString)
+					{
+						Console_Warning(Console_WriteValueCFString, "unable to create preferences property list from XML data",
+										errorCFString);
+						CFRelease(errorCFString), errorCFString = nullptr;
+					}
+				}
+				else
+				{
+					CFDictionaryRef		rootAsDictionary = CFUtilities_DictionaryCast(root);
+					OSStatus			error = noErr;
+					
+					
+					assert(CFPropertyListIsValid(root, kCFPropertyListXMLFormat_v1_0));
+					error = readPreferencesDictionaryInContext(contextPtr, rootAsDictionary, false/* merge */);
+					if (noErr != error)
+					{
+						Console_Warning(Console_WriteValue, "unable to read dictionary created from XML data", error);
+					}
+					CFRelease(root), root = nullptr;
+				}
+			}
+		}
+	}
+	catch (std::exception const&	inException)
+	{
+		Console_WriteLine(inException.what());
+		result = nullptr;
+	}
+	return result;
+}// NewContextFromXMLData
+
+
+/*!
+Convenience method to invoke Preferences_NewContextFromXMLData()
+using the data in an XML file, as specified by an FSRef.
+
+(4.0)
+*/
+Preferences_ContextRef
+Preferences_NewContextFromXMLFileRef	(Preferences_Class		inClass,
+										 FSRef const&			inFile)
+{
+	Preferences_ContextRef		result = nullptr;
+	CFURLRef					fileURL = CFURLCreateFromFSRef(kCFAllocatorDefault, &inFile);
+	
+	
+	if (nullptr == fileURL)
+	{
+		Console_Warning(Console_WriteLine, "unable to create URL for file");
+	}
+	else
+	{
+		result = Preferences_NewContextFromXMLFileURL(inClass, fileURL);
+		CFRelease(fileURL), fileURL = nullptr;
+	}
+	return result;
+}// NewContextFromXMLFileRef
+
+
+/*!
+Convenience method to invoke Preferences_NewContextFromXMLData()
+using the data in an XML file, as specified by a URL.
+
+(4.0)
+*/
+Preferences_ContextRef
+Preferences_NewContextFromXMLFileURL	(Preferences_Class		inClass,
+										 CFURLRef				inFileURL)
+{
+	Preferences_ContextRef		result = nullptr;
+	CFDataRef					xmlData = nullptr;
+	SInt32						errorForFileURL = 0;
+	Boolean						readOK = false;
+	
+	
+	readOK = CFURLCreateDataAndPropertiesFromResource
+				(kCFAllocatorDefault, inFileURL, &xmlData, nullptr/* returned properties dictionary */,
+					nullptr/* list of desired properties */, &errorForFileURL);
+	if (false == readOK)
+	{
+		Console_Warning(Console_WriteValue, "unable to read XML data from file, URL error", errorForFileURL);
+	}
+	else
+	{
+		result = Preferences_NewContextFromXMLData(inClass, xmlData);
+		CFRelease(xmlData), xmlData = nullptr;
+	}
+	
+	return result;
+}// NewContextFromXMLFileURL
+
+
+/*!
 Creates a new alias in memory based on an alias already
 present in the preferences file.  You generally save an
 alias ID in a preferences structure in order to refer to
@@ -2489,6 +2641,160 @@ Preferences_ContextSave		(Preferences_ContextRef		inContext)
 	}
 	return result;
 }// ContextSave
+
+
+/*!
+Converts in-memory preferences data model changes to XML data,
+suitable for writing to a UTF-8-encoded text file.
+
+This data can later recreate a context using the method
+Preferences_NewContextFromXML().
+
+Unlike Preferences_ContextSave(), this has no side effects.
+
+You must invoke CFRelease() to free the data when finished.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist
+
+\retval kPreferences_ResultGenericFailure
+if any other problem prevents data generation
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextSaveAsXMLData	(Preferences_ContextRef		inContext,
+									 CFDataRef&					outData)
+{
+	Preferences_Result		result = kPreferences_ResultGenericFailure;
+	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+	
+	
+	if (nullptr == ptr) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		CFRetainRelease		targetDictionary(CFDictionaryCreateMutable(kCFAllocatorDefault, 0/* capacity or zero for no limit */,
+																		&kCFTypeDictionaryKeyCallBacks,
+																		&kCFTypeDictionaryValueCallBacks), true/* is retained */);
+		OSStatus			error = noErr;
+		
+		
+		error = writePreferencesDictionaryFromContext(ptr, targetDictionary.returnCFMutableDictionaryRef(), false/* merge */);
+		if (noErr != error) result = kPreferences_ResultGenericFailure;
+		else
+		{
+			outData = CFPropertyListCreateXMLData(kCFAllocatorDefault, targetDictionary.returnCFMutableDictionaryRef());
+			if (nullptr == outData) result = kPreferences_ResultGenericFailure;
+			else
+			{
+				// success!
+				result = kPreferences_ResultOK;
+			}
+		}
+	}
+	return result;
+}// ContextSaveAsXMLData
+
+
+/*!
+Convenience method to invoke Preferences_ContextSaveAsXMLData()
+and then writing that data to an XML file, as specified by an
+FSRef.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist
+
+\retval kPreferences_ResultGenericFailure
+if any other problem prevents a save
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextSaveAsXMLFileRef		(Preferences_ContextRef		inContext,
+										 FSRef const&				inFile)
+{
+	Preferences_Result	result = kPreferences_ResultGenericFailure;
+	
+	
+	if (nullptr == inContext) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		CFURLRef	fileURL = CFURLCreateFromFSRef(kCFAllocatorDefault, &inFile);
+		
+		
+		if (nullptr == fileURL)
+		{
+			Console_Warning(Console_WriteLine, "unable to create URL for file");
+			result = kPreferences_ResultGenericFailure;
+		}
+		else
+		{
+			result = Preferences_ContextSaveAsXMLFileURL(inContext, fileURL);
+			CFRelease(fileURL), fileURL = nullptr;
+		}
+	}
+	return result;
+}// ContextSaveAsXMLFileRef
+
+
+/*!
+Convenience method to invoke Preferences_ContextSaveAsXMLData()
+and then writing that data to an XML file, as specified by a URL.
+
+\retval kPreferences_ResultOK
+if no error occurred
+
+\retval kPreferences_ResultInvalidContextReference
+if the specified context does not exist
+
+\retval kPreferences_ResultGenericFailure
+if any other problem prevents a save
+
+(4.0)
+*/
+Preferences_Result
+Preferences_ContextSaveAsXMLFileURL		(Preferences_ContextRef		inContext,
+										 CFURLRef					inFileURL)
+{
+	Preferences_Result	result = kPreferences_ResultGenericFailure;
+	
+	
+	if (nullptr == inContext) result = kPreferences_ResultInvalidContextReference;
+	else
+	{
+		CFDataRef	xmlData = nullptr;
+		
+		
+		result = Preferences_ContextSaveAsXMLData(inContext, xmlData);
+		if (kPreferences_ResultOK == result)
+		{
+			SInt32		errorForFileURL = 0;
+			Boolean		writeOK = false;
+			
+			
+			writeOK = CFURLWriteDataAndPropertiesToResource(inFileURL, xmlData, nullptr/* properties to write */,
+															&errorForFileURL);
+			if (false == writeOK)
+			{
+				Console_Warning(Console_WriteValue, "unable to write XML data to file, URL error", errorForFileURL);
+				result = kPreferences_ResultGenericFailure;
+			}
+			else
+			{
+				// success!
+				result = kPreferences_ResultOK;
+			}
+			CFRelease(xmlData), xmlData = nullptr;
+		}
+	}
+	return result;
+}// ContextSaveAsXMLFileURL
 
 
 /*!
@@ -9324,7 +9630,61 @@ virtualKeyParseName	(CFStringRef	inName,
 }// virtualKeyParseName
 
 
-Boolean					virtualKeyParseName						(CFStringRef, UInt16&, Boolean&);
+/*!
+Updates the given dictionary using stored preference values from
+the specified context.  If merging, conflicting keys are skipped;
+otherwise, they are replaced with the new dictionary values.
+
+All of the keys added to the dictionary will be of type
+CFStringRef.
+
+\retval noErr
+currently always returned; there is no way to detect errors
+
+(4.0)
+*/
+OSStatus
+writePreferencesDictionaryFromContext	(My_ContextInterfacePtr		inContextPtr,
+										 CFMutableDictionaryRef		inoutPreferenceDictionary,
+										 Boolean					inMerge)
+{
+	CFRetainRelease		keyListCFArrayObject(inContextPtr->returnKeyListCopy(), true/* is retained */);
+	CFArrayRef			keyListCFArray = keyListCFArrayObject.returnCFArrayRef();
+	OSStatus			result = noErr;
+	
+	
+	for (CFIndex i = 0; i < CFArrayGetCount(keyListCFArray); ++i)
+	{
+		CFStringRef const	kKey = CFUtilities_StringCast(CFArrayGetValueAtIndex(keyListCFArray, i));
+		Boolean				useDefault = true;
+		
+		
+		if (inMerge)
+		{
+			// when merging, do not replace any key that is already defined
+			if (CFDictionaryContainsKey(inoutPreferenceDictionary, kKey))
+			{
+				useDefault = false;
+			}
+			else
+			{
+				// value is not yet defined
+				useDefault = true;
+			}
+		}
+		if (useDefault)
+		{
+			CFRetainRelease		prefsValueCFProperty(inContextPtr->returnValueCopy(kKey), true/* is retained */);
+			
+			
+			if (prefsValueCFProperty.exists())
+			{
+				CFDictionaryAddValue(inoutPreferenceDictionary, kKey, prefsValueCFProperty.returnCFTypeRef());
+			}
+		}
+	}
+	return result;
+}// writePreferencesDictionaryFromContext
 
 } // anonymous namespace
 

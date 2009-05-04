@@ -462,6 +462,18 @@ Preferences_ContextRef
 											 CFStringRef						inDomainNameIfInitializingOrNull = nullptr);
 
 Preferences_ContextRef
+	Preferences_NewContextFromXMLData		(Preferences_Class					inClass,
+											 CFDataRef							inData);
+
+Preferences_ContextRef
+	Preferences_NewContextFromXMLFileRef	(Preferences_Class					inClass,
+											 FSRef const&						inFile);
+
+Preferences_ContextRef
+	Preferences_NewContextFromXMLFileURL	(Preferences_Class					inClass,
+											 CFURLRef							inFileURL);
+
+Preferences_ContextRef
 	Preferences_NewCloneContext				(Preferences_ContextRef				inBaseContext,
 											 Boolean							inForceDetach = false);
 
@@ -557,6 +569,18 @@ Preferences_Class
 
 Preferences_Result
 	Preferences_ContextSave					(Preferences_ContextRef				inContext);
+
+Preferences_Result
+	Preferences_ContextSaveAsXMLData		(Preferences_ContextRef				inContext,
+											 CFDataRef&							outData);
+
+Preferences_Result
+	Preferences_ContextSaveAsXMLFileRef		(Preferences_ContextRef				inContext,
+											 FSRef const&						inFile);
+
+Preferences_Result
+	Preferences_ContextSaveAsXMLFileURL		(Preferences_ContextRef				inContext,
+											 CFURLRef							inURL);
 
 Preferences_Result
 	Preferences_ContextSetData				(Preferences_ContextRef				inContext,
