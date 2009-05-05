@@ -8352,9 +8352,8 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		}
 	}
 	
-	// add each character to the terminal at the current
-	// cursor position, advancing the cursor each time
-	// (and therefore being mindful of wrap settings, etc.)
+	// add each character to the terminal at the current cursor position, advancing
+	// the cursor each time (and therefore being mindful of wrap settings, etc.)
 	{
 		My_ScreenBufferLineList::iterator	cursorLineIterator;
 		register SInt16						preWriteCursorX = inDataPtr->current.cursorX;
@@ -8375,8 +8374,16 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			UniChar const	kThisCharacter = CFStringGetCharacterFromInlineBuffer(&inlineBuffer, i);
 			
 			
+		#if 0
 			// debug
-			//Console_WriteValueCharacter("echo", kThisCharacter);
+			{
+				CFRetainRelease		s(CFStringCreateWithCharacters(kCFAllocatorDefault, &kThisCharacter, 1), true);
+				
+				
+				Console_WriteValueCFString("echo character: glyph", s.returnCFStringRef());
+				Console_WriteValue("echo character: value", kThisCharacter);
+			}
+		#endif
 			
 			// write characters on a single line
 			if (inDataPtr->modeInsertNotReplace)
