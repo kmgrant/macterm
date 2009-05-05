@@ -231,6 +231,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090504': [
+		'Fixed Terminal view text display for characters that could technically be decomposed Unicode; for instance, an accented character represented by a letter and accent sequence now correctly offsets the cursor by one character cell instead of two.',
 		'Fixed file opens to properly handle extensions, so file type and creator are no longer implicitly required.',
 		'Fixed Terminal window resizes to no longer change the application-defined scrolling region, when in origin mode.',
 		'Fixed VT100 emulator cursor movement to not leave the scrolling region, when in origin mode.',

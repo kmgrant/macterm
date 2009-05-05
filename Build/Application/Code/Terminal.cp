@@ -8371,17 +8371,41 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		locateCursorLine(inDataPtr, cursorLineIterator);
 		for (CFIndex i = 0; i < kLength; ++i)
 		{
-			UniChar const	kThisCharacter = CFStringGetCharacterFromInlineBuffer(&inlineBuffer, i);
+			UniChar			thisCharacter = CFStringGetCharacterFromInlineBuffer(&inlineBuffer, i);
+			CFIndex const	kCharacterCountToCompose = CFStringGetRangeOfComposedCharactersAtIndex(inString, i).length;
 			
+			
+			// compose the character for display purposes
+			// IMPORTANT: this is a bit of a hack, as it is technically possible
+			// for Unicode combinations to have no single character equivalent
+			// (i.e. they can only be described in decomposed form); however, this
+			// is rare; for now composition is considered an acceptable work-around
+			if (kCharacterCountToCompose > 1)
+			{
+				CFRetainRelease		composedCharacter(CFStringCreateMutable(kCFAllocatorDefault, kCharacterCountToCompose),
+														true/* is retained */);
+				
+				
+				for (CFIndex j = i; j < (i + kCharacterCountToCompose); ++j)
+				{
+					UniChar const	kNextChar = CFStringGetCharacterFromInlineBuffer(&inlineBuffer, j);
+					
+					
+					CFStringAppendCharacters(composedCharacter.returnCFMutableStringRef(), &kNextChar, 1);
+				}
+				CFStringNormalize(composedCharacter.returnCFMutableStringRef(), kCFStringNormalizationFormC);
+				thisCharacter = CFStringGetCharacterAtIndex(composedCharacter.returnCFStringRef(), 0);
+			}
 			
 		#if 0
 			// debug
 			{
-				CFRetainRelease		s(CFStringCreateWithCharacters(kCFAllocatorDefault, &kThisCharacter, 1), true);
+				CFRetainRelease		s(CFStringCreateWithCharacters(kCFAllocatorDefault, &thisCharacter, 1), true);
 				
 				
 				Console_WriteValueCFString("echo character: glyph", s.returnCFStringRef());
-				Console_WriteValue("echo character: value", kThisCharacter);
+				Console_WriteValue("echo character: value", thisCharacter);
+				Console_WriteValue("echo character: count", kCharacterCountToCompose);
 			}
 		#endif
 			
@@ -8390,7 +8414,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			{
 				bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 			}
-			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, kThisCharacter,
+			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, thisCharacter,
 																									inDataPtr->current.attributeBits,
 																									temporaryAttributes);
 			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
@@ -8424,6 +8448,12 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 					moveCursorRightToEdge(inDataPtr);
 				}
 			}
+			
+			// when characters are composed (e.g. a letter followed by its accent),
+			// ALL of the values used to produce the single, visible glyph should
+			// be skipped in the buffer, while still corresponding to a single
+			// position from the user’s point of view, e.g. cursor only moves once
+			i += (kCharacterCountToCompose - 1/* loop has a ++i by default */);
 		}
 		
 		// end of data; notify of a change (this will cause things like Terminal View updates)
