@@ -513,6 +513,13 @@ public:
 	{
 	}
 	
+	bool
+	operator ==		(My_RowBoundary const&		inOther)
+	{
+		return ((inOther.firstRow == this->firstRow) &&
+				(inOther.lastRow == this->lastRow));
+	}
+	
 	My_ScreenRowIndex	firstRow;   //!< zero-based row number where range occurs
 	My_ScreenRowIndex	lastRow;	//!< zero-based row number of the final row included in the range; 0 is topmost
 									//!  main screen line, a negative line number is in the scrollback buffer
@@ -525,14 +532,13 @@ public:
 							 My_ScreenRowIndex	inFirstRow,
 							 UInt16				inLastColumn,
 							 My_ScreenRowIndex	inLastRow)
-	: firstColumn(inFirstColumn), firstRow(inFirstRow), lastColumn(inLastColumn), lastRow(inLastRow)
+	: firstColumn(inFirstColumn), lastColumn(inLastColumn), rows(inFirstRow, inLastRow)
 	{
 	}
 	
 	UInt16				firstColumn;	//!< zero-based column number where range begins
-	My_ScreenRowIndex	firstRow;		//!< zero-based row number where range occurs
 	UInt16				lastColumn;		//!< zero-based column number of the final column included in the range
-	My_ScreenRowIndex	lastRow;		//!< zero-based row number of the final row included in the range
+	My_RowBoundary		rows;			//!< zero-based row numbers where range occurs (inclusive)
 };
 
 /*!
@@ -687,9 +693,8 @@ public:
 	My_CharacterSetInfo					vtG1;						//!< the G1 character set
 	
 	My_RowColumnBoundary				visibleBoundary;			//!< rows and columns forming the perimeter of the buffer’s “visible” region
-	My_RowBoundary						scrollingRegion;			//!< rows that define the scrolling area, inclusive; should not fall outside of
-																	//!  the visible boundary;
-																	//!  WARNING: do not change this except with a setScrollingRegion...() routine
+	My_RowBoundary						customScrollingRegion;		//!< region that is in effect when margin set sequence is received; updated only
+																	//!  when a terminal sequence to change margins is received
 	
 	struct
 	{
@@ -739,6 +744,9 @@ public:
 	Boolean								modeOriginRedefined;		//!< DECOM mode: true only if the origin has been moved from its default place
 																	//!  (in which case, various subsequent terminal operations must be relative to
 																	//!  the origin instead of the home position)
+	My_RowBoundary*						originRegionPtr;			//!< automatically set to the boundaries appropriate for the current origin mode;
+																	//!  this should always be preferred when restricting the cursor, and as an offset
+																	//!  when returning column or row numbers
 	
     TerminalPrintingInfo				printing;					//!< data used when spooling data to a printer (via temporary file)
 	
@@ -1035,8 +1043,6 @@ Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
 void						saveToScrollback						(My_ScreenBufferPtr);
 void						scrollTerminalBuffer					(My_ScreenBufferPtr);
 void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
-void						setScrollingRegionBottom				(My_ScreenBufferPtr, UInt16);
-void						setScrollingRegionTop					(My_ScreenBufferPtr, UInt16);
 // IMPORTANT: Attribute bit manipulation is fully described in "TerminalTextAttributes.typedef.h".
 //            Changes must be kept consistent everywhere.  See below, for usage.
 inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
@@ -3011,48 +3017,6 @@ Terminal_GetLineRange	(TerminalScreenRef			inScreen,
 
 
 /*!
-Returns (for any non-nullptr parameters) the top,
-left, bottom and right boundaries of the entire
-screen buffer.
-
-If the top extreme is negative, it means the
-screen has a scrollback buffer.
-
-(3.0)
-*/
-void
-Terminal_GetMaximumBounds	(TerminalScreenRef	inRef,
-							 SInt16*			outZeroBasedTopScrollbackRowPtrOrNull,
-							 SInt16*			outZeroBasedLeftColumnPtrOrNull,
-							 SInt16*			outZeroBasedBottomRowPtrOrNull,
-							 SInt16*			outZeroBasedRightColumnPtrOrNull)
-{
-	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (dataPtr != nullptr)
-	{
-		if (outZeroBasedTopScrollbackRowPtrOrNull != nullptr)
-		{
-			*outZeroBasedTopScrollbackRowPtrOrNull = dataPtr->scrollingRegion.firstRow - Terminal_ReturnInvisibleRowCount(inRef);
-		}
-		if (outZeroBasedLeftColumnPtrOrNull != nullptr)
-		{
-			*outZeroBasedLeftColumnPtrOrNull = 0;
-		}
-		if (outZeroBasedBottomRowPtrOrNull != nullptr)
-		{
-			*outZeroBasedBottomRowPtrOrNull = dataPtr->scrollingRegion.lastRow;
-		}
-		if (outZeroBasedRightColumnPtrOrNull != nullptr)
-		{
-			*outZeroBasedRightColumnPtrOrNull = dataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
-		}
-	}
-}// GetMaximumBounds
-
-
-/*!
 Returns "true" only if the LED with the specified
 number is currently on.  The meaning of an LED with
 a specific number is left to the caller.
@@ -4112,18 +4076,15 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 			dataPtr->screenBuffer.resize(dataPtr->screenBuffer.size() + kLineDelta);
 		}
 		
-		// if not in origin mode, make sure the scrolling region is up to date
-		// (if in origin mode, assume an application has set this for an important
-		// reason, and leave it alone!)
-		if (false == dataPtr->modeOriginRedefined)
+		// reset visible region; if the custom margin is also at the bottom,
+		// keep it at the new bottom (otherwise, assume there was a good
+		// reason that it was not using all the lines, and leave it alone!)
+		if (dataPtr->customScrollingRegion.lastRow == dataPtr->visibleBoundary.rows.lastRow)
 		{
-			setScrollingRegionTop(dataPtr, 0);
-			setScrollingRegionBottom(dataPtr, inNewNumberOfLinesHigh - 1);
+			dataPtr->customScrollingRegion.lastRow = inNewNumberOfLinesHigh - 1;
 		}
-		
-		// reset visible region
-		dataPtr->visibleBoundary.firstRow = 0;
-		dataPtr->visibleBoundary.lastRow = inNewNumberOfLinesHigh - 1;
+		dataPtr->visibleBoundary.rows.firstRow = 0;
+		dataPtr->visibleBoundary.rows.lastRow = inNewNumberOfLinesHigh - 1;
 		
 		// add new screen rows to the text-change region; this should trigger
 		// things like Terminal View updates
@@ -4891,7 +4852,7 @@ windowMinimized(false),
 vtG0(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOff),
 vtG1(kMy_CharacterSetVT100UnitedStates, kMy_CharacterROMNormal, kMy_GraphicsModeOn),
 visibleBoundary(0, 0, returnScreenColumns(inTerminalConfig) - 1, returnScreenRows(inTerminalConfig) - 1),
-scrollingRegion(0, 0), // reset below...
+customScrollingRegion(0, 0), // reset below...
 // text elements - not initialized
 litLEDs(kMy_LEDBitsAllOff),
 mayNeedToSaveToScrollback(false),
@@ -4904,6 +4865,7 @@ modeCursorKeysForApp(false),
 modeInsertNotReplace(false),
 modeNewLineOption(false),
 modeOriginRedefined(false),
+originRegionPtr(&visibleBoundary.rows),
 printing(returnScreenColumns(inTerminalConfig)),
 // speech elements - not initialized
 // current elements - not initialized
@@ -4959,8 +4921,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	
 	moveCursor(this, 0, 0);
 	
-	setScrollingRegionTop(this, 0);
-	setScrollingRegionBottom(this, returnScreenRows(inTerminalConfig) - 1);
+	this->customScrollingRegion = this->visibleBoundary.rows; // initially...
 	
 	this->speaker = TerminalSpeaker_New(REINTERPRET_CAST(this, TerminalScreenRef));
 }// My_ScreenBuffer 1-argument constructor
@@ -6377,8 +6338,8 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 										: 0/* default is home */;
 			
 			
-			// in origin mode, offset according to the scrolling region
-			if (inDataPtr->modeOriginRedefined) newY += inDataPtr->scrollingRegion.firstRow;
+			// offset according to the origin mode
+			newY += inDataPtr->originRegionPtr->firstRow;
 			
 			// constrain the value and then change it safely
 			if (newX < 0) newX = 0;
@@ -7109,10 +7070,8 @@ My_VT102::
 deleteLines		(My_ScreenBufferPtr		inDataPtr)
 {
 	// do nothing if the cursor is outside the scrolling region
-	// TEMPORARY - the cursor is supposed to be within the region,
-	// so this test may not be necessary
-	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
-		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
+	if ((inDataPtr->customScrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
+		(inDataPtr->customScrollingRegion.firstRow <= inDataPtr->current.cursorY))
 	{
 		// “one line” is assumed if a parameter is zero, or there are no parameters,
 		// even though this is not explicitly stated in VT102 documentation
@@ -7149,10 +7108,8 @@ My_VT102::
 insertLines		(My_ScreenBufferPtr		inDataPtr)
 {
 	// do nothing if the cursor is outside the scrolling region
-	// TEMPORARY - the cursor is supposed to be within the region,
-	// so this test may not be necessary
-	if ((inDataPtr->scrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
-		(inDataPtr->scrollingRegion.firstRow <= inDataPtr->current.cursorY))
+	if ((inDataPtr->customScrollingRegion.lastRow >= inDataPtr->current.cursorY) &&
+		(inDataPtr->customScrollingRegion.firstRow <= inDataPtr->current.cursorY))
 	{
 		// “one line” is assumed if a parameter is zero, or there are no parameters,
 		// even though this is not explicitly stated in VT102 documentation
@@ -7936,7 +7893,7 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 			range.firstRow = kFirstInsertedRow;
 			range.firstColumn = 0;
 			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-			range.rowCount = inDataPtr->scrollingRegion.lastRow - range.firstRow + 1;
+			range.rowCount = inDataPtr->customScrollingRegion.lastRow - range.firstRow + 1;
 			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 		}
 	}
@@ -8104,7 +8061,7 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 			range.firstRow = kFirstDeletedRow;
 			range.firstColumn = 0;
 			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-			range.rowCount = inDataPtr->scrollingRegion.lastRow - range.firstRow + 1;
+			range.rowCount = inDataPtr->customScrollingRegion.lastRow - range.firstRow + 1;
 			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 		}
 	}
@@ -9109,8 +9066,8 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 												: 0/* default is home */;
 					
 					
-					// in origin mode, offset according to the scrolling region
-					if (inDataPtr->modeOriginRedefined) newY += inDataPtr->scrollingRegion.firstRow;
+					// offset according to the scrolling region (if any)
+					newY += inDataPtr->originRegionPtr->firstRow;
 					
 					// constrain the value and then change it safely
 					if (newX < 0) newX = 0;
@@ -10096,7 +10053,7 @@ screen area.  Using this routine instead of retaining
 iterators is recommended, since it is difficult to
 properly synchronize an iterator with origin changes,
 (frequent) scroll activity and other list modifications.
-Plus, the scrolling region iterators only needs to be
+Plus, the scrolling region iterators only need to be
 found rarely, in practice less frequently than most list
 modifications that would invalidate retained iterators.
 
@@ -10107,25 +10064,25 @@ locateScrollingRegion	(My_ScreenBufferPtr						inDataPtr,
 						 My_ScreenBufferLineList::iterator&		outTopLine,
 						 My_ScreenBufferLineList::iterator&		outPastBottomLine)
 {
-	//assert(inDataPtr->scrollingRegion.firstRow >= 0);
-	assert(inDataPtr->scrollingRegion.lastRow >= inDataPtr->scrollingRegion.firstRow);
-	assert(inDataPtr->scrollingRegion.lastRow <= inDataPtr->screenBuffer.size());
-	assert(inDataPtr->screenBuffer.size() >= (inDataPtr->scrollingRegion.lastRow - inDataPtr->scrollingRegion.firstRow));
+	//assert(inDataPtr->customScrollingRegion.firstRow >= 0);
+	assert(inDataPtr->customScrollingRegion.lastRow >= inDataPtr->customScrollingRegion.firstRow);
+	assert(inDataPtr->customScrollingRegion.lastRow <= inDataPtr->screenBuffer.size());
+	assert(inDataPtr->screenBuffer.size() >= (inDataPtr->customScrollingRegion.lastRow - inDataPtr->customScrollingRegion.firstRow));
 	
 	// find top line iterator in screen
 	outTopLine = inDataPtr->screenBuffer.begin();
-	std::advance(outTopLine, inDataPtr->scrollingRegion.firstRow/* zero-based */);
+	std::advance(outTopLine, inDataPtr->customScrollingRegion.firstRow/* zero-based */);
 	
 #if 1
 	// slow, but definitely correct
 	outPastBottomLine = inDataPtr->screenBuffer.begin();
-	std::advance(outPastBottomLine, 1 + inDataPtr->scrollingRegion.lastRow/* zero-based */);
+	std::advance(outPastBottomLine, 1 + inDataPtr->customScrollingRegion.lastRow/* zero-based */);
 #else
 	// note the region boundary is inclusive but past-the-end is exclusive;
 	// also, for efficiency, assume this will be much closer to the end and
 	// advance backwards to save some pointer iterations
 	outPastBottomLine = inDataPtr->screenBuffer.end();
-	std::advance(outPastBottomLine, -(inDataPtr->screenBuffer.size() - 1 - inDataPtr->scrollingRegion.lastRow/* zero-based */));
+	std::advance(outPastBottomLine, -(inDataPtr->screenBuffer.size() - 1 - inDataPtr->customScrollingRegion.lastRow/* zero-based */));
 #endif
 }// locateScrollingRegion
 
@@ -10145,11 +10102,11 @@ void
 locateScrollingRegionTop	(My_ScreenBufferPtr						inDataPtr,
 							 My_ScreenBufferLineList::iterator&		outTopLine)
 {
-	//assert(inDataPtr->scrollingRegion.firstRow >= 0);
+	//assert(inDataPtr->customScrollingRegion.firstRow >= 0);
 	
 	// find top line iterator in screen
 	outTopLine = inDataPtr->screenBuffer.begin();
-	std::advance(outTopLine, inDataPtr->scrollingRegion.firstRow/* zero-based */);
+	std::advance(outTopLine, inDataPtr->customScrollingRegion.firstRow/* zero-based */);
 }// locateScrollingRegionTop
 
 
@@ -10207,7 +10164,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 void
 moveCursorDownOrScroll	(My_ScreenBufferPtr		inDataPtr)
 {
-	if (inDataPtr->current.cursorY == inDataPtr->scrollingRegion.lastRow)
+	if (inDataPtr->current.cursorY == inDataPtr->customScrollingRegion.lastRow)
 	{
 		scrollTerminalBuffer(inDataPtr);
 	}
@@ -10254,7 +10211,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 inline void
 moveCursorDownToEdge	(My_ScreenBufferPtr		inDataPtr)
 {
-	moveCursorY(inDataPtr, inDataPtr->scrollingRegion.lastRow);
+	moveCursorY(inDataPtr, inDataPtr->originRegionPtr->lastRow);
 }// moveCursorDownToEdge
 
 
@@ -10405,7 +10362,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 void
 moveCursorUpOrScroll	(My_ScreenBufferPtr		inDataPtr)
 {
-	if (inDataPtr->current.cursorY == inDataPtr->scrollingRegion.firstRow)
+	if (inDataPtr->current.cursorY == inDataPtr->customScrollingRegion.firstRow)
 	{
 		My_ScreenBufferLineList::iterator	scrollingRegionBegin;
 		
@@ -10434,7 +10391,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 inline void
 moveCursorUpToEdge	(My_ScreenBufferPtr		inDataPtr)
 {
-	moveCursorY(inDataPtr, inDataPtr->scrollingRegion.firstRow);
+	moveCursorY(inDataPtr, inDataPtr->originRegionPtr->firstRow);
 }// moveCursorUpToEdge
 
 
@@ -10503,25 +10460,14 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 	}
 	STYLE_REMOVE(inDataPtr->current.attributeBits, cursorLineIterator->globalAttributes);
 	
-	// don’t allow the cursor to fall off the screen
+	// don’t allow the cursor to fall off the screen (in origin
+	// mode, it cannot fall outside the scrolling region)
 	{
 		SInt16		newCursorY = inNewY;
 		
 		
-		// TEMPORARY: the scrolling region “should” always be accurate,
-		// regardless of the current origin mode, so it is supposed to
-		// work as the only boundary check; but verifying this will
-		// require some extensive code review
-		if (inDataPtr->modeOriginRedefined)
-		{
-			newCursorY = std::max< SInt16 >(newCursorY, inDataPtr->scrollingRegion.firstRow);
-			newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->scrollingRegion.lastRow);
-		}
-		else
-		{
-			newCursorY = std::max< SInt16 >(newCursorY, 0);
-			newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->screenBuffer.size() - 1);
-		}
+		newCursorY = std::max< SInt16 >(newCursorY, inDataPtr->originRegionPtr->firstRow);
+		newCursorY = std::min< SInt16 >(newCursorY, inDataPtr->originRegionPtr->lastRow);
 		inDataPtr->current.cursorY = newCursorY;
 	}
 	
@@ -10553,14 +10499,14 @@ and notifies any listeners of reset events.
 void
 resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 {
-	setScrollingRegionTop(inDataPtr, 0);
-	setScrollingRegionBottom(inDataPtr, inDataPtr->screenBuffer.size() - 1);
+	inDataPtr->customScrollingRegion = inDataPtr->visibleBoundary.rows;
 	inDataPtr->emulator.parameterEndIndex = 0;
 	vt100ANSIMode(inDataPtr);
 	//inDataPtr->modeAutoWrap = false; // 3.0 - do not touch the auto-wrap setting
 	inDataPtr->modeCursorKeysForApp = false;
 	inDataPtr->modeApplicationKeys = false;
-	inDataPtr->modeOriginRedefined = false;
+	inDataPtr->modeOriginRedefined = false; // also requires cursor homing (below), according to manual
+	inDataPtr->originRegionPtr = &inDataPtr->visibleBoundary.rows;
 	inDataPtr->previous.attributeBits = kInvalidTerminalTextAttributes;
 	inDataPtr->current.attributeBits = 0;
 	inDataPtr->modeInsertNotReplace = false;
@@ -10643,8 +10589,7 @@ saveToScrollback	(My_ScreenBufferPtr		inDataPtr)
 	//Console_WriteLine("saveToScrollback");
 	
 	if ((inDataPtr->text.scrollback.enabled) &&
-		(inDataPtr->scrollingRegion.firstRow == 0) &&
-		(inDataPtr->scrollingRegion.lastRow == (inDataPtr->screenBuffer.size() - 1)))
+		(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 	{
 		if (insertNewLines(inDataPtr, inDataPtr->screenBuffer.size(), false/* append only */))
 		{
@@ -10665,9 +10610,7 @@ scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 	if (inDataPtr->current.cursorY < inDataPtr->screenBuffer.size())
 	{
 		if ((inDataPtr->text.scrollback.enabled) &&
-			(inDataPtr->scrollingRegion.firstRow == 0) &&
-			((inDataPtr->scrollingRegion.lastRow == (inDataPtr->screenBuffer.size() - 1)) ||
-				inDataPtr->text.scrollback.enabled))
+			(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 		{
 			// scrolling region is entire screen, and lines are being saved off the top
 			(Boolean)insertNewLines(inDataPtr, 1/* number of lines */, false/* append only */);
@@ -10683,7 +10626,7 @@ scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 				range.firstRow = 0;
 				range.firstColumn = 0;
 				range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
-				range.rowCount = inDataPtr->visibleBoundary.lastRow - inDataPtr->visibleBoundary.firstRow + 1;
+				range.rowCount = inDataPtr->visibleBoundary.rows.lastRow - inDataPtr->visibleBoundary.rows.firstRow + 1;
 				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 			}
 		}
@@ -10717,49 +10660,6 @@ setCursorVisible	(My_ScreenBufferPtr		inDataPtr,
 	inDataPtr->cursorVisible = inIsVisible;
 	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorState, inDataPtr->selfRef);
 }// setCursorVisible
-
-
-/*!
-Sets the “logical bottom” of the main screen, which is
-initially the very last screen row.  A VT command can
-change this, affecting many subsequent operations such
-as scrolling and cursor movement.
-
-IMPORTANT:	ALWAYS use setScrollingRegion...() routines
-			to set the scrolling region, because it is
-			kept in sync with various other things such
-			as key row iterators.
-
-(3.0)
-*/
-void
-setScrollingRegionBottom	(My_ScreenBufferPtr		inDataPtr,
-							 UInt16					inNewBottomRow)
-{
-	inDataPtr->scrollingRegion.lastRow = inNewBottomRow;
-	assert(inDataPtr->scrollingRegion.lastRow < inDataPtr->screenBuffer.size());
-}// setScrollingRegionBottom
-
-
-/*!
-Sets the “logical top” of the main screen, which is
-initially row zero (home position).  A VT command can
-change this, affecting many subsequent operations such
-as scrolling and cursor movement.
-
-IMPORTANT:	ALWAYS use setScrollingRegion...() routines
-			to set the scrolling region, because it is
-			kept in sync with various other things such
-			as key row iterators.
-
-(3.0)
-*/
-void
-setScrollingRegionTop	(My_ScreenBufferPtr		inDataPtr,
-						 UInt16					inNewTopRow)
-{
-	inDataPtr->scrollingRegion.firstRow = inNewTopRow;
-}// setScrollingRegionTop
 
 
 /*!
@@ -11257,7 +11157,7 @@ vt100CursorDown		(My_ScreenBufferPtr		inDataPtr)
 	// the default value is 1 if there are no parameters
 	if (inDataPtr->emulator.parameterValues[0] < 1)
 	{
-		if (inDataPtr->current.cursorY < inDataPtr->scrollingRegion.lastRow) moveCursorDown(inDataPtr);
+		if (inDataPtr->current.cursorY < inDataPtr->originRegionPtr->lastRow) moveCursorDown(inDataPtr);
 		else moveCursorDownToEdge(inDataPtr);
 	}
 	else
@@ -11266,10 +11166,11 @@ vt100CursorDown		(My_ScreenBufferPtr		inDataPtr)
 										inDataPtr->emulator.parameterValues[0];
 		
 		
-		if (newValue > inDataPtr->scrollingRegion.lastRow)
+		if (newValue > inDataPtr->originRegionPtr->lastRow)
 		{
-			newValue = inDataPtr->scrollingRegion.lastRow;
+			newValue = inDataPtr->originRegionPtr->lastRow;
 		}
+		// NOTE: the check below may not be necessary
 		if (newValue >= inDataPtr->screenBuffer.size())
 		{
 			newValue = inDataPtr->screenBuffer.size() - 1;
@@ -11288,7 +11189,7 @@ See the VT100 manual for complete details.
 inline void
 vt100CursorDown_vt52	(My_ScreenBufferPtr		inDataPtr)
 {
-	if (inDataPtr->current.cursorY < inDataPtr->scrollingRegion.lastRow) moveCursorDown(inDataPtr);
+	if (inDataPtr->current.cursorY < inDataPtr->originRegionPtr->lastRow) moveCursorDown(inDataPtr);
 	else moveCursorDownToEdge(inDataPtr);
 }// vt100CursorDown_vt52
 
@@ -11351,7 +11252,7 @@ vt100CursorUp	(My_ScreenBufferPtr		inDataPtr)
 	// the default value is 1 if there are no parameters
 	if (inDataPtr->emulator.parameterValues[0] < 1)
 	{
-		if (inDataPtr->current.cursorY > inDataPtr->scrollingRegion.firstRow)
+		if (inDataPtr->current.cursorY > inDataPtr->originRegionPtr->firstRow)
 		{
 			moveCursorUp(inDataPtr);
 		}
@@ -11372,9 +11273,9 @@ vt100CursorUp	(My_ScreenBufferPtr		inDataPtr)
 		}
 		
 		rowIndex = STATIC_CAST(newValue, My_ScreenRowIndex);
-		if (rowIndex < inDataPtr->scrollingRegion.firstRow)
+		if (rowIndex < inDataPtr->originRegionPtr->firstRow)
 		{
-			rowIndex = inDataPtr->scrollingRegion.firstRow;
+			rowIndex = inDataPtr->originRegionPtr->firstRow;
 		}
 		moveCursorY(inDataPtr, rowIndex);
 	}
@@ -11390,7 +11291,7 @@ See the VT100 manual for complete details.
 inline void
 vt100CursorUp_vt52		(My_ScreenBufferPtr		inDataPtr)
 {
-	if (inDataPtr->current.cursorY > inDataPtr->scrollingRegion.firstRow)
+	if (inDataPtr->current.cursorY > inDataPtr->originRegionPtr->firstRow)
 	{
 		moveCursorUp(inDataPtr);
 	}
@@ -11466,11 +11367,8 @@ vt100DeviceStatusReport		(My_ScreenBufferPtr		inDataPtr)
 				reportedCursorY = inDataPtr->screenBuffer.size() - 1;
 			}
 			
-			// in origin mode, report relative to the current scroll range
-			if (inDataPtr->modeOriginRedefined)
-			{
-				reportedCursorY -= inDataPtr->scrollingRegion.firstRow;
-			}
+			// report relative to the scroll region if in origin mode
+			reportedCursorY -= inDataPtr->originRegionPtr->firstRow;
 			
 			// the reported numbers are one-based, not zero-based
 			++reportedCursorX;
@@ -11687,9 +11585,21 @@ vt100ModeSetReset	(My_ScreenBufferPtr		inDataPtr,
 					#endif
 						
 						inDataPtr->modeOriginRedefined = inIsModeEnabled;
+						if (inIsModeEnabled)
+						{
+							// restrict cursor movements to the defined margins, and
+							// ensure that reported cursor row/column use these offsets
+							inDataPtr->originRegionPtr = &inDataPtr->customScrollingRegion;
+						}
+						else
+						{
+							// no restrictions
+							inDataPtr->originRegionPtr = &inDataPtr->visibleBoundary.rows;
+						}
 						
 						// home the cursor, but relative to the new top margin
-						moveCursor(inDataPtr, 0, (inIsModeEnabled) ? inDataPtr->scrollingRegion.firstRow : 0);
+						// (automatically restricted by cursor movement routines)
+						moveCursor(inDataPtr, 0, 0);
 					}
 					break;
 				
@@ -11911,19 +11821,19 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	if (inDataPtr->emulator.parameterValues[0] < 0)
 	{
 		// no top parameter given; default is top of screen
-		setScrollingRegionTop(inDataPtr, 0);
+		inDataPtr->customScrollingRegion.firstRow = inDataPtr->visibleBoundary.rows.firstRow;
 	}
 	else
 	{
 		// parameter is the line number of the new first line of the scrolling region; the
 		// input is 1-based but internally it is a zero-based array index, so subtract one
-		setScrollingRegionTop(inDataPtr, inDataPtr->emulator.parameterValues[0] - 1);
+		inDataPtr->customScrollingRegion.firstRow = inDataPtr->emulator.parameterValues[0] - 1;
 	}
 	
 	if (inDataPtr->emulator.parameterValues[1] < 0)
 	{
 		// no bottom parameter given; default is bottom of screen
-		setScrollingRegionBottom(inDataPtr, inDataPtr->screenBuffer.size() - 1);
+		inDataPtr->customScrollingRegion.lastRow = inDataPtr->visibleBoundary.rows.lastRow;
 	}
 	else
 	{
@@ -11932,24 +11842,24 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 		UInt16		newValue = inDataPtr->emulator.parameterValues[1] - 1;
 		
 		
-		if (newValue >= inDataPtr->screenBuffer.size())
+		if (newValue > inDataPtr->visibleBoundary.rows.lastRow)
 		{
 			Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is too large; truncating");
-			newValue = inDataPtr->screenBuffer.size() - 1;
+			newValue = inDataPtr->visibleBoundary.rows.lastRow;
 		}
-		setScrollingRegionBottom(inDataPtr, newValue);
+		inDataPtr->customScrollingRegion.lastRow = newValue;
 	}
 	
 	// VT100 requires that the range be 2 lines minimum
-	if (inDataPtr->scrollingRegion.firstRow >= inDataPtr->scrollingRegion.lastRow)
+	if (inDataPtr->customScrollingRegion.firstRow >= inDataPtr->customScrollingRegion.lastRow)
 	{
-		if (inDataPtr->scrollingRegion.lastRow >= 1)
+		if (inDataPtr->customScrollingRegion.lastRow >= 1)
 		{
-			setScrollingRegionTop(inDataPtr, inDataPtr->scrollingRegion.lastRow - 1);
+			inDataPtr->customScrollingRegion.firstRow = inDataPtr->customScrollingRegion.lastRow - 1;
 		}
 		else
 		{
-			setScrollingRegionBottom(inDataPtr, inDataPtr->scrollingRegion.firstRow + 1);
+			inDataPtr->customScrollingRegion.lastRow = inDataPtr->customScrollingRegion.firstRow + 1;
 		}
 	}
 	
@@ -11957,7 +11867,8 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	// (this limit is enforced by moveCursorY())
 	moveCursor(inDataPtr, 0, 0);
 	
-	//Console_WriteValuePair("scrolling region rows are now", inDataPtr->scrollingRegion.firstRow, inDataPtr->scrollingRegion.lastRow); // debug
+	//Console_WriteValuePair("scrolling region rows are now", inDataPtr->inDataPtr->customScrollingRegion.firstRow,
+	//							inDataPtr->customScrollingRegion.lastRow); // debug
 	//Console_WriteValuePair("origin mode enable flag and cursor row", inDataPtr->modeOriginRedefined, inDataPtr->current.cursorY); // debug
 }// vt100SetTopAndBottomMargins
 

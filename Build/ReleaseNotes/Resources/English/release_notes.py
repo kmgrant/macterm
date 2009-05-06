@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090505',
     '20090504',
     '20090428',
     '20090423',
@@ -230,6 +231,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090505': [
+		'Fixed certain terminal scrolling problems introduced in the build from yesterday.',
+	],
 	'20090504': [
 		'Fixed Terminal view text display for characters that could technically be decomposed Unicode; for instance, an accented character represented by a letter and accent sequence now correctly offsets the cursor by one character cell instead of two.',
 		'Fixed file opens to properly handle extensions, so file type and creator are no longer implicitly required.',
