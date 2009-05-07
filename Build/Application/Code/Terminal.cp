@@ -2011,6 +2011,29 @@ Terminal_CursorIsVisible	(TerminalScreenRef		inRef)
 
 
 /*!
+Provides all the text attributes of the position currently
+occupied by the cursor.
+
+NOTE:	Admittedly this is a bit of a weird exception, since
+		all other style information is returned as part of the
+		Terminal_ForEachLikeAttributeRunDo() loop.  However,
+		the cursor is rendered at unusual times, and has a
+		special appearance, that make this necessary.
+
+(4.0)
+*/
+TerminalTextAttributes
+Terminal_CursorReturnAttributes		(TerminalScreenRef		inRef)
+{
+	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
+	TerminalTextAttributes		result = dataPtr->current.attributeBits;
+	
+	
+	return result;
+}// CursorReturnAttributes
+
+
+/*!
 Destroys all scrollback buffer lines.  The “visible”
 lines are not affected.  This obviously invalidates any
 iterators pointing to scrollback lines.

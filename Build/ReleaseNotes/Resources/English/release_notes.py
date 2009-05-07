@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090506',
     '20090505',
     '20090504',
     '20090428',
@@ -231,6 +232,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090506': [
+		'Terminal view cursor now attempts to render with knowledge of actual colors at its position (such as custom ANSI colors).',
+	],
 	'20090505': [
 		'Fixed certain terminal scrolling problems introduced in the build from yesterday.',
 	],

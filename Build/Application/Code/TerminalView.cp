@@ -8340,8 +8340,11 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						if (kMyCursorStateVisible == viewPtr->screen.cursor.currentState)
 						{
+							TerminalTextAttributes		cursorAttributes = Terminal_CursorReturnAttributes(viewPtr->screen.ref);
+							
+							
 							// flip colors and paint at the current blink alpha value
-							useTerminalTextColors(viewPtr, drawingContext, kTerminalTextAttributeInverseVideo,
+							useTerminalTextColors(viewPtr, drawingContext, cursorAttributes | kTerminalTextAttributeInverseVideo,
 													cursorBlinks(viewPtr)
 													? viewPtr->animation.cursor.blinkAlpha
 													: 0.8/* arbitrary, but it should be possible to see characters underneath a block shape */);

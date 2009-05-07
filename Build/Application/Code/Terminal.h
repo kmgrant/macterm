@@ -518,6 +518,9 @@ Terminal_Result
 Boolean
 	Terminal_CursorIsVisible				(TerminalScreenRef			inScreen);
 
+TerminalTextAttributes
+	Terminal_CursorReturnAttributes			(TerminalScreenRef			inScreen);
+
 Terminal_Result
 	Terminal_EmulatorDeriveFromCString		(TerminalScreenRef			inScreen,
 											 char const*				inCString,
