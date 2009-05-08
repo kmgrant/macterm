@@ -701,7 +701,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::FORMAT);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext)
 			{
@@ -1026,8 +1026,8 @@ createSampleTerminalScreen ()
 const
 {
 	TerminalScreenRef		result = nullptr;
-	Preferences_ContextRef	terminalConfig = Preferences_NewContext(kPreferences_ClassTerminal);
-	Preferences_ContextRef	translationConfig = Preferences_NewContext(kPreferences_ClassTranslation);
+	Preferences_ContextRef	terminalConfig = Preferences_NewContext(Quills::Prefs::TERMINAL);
+	Preferences_ContextRef	translationConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
 	Terminal_Result			screenCreationError = kTerminal_ResultOK;
 	
 	
@@ -1223,7 +1223,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::FORMAT);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext)
 			{

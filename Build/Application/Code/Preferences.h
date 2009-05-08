@@ -65,6 +65,7 @@
 
 // MacTelnet includes
 #include "Commands.h"
+#include "QuillsPrefs.h"
 
 
 
@@ -106,26 +107,6 @@ enum
 };
 
 /*!
-Defines the subset of all possible preference tags
-that are expected as input to an API in this module.
-Check documentation on the tags to see what class
-they belong to.
-*/
-typedef FourCharCode Preferences_Class;
-enum
-{
-	// All of the four-character codes for classes are listed
-	// alphabetically by code, and must be unique.
-	kPreferences_ClassGeneral		= 'appl',
-	kPreferences_ClassFormat		= 'text',	//!< use with Preferences_NewContext()
-	kPreferences_ClassMacroSet		= 'mcro',	//!< use with Preferences_NewContext()
-	kPreferences_ClassSession		= 'sess',	//!< use with Preferences_NewContext()
-	kPreferences_ClassTerminal		= 'term',	//!< use with Preferences_NewContext()
-	kPreferences_ClassTranslation	= 'encd',	//!< use with Preferences_NewContext()
-	kPreferences_ClassFactoryDefaults	= 'fdef'	//!< for internal use
-};
-
-/*!
 All tags from the same preference class must have
 unique values.  The tags are grouped by class.
 When you call Preferences_GetData...() methods,
@@ -143,7 +124,7 @@ with a tag in certain circumstances.
 typedef FourCharCode Preferences_Tag;
 
 /*!
-Tags for use with kPreferences_ClassFormat.
+Tags for use with Quills::Prefs::FORMAT.
 */
 enum
 {
@@ -185,7 +166,7 @@ enum
 };
 
 /*!
-Tags for use with kPreferences_ClassGeneral.
+Tags for use with Quills::Prefs::GENERAL.
 */
 enum
 {
@@ -230,7 +211,7 @@ enum
 };
 
 /*!
-Tags for use with kPreferences_ClassMacroSet.
+Tags for use with Quills::Prefs::MACRO_SET.
 
 IMPORTANT:	These are indexed tags, so calls to APIs must
 			use Preferences_ReturnTagVariantForIndex()
@@ -248,13 +229,13 @@ enum
 };
 
 /*!
-Tags for use with kPreferences_ClassSession.
+Tags for use with Quills::Prefs::SESSION.
 */
 enum
 {
-	kPreferences_TagAssociatedFormatFavorite			= 'frmt',	//!< data: "CFStringRef" (a kPreferences_ClassFormat context name)
-	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a kPreferences_ClassTerminal context name)
-	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a kPreferences_ClassTranslation context name)
+	kPreferences_TagAssociatedFormatFavorite			= 'frmt',	//!< data: "CFStringRef" (a Quills::Prefs::FORMAT context name)
+	kPreferences_TagAssociatedTerminalFavorite			= 'term',	//!< data: "CFStringRef" (a Quills::Prefs::TERMINAL context name)
+	kPreferences_TagAssociatedTranslationFavorite		= 'xlat',	//!< data: "CFStringRef" (a Quills::Prefs::TRANSLATION context name)
 	kPreferences_TagAutoCaptureToFile					= 'capt',	//!< data: "Boolean"
 	kPreferences_TagCaptureFileAlias					= 'cfil',	//!< data: "Preferences_AliasID"
 	kPreferences_TagCommandLine							= 'cmdl',	//!< data: "CFArrayRef" (of CFStrings)
@@ -280,7 +261,7 @@ enum
 };
 
 /*!
-Tags for use with kPreferences_ClassTerminal.
+Tags for use with Quills::Prefs::TERMINAL.
 
 Some are terminal-specific tweaks; anything starting with
 "kPreferences_TagVT..." or "kPreferences_TagXTerm...".
@@ -311,7 +292,7 @@ enum
 };
 
 /*!
-Tags for use with kPreferences_ClassTranslation.
+Tags for use with Quills::Prefs::TRANSLATION.
 */
 enum
 {
@@ -454,23 +435,23 @@ void
 //@{
 
 Preferences_ContextRef
-	Preferences_NewContext					(Preferences_Class					inClass);
+	Preferences_NewContext					(Quills::Prefs::Class				inClass);
 
 Preferences_ContextRef
-	Preferences_NewContextFromFavorites		(Preferences_Class					inClass,
+	Preferences_NewContextFromFavorites		(Quills::Prefs::Class				inClass,
 											 CFStringRef						inNameOrNullToAutoGenerateUniqueName = nullptr,
 											 CFStringRef						inDomainNameIfInitializingOrNull = nullptr);
 
 Preferences_ContextRef
-	Preferences_NewContextFromXMLData		(Preferences_Class					inClass,
+	Preferences_NewContextFromXMLData		(Quills::Prefs::Class				inClass,
 											 CFDataRef							inData);
 
 Preferences_ContextRef
-	Preferences_NewContextFromXMLFileRef	(Preferences_Class					inClass,
+	Preferences_NewContextFromXMLFileRef	(Quills::Prefs::Class				inClass,
 											 FSRef const&						inFile);
 
 Preferences_ContextRef
-	Preferences_NewContextFromXMLFileURL	(Preferences_Class					inClass,
+	Preferences_NewContextFromXMLFileURL	(Quills::Prefs::Class				inClass,
 											 CFURLRef							inFileURL);
 
 Preferences_ContextRef
@@ -491,7 +472,7 @@ void
 
 Preferences_Result
 	Preferences_GetDefaultContext			(Preferences_ContextRef*			outContextPtr,
-											 Preferences_Class					inClass = kPreferences_ClassGeneral);
+											 Quills::Prefs::Class				inClass = Quills::Prefs::GENERAL);
 
 Preferences_Result
 	Preferences_GetFactoryDefaultsContext	(Preferences_ContextRef*			outContextPtr);
@@ -519,20 +500,20 @@ Preferences_Result
 													 SInt32								inDelta);
 
 Preferences_Result
-	Preferences_CreateContextNameArray				(Preferences_Class					inClass,
+	Preferences_CreateContextNameArray				(Quills::Prefs::Class				inClass,
 													 CFArrayRef&						outNewArrayOfNewCFStrings);
 
 Preferences_Result
-	Preferences_CreateUniqueContextName				(Preferences_Class					inClass,
+	Preferences_CreateUniqueContextName				(Quills::Prefs::Class				inClass,
 													 CFStringRef&						outNewName,
 													 CFStringRef						inBaseNameOrNull = nullptr);
 
 Boolean
-	Preferences_GetContextsInClass					(Preferences_Class					inClass,
+	Preferences_GetContextsInClass					(Quills::Prefs::Class				inClass,
 													 std::vector< Preferences_ContextRef >&);
 
 Preferences_Result
-	Preferences_InsertContextNamesInMenu			(Preferences_Class					inClass,
+	Preferences_InsertContextNamesInMenu			(Quills::Prefs::Class				inClass,
 													 MenuRef							inoutMenuRef,
 													 MenuItemIndex						inAfterItemIndex,
 													 UInt32								inInitialIndent,
@@ -564,7 +545,7 @@ Preferences_Result
 											 size_t*							outActualSizePtrOrNull = nullptr,
 											 Boolean*							outIsDefaultOrNull = nullptr);
 
-Preferences_Class
+Quills::Prefs::Class
 	Preferences_ContextReturnClass			(Preferences_ContextRef				inContext);
 
 Preferences_Result

@@ -45,14 +45,6 @@
 
 
 
-#pragma mark Internal Method Prototypes
-namespace {
-
-Preferences_Class		returnPreferencesClassForPrefsClass		(Quills::Prefs::Class);
-
-} // anonymous namespace
-
-
 #pragma mark Public Methods
 namespace Quills {
 
@@ -69,8 +61,7 @@ Prefs::list_collections		(Prefs::Class	inForWhichClass)
 	Preferences_Result			prefsError = kPreferences_ResultOK;
 	
 	
-	prefsError = Preferences_CreateContextNameArray
-					(returnPreferencesClassForPrefsClass(inForWhichClass), nameCFArray);
+	prefsError = Preferences_CreateContextNameArray(inForWhichClass, nameCFArray);
 	if (kPreferences_ResultOK == prefsError)
 	{
 		CFIndex const	kCount = CFArrayGetCount(nameCFArray);
@@ -100,59 +91,5 @@ Prefs::list_collections		(Prefs::Class	inForWhichClass)
 
 
 } // namespace Quills
-
-
-#pragma mark Internal Methods
-namespace {
-
-/*!
-The Python API exposes different typenames for each
-class of preference, so this API maps those typenames
-to internal typenames.
-
-(3.1)
-*/
-Preferences_Class
-returnPreferencesClassForPrefsClass		(Quills::Prefs::Class	inType)
-{
-	Preferences_Class	result = kPreferences_ClassGeneral;
-	
-	
-	switch (inType)
-	{
-	case Quills::Prefs::GENERAL:
-		result = kPreferences_ClassGeneral;
-		break;
-	
-	case Quills::Prefs::FORMAT:
-		result = kPreferences_ClassFormat;
-		break;
-	
-	case Quills::Prefs::MACRO_SET:
-		result = kPreferences_ClassMacroSet;
-		break;
-	
-	case Quills::Prefs::SESSION:
-		result = kPreferences_ClassSession;
-		break;
-	
-	case Quills::Prefs::TERMINAL:
-		result = kPreferences_ClassTerminal;
-		break;
-	
-	case Quills::Prefs::TRANSLATION:
-		result = kPreferences_ClassTranslation;
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-	
-	return result;
-}// returnPreferencesClassForCollectionType
-
-
-} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

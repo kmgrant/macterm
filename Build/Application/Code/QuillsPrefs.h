@@ -60,7 +60,8 @@ public:
 		MACRO_SET = 2,
 		SESSION = 3,
 		TERMINAL = 4,
-		TRANSLATION = 5
+		TRANSLATION = 5,
+		_FACTORY_DEFAULTS = 100,
 	};
 #if SWIG
 %feature("docstring",

@@ -139,34 +139,34 @@ typedef std::map< UInt32, SInt16 >			IndexByCommandID;
 #pragma mark Internal Method Prototypes
 namespace {
 
-pascal OSStatus		accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
-														DataBrowserItemDataRef, Boolean);
-void				chooseContext					(Preferences_ContextRef);
-void				choosePanel						(UInt16);
-Boolean				createCollection				(CFStringRef = nullptr);
-void				displayCollectionRenameUI		(DataBrowserItemID);
-Boolean				duplicateCollection				(Preferences_ContextRef);
-void				findBestPanelSize				(HISize const&, HISize&);
-void				handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
-void				handleNewFooterSize				(HIViewRef, Float32, Float32, void*);
-void				handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
-void				init							();
-void				installPanel					(Panel_Ref);
-pascal void			monitorDataBrowserItems			(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
-void				newPanelSelector				(Panel_Ref);
-void				preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-void				rebuildList						();
-pascal OSStatus		receiveFooterActiveStateChange	(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveFooterDraw				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
-void				refreshDisplay					();
-void				removeCollectionRenameUI		();
-Preferences_Class	returnCurrentPreferencesClass	();
-DataBrowserItemID	returnCurrentSelection			();
-OSStatus			selectCollection				(DataBrowserItemID = 0);
-void				showWindow						();
-void				sizePanels						(HISize const&);
+pascal OSStatus			accessDataBrowserItemData		(HIViewRef, DataBrowserItemID, DataBrowserPropertyID,
+														 DataBrowserItemDataRef, Boolean);
+void					chooseContext					(Preferences_ContextRef);
+void					choosePanel						(UInt16);
+Boolean					createCollection				(CFStringRef = nullptr);
+void					displayCollectionRenameUI		(DataBrowserItemID);
+Boolean					duplicateCollection				(Preferences_ContextRef);
+void					findBestPanelSize				(HISize const&, HISize&);
+void					handleNewDrawerWindowSize		(WindowRef, Float32, Float32, void*);
+void					handleNewFooterSize				(HIViewRef, Float32, Float32, void*);
+void					handleNewMainWindowSize			(WindowRef, Float32, Float32, void*);
+void					init							();
+void					installPanel					(Panel_Ref);
+pascal void				monitorDataBrowserItems			(ControlRef, DataBrowserItemID, DataBrowserItemNotification);
+void					newPanelSelector				(Panel_Ref);
+void					preferenceChanged				(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+void					rebuildList						();
+pascal OSStatus			receiveFooterActiveStateChange	(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			receiveFooterDraw				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+pascal OSStatus			receiveWindowClosing			(EventHandlerCallRef, EventRef, void*);
+void					refreshDisplay					();
+void					removeCollectionRenameUI		();
+Quills::Prefs::Class	returnCurrentPreferencesClass	();
+DataBrowserItemID		returnCurrentSelection			();
+OSStatus				selectCollection				(DataBrowserItemID = 0);
+void					showWindow						();
+void					sizePanels						(HISize const&);
 
 // declare the LDEF entry point (it’s only referred to here, and is implemented in IconListDef.c)
 pascal void IconListDef(SInt16, Boolean, Rect*, Cell, SInt16, SInt16, ListHandle);
@@ -1682,7 +1682,7 @@ in this way.
 void
 rebuildList ()
 {
-	Preferences_Class const		kCurrentPreferencesClass = returnCurrentPreferencesClass();
+	Quills::Prefs::Class const	kCurrentPreferencesClass = returnCurrentPreferencesClass();
 	typedef std::vector< Preferences_ContextRef >	ContextsList;
 	ContextsList				contextList;
 	
@@ -2129,38 +2129,38 @@ collection class will be returned.
 
 (3.1)
 */
-Preferences_Class
+Quills::Prefs::Class
 returnCurrentPreferencesClass ()
 {
-	Preferences_Class	result = kPreferences_ClassGeneral;
-	Panel_Kind			currentPanelKind = Panel_ReturnKind(gCurrentPanel);
+	Quills::Prefs::Class	result = Quills::Prefs::GENERAL;
+	Panel_Kind				currentPanelKind = Panel_ReturnKind(gCurrentPanel);
 	
 	
 	assert(nullptr != currentPanelKind);
 	if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_PrefPanelDescriptorFormats, currentPanelKind,
 												kCFCompareBackwards))
 	{
-		result = kPreferences_ClassFormat;
+		result = Quills::Prefs::FORMAT;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_PrefPanelDescriptorMacros, currentPanelKind,
 													kCFCompareBackwards))
 	{
-		result = kPreferences_ClassMacroSet;
+		result = Quills::Prefs::MACRO_SET;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_PrefPanelDescriptorSessions, currentPanelKind,
 													kCFCompareBackwards))
 	{
-		result = kPreferences_ClassSession;
+		result = Quills::Prefs::SESSION;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_PrefPanelDescriptorTerminals, currentPanelKind,
 													kCFCompareBackwards))
 	{
-		result = kPreferences_ClassTerminal;
+		result = Quills::Prefs::TERMINAL;
 	}
 	else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_PrefPanelDescriptorTranslations, currentPanelKind,
 													kCFCompareBackwards))
 	{
-		result = kPreferences_ClassTranslation;
+		result = Quills::Prefs::TRANSLATION;
 	}
 	return result;
 }// returnCurrentPreferencesClass

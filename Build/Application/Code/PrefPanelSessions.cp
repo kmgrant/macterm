@@ -233,7 +233,7 @@ struct My_SessionsPanelResourceUI
 										 CFStringRef&, UInt16&, CFStringRef&);
 	
 	void
-	rebuildFavoritesMenu	(HIViewID const&, UInt32, Preferences_Class,
+	rebuildFavoritesMenu	(HIViewID const&, UInt32, Quills::Prefs::Class,
 							 UInt32, MenuItemIndex&);
 	
 	void
@@ -793,7 +793,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
@@ -1052,7 +1052,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
@@ -1395,7 +1395,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
@@ -1720,7 +1720,7 @@ panelChanged	(Panel_Ref		inPanel,
 				panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
 				Preferences_ContextSave(oldContext);
 			}
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassSession);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::SESSION);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
@@ -1957,7 +1957,7 @@ void
 My_SessionsPanelResourceUI::
 rebuildFavoritesMenu	(HIViewID const&		inMenuButtonID,
 						 UInt32					inAnchorCommandID,
-						 Preferences_Class		inCollectionsToUse,
+						 Quills::Prefs::Class	inCollectionsToUse,
 						 UInt32					inEachNewItemCommandID,
 						 MenuItemIndex&			inoutItemCountTracker)
 {
@@ -2014,7 +2014,7 @@ void
 My_SessionsPanelResourceUI::
 rebuildFormatMenu ()
 {
-	rebuildFavoritesMenu(idMyPopUpMenuFormat, kCommandFormatDefault/* anchor */, kPreferences_ClassFormat,
+	rebuildFavoritesMenu(idMyPopUpMenuFormat, kCommandFormatDefault/* anchor */, Quills::Prefs::FORMAT,
 							kCommandFormatByFavoriteName/* command ID of new items */, this->_numberOfFormatItemsAdded);
 }// My_SessionsPanelResourceUI::rebuildFormatMenu
 
@@ -2029,7 +2029,7 @@ void
 My_SessionsPanelResourceUI::
 rebuildTerminalMenu ()
 {
-	rebuildFavoritesMenu(idMyPopUpMenuTerminal, kCommandTerminalDefault/* anchor */, kPreferences_ClassTerminal,
+	rebuildFavoritesMenu(idMyPopUpMenuTerminal, kCommandTerminalDefault/* anchor */, Quills::Prefs::TERMINAL,
 							kCommandTerminalByFavoriteName/* command ID of new items */, this->_numberOfTerminalItemsAdded);
 }// My_SessionsPanelResourceUI::rebuildTerminalMenu
 
@@ -2044,7 +2044,7 @@ void
 My_SessionsPanelResourceUI::
 rebuildTranslationMenu ()
 {
-	rebuildFavoritesMenu(idMyPopUpMenuTranslation, kCommandTranslationTableDefault/* anchor */, kPreferences_ClassTranslation,
+	rebuildFavoritesMenu(idMyPopUpMenuTranslation, kCommandTranslationTableDefault/* anchor */, Quills::Prefs::TRANSLATION,
 							kCommandTranslationTableByFavoriteName/* command ID of new items */, this->_numberOfTranslationItemsAdded);
 }// My_SessionsPanelResourceUI::rebuildTranslationMenu
 

@@ -2348,7 +2348,7 @@ setUpFormatFavoritesMenu	(MenuRef	inMenu)
 		// add the names of all defined formats to the menu;
 		// update global count of items added at that location
 		gNumberOfFormatMenuItemsAdded = 0;
-		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassFormat, inMenu,
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(Quills::Prefs::FORMAT, inMenu,
 																	defaultIndex, 1/* indentation level */,
 																	kCommandFormatByFavoriteName,
 																	gNumberOfFormatMenuItemsAdded);
@@ -2417,7 +2417,7 @@ setUpMacroSetsMenu	(MenuRef	inMenu)
 			// add the names of all macro sets to the menu;
 			// update global count of items added at that location
 			gNumberOfMacroSetMenuItemsAdded = 0;
-			(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassMacroSet, inMenu,
+			(Preferences_Result)Preferences_InsertContextNamesInMenu(Quills::Prefs::MACRO_SET, inMenu,
 																		defaultIndex, 1/* indentation level */,
 																		kCommandMacroSetByFavoriteName,
 																		gNumberOfMacroSetMenuItemsAdded);
@@ -2737,7 +2737,7 @@ setUpSessionFavoritesMenu	(MenuRef	inMenu)
 		// add the names of all session configurations to the menu;
 		// update global count of items added at that location
 		gNumberOfSessionMenuItemsAdded = 0;
-		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassSession, inMenu,
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(Quills::Prefs::SESSION, inMenu,
 																	defaultIndex, 1/* indentation level */,
 																	kCommandNewSessionByFavoriteName,
 																	gNumberOfSessionMenuItemsAdded);
@@ -2800,7 +2800,7 @@ setUpTranslationTablesMenu	(MenuRef	inMenu)
 		// add the names of all translation tables to the menu;
 		// update global count of items added at that location
 		gNumberOfTranslationTableMenuItemsAdded = 0;
-		(Preferences_Result)Preferences_InsertContextNamesInMenu(kPreferences_ClassTranslation, inMenu,
+		(Preferences_Result)Preferences_InsertContextNamesInMenu(Quills::Prefs::TRANSLATION, inMenu,
 																	defaultIndex, 1/* indentation level */,
 																	kCommandTranslationTableByFavoriteName,
 																	gNumberOfTranslationTableMenuItemsAdded);

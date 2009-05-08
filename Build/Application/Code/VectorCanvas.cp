@@ -271,7 +271,7 @@ VectorCanvas_New	(VectorInterpreter_ID	inID,
 		Preferences_Result			prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_GetDefaultContext(&defaultFormat, kPreferences_ClassFormat);
+		prefsResult = Preferences_GetDefaultContext(&defaultFormat, Quills::Prefs::FORMAT);
 		assert(kPreferences_ResultOK == prefsResult);
 		copyColorPreferences(ptr, defaultFormat);
 	}

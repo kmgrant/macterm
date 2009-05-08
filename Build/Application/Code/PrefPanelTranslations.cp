@@ -1006,7 +1006,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTranslation);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::TRANSLATION);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext)
 			{

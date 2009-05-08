@@ -64,6 +64,7 @@
 #include "MenuBar.h"
 #include "Network.h"
 #include "Preferences.h"
+#include "QuillsPrefs.h"
 #include "Session.h"
 #include "SessionFactory.h"
 #include "Terminal.h"
@@ -851,7 +852,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
 							{
 								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-																			(kPreferences_ClassMacroSet, collectionName);
+																			(Quills::Prefs::MACRO_SET, collectionName);
 								
 								
 								if (nullptr != namedSettings)
@@ -985,7 +986,7 @@ returnDefaultMacroSet ()
 	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	
 	
-	prefsResult = Preferences_GetDefaultContext(&result, kPreferences_ClassMacroSet);
+	prefsResult = Preferences_GetDefaultContext(&result, Quills::Prefs::MACRO_SET);
 	assert(kPreferences_ResultOK == prefsResult);
 	return result;
 }// returnDefaultMacroSet

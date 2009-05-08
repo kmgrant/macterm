@@ -1685,13 +1685,13 @@ installedActions()
 	// of errors later on
 	if (nullptr == inTerminalInfoOrNull)
 	{
-		preferencesResult = Preferences_GetDefaultContext(&inTerminalInfoOrNull, kPreferences_ClassTerminal);
+		preferencesResult = Preferences_GetDefaultContext(&inTerminalInfoOrNull, Quills::Prefs::TERMINAL);
 		assert(kPreferences_ResultOK == preferencesResult);
 		assert(nullptr != inTerminalInfoOrNull);
 	}
 	if (nullptr == inTranslationInfoOrNull)
 	{
-		preferencesResult = Preferences_GetDefaultContext(&inTranslationInfoOrNull, kPreferences_ClassTranslation);
+		preferencesResult = Preferences_GetDefaultContext(&inTranslationInfoOrNull, Quills::Prefs::TRANSLATION);
 		assert(kPreferences_ResultOK == preferencesResult);
 		assert(nullptr != inTranslationInfoOrNull);
 	}
@@ -1706,7 +1706,7 @@ installedActions()
 			std::vector< Preferences_ContextRef >	contextList;
 			
 			
-			if (Preferences_GetContextsInClass(kPreferences_ClassFormat, contextList))
+			if (Preferences_GetContextsInClass(Quills::Prefs::FORMAT, contextList))
 			{
 				std::vector< UInt16 >	numberList(contextList.size());
 				RandomWrap				generator;
@@ -1722,7 +1722,7 @@ installedActions()
 		
 		if (false == chooseRandom)
 		{
-			preferencesResult = Preferences_GetDefaultContext(&inFontInfoOrNull, kPreferences_ClassFormat);
+			preferencesResult = Preferences_GetDefaultContext(&inFontInfoOrNull, Quills::Prefs::FORMAT);
 			assert(kPreferences_ResultOK == preferencesResult);
 			assert(nullptr != inFontInfoOrNull);
 		}
@@ -3679,7 +3679,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						Boolean						isError = true;
 						
 						
-						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, kPreferences_ClassFormat))
+						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::FORMAT))
 						{
 							isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
 						}
@@ -3710,7 +3710,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
 							{
 								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-																			(kPreferences_ClassFormat, collectionName);
+																			(Quills::Prefs::FORMAT, collectionName);
 								
 								
 								if (nullptr != namedSettings)
@@ -3828,7 +3828,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						Boolean						isError = true;
 						
 						
-						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, kPreferences_ClassTranslation))
+						if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultSettings, Quills::Prefs::TRANSLATION))
 						{
 							isError = (kPreferences_ResultOK != Preferences_ContextCopy(defaultSettings, currentSettings));
 						}
@@ -3859,7 +3859,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef, received.menu.menuItemIndex, &collectionName))
 							{
 								Preferences_ContextRef		namedSettings = Preferences_NewContextFromFavorites
-																			(kPreferences_ClassTranslation, collectionName);
+																			(Quills::Prefs::TRANSLATION, collectionName);
 								
 								
 								if (nullptr != namedSettings)

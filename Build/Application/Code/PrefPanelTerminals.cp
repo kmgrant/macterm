@@ -885,7 +885,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTerminal);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::TERMINAL);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
@@ -1381,7 +1381,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTerminal);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::TERMINAL);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;
@@ -1668,7 +1668,7 @@ panelChanged	(Panel_Ref		inPanel,
 			
 			
 			if (nullptr != oldContext) Preferences_ContextSave(oldContext);
-			prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassTerminal);
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::TERMINAL);
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext) panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
 			panelDataPtr->dataModel = newContext;

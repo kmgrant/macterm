@@ -3122,7 +3122,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 {
 	this->selfRef = REINTERPRET_CAST(this, TerminalViewRef);
 	
-	this->encodingConfig = Preferences_NewContext(kPreferences_ClassTranslation);
+	this->encodingConfig = Preferences_NewContext(Quills::Prefs::TRANSLATION);
 	assert(nullptr != this->encodingConfig);
 	{
 		Boolean		setOK = TextTranslation_ContextSetEncoding(this->encodingConfig, kCFStringEncodingUTF8);
@@ -7396,7 +7396,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			{
 				// batch mode; multiple things have changed, so check for the new values
 				// of everything that is understood by a terminal view
-				if (kPreferences_ClassTranslation == Preferences_ContextReturnClass(prefsContext))
+				if (Quills::Prefs::TRANSLATION == Preferences_ContextReturnClass(prefsContext))
 				{
 					copyTranslationPreferences(viewPtr, prefsContext);
 				}
@@ -7577,7 +7577,7 @@ receiveTerminalHIObjectEvents	(EventHandlerCallRef	inHandlerCallRef,
 						Preferences_ContextRef	defaultContext = nullptr;
 						
 						
-						prefsResult = Preferences_GetDefaultContext(&defaultContext, kPreferences_ClassFormat);
+						prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::FORMAT);
 						if (kPreferences_ResultOK != prefsResult)
 						{
 							Console_Warning(Console_WriteLine, "failed to find default context for new view");

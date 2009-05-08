@@ -1132,7 +1132,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 														sizeof(associatedFormatName), &associatedFormatName);
 		if (kPreferences_ResultOK == preferencesResult)
 		{
-			associatedFormatContext = Preferences_NewContextFromFavorites(kPreferences_ClassFormat, associatedFormatName);
+			associatedFormatContext = Preferences_NewContextFromFavorites(Quills::Prefs::FORMAT, associatedFormatName);
 		}
 	}
 	
@@ -1147,7 +1147,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 														sizeof(associatedTerminalName), &associatedTerminalName);
 		if (kPreferences_ResultOK == preferencesResult)
 		{
-			associatedTerminalContext = Preferences_NewContextFromFavorites(kPreferences_ClassTerminal, associatedTerminalName);
+			associatedTerminalContext = Preferences_NewContextFromFavorites(Quills::Prefs::TERMINAL, associatedTerminalName);
 		}
 	}
 	
@@ -1162,7 +1162,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 														sizeof(associatedTranslationName), &associatedTranslationName);
 		if (kPreferences_ResultOK == preferencesResult)
 		{
-			associatedTranslationContext = Preferences_NewContextFromFavorites(kPreferences_ClassTranslation, associatedTranslationName);
+			associatedTranslationContext = Preferences_NewContextFromFavorites(Quills::Prefs::TRANSLATION, associatedTranslationName);
 		}
 	}
 	
@@ -1267,7 +1267,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowO
 	
 	
 	
-	prefsResult = Preferences_GetDefaultContext(&sessionContext, kPreferences_ClassSession);
+	prefsResult = Preferences_GetDefaultContext(&sessionContext, Quills::Prefs::SESSION);
 	if (kPreferences_ResultOK != prefsResult)
 	{
 		Console_Warning(Console_WriteLine, "unable to initialize dialog with Session Default preferences!");
@@ -2021,7 +2021,7 @@ configureSessionTerminalWindow	(TerminalWindowRef			inTerminalWindow,
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		Preferences_ContextRef		associatedFormat = Preferences_NewContextFromFavorites
-														(kPreferences_ClassFormat, associatedFormatName);
+														(Quills::Prefs::FORMAT, associatedFormatName);
 		
 		
 		if (nullptr == associatedFormat)
@@ -2245,7 +2245,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						if (kCommandNewSessionDefaultFavorite == received.commandID)
 						{
 							Preferences_Result		prefsResult = Preferences_GetDefaultContext
-																	(&sessionContext, kPreferences_ClassSession);
+																	(&sessionContext, Quills::Prefs::SESSION);
 							
 							
 							if (kPreferences_ResultOK != prefsResult) sessionContext = nullptr;
@@ -2265,7 +2265,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								if (noErr == CopyMenuItemTextAsCFString(received.menu.menuRef,
 																		received.menu.menuItemIndex, &itemTextCFString))
 								{
-									sessionContext = Preferences_NewContextFromFavorites(kPreferences_ClassSession, itemTextCFString);
+									sessionContext = Preferences_NewContextFromFavorites(Quills::Prefs::SESSION, itemTextCFString);
 									CFRelease(itemTextCFString), itemTextCFString = nullptr;
 								}
 							}

@@ -324,7 +324,7 @@ public:
 	}
 	
 	//! the category of this context
-	inline Preferences_Class
+	inline Quills::Prefs::Class
 	returnClass () const;
 	
 	//! retrieves a true or false value from the dictionary (use only if the value really is a Boolean!)
@@ -389,13 +389,13 @@ public:
 	unitTest	(My_ContextInterface*);
 
 protected:
-	My_ContextInterface	(Preferences_Class);
+	My_ContextInterface	(Quills::Prefs::Class);
 	
 	void
 	setImplementor	(CFKeyValueInterface*);
 
 private:
-	Preferences_Class		_preferencesClass;	//!< hint as to what keys are likely to be present
+	Quills::Prefs::Class	_preferencesClass;	//!< hint as to what keys are likely to be present
 	ListenerModel_Ref		_listenerModel;		//!< if monitors are used, handles change notifications
 	CFKeyValueInterface*	_implementorPtr;	//!< how settings are saved (e.g. application preferences, an in-memory dictionary...)
 };
@@ -413,9 +413,9 @@ class My_ContextCFDictionary:
 public My_ContextInterface
 {
 public:
-	My_ContextCFDictionary	(Preferences_Class, CFDictionaryRef);
+	My_ContextCFDictionary	(Quills::Prefs::Class, CFDictionaryRef);
 	
-	My_ContextCFDictionary	(Preferences_Class, CFMutableDictionaryRef = nullptr);
+	My_ContextCFDictionary	(Quills::Prefs::Class, CFMutableDictionaryRef = nullptr);
 	
 	//!\name New Methods In This Class
 	//@{
@@ -471,7 +471,7 @@ class My_ContextDefault:
 public My_ContextInterface
 {
 public:
-	My_ContextDefault	(Preferences_Class);
+	My_ContextDefault	(Quills::Prefs::Class);
 	
 	//!\name New Methods In This Class
 	//@{
@@ -523,14 +523,14 @@ class My_ContextFavorite:
 public My_ContextInterface
 {
 public:
-	My_ContextFavorite	(Preferences_Class, CFStringRef, CFStringRef = nullptr);
+	My_ContextFavorite	(Quills::Prefs::Class, CFStringRef, CFStringRef = nullptr);
 	
 	//!\name New Methods In This Class
 	//@{
 	
 	//! returns the common prefix for any domain of a collection in the given class
 	static CFStringRef
-	returnClassDomainNamePrefix	(Preferences_Class);
+	returnClassDomainNamePrefix	(Quills::Prefs::Class);
 	
 	//! rearrange this context relative to another context
 	Preferences_Result
@@ -538,7 +538,7 @@ public:
 	
 	//! test routine
 	static Boolean
-	unitTest	(Preferences_Class, CFStringRef);
+	unitTest	(Quills::Prefs::Class, CFStringRef);
 	
 	//@}
 	
@@ -565,7 +565,7 @@ public:
 
 protected:
 	CFStringRef
-	createDomainName	(Preferences_Class, CFStringRef);
+	createDomainName	(Quills::Prefs::Class, CFStringRef);
 
 private:
 	CFRetainRelease			_contextName;	//!< CFStringRef; a display name for this context
@@ -590,18 +590,18 @@ class My_PreferenceDefinition
 public:
 	static void
 	create		(Preferences_Tag, CFStringRef, FourCharCode, size_t,
-				 Preferences_Class, My_PreferenceDefinition** = nullptr);
+				 Quills::Prefs::Class, My_PreferenceDefinition** = nullptr);
 	
 	static void
-	createFlag	(Preferences_Tag, CFStringRef, Preferences_Class,
+	createFlag	(Preferences_Tag, CFStringRef, Quills::Prefs::Class,
 				 My_PreferenceDefinition** = nullptr);
 	
 	static void
 	createIndexed	(Preferences_Tag, Preferences_Index, CFStringRef, FourCharCode,
-					 size_t, Preferences_Class);
+					 size_t, Quills::Prefs::Class);
 	
 	static void
-	createRGBColor	(Preferences_Tag, CFStringRef, Preferences_Class,
+	createRGBColor	(Preferences_Tag, CFStringRef, Quills::Prefs::Class,
 					 My_PreferenceDefinition** = nullptr);
 	
 	static My_PreferenceDefinition*
@@ -610,14 +610,14 @@ public:
 	static My_PreferenceDefinition*
 	findByTag	(Preferences_Tag);
 	
-	Preferences_Tag		tag;						//!< tag that describes this setting
-	CFRetainRelease		keyName;					//!< key used to store this in XML or CFPreferences
-	FourCharCode		keyValueType;				//!< property list type of key (e.g. typeCFArrayRef)
-	size_t				nonDictionaryValueSize;		//!< bytes required for data buffers that read/write this value
-	Preferences_Class	preferenceClass;			//!< the class of context that this tag is generally used in
+	Preferences_Tag			tag;						//!< tag that describes this setting
+	CFRetainRelease			keyName;					//!< key used to store this in XML or CFPreferences
+	FourCharCode			keyValueType;				//!< property list type of key (e.g. typeCFArrayRef)
+	size_t					nonDictionaryValueSize;		//!< bytes required for data buffers that read/write this value
+	Quills::Prefs::Class	preferenceClass;			//!< the class of context that this tag is generally used in
 	
 protected:
-	My_PreferenceDefinition		(Preferences_Tag, CFStringRef, FourCharCode, size_t, Preferences_Class);
+	My_PreferenceDefinition		(Preferences_Tag, CFStringRef, FourCharCode, size_t, Quills::Prefs::Class);
 
 private:
 	typedef std::map< Preferences_Tag, class My_PreferenceDefinition* >		DefinitionPtrByTag;
@@ -643,11 +643,11 @@ namespace {
 Preferences_Result		assertInitialized						();
 void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullptr,
 																 Boolean = false);
-Preferences_Result		contextGetData							(My_ContextInterfacePtr, Preferences_Class, Preferences_Tag,
+Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
 																 size_t, void*, size_t*);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
-Preferences_Result		copyClassDomainCFArray					(Preferences_Class, CFArrayRef&);
+Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef&);
 Preferences_Result		createAllPreferencesContextsFromDisk	();
 CFDictionaryRef			createDefaultPrefDictionary				();
 CFStringRef				createKeyAtIndex						(CFStringRef, UInt32);
@@ -657,19 +657,19 @@ My_AliasInfoPtr			findAlias								(Preferences_AliasID);
 Boolean					findAliasOnDisk							(Preferences_AliasID, AliasHandle*);
 CFIndex					findDomainIndexInArray					(CFArrayRef, CFStringRef);
 CFStringRef				findDomainUserSpecifiedName				(CFStringRef);
-Boolean					getDefaultContext						(Preferences_Class, My_ContextInterfacePtr&);
+Boolean					getDefaultContext						(Quills::Prefs::Class, My_ContextInterfacePtr&);
 Boolean					getFactoryDefaultsContext				(My_ContextInterfacePtr&);
 Preferences_Result		getFormatPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Preferences_Result		getGeneralPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
-Boolean					getListOfContexts						(Preferences_Class, My_FavoriteContextList*&);
+Boolean					getListOfContexts						(Quills::Prefs::Class, My_FavoriteContextList*&);
 Preferences_Result		getMacroPreference						(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
-Boolean					getNamedContext							(Preferences_Class, CFStringRef,
+Boolean					getNamedContext							(Quills::Prefs::Class, CFStringRef,
 																 My_ContextFavoritePtr&);
 Preferences_Result		getPreferenceDataInfo					(Preferences_Tag, CFStringRef&,
-																 FourCharCode&, size_t&, Preferences_Class&);
+																 FourCharCode&, size_t&, Quills::Prefs::Class&);
 Preferences_Result		getSessionPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
@@ -677,7 +677,7 @@ Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Pref
 Preferences_Result		getTranslationPreference				(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
 OSStatus				mergeInDefaultPreferences				();
-Preferences_Result		overwriteClassDomainCFArray				(Preferences_Class, CFArrayRef);
+Preferences_Result		overwriteClassDomainCFArray				(Quills::Prefs::Class, CFArrayRef);
 void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
 void					readMacTelnetArrayPreference			(CFStringRef, CFArrayRef&);
 OSStatus				readPreferencesDictionary				(CFDictionaryRef, Boolean);
@@ -716,17 +716,17 @@ Boolean						gInitialized = false;
 My_AliasInfoList&			gAliasList ()	{ static My_AliasInfoList x; return x; }
 My_ContextPtrLocker&		gMyContextPtrLocks ()	{ static My_ContextPtrLocker x; return x; }
 My_ContextReferenceLocker&	gMyContextRefLocks ()	{ static My_ContextReferenceLocker x; return x; }
-My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(kPreferences_ClassFactoryDefaults, createDefaultPrefDictionary()); return x; }
-My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassGeneral); return x; }
-My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassFormat); return x; }
+My_ContextInterface&		gFactoryDefaultsContext ()	{ static My_ContextCFDictionary x(Quills::Prefs::_FACTORY_DEFAULTS, createDefaultPrefDictionary()); return x; }
+My_ContextInterface&		gGeneralDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::GENERAL); return x; }
+My_ContextInterface&		gFormatDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::FORMAT); return x; }
 My_FavoriteContextList&		gFormatNamedContexts ()		{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassMacroSet); return x; }
+My_ContextInterface&		gMacroSetDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::MACRO_SET); return x; }
 My_FavoriteContextList&		gMacroSetNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassSession); return x; }
+My_ContextInterface&		gSessionDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::SESSION); return x; }
 My_FavoriteContextList&		gSessionNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTerminal); return x; }
+My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::TERMINAL); return x; }
 My_FavoriteContextList&		gTerminalNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x(kPreferences_ClassTranslation); return x; }
+My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::TRANSLATION); return x; }
 My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 
 } // anonymous namespace
@@ -925,315 +925,315 @@ Preferences_Init ()
 	//            and relied upon in other methods.  They are also used in
 	//            the PrefsConverter.  Check for consistency!
 	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
-										CFSTR("terminal-use-tabs"), kPreferences_ClassGeneral);
+										CFSTR("terminal-use-tabs"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavorite,
 									CFSTR("format-favorite"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassSession);
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTerminalFavorite,
 									CFSTR("terminal-favorite"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassSession);
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedTranslationFavorite,
 									CFSTR("translation-favorite"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassSession);
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagAutoCaptureToFile,
-										CFSTR("terminal-capture-auto-start"), kPreferences_ClassSession);
+										CFSTR("terminal-capture-auto-start"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagBackupFontName,
 									CFSTR("terminal-backup-font-family"), typeCFStringRef,
-									sizeof(Str255), kPreferences_ClassTranslation);
+									sizeof(Str255), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagBellSound,
 									CFSTR("terminal-when-bell-sound-basename"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassGeneral);
+									sizeof(CFStringRef), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileAlias,
 									CFSTR("terminal-capture-file-alias-id"), typeNetEvents_CFNumberRef,
-									sizeof(Preferences_AliasID), kPreferences_ClassSession);
+									sizeof(Preferences_AliasID), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileCreator,
 									CFSTR("terminal-capture-file-creator-code"), typeCFStringRef,
-									sizeof(OSType), kPreferences_ClassGeneral);
+									sizeof(OSType), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagCommandLine,
 									CFSTR("command-line-token-strings"), typeCFArrayRef,
-									sizeof(CFArrayRef), kPreferences_ClassSession);
+									sizeof(CFArrayRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCopySelectedText,
-										CFSTR("terminal-auto-copy-on-select"), kPreferences_ClassGeneral);
+										CFSTR("terminal-auto-copy-on-select"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagCopyTableThreshold,
 									CFSTR("spaces-per-tab"), typeNetEvents_CFNumberRef,
-									sizeof(UInt16), kPreferences_ClassGeneral);
+									sizeof(UInt16), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCursorBlinks,
-										CFSTR("terminal-cursor-blinking"), kPreferences_ClassGeneral);
+										CFSTR("terminal-cursor-blinking"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagCursorMovesPriorToDrops,
-										CFSTR("terminal-cursor-auto-move-on-drop"), kPreferences_ClassGeneral);
+										CFSTR("terminal-cursor-auto-move-on-drop"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagDataReceiveDoNotStripHighBit,
-										CFSTR("data-receive-do-not-strip-high-bit"), kPreferences_ClassTerminal);
+										CFSTR("data-receive-do-not-strip-high-bit"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagDataReadBufferSize,
 									CFSTR("data-receive-buffer-size-bytes"), typeNetEvents_CFNumberRef,
-									sizeof(SInt16), kPreferences_ClassSession);
+									sizeof(SInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagDontAutoClose,
-										CFSTR("no-auto-close"), kPreferences_ClassGeneral);
+										CFSTR("no-auto-close"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagDontAutoNewOnApplicationReopen,
-										CFSTR("no-auto-new"), kPreferences_ClassGeneral);
+										CFSTR("no-auto-new"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagEMACSMetaKey,
 									CFSTR("key-map-emacs-meta"), typeCFStringRef,
-									sizeof(Session_EMACSMetaKey), kPreferences_ClassTerminal);
+									sizeof(Session_EMACSMetaKey), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagFocusFollowsMouse,
-										CFSTR("terminal-focus-follows-mouse"), kPreferences_ClassGeneral);
+										CFSTR("terminal-focus-follows-mouse"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagFontCharacterWidthMultiplier,
 									CFSTR("terminal-font-width-multiplier"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFontName,
 									CFSTR("terminal-font-family"), typeCFStringRef,
-									sizeof(Str255), kPreferences_ClassFormat);
+									sizeof(Str255), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagFontSize,
 									CFSTR("terminal-font-size-points"), typeNetEvents_CFNumberRef,
-									sizeof(SInt16), kPreferences_ClassFormat);
+									sizeof(SInt16), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagIdleAfterInactivityInSeconds,
 									CFSTR("data-receive-idle-seconds"), typeNetEvents_CFNumberRef,
-									sizeof(UInt16), kPreferences_ClassSession);
+									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroAction, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-action"), typeCFStringRef,
-											sizeof(MacroManager_Action), kPreferences_ClassMacroSet);
+											sizeof(MacroManager_Action), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroContents, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-contents-string"), typeCFStringRef,
-											sizeof(CFStringRef), kPreferences_ClassMacroSet);
+											sizeof(CFStringRef), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKey, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-key"), typeCFStringRef,
-											sizeof(MacroManager_KeyID), kPreferences_ClassMacroSet);
+											sizeof(MacroManager_KeyID), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroKeyModifiers, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-modifiers"), typeCFArrayRef,
-											sizeof(UInt32), kPreferences_ClassMacroSet);
+											sizeof(UInt32), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::createIndexed(kPreferences_TagIndexedMacroName, kMacroManager_MaximumMacroSetSize,
 											CFSTR("macro-%02u-name-string"), typeCFStringRef,
-											sizeof(CFStringRef), kPreferences_ClassMacroSet);
+											sizeof(CFStringRef), Quills::Prefs::MACRO_SET);
 	My_PreferenceDefinition::create(kPreferences_TagKeepAlivePeriodInMinutes,
 									CFSTR("data-send-keepalive-period-minutes"), typeNetEvents_CFNumberRef,
-									sizeof(UInt16), kPreferences_ClassSession);
+									sizeof(UInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagKeyInterruptProcess,
 									CFSTR("command-key-interrupt-process"), typeCFStringRef,
-									sizeof(char), kPreferences_ClassSession);
+									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagKeyResumeOutput,
 									CFSTR("command-key-resume-output"), typeCFStringRef,
-									sizeof(char), kPreferences_ClassSession);
+									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagKeySuspendOutput,
 									CFSTR("command-key-suspend-output"), typeCFStringRef,
-									sizeof(char), kPreferences_ClassSession);
+									sizeof(char), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskAllowsForceQuit,
-										CFSTR("kiosk-force-quit-enabled"), kPreferences_ClassGeneral);
+										CFSTR("kiosk-force-quit-enabled"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsMenuBar,
-										CFSTR("kiosk-menu-bar-visible"), kPreferences_ClassGeneral);
+										CFSTR("kiosk-menu-bar-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsOffSwitch,
-										CFSTR("kiosk-off-switch-visible"), kPreferences_ClassGeneral);
+										CFSTR("kiosk-off-switch-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsScrollBar,
-										CFSTR("kiosk-scroll-bar-visible"), kPreferences_ClassGeneral);
+										CFSTR("kiosk-scroll-bar-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskUsesSuperfluousEffects,
-										CFSTR("kiosk-effects-enabled"), kPreferences_ClassGeneral);
+										CFSTR("kiosk-effects-enabled"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
-										CFSTR("window-terminal-toolbar-invisible"), kPreferences_ClassGeneral);
+										CFSTR("window-terminal-toolbar-invisible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagInfoWindowColumnOrdering,
 									CFSTR("window-sessioninfo-column-order"), typeCFArrayRef,
-									sizeof(CFArrayRef), kPreferences_ClassGeneral);
+									sizeof(CFArrayRef), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLineModeEnabled,
-										CFSTR("line-mode-enabled"), kPreferences_ClassSession);
+										CFSTR("line-mode-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoEnabled,
-										CFSTR("data-send-local-echo-enabled"), kPreferences_ClassSession);
+										CFSTR("data-send-local-echo-enabled"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagLocalEchoHalfDuplex,
-										CFSTR("data-send-local-echo-half-duplex"), kPreferences_ClassSession);
+										CFSTR("data-send-local-echo-half-duplex"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagMacrosMenuVisible,
-										CFSTR("menu-macros-visible"), kPreferences_ClassGeneral);
+										CFSTR("menu-macros-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEMACS,
 									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
-									sizeof(Boolean), kPreferences_ClassTerminal);
+									sizeof(Boolean), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagMapBackquote,
 									CFSTR("key-map-backquote"), typeCFStringRef/* keystroke string, e.g. blank "" or escape "\e" */,
-									sizeof(Boolean), kPreferences_ClassGeneral);
+									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagMapCarriageReturnToCRNull,
 									CFSTR("key-map-new-line"), typeCFStringRef,
-									sizeof(Boolean), kPreferences_ClassSession);
+									sizeof(Boolean), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapDeleteToBackspace,
 									CFSTR("key-map-delete"), typeCFStringRef,
-									sizeof(Boolean), kPreferences_ClassSession);
+									sizeof(Boolean), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagMapKeypadTopRowForVT220,
 									CFSTR("command-key-vt220-pf1")/* TEMPORARY - one of several key names used */, typeCFStringRef,
-									sizeof(Boolean), kPreferences_ClassTerminal);
+									sizeof(Boolean), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagMarginBell,
 									CFSTR("terminal-when-cursor-near-right-margin"), typeCFStringRef/* "bell", "ignore" */,
-									sizeof(Boolean), kPreferences_ClassGeneral);
+									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagMenuItemKeys,
-										CFSTR("menu-key-equivalents"), kPreferences_ClassGeneral);
+										CFSTR("menu-key-equivalents"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
 									CFSTR("new-means"), typeCFStringRef/* "shell", "dialog", "default" */,
-									sizeof(UInt32), kPreferences_ClassGeneral);
+									sizeof(UInt32), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNotification,
 									CFSTR("when-alert-in-background"), typeCFStringRef/* "alert", "animate", "badge", "ignore" */,
-									sizeof(SInt16), kPreferences_ClassGeneral);
+									sizeof(SInt16), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNotifyOfBeeps,
 									CFSTR("terminal-when-bell-in-background"), typeCFStringRef/* "notify", "ignore" */,
-									sizeof(Boolean), kPreferences_ClassGeneral);
+									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagPageKeysControlLocalTerminal,
 									CFSTR("command-key-terminal-end")/* TEMPORARY - one of several key names used */, typeCFStringRef,
-									sizeof(Boolean), kPreferences_ClassTerminal);
+									sizeof(Boolean), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagPasteBlockSize,
 									CFSTR("data-send-paste-block-size-bytes"), typeNetEvents_CFNumberRef,
-									sizeof(SInt16), kPreferences_ClassSession);
+									sizeof(SInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagPasteMethod,
 									CFSTR("data-send-paste-method"), typeCFStringRef,
-									sizeof(Clipboard_PasteMethod), kPreferences_ClassSession);
+									sizeof(Clipboard_PasteMethod), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagPureInverse,
-										CFSTR("terminal-inverse-selections"), kPreferences_ClassGeneral);
+										CFSTR("terminal-inverse-selections"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagRandomTerminalFormats,
-										CFSTR("terminal-format-random"), kPreferences_ClassGeneral);
+										CFSTR("terminal-format-random"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagServerHost,
 									CFSTR("server-host"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassSession);
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerPort,
 									CFSTR("server-port"), typeNetEvents_CFNumberRef,
-									sizeof(SInt16), kPreferences_ClassSession);
+									sizeof(SInt16), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerProtocol,
 									CFSTR("server-protocol"), typeCFStringRef,
-									sizeof(Session_Protocol), kPreferences_ClassSession);
+									sizeof(Session_Protocol), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerUserID,
 									CFSTR("server-user-id"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassSession);
+									sizeof(CFStringRef), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagSimplifiedUserInterface,
-										CFSTR("menu-command-set-simplified"), kPreferences_ClassGeneral);
+										CFSTR("menu-command-set-simplified"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTektronixMode,
 									CFSTR("tek-mode"), typeCFStringRef,
-									sizeof(VectorInterpreter_Mode), kPreferences_ClassSession);
+									sizeof(VectorInterpreter_Mode), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTektronixPAGEClearsScreen,
-										CFSTR("tek-page-clears-screen"), kPreferences_ClassSession);
+										CFSTR("tek-page-clears-screen"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalAnswerBackMessage,
 									CFSTR("terminal-emulator-answerback"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassTerminal);
+									sizeof(CFStringRef), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminalClearSavesLines,
-										CFSTR("terminal-clear-saves-lines"), kPreferences_ClassTerminal);
+										CFSTR("terminal-clear-saves-lines"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlack,
-											CFSTR("terminal-color-ansi-black-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-black-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIRed,
-											CFSTR("terminal-color-ansi-red-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-red-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIGreen,
-											CFSTR("terminal-color-ansi-green-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-green-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIYellow,
-											CFSTR("terminal-color-ansi-yellow-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-yellow-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlue,
-											CFSTR("terminal-color-ansi-blue-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-blue-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIMagenta,
-											CFSTR("terminal-color-ansi-magenta-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-magenta-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSICyan,
-											CFSTR("terminal-color-ansi-cyan-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-cyan-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIWhite,
-											CFSTR("terminal-color-ansi-white-normal-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-white-normal-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlackBold,
-											CFSTR("terminal-color-ansi-black-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-black-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIRedBold,
-											CFSTR("terminal-color-ansi-red-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-red-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIGreenBold,
-											CFSTR("terminal-color-ansi-green-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-green-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIYellowBold,
-											CFSTR("terminal-color-ansi-yellow-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-yellow-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIBlueBold,
-											CFSTR("terminal-color-ansi-blue-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-blue-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIMagentaBold,
-											CFSTR("terminal-color-ansi-magenta-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-magenta-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSICyanBold,
-											CFSTR("terminal-color-ansi-cyan-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-cyan-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorANSIWhiteBold,
-											CFSTR("terminal-color-ansi-white-bold-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-ansi-white-bold-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBlinkingForeground,
-											CFSTR("terminal-color-blinking-foreground-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-blinking-foreground-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBlinkingBackground,
-											CFSTR("terminal-color-blinking-background-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-blinking-background-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBoldForeground,
-											CFSTR("terminal-color-bold-foreground-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-bold-foreground-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorBoldBackground,
-											CFSTR("terminal-color-bold-background-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-bold-background-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorMatteBackground,
-											CFSTR("terminal-color-matte-background-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-matte-background-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorNormalForeground,
-											CFSTR("terminal-color-normal-foreground-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-normal-foreground-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createRGBColor(kPreferences_TagTerminalColorNormalBackground,
-											CFSTR("terminal-color-normal-background-rgb"), kPreferences_ClassFormat);
+											CFSTR("terminal-color-normal-background-rgb"), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalCursorType,
 									CFSTR("terminal-cursor-shape"),
 									typeCFStringRef/* "block", "underline", "thick underline", "vertical bar", "thick vertical bar" */,
-									sizeof(TerminalView_CursorType), kPreferences_ClassGeneral);
+									sizeof(TerminalView_CursorType), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalEmulatorType,
 									CFSTR("terminal-emulator-type"), typeCFStringRef,
-									sizeof(Terminal_Emulator), kPreferences_ClassTerminal);
+									sizeof(Terminal_Emulator), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminalLineWrap,
-										CFSTR("terminal-line-wrap"), kPreferences_ClassTerminal);
+										CFSTR("terminal-line-wrap"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginLeft,
 									CFSTR("terminal-margin-left-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginRight,
 									CFSTR("terminal-margin-right-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginTop,
 									CFSTR("terminal-margin-top-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginBottom,
 									CFSTR("terminal-margin-bottom-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingLeft,
 									CFSTR("terminal-padding-left-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingRight,
 									CFSTR("terminal-padding-right-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingTop,
 									CFSTR("terminal-padding-top-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalPaddingBottom,
 									CFSTR("terminal-padding-bottom-em"), typeNetEvents_CFNumberRef,
-									sizeof(Float32), kPreferences_ClassFormat);
+									sizeof(Float32), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalResizeAffectsFontSize,
 									CFSTR("terminal-resize-affects"), typeCFStringRef/* "screen" or "font" */,
-									sizeof(Boolean), kPreferences_ClassGeneral);
+									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenColumns,
 									CFSTR("terminal-screen-dimensions-columns"), typeNetEvents_CFNumberRef,
-									sizeof(UInt16), kPreferences_ClassTerminal);
+									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenRows,
 									CFSTR("terminal-screen-dimensions-rows"), typeNetEvents_CFNumberRef,
-									sizeof(UInt16), kPreferences_ClassTerminal);
+									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackRows,
 									CFSTR("terminal-scrollback-size-lines"), typeNetEvents_CFNumberRef,
-									sizeof(UInt16), kPreferences_ClassTerminal);
+									sizeof(UInt16), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackType,
 									CFSTR("terminal-scrollback-type"), typeCFStringRef,
-									sizeof(Terminal_ScrollbackType), kPreferences_ClassTerminal);
+									sizeof(Terminal_ScrollbackType), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScrollDelay,
 									CFSTR("terminal-scroll-delay-milliseconds"), typeNetEvents_CFNumberRef,
-									sizeof(EventTime), kPreferences_ClassTerminal);
+									sizeof(EventTime), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTextEncodingIANAName,
 									CFSTR("terminal-text-encoding-name"), typeCFStringRef,
-									sizeof(CFStringRef), kPreferences_ClassTranslation);
+									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagTextEncodingID,
 									CFSTR("terminal-text-encoding-id"), typeNetEvents_CFNumberRef,
-									sizeof(CFStringEncoding), kPreferences_ClassTranslation);
+									sizeof(CFStringEncoding), Quills::Prefs::TRANSLATION);
 	My_PreferenceDefinition::create(kPreferences_TagVisualBell,
 									CFSTR("terminal-when-bell"), typeCFStringRef/* "visual" or "audio+visual" */,
-									sizeof(Boolean), kPreferences_ClassGeneral);
+									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasClipboardShowing,
-										CFSTR("window-clipboard-visible"), kPreferences_ClassGeneral);
+										CFSTR("window-clipboard-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasCommandLineShowing,
-										CFSTR("window-commandline-visible"), kPreferences_ClassGeneral);
+										CFSTR("window-commandline-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasControlKeypadShowing,
-										CFSTR("window-controlkeys-visible"), kPreferences_ClassGeneral);
+										CFSTR("window-controlkeys-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasFunctionKeypadShowing,
-										CFSTR("window-functionkeys-visible"), kPreferences_ClassGeneral);
+										CFSTR("window-functionkeys-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasSessionInfoShowing,
-										CFSTR("window-sessioninfo-visible"), kPreferences_ClassGeneral);
+										CFSTR("window-sessioninfo-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagWasVT220KeypadShowing,
-										CFSTR("window-vt220keys-visible"), kPreferences_ClassGeneral);
+										CFSTR("window-vt220keys-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagWindowStackingOrigin,
 									CFSTR("window-terminal-position-pixels"), typeCFArrayRef/* 2 CFNumberRefs, pixels from top-left */,
-									sizeof(Point), kPreferences_ClassGeneral);
+									sizeof(Point), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
-										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), kPreferences_ClassTerminal);
+										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTerm256ColorsEnabled,
-										CFSTR("terminal-emulator-xterm-enable-color-256"), kPreferences_ClassTerminal);
+										CFSTR("terminal-emulator-xterm-enable-color-256"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermColorEnabled,
-										CFSTR("terminal-emulator-xterm-enable-color"), kPreferences_ClassTerminal);
+										CFSTR("terminal-emulator-xterm-enable-color"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermGraphicsEnabled,
-										CFSTR("terminal-emulator-xterm-enable-graphics"), kPreferences_ClassTerminal);
+										CFSTR("terminal-emulator-xterm-enable-graphics"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTermWindowAlterationEnabled,
-										CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences"), kPreferences_ClassTerminal);
+										CFSTR("terminal-emulator-xterm-enable-window-alteration-sequences"), Quills::Prefs::TERMINAL);
 	
 	// to ensure that the rest of the application can depend on its
 	// known keys being defined, ALWAYS merge in default values for
@@ -1401,7 +1401,7 @@ Preferences_NewCloneContext		(Preferences_ContextRef		inBaseContext,
 								 Boolean					inForceDetach)
 {
 	My_ContextAutoLocker		basePtr(gMyContextPtrLocks(), inBaseContext);
-	Preferences_Class			baseClass = kPreferences_ClassGeneral;
+	Quills::Prefs::Class		baseClass = Quills::Prefs::GENERAL;
 	Preferences_ContextRef		result = nullptr;
 	Boolean						isDetached = (0 == CFStringGetLength(basePtr->returnName()));
 	
@@ -1479,7 +1479,7 @@ reference to the new context is returned.
 (3.1)
 */
 Preferences_ContextRef
-Preferences_NewContext	(Preferences_Class		inClass)
+Preferences_NewContext	(Quills::Prefs::Class	inClass)
 {
 	Preferences_ContextRef		result = nullptr;
 	
@@ -1547,7 +1547,7 @@ WARNING:	Despite the name, the 2nd parameter does
 (3.1)
 */
 Preferences_ContextRef
-Preferences_NewContextFromFavorites		(Preferences_Class		inClass,
+Preferences_NewContextFromFavorites		(Quills::Prefs::Class	inClass,
 										 CFStringRef			inNameOrNullToAutoGenerateUniqueName,
 										 CFStringRef			inDomainNameIfInitializingOrNull)
 {
@@ -1642,7 +1642,7 @@ WARNING:	It is typical for a file to contain several
 (4.0)
 */
 Preferences_ContextRef
-Preferences_NewContextFromXMLData	(Preferences_Class		inClass,
+Preferences_NewContextFromXMLData	(Quills::Prefs::Class	inClass,
 									 CFDataRef				inData)
 {
 	Preferences_ContextRef		result = nullptr;
@@ -1711,7 +1711,7 @@ using the data in an XML file, as specified by an FSRef.
 (4.0)
 */
 Preferences_ContextRef
-Preferences_NewContextFromXMLFileRef	(Preferences_Class		inClass,
+Preferences_NewContextFromXMLFileRef	(Quills::Prefs::Class	inClass,
 										 FSRef const&			inFile)
 {
 	Preferences_ContextRef		result = nullptr;
@@ -1738,7 +1738,7 @@ using the data in an XML file, as specified by a URL.
 (4.0)
 */
 Preferences_ContextRef
-Preferences_NewContextFromXMLFileURL	(Preferences_Class		inClass,
+Preferences_NewContextFromXMLFileURL	(Quills::Prefs::Class	inClass,
 										 CFURLRef				inFileURL)
 {
 	Preferences_ContextRef		result = nullptr;
@@ -2182,7 +2182,7 @@ Preferences_ContextDeleteData	(Preferences_ContextRef		inContext,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0;
-	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::GENERAL;
 	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
@@ -2291,7 +2291,7 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0;
 	Boolean					isDefault = false;
-	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::GENERAL;
 	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
@@ -2581,15 +2581,15 @@ Preferences_ContextRepositionRelativeToSelf		(Preferences_ContextRef		inContext,
 
 /*!
 Returns the class ID used to create the specified context.
-"kPreferences_ClassGeneral" is returned if there is no way
+"Quills::Prefs::GENERAL" is returned if there is no way
 to tell what the class is.
 
 (4.0)
 */
-Preferences_Class
+Quills::Prefs::Class
 Preferences_ContextReturnClass		(Preferences_ContextRef		inContext)
 {
-	Preferences_Class		result = kPreferences_ClassGeneral;
+	Quills::Prefs::Class	result = Quills::Prefs::GENERAL;
 	My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
 	
 	
@@ -2830,7 +2830,7 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0;
-	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::GENERAL;
 	Preferences_Result		result = kPreferences_ResultOK;
 	
 	
@@ -2842,27 +2842,27 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 		
 		switch (dataClass)
 		{
-		case kPreferences_ClassFormat:
+		case Quills::Prefs::FORMAT:
 			result = setFormatPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
-		case kPreferences_ClassGeneral:
+		case Quills::Prefs::GENERAL:
 			result = setGeneralPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
-		case kPreferences_ClassMacroSet:
+		case Quills::Prefs::MACRO_SET:
 			result = setMacroPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
-		case kPreferences_ClassSession:
+		case Quills::Prefs::SESSION:
 			result = setSessionPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
-		case kPreferences_ClassTerminal:
+		case Quills::Prefs::TERMINAL:
 			result = setTerminalPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
-		case kPreferences_ClassTranslation:
+		case Quills::Prefs::TRANSLATION:
 			result = setTranslationPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
@@ -2994,7 +2994,7 @@ if any other error occurs
 (3.1)
 */
 Preferences_Result
-Preferences_CreateContextNameArray	(Preferences_Class		inClass,
+Preferences_CreateContextNameArray	(Quills::Prefs::Class	inClass,
 									 CFArrayRef&			outNewArrayOfNewCFStrings)
 {
 	Preferences_Result			result = kPreferences_ResultGenericFailure;
@@ -3058,9 +3058,9 @@ if any other error occurs
 (3.1)
 */
 Preferences_Result
-Preferences_CreateUniqueContextName		(Preferences_Class	inClass,
-										 CFStringRef&		outNewName,
-										 CFStringRef		inBaseNameOrNull)
+Preferences_CreateUniqueContextName		(Quills::Prefs::Class	inClass,
+										 CFStringRef&			outNewName,
+										 CFStringRef			inBaseNameOrNull)
 {
 	Preferences_Result			result = kPreferences_ResultGenericFailure;
 	My_FavoriteContextList*		listPtr = nullptr;
@@ -3191,7 +3191,7 @@ the list may contain a partial set of valid contexts.
 (3.1)
 */
 Boolean
-Preferences_GetContextsInClass	(Preferences_Class							inClass,
+Preferences_GetContextsInClass	(Quills::Prefs::Class						inClass,
 								 std::vector< Preferences_ContextRef >&		outContextsList)
 {
 	Boolean					result = false;
@@ -3246,7 +3246,7 @@ Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 	CFStringRef					keyName = nullptr;
 	FourCharCode				keyValueType = '----';
 	size_t						actualSize = 0;
-	Preferences_Class			dataClass = kPreferences_ClassGeneral;
+	Quills::Prefs::Class		dataClass = Quills::Prefs::GENERAL;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
@@ -3265,7 +3265,7 @@ Preferences_GetData		(Preferences_Tag	inDataPreferenceTag,
 
 /*!
 Returns the default context for the specified class.
-Preferences written to the "kPreferences_ClassGeneral"
+Preferences written to the "Quills::Prefs::GENERAL"
 default context are in fact global settings.
 
 Despite the given class, the resulting context could
@@ -3288,7 +3288,7 @@ if "inClass" is not valid
 */
 Preferences_Result
 Preferences_GetDefaultContext	(Preferences_ContextRef*	outContextPtr,
-								 Preferences_Class			inClass)
+								 Quills::Prefs::Class		inClass)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
 	
@@ -3390,7 +3390,7 @@ if at least one of the context names could not be retrieved
 (3.1)
 */
 Preferences_Result
-Preferences_InsertContextNamesInMenu	(Preferences_Class		inClass,
+Preferences_InsertContextNamesInMenu	(Quills::Prefs::Class	inClass,
 										 MenuRef				inoutMenuRef,
 										 MenuItemIndex			inAfterItemIndex,
 										 UInt32					inInitialIndent,
@@ -3488,7 +3488,7 @@ Preferences_SetData		(Preferences_Tag	inDataPreferenceTag,
 	CFStringRef					keyName = nullptr;
 	FourCharCode				keyValueType = '----';
 	size_t						actualSize = 0;
-	Preferences_Class			dataClass = kPreferences_ClassGeneral;
+	Quills::Prefs::Class		dataClass = Quills::Prefs::GENERAL;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
@@ -3648,7 +3648,7 @@ Constructor.  Used only by subclasses.
 (3.1)
 */
 My_ContextInterface::
-My_ContextInterface		(Preferences_Class		inClass)
+My_ContextInterface		(Quills::Prefs::Class	inClass)
 :
 selfRef(REINTERPRET_CAST(this, Preferences_ContextRef)),
 _preferencesClass(inClass),
@@ -3762,7 +3762,7 @@ indicates what preference keys should be used.
 
 (3.1)
 */
-Preferences_Class
+Quills::Prefs::Class
 My_ContextInterface::
 returnClass ()
 const
@@ -3963,7 +3963,7 @@ attempt to write data will throw an exception.
 (3.1)
 */
 My_ContextCFDictionary::
-My_ContextCFDictionary	(Preferences_Class		inClass,
+My_ContextCFDictionary	(Quills::Prefs::Class	inClass,
 						 CFDictionaryRef		inDictionary)
 :
 My_ContextInterface(inClass),
@@ -3984,7 +3984,7 @@ Constructor.  See Preferences_NewContext().
 (3.1)
 */
 My_ContextCFDictionary::
-My_ContextCFDictionary	(Preferences_Class			inClass,
+My_ContextCFDictionary	(Quills::Prefs::Class		inClass,
 						 CFMutableDictionaryRef		inDictionaryOrNull)
 :
 My_ContextInterface(inClass),
@@ -4113,12 +4113,12 @@ My_ContextCFDictionary::
 unitTest ()
 {
 	Boolean						result = true;
-	My_ContextCFDictionary*		testObjectPtr = new My_ContextCFDictionary(kPreferences_ClassGeneral);
+	My_ContextCFDictionary*		testObjectPtr = new My_ContextCFDictionary(Quills::Prefs::GENERAL);
 	CFArrayRef					keyListCFArray = nullptr;
 	
 	
 	result &= Console_Assert("class is set correctly",
-								kPreferences_ClassGeneral == testObjectPtr->returnClass());
+								Quills::Prefs::GENERAL == testObjectPtr->returnClass());
 	result &= Console_Assert("name is set correctly",
 								kCFCompareEqualTo == CFStringCompare
 														(CFSTR(""), testObjectPtr->returnName(),
@@ -4147,7 +4147,7 @@ Constructor.  See Preferences_GetDefaultContext().
 (3.1)
 */
 My_ContextDefault::
-My_ContextDefault	(Preferences_Class	inClass)
+My_ContextDefault	(Quills::Prefs::Class	inClass)
 :
 My_ContextInterface(inClass),
 _contextName(CFSTR("Default")/* TEMPORARY - LOCALIZE  THIS */),
@@ -4248,12 +4248,12 @@ My_ContextDefault::
 unitTest ()
 {
 	Boolean				result = true;
-	My_ContextDefault*	testObjectPtr = new My_ContextDefault(kPreferences_ClassGeneral);
+	My_ContextDefault*	testObjectPtr = new My_ContextDefault(Quills::Prefs::GENERAL);
 	CFArrayRef			keyListCFArray = nullptr;
 	
 	
 	result &= Console_Assert("class is set correctly",
-								kPreferences_ClassGeneral == testObjectPtr->returnClass());
+								Quills::Prefs::GENERAL == testObjectPtr->returnClass());
 	result &= Console_Assert("name is set correctly",
 								kCFCompareEqualTo == CFStringCompare
 														(CFSTR("Default"), testObjectPtr->returnName(),
@@ -4286,9 +4286,9 @@ Constructor.  See Preferences_NewContextFromFavorites().
 (3.1)
 */
 My_ContextFavorite::
-My_ContextFavorite	(Preferences_Class	inClass,
-					 CFStringRef		inFavoriteName,
-					 CFStringRef		inDomainName)
+My_ContextFavorite	(Quills::Prefs::Class	inClass,
+					 CFStringRef			inFavoriteName,
+					 CFStringRef			inDomainName)
 :
 My_ContextInterface(inClass),
 _contextName(inFavoriteName),
@@ -4311,8 +4311,8 @@ preferences are updated to list the new domain.
 */
 CFStringRef
 My_ContextFavorite::
-createDomainName	(Preferences_Class	inClass,
-					 CFStringRef		inName)
+createDomainName	(Quills::Prefs::Class	inClass,
+					 CFStringRef			inName)
 {
 	CFStringRef				result = nullptr;
 	My_ContextFavoritePtr	favoritePtr = nullptr;
@@ -4480,30 +4480,30 @@ application space, regardless of class).
 */
 CFStringRef
 My_ContextFavorite::
-returnClassDomainNamePrefix		(Preferences_Class	inClass)
+returnClassDomainNamePrefix		(Quills::Prefs::Class	inClass)
 {
 	CFStringRef		result = nullptr;
 	
 	
 	switch (inClass)
 	{
-	case kPreferences_ClassFormat:
+	case Quills::Prefs::FORMAT:
 		result = kMy_PreferencesSubDomainFormats;
 		break;
 	
-	case kPreferences_ClassMacroSet:
+	case Quills::Prefs::MACRO_SET:
 		result = kMy_PreferencesSubDomainMacros;
 		break;
 	
-	case kPreferences_ClassSession:
+	case Quills::Prefs::SESSION:
 		result = kMy_PreferencesSubDomainSessions;
 		break;
 	
-	case kPreferences_ClassTerminal:
+	case Quills::Prefs::TERMINAL:
 		result = kMy_PreferencesSubDomainTerminals;
 		break;
 	
-	case kPreferences_ClassTranslation:
+	case Quills::Prefs::TRANSLATION:
 		result = kMy_PreferencesSubDomainTranslations;
 		break;
 	
@@ -4685,8 +4685,8 @@ Information on failures is printed to the console.
 */
 Boolean
 My_ContextFavorite::
-unitTest	(Preferences_Class	inClass,
-			 CFStringRef		inName)
+unitTest	(Quills::Prefs::Class	inClass,
+			 CFStringRef			inName)
 {
 	Boolean					result = true;
 	My_ContextFavorite*		testObjectPtr = new My_ContextFavorite(inClass, inName);
@@ -4725,7 +4725,7 @@ My_PreferenceDefinition	(Preferences_Tag		inTag,
 						 CFStringRef			inKeyName,
 						 FourCharCode			inKeyValueType,
 						 size_t					inNonDictionaryValueSize,
-						 Preferences_Class		inClass)
+						 Quills::Prefs::Class	inClass)
 :
 tag(inTag),
 keyName(inKeyName),
@@ -4766,7 +4766,7 @@ create	(Preferences_Tag			inTag,
 		 CFStringRef				inKeyName,
 		 FourCharCode				inKeyValueType,
 		 size_t						inNonDictionaryValueSize,
-		 Preferences_Class			inClass,
+		 Quills::Prefs::Class		inClass,
 		 My_PreferenceDefinition**	outResultPtrPtrOrNull)
 {
 	My_PreferenceDefinition*	newPtr = new My_PreferenceDefinition(inTag, inKeyName, inKeyValueType,
@@ -4798,7 +4798,7 @@ inline void
 My_PreferenceDefinition::
 createFlag	(Preferences_Tag			inTag,
 			 CFStringRef				inKeyName,
-			 Preferences_Class			inClass,
+			 Quills::Prefs::Class		inClass,
 			 My_PreferenceDefinition**	outResultPtrPtrOrNull)
 {
 	create(inTag, inKeyName, typeNetEvents_CFBooleanRef, sizeof(Boolean), inClass,
@@ -4828,7 +4828,7 @@ createIndexed	(Preferences_Tag		inTag,
 				 CFStringRef			inKeyNameTemplate,
 				 FourCharCode			inKeyValueType,
 				 size_t					inNonDictionaryValueSize,
-				 Preferences_Class		inClass)
+				 Quills::Prefs::Class	inClass)
 {
 	for (Preferences_Index i = 1; i <= inNumberOfIndexedKeys; ++i)
 	{
@@ -4857,7 +4857,7 @@ inline void
 My_PreferenceDefinition::
 createRGBColor	(Preferences_Tag			inTag,
 				 CFStringRef				inKeyName,
-				 Preferences_Class			inClass,
+				 Quills::Prefs::Class		inClass,
 				 My_PreferenceDefinition**	outResultPtrPtrOrNull)
 {
 	create(inTag, inKeyName, typeCFArrayRef, sizeof(RGBColor), inClass, outResultPtrPtrOrNull);
@@ -4951,7 +4951,7 @@ Internal version of Preferences_ContextGetData().
 */
 Preferences_Result
 contextGetData		(My_ContextInterfacePtr		inContextPtr,
-					 Preferences_Class			inDataClass,
+					 Quills::Prefs::Class		inDataClass,
 					 Preferences_Tag			inDataPreferenceTag,
 					 size_t						inDataStorageSize,
 					 void*						outDataStorage,
@@ -4962,27 +4962,27 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 	
 	switch (inDataClass)
 	{
-	case kPreferences_ClassFormat:
+	case Quills::Prefs::FORMAT:
 		result = getFormatPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
-	case kPreferences_ClassGeneral:
+	case Quills::Prefs::GENERAL:
 		result = getGeneralPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
-	case kPreferences_ClassMacroSet:
+	case Quills::Prefs::MACRO_SET:
 		result = getMacroPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
-	case kPreferences_ClassSession:
+	case Quills::Prefs::SESSION:
 		result = getSessionPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
-	case kPreferences_ClassTerminal:
+	case Quills::Prefs::TERMINAL:
 		result = getTerminalPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
-	case kPreferences_ClassTranslation:
+	case Quills::Prefs::TRANSLATION:
 		result = getTranslationPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
@@ -5141,8 +5141,8 @@ if the array was not found
 (3.1)
 */
 Preferences_Result
-copyClassDomainCFArray	(Preferences_Class	inClass,
-						 CFArrayRef&		outCFArrayOfCFStrings)
+copyClassDomainCFArray	(Quills::Prefs::Class	inClass,
+						 CFArrayRef&			outCFArrayOfCFStrings)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
 	
@@ -5153,32 +5153,32 @@ copyClassDomainCFArray	(Preferences_Class	inClass,
 	// figure out which MacTelnet preferences key holds the relevant list of domains
 	switch (inClass)
 	{
-	case kPreferences_ClassGeneral:
+	case Quills::Prefs::GENERAL:
 		// not applicable
 		result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
-	case kPreferences_ClassFormat:
+	case Quills::Prefs::FORMAT:
 		readMacTelnetArrayPreference(CFSTR("favorite-formats"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
-	case kPreferences_ClassMacroSet:
+	case Quills::Prefs::MACRO_SET:
 		readMacTelnetArrayPreference(CFSTR("favorite-macro-sets"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
-	case kPreferences_ClassSession:
+	case Quills::Prefs::SESSION:
 		readMacTelnetArrayPreference(CFSTR("favorite-sessions"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
-	case kPreferences_ClassTerminal:
+	case Quills::Prefs::TERMINAL:
 		readMacTelnetArrayPreference(CFSTR("favorite-terminals"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
-	case kPreferences_ClassTranslation:
+	case Quills::Prefs::TRANSLATION:
 		readMacTelnetArrayPreference(CFSTR("favorite-translations"), outCFArrayOfCFStrings);
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
@@ -5208,7 +5208,7 @@ IMPORTANT:	Only do this once, preferably at startup.
 Preferences_Result
 createAllPreferencesContextsFromDisk ()
 {
-	typedef std::vector< Preferences_Class >	PrefClassList;
+	typedef std::vector< Quills::Prefs::Class >		PrefClassList;
 	static Boolean			gWasCalled = false;
 	PrefClassList			allClassesSupportingCollections;
 	Preferences_Result		result = kPreferences_ResultOK;
@@ -5219,11 +5219,11 @@ createAllPreferencesContextsFromDisk ()
 	
 	// for every class that can have collections, create ALL contexts
 	// (based on saved names) for that class, so that the list is current
-	allClassesSupportingCollections.push_back(kPreferences_ClassSession);
-	allClassesSupportingCollections.push_back(kPreferences_ClassMacroSet);
-	allClassesSupportingCollections.push_back(kPreferences_ClassTerminal);
-	allClassesSupportingCollections.push_back(kPreferences_ClassTranslation);
-	allClassesSupportingCollections.push_back(kPreferences_ClassFormat);
+	allClassesSupportingCollections.push_back(Quills::Prefs::SESSION);
+	allClassesSupportingCollections.push_back(Quills::Prefs::MACRO_SET);
+	allClassesSupportingCollections.push_back(Quills::Prefs::TERMINAL);
+	allClassesSupportingCollections.push_back(Quills::Prefs::TRANSLATION);
+	allClassesSupportingCollections.push_back(Quills::Prefs::FORMAT);
 	for (PrefClassList::const_iterator toClass = allClassesSupportingCollections.begin();
 			toClass != allClassesSupportingCollections.end(); ++toClass)
 	{
@@ -5533,7 +5533,7 @@ the specified class.  Returns true unless this fails.
 (3.1)
 */
 Boolean
-getDefaultContext	(Preferences_Class			inClass,
+getDefaultContext	(Quills::Prefs::Class		inClass,
 					 My_ContextInterfacePtr&	outContextPtr)
 {
 	Boolean		result = true;
@@ -5542,27 +5542,27 @@ getDefaultContext	(Preferences_Class			inClass,
 	outContextPtr = nullptr;
 	switch (inClass)
 	{
-	case kPreferences_ClassFormat:
+	case Quills::Prefs::FORMAT:
 		outContextPtr = &(gFormatDefaultContext());
 		break;
 	
-	case kPreferences_ClassGeneral:
+	case Quills::Prefs::GENERAL:
 		outContextPtr = &(gGeneralDefaultContext());
 		break;
 	
-	case kPreferences_ClassMacroSet:
+	case Quills::Prefs::MACRO_SET:
 		outContextPtr = &(gMacroSetDefaultContext());
 		break;
 	
-	case kPreferences_ClassSession:
+	case Quills::Prefs::SESSION:
 		outContextPtr = &(gSessionDefaultContext());
 		break;
 	
-	case kPreferences_ClassTerminal:
+	case Quills::Prefs::TERMINAL:
 		outContextPtr = &(gTerminalDefaultContext());
 		break;
 	
-	case kPreferences_ClassTranslation:
+	case Quills::Prefs::TRANSLATION:
 		outContextPtr = &(gTranslationDefaultContext());
 		break;
 	
@@ -5624,15 +5624,15 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 	
 	if (nullptr != outDataPtr)
 	{
-		CFStringRef			keyName = nullptr;
-		FourCharCode		keyValueType = '----';
-		Preferences_Class	dataClass = kPreferences_ClassFormat;
+		CFStringRef				keyName = nullptr;
+		FourCharCode			keyValueType = '----';
+		Quills::Prefs::Class	dataClass = Quills::Prefs::FORMAT;
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
-			assert(dataClass == kPreferences_ClassFormat);
+			assert(dataClass == Quills::Prefs::FORMAT);
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
@@ -5813,15 +5813,15 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 	
 	if (nullptr != outDataPtr)
 	{
-		CFStringRef			keyName = nullptr;
-		FourCharCode		keyValueType = '----';
-		Preferences_Class	dataClass = kPreferences_ClassGeneral;
+		CFStringRef				keyName = nullptr;
+		FourCharCode			keyValueType = '----';
+		Quills::Prefs::Class	dataClass = Quills::Prefs::GENERAL;
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
-			assert(dataClass == kPreferences_ClassGeneral);
+			assert(dataClass == Quills::Prefs::GENERAL);
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
@@ -6268,7 +6268,7 @@ IMPORTANT:	This list will only contain contexts created with
 (3.1)
 */
 Boolean
-getListOfContexts	(Preferences_Class				inClass,
+getListOfContexts	(Quills::Prefs::Class			inClass,
 					 My_FavoriteContextList*&		outListPtr)
 {
 	Boolean		result = true;
@@ -6277,27 +6277,27 @@ getListOfContexts	(Preferences_Class				inClass,
 	outListPtr = nullptr;
 	switch (inClass)
 	{
-	case kPreferences_ClassFormat:
+	case Quills::Prefs::FORMAT:
 		outListPtr = &gFormatNamedContexts();
 		break;
 	
-	case kPreferences_ClassMacroSet:
+	case Quills::Prefs::MACRO_SET:
 		outListPtr = &gMacroSetNamedContexts();
 		break;
 	
-	case kPreferences_ClassSession:
+	case Quills::Prefs::SESSION:
 		outListPtr = &gSessionNamedContexts();
 		break;
 	
-	case kPreferences_ClassTerminal:
+	case Quills::Prefs::TERMINAL:
 		outListPtr = &gTerminalNamedContexts();
 		break;
 	
-	case kPreferences_ClassTranslation:
+	case Quills::Prefs::TRANSLATION:
 		outListPtr = &gTranslationNamedContexts();
 		break;
 	
-	case kPreferences_ClassGeneral:
+	case Quills::Prefs::GENERAL:
 	default:
 		// ???
 		result = false;
@@ -6339,15 +6339,15 @@ getMacroPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 	
 	if (nullptr != outDataPtr)
 	{
-		CFStringRef			keyName = nullptr;
-		FourCharCode		keyValueType = '----';
-		Preferences_Class	dataClass = kPreferences_ClassMacroSet;
+		CFStringRef				keyName = nullptr;
+		FourCharCode			keyValueType = '----';
+		Quills::Prefs::Class	dataClass = Quills::Prefs::MACRO_SET;
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
-			assert(dataClass == kPreferences_ClassMacroSet);
+			assert(dataClass == Quills::Prefs::MACRO_SET);
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
@@ -6521,7 +6521,7 @@ IMPORTANT:	There will be only one context per class and
 (3.1)
 */
 Boolean
-getNamedContext		(Preferences_Class			inClass,
+getNamedContext		(Quills::Prefs::Class		inClass,
 					 CFStringRef				inName,
 					 My_ContextFavoritePtr&		outContextPtr)
 {
@@ -6560,9 +6560,9 @@ been “varied” (by adding the index), so that the proper key name
 is returned.
 
 If no particular class dictionary is required, then "outClass"
-will be "kPreferences_ClassGeneral".  In this case ONLY, you
-may use Core Foundation Preferences to store or retrieve the
-key value directly in the application’s globals.  However, keys
+will be "Quills::Prefs::GENERAL".  In this case ONLY, you may
+use Core Foundation Preferences to store or retrieve the key
+value directly in the application’s globals.  However, keys
 intended for storage in user Favorites will have a different
 class, and must be set in a specific domain.
 
@@ -6581,7 +6581,7 @@ getPreferenceDataInfo	(Preferences_Tag		inTag,
 						 CFStringRef&			outKeyName,
 						 FourCharCode&			outKeyValueType,
 						 size_t&				outNonDictionaryValueSize,
-						 Preferences_Class&		outClass)
+						 Quills::Prefs::Class&	outClass)
 {
 	Preferences_Result			result = kPreferences_ResultOK;
 	My_PreferenceDefinition*	definitionPtr = nullptr;
@@ -6635,15 +6635,15 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 	
 	if (nullptr != outDataPtr)
 	{
-		CFStringRef			keyName = nullptr;
-		FourCharCode		keyValueType = '----';
-		Preferences_Class	dataClass = kPreferences_ClassSession;
+		CFStringRef				keyName = nullptr;
+		FourCharCode			keyValueType = '----';
+		Quills::Prefs::Class	dataClass = Quills::Prefs::SESSION;
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
-			assert(dataClass == kPreferences_ClassSession);
+			assert(dataClass == Quills::Prefs::SESSION);
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
@@ -7020,15 +7020,15 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 	
 	if (nullptr != outDataPtr)
 	{
-		CFStringRef			keyName = nullptr;
-		FourCharCode		keyValueType = '----';
-		Preferences_Class	dataClass = kPreferences_ClassTerminal;
+		CFStringRef				keyName = nullptr;
+		FourCharCode			keyValueType = '----';
+		Quills::Prefs::Class	dataClass = Quills::Prefs::TERMINAL;
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
-			assert(dataClass == kPreferences_ClassTerminal);
+			assert(dataClass == Quills::Prefs::TERMINAL);
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
@@ -7326,15 +7326,15 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 	
 	if (nullptr != outDataPtr)
 	{
-		CFStringRef			keyName = nullptr;
-		FourCharCode		keyValueType = '----';
-		Preferences_Class	dataClass = kPreferences_ClassTranslation;
+		CFStringRef				keyName = nullptr;
+		FourCharCode			keyValueType = '----';
+		Quills::Prefs::Class	dataClass = Quills::Prefs::TRANSLATION;
 		
 		
 		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 		if (kPreferences_ResultOK == result)
 		{
-			assert(dataClass == kPreferences_ClassTranslation);
+			assert(dataClass == Quills::Prefs::TRANSLATION);
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
@@ -7469,8 +7469,8 @@ if the given preference class is unknown or does not have an array value
 (3.1)
 */
 Preferences_Result
-overwriteClassDomainCFArray		(Preferences_Class	inClass,
-								 CFArrayRef			inCFArrayOfCFStrings)
+overwriteClassDomainCFArray		(Quills::Prefs::Class	inClass,
+								 CFArrayRef				inCFArrayOfCFStrings)
 {
 	Preferences_Result		result = kPreferences_ResultOK;
 	
@@ -7478,27 +7478,27 @@ overwriteClassDomainCFArray		(Preferences_Class	inClass,
 	// figure out which MacTelnet preferences key should hold this list of domains
 	switch (inClass)
 	{
-	case kPreferences_ClassFormat:
+	case Quills::Prefs::FORMAT:
 		setMacTelnetPreference(CFSTR("favorite-formats"), inCFArrayOfCFStrings);
 		break;
 	
-	case kPreferences_ClassMacroSet:
+	case Quills::Prefs::MACRO_SET:
 		setMacTelnetPreference(CFSTR("favorite-macro-sets"), inCFArrayOfCFStrings);
 		break;
 	
-	case kPreferences_ClassSession:
+	case Quills::Prefs::SESSION:
 		setMacTelnetPreference(CFSTR("favorite-sessions"), inCFArrayOfCFStrings);
 		break;
 	
-	case kPreferences_ClassTerminal:
+	case Quills::Prefs::TERMINAL:
 		setMacTelnetPreference(CFSTR("favorite-terminals"), inCFArrayOfCFStrings);
 		break;
 	
-	case kPreferences_ClassTranslation:
+	case Quills::Prefs::TRANSLATION:
 		setMacTelnetPreference(CFSTR("favorite-translations"), inCFArrayOfCFStrings);
 		break;
 	
-	case kPreferences_ClassGeneral:
+	case Quills::Prefs::GENERAL:
 	default:
 		// ???
 		result = kPreferences_ResultUnknownTagOrClass;
@@ -7674,7 +7674,7 @@ readPreferencesDictionary	(CFDictionaryRef	inPreferenceDictionary,
 							 Boolean			inMerge)
 {
 	My_ContextInterfacePtr		contextPtr = nullptr;
-	Boolean						gotContext = getDefaultContext(kPreferences_ClassGeneral, contextPtr);
+	Boolean						gotContext = getDefaultContext(Quills::Prefs::GENERAL, contextPtr);
 	
 	
 	assert(gotContext);
@@ -7813,13 +7813,13 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0L;
-	Preferences_Class		dataClass = kPreferences_ClassFormat;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::FORMAT;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
-		assert(dataClass == kPreferences_ClassFormat);
+		assert(dataClass == Quills::Prefs::FORMAT);
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
@@ -7946,13 +7946,13 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0L;
-	Preferences_Class		dataClass = kPreferences_ClassGeneral;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::GENERAL;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
-		assert(dataClass == kPreferences_ClassGeneral);
+		assert(dataClass == Quills::Prefs::GENERAL);
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
@@ -8444,13 +8444,13 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0L;
-	Preferences_Class		dataClass = kPreferences_ClassMacroSet;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::MACRO_SET;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
-		assert(dataClass == kPreferences_ClassMacroSet);
+		assert(dataClass == Quills::Prefs::MACRO_SET);
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
@@ -8760,13 +8760,13 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0L;
-	Preferences_Class		dataClass = kPreferences_ClassSession;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::SESSION;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
-		assert(dataClass == kPreferences_ClassSession);
+		assert(dataClass == Quills::Prefs::SESSION);
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
@@ -9003,13 +9003,13 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0L;
-	Preferences_Class		dataClass = kPreferences_ClassTerminal;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::TERMINAL;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
-		assert(dataClass == kPreferences_ClassTerminal);
+		assert(dataClass == Quills::Prefs::TERMINAL);
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
@@ -9241,13 +9241,13 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 	CFStringRef				keyName = nullptr;
 	FourCharCode			keyValueType = '----';
 	size_t					actualSize = 0L;
-	Preferences_Class		dataClass = kPreferences_ClassTranslation;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::TRANSLATION;
 	
 	
 	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
 	if (kPreferences_ResultOK == result)
 	{
-		assert(dataClass == kPreferences_ClassTranslation);
+		assert(dataClass == Quills::Prefs::TRANSLATION);
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
@@ -9748,7 +9748,7 @@ unitTest002_Begin ()
 	Boolean		result = true;
 	
 	
-	result = My_ContextFavorite::unitTest(kPreferences_ClassSession, CFSTR("__test_session__"));
+	result = My_ContextFavorite::unitTest(Quills::Prefs::SESSION, CFSTR("__test_session__"));
 	return result;
 }// unitTest002_Begin
 
@@ -9769,7 +9769,7 @@ unitTest003_Begin ()
 	Boolean		result = true;
 	
 	
-	result = My_ContextFavorite::unitTest(kPreferences_ClassFormat, CFSTR("__test_format__"));
+	result = My_ContextFavorite::unitTest(Quills::Prefs::FORMAT, CFSTR("__test_format__"));
 	return result;
 }// unitTest003_Begin
 
