@@ -10,15 +10,15 @@ __version__ = '4.0.0'
 import Quills
 
 def script(pathname):
-	"""script(pathname) -> None
-	
-	Asynchronously open a session from the given script file, by
-	running the script!  Raises an exception on failure.
-	
-	"""
-	args = [pathname];
-	session = Quills.Session(args)
+    """script(pathname) -> None
+    
+    Asynchronously open a session from the given script file, by
+    running the script!  Raise an exception on failure.
+    
+    """
+    args = [pathname]
+    session = Quills.Session(args)
 
 def _test():
-	import doctest, pymactelnet.HandleFile
-	return doctest.testmod(pymactelnet.HandleFile)
+    import doctest, pymactelnet.file.open
+    return doctest.testmod(pymactelnet.file.open)
