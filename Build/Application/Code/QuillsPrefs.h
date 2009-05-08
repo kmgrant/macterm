@@ -45,11 +45,26 @@
 #include <string>
 #include <vector>
 
+// MacTelnet includes
+#include <PreferencesContextRef.typedef.h>
+
 
 
 #pragma mark Public Methods
 namespace Quills {
 
+#if SWIG
+%feature("docstring",
+"GENERAL -- Preferences not typically found in collections.\n\
+FORMAT -- Font and color settings.\n\
+MACRO_SET -- Actions mapped to keyboard short-cuts.\n\
+SESSION -- How to reach, and interact with, a resource.\n\
+TERMINAL -- Characteristics of the emulator and its data storage.\n\
+TRANSLATION -- Text encoding.\n\
+_FACTORY_DEFAULTS -- Represents the DefaultPreferences.plist,\n\
+for internal use only.\n\
+") Prefs;
+#endif
 class Prefs
 {
 public:
@@ -63,18 +78,61 @@ public:
 		TRANSLATION = 5,
 		_FACTORY_DEFAULTS = 100,
 	};
+	
 #if SWIG
 %feature("docstring",
-"Returns a list of collection names for preferences saved in the\n\
+"Create a new collection of the given type.\n\
+\n\
+Currently, only in-memory (temporary) collection are supported\n\
+through this interface.\n\
+") Prefs;
+#endif
+	Prefs	(Class	inClass);
+	~Prefs	();
+	
+#if SWIG
+%feature("kwargs") define_macro;
+%feature("docstring",
+"Add or modify a macro in this collection.\n\
+\n\
+The index is at least 1, and specifies which macro in the set\n\
+to change.\n\
+\n\
+The keyword arguments are optional; any that are given will be\n\
+assigned as attributes of the macro.  Currently, not all\n\
+possible attributes can be set from scripts.\n\
+\n\
+Any given strings must use UTF-8 encoding.\n\
+") define_macro;
+#endif
+	void define_macro	(unsigned int		index_in_set,
+						 std::string		name = "",
+						 std::string		contents = "");
+	
+#if SWIG
+%feature("docstring",
+"Return a list of collection names for preferences saved in the\n\
 given category, if any.\n\
 \n\
 Each string is in UTF-8 encoding.\n\
 ") list_collections;
 #endif
-	static std::vector< std::string > list_collections (Class	inClass);
+	static std::vector< std::string > list_collections (Class	of_class);
+	
+#if SWIG
+%feature("docstring",
+"Change the active macro set to the specified collection,\n\
+which should be of type MACRO_SET.\n\
+\n\
+Since changes to collections are detected, you may continue to\n\
+modify the specified macros, and anything that depends on them\n\
+(such as a Macros menu) will update automatically.\n\
+") set_current_macros;
+#endif
+	static void set_current_macros	(Prefs&		in_set);
 
 private:
-	Prefs (); // class is not instantiated
+	Preferences_ContextRef		_context;	//!< manages access to settings
 };
 
 } // namespace Quills

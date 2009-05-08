@@ -20,7 +20,7 @@ import os, string
 import pymactelnet.file.open
 import pymactelnet.url.open
 try:
-    from Quills import Base, Events, Session, Terminal
+    from Quills import Base, Events, Prefs, Session, Terminal
 except ImportError, err:
     import sys, os
     print >>sys.stderr, "Unable to import Quills."
@@ -134,6 +134,13 @@ print "MacTelnet: Full initialization complete."
 
 # the following line would run a command every time you start up...
 #session_1 = Session("progname -arg1 -arg2 -arg3 val3 -arg4 val4".split())
+
+# the following would define some custom macros immediately...
+#my_set = Prefs(Prefs.MACRO_SET)
+#my_set.define_macro(1, name="my first macro!", contents="some text")
+#my_set.define_macro(2, name="my second macro!", contents="yet another macro")
+#my_set.define_macro(3, name="my third macro!", contents="this is different")
+#Prefs.set_current_macros(my_set)
 
 # start user interaction (WARNING: will not return until quitting time!)
 Events.run_loop()

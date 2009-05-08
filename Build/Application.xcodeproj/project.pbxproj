@@ -457,6 +457,7 @@
 		0A69E52D0DDBAD9A00DA7874 /* CustomPaths.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = CustomPaths.xcconfig; path = Shared/CustomPaths.xcconfig; sourceTree = "<group>"; };
 		0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MacHelpUtilities.h; path = Shared/Code/MacHelpUtilities.h; sourceTree = "<group>"; };
 		0A6E225906CF42F0004AC0A4 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/KioskPasswordDialog.nib; sourceTree = "<group>"; };
+		0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PreferencesContextRef.typedef.h; path = Application/Code/PreferencesContextRef.typedef.h; sourceTree = "<group>"; };
 		0A719D33055D95EE009B0A88 /* SpacingConstants.r */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.rez; name = SpacingConstants.r; path = Application/Resources/SpacingConstants.r; sourceTree = "<group>"; };
 		0A719D51055D963A009B0A88 /* GeneralResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GeneralResources.h; path = Application/Resources/GeneralResources.h; sourceTree = "<group>"; };
 		0A719D53055D963A009B0A88 /* MenuResources.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MenuResources.h; path = Application/Resources/MenuResources.h; sourceTree = "<group>"; };
@@ -1117,6 +1118,7 @@
 			isa = PBXGroup;
 			children = (
 				0A4604120554376100ACDF3A /* Preferences.h */,
+				0A6F285B0FB3E45B00B30E69 /* PreferencesContextRef.typedef.h */,
 				0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */,
 				0A4604160554376100ACDF3A /* PrefPanelGeneral.h */,
 				0AF4B5450A1D61C700D187A3 /* PrefPanelKiosk.h */,

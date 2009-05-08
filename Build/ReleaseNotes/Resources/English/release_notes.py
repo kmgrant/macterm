@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090507',
     '20090506',
     '20090505',
     '20090504',
@@ -232,6 +233,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090507': [
+		'Added Prefs class instance to Quills, allowing basic collections of settings to be managed from Python.',
+		'Added Prefs.define_macro() to Quills, allowing macros to be set from Python.',
+		'Added Prefs.set_current_macros() to Quills, allowing the current macro set to be changed from Python.',
+	],
 	'20090506': [
 		'Terminal view cursor now attempts to render with knowledge of actual colors at its position (such as custom ANSI colors).',
 	],

@@ -32,6 +32,7 @@
 #include "UniversalDefines.h"
 
 // standard-C++ includes
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -39,7 +40,12 @@
 #include <Carbon/Carbon.h>
 #include <StringUtilities.h>
 
+// library includes
+#include <CFRetainRelease.h>
+#include <Console.h>
+
 // MacTelnet includes
+#include "MacroManager.h"
 #include "Preferences.h"
 #include "QuillsPrefs.h"
 
@@ -48,20 +54,116 @@
 #pragma mark Public Methods
 namespace Quills {
 
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+Prefs::
+Prefs	(Prefs::Class	of_class)
+:
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+_context(nullptr)
+{
+	try
+	{
+		_context = Preferences_NewContext(of_class);
+	}
+	catch (...)
+	{
+		// WARNING: The constructors for objects that are exposed to scripts
+		// cannot throw exceptions, because ownership rules imply an object
+		// is always created and released.  Instead, the object “exists” in
+		// a state that simply triggers exceptions when certain methods are
+		// later called on the object.  This also helps in cases where an
+		// object may asynchronously become invalid.
+		Console_Warning(Console_WriteLine, "unexpected exception in Prefs constructor");
+		_context = nullptr;
+	}
+}// default constructor
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+Prefs::
+~Prefs ()
+{
+	if (nullptr != _context) Preferences_ReleaseContext(&_context);
+}// destructor
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+void
+Prefs::define_macro		(unsigned int		index_in_set,
+						 std::string		name,
+						 std::string		contents)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	
+	
+	if ((index_in_set < 1) || (index_in_set > kMacroManager_MaximumMacroSetSize))
+	{
+		throw std::invalid_argument("macro index is out of range");
+	}
+	
+	if (false == name.empty())
+	{
+		CFRetainRelease		nameObject(CFStringCreateWithCString(kCFAllocatorDefault, name.c_str(), kCFStringEncodingUTF8),
+										true/* is retained */);
+		CFStringRef			nameCFString = nameObject.returnCFStringRef();
+		
+		
+		prefsResult = Preferences_ContextSetData(this->_context, Preferences_ReturnTagVariantForIndex
+																	(kPreferences_TagIndexedMacroName, index_in_set),
+													sizeof(nameCFString), &nameCFString);;
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_WriteValue("failed to set the macro name, Preferences module result", prefsResult);
+			throw std::invalid_argument("failed to set the macro name");
+		}
+	}
+	
+	if (false == contents.empty())
+	{
+		CFRetainRelease		contentsObject(CFStringCreateWithCString(kCFAllocatorDefault, contents.c_str(), kCFStringEncodingUTF8),
+											true/* is retained */);
+		CFStringRef			contentsCFString = contentsObject.returnCFStringRef();
+		
+		
+		prefsResult = Preferences_ContextSetData(this->_context, Preferences_ReturnTagVariantForIndex
+																	(kPreferences_TagIndexedMacroContents, index_in_set),
+													sizeof(contentsCFString), &contentsCFString);;
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_WriteValue("failed to set the macro contents, Preferences module result", prefsResult);
+			throw std::invalid_argument("failed to set the macro contents");
+		}
+	}
+}// define_macro
+
+
 /*!
 See header or "pydoc" for Python docstrings.
 
 (3.1)
 */
 std::vector< std::string >
-Prefs::list_collections		(Prefs::Class	inForWhichClass)
+Prefs::list_collections		(Prefs::Class	of_class)
 {
 	std::vector< std::string >	result;
 	CFArrayRef					nameCFArray = nullptr;
 	Preferences_Result			prefsError = kPreferences_ResultOK;
 	
 	
-	prefsError = Preferences_CreateContextNameArray(inForWhichClass, nameCFArray);
+	prefsError = Preferences_CreateContextNameArray(of_class, nameCFArray);
 	if (kPreferences_ResultOK == prefsError)
 	{
 		CFIndex const	kCount = CFArrayGetCount(nameCFArray);
@@ -88,6 +190,18 @@ Prefs::list_collections		(Prefs::Class	inForWhichClass)
 	
 	return result;
 }// list_collections
+
+
+/*!
+See header or "pydoc" for Python docstrings.
+
+(4.0)
+*/
+void
+Prefs::set_current_macros		(Prefs&		in_set)
+{
+	MacroManager_SetCurrentMacros(in_set._context);
+}// set_current_macros
 
 
 } // namespace Quills

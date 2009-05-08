@@ -373,6 +373,8 @@ typedef Preferences_Tag		Preferences_Change;
 
 #pragma mark Types
 
+#include "PreferencesContextRef.typedef.h"
+
 /*!
 A zero-based preferences index is added to the tag value to
 generate a unique tag that can be hashed.  So, a tag must have
@@ -383,17 +385,6 @@ Always use Preferences_ReturnTagVariantForIndex() to produce a
 valid tag out of a base tag and an index.
 */
 typedef UInt8		Preferences_Index;
-
-/*!
-A context defines where to start looking for preferences data, in
-what might be a string of possible contexts in a directed graph.
-
-When setting data, however, a context is absolute; every context
-has a specific place on disk where its data is stored, so setting
-a preference in a specific context states exactly where the data
-should go.
-*/
-typedef struct Preferences_OpaqueContext*	Preferences_ContextRef;
 
 /*!
 The context passed to the listeners of global preference changes.
