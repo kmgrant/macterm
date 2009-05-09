@@ -83,7 +83,7 @@ public:
 %feature("docstring",
 "Create a new collection of the given type.\n\
 \n\
-Currently, only in-memory (temporary) collection are supported\n\
+Currently, only in-memory (temporary) collections are supported\n\
 through this interface.\n\
 ") Prefs;
 #endif
@@ -122,18 +122,47 @@ Each string is in UTF-8 encoding.\n\
 #if SWIG
 %feature("docstring",
 "Change the active macro set to the specified collection,\n\
-which should be of type MACRO_SET.\n\
+which should be a Prefs instance of type MACRO_SET.\n\
 \n\
 Since changes to collections are detected, you may continue to\n\
 modify the specified macros, and anything that depends on them\n\
 (such as a Macros menu) will update automatically.\n\
 ") set_current_macros;
 #endif
-	static void set_current_macros	(Prefs&		in_set);
+	
+	// only intended for direct use by the SWIG wrapper
+	static void _set_current_macros	(Prefs&);
 
 private:
 	Preferences_ContextRef		_context;	//!< manages access to settings
 };
+
+#if SWIG
+%extend Prefs {
+	// Any routines that accept a Python-generated object
+	// for unspecified future use must be able to retain
+	// that reference.  These method wrappers help to keep
+	// the Python stuff contained here, relying on internal
+	// methods for most of the implementation.
+	
+	static void set_current_macros	(PyObject*		new_set)
+	{
+		void*				objectPtr = nullptr;
+		Quills::Prefs*		prefsPtr = nullptr;
+		int					conversionResult = 0;
+		
+		
+		// inform SWIG that it should no longer allow Python to free this object
+		conversionResult = SWIG_ConvertPtr(new_set, &objectPtr, SWIGTYPE_p_Quills__Prefs, SWIG_POINTER_DISOWN |  0 );
+		if (false == SWIG_IsOK(conversionResult))
+		{
+			throw std::invalid_argument("specified set does not appear to be a Prefs object");
+		}
+		prefsPtr = REINTERPRET_CAST(objectPtr, Quills::Prefs*);
+		Quills::Prefs::_set_current_macros(*prefsPtr);
+	}
+} // %extend
+#endif
 
 } // namespace Quills
 

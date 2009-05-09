@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090509',
     '20090507',
     '20090506',
     '20090505',
@@ -233,6 +234,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090509': [
+		'Macro importing has been restored, though only implicitly by opening a ".macros" file from the Finder.',
+	],
 	'20090507': [
 		'Added Prefs class instance to Quills, allowing basic collections of settings to be managed from Python.',
 		'Added Prefs.define_macro() to Quills, allowing macros to be set from Python.',

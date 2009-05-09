@@ -198,10 +198,10 @@ See header or "pydoc" for Python docstrings.
 (4.0)
 */
 void
-Prefs::set_current_macros		(Prefs&		in_set)
+Prefs::_set_current_macros		(Prefs&		in_set)
 {
 	MacroManager_SetCurrentMacros(in_set._context);
-}// set_current_macros
+}// _set_current_macros
 
 
 } // namespace Quills

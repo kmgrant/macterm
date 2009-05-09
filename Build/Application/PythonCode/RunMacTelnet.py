@@ -89,6 +89,7 @@ Session.on_fileopen_call(pymactelnet.file.open.script, 'tcl')
 Session.on_fileopen_call(pymactelnet.file.open.script, 'tcsh')
 Session.on_fileopen_call(pymactelnet.file.open.script, 'tool')
 Session.on_fileopen_call(pymactelnet.file.open.script, 'zsh')
+Session.on_fileopen_call(pymactelnet.file.open.macros, 'macros')
 
 # if desired, override what string is sent after keep-alive timers expire
 #Session.set_keep_alive_transmission(".")
