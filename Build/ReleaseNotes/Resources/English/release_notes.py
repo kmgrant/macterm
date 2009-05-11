@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090510',
     '20090509',
     '20090507',
     '20090506',
@@ -234,6 +235,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090510': [
+		'Fixed enabling/disabling of menu items representing Preferences collections.',
+	],
 	'20090509': [
 		'Macro importing has been restored, though only implicitly by opening a ".macros" file from the Finder.',
 	],

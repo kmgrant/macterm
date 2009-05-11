@@ -1092,14 +1092,14 @@ adjustMenuItem	(MenuRef		inMenu,
 
 
 /*!
-Automatically sets the enabled state and, as appropriate,
-the mark, item text, etc. for a menu item using only its
-command ID.  Both primary and secondary menus are updated,
-which means that menus specific to simplified-user-interface
-mode are automatically adjusted, too.
+Automatically sets the enabled state and, as appropriate, the
+mark, item text, etc. for a menu item using only its command ID.
+Both primary and secondary menus are updated, which means that
+menus specific to simplified-user-interface mode are
+automatically adjusted, too.
 
-For this method to work, you must have previously associated
-a state tracking procedure with the item using
+For this method to work, you must have previously associated a
+state tracking procedure with the item using
 MenuBar_SetMenuItemStateTrackerProcByCommandID().
 
 This is called by MenuBar_SetUpMenuItemState(), and is probably
@@ -1117,7 +1117,28 @@ adjustMenuItemByCommandID	(UInt32		inCommandID)
 	
 	
 	getMenusAndMenuItemIndicesByCommandID(inCommandID, &menu1, &menu2, &itemIndex1, &itemIndex2);
-	adjustMenuItem(menu1, itemIndex1, inCommandID);
+	if (nullptr != menu1)
+	{
+		MenuRef			foundMenu = nullptr;
+		MenuItemIndex	foundIndex = 0;
+		OSStatus		error = noErr;
+		
+		
+		adjustMenuItem(menu1, itemIndex1, inCommandID);
+		
+		// some commands are repeated several times (e.g. for Favorites lists),
+		// requiring iteration to find all of the items that have this command ID
+		for (MenuItemIndex i = 2; ((noErr == error) && (i < 50/* arbitrary */)); ++i)
+		{
+			error = GetIndMenuItemWithCommandID(menu1/* starting point */, inCommandID,
+												i/* which matching item to return */,
+												&foundMenu, &foundIndex);
+			if (noErr == error)
+			{
+				adjustMenuItem(foundMenu, foundIndex, inCommandID);
+			}
+		}
+	}
 	
 	// some commands also appear in Simplified User Interface mode, but in different places
 	if ((itemIndex2 != itemIndex1) || (menu2 != menu1)) adjustMenuItem(menu2, itemIndex2, inCommandID);
