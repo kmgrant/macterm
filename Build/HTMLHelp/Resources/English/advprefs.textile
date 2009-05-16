@@ -124,6 +124,8 @@ table(deftable).
 (defbottom). |(desc)\2. This window should be displayed when the application launches.|
 (deftop). |(key). @window-terminal-position-pixels@|(types). _array of integer_: two values, horizontal and vertical pixel offsets from main display top-left|
 (defbottom). |(desc)\2. Where to place the first terminal window, and where to start for "Arrange All in Front".|
+(deftop). |(key). @window-terminal-tab-edge@|(types). _string_: @top@, @bottom@, @left@ or @right@| 
+(defbottom). |(desc)\2. When tabs are enabled, this side of the window should be used.|
 
 h3(#sessions). Session Collections
 

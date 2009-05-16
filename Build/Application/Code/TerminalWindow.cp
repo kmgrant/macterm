@@ -159,7 +159,8 @@ struct TerminalWindow
 	CarbonEventHandlerWrap*		tabDragHandlerPtr;			// used to track drags that enter tabs
 	WindowGroupRef				tabAndWindowGroup;			// WindowGroupRef; forces the window and its tab to move together
 	Float32						tabOffsetInPixels;			// used to position the tab drawer, if any
-	Float32						tabWidthInPixels;			// used to position and size the tab drawer, if any
+	Float32						tabWidthInPixels;			// used to position and size a top or bottom tab drawer, if any
+	Float32						tabHeightInPixels;			// used to position and size a left or right tab drawer, if any
 	HIToolbarRef				toolbar;					// customizable toolbar of icons at the top
 	CFRetainRelease				toolbarItemBell;			// if present, enable/disable bell item
 	CFRetainRelease				toolbarItemLED1;			// if present, LED #1 status item
@@ -339,6 +340,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 	IconRef&					gScrollLockOffIcon ()			{ static IconRef x = createScrollLockOffIcon(); return x; }
 	IconRef&					gScrollLockOnIcon ()			{ static IconRef x = createScrollLockOnIcon(); return x; }
 	Float32						gDefaultTabWidth = 0.0;		// set later
+	Float32						gDefaultTabHeight = 0.0;	// set later
 }
 
 
@@ -590,9 +592,10 @@ TerminalWindow_GetScreenDimensions	(TerminalWindowRef	inRef,
 
 /*!
 Returns the tab width, in pixels, of the specified terminal
-window.  If the window has never been explicitly sized, some
-default width will be returned.  Otherwise, the size most
-recently set with TerminalWindow_SetTabWidth() will be returned.
+window (or height, for left/right tabs).  If the window has never
+been explicitly sized, some default size will be returned.
+Otherwise, the size most recently set with
+TerminalWindow_SetTabWidth() will be returned.
 
 \retval kTerminalWindow_ResultOK
 if there are no errors
@@ -601,13 +604,13 @@ if there are no errors
 if the specified terminal window is unrecognized
 
 \retval kTerminalWindow_ResultGenericFailure
-if no window has ever had a tab; "outWidthInPixels" will be 0
+if no window has ever had a tab; "outWidthHeightInPixels" will be 0
 
 (3.1)
 */
 TerminalWindow_Result
 TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
-							 Float32&			outWidthInPixels)
+							 Float32&			outWidthHeightInPixels)
 {
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
 	TerminalWindow_Result		result = kTerminalWindow_ResultOK;
@@ -617,12 +620,30 @@ TerminalWindow_GetTabWidth	(TerminalWindowRef	inRef,
 	{
 		result = kTerminalWindow_ResultInvalidReference;
 		Console_Warning(Console_WriteValueAddress, "attempt to TerminalWindow_GetTabWidth() with invalid reference", inRef);
-		outWidthInPixels = 0;
+		outWidthHeightInPixels = 0;
 	}
 	else
 	{
-		if (0.0 == ptr->tabWidthInPixels) result = kTerminalWindow_ResultGenericFailure;
-		outWidthInPixels = ptr->tabWidthInPixels;
+		OptionBits				preferredEdge = kWindowEdgeTop;
+		Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
+																	sizeof(preferredEdge), &preferredEdge);
+		
+		
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			preferredEdge = kWindowEdgeTop;
+		}
+		
+		if ((kWindowEdgeLeft == preferredEdge) || (kWindowEdgeRight == preferredEdge))
+		{
+			if (0.0 == ptr->tabHeightInPixels) result = kTerminalWindow_ResultGenericFailure;
+			outWidthHeightInPixels = ptr->tabHeightInPixels;
+		}
+		else
+		{
+			if (0.0 == ptr->tabWidthInPixels) result = kTerminalWindow_ResultGenericFailure;
+			outWidthHeightInPixels = ptr->tabWidthInPixels;
+		}
 	}
 	
 	return result;
@@ -1285,7 +1306,16 @@ TerminalWindow_SetTabAppearance		(TerminalWindowRef		inRef,
 			result = SetDrawerParent(tabWindow, ptr->window);
 			if (noErr == result)
 			{
-				result = SetDrawerPreferredEdge(tabWindow, kWindowEdgeTop);
+				OptionBits				preferredEdge = kWindowEdgeTop;
+				Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
+																			sizeof(preferredEdge), &preferredEdge);
+				
+				
+				if (kPreferences_ResultOK != prefsResult)
+				{
+					preferredEdge = kWindowEdgeTop;
+				}
+				result = SetDrawerPreferredEdge(tabWindow, preferredEdge);
 			}
 		}
 		
@@ -1405,7 +1435,7 @@ only; see also TerminalWindow_SetTabPosition().
 
 You can pass "kTerminalWindow_DefaultMetaTabWidth" to
 indicate that the tab should be resized to its ordinary
-(default) width.
+(default) width or height.
 
 Note that since this affects only a single window, this is
 not the proper API for general tab manipulation; it is a
@@ -1447,19 +1477,35 @@ TerminalWindow_SetTabWidth	(TerminalWindowRef	inRef,
 		{
 			// drawers are managed in terms of start and end offsets as opposed to
 			// a “width”, so some roundabout calculations are done to find offsets
-			HIWindowRef		tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
-			HIWindowRef		parentWindow = GetDrawerParent(tabWindow);
-			Rect			currentParentBounds;
-			OSStatus		error = noErr;
-			float			leadingOffset = kWindowOffsetUnchanged;
-			float			trailingOffset = kWindowOffsetUnchanged;
+			HIWindowRef				tabWindow = REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef);
+			HIWindowRef				parentWindow = GetDrawerParent(tabWindow);
+			Rect					currentParentBounds;
+			OSStatus				error = noErr;
+			float					leadingOffset = kWindowOffsetUnchanged;
+			float					trailingOffset = kWindowOffsetUnchanged;
+			OptionBits				preferredEdge = kWindowEdgeTop;
+			Preferences_Result		prefsResult = Preferences_GetData(kPreferences_TagWindowTabPreferredEdge,
+																		sizeof(preferredEdge), &preferredEdge);
 			
+			
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				preferredEdge = kWindowEdgeTop;
+			}
 			
 			error = GetWindowBounds(parentWindow, kWindowStructureRgn, &currentParentBounds);
 			assert_noerr(error);
 			leadingOffset = (float)ptr->tabOffsetInPixels;
-			trailingOffset = (float)(currentParentBounds.right - currentParentBounds.left -
-										inWidthInPixels - leadingOffset);
+			if ((kWindowEdgeLeft == preferredEdge) || (kWindowEdgeRight == preferredEdge))
+			{
+				trailingOffset = (float)(currentParentBounds.bottom - currentParentBounds.top -
+											inWidthInPixels - leadingOffset);
+			}
+			else
+			{
+				trailingOffset = (float)(currentParentBounds.right - currentParentBounds.left -
+											inWidthInPixels - leadingOffset);
+			}
 			
 			// force a “resize” to cause the tab position to update immediately
 			// (TEMPORARY: is there a better way to do this?)
@@ -1629,6 +1675,7 @@ tabDragHandlerPtr(nullptr),
 tabAndWindowGroup(nullptr),
 tabOffsetInPixels(0.0),
 tabWidthInPixels(0.0),
+tabHeightInPixels(0.0),
 toolbar(nullptr),
 toolbarItemBell(),
 toolbarItemLED1(),
@@ -2641,8 +2688,10 @@ createTabWindow		(TerminalWindowPtr		inPtr)
 				error = GetWindowBounds(tabWindow, kWindowStructureRgn, &currentBounds);
 				assert_noerr(error);
 				gDefaultTabWidth = STATIC_CAST(currentBounds.right - currentBounds.left, Float32);
+				gDefaultTabHeight = STATIC_CAST(currentBounds.bottom - currentBounds.top, Float32);
 			}
 			inPtr->tabWidthInPixels = gDefaultTabWidth;
+			inPtr->tabHeightInPixels = gDefaultTabHeight;
 			
 			// enable drag tracking so that tabs can auto-activate during drags
 			error = SetAutomaticControlDragTrackingEnabledForWindow(tabWindow, true/* enabled */);

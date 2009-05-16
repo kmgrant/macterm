@@ -207,7 +207,8 @@ enum
 	kPreferences_TagWasFunctionKeypadShowing			= 'wvfk',	//!< data: "Boolean"
 	kPreferences_TagWasSessionInfoShowing				= 'wvsi',	//!< data: "Boolean"
 	kPreferences_TagWasVT220KeypadShowing				= 'wvvk',	//!< data: "Boolean"
-	kPreferences_TagWindowStackingOrigin				= 'wino'	//!< data: "Point"
+	kPreferences_TagWindowStackingOrigin				= 'wino',	//!< data: "Point"
+	kPreferences_TagWindowTabPreferredEdge				= 'tedg'	//!< data: "OptionBits", a "kWindowEdge..." constant
 };
 
 /*!

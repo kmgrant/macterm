@@ -1224,6 +1224,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagWindowStackingOrigin,
 									CFSTR("window-terminal-position-pixels"), typeCFArrayRef/* 2 CFNumberRefs, pixels from top-left */,
 									sizeof(Point), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::create(kPreferences_TagWindowTabPreferredEdge,
+									CFSTR("window-terminal-tab-edge"), typeCFStringRef/* "top", "bottom", "left" or "right" */,
+									sizeof(OptionBits), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagVT100FixLineWrappingBug,
 										CFSTR("terminal-emulator-vt100-fix-line-wrapping-bug"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagXTerm256ColorsEnabled,
@@ -6240,6 +6243,42 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagWindowTabPreferredEdge:
+					assert(typeCFStringRef == keyValueType);
+					{
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							OptionBits*		storedValuePtr = REINTERPRET_CAST(outDataPtr, OptionBits*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("left"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kWindowEdgeLeft;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("right"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kWindowEdgeRight;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("bottom"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kWindowEdgeBottom;
+							}
+							else
+							{
+								*storedValuePtr = kWindowEdgeTop;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
 				default:
 					// unrecognized tag
 					result = kPreferences_ResultUnknownTagOrClass;
@@ -8410,6 +8449,34 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 							CFRelease(topCoord), topCoord = nullptr;
 						}
 						CFRelease(leftCoord), leftCoord = nullptr;
+					}
+				}
+				break;
+			
+			case kPreferences_TagWindowTabPreferredEdge:
+				{
+					OptionBits const	data = *(REINTERPRET_CAST(inDataPtr, OptionBits const*));
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (data)
+					{
+					case kWindowEdgeLeft:
+						setMacTelnetPreference(keyName, CFSTR("left"));
+						break;
+					
+					case kWindowEdgeRight:
+						setMacTelnetPreference(keyName, CFSTR("right"));
+						break;
+					
+					case kWindowEdgeBottom:
+						setMacTelnetPreference(keyName, CFSTR("bottom"));
+						break;
+					
+					case kWindowEdgeTop:
+					default:
+						setMacTelnetPreference(keyName, CFSTR("top"));
+						break;
 					}
 				}
 				break;

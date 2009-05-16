@@ -237,6 +237,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090515': [
+		'Added a hidden preference (accessible through the "defaults" program) to set the preferred window edge for tabs.',
 		'MacTelnet Help expanded to describe more low-level preference keys, including those of macro sets.',
 	],
 	'20090510': [

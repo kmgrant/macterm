@@ -516,6 +516,8 @@
 		<integer>40</integer>
 		<integer>30</integer>
 	</array>
+	<key>window-terminal-tab-edge</key>
+	<string>top</string>
 	<key>window-terminal-toolbar-invisible</key>
 	<false />
 	<key>window-vt220keys-visible</key>
