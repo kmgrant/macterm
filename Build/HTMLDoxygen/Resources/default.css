@@ -29,6 +29,10 @@ body{
 	}
 }
 
+img{
+	border-width:		0;
+}
+
 .element-remover{
 	background:			transparent url('DisclosureTriangleOpen.gif') no-repeat;
 	cursor:				pointer;
@@ -39,27 +43,6 @@ body{
 	background:			transparent url('DisclosureTriangleClosed.gif') no-repeat;
 	cursor:				pointer;
 	padding-left:		20px;
-}
-
-a:link,
-a:visited,
-a:active,
-a:hover{
-	margin-top:			0;
-	border-top:			0;
-	padding-top:		0;
-	height:				auto;
-	padding-bottom:		0;
-	border-bottom:		solid transparent 0.1em;
-	margin-bottom:		0;
-	
-	margin-left:		0;
-	border-left:		0;
-	padding-left:		0.2em;
-	width:				auto;
-	padding-right:		0.2em;
-	border-right:		0;
-	margin-right:		0;
 }
 
 a{
@@ -82,12 +65,12 @@ a{
 
 a:link{
 	background:			transparent; /* okay because the body image color is known */
-	color:				blue;
+	color:				#3365aa;
 }
 
 a:visited{
 	background:			transparent; /* okay because the body image color is known */
-	color:				#5533cc;
+	color:				#035;
 }
 
 a:active{
@@ -103,9 +86,13 @@ a:hover{
 	
 	border-bottom-color:#999;
 	
+	-moz-border-radius-topleft:			0.6em;
 	-webkit-border-top-left-radius:		0.6em;
+	-moz-border-radius-topright:		0.6em;
 	-webkit-border-top-right-radius:	0.6em;
+	-moz-border-radius-bottomleft:		0.6em;
 	-webkit-border-bottom-left-radius:	0.6em;
+	-moz-border-radius-bottomright:		0.6em;
 	-webkit-border-bottom-right-radius:	0.6em;
 }
 
@@ -117,7 +104,7 @@ a:hover{
 }
 
 .navigation{
-	background-color:	black; /* okay because the body image color is known */
+	background-color:	black;
 	color:				white;
 	font-family:		Optima, sans-serif;
 	font-size:			small;
@@ -128,19 +115,28 @@ a:hover{
 	
 	margin-top:			0;
 	border-top:			0;
-	padding-top:		1.5em;
+	padding-top:		1em;
 	height:				auto;
-	padding-bottom:		0.4em;
+	padding-bottom:		1em;
 	border-bottom:		0;
 	margin-bottom:		0;
 	
-	margin-left:		0;
+	margin-left:		0.5em;
 	border-left:		0;
 	padding-left:		1em;
 	width:				auto;
 	padding-right:		1em;
 	border-right:		0;
-	margin-right:		0;
+	margin-right:		0.5em;
+	
+	-moz-border-radius-topleft:			0em;
+	-webkit-border-top-left-radius:		0em;
+	-moz-border-radius-topright:		0em;
+	-webkit-border-top-right-radius:	0em;
+	-moz-border-radius-bottomleft:		0.6em;
+	-webkit-border-bottom-left-radius:	0.6em;
+	-moz-border-radius-bottomright:		0.6em;
+	-webkit-border-bottom-right-radius:	0.6em;
 }
 
 .navigation ul{
@@ -168,9 +164,16 @@ a:hover{
 	list-style-type:	none;
 }
 
+.navigation a{
+	-webkit-transition-property:		text-shadow;
+	-webkit-transition-delay:			0.1s;
+	-webkit-transition-duration:		0.5s;
+	-webkit-transition-timing-function:	ease;
+}
+
 .navigation a:link{
 	background:			transparent; /* okay because the body image color is known */
-	color:				yellow;
+	color:				#bbd5ff;
 	text-shadow:		black 0.075em 0.15em 0.5em;
 	
 	margin-top:			0;
@@ -265,48 +268,64 @@ a:hover{
 }
 
 .page-title{
-	background-color:	transparent;
-	background-image:	url('Metal4x60.png');
-	background-repeat:	repeat;
-	color:				white;
-	text-shadow:		black 0.1em 0.2em 1em;
+	background:			#bbd5ff;
+	color:				#113;
 	
-	margin-top:			0;
-	border-top:			solid #111 0.1em;
+	margin-top:			0.1em;
+	border-top:			0;
 	padding-top:		0.05em;
 	height:				auto;
 	padding-bottom:		0;
-	border-bottom:		solid #111 0.05em;
+	border-bottom:		solid #6695dd 0.075em;
 	margin-bottom:		0;
 	
-	margin-left:		0;
-	border-left:		0;
+	margin-left:		0.5em;
+	border-left:		solid #aac5ee 0.075em;
 	padding-left:		1em;
 	width:				auto;
 	padding-right:		0;
-	border-right:		0;
-	margin-right:		0;
+	border-right:		solid #6695dd 0.075em;
+	margin-right:		0.5em;
+	
+	-moz-border-radius-topleft:			0em;
+	-webkit-border-top-left-radius:		0em;
+	-moz-border-radius-topright:		0em;
+	-webkit-border-top-right-radius:	0em;
+	-moz-border-radius-bottomleft:		0.5em;
+	-webkit-border-bottom-left-radius:	0.5em;
+	-moz-border-radius-bottomright:		0.5em;
+	-webkit-border-bottom-right-radius:	0.5em;
 }
 
 h2{
-	background:			url('Translucent64x64.png');
-	color:				black;
+	background:			#5585cc;
+	color:				#eee;
+	text-shadow:		#042 0.1em 0.2em 1em;
 	
-	margin-top:			0.25em;
-	border-top:			solid #aaa 0.075em;
-	padding-top:		0.05em;
+	margin-top:			0.6em;
+	border-top:			solid #4475bb 0.075em;
+	padding-top:		0.3em;
 	height:				auto;
-	padding-bottom:		0;
-	border-bottom:		solid #aaa 0.075em;
-	margin-bottom:		0.2em;
+	padding-bottom:		0.25em;
+	border-bottom:		solid #88b5ff 0.075em;
+	margin-bottom:		0.1em;
 	
-	margin-left:		-1.2em;
-	border-left:		solid #666 0.35em;
+	margin-left:		-1.3em;
+	border-left:		solid #4475bb 0.075em;
 	padding-left:		0.8em;
 	width:				auto;
 	padding-right:		0;
-	border-right:		0;
-	margin-right:		-1.1em;
+	border-right:		solid #88b5ff 0.075em;
+	margin-right:		-1.3em;
+	
+	-moz-border-radius-topleft:			0.5em;
+	-webkit-border-top-left-radius:		0.5em;
+	-moz-border-radius-topright:		0em;
+	-webkit-border-top-right-radius:	0em;
+	-moz-border-radius-bottomleft:		0em;
+	-webkit-border-bottom-left-radius:	0em;
+	-moz-border-radius-bottomright:		0.5em;
+	-webkit-border-bottom-right-radius:	0.5em;
 }
 
 h3{
@@ -414,6 +433,15 @@ h6{
 	padding-right:		1.5em;
 	border-right:		solid #aaa 0.15em;
 	margin-right:		auto;
+	
+	-moz-border-radius-topleft:			1.1em;
+	-webkit-border-top-left-radius:		1.1em;
+	-moz-border-radius-topright:		1.1em;
+	-webkit-border-top-right-radius:	1.1em;
+	-moz-border-radius-bottomleft:		1.1em;
+	-webkit-border-bottom-left-radius:	1.1em;
+	-moz-border-radius-bottomright:		1.1em;
+	-webkit-border-bottom-right-radius:	1.1em;
 }
 
 /* the background image will only be useful to color display users */
