@@ -70,7 +70,7 @@ table(deftable).
 (defbottom). |(desc)\2. Menu items in the menu bar can display and respond to keyboard equivalents.|
 (deftop). |(key). @menu-macros-visible@|(types). _true or false_|
 (defbottom). |(desc)\2. Macros are available in the menu bar.|
-(deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@|(types). 
+(deftop). |(key). @new-means@|(types). _string_: @default@, @dialog@, @log-in shell@ or @shell@| 
 (defbottom). |(desc)\2. The default command-N key equivalent creates this type of session.|
 (deftop). |(key). @no-auto-close@|(types). _true or false_|
 (defbottom). |(desc)\2. The window stays open after the process exits for any reason.|
@@ -84,7 +84,7 @@ table(deftable).
 (defbottom). |(desc)\2. Cursor movement sequences are sent to the terminal prior to text drag-and-drop to position the cursor beneath the mouse.|
 (deftop). |(key). @terminal-cursor-blinking@|(types). _true or false_|
 (defbottom). |(desc)\2. The text input marker in terminals flashes on and off.|
-(deftop). |(key). @terminal-cursor-shape@|(types). _string_: @block@, @underline@, @thick underline@, @vertical bar@ or @thick vertical bar@|(types). 
+(deftop). |(key). @terminal-cursor-shape@|(types). _string_: @block@, @underline@, @thick underline@, @vertical bar@ or @thick vertical bar@| 
 (defbottom). |(desc)\2. The appearance of the text input marker in terminals.|
 (deftop). |(key). @terminal-focus-follows-mouse@|(types). _true or false_|
 (defbottom). |(desc)\2. The terminal view beneath the mouse always accepts keyboard input regardless of which window is in front.|
@@ -92,19 +92,19 @@ table(deftable).
 (defbottom). |(desc)\2. Each new window selects one of the Format collections at random (affects font and colors).|
 (deftop). |(key). @terminal-inverse-selections@|(types). _true or false_|
 (defbottom). |(desc)\2. Selected text inverts the screen colors instead of using a darkening or lightening effect.|
-(deftop). |(key). @terminal-resize-affects@|(types). _string_: @screen@ or @font@|(types). 
+(deftop). |(key). @terminal-resize-affects@|(types). _string_: @screen@ or @font@| 
 (defbottom). |(desc)\2. Resizing a terminal view will alter its screen dimensions or its font size to best fit the new area.|
 (deftop). |(key). @terminal-use-tabs@|(types). _true or false_|
 (defbottom). |(desc)\2. Windows stick together and have tabs.|
-(deftop). |(key). @terminal-when-bell@|(types). _string_: @audio@, @audio+visual@ or @visual@|(types). 
+(deftop). |(key). @terminal-when-bell@|(types). _string_: @audio@, @audio+visual@ or @visual@| 
 (defbottom). |(desc)\2. Terminal bells have this effect when the source terminal is frontmost.|
-(deftop). |(key). @terminal-when-bell-in-background@|(types). _string_: @ignore@ or @notify@|(types). 
+(deftop). |(key). @terminal-when-bell-in-background@|(types). _string_: @ignore@ or @notify@| 
 (defbottom). |(desc)\2. Terminal bells have this effect when the application is not frontmost.|
 (deftop). |(key). @terminal-when-bell-sound-basename@|(types). _string_|
 (defbottom). |(desc)\2. Terminal bells play this sound; found in any Library/Sounds folder; no extension (e.g. ".aiff").|
-(deftop). |(key). @terminal-when-cursor-near-right-margin@|(types). _string_: @bell@ or @ignore@|(types). 
+(deftop). |(key). @terminal-when-cursor-near-right-margin@|(types). _string_: @bell@ or @ignore@| 
 (defbottom). |(desc)\2. When user input moves the cursor close to the right edge, an audio event occurs.|
-(deftop). |(key). @when-alert-in-background@|(types). _string_: @ignore@, @badge@, @animate@ or @alert@|(types). 
+(deftop). |(key). @when-alert-in-background@|(types). _string_: @ignore@, @badge@, @animate@ or @alert@| 
 (defbottom). |(desc)\2. This is the type of notification used for alert messages when the application is not frontmost.|
 (deftop). |(key). @window-clipboard-visible@|(types). _true or false_|
 (defbottom). |(desc)\2. This window should be displayed when the application launches.|
@@ -148,23 +148,23 @@ table(deftable).
 (defbottom). |(desc)\2. The running process is instructed not to echo data coming from text input.|
 (deftop). |(key). @data-send-paste-block-size-bytes@|(types). _integer_|
 (defbottom). |(desc)\2. "Large" pastes in throttled mode are split into chunks no larger than this number of bytes.|
-(deftop). |(key). @data-send-paste-method@|(types). _string_: @normal@ or @throttled@|(types). 
+(deftop). |(key). @data-send-paste-method@|(types). _string_: @normal@ or @throttled@| 
 (defbottom). |(desc)\2. Pastes are sent to the session all at once or split into chunks.|
 (deftop). |(key). @format-favorite@|(types). _string_|
 (defbottom). |(desc)\2. This Format collection is used by default when the session starts.|
-(deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@|(types). 
+(deftop). |(key). @key-map-delete@|(types). _string_: @backspace@ or @delete@| 
 (defbottom). |(desc)\2. Using the Delete key sends this instruction (backspace or delete) to the session.|
-(deftop). |(key). @key-map-new-line@|(types). _string_: @\015\000@ or @\015\012@|(types). 
+(deftop). |(key). @key-map-new-line@|(types). _string_: @\015\000@ or @\015\012@| 
 (defbottom). |(desc)\2. Using the Return or Enter key sends this sequence (character codes in C-style octal) to the session.|
 (deftop). |(key). @server-host@|(types). _string_: TCP/IP host name, or IPv4 or IPv6 address|
 (defbottom). |(desc)\2. The machine where the desired remote server is located.|
 (deftop). |(key). @server-port@|(types). _integer_: TCP/IP port number|
 (defbottom). |(desc)\2. The port on the host machine that the desired remote server is using; can derive default from protocol.|
-(deftop). |(key). @server-protocol@|(types). _string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@|(types). 
+(deftop). |(key). @server-protocol@|(types). _string_: @ssh-1@, @ssh-2@, @sftp@, @ftp@ or @telnet@| 
 (defbottom). |(desc)\2. The protocol used for a remote connection.|
 (deftop). |(key). @server-user-id@|(types). _string_: typically all-lowercase and one word, for log-in|
 (defbottom). |(desc)\2. The ID used for logging in to the remote server.|
-(deftop). |(key). @tek-mode@|(types). _string_: @off@, @4014@ or @4105@|(types). 
+(deftop). |(key). @tek-mode@|(types). _string_: @off@, @4014@ or @4105@| 
 (defbottom). |(desc)\2. Vector graphics commands received from the session are disabled or assumed to use this command set.|
 (deftop). |(key). @tek-page-clears-screen@|(types). _true or false_|
 (defbottom). |(desc)\2. A PAGE command in TEK data causes the active graphics window to be erased instead of opening a new active window.|
@@ -210,7 +210,7 @@ table(deftable).
 (defbottom). |(desc)\2. A session request to clear the screen will first copy screen lines to the scrollback before obliterating them.|
 (deftop). |(key). @terminal-emulator-answerback@|(types). _string_|
 (defbottom). |(desc)\2. The name sent to the session when asked about terminal type; defaults to the current emulator name.|
-(deftop). |(key). @terminal-emulator-type@|(types). _string_: @dumb@, @vt100@, @vt102@, or @vt220@|(types). 
+(deftop). |(key). @terminal-emulator-type@|(types). _string_: @dumb@, @vt100@, @vt102@, or @vt220@| 
 (defbottom). |(desc)\2. Default behavior (such as which sequences are read, and what effects they have) follows the specification of this terminal.|
 (deftop). |(key). @terminal-emulator-vt100-fix-line-wrapping-bug@|(types). _true or false_|
 (defbottom). |(desc)\2. Avoids strict VT100 emulation, preventing a real bug in VT100s that causes the last terminal line to scroll when wrapped.|
@@ -232,7 +232,7 @@ table(deftable).
 (defbottom). |(desc)\2. Instead of being as fast as possible, scroll activity is delayed by this number of milliseconds to improve readability.|
 (deftop). |(key). @terminal-scrollback-size-lines@|(types). _integer_|
 (defbottom). |(desc)\2. For scrollbacks of fixed or distributed type, the maximum number of lines used by this screen.|
-(deftop). |(key). @terminal-scrollback-type@|(types). _string_: @off@, @unlimited@, @distributed@ or @fixed@|(types). 
+(deftop). |(key). @terminal-scrollback-type@|(types). _string_: @off@, @unlimited@, @distributed@ or @fixed@| 
 (defbottom). |(desc)\2. Scrollback memory is not allocated at all, or is allocated in the specified way.|
 
 h3(#formats). Format Collections
@@ -310,7 +310,18 @@ table(deftable).
 h3(#macros). Macro Collections
 
 table(deftable).
-|\2. _this table is incomplete_ |
+(deftop). |(key). @macro-NN-action@, where NN is 01 to 12|(types). _string_: @text@, @verbatim@, @handle URL@, or @new window with command@|
+(defbottom). |(desc)\2. How to interpret the content string.  If @text@, then escapes such as @\012@ are expanded; if @verbatim@, escapes are ignored.|
+(deftop). |(key). @macro-NN-contents-string@, where NN is 01 to 12|(types). _string_|
+(defbottom). |(desc)\2. Text, whose meaning depends on the action: something to send (interpreted or verbatim), a URL to open, or a command line to run (without interpretation).|
+(deftop). |(key). @macro-NN-key@, where NN is 01 to 12|(types). _string_: a "key name":#specialvalues|
+(defbottom). |(desc)\2. Base key that activates this macro, when combined with the modifier keys.|
+(deftop). |(key). @macro-NN-modifiers@, where NN is 01 to 12|(types). _array of string_: zero or more "modifier keys":#specialvalues|
+(defbottom). |(desc)\2. Modifier keys that must be held down before the base key is interpreted as a macro request.|
+(deftop). |(key). @macro-NN-name-string@, where NN is 01 to 12|(types). _string_|
+(defbottom). |(desc)\2. Name to use in menus and other interface elements, when representing this macro.|
+(deftop). |(key). @macro-order@|(types). _array of string_: values from @macro-01@ to @macro-12@|
+(defbottom). |(desc)\2. Order in which macros should be displayed in user interface elements.|
 
 h3(#translations). Translation Collections
 
@@ -321,6 +332,21 @@ table(deftable).
 (defbottom). |(desc)\2. The IANA registry name of the text encoding to use; if both a name and ID exist, the name is used unless it is invalid.|
 (deftop). |(key). @terminal-text-encoding-id@|(types). _integer_|
 (defbottom). |(desc)\2. The CFString-assigned number for the text encoding to use; if both a name and ID exist, the name is used unless it is invalid.|
+
+h2(#specialvalues). Special Values
+
+Sometimes, several preference keys accept similar values, that
+can have a wide range of valid tokens.
+
+A *key name* can describe many keys on the keyboard.  Characters
+that can unambiguously describe a key (such as capital letters)
+are all valid.  In addition, the string value could be @return@,
+@enter@, @escape@, @clear@, @forward-delete@, @backward-delete@,
+@home@, @end@, @page-up@, @page-down@, @left-arrow@,
+@right-arrow@, @up-arrow@, @down-arrow@, or @f1@ through @f16@.
+
+A *modifier key* is described by a string value equal to @shift@,
+@command@, @control@, or @option@.
 
 </div>
 

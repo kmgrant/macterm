@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090515',
     '20090510',
     '20090509',
     '20090507',
@@ -235,6 +236,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090515': [
+		'MacTelnet Help expanded to describe more low-level preference keys, including those of macro sets.',
+	],
 	'20090510': [
 		'Fixed enabling/disabling of menu items representing Preferences collections.',
 	],
