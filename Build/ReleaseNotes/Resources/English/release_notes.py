@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090517',
     '20090515',
     '20090510',
     '20090509',
@@ -236,6 +237,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090517': [
+		'Terminal view cursor is now properly inverted when covering inverted text.',
+	],
 	'20090515': [
 		'Added a hidden preference (accessible through the "defaults" program) to set the preferred window edge for tabs.',
 		'MacTelnet Help expanded to describe more low-level preference keys, including those of macro sets.',
