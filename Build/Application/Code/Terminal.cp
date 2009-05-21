@@ -1023,7 +1023,6 @@ void						locateScrollingRegionTop				(My_ScreenBufferPtr, My_ScreenBufferLineLi
 void						moveCursor								(My_ScreenBufferPtr, SInt16, My_ScreenRowIndex);
 void						moveCursorDown							(My_ScreenBufferPtr);
 void						moveCursorDownOrScroll					(My_ScreenBufferPtr);
-void						moveCursorDownOrStop					(My_ScreenBufferPtr);
 void						moveCursorDownToEdge					(My_ScreenBufferPtr);
 void						moveCursorLeft							(My_ScreenBufferPtr);
 void						moveCursorLeftToEdge					(My_ScreenBufferPtr);
@@ -6353,28 +6352,25 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	case kStateHVP:
 		// absolute cursor positioning
 		{
-			SInt16				newX = (inDataPtr->emulator.parameterValues[1] != -1)
-										? inDataPtr->emulator.parameterValues[1] - 1
-										: 0/* default is home */;
-			My_ScreenRowIndex	newY = (inDataPtr->emulator.parameterValues[0] != -1)
-										? inDataPtr->emulator.parameterValues[0] - 1
-										: 0/* default is home */;
+			// both 0 and 1 are considered first row/column
+			SInt16				newX = (0 == inDataPtr->emulator.parameterValues[1])
+										? 0
+										: (inDataPtr->emulator.parameterValues[1] != -1)
+											? inDataPtr->emulator.parameterValues[1] - 1
+											: 0/* default is home */;
+			My_ScreenRowIndex	newY = (0 == inDataPtr->emulator.parameterValues[0])
+										? 0
+										: (inDataPtr->emulator.parameterValues[0] != -1)
+											? inDataPtr->emulator.parameterValues[0] - 1
+											: 0/* default is home */;
 			
 			
 			// offset according to the origin mode
 			newY += inDataPtr->originRegionPtr->firstRow;
 			
-			// constrain the value and then change it safely
-			if (newX < 0) newX = 0;
-			if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
-			{
-				newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
-			}
-			//if (newY < 0) newY = 0;
-			if (newY >= inDataPtr->screenBuffer.size())
-			{
-				newY = inDataPtr->screenBuffer.size() - 1;
-			}
+			// the new values are not checked for violation of constraints
+			// because constraints (including current origin mode) are
+			// automatically enforced by moveCursor...() routines
 			moveCursor(inDataPtr, newX, newY);
 		}
 		break;
@@ -9081,28 +9077,24 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			case 'H':
 				// absolute cursor positioning
 				{
-					SInt16				newX = (inDataPtr->emulator.parameterValues[1] != -1)
-												? inDataPtr->emulator.parameterValues[1] - 1
-												: 0/* default is home */;
-					My_ScreenRowIndex	newY = (inDataPtr->emulator.parameterValues[0] != -1)
-												? inDataPtr->emulator.parameterValues[0] - 1
-												: 0/* default is home */;
+					SInt16				newX = (0 == inDataPtr->emulator.parameterValues[1])
+												? 0
+												: (inDataPtr->emulator.parameterValues[1] != -1)
+													? inDataPtr->emulator.parameterValues[1] - 1
+													: 0/* default is home */;
+					My_ScreenRowIndex	newY = (0 == inDataPtr->emulator.parameterValues[0])
+												? 0
+												: (inDataPtr->emulator.parameterValues[0] != -1)
+													? inDataPtr->emulator.parameterValues[0] - 1
+													: 0/* default is home */;
 					
 					
 					// offset according to the scrolling region (if any)
 					newY += inDataPtr->originRegionPtr->firstRow;
 					
-					// constrain the value and then change it safely
-					if (newX < 0) newX = 0;
-					if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
-					{
-						newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
-					}
-					//if (newY < 0) newY = 0;
-					if (newY >= inDataPtr->screenBuffer.size())
-					{
-						newY = inDataPtr->screenBuffer.size() - 1;
-					}
+					// the new values are not checked for violation of constraints
+					// because constraints (including current origin mode) are
+					// automatically enforced by moveCursor...() routines
 					moveCursor(inDataPtr, newX, newY);
 				}
 				goto ShortCut;				
@@ -10199,28 +10191,6 @@ moveCursorDownOrScroll	(My_ScreenBufferPtr		inDataPtr)
 
 
 /*!
-Moves the cursor to the row below its current row,
-or does nothing if the cursor is already at the
-bottom of the scrolling region.
-
-IMPORTANT:	ALWAYS use moveCursor...() routines
-			to set the cursor value; otherwise,
-			cursor-dependent stuff could become
-			out of sync.
-
-(3.1)
-*/
-void
-moveCursorDownOrStop	(My_ScreenBufferPtr		inDataPtr)
-{
-	if (inDataPtr->current.cursorY < (inDataPtr->screenBuffer.size() - 1))
-	{
-		moveCursorDown(inDataPtr);
-	}
-}// moveCursorDownOrStop
-
-
-/*!
 Moves the cursor to the last row (constrained by
 the current scrolling region).
 
@@ -10452,6 +10422,11 @@ moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 	{
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
 	}
+	
+#if 0
+	// DEBUG
+	Console_WriteValuePair("cursor trace (dx)", inDataPtr->current.cursorX, inDataPtr->current.cursorY);
+#endif
 }// moveCursorX
 
 
@@ -10510,6 +10485,11 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 	{
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
 	}
+	
+#if 0
+	// DEBUG
+	Console_WriteValuePair("cursor trace (dy)", inDataPtr->current.cursorX, inDataPtr->current.cursorY);
+#endif
 }// moveCursorY
 
 
