@@ -35,7 +35,7 @@
 		<key>Session ended</key>
 		<string>When a main window process exits successfully</string>
 		<key>Session failed</key>
-		<string>When a main window process exits because of an unexpected signal or a nonzero exit code</string>
+		<string>When a main window process exits with an unexpected signal or nonzero status</string>
 		<key>Session idle</key>
 		<string>When data has not arrived for awhile, in windows requesting "Notify on Inactivity"</string>
 	</dict>
