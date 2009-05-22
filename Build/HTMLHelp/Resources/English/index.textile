@@ -65,6 +65,7 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 <dt>Tutorials</dt><dd>
 
 * "playing BBS games":content/games.html
+* "using serial ports":content/serial.html
 
 </dd>
 

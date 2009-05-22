@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090522',
     '20090521',
     '20090517',
     '20090515',
@@ -238,6 +239,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090522': [
+		'MacTelnet Help now includes a tutorial on how to use serial ports (via "screen").',
+	],
 	'20090521': [
 		'Fixed major wrapping bug that could cause full-screen programs such as "screen", "pine" and "emacs" to scroll up.',
 		'Fixed some corner cases in previous builds, so NOW the terminal cursor properly renders in visible colors against any background.',
