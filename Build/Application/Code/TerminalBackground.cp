@@ -3,7 +3,7 @@
 	TerminalBackground.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -58,6 +58,7 @@
 
 
 #pragma mark Constants
+namespace {
 
 enum
 {
@@ -69,7 +70,10 @@ enum
 	kTerminalBackground_ContentPartText		= 1,				//!< draw a focus ring around entire view perimeter
 };
 
+} // anonymous namespace
+
 #pragma mark Types
+namespace {
 
 struct MyTerminalBackground
 {
@@ -81,28 +85,33 @@ struct MyTerminalBackground
 typedef MyTerminalBackground*			MyTerminalBackgroundPtr;
 typedef MyTerminalBackground const*		MyTerminalBackgroundConstPtr;
 
-#pragma mark Internal Method Prototypes
+} // anonymous namespace
 
-static OSStatus			receiveBackgroundContextualMenuSelect	(EventHandlerCallRef, EventRef,
-																 MyTerminalBackgroundPtr);
-static OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
-																 MyTerminalBackgroundPtr);
-static OSStatus			receiveBackgroundFocus					(EventHandlerCallRef, EventRef,
-																 MyTerminalBackgroundPtr);
-static OSStatus			receiveBackgroundHICommand				(EventHandlerCallRef, EventRef,
-																 MyTerminalBackgroundPtr);
-static pascal OSStatus  receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
-static OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
-																 MyTerminalBackgroundPtr);
+#pragma mark Internal Method Prototypes
+namespace {
+
+OSStatus			receiveBackgroundContextualMenuSelect	(EventHandlerCallRef, EventRef,
+															 MyTerminalBackgroundPtr);
+OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
+															 MyTerminalBackgroundPtr);
+OSStatus			receiveBackgroundFocus					(EventHandlerCallRef, EventRef,
+															 MyTerminalBackgroundPtr);
+OSStatus			receiveBackgroundHICommand				(EventHandlerCallRef, EventRef,
+															 MyTerminalBackgroundPtr);
+pascal OSStatus		receiveBackgroundHIObjectEvents			(EventHandlerCallRef, EventRef, void*);
+OSStatus			receiveBackgroundRegionRequest			(EventHandlerCallRef, EventRef,
+															 MyTerminalBackgroundPtr);
+
+} // anonymous namespace
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	HIObjectClassRef	gMyBackgroundViewHIObjectClassRef = nullptr;
-	EventHandlerUPP		gMyBackgroundViewConstructorUPP = nullptr;
-	Boolean				gTerminalBackgroundInitialized = false;
-}
+HIObjectClassRef	gMyBackgroundViewHIObjectClassRef = nullptr;
+EventHandlerUPP		gMyBackgroundViewConstructorUPP = nullptr;
+Boolean				gTerminalBackgroundInitialized = false;
+
+} // anonymous namespace
 
 
 
@@ -241,6 +250,7 @@ TerminalBackground_CreateHIView		(HIViewRef&		outHIViewRef)
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Constructor.  See receiveBackgroundHIObjectEvents().
@@ -273,7 +283,7 @@ for terminal backgrounds.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveBackgroundContextualMenuSelect	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 										 EventRef					inEvent,
 										 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
@@ -324,7 +334,7 @@ Paints the background color of the specified view.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef					inEvent,
 						 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
@@ -426,56 +436,8 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				GetControlBounds(view, &bounds);
 				OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
-				// start with a background similar to that of the text, but darker
-				// so as to create a subtle border around the interior text area
 				RGBBackColor(&backgroundColor);
-			#if 0
-					UseSelectionColors();//TMP
-					UseSelectionColors();//TMP
-			#endif
 				EraseRect(&bounds);
-				
-			#if 0
-				// frame the background in a color that contrasts with the background
-				// (this may become user-configurable); for now, take advantage of the
-				// algorithm in UseSelectionColors(), which tends to use a color darker
-				// than the background unless the background is close to black, in which
-				// case a lighter gray is used
-				{
-					RGBColor	frameColor = {	INTEGER_TRIPLED(INTEGER_QUARTERED(RGBCOLOR_INTENSITY_MAX)),
-												INTEGER_TRIPLED(INTEGER_QUARTERED(RGBCOLOR_INTENSITY_MAX)),
-												INTEGER_TRIPLED(INTEGER_QUARTERED(RGBCOLOR_INTENSITY_MAX))	};
-					
-					
-					PenNormal();
-					RGBBackColor(&backgroundColor);
-					UseSelectionColors();
-					GetPortBackColor(drawingPort, &frameColor); // selection color is normally applied to background, but framing requires a foreground
-					RGBForeColor(&frameColor);
-					InsetRect(&bounds, 1, 1); // make the frame visible, as the view edges are usually covered by a 1-pixel overlap
-					unless (IsControlActive(view)) UseInactiveColors();
-					++(bounds.right);
-					++(bounds.bottom);
-					FrameRect(&bounds);
-				}
-			#endif
-				
-			#if 0
-				// frame the background in a color that contrasts with the background
-				// (this may become user-configurable); for now, take advantage of the
-				// algorithm in UseSelectionColors(), which tends to use a color darker
-				// than the background unless the background is close to black, in which
-				// case a lighter gray is used
-				PenNormal();
-				RGBBackColor(&backgroundColor);
-				UseSelectionColors();
-				RGBForeColor(&backgroundColor);
-				InsetRect(&bounds, 1, 1); // make the frame visible, as the view edges are usually covered by a 1-pixel overlap
-				unless (IsControlActive(view)) UseInactiveColors();
-				++(bounds.right);
-				++(bounds.bottom);
-				FrameRect(&bounds);
-			#endif
 				
 				// focus ring
 				{
@@ -506,7 +468,7 @@ a terminal view should be changed.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 receiveBackgroundFocus	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef					inEvent,
 						 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
@@ -611,7 +573,7 @@ user accepts.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveBackgroundHICommand	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 							 EventRef					inEvent,
 							 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
@@ -715,7 +677,7 @@ Invoked by Mac OS X.
 
 (3.1)
 */
-static pascal OSStatus
+pascal OSStatus
 receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 									 EventRef				inEvent,
 									 void*					inMyTerminalBackgroundPtr)
@@ -1029,7 +991,7 @@ Returns the boundaries of the requested view part.
 
 (3.1)
 */
-static OSStatus
+OSStatus
 receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef					inEvent,
 								 MyTerminalBackgroundPtr	inMyTerminalBackgroundPtr)
@@ -1121,5 +1083,7 @@ receiveBackgroundRegionRequest	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCa
 	}
 	return result;
 }// receiveBackgroundRegionRequest
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE
