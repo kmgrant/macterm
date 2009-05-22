@@ -727,6 +727,7 @@ public:
 																	//!  buffer just before being explicitly erased with a clear command
 	
 	Boolean								reportOnlyOnRequest;		//!< DECREQTPARM mode: determines response format and timing
+	Boolean								wrapPending;				//!< set only when a character is echoed in final column
 	
 	Boolean								modeANSIEnabled;			//!< DECANM mode: true only if in ANSI mode (as opposed to VT52 compatibility
 																	//!  mode); if the former, parameters are only recognized following the CSI
@@ -4882,6 +4883,7 @@ litLEDs(kMy_LEDBitsAllOff),
 mayNeedToSaveToScrollback(false),
 saveToScrollbackOnClear(true),
 reportOnlyOnRequest(false),
+wrapPending(false),
 modeANSIEnabled(true),
 modeApplicationKeys(false),
 modeAutoWrap(false),
@@ -8388,6 +8390,19 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			}
 		#endif
 			
+			// if the cursor was about to wrap on the previous
+			// write, perform that wrap now
+			if (inDataPtr->wrapPending)
+			{
+				// autowrap to start of next line
+				moveCursorLeftToEdge(inDataPtr);
+				moveCursorDownOrScroll(inDataPtr);
+				locateCursorLine(inDataPtr, cursorLineIterator); // cursor changed rows...
+				
+				// reset column tracker
+				preWriteCursorX = 0;
+			}
+			
 			// write characters on a single line
 			if (inDataPtr->modeInsertNotReplace)
 			{
@@ -8397,34 +8412,29 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 																									inDataPtr->current.drawingAttributes,
 																									temporaryAttributes);
 			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
-			if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
+			
+			if (false == inDataPtr->wrapPending)
 			{
-				// advance the cursor position
-				moveCursorRight(inDataPtr);
-			}
-			else
-			{
-				// hit right margin
-				
-				// move the cursor appropriately, and reset state if necessary
-				if (inDataPtr->modeAutoWrap)
+				if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
 				{
-					//Console_WriteLine("wrap");
-					
-					// autowrap to start of next line
-					moveCursorLeftToEdge(inDataPtr);
-					moveCursorDownOrScroll(inDataPtr);
-					locateCursorLine(inDataPtr, cursorLineIterator); // cursor changed rows...
-					
-					// reset column tracker
-					preWriteCursorX = 0;
+					// advance the cursor position
+					moveCursorRight(inDataPtr);
 				}
 				else
 				{
-					//Console_WriteLine("nowrap");
-					
-					// stay at right margin
-					moveCursorRightToEdge(inDataPtr);
+					// hit right margin
+					if (inDataPtr->modeAutoWrap)
+					{
+						// the cursor just arrived here, so set up a pending
+						// wrap-and-scroll; it will only occur the next time
+						// data is actually written
+						inDataPtr->wrapPending = true;
+					}
+					else
+					{
+						// stay at right margin
+						moveCursorRightToEdge(inDataPtr);
+					}
 				}
 			}
 			
@@ -10431,6 +10441,9 @@ moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 		inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
 	}
 	
+	// reset wrap flag, now that the cursor is moving
+	inDataPtr->wrapPending = false;
+	
 	//if (inDataPtr->cursorVisible)
 	{
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
@@ -10495,6 +10508,9 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 	}
 	
 	inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
+	
+	// reset wrap flag, now that the cursor is moving
+	inDataPtr->wrapPending = false;
 	
 	//if (inDataPtr->cursorVisible)
 	{
@@ -11623,6 +11639,7 @@ vt100ModeSetReset	(My_ScreenBufferPtr		inDataPtr,
 				
 				case 7: // DECAWM (auto-wrap mode)
 					inDataPtr->modeAutoWrap = inIsModeEnabled;
+					if (false == inIsModeEnabled) inDataPtr->wrapPending = false;
 					break;
 				
 				case 4: // DECSCLM (if enabled, scrolling is smooth at 6 lines per second; otherwise, instantaneous)

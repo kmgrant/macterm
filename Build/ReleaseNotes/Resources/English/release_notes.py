@@ -239,6 +239,7 @@ daily_build_lineage = [
 
 notes_by_version = {
 	'20090521': [
+		'Fixed major wrapping bug that could cause full-screen programs such as "screen", "pine" and "emacs" to scroll up.',
 		'Fixed some corner cases in previous builds, so NOW the terminal cursor properly renders in visible colors against any background.',
 	],
 	'20090517': [
