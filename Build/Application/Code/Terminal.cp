@@ -758,7 +758,9 @@ public:
 	
 	struct
 	{
-		TerminalTextAttributes			attributeBits;			//!< text attributes for the line the cursor is on; these should be updated as the cursor
+		TerminalTextAttributes			cursorAttributes;		//!< text attributes for the position under the cursor; useful for rendering the cursor
+																//!  in a way that does not clash with these attributes (e.g. by choosing opposite colors)
+		TerminalTextAttributes			drawingAttributes;		//!< text attributes for the line the cursor is on; these should be updated as the cursor
 																//!  moves, or as terminal sequences are processed by the emulator
 		SInt16							cursorX;				//!< column number of current cursor position;
 																//!  WARNING: do not change this value except with a moveCursor...() routine
@@ -769,9 +771,9 @@ public:
 	
 	struct
 	{
-		TerminalTextAttributes		attributeBits;	//!< previous bits of corresponding bits in "current" structure
-		SInt16						cursorX;		//!< previous value of corresponding value in "current" structure
-		SInt16						cursorY;		//!< previous value of corresponding value in "current" structure
+		TerminalTextAttributes		drawingAttributes;	//!< previous bits of corresponding bits in "current" structure
+		SInt16						cursorX;			//!< previous value of corresponding value in "current" structure
+		SInt16						cursorY;			//!< previous value of corresponding value in "current" structure
 	} previous;
 	
 	TerminalScreenRef		selfRef;					//!< opaque reference that would resolve to a pointer to this structure
@@ -2024,8 +2026,8 @@ NOTE:	Admittedly this is a bit of a weird exception, since
 TerminalTextAttributes
 Terminal_CursorReturnAttributes		(TerminalScreenRef		inRef)
 {
-	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
-	TerminalTextAttributes		result = dataPtr->current.attributeBits;
+	My_ScreenBufferPtr			dataPtr = getVirtualScreenData(inRef);
+	TerminalTextAttributes		result = dataPtr->current.cursorAttributes;
 	
 	
 	return result;
@@ -4925,8 +4927,9 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	this->text.scrollback.numberOfRowsPermitted = returnScrollbackRows(inTerminalConfig);
 	this->text.scrollback.enabled = (returnForceSave(inTerminalConfig) || (this->text.scrollback.numberOfRowsPermitted > 0));
 	this->text.visibleScreen.numberOfColumnsPermitted = returnScreenColumns(inTerminalConfig);
-	this->current.attributeBits = 0;
-	this->previous.attributeBits = kInvalidTerminalTextAttributes; /* initially no saved attribute */
+	this->current.cursorAttributes = kNoTerminalTextAttributes;
+	this->current.drawingAttributes = kNoTerminalTextAttributes;
+	this->previous.drawingAttributes = kInvalidTerminalTextAttributes; // initially no saved attribute
 	
 	// speech setup
 	this->speech.mode = kTerminal_SpeechModeSpeakAlways;
@@ -6281,12 +6284,12 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 		{
 			// set attribute
-			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 		}
 		else
 		{
 			// clear attribute
-			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 		}
 		break;
 	
@@ -6296,12 +6299,12 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 		if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 		{
 			// set attribute
-			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 		}
 		else
 		{
 			// clear attribute
-			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 		}
 		break;
 	
@@ -6576,7 +6579,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
 			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 		}
 		break;
 	
@@ -6591,7 +6594,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			targetCharacterSetPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
 			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 		}
 		break;
 	
@@ -6605,7 +6608,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			if (kStateSCSG1SG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
 			targetCharacterSetPtr->source = kMy_CharacterROMNormal;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
-			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // set graphics attribute
 		}
 		break;
 	
@@ -6619,7 +6622,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			if (kStateSCSG1ACRStd == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
 			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOff;
-			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 		}
 		break;
 	
@@ -6633,7 +6636,7 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 			if (kStateSCSG1ACRSG == inNewState) targetCharacterSetPtr = &inDataPtr->vtG1;
 			targetCharacterSetPtr->source = kMy_CharacterROMAlternate;
 			targetCharacterSetPtr->graphicsMode = kMy_GraphicsModeOn;
-			STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
+			STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // set graphics attribute
 		}
 		break;
 	
@@ -6659,22 +6662,22 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 				// Other values are basically recognized because they are
 				// compatible with VT100 and are very often used (ANSI
 				// colors in particular).
-				if (p == 0) STYLE_REMOVE(inDataPtr->current.attributeBits, kAllStyleOrColorTerminalTextAttributes); // all style bits off
-				else if (p < 9) STYLE_ADD(inDataPtr->current.attributeBits, styleOfVTParameter(p)); // set attribute
+				if (p == 0) STYLE_REMOVE(inDataPtr->current.drawingAttributes, kAllStyleOrColorTerminalTextAttributes); // all style bits off
+				else if (p < 9) STYLE_ADD(inDataPtr->current.drawingAttributes, styleOfVTParameter(p)); // set attribute
 				else if (p == 10) { /* set normal font - unsupported */ }
 				else if (p == 11) { /* set alternate font - unsupported */ }
 				else if (p == 12) { /* set alternate font, shifting by 128 - unsupported */ }
-				else if (p == 22) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
-				else if ((p > 22) && (p < 29)) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(p - 20)); // clear attribute
+				else if (p == 22) STYLE_REMOVE(inDataPtr->current.drawingAttributes, styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
+				else if ((p > 22) && (p < 29)) STYLE_REMOVE(inDataPtr->current.drawingAttributes, styleOfVTParameter(p - 20)); // clear attribute
 				else
 				{
 					if ((p >= 30) && (p < 38))
 					{
-						STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.attributeBits, p - 30);
+						STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.drawingAttributes, p - 30);
 					}
 					else if ((p >= 40) && (p < 48))
 					{
-						STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.attributeBits, p - 40);
+						STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes, p - 40);
 					}
 					else if ((38 == p) || (48 == p))
 					{
@@ -6702,11 +6705,11 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 								{
 									if (kSetForeground)
 									{
-										STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.attributeBits, kColorParam);
+										STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.drawingAttributes, kColorParam);
 									}
 									else
 									{
-										STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.attributeBits, kColorParam);
+										STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes, kColorParam);
 									}
 								}
 								++i; // skip next parameter (2)
@@ -6717,12 +6720,12 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 					else if (39 == p)
 					{
 						// generally means “reset foreground”
-						STYLE_CLEAR_FOREGROUND_INDEX(inDataPtr->current.attributeBits);
+						STYLE_CLEAR_FOREGROUND_INDEX(inDataPtr->current.drawingAttributes);
 					}
 					else if (49 == p)
 					{
 						// generally means “reset background”
-						STYLE_CLEAR_BACKGROUND_INDEX(inDataPtr->current.attributeBits);
+						STYLE_CLEAR_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes);
 					}
 					else
 					{
@@ -8165,11 +8168,11 @@ changeLineRangeAttributes	(My_ScreenBufferPtr			inDataPtr,
 		locateCursorLine(inDataPtr, cursorLineIterator);
 		if (inRow == *cursorLineIterator)
 		{
-			STYLE_REMOVE(inDataPtr->current.attributeBits, inClearTheseAttributes);
-			STYLE_ADD(inDataPtr->current.attributeBits, inSetTheseAttributes);
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, inClearTheseAttributes);
+			STYLE_ADD(inDataPtr->current.drawingAttributes, inSetTheseAttributes);
 			
 			// ...however, do not propagate text highlighting to text rendered from now on
-			STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeSelected);
+			STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeSelected);
 		}
 	}
 	
@@ -8235,7 +8238,7 @@ cursorRestore  (My_ScreenBufferPtr		inPtr)
 	moveCursor(inPtr, inPtr->previous.cursorX, inPtr->previous.cursorY);
 	
 	// ??? this will clear the current graphics character set too, is that supposed to happen ???
-	inPtr->current.attributeBits = inPtr->previous.attributeBits;
+	inPtr->current.drawingAttributes = inPtr->previous.drawingAttributes;
 }// cursorRestore
 
 
@@ -8251,7 +8254,7 @@ cursorSave  (My_ScreenBufferPtr  inPtr)
 {
 	inPtr->previous.cursorX = inPtr->current.cursorX;
 	inPtr->previous.cursorY = inPtr->current.cursorY;
-	inPtr->previous.attributeBits = inPtr->current.attributeBits;
+	inPtr->previous.drawingAttributes = inPtr->current.drawingAttributes;
 }// cursorSave
 
 
@@ -8391,7 +8394,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 				bufferInsertBlanksAtCursorColumn(inDataPtr, 1/* number of blank characters */);
 			}
 			cursorLineIterator->textVectorBegin[inDataPtr->current.cursorX] = translateCharacter(inDataPtr, thisCharacter,
-																									inDataPtr->current.attributeBits,
+																									inDataPtr->current.drawingAttributes,
 																									temporaryAttributes);
 			cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
 			if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
@@ -8534,12 +8537,12 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 				{
 					// set attribute
-					STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+					STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 				}
 				else
 				{
 					// clear attribute
-					STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+					STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 				}
 				break;
 			
@@ -8548,12 +8551,12 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				if (inDataPtr->current.characterSetInfoPtr->graphicsMode == kMy_GraphicsModeOn)
 				{
 					// set attribute
-					STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+					STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 				}
 				else
 				{
 					// clear attribute
-					STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics);
+					STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics);
 				}
 				break;
 			
@@ -8645,7 +8648,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					!((*c & 0x80) && (*c < 0xA0) && (inDataPtr->emulator.primaryType == kTerminal_EmulatorVT220)))
 			{
 				// print lines of text one at a time
-				attrib = inDataPtr->current.attributeBits; /* current writing attribute */
+				attrib = inDataPtr->current.drawingAttributes; /* current writing attribute */
 				wrapped = false; /* wrapped to next line (boolean) */
 				extra = 0; /* overwriting last character of line  */
 				
@@ -9137,22 +9140,22 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 						// Other values are basically recognized because they are
 						// compatible with VT100 and are very often used (ANSI
 						// colors in particular).
-						if (p == 0) STYLE_REMOVE(inDataPtr->current.attributeBits, kAllStyleOrColorTerminalTextAttributes); // all style bits off
-						else if (p < 9) STYLE_ADD(inDataPtr->current.attributeBits, styleOfVTParameter(p)); // set attribute
+						if (p == 0) STYLE_REMOVE(inDataPtr->current.drawingAttributes, kAllStyleOrColorTerminalTextAttributes); // all style bits off
+						else if (p < 9) STYLE_ADD(inDataPtr->current.drawingAttributes, styleOfVTParameter(p)); // set attribute
 						else if (p == 10) { /* set normal font - unsupported */ }
 						else if (p == 11) { /* set alternate font - unsupported */ }
 						else if (p == 12) { /* set alternate font, shifting by 128 - unsupported */ }
-						else if (p == 22) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
-						else if ((p > 22) && (p < 29)) STYLE_REMOVE(inDataPtr->current.attributeBits, styleOfVTParameter(p - 20)); // clear attribute
+						else if (p == 22) STYLE_REMOVE(inDataPtr->current.drawingAttributes, styleOfVTParameter(1)); // clear bold (oddball - 22, not 21)
+						else if ((p > 22) && (p < 29)) STYLE_REMOVE(inDataPtr->current.drawingAttributes, styleOfVTParameter(p - 20)); // clear attribute
 						else
 						{
 							if ((p >= 30) && (p <= 38))
 							{
-								STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.attributeBits, p - 30);
+								STYLE_SET_FOREGROUND_INDEX(inDataPtr->current.drawingAttributes, p - 30);
 							}
 							else if ((p >= 40) && (p <= 48))
 							{
-								STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.attributeBits, p - 40);
+								STYLE_SET_BACKGROUND_INDEX(inDataPtr->current.drawingAttributes, p - 40);
 							}
 						}
 						++i;
@@ -9503,7 +9506,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				characterSetInfoPtr->translationTable = kMy_CharacterSetVT100UnitedKingdom;
 				characterSetInfoPtr->source = kMy_CharacterROMNormal;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+				STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 				goto ShortCut;
 			
 			case 'B':
@@ -9511,28 +9514,28 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				characterSetInfoPtr->translationTable = kMy_CharacterSetVT100UnitedStates;
 				characterSetInfoPtr->source = kMy_CharacterROMNormal;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+				STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 				goto ShortCut;
 			
 			case '0':
 				// normal ROM, graphics mode
 				characterSetInfoPtr->source = kMy_CharacterROMNormal;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOn;
-				STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
+				STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // set graphics attribute
 				goto ShortCut;
 			
 			case '1':
 				// alternate ROM, no graphics
 				characterSetInfoPtr->source = kMy_CharacterROMAlternate;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOff;
-				STYLE_REMOVE(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // clear graphics attribute
+				STYLE_REMOVE(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // clear graphics attribute
 				goto ShortCut;
 			
 			case '2':
 				// alternate ROM, graphics mode
 				characterSetInfoPtr->source = kMy_CharacterROMAlternate;
 				characterSetInfoPtr->graphicsMode = kMy_GraphicsModeOn;
-				STYLE_ADD(inDataPtr->current.attributeBits, kTerminalTextAttributeVTGraphics); // set graphics attribute
+				STYLE_ADD(inDataPtr->current.drawingAttributes, kTerminalTextAttributeVTGraphics); // set graphics attribute
 				goto ShortCut;				
 			
 			default:
@@ -10418,6 +10421,16 @@ moveCursorX		(My_ScreenBufferPtr		inDataPtr,
 		inDataPtr->mayNeedToSaveToScrollback = true;
 	}
 	
+	// TEMPORARY - the inefficiency of this is ugly, but it
+	// is definitely known to work
+	{
+		My_ScreenBufferLineList::iterator	cursorLineIterator;
+		
+		
+		locateCursorLine(inDataPtr, cursorLineIterator);
+		inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
+	}
+	
 	//if (inDataPtr->cursorVisible)
 	{
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorLocation, inDataPtr->selfRef);
@@ -10456,7 +10469,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 		// chance of having to save the top line into scrollback
 		inDataPtr->mayNeedToSaveToScrollback = false;
 	}
-	STYLE_REMOVE(inDataPtr->current.attributeBits, cursorLineIterator->globalAttributes);
+	STYLE_REMOVE(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
 	
 	// don’t allow the cursor to fall off the screen (in origin
 	// mode, it cannot fall outside the scrolling region)
@@ -10472,7 +10485,7 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 	// cursor has moved, so find the data for its new row
 	locateCursorLine(inDataPtr, cursorLineIterator);
 	
-	STYLE_ADD(inDataPtr->current.attributeBits, cursorLineIterator->globalAttributes);
+	STYLE_ADD(inDataPtr->current.drawingAttributes, cursorLineIterator->globalAttributes);
 	if ((0 == inDataPtr->current.cursorY) && (0 == inDataPtr->current.cursorX))
 	{
 		// if the cursor moves into the home position, flag this
@@ -10480,6 +10493,8 @@ moveCursorY		(My_ScreenBufferPtr		inDataPtr,
 		// subsequent erase commands show up
 		inDataPtr->mayNeedToSaveToScrollback = true;
 	}
+	
+	inDataPtr->current.cursorAttributes = cursorLineIterator->attributeVector[inDataPtr->current.cursorX];
 	
 	//if (inDataPtr->cursorVisible)
 	{
@@ -10510,8 +10525,8 @@ resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 	inDataPtr->modeApplicationKeys = false;
 	inDataPtr->modeOriginRedefined = false; // also requires cursor homing (below), according to manual
 	inDataPtr->originRegionPtr = &inDataPtr->visibleBoundary.rows;
-	inDataPtr->previous.attributeBits = kInvalidTerminalTextAttributes;
-	inDataPtr->current.attributeBits = 0;
+	inDataPtr->previous.drawingAttributes = kInvalidTerminalTextAttributes;
+	inDataPtr->current.drawingAttributes = kNoTerminalTextAttributes;
 	inDataPtr->modeInsertNotReplace = false;
 	inDataPtr->modeNewLineOption = false;
 	moveCursor(inDataPtr, 0, 0);

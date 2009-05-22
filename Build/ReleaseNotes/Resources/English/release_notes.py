@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090521',
     '20090517',
     '20090515',
     '20090510',
@@ -237,6 +238,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090521': [
+		'Fixed some corner cases in previous builds, so NOW the terminal cursor properly renders in visible colors against any background.',
+	],
 	'20090517': [
 		'Terminal view cursor is now properly inverted when covering inverted text.',
 	],
