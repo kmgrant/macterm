@@ -241,6 +241,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20090522': [
 		'MacTelnet Help now includes a tutorial on how to use serial ports (via "screen").',
+		'Terminal window tabs can now be hovered over to display their full window titles (when Show Help Tags is on).',
 	],
 	'20090521': [
 		'Fixed major wrapping bug that could cause full-screen programs such as "screen", "pine" and "emacs" to scroll up.',

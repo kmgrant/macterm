@@ -317,6 +317,7 @@ static void					sessionStateChanged				(ListenerModel_Ref, ListenerModel_Event, 
 static OSStatus				setCursorInWindow				(WindowRef, Point, UInt32);
 static void					setStandardState				(TerminalWindowPtr, UInt16, UInt16, Boolean);
 static void					setWarningOnWindowClose			(TerminalWindowPtr, Boolean);
+static void					setWindowAndTabTitle			(TerminalWindowPtr, CFStringRef);
 static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 static void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
@@ -1548,35 +1549,21 @@ TerminalWindow_SetWindowTitle	(TerminalWindowRef	inRef,
 		if (ptr->isDead)
 		{
 			// add a visual indicator to the window title of disconnected windows
-			CFStringRef		adornedCFString = CFStringCreateWithFormat
+			CFRetainRelease		adornedCFString(CFStringCreateWithFormat
 												(kCFAllocatorDefault, nullptr/* format options */,
 													CFSTR("~ %@ ~")/* LOCALIZE THIS? */,
-													ptr->baseTitleString.returnCFStringRef());
+													ptr->baseTitleString.returnCFStringRef()),
+												true/* is retained */);
 			
 			
-			if (nullptr != adornedCFString)
+			if (adornedCFString.exists())
 			{
-				SetWindowTitleWithCFString(ptr->window, adornedCFString);
-				if (ptr->tab.exists())
-				{
-					HIViewWrap		titleWrap(idMyLabelTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
-					
-					
-					SetControlTextWithCFString(titleWrap, adornedCFString);
-				}
-				CFRelease(adornedCFString), adornedCFString = nullptr;
+				setWindowAndTabTitle(ptr, adornedCFString.returnCFStringRef());
 			}
 		}
 		else if (nullptr != inName)
 		{
-			SetWindowTitleWithCFString(ptr->window, ptr->baseTitleString.returnCFStringRef());
-			if (ptr->tab.exists())
-			{
-				HIViewWrap		titleWrap(idMyLabelTabTitle, REINTERPRET_CAST(ptr->tab.returnHIObjectRef(), HIWindowRef));
-				
-				
-				SetControlTextWithCFString(titleWrap, ptr->baseTitleString.returnCFStringRef());
-			}
+			setWindowAndTabTitle(ptr, ptr->baseTitleString.returnCFStringRef());
 		}
 	}
 	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeWindowTitle, ptr->selfRef/* context */);
@@ -5747,6 +5734,46 @@ setWarningOnWindowClose		(TerminalWindowPtr	inPtr,
 
 
 /*!
+Changes the title of the terminal window, and any tab
+associated with it, to the specified string.
+
+See also TerminalWindow_SetWindowTitle().
+
+(4.0)
+*/
+static void
+setWindowAndTabTitle	(TerminalWindowPtr	inPtr,
+						 CFStringRef		inNewTitle)
+{
+	SetWindowTitleWithCFString(inPtr->window, inNewTitle);
+	if (inPtr->tab.exists())
+	{
+		HIViewWrap			titleWrap(idMyLabelTabTitle,
+										REINTERPRET_CAST(inPtr->tab.returnHIObjectRef(), HIWindowRef));
+		HMHelpContentRec	helpTag;
+		
+		
+		// set text
+		SetControlTextWithCFString(titleWrap, inNewTitle);
+		
+		// set help tag, to show full title on hover
+		// in case it is too long to display
+		bzero(&helpTag, sizeof(helpTag));
+		helpTag.version = kMacHelpVersion;
+		helpTag.tagSide = kHMOutsideBottomCenterAligned;
+		helpTag.content[0].contentType = kHMCFStringContent;
+		helpTag.content[0].u.tagCFString = inNewTitle;
+		helpTag.content[1].contentType = kHMCFStringContent;
+		helpTag.content[1].u.tagCFString = CFSTR("");
+		OSStatus error = noErr;
+		//(OSStatus)HMSetControlHelpContent(titleWrap, &helpTag);
+		error = HMSetControlHelpContent(titleWrap, &helpTag);
+		assert_noerr(error);
+	}
+}// setWindowAndTabTitle
+
+
+/*!
 This routine, of "SessionFactory_TerminalWindowOpProcPtr"
 form, arranges the specified window in one of the “free
 slots” for staggered terminal windows.
@@ -5987,7 +6014,7 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				Terminal_CopyTitleForWindow(screen, titleCFString);
 				if (nullptr != titleCFString)
 				{
-					SetWindowTitleWithCFString(ptr->window, titleCFString);
+					TerminalWindow_SetWindowTitle(ptr->selfRef, titleCFString);
 					CFRelease(titleCFString), titleCFString = nullptr;
 				}
 			}
