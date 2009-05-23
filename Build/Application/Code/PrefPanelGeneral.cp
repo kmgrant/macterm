@@ -99,7 +99,6 @@ the NIBs from the package "PrefPanels.nib".
 
 In addition, they MUST be unique across all panels.
 */
-static HIViewID const	idMyCheckBoxSimplifiedUI					= { 'SUIM', 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotAutoClose					= { 'DACW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxDoNotDimInactive				= { 'DDBW', 0/* ID */ };
 static HIViewID const	idMyCheckBoxUseTabsToArrangeWindows			= { 'UTAW', 0/* ID */ };
@@ -943,18 +942,6 @@ const
 	// initialize checkboxes using user preferences
 	//
 	
-	{
-		HIViewWrap		checkBox(idMyCheckBoxSimplifiedUI, inOwningWindow);
-		
-		
-		assert(checkBox.exists());
-		unless (Preferences_GetData(kPreferences_TagSimplifiedUserInterface, sizeof(flag), &flag,
-									&actualSize) == kPreferences_ResultOK)
-		{
-			flag = false; // assume a value, if preference can’t be found
-		}
-		SetControl32BitValue(checkBox, BooleanToCheckBoxValue(flag));
-	}
 	{
 		HIViewWrap		checkBox(idMyCheckBoxDoNotAutoClose, inOwningWindow);
 		
@@ -1962,13 +1949,7 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 		switch (chosenTabIndex)
 		{
 		case kMy_TabIndexGeneralOptions:
-			if (HIViewIDWrap(idMyCheckBoxSimplifiedUI) == viewID)
-			{
-				Preferences_SetData(kPreferences_TagSimplifiedUserInterface,
-									sizeof(checkBoxFlagValue), &checkBoxFlagValue);
-				result = true;
-			}
-			else if (HIViewIDWrap(idMyCheckBoxDoNotAutoClose) == viewID)
+			if (HIViewIDWrap(idMyCheckBoxDoNotAutoClose) == viewID)
 			{
 				Preferences_SetData(kPreferences_TagDontAutoClose,
 									sizeof(checkBoxFlagValue), &checkBoxFlagValue);

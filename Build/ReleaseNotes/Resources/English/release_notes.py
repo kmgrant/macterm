@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090523',
     '20090522',
     '20090521',
     '20090517',
@@ -239,6 +240,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090523': [
+		'The "Simplified user interface" option has been removed to eliminate internal complexity; so all menus are now visible.',
+	],
 	'20090522': [
 		'MacTelnet Help now includes a tutorial on how to use serial ports (via "screen").',
 		'Terminal window tabs can now be hovered over to display their full window titles (when Show Help Tags is on).',

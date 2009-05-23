@@ -26,8 +26,7 @@ h2(#notificationtypes). Types of Notifications
 h3. Session active
 
 This notification applies whenever the Terminal menu in MacTelnet
-has been used to activate "Notify on Next Activity".  (The menu
-is not visible if "Simplified user interface" on.)
+has been used to activate "Notify on Next Activity".
 
 When new data arrives in any monitored terminal window that is
 not in front, this notification is sent.  You might use this if a
@@ -64,8 +63,7 @@ notification look however you want!
 h3. Session idle
 
 This notification applies whenever the Terminal menu in MacTelnet
-has been used to activate "Notify on Inactivity".  (The menu is
-not visible if "Simplified user interface" on.)
+has been used to activate "Notify on Inactivity".
 
 When no data has arrived for awhile in any monitored terminal
 window that is not in front, this notification is sent.  You

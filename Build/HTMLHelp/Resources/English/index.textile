@@ -38,7 +38,6 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 
 <dt>Interesting Features</dt><dd>
 
-* "simpler user interface":content/preferences.html#simplify
 * "floating command line":content/terminals.html#commandline
 * "rectangular text selections":content/terminals.html#select
 * "cursor location finder":content/terminals.html#findcursor

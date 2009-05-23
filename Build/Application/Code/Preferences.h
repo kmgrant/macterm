@@ -197,7 +197,6 @@ enum
 	kPreferences_TagNotifyOfBeeps						= 'bnot',	//!< data: "Boolean"
 	kPreferences_TagPureInverse							= 'pinv',	//!< data: "Boolean"
 	kPreferences_TagRandomTerminalFormats				= 'rfmt',	//!< data: "Boolean"
-	kPreferences_TagSimplifiedUserInterface				= 'simp',	//!< data: "Boolean"
 	kPreferences_TagTerminalCursorType					= 'curs',	//!< data: "TerminalView_CursorType"
 	kPreferences_TagTerminalResizeAffectsFontSize		= 'rszf',	//!< data: "Boolean"
 	kPreferences_TagVisualBell							= 'visb',	//!< data: "Boolean"

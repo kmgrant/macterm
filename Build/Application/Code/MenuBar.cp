@@ -120,7 +120,6 @@ MenuItemIndex				gNumberOfTranslationTableMenuItemsAdded = 0;
 MenuItemIndex				gNumberOfWindowMenuItemsAdded = 0;
 MenuItemIndex				gNumberOfSpecialScriptMenuItems = 0;
 Boolean						gUsingTabs = false;
-Boolean						gSimplifiedMenuBar = false;
 Boolean						gFontMenusAvailable = false;
 UInt32						gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite;
 
@@ -138,8 +137,6 @@ void				buildMenuBar							();
 void				executeScriptByMenuEvent				(MenuRef, MenuItemIndex);
 MenuItemIndex		getMenuAndMenuItemIndexByCommandID		(UInt32, MenuRef*);
 void				getMenuItemAdjustmentProc				(MenuRef, MenuItemIndex, MenuCommandStateTrackerProcPtr*);
-void				getMenusAndMenuItemIndicesByCommandID	(UInt32, MenuRef*, MenuRef*, MenuItemIndex*,
-																MenuItemIndex*);
 void				installMenuItemStateTrackers			();
 void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 void				removeMenuItemModifier					(MenuRef, MenuItemIndex);
@@ -168,7 +165,6 @@ void				setUpScriptsMenu						(MenuRef);
 void				setUpTranslationTablesMenu				(MenuRef);
 void				setUpWindowMenu							(MenuRef);
 void				setWindowMenuItemMarkForSession			(SessionRef, MenuRef = nullptr, MenuItemIndex = 0);
-void				simplifyMenuBar							(Boolean);
 Boolean				stateTrackerCheckableItems				(UInt32, MenuRef, MenuItemIndex);
 Boolean				stateTrackerGenericSessionItems			(UInt32, MenuRef, MenuItemIndex);
 Boolean				stateTrackerNetSendItems				(UInt32, MenuRef, MenuItemIndex);
@@ -197,7 +193,7 @@ MenuBar_Init ()
 	// this ALSO has the effect of initializing menus, because the
 	// callbacks are installed with a request to be invoked immediately
 	// with the initial preference value (this has side effects like
-	// creating the menu bar, possibly setting simplified mode, etc.)
+	// creating the menu bar, etc.)
 	gPreferenceChangeEventListener = ListenerModel_NewStandardListener(preferenceChanged);
 	{
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
@@ -213,10 +209,6 @@ MenuBar_Init ()
 		assert(kPreferences_ResultOK == prefsResult);
 		prefsResult = Preferences_StartMonitoring
 						(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect,
-							true/* notify of initial value */);
-		assert(kPreferences_ResultOK == prefsResult);
-		prefsResult = Preferences_StartMonitoring
-						(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface,
 							true/* notify of initial value */);
 		assert(kPreferences_ResultOK == prefsResult);
 		prefsResult = Preferences_StartMonitoring
@@ -337,7 +329,6 @@ MenuBar_Done ()
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagArrangeWindowsUsingTabs);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagMenuItemKeys);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNewCommandShortcutEffect);
-	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagSimplifiedUserInterface);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 	
 	// disable session counting listener
@@ -414,8 +405,7 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 			// TEMPORARY - LOCALIZE THIS
 			kMacrosMenuTitleWidthApproximation = 66,
 			kWindowMenuTitleWidthApproximation = 72, // pixels
-			kWindowMenuTitleLeftEdgeNormalApproximation = 400, // pixel offset
-			kWindowMenuTitleLeftEdgeSimpleModeApproximation = 272 // pixel offset
+			kWindowMenuTitleLeftEdgeApproximation = 400, // pixel offset
 		};
 		UInt16			macrosMenuWidth = kMacrosMenuTitleWidthApproximation;
 		OSStatus		error = noErr;
@@ -435,15 +425,12 @@ MenuBar_GetMenuTitleRectangle	(MenuBar_Menu	inMenuBarMenuSpecifier,
 		switch (inMenuBarMenuSpecifier)
 		{
 		case kMenuBar_MenuWindow:
-			// approximate the rectangle of the Window menu, which is different in Simplified User
-			// Interface mode (there’s gotta be a beautiful way to get this just right, but I’m
-			// not finding it now)
+			// approximate the rectangle of the Window menu (there’s gotta be a beautiful
+			// way to get this just right, but I’m not finding it now)
 			*outMenuBarMenuTitleRect = (**(GetMainDevice())).gdRect;
 			outMenuBarMenuTitleRect->bottom = GetMBarHeight();
 			outMenuBarMenuTitleRect->left += macrosMenuWidth;
-			outMenuBarMenuTitleRect->left += (gSimplifiedMenuBar)
-												? kWindowMenuTitleLeftEdgeSimpleModeApproximation
-												: kWindowMenuTitleLeftEdgeNormalApproximation;
+			outMenuBarMenuTitleRect->left += kWindowMenuTitleLeftEdgeApproximation;
 			outMenuBarMenuTitleRect->right = outMenuBarMenuTitleRect->left + kWindowMenuTitleWidthApproximation;
 			
 		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
@@ -660,19 +647,17 @@ IMPORTANT:	All commands must be associated with a
 Boolean
 MenuBar_IsMenuCommandEnabled	(UInt32		inCommandID)
 {
-	MenuRef							menu1 = nullptr;
-	MenuRef							menu2 = nullptr;
-	MenuItemIndex					itemIndex1 = 0;
-	MenuItemIndex					itemIndex2 = 0;
+	MenuRef							menu = nullptr;
+	MenuItemIndex					itemIndex = 0;
 	MenuCommandStateTrackerProcPtr	proc = nullptr;
 	Boolean							result = false;
 	
 	
-	getMenusAndMenuItemIndicesByCommandID(inCommandID, &menu1, &menu2, &itemIndex1, &itemIndex2);
-	if ((nullptr != menu1) && (itemIndex1 > 0)) // only look at the primary menu (both should be the same anyway)
+	itemIndex = getMenuAndMenuItemIndexByCommandID(inCommandID, &menu);
+	if ((nullptr != menu) && (itemIndex > 0)) // only look at the primary menu (both should be the same anyway)
 	{
-		getMenuItemAdjustmentProc(menu1, itemIndex1, &proc);
-		if (nullptr != proc) result = MenuBar_InvokeCommandStateTracker(proc, inCommandID, menu1, itemIndex1);
+		getMenuItemAdjustmentProc(menu, itemIndex, &proc);
+		if (nullptr != proc) result = MenuBar_InvokeCommandStateTracker(proc, inCommandID, menu, itemIndex);
 	}
 	
 	return result;
@@ -919,20 +904,14 @@ void
 MenuBar_SetMenuItemStateTrackerProcByCommandID	(UInt32								inCommandID,
 												 MenuCommandStateTrackerProcPtr		inProc)
 {
-	MenuRef			menuHandle1 = nullptr;
-	MenuRef			menuHandle2 = nullptr;
-	MenuItemIndex	itemIndex1 = 0;
-	MenuItemIndex	itemIndex2 = 0;
+	MenuRef			menu = nullptr;
+	MenuItemIndex	itemIndex = 0;
 	
 	
-	getMenusAndMenuItemIndicesByCommandID(inCommandID, &menuHandle1, &menuHandle2, &itemIndex1, &itemIndex2);
-	if ((nullptr != menuHandle1) && (0 != itemIndex1))
+	itemIndex = getMenuAndMenuItemIndexByCommandID(inCommandID, &menu);
+	if ((nullptr != menu) && (0 != itemIndex))
 	{
-		MenuBar_SetMenuItemStateTrackerProc(menuHandle1, itemIndex1, inProc);
-	}
-	if ((nullptr != menuHandle2) && (0 != itemIndex2))
-	{
-		MenuBar_SetMenuItemStateTrackerProc(menuHandle2, itemIndex2, inProc);
+		MenuBar_SetMenuItemStateTrackerProc(menu, itemIndex, inProc);
 	}
 }// SetMenuItemStateTrackerProcByCommandID
 
@@ -1094,9 +1073,6 @@ adjustMenuItem	(MenuRef		inMenu,
 /*!
 Automatically sets the enabled state and, as appropriate, the
 mark, item text, etc. for a menu item using only its command ID.
-Both primary and secondary menus are updated, which means that
-menus specific to simplified-user-interface mode are
-automatically adjusted, too.
 
 For this method to work, you must have previously associated a
 state tracking procedure with the item using
@@ -1110,27 +1086,25 @@ not needed any place else.
 void
 adjustMenuItemByCommandID	(UInt32		inCommandID)
 {
-	MenuRef			menu1 = nullptr;
-	MenuRef			menu2 = nullptr;
-	MenuItemIndex	itemIndex1 = 0;
-	MenuItemIndex	itemIndex2 = 0;
+	MenuRef			menu = nullptr;
+	MenuItemIndex	itemIndex = 0;
 	
 	
-	getMenusAndMenuItemIndicesByCommandID(inCommandID, &menu1, &menu2, &itemIndex1, &itemIndex2);
-	if (nullptr != menu1)
+	itemIndex = getMenuAndMenuItemIndexByCommandID(inCommandID, &menu);
+	if (nullptr != menu)
 	{
 		MenuRef			foundMenu = nullptr;
 		MenuItemIndex	foundIndex = 0;
 		OSStatus		error = noErr;
 		
 		
-		adjustMenuItem(menu1, itemIndex1, inCommandID);
+		adjustMenuItem(menu, itemIndex, inCommandID);
 		
 		// some commands are repeated several times (e.g. for Favorites lists),
 		// requiring iteration to find all of the items that have this command ID
 		for (MenuItemIndex i = 2; ((noErr == error) && (i < 50/* arbitrary */)); ++i)
 		{
-			error = GetIndMenuItemWithCommandID(menu1/* starting point */, inCommandID,
+			error = GetIndMenuItemWithCommandID(menu/* starting point */, inCommandID,
 												i/* which matching item to return */,
 												&foundMenu, &foundIndex);
 			if (noErr == error)
@@ -1139,9 +1113,6 @@ adjustMenuItemByCommandID	(UInt32		inCommandID)
 			}
 		}
 	}
-	
-	// some commands also appear in Simplified User Interface mode, but in different places
-	if ((itemIndex2 != itemIndex1) || (menu2 != menu1)) adjustMenuItem(menu2, itemIndex2, inCommandID);
 }// adjustMenuItemByCommandID
 
 
@@ -1186,10 +1157,6 @@ buildMenuBar ()
 {
 	// Load the NIB containing each menu (automatically finds
 	// the right localizations), and create the menu bar.
-	//
-	// Right now, MacTelnet 3.0 wastefully grabs simple menus
-	// along with regular menus, even though the two will never
-	// be used simultaneously.  Maybe this could be optimized.
 	{
 		NIBLoader	menuFile(AppResources_ReturnBundleForNIBs(), CFSTR("MainMenus"));
 		assert(menuFile.isLoaded());
@@ -1298,37 +1265,26 @@ IMPORTANT:	There are several utility functions in this file that
 			directly performs a command-ID-based function that you
 			need.
 
-WARNING:	This method will only return the menu handle and item
-			number for the command appropriate for the current
-			“mode” (i.e. simplified-user-interface or otherwise).
-			To ensure you change all versions of a command, you
-			should use the getMenusAndMenuItemIndicesByCommandID()
-			variation of this method.  If you use the convenience
-			functions in this module, you avoid this potential
-			problem.
-
 (3.0)
 */
 MenuItemIndex
 getMenuAndMenuItemIndexByCommandID	(UInt32		inCommandID,
 									 MenuRef*	outMenu)
 {
-	MenuRef			simplifiedUIModeMenu = nullptr;
-	MenuItemIndex	simplifiedUIModeMenuItemIndex = 0;
 	MenuItemIndex	result = 0;
+	OSStatus		error = noErr;
 	
 	
-	getMenusAndMenuItemIndicesByCommandID(inCommandID, outMenu, &simplifiedUIModeMenu,
-											&result, &simplifiedUIModeMenuItemIndex);
-	
-	// If the user is in simplified-user-interface mode, then it’s the
-	// secondary menus that are potentially important.  If the secondary
-	// menu is nullptr, however, then the primary menu is also the menu to
-	// use while in simplified-user-interface mode.
-	if (gSimplifiedMenuBar && (nullptr != simplifiedUIModeMenu))
+	// These searches start from the root menu; it may be possible to
+	// write a faster scan (no speed test has been done) by making
+	// the code more dependent on known commands IDs, but this
+	// approach has definite maintainability advantages.
+	if (nullptr != outMenu)
 	{
-		*outMenu = simplifiedUIModeMenu;
-		result = simplifiedUIModeMenuItemIndex;
+		error = GetIndMenuItemWithCommandID(nullptr/* starting point */, inCommandID,
+											1/* which matching item to return */,
+											outMenu/* matching menu */,
+											&result/* matching index, or nullptr */);
 	}
 	return result;
 }// getMenuAndMenuItemIndexByCommandID
@@ -1355,74 +1311,6 @@ getMenuItemAdjustmentProc	(MenuRef							inMenu,
 								sizeof(*outProcPtrPtr), &actualSize, outProcPtrPtr);
 	if (noErr != error) *outProcPtrPtr = nullptr;
 }// getMenuItemAdjustmentProc
-
-
-/*!
-Returns the two menu bar menus and menu item indices for a command
-based only on its command ID.  If the specified command cannot be
-matched with an item index, 0 is returned in the item index pointers.
-If the specified command cannot be matched with a menu, nullptr is
-returned via the specified menu handle pointers.
-
-The “primary” menu specifications refer to the menu in normal mode,
-and the “secondary” menu specifications refer to the menu in
-simplified-user-interface mode.  Some menus do not have versions
-for the simplified-user-interface mode, so the primary and secondary
-menus are identical in those cases.  Also, sometimes an item present
-in a primary menu will not be present in a secondary menu.  0 is
-returned for the item index in this case, and the Mac OS Menu Manager
-should safely ignore any attempts to perform menu operations with
-this index.
-
-IMPORTANT:	This is the only place in the entire program where menu
-			commands are physically tied to menus, with the exception
-			of the 'xmnu' resource specifications.  DO NOT DEFEAT THE
-			PURPOSE OF THIS by placing similar mappings ANYWHERE ELSE.
-			
-			There are several utility functions in this file that
-			automatically use the power of this routine to get and
-			set various attributes of menu items (such as item
-			text, item enabled state and checkmarks) using only a
-			command ID.  If you think this method is useful, be
-			sure to first check if there is an even more useful
-			version that directly performs a command-ID-based
-			function that you need.  In particular, you avoid the
-			hassle of working with the primary and secondary menus
-			if you use one of the utility functions, because the
-			utility functions automatically update both menus.
-
-(3.0)
-*/
-void
-getMenusAndMenuItemIndicesByCommandID	(UInt32				inCommandID,
-										 MenuRef*			outPrimaryMenu,
-										 MenuRef*			outSecondaryMenu,
-										 MenuItemIndex*		outPrimaryItemIndex,
-										 MenuItemIndex*		outSecondaryItemIndex)
-{
-	OSStatus	error = noErr;
-	
-	
-	// These searches start from the root menu; it may be possible to
-	// write a faster scan (no speed test has been done) by making
-	// the code more dependent on known commands IDs, but this
-	// approach has definite maintainability advantages.
-	if (nullptr != outPrimaryMenu)
-	{
-		error = GetIndMenuItemWithCommandID(nullptr/* starting point */, inCommandID,
-											1/* which matching item to return */,
-											outPrimaryMenu/* matching menu */,
-											outPrimaryItemIndex/* matching index, or nullptr */);
-	}
-	if (nullptr != outSecondaryMenu)
-	{
-		error = GetIndMenuItemWithCommandID(nullptr/* starting point */, inCommandID,
-											2/* which matching item to return */,
-											outSecondaryMenu/* matching menu */,
-											outSecondaryItemIndex/* matching index, or nullptr */);
-		if ((noErr != error) && (nullptr != outPrimaryMenu)) *outSecondaryMenu = *outPrimaryMenu;
-	}
-}// getMenusAndMenuItemIndicesByCommandID
 
 
 /*!
@@ -1628,18 +1516,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			gNewCommandShortcutEffect = kCommandNewSessionDefaultFavorite; // assume command, if preference can’t be found
 		}
 		setNewCommand(gNewCommandShortcutEffect);
-		break;
-	
-	case kPreferences_TagSimplifiedUserInterface:
-		// update internal variable that matches the value of the preference
-		// (easier than calling Preferences_GetData() every time!)
-		unless (Preferences_GetData(kPreferences_TagSimplifiedUserInterface,
-									sizeof(gSimplifiedMenuBar), &gSimplifiedMenuBar,
-									&actualSize) == kPreferences_ResultOK)
-		{
-			gSimplifiedMenuBar = false; // assume normal mode, if preference can’t be found
-		}
-		simplifyMenuBar(gSimplifiedMenuBar);
 		break;
 	
 	case kPreferences_ChangeNumberOfContexts:
@@ -2067,7 +1943,7 @@ setMenusHaveKeyEquivalents	(Boolean	inMenusHaveKeyEquivalents,
 		if ((inMenusHaveKeyEquivalents) && (false == inVeryFirstCall))
 		{
 			DeleteMenu(kMenuIDFile);
-			DeleteMenu((gSimplifiedMenuBar) ? kMenuIDSimpleEdit : kMenuIDEdit);
+			DeleteMenu(kMenuIDEdit);
 			DeleteMenu(kMenuIDView);
 			DeleteMenu(kMenuIDTerminal);
 			DeleteMenu(kMenuIDKeys);
@@ -2087,7 +1963,6 @@ setMenusHaveKeyEquivalents	(Boolean	inMenusHaveKeyEquivalents,
 			removeMenuItemModifiers(GetMenuRef(kMenuIDApplication));
 			removeMenuItemModifiers(GetMenuRef(kMenuIDFile));
 			removeMenuItemModifiers(GetMenuRef(kMenuIDEdit));
-			removeMenuItemModifiers(GetMenuRef(kMenuIDSimpleEdit));
 			removeMenuItemModifiers(GetMenuRef(kMenuIDView));
 			removeMenuItemModifiers(GetMenuRef(kMenuIDTerminal));
 			removeMenuItemModifiers(GetMenuRef(kMenuIDKeys));
@@ -2098,14 +1973,6 @@ setMenusHaveKeyEquivalents	(Boolean	inMenusHaveKeyEquivalents,
 		}
 	}
 	
-	// since there is a possibility menus were reloaded, it
-	// is necessary for this routine to perform all post-load
-	// corrections to menus
-	unless (inVeryFirstCall)
-	{
-		simplifyMenuBar(true/* tmp */);
-		simplifyMenuBar(gSimplifiedMenuBar); // need to reset this since menus were reloaded
-	}
 	DrawMenuBar();
 	setUpDynamicMenus();
 }// setMenusHaveKeyEquivalents
@@ -2166,23 +2033,10 @@ setNewCommand	(UInt32		inCommandNShortcutCommand)
 			}
 		}
 		
-		// IMPORTANT: For, er, simplicity, since there is no longer a simplified version
-		// of the File menu, secondary menus are ignored here and key equivalents are
-		// just flipped in the single File menu.  If a simplified File menu is ever
-		// added back, this code has to check and flip the key equivalents in the
-		// secondary menu, too.
-		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionDefaultFavorite, &defaultMenu,
-												nullptr/* simple menu */,
-												&defaultItemIndex, nullptr/* simple item index */);
-		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionShell, &shellMenu,
-												nullptr/* simple menu */,
-												&shellItemIndex, nullptr/* simple item index */);
-		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionLoginShell, &logInShellMenu,
-												nullptr/* simple menu */,
-												&logInShellItemIndex, nullptr/* simple item index */);
-		getMenusAndMenuItemIndicesByCommandID(kCommandNewSessionDialog, &dialogMenu,
-												nullptr/* simple menu */,
-												&dialogItemIndex, nullptr/* simple item index */);
+		defaultItemIndex = getMenuAndMenuItemIndexByCommandID(kCommandNewSessionDefaultFavorite, &defaultMenu);
+		shellItemIndex = getMenuAndMenuItemIndexByCommandID(kCommandNewSessionShell, &shellMenu);
+		logInShellItemIndex = getMenuAndMenuItemIndexByCommandID(kCommandNewSessionLoginShell, &logInShellMenu);
+		dialogItemIndex = getMenuAndMenuItemIndexByCommandID(kCommandNewSessionDialog, &dialogMenu);
 		
 		// first clear the non-command-key modifiers of certain “New” commands
 		removeMenuItemModifier(defaultMenu, defaultItemIndex);
@@ -2977,46 +2831,6 @@ setWindowMenuItemMarkForSession		(SessionRef		inSession,
 		}
 	}
 }// setWindowMenuItemMarkForSession
-
-
-/*!
-Sets the menus appropriately based on whether or not the user
-requested simplified-user-interface mode.  In simplified-
-user-interface mode, there are fewer menu items and fewer
-command key equivalents to make the interface less daunting
-and easier for novices to use.
-
-(3.0)
-*/
-void
-simplifyMenuBar		(Boolean		inSetToSimplifiedMode)
-{
-	if (inSetToSimplifiedMode)
-	{
-		// simplify menus
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDEdit), kMenuAttrHidden/* attributes to set */,
-										0/* attributes to clear */);
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDTerminal), kMenuAttrHidden/* attributes to set */,
-										0/* attributes to clear */);
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDKeys), kMenuAttrHidden/* attributes to set */,
-										0/* attributes to clear */);
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDSimpleEdit), 0/* attributes to set */,
-										kMenuAttrHidden/* attributes to clear */);
-	}
-	else
-	{
-		// change menus back to normal
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDSimpleEdit), kMenuAttrHidden/* attributes to set */,
-										0/* attributes to clear */);
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDEdit), 0/* attributes to set */,
-										kMenuAttrHidden/* attributes to clear */);
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDTerminal), 0/* attributes to set */,
-										kMenuAttrHidden/* attributes to clear */);
-		(OSStatus)ChangeMenuAttributes(GetMenuRef(kMenuIDKeys), 0/* attributes to set */,
-										kMenuAttrHidden/* attributes to clear */);
-	}
-	DrawMenuBar();
-}// simplifyMenuBar
 
 
 /*!

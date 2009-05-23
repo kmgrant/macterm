@@ -1091,8 +1091,6 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagServerUserID,
 									CFSTR("server-user-id"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
-	My_PreferenceDefinition::createFlag(kPreferences_TagSimplifiedUserInterface,
-										CFSTR("menu-command-set-simplified"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTektronixMode,
 									CFSTR("tek-mode"), typeCFStringRef,
 									sizeof(VectorInterpreter_Mode), Quills::Prefs::SESSION);
@@ -3545,7 +3543,6 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagMenuItemKeys:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
-	case kPreferences_TagSimplifiedUserInterface:
 	case kPreferences_TagTerminalCursorType:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
 	case kPreferences_TagTerminalScrollDelay:
@@ -3619,7 +3616,6 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagMenuItemKeys:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
-	case kPreferences_TagSimplifiedUserInterface:
 	case kPreferences_TagTerminalCursorType:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
 	case kPreferences_TagTerminalScrollDelay:
@@ -5894,7 +5890,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagMenuItemKeys:
 				case kPreferences_TagPureInverse:
 				case kPreferences_TagRandomTerminalFormats:
-				case kPreferences_TagSimplifiedUserInterface:
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
 						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
@@ -8289,17 +8284,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-				}
-				break;
-			
-			case kPreferences_TagSimplifiedUserInterface:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
 			

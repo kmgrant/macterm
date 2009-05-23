@@ -64,8 +64,6 @@ table(deftable).
 (defbottom). |(desc)\2. A floating window is visible to turn off Full Screen mode.|
 (deftop). |(key). @kiosk-scroll-bar-visible@|(types). _true or false_|
 (defbottom). |(desc)\2. The scroll bar (and therefore scrollback history) is available in Full Screen mode.|
-(deftop). |(key). @menu-command-set-simplified@|(types). _true or false_|
-(defbottom). |(desc)\2. "Complex" or rarely needed items are hidden in the menu bar.|
 (deftop). |(key). @menu-key-equivalents@|(types). _true or false_|
 (defbottom). |(desc)\2. Menu items in the menu bar can display and respond to keyboard equivalents.|
 (deftop). |(key). @menu-macros-visible@|(types). _true or false_|

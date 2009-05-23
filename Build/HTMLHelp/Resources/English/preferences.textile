@@ -30,11 +30,6 @@ h3(#generaloptions). Options
 
 h4. Menus and Windows
 
-h5(#simplify). Simplified user interface
-
-Hides commands and portions of windows that are not frequently
-needed.
-
 h5(#noautoclose). No window close on process exit
 
 Prevents a window from closing when the process running inside it
