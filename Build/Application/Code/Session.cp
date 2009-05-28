@@ -240,6 +240,9 @@ any code outside this module.  See Session_New().
 */
 struct My_Session
 {
+	My_Session		(Boolean);
+	~My_Session		();
+	
 	Boolean						readOnly;					// whether or not user input is allowed
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
@@ -283,9 +286,9 @@ struct My_Session
 	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
 	VectorInterpreter_Mode		vectorGraphicsCommandSet;	// e.g. TEK 4014 or 4105
 	VectorInterpreter_ID		vectorGraphicsID;			// the ID of the current graphic, if any; see "VectorInterpreter.h"
-	UInt8*						readBufferPtr;				// buffer space for processing data
 	size_t						readBufferSizeMaximum;		// maximum number of bytes that can be processed at once
 	size_t						readBufferSizeInUse;		// number of bytes of data currently in the read buffer
+	UInt8*						readBufferPtr;				// buffer space for processing data
 	CFStringEncoding			writeEncoding;				// the character set that text (data) sent to a session should be using
 	Session_Watch				activeWatch;				// if any, what notification is currently set up for internal data events
 	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
@@ -656,90 +659,17 @@ has arrived.
 SessionRef
 Session_New		(Boolean	inIsReadOnly)
 {
-	SessionRef		result = REINTERPRET_CAST(new My_Session, SessionRef);
+	SessionRef		result = nullptr;
 	
 	
-	// add an entry for this reference to the map
-	if (result != nullptr)
+	try
 	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), result);
-		
-		
-		ptr->mainProcess = nullptr;
-		ptr->readOnly = inIsReadOnly;
-		ptr->vectorGraphicsCommandSet = kVectorInterpreter_ModeTEK4014; // arbitrary, for now...
-		ptr->vectorGraphicsPageOpensNewWindow = true;
-		ptr->vectorGraphicsID = kVectorInterpreter_InvalidID;
-		ptr->kind = kSession_TypeLocalNonLoginShell;
-		ptr->changeListenerModel = ListenerModel_New(kListenerModel_StyleStandard,
-														kConstantsRegistry_ListenerModelDescriptorSessionChanges);
-		ptr->changeListener = ListenerModel_NewStandardListener(connectionStateChanged);
-		ptr->dataArrivalListener = ListenerModel_NewStandardListener(dataArrived);
-		ptr->windowValidationListener = ListenerModel_NewStandardListener(windowValidationStateChanged);
-		//ptr->terminalWindowListener set in response to window-open event
-		//drag-and-drop handlers set in response to window-open event
-		ptr->statusString.clear();
-		ptr->resourceLocationString.clear();
-		ptr->deviceNameString.clear();
-		try
-		{
-			ptr->dataPtr = REINTERPRET_CAST(new ConnectionData(), ConnectionDataPtr);
-		}
-		catch (std::bad_alloc)
-		{
-			ptr->dataPtr = nullptr;
-		}
-		ptr->currentTerminationAlert = nullptr;
-		ptr->terminalWindow = nullptr;
-		ptr->window = nullptr;
-		ptr->readBufferSizeMaximum = 4096; // arbitrary, for initialization; see Session_SetDataProcessingCapacity()
-		ptr->readBufferSizeInUse = 0;
-		// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
-		ptr->readBufferPtr = new UInt8[ptr->readBufferSizeMaximum];
-		assert(nullptr != ptr->readBufferPtr);
-		ptr->writeEncoding = kCFStringEncodingUTF8; // initially...
-		ptr->activeWatch = kSession_WatchNothing;
-		ptr->inactivityWatchTimerUPP = nullptr;
-		ptr->inactivityWatchTimer = nullptr;
-		ptr->watchBox = nullptr;
-		//ptr->auxiliaryDataMap is self-initializing
-		ptr->selfRef = result;
-		Session_StartMonitoring(result, kSession_ChangeState, ptr->changeListener);
-		Session_StartMonitoring(result, kSession_ChangeDataArrived, ptr->dataArrivalListener);
-		Session_StartMonitoring(result, kSession_ChangeWindowValid, ptr->windowValidationListener);
-		Session_StartMonitoring(result, kSession_ChangeWindowInvalid, ptr->windowValidationListener);
-		
-		ptr->status = kSession_StateBrandNew;
-		changeNotifyForSession(ptr, kSession_ChangeState, result/* context */);
-		ptr->statusAttributes = 0;
-		changeNotifyForSession(ptr, kSession_ChangeStateAttributes, result/* context */);
-		
-		// 3.0 - record the time when the connection began
-		GetDateTime(&ptr->connectionDateTime);
-		ptr->terminationAbsoluteTime = 0;
-		
-		// install a one-shot timer to tell interested parties when this session
-		// has been opened for 15 seconds
-		assert(ptr->selfRef != nullptr);
-		ptr->longLifeTimerUPP = NewEventLoopTimerUPP(detectLongLife);
-		(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
-										kEventDurationSecond * kSession_LifetimeMinimumForNoWarningClose,
-										kEventDurationForever/* time between fires - this timer does not repeat */,
-										ptr->longLifeTimerUPP, ptr->selfRef/* user data */, &ptr->longLifeTimer);
-		
-		// prepare the timer for drags but install only as needed
-		ptr->autoActivateDragTimerUPP = NewEventLoopTimerUPP(autoActivateWindow);
-		ptr->autoActivateDragTimer = nullptr;
-		
-		// create a callback for preferences, then listen for certain preferences
-		// (this will also initialize the preferences cache values)
-		ptr->preferencesListener = ListenerModel_NewStandardListener(preferenceChanged, result/* context */);
-		Preferences_StartMonitoring(ptr->preferencesListener, kPreferences_TagCursorBlinks,
-									true/* call immediately to initialize */);
-		Preferences_StartMonitoring(ptr->preferencesListener, kPreferences_TagMapBackquote,
-									true/* call immediately to initialize */);
+		result = REINTERPRET_CAST(new My_Session(inIsReadOnly), SessionRef);
 	}
-	
+	catch (std::bad_alloc)
+	{
+		result = nullptr;
+	}
 	return result;
 }// New
 
@@ -752,57 +682,20 @@ Destroys a session created with Session_New().
 void
 Session_Dispose		(SessionRef*	inoutRefPtr)
 {
-	{
-		My_SessionAutoLocker	ptr(gSessionPtrLocks(), *inoutRefPtr);
-		
-		
-		ptr->status = kSession_StateImminentDisposal;
-		changeNotifyForSession(ptr, kSession_ChangeState, *inoutRefPtr/* context */);
-	}
-	
-	if (gSessionPtrLocks().returnLockCount(*inoutRefPtr) > 0)
+	if (gSessionPtrLocks().isLocked(*inoutRefPtr))
 	{
 		Console_Warning(Console_WriteLine, "attempt to dispose of locked session");
 	}
 	else
 	{
+		// clean up
 		{
 			My_SessionAutoLocker	ptr(gSessionPtrLocks(), *inoutRefPtr);
 			
 			
-			// clean up
-			Preferences_StopMonitoring(ptr->preferencesListener, kPreferences_TagCursorBlinks);
-			Preferences_StopMonitoring(ptr->preferencesListener, kPreferences_TagMapBackquote);
-			ListenerModel_ReleaseListener(&ptr->preferencesListener);
-			
-			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeState, ptr->changeListener);
-			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeDataArrived, ptr->dataArrivalListener);
-			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeWindowValid, ptr->windowValidationListener);
-			Session_StopMonitoring(*inoutRefPtr, kSession_ChangeWindowInvalid, ptr->windowValidationListener);
-			
-			if (nullptr != ptr->autoActivateDragTimer) RemoveEventLoopTimer(ptr->autoActivateDragTimer), ptr->autoActivateDragTimer = nullptr;
-			DisposeEventLoopTimerUPP(ptr->autoActivateDragTimerUPP), ptr->autoActivateDragTimerUPP = nullptr;
-			if (nullptr != ptr->longLifeTimer) RemoveEventLoopTimer(ptr->longLifeTimer), ptr->longLifeTimer = nullptr;
-			DisposeEventLoopTimerUPP(ptr->longLifeTimerUPP), ptr->longLifeTimerUPP = nullptr;
-			
-			if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
-			{
-				VectorInterpreter_Dispose(&ptr->vectorGraphicsID);
-			}
-			
-			delete ptr->dataPtr, ptr->dataPtr = nullptr;
-			
-			// dispose contents
-			// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
-			if (ptr->readBufferPtr != nullptr) delete [] ptr->readBufferPtr, ptr->readBufferPtr = nullptr;
-			ListenerModel_ReleaseListener(&ptr->windowValidationListener);
-			ListenerModel_ReleaseListener(&ptr->dataArrivalListener);
-			ListenerModel_ReleaseListener(&ptr->changeListener);
-			ListenerModel_Dispose(&ptr->changeListenerModel);
+			delete ptr;
 		}
-		
-		// delete outside the lock block
-		delete *(REINTERPRET_CAST(inoutRefPtr, My_SessionPtr*)), *inoutRefPtr = nullptr;
+		*inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -4330,6 +4223,151 @@ controlKey		()
 	bzero(&this->kbbuf, sizeof(this->kbbuf));
 	bzero(&this->parsedat, sizeof(this->parsedat));
 }// ConnectionData default constructor
+
+
+/*!
+Constructor.  See Session_New().
+
+(4.0)
+*/
+My_Session::
+My_Session	(Boolean	inIsReadOnly)
+:
+readOnly(inIsReadOnly),
+kind(kSession_TypeLocalNonLoginShell),
+status(kSession_StateBrandNew),
+statusAttributes(0),
+statusString(),
+resourceLocationString(),
+deviceNameString(),
+connectionDateTime(0), // set below
+terminationAbsoluteTime(0),
+windowClosingUPP(nullptr), // set at window validation time
+windowClosingHandler(nullptr), // set at window validation time
+windowFocusChangeUPP(nullptr), // set at window validation time
+windowFocusChangeHandler(nullptr), // set at window validation time
+terminalViewDragDropUPP(nullptr), // set at window validation time
+terminalViewDragDropHandlers(), // set at window validation time
+terminalViewEnteredUPP(nullptr), // set at window validation time
+terminalViewEnteredHandlers(), // set at window validation time
+terminalViewTextInputUPP(nullptr), // set at window validation time
+terminalViewTextInputHandlers(), // set at window validation time
+changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
+										kConstantsRegistry_ListenerModelDescriptorSessionChanges)),
+changeListener(ListenerModel_NewStandardListener(connectionStateChanged)),
+dataArrivalListener(ListenerModel_NewStandardListener(dataArrived)),
+windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged)),
+terminalWindowListener(nullptr), // set at window validation time
+preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
+autoActivateDragTimerUPP(NewEventLoopTimerUPP(autoActivateWindow)),
+autoActivateDragTimer(nullptr), // installed only as needed
+longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
+longLifeTimer(nullptr), // set later
+dataPtr(new ConnectionData()),
+currentTerminationAlert(nullptr),
+terminalWindow(nullptr), // set at window validation time
+window(nullptr), // set at window validation time
+mainProcess(nullptr),
+targetVectorGraphics(),
+targetRasterGraphicsScreens(),
+targetDumbTerminals(),
+targetTerminals(),
+targetFiles(),
+targetPrintJobs(),
+vectorGraphicsPageOpensNewWindow(true),
+vectorGraphicsCommandSet(kVectorInterpreter_ModeTEK4014), // arbitrary, reset later
+vectorGraphicsID(kVectorInterpreter_InvalidID),
+readBufferSizeMaximum(4096), // arbitrary, for initialization; see Session_SetDataProcessingCapacity()
+readBufferSizeInUse(0),
+readBufferPtr(new UInt8[this->readBufferSizeMaximum]), // Session_SetDataProcessingCapacity() also defines this buffer
+writeEncoding(kCFStringEncodingUTF8), // initially...
+activeWatch(kSession_WatchNothing),
+inactivityWatchTimerUPP(nullptr),
+inactivityWatchTimer(nullptr),
+watchBox(nullptr),
+auxiliaryDataMap(),
+selfRef(REINTERPRET_CAST(this, SessionRef))
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+{
+	// 3.0 - record the time when the connection began
+	GetDateTime(&this->connectionDateTime);
+	
+	assert(nullptr != this->readBufferPtr);
+	
+	Session_StartMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
+	Session_StartMonitoring(this->selfRef, kSession_ChangeDataArrived, this->dataArrivalListener);
+	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
+	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener);
+	
+	changeNotifyForSession(this, kSession_ChangeState, this->selfRef/* context */);
+	changeNotifyForSession(this, kSession_ChangeStateAttributes, this->selfRef/* context */);
+	
+	// install a one-shot timer to tell interested parties when this session
+	// has been opened for 15 seconds
+	(OSStatus)InstallEventLoopTimer(GetCurrentEventLoop(),
+									kEventDurationSecond * kSession_LifetimeMinimumForNoWarningClose,
+									kEventDurationForever/* time between fires - this timer does not repeat */,
+									this->longLifeTimerUPP, this->selfRef/* user data */, &this->longLifeTimer);
+	
+	// create a callback for preferences, then listen for certain preferences
+	// (this will also initialize the preferences cache values)
+	Preferences_StartMonitoring(this->preferencesListener, kPreferences_TagCursorBlinks,
+								true/* call immediately to initialize */);
+	Preferences_StartMonitoring(this->preferencesListener, kPreferences_TagMapBackquote,
+								true/* call immediately to initialize */);
+}// My_Session default constructor
+
+
+/*!
+Destructor.  See Session_Dispose().
+
+(4.0)
+*/
+My_Session::
+~My_Session ()
+{
+	this->status = kSession_StateImminentDisposal;
+	changeNotifyForSession(this, kSession_ChangeState, this->selfRef/* context */);
+	
+	// clean up
+	Preferences_StopMonitoring(this->preferencesListener, kPreferences_TagCursorBlinks);
+	Preferences_StopMonitoring(this->preferencesListener, kPreferences_TagMapBackquote);
+	ListenerModel_ReleaseListener(&this->preferencesListener);
+	
+	Session_StopMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
+	Session_StopMonitoring(this->selfRef, kSession_ChangeDataArrived, this->dataArrivalListener);
+	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
+	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener);
+	
+	if (nullptr != this->autoActivateDragTimer)
+	{
+		RemoveEventLoopTimer(this->autoActivateDragTimer), this->autoActivateDragTimer = nullptr;
+	}
+	DisposeEventLoopTimerUPP(this->autoActivateDragTimerUPP), this->autoActivateDragTimerUPP = nullptr;
+	if (nullptr != this->longLifeTimer)
+	{
+		RemoveEventLoopTimer(this->longLifeTimer), this->longLifeTimer = nullptr;
+	}
+	DisposeEventLoopTimerUPP(this->longLifeTimerUPP), this->longLifeTimerUPP = nullptr;
+	
+	if (kVectorInterpreter_InvalidID != this->vectorGraphicsID)
+	{
+		VectorInterpreter_Dispose(&this->vectorGraphicsID);
+	}
+	
+	delete this->dataPtr, this->dataPtr = nullptr;
+	
+	// dispose contents
+	// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
+	if (this->readBufferPtr != nullptr)
+	{
+		delete [] this->readBufferPtr, this->readBufferPtr = nullptr;
+	}
+	ListenerModel_ReleaseListener(&this->windowValidationListener);
+	ListenerModel_ReleaseListener(&this->dataArrivalListener);
+	ListenerModel_ReleaseListener(&this->changeListener);
+	ListenerModel_Dispose(&this->changeListenerModel);
+}// My_Session destructor
 
 
 /*!
