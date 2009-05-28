@@ -133,13 +133,11 @@ struct My_KeyPress
 };
 typedef My_KeyPress*	My_KeyPressPtr;
 
-typedef std::map< HIViewRef, EventHandlerRef >		ControlDragDropHandlerMap;
+typedef std::map< Session_PropertyKey, void* >		My_AuxiliaryDataByKey;
 
-typedef std::map< HIViewRef, EventHandlerRef >		ControlTextInputHandlerMap;
+typedef std::vector< TerminalScreenRef >	My_CaptureFileList;
 
-typedef std::map< Session_PropertyKey, void* >		SessionAuxiliaryDataMap;
-
-typedef std::vector< TerminalScreenRef >	MyCaptureFileList;
+typedef std::map< HIViewRef, EventHandlerRef >		My_DragDropHandlerByView;
 
 /*!
 A “safe” wrapper around the help tag structure.
@@ -226,15 +224,21 @@ private:
 	CFStringRef			_altName;	// unlike the record name, this can be nullptr
 };
 
-typedef std::vector< TerminalScreenRef >	MyPrintJobList;
+typedef std::vector< TerminalScreenRef >	My_PrintJobList;
 
-typedef std::vector< SInt16 >				MyRasterGraphicsScreenList;
+typedef std::vector< SInt16 >				My_RasterGraphicsScreenList;
 
-typedef std::vector< SInt16 >				MyTEKGraphicList;
+typedef std::vector< SInt16 >				My_TEKGraphicList;
 
-typedef std::vector< TerminalScreenRef >	MyTerminalScreenList;
+typedef std::vector< TerminalScreenRef >	My_TerminalScreenList;
 
-struct Session
+typedef std::map< HIViewRef, EventHandlerRef >	My_TextInputHandlerByView;
+
+/*!
+The data structure that is known as a "Session_Ref" to
+any code outside this module.  See Session_New().
+*/
+struct My_Session
 {
 	Boolean						readOnly;					// whether or not user input is allowed
 	Session_Type				kind;						// type of session; affects use of the union below
@@ -250,11 +254,11 @@ struct Session
 	EventHandlerUPP				windowFocusChangeUPP;		// wrapper for window focus-change callback
 	EventHandlerRef				windowFocusChangeHandler;	// invoked whenever a session terminal window is chosen for keyboard input
 	EventHandlerUPP				terminalViewDragDropUPP;	// wrapper for drag-and-drop callback
-	ControlDragDropHandlerMap	terminalViewDragDropHandlers;// invoked whenever a terminal view is the target of drag-and-drop
+	My_DragDropHandlerByView	terminalViewDragDropHandlers;// invoked whenever a terminal view is the target of drag-and-drop
 	EventHandlerUPP				terminalViewEnteredUPP;		// wrapper for mouse tracking (focus-follows-mouse) callback
-	ControlDragDropHandlerMap	terminalViewEnteredHandlers;// invoked whenever the mouse moves into a terminal view
+	My_DragDropHandlerByView	terminalViewEnteredHandlers;// invoked whenever the mouse moves into a terminal view
 	EventHandlerUPP				terminalViewTextInputUPP;   // wrapper for keystroke callback
-	ControlTextInputHandlerMap	terminalViewTextInputHandlers;// invoked whenever a terminal view is focused during a key press
+	My_TextInputHandlerByView	terminalViewTextInputHandlers;// invoked whenever a terminal view is focused during a key press
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
 	ListenerModel_ListenerRef	changeListener;				// listener that updates the status string
 	ListenerModel_ListenerRef	dataArrivalListener;		// listener that processes incoming data
@@ -270,12 +274,12 @@ struct Session
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
 	HIWindowRef					window;						// redundant copy of TerminalWindow_ReturnWindow(terminalWindow)
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
-	MyTEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
-	MyRasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
-	MyTerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
-	MyTerminalScreenList		targetTerminals;			// list of screen buffers to which incoming data is being copied
-	MyCaptureFileList			targetFiles;				// list of open files, if any, to which incoming data is being copied
-	MyPrintJobList				targetPrintJobs;			// list of open printer spool files, if any, to which incoming data is being copied
+	My_TEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
+	My_RasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
+	My_TerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
+	My_TerminalScreenList		targetTerminals;			// list of screen buffers to which incoming data is being copied
+	My_CaptureFileList			targetFiles;				// list of open files, if any, to which incoming data is being copied
+	My_PrintJobList				targetPrintJobs;			// list of open printer spool files, if any, to which incoming data is being copied
 	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
 	VectorInterpreter_Mode		vectorGraphicsCommandSet;	// e.g. TEK 4014 or 4105
 	VectorInterpreter_ID		vectorGraphicsID;			// the ID of the current graphic, if any; see "VectorInterpreter.h"
@@ -287,7 +291,7 @@ struct Session
 	EventLoopTimerUPP			inactivityWatchTimerUPP;	// procedure that is called if data has not arrived after awhile
 	EventLoopTimerRef			inactivityWatchTimer;		// short timer
 	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
-	SessionAuxiliaryDataMap		auxiliaryDataMap;			// all tagged data associated with this session
+	My_AuxiliaryDataByKey		auxiliaryDataMap;			// all tagged data associated with this session
 	SessionRef					selfRef;					// convenient reference to this structure
 	
 	struct
@@ -296,11 +300,11 @@ struct Session
 		Boolean		remapBackquoteToEscape;		//!< preferences callback should update this value
 	} preferencesCache;
 };
-typedef Session*		SessionPtr;
-typedef SessionPtr*		SessionHandle;
+typedef My_Session*		My_SessionPtr;
+typedef My_SessionPtr*	My_SessionHandle;
 
-typedef MemoryBlockPtrLocker< SessionRef, Session >		SessionPtrLocker;
-typedef LockAcquireRelease< SessionRef, Session >		SessionAutoLocker;
+typedef MemoryBlockPtrLocker< SessionRef, My_Session >	My_SessionPtrLocker;
+typedef LockAcquireRelease< SessionRef, My_Session >	My_SessionAutoLocker;
 
 struct My_PasteAlertInfo
 {
@@ -310,12 +314,12 @@ struct My_PasteAlertInfo
 };
 typedef My_PasteAlertInfo*		My_PasteAlertInfoPtr;
 
-struct TerminateAlertInfo
+struct My_TerminateAlertInfo
 {
 	// sent to terminationWarningCloseNotifyProc()
 	SessionRef		sessionBeingTerminated;
 };
-typedef TerminateAlertInfo*		TerminateAlertInfoPtr;
+typedef My_TerminateAlertInfo*	My_TerminateAlertInfoPtr;
 
 struct My_WatchAlertInfo
 {
@@ -330,8 +334,8 @@ typedef My_WatchAlertInfo*		My_WatchAlertInfoPtr;
 namespace {
 
 pascal void					autoActivateWindow					(EventLoopTimerRef, void*);
-void						changeNotifyForSession				(SessionPtr, Session_Change, void*);
-void						changeStateAttributes				(SessionPtr, Session_StateAttributes,
+void						changeNotifyForSession				(My_SessionPtr, Session_Change, void*);
+void						changeStateAttributes				(My_SessionPtr, Session_StateAttributes,
 																 Session_StateAttributes);
 void						configureSaveDialog					(SessionRef, NavDialogCreationOptions&);
 void						connectionStateChanged				(ListenerModel_Ref, ListenerModel_Event,
@@ -347,15 +351,15 @@ void						dataArrived							(ListenerModel_Ref, ListenerModel_Event,
 pascal void					detectLongLife						(EventLoopTimerRef, void*);
 Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-Boolean						isReadOnly							(SessionPtr);
-void						killConnection						(SessionPtr);
+Boolean						isReadOnly							(My_SessionPtr);
+void						killConnection						(My_SessionPtr);
 pascal void					navigationFileCaptureDialogEvent	(NavEventCallbackMessage, NavCBRecPtr, void*);
 pascal void					navigationSaveDialogEvent			(NavEventCallbackMessage, NavCBRecPtr, void*);
 pascal void					pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
 void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
-Boolean						queueCharacterInKeyboardBuffer		(SessionPtr, char);
+Boolean						queueCharacterInKeyboardBuffer		(My_SessionPtr, char);
 pascal OSStatus				receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 pascal OSStatus				receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
@@ -363,7 +367,7 @@ pascal OSStatus				receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, 
 pascal OSStatus				receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus				receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus				receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
-HIWindowRef					returnActiveWindow					(SessionPtr);
+HIWindowRef					returnActiveWindow					(My_SessionPtr);
 void						sendRecordableDataTransmitEvent		(CFStringRef, Boolean);
 void						sendRecordableDataTransmitEvent		(char const*, SInt16, Boolean);
 void						sendRecordableSpecialTransmitEvent	(FourCharCode, Boolean);
@@ -372,11 +376,11 @@ OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 void						terminationWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
-void						watchClearForSession				(SessionPtr);
+void						watchClearForSession				(My_SessionPtr);
 void						watchCloseNotifyProc				(AlertMessages_BoxRef, SInt16, void*);
-void						watchNotifyForSession				(SessionPtr, Session_Watch);
+void						watchNotifyForSession				(My_SessionPtr, Session_Watch);
 pascal void					watchNotifyFromTimer				(EventLoopTimerRef, void*);
-void						watchTimerResetForSession			(SessionPtr, Session_Watch);
+void						watchTimerResetForSession			(My_SessionPtr, Session_Watch);
 void						windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 
@@ -385,10 +389,10 @@ void						windowValidationStateChanged		(ListenerModel_Ref, ListenerModel_Event,
 #pragma mark Variables
 namespace {
 
-SessionPtrLocker&	gSessionPtrLocks ()	{ static SessionPtrLocker x; return x; }
-PMPageFormat&		gSessionPageFormat () { static PMPageFormat x = createSessionPageFormat(); return x; }
-IconRef				gSessionActiveIcon () { static IconRef x = createSessionStateActiveIcon(); return x; }
-IconRef				gSessionDeadIcon () { static IconRef x = createSessionStateDeadIcon(); return x; }
+My_SessionPtrLocker&	gSessionPtrLocks ()	{ static My_SessionPtrLocker x; return x; }
+PMPageFormat&			gSessionPageFormat () { static PMPageFormat x = createSessionPageFormat(); return x; }
+IconRef					gSessionActiveIcon () { static IconRef x = createSessionStateActiveIcon(); return x; }
+IconRef					gSessionDeadIcon () { static IconRef x = createSessionStateDeadIcon(); return x; }
 
 } // anonymous namespace
 
@@ -652,13 +656,13 @@ has arrived.
 SessionRef
 Session_New		(Boolean	inIsReadOnly)
 {
-	SessionRef		result = REINTERPRET_CAST(new Session, SessionRef);
+	SessionRef		result = REINTERPRET_CAST(new My_Session, SessionRef);
 	
 	
 	// add an entry for this reference to the map
 	if (result != nullptr)
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), result);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), result);
 		
 		
 		ptr->mainProcess = nullptr;
@@ -749,7 +753,7 @@ void
 Session_Dispose		(SessionRef*	inoutRefPtr)
 {
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), *inoutRefPtr);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), *inoutRefPtr);
 		
 		
 		ptr->status = kSession_StateImminentDisposal;
@@ -763,7 +767,7 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 	else
 	{
 		{
-			SessionAutoLocker	ptr(gSessionPtrLocks(), *inoutRefPtr);
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), *inoutRefPtr);
 			
 			
 			// clean up
@@ -798,7 +802,7 @@ Session_Dispose		(SessionRef*	inoutRefPtr)
 		}
 		
 		// delete outside the lock block
-		delete *(REINTERPRET_CAST(inoutRefPtr, SessionPtr*)), *inoutRefPtr = nullptr;
+		delete *(REINTERPRET_CAST(inoutRefPtr, My_SessionPtr*)), *inoutRefPtr = nullptr;
 	}
 }// Dispose
 
@@ -835,15 +839,15 @@ Session_AddDataTarget	(SessionRef				inRef,
 						 Session_DataTarget		inTarget,
 						 void*					inTargetData)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_Result		result = kSession_ResultOK;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_Result			result = kSession_ResultOK;
 	
 	
 	switch (inTarget)
 	{
 	case kSession_DataTargetStandardTerminal:
 		{
-			MyTerminalScreenList::size_type		listSize = ptr->targetTerminals.size();
+			My_TerminalScreenList::size_type	listSize = ptr->targetTerminals.size();
 			
 			
 			ptr->targetTerminals.push_back(REINTERPRET_CAST(inTargetData, TerminalScreenRef));
@@ -853,7 +857,7 @@ Session_AddDataTarget	(SessionRef				inRef,
 	
 	case kSession_DataTargetDumbTerminal:
 		{
-			MyTerminalScreenList::size_type		listSize = ptr->targetDumbTerminals.size();
+			My_TerminalScreenList::size_type	listSize = ptr->targetDumbTerminals.size();
 			
 			
 			ptr->targetDumbTerminals.push_back(REINTERPRET_CAST(inTargetData, TerminalScreenRef));
@@ -863,7 +867,7 @@ Session_AddDataTarget	(SessionRef				inRef,
 	
 	case kSession_DataTargetTektronixGraphicsCanvas:
 		{
-			MyTEKGraphicList::size_type		listSize = ptr->targetVectorGraphics.size();
+			My_TEKGraphicList::size_type	listSize = ptr->targetVectorGraphics.size();
 			
 			
 			ptr->targetVectorGraphics.push_back(*(REINTERPRET_CAST(inTargetData, SInt16 const*/* TEK graphics ID */)));
@@ -873,7 +877,7 @@ Session_AddDataTarget	(SessionRef				inRef,
 	
 	case kSession_DataTargetInteractiveColorRasterGraphicsScreen:
 		{
-			MyRasterGraphicsScreenList::size_type	listSize = ptr->targetRasterGraphicsScreens.size();
+			My_RasterGraphicsScreenList::size_type	listSize = ptr->targetRasterGraphicsScreens.size();
 			
 			
 			ptr->targetRasterGraphicsScreens.push_back(*(REINTERPRET_CAST(inTargetData, SInt16 const*/* ICR window ID */)));
@@ -883,7 +887,7 @@ Session_AddDataTarget	(SessionRef				inRef,
 	
 	case kSession_DataTargetOpenCaptureFile:
 		{
-			MyCaptureFileList::size_type	listSize = ptr->targetFiles.size();
+			My_CaptureFileList::size_type	listSize = ptr->targetFiles.size();
 			
 			
 			ptr->targetFiles.push_back(REINTERPRET_CAST(inTargetData, TerminalScreenRef));
@@ -917,10 +921,10 @@ Session_AppendDataForProcessing		(SessionRef		inRef,
 									 UInt8 const*	inDataPtr,
 									 size_t			inSize)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	size_t				numberOfBytesToCopy = 0;
-	size_t const		kMaximumBytesLeft = ptr->readBufferSizeMaximum - ptr->readBufferSizeInUse;
-	size_t				result = inSize;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	size_t					numberOfBytesToCopy = 0;
+	size_t const			kMaximumBytesLeft = ptr->readBufferSizeMaximum - ptr->readBufferSizeInUse;
+	size_t					result = inSize;
 	
 	
 	// figure out how much to copy
@@ -947,8 +951,8 @@ TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
 ConnectionDataPtr
 Session_ConnectionDataPtr	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	ConnectionDataPtr	result = ptr->dataPtr;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	ConnectionDataPtr		result = ptr->dataPtr;
 	
 	
 	return result;
@@ -981,7 +985,7 @@ Session_CopyStateIconRef	(SessionRef		inRef,
 	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		switch (ptr->status)
@@ -1057,8 +1061,8 @@ in killConnection().
 void
 Session_Disconnect		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	ConnectionDataPtr	connectionDataPtr = ptr->dataPtr;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	ConnectionDataPtr		connectionDataPtr = ptr->dataPtr;
 	
 	
 	if (Session_StateIsActive(inRef))
@@ -1139,9 +1143,9 @@ without the user having confirmed the print.
 void
 Session_DisplayPrintPageSetupDialog		(SessionRef		inRef)
 {
-	OSStatus			error = noErr;
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	PMPrintSession		printSession = nullptr;
+	OSStatus				error = noErr;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	PMPrintSession			printSession = nullptr;
 	
 	
 	error = PMCreateSession(&printSession);
@@ -1277,14 +1281,14 @@ void
 Session_DisplayTerminationWarning	(SessionRef		inRef,
 									 Boolean		UNUSED_ARGUMENT_CLASSIC(inForceModalDialog))
 {
-	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
-	HIWindowRef				window = Session_ReturnActiveWindow(inRef);
-	TerminateAlertInfoPtr	terminateAlertInfoPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(TerminateAlertInfo)),
-																		TerminateAlertInfoPtr);
-	Rect					originalStructureBounds;
-	Rect					centeredStructureBounds;
-	OSStatus				error = noErr;
-	Boolean					isModal = inForceModalDialog;
+	My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	HIWindowRef					window = Session_ReturnActiveWindow(inRef);
+	My_TerminateAlertInfoPtr	terminateAlertInfoPtr = REINTERPRET_CAST(Memory_NewPtr(sizeof(My_TerminateAlertInfo)),
+																			My_TerminateAlertInfoPtr);
+	Rect						originalStructureBounds;
+	Rect						centeredStructureBounds;
+	OSStatus					error = noErr;
+	Boolean						isModal = inForceModalDialog;
 	
 	
 	// TEMPORARY - this should really take into account whether the quit event is interactive
@@ -1582,9 +1586,9 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 		*outNewSaveFileMemoryModelPtr = saveFileMemoryModel;
 		if (saveFileMemoryModel != nullptr)
 		{
-			SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-			TerminalWindowRef	terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
-			TerminalViewRef		view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+			TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
+			TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(terminalWindow);
 			
 			
 			// write all information into memory
@@ -1731,8 +1735,8 @@ showing as much data as there is available.
 void
 Session_FlushNetwork	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	register SInt16		remainingBytesCount = 0;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	register SInt16			remainingBytesCount = 0;
 	
 	
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
@@ -1784,7 +1788,7 @@ Session_GetStateString		(SessionRef		inRef,
 	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		outUncopiedString = ptr->statusString.returnCFStringRef();
@@ -1823,7 +1827,7 @@ Session_GetWindowUserDefinedTitle	(SessionRef		inRef,
 	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		outUncopiedString = ptr->dataPtr->alternateTitle.returnCFStringRef();
@@ -1845,8 +1849,8 @@ IMPORTANT:	This is ONLY a flag.  It is not enforced,
 Boolean
 Session_IsReadOnly	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = isReadOnly(ptr);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = isReadOnly(ptr);
 	
 	
 	return result;
@@ -1864,8 +1868,8 @@ TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
 char*
 Session_kbbuf		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	char*				result = ptr->dataPtr->kbbuf;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	char*					result = ptr->dataPtr->kbbuf;
 	
 	
 	return result;
@@ -1883,8 +1887,8 @@ TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
 SInt16*
 Session_kblen		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16*				result = &ptr->dataPtr->kblen;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	SInt16*					result = &ptr->dataPtr->kblen;
 	
 	
 	return result;
@@ -1903,8 +1907,8 @@ echo back characters.
 Boolean
 Session_LocalEchoIsEnabled		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (ptr->dataPtr->echo != 0);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (ptr->dataPtr->echo != 0);
 	
 	
 	return result;
@@ -1922,8 +1926,8 @@ return key or control key is pressed.
 Boolean
 Session_LocalEchoIsFullDuplex	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (ptr->dataPtr->halfdup == 0);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (ptr->dataPtr->halfdup == 0);
 	
 	
 	return result;
@@ -1940,8 +1944,8 @@ is locally echoed and immediately sent to the server.
 Boolean
 Session_LocalEchoIsHalfDuplex	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (ptr->dataPtr->halfdup != 0);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (ptr->dataPtr->halfdup != 0);
 	
 	
 	return result;
@@ -1958,8 +1962,8 @@ not been suspended by a Scroll Lock.
 Boolean
 Session_NetworkIsSuspended		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = !ptr->dataPtr->enabled;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = !ptr->dataPtr->enabled;
 	
 	
 	return result;
@@ -1977,8 +1981,8 @@ session’s process (local or remote).
 Boolean
 Session_PageKeysControlTerminalView		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = !ptr->dataPtr->pgupdwn;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = !ptr->dataPtr->pgupdwn;
 	
 	
 	return result;
@@ -1996,8 +2000,8 @@ TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
 UInt8*
 Session_parsedat		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	UInt8*				result = ptr->dataPtr->parsedat;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	UInt8*					result = ptr->dataPtr->parsedat;
 	
 	
 	return result;
@@ -2015,8 +2019,8 @@ TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
 size_t
 Session_parsedat_size	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	size_t				result = sizeof(ptr->dataPtr->parsedat);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	size_t					result = sizeof(ptr->dataPtr->parsedat);
 	
 	
 	return result;
@@ -2034,8 +2038,8 @@ TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
 SInt16*
 Session_parseIndex		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16*				result = &ptr->dataPtr->parseIndex;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	SInt16*					result = &ptr->dataPtr->parseIndex;
 	
 	
 	return result;
@@ -2131,8 +2135,8 @@ low seven bits.
 Boolean
 Session_ProcessesAll8Bits		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = ptr->dataPtr->eightbit;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = ptr->dataPtr->eightbit;
 	
 	
 	return result;
@@ -2156,8 +2160,8 @@ Session_SetDataProcessingCapacity().
 size_t
 Session_ProcessMoreData		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	size_t				result = 0;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	size_t					result = 0;
 	
 	
 	// local session data on Mac OS X is handled in a separate
@@ -2189,7 +2193,7 @@ Session_PropertyAdd		(SessionRef				inRef,
 {
 	if (inRef != nullptr)
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		ptr->auxiliaryDataMap[inAuxiliaryDataTag] = inAuxiliaryData;
@@ -2216,7 +2220,7 @@ Session_PropertyLookUp	(SessionRef				inRef,
 {
 	if (inRef != nullptr)
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		if (ptr->auxiliaryDataMap.find(inAuxiliaryDataTag) != ptr->auxiliaryDataMap.end())
@@ -2246,7 +2250,7 @@ Session_PropertyRemove	(SessionRef				inRef,
 	
 	if (inRef != nullptr)
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		// erase the specified data from the internal map, and return it;
@@ -2282,8 +2286,8 @@ Session_ReceiveData		(SessionRef		inRef,
 						 void const*	inBufferPtr,
 						 size_t			inByteCount)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_Result		result = kSession_ResultOK;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_Result			result = kSession_ResultOK;
 	
 	
 	// “carbon copy” the data to all active attached targets; take care
@@ -2357,8 +2361,8 @@ Session_RemoveDataTarget	(SessionRef				inRef,
 							 Session_DataTarget		inTarget,
 							 void*					inTargetData)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_Result		result = kSession_ResultOK;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_Result			result = kSession_ResultOK;
 	
 	
 	switch (inTarget)
@@ -2433,8 +2437,8 @@ more than one window to belong to a session.
 TerminalWindowRef
 Session_ReturnActiveTerminalWindow	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	TerminalWindowRef	result = ptr->terminalWindow;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	TerminalWindowRef		result = ptr->terminalWindow;
 	
 	
 	return result;
@@ -2455,8 +2459,8 @@ See documentation on that function for more.
 HIWindowRef
 Session_ReturnActiveWindow	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	HIWindowRef			result = returnActiveWindow(ptr);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	HIWindowRef				result = returnActiveWindow(ptr);
 	
 	
 	return result;
@@ -2473,8 +2477,8 @@ user interface elements.
 CFStringRef
 Session_ReturnPseudoTerminalDeviceNameCFString		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFStringRef			result = ptr->deviceNameString.returnCFStringRef();
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFStringRef				result = ptr->deviceNameString.returnCFStringRef();
 	
 	
 	return result;
@@ -2493,8 +2497,8 @@ interface elements.
 CFStringRef
 Session_ReturnResourceLocationCFString		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFStringRef			result = ptr->resourceLocationString.returnCFStringRef();
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFStringRef				result = ptr->resourceLocationString.returnCFStringRef();
 	
 	
 	return result;
@@ -2511,8 +2515,8 @@ certain tasks.
 Session_State
 Session_ReturnState	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_State		result = ptr->status;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_State			result = ptr->status;
 	
 	
 	return result;
@@ -2529,7 +2533,7 @@ element is currently modal to the session).
 Session_StateAttributes
 Session_ReturnStateAttributes	(SessionRef		inRef)
 {
-	SessionAutoLocker			ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
 	Session_StateAttributes		result = ptr->statusAttributes;
 	
 	
@@ -2554,8 +2558,8 @@ if the specified session is unrecognized
 Session_Result
 Session_Select	(SessionRef		inRef)
 {
-	Session_Result		result = kSession_ResultOK;
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_Result			result = kSession_ResultOK;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	if (nullptr == ptr) result = kSession_ResultInvalidReference;
@@ -2594,16 +2598,17 @@ Session_SendData	(SessionRef		inRef,
 					 CFStringRef	inString)
 {
 	// first determine how much space will be needed
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFIndex				numberOfBytesRequired = 0;
-	CFIndex				numberOfCharactersConverted = CFStringGetBytes(inString,
-																		CFRangeMake(0, CFStringGetLength(inString)),
-																		ptr->writeEncoding,
-																		0/* loss byte, or 0 for no lossy conversion */,
-																		false/* is external representation */,
-																		nullptr/* no buffer means “return size only” */,
-																		0/* size - ignored for null buffer */,
-																		&numberOfBytesRequired);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFIndex					numberOfBytesRequired = 0;
+	CFIndex					numberOfCharactersConverted = CFStringGetBytes
+															(inString,
+																CFRangeMake(0, CFStringGetLength(inString)),
+																ptr->writeEncoding,
+																0/* loss byte, or 0 for no lossy conversion */,
+																false/* is external representation */,
+																nullptr/* no buffer means “return size only” */,
+																0/* size - ignored for null buffer */,
+																&numberOfBytesRequired);
 	SInt16		result = -1;
 	
 	
@@ -2649,8 +2654,8 @@ Session_SendData	(SessionRef		inRef,
 					 void const*	inBufferPtr,
 					 size_t			inByteCount)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16				result = 0;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	SInt16					result = 0;
 	
 	
 	if (nullptr != ptr->mainProcess)
@@ -2674,8 +2679,8 @@ left in the buffer.
 SInt16
 Session_SendFlush	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16				result = 0;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	SInt16					result = 0;
 	
 	
 	// not currently defined
@@ -2700,8 +2705,8 @@ Session_SendFlushData	(SessionRef		inRef,
 						 void const*	inBufferPtr,
 						 SInt16			inByteCount)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16				result = 0;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	SInt16					result = 0;
 	
 	
 	(SInt16)Session_SendFlush(inRef);
@@ -2729,10 +2734,10 @@ void
 Session_SendNewline		(SessionRef		inRef,
 						 Session_Echo	inEcho)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	TerminalScreenRef	screen = TerminalWindow_ReturnScreenWithFocus(ptr->terminalWindow);
-	Boolean				lineFeedToo = false;
-	Boolean				echo = false;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(ptr->terminalWindow);
+	Boolean					lineFeedToo = false;
+	Boolean					echo = false;
 	
 	
 	if (nullptr != screen)
@@ -2798,8 +2803,8 @@ Session_SetDataProcessingCapacity	(SessionRef		inRef,
 	if (inRef == nullptr) result = kSession_ResultInvalidReference;
 	else
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-		UInt8*				newBuffer = nullptr;
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		UInt8*					newBuffer = nullptr;
 		
 		
 		// set the size, and allocate a buffer if necessary
@@ -2840,7 +2845,7 @@ void
 Session_SetLocalEchoEnabled		(SessionRef		inRef,
 								 Boolean		inIsEnabled)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->dataPtr->echo = inIsEnabled;
@@ -2858,7 +2863,7 @@ pressed.
 void
 Session_SetLocalEchoFullDuplex	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->dataPtr->halfdup = 0;
@@ -2875,7 +2880,7 @@ sent to the server.
 void
 Session_SetLocalEchoHalfDuplex	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->dataPtr->halfdup = 1;
@@ -2893,7 +2898,7 @@ void
 Session_SetNetworkSuspended		(SessionRef		inRef,
 								 Boolean		inScrollLock)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->dataPtr->enabled = !inScrollLock;
@@ -2962,7 +2967,7 @@ void
 Session_SetNewlineMode	(SessionRef				inRef,
 						 Session_NewlineMode	inNewlineMode)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->dataPtr->crmap = inNewlineMode;
@@ -2983,7 +2988,7 @@ void
 Session_SetProcess	(SessionRef			inRef,
 					 Local_ProcessRef	inRunningProcess)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	assert(nullptr != inRunningProcess);
@@ -3039,7 +3044,7 @@ Session_SetSendDataEncoding		(SessionRef			inRef,
 	if (nullptr == inRef) result = kSession_ResultInvalidReference;
 	else
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		ptr->writeEncoding = inEncoding;
@@ -3058,7 +3063,7 @@ void
 Session_SetSpeechEnabled	(SessionRef		inRef,
 							 Boolean		inIsEnabled)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	Terminal_SetSpeechEnabled(ptr->dataPtr->vs, inIsEnabled);
@@ -3090,7 +3095,7 @@ void
 Session_SetState	(SessionRef		inRef,
 					 Session_State	inNewState)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->status = inNewState;
@@ -3126,7 +3131,7 @@ void
 Session_SetTerminalWindow	(SessionRef			inRef,
 							 TerminalWindowRef	inTerminalWindow)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->terminalWindow = inTerminalWindow;
@@ -3155,7 +3160,7 @@ void
 Session_SetWatch	(SessionRef		inRef,
 					 Session_Watch	inNewWatch)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->activeWatch = inNewWatch;
@@ -3205,7 +3210,7 @@ void
 Session_SetWindowUserDefinedTitle	(SessionRef		inRef,
 									 CFStringRef	inWindowName)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->dataPtr->alternateTitle.setCFTypeRef(CFStringCreateCopy(kCFAllocatorDefault, inWindowName));
@@ -3225,8 +3230,8 @@ call such as SpeechBusy().)
 Boolean
 Session_SpeechIsEnabled		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = Terminal_SpeechIsEnabled(ptr->dataPtr->vs);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = Terminal_SpeechIsEnabled(ptr->dataPtr->vs);
 	
 	
 	return result;
@@ -3250,7 +3255,7 @@ the computer to speak the remainder of its buffer.
 void
 Session_SpeechPause		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	Terminal_SpeechPause(ptr->dataPtr->vs);
@@ -3265,7 +3270,7 @@ Resumes speech paused with Session_SpeechPause().
 void
 Session_SpeechResume	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	Terminal_SpeechResume(ptr->dataPtr->vs);
@@ -3306,8 +3311,8 @@ Session_StartMonitoring		(SessionRef					inRef,
 	}
 	else
 	{
-		OSStatus			error = noErr;
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		OSStatus				error = noErr;
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		// add a listener to the specified target’s listener model for the given setting change
@@ -3331,8 +3336,8 @@ current.
 Boolean
 Session_StateIsActive	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = false;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = false;
 	
 	
 	result = ((kSession_StateActiveUnstable == ptr->status) ||
@@ -3356,8 +3361,8 @@ is in the stable active state.
 Boolean
 Session_StateIsActiveStable		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_StateActiveStable == ptr->status);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_StateActiveStable == ptr->status);
 	
 	
 	return result;
@@ -3379,8 +3384,8 @@ is in the unstable active state.
 Boolean
 Session_StateIsActiveUnstable	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_StateActiveUnstable == ptr->status);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_StateActiveUnstable == ptr->status);
 	
 	
 	return result;
@@ -3400,8 +3405,8 @@ tells you when the session has been properly set up.
 Boolean
 Session_StateIsBrandNew		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_StateBrandNew == ptr->status);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_StateBrandNew == ptr->status);
 	
 	
 	return result;
@@ -3418,8 +3423,8 @@ but perhaps its window is still open).
 Boolean
 Session_StateIsDead		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_StateDead == ptr->status);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_StateDead == ptr->status);
 	
 	
 	return result;
@@ -3438,8 +3443,8 @@ this state it is appropriate to perform cleanup tasks
 Boolean
 Session_StateIsImminentDisposal		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_StateImminentDisposal == ptr->status);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_StateImminentDisposal == ptr->status);
 	
 	
 	return result;
@@ -3459,8 +3464,8 @@ the user, etc.
 Boolean
 Session_StateIsInitialized		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_StateInitialized == ptr->status);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_StateInitialized == ptr->status);
 	
 	
 	return result;
@@ -3501,7 +3506,7 @@ Session_StopMonitoring	(SessionRef					inRef,
 	}
 	else
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		// remove a listener from the specified target’s listener model for the given setting change
@@ -3522,7 +3527,7 @@ window remains the target).
 Boolean
 Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 {
-	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	VectorInterpreter_ID	id = kVectorInterpreter_InvalidID;
 	Boolean					result = false;
 	
@@ -3562,7 +3567,7 @@ does nothing.
 void
 Session_TEKDetachTargetGraphic		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	if (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID)
@@ -3582,8 +3587,8 @@ TEK vector graphic for the specified session.
 Boolean
 Session_TEKHasTargetGraphic		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kVectorInterpreter_InvalidID != ptr->vectorGraphicsID);
 	
 	
 	return result;
@@ -3599,8 +3604,8 @@ set up to handle Tektronix vector graphics.
 Boolean
 Session_TEKIsEnabled	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kVectorInterpreter_ModeDisabled != ptr->vectorGraphicsCommandSet);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kVectorInterpreter_ModeDisabled != ptr->vectorGraphicsCommandSet);
 	
 	
 	return result;
@@ -3619,8 +3624,8 @@ is cleared and replaced with the new graphics.)
 Boolean
 Session_TEKPageCommandOpensNewWindow	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = ptr->vectorGraphicsPageOpensNewWindow;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = ptr->vectorGraphicsPageOpensNewWindow;
 	
 	
 	return result;
@@ -3641,7 +3646,7 @@ void
 Session_TEKSetPageCommandOpensNewWindow		(SessionRef		inRef,
 											 Boolean		inNewWindow)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	ptr->vectorGraphicsPageOpensNewWindow = inNewWindow;
@@ -3681,7 +3686,7 @@ Session_TerminalCopyAnswerBackMessage	(SessionRef		inRef,
 	if (nullptr == inRef) result = kSession_ResultInvalidReference;
 	else
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		outAnswerBack = Terminal_EmulatorReturnName(ptr->dataPtr->vs);
@@ -3706,7 +3711,7 @@ Session_TerminalWrite	(SessionRef		inRef,
 						 UInt8 const*	inBuffer,
 						 UInt32			inLength)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	Terminal_EmulatorProcessData(ptr->dataPtr->vs, inBuffer, inLength);
@@ -3726,7 +3731,7 @@ void
 Session_TerminalWriteCString	(SessionRef		inRef,
 								 char const*	inCString)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	Terminal_EmulatorProcessCString(ptr->dataPtr->vs, inCString);
@@ -3744,8 +3749,8 @@ result to get a text representation.
 UInt32
 Session_TimeOfActivation	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	UInt32				result = 0L;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	UInt32					result = 0L;
 	
 	
 	result = ptr->connectionDateTime;
@@ -3764,8 +3769,8 @@ result to get a text representation.
 CFAbsoluteTime
 Session_TimeOfTermination	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	CFAbsoluteTime		result = 0L;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	CFAbsoluteTime			result = 0L;
 	
 	
 	result = ptr->terminationAbsoluteTime;
@@ -3786,8 +3791,8 @@ directly.
 Boolean
 Session_TypeIsLocalLoginShell	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_TypeLocalLoginShell == ptr->kind);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_TypeLocalLoginShell == ptr->kind);
 	
 	
 	return result;
@@ -3807,8 +3812,8 @@ session.
 Boolean
 Session_TypeIsLocalNonLoginShell	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_TypeLocalNonLoginShell == ptr->kind);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_TypeLocalNonLoginShell == ptr->kind);
 	
 	
 	return result;
@@ -3837,8 +3842,9 @@ Session_UserInputCFString	(SessionRef		inRef,
 	{
 		try
 		{
-			SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-			char*				stringBuffer = new char[1 + CFStringGetMaximumSizeForEncoding
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+			char*					stringBuffer = new char
+													[1 + CFStringGetMaximumSizeForEncoding
 															(CFStringGetLength(inStringBuffer), ptr->writeEncoding)];
 			
 			
@@ -3906,7 +3912,7 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 	
 	// send character to Unix process
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
 		if (nullptr != ptr->mainProcess)
@@ -3944,8 +3950,8 @@ Session_Result
 Session_UserInputKey	(SessionRef		inRef,
 						 UInt8			inKeyOrASCII)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_Result		result = kSession_ResultOK;
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_Result			result = kSession_ResultOK;
 	
 	
 	if (nullptr == ptr) result = kSession_ResultInvalidReference;
@@ -4026,7 +4032,7 @@ Session_UserInputPaste	(SessionRef			inRef,
 	PasteboardRef const		kPasteboard = (nullptr == inSourceOrNull)
 											? Clipboard_ReturnPrimaryPasteboard()
 											: inSourceOrNull;
-	SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	My_PasteAlertInfoPtr	pasteAlertInfoPtr = new My_PasteAlertInfo;
 	CFStringRef				pastedCFString = nullptr;
 	CFStringRef				pastedDataUTI = nullptr;
@@ -4165,7 +4171,7 @@ void
 Session_UserInputQueueCharacter		(SessionRef		inRef,
 									 char			inCharacter)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
 	(Boolean)queueCharacterInKeyboardBuffer(ptr, inCharacter);
@@ -4217,8 +4223,8 @@ See Session_SetWatch().
 Boolean
 Session_WatchIsForInactivity	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_WatchForInactivity == ptr->activeWatch);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_WatchForInactivity == ptr->activeWatch);
 	
 	
 	return result;
@@ -4238,8 +4244,8 @@ See Session_SetWatch().
 Boolean
 Session_WatchIsForKeepAlive		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_WatchForKeepAlive == ptr->activeWatch);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_WatchForKeepAlive == ptr->activeWatch);
 	
 	
 	return result;
@@ -4257,8 +4263,8 @@ See Session_SetWatch().
 Boolean
 Session_WatchIsForPassiveData	(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_WatchForPassiveData == ptr->activeWatch);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_WatchForPassiveData == ptr->activeWatch);
 	
 	
 	return result;
@@ -4276,8 +4282,8 @@ See Session_SetWatch().
 Boolean
 Session_WatchIsOff		(SessionRef		inRef)
 {
-	SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean				result = (kSession_WatchNothing == ptr->activeWatch);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Boolean					result = (kSession_WatchNothing == ptr->activeWatch);
 	
 	
 	return result;
@@ -4340,8 +4346,8 @@ pascal void
 autoActivateWindow	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 					 void*					inSessionRef)
 {
-	SessionRef			ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
 	
 	
 	if (nullptr != ptr->terminalWindow) SelectWindow(TerminalWindow_ReturnWindow(ptr->terminalWindow));
@@ -4361,7 +4367,7 @@ IMPORTANT:	The context must make sense for the
 (3.0)
 */
 void
-changeNotifyForSession		(SessionPtr			inPtr,
+changeNotifyForSession		(My_SessionPtr		inPtr,
 							 Session_Change		inWhatChanged,
 							 void*				inContextPtr)
 {
@@ -4380,7 +4386,7 @@ specified clear attributes are cleared.
 (3.1)
 */
 void
-changeStateAttributes	(SessionPtr					inPtr,
+changeStateAttributes	(My_SessionPtr				inPtr,
 						 Session_StateAttributes	inAttributesToSet,
 						 Session_StateAttributes	inAttributesToClear)
 {
@@ -4432,9 +4438,9 @@ connectionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeState:
 		// update status text to reflect new state
 		{
-			SessionRef			session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-			CFStringRef			statusString = nullptr;
+			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			CFStringRef				statusString = nullptr;
 			
 			
 			// once connected, set the connection time
@@ -4768,7 +4774,7 @@ dataArrived		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 			
 			// also trigger a watch, if one exists
 			{
-				SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+				My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 				
 				
 				if (kSession_WatchForPassiveData == ptr->activeWatch)
@@ -4814,8 +4820,8 @@ pascal void
 detectLongLife	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				 void*					inSessionRef)
 {
-	SessionRef			ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
 	
 	
 	if (Session_StateIsActiveUnstable(ref)) Session_SetState(ref, kSession_StateActiveStable);
@@ -4861,7 +4867,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	Boolean					result = false;
 	My_KeyPressPtr			keyPressInfoPtr = REINTERPRET_CAST(inEventContextPtr, My_KeyPressPtr);
 	SessionRef				session = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
-	SessionAutoLocker		ptr(gSessionPtrLocks(), session);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 	ConnectionDataPtr		connectionDataPtr = nullptr; // TEMPORARY, until transition to SessionRef
 	static SInt16			characterCode = '\0'; // ASCII
 	static SInt16			characterCode2 = '\0'; // ASCII
@@ -5147,7 +5153,7 @@ not allowing user input.
 (2.6)
 */
 inline Boolean
-isReadOnly		(SessionPtr		inPtr)
+isReadOnly		(My_SessionPtr		inPtr)
 {
 	return inPtr->readOnly;
 }// isReadOnly
@@ -5170,7 +5176,7 @@ window should be destroyed.
 (2.6)
 */
 void
-killConnection		(SessionPtr		inPtr)
+killConnection		(My_SessionPtr		inPtr)
 {
 	if (inPtr->dataPtr != nullptr)
 	{
@@ -5253,7 +5259,7 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 						(reply, captureFileCreator, 'TEXT', saveFile, temporaryFile);
 				if (error == noErr)
 				{
-					SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 					
 					
 					// delete the temporary file; this is ignored for file captures,
@@ -5498,7 +5504,7 @@ pasteWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 	
 	if (dataPtr != nullptr)
 	{
-		SessionAutoLocker	sessionPtr(gSessionPtrLocks(), dataPtr->sessionForPaste);
+		My_SessionAutoLocker	sessionPtr(gSessionPtrLocks(), dataPtr->sessionForPaste);
 		
 		
 		if (inItemHit == kAlertStdAlertOKButton)
@@ -5538,9 +5544,9 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 void*					UNUSED_ARGUMENT(inEventContextPtr),
 					 void*					inListenerContextPtr)
 {
-	SessionRef			ref = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
-	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
-	size_t				actualSize = 0L;
+	SessionRef				ref = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	size_t					actualSize = 0L;
 	
 	
 	switch (inPreferenceTagThatChanged)
@@ -5586,7 +5592,7 @@ successfully.
 (3.0)
 */
 Boolean
-queueCharacterInKeyboardBuffer	(SessionPtr		inPtr,
+queueCharacterInKeyboardBuffer	(My_SessionPtr	inPtr,
 								 char			inCharacter)
 {
 	Boolean		result = true; // TEMPORARY: no error checking here
@@ -5616,11 +5622,11 @@ receiveTerminalViewDragDrop		(EventHandlerCallRef	inHandlerCallRef,
 								 EventRef				inEvent,
 								 void*					inSessionRef)
 {
-	OSStatus			result = eventNotHandledErr;
-	SessionRef			session = REINTERPRET_CAST(inSessionRef, SessionRef);
-	SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-	UInt32 const		kEventClass = GetEventClass(inEvent);
-	UInt32 const		kEventKind = GetEventKind(inEvent);
+	OSStatus				result = eventNotHandledErr;
+	SessionRef				session = REINTERPRET_CAST(inSessionRef, SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+	UInt32 const			kEventClass = GetEventClass(inEvent);
+	UInt32 const			kEventKind = GetEventKind(inEvent);
 	
 	
 	assert(kEventClass == kEventClassControl);
@@ -6002,7 +6008,7 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 		case '`':
 			// user-defined key mapping
 			{
-				SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+				My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 				
 				
 				if ((false == controlKeyPressInfo.commandDown) &&
@@ -6177,7 +6183,7 @@ receiveWindowFocusChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the window was found, proceed
 		if (result == noErr)
 		{
-			SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 			
 			
 			watchClearForSession(ptr);
@@ -6196,7 +6202,7 @@ Returns the window most recently used by this session.
 (4.0)
 */
 HIWindowRef
-returnActiveWindow	(SessionPtr		inPtr)
+returnActiveWindow	(My_SessionPtr		inPtr)
 {
 	HIWindowRef		result = inPtr->window;
 	
@@ -6567,7 +6573,7 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				if (nullptr == session) error = true;
 				else
 				{
-					SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 					
 					
 					changeNotifyForSession(ptr, kSession_ChangeWindowObscured, session);
@@ -6594,9 +6600,9 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				if (session == nullptr) error = true;
 				else
 				{
-					SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-					UInt16				newColumnCount = 0;
-					UInt16				newRowCount = 0;
+					My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+					UInt16					newColumnCount = 0;
+					UInt16					newRowCount = 0;
 					
 					
 					// determine new size
@@ -6643,12 +6649,12 @@ terminationWarningCloseNotifyProc	(InterfaceLibAlertRef	inAlertThatClosed,
 									 SInt16					inItemHit,
 									 void*					inTerminateAlertInfoPtr)
 {
-	TerminateAlertInfoPtr	dataPtr = REINTERPRET_CAST(inTerminateAlertInfoPtr, TerminateAlertInfoPtr);
+	My_TerminateAlertInfoPtr	dataPtr = REINTERPRET_CAST(inTerminateAlertInfoPtr, My_TerminateAlertInfoPtr);
 	
 	
 	if (dataPtr != nullptr)
 	{
-		SessionAutoLocker				sessionPtr(gSessionPtrLocks(), dataPtr->sessionBeingTerminated);
+		My_SessionAutoLocker			sessionPtr(gSessionPtrLocks(), dataPtr->sessionBeingTerminated);
 		SessionCloseWarningButtonInfo	info;
 		
 		
@@ -6723,7 +6729,7 @@ triggered notification on that session.
 (3.1)
 */
 void
-watchClearForSession	(SessionPtr		inPtr)
+watchClearForSession	(My_SessionPtr		inPtr)
 {
 	// note the change (e.g. can cause icon displays to be updated)
 	changeStateAttributes(inPtr, 0/* attributes to set */,
@@ -6754,7 +6760,7 @@ watchCloseNotifyProc	(AlertMessages_BoxRef	inAlertThatClosed,
 	
 	if (nullptr != dataPtr)
 	{
-		SessionAutoLocker	ptr(gSessionPtrLocks(), dataPtr->sessionBeingWatched);
+		My_SessionAutoLocker	ptr(gSessionPtrLocks(), dataPtr->sessionBeingWatched);
 		
 		
 		watchClearForSession(ptr);
@@ -6780,7 +6786,7 @@ need to see an alert about the window currently being used!
 (3.1)
 */
 void
-watchNotifyForSession	(SessionPtr		inPtr,
+watchNotifyForSession	(My_SessionPtr	inPtr,
 						 Session_Watch	inWhatTriggered)
 {
 	Boolean		canTrigger = (kSession_WatchForKeepAlive == inWhatTriggered)
@@ -6908,8 +6914,8 @@ pascal void
 watchNotifyFromTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 						 void*					inSessionRef)
 {
-	SessionRef			ref = REINTERPRET_CAST(inSessionRef, SessionRef);
-	SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
+	SessionRef				ref = REINTERPRET_CAST(inSessionRef, SessionRef);
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
 	
 	
 	watchNotifyForSession(ptr, ptr->activeWatch);
@@ -6929,7 +6935,7 @@ Has no effect for other kinds of watches.
 (3.1)
 */
 void
-watchTimerResetForSession	(SessionPtr		inPtr,
+watchTimerResetForSession	(My_SessionPtr	inPtr,
 							 Session_Watch	inWatchType)
 {
 	OSStatus	error = noErr;
@@ -7011,8 +7017,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeWindowValid:
 		// install window-dependent event handlers
 		{
-			SessionRef			session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 			
 			
 			// install a callback that disposes of the window properly when it should be closed
@@ -7155,8 +7161,8 @@ windowValidationStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kSession_ChangeWindowInvalid:
 		// remove window-dependent event handlers
 		{
-			SessionRef			session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+			SessionRef				session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
+			My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 			
 			
 			RemoveEventHandler(ptr->windowClosingHandler), ptr->windowClosingHandler = nullptr;
