@@ -229,31 +229,6 @@ sigset_t&					gSignalsBlockedInThreads ()
 #pragma mark Public Methods
 
 /*!
-Disables local echoing for a pseudo-terminal.
-Returns any errors sent back from terminal
-control routines.
-
-(3.0)
-*/
-int
-Local_DisableTerminalLocalEcho		(Local_TerminalID		inPseudoTerminalID)
-{
-	struct termios	stermios;
-	int				result = 0;
-	
-	
-	result = tcgetattr(inPseudoTerminalID, &stermios);
-	if (0 == result)
-	{
-		stermios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
-		stermios.c_oflag &= ~(ONLCR); // also disable mapping from newline to newline-carriage-return
-		result = tcsetattr(inPseudoTerminalID, TCSANOW/* when to apply changes */, &stermios);
-	}
-	return result;
-}// DisableTerminalLocalEcho
-
-
-/*!
 Returns the current Unix user’s login shell preference,
 as a pointer to an array of characters in C string format.
 
@@ -420,139 +395,6 @@ Local_ProcessReturnUnixID	(Local_ProcessRef	inProcess)
 	result = ptr->_processID;
 	return result;
 }// ProcessReturnUnixID
-
-
-/*!
-Returns the resume-output character for a
-pseudo-terminal (usually, control-Q).  Returns
--1 if any errors are sent back from terminal
-control routines.
-
-(3.1)
-*/
-int
-Local_ReturnTerminalFlowStartCharacter	(Local_TerminalID		inPseudoTerminalID)
-{
-	struct termios	stermios;
-	int				result = 0;
-	int				error = 0;
-	
-	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
-	if (0 == error)
-	{
-		// success!
-		result = stermios.c_cc[VSTART];
-	}
-	else
-	{
-		// error
-		result = -1;
-	}
-	
-	return result;
-}// ReturnTerminalFlowStartCharacter
-
-
-/*!
-Returns the suspend-output (scroll lock) character
-for a pseudo-terminal (usually, control-S).  Returns
--1 if any errors are sent back from terminal control
-routines.
-
-(3.1)
-*/
-int
-Local_ReturnTerminalFlowStopCharacter	(Local_TerminalID		inPseudoTerminalID)
-{
-	struct termios	stermios;
-	int				result = 0;
-	int				error = 0;
-	
-	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
-	if (0 == error)
-	{
-		// success!
-		result = stermios.c_cc[VSTOP];
-	}
-	else
-	{
-		// error
-		result = -1;
-	}
-	
-	return result;
-}// ReturnTerminalFlowStopCharacter
-
-
-/*!
-Returns the interrupt-process character for a
-pseudo-terminal (usually, control-C).  Returns
--1 if any errors are sent back from terminal
-control routines.
-
-(3.1)
-*/
-int
-Local_ReturnTerminalInterruptCharacter	(Local_TerminalID		inPseudoTerminalID)
-{
-	struct termios	stermios;
-	int				result = 0;
-	int				error = 0;
-	
-	
-	error = tcgetattr(inPseudoTerminalID, &stermios);
-	if (0 == error)
-	{
-		// success!
-		result = stermios.c_cc[VINTR];
-	}
-	else
-	{
-		// error
-		result = -1;
-	}
-	
-	return result;
-}// ReturnTerminalInterruptCharacter
-
-
-/*!
-Sends a message to the specified TTY telling it
-that the size of the terminal window has now
-changed.  If you resize a terminal window in
-which a Unix process is running but do not send
-this message, then the process cannot make use
-of the additional space in the window.
-
-\retval kLocal_ResultOK
-if the message is sent successfully
-
-\retval kLocal_ResultIOControlError
-if the message could not be sent
-
-(3.0)
-*/
-Local_Result
-Local_SendTerminalResizeMessage		(Local_TerminalID	inPseudoTerminalID,
-									 UInt16				inNewColumnCount,
-									 UInt16				inNewRowCount,
-									 UInt16				inNewColumnWidthInPixels,
-									 UInt16				inNewRowHeightInPixels)
-{
-	Local_Result		result = kLocal_ResultOK;
-	struct winsize		unixTerminalWindowSizeStructure; // defined in "/usr/include/sys/ttycom.h"
-	
-	
-	unixTerminalWindowSizeStructure.ws_col = inNewColumnCount;				// terminal width, in characters
-	unixTerminalWindowSizeStructure.ws_row = inNewRowCount;					// terminal height, in lines
-	unixTerminalWindowSizeStructure.ws_xpixel = inNewColumnWidthInPixels;	// terminal width, in pixels
-	unixTerminalWindowSizeStructure.ws_ypixel = inNewRowHeightInPixels;		// terminal height, in pixels
-	
-	result = sendTerminalResizeMessage(inPseudoTerminalID, &unixTerminalWindowSizeStructure);
-	return result;
-}// SendTerminalResizeMessage
 
 
 /*!
@@ -927,6 +769,164 @@ Local_StandardInputIsATerminal ()
 
 
 /*!
+Disables local echoing for a pseudo-terminal.
+Returns any errors sent back from terminal
+control routines.
+
+(3.0)
+*/
+int
+Local_TerminalDisableLocalEcho		(Local_TerminalID		inPseudoTerminalID)
+{
+	struct termios	stermios;
+	int				result = 0;
+	
+	
+	result = tcgetattr(inPseudoTerminalID, &stermios);
+	if (0 == result)
+	{
+		stermios.c_lflag &= ~(ECHO | ECHOE | ECHOK | ECHONL);
+		stermios.c_oflag &= ~(ONLCR); // also disable mapping from newline to newline-carriage-return
+		result = tcsetattr(inPseudoTerminalID, TCSANOW/* when to apply changes */, &stermios);
+	}
+	return result;
+}// TerminalDisableLocalEcho
+
+
+/*!
+Returns the resume-output character for a
+pseudo-terminal (usually, control-Q).  Returns
+-1 if any errors are sent back from terminal
+control routines.
+
+(3.1)
+*/
+int
+Local_TerminalReturnFlowStartCharacter	(Local_TerminalID		inPseudoTerminalID)
+{
+	struct termios	stermios;
+	int				result = 0;
+	int				error = 0;
+	
+	
+	error = tcgetattr(inPseudoTerminalID, &stermios);
+	if (0 == error)
+	{
+		// success!
+		result = stermios.c_cc[VSTART];
+	}
+	else
+	{
+		// error
+		result = -1;
+	}
+	
+	return result;
+}// TerminalReturnFlowStartCharacter
+
+
+/*!
+Returns the suspend-output (scroll lock) character
+for a pseudo-terminal (usually, control-S).  Returns
+-1 if any errors are sent back from terminal control
+routines.
+
+(3.1)
+*/
+int
+Local_TerminalReturnFlowStopCharacter	(Local_TerminalID		inPseudoTerminalID)
+{
+	struct termios	stermios;
+	int				result = 0;
+	int				error = 0;
+	
+	
+	error = tcgetattr(inPseudoTerminalID, &stermios);
+	if (0 == error)
+	{
+		// success!
+		result = stermios.c_cc[VSTOP];
+	}
+	else
+	{
+		// error
+		result = -1;
+	}
+	
+	return result;
+}// TerminalReturnFlowStopCharacter
+
+
+/*!
+Returns the interrupt-process character for a
+pseudo-terminal (usually, control-C).  Returns
+-1 if any errors are sent back from terminal
+control routines.
+
+(3.1)
+*/
+int
+Local_TerminalReturnInterruptCharacter	(Local_TerminalID		inPseudoTerminalID)
+{
+	struct termios	stermios;
+	int				result = 0;
+	int				error = 0;
+	
+	
+	error = tcgetattr(inPseudoTerminalID, &stermios);
+	if (0 == error)
+	{
+		// success!
+		result = stermios.c_cc[VINTR];
+	}
+	else
+	{
+		// error
+		result = -1;
+	}
+	
+	return result;
+}// TerminalReturnInterruptCharacter
+
+
+/*!
+Sends a message to the specified TTY telling it
+that the size of the terminal window has now
+changed.  If you resize a terminal window in
+which a Unix process is running but do not send
+this message, then the process cannot make use
+of the additional space in the window.
+
+\retval kLocal_ResultOK
+if the message is sent successfully
+
+\retval kLocal_ResultIOControlError
+if the message could not be sent
+
+(3.0)
+*/
+Local_Result
+Local_TerminalResize	(Local_TerminalID	inPseudoTerminalID,
+						 UInt16				inNewColumnCount,
+						 UInt16				inNewRowCount,
+						 UInt16				inNewColumnWidthInPixels,
+						 UInt16				inNewRowHeightInPixels)
+{
+	Local_Result		result = kLocal_ResultOK;
+	struct winsize		unixTerminalWindowSizeStructure; // defined in "/usr/include/sys/ttycom.h"
+	
+	
+	unixTerminalWindowSizeStructure.ws_col = inNewColumnCount;				// terminal width, in characters
+	unixTerminalWindowSizeStructure.ws_row = inNewRowCount;					// terminal height, in lines
+	unixTerminalWindowSizeStructure.ws_xpixel = inNewColumnWidthInPixels;	// terminal width, in pixels
+	unixTerminalWindowSizeStructure.ws_ypixel = inNewRowHeightInPixels;		// terminal height, in pixels
+	
+	result = sendTerminalResizeMessage(inPseudoTerminalID, &unixTerminalWindowSizeStructure);
+	return result;
+}// TerminalResize
+
+
+/*!
 Writes the specified data to the stream described by
 the file descriptor.  Returns the number of bytes
 actually written.
@@ -934,9 +934,9 @@ actually written.
 (3.0)
 */
 ssize_t
-Local_WriteBytes	(int			inFileDescriptor,
-					 void const*	inBufferPtr,
-					 size_t			inByteCount)
+Local_TerminalWriteBytes	(int			inFileDescriptor,
+							 void const*	inBufferPtr,
+							 size_t			inByteCount)
 {
 	char const*			ptr = nullptr;
 	size_t				bytesLeft = 0;
@@ -971,7 +971,7 @@ Local_WriteBytes	(int			inFileDescriptor,
 		}
 	}
 	return result;
-}// WriteBytes
+}// TerminalWriteBytes
 
 
 #pragma mark Internal Methods
@@ -1656,7 +1656,7 @@ receiveSignal	(int	UNUSED_ARGUMENT(inSignal))
 
 
 /*!
-Internal version of Local_SendTerminalResizeMessage().
+Internal version of Local_TerminalResize().
 
 \retval kLocal_ResultOK
 if the message is sent successfully

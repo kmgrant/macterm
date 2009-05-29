@@ -2553,9 +2553,9 @@ Session_SendData	(SessionRef		inRef,
 	
 	if (nullptr != ptr->mainProcess)
 	{
-		result = Local_WriteBytes(Local_ProcessReturnMasterTerminal(ptr->mainProcess), inBufferPtr, inByteCount);
+		result = Local_TerminalWriteBytes(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
+											inBufferPtr, inByteCount);
 	}
-	
 	return result;
 }// SendData
 
@@ -2824,7 +2824,7 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		if (nullptr != ptr->mainProcess)
 		{
 			queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-											(Local_ReturnTerminalFlowStopCharacter
+											(Local_TerminalReturnFlowStopCharacter
 												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), char));
 		}
 		// set the scroll lock attribute of the session
@@ -2840,7 +2840,7 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		if (nullptr != ptr->mainProcess)
 		{
 			queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-											(Local_ReturnTerminalFlowStartCharacter
+											(Local_TerminalReturnFlowStartCharacter
 												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), char));
 		}
 		// clear the scroll lock attribute of the session
@@ -3811,7 +3811,7 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 		if (nullptr != ptr->mainProcess)
 		{
 			Session_UserInputQueueCharacter(inRef, STATIC_CAST
-											(Local_ReturnTerminalInterruptCharacter
+											(Local_TerminalReturnInterruptCharacter
 												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)),
 												char));
 			Session_FlushUserInputBuffer(inRef);
@@ -6649,10 +6649,10 @@ terminalWindowChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					// send an I/O control message to the TTY informing it that the screen size has changed
 					if (nullptr != ptr->mainProcess)
 					{
-						Local_SendTerminalResizeMessage(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
-														newColumnCount, newRowCount,
-														0/* tmp - not easy to tell pixel width here */,
-														0/* tmp - not easy to tell pixel width here */);
+						Local_TerminalResize(Local_ProcessReturnMasterTerminal(ptr->mainProcess),
+												newColumnCount, newRowCount,
+												0/* tmp - not easy to tell pixel width here */,
+												0/* tmp - not easy to tell pixel width here */);
 					}
 				}
 			}

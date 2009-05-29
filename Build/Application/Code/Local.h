@@ -133,28 +133,28 @@ pid_t
 //@{
 
 int
-	Local_DisableTerminalLocalEcho			(Local_TerminalID			inPseudoTerminalID);
-
-int
-	Local_ReturnTerminalFlowStartCharacter	(Local_TerminalID			inPseudoTerminalID);
-
-int
-	Local_ReturnTerminalFlowStopCharacter	(Local_TerminalID			inPseudoTerminalID);
-
-int
-	Local_ReturnTerminalInterruptCharacter	(Local_TerminalID			inPseudoTerminalID);
+	Local_TerminalDisableLocalEcho			(Local_TerminalID			inPseudoTerminalID);
 
 Local_Result
-	Local_SendTerminalResizeMessage			(Local_TerminalID			inPseudoTerminalID,
+	Local_TerminalResize					(Local_TerminalID			inPseudoTerminalID,
 											 UInt16						inNewColumnCount,
 											 UInt16						inNewRowCount,
 											 UInt16						inNewColumnWidthInPixels,
 											 UInt16						inNewRowHeightInPixels);
 
+int
+	Local_TerminalReturnFlowStartCharacter	(Local_TerminalID			inPseudoTerminalID);
+
+int
+	Local_TerminalReturnFlowStopCharacter	(Local_TerminalID			inPseudoTerminalID);
+
+int
+	Local_TerminalReturnInterruptCharacter	(Local_TerminalID			inPseudoTerminalID);
+
 extern "C"
 {
 ssize_t
-	Local_WriteBytes						(Local_TerminalID			inFileDescriptor,
+	Local_TerminalWriteBytes				(Local_TerminalID			inFileDescriptor,
 											 void const*				inBufferPtr,
 											 size_t						inByteCount);
 }
