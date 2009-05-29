@@ -243,6 +243,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20090529': [
 		'Fixed terminal search highlighting to cover the correct ranges even if the scrollback is showing (Trac #26).',
+		'The environment variables TERM_PROGRAM and TERM_PROGRAM_VERSION are now defined, as other Mac terminals have done.',
 	],
 	'20090523': [
 		'The "Simplified user interface" option has been removed to eliminate internal complexity; so all menus are now visible.',

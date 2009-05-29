@@ -66,6 +66,7 @@ extern "C"
 // library includes
 #include <AlertMessages.h>
 #include <CarbonEventUtilities.template.h>
+#include <CFUtilities.h>
 #include <Console.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
@@ -530,6 +531,45 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				(int)setenv("TERM", answerBackCString, true/* overwrite */);
 			}
 			delete [] answerBackCString;
+		}
+	}
+	
+	// Apple’s Terminal sets the variables TERM_PROGRAM and
+	// TERM_PROGRAM_VERSION for some reason; it is possible
+	// that scripts could start to rely on these, so it seems
+	// harmless enough to set them correctly for MacTelnet
+	{
+		CFBundleRef		mainBundle = AppResources_ReturnBundleForInfo();
+		CFStringRef		valueCFString = nullptr;
+		
+		
+		valueCFString = CFUtilities_StringCast
+						(CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleNameKey));
+		if (nullptr != valueCFString)
+		{
+			size_t const	kStringSize = CFStringGetLength(valueCFString) + 1/* terminator */;
+			char*			valueCString = new char[kStringSize];
+			
+			
+			if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
+			{
+				(int)setenv("TERM_PROGRAM", valueCString, true/* overwrite */);
+			}
+			delete [] valueCString;
+		}
+		valueCFString = CFUtilities_StringCast
+						(CFBundleGetValueForInfoDictionaryKey(mainBundle, kCFBundleVersionKey));
+		if (nullptr != valueCFString)
+		{
+			size_t const	kStringSize = CFStringGetLength(valueCFString) + 1/* terminator */;
+			char*			valueCString = new char[kStringSize];
+			
+			
+			if (CFStringGetCString(valueCFString, valueCString, kStringSize, kCFStringEncodingASCII))
+			{
+				(int)setenv("TERM_PROGRAM_VERSION", valueCString, true/* overwrite */);
+			}
+			delete [] valueCString;
 		}
 	}
 	
