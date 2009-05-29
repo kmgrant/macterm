@@ -416,6 +416,7 @@ void				drawVTGraphicsGlyph					(TerminalViewPtr, CGContextRef, Rect const*, Uni
 void				eraseSection						(TerminalViewPtr, CGContextRef, SInt16, SInt16, CGRect&);
 void				eventNotifyForView					(TerminalViewConstPtr, TerminalView_Event, void*);
 Terminal_LineRef	findRowIterator						(TerminalViewPtr, UInt16);
+Terminal_LineRef	findRowIteratorRelativeTo			(TerminalViewPtr, UInt16, SInt16);
 Boolean				findVirtualCellFromLocalPoint		(TerminalViewPtr, Point, TerminalView_Cell&, SInt16&, SInt16&);
 void				getBlinkAnimationColor				(TerminalViewPtr, UInt16, RGBColor*);
 void				getRowBounds						(TerminalViewPtr, UInt16, Rect*);
@@ -2828,8 +2829,8 @@ TerminalView_TranslateTerminalScreenRange	(TerminalViewRef					inView,
 	else
 	{
 		outRange.first = TerminalView_Cell(inRange.firstColumn, inRange.firstRow);
-		outRange.second = TerminalView_Cell(inRange.firstColumn + inRange.columnCount,
-											inRange.firstRow + inRange.rowCount);
+		outRange.second = TerminalView_Cell(outRange.first.first + inRange.columnCount,
+											outRange.first.second + inRange.rowCount);
 	}
 	return result;
 }// TranslateTerminalScreenRange
@@ -5276,6 +5277,29 @@ currently topmost in the view, row index 0 refers to the
 50th scrollback line.  Returns nullptr if the index is out
 of range or there is any other problem creating the iterator.
 
+Calls findRowIteratorRelativeTo().
+
+(3.0)
+*/
+Terminal_LineRef
+findRowIterator		(TerminalViewPtr	inTerminalViewPtr,
+					 UInt16				inZeroBasedRowIndex)
+{
+	Terminal_LineRef	result = findRowIteratorRelativeTo(inTerminalViewPtr, inZeroBasedRowIndex,
+															inTerminalViewPtr->screen.topVisibleEdgeInRows);
+	
+	
+	return result;
+}// findRowIterator
+
+
+/*!
+Returns the terminal buffer iterator for the specified line,
+which is relative to the given origin row (where 0 is the
+topmost main screen row, and -1 is the first scrollback row).
+Returns nullptr if the index is out of range or there is any
+other problem creating the iterator.
+
 It is most efficient to interact with the terminal backing
 store in terms of iterator references; however, in the
 physical world (view rendering), these are only useful for
@@ -5291,18 +5315,19 @@ world.
 
 IMPORTANT:  Call releaseRowIterator() when finished with the
 			given iterator, in case any resources were
-			allocated to create it in the first place. 
+			allocated to create it in the first place.
 
-(3.0)
+(4.0)
 */
 Terminal_LineRef
-findRowIterator		(TerminalViewPtr	inTerminalViewPtr,
-					 UInt16				inZeroBasedRowIndex)
+findRowIteratorRelativeTo	(TerminalViewPtr	inTerminalViewPtr,
+							 UInt16				inZeroBasedRowIndex,
+							 SInt16				inOriginRow)
 {
 	Terminal_LineRef	result = nullptr;
 	// normalize the requested row so that a scrollback line is negative,
 	// and all main screen lines are numbered 0 or greater
-	SInt16 const		kActualIndex = inTerminalViewPtr->screen.topVisibleEdgeInRows + inZeroBasedRowIndex;
+	SInt16 const		kActualIndex = inOriginRow + inZeroBasedRowIndex;
 	
 	
 	// TEMPORARY: this is a lazy implementation and inefficient, but it works
@@ -5320,7 +5345,7 @@ findRowIterator		(TerminalViewPtr	inTerminalViewPtr,
 		result = Terminal_NewMainScreenLineIterator(inTerminalViewPtr->screen.ref, kActualIndex);
 	}
 	return result;
-}// findRowIterator
+}// findRowIteratorRelativeTo
 
 
 /*!
@@ -6816,8 +6841,8 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 	
 	// modify selection attributes
 	{
-		Terminal_LineRef	lineIterator = findRowIterator
-											(inTerminalViewPtr, orderedRange.first.second);
+		Terminal_LineRef	lineIterator = findRowIteratorRelativeTo
+											(inTerminalViewPtr, orderedRange.first.second, 0/* origin row */);
 		UInt16 const		kNumberOfRows = orderedRange.second.second - orderedRange.first.second;
 		
 		
@@ -6857,10 +6882,6 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 			{
 				orderedRange.second.first = pastTheEndColumn;
 			}
-			if (orderedRange.first.second < 0)
-			{
-				orderedRange.first.second = 0;
-			}
 		}
 		
 		// redraw affected area; for rectangular selections it is only
@@ -6876,8 +6897,9 @@ highlightVirtualRange	(TerminalViewPtr				inTerminalViewPtr,
 											: Terminal_ReturnColumnCount(inTerminalViewPtr->screen.ref);
 			
 			
-			for (UInt16 rowIndex = orderedRange.first.second;
-					rowIndex < orderedRange.second.second; ++rowIndex)
+			for (UInt16 rowIndex = orderedRange.first.second - inTerminalViewPtr->screen.topVisibleEdgeInRows;
+					rowIndex < orderedRange.second.second - inTerminalViewPtr->screen.topVisibleEdgeInRows;
+					++rowIndex)
 			{
 				invalidateRowSection(inTerminalViewPtr, rowIndex,
 										kFirstChar, kPastLastChar - kFirstChar/* count */);

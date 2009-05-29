@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090529',
     '20090523',
     '20090522',
     '20090521',
@@ -240,6 +241,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090529': [
+		'Fixed terminal search highlighting to cover the correct ranges even if the scrollback is showing (Trac #26).',
+	],
 	'20090523': [
 		'The "Simplified user interface" option has been removed to eliminate internal complexity; so all menus are now visible.',
 	],
