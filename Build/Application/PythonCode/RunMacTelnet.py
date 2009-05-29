@@ -52,6 +52,19 @@ except ImportError, err:
 Base.all_init()
 #Base.all_init(os.environ['INITIAL_APP_BUNDLE_DIR']) # this variant is no longer needed
 
+# undo environment settings made by the "MacTelnet" script, so as not
+# to pollute the user environment too much
+for removed_var in (
+	# this list should basically correspond to any uses of
+	# "os.environ" in the "MacTelnet" front-end script
+    'DYLD_FRAMEWORK_PATH',
+    'DYLD_LIBRARY_PATH',
+    'INITIAL_APP_BUNDLE_DIR',
+    'PYTHONEXECUTABLE',
+    'PYTHONPATH',
+):
+    if removed_var in os.environ: del os.environ[removed_var]
+
 # banner
 print "MacTelnet: Base initialization complete.  This is MacTelnet version %s." % Base.version()
 

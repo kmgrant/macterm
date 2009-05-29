@@ -243,6 +243,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20090529': [
 		'Fixed terminal search highlighting to cover the correct ranges even if the scrollback is showing (Trac #26).',
+		'Fixed initialization to remove startup-time variable settings from the environment of launched sessions.',
 		'The environment variables TERM_PROGRAM and TERM_PROGRAM_VERSION are now defined, as other Mac terminals have done.',
 	],
 	'20090523': [
