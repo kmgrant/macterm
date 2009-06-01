@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090531',
     '20090529',
     '20090523',
     '20090522',
@@ -241,6 +242,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090531': [
+		'Fixed XTerm sequences to once again allow the terminal window or icon title to be changed by a program.',
+	],
 	'20090529': [
 		'Fixed terminal search highlighting to cover the correct ranges even if the scrollback is showing (Trac #26).',
 		'Fixed initialization to remove startup-time variable settings from the environment of launched sessions.',
