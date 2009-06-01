@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090601',
     '20090531',
     '20090529',
     '20090523',
@@ -242,6 +243,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090601': [
+		'Preferences window Terminals pane now shows Emulation by default; the Options pane is last since it is not commonly used.',
+	],
 	'20090531': [
 		'Fixed XTerm sequences to once again allow the terminal window or icon title to be changed by a program.',
 	],

@@ -338,9 +338,9 @@ PrefPanelTerminals_New ()
 	GenericPanelTabs_List	tabList;
 	
 	
-	tabList.push_back(PrefPanelTerminals_NewOptionsPane());
 	tabList.push_back(PrefPanelTerminals_NewEmulationPane());
 	tabList.push_back(PrefPanelTerminals_NewScreenPane());
+	tabList.push_back(PrefPanelTerminals_NewOptionsPane());
 	
 	if (UIStrings_Copy(kUIStrings_PreferencesWindowTerminalsCategoryName, nameCFString).ok())
 	{
