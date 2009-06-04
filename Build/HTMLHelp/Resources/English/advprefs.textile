@@ -172,6 +172,8 @@ table(deftable).
 (defbottom). |(desc)\2. File captures begin automatically when the session starts.|
 (deftop). |(key). @terminal-favorite@|(types). _string_|
 (defbottom). |(desc)\2. This Terminal collection is used by default when the session starts.|
+(deftop). |(key). @terminal-scroll-delay-milliseconds@|(types). _integer_|
+(defbottom). |(desc)\2. Instead of being as fast as possible, scroll activity is delayed by this number of milliseconds to improve readability.|
 (deftop). |(key). @translation-favorite@|(types). _string_|
 (defbottom). |(desc)\2. This Translation collection is used by default when the session starts.|
 
@@ -228,8 +230,6 @@ table(deftable).
 (defbottom). |(desc)\2. The screen is this many columns wide.|
 (deftop). |(key). @terminal-screen-dimensions-rows@|(types). _integer_|
 (defbottom). |(desc)\2. The main screen (excluding scrollback) is this many rows high.|
-(deftop). |(key). @terminal-scroll-delay-milliseconds@|(types). _integer_|
-(defbottom). |(desc)\2. Instead of being as fast as possible, scroll activity is delayed by this number of milliseconds to improve readability.|
 (deftop). |(key). @terminal-scrollback-size-lines@|(types). _integer_|
 (defbottom). |(desc)\2. For scrollbacks of fixed or distributed type, the maximum number of lines used by this screen.|
 (deftop). |(key). @terminal-scrollback-type@|(types). _string_: @off@, @unlimited@, @distributed@ or @fixed@| 

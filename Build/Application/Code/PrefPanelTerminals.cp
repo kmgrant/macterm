@@ -94,7 +94,6 @@ HIViewID const	idMyFieldRows					= { 'Rows', 0/* ID */ };
 HIViewID const	idMyPopUpMenuScrollbackType		= { 'SbkT', 0/* ID */ };
 HIViewID const	idMyFieldScrollback				= { 'Sbak', 0/* ID */ };
 HIViewID const	idMyPopUpMenuScrollbackUnits	= { 'SbkU', 0/* ID */ };
-HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyLabelScrollSpeedFast		= { 'LScF', 0/* ID */ };
 HIViewID const	idMyHelpTextTweaks				= { 'TwkH', 0/* ID */ };
 
@@ -1560,10 +1559,6 @@ deltaSize	(HIViewRef		inContainer,
 	
 	
 	// INCOMPLETE
-	//viewWrap = HIViewWrap(idMySliderScrollSpeed, kPanelWindow);
-	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	//viewWrap = HIViewWrap(idMyLabelScrollSpeedFast, kPanelWindow);
-	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 }// My_TerminalsPanelScreenUI::deltaSize
 
 

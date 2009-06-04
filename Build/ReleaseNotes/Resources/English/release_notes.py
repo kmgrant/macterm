@@ -246,6 +246,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20090603': [
 		'Fixed a terminal bug introduced by the recent XTerm-related changes, that could affect the Formats panel.',
+		'Preferences window Sessions pane Data Flow tab now contains Scrolling Speed, instead of the Terminals pane.',
 	],
 	'20090601': [
 		'Preferences window Terminals pane now shows Emulation by default; the Options pane is last since it is not commonly used.',

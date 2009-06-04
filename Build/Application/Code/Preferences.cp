@@ -1079,6 +1079,9 @@ Preferences_Init ()
 										CFSTR("terminal-inverse-selections"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagRandomTerminalFormats,
 										CFSTR("terminal-format-random"), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::create(kPreferences_TagScrollDelay,
+									CFSTR("terminal-scroll-delay-milliseconds"), typeNetEvents_CFNumberRef,
+									sizeof(EventTime), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::create(kPreferences_TagServerHost,
 									CFSTR("server-host"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
@@ -1195,9 +1198,6 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackType,
 									CFSTR("terminal-scrollback-type"), typeCFStringRef,
 									sizeof(Terminal_ScrollbackType), Quills::Prefs::TERMINAL);
-	My_PreferenceDefinition::create(kPreferences_TagTerminalScrollDelay,
-									CFSTR("terminal-scroll-delay-milliseconds"), typeNetEvents_CFNumberRef,
-									sizeof(EventTime), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTextEncodingIANAName,
 									CFSTR("terminal-text-encoding-name"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
@@ -3543,9 +3543,9 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagMenuItemKeys:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
+	case kPreferences_TagScrollDelay:
 	case kPreferences_TagTerminalCursorType:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
-	case kPreferences_TagTerminalScrollDelay:
 	case kPreferences_ChangeContextName:
 	case kPreferences_ChangeNumberOfContexts:
 		result = assertInitialized();
@@ -3616,9 +3616,9 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagMenuItemKeys:
 	case kPreferences_TagNewCommandShortcutEffect:
 	case kPreferences_TagPureInverse:
+	case kPreferences_TagScrollDelay:
 	case kPreferences_TagTerminalCursorType:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
-	case kPreferences_TagTerminalScrollDelay:
 	case kPreferences_ChangeContextName:
 	case kPreferences_ChangeNumberOfContexts:
 		result = assertInitialized();
@@ -6908,6 +6908,17 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagScrollDelay:
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						SInt16				valueInteger = inContextPtr->returnInteger(keyName);
+						EventTime* const	data = REINTERPRET_CAST(outDataPtr, EventTime*);
+						
+						
+						*data = STATIC_CAST(valueInteger, EventTime) * kEventDurationMillisecond;
+					}
+					break;
+				
 				case kPreferences_TagServerPort:
 					{
 						assert(typeNetEvents_CFNumberRef == keyValueType);
@@ -7303,17 +7314,6 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							}
 							CFRelease(valueCFString), valueCFString = nullptr;
 						}
-					}
-					break;
-				
-				case kPreferences_TagTerminalScrollDelay:
-					{
-						assert(typeNetEvents_CFNumberRef == keyValueType);
-						SInt16				valueInteger = inContextPtr->returnInteger(keyName);
-						EventTime* const	data = REINTERPRET_CAST(outDataPtr, EventTime*);
-						
-						
-						*data = STATIC_CAST(valueInteger, EventTime) * kEventDurationMillisecond;
 					}
 					break;
 				
@@ -8960,6 +8960,17 @@ setSessionPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
+			case kPreferences_TagScrollDelay:
+				{
+					EventTime const* const		data = REINTERPRET_CAST(inDataPtr, EventTime const*);
+					EventTime					junk = *data / kEventDurationMillisecond;
+					
+					
+					assert(typeNetEvents_CFNumberRef == keyValueType);
+					inContextPtr->addInteger(inDataPreferenceTag, keyName, STATIC_CAST(junk, SInt16));
+				}
+				break;
+			
 			case kPreferences_TagServerProtocol:
 				{
 					Session_Protocol const* const	data = REINTERPRET_CAST(inDataPtr, Session_Protocol const*);
@@ -9234,17 +9245,6 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("fixed"));
 						break;
 					}
-				}
-				break;
-			
-			case kPreferences_TagTerminalScrollDelay:
-				{
-					EventTime const* const		data = REINTERPRET_CAST(inDataPtr, EventTime const*);
-					EventTime					junk = *data / kEventDurationMillisecond;
-					
-					
-					assert(typeNetEvents_CFNumberRef == keyValueType);
-					inContextPtr->addInteger(inDataPreferenceTag, keyName, STATIC_CAST(junk, SInt16));
 				}
 				break;
 			

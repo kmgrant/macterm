@@ -101,6 +101,7 @@ HIViewID const	idMyPopUpMenuTerminal			= { 'Term', 0/* ID */ };
 HIViewID const	idMyPopUpMenuFormat				= { 'Frmt', 0/* ID */ };
 HIViewID const	idMyPopUpMenuTranslation		= { 'Xlat', 0/* ID */ };
 HIViewID const	idMyHelpTextPresets				= { 'THlp', 0/* ID */ };
+HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
 HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
 HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
@@ -695,6 +696,10 @@ deltaSize	(HIViewRef		inContainer,
 	viewWrap = HIViewWrap(idMyStaticTextCaptureFilePath, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 	// INCOMPLETE
+	//viewWrap = HIViewWrap(idMySliderScrollSpeed, kPanelWindow);
+	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	//viewWrap = HIViewWrap(idMyLabelScrollSpeedFast, kPanelWindow);
+	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 }// My_SessionsPanelDataFlowUI::deltaSize
 
 

@@ -330,6 +330,17 @@ basis.  This means that MacTelnet does not send all text at once,
 it splits the data into small chunks and sends each piece
 separately.
 
+h4. Scrolling Speed
+
+An artificial delay imposed on the emulator's data processing
+loop, to slow down the terminal.  This may help readability
+for fast-moving streams, or it may just be useful for
+emulating a user's slow connection to an application.
+
+Note that there is also Terminal >> Suspend (Scroll Lock) and
+the associated key equivalents, to temporarily stop a command
+from displaying any more data.
+
 h4. Capture to File
 
 You can choose to automatically capture this session to a
@@ -720,17 +731,6 @@ other terminal windows that also have the Distributed setting,
 and they effectively share memory.  If a terminal hasn't been
 used in awhile, its oldest scrollback lines are recycled by
 the windows that actually are being used.
-
-h4. Scrolling Speed
-
-An artificial delay imposed on the emulator's data processing
-loop, to slow down the terminal.  This may help readability
-for fast-moving streams, or it may just be useful for
-emulating a user's slow connection to an application.
-
-Note that there is also Terminal >> Suspend (Scroll Lock) and
-the associated key equivalents, to temporarily stop a command
-from displaying any more data.
 
 h2(#formats). Formats
 

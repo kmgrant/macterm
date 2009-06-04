@@ -252,6 +252,7 @@ enum
 	kPreferences_TagMapDeleteToBackspace				= 'delb',	//!< data: "Boolean"
 	kPreferences_TagPasteBlockSize						= 'pblk',	//!< data: "SInt16"
 	kPreferences_TagPasteMethod							= 'pstm',	//!< data: a "kClipboard_PasteMethod…" constant
+	kPreferences_TagScrollDelay							= 'scrd',	//!< data: "EventTime" in MILLISECONDS
 	kPreferences_TagServerHost							= 'host',	//!< data: "CFStringRef" (domain name or IP address)
 	kPreferences_TagServerPort							= 'port',	//!< data: "SInt16"
 	kPreferences_TagServerProtocol						= 'prcl',	//!< data: "Session_Protocol"
@@ -283,7 +284,6 @@ enum
 	kPreferences_TagTerminalScreenRows					= 'srow',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenScrollbackRows		= 'scrb',	//!< data: "UInt16"
 	kPreferences_TagTerminalScreenScrollbackType		= 'scrt',	//!< data: "Terminal_ScrollbackType"
-	kPreferences_TagTerminalScrollDelay					= 'scrd',	//!< data: "EventTime" in MILLISECONDS
 	kPreferences_TagVT100FixLineWrappingBug				= 'vlwr',	//!< data: "Boolean"
 	kPreferences_TagXTermColorEnabled					= 'xtcl',	//!< data: "Boolean"
 	kPreferences_TagXTerm256ColorsEnabled				= 'x256',	//!< data: "Boolean"
