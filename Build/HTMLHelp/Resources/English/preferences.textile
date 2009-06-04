@@ -478,59 +478,6 @@ in a terminal window.  Custom and collection Sessions can
 associate a Terminal collection with them, ensuring that these
 important settings are always made for you.
 
-h3. Options
-
-h4. General
-
-h5. Wrap lines (no truncation)
-
-If the cursor is at the end of a line and another character is
-written, this cause the cursor to automatically wrap to the
-beginning of the next line.  In addition, if this was the very
-bottom line, the content scrolls up one line.  (Certain
-terminal emulators may handle this slightly differently.)
-
-If wrapping is disabled, the final character is simply
-obliterated each time a new character arrives, until an
-explicit new-line sequence is read or the cursor is relocated
-by the application.
-
-This sets the default for Terminal >> Line Wrap.
-
-h5. Do not strip high bit of bytes
-
-Specifies that the data is 8 bits instead of 7 bits.  The
-MacTelnet 4.0 daily builds currently do not handle this
-setting reliably.
-
-h5. Save lines when screen clears
-
-If an application requests a full screen clear, this causes
-the entire content of the screen to first be copied into the
-scrollback buffer (as if it "scrolled off the top") before
-clearing the screen.
-
-Otherwise, the screen is cleared and anything on it is lost.
-
-This sets the default for Terminal >> Save Lines on Clear.
-
-h4. Keyboard
-
-h5. Normal keypad top row
-
-Prevents the clear, =, /, and * keypad keys from being mapped
-respectively to the PF1, PF2, PF3 and PF4 keys of a VT220
-terminal.
-
-h5. Local page keys
-
-Prevents the home, end, page up and page down keys from sending
-commands to the application running in the terminal; instead,
-they affect the local terminal display.  Specifically, a local
-"home" scrolls to the very top, an "end" scrolls to the very
-bottom, a "page up" scrolls the content down by a screenful,
-and a "page down" scrolls the content upward by a screenful.
-
 h3. Emulation
 
 h4. Base Emulator
@@ -731,6 +678,59 @@ other terminal windows that also have the Distributed setting,
 and they effectively share memory.  If a terminal hasn't been
 used in awhile, its oldest scrollback lines are recycled by
 the windows that actually are being used.
+
+h3. Options
+
+h4. General
+
+h5. Wrap lines (no truncation)
+
+If the cursor is at the end of a line and another character is
+written, this cause the cursor to automatically wrap to the
+beginning of the next line.  In addition, if this was the very
+bottom line, the content scrolls up one line.  (Certain
+terminal emulators may handle this slightly differently.)
+
+If wrapping is disabled, the final character is simply
+obliterated each time a new character arrives, until an
+explicit new-line sequence is read or the cursor is relocated
+by the application.
+
+This sets the default for Terminal >> Line Wrap.
+
+h5. Do not strip high bit of bytes
+
+Specifies that the data is 8 bits instead of 7 bits.  The
+MacTelnet 4.0 daily builds currently do not handle this
+setting reliably.
+
+h5. Save lines when screen clears
+
+If an application requests a full screen clear, this causes
+the entire content of the screen to first be copied into the
+scrollback buffer (as if it "scrolled off the top") before
+clearing the screen.
+
+Otherwise, the screen is cleared and anything on it is lost.
+
+This sets the default for Terminal >> Save Lines on Clear.
+
+h4. Keyboard
+
+h5. Normal keypad top row
+
+Prevents the clear, =, /, and * keypad keys from being mapped
+respectively to the PF1, PF2, PF3 and PF4 keys of a VT220
+terminal.
+
+h5. Local page keys
+
+Prevents the home, end, page up and page down keys from sending
+commands to the application running in the terminal; instead,
+they affect the local terminal display.  Specifically, a local
+"home" scrolls to the very top, an "end" scrolls to the very
+bottom, a "page up" scrolls the content down by a screenful,
+and a "page down" scrolls the content upward by a screenful.
 
 h2(#formats). Formats
 
