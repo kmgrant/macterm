@@ -10,6 +10,13 @@
 # Kevin Grant (kevin@ieee.org)
 # June 17, 2004
 
+die () {
+	[ "x$1" != "x" ] && echo "$0: $1" >&2
+	exit 1
+}
+
+trap die ERR
+
 # config
 cat=/bin/cat
 date=/bin/date
@@ -18,6 +25,9 @@ find=/usr/bin/find
 gnu_tar=/usr/bin/tar
 root=~/Desktop # where the tarball goes
 svn=svn
+
+PATH=/opt/svn/bin:$PATH
+export PATH
 
 $date "+Started creating source tarball at %T."
 
@@ -46,7 +56,7 @@ if [ "x$sub" = "x0" ] ; then
 elif [ "x$sub" != "x" ] ; then
 	sub=.${sub}
 fi
-version=${maj}.${min}${sub}${alb}build${bld}
+version=${maj}.${min}${sub}${alb}${bld}
 directory=sourceMacTelnet${version}
 target=$root/$directory
 
