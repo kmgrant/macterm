@@ -2341,6 +2341,10 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 						countRead = My_XTermWindowAlteration::stateDeterminant(&dataPtr->emulator, ptr, i,
 																				currentState, nextState, isInterrupt);
 					}
+					else
+					{
+						throw My_ParserStateNotHandled(currentState, *ptr);
+					}
 				}
 				catch (My_ParserStateNotHandled const&)
 				{
@@ -2457,6 +2461,10 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					{
 						countRead = My_XTermWindowAlteration::stateTransition(dataPtr, ptr, i,
 																				nextState, currentState);
+					}
+					else
+					{
+						throw My_ParserStateNotHandled(nextState, *ptr);
 					}
 				}
 				catch (My_ParserStateNotHandled const&)
@@ -7647,8 +7655,8 @@ stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
 	{
 	case kMy_ParserStateSeenESC:
 	case kMy_ParserStateSeenESCRightSqBracket:
-		result = My_DefaultEmulator::stateDeterminant(inEmulatorPtr, inBuffer, inLength,
-														inCurrentState, outNextState, outInterrupt);
+		result = inEmulatorPtr->currentCallbacks.stateDeterminant(inEmulatorPtr, inBuffer, inLength,
+																	inCurrentState, outNextState, outInterrupt);
 		break;
 	
 	case kMy_ParserStateSeenESCRightSqBracket0Semi:
@@ -7716,7 +7724,6 @@ stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
 	
 	default:
 		// other states are not handled at all
-		result = 0;
 		throw My_ParserStateNotHandled(inCurrentState, kTriggerChar);
 	}
 	
@@ -7808,7 +7815,6 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	
 	default:
 		// other state transitions are not handled at all
-		result = 0;
 		throw My_ParserStateNotHandled(inNewState, *inBuffer);
 	}
 	

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090603',
     '20090601',
     '20090531',
     '20090529',
@@ -243,6 +244,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090603': [
+		'Fixed a terminal bug introduced by the recent XTerm-related changes, that could affect the Formats panel.',
+	],
 	'20090601': [
 		'Preferences window Terminals pane now shows Emulation by default; the Options pane is last since it is not commonly used.',
 	],
