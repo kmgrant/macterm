@@ -3261,10 +3261,16 @@ row that the iterator currently points to.  Pass a value less
 than zero to find a previous row, otherwise positive values
 find following rows.
 
-Returns "kTerminal_ResultIteratorCannotAdvance" if the
-specified iterator is at the end of its list of lines.
-Returns "kTerminal_ResultParameterError" if the iterator is
-completely invalid.  Otherwise, returns "kTerminal_ResultOK".
+\retval kTerminal_ResultOK
+if the iterator is advanced or backed-up successfully
+
+\retval kTerminal_ResultParameterError
+if the iterator is completely invalid
+
+\retval kTerminal_ResultIteratorCannotAdvance
+if the iterator cannot move in the requested direction; try
+creating a new iterator over the other buffer (scrollback or
+main screen)
 
 (3.0)
 */
@@ -3279,14 +3285,9 @@ Terminal_LineIteratorAdvance	(TerminalScreenRef		inRef,
 	
 	
 	if (iteratorPtr == nullptr) result = kTerminal_ResultParameterError;
-	else if (((inHowManyRowsForwardOrNegativeForBackward > 0) && (iteratorPtr->rowIterator == iteratorPtr->sourceList.end())) ||
-			((inHowManyRowsForwardOrNegativeForBackward < 0) && (iteratorPtr->rowIterator == iteratorPtr->sourceList.begin())))
-	{
-		// unable to advance!
-		result = kTerminal_ResultIteratorCannotAdvance;
-	}
 	else
 	{
+		My_ScreenBufferLineList::iterator			proposedNewIterator = iteratorPtr->rowIterator;
 		My_ScreenBufferLineList::difference_type	moveDistance = STATIC_CAST(inHowManyRowsForwardOrNegativeForBackward,
 																				My_ScreenBufferLineList::difference_type);
 		
@@ -3297,7 +3298,18 @@ Terminal_LineIteratorAdvance	(TerminalScreenRef		inRef,
 		// (from a rendering point of view)
 		if (&iteratorPtr->sourceList == &dataPtr->scrollbackBuffer) moveDistance = -moveDistance;
 		
-		std::advance(iteratorPtr->rowIterator, moveDistance);
+		std::advance(proposedNewIterator, moveDistance);
+		
+		if (((inHowManyRowsForwardOrNegativeForBackward > 0) && (proposedNewIterator == iteratorPtr->sourceList.end())) ||
+				((inHowManyRowsForwardOrNegativeForBackward < 0) && (iteratorPtr->rowIterator == iteratorPtr->sourceList.begin())))
+		{
+			// unable to advance!
+			result = kTerminal_ResultIteratorCannotAdvance;
+		}
+		else
+		{
+			iteratorPtr->rowIterator = proposedNewIterator;
+		}
 	}
 	return result;
 }// LineIteratorAdvance

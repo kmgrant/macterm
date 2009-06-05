@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090604',
     '20090603',
     '20090601',
     '20090531',
@@ -244,6 +245,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090604': [
+		'Fixed problems copying selected text that crosses from the scrollback to the main screen buffer.',
+	],
 	'20090603': [
 		'Fixed a terminal bug introduced by the recent XTerm-related changes, that could affect the Formats panel.',
 		'Preferences window Sessions pane Data Flow tab now contains Scrolling Speed, instead of the Terminals pane.',

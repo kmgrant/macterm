@@ -9471,7 +9471,9 @@ returnSelectedTextAsNewUnicode	(TerminalViewPtr			inTerminalViewPtr,
 		
 		if (nullptr != resultMutable)
 		{
-			Terminal_LineRef	lineIterator = findRowIterator(inTerminalViewPtr, kSelectionStart.second);
+			Terminal_LineRef	lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, 0,
+																			kSelectionStart.second);
+			Terminal_Result		iteratorAdvanceResult = kTerminal_ResultOK;
 			Terminal_Result		textGrabResult = kTerminal_ResultOK;
 			
 			
@@ -9502,7 +9504,6 @@ returnSelectedTextAsNewUnicode	(TerminalViewPtr			inTerminalViewPtr,
 																kSelectionStart.first, -1/* end column */,
 																textBegin, textPastEnd, kTerminal_TextFilterFlagsNoEndWhitespace);
 						assert(kTerminal_ResultOK == textGrabResult);
-						
 					}
 					else if (i == (kSelectionPastEnd.second - 1))
 					{
@@ -9534,7 +9535,14 @@ returnSelectedTextAsNewUnicode	(TerminalViewPtr			inTerminalViewPtr,
 					}
 				}
 				
-				Terminal_LineIteratorAdvance(inTerminalViewPtr->screen.ref, lineIterator, +1);
+				iteratorAdvanceResult = Terminal_LineIteratorAdvance(inTerminalViewPtr->screen.ref, lineIterator, +1);
+				if (kTerminal_ResultIteratorCannotAdvance == iteratorAdvanceResult)
+				{
+					// iterator has reached end of buffer; most likely means that the selection
+					// crosses from the scrollback to the main screen, so reset to the main screen
+					releaseRowIterator(inTerminalViewPtr, &lineIterator);
+					lineIterator = findRowIteratorRelativeTo(inTerminalViewPtr, 0/* requested row */, 0/* origin row */);
+				}
 			}
 			releaseRowIterator(inTerminalViewPtr, &lineIterator);
 			
