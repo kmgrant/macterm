@@ -52,7 +52,6 @@
 		0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE1055432A400ACDF3A /* HelpSystem.cp */; };
 		0AC6BAFF0A8C0BA000AFF37A /* MainEntryPoint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF9055432A400ACDF3A /* MainEntryPoint.cp */; };
 		0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDFE055432A400ACDF3A /* NetEvents.cp */; };
-		0AC6BB010A8C0BA000AFF37A /* ListUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDF2055432A400ACDF3A /* ListUtilities.cp */; };
 		0AC6BB020A8C0BA000AFF37A /* PrefsWindow.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE08055432A400ACDF3A /* PrefsWindow.cp */; };
 		0AC6BB030A8C0BA000AFF37A /* MacroManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A03DBC7063F6BA400C38B78 /* MacroManager.cp */; };
 		0AC6BB040A8C0BA000AFF37A /* SoundSystem.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE19055432A400ACDF3A /* SoundSystem.cp */; };
@@ -394,7 +393,6 @@
 		0A46FDE8055432A400ACDF3A /* Initialize.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Initialize.cp; path = Application/Code/Initialize.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE9055432A400ACDF3A /* InstallAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InstallAE.cp; path = Application/Code/InstallAE.cp; sourceTree = "<group>"; };
 		0A46FDEA055432A400ACDF3A /* InternetPrefs.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InternetPrefs.cp; path = Application/Code/InternetPrefs.cp; sourceTree = SOURCE_ROOT; };
-		0A46FDF2055432A400ACDF3A /* ListUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ListUtilities.cp; path = Shared/Code/ListUtilities.cp; sourceTree = "<group>"; };
 		0A46FDF3055432A400ACDF3A /* Local.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Local.cp; path = Application/Code/Local.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDF4055432A400ACDF3A /* Localization.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Localization.cp; path = Application/Code/Localization.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MacHelpUtilities.cp; path = Shared/Code/MacHelpUtilities.cp; sourceTree = "<group>"; };
@@ -540,7 +538,6 @@
 		0ACBC4270D5BBCC700FCF05F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		0ACDC7910DDA5688000AE3CD /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AddressDialogCocoa.nib; sourceTree = "<group>"; };
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
-		0ACDD91C0ABD163700040553 /* ListUtilities.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ListUtilities.h; path = Shared/Code/ListUtilities.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
 		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.interfacer; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
@@ -664,7 +661,6 @@
 				0A33CD0007FAC07A00248DDF /* FlagManager.cp */,
 				0A66CA4B0887467000FD616C /* HIViewWrap.cp */,
 				0A33CCF607FAC04200248DDF /* ListenerModel.cp */,
-				0A46FDF2055432A400ACDF3A /* ListUtilities.cp */,
 				0A46FDF5055432A400ACDF3A /* MacHelpUtilities.cp */,
 				0A33CCF907FAC05600248DDF /* MemoryBlocks.cp */,
 				0AFD12B5087A147D00439BEA /* NIBLoader.cp */,
@@ -697,7 +693,6 @@
 				0A66CA950887505200FD616C /* HIViewWrap.fwd.h */,
 				0A68F1D70890AFFE009F5580 /* HIViewWrapManip.h */,
 				0A9B318E0D538EAB00C1616D /* ListenerModel.h */,
-				0ACDD91C0ABD163700040553 /* ListUtilities.h */,
 				0A6D37F506C457E9008A5E24 /* MacHelpUtilities.h */,
 				0A9B31940D538EF000C1616D /* MemoryBlockHandleLocker.template.h */,
 				0A9B31950D538EF000C1616D /* MemoryBlockLocker.template.h */,
@@ -1370,7 +1365,6 @@
 				0AC6BAFC0A8C0BA000AFF37A /* HelpSystem.cp in Sources */,
 				0AC6BAFF0A8C0BA000AFF37A /* MainEntryPoint.cp in Sources */,
 				0AC6BB000A8C0BA000AFF37A /* NetEvents.cp in Sources */,
-				0AC6BB010A8C0BA000AFF37A /* ListUtilities.cp in Sources */,
 				0AC6BB020A8C0BA000AFF37A /* PrefsWindow.cp in Sources */,
 				0AC6BB030A8C0BA000AFF37A /* MacroManager.cp in Sources */,
 				0AC6BB040A8C0BA000AFF37A /* SoundSystem.cp in Sources */,
