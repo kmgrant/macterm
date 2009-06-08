@@ -3559,16 +3559,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandFullScreenModal:
 				case kCommandKioskModeDisable:
 					{
-						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-						Boolean						turnOnFullScreen = (kCommandKioskModeDisable != received.commandID) &&
-																		(false == FlagManager_Test(kFlagKioskMode));
-						Boolean						modalFullScreen = (kCommandFullScreenModal == received.commandID);
+						static UInt16		gNumberOfDisplaysUsed = 0;
+						Boolean				turnOnFullScreen = (kCommandKioskModeDisable != received.commandID) &&
+																(false == FlagManager_Test(kFlagKioskMode));
+						Boolean				modalFullScreen = (kCommandFullScreenModal == received.commandID);
 						
 						
 						// enable kiosk mode only if it is not enabled already
 						if (turnOnFullScreen)
 						{
-							HIWindowRef			window = EventLoop_ReturnRealFrontWindow();
+							HIWindowRef			activeWindow = EventLoop_ReturnRealFrontWindow();
+							HIWindowRef			alternateDisplayWindow = nullptr;
 							Rect				deviceBounds;
 							Boolean				allowForceQuit = true;
 							Boolean				showMenuBar = true;
@@ -3623,10 +3624,61 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							
 							if (modalFullScreen)
 							{
-								// hide the scroll bar, if requested
-								unless (showScrollBar)
+								CGDirectDisplayID	activeWindowDisplay = kCGNullDirectDisplay;
+								
+								
+								alternateDisplayWindow = activeWindow; // initially...
+								if (RegionUtilities_GetWindowDirectDisplayID(activeWindow, activeWindowDisplay))
 								{
-									(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, false);
+									TerminalWindowRef	alternateTerminalWindow = nullptr;
+									CGDirectDisplayID	alternateWindowDisplay = kCGNullDirectDisplay;
+									Boolean				validAlternative = false;
+									
+									
+									// in full screen mode with multiple displays, try to detect a
+									// good window to maximize on each display
+									do
+									{
+										validAlternative = false; // initially...
+										
+										// the most recently activated window seems like a good place to start
+										alternateDisplayWindow = GetNextWindow(alternateDisplayWindow);
+										alternateTerminalWindow = TerminalWindow_ReturnFromWindow(alternateDisplayWindow);
+										if (nullptr != alternateTerminalWindow)
+										{
+											// find the monitor that contains most of the window, and also make
+											// sure that it isn’t “the same” desktop (mirrored) as the one that
+											// already contains the active window
+											if (RegionUtilities_GetWindowDirectDisplayID(alternateDisplayWindow,
+																							alternateWindowDisplay))
+											{
+												CGDirectDisplayID	mirrorSource = CGDisplayMirrorsDisplay(alternateWindowDisplay);
+												
+												
+												if ((kCGNullDirectDisplay == mirrorSource) &&
+													(activeWindowDisplay != alternateWindowDisplay))
+												{
+													// good; this window is primarily covering a different display,
+													// so it is a candidate for zooming to its display
+													validAlternative = true;
+												}
+											}
+										}
+									} while ((false == validAlternative) &&
+												(nullptr != alternateDisplayWindow) &&
+												(activeWindow != alternateDisplayWindow));
+									
+									if (validAlternative)
+									{
+										// a background window on a different display was found,
+										// so zoom that window as well
+										// UNIMPLEMENTED
+										Console_WriteLine("a candidate for full screen was found on another display");
+									}
+									else
+									{
+										alternateDisplayWindow = nullptr;
+									}
 								}
 								
 								// lock down the system (hide menu bar, etc.) for kiosk;
@@ -3640,13 +3692,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								}
 								
 								// entire screen is available, so use it
-								RegionUtilities_GetWindowDeviceGrayRect(window, &deviceBounds);
+								RegionUtilities_GetWindowDeviceGrayRect(activeWindow, &deviceBounds);
 								
 								// show “off switch” if user has requested it
 								if (showOffSwitch)
 								{
 									Keypads_SetVisible(kKeypads_WindowTypeFullScreen, true);
-									SelectWindow(window); // return focus to the terminal window
+									SelectWindow(activeWindow); // return focus to the terminal window
 								}
 								
 								// finally, set a global flag indicating the mode is in effect
@@ -3655,14 +3707,18 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 							else
 							{
 								// menu bar and Dock will remain visible, so maximize within that region
-								RegionUtilities_GetPositioningBounds(window, &deviceBounds);
+								RegionUtilities_GetPositioningBounds(activeWindow, &deviceBounds);
 							}
 							
 							// terminal views are mostly capable of handling text zoom or row/column resize
 							// on their own, as a side effect of changing dimensions in the right mode; so
 							// it is just a matter of setting the window size, and then setting up an
 							// appropriate Undo command (which is used to turn off Full Screen later)
+							gNumberOfDisplaysUsed = 0;
+							for (HIWindowRef targetWindow = activeWindow; targetWindow != nullptr; ++gNumberOfDisplaysUsed)
 							{
+								TerminalWindowRef				targetTerminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
+								TerminalWindowAutoLocker		ptr(gTerminalWindowPtrLocks(), targetTerminalWindow);
 								TerminalView_DisplayMode const	kOldMode = TerminalView_ReturnDisplayMode(ptr->allViews.front());
 								Rect							maxBounds;
 								
@@ -3678,27 +3734,41 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 																					: kTerminalView_DisplayModeZoom;
 									
 									
-									installUndoFullScreenChanges(terminalWindow, kOldMode, kNewMode);
+									installUndoFullScreenChanges(targetTerminalWindow, kOldMode, kNewMode);
 									if (kSwapModes)
 									{
 										TerminalView_SetDisplayMode(ptr->allViews.front(), kNewMode);
 									}
+									
+									// hide the scroll bar, if requested
+									unless (showScrollBar)
+									{
+										(OSStatus)HIViewSetVisible(ptr->controls.scrollBarV, false);
+									}
 								}
 								else
 								{
-									installUndoFontSizeChanges(terminalWindow, false/* undo font */, true/* undo font size */);
+									installUndoFontSizeChanges(targetTerminalWindow, false/* undo font */, true/* undo font size */);
 									TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
 								}
-								RegionUtilities_GetWindowMaximumBounds(window, &maxBounds, nullptr/* previous bounds */, true/* no insets */);
-								(OSStatus)SetWindowBounds(window, kWindowContentRgn, &maxBounds);
+								RegionUtilities_GetWindowMaximumBounds(targetWindow, &maxBounds,
+																		nullptr/* previous bounds */, true/* no insets */);
+								(OSStatus)SetWindowBounds(targetWindow, kWindowContentRgn, &maxBounds);
 								
 								TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);
+								
+								// switch to next display; TEMPORARY, only supports up to 2 displays
+								if (activeWindow == targetWindow) targetWindow = alternateDisplayWindow;
+								else targetWindow = nullptr;
 							}
 						}
 						else
 						{
 							// end Kiosk Mode
-							Commands_ExecuteByID(kCommandUndo);
+							for (UInt16 i = 0; i < gNumberOfDisplaysUsed; ++i)
+							{
+								Commands_ExecuteByID(kCommandUndo);
+							}
 							result = noErr;
 						}
 						

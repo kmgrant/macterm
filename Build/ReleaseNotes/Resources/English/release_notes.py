@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090608',
     '20090604',
     '20090603',
     '20090601',
@@ -245,6 +246,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090608': [
+		'Full Screen will now fill up to 2 displays, with the most-recently-selected window on each display.',
+	],
 	'20090604': [
 		'Fixed problems copying selected text that crosses from the scrollback to the main screen buffer.',
 	],
