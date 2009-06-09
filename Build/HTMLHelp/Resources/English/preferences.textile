@@ -995,6 +995,13 @@ visitors of a kiosk, it may be appropriate to hide the scroll bar
 so that none of the "junk" normally cached in the scrollback is
 accessible.
 
+h5. Show window frame
+
+If unset, the content region of a terminal window fills its whole
+display, leaving no room for the window title or toolbar (though
+the colored matte space is still present, and there is space for
+a scroll bar).
+
 h5. Allow "Force Quit" command
 
 To make kiosks harder to mess with, you can prevent the user from

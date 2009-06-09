@@ -78,6 +78,7 @@ In addition, they MUST be unique across all panels.
 */
 static HIViewID const	idMyCheckBoxShowMenuBar					= { 'XKSM', 0/* ID */ };
 static HIViewID const	idMyCheckBoxShowScrollBar				= { 'XKSS', 0/* ID */ };
+static HIViewID const	idMyCheckBoxShowWindowFrame				= { 'XKWF', 0/* ID */ };
 static HIViewID const	idMyCheckBoxAllowForceQuit				= { 'XKFQ', 0/* ID */ };
 static HIViewID const	idMyCheckBoxSuperfluousEffects			= { 'XKFX', 0/* ID */ };
 static HIViewID const	idMyHelpTextSuperfluousEffects			= { 'HTSG', 0/* ID */ };
@@ -294,6 +295,18 @@ const
 			showScrollBar = false; // assume a default, if preference can’t be found
 		}
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxShowScrollBar, inOwningWindow), BooleanToCheckBoxValue(showScrollBar));
+	}
+	{
+		Boolean		showWindowFrame = false;
+		
+		
+		unless (kPreferences_ResultOK ==
+				Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
+									&showWindowFrame, &actualSize))
+		{
+			showWindowFrame = true; // assume a default, if preference can’t be found
+		}
+		SetControl32BitValue(HIViewWrap(idMyCheckBoxShowWindowFrame, inOwningWindow), BooleanToCheckBoxValue(showWindowFrame));
 	}
 	{
 		Boolean		allowForceQuit = false;
@@ -570,6 +583,12 @@ updateCheckBoxPreference	(MyKioskPanelUIPtr		inInterfacePtr,
 		else if (HIViewIDWrap(idMyCheckBoxShowScrollBar) == viewID)
 		{
 			Preferences_SetData(kPreferences_TagKioskShowsScrollBar,
+								sizeof(checkBoxFlagValue), &checkBoxFlagValue);
+			result = true;
+		}
+		else if (HIViewIDWrap(idMyCheckBoxShowWindowFrame) == viewID)
+		{
+			Preferences_SetData(kPreferences_TagKioskShowsWindowFrame,
 								sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 			result = true;
 		}

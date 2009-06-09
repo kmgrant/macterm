@@ -187,6 +187,7 @@ enum
 	kPreferences_TagKioskShowsMenuBar					= 'kmnb',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsOffSwitch					= 'koff',	//!< data: "Boolean"
 	kPreferences_TagKioskShowsScrollBar					= 'kscr',	//!< data: "Boolean"
+	kPreferences_TagKioskShowsWindowFrame				= 'kwnf',	//!< data: "Boolean"
 	kPreferences_TagKioskUsesSuperfluousEffects			= 'kewl',	//!< data: "Boolean"
 	kPreferences_TagMacrosMenuVisible					= 'mmnu',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"

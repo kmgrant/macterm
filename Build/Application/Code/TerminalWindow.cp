@@ -3570,11 +3570,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						{
 							HIWindowRef			activeWindow = EventLoop_ReturnRealFrontWindow();
 							HIWindowRef			alternateDisplayWindow = nullptr;
-							Rect				deviceBounds;
 							Boolean				allowForceQuit = true;
 							Boolean				showMenuBar = true;
 							Boolean				showOffSwitch = true;
 							Boolean				showScrollBar = true;
+							Boolean				showWindowFrame = true;
 							Boolean				useEffects = true;
 							SystemUIOptions		optionsForFullScreen = 0;
 							
@@ -3612,6 +3612,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 														&showScrollBar, &actualSize))
 								{
 									showScrollBar = true; // assume a value if the preference cannot be found
+								}
+								
+								if (kPreferences_ResultOK !=
+									Preferences_GetData(kPreferences_TagKioskShowsWindowFrame, sizeof(showWindowFrame),
+														&showWindowFrame, &actualSize))
+								{
+									showWindowFrame = true; // assume a value if the preference cannot be found
 								}
 								
 								if (kPreferences_ResultOK !=
@@ -3691,9 +3698,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									Sound_StandardAlert();
 								}
 								
-								// entire screen is available, so use it
-								RegionUtilities_GetWindowDeviceGrayRect(activeWindow, &deviceBounds);
-								
 								// show “off switch” if user has requested it
 								if (showOffSwitch)
 								{
@@ -3703,11 +3707,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								
 								// finally, set a global flag indicating the mode is in effect
 								FlagManager_Set(kFlagKioskMode, true);
-							}
-							else
-							{
-								// menu bar and Dock will remain visible, so maximize within that region
-								RegionUtilities_GetPositioningBounds(activeWindow, &deviceBounds);
 							}
 							
 							// terminal views are mostly capable of handling text zoom or row/column resize
@@ -3751,8 +3750,25 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 									installUndoFontSizeChanges(targetTerminalWindow, false/* undo font */, true/* undo font size */);
 									TerminalView_SetDisplayMode(ptr->allViews.front(), kTerminalView_DisplayModeZoom);
 								}
-								RegionUtilities_GetWindowMaximumBounds(targetWindow, &maxBounds,
-																		nullptr/* previous bounds */, true/* no insets */);
+								
+								if (showWindowFrame)
+								{
+									RegionUtilities_GetWindowMaximumBounds(targetWindow, &maxBounds,
+																			nullptr/* previous bounds */, true/* no insets */);
+								}
+								else
+								{
+									if (modalFullScreen)
+									{
+										// entire screen is available, so use it
+										RegionUtilities_GetWindowDeviceGrayRect(targetWindow, &maxBounds);
+									}
+									else
+									{
+										// menu bar and Dock will remain visible, so maximize within that region
+										RegionUtilities_GetPositioningBounds(targetWindow, &maxBounds);
+									}
+								}
 								(OSStatus)SetWindowBounds(targetWindow, kWindowContentRgn, &maxBounds);
 								
 								TerminalView_SetDisplayMode(ptr->allViews.front(), kOldMode);

@@ -248,6 +248,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20090608': [
 		'Full Screen will now fill up to 2 displays, with the most-recently-selected window on each display.',
+		'Preferences window Full Screen pane now has a "Show window frame" option, which is checked by default.',
 	],
 	'20090604': [
 		'Fixed problems copying selected text that crosses from the scrollback to the main screen buffer.',

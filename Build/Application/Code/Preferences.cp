@@ -1022,6 +1022,8 @@ Preferences_Init ()
 										CFSTR("kiosk-off-switch-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsScrollBar,
 										CFSTR("kiosk-scroll-bar-visible"), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagKioskShowsWindowFrame,
+										CFSTR("kiosk-window-frame-visible"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagKioskUsesSuperfluousEffects,
 										CFSTR("kiosk-effects-enabled"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagHeadersCollapsed,
@@ -5930,6 +5932,7 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 				case kPreferences_TagKioskShowsMenuBar:
 				case kPreferences_TagKioskShowsOffSwitch:
 				case kPreferences_TagKioskShowsScrollBar:
+				case kPreferences_TagKioskShowsWindowFrame:
 				case kPreferences_TagKioskUsesSuperfluousEffects:
 					{
 						assert(typeNetEvents_CFBooleanRef == keyValueType);
@@ -8145,6 +8148,7 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 			case kPreferences_TagKioskShowsMenuBar:
 			case kPreferences_TagKioskShowsOffSwitch:
 			case kPreferences_TagKioskShowsScrollBar:
+			case kPreferences_TagKioskShowsWindowFrame:
 			case kPreferences_TagKioskUsesSuperfluousEffects:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));

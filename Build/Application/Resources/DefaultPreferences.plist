@@ -102,6 +102,8 @@
 	<true/>
 	<key>kiosk-scroll-bar-visible</key>
 	<true/>
+	<key>kiosk-window-frame-visible</key>
+	<true/>
 	<key>line-mode-enabled</key>
 	<false/>
 	<key>macro-01-action</key>
