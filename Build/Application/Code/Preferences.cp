@@ -1054,9 +1054,6 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagMapKeypadTopRowForVT220,
 									CFSTR("command-key-vt220-pf1")/* TEMPORARY - one of several key names used */, typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
-	My_PreferenceDefinition::create(kPreferences_TagMarginBell,
-									CFSTR("terminal-when-cursor-near-right-margin"), typeCFStringRef/* "bell", "ignore" */,
-									sizeof(Boolean), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagMenuItemKeys,
 										CFSTR("menu-key-equivalents"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagNewCommandShortcutEffect,
@@ -1200,6 +1197,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagTerminalScreenScrollbackType,
 									CFSTR("terminal-scrollback-type"), typeCFStringRef,
 									sizeof(Terminal_ScrollbackType), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalShowMarginAtColumn,
+									CFSTR("terminal-show-margin-at-column"), typeNetEvents_CFNumberRef,
+									sizeof(UInt16), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagTextEncodingIANAName,
 									CFSTR("terminal-text-encoding-name"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::TRANSLATION);
@@ -3548,6 +3548,7 @@ Preferences_StartMonitoring		(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagScrollDelay:
 	case kPreferences_TagTerminalCursorType:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
+	case kPreferences_TagTerminalShowMarginAtColumn:
 	case kPreferences_ChangeContextName:
 	case kPreferences_ChangeNumberOfContexts:
 		result = assertInitialized();
@@ -3621,6 +3622,7 @@ Preferences_StopMonitoring	(ListenerModel_ListenerRef	inListener,
 	case kPreferences_TagScrollDelay:
 	case kPreferences_TagTerminalCursorType:
 	case kPreferences_TagTerminalResizeAffectsFontSize:
+	case kPreferences_TagTerminalShowMarginAtColumn:
 	case kPreferences_ChangeContextName:
 	case kPreferences_ChangeNumberOfContexts:
 		result = assertInitialized();
@@ -5965,27 +5967,18 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagMarginBell:
-					assert(typeCFStringRef == keyValueType);
+				case kPreferences_TagTerminalShowMarginAtColumn:
+					assert(typeNetEvents_CFNumberRef == keyValueType);
 					{
-						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						UInt16*		outUInt16Ptr = REINTERPRET_CAST(outDataPtr, UInt16*);
 						
 						
-						if (nullptr == valueCFString)
+						*outUInt16Ptr = STATIC_CAST(inContextPtr->returnInteger(keyName), UInt16);
+						if (*outUInt16Ptr == 0)
 						{
+							// failed; make default
+							*outUInt16Ptr = 0; // 0 means “off”
 							result = kPreferences_ResultBadVersionDataNotAvailable;
-						}
-						else
-						{
-							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("bell"), kCFCompareCaseInsensitive))
-							{
-								*(REINTERPRET_CAST(outDataPtr, Boolean*)) = true;
-							}
-							else
-							{
-								*(REINTERPRET_CAST(outDataPtr, Boolean*)) = false;
-							}
-							CFRelease(valueCFString), valueCFString = nullptr;
 						}
 					}
 					break;
@@ -8181,16 +8174,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagMarginBell:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeCFStringRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? CFSTR("bell") : CFSTR("ignore"));
-				}
-				break;
-			
 			case kPreferences_TagMenuItemKeys:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
@@ -8332,6 +8315,23 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(typeCFStringRef == keyValueType);
 					setMacTelnetPreference(keyName, (data) ? CFSTR("font") : CFSTR("screen"));
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
+				}
+				break;
+			
+			case kPreferences_TagTerminalShowMarginAtColumn:
+				{
+					UInt16 const	unsignedData = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
+					SInt16 const	data = STATIC_CAST(unsignedData, SInt16);
+					CFNumberRef		numberRef = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &data);
+					
+					
+					if (nullptr != numberRef)
+					{
+						assert(typeNetEvents_CFNumberRef == keyValueType);
+						setMacTelnetPreference(keyName, numberRef);
+						changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
+						CFRelease(numberRef), numberRef = nullptr;
+					}
 				}
 				break;
 			

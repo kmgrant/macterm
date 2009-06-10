@@ -126,7 +126,6 @@ static HIViewID const	idMyLabelBellType							= { 'LSnd', 0/* ID */ };
 static HIViewID const	idMyPopUpMenuBellType						= { 'BSnd', 0/* ID */ };
 static HIViewID const	idMyCheckBoxVisualBell						= { 'VisB', 0/* ID */ };
 static HIViewID const	idMyHelpTextBellType						= { 'HTBT', 0/* ID */ };
-static HIViewID const	idMyCheckBoxMarginBell						= { 'MarB', 0/* ID */ };
 static HIViewID const	idMyCheckBoxNotifyTerminalBeeps				= { 'BelN', 0/* ID */ };
 static HIViewID const	idMyRadioButtonNotifyDoNothing				= { 'NotN', 0/* ID */ };
 static HIViewID const	idMyRadioButtonNotifyBadgeDockIcon			= { 'NotD', 0/* ID */ };
@@ -698,7 +697,6 @@ const
 	{
 		size_t		actualSize = 0;
 		Boolean		visualBell = false;
-		Boolean		marginBell = false;
 		Boolean		notifyOfBeeps = false;
 		
 		
@@ -706,11 +704,6 @@ const
 				kPreferences_ResultOK)
 		{
 			visualBell = false; // assume default, if preference can’t be found
-		}
-		unless (Preferences_GetData(kPreferences_TagMarginBell, sizeof(marginBell), &marginBell, &actualSize) ==
-				kPreferences_ResultOK)
-		{
-			marginBell = false; // assume default, if preference can’t be found
 		}
 		unless (Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(notifyOfBeeps),
 									&notifyOfBeeps, &actualSize) ==
@@ -786,7 +779,6 @@ const
 		}
 		
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxVisualBell, inOwningWindow), BooleanToCheckBoxValue(visualBell));
-		SetControl32BitValue(HIViewWrap(idMyCheckBoxMarginBell, inOwningWindow), BooleanToCheckBoxValue(marginBell));
 		SetControl32BitValue(HIViewWrap(idMyCheckBoxNotifyTerminalBeeps, inOwningWindow), BooleanToCheckBoxValue(notifyOfBeeps));
 		
 		// ...initialize radio buttons using user preferences
@@ -2171,13 +2163,6 @@ updateCheckBoxPreference	(My_GeneralPanelUIPtr	inInterfacePtr,
 				{
 					// save the new value
 					Preferences_SetData(kPreferences_TagVisualBell,
-										sizeof(checkBoxFlagValue), &checkBoxFlagValue);
-					result = true;
-				}
-				else if (HIViewWrap(idMyCheckBoxMarginBell, kWindow) == HIViewWrap(inCheckBoxClicked))
-				{
-					// save the new value
-					Preferences_SetData(kPreferences_TagMarginBell,
 										sizeof(checkBoxFlagValue), &checkBoxFlagValue);
 					result = true;
 				}

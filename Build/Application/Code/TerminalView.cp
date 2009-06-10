@@ -192,12 +192,13 @@ enum My_SelectionMode
 #pragma mark Types
 namespace {
 
-struct MyPreferenceProxies
+struct My_PreferenceProxies
 {
 	Boolean		cursorBlinks;
 	Boolean		dontDimTerminals;
 	Boolean		invertSelections;
 	Boolean		notifyOfBeeps;
+	UInt16		renderMarginAtColumn; // the value 0 means “no rendering”; column 1 is first column, etc.
 };
 
 typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
@@ -500,7 +501,7 @@ HIObjectClassRef			gTerminalTextViewHIObjectClassRef = nullptr;
 EventHandlerUPP				gMyTextViewConstructorUPP = nullptr;
 ListenerModel_ListenerRef	gMainEventLoopEventListener = nullptr;
 ListenerModel_ListenerRef	gPreferenceChangeEventListener = nullptr;
-struct MyPreferenceProxies	gPreferenceProxies;
+struct My_PreferenceProxies	gPreferenceProxies;
 Boolean						gApplicationIsSuspended = false;
 Boolean						gTerminalViewInitialized = false;
 TerminalViewPtrLocker&		gTerminalViewPtrLocks ()				{ static TerminalViewPtrLocker x; return x; }
@@ -574,6 +575,8 @@ TerminalView_Init ()
 											true/* call immediately to get initial value */);
 		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
 											true/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalShowMarginAtColumn,
+											true/* call immediately to get initial value */);
 		// TMP - should check for errors here!
 		//if (error != kPreferences_ResultOK) ...
 	}
@@ -602,6 +605,7 @@ TerminalView_Done ()
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalShowMarginAtColumn);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 }// Done
 
@@ -7332,6 +7336,16 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
+	case kPreferences_TagTerminalShowMarginAtColumn:
+		// update global variable with current preference value
+		unless (Preferences_GetData(kPreferences_TagTerminalShowMarginAtColumn, sizeof(gPreferenceProxies.renderMarginAtColumn),
+									&gPreferenceProxies.renderMarginAtColumn, &actualSize) ==
+				kPreferences_ResultOK)
+		{
+			gPreferenceProxies.renderMarginAtColumn = 0; // assume a value, if preference can’t be found
+		}
+		break;
+	
 	default:
 		// ???
 		break;
@@ -8345,6 +8359,29 @@ receiveTerminalViewDraw		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								DragAndDrop_ShowHighlightFrame(drawingContext, floatBounds);
 							}
 						}
+					}
+					
+					// render margin line, if requested
+					if (gPreferenceProxies.renderMarginAtColumn > 0)
+					{
+						Rect			dummyBounds;
+						RGBColor		highlightColorRGB;
+						CGDeviceColor	highlightColorDevice;
+						
+						
+						getRowSectionBounds(viewPtr, 0/* row; does not matter which */,
+											gPreferenceProxies.renderMarginAtColumn/* zero-based column number, but following column is desired */,
+											1/* character count - not important */, &dummyBounds);
+						CGContextSetLineWidth(drawingContext, 2.0);
+						CGContextSetLineCap(drawingContext, kCGLineCapButt);
+						LMGetHiliteRGB(&highlightColorRGB);
+						highlightColorDevice = ColorUtilities_CGDeviceColorMake(highlightColorRGB);
+						CGContextSetRGBStrokeColor(drawingContext, highlightColorDevice.red, highlightColorDevice.green,
+													highlightColorDevice.blue, 1.0/* alpha */);
+						CGContextBeginPath(drawingContext);
+						CGContextMoveToPoint(drawingContext, dummyBounds.left, floatBounds.origin.y);
+						CGContextAddLineToPoint(drawingContext, dummyBounds.left, floatBounds.origin.y + floatBounds.size.height);
+						CGContextStrokePath(drawingContext);
 					}
 					
 					// kTerminalView_ContentPartCursor

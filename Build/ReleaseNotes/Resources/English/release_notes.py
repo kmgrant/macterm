@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090609',
     '20090608',
     '20090604',
     '20090603',
@@ -246,6 +247,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090609': [
+		'New low-level preference for setting a column at which to render a thin margin line.',
+		'Preferences window General pane Notification tab "Margin bell" checkbox has been removed.',
+	],
 	'20090608': [
 		'Full Screen will now fill up to 2 displays, with the most-recently-selected window on each display.',
 		'Preferences window Full Screen pane now has a "Show window frame" option, which is checked by default.',

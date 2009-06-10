@@ -479,6 +479,8 @@
 	<integer>1000</integer>
 	<key>terminal-scrollback-size-lines</key>
 	<integer>200</integer>
+	<key>terminal-show-margin-at-column</key>
+	<integer>0</integer>
 	<key>terminal-text-encoding-name</key>
 	<string>UTF-8</string>
 	<key>terminal-when-bell</key>

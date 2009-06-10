@@ -94,6 +94,8 @@ table(deftable).
 (defbottom). |(desc)\2. Selected text inverts the screen colors instead of using a darkening or lightening effect.|
 (deftop). |(key). @terminal-resize-affects@|(types). _string_: @screen@ or @font@| 
 (defbottom). |(desc)\2. Resizing a terminal view will alter its screen dimensions or its font size to best fit the new area.|
+(deftop). |(key). @terminal-show-margin-at-column@|(types). _integer_|
+(defbottom). |(desc)\2. A thin vertical line is rendered after this column of text; 1 is first column, 0 turns off the feature.|
 (deftop). |(key). @terminal-use-tabs@|(types). _true or false_|
 (defbottom). |(desc)\2. Windows stick together and have tabs.|
 (deftop). |(key). @terminal-when-bell@|(types). _string_: @audio@, @audio+visual@ or @visual@| 
@@ -102,8 +104,6 @@ table(deftable).
 (defbottom). |(desc)\2. Terminal bells have this effect when the application is not frontmost.|
 (deftop). |(key). @terminal-when-bell-sound-basename@|(types). _string_|
 (defbottom). |(desc)\2. Terminal bells play this sound; found in any Library/Sounds folder; no extension (e.g. ".aiff").|
-(deftop). |(key). @terminal-when-cursor-near-right-margin@|(types). _string_: @bell@ or @ignore@| 
-(defbottom). |(desc)\2. When user input moves the cursor close to the right edge, an audio event occurs.|
 (deftop). |(key). @when-alert-in-background@|(types). _string_: @ignore@, @badge@, @animate@ or @alert@| 
 (defbottom). |(desc)\2. This is the type of notification used for alert messages when the application is not frontmost.|
 (deftop). |(key). @window-clipboard-visible@|(types). _true or false_|

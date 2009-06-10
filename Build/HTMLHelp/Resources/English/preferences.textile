@@ -207,12 +207,6 @@ to show you which window the bell came from.
 However, you can choose to enable visuals all the time, in which
 case even active terminals will flash when bells occur.
 
-h5(#marginbell). Margin bell
-
-Not implemented.  But it will eventually, if enabled, generate a
-terminal bell event if you are typing and the cursor passes into
-the last 5 columns of the display.
-
 h5(#notifybeeps). Background notification on bell
 
 If MacTelnet is not the active application, you can ask that you

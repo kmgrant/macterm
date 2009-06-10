@@ -191,7 +191,6 @@ enum
 	kPreferences_TagKioskUsesSuperfluousEffects			= 'kewl',	//!< data: "Boolean"
 	kPreferences_TagMacrosMenuVisible					= 'mmnu',	//!< data: "Boolean"
 	kPreferences_TagMapBackquote						= 'map`',	//!< data: "Boolean"
-	kPreferences_TagMarginBell							= 'marb',	//!< data: "Boolean"
 	kPreferences_TagMenuItemKeys						= 'mkey',	//!< data: "Boolean"
 	kPreferences_TagNewCommandShortcutEffect			= 'new?',	//!< data: "UInt32", a "kCommand..." constant
 	kPreferences_TagNotification						= 'noti',	//!< data: "SInt16", a "kAlert_Notify..." constant
@@ -200,6 +199,7 @@ enum
 	kPreferences_TagRandomTerminalFormats				= 'rfmt',	//!< data: "Boolean"
 	kPreferences_TagTerminalCursorType					= 'curs',	//!< data: "TerminalView_CursorType"
 	kPreferences_TagTerminalResizeAffectsFontSize		= 'rszf',	//!< data: "Boolean"
+	kPreferences_TagTerminalShowMarginAtColumn			= 'smar',	//!< data: "UInt16"; 0 turns off, 1 is first column, etc.
 	kPreferences_TagVisualBell							= 'visb',	//!< data: "Boolean"
 	kPreferences_TagWasClipboardShowing					= 'wvcl',	//!< data: "Boolean"
 	kPreferences_TagWasCommandLineShowing				= 'wvcm',	//!< data: "Boolean"
