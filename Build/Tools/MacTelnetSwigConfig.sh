@@ -17,7 +17,7 @@
 #
 # SWIG 1.3.29 or later works with Tiger (10.4).
 # SWIG 1.3.30 or later is required for Leopard (10.5).
-swigversion=1.3.35
+swigversion=1.3.39
 prefix_with_ver=/opt/swig-${swigversion}
 prefix_no_ver=/opt/swig
 
@@ -28,6 +28,7 @@ ln -snf ${prefix_with_ver} ${prefix_no_ver}
 # enable only Python
 ./configure \
 --prefix=${prefix_with_ver} \
+--disable-ccache \
 --with-python \
 --without-allegrocl \
 --without-chicken \
@@ -39,9 +40,11 @@ ln -snf ${prefix_with_ver} ${prefix_no_ver}
 --without-lua \
 --without-mzscheme \
 --without-ocaml \
+--without-octave \
 --without-perl5 \
 --without-pike \
---without-php4 \
+--without-php \
+--without-r \
 --without-ruby \
 --without-tcl \
 ;
