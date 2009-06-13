@@ -1043,6 +1043,7 @@ namespace {
 
 void						addScreenLineLength						(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
 void						appendScreenLineRawToCFString			(My_ScreenBufferPtr, CFMutableStringRef, UInt16, void*);
+void						assertScrollingRegion					(My_ScreenBufferPtr);
 void						bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr);
 void						bufferEraseFromCursorToEnd				(My_ScreenBufferPtr);
 void						bufferEraseFromHomeToCursor				(My_ScreenBufferPtr);
@@ -4224,9 +4225,14 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 		// reset visible region; if the custom margin is also at the bottom,
 		// keep it at the new bottom (otherwise, assume there was a good
 		// reason that it was not using all the lines, and leave it alone!)
-		if (dataPtr->customScrollingRegion.lastRow == dataPtr->visibleBoundary.rows.lastRow)
+		if (dataPtr->customScrollingRegion.lastRow >= dataPtr->visibleBoundary.rows.lastRow)
 		{
 			dataPtr->customScrollingRegion.lastRow = inNewNumberOfLinesHigh - 1;
+			if (dataPtr->customScrollingRegion.firstRow > dataPtr->customScrollingRegion.lastRow)
+			{
+				dataPtr->customScrollingRegion.firstRow = dataPtr->customScrollingRegion.lastRow - 1;
+				assertScrollingRegion(dataPtr);
+			}
 		}
 		dataPtr->visibleBoundary.rows.firstRow = 0;
 		dataPtr->visibleBoundary.rows.lastRow = inNewNumberOfLinesHigh - 1;
@@ -5073,6 +5079,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	moveCursor(this, 0, 0);
 	
 	this->customScrollingRegion = this->visibleBoundary.rows; // initially...
+	assertScrollingRegion(this);
 	
 	this->speaker = TerminalSpeaker_New(REINTERPRET_CAST(this, TerminalScreenRef));
 }// My_ScreenBuffer 1-argument constructor
@@ -7887,6 +7894,23 @@ appendScreenLineRawToCFString	(My_ScreenBufferPtr		UNUSED_ARGUMENT(inRef),
 
 
 /*!
+Performs various assertions on the current custom scrolling
+region range, to make sure all values are valid.
+
+This should be called if the range changes for any reason.
+
+(4.0)
+*/
+inline void
+assertScrollingRegion	(My_ScreenBufferPtr		inDataPtr)
+{
+	assert(inDataPtr->customScrollingRegion.lastRow >= inDataPtr->customScrollingRegion.firstRow);
+	assert(inDataPtr->customScrollingRegion.lastRow < inDataPtr->screenBuffer.size());
+	assert(inDataPtr->screenBuffer.size() >= (inDataPtr->customScrollingRegion.lastRow - inDataPtr->customScrollingRegion.firstRow));
+}// assertScrollingRegion
+
+
+/*!
 Erases characters on the cursor row, from the cursor
 position to the end of the line.
 
@@ -10498,10 +10522,28 @@ void
 locateCursorLine	(My_ScreenBufferPtr						inDataPtr,
 					 My_ScreenBufferLineList::iterator&		outCursorLine)
 {
+	My_ScreenBufferLineList::size_type const	kMaximumLines = inDataPtr->screenBuffer.size();
+	
+	
 	//assert(inDataPtr->current.cursorY >= 0);
-	assert(inDataPtr->current.cursorY <= inDataPtr->screenBuffer.size());
-	outCursorLine = inDataPtr->screenBuffer.begin();
-	std::advance(outCursorLine, inDataPtr->current.cursorY/* zero-based */);
+	assert(inDataPtr->current.cursorY <= kMaximumLines);
+	if (inDataPtr->current.cursorY < INTEGER_HALVED(kMaximumLines))
+	{
+		// near the top; search from the beginning
+		// (NOTE: linear search is still horrible, but this makes it less horrible)
+		outCursorLine = inDataPtr->screenBuffer.begin();
+		std::advance(outCursorLine, inDataPtr->current.cursorY/* zero-based */);
+	}
+	else
+	{
+		// near the bottom; search from the end
+		// (NOTE: linear search is still horrible, but this makes it less horrible)
+		SInt32 const	kDelta = inDataPtr->current.cursorY/* zero-based */ - kMaximumLines;
+		
+		
+		outCursorLine = inDataPtr->screenBuffer.end();
+		std::advance(outCursorLine, kDelta);
+	}
 }// locateCursorLine
 
 
@@ -10528,25 +10570,31 @@ locateScrollingRegion	(My_ScreenBufferPtr						inDataPtr,
 						 My_ScreenBufferLineList::iterator&		outTopLine,
 						 My_ScreenBufferLineList::iterator&		outPastBottomLine)
 {
+	My_ScreenBufferLineList::size_type const	kMaximumLines = inDataPtr->screenBuffer.size();
+	
+	
 	//assert(inDataPtr->customScrollingRegion.firstRow >= 0);
-	assert(inDataPtr->customScrollingRegion.lastRow >= inDataPtr->customScrollingRegion.firstRow);
-	assert(inDataPtr->customScrollingRegion.lastRow <= inDataPtr->screenBuffer.size());
-	assert(inDataPtr->screenBuffer.size() >= (inDataPtr->customScrollingRegion.lastRow - inDataPtr->customScrollingRegion.firstRow));
+	assertScrollingRegion(inDataPtr);
 	
 	// find top line iterator in screen
 	outTopLine = inDataPtr->screenBuffer.begin();
 	std::advance(outTopLine, inDataPtr->customScrollingRegion.firstRow/* zero-based */);
 	
-#if 1
+#if 0
 	// slow, but definitely correct
 	outPastBottomLine = inDataPtr->screenBuffer.begin();
 	std::advance(outPastBottomLine, 1 + inDataPtr->customScrollingRegion.lastRow/* zero-based */);
 #else
-	// note the region boundary is inclusive but past-the-end is exclusive;
-	// also, for efficiency, assume this will be much closer to the end and
-	// advance backwards to save some pointer iterations
-	outPastBottomLine = inDataPtr->screenBuffer.end();
-	std::advance(outPastBottomLine, -(inDataPtr->screenBuffer.size() - 1 - inDataPtr->customScrollingRegion.lastRow/* zero-based */));
+	{
+		// note the region boundary is inclusive but past-the-end is exclusive;
+		// also, for efficiency, assume this will be much closer to the end and
+		// advance backwards to save some pointer iterations
+		SInt32 const	kDelta = inDataPtr->customScrollingRegion.lastRow/* zero-based */ - kMaximumLines + 1/* past-end */;
+		
+		
+		outPastBottomLine = inDataPtr->screenBuffer.end();
+		std::advance(outPastBottomLine, kDelta);
+	}
 #endif
 }// locateScrollingRegion
 
@@ -10566,8 +10614,6 @@ void
 locateScrollingRegionTop	(My_ScreenBufferPtr						inDataPtr,
 							 My_ScreenBufferLineList::iterator&		outTopLine)
 {
-	//assert(inDataPtr->customScrollingRegion.firstRow >= 0);
-	
 	// find top line iterator in screen
 	outTopLine = inDataPtr->screenBuffer.begin();
 	std::advance(outTopLine, inDataPtr->customScrollingRegion.firstRow/* zero-based */);
@@ -10970,6 +11016,7 @@ void
 resetTerminal   (My_ScreenBufferPtr  inDataPtr)
 {
 	inDataPtr->customScrollingRegion = inDataPtr->visibleBoundary.rows;
+	assertScrollingRegion(inDataPtr);
 	inDataPtr->emulator.parameterEndIndex = 0;
 	vt100ANSIMode(inDataPtr);
 	//inDataPtr->modeAutoWrap = false; // 3.0 - do not touch the auto-wrap setting
@@ -12298,6 +12345,7 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	{
 		// parameter is the line number of the new first line of the scrolling region; the
 		// input is 1-based but internally it is a zero-based array index, so subtract one
+		if (0 == inDataPtr->emulator.parameterValues[0]) inDataPtr->emulator.parameterValues[0] = 1;
 		inDataPtr->customScrollingRegion.firstRow = inDataPtr->emulator.parameterValues[0] - 1;
 	}
 	
@@ -12310,9 +12358,12 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	{
 		// parameter is the line number of the new last line of the scrolling region; the
 		// input is 1-based but internally it is a zero-based array index, so subtract one
-		UInt16		newValue = inDataPtr->emulator.parameterValues[1] - 1;
+		UInt16		newValue = 0;
 		
 		
+		if (0 == inDataPtr->emulator.parameterValues[1]) inDataPtr->emulator.parameterValues[1] = 1;
+		
+		newValue = inDataPtr->emulator.parameterValues[1] - 1;
 		if (newValue > inDataPtr->visibleBoundary.rows.lastRow)
 		{
 			Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is too large; truncating");
@@ -12324,14 +12375,17 @@ vt100SetTopAndBottomMargins		(My_ScreenBufferPtr		inDataPtr)
 	// VT100 requires that the range be 2 lines minimum
 	if (inDataPtr->customScrollingRegion.firstRow >= inDataPtr->customScrollingRegion.lastRow)
 	{
-		if (inDataPtr->customScrollingRegion.lastRow >= 1)
+		Console_Warning(Console_WriteLine, "emulator was given a scrolling region bottom row that is less than the top; resetting");
+		inDataPtr->customScrollingRegion.lastRow = inDataPtr->customScrollingRegion.firstRow + 1;
+		if (inDataPtr->customScrollingRegion.lastRow > inDataPtr->visibleBoundary.rows.lastRow)
+		{
+			inDataPtr->customScrollingRegion.lastRow = inDataPtr->visibleBoundary.rows.lastRow;
+		}
+		if (inDataPtr->customScrollingRegion.firstRow >= inDataPtr->customScrollingRegion.lastRow)
 		{
 			inDataPtr->customScrollingRegion.firstRow = inDataPtr->customScrollingRegion.lastRow - 1;
 		}
-		else
-		{
-			inDataPtr->customScrollingRegion.lastRow = inDataPtr->customScrollingRegion.firstRow + 1;
-		}
+		assertScrollingRegion(inDataPtr);
 	}
 	
 	// home the cursor, but relative to any current top margin

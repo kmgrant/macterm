@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090613',
     '20090609',
     '20090608',
     '20090604',
@@ -247,6 +248,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090613': [
+		'Fixed a corner case where an invalid scrolling region could crash the terminal.',
+	],
 	'20090609': [
 		'New low-level preference for setting a column at which to render a thin margin line.',
 		'Preferences window General pane Notification tab "Margin bell" checkbox has been removed.',
