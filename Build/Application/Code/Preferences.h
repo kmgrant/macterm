@@ -303,6 +303,19 @@ enum
 };
 
 /*!
+Tags for use with Quills::Prefs::WORKSPACE.
+
+IMPORTANT:	These are indexed tags, so calls to APIs must
+			use Preferences_ReturnTagVariantForIndex()
+			when defining the tag parameter.
+*/
+enum
+{
+	// indexed tags must have a zero byte to have space for tag variants;
+	// see also Preferences_ReturnTagVariantForIndex()
+};
+
+/*!
 Navigation Services preference keys.  The idea here is to
 define and use a unique key any time that may be helpful
 to the user (e.g. when choosing an application, the user

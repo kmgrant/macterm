@@ -1,9 +1,8 @@
 /*!	\file QuillsPrefs.h
-	\brief User preferences APIs exposed to scripting
-	languages.
+	\brief User preferences APIs exposed to scripting languages.
 	
-	Use this class to access and modify user preferences
-	from within a script.
+	Use this class to access and modify user preferences from
+	within a script.
 	
 	Information on these APIs is available through "pydoc".
 */
@@ -61,6 +60,7 @@ MACRO_SET -- Actions mapped to keyboard short-cuts.\n\
 SESSION -- How to reach, and interact with, a resource.\n\
 TERMINAL -- Characteristics of the emulator and its data storage.\n\
 TRANSLATION -- Text encoding.\n\
+WORKSPACE -- Windows that are spawned at the same time.\n\
 _FACTORY_DEFAULTS -- Represents the DefaultPreferences.plist,\n\
 for internal use only.\n\
 ") Prefs;
@@ -76,6 +76,7 @@ public:
 		SESSION = 3,
 		TERMINAL = 4,
 		TRANSLATION = 5,
+		WORKSPACE = 6,
 		_FACTORY_DEFAULTS = 100,
 	};
 	

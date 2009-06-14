@@ -84,6 +84,8 @@
 	<array/>
 	<key>favorite-translations</key>
 	<array/>
+	<key>favorite-workspaces</key>
+	<array/>
 	<key>key-map-backquote</key>
 	<string>\e</string>
 	<key>key-map-delete</key>

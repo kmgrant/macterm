@@ -107,6 +107,7 @@ CFStringRef const			kMy_PreferencesSubDomainMacros = CFSTR("com.mactelnet.MacTel
 CFStringRef const			kMy_PreferencesSubDomainSessions = CFSTR("com.mactelnet.MacTelnet.sessions");
 CFStringRef const			kMy_PreferencesSubDomainTerminals = CFSTR("com.mactelnet.MacTelnet.terminals");
 CFStringRef const			kMy_PreferencesSubDomainTranslations = CFSTR("com.mactelnet.MacTelnet.translations");
+CFStringRef const			kMy_PreferencesSubDomainWorkspaces = CFSTR("com.mactelnet.MacTelnet.workspaces");
 
 } // anonymous namespace
 
@@ -676,6 +677,8 @@ Preferences_Result		getTerminalPreference					(My_ContextInterfaceConstPtr, Pref
 																 size_t, void*, size_t*);
 Preferences_Result		getTranslationPreference				(My_ContextInterfaceConstPtr, Preferences_Tag,
 																 size_t, void*, size_t*);
+Preferences_Result		getWorkspacePreference					(My_ContextInterfaceConstPtr, Preferences_Tag,
+																 size_t, void*, size_t*);
 OSStatus				mergeInDefaultPreferences				();
 Preferences_Result		overwriteClassDomainCFArray				(Quills::Prefs::Class, CFArrayRef);
 void					readMacTelnetCoordPreference			(CFStringRef, SInt16&, SInt16&);
@@ -696,6 +699,8 @@ Preferences_Result		setSessionPreference					(My_ContextInterfacePtr, Preference
 Preferences_Result		setTerminalPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 Preferences_Result		setTranslationPreference				(My_ContextInterfacePtr, Preferences_Tag,
+																 size_t, void const*);
+Preferences_Result		setWorkspacePreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
 CFStringRef				virtualKeyCreateName					(UInt16);
 Boolean					virtualKeyParseName						(CFStringRef, UInt16&, Boolean&);
@@ -728,6 +733,8 @@ My_ContextInterface&		gTerminalDefaultContext ()	{ static My_ContextDefault x(Qu
 My_FavoriteContextList&		gTerminalNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::TRANSLATION); return x; }
 My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContextList x; return x; }
+My_ContextInterface&		gWorkspaceDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::WORKSPACE); return x; }
+My_FavoriteContextList&		gWorkspaceNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 
 } // anonymous namespace
 
@@ -2869,6 +2876,10 @@ Preferences_ContextSetData	(Preferences_ContextRef		inContext,
 			result = setTranslationPreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
 			break;
 		
+		case Quills::Prefs::WORKSPACE:
+			result = setWorkspacePreference(ptr, inDataPreferenceTag, inDataSize, inDataPtr);
+			break;
+		
 		default:
 			result = kPreferences_ResultUnknownTagOrClass;
 			break;
@@ -3465,6 +3476,7 @@ Preferences_Save ()
 	std::for_each(gSessionNamedContexts().begin(), gSessionNamedContexts().end(), contextSave());
 	std::for_each(gTerminalNamedContexts().begin(), gTerminalNamedContexts().end(), contextSave());
 	std::for_each(gTranslationNamedContexts().begin(), gTranslationNamedContexts().end(), contextSave());
+	std::for_each(gWorkspaceNamedContexts().begin(), gWorkspaceNamedContexts().end(), contextSave());
 	
 	if (false == CFPreferencesAppSynchronize(kCFPreferencesCurrentApplication))
 	{
@@ -4510,6 +4522,10 @@ returnClassDomainNamePrefix		(Quills::Prefs::Class	inClass)
 		result = kMy_PreferencesSubDomainTranslations;
 		break;
 	
+	case Quills::Prefs::WORKSPACE:
+		result = kMy_PreferencesSubDomainWorkspaces;
+		break;
+	
 	default:
 		// ???
 		throw std::invalid_argument("unexpected preferences class value");
@@ -4989,6 +5005,10 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 		result = getTranslationPreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
 		break;
 	
+	case Quills::Prefs::WORKSPACE:
+		result = getWorkspacePreference(inContextPtr, inDataPreferenceTag, inDataStorageSize, outDataStorage, outActualSizePtrOrNull);
+		break;
+	
 	default:
 		// unrecognized preference class
 		result = kPreferences_ResultUnknownTagOrClass;
@@ -5186,6 +5206,11 @@ copyClassDomainCFArray	(Quills::Prefs::Class	inClass,
 		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
 		break;
 	
+	case Quills::Prefs::WORKSPACE:
+		readMacTelnetArrayPreference(CFSTR("favorite-workspaces"), outCFArrayOfCFStrings);
+		if (nullptr == outCFArrayOfCFStrings) result = kPreferences_ResultBadVersionDataNotAvailable;
+		break;
+	
 	default:
 		// ???
 		result = kPreferences_ResultUnknownTagOrClass;
@@ -5222,11 +5247,12 @@ createAllPreferencesContextsFromDisk ()
 	
 	// for every class that can have collections, create ALL contexts
 	// (based on saved names) for that class, so that the list is current
+	allClassesSupportingCollections.push_back(Quills::Prefs::WORKSPACE);
 	allClassesSupportingCollections.push_back(Quills::Prefs::SESSION);
-	allClassesSupportingCollections.push_back(Quills::Prefs::MACRO_SET);
 	allClassesSupportingCollections.push_back(Quills::Prefs::TERMINAL);
-	allClassesSupportingCollections.push_back(Quills::Prefs::TRANSLATION);
 	allClassesSupportingCollections.push_back(Quills::Prefs::FORMAT);
+	allClassesSupportingCollections.push_back(Quills::Prefs::MACRO_SET);
+	allClassesSupportingCollections.push_back(Quills::Prefs::TRANSLATION);
 	for (PrefClassList::const_iterator toClass = allClassesSupportingCollections.begin();
 			toClass != allClassesSupportingCollections.end(); ++toClass)
 	{
@@ -5567,6 +5593,10 @@ getDefaultContext	(Quills::Prefs::Class		inClass,
 	
 	case Quills::Prefs::TRANSLATION:
 		outContextPtr = &(gTranslationDefaultContext());
+		break;
+	
+	case Quills::Prefs::WORKSPACE:
+		outContextPtr = &(gWorkspaceDefaultContext());
 		break;
 	
 	default:
@@ -6327,6 +6357,10 @@ getListOfContexts	(Quills::Prefs::Class			inClass,
 		outListPtr = &gTranslationNamedContexts();
 		break;
 	
+	case Quills::Prefs::WORKSPACE:
+		outListPtr = &gWorkspaceNamedContexts();
+		break;
+	
 	case Quills::Prefs::GENERAL:
 	default:
 		// ???
@@ -6340,7 +6374,6 @@ getListOfContexts	(Quills::Prefs::Class			inClass,
 
 /*!
 Returns preference data for a setting for a particular macro.
-In this method, 0 is an invalid index.
 
 \retval kPreferences_ResultOK
 if the data was found successfully
@@ -7442,6 +7475,67 @@ getTranslationPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 
 
 /*!
+Returns preference data for a setting for a particular window
+of a workspace.
+
+\retval kPreferences_ResultOK
+if the data was found successfully
+
+\retval kPreferences_ResultBadVersionDataNotAvailable
+if the requested data is not in the preferences file
+
+\retval kPreferences_ResultInsufficientBufferSpace
+if the given buffer is not large enough for the requested data
+
+\retval kPreferences_ResultUnknownTagOrClass
+if the given preference tag is not valid
+
+(4.0)
+*/
+Preferences_Result	
+getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
+						 Preferences_Tag				inDataPreferenceTag,
+						 size_t							inDataSize,
+						 void*							outDataPtr,
+						 size_t*						outActualSizePtrOrNull)
+{
+	size_t					actualSize = 0L;
+	Preferences_Result		result = kPreferences_ResultOK;
+	
+	
+	if (nullptr != outDataPtr)
+	{
+		CFStringRef				keyName = nullptr;
+		FourCharCode			keyValueType = '----';
+		Quills::Prefs::Class	dataClass = Quills::Prefs::WORKSPACE;
+		
+		
+		result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+		if (kPreferences_ResultOK == result)
+		{
+			assert(dataClass == Quills::Prefs::WORKSPACE);
+			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
+			else
+			{
+				Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inDataPreferenceTag);
+				
+				
+				switch (kTagWithoutIndex)
+				{
+				default:
+					// unrecognized tag
+					result = kPreferences_ResultUnknownTagOrClass;
+					break;
+				}
+			}
+		}
+	}
+	if (nullptr != outActualSizePtrOrNull) *outActualSizePtrOrNull = actualSize;
+	return result;
+}// getWorkspacePreference
+
+
+/*!
 Adds default values for known preference keys.  Existing
 values are kept and any other defaults are added.
 
@@ -7526,6 +7620,10 @@ overwriteClassDomainCFArray		(Quills::Prefs::Class	inClass,
 	
 	case Quills::Prefs::TRANSLATION:
 		setMacTelnetPreference(CFSTR("favorite-translations"), inCFArrayOfCFStrings);
+		break;
+	
+	case Quills::Prefs::WORKSPACE:
+		setMacTelnetPreference(CFSTR("favorite-workspaces"), inCFArrayOfCFStrings);
 		break;
 	
 	case Quills::Prefs::GENERAL:
@@ -8485,7 +8583,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 Modifies the indicated preference for a specific macro using
 the given data (see Preferences.h and the definition of each
 tag for comments on what data format is expected for each one).
-In this method, 0 is an invalid index.
 
 (3.1)
 */
@@ -9355,6 +9452,51 @@ setTranslationPreference	(My_ContextInterfacePtr		inContextPtr,
 	
 	return result;
 }// setTranslationPreference
+
+
+/*!
+Modifies the indicated preference for a specific workspace
+window, using the given data (see Preferences.h and the
+definition of each tag for comments on what data format is
+expected for each one).
+
+(4.0)
+*/
+Preferences_Result	
+setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
+						 Preferences_Tag			inDataPreferenceTag,
+						 size_t						inDataSize,
+						 void const*				inDataPtr)
+{
+	Preferences_Result		result = kPreferences_ResultOK;
+	CFStringRef				keyName = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					actualSize = 0L;
+	Quills::Prefs::Class	dataClass = Quills::Prefs::WORKSPACE;
+	
+	
+	result = getPreferenceDataInfo(inDataPreferenceTag, keyName, keyValueType, actualSize, dataClass);
+	if (kPreferences_ResultOK == result)
+	{
+		assert(dataClass == Quills::Prefs::WORKSPACE);
+		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
+		else
+		{
+			Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inDataPreferenceTag);
+			
+			
+			switch (kTagWithoutIndex)
+			{
+			default:
+				// unrecognized tag
+				result = kPreferences_ResultUnknownTagOrClass;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// setWorkspacePreference
 
 
 /*!
