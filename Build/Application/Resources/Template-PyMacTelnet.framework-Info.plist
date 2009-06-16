@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleGetInfoString</key>
-	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%</string>
+	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%%MY_ALPHA_BETA%, build %MY_BUILD_NUMBER%</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.mactelnet.frameworks.PyMacTelnet</string>
 	<key>CFBundleInfoDictionaryVersion</key>
@@ -15,7 +15,7 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%, build %MY_BUILD_NUMBER%</string>
+	<string>%MY_MAJOR_NUMBER%.%MY_MINOR_NUMBER%.%MY_SUBMINOR_NUMBER%%MY_ALPHA_BETA%, build %MY_BUILD_NUMBER%</string>
 	<key>CFBundleSignature</key>
 	<string>KevG</string>
 	<key>CFBundleVersion</key>
