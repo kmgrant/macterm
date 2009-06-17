@@ -194,11 +194,12 @@ namespace {
 
 struct My_PreferenceProxies
 {
-	Boolean		cursorBlinks;
-	Boolean		dontDimTerminals;
-	Boolean		invertSelections;
-	Boolean		notifyOfBeeps;
-	UInt16		renderMarginAtColumn; // the value 0 means “no rendering”; column 1 is first column, etc.
+	TerminalView_CursorType		cursorType;
+	Boolean						cursorBlinks;
+	Boolean						dontDimTerminals;
+	Boolean						invertSelections;
+	Boolean						notifyOfBeeps;
+	UInt16						renderMarginAtColumn; // the value 0 means “no rendering”; column 1 is first column, etc.
 };
 
 typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
@@ -407,6 +408,7 @@ void				copySelectedTextIfUserPreference	(TerminalViewPtr);
 void				copyTranslationPreferences			(TerminalViewPtr, Preferences_ContextRef);
 OSStatus			createWindowColorPalette			(TerminalViewPtr, Preferences_ContextRef, Boolean = true);
 Boolean				cursorBlinks						(TerminalViewPtr);
+TerminalView_CursorType	cursorType						(TerminalViewPtr);
 OSStatus			dragTextSelection					(TerminalViewPtr, RgnHandle, EventRecord*, Boolean*);
 Boolean				drawSection							(TerminalViewPtr, CGContextRef, UInt16, UInt16, UInt16, UInt16);
 void				drawTerminalScreenRunOp				(TerminalScreenRef, UniChar const*, UInt16, Terminal_LineRef,
@@ -575,6 +577,8 @@ TerminalView_Init ()
 											true/* call immediately to get initial value */);
 		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
 											true/* call immediately to get initial value */);
+		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalCursorType,
+											true/* call immediately to get initial value */);
 		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalShowMarginAtColumn,
 											true/* call immediately to get initial value */);
 		// TMP - should check for errors here!
@@ -605,6 +609,7 @@ TerminalView_Done ()
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
+	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalCursorType);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalShowMarginAtColumn);
 	ListenerModel_ReleaseListener(&gPreferenceChangeEventListener);
 }// Done
@@ -4035,6 +4040,21 @@ cursorBlinks	(TerminalViewPtr	UNUSED_ARGUMENT(inTerminalViewPtr))
 
 
 /*!
+Returns the user’s preferred cursor shape.  Currently,
+this preference is global, so either all screen cursors
+blink or all don’t; however, for future flexibility,
+this routine takes a specific screen as a parameter.
+
+(4.0)
+*/
+TerminalView_CursorType
+cursorType		(TerminalViewPtr	UNUSED_ARGUMENT(inTerminalViewPtr))
+{
+	return gPreferenceProxies.cursorType;
+}// cursorType
+
+
+/*!
 This method handles dragging of a text selection.
 If the text is dropped (i.e. not cancelled), then
 "true" is returned in "outDragWasDropped".
@@ -7336,6 +7356,16 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
+	case kPreferences_TagTerminalCursorType:
+		// update global variable with current preference value
+		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(gPreferenceProxies.cursorType),
+									&gPreferenceProxies.cursorType, &actualSize) ==
+				kPreferences_ResultOK)
+		{
+			gPreferenceProxies.cursorBlinks = kTerminalView_CursorTypeBlock; // assume a value, if preference can’t be found
+		}
+		break;
+	
 	case kPreferences_TagTerminalShowMarginAtColumn:
 		// update global variable with current preference value
 		unless (Preferences_GetData(kPreferences_TagTerminalShowMarginAtColumn, sizeof(gPreferenceProxies.renderMarginAtColumn),
@@ -10192,11 +10222,7 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 	// otherwise, calculate the bounds for the given shape
 	if (inTerminalCursorType == kTerminalView_CursorTypeCurrentPreferenceValue)
 	{
-		unless (Preferences_GetData(kPreferences_TagTerminalCursorType, sizeof(terminalCursorType),
-									&terminalCursorType, &actualSize) == kPreferences_ResultOK)
-		{
-			terminalCursorType = kTerminalView_CursorTypeBlock; // assume a block-shaped cursor, if preference can’t be found
-		}
+		terminalCursorType = cursorType(inTerminalViewPtr);
 	}
 	
 	SetPt(&characterSizeInPixels, getRowCharacterWidth(inTerminalViewPtr, inY), inTerminalViewPtr->text.font.heightPerCharacter);
