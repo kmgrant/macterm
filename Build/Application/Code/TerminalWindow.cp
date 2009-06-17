@@ -6290,7 +6290,29 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 		SetControl32BitMinimum(scrollBarView, scrollVRangeMinimum);
 		SetControl32BitMaximum(scrollBarView, scrollVRangePastMaximum - (scrollVPastEndView - scrollVStartView)/* subtract last page */);
 		SetControl32BitValue(scrollBarView, scrollVStartView);
-		SetControlViewSize(scrollBarView, scrollVPastEndView - scrollVStartView);
+		
+		// set the size of the scroll thumb, but refuse to make it as ridiculously
+		// tiny as Apple allows; artificially require it to be bigger
+		{
+			UInt32		proposedViewSize = scrollVPastEndView - scrollVStartView;
+			HIRect		scrollBarBounds;
+			Float64		viewDenominator = (STATIC_CAST(GetControl32BitMaximum(scrollBarView), Float32) -
+											STATIC_CAST(GetControl32BitMinimum(scrollBarView), Float32));
+			Float64		viewScale = STATIC_CAST(proposedViewSize, Float32) / viewDenominator;
+			Float64		barScale = 0;
+			
+			
+			(OSStatus)HIViewGetBounds(scrollBarView, &scrollBarBounds);
+			
+			// adjust the numerator to require a larger minimum size for the thumb
+			barScale = 64.0 / (scrollBarBounds.size.height - 32.0/* arbitrary; approximation of space taken by arrows */);
+			if (viewScale < barScale)
+			{
+				proposedViewSize = barScale * viewDenominator;
+			}
+			
+			SetControlViewSize(scrollBarView, proposedViewSize);
+		}
 		
 		// set the scroll bar view size to be the ratio
 	#if 0

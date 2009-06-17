@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090616',
     '20090613',
     '20090609',
     '20090608',
@@ -248,6 +249,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090616': [
+		'Scroll bar thumb is now forced to remain a relatively useful size, even when there are hundreds of scrollback lines.',
+	],
 	'20090613': [
 		'Fixed a corner case where an invalid scrolling region could crash the terminal.',
 	],
