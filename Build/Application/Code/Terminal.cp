@@ -1157,6 +1157,7 @@ dest_char_seq_iter			whitespaceSensitiveCopy					(src_char_seq_const_iter, src_c
 namespace {
 
 My_PrintableByUniChar&		gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
+My_ScreenBufferLine&		gEmptyScreenBufferLine ()	{ static My_ScreenBufferLine x; return x; }
 
 } // anonymous namespace
 
@@ -8359,7 +8360,7 @@ bufferInsertBlankLines	(My_ScreenBufferPtr						inDataPtr,
 		
 		// insert blank lines
 		// INCOMPLETE - copy attributes of insertion line for new lines
-		inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, My_ScreenBufferLine());
+		inDataPtr->screenBuffer.insert(inInsertionLine, kMostLines, gEmptyScreenBufferLine());
 		
 		// delete last lines
 		pastLastKeptLine = scrollingRegionEnd;
@@ -8527,7 +8528,7 @@ bufferRemoveLines	(My_ScreenBufferPtr						inDataPtr,
 		
 		// insert blank lines
 		// INCOMPLETE - copy attributes of last line for new lines
-		inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, My_ScreenBufferLine());
+		inDataPtr->screenBuffer.insert(scrollingRegionEnd, kMostLines, gEmptyScreenBufferLine());
 		
 		// delete first lines
 		pastLastDeletionLine = inFirstDeletionLine;
