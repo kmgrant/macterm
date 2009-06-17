@@ -7752,7 +7752,8 @@ stateDeterminant	(My_EmulatorPtr		inEmulatorPtr,
 	
 	default:
 		// other states are not handled at all
-		throw My_ParserStateNotHandled(inCurrentState, kTriggerChar);
+		//DEBUG//throw My_ParserStateNotHandled(inCurrentState, kTriggerChar);
+		throw gEmptyStateNotHandled();
 	}
 	
 	// debug
@@ -7843,7 +7844,8 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 	
 	default:
 		// other state transitions are not handled at all
-		throw My_ParserStateNotHandled(inNewState, *inBuffer);
+		//DEBUG//throw My_ParserStateNotHandled(inNewState, *inBuffer);
+		throw gEmptyStateNotHandled();
 	}
 	
 	return result;
