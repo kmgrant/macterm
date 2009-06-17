@@ -456,9 +456,16 @@ struct My_ParserStateNotHandled:
 public std::logic_error
 {
 public:
+	My_ParserStateNotHandled ()
+	: std::logic_error("")
+	{
+	}
+	
 	My_ParserStateNotHandled	(My_ParserState		inState,
 								 UInt8				inTriggerChar)
-	: std::logic_error(createExceptionMessage(inState, inTriggerChar))
+	// Most exceptions of this type are harmless, so avoid
+	// constructing a message string outside of debugging.
+	: std::logic_error(""/*createExceptionMessage(inState, inTriggerChar)*/)
 	{
 	}
 
@@ -1158,6 +1165,7 @@ namespace {
 
 My_PrintableByUniChar&		gDumbTerminalRenderings ()	{ static My_PrintableByUniChar x; return x; }
 My_ScreenBufferLine&		gEmptyScreenBufferLine ()	{ static My_ScreenBufferLine x; return x; }
+My_ParserStateNotHandled&	gEmptyStateNotHandled ()	{ static My_ParserStateNotHandled x; return x; }
 
 } // anonymous namespace
 
@@ -2345,7 +2353,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					}
 					else
 					{
-						throw My_ParserStateNotHandled(currentState, *ptr);
+						throw gEmptyStateNotHandled();
 					}
 				}
 				catch (My_ParserStateNotHandled const&)
@@ -2466,7 +2474,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 					}
 					else
 					{
-						throw My_ParserStateNotHandled(nextState, *ptr);
+						throw gEmptyStateNotHandled();
 					}
 				}
 				catch (My_ParserStateNotHandled const&)
