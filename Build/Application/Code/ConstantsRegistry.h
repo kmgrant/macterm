@@ -131,6 +131,7 @@ CFStringRef const kConstantsRegistry_PrefPanelDescriptorFormatsNormal		= CFSTR("
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorKiosk				= CFSTR("com.mactelnet.prefpanels.kiosk");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorScripts				= CFSTR("com.mactelnet.prefpanels.scripts");
 CFStringRef const kConstantsRegistry_PrefPanelDescriptorTranslations		= CFSTR("com.mactelnet.prefpanels.translations");
+CFStringRef const kConstantsRegistry_PrefPanelDescriptorWorkspaces			= CFSTR("com.mactelnet.prefpanels.workspaces");
 
 /*!
 Used with HIObject routines (such as HIObjectCreate()) to
@@ -189,6 +190,8 @@ enum
 	kConstantsRegistry_IconServicesIconPrefPanelScripts			= 'PScr',
 	kConstantsRegistry_IconServicesIconPrefPanelSessions		= 'PSsn',
 	kConstantsRegistry_IconServicesIconPrefPanelTerminals		= 'PTrm',
+	kConstantsRegistry_IconServicesIconPrefPanelTranslations	= 'PXlt',
+	kConstantsRegistry_IconServicesIconPrefPanelWorkspaces		= 'PWsp',
 	kConstantsRegistry_IconServicesIconSessionStatusActive		= 'Actv',
 	kConstantsRegistry_IconServicesIconSessionStatusDead		= 'Dead',
 	kConstantsRegistry_IconServicesIconToolbarItemBellOff		= 'BelO',

@@ -232,7 +232,7 @@ PrefPanelTranslations_New ()
 		}
 		Panel_SetIconRefFromBundleFile(result, AppResources_ReturnPrefPanelTranslationsIconFilenameNoExtension(),
 										AppResources_ReturnCreatorCode(),
-										kConstantsRegistry_IconServicesIconPrefPanelFullScreen);
+										kConstantsRegistry_IconServicesIconPrefPanelTranslations);
 		Panel_SetImplementation(result, dataPtr);
 	}
 	return result;
