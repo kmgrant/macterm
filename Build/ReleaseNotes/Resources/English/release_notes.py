@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090618',
     '20090616',
     '20090613',
     '20090609',
@@ -249,6 +250,11 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090618': [
+		'Preferences window Workspaces pane now available, though most settings of this new class are not yet functional.',
+		'"Use tabs to arrange windows" preference has been moved to the new Workspaces pane.',
+		'Preferences window Scripts pane has been removed.',
+	],
 	'20090616': [
 		'Scroll bar thumb is now forced to remain a relatively useful size, even when there are hundreds of scrollback lines.',
 	],

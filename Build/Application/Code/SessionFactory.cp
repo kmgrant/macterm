@@ -1118,7 +1118,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 	Preferences_ContextRef	associatedFormatContext = nullptr;
 	Preferences_ContextRef	associatedTerminalContext = nullptr;
 	Preferences_ContextRef	associatedTranslationContext = nullptr;
-	Preferences_Result		preferencesResult = kPreferences_ResultOK;
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	
 	
 	// read the format associated with the session, and use it
@@ -1128,9 +1128,9 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		CFStringRef		associatedFormatName = nullptr;
 		
 		
-		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
-														sizeof(associatedFormatName), &associatedFormatName);
-		if (kPreferences_ResultOK == preferencesResult)
+		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedFormatFavorite,
+													sizeof(associatedFormatName), &associatedFormatName);
+		if (kPreferences_ResultOK == prefsResult)
 		{
 			associatedFormatContext = Preferences_NewContextFromFavorites(Quills::Prefs::FORMAT, associatedFormatName);
 		}
@@ -1143,9 +1143,9 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		CFStringRef		associatedTerminalName = nullptr;
 		
 		
-		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
-														sizeof(associatedTerminalName), &associatedTerminalName);
-		if (kPreferences_ResultOK == preferencesResult)
+		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTerminalFavorite,
+													sizeof(associatedTerminalName), &associatedTerminalName);
+		if (kPreferences_ResultOK == prefsResult)
 		{
 			associatedTerminalContext = Preferences_NewContextFromFavorites(Quills::Prefs::TERMINAL, associatedTerminalName);
 		}
@@ -1158,9 +1158,9 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		CFStringRef		associatedTranslationName = nullptr;
 		
 		
-		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTranslationFavorite,
-														sizeof(associatedTranslationName), &associatedTranslationName);
-		if (kPreferences_ResultOK == preferencesResult)
+		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagAssociatedTranslationFavorite,
+													sizeof(associatedTranslationName), &associatedTranslationName);
+		if (kPreferences_ResultOK == prefsResult)
 		{
 			associatedTranslationContext = Preferences_NewContextFromFavorites(Quills::Prefs::TRANSLATION, associatedTranslationName);
 		}
@@ -1185,9 +1185,9 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		CFArrayRef		argumentCFArray = nullptr;
 		
 		
-		preferencesResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagCommandLine,
-														sizeof(argumentCFArray), &argumentCFArray);
-		if (kPreferences_ResultOK == preferencesResult)
+		prefsResult = Preferences_ContextGetData(inSessionContext, kPreferences_TagCommandLine,
+													sizeof(argumentCFArray), &argumentCFArray);
+		if (kPreferences_ResultOK == prefsResult)
 		{
 			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
 																nullptr/* context */);
@@ -2088,14 +2088,18 @@ displayTerminalWindow	(TerminalWindowRef	inTerminalWindow)
 	{
 		TerminalWindow_Result		terminalWindowResult = kTerminalWindow_ResultOK;
 		TerminalViewRef				view = nullptr;
-		Preferences_Result			preferencesResult = kPreferences_ResultOK;
+		Preferences_ContextRef		defaultContext = nullptr;
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
 		Boolean						useTabs = false;
 		
 		
 		// figure out if this window should have a tab and be arranged
-		preferencesResult = Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs,
-												sizeof(useTabs), &useTabs, nullptr/* actual size */);
-		if (preferencesResult != kPreferences_ResultOK) useTabs = false;
+		prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::WORKSPACE);
+		assert(kPreferences_ResultOK == prefsResult);
+		prefsResult = Preferences_ContextGetData(defaultContext, kPreferences_TagArrangeWindowsUsingTabs,
+													sizeof(useTabs), &useTabs,
+													true/* search defaults */, nullptr/* actual size */);
+		if (prefsResult != kPreferences_ResultOK) useTabs = false;
 		if (useTabs)
 		{
 			MyWorkspaceList&	targetList = gWorkspaceListSortedByCreationTime();

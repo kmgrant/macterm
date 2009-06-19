@@ -393,6 +393,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandDisplayPrefPanelTerminalsOptions	'SPTO'	// “Preferences“ window
 #define kCommandDisplayPrefPanelTerminalsScreen	'SPTS'		// “Preferences“ window
 #define kCommandDisplayPrefPanelTranslations	'SPrX'		// “Preferences“ window
+#define kCommandDisplayPrefPanelWorkspaces		'SPrW'		// “Preferences“ window
 #define kCommandPrefCursorBlock					'CrBl'		// “Preferences” window
 #define kCommandPrefCursorUnderline				'CrUn'		// “Preferences” window
 #define kCommandPrefCursorVerticalBar			'CrVB'		// “Preferences” window
@@ -461,6 +462,10 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandSetTEKModeTEK4014				'4014'		// “Preferences” window
 #define kCommandSetTEKModeTEK4105				'4105'		// “Preferences” window
 #define kCommandSetTEKPageClearsScreen			'XPCS'		// “Preferences” window
+#define kCommandSetWorkspaceDisplayRegions1x1	'R1x1'		// multiple interfaces
+#define kCommandSetWorkspaceDisplayRegions2x2	'R2x2'		// multiple interfaces
+#define kCommandSetWorkspaceDisplayRegions3x3	'R3x3'		// multiple interfaces
+#define kCommandSetWorkspaceWindowPosition		'SPos'		// multiple interfaces
 #define kCommandSetEmulatorANSIBBS				'EmAB'		// multiple interfaces
 #define kCommandSetEmulatorVT100				'E100'		// multiple interfaces
 #define kCommandSetEmulatorVT102				'E102'		// multiple interfaces

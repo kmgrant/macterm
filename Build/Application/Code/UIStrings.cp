@@ -3,7 +3,7 @@
 	UIStrings.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -1132,6 +1132,11 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 													CFSTR("kUIStrings_PreferencesWindowKioskCategoryName"));
 		break;
 	
+	case kUIStrings_PreferencesWindowListHeaderNumber:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("#"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesListHeaderNumber"));
+		break;
+	
 	case kUIStrings_PreferencesWindowMacrosCategoryName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Macros"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowMacrosCategoryName"));
@@ -1140,11 +1145,6 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	case kUIStrings_PreferencesWindowMacrosListHeaderName:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Macro Name"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowMacrosListHeaderName"));
-		break;
-	
-	case kUIStrings_PreferencesWindowMacrosListHeaderNumber:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("#"), CFSTR("PreferencesWindow"),
-													CFSTR("kUIStrings_PreferencesWindowMacrosListHeaderNumber"));
 		break;
 	
 	case kUIStrings_PreferencesWindowScriptsCategoryName:
@@ -1245,6 +1245,16 @@ UIStrings_Copy	(UIStrings_PreferencesWindowCFString	inWhichString,
 	case kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable:
 		outString = CFCopyLocalizedStringFromTable(CFSTR("Available Encodings"), CFSTR("PreferencesWindow"),
 													CFSTR("kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable"));
+		break;
+	
+	case kUIStrings_PreferencesWindowWorkspacesCategoryName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Workspaces"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowWorkspacesCategoryName"));
+		break;
+	
+	case kUIStrings_PreferencesWindowWindowsListHeaderName:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Windows"), CFSTR("PreferencesWindow"),
+													CFSTR("kUIStrings_PreferencesWindowWindowsListHeaderName"));
 		break;
 	
 	default:

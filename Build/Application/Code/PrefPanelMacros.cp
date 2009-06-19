@@ -499,7 +499,7 @@ createContainerView		(Panel_Ref		inPanel,
 		columnInfo.headerBtnDesc.btnContentInfo.contentType = kControlContentTextOnly;
 		
 		// create number column
-		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowMacrosListHeaderNumber,
+		stringResult = UIStrings_Copy(kUIStrings_PreferencesWindowListHeaderNumber,
 										columnInfo.headerBtnDesc.titleString);
 		if (stringResult.ok())
 		{

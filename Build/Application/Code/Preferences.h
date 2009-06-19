@@ -170,7 +170,6 @@ Tags for use with Quills::Prefs::GENERAL.
 */
 enum
 {
-	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
 	kPreferences_TagBellSound							= 'bsnd',	//!< data: "CFStringRef" ("off", or the basename of sound file in a Sounds library folder)
 	kPreferences_TagCaptureFileCreator					= 'cpfc',	//!< data: "OSType"
 	kPreferences_TagCopySelectedText					= 'cpsl',	//!< data: "Boolean"
@@ -305,12 +304,13 @@ enum
 /*!
 Tags for use with Quills::Prefs::WORKSPACE.
 
-IMPORTANT:	These are indexed tags, so calls to APIs must
+IMPORTANT:	Some are indexed tags, so calls to APIs must
 			use Preferences_ReturnTagVariantForIndex()
-			when defining the tag parameter.
+			when defining those tag parameters.
 */
 enum
 {
+	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
 	// indexed tags must have a zero byte to have space for tag variants;
 	// see also Preferences_ReturnTagVariantForIndex()
 };

@@ -81,9 +81,9 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowGeneralSpecialTabName			= 'GenS',
 	kUIStrings_PreferencesWindowIconName						= 'Icon',
 	kUIStrings_PreferencesWindowKioskCategoryName				= 'KioT',
+	kUIStrings_PreferencesWindowListHeaderNumber				= 'Numb',
 	kUIStrings_PreferencesWindowMacrosCategoryName				= 'McrT',
 	kUIStrings_PreferencesWindowMacrosListHeaderName			= 'McNm',
-	kUIStrings_PreferencesWindowMacrosListHeaderNumber			= 'McNu',
 	kUIStrings_PreferencesWindowScriptsCategoryName				= 'ScrT',
 	kUIStrings_PreferencesWindowScriptsListHeaderEvent			= 'ScEv',
 	kUIStrings_PreferencesWindowScriptsListHeaderScriptToRun	= 'ScSc',
@@ -105,7 +105,9 @@ enum UIStrings_PreferencesWindowCFString
 	kUIStrings_PreferencesWindowTerminalsOptionsTabName			= 'TrmO',
 	kUIStrings_PreferencesWindowTerminalsScreenTabName			= 'TrmS',
 	kUIStrings_PreferencesWindowTranslationsCategoryName		= 'TrnT',
-	kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable	= 'TrnB'
+	kUIStrings_PreferencesWindowTranslationsListHeaderBaseTable	= 'TrnB',
+	kUIStrings_PreferencesWindowWorkspacesCategoryName			= 'WspT',
+	kUIStrings_PreferencesWindowWindowsListHeaderName			= 'WnNm'
 };
 
 

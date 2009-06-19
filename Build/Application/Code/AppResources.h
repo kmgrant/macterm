@@ -330,6 +330,13 @@ inline CFStringRef
 }
 
 inline CFStringRef
+	AppResources_ReturnPrefPanelWorkspacesIconFilenameNoExtension		()
+{
+	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"
+	return CFSTR("IconForPrefPanelWorkspaces");
+}
+
+inline CFStringRef
 	AppResources_ReturnScrollLockOffIconFilenameNoExtension				()
 {
 	// value is <X> in "<bundle>.app/Resources[/<locale>.lproj]/<X>.icns"

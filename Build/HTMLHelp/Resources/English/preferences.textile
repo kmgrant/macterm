@@ -16,13 +16,13 @@ mentioned here, start by choosing the "Preferences..." item in
 the MacTelnet menu.
 
 * "General":#general
+* "Macros":#macros
+* "Workspaces":#workspaces
 * "Sessions":#sessions
 * "Terminals":#terminals
 * "Formats":#formats
-* "Macros":#macros
 * "Translations":#translations
 * "Full Screen":#fullscreen
-* "Scripts":#scripts
 
 h2(#general). General
 
@@ -43,28 +43,14 @@ application is activated and no windows are open.
 Note that the type of session created will implicitly match the
 "Command-N Key Equivalent" preference.
 
-h5(#usetabs). Use tabs to arrange windows
+h5(#macrosmenu). Display a macros menu
 
-Once enabled, all new windows (but not existing ones) will be
-given tab adornments and will stick together automatically.
-
-New windows are added to the tab group of the active window.
-A tab can be moved to a new group by clicking the up-arrow
-button on its tab, or using Window >> Move to New Workspace.
-
-**Tip:** If you're using more than one display, or Spaces, it
-is handy to have a tab group for each space.
-
-It is important to notice that MacTelnet tabs are normal
-windows, so they are independent and can be modified in the
-usual ways.  The _only_ exception is that all the windows in
-the group will move together.
-
-If a sheet is open on one tab, you can still reach other tabs
-by clicking on them with the mouse.
-
-You can also drag and drop between tabs: simply move the mouse
-over a tab to activate its window.
+Show a Macros menu in the menu bar, providing direct access to
+the current macros (as selected from the Map menu and defined in
+the Preferences window).  Also useful for seeing at a glance the
+names and key equivalents of your current macros.  And, if you
+invoke keys that trigger macros, the Macros menu title will
+flash.
 
 h4. Text
 
@@ -221,6 +207,192 @@ error message), you can specify how "annoying" MacTelnet may be.
 The options range from no interruptions at all, to an immediate
 alert in your other application telling you that MacTelnet needs
 your attention.
+
+h2(#macros). Macros
+
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply
+choose a name from the list in the drawer, and then
+edit that collection's settings in the main Preferences
+window.
+
+bq. Each set in this category has an additional list
+of items.  First choose a set from the drawer, then
+choose an item from the numbered list, before editing.
+You can also edit the names of the numbered items, as
+you would for any item in the Finder.
+
+Macro sets are completely arbitrary actions that you can bind
+to almost any key combinations you wish!  In addition, you can
+choose to display them in a menu (see General preferences).
+
+Only macros from the active set, if any, are enabled.  The
+active set is selected with the Map menu.  If the "None"
+set is chosen, macros are disabled and the Macros menu is
+temporarily hidden.
+
+If a macro set is active, any of its macros can be used by
+typing a key equivalent (the macro's main key, plus some
+optional combination of modifiers).  In addition, if the
+preference is set to display a Macros menu, all of the
+current macros' names are shown in the menu along with their
+key equivalents.
+
+h3. Macro List
+
+This displays the number of macros in the set (currently fixed
+at 12), and their names.
+
+The names can be edited by clicking and hovering on them, or
+selecting an item and pressing Return.  Names are currently
+only used in the Macros menu (if enabled).
+
+h3. Selected Macro
+
+To edit a macro, select it from the list and then modify its
+fields in this section.  Changes take effect immediately (so,
+you could test in a terminal window at the same time, provided
+you made this the current macro set via the Map menu).
+
+h4. Invoke With
+
+The key or combination of keys that will trigger the macro
+action.
+
+If "Ordinary Key" is selected, you should type one character
+into the field next to the pop-up menu to indicate which key.
+For example, "K" indicates that typing the K key will activate
+the macro.
+
+Alternately, you can choose from a number of "special" keys
+in the menu.
+
+No matter which keys you choose, you have to be mindful of
+what may already be in use by MacTelnet, your computer's
+defaults, or the application you're going to run in the
+terminal.  In general, it's not a good idea to choose very
+simple key combinations.
+
+**Important:** Whether or not you intend to use the Macros
+menu, displaying it initially is recommended so that you can
+see how your key equivalent will be interpreted.  Certain
+combinations are "special" and will not be available to you.
+
+h4. Modifiers
+
+Any combination of zero to four standard modifier keys that
+must be held down _in addition_ to the "Invoke With" key,
+before the macro will be activated.
+
+Modifiers are highly recommended!  Most keys are needed for
+other things by default, and shouldn't invoke macros by
+themselves.
+
+h4. Action
+
+The type of behavior the macro will trigger, and the way the
+Contents will be interpreted:
+
+h5. Open URL
+
+The Contents are interpreted as a URL and opened locally with
+whatever helper application is appropriate (such as your
+preferred web browser).
+
+h5. New Window with Command
+
+The Contents are interpreted as a command line, split into
+words (on whitespace) and run in a new terminal window.
+When the command finishes, the terminal window is closed.
+
+h5. Enter Text
+
+The Contents will be typed into the active terminal view as if
+the keyboard were used; however, any special sequences will
+first be substituted with their current values.
+
+If your macro fails to send any text, there may be errors in its
+special sequences.  You can use the Console application to see
+any errors that MacTelnet may have printed regarding your macro.
+
+The possible special sequences are:
+
+table(deftable).
+(def). |_<(key). Code|_<(desc). Meaning|
+(def). |<(key). @\\@|(desc)<. backslash (@\@)|
+(def). |<(key). @\t@|(desc)<. horizontal tab|
+(def). |<(key). @\r@|(desc)<. carriage return|
+(def). |<(key). @\n@|(desc)<. line feed|
+(def). |<(key). @\e@|(desc)<. escape (@^[@)|
+(def). |<(key). @\0nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\004@" is @^D@|
+(def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\177@" is delete|
+
+bq. To see the octal versions of all ASCII characters,
+look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
+MacTelnet window and runs "man ascii").
+
+For legacy reasons, you can also escape a double-quote (\"), but
+this is no longer necessary.
+
+MacTelnet also recognizes codes that represent information
+to be inserted at the time a macro is actually used:
+
+table(deftable).
+(def). |<(key). @\i@|(desc)<. dynamically substitute an IP address of the computer|
+(def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
+
+Currently, there is no way to choose which IP address is actually
+sent with "\i".  But you can use Window >> Show IP Addresses to
+see all the IP addresses that your computer has, and drag the
+desired one into a terminal window.
+
+h5. Enter Text Verbatim
+
+The Contents will be typed into the active terminal view as if
+the keyboard were used, and *no* special sequences will be
+substituted.
+
+h2(#workspaces). Workspaces
+
+bq. You can create more than one set of preferences in
+this category.  When you select the icon, a drawer
+appears with all the collections you have.  Simply
+choose a name from the list in the drawer, and then
+edit that collection's settings in the main Preferences
+window.
+
+Workspaces manage multiple terminal windows on one or more
+displays.
+
+So far in MacTelnet 4.0 beta, these preferences are not fully
+functional, but the intent is to offer very flexible window
+management.
+
+h3. Settings
+
+h4(#usetabs). Use tabs to arrange windows
+
+Once enabled, all new windows (but not existing ones) will be
+given tab adornments and will stick together automatically.
+
+New windows are added to the tab group of the active window.
+A tab can be moved to a new group by clicking the up-arrow
+button on its tab, or using Window >> Move to New Workspace.
+
+**Tip:** If you're using more than one display, or Spaces, it
+is handy to have a tab group for each space.
+
+It is important to notice that MacTelnet tabs are normal
+windows, so they are independent and can be modified in the
+usual ways.  The _only_ exception is that all the windows in
+the group will move together.
+
+If a sheet is open on one tab, you can still reach other tabs
+by clicking on them with the mouse.
+
+You can also drag and drop between tabs: simply move the mouse
+over a tab to activate its window.
 
 h2(#sessions). Sessions
 
@@ -778,151 +950,6 @@ clicked to restore the 16 ordinary colors.
 Not all applications in terminals will make use of these colors.
 In addition, a Terminal collection can disable them.
 
-h2(#macros). Macros
-
-bq. You can create more than one set of preferences in
-this category.  When you select the icon, a drawer
-appears with all the collections you have.  Simply
-choose a name from the list in the drawer, and then
-edit that collection's settings in the main Preferences
-window.
-
-bq. Each set in this category has an additional list
-of items.  First choose a set from the drawer, then
-choose an item from the numbered list, before editing.
-You can also edit the names of the numbered items, as
-you would for any item in the Finder.
-
-Macro sets are completely arbitrary actions that you can bind
-to almost any key combinations you wish!  In addition, you can
-choose to display them in a menu (see General preferences).
-
-Only macros from the active set, if any, are enabled.  The
-active set is selected with the Map menu.  If the "None"
-set is chosen, macros are disabled and the Macros menu is
-temporarily hidden.
-
-If a macro set is active, any of its macros can be used by
-typing a key equivalent (the macro's main key, plus some
-optional combination of modifiers).  In addition, if the
-preference is set to display a Macros menu, all of the
-current macros' names are shown in the menu along with their
-key equivalents.
-
-h3. Macro List
-
-This displays the number of macros in the set (currently fixed
-at 12), and their names.
-
-The names can be edited by clicking and hovering on them, or
-selecting an item and pressing Return.  Names are currently
-only used in the Macros menu (if enabled).
-
-h3. Selected Macro
-
-To edit a macro, select it from the list and then modify its
-fields in this section.  Changes take effect immediately (so,
-you could test in a terminal window at the same time, provided
-you made this the current macro set via the Map menu).
-
-h4. Invoke With
-
-The key or combination of keys that will trigger the macro
-action.
-
-If "Ordinary Key" is selected, you should type one character
-into the field next to the pop-up menu to indicate which key.
-For example, "K" indicates that typing the K key will activate
-the macro.
-
-Alternately, you can choose from a number of "special" keys
-in the menu.
-
-No matter which keys you choose, you have to be mindful of
-what may already be in use by MacTelnet, your computer's
-defaults, or the application you're going to run in the
-terminal.  In general, it's not a good idea to choose very
-simple key combinations.
-
-**Important:** Whether or not you intend to use the Macros
-menu, displaying it initially is recommended so that you can
-see how your key equivalent will be interpreted.  Certain
-combinations are "special" and will not be available to you.
-
-h4. Modifiers
-
-Any combination of zero to four standard modifier keys that
-must be held down _in addition_ to the "Invoke With" key,
-before the macro will be activated.
-
-Modifiers are highly recommended!  Most keys are needed for
-other things by default, and shouldn't invoke macros by
-themselves.
-
-h4. Action
-
-The type of behavior the macro will trigger, and the way the
-Contents will be interpreted:
-
-h5. Open URL
-
-The Contents are interpreted as a URL and opened locally with
-whatever helper application is appropriate (such as your
-preferred web browser).
-
-h5. New Window with Command
-
-The Contents are interpreted as a command line, split into
-words (on whitespace) and run in a new terminal window.
-When the command finishes, the terminal window is closed.
-
-h5. Enter Text
-
-The Contents will be typed into the active terminal view as if
-the keyboard were used; however, any special sequences will
-first be substituted with their current values.
-
-If your macro fails to send any text, there may be errors in its
-special sequences.  You can use the Console application to see
-any errors that MacTelnet may have printed regarding your macro.
-
-The possible special sequences are:
-
-table(deftable).
-(def). |_<(key). Code|_<(desc). Meaning|
-(def). |<(key). @\\@|(desc)<. backslash (@\@)|
-(def). |<(key). @\t@|(desc)<. horizontal tab|
-(def). |<(key). @\r@|(desc)<. carriage return|
-(def). |<(key). @\n@|(desc)<. line feed|
-(def). |<(key). @\e@|(desc)<. escape (@^[@)|
-(def). |<(key). @\0nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\004@" is @^D@|
-(def). |<(key). @\1nn@|(desc)<. arbitrary ASCII in octal; e.g. "@\177@" is delete|
-
-bq. To see the octal versions of all ASCII characters,
-look at <a href="x-man-page://ascii">x-man-page://ascii</a> (opens a
-MacTelnet window and runs "man ascii").
-
-For legacy reasons, you can also escape a double-quote (\"), but
-this is no longer necessary.
-
-MacTelnet also recognizes codes that represent information
-to be inserted at the time a macro is actually used:
-
-table(deftable).
-(def). |<(key). @\i@|(desc)<. dynamically substitute an IP address of the computer|
-(def). |<(key). @\#@|(desc)<. dynamically substitute the number of terminal lines|
-
-Currently, there is no way to choose which IP address is actually
-sent with "\i".  But you can use Window >> Show IP Addresses to
-see all the IP addresses that your computer has, and drag the
-desired one into a terminal window.
-
-h5. Enter Text Verbatim
-
-The Contents will be typed into the active terminal view as if
-the keyboard were used, and *no* special sequences will be
-substituted.
-
 h2(#translations). Translations
 
 bq. You can create more than one set of preferences in
@@ -1024,11 +1051,6 @@ If you do not want your kiosk disturbed, you may wish to remove
 the floating button that appears by default.  (Full Screen can
 always be disabled, but without this button it is less likely
 that visitors will determine how.)
-
-h2(#scripts). Scripts
-
-This panel provides easy access to your Scripts Menu Items and
-will make more scripting options available in the future.
 
 </div>
 

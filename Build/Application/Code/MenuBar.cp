@@ -1484,11 +1484,20 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	switch (inPreferenceTagThatChanged)
 	{
 	case kPreferences_TagArrangeWindowsUsingTabs:
-		unless (Preferences_GetData(kPreferences_TagArrangeWindowsUsingTabs,
-									sizeof(gUsingTabs), &gUsingTabs,
-									&actualSize) == kPreferences_ResultOK)
 		{
-			gUsingTabs = false; // assume tabs are not being used, if preference can’t be found
+			Preferences_Result		prefsResult = kPreferences_ResultOK;
+			Preferences_ContextRef	defaultContext = nullptr;
+			
+			
+			prefsResult = Preferences_GetDefaultContext(&defaultContext, Quills::Prefs::WORKSPACE);
+			assert(kPreferences_ResultOK == prefsResult);
+			prefsResult = Preferences_ContextGetData(defaultContext, kPreferences_TagArrangeWindowsUsingTabs,
+														sizeof(gUsingTabs), &gUsingTabs,
+														true/* search defaults */, &actualSize);
+			unless (kPreferences_ResultOK == prefsResult)
+			{
+				gUsingTabs = false; // assume tabs are not being used, if preference can’t be found
+			}
 		}
 		break;
 	

@@ -932,7 +932,7 @@ Preferences_Init ()
 	//            and relied upon in other methods.  They are also used in
 	//            the PrefsConverter.  Check for consistency!
 	My_PreferenceDefinition::createFlag(kPreferences_TagArrangeWindowsUsingTabs,
-										CFSTR("terminal-use-tabs"), Quills::Prefs::GENERAL);
+										CFSTR("terminal-use-tabs"), Quills::Prefs::WORKSPACE);
 	My_PreferenceDefinition::create(kPreferences_TagAssociatedFormatFavorite,
 									CFSTR("format-favorite"), typeCFStringRef,
 									sizeof(CFStringRef), Quills::Prefs::SESSION);
@@ -5911,7 +5911,6 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagArrangeWindowsUsingTabs:
 				case kPreferences_TagCopySelectedText:
 				case kPreferences_TagCursorBlinks:
 				case kPreferences_TagCursorMovesPriorToDrops:
@@ -7517,14 +7516,30 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 			if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 			else
 			{
-				Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inDataPreferenceTag);
-				
-				
-				switch (kTagWithoutIndex)
+				switch (inDataPreferenceTag)
 				{
+				case kPreferences_TagArrangeWindowsUsingTabs:
+					{
+						assert(typeNetEvents_CFBooleanRef == keyValueType);
+						*(REINTERPRET_CAST(outDataPtr, Boolean*)) = inContextPtr->returnFlag(keyName);
+					}
+					break;
+				
 				default:
-					// unrecognized tag
-					result = kPreferences_ResultUnknownTagOrClass;
+					// all other settings are per-window
+					{
+						Preferences_Tag const	kTagWithoutIndex = Preferences_ReturnTagFromVariant
+																	(inDataPreferenceTag);
+						
+						
+						switch (kTagWithoutIndex)
+						{
+						default:
+							// unrecognized tag
+							result = kPreferences_ResultUnknownTagOrClass;
+							break;
+						}
+					}
 					break;
 				}
 			}
@@ -8086,17 +8101,6 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 		{
 			switch (inDataPreferenceTag)
 			{
-			case kPreferences_TagArrangeWindowsUsingTabs:
-				{
-					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
-					
-					
-					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
-					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
-				}
-				break;
-			
 			case kPreferences_TagBellSound:
 				{
 					CFStringRef const	data = *(REINTERPRET_CAST(inDataPtr, CFStringRef const*));
@@ -9482,14 +9486,34 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 		if (inDataSize < actualSize) result = kPreferences_ResultInsufficientBufferSpace;
 		else
 		{
-			Preferences_Tag const		kTagWithoutIndex = Preferences_ReturnTagFromVariant(inDataPreferenceTag);
-			
-			
-			switch (kTagWithoutIndex)
+			switch (inDataPreferenceTag)
 			{
+			case kPreferences_TagArrangeWindowsUsingTabs:
+				{
+					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
+					
+					
+					assert(typeNetEvents_CFBooleanRef == keyValueType);
+					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
+				}
+				break;
+			
 			default:
-				// unrecognized tag
-				result = kPreferences_ResultUnknownTagOrClass;
+				// all other settings are per-window
+				{
+					Preferences_Tag const	kTagWithoutIndex = Preferences_ReturnTagFromVariant
+																(inDataPreferenceTag);
+					
+					
+					switch (kTagWithoutIndex)
+					{
+					default:
+						// unrecognized tag
+						result = kPreferences_ResultUnknownTagOrClass;
+						break;
+					}
+				}
 				break;
 			}
 		}

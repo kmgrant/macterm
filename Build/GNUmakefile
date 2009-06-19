@@ -178,6 +178,7 @@ IconForPrefPanelScripts.icns \
 IconForPrefPanelSessions.icns \
 IconForPrefPanelTerminals.icns \
 IconForPrefPanelTranslations.icns \
+IconForPrefPanelWorkspaces.icns \
 IconForPreferenceCollections.icns \
 IconForScriptsMenu.icns \
 IconForScrollLockOff.icns \
@@ -215,6 +216,7 @@ English.lproj/PrefPanelMacros.nib \
 English.lproj/PrefPanels.nib \
 English.lproj/PrefPanelSessions.nib \
 English.lproj/PrefPanelTerminals.nib \
+English.lproj/PrefPanelWorkspaces.nib \
 English.lproj/PrefsWindow.nib \
 English.lproj/ProgressDialog.nib \
 English.lproj/ServerBrowserCocoa.nib \

@@ -17,10 +17,11 @@ with a window in MacTelnet.
 * "Overview":#overview
 * "Preference Keys":#keys
 ** "General":#general
+** "Macro Collections":#macros
+** "Workspace Collections":#workspaces
 ** "Session Collections":#sessions
 ** "Terminal Collections":#terminals
 ** "Format Collections":#formats
-** "Macro Collections":#macros
 ** "Translation Collections":#translations
 
 h2(#overview). Overview
@@ -96,8 +97,6 @@ table(deftable).
 (defbottom). |(desc)\2. Resizing a terminal view will alter its screen dimensions or its font size to best fit the new area.|
 (deftop). |(key). @terminal-show-margin-at-column@|(types). _integer_|
 (defbottom). |(desc)\2. A thin vertical line is rendered after this column of text; 1 is first column, 0 turns off the feature.|
-(deftop). |(key). @terminal-use-tabs@|(types). _true or false_|
-(defbottom). |(desc)\2. Windows stick together and have tabs.|
 (deftop). |(key). @terminal-when-bell@|(types). _string_: @audio@, @audio+visual@ or @visual@| 
 (defbottom). |(desc)\2. Terminal bells have this effect when the source terminal is frontmost.|
 (deftop). |(key). @terminal-when-bell-in-background@|(types). _string_: @ignore@ or @notify@| 
@@ -126,6 +125,28 @@ table(deftable).
 (defbottom). |(desc)\2. Where to place the first terminal window, and where to start for "Arrange All in Front".|
 (deftop). |(key). @window-terminal-tab-edge@|(types). _string_: @top@, @bottom@, @left@ or @right@| 
 (defbottom). |(desc)\2. When tabs are enabled, this side of the window should be used.|
+
+h3(#macros). Macro Collections
+
+table(deftable).
+(deftop). |(key). @macro-NN-action@, where NN is 01 to 12|(types). _string_: @text@, @verbatim@, @handle URL@, or @new window with command@|
+(defbottom). |(desc)\2. How to interpret the content string.  If @text@, then escapes such as @\012@ are expanded; if @verbatim@, escapes are ignored.|
+(deftop). |(key). @macro-NN-contents-string@, where NN is 01 to 12|(types). _string_|
+(defbottom). |(desc)\2. Text, whose meaning depends on the action: something to send (interpreted or verbatim), a URL to open, or a command line to run (without interpretation).|
+(deftop). |(key). @macro-NN-key@, where NN is 01 to 12|(types). _string_: a "key name":#specialvalues|
+(defbottom). |(desc)\2. Base key that activates this macro, when combined with the modifier keys.|
+(deftop). |(key). @macro-NN-modifiers@, where NN is 01 to 12|(types). _array of string_: zero or more "modifier keys":#specialvalues|
+(defbottom). |(desc)\2. Modifier keys that must be held down before the base key is interpreted as a macro request.|
+(deftop). |(key). @macro-NN-name-string@, where NN is 01 to 12|(types). _string_|
+(defbottom). |(desc)\2. Name to use in menus and other interface elements, when representing this macro.|
+(deftop). |(key). @macro-order@|(types). _array of string_: values from @macro-01@ to @macro-12@|
+(defbottom). |(desc)\2. Order in which macros should be displayed in user interface elements.|
+
+h3(#workspaces). Workspace Collections
+
+table(deftable).
+(deftop). |(key). @terminal-use-tabs@|(types). _true or false_|
+(defbottom). |(desc)\2. Windows stick together and have tabs.|
 
 h3(#sessions). Session Collections
 
@@ -308,22 +329,6 @@ table(deftable).
 (defbottom). |(desc)\2. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
 (deftop). |(key). @terminal-padding-top-em@|(types). _float_: multiplied by the current font's "m" width|
 (defbottom). |(desc)\2. Amount of space between the inner edge of the terminal and its keyboard focus ring.|
-
-h3(#macros). Macro Collections
-
-table(deftable).
-(deftop). |(key). @macro-NN-action@, where NN is 01 to 12|(types). _string_: @text@, @verbatim@, @handle URL@, or @new window with command@|
-(defbottom). |(desc)\2. How to interpret the content string.  If @text@, then escapes such as @\012@ are expanded; if @verbatim@, escapes are ignored.|
-(deftop). |(key). @macro-NN-contents-string@, where NN is 01 to 12|(types). _string_|
-(defbottom). |(desc)\2. Text, whose meaning depends on the action: something to send (interpreted or verbatim), a URL to open, or a command line to run (without interpretation).|
-(deftop). |(key). @macro-NN-key@, where NN is 01 to 12|(types). _string_: a "key name":#specialvalues|
-(defbottom). |(desc)\2. Base key that activates this macro, when combined with the modifier keys.|
-(deftop). |(key). @macro-NN-modifiers@, where NN is 01 to 12|(types). _array of string_: zero or more "modifier keys":#specialvalues|
-(defbottom). |(desc)\2. Modifier keys that must be held down before the base key is interpreted as a macro request.|
-(deftop). |(key). @macro-NN-name-string@, where NN is 01 to 12|(types). _string_|
-(defbottom). |(desc)\2. Name to use in menus and other interface elements, when representing this macro.|
-(deftop). |(key). @macro-order@|(types). _array of string_: values from @macro-01@ to @macro-12@|
-(defbottom). |(desc)\2. Order in which macros should be displayed in user interface elements.|
 
 h3(#translations). Translation Collections
 

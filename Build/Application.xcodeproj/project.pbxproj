@@ -15,6 +15,7 @@
 		0A36176B0DD286240081A445 /* Keypads.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0A36176A0DD286240081A445 /* Keypads.mm */; };
 		0A377E630D38806B001F3573 /* open.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A377E610D38804B001F3573 /* open.py */; };
 		0A3E06F30B81766900EDC16A /* PrefPanelTranslations.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */; };
+		0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */; };
 		0A766E0B0FB54D8E00259E56 /* kvp.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
@@ -443,6 +444,10 @@
 		0A4A783B055B3D1D0011CC82 /* English */ = {isa = PBXFileReference; lastKnownFileType = image.pict; name = English; path = Application/Resources/English.lproj/DockTileAttention.pict; sourceTree = "<group>"; };
 		0A4A86AC055B3DDF0011CC82 /* ApplicationVersion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ApplicationVersion.h; path = Application/Resources/ApplicationVersion.h; sourceTree = "<group>"; };
 		0A4A86B9055B3DDF0011CC82 /* English */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = English; path = Application/Resources/English.lproj/LocalizedApplicationVersion.h; sourceTree = SOURCE_ROOT; };
+		0A4C9D210FE9B1A0005EAE9D /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefPanelWorkspaces.nib; sourceTree = "<group>"; };
+		0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelWorkspaces.cp; path = Application/Code/PrefPanelWorkspaces.cp; sourceTree = "<group>"; };
+		0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelWorkspaces.h; path = Application/Code/PrefPanelWorkspaces.h; sourceTree = "<group>"; };
+		0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForPrefPanelWorkspaces.icns; path = Application/Resources/IconForPrefPanelWorkspaces.icns; sourceTree = "<group>"; };
 		0A54E40C0560B62F005B4592 /* IconForSession.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForSession.icns; path = Application/Resources/IconForSession.icns; sourceTree = "<group>"; };
 		0A54E40D0560B62F005B4592 /* IconForBundle.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBundle.icns; path = Application/Resources/IconForBundle.icns; sourceTree = "<group>"; };
 		0A54E40E0560B62F005B4592 /* IconForMacroSet.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForMacroSet.icns; path = Application/Resources/IconForMacroSet.icns; sourceTree = "<group>"; };
@@ -1003,6 +1008,7 @@
 				0A4123160ACE525B0067D333 /* PrefPanelMacros.nib */,
 				0A4123180ACE525B0067D333 /* PrefPanelSessions.nib */,
 				0A41231A0ACE525B0067D333 /* PrefPanelTerminals.nib */,
+				0A4C9D200FE9B1A0005EAE9D /* PrefPanelWorkspaces.nib */,
 				0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */,
 				0A8450A70554CB8E00CFF440 /* ProgressDialog.nib */,
 				0AF5080409006B3D00E6FE79 /* SizeDialog.nib */,
@@ -1062,6 +1068,7 @@
 				0ABC0CF40A44FFA7009D07FC /* IconForPrefPanelSessions.icns */,
 				0ABC0CF60A44FFAA009D07FC /* IconForPrefPanelTerminals.icns */,
 				0A3E07400B817E9800EDC16A /* IconForPrefPanelTranslations.icns */,
+				0A4C9D5E0FE9C5B5005EAE9D /* IconForPrefPanelWorkspaces.icns */,
 				0A22A019059FBF0300A0BB56 /* IconForScriptsMenu.icns */,
 				0AC838690ABF917000BEF8B9 /* IconForScrollLockOff.icns */,
 				0AC8386A0ABF917000BEF8B9 /* IconForScrollLockOn.icns */,
@@ -1107,6 +1114,7 @@
 				0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */,
 				0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */,
 				0A3E06F20B81766900EDC16A /* PrefPanelTranslations.cp */,
+				0A4C9D240FE9B95F005EAE9D /* PrefPanelWorkspaces.cp */,
 				0A46FDDB055432A400ACDF3A /* PrefsContextDialog.cp */,
 				0A46FE08055432A400ACDF3A /* PrefsWindow.cp */,
 			);
@@ -1126,6 +1134,7 @@
 				0A87394D0A5F6DA0002CACA9 /* PrefPanelSessions.h */,
 				0A87394E0A5F6DA4002CACA9 /* PrefPanelTerminals.h */,
 				0A3E06F60B81767A00EDC16A /* PrefPanelTranslations.h */,
+				0A4C9D260FE9B986005EAE9D /* PrefPanelWorkspaces.h */,
 				0A4603E60554376100ACDF3A /* PrefsContextDialog.h */,
 				0A4604190554376100ACDF3A /* PrefsWindow.h */,
 			);
@@ -1458,6 +1467,7 @@
 				0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */,
 				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
 				0AF502390F872D590068CB19 /* CollectionWrap.cp in Sources */,
+				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1559,6 +1569,14 @@
 			);
 			name = DockTileAttention.pict;
 			sourceTree = SOURCE_ROOT;
+		};
+		0A4C9D200FE9B1A0005EAE9D /* PrefPanelWorkspaces.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0A4C9D210FE9B1A0005EAE9D /* English */,
+			);
+			name = PrefPanelWorkspaces.nib;
+			sourceTree = "<group>";
 		};
 		0A6E225806CF42F0004AC0A4 /* KioskPasswordDialog.nib */ = {
 			isa = PBXVariantGroup;

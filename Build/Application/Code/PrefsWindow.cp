@@ -80,6 +80,7 @@
 #include "PrefPanelSessions.h"
 #include "PrefPanelTerminals.h"
 #include "PrefPanelTranslations.h"
+#include "PrefPanelWorkspaces.h"
 #include "PrefsWindow.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
@@ -1333,13 +1334,14 @@ init ()
 		
 		// create category panels - call these routines in the order you want their category buttons to appear
 		installPanel(PrefPanelGeneral_New());
+		installPanel(PrefPanelMacros_New());
+		installPanel(PrefPanelWorkspaces_New());
 		installPanel(PrefPanelSessions_New());
 		installPanel(PrefPanelTerminals_New());
 		installPanel(PrefPanelFormats_New());
-		installPanel(PrefPanelMacros_New());
 		installPanel(PrefPanelTranslations_New());
 		installPanel(PrefPanelKiosk_New());
-		installPanel(PrefPanelScripts_New());
+		//installPanel(PrefPanelScripts_New());
 		
 		// footer callbacks
 		{
@@ -2031,6 +2033,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				case kCommandDisplayPrefPanelSessions:
 				case kCommandDisplayPrefPanelTerminals:
 				case kCommandDisplayPrefPanelTranslations:
+				case kCommandDisplayPrefPanelWorkspaces:
 					showWindow();
 					assert(false == gIndicesByCommandID().empty());
 					choosePanel(gIndicesByCommandID()[received.commandID]);
@@ -2161,6 +2164,11 @@ returnCurrentPreferencesClass ()
 													kCFCompareBackwards))
 	{
 		result = Quills::Prefs::TRANSLATION;
+	}
+	else if (kCFCompareEqualTo == CFStringCompare(kConstantsRegistry_PrefPanelDescriptorWorkspaces, currentPanelKind,
+													kCFCompareBackwards))
+	{
+		result = Quills::Prefs::WORKSPACE;
 	}
 	return result;
 }// returnCurrentPreferencesClass
