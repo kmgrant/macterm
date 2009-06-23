@@ -646,7 +646,9 @@ void					changeNotify							(Preferences_Change, Preferences_ContextRef = nullpt
 																 Boolean = false);
 Preferences_Result		contextGetData							(My_ContextInterfacePtr, Quills::Prefs::Class, Preferences_Tag,
 																 size_t, void*, size_t*);
+Boolean					convertCFArrayToHIRect					(CFArrayRef, HIRect&);
 Boolean					convertCFArrayToRGBColor				(CFArrayRef, RGBColor*);
+Boolean					convertHIRectToCFArray					(HIRect const&, CFArrayRef&);
 Boolean					convertRGBColorToCFArray				(RGBColor const*, CFArrayRef&);
 Preferences_Result		copyClassDomainCFArray					(Quills::Prefs::Class, CFArrayRef&);
 Preferences_Result		createAllPreferencesContextsFromDisk	();
@@ -692,7 +694,6 @@ Preferences_Result		setGeneralPreference					(My_ContextInterfacePtr, Preference
 																 size_t, void const*);
 Preferences_Result		setMacroPreference						(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
-Boolean					setMacTelnetCoordPreference				(CFStringRef, SInt16, SInt16);
 void					setMacTelnetPreference					(CFStringRef, CFPropertyListRef);
 Preferences_Result		setSessionPreference					(My_ContextInterfacePtr, Preferences_Tag,
 																 size_t, void const*);
@@ -5019,6 +5020,57 @@ contextGetData		(My_ContextInterfacePtr		inContextPtr,
 
 
 /*!
+Reads an array of 4 CFNumber elements and puts their
+values into an HIRect structure in the order origin.x,
+origin.y, size.width, size.height.
+
+Returns "true" only if successful.
+
+(4.0)
+*/
+Boolean
+convertCFArrayToHIRect	(CFArrayRef		inArray,
+						 HIRect&		outRect)
+{
+	Boolean		result = false;
+	
+	
+	if ((nullptr != inArray) && (CFArrayGetCount(inArray) == 4))
+	{
+		CFNumberRef		xValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 0));
+		CFNumberRef		yValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 1));
+		CFNumberRef		widthValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 2));
+		CFNumberRef		heightValue = CFUtilities_NumberCast(CFArrayGetValueAtIndex(inArray, 3));
+		Float64			floatValue = 0L;
+		
+		
+		if (CFNumberGetValue(xValue, kCFNumberFloat32Type, &floatValue))
+		{
+			outRect.origin.x = floatValue;
+			if (CFNumberGetValue(yValue, kCFNumberFloat32Type, &floatValue))
+			{
+				outRect.origin.y = floatValue;
+				if (CFNumberGetValue(widthValue, kCFNumberFloat32Type, &floatValue))
+				{
+					outRect.size.width = floatValue;
+					if (CFNumberGetValue(heightValue, kCFNumberFloat32Type, &floatValue))
+					{
+						outRect.size.height = floatValue;
+						result = true;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		// unexpected number of elements
+	}
+	return result;
+}// convertCFArrayToHIRect
+
+
+/*!
 Reads an array of 3 CFNumber elements and puts their
 values into an RGBColor structure.
 
@@ -5065,9 +5117,78 @@ convertCFArrayToRGBColor	(CFArrayRef		inArray,
 	{
 		// unexpected number of elements
 	}
-	
 	return result;
 }// convertCFArrayToRGBColor
+
+
+/*!
+Utility routine for “packing” a rectangular value (origin x, y
+and size width, height) into a CFArray of 4 floating-point
+numbers.  Returns true only if successful.
+
+See also convertCFArrayToHIRect().
+
+(4.0)
+*/
+Boolean
+convertHIRectToCFArray	(HIRect const&	inRect,
+						 CFArrayRef&	outNewCFArray)
+{
+	CFNumberRef		componentValues[] = { nullptr, nullptr, nullptr, nullptr };
+	SInt16			i = 0;
+	Float32			floatValue = 0L;
+	Boolean			result = false;
+	
+	
+	outNewCFArray = nullptr;
+	
+	// WARNING: this is not exception-safe
+	floatValue = inRect.origin.x;
+	componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+	if (nullptr != componentValues[i])
+	{
+		++i;
+		floatValue = inRect.origin.y;
+		componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+		if (nullptr != componentValues[i])
+		{
+			++i;
+			floatValue = inRect.size.width;
+			componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+			if (nullptr != componentValues[i])
+			{
+				++i;
+				floatValue = inRect.size.height;
+				componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
+				if (nullptr != componentValues[i])
+				{
+					++i;
+					
+					// store colors in array
+					outNewCFArray = CFArrayCreate(kCFAllocatorDefault,
+													REINTERPRET_CAST(componentValues, void const**),
+													sizeof(componentValues) / sizeof(CFNumberRef),
+													&kCFTypeArrayCallBacks);
+					if (nullptr != outNewCFArray)
+					{
+						// success!
+						result = true;
+					}
+					
+					--i;
+					CFRelease(componentValues[i]);
+				}
+				--i;
+				CFRelease(componentValues[i]);
+			}
+			--i;
+			CFRelease(componentValues[i]);
+		}
+		--i;
+		CFRelease(componentValues[i]);
+	}
+	return result;
+}// convertHIRectToCFArray
 
 
 /*!
@@ -5085,6 +5206,8 @@ convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 	Boolean		result = false;
 	
 	
+	outNewCFArray = nullptr;
+	
 	if (nullptr != inColorPtr)
 	{
 		CFNumberRef		componentValues[] = { nullptr, nullptr, nullptr };
@@ -5092,6 +5215,7 @@ convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 		Float32			floatValue = 0L;
 		
 		
+		// WARNING: this is not exception-safe
 		floatValue = inColorPtr->red;
 		floatValue /= RGBCOLOR_INTENSITY_MAX;
 		componentValues[i] = CFNumberCreate(kCFAllocatorDefault, kCFNumberFloat32Type, &floatValue);
@@ -5136,7 +5260,6 @@ convertRGBColorToCFArray	(RGBColor const*	inColorPtr,
 	{
 		// unexpected input
 	}
-	
 	return result;
 }// convertRGBColorToCFArray
 
@@ -7534,6 +7657,34 @@ getWorkspacePreference	(My_ContextInterfaceConstPtr	inContextPtr,
 						
 						switch (kTagWithoutIndex)
 						{
+						case kPreferences_TagIndexedWindowFrameBounds:
+						case kPreferences_TagIndexedWindowScreenBounds:
+							{
+								assert(typeCFArrayRef == keyValueType);
+								CFArrayRef		valueCFArray = inContextPtr->returnArrayCopy(keyName);
+								
+								
+								if (nullptr == valueCFArray)
+								{
+									result = kPreferences_ResultBadVersionDataNotAvailable;
+								}
+								else
+								{
+									HIRect* const	data = REINTERPRET_CAST(outDataPtr, HIRect*);
+									
+									
+									if (false == convertCFArrayToHIRect(valueCFArray, *data))
+									{
+										// failed; make empty
+										data->origin.x = data->origin.y = 0;
+										data->size.width = data->size.height = 0;
+										result = kPreferences_ResultBadVersionDataNotAvailable;
+									}
+									CFRelease(valueCFArray), valueCFArray = nullptr;
+								}
+							}
+							break;
+						
 						default:
 							// unrecognized tag
 							result = kPreferences_ResultUnknownTagOrClass;
@@ -8768,54 +8919,6 @@ setMacroPreference	(My_ContextInterfacePtr		inContextPtr,
 
 
 /*!
-Like setMacTelnetPreference(), but is useful for creating
-coordinate values.  The work of creating a CFArrayRef
-containing two CFNumberRefs is done for you.
-
-Returns "true" only if it was possible to create the
-necessary Core Foundation types.
-
-(3.1)
-*/
-Boolean
-setMacTelnetCoordPreference		(CFStringRef	inKey,
-								 SInt16			inX,
-								 SInt16			inY)
-{
-	CFNumberRef		leftCoord = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &inX);
-	Boolean			result = false;
-	
-	
-	if (nullptr != leftCoord)
-	{
-		CFNumberRef		topCoord = CFNumberCreate(kCFAllocatorDefault, kCFNumberSInt16Type, &inY);
-		
-		
-		if (nullptr != topCoord)
-		{
-			CFNumberRef		values[] = { leftCoord, topCoord };
-			CFArrayRef		coords = CFArrayCreate(kCFAllocatorDefault,
-													REINTERPRET_CAST(values, void const**),
-													sizeof(values) / sizeof(CFNumberRef),
-													&kCFTypeArrayCallBacks);
-			
-			
-			if (nullptr != coords)
-			{
-				setMacTelnetPreference(inKey, coords);
-				result = true; // technically, it’s not possible to see if setMacTelnetPreference() succeeded...
-				CFRelease(coords), coords = nullptr;
-			}
-			CFRelease(topCoord), topCoord = nullptr;
-		}
-		CFRelease(leftCoord), leftCoord = nullptr;
-	}
-	
-	return result;
-}// setMacTelnetCoordPreference
-
-
-/*!
 Updates MacTelnet’s XML preferences as requested.
 Also prints to standard output information about
 the data being written (if debugging is enabled).
@@ -9508,6 +9611,23 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					switch (kTagWithoutIndex)
 					{
+					case kPreferences_TagIndexedWindowFrameBounds:
+					case kPreferences_TagIndexedWindowScreenBounds:
+						{
+							HIRect const* const		data = REINTERPRET_CAST(inDataPtr, HIRect const*);
+							CFArrayRef				boundsCFArray = nullptr;
+							
+							
+							if (convertHIRectToCFArray(*data, boundsCFArray))
+							{
+								assert(typeCFArrayRef == keyValueType);
+								inContextPtr->addArray(inDataPreferenceTag, keyName, boundsCFArray);
+								CFRelease(boundsCFArray), boundsCFArray = nullptr;
+							}
+							else result = kPreferences_ResultGenericFailure;
+						}
+						break;
+					
 					default:
 						// unrecognized tag
 						result = kPreferences_ResultUnknownTagOrClass;

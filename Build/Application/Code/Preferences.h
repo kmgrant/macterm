@@ -313,6 +313,8 @@ enum
 	kPreferences_TagArrangeWindowsUsingTabs				= 'tabs',	//!< data: "Boolean"
 	// indexed tags must have a zero byte to have space for tag variants;
 	// see also Preferences_ReturnTagVariantForIndex()
+	kPreferences_TagIndexedWindowFrameBounds			= 'wfb\0',	//!< data: "HIRect"
+	kPreferences_TagIndexedWindowScreenBounds			= 'wsb\0'	//!< data: "HIRect"
 };
 
 /*!
