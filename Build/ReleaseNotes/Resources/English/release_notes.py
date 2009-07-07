@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090707',
     '20090706',
     '20090618',
     '20090616',
@@ -251,6 +252,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090707': [
+		'Terminal view text size can now be changed with the scroll wheel and the Control key, similar to applications like Firefox.',
+	],
 	'20090706': [
 		'Preferences window Workspaces pane has been simplified, as there are future plans to rely primarily on an arrangement panel.',
 	],

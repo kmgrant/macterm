@@ -4184,6 +4184,12 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						
 						
 						if (nullptr == terminalWindow) result = eventNotHandledErr;
+						else if (modifiers & controlKey)
+						{
+							// like Firefox, use control-scroll-wheel to affect font size
+							Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandBiggerText : kCommandSmallerText);
+							result = noErr;
+						}
 						else
 						{
 							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
