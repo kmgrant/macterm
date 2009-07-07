@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090706',
     '20090618',
     '20090616',
     '20090613',
@@ -250,6 +251,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090706': [
+		'Preferences window Workspaces pane has been simplified, as there are future plans to rely primarily on an arrangement panel.',
+	],
 	'20090618': [
 		'Preferences window Workspaces pane now available, though most settings of this new class are not yet functional.',
 		'"Use tabs to arrange windows" preference has been moved to the new Workspaces pane.',

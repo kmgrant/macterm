@@ -103,19 +103,7 @@ HIViewID const	idMyDataBrowserWindowList				= { 'WnDB', 0/* ID */ };
 HIViewID const	idMyButtonAddWindow						= { 'NewW', 0/* ID */ };
 HIViewID const	idMyButtonRemoveWindow					= { 'DelW', 0/* ID */ };
 HIViewID const	idMySeparatorSelectedWindow				= { 'SSWn', 0/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion1			= { 'Regn', 1/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion2			= { 'Regn', 2/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion3			= { 'Regn', 3/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion4			= { 'Regn', 4/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion5			= { 'Regn', 5/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion6			= { 'Regn', 6/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion7			= { 'Regn', 7/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion8			= { 'Regn', 8/* ID */ };
-HIViewID const	idMyButtonAreaOccupiesRegion9			= { 'Regn', 9/* ID */ };
-HIViewID const	idMyHelpTextDisplayPartitioning			= { 'DHlp', 0/* ID */ };
 HIViewID const	idMySeparatorGlobalSettings				= { 'SSWG', 0/* ID */ };
-HIViewID const	idMyLabelDisplayPartitions				= { 'LDPr', 0/* ID */ };
-HIViewID const	idMyPopUpMenuDisplayPartitions			= { 'MDPr', 0/* ID */ };
 HIViewID const	idMyLabelOptions						= { 'LWSO', 0/* ID */ };
 HIViewID const	idMyCheckBoxUseTabsToArrangeWindows		= { 'UTAW', 0/* ID */ };
 
@@ -1014,15 +1002,9 @@ deltaSizePanelContainerHIView	(HIViewRef		inView,
 		// INCOMPLETE
 		viewWrap = HIViewWrap(idMySeparatorSelectedWindow, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-		viewWrap = HIViewWrap(idMyHelpTextDisplayPartitioning, kPanelWindow);
-		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 		
 		viewWrap = HIViewWrap(idMySeparatorGlobalSettings, kPanelWindow);
 		viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
-		viewWrap = HIViewWrap(idMyLabelDisplayPartitions, kPanelWindow);
-		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
-		viewWrap = HIViewWrap(idMyPopUpMenuDisplayPartitions, kPanelWindow);
 		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
 		viewWrap = HIViewWrap(idMyLabelOptions, kPanelWindow);
 		viewWrap << HIViewWrap_MoveBy(0/* delta X */, inDeltaY/* delta Y */);
