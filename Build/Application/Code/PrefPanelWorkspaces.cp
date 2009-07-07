@@ -147,9 +147,6 @@ public:
 	refreshDisplay ();
 	
 	void
-	saveFieldPreferences	(Preferences_ContextRef, UInt32);
-	
-	void
 	setDataBrowserColumnWidths ();
 	
 	Panel_Ref							panel;						//!< the panel using this UI
