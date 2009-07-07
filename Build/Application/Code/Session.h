@@ -95,11 +95,6 @@ enum
 													//!  clicking a button (context:
 													//!  SessionCloseWarningButtonInfoPtr)
 	
-	kSession_ChangeDataArrived			= 'Data',	//!< new data has been inserted for processing via a
-													//!  call to Session_AppendDataForProcessing(); the
-													//!  usual response is to invoke Session_ProcessMoreData()
-													//!  (context: SessionRef)
-	
 	kSession_ChangeResourceLocation		= 'SURL',	//!< the URL of a monitored Session has been updated
 													//!  (context: SessionRef)
 	
@@ -518,9 +513,6 @@ Boolean
 
 Boolean
 	Session_ProcessesAll8Bits				(SessionRef							inRef);
-
-size_t
-	Session_ProcessMoreData					(SessionRef							inRef);
 
 Session_Result
 	Session_ReceiveData						(SessionRef							inRef,

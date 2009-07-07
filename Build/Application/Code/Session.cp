@@ -264,7 +264,6 @@ struct My_Session
 	My_TextInputHandlerByView	terminalViewTextInputHandlers;// invoked whenever a terminal view is focused during a key press
 	ListenerModel_Ref			changeListenerModel;		// who to notify for various kinds of changes to this session data
 	ListenerModel_ListenerRef	changeListener;				// listener that updates the status string
-	ListenerModel_ListenerRef	dataArrivalListener;		// listener that processes incoming data
 	ListenerModel_ListenerRef	windowValidationListener;	// responds after a window is created, and just before it dies
 	ListenerModel_ListenerRef	terminalWindowListener;		// responds when terminal window states change
 	ListenerModel_ListenerRef	preferencesListener;		// responds when certain preference values are initialized or changed
@@ -349,8 +348,6 @@ My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
 PMPageFormat				createSessionPageFormat				();
 IconRef						createSessionStateActiveIcon		();
 IconRef						createSessionStateDeadIcon			();
-void						dataArrived							(ListenerModel_Ref, ListenerModel_Event,
-																 void*, void*);
 pascal void					detectLongLife						(EventLoopTimerRef, void*);
 Boolean						handleSessionKeyDown				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
@@ -362,6 +359,7 @@ pascal void					pageSetupCloseNotifyProc			(PMPrintSession, WindowRef, Boolean);
 void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
+size_t						processMoreData						(My_SessionPtr);
 Boolean						queueCharacterInKeyboardBuffer		(My_SessionPtr, char);
 pascal OSStatus				receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
@@ -798,8 +796,8 @@ Session_AddDataTarget	(SessionRef				inRef,
 
 
 /*!
-Copies the specified data into the “read buffer” of
-the specified session, starting one byte beyond the
+Copies the specified data into the “read buffer” of the
+specified session, starting one byte beyond the
 last byte currently in the buffer, and inserts an
 event in the internal queue (if there isn’t one already)
 informing the session that there is data to be handled.
@@ -827,7 +825,21 @@ Session_AppendDataForProcessing		(SessionRef		inRef,
 		result = inSize - numberOfBytesToCopy;
 		CPP_STD::memcpy(ptr->readBufferPtr + ptr->readBufferSizeInUse, inDataPtr, numberOfBytesToCopy);
 		ptr->readBufferSizeInUse += numberOfBytesToCopy;
-		changeNotifyForSession(ptr, kSession_ChangeDataArrived, inRef/* context */);
+		
+		processMoreData(ptr);
+		
+		// also trigger a watch, if one exists
+		if (kSession_WatchForPassiveData == ptr->activeWatch)
+		{
+			// data arrived; notify immediately
+			watchNotifyForSession(ptr, ptr->activeWatch);
+		}
+		else if ((kSession_WatchForKeepAlive == ptr->activeWatch) ||
+					(kSession_WatchForInactivity == ptr->activeWatch))
+		{
+			// reset timer, start waiting again
+			watchTimerResetForSession(ptr, ptr->activeWatch);
+		}
 	}
 	return result;
 }// AppendDataForProcessing
@@ -1635,7 +1647,7 @@ Session_FlushNetwork	(SessionRef		inRef)
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									false); // no output
 	remainingBytesCount = 1; // just needs to be positive to start with
-	while (remainingBytesCount > 0) remainingBytesCount = Session_ProcessMoreData(inRef);
+	while (remainingBytesCount > 0) remainingBytesCount = processMoreData(ptr);
 	TerminalView_SetDrawingEnabled(TerminalWindow_ReturnViewWithFocus(Session_ReturnActiveTerminalWindow(inRef)),
 									true); // output now
 	RegionUtilities_RedrawWindowOnNextUpdate(returnActiveWindow(ptr));
@@ -2034,38 +2046,6 @@ Session_ProcessesAll8Bits		(SessionRef		inRef)
 	
 	return result;
 }// ProcessesAll8Bits
-
-
-/*!
-Reads as much available data as possible (based on
-the size of the processing buffer) and processes it,
-which will result in either displaying it as text or
-interpreting it as one or more commands.  The number
-of bytes left to be processed is returned, so if
-the result is greater than zero you ought to call
-this routine again.
-
-You can change the buffer size using the method
-Session_SetDataProcessingCapacity().
-
-(3.0)
-*/
-size_t
-Session_ProcessMoreData		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	size_t					result = 0;
-	
-	
-	// local session data on Mac OS X is handled in a separate
-	// thread using the blocking read() system call, so in that
-	// case data is expected to have been placed in the read buffer
-	// already by that thread
-	Session_ReceiveData(ptr->selfRef, ptr->readBufferPtr, ptr->readBufferSizeInUse);
-	//Session_TerminalWrite(ptr->selfRef, ptr->readBufferPtr, ptr->readBufferSizeInUse);
-	ptr->readBufferSizeInUse = 0;
-	return result;
-}// ProcessMoreData
 
 
 /*!
@@ -2667,13 +2647,13 @@ Session_SendNewline		(SessionRef		inRef,
 
 
 /*!
-Specifies the maximum number of bytes that can be
-read with each call to Session_ProcessMoreData().
-Depending on available memory, the actual buffer size
-may end up being less than the amount requested.
+Specifies the maximum number of bytes that can be read with
+each call to processMoreData().  Depending on available memory,
+the actual buffer size may end up being less than the amount
+requested.
 
-Requests of less than 512 bytes are increased to be
-a minimum of 512 bytes.
+Requests of less than 512 bytes are increased to be a minimum
+of 512 bytes.
 
 \retval kSession_ResultOK
 if there are no errors
@@ -3192,7 +3172,6 @@ Session_StartMonitoring		(SessionRef					inRef,
 	{
 		// recursively invoke for ALL session change types listed in "Session.h"
 		Session_StartMonitoring(inRef, kSession_ChangeCloseWarningAnswered, inListener);
-		Session_StartMonitoring(inRef, kSession_ChangeDataArrived, inListener);
 		Session_StartMonitoring(inRef, kSession_ChangeResourceLocation, inListener);
 		Session_StartMonitoring(inRef, kSession_ChangeSelected, inListener);
 		Session_StartMonitoring(inRef, kSession_ChangeState, inListener);
@@ -3387,7 +3366,6 @@ Session_StopMonitoring	(SessionRef					inRef,
 	{
 		// recursively invoke for ALL session change types listed in "Session.h"
 		Session_StopMonitoring(inRef, kSession_ChangeCloseWarningAnswered, inListener);
-		Session_StopMonitoring(inRef, kSession_ChangeDataArrived, inListener);
 		Session_StopMonitoring(inRef, kSession_ChangeResourceLocation, inListener);
 		Session_StopMonitoring(inRef, kSession_ChangeSelected, inListener);
 		Session_StopMonitoring(inRef, kSession_ChangeState, inListener);
@@ -4255,7 +4233,6 @@ terminalViewTextInputHandlers(), // set at window validation time
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard,
 										kConstantsRegistry_ListenerModelDescriptorSessionChanges)),
 changeListener(ListenerModel_NewStandardListener(connectionStateChanged)),
-dataArrivalListener(ListenerModel_NewStandardListener(dataArrived)),
 windowValidationListener(ListenerModel_NewStandardListener(windowValidationStateChanged)),
 terminalWindowListener(nullptr), // set at window validation time
 preferencesListener(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
@@ -4295,7 +4272,6 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	assert(nullptr != this->readBufferPtr);
 	
 	Session_StartMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
-	Session_StartMonitoring(this->selfRef, kSession_ChangeDataArrived, this->dataArrivalListener);
 	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
 	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener);
 	
@@ -4335,7 +4311,6 @@ My_Session::
 	ListenerModel_ReleaseListener(&this->preferencesListener);
 	
 	Session_StopMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
-	Session_StopMonitoring(this->selfRef, kSession_ChangeDataArrived, this->dataArrivalListener);
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowInvalid, this->windowValidationListener);
 	
@@ -4364,7 +4339,6 @@ My_Session::
 		delete [] this->readBufferPtr, this->readBufferPtr = nullptr;
 	}
 	ListenerModel_ReleaseListener(&this->windowValidationListener);
-	ListenerModel_ReleaseListener(&this->dataArrivalListener);
 	ListenerModel_ReleaseListener(&this->changeListener);
 	ListenerModel_Dispose(&this->changeListenerModel);
 }// My_Session destructor
@@ -4785,56 +4759,6 @@ createSessionStateDeadIcon ()
 	
 	return result;
 }// createSessionStateDeadIcon
-
-
-/*!
-Invoked when more data has appeared in the internal buffer,
-and needs processing.
-
-This can also trigger any watches set on the session.
-
-(3.1)
-*/
-void
-dataArrived		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
-				 ListenerModel_Event	inEvent,
-				 void*					inEventContextPtr,
-				 void*					UNUSED_ARGUMENT(inListenerContextPtr))
-{
-	switch (inEvent)
-	{
-	case kSession_ChangeDataArrived:
-		{
-			SessionRef		session = REINTERPRET_CAST(inEventContextPtr, SessionRef);
-			
-			
-			Session_ProcessMoreData(session);
-			
-			// also trigger a watch, if one exists
-			{
-				My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-				
-				
-				if (kSession_WatchForPassiveData == ptr->activeWatch)
-				{
-					// data arrived; notify immediately
-					watchNotifyForSession(ptr, ptr->activeWatch);
-				}
-				else if ((kSession_WatchForKeepAlive == ptr->activeWatch) ||
-							(kSession_WatchForInactivity == ptr->activeWatch))
-				{
-					// reset timer, start waiting again
-					watchTimerResetForSession(ptr, ptr->activeWatch);
-				}
-			}
-		}
-		break;
-	
-	default:
-		// ???
-		break;
-	}
-}// dataArrived
 
 
 /*!
@@ -5616,6 +5540,37 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// preferenceChanged
+
+
+/*!
+Reads as much available data as possible (based on
+the size of the processing buffer) and processes it,
+which will result in either displaying it as text or
+interpreting it as one or more commands.  The number
+of bytes left to be processed is returned, so if
+the result is greater than zero you ought to call
+this routine again.
+
+You can change the buffer size using the method
+Session_SetDataProcessingCapacity().
+
+(3.0)
+*/
+size_t
+processMoreData		(My_SessionPtr	inPtr)
+{
+	size_t		result = 0;
+	
+	
+	// local session data on Mac OS X is handled in a separate
+	// thread using the blocking read() system call, so in that
+	// case data is expected to have been placed in the read buffer
+	// already by that thread
+	Session_ReceiveData(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
+	//Session_TerminalWrite(inPtr->selfRef, inPtr->readBufferPtr, inPtr->readBufferSizeInUse);
+	inPtr->readBufferSizeInUse = 0;
+	return result;
+}// processMoreData
 
 
 /*!
