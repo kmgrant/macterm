@@ -9597,7 +9597,7 @@ setWorkspacePreference	(My_ContextInterfacePtr		inContextPtr,
 					
 					
 					assert(typeNetEvents_CFBooleanRef == keyValueType);
-					setMacTelnetPreference(keyName, (data) ? kCFBooleanTrue : kCFBooleanFalse);
+					inContextPtr->addFlag(inDataPreferenceTag, keyName, data);
 					changeNotify(inDataPreferenceTag, inContextPtr->selfRef);
 				}
 				break;
