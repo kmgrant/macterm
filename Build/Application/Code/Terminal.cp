@@ -613,9 +613,6 @@ parameters collected and any pending operations.
 struct My_Emulator
 {
 public:
-	typedef std::vector< SInt16 >			ParameterList;
-	typedef std::set< Preferences_Tag >		TagSet;
-	
 	struct Callbacks
 	{
 	public:
@@ -631,6 +628,10 @@ public:
 		My_EmulatorStateDeterminantProcPtr	stateDeterminant;		//!< figures out what the next state should be
 		My_EmulatorStateTransitionProcPtr	transitionHandler;		//!< handles new parser states, driving the terminal; varies based on the emulator
 	};
+	
+	typedef std::vector< Callbacks >		VariantChain;
+	typedef std::vector< SInt16 >			ParameterList;
+	typedef std::set< Preferences_Tag >		TagSet;
 	
 	My_Emulator		(Terminal_Emulator, CFStringRef, CFStringEncoding);
 	
@@ -648,6 +649,7 @@ public:
 	std::string							stringAccumulator;		//!< used to gather characters for such things as XTerm window changes
 	SInt16								parameterEndIndex;		//!< zero-based last parameter position in the "values" array
 	ParameterList						parameterValues;		//!< all values provided for the current escape sequence
+	VariantChain						preCallbackSet;			//!< callbacks invoked prior to ordinary callbacks, to allow tweaks (e.g. XTerm)
 	Callbacks							currentCallbacks;		//!< emulator-type-specific handlers to drive the state machine
 	Callbacks							pushedCallbacks;		//!< for emulators that can switch modes, the previous set of callbacks
 	TagSet								supportedVariants;		//!< tags identifying minor features, e.g. "kPreferences_TagXTerm256ColorsEnabled"
@@ -2332,6 +2334,7 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 			{
 				My_ParserState	currentState = dataPtr->emulator.currentState;
 				My_ParserState	nextState = currentState;
+				Boolean			isHandled = false;
 				Boolean			isInterrupt = false;
 				
 				
@@ -2340,23 +2343,23 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				
 				// find a new state, which may or may not interrupt the
 				// state that is currently forming
-				try
+				isHandled = false;
+				for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
+						((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
 				{
-					// TEMPORARY: would be better to store supported variants as a list of
-					// callbacks to try in turn, instead of testing each individually; this
-					// would also allow exception handling to be completely bypassed if a
-					// terminal has no variants enabled
-					if (dataPtr->emulator.supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
+					try
 					{
-						countRead = My_XTermWindowAlteration::stateDeterminant(&dataPtr->emulator, ptr, i,
-																				currentState, nextState, isInterrupt);
+						countRead = invokeEmulatorStateDeterminantProc
+									(toCallbacks->stateDeterminant, &dataPtr->emulator,
+										ptr, i, currentState, nextState, isInterrupt);
+						isHandled = true;
 					}
-					else
+					catch (My_ParserStateNotHandled const&)
 					{
-						throw gEmptyStateNotHandled();
+						// do nothing
 					}
 				}
-				catch (My_ParserStateNotHandled const&)
+				unless (isHandled)
 				{
 					// most of the time, the ordinary emulator is used
 					countRead = invokeEmulatorStateDeterminantProc
@@ -2461,23 +2464,22 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				}
 				
 				// perform whatever action is appropriate to enter this state
-				try
+				isHandled = false;
+				for (My_Emulator::VariantChain::const_iterator toCallbacks = dataPtr->emulator.preCallbackSet.begin();
+						((false == isHandled) && (toCallbacks != dataPtr->emulator.preCallbackSet.end())); ++toCallbacks)
 				{
-					// TEMPORARY: would be better to store supported variants as a list of
-					// callbacks to try in turn, instead of testing each individually; this
-					// would also allow exception handling to be completely bypassed if a
-					// terminal has no variants enabled
-					if (dataPtr->emulator.supportsVariant(kPreferences_TagXTermWindowAlterationEnabled))
+					try
 					{
-						countRead = My_XTermWindowAlteration::stateTransition(dataPtr, ptr, i,
-																				nextState, currentState);
+						countRead = invokeEmulatorStateTransitionProc
+									(toCallbacks->transitionHandler, dataPtr, ptr, i, nextState, currentState);
+						isHandled = true;
 					}
-					else
+					catch (My_ParserStateNotHandled const&)
 					{
-						throw gEmptyStateNotHandled();
+						// do nothing
 					}
 				}
-				catch (My_ParserStateNotHandled const&)
+				unless (isHandled)
 				{
 					countRead = invokeEmulatorStateTransitionProc
 								(dataPtr->emulator.currentCallbacks.transitionHandler, dataPtr, ptr, i, nextState, currentState);
@@ -4739,6 +4741,7 @@ currentState(kMy_ParserStateInitial),
 stateRepetitions(0),
 parameterEndIndex(0),
 parameterValues(kMy_MaximumANSIParameters),
+preCallbackSet(),
 currentCallbacks(returnDataWriter(inPrimaryEmulation),
 					returnStateDeterminant(inPrimaryEmulation),
 					returnStateTransitionHandler(inPrimaryEmulation)),
@@ -5079,6 +5082,10 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	if (returnXTermWindowAlteration(inTerminalConfig))
 	{
 		this->emulator.supportedVariants.insert(kPreferences_TagXTermWindowAlterationEnabled);
+		this->emulator.preCallbackSet.insert(this->emulator.preCallbackSet.begin(),
+												My_Emulator::Callbacks(My_DefaultEmulator::echoData,
+																		My_XTermWindowAlteration::stateDeterminant,
+																		My_XTermWindowAlteration::stateTransition));
 	}
 	
 	// IMPORTANT: Within constructors, calls to routines expecting a *self reference* should be
