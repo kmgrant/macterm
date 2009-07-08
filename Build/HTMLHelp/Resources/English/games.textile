@@ -1,7 +1,7 @@
 <div class="navigation">
 
 * MacTELNET Help
-* "Home":./index.html
+* "Home":../index.html
 
 </div>
 
