@@ -3,7 +3,7 @@
 body{
 	background:			white;
 	color:				black;
-	font-family:		"Gill Sans", "Lucida Grande", sans-serif;
+	font-family:		"Big Caslon", "Hoefler Text", serif;
 	
 	margin-top:			0;
 	border-top:			0;
@@ -20,6 +20,12 @@ body{
 	padding-right:		0;
 	border-right:		0;
 	margin-right:		0;
+}
+
+pre,
+tt{
+	font-family:		"Deja Vu Sans Mono", "Inconsolata", monospace;
+	font-size:			smaller;
 }
 
 /* the background image will only be useful to color display users */
@@ -106,7 +112,7 @@ a:hover{
 .navigation{
 	background-color:	black;
 	color:				white;
-	font-family:		Optima, sans-serif;
+	font-family:		"Handwriting - Dakota", "Bradley Hand ITC TT", "Papyrus", Optima, sans-serif;
 	font-size:			small;
 	font-style:			normal;
 	font-weight:		bold;
