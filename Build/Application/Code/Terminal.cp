@@ -765,7 +765,7 @@ public:
 			My_ScreenRowIndex	numberOfRowsPermitted;		//!< maximum lines of non-scrollback specified by the user
 			UInt16				numberOfColumnsAllocated;	//!< how many characters per line are currently taking up memory; it follows
 															//!  that this is the maximum possible value for "numberOfColumnsPermitted"
-			UInt16				numberOfColumnsPermitted;	//!< maximum columns per line specified by the user
+			UInt16				numberOfColumnsPermitted;	//!< maximum columns per line specified by the user; but see current.returnNumberOfColumnsPermitted()
 		} visibleScreen;
 	} text;
 	
@@ -809,8 +809,31 @@ public:
 		Str255					buffer;			//!< place to hold text that has not yet been spoken
 	} speech;
 	
-	struct
+	struct CurrentLineCache
 	{
+		CurrentLineCache	(struct My_ScreenBuffer const&		inParent)
+		:
+		parent(inParent),
+		cursorAttributes(kNoTerminalTextAttributes),
+		drawingAttributes(kNoTerminalTextAttributes),
+		cursorX(0),
+		cursorY(0),
+		characterSetInfoPtr(nullptr)
+		{
+		}
+		
+		UInt16
+		returnNumberOfColumnsPermitted ()
+		const
+		{
+			UInt16		result = parent.text.visibleScreen.numberOfColumnsPermitted;
+			
+			
+			if (STYLE_IS_DOUBLE_ANY(this->cursorAttributes)) result = INTEGER_HALVED(result);
+			return result;
+		}
+		
+		struct My_ScreenBuffer const&	parent;
 		TerminalTextAttributes			cursorAttributes;		//!< text attributes for the position under the cursor; useful for rendering the cursor
 																//!  in a way that does not clash with these attributes (e.g. by choosing opposite colors)
 		TerminalTextAttributes			drawingAttributes;		//!< text attributes for the line the cursor is on; these should be updated as the cursor
@@ -5032,7 +5055,7 @@ modeOriginRedefined(false),
 originRegionPtr(&visibleBoundary.rows),
 printing(returnScreenColumns(inTerminalConfig)),
 // speech elements - not initialized
-// current elements - not initialized
+current(*this),
 // previous elements - not initialized
 selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 // TEMPORARY: initialize other members here...
@@ -7258,9 +7281,9 @@ stateTransition		(My_ScreenBufferPtr		inDataPtr,
 				
 				// constrain the value and then change it safely
 				if (newX < 0) newX = 0;
-				if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+				if (newX >= inDataPtr->current.returnNumberOfColumnsPermitted())
 				{
-					newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
+					newX = inDataPtr->current.returnNumberOfColumnsPermitted() - 1;
 				}
 				moveCursorX(inDataPtr, newX);
 			}
@@ -7978,7 +8001,7 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
 		range.screen = inDataPtr->selfRef;
 		range.firstRow = postWrapCursorY;
 		range.firstColumn = postWrapCursorX;
-		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - postWrapCursorX;
+		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 		range.rowCount = 1;
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 	}
@@ -8199,7 +8222,7 @@ bufferEraseLineWithUpdate		(My_ScreenBufferPtr		inDataPtr,
 		range.screen = inDataPtr->selfRef;
 		range.firstRow = postWrapCursorY;
 		range.firstColumn = 0;
-		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted();
 		range.rowCount = 1;
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 	}
@@ -8457,9 +8480,9 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	
 	// since the caller cannot know for sure if the cursor wrapped,
 	// do bounds-checking between the screen edge and new location
-	if ((postWrapCursorX + numCharsToRemove) >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+	if ((postWrapCursorX + numCharsToRemove) >= inDataPtr->current.returnNumberOfColumnsPermitted())
 	{
-		numCharsToRemove = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - postWrapCursorX;
+		numCharsToRemove = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 	}
 	
 	// find cursor position
@@ -8484,7 +8507,7 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 	firstAttrDeletedIterator = cursorLineIterator->attributeVector.end();
 	std::advance(firstAttrDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
 	std::fill(firstAttrDeletedIterator, cursorLineIterator->attributeVector.end(),
-				cursorLineIterator->attributeVector[inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1]);
+				cursorLineIterator->attributeVector[inDataPtr->current.returnNumberOfColumnsPermitted() - 1]);
 	firstCharDeletedIterator = cursorLineIterator->textVectorEnd;
 	std::advance(firstCharDeletedIterator, -STATIC_CAST(numCharsToRemove, SInt16));
 	std::fill(firstCharDeletedIterator, cursorLineIterator->textVectorEnd, ' ');
@@ -8500,7 +8523,7 @@ bufferRemoveCharactersAtCursorColumn	(My_ScreenBufferPtr		inDataPtr,
 		range.screen = inDataPtr->selfRef;
 		range.firstRow = postWrapCursorY;
 		range.firstColumn = postWrapCursorX;
-		range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - postWrapCursorX;
+		range.columnCount = inDataPtr->current.returnNumberOfColumnsPermitted() - postWrapCursorX;
 		range.rowCount = 1;
 		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 	}
@@ -8750,7 +8773,7 @@ cursorWrapIfNecessaryGetLocation	(My_ScreenBufferPtr		inDataPtr,
 									 SInt16*				outCursorXPtr,
 									 My_ScreenRowIndex*		outCursorYPtr)
 {
-	if (inDataPtr->current.cursorX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted) 
+	if (inDataPtr->current.cursorX >= inDataPtr->current.returnNumberOfColumnsPermitted()) 
 	{
 		moveCursorX(inDataPtr, 0);
 		moveCursorDownOrScroll(inDataPtr);
@@ -8893,7 +8916,7 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 			
 			if (false == inDataPtr->wrapPending)
 			{
-				if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
+				if (inDataPtr->current.cursorX < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1))
 				{
 					// advance the cursor position
 					moveCursorRight(inDataPtr);
@@ -9140,7 +9163,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 				wrapped = false; /* wrapped to next line (boolean) */
 				extra = 0; /* overwriting last character of line  */
 				
-				if (inDataPtr->current.cursorX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+				if (inDataPtr->current.cursorX >= inDataPtr->current.returnNumberOfColumnsPermitted())
 				{
 					if (inDataPtr->modeAutoWrap)
 					{
@@ -9152,7 +9175,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					else
 					{
 						// stay at right margin
-						moveCursorX(inDataPtr, inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1);
+						moveCursorX(inDataPtr, inDataPtr->current.returnNumberOfColumnsPermitted() - 1);
 					}
 				}
 				
@@ -9175,7 +9198,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					cursorLineIterator->attributeVector[inDataPtr->current.cursorX] = temporaryAttributes;
 					++c;
 					--ctr;
-					if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
+					if (inDataPtr->current.cursorX < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1))
 					{
 						// advance the cursor position
 						moveCursorRight(inDataPtr);
@@ -9428,9 +9451,9 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					
 					// constrain the value and then change it safely
 					if (newX < 0) newX = 0;
-					if (newX >= inDataPtr->text.visibleScreen.numberOfColumnsPermitted)
+					if (newX >= inDataPtr->current.returnNumberOfColumnsPermitted())
 					{
-						newX = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1;
+						newX = inDataPtr->current.returnNumberOfColumnsPermitted() - 1;
 					}
 					//if (newY < 0) newY = 0;
 					if (newY >= inDataPtr->screenBuffer.size())
@@ -10814,7 +10837,7 @@ IMPORTANT:	ALWAYS use moveCursor...() routines
 inline void
 moveCursorRightToEdge		(My_ScreenBufferPtr		inDataPtr)
 {
-	moveCursorX(inDataPtr, inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1);
+	moveCursorX(inDataPtr, inDataPtr->current.returnNumberOfColumnsPermitted() - 1);
 }// moveCursorRightToEdge
 
 
@@ -11229,11 +11252,11 @@ tabStopGetDistanceFromCursor	(My_ScreenBufferConstPtr	inDataPtr)
 	UInt16		result = 0;
 	
 	
-	if (inDataPtr->current.cursorX < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1))
+	if (inDataPtr->current.cursorX < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1))
 	{
 		result = inDataPtr->current.cursorX + 1;
 		while ((inDataPtr->tabSettings[result] != kMy_TabSet) &&
-				(result < (inDataPtr->text.visibleScreen.numberOfColumnsPermitted - 1)))
+				(result < (inDataPtr->current.returnNumberOfColumnsPermitted() - 1)))
 		{
 			++result;
 		}
@@ -11738,7 +11761,7 @@ manual for complete details.
 inline void
 vt100CursorForward		(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16		rightLimit = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - ((inDataPtr->modeAutoWrap) ? 0 : 1);
+	SInt16		rightLimit = inDataPtr->current.returnNumberOfColumnsPermitted() - ((inDataPtr->modeAutoWrap) ? 0 : 1);
 	
 	
 	// the default value is 1 if there are no parameters
@@ -11767,7 +11790,7 @@ See the VT100 manual for complete details.
 inline void
 vt100CursorForward_vt52	(My_ScreenBufferPtr		inDataPtr)
 {
-	SInt16		rightLimit = inDataPtr->text.visibleScreen.numberOfColumnsPermitted - ((inDataPtr->modeAutoWrap) ? 0 : 1);
+	SInt16		rightLimit = inDataPtr->current.returnNumberOfColumnsPermitted() - ((inDataPtr->modeAutoWrap) ? 0 : 1);
 	
 	
 	if (inDataPtr->current.cursorX < rightLimit) moveCursorRight(inDataPtr);

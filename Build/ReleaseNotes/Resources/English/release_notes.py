@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090714',
     '20090707',
     '20090706',
     '20090618',
@@ -252,6 +253,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090714': [
+		'Fixed certain rendering problems with double-sized text, such as the handling of tab stops and cursor wrapping.',
+	],
 	'20090707': [
 		'Terminal view text size can now be changed with the scroll wheel and the Control key, similar to applications like Firefox.',
 	],
