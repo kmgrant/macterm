@@ -256,6 +256,7 @@ daily_build_lineage = [
 notes_by_version = {
 	'20090716': [
 		'Fixed major rendering performance problems created in recent builds.',
+		'Fixed interpretation problems with certain XTerm window title sequences.',
 	],
 	'20090714': [
 		'Fixed certain rendering problems with double-sized text, such as the handling of tab stops and cursor wrapping.',

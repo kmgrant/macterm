@@ -5878,6 +5878,8 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			break;
 		
 		default:
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
 			break;
 		}
 		break;
@@ -5890,6 +5892,8 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			break;
 		
 		default:
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
 			break;
 		}
 		break;
@@ -5902,6 +5906,8 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			break;
 		
 		default:
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
 			break;
 		}
 		break;
@@ -5914,6 +5920,8 @@ stateDeterminant	(My_EmulatorPtr			inEmulatorPtr,
 			break;
 		
 		default:
+			inNowOutNext.second = kDefaultNextState;
+			result = 0; // do not absorb the unknown
 			break;
 		}
 		break;
