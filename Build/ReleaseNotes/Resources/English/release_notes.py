@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090716',
     '20090714',
     '20090707',
     '20090706',
@@ -253,6 +254,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090716': [
+		'Fixed major rendering performance problems created in recent builds.',
+	],
 	'20090714': [
 		'Fixed certain rendering problems with double-sized text, such as the handling of tab stops and cursor wrapping.',
 	],
