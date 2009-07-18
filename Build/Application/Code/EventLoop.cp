@@ -66,7 +66,6 @@
 // MacTelnet includes
 #include "Clipboard.h"
 #include "Commands.h"
-#include "ConnectionData.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"

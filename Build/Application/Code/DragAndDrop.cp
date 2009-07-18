@@ -48,7 +48,6 @@
 
 // MacTelnet includes
 #include "CommandLine.h"
-#include "ConnectionData.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"

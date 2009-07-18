@@ -972,9 +972,14 @@ Session_Disconnect		(SessionRef		inRef)
 	
 	if (Session_StateIsActive(inRef))
 	{
-		// active session; terminate associated tasks
-		if (Terminal_FileCaptureInProgress(connectionDataPtr->vs)) Terminal_FileCaptureEnd(connectionDataPtr->vs);
-		if (Terminal_PrintingInProgress(connectionDataPtr->vs)) Terminal_PrintingEnd(connectionDataPtr->vs);
+		// TEMPORARY - this should be able to use "ptr->targetFiles" and "ptr->targetPrintJobs"
+		for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+				toScreen != ptr->targetTerminals.end(); ++toScreen)
+		{
+			// active session; terminate associated tasks
+			if (Terminal_FileCaptureInProgress(*toScreen)) Terminal_FileCaptureEnd(*toScreen);
+			if (Terminal_PrintingInProgress(*toScreen)) Terminal_PrintingEnd(*toScreen);
+		}
 	}
 	
 	killConnection(ptr);
@@ -1564,8 +1569,11 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 				}
 				
 				// terminal screen metrics
+				if (false == ptr->targetTerminals.empty())
 				{
-					TerminalScreenRef	screen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+					// TEMPORARY - limitations of this format do not really allow for the
+					// concept of multiple screens per window!
+					TerminalScreenRef	screen = ptr->targetTerminals.front();
 					UInt16				columns = Terminal_ReturnColumnCount(screen);
 					UInt16				rows = Terminal_ReturnRowCount(screen);
 					UInt16				scrollback = Terminal_ReturnInvisibleRowCount(screen);
@@ -2608,14 +2616,13 @@ Session_SendNewline		(SessionRef		inRef,
 						 Session_Echo	inEcho)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(ptr->terminalWindow);
 	Boolean					lineFeedToo = false;
 	Boolean					echo = false;
 	
 	
-	if (nullptr != screen)
+	if (false == ptr->targetTerminals.empty())
 	{
-		lineFeedToo = Terminal_LineFeedNewLineMode(screen);
+		lineFeedToo = Terminal_LineFeedNewLineMode(ptr->targetTerminals.front());
 	}
 	
 	if (lineFeedToo)
@@ -2939,7 +2946,11 @@ Session_SetSpeechEnabled	(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	Terminal_SetSpeechEnabled(ptr->dataPtr->vs, inIsEnabled);
+	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	{
+		Terminal_SetSpeechEnabled(*toScreen, inIsEnabled);
+	}
 }// SetSpeechEnabled
 
 
@@ -3009,7 +3020,6 @@ Session_SetTerminalWindow	(SessionRef			inRef,
 	
 	ptr->terminalWindow = inTerminalWindow;
 	ptr->window = TerminalWindow_ReturnWindow(inTerminalWindow);
-	ptr->dataPtr->vs = TerminalWindow_ReturnScreenWithFocus(inTerminalWindow);
 	if (nullptr == inTerminalWindow)
 	{
 		changeNotifyForSession(ptr, kSession_ChangeWindowInvalid, inRef/* context */);
@@ -3104,8 +3114,14 @@ Boolean
 Session_SpeechIsEnabled		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = Terminal_SpeechIsEnabled(ptr->dataPtr->vs);
+	Boolean					result = false;
 	
+	
+	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	{
+		if (Terminal_SpeechIsEnabled(*toScreen)) result = true;
+	}
 	
 	return result;
 }// SpeechIsEnabled
@@ -3131,7 +3147,11 @@ Session_SpeechPause		(SessionRef		inRef)
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	Terminal_SpeechPause(ptr->dataPtr->vs);
+	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	{
+		Terminal_SpeechPause(*toScreen);
+	}
 }// SpeechPause
 
 
@@ -3146,7 +3166,11 @@ Session_SpeechResume	(SessionRef		inRef)
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	Terminal_SpeechResume(ptr->dataPtr->vs);
+	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	{
+		Terminal_SpeechResume(*toScreen);
+	}
 }// SpeechResume
 
 
@@ -3560,7 +3584,12 @@ Session_TerminalCopyAnswerBackMessage	(SessionRef		inRef,
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
-		outAnswerBack = Terminal_EmulatorReturnName(ptr->dataPtr->vs);
+		outAnswerBack = nullptr;
+		// TEMPORARY - this API is not flexible enough to handle multiple screens per window
+		if (false == ptr->targetTerminals.empty())
+		{
+			outAnswerBack = Terminal_EmulatorReturnName(ptr->targetTerminals.front());
+		}
 		if (nullptr != outAnswerBack) CFRetain(outAnswerBack);
 	}
 	
@@ -3585,7 +3614,7 @@ Session_TerminalWrite	(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	Terminal_EmulatorProcessData(ptr->dataPtr->vs, inBuffer, inLength);
+	std::for_each(ptr->targetTerminals.begin(), ptr->targetTerminals.end(), terminalDataWriter(inBuffer, inLength));	
 }// TerminalWrite
 
 
@@ -3605,7 +3634,11 @@ Session_TerminalWriteCString	(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	Terminal_EmulatorProcessCString(ptr->dataPtr->vs, inCString);
+	for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+			toScreen != ptr->targetTerminals.end(); ++toScreen)
+	{
+		Terminal_EmulatorProcessCString(*toScreen, inCString);
+	}
 }// TerminalWriteCString
 
 
@@ -3866,14 +3899,17 @@ Session_UserInputKey	(SessionRef		inRef,
 		}
 		else
 		{
-			TerminalWindowRef		terminalWindow = Session_ReturnActiveTerminalWindow(inRef);
-			TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-			
-			
-			// allow the terminal to perform the appropriate action for the key,
-			// given its current mode (for instance, a VT100 might be in VT52
-			// mode, which would send different data than ANSI mode)
-			(Terminal_Result)Terminal_UserInputVTKey(screen, inKeyOrASCII, (0 != ptr->dataPtr->echo));
+			if (false == ptr->targetTerminals.empty())
+			{
+				// allow the terminal to perform the appropriate action for the key,
+				// given its current mode (for instance, a VT100 might be in VT52
+				// mode, which would send different data than ANSI mode)
+				for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
+						toScreen != ptr->targetTerminals.end(); ++toScreen)
+				{
+					(Terminal_Result)Terminal_UserInputVTKey(*toScreen, inKeyOrASCII, (0 != ptr->dataPtr->echo));
+				}
+			}
 		}
 	}
 	return result;
@@ -4177,7 +4213,6 @@ ConnectionData::
 ConnectionData ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-vs				(nullptr),
 alternateTitle	(),
 enabled			(true),
 bsdel			(0),
@@ -4831,6 +4866,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	SessionRef				session = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
 	ConnectionDataPtr		connectionDataPtr = nullptr; // TEMPORARY, until transition to SessionRef
+	TerminalScreenRef		someScreen = ptr->targetTerminals.front(); // TEMPORARY
 	static SInt16			characterCode = '\0'; // ASCII
 	static SInt16			characterCode2 = '\0'; // ASCII
 	static SInt16			virtualKeyCode = '\0'; // see p.2-43 of "IM:MTE" for a set of virtual key codes
@@ -4944,7 +4980,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(connectionDataPtr->vs))
+		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewPageUp);
 		}
@@ -4954,7 +4990,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(connectionDataPtr->vs))
+		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewPageDown);
 		}
@@ -4964,7 +5000,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(connectionDataPtr->vs))
+		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewHome);
 		}
@@ -4974,7 +5010,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(connectionDataPtr->vs))
+		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewEnd);
 		}
@@ -5261,7 +5297,9 @@ navigationFileCaptureDialogEvent	(NavEventCallbackMessage	inMessage,
 							// "kTerminal_ChangeFileCaptureEnding" event - this module should
 							// listen for that event so that FSClose() can be called.
 							SetEOF(fileRefNum, (long)0);
-							Terminal_FileCaptureBegin(ptr->dataPtr->vs, fileRefNum);
+							// TEMPORARY - this should be able to use "ptr->targetFiles" and "ptr->targetPrintJobs"
+							// TEMPORARY - this command is not capable of handling multiple screens per window
+							Terminal_FileCaptureBegin(ptr->targetTerminals.front(), fileRefNum);
 							
 						#if 0
 							// set the window proxy icon appropriately for the file capture

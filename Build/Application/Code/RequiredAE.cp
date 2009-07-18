@@ -58,7 +58,6 @@
 #include "BasicTypesAE.h"
 #include "Clipboard.h"
 #include "Commands.h"
-#include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"

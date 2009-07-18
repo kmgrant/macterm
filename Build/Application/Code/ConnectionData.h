@@ -60,10 +60,6 @@ struct ConnectionData
 {
 	explicit ConnectionData	();
 	
-	TerminalScreenRef	vs;						// virtual screen number (TelnetScreenID); DEPRECATED
-												// (instead, use Session_ReturnActiveTerminalWindow() and then
-												// TerminalWindow_GetScreenWithFocus() or
-												// TerminalWindow_GetScreens())
 	CFRetainRelease		alternateTitle;			// DIRECT ACCESS PROHIBITED; use Session_GetWindowUserDefinedTitle()
 	
 	SInt16				enabled;				// DIRECT ACCESS PROHIBITED; use:

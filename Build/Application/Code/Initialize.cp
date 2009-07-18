@@ -67,7 +67,6 @@
 #include "Clipboard.h"
 #include "CommandLine.h"
 #include "Commands.h"
-#include "ConnectionData.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
