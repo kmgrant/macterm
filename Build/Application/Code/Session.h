@@ -369,9 +369,6 @@ void
 	Session_DisplayTerminationWarning		(SessionRef							inRef,
 											 Boolean							inForceModalDialog = false);
 
-void
-	Session_FlushUserInputBuffer			(SessionRef							inRef);
-
 Boolean
 	Session_IsReadOnly						(SessionRef							inRef);
 
@@ -405,10 +402,6 @@ Session_Result
 Session_Result
 	Session_UserInputPaste					(SessionRef							inRef,
 											 PasteboardRef						inSourceOrNull = nullptr);
-
-void
-	Session_UserInputQueueCharacter			(SessionRef							inRef,
-											 char								inCharacter);
 
 void
 	Session_UserInputString					(SessionRef							inRef,
@@ -712,21 +705,6 @@ Boolean
 
 ConnectionDataPtr
 	Session_ConnectionDataPtr				(SessionRef							inRef);
-
-char*
-	Session_kbbuf							(SessionRef							inRef);
-
-SInt16*
-	Session_kblen							(SessionRef							inRef);
-
-UInt8*
-	Session_parsedat						(SessionRef							inRef);
-
-size_t
-	Session_parsedat_size					(SessionRef							inRef);
-
-SInt16*
-	Session_parseIndex						(SessionRef							inRef);
 
 void
 	Session_SetTerminalWindow				(SessionRef							inRef,

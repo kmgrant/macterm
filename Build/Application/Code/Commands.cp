@@ -734,13 +734,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandEcho:
 			if (isSession)
 			{
-				// toggle local echo, if possible
-				if (Session_LocalEchoIsEnabled(frontSession) && (currentConnectionDataPtr->kblen > 0))
-				{
-					// if not empty, send buffer
-					Session_SendData(frontSession, currentConnectionDataPtr->kbbuf, currentConnectionDataPtr->kblen);
-					currentConnectionDataPtr->kblen = 0;
-				}
 				Session_SetLocalEchoEnabled(frontSession, !Session_LocalEchoIsEnabled(frontSession));
 			}
 			break;
@@ -933,13 +926,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 				std::string		ipAddressString;
 				int				addressType = 0;
 				
-				
-				// send whatever keystrokes are still buffered
-				if (Session_LocalEchoIsEnabled(frontSession) && (currentConnectionDataPtr->kblen > 0))
-				{
-					// if not empty, send buffer
-					Session_FlushUserInputBuffer(frontSession);
-				}
 				
 				// now send the requested information
 				if (Network_CurrentIPAddressToString(ipAddressString, addressType)) // 3.0

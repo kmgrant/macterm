@@ -60,8 +60,6 @@ struct ConnectionData
 {
 	explicit ConnectionData	();
 	
-	CFRetainRelease		alternateTitle;			// DIRECT ACCESS PROHIBITED; use Session_GetWindowUserDefinedTitle()
-	
 	SInt16				enabled;				// DIRECT ACCESS PROHIBITED; use:
 												//		Session_NetworkIsSuspended()
 												//		Session_SetNetworkSuspended()
@@ -89,12 +87,6 @@ struct ConnectionData
 												//		Session_SetLocalEchoEnabled()
 												//		Session_SetLocalEchoFullDuplex()
 												//		Session_SetLocalEchoHalfDuplex()
-	
-	SInt16				kblen;					// offset into buffer of character to use
-	char				kbbuf[256];				// The keyboard buffer (echo mode)
-	
-	UInt8				parsedat[450];			// DIRECT ACCESS PROHIBITED; used only in parser (changing)
-	SInt16				parseIndex;				// DIRECT ACCESS PROHIBITED; used only in parser (changing)
 	
 	struct ControlKeys
 	{

@@ -248,6 +248,7 @@ struct My_Session
 	Session_State				status;						// indicates whether session is initialized, etc.
 	Session_StateAttributes		statusAttributes;			// “tags” for the status, above
 	CFRetainRelease				statusString;				// one word (usually) describing the state succinctly
+	CFRetainRelease				alternateTitle;				// user-defined window title
 	CFRetainRelease				resourceLocationString;		// one-liner for remote URL or local Unix command line
 	CFRetainRelease				deviceNameString;			// pathname of slave pseudo-terminal device attached to the session
 	UInt32						connectionDateTime;			// result of GetDateTime() call at connection time
@@ -360,7 +361,6 @@ void						pasteWarningCloseNotifyProc			(InterfaceLibAlertRef, SInt16, void*);
 void						preferenceChanged					(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
 size_t						processMoreData						(My_SessionPtr);
-Boolean						queueCharacterInKeyboardBuffer		(My_SessionPtr, char);
 pascal OSStatus				receiveTerminalViewDragDrop			(EventHandlerCallRef, EventRef, void*);
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
 pascal OSStatus				receiveTerminalViewEntered			(EventHandlerCallRef, EventRef, void*);
@@ -1663,28 +1663,6 @@ Session_FlushNetwork	(SessionRef		inRef)
 
 
 /*!
-Clears out any buffered keyboard input from the user,
-sending it to the session.
-
-(3.0)
-*/
-void
-Session_FlushUserInputBuffer	(SessionRef		inRef)
-{
-	SInt16*		kblenPtr = nullptr;
-	
-	
-	kblenPtr = Session_kblen(inRef);
-	if (*kblenPtr > 0)
-	{
-		// flush buffer
-		Session_SendData(inRef, Session_kbbuf(inRef), *kblenPtr);
-		*kblenPtr = 0;
-	}
-}// FlushUserInputBuffer
-
-
-/*!
 Returns a succinct string representation of the
 specified session’s state.  This is localized so
 it can be displayed in user interface elements.
@@ -1743,7 +1721,7 @@ Session_GetWindowUserDefinedTitle	(SessionRef		inRef,
 		My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 		
 		
-		outUncopiedString = ptr->dataPtr->alternateTitle.returnCFStringRef();
+		outUncopiedString = ptr->alternateTitle.returnCFStringRef();
 	}
 	
 	return result;
@@ -1768,44 +1746,6 @@ Session_IsReadOnly	(SessionRef		inRef)
 	
 	return result;
 }// IsReadOnly
-
-
-/*!
-Returns a pointer to the "kbbuf" data in the internal
-structure.
-
-TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
-
-(3.0)
-*/
-char*
-Session_kbbuf		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	char*					result = ptr->dataPtr->kbbuf;
-	
-	
-	return result;
-}// kbbuf
-
-
-/*!
-Returns a pointer to the "kblen" data in the internal
-structure.
-
-TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
-
-(3.0)
-*/
-SInt16*
-Session_kblen		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16*					result = &ptr->dataPtr->kblen;
-	
-	
-	return result;
-}// kblen
 
 
 /*!
@@ -1900,63 +1840,6 @@ Session_PageKeysControlTerminalView		(SessionRef		inRef)
 	
 	return result;
 }// PageKeysControlTerminalView
-
-
-/*!
-Returns a pointer to the "parsedat" data in the internal
-structure.
-
-TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
-
-(3.0)
-*/
-UInt8*
-Session_parsedat		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	UInt8*					result = ptr->dataPtr->parsedat;
-	
-	
-	return result;
-}// parsedat
-
-
-/*!
-Returns the size of the internal "parsedat" array in the
-internal structure.
-
-TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
-
-(3.0)
-*/
-size_t
-Session_parsedat_size	(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	size_t					result = sizeof(ptr->dataPtr->parsedat);
-	
-	
-	return result;
-}// parsedat_size
-
-
-/*!
-Returns a pointer to the "parseIndex" data in the internal
-structure.
-
-TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
-
-(3.0)
-*/
-SInt16*
-Session_parseIndex		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	SInt16*					result = &ptr->dataPtr->parseIndex;
-	
-	
-	return result;
-}// parseIndex
 
 
 /*!
@@ -2810,9 +2693,16 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		// suspend
 		if (nullptr != ptr->mainProcess)
 		{
-			queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-											(Local_TerminalReturnFlowStopCharacter
-												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), char));
+			UInt8		charToSend = STATIC_CAST
+										(Local_TerminalReturnFlowStopCharacter
+											(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), UInt8);
+			SInt16		bytesSent = Session_SendData(inRef, &charToSend, 1/* number of bytes */);
+			
+			
+			if (bytesSent < 1)
+			{
+				Console_Warning(Console_WriteLine, "failed to send stop character to session");
+			}
 		}
 		// set the scroll lock attribute of the session
 		changeStateAttributes(ptr, kSession_StateAttributeSuspendNetwork/* attributes to set */,
@@ -2826,15 +2716,21 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 		// resume
 		if (nullptr != ptr->mainProcess)
 		{
-			queueCharacterInKeyboardBuffer(ptr, STATIC_CAST
-											(Local_TerminalReturnFlowStartCharacter
-												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), char));
+			UInt8		charToSend = STATIC_CAST
+										(Local_TerminalReturnFlowStartCharacter
+											(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), UInt8);
+			SInt16		bytesSent = Session_SendData(inRef, &charToSend, 1/* number of bytes */);
+			
+			
+			if (bytesSent < 1)
+			{
+				Console_Warning(Console_WriteLine, "failed to send start character to session");
+			}
 		}
 		// clear the scroll lock attribute of the session
 		changeStateAttributes(ptr, 0/* attributes to set */,
 								kSession_StateAttributeSuspendNetwork/* attributes to clear */);
 	}
-	Session_FlushUserInputBuffer(inRef);
 }// SetNetworkSuspended
 
 
@@ -3096,7 +2992,7 @@ Session_SetWindowUserDefinedTitle	(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	ptr->dataPtr->alternateTitle.setCFTypeRef(CFStringCreateCopy(kCFAllocatorDefault, inWindowName));
+	ptr->alternateTitle.setCFTypeRef(CFStringCreateCopy(kCFAllocatorDefault, inWindowName));
 	changeNotifyForSession(ptr, kSession_ChangeWindowTitle, inRef);
 }// SetWindowUserDefinedTitle
 
@@ -3739,7 +3635,6 @@ Session_UserInputCFString	(SessionRef		inRef,
 							 Boolean		inSendToRecordingScripts)
 {
 	Session_SendFlush(inRef);
-	Session_FlushUserInputBuffer(inRef);
 	Session_SendData(inRef, inStringBuffer);
 	
 	if (Session_LocalEchoIsEnabled(inRef))
@@ -3821,11 +3716,16 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 		
 		if (nullptr != ptr->mainProcess)
 		{
-			Session_UserInputQueueCharacter(inRef, STATIC_CAST
-											(Local_TerminalReturnInterruptCharacter
-												(Local_ProcessReturnMasterTerminal(ptr->mainProcess)),
-												char));
-			Session_FlushUserInputBuffer(inRef);
+			UInt8		charToSend = STATIC_CAST
+										(Local_TerminalReturnInterruptCharacter
+											(Local_ProcessReturnMasterTerminal(ptr->mainProcess)), UInt8);
+			SInt16		bytesSent = Session_SendData(inRef, &charToSend, 1/* number of bytes */);
+			
+			
+			if (bytesSent < 1)
+			{
+				Console_Warning(Console_WriteLine, "failed to send interrupt character to session");
+			}
 		}
 	}
 	
@@ -4067,25 +3967,6 @@ Session_UserInputPaste	(SessionRef			inRef,
 
 
 /*!
-Adds the specified character to the keyboard input
-queue, where it will eventually be processed.  This
-is normally used only by things that are intercepting
-keyboard input from the user.
-
-(3.0)
-*/
-void
-Session_UserInputQueueCharacter		(SessionRef		inRef,
-									 char			inCharacter)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	
-	
-	(Boolean)queueCharacterInKeyboardBuffer(ptr, inCharacter);
-}// UserInputQueueCharacter
-
-
-/*!
 Send a string to a session as if it were typed into
 the specified session’s window.  If local echoing is
 enabled for the session, the string will be written
@@ -4101,7 +3982,6 @@ Session_UserInputString		(SessionRef		inRef,
 							 Boolean		inSendToRecordingScripts)
 {
 	Session_SendFlush(inRef);
-	Session_FlushUserInputBuffer(inRef);
 	Session_SendData(inRef, inStringBuffer, inStringBufferSize);
 	
 	if (Session_LocalEchoIsEnabled(inRef))
@@ -4213,7 +4093,6 @@ ConnectionData::
 ConnectionData ()
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-alternateTitle	(),
 enabled			(true),
 bsdel			(0),
 eightbit		(0),
@@ -4227,14 +4106,8 @@ pgupdwn			(false),
 crmap			(0),
 echo			(0),
 halfdup			(0),
-kblen			(0),
-// kbbuf initialized below
-// parsedat initialized below
-parseIndex		(0),
 controlKey		()
 {
-	bzero(&this->kbbuf, sizeof(this->kbbuf));
-	bzero(&this->parsedat, sizeof(this->parsedat));
 }// ConnectionData default constructor
 
 
@@ -4251,6 +4124,7 @@ kind(kSession_TypeLocalNonLoginShell),
 status(kSession_StateBrandNew),
 statusAttributes(0),
 statusString(),
+alternateTitle(),
 resourceLocationString(),
 deviceNameString(),
 connectionDateTime(0), // set below
@@ -5123,11 +4997,6 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					theSize = sizeof(characterPtr[0]);
 				}
 				
-				if (metaDown)
-				{
-					Session_FlushUserInputBuffer(session);
-				}
-				
 				// finally, send the characters (echoing if necessary)
 				if (Session_LocalEchoIsEnabled(session) && Session_LocalEchoIsHalfDuplex(session))
 				{
@@ -5609,29 +5478,6 @@ processMoreData		(My_SessionPtr	inPtr)
 	inPtr->readBufferSizeInUse = 0;
 	return result;
 }// processMoreData
-
-
-/*!
-Inserts the specified character into the keyboard
-input buffer of the given session; the text will be
-processed at the first opportunity, but maybe not
-right away.
-
-Returns "true" only if the character was queued
-successfully.
-
-(3.0)
-*/
-Boolean
-queueCharacterInKeyboardBuffer	(My_SessionPtr	inPtr,
-								 char			inCharacter)
-{
-	Boolean		result = true; // TEMPORARY: no error checking here
-	
-	
-	inPtr->dataPtr->kbbuf[inPtr->dataPtr->kblen++] = inCharacter;
-	return result;
-}// queueCharacterInKeyboardBuffer
 
 
 /*!
