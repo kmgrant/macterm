@@ -706,17 +706,21 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 			if (0 != error) result = kLocal_ResultThreadError;
 			else
 			{
-				ConnectionDataPtr				connectionDataPtr = nullptr;
 				My_DataLoopThreadContextPtr		threadContextPtr = nullptr;
 				pthread_t						thread;
 				
 				
-				connectionDataPtr = Session_ConnectionDataPtr(inUninitializedSession);
-				
 				// synchronize somewhat with terminal control structure
-				connectionDataPtr->controlKey.interrupt = terminalControl.c_cc[VINTR];
-				connectionDataPtr->controlKey.suspend = terminalControl.c_cc[VSTOP];
-				connectionDataPtr->controlKey.resume = terminalControl.c_cc[VSTART];
+				{
+					Session_EventKeys		keys;
+					
+					
+					bzero(&keys, sizeof(keys));
+					keys.interrupt = terminalControl.c_cc[VINTR];
+					keys.suspend = terminalControl.c_cc[VSTOP];
+					keys.resume = terminalControl.c_cc[VSTART];
+					Session_SetEventKeys(inUninitializedSession, keys);
+				}
 				
 				// store process information for session
 				{

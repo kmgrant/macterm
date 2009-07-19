@@ -87,16 +87,6 @@ struct ConnectionData
 												//		Session_SetLocalEchoEnabled()
 												//		Session_SetLocalEchoFullDuplex()
 												//		Session_SetLocalEchoHalfDuplex()
-	
-	struct ControlKeys
-	{
-		ControlKeys (): suspend('\0'), resume('\0'), interrupt('\0'), pad('\0') {}
-		
-		char				suspend,			// character for scrolling to stop
-							resume,				// character for scrolling to go
-							interrupt,			// character for “interrupt process”
-							pad;				// unused
-	} controlKey;
 };
 typedef ConnectionData*		ConnectionDataPtr;
 

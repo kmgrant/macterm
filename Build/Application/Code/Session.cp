@@ -277,6 +277,7 @@ struct My_Session
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
 	HIWindowRef					window;						// redundant copy of TerminalWindow_ReturnWindow(terminalWindow)
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
+	Session_EventKeys			controlKey;					// information on keyboard short-cuts for major events
 	My_TEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
 	My_RasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
 	My_TerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
@@ -2232,6 +2233,24 @@ Session_ReturnActiveWindow	(SessionRef		inRef)
 
 
 /*!
+Returns the keys used as short-cuts for various events.
+See the documentation on Session_EventKeys for more
+information.
+
+(4.0)
+*/
+Session_EventKeys
+Session_ReturnEventKeys		(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Session_EventKeys		result = ptr->controlKey;
+	
+	
+	return result;
+}// ReturnEventKeys
+
+
+/*!
 Returns a pathname for the slave pseudo-terminal device
 attached to the given session.  This can be displayed in
 user interface elements.
@@ -2588,6 +2607,24 @@ Session_SetDataProcessingCapacity	(SessionRef		inRef,
 	
 	return result;
 }// SetDataProcessingCapacity
+
+
+/*!
+Changes the keys used as short-cuts for various events.
+See the documentation on Session_EventKeys for more
+information.
+
+(4.0)
+*/
+void
+Session_SetEventKeys	(SessionRef					inRef,
+						 Session_EventKeys const&	inKeys)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	
+	
+	ptr->controlKey = inKeys;
+}// SetEventKeys
 
 
 /*!
@@ -4105,8 +4142,7 @@ Xterm			(0),
 pgupdwn			(false),
 crmap			(0),
 echo			(0),
-halfdup			(0),
-controlKey		()
+halfdup			(0)
 {
 }// ConnectionData default constructor
 
@@ -4154,6 +4190,7 @@ currentTerminationAlert(nullptr),
 terminalWindow(nullptr), // set at window validation time
 window(nullptr), // set at window validation time
 mainProcess(nullptr),
+// controlKey is initialized below
 targetVectorGraphics(),
 targetRasterGraphicsScreens(),
 targetDumbTerminals(),
@@ -4179,6 +4216,11 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	GetDateTime(&this->connectionDateTime);
 	
 	assert(nullptr != this->readBufferPtr);
+	
+	// this structure is initialized later by the Local module
+	this->controlKey.interrupt = '\0';
+	this->controlKey.suspend = '\0';
+	this->controlKey.resume = '\0';
 	
 	Session_StartMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
 	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
@@ -4924,17 +4966,17 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// if no key-based action occurred, look for character-based actions
 		if (0 == characterCode2)
 		{
-			if (characterCode == connectionDataPtr->controlKey.suspend)
+			if (characterCode == ptr->controlKey.suspend)
 			{
 				Session_SetNetworkSuspended(session, true);
 				result = true;
 			}
-			if (characterCode == connectionDataPtr->controlKey.resume) 
+			if (characterCode == ptr->controlKey.resume) 
 			{
 				Session_SetNetworkSuspended(session, false);
 				result = true;
 			}
-			if (characterCode == connectionDataPtr->controlKey.interrupt)  
+			if (characterCode == ptr->controlKey.interrupt)  
 			{
 				Session_UserInputInterruptProcess(session);
 				result = true;

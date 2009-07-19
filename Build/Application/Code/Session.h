@@ -331,6 +331,20 @@ struct SessionCloseWarningButtonInfo
 };
 typedef SessionCloseWarningButtonInfo*	SessionCloseWarningButtonInfoPtr;
 
+/*!
+Information passed to a handler when the user has
+chosen an option from the Close sheet.
+*/
+struct Session_EventKeys
+{
+	UInt8	interrupt;	//!< the ASCII code for the control key used to interrupt processes;
+						//!  see Session_UserInputInterruptProcess()
+	UInt8	suspend;	//!< the ASCII code for the control key used to stop the flow of data;
+						//!  see Session_SetNetworkSuspended()
+	UInt8	resume;		//!< the ASCII code for the control key used to start the flow of data;
+						//!  see Session_SetNetworkSuspended()
+};
+
 
 
 #pragma mark Public Methods
@@ -618,6 +632,9 @@ TerminalWindowRef
 HIWindowRef
 	Session_ReturnActiveWindow				(SessionRef							inRef);
 
+Session_EventKeys
+	Session_ReturnEventKeys					(SessionRef							inRef);
+
 CFStringRef
 	Session_ReturnPseudoTerminalDeviceNameCFString	(SessionRef					inRef);
 
@@ -629,6 +646,10 @@ Session_State
 
 Session_StateAttributes
 	Session_ReturnStateAttributes			(SessionRef							inRef);
+
+void
+	Session_SetEventKeys					(SessionRef							inRef,
+											 Session_EventKeys const&			inKeys);
 
 void
 	Session_SetProcess						(SessionRef							inRef,

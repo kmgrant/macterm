@@ -3,7 +3,7 @@
 	SpecialKeySequencesDialog.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -90,9 +90,7 @@ struct MySpecialKeysDialog
 	CarbonEventHandlerWrap							buttonHICommandsHandler;	//!< invoked when a button is clicked
 	SpecialKeySequencesDialog_CloseNotifyProcPtr	closeNotifyProc;	//!< routine to call when the dialog is dismissed
 	HelpSystem_WindowKeyPhraseSetter				contextualHelpSetup;//!< ensures proper contextual help for this window
-	char											interruptKey;
-	char											resumeKey;
-	char											suspendKey;
+	Session_EventKeys								keys;
 };
 
 typedef MySpecialKeysDialog*		MySpecialKeysDialogPtr;
@@ -249,9 +247,7 @@ SpecialKeySequencesDialog_StandardCloseNotifyProc	(SpecialKeySequencesDialog_Ref
 	if (inOKButtonPressed)
 	{
 		// update the session to reflect the user’s changes
-		Session_ConnectionDataPtr(ptr->session)->controlKey.interrupt = ptr->interruptKey;
-		Session_ConnectionDataPtr(ptr->session)->controlKey.suspend = ptr->suspendKey;
-		Session_ConnectionDataPtr(ptr->session)->controlKey.resume = ptr->resumeKey;
+		Session_SetEventKeys(ptr->session, ptr->keys);
 	}
 }// StandardCloseNotifyProc
 
@@ -289,9 +285,7 @@ buttonHICommandsHandler			(GetWindowEventTarget(this->dialogWindow), receiveHICo
 									this->selfRef/* user data */),
 closeNotifyProc					(inCloseNotifyProcPtr),
 contextualHelpSetup				(this->dialogWindow, kHelpSystem_KeyPhraseSpecialKeys),
-interruptKey					(Session_ConnectionDataPtr(inSession)->controlKey.interrupt),
-resumeKey						(Session_ConnectionDataPtr(inSession)->controlKey.resume),
-suspendKey						(Session_ConnectionDataPtr(inSession)->controlKey.suspend)
+keys							(Session_ReturnEventKeys(inSession))
 {
 	// make all bevel buttons use a larger font than is provided by default in a NIB
 	makeAllBevelButtonsUseTheSystemFont(this->dialogWindow);
@@ -303,13 +297,13 @@ suspendKey						(Session_ConnectionDataPtr(inSession)->controlKey.suspend)
 	
 	// initialize other controls
 	SetControl32BitValue(this->buttonSuspend, kControlCheckBoxCheckedValue);
-	setCurrentPendingKeyCharacter(this, this->suspendKey);
+	setCurrentPendingKeyCharacter(this, this->keys.suspend);
 	SetControl32BitValue(this->buttonSuspend, kControlCheckBoxUncheckedValue);
 	SetControl32BitValue(this->buttonResume, kControlCheckBoxCheckedValue);
-	setCurrentPendingKeyCharacter(this, this->resumeKey);
+	setCurrentPendingKeyCharacter(this, this->keys.resume);
 	SetControl32BitValue(this->buttonResume, kControlCheckBoxUncheckedValue);
 	SetControl32BitValue(this->buttonInterrupt, kControlCheckBoxCheckedValue);
-	setCurrentPendingKeyCharacter(this, this->interruptKey);
+	setCurrentPendingKeyCharacter(this, this->keys.interrupt);
 	
 	// ensure handlers were installed
 	assert(buttonHICommandsHandler.isInstalled());
@@ -742,17 +736,17 @@ setCurrentPendingKeyCharacter   (MySpecialKeysDialogPtr		inPtr,
 		// one of the 3 buttons should always be active
 		if (GetControlValue(inPtr->buttonInterrupt) == kControlCheckBoxCheckedValue)
 		{
-			inPtr->interruptKey = inCharacter;
+			inPtr->keys.interrupt = inCharacter;
 			view = inPtr->buttonInterrupt;
 		}
 		else if (GetControlValue(inPtr->buttonSuspend) == kControlCheckBoxCheckedValue)
 		{
-			inPtr->suspendKey = inCharacter;
+			inPtr->keys.suspend = inCharacter;
 			view = inPtr->buttonSuspend;
 		}
 		else if (GetControlValue(inPtr->buttonResume) == kControlCheckBoxCheckedValue)
 		{
-			inPtr->resumeKey = inCharacter;
+			inPtr->keys.resume = inCharacter;
 			view = inPtr->buttonResume;
 		}
 		else
