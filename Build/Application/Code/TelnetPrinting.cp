@@ -50,7 +50,6 @@
 #include <UniversalPrint.h>
 
 // MacTelnet includes
-#include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "Folder.h"
@@ -58,6 +57,7 @@
 #include "TelnetPrinting.h"
 #include "Terminal.h"
 #include "TerminalView.h"
+#include "TerminalWindow.h"
 #include "UIStrings.h"
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
