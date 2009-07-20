@@ -74,7 +74,6 @@ extern "C"
 // MacTelnet includes
 #include "AppResources.h"
 #include "CocoaBasic.h"
-#include "ConnectionData.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "Local.h"
@@ -103,7 +102,7 @@ namespace {
 typedef Local_TerminalID		My_TTYMasterID;
 typedef Local_TerminalID		My_TTYSlaveID;
 
-typedef std::set< pid_t >	My_UnixProcessIDSet;
+typedef std::set< pid_t >		My_UnixProcessIDSet;
 
 /*!
 Thread context passed to threadForLocalProcessDataLoop().
@@ -130,12 +129,15 @@ struct My_Process
 	createCommandLine	(int, char const* const[]);
 	
 	pid_t				_processID;			// the process directly spawned by this session
+	Boolean				_stopped;			// true only if XOFF/suspend has occurred with no XON/resume yet
 	Local_TerminalID	_pseudoTerminal;	// file descriptor of pseudo-terminal master
 	char const*			_slaveDeviceName;	// e.g. "/dev/ttyp0", data sent here goes to the terminal emulator (not the process)
 	char const*			_commandLine;		// buffer for parent process’ command line
 };
 typedef My_Process*			My_ProcessPtr;
 typedef My_Process const*	My_ProcessConstPtr;
+
+typedef std::map< pid_t, Local_ProcessRef >		My_ProcessByID;
 
 typedef MemoryBlockPtrLocker< Local_ProcessRef, My_Process >	My_ProcessPtrLocker;
 typedef LockAcquireRelease< Local_ProcessRef, My_Process >		My_ProcessAutoLocker;
@@ -171,7 +173,8 @@ Boolean						gInDebuggingMode = Local_StandardInputIsATerminal(); //!< true if t
 
 //! used to help atexit() handlers know which terminal to touch
 Local_TerminalID			gTerminalToRestore = 0;
-My_UnixProcessIDSet&		gChildProcessIDs ()			{ static My_UnixProcessIDSet x; return x; }
+My_UnixProcessIDSet&		gChildProcessIDs ()		{ static My_UnixProcessIDSet x; return x; }
+My_ProcessByID&				gProcessesByID ()		{ static My_ProcessByID x; return x; }
 EventLoopTimerRef&			gExitWatchTimer ()
 							{
 								static EventLoopTimerRef	x = nullptr;
@@ -319,6 +322,23 @@ Local_KillProcess	(Local_ProcessRef*	inoutRefPtr)
 		delete *(REINTERPRET_CAST(inoutRefPtr, My_ProcessPtr*)), *inoutRefPtr = nullptr;
 	}
 }// KillProcess
+
+
+/*!
+Returns true only if the specified process is currently
+stopped, as determined by this module’s periodic checks.
+
+(4.0)
+*/
+Boolean
+Local_ProcessIsStopped	(Local_ProcessRef	inProcess)
+{
+	My_ProcessAutoLocker	ptr(gProcessPtrLocks(), inProcess);
+	Boolean					result = ptr->_stopped;
+	
+	
+	return result;
+}// ProcessIsStopped
 
 
 /*!
@@ -663,7 +683,6 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 		// this is executed inside the parent process
 		//
 		
-		gChildProcessIDs().insert(processID);
 		Console_WriteValue("spawned process ID", processID);
 		
 		// prevent threads from being the receivers of signals
@@ -1030,16 +1049,21 @@ My_Process	(int				argc,
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 _processID(inProcessID),
+_stopped(false),
 _pseudoTerminal(inMasterTerminal),
 _slaveDeviceName(inSlaveDeviceName),
 _commandLine(createCommandLine(argc, argv))
 {
+	gChildProcessIDs().insert(_processID);
+	gProcessesByID()[_processID] = REINTERPRET_CAST(this, Local_ProcessRef);
 }// My_Process constructor
 
 
 My_Process::
 ~My_Process ()
 {
+	gChildProcessIDs().erase(_processID);
+	gProcessesByID().erase(_processID);
 	if (nullptr != _commandLine) delete [] _commandLine, _commandLine = nullptr;
 }// My_Process destructor
 
@@ -2022,6 +2046,24 @@ watchForExitsTimer	(EventLoopTimerRef		UNUSED_ARGUMENT(inTimer),
 				case SIGTERM:
 					canNotifyGrowl = false;
 					canDisplayAlert = false;
+					break;
+				
+				case SIGSTOP:
+				case SIGTSTP:
+				case SIGCONT:
+					{
+						My_ProcessByID::const_iterator		toProcess = gProcessesByID().find(kProcessID);
+						
+						
+						if (gProcessesByID().end() != toProcess)
+						{
+							Local_ProcessRef		thisProcess = toProcess->second;
+							My_ProcessAutoLocker	ptr(gProcessPtrLocks(), thisProcess);
+							
+							
+							ptr->_stopped = (SIGCONT != kSignal);
+						}
+					}
 					break;
 				
 				default:

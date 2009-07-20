@@ -72,7 +72,6 @@
 
 // MacTelnet includes
 #include "Commands.h"
-#include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "Folder.h"

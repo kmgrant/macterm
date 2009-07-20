@@ -18,7 +18,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -57,9 +57,10 @@
 #include <ResultCode.template.h>
 
 // MacTelnet includes
-#include "ConnectionData.h"
 #include "ConstantsRegistry.h"
+#include "Local.h"
 #include "SessionDescription.h"
+#include "TerminalWindow.h"
 
 
 
@@ -332,17 +333,24 @@ struct SessionCloseWarningButtonInfo
 typedef SessionCloseWarningButtonInfo*	SessionCloseWarningButtonInfoPtr;
 
 /*!
-Information passed to a handler when the user has
-chosen an option from the Close sheet.
+Various key mappings for typical session events.  To modify,
+use Session_ReturnEventKeys() to copy the current values, and
+Session_SetEventKeys() to write an updated structure.
 */
 struct Session_EventKeys
 {
-	UInt8	interrupt;	//!< the ASCII code for the control key used to interrupt processes;
-						//!  see Session_UserInputInterruptProcess()
-	UInt8	suspend;	//!< the ASCII code for the control key used to stop the flow of data;
-						//!  see Session_SetNetworkSuspended()
-	UInt8	resume;		//!< the ASCII code for the control key used to start the flow of data;
-						//!  see Session_SetNetworkSuspended()
+	UInt8					interrupt;				//!< the ASCII code for the control key used to interrupt processes;
+													//!  see Session_UserInputInterruptProcess()
+	UInt8					suspend;				//!< the ASCII code for the control key used to stop the flow of data;
+													//!  see Session_SetNetworkSuspended()
+	UInt8					resume;					//!< the ASCII code for the control key used to start the flow of data;
+													//!  see Session_SetNetworkSuspended()
+	Session_NewlineMode		newline;				//!< what new-line means
+	Session_EMACSMetaKey	meta;					//!< meta key generator, i.e. for EMACS
+	Boolean					deleteSendsBackspace;	//!< if false, delete sends “delete”; if true, it sends a backspace
+	Boolean					arrowsRemappedForEMACS;	//!< if false, arrows are not special; if true, they become EMACS cursor keys
+	Boolean					pageKeysLocalControl;	//!< if false, page keys are sent to the session; if true, they manage scrolling
+	Boolean					keypadRemappedForVT220;	//!< if false, arrows are not special; if true, they become EMACS cursor keys
 };
 
 
@@ -515,12 +523,6 @@ void
 void
 	Session_FlushNetwork					(SessionRef							inRef);
 
-Boolean
-	Session_PageKeysControlTerminalView		(SessionRef							inRef);
-
-Boolean
-	Session_ProcessesAll8Bits				(SessionRef							inRef);
-
 Session_Result
 	Session_ReceiveData						(SessionRef							inRef,
 											 void const*						inBufferPtr,
@@ -564,10 +566,6 @@ void
 void
 	Session_SetNetworkSuspended				(SessionRef							inRef,
 											 Boolean							inScrollLock);
-
-void
-	Session_SetNewlineMode					(SessionRef							inRef,
-											 Session_NewlineMode				inNewlineMode);
 
 void
 	Session_SetSpeechEnabled				(SessionRef							inRef,
@@ -723,9 +721,6 @@ Boolean
 	only to aide the transition to the SessionRef-based APIs,
 	and WILL DEFINITELY DISAPPEAR IN THE FUTURE.
 ###############################################################*/
-
-ConnectionDataPtr
-	Session_ConnectionDataPtr				(SessionRef							inRef);
 
 void
 	Session_SetTerminalWindow				(SessionRef							inRef,

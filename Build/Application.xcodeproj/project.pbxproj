@@ -262,7 +262,6 @@
 		0A4603C60554376100ACDF3A /* CommandLine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CommandLine.h; path = Application/Code/CommandLine.h; sourceTree = SOURCE_ROOT; };
 		0A4603C70554376100ACDF3A /* Commands.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Commands.h; path = Application/Code/Commands.h; sourceTree = SOURCE_ROOT; };
 		0A4603C90554376100ACDF3A /* ConnectionAE.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConnectionAE.h; path = Application/Code/ConnectionAE.h; sourceTree = "<group>"; };
-		0A4603CA0554376100ACDF3A /* ConnectionData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConnectionData.h; path = Application/Code/ConnectionData.h; sourceTree = SOURCE_ROOT; };
 		0A4603CB0554376100ACDF3A /* Console.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Console.h; path = Shared/Code/Console.h; sourceTree = "<group>"; };
 		0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ConstantsRegistry.h; path = Application/Code/ConstantsRegistry.h; sourceTree = SOURCE_ROOT; };
 		0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ContextSensitiveMenu.h; path = Shared/Code/ContextSensitiveMenu.h; sourceTree = "<group>"; };
@@ -810,7 +809,6 @@
 				0A4603C60554376100ACDF3A /* CommandLine.h */,
 				0A4603C70554376100ACDF3A /* Commands.h */,
 				0A3D04C10A4CEB4E00A79DDF /* CommonEventHandlers.h */,
-				0A4603CA0554376100ACDF3A /* ConnectionData.h */,
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
 				0A4603CF0554376100ACDF3A /* ContextualMenuBuilder.h */,
 				0A4603D30554376100ACDF3A /* Cursors.h */,

@@ -76,7 +76,6 @@
 #include "BasicTypesAE.h"
 #include "Clipboard.h"
 #include "Commands.h"
-#include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"
 #include "EventLoop.h"
@@ -272,12 +271,11 @@ struct My_Session
 	EventLoopTimerRef			autoActivateDragTimer;		// short timer
 	EventLoopTimerUPP			longLifeTimerUPP;			// procedure that is called when a session has been open 15 seconds
 	EventLoopTimerRef			longLifeTimer;				// 15-second timer
-	ConnectionDataPtr			dataPtr;					// data for this connection
 	InterfaceLibAlertRef		currentTerminationAlert;	// retained while a sheet is still open so a 2nd sheet is not displayed
 	TerminalWindowRef			terminalWindow;				// terminal window housing this session
 	HIWindowRef					window;						// redundant copy of TerminalWindow_ReturnWindow(terminalWindow)
 	Local_ProcessRef			mainProcess;				// the command whose output is directly attached to the terminal
-	Session_EventKeys			controlKey;					// information on keyboard short-cuts for major events
+	Session_EventKeys			eventKeys;					// information on keyboard short-cuts for major events
 	My_TEKGraphicList			targetVectorGraphics;		// list of TEK graphics attached to this session
 	My_RasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
 	My_TerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
@@ -297,6 +295,13 @@ struct My_Session
 	AlertMessages_BoxRef		watchBox;					// if defined, the global alert used to show notifications for this session
 	My_AuxiliaryDataByKey		auxiliaryDataMap;			// all tagged data associated with this session
 	SessionRef					selfRef;					// convenient reference to this structure
+	
+	struct
+	{
+		Boolean		enabled;		//!< is local echo enabled?
+		Boolean		halfDuplex;		//!< data is echoed and sent immediately, instead of waiting for
+									//!  a control key (as in full duplex)
+	} echo;
 	
 	struct
 	{
@@ -847,25 +852,6 @@ Session_AppendDataForProcessing		(SessionRef		inRef,
 
 
 /*!
-Returns a pointer to the "ConnectionDataPtr" data in the
-internal structure.
-
-TEMPORARY, TRANSITIONAL FUNCTION THAT *WILL* DISAPPEAR!!!
-
-(3.0)
-*/
-ConnectionDataPtr
-Session_ConnectionDataPtr	(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	ConnectionDataPtr		result = ptr->dataPtr;
-	
-	
-	return result;
-}// ConnectionDataPtr
-
-
-/*!
 Returns an icon that describes the session status (for
 example, running or not running).  This can be displayed
 in user interface elements.
@@ -968,7 +954,6 @@ void
 Session_Disconnect		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	ConnectionDataPtr		connectionDataPtr = ptr->dataPtr;
 	
 	
 	if (Session_StateIsActive(inRef))
@@ -1601,13 +1586,13 @@ Session_FillInSessionDescription	(SessionRef					inRef,
 					Boolean		flag = false;
 					
 					
-					flag = Session_ConnectionDataPtr(inRef)->crmap;
+					flag = ptr->eventKeys.newline;
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypeRemapCR, flag);
-					flag = !Session_PageKeysControlTerminalView(inRef);
+					flag = !ptr->eventKeys.pageKeysLocalControl;
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypePageKeysDoNotControlTerminal, flag);
-					flag = Session_ConnectionDataPtr(inRef)->keypadmap;
+					flag = false; // TEMPORARY
 					saveError = SessionDescription_SetBooleanData
 								(saveFileMemoryModel, kSessionDescription_BooleanTypeRemapKeypadTopRow, flag);
 				}
@@ -1762,7 +1747,7 @@ Boolean
 Session_LocalEchoIsEnabled		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = (ptr->dataPtr->echo != 0);
+	Boolean					result = ptr->echo.enabled;
 	
 	
 	return result;
@@ -1781,7 +1766,7 @@ Boolean
 Session_LocalEchoIsFullDuplex	(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = (ptr->dataPtr->halfdup == 0);
+	Boolean					result = (false == ptr->echo.halfDuplex);
 	
 	
 	return result;
@@ -1799,7 +1784,7 @@ Boolean
 Session_LocalEchoIsHalfDuplex	(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = (ptr->dataPtr->halfdup != 0);
+	Boolean					result = ptr->echo.halfDuplex;
 	
 	
 	return result;
@@ -1817,30 +1802,11 @@ Boolean
 Session_NetworkIsSuspended		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = !ptr->dataPtr->enabled;
+	Boolean					result = Local_ProcessIsStopped(ptr->mainProcess);
 	
 	
 	return result;
 }// NetworkIsSuspended
-
-
-/*!
-Returns "true" only if the Page Up, Page Down,
-and similar keys control the local terminal
-instead of causing commands to be sent to the
-session’s process (local or remote).
-
-(3.0)
-*/
-Boolean
-Session_PageKeysControlTerminalView		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = !ptr->dataPtr->pgupdwn;
-	
-	
-	return result;
-}// PageKeysControlTerminalView
 
 
 /*!
@@ -1920,24 +1886,6 @@ Session_PostDataArrivedEventToMainQueue		(SessionRef		inRef,
 	}
 	return result;
 }// PostDataArrivedEventToQueue
-
-
-/*!
-Returns whether the specified session processes all
-eight bits of the bytes it receives, instead of the
-low seven bits.
-
-(3.0)
-*/
-Boolean
-Session_ProcessesAll8Bits		(SessionRef		inRef)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Boolean					result = ptr->dataPtr->eightbit;
-	
-	
-	return result;
-}// ProcessesAll8Bits
 
 
 /*!
@@ -2243,7 +2191,7 @@ Session_EventKeys
 Session_ReturnEventKeys		(SessionRef		inRef)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	Session_EventKeys		result = ptr->controlKey;
+	Session_EventKeys		result = ptr->eventKeys;
 	
 	
 	return result;
@@ -2539,7 +2487,7 @@ Session_SendNewline		(SessionRef		inRef,
 	switch (inEcho)
 	{
 	case kSession_EchoCurrentSessionValue:
-		echo = (0 != ptr->dataPtr->echo);
+		echo = ptr->echo.enabled;
 		break;
 	
 	case kSession_EchoEnabled:
@@ -2623,7 +2571,7 @@ Session_SetEventKeys	(SessionRef					inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	ptr->controlKey = inKeys;
+	ptr->eventKeys = inKeys;
 }// SetEventKeys
 
 
@@ -2648,7 +2596,7 @@ Session_SetLocalEchoEnabled		(SessionRef		inRef,
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	ptr->dataPtr->echo = inIsEnabled;
+	ptr->echo.enabled = inIsEnabled;
 }// SetLocalEchoEnabled
 
 
@@ -2666,7 +2614,7 @@ Session_SetLocalEchoFullDuplex	(SessionRef		inRef)
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	ptr->dataPtr->halfdup = 0;
+	ptr->echo.halfDuplex = false;
 }// SetLocalEchoFullDuplex
 
 
@@ -2683,7 +2631,7 @@ Session_SetLocalEchoHalfDuplex	(SessionRef		inRef)
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
 	
-	ptr->dataPtr->halfdup = 1;
+	ptr->echo.halfDuplex = true;
 }// SetLocalEchoHalfDuplex
 
 
@@ -2700,8 +2648,6 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	
-	
-	ptr->dataPtr->enabled = !inScrollLock;
 	
 	// send the appropriate character to the Unix process
 	if (inScrollLock)
@@ -2769,22 +2715,6 @@ Session_SetNetworkSuspended		(SessionRef		inRef,
 								kSession_StateAttributeSuspendNetwork/* attributes to clear */);
 	}
 }// SetNetworkSuspended
-
-
-/*!
-Defines what Session_SendNewline() does.
-
-(3.0)
-*/
-void
-Session_SetNewlineMode	(SessionRef				inRef,
-						 Session_NewlineMode	inNewlineMode)
-{
-	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
-	
-	
-	ptr->dataPtr->crmap = inNewlineMode;
-}// SetNewlineMode
 
 
 /*!
@@ -3803,7 +3733,7 @@ Session_UserInputKey	(SessionRef		inRef,
 			// 7-bit ASCII; send as-is
 			Session_SendData(ptr->selfRef, &inKeyOrASCII, 1);
 		}
-		else if (ptr->dataPtr->arrowmap && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
+		else if (ptr->eventKeys.arrowsRemappedForEMACS && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
 		{
 			UInt8		actualKey = inKeyOrASCII;
 			
@@ -3844,7 +3774,7 @@ Session_UserInputKey	(SessionRef		inRef,
 				for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
 						toScreen != ptr->targetTerminals.end(); ++toScreen)
 				{
-					(Terminal_Result)Terminal_UserInputVTKey(*toScreen, inKeyOrASCII, (0 != ptr->dataPtr->echo));
+					(Terminal_Result)Terminal_UserInputVTKey(*toScreen, inKeyOrASCII, ptr->echo.enabled);
 				}
 			}
 		}
@@ -4120,36 +4050,6 @@ namespace {
 /*!
 Constructor.  See Session_New().
 
-DEPRECATED.  This exists for transition purposes only,
-as it is based on a very old data structure that is
-still referenced throughout the code.
-
-(3.1)
-*/
-ConnectionData::
-ConnectionData ()
-:
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
-enabled			(true),
-bsdel			(0),
-eightbit		(0),
-national		(0),
-arrowmap		(0),
-showErrors		(0),
-keypadmap		(0),
-metaKey			(0),
-Xterm			(0),
-pgupdwn			(false),
-crmap			(0),
-echo			(0),
-halfdup			(0)
-{
-}// ConnectionData default constructor
-
-
-/*!
-Constructor.  See Session_New().
-
 (4.0)
 */
 My_Session::
@@ -4185,7 +4085,6 @@ autoActivateDragTimerUPP(NewEventLoopTimerUPP(autoActivateWindow)),
 autoActivateDragTimer(nullptr), // installed only as needed
 longLifeTimerUPP(NewEventLoopTimerUPP(detectLongLife)),
 longLifeTimer(nullptr), // set later
-dataPtr(new ConnectionData()),
 currentTerminationAlert(nullptr),
 terminalWindow(nullptr), // set at window validation time
 window(nullptr), // set at window validation time
@@ -4210,17 +4109,20 @@ inactivityWatchTimer(nullptr),
 watchBox(nullptr),
 auxiliaryDataMap(),
 selfRef(REINTERPRET_CAST(this, SessionRef))
+// echo initialized below
+// preferencesCache initialized below
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 {
+	bzero(&this->echo, sizeof(this->echo));
+	bzero(&this->preferencesCache, sizeof(this->preferencesCache));
+	
 	// 3.0 - record the time when the connection began
 	GetDateTime(&this->connectionDateTime);
 	
 	assert(nullptr != this->readBufferPtr);
 	
-	// this structure is initialized later by the Local module
-	this->controlKey.interrupt = '\0';
-	this->controlKey.suspend = '\0';
-	this->controlKey.resume = '\0';
+	// these are initialized later by the Local module
+	bzero(&this->eventKeys, sizeof(this->eventKeys));
 	
 	Session_StartMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
 	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
@@ -4280,8 +4182,6 @@ My_Session::
 	{
 		VectorInterpreter_Dispose(&this->vectorGraphicsID);
 	}
-	
-	delete this->dataPtr, this->dataPtr = nullptr;
 	
 	// dispose contents
 	// WARNING: Session_SetDataProcessingCapacity() also allocates/deallocates this buffer
@@ -4781,7 +4681,6 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	My_KeyPressPtr			keyPressInfoPtr = REINTERPRET_CAST(inEventContextPtr, My_KeyPressPtr);
 	SessionRef				session = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
-	ConnectionDataPtr		connectionDataPtr = nullptr; // TEMPORARY, until transition to SessionRef
 	TerminalScreenRef		someScreen = ptr->targetTerminals.front(); // TEMPORARY
 	static SInt16			characterCode = '\0'; // ASCII
 	static SInt16			characterCode2 = '\0'; // ASCII
@@ -4793,8 +4692,6 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	static Boolean			metaDown = false;
 	
 	
-	connectionDataPtr = ptr->dataPtr;
-	
 	characterCode = keyPressInfoPtr->characterCode;
 	characterCode2 = keyPressInfoPtr->characterCode2;
 	virtualKeyCode = keyPressInfoPtr->virtualKeyCode;
@@ -4805,7 +4702,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	// technically add-on support for an EMACS concept
 	metaDown = ((commandDown) && (controlDown) &&
-				(connectionDataPtr->metaKey == kSession_EMACSMetaKeyControlCommand));
+				(ptr->eventKeys.meta == kSession_EMACSMetaKeyControlCommand));
 	
 	// scan for keys that invoke instant commands
 	switch (virtualKeyCode)
@@ -4896,7 +4793,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
+		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewPageUp);
 		}
@@ -4906,7 +4803,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
+		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewPageDown);
 		}
@@ -4916,7 +4813,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
+		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewHome);
 		}
@@ -4926,7 +4823,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
-		if ((connectionDataPtr->pgupdwn) || Terminal_EmulatorIsVT100(someScreen))
+		if ((ptr->eventKeys.pageKeysLocalControl) || Terminal_EmulatorIsVT100(someScreen))
 		{
 			result = Commands_ExecuteByID(kCommandTerminalViewEnd);
 		}
@@ -4966,17 +4863,17 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		// if no key-based action occurred, look for character-based actions
 		if (0 == characterCode2)
 		{
-			if (characterCode == ptr->controlKey.suspend)
+			if (characterCode == ptr->eventKeys.suspend)
 			{
 				Session_SetNetworkSuspended(session, true);
 				result = true;
 			}
-			if (characterCode == ptr->controlKey.resume) 
+			if (characterCode == ptr->eventKeys.resume) 
 			{
 				Session_SetNetworkSuspended(session, false);
 				result = true;
 			}
-			if (characterCode == ptr->controlKey.interrupt)  
+			if (characterCode == ptr->eventKeys.interrupt)  
 			{
 				Session_UserInputInterruptProcess(session);
 				result = true;
@@ -5087,38 +4984,30 @@ window should be destroyed.
 void
 killConnection		(My_SessionPtr		inPtr)
 {
-	if (inPtr->dataPtr != nullptr)
+	Cursors_UseWatch();
+	
+	// 3.1 - record the time when the command exited
+	inPtr->terminationAbsoluteTime = CFAbsoluteTimeGetCurrent();
+	
+	inPtr->status = kSession_StateImminentDisposal;
+	changeNotifyForSession(inPtr, kSession_ChangeState, inPtr->selfRef/* context */);
+	
+	if (nullptr != inPtr->terminalWindow)
 	{
-		Cursors_UseWatch();
-		
-		// 3.1 - record the time when the command exited
-		inPtr->terminationAbsoluteTime = CFAbsoluteTimeGetCurrent();
-		
-		inPtr->status = kSession_StateImminentDisposal;
-		changeNotifyForSession(inPtr, kSession_ChangeState, inPtr->selfRef/* context */);
-		
-		if (nullptr != inPtr->terminalWindow)
-		{
-			changeNotifyForSession(inPtr, kSession_ChangeWindowInvalid, inPtr->selfRef/* context */);
-			// WARNING: This is old-style.  A session does not really “own” a terminal window,
-			// it is more logical for a responder to the invalidation event to dispose of the
-			// terminal window.
-			TerminalWindow_Dispose(&inPtr->terminalWindow);
-		}
-		
-		// 3.0 - destroy the connection initialization parameters!
-		//Console_WriteLine("destroying initialization parameters");
-		//Memory_DisposeHandle(&inPtr->dataPtr->setupParametersHandle);
-		
-		Session_Dispose(&inPtr->selfRef);
-		
-		Cursors_UseArrow();
+		changeNotifyForSession(inPtr, kSession_ChangeWindowInvalid, inPtr->selfRef/* context */);
+		// WARNING: This is old-style.  A session does not really “own” a terminal window,
+		// it is more logical for a responder to the invalidation event to dispose of the
+		// terminal window.
+		TerminalWindow_Dispose(&inPtr->terminalWindow);
 	}
-	else
-	{
-		Sound_StandardAlert();
-		Console_WriteLine("WARNING: Attempt to kill a connection with nonexistent data!");
-	}
+	
+	// 3.0 - destroy the connection initialization parameters!
+	//Console_WriteLine("destroying initialization parameters");
+	//Memory_DisposeHandle(&inPtr->dataPtr->setupParametersHandle);
+	
+	Session_Dispose(&inPtr->selfRef);
+	
+	Cursors_UseArrow();
 }// killConnection
 
 
@@ -5960,44 +5849,28 @@ receiveTerminalViewTextInput	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 		case 0x33: // backspace
 			// handle mapping BS to DEL, flipping on option-delete or command-delete
 			{
-				enum
+				My_SessionAutoLocker	ptr(gSessionPtrLocks(), session);
+				Boolean					sendBackspace = ptr->eventKeys.deleteSendsBackspace;
+				
+				
+				if ((controlKeyPressInfo.optionDown) || (controlKeyPressInfo.commandDown))
 				{
-					ASCII_BACKSPACE		= 0x08,
-					ASCII_DELETE		= 0x7F
-				};
-				if (Session_ConnectionDataPtr(session)->bsdel)
+					sendBackspace = !sendBackspace;
+					
+					// clear these modifier keys, because they were only used
+					// to alter the effective character and should not have
+					// any other special significance
+					controlKeyPressInfo.optionDown = false;
+					controlKeyPressInfo.commandDown = false;
+				}
+				
+				if (sendBackspace)
 				{
-					if ((controlKeyPressInfo.optionDown) || (controlKeyPressInfo.commandDown))
-					{
-						controlKeyPressInfo.characterCode = ASCII_BACKSPACE;
-						
-						// clear these modifier keys, because they were only used
-						// to alter the effective character and should not have
-						// any other special significance
-						controlKeyPressInfo.optionDown = false;
-						controlKeyPressInfo.commandDown = false;
-					}
-					else
-					{
-						controlKeyPressInfo.characterCode = ASCII_DELETE;
-					}
+					controlKeyPressInfo.characterCode = 0x08; // backspace
 				}
 				else
 				{
-					if ((controlKeyPressInfo.optionDown) || (controlKeyPressInfo.commandDown))
-					{
-						controlKeyPressInfo.characterCode = ASCII_DELETE;
-						
-						// clear these modifier keys, because they were only used
-						// to alter the effective character and should not have
-						// any other special significance
-						controlKeyPressInfo.optionDown = false;
-						controlKeyPressInfo.commandDown = false;
-					}
-					else
-					{
-						controlKeyPressInfo.characterCode = ASCII_BACKSPACE;
-					}
+					controlKeyPressInfo.characterCode = 0x7F; // delete
 				}
 			}
 			break;

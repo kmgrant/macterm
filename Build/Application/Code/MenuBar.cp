@@ -62,7 +62,6 @@
 #include "Clipboard.h"
 #include "CommandLine.h"
 #include "Commands.h"
-#include "ConnectionData.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "FileUtilities.h"
@@ -2856,7 +2855,6 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 {
 	SessionRef				currentSession = nullptr;
 	TerminalScreenRef		currentScreen = nullptr;
-	ConnectionDataPtr		currentConnectionDataPtr = nullptr;
 	Boolean					connectionCommandResult = areSessionRelatedItemsEnabled();
 	Boolean					checked = false;
 	Boolean					result = false;
@@ -2877,7 +2875,6 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 			{
 				currentSession = SessionFactory_ReturnUserFocusSession();
 				currentScreen = (nullptr == terminalWindow) ? nullptr : TerminalWindow_ReturnScreenWithFocus(terminalWindow);
-				currentConnectionDataPtr = (nullptr == currentSession) ? nullptr : Session_ConnectionDataPtr(currentSession); // DEPRECATED
 			}
 		}
 	}
@@ -2914,12 +2911,24 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 	
 	case kCommandDeletePressSendsBackspace:
 		result = connectionCommandResult;
-		if (nullptr != currentSession) checked = (result) ? (!currentConnectionDataPtr->bsdel) : false;
+		if (nullptr != currentSession)
+		{
+			Session_EventKeys		keyMappings = Session_ReturnEventKeys(currentSession);
+			
+			
+			checked = (result) ? keyMappings.deleteSendsBackspace : false;
+		}
 		break;
 	
 	case kCommandDeletePressSendsDelete:
 		result = connectionCommandResult;
-		if (nullptr != currentSession) checked = (result) ? (currentConnectionDataPtr->bsdel) : false;
+		if (nullptr != currentSession)
+		{
+			Session_EventKeys		keyMappings = Session_ReturnEventKeys(currentSession);
+			
+			
+			checked = (result) ? (false == keyMappings.deleteSendsBackspace) : false;
+		}
 		break;
 	
 	case kCommandEMACSArrowMapping:
@@ -2929,7 +2938,13 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 		// active terminal type supports this
 		result = connectionCommandResult;
 		if (result) result = Terminal_EmulatorIsVT220(currentScreen);
-		if (nullptr != currentSession) checked = (result) ? (currentConnectionDataPtr->arrowmap) : false;
+		if (nullptr != currentSession)
+		{
+			Session_EventKeys		keyMappings = Session_ReturnEventKeys(currentSession);
+			
+			
+			checked = (result) ? keyMappings.arrowsRemappedForEMACS : false;
+		}
 		break;
 	
 	case kCommandLocalPageUpDown:
@@ -2939,7 +2954,13 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 		// active terminal type supports this
 		result = connectionCommandResult;
 		if (result) result = Terminal_EmulatorIsVT220(currentScreen);
-		if (nullptr != currentSession) checked = (result) ? Session_PageKeysControlTerminalView(currentSession) : false;
+		if (nullptr != currentSession)
+		{
+			Session_EventKeys		keyMappings = Session_ReturnEventKeys(currentSession);
+			
+			
+			checked = (result) ? keyMappings.pageKeysLocalControl : false;
+		}
 		break;
 	
 	case kCommandWatchNothing:

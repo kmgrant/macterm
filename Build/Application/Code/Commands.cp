@@ -289,7 +289,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 	{
 		// no handler for the specified command; check against
 		// the following list of known commands
-		ConnectionDataPtr	currentConnectionDataPtr = nullptr;
 		SessionRef			frontSession = nullptr;
 		TerminalWindowRef	frontTerminalWindow = nullptr;
 		TerminalScreenRef	activeScreen = nullptr;
@@ -310,11 +309,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		// global context that is automatically updated whenever the user
 		// focus session is changed (and only then).
 		frontSession = SessionFactory_ReturnUserFocusSession();
-		currentConnectionDataPtr = (nullptr == frontSession) ? nullptr : Session_ConnectionDataPtr(frontSession); // TEMPORARY
 		frontTerminalWindow = (nullptr == frontSession) ? nullptr : Session_ReturnActiveTerminalWindow(frontSession);
 		activeScreen = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnScreenWithFocus(frontTerminalWindow);
 		activeView = (nullptr == frontTerminalWindow) ? nullptr : TerminalWindow_ReturnViewWithFocus(frontTerminalWindow);
-		isSession = ((nullptr != frontSession) && (nullptr != currentConnectionDataPtr));
+		isSession = (nullptr != frontSession);
 		isTerminal = ((nullptr != activeScreen) && (nullptr != activeView));
 		
 		switch (inCommandID)
@@ -878,21 +876,33 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandDeletePressSendsDelete:
 			if (isSession)
 			{
-				currentConnectionDataPtr->bsdel = (inCommandID == kCommandDeletePressSendsDelete);
+				Session_EventKeys		keyMappings = Session_ReturnEventKeys(frontSession);
+				
+				
+				keyMappings.deleteSendsBackspace = (inCommandID == kCommandDeletePressSendsBackspace);
+				Session_SetEventKeys(frontSession, keyMappings);
 			}
 			break;
 		
 		case kCommandEMACSArrowMapping:
 			if (isSession)
 			{
-				currentConnectionDataPtr->arrowmap = !currentConnectionDataPtr->arrowmap;
+				Session_EventKeys		keyMappings = Session_ReturnEventKeys(frontSession);
+				
+				
+				keyMappings.arrowsRemappedForEMACS = !(keyMappings.arrowsRemappedForEMACS);
+				Session_SetEventKeys(frontSession, keyMappings);
 			}
 			break;
 		
 		case kCommandLocalPageUpDown:
 			if (isSession)
 			{
-				currentConnectionDataPtr->pgupdwn = !currentConnectionDataPtr->pgupdwn;
+				Session_EventKeys		keyMappings = Session_ReturnEventKeys(frontSession);
+				
+				
+				keyMappings.pageKeysLocalControl = !(keyMappings.pageKeysLocalControl);
+				Session_SetEventKeys(frontSession, keyMappings);
 			}
 			break;
 		

@@ -115,6 +115,9 @@ Local_Result
 void
 	Local_KillProcess						(Local_ProcessRef*			inoutRefPtr);
 
+Boolean
+	Local_ProcessIsStopped					(Local_ProcessRef			inProcess);
+
 char const*
 	Local_ProcessReturnCommandLineString	(Local_ProcessRef			inProcess);
 
