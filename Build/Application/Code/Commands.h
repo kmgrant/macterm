@@ -162,6 +162,10 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 
 // View menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
+#define kCommandWiderScreen						'WidI'
+#define kCommandNarrowerScreen					'WidD'
+#define kCommandTallerScreen					'HgtI'
+#define kCommandShorterScreen					'HgtD'
 #define kCommandSmallScreen						'StdW'
 #define kCommandTallScreen						'Tall'
 #define kCommandLargeScreen						'Wide'

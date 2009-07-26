@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090725',
     '20090716',
     '20090714',
     '20090707',
@@ -254,6 +255,12 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090725': [
+		'View menu now contains commands for adjusting the terminal screen size incrementally.',
+		'Terminal view screen width can now be changed with the vertical scroll wheel and the Option and Command keys.',
+		'Terminal view screen width can now be changed with the horizontal scroll wheel and the Option key.',
+		'Terminal view screen height can now be changed with the vertical scroll wheel and the Option key.',
+	],
 	'20090716': [
 		'Fixed major rendering performance problems created in recent builds.',
 		'Fixed interpretation problems with certain XTerm window title sequences.',

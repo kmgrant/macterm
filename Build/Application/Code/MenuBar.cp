@@ -1384,6 +1384,10 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideClipboard, stateTrackerShowHideItems);
 	
 	// View
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandWiderScreen, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandNarrowerScreen, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTallerScreen, stateTrackerGenericSessionItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShorterScreen, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSmallScreen, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandTallScreen, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandLargeScreen, stateTrackerGenericSessionItems);
@@ -3061,6 +3065,10 @@ stateTrackerGenericSessionItems		(UInt32				inCommandID,
 	case kCommandSaveSession:
 	case kCommandNewDuplicateSession:
 	case kCommandFindCursor:
+	case kCommandWiderScreen:
+	case kCommandNarrowerScreen:
+	case kCommandTallerScreen:
+	case kCommandShorterScreen:
 	case kCommandLargeScreen:
 	case kCommandSmallScreen:
 	case kCommandTallScreen:

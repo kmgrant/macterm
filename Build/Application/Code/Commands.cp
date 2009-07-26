@@ -685,6 +685,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			PrefsWindow_Display();
 			break;
 		
+		//case kCommandWiderScreen:
+		//case kCommandNarrowerScreen:
+		//case kCommandTallerScreen:
+		//case kCommandShorterScreen:
 		//case kCommandLargeScreen:
 		//case kCommandSmallScreen:
 		//case kCommandTallScreen:

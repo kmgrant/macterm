@@ -3895,6 +3895,44 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					}
 					break;
 				
+				case kCommandWiderScreen:
+				case kCommandNarrowerScreen:
+				case kCommandTallerScreen:
+				case kCommandShorterScreen:
+					{
+						TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+						UInt16				columns = Terminal_ReturnColumnCount(activeScreen);
+						UInt16				rows = Terminal_ReturnRowCount(activeScreen);
+						
+						
+						if (received.commandID == kCommandNarrowerScreen)
+						{
+							columns -= 4; // arbitrary delta
+						}
+						else if (received.commandID == kCommandTallerScreen)
+						{
+							rows += 2; // arbitrary delta
+						}
+						else if (received.commandID == kCommandShorterScreen)
+						{
+							rows -= 2; // arbitrary delta
+						}
+						else
+						{
+							columns += 4; // arbitrary delta
+						}
+						
+						// arbitrarily restrict the minimum size
+						if (columns < 10) columns = 10;
+						if (rows < 10) rows = 10;
+						
+						// resize the screen and the window
+						TerminalWindow_SetScreenDimensions(terminalWindow, columns, rows, true/* recordable */);
+						
+						result = noErr;
+					}
+					break;
+				
 				case kCommandLargeScreen:
 				case kCommandSmallScreen:
 				case kCommandTallScreen:
@@ -4150,70 +4188,90 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 		// if the axis information was found, continue
 		if (noErr == result)
 		{
-			if (kEventMouseWheelAxisY != axis) result = eventNotHandledErr;
-			else
+			SInt32		delta = 0;
+			UInt32		modifiers = 0;
+			
+			
+			// determine modifier keys pressed during scroll
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
+			result = noErr; // ignore modifier key parameter if absent
+			
+			// determine how far the mouse wheel was scrolled
+			// and in which direction; negative means up/left,
+			// positive means down/right
+			result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeLongInteger, delta);
+			
+			// if all information can be found, proceed with scrolling
+			if (noErr == result)
 			{
-				SInt32		delta = 0;
-				UInt32		modifiers = 0;
+				HIWindowRef		targetWindow = nullptr;
 				
 				
-				// determine modifier keys pressed during scroll
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamKeyModifiers, typeUInt32, modifiers);
-				result = noErr; // ignore modifier key parameter if absent
-				
-				// determine how far the mouse wheel was scrolled
-				// and in which direction; negative means up/left,
-				// positive means down/right
-				result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamMouseWheelDelta, typeLongInteger, delta);
-				
-				// if all information can be found, proceed with scrolling
-				if (noErr == result)
+				if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamWindowRef, typeWindowRef, targetWindow))
 				{
-					HIWindowRef		targetWindow = nullptr;
+					// cannot find information (implies Mac OS X 10.0.x) - fine, assume frontmost window
+					targetWindow = EventLoop_ReturnRealFrontWindow();
+				}
+				
+				if (TerminalWindow_ExistsFor(targetWindow))
+				{
+					TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
 					
 					
-					if (noErr != CarbonEventUtilities_GetEventParameter(inEvent, kEventParamWindowRef, typeWindowRef, targetWindow))
+					if (nullptr == terminalWindow) result = eventNotHandledErr;
+					else if (modifiers & controlKey)
 					{
-						// cannot find information (implies Mac OS X 10.0.x) - fine, assume frontmost window
-						targetWindow = EventLoop_ReturnRealFrontWindow();
+						// like Firefox, use control-scroll-wheel to affect font size
+						Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandBiggerText : kCommandSmallerText);
+						result = noErr;
 					}
-					
-					if (TerminalWindow_ExistsFor(targetWindow))
+					else if (modifiers & optionKey)
 					{
-						TerminalWindowRef		terminalWindow = TerminalWindow_ReturnFromWindow(targetWindow);
-						
-						
-						if (nullptr == terminalWindow) result = eventNotHandledErr;
-						else if (modifiers & controlKey)
+						// adjust screen width or height
+						if (kEventMouseWheelAxisX == axis)
 						{
-							// like Firefox, use control-scroll-wheel to affect font size
-							Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandBiggerText : kCommandSmallerText);
+							// adjust screen width
+							Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandNarrowerScreen : kCommandWiderScreen);
 							result = noErr;
 						}
 						else
 						{
-							TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
-							HIViewRef					scrollBar = ptr->controls.scrollBarV;
-							HIViewPartCode				hitPart = (delta > 0)
-																? (modifiers & optionKey)
-																	? kControlPageUpPart
-																	: kControlUpButtonPart
-																: (modifiers & optionKey)
-																	? kControlPageDownPart
-																	: kControlDownButtonPart;
-							
-							
-							// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
-							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-							InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
-							result = noErr;
+							if (modifiers & cmdKey)
+							{
+								// adjust screen width
+								Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandWiderScreen : kCommandNarrowerScreen);
+								result = noErr;
+							}
+							else
+							{
+								Commands_ExecuteByIDUsingEvent((delta > 0) ? kCommandTallerScreen : kCommandShorterScreen);
+								result = noErr;
+							}
 						}
 					}
 					else
 					{
-						result = eventNotHandledErr;
+						TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+						HIViewRef					scrollBar = ptr->controls.scrollBarV;
+						HIViewPartCode				hitPart = (delta > 0)
+															? (modifiers & optionKey)
+																? kControlPageUpPart
+																: kControlUpButtonPart
+															: (modifiers & optionKey)
+																? kControlPageDownPart
+																: kControlDownButtonPart;
+						
+						
+						// vertically scroll the terminal, but 3 lines at a time (scroll wheel)
+						InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+						InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+						InvokeControlActionUPP(scrollBar, hitPart, GetControlAction(scrollBar));
+						result = noErr;
 					}
+				}
+				else
+				{
+					result = eventNotHandledErr;
 				}
 			}
 		}
