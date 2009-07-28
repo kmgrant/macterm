@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090728',
     '20090725',
     '20090716',
     '20090714',
@@ -255,6 +256,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+	'20090728': [
+		'Find dialog no longer initiates a live search for a single character, although this search can be initiated using the button.',
+	],
 	'20090725': [
 		'View menu now contains commands for adjusting the terminal screen size incrementally.',
 		'Terminal view screen width can now be changed with the vertical scroll wheel and the Option and Command keys.',

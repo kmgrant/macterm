@@ -139,7 +139,7 @@ namespace {
 void				addToHistory					(My_FindDialogPtr, CFStringRef);
 Boolean				handleItemHit					(My_FindDialogPtr, HIViewID const&);
 void				handleNewSize					(WindowRef, Float32, Float32, void*);
-Boolean				initiateSearch					(My_FindDialogPtr);
+Boolean				initiateSearch					(My_FindDialogPtr, UInt32 = 1);
 pascal OSStatus		receiveFieldChanged				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
@@ -653,108 +653,120 @@ handleNewSize	(WindowRef	UNUSED_ARGUMENT(inWindow),
 
 
 /*!
+Starts a (synchronous) search of the focused terminal screen,
+if the current filter text is at least "inMinimumLength"
+characters long; otherwise, does nothing.
+
 Returns true only if something is found.
 
 (3.1)
 */
 Boolean
-initiateSearch	(My_FindDialogPtr	inPtr)
+initiateSearch	(My_FindDialogPtr	inPtr,
+				 UInt32				inMinimumLength)
 {
-	TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
-	TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
-	My_TerminalRangeList	searchResults;
-	Terminal_SearchFlags	flags = 0;
-	Terminal_Result			searchStatus = kTerminal_ResultOK;
-	CFStringRef				searchQueryCFString = nullptr;
-	Boolean					result = false;
+	CFStringRef		searchQueryCFString = nullptr;
+	CFIndex			searchQueryLength = 0;
+	Boolean			result = false;
 	
 	
-	// remove highlighting from any previous searches
-	TerminalView_FindNothing(view);
-	
-	// initiate synchronous (should be asynchronous!) search
 	GetControlTextAsCFString(inPtr->fieldKeywords, searchQueryCFString);
-	if ((nullptr == searchQueryCFString) || (0 == CFStringGetLength(searchQueryCFString)))
+	searchQueryLength = CFStringGetLength(searchQueryCFString);
+	if (STATIC_CAST(searchQueryLength, UInt32) >= inMinimumLength)
 	{
-		// clear status area, avoid search
-		SetControlTextWithCFString(inPtr->textStatus, CFSTR(""));
-	}
-	else
-	{
-		// put the sheet in progress mode
-		DeactivateControl(inPtr->buttonSearch);
-		DeactivateControl(inPtr->checkboxIgnoreCase);
-		HIViewSetVisible(inPtr->arrowsSearchProgress, true);
+		TerminalViewRef			view = TerminalWindow_ReturnViewWithFocus(inPtr->terminalWindow);
+		TerminalScreenRef		screen = TerminalWindow_ReturnScreenWithFocus(inPtr->terminalWindow);
+		My_TerminalRangeList	searchResults;
+		Terminal_SearchFlags	flags = 0;
+		Terminal_Result			searchStatus = kTerminal_ResultOK;
 		
-		// configure search
-		if (GetControl32BitValue(inPtr->checkboxIgnoreCase) == kControlCheckBoxUncheckedValue)
+		
+		// remove highlighting from any previous searches
+		TerminalView_FindNothing(view);
+		
+		// initiate synchronous (should be asynchronous!) search
+		if ((nullptr == searchQueryCFString) || (0 == searchQueryLength))
 		{
-			flags |= kTerminal_SearchFlagsCaseSensitive;
+			// clear status area, avoid search
+			SetControlTextWithCFString(inPtr->textStatus, CFSTR(""));
 		}
-		
-		// initiate synchronous (should it be asynchronous?) search
-		searchStatus = Terminal_Search(screen, searchQueryCFString, flags, searchResults);
-		if (kTerminal_ResultOK == searchStatus)
+		else
 		{
-			UIStrings_Result	stringResult = kUIStrings_ResultOK;
-			CFStringRef			statusCFString = nullptr;
+			// put the sheet in progress mode
+			DeactivateControl(inPtr->buttonSearch);
+			DeactivateControl(inPtr->checkboxIgnoreCase);
+			HIViewSetVisible(inPtr->arrowsSearchProgress, true);
 			
-			
-			if (searchResults.empty())
+			// configure search
+			if (GetControl32BitValue(inPtr->checkboxIgnoreCase) == kControlCheckBoxUncheckedValue)
 			{
-				result = false;
-				
-				// show an error icon and message
-				HIViewSetVisible(inPtr->iconNotFound, true);
-				stringResult = UIStrings_Copy(kUIStrings_TerminalSearchNothingFound, statusCFString);
+				flags |= kTerminal_SearchFlagsCaseSensitive;
 			}
-			else
+			
+			// initiate synchronous (should it be asynchronous?) search
+			searchStatus = Terminal_Search(screen, searchQueryCFString, flags, searchResults);
+			if (kTerminal_ResultOK == searchStatus)
 			{
-				result = true;
+				UIStrings_Result	stringResult = kUIStrings_ResultOK;
+				CFStringRef			statusCFString = nullptr;
 				
-				// hide the error icon and display the number of matches
-				HIViewSetVisible(inPtr->iconNotFound, false);
+				
+				if (searchResults.empty())
 				{
-					CFStringRef		templateCFString = nullptr;
+					result = false;
 					
+					// show an error icon and message
+					HIViewSetVisible(inPtr->iconNotFound, true);
+					stringResult = UIStrings_Copy(kUIStrings_TerminalSearchNothingFound, statusCFString);
+				}
+				else
+				{
+					result = true;
 					
-					stringResult = UIStrings_Copy(kUIStrings_TerminalSearchNumberOfMatches, templateCFString);
-					if (stringResult.ok())
+					// hide the error icon and display the number of matches
+					HIViewSetVisible(inPtr->iconNotFound, false);
 					{
-						statusCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, templateCFString,
-																	STATIC_CAST(searchResults.size(), unsigned long));
-						CFRelease(templateCFString), templateCFString = nullptr;
+						CFStringRef		templateCFString = nullptr;
+						
+						
+						stringResult = UIStrings_Copy(kUIStrings_TerminalSearchNumberOfMatches, templateCFString);
+						if (stringResult.ok())
+						{
+							statusCFString = CFStringCreateWithFormat(kCFAllocatorDefault, nullptr/* options */, templateCFString,
+																		STATIC_CAST(searchResults.size(), unsigned long));
+							CFRelease(templateCFString), templateCFString = nullptr;
+						}
+					}
+					
+					// highlight search results
+					for (std::vector< Terminal_RangeDescription >::const_iterator toResultRange = searchResults.begin();
+							toResultRange != searchResults.end(); ++toResultRange)
+					{
+						TerminalView_CellRange		highlightRange;
+						TerminalView_Result			viewResult = kTerminalView_ResultOK;
+						
+						
+						// translate this result range into cell anchors for highlighting
+						viewResult = TerminalView_TranslateTerminalScreenRange(view, *toResultRange, highlightRange);
+						if (kTerminalView_ResultOK == viewResult)
+						{
+							TerminalView_FindVirtualRange(view, highlightRange);
+						}
 					}
 				}
 				
-				// highlight search results
-				for (std::vector< Terminal_RangeDescription >::const_iterator toResultRange = searchResults.begin();
-						toResultRange != searchResults.end(); ++toResultRange)
+				if (nullptr != statusCFString)
 				{
-					TerminalView_CellRange		highlightRange;
-					TerminalView_Result			viewResult = kTerminalView_ResultOK;
-					
-					
-					// translate this result range into cell anchors for highlighting
-					viewResult = TerminalView_TranslateTerminalScreenRange(view, *toResultRange, highlightRange);
-					if (kTerminalView_ResultOK == viewResult)
-					{
-						TerminalView_FindVirtualRange(view, highlightRange);
-					}
+					SetControlTextWithCFString(inPtr->textStatus, statusCFString);
+					CFRelease(statusCFString), statusCFString = nullptr;
 				}
 			}
 			
-			if (nullptr != statusCFString)
-			{
-				SetControlTextWithCFString(inPtr->textStatus, statusCFString);
-				CFRelease(statusCFString), statusCFString = nullptr;
-			}
+			// remove modal state
+			HIViewSetVisible(inPtr->arrowsSearchProgress, false);
+			ActivateControl(inPtr->buttonSearch);
+			ActivateControl(inPtr->checkboxIgnoreCase);
 		}
-		
-		// remove modal state
-		HIViewSetVisible(inPtr->arrowsSearchProgress, false);
-		ActivateControl(inPtr->buttonSearch);
-		ActivateControl(inPtr->checkboxIgnoreCase);
 	}
 	
 	return result;
@@ -788,7 +800,7 @@ receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 	result = CallNextEventHandler(inHandlerCallRef, inEvent);
 	
 	// initiate find-as-you-type (ignore results for now)
-	(Boolean)initiateSearch(ptr);
+	(Boolean)initiateSearch(ptr, 2/* minimum length; arbitrary */);
 	
 	return result;
 }// receiveFieldChanged
