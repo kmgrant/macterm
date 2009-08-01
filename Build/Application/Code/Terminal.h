@@ -649,7 +649,7 @@ Boolean
 void
 	Terminal_FileCaptureWriteData			(TerminalScreenRef			inScreen,
 											 UInt8 const*				inBuffer,
-											 SInt32						inLength);
+											 size_t						inLength);
 
 //@}
 

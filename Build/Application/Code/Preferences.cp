@@ -957,6 +957,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagCaptureFileCreator,
 									CFSTR("terminal-capture-file-creator-code"), typeCFStringRef,
 									sizeof(OSType), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::create(kPreferences_TagCaptureFileLineEndings,
+									CFSTR("terminal-capture-file-line-endings"), typeCFStringRef,
+									sizeof(Session_LineEnding), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagCommandLine,
 									CFSTR("command-line-token-strings"), typeCFArrayRef,
 									sizeof(CFArrayRef), Quills::Prefs::SESSION);
@@ -6034,6 +6037,42 @@ getGeneralPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagCaptureFileLineEndings:
+					assert(typeCFStringRef == keyValueType);
+					{
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							Session_LineEnding*		storedValuePtr = REINTERPRET_CAST(outDataPtr, Session_LineEnding*);
+							
+							
+							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("cr"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_LineEndingCR;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("lf"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_LineEndingLF;
+							}
+							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("crlf"), kCFCompareCaseInsensitive))
+							{
+								*storedValuePtr = kSession_LineEndingCRLF;
+							}
+							else
+							{
+								result = kPreferences_ResultBadVersionDataNotAvailable;
+							}
+							CFRelease(valueCFString), valueCFString = nullptr;
+						}
+					}
+					break;
+				
 				case kPreferences_TagCopySelectedText:
 				case kPreferences_TagCursorBlinks:
 				case kPreferences_TagCursorMovesPriorToDrops:
@@ -8278,6 +8317,30 @@ setGeneralPreference	(My_ContextInterfacePtr		inContextPtr,
 						assert(typeCFStringRef == keyValueType);
 						setMacTelnetPreference(keyName, stringRef);
 						CFRelease(stringRef), stringRef = nullptr;
+					}
+				}
+				break;
+			
+			case kPreferences_TagCaptureFileLineEndings:
+				{
+					Session_LineEnding const	data = *(REINTERPRET_CAST(inDataPtr, Session_LineEnding const*));
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					switch (data)
+					{
+					case kSession_LineEndingCR:
+						setMacTelnetPreference(keyName, CFSTR("cr"));
+						break;
+					
+					case kSession_LineEndingCRLF:
+						setMacTelnetPreference(keyName, CFSTR("crlf"));
+						break;
+					
+					case kSession_LineEndingLF:
+					default:
+						setMacTelnetPreference(keyName, CFSTR("lf"));
+						break;
 					}
 				}
 				break;

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090731',
     '20090728',
     '20090725',
     '20090716',
@@ -256,6 +257,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090731': [
+        'New low-level preference for changing the preferred line endings of capture files.',
+    ],
     '20090728': [
         'Find dialog no longer initiates a live search for a single character, although this search can be initiated using the button.',
     ],

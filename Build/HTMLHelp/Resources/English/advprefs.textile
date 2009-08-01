@@ -81,6 +81,8 @@ table(deftable).
 (defbottom). |(desc)\2. "Copy with Tab Substitution" uses this many spaces in place of each tab it finds.|
 (deftop). |(key). @terminal-auto-copy-on-select@|(types). _true or false_|
 (defbottom). |(desc)\2. Text is copied to the Clipboard as soon as it is selected via mouse or keyboard.|
+(deftop). |(key). @terminal-capture-file-line-endings@|(types). _string_: @cr@, @lf@ or @crlf@| 
+(defbottom). |(desc)\2. The character(s) used to terminate lines in generated text files.|
 (deftop). |(key). @terminal-cursor-auto-move-on-drop@|(types). _true or false_|
 (defbottom). |(desc)\2. Cursor movement sequences are sent to the terminal prior to text drag-and-drop to position the cursor beneath the mouse.|
 (deftop). |(key). @terminal-cursor-blinking@|(types). _true or false_|

@@ -275,6 +275,8 @@
 	<false/>
 	<key>terminal-capture-file-creator-code</key>
 	<string>ttxt</string>
+	<key>terminal-capture-file-line-endings</key>
+	<string>cr</string>
 	<key>terminal-capture-file-open-with-application</key>
 	<string></string>
 	<key>terminal-capture-folder</key>

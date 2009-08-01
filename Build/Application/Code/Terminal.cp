@@ -659,6 +659,9 @@ public:
 	Boolean
 	returnForceSave		(Preferences_ContextRef);
 	
+	Session_LineEnding
+	returnLineEndings ();
+	
 	UInt16
 	returnScreenColumns		(Preferences_ContextRef);
 	
@@ -709,6 +712,7 @@ public:
 	My_TabStopList						tabSettings;				//!< array of characters representing tab stops; values are either kMy_TabClear
 																	//!  (for most columns), or kMy_TabSet at tab columns
 	
+	Session_LineEnding					captureFileLineEndings;		//!< carriage return and/or line feed
 	SInt16								captureFileRefNum;			//!< file reference number of opened capture file
 	
 	Boolean								bellDisabled;				//!< if true, all bell signals are completely ignored (no audio or visual)
@@ -2821,39 +2825,65 @@ unexpected failures to write all bytes via FSWrite().
 void
 Terminal_FileCaptureWriteData	(TerminalScreenRef	inRef,
 								 UInt8 const*		inBuffer,
-								 SInt32				inLength)
+								 size_t				inLength)
 {
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
 	
 	
 	if ((dataPtr != nullptr) && (dataPtr->captureFileRefNum != 0))
 	{
-		size_t const	kCaptureBufferSize = 512; // bytes
-		UInt8			chunkBuffer[kCaptureBufferSize];
-		UInt8*			chunkBufferIterator = nullptr;
-		UInt8 const*	paramBufferIterator = nullptr;
-		OSStatus		error = noErr;
-		size_t			bytesLeft = inLength;
-		SInt32			bytesInCaptureBuffer = 0;
-		SInt32			chunkByteCount = 0;
+		Session_LineEnding const	kFileLineEndings = dataPtr->captureFileLineEndings;
+		size_t const				kFileEndingLength = (kSession_LineEndingCRLF == kFileLineEndings) ? 2 : 1;
+		size_t const				kCaptureBufferSize = 512;
+		UInt8						chunkBuffer[kCaptureBufferSize];
+		UInt8*						chunkBufferIterator = nullptr;
+		UInt8 const*				paramBufferIterator = nullptr;
+		UInt8						fileEndingData[kFileEndingLength];
+		OSStatus					error = noErr;
+		size_t						bytesLeft = inLength;
+		SInt32						bytesInCaptureBuffer = 0;
+		SInt32						chunkByteCount = 0;
 		
 		
 		// initialize the iterator for the buffer given as input
 		paramBufferIterator = inBuffer;
 		
+		// set up line ending translation
+		// TEMPORARY - this might be set up sooner, for the whole screen,
+		// at the point the line ending setting is made
+		switch (kFileLineEndings)
+		{
+		case kSession_LineEndingCR:
+			fileEndingData[0] = '\015';
+			break;
+		
+		case kSession_LineEndingCRLF:
+			fileEndingData[0] = '\015';
+			fileEndingData[1] = '\012';
+			break;
+		
+		case kSession_LineEndingLF:
+		default:
+			fileEndingData[0] = '\012';
+			break;
+		}
+		
 		// iterate over the input buffer until every byte has been
-		// written, or until FSWrite() returns an error (big problem!)
+		// written, or until FSWrite() returns an error (big problem!);
+		// if the new-line sentinel is seen, skip over the original
+		// new-line sequence and write the preferred sequence instead
 		while ((bytesLeft > 0) && (error == noErr))
 		{
-			// initialize the iterator for the chunk buffer (512 bytes maximum)
+			// initialize the iterator for the chunk buffer
 			chunkBufferIterator = chunkBuffer;
 			bytesInCaptureBuffer = 0; // each time through, initially nothing important in the chunk buffer
 			chunkByteCount = (bytesLeft < kCaptureBufferSize) ? bytesLeft : kCaptureBufferSize; // only copy data that’s there!!!
 			
-			// iterate over the chunk buffer until either no bytes
-			// remain to be written from the input buffer, or until
-			// there is no more capacity in the chunk buffer
-			while (chunkByteCount > 0)
+			// fill in the buffer until a new-line character is reached;
+			// since a mixture of characters is likely in practice, stop
+			// on the first carriage return or line-feed, regardless of
+			// which “should” indicate a new-line
+			while ((chunkByteCount > 0) && ('\015' != *paramBufferIterator) && ('\012' != *paramBufferIterator))
 			{
 				*chunkBufferIterator++ = *paramBufferIterator++;
 				++bytesInCaptureBuffer;
@@ -2867,7 +2897,25 @@ Terminal_FileCaptureWriteData	(TerminalScreenRef	inRef,
 			// were actually successfully written to the file (so,
 			// the mega-count "bytesLeft" takes into account the latter)
 			error = FSWrite(dataPtr->captureFileRefNum, &bytesInCaptureBuffer, chunkBuffer);
-			bytesLeft -= bytesInCaptureBuffer;
+			if (noErr == error)
+			{
+				bytesLeft -= bytesInCaptureBuffer;
+				
+				// if a new-line was found, write the preferred sequence
+				// and skip over the actual sequence from the input
+				if (('\015' == *paramBufferIterator) || ('\012' == *paramBufferIterator))
+				{
+					SInt32		dummySize = kFileEndingLength;
+					
+					
+					error = FSWrite(dataPtr->captureFileRefNum, &dummySize, fileEndingData);
+					while ((bytesLeft > 0) && (('\015' == *paramBufferIterator) || ('\012' == *paramBufferIterator)))
+					{
+						--bytesLeft;
+						++paramBufferIterator;
+					}
+				}
+			}
 		}
 		
 		// this REALLY should trigger a user alert of some sort
@@ -4992,6 +5040,7 @@ scrollbackBuffer(),
 screenBuffer(),
 bytesToEcho(),
 tabSettings(),
+captureFileLineEndings(returnLineEndings()),
 captureFileRefNum(0),
 bellDisabled(false),
 cursorVisible(true),
@@ -5167,6 +5216,28 @@ returnForceSave		(Preferences_ContextRef		inTerminalConfig)
 	
 	return result;
 }// returnForceSave
+
+
+/*!
+Reads "kPreferences_TagCaptureFileLineEndings" from a Preferences
+context, and returns either that value or the default value if
+none was found.
+
+(4.0)
+*/
+Session_LineEnding
+My_ScreenBuffer::
+returnLineEndings ()
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Session_LineEnding		result = kSession_LineEndingLF; // arbitrary default
+	
+	
+	// TEMPORARY - perhaps this routine should take a specific preferences context
+	prefsResult = Preferences_GetData(kPreferences_TagCaptureFileLineEndings,
+										sizeof(result), &result);
+	return result;
+}// returnLineEndings
 
 
 /*!
@@ -8991,7 +9062,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			
 			case 0x09: // control-I; horizontal tab
 				moveCursorRightToNextTabStop(inDataPtr);
-				Terminal_FileCaptureWriteData(inDataPtr->selfRef, c, 1);				
+				Terminal_FileCaptureWriteData(inDataPtr->selfRef, c, 1);
 				break;
 			
 			case 0x0A: // control-J; line feed
@@ -9006,7 +9077,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			
 			case 0x0D: // control-M; carriage return
 				moveCursorLeftToEdge(inDataPtr);
-				Terminal_FileCaptureWriteData(inDataPtr->selfRef, c, 1);				
+				Terminal_FileCaptureWriteData(inDataPtr->selfRef, c, 1);
 				break;
 			
 			case 0x0E: // control-N; shift-out

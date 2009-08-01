@@ -172,6 +172,7 @@ enum
 {
 	kPreferences_TagBellSound							= 'bsnd',	//!< data: "CFStringRef" ("off", or the basename of sound file in a Sounds library folder)
 	kPreferences_TagCaptureFileCreator					= 'cpfc',	//!< data: "OSType"
+	kPreferences_TagCaptureFileLineEndings				= 'cple',	//!< data: "Session_LineEnding"
 	kPreferences_TagCopySelectedText					= 'cpsl',	//!< data: "Boolean"
 	kPreferences_TagCopyTableThreshold					= 'ctth',	//!< data: "UInt16", the number of spaces per tab
 	kPreferences_TagCursorBlinks						= 'curf',	//!< data: "Boolean"

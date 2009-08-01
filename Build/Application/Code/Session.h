@@ -173,14 +173,8 @@ enum Session_DataTarget
 																	//!  the TEK window ID)
 	kSession_DataTargetDumbTerminal = 3,							//!< data goes to a DUMB terminal (data:
 																	//!  TerminalScreenRef)	
-	kSession_DataTargetInteractiveColorRasterGraphicsScreen = 4,	//!< data goes to an ICR window (data: SInt16*,
+	kSession_DataTargetInteractiveColorRasterGraphicsScreen = 4		//!< data goes to an ICR window (data: SInt16*,
 																	//!  the ICR window ID)
-	kSession_DataTargetOpenCaptureFile = 5,							//!< data goes to a capture file (data:
-																	//!  TerminalScreenRef that has had a capture
-																	//!  begun on it)
-	kSession_DataTargetOpenPrinterSpool = 6							//!< data goes to a running print job (data:
-																	//!  TerminalScreenRef that has had a printer
-																	//!  spool begun on it)
 };
 
 /*!
@@ -204,6 +198,17 @@ enum Session_EMACSMetaKey
 	kSession_EMACSMetaKeyOff = 0,				//!< no mapping
 	kSession_EMACSMetaKeyControlCommand = 1,	//!< by holding down control and command keys, meta is simulated
 	kSession_EMACSMetaKeyOption = 2				//!< by holding down option key, meta is simulated
+};
+
+/*!
+Which characters are used for line endings in text files
+(such as file captures and saved selections).
+*/
+enum Session_LineEnding
+{
+	kSession_LineEndingCR			= 0,	//!< Macintosh style, carriage-return character
+	kSession_LineEndingLF			= 1,	//!< Unix style, line-feed character
+	kSession_LineEndingCRLF			= 2		//!< PC style, carriage-return and line-feed characters
 };
 
 /*!

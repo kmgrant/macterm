@@ -280,8 +280,6 @@ struct My_Session
 	My_RasterGraphicsScreenList	targetRasterGraphicsScreens;	// list of open ICR graphics screens, if any
 	My_TerminalScreenList		targetDumbTerminals;		// list of DUMB terminals to which incoming data is being copied
 	My_TerminalScreenList		targetTerminals;			// list of screen buffers to which incoming data is being copied
-	My_CaptureFileList			targetFiles;				// list of open files, if any, to which incoming data is being copied
-	My_PrintJobList				targetPrintJobs;			// list of open printer spool files, if any, to which incoming data is being copied
 	Boolean						vectorGraphicsPageOpensNewWindow;	// true if a TEK PAGE opens a new window instead of clearing the current one
 	VectorInterpreter_Mode		vectorGraphicsCommandSet;	// e.g. TEK 4014 or 4105
 	VectorInterpreter_ID		vectorGraphicsID;			// the ID of the current graphic, if any; see "VectorInterpreter.h"
@@ -405,70 +403,6 @@ IconRef					gSessionDeadIcon () { static IconRef x = createSessionStateDeadIcon(
 
 #pragma mark Functors
 namespace {
-
-/*!
-Appends the specified data to a file currently
-receiving captures from the given screen.
-
-Model of STL Unary Function.
-
-(1.0)
-*/
-#pragma mark captureFileDataWriter
-class captureFileDataWriter:
-public std::unary_function< TerminalScreenRef/* argument */, void/* return */ >
-{
-public:
-	captureFileDataWriter	(UInt8 const*	inBuffer,
-							 size_t			inBufferSize)
-	: _buffer(inBuffer), _bufferSize(inBufferSize)
-	{
-	}
-	
-	void
-	operator()	(TerminalScreenRef	inScreen)
-	{
-		Terminal_FileCaptureWriteData(inScreen, _buffer, _bufferSize);
-	}
-
-protected:
-
-private:
-	UInt8 const*	_buffer;
-	size_t			_bufferSize;
-};
-
-/*!
-Writes the specified data to a print job that
-is currently in progress for the given screen.
-
-Model of STL Unary Function.
-
-(1.0)
-*/
-#pragma mark printJobDataWriter
-class printJobDataWriter:
-public std::unary_function< TerminalScreenRef/* argument */, void/* return */ >
-{
-public:
-	printJobDataWriter	(UInt8 const*	inBuffer,
-						 size_t			inBufferSize)
-	: _buffer(inBuffer), _bufferSize(inBufferSize)
-	{
-	}
-	
-	void
-	operator()	(TerminalScreenRef		inScreen)
-	{
-		//Terminal_PrintingSpool(inScreen, _buffer, &_bufferSize);
-	}
-
-protected:
-
-private:
-	UInt8 const*	_buffer;
-	size_t			_bufferSize;
-};
 
 /*!
 Writes the specified data to a given Interactive
@@ -782,16 +716,6 @@ Session_AddDataTarget	(SessionRef				inRef,
 		}
 		break;
 	
-	case kSession_DataTargetOpenCaptureFile:
-		{
-			My_CaptureFileList::size_type	listSize = ptr->targetFiles.size();
-			
-			
-			ptr->targetFiles.push_back(REINTERPRET_CAST(inTargetData, TerminalScreenRef));
-			assert(ptr->targetFiles.size() == (1 + listSize));
-		}
-		break;
-	
 	default:
 		// ???
 		result = kSession_ResultParameterError;
@@ -958,7 +882,6 @@ Session_Disconnect		(SessionRef		inRef)
 	
 	if (Session_StateIsActive(inRef))
 	{
-		// TEMPORARY - this should be able to use "ptr->targetFiles" and "ptr->targetPrintJobs"
 		for (My_TerminalScreenList::iterator toScreen = ptr->targetTerminals.begin();
 				toScreen != ptr->targetTerminals.end(); ++toScreen)
 		{
@@ -2022,12 +1945,8 @@ Session_ReceiveData		(SessionRef		inRef,
 			// precedence over any installed standard terminals or files
 			if (ptr->targetRasterGraphicsScreens.empty())
 			{
-				// terminals, capture files and print jobs are considered
-				// compatible; write data to all types of targets at the
-				// same time, if any are attached
+				// this is the typical case; send data to a sophisticated terminal emulator
 				std::for_each(ptr->targetTerminals.begin(), ptr->targetTerminals.end(), terminalDataWriter(kBuffer, inByteCount));
-				std::for_each(ptr->targetFiles.begin(), ptr->targetFiles.end(), captureFileDataWriter(kBuffer, inByteCount));
-				std::for_each(ptr->targetPrintJobs.begin(), ptr->targetPrintJobs.end(), printJobDataWriter(kBuffer, inByteCount));
 			}
 			else
 			{
@@ -2103,18 +2022,6 @@ Session_RemoveDataTarget	(SessionRef				inRef,
 															ptr->targetRasterGraphicsScreens.end(),
 															*(REINTERPRET_CAST(inTargetData, SInt16*/* ICR window ID */))),
 												ptr->targetRasterGraphicsScreens.end());
-		break;
-	
-	case kSession_DataTargetOpenCaptureFile:
-		ptr->targetFiles.erase(std::remove(ptr->targetFiles.begin(), ptr->targetFiles.end(),
-											REINTERPRET_CAST(inTargetData, TerminalScreenRef)),
-								ptr->targetFiles.end());
-		break;
-	
-	case kSession_DataTargetOpenPrinterSpool:
-		ptr->targetFiles.erase(std::remove(ptr->targetPrintJobs.begin(), ptr->targetPrintJobs.end(),
-											REINTERPRET_CAST(inTargetData, TerminalScreenRef)),
-								ptr->targetPrintJobs.end());
 		break;
 	
 	default:
@@ -4094,8 +4001,6 @@ targetVectorGraphics(),
 targetRasterGraphicsScreens(),
 targetDumbTerminals(),
 targetTerminals(),
-targetFiles(),
-targetPrintJobs(),
 vectorGraphicsPageOpensNewWindow(true),
 vectorGraphicsCommandSet(kVectorInterpreter_ModeTEK4014), // arbitrary, reset later
 vectorGraphicsID(kVectorInterpreter_InvalidID),
