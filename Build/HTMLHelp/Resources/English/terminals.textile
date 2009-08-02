@@ -115,6 +115,12 @@ You may also open a dialog to choose a specific number of rows
 and columns.  Note that Edit >> Undo can be used to cancel
 dimension changes made with these commands.
 
+If your mouse has a scroll wheel, you can hold down the Option
+key and use the wheel to increase or decrease the terminal rows
+(or terminal columns, if your wheel can be moved horizontally).
+You can also adjust terminal columns by holding down both the
+Option and Command keys when using the vertical scroll wheel.
+
 Depending on your "Window Resize Effect" preferences, dragging
 the size box with or without the Option key will also change the
 terminal screen dimensions.
@@ -124,6 +130,9 @@ h3(#magnify). Magnification
 Use View >> Make Text as Big as Possible to alter a terminal's
 text size based on the display that contains the largest part of
 its window!
+
+If your mouse has a scroll wheel, you can hold down the Control
+key and use the wheel to increase or decrease the text size.
 
 It is also possible to magnify text as you resize a window or
 as you enter Full Screen mode.  The result depends on your
