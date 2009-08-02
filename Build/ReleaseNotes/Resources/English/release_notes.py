@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090802',
     '20090731',
     '20090728',
     '20090725',
@@ -257,6 +258,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090802': [
+        'Fixed clipping problems for various checkboxes in the Preferences window.',
+    ],
     '20090731': [
         'New low-level preference for changing the preferred line endings of capture files.',
     ],
