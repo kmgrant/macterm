@@ -101,7 +101,6 @@
 		0AC6BB350A8C0BA100AFF37A /* TerminalFile.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE26055432A400ACDF3A /* TerminalFile.cp */; };
 		0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE3D055432A400ACDF3A /* Workspace.cp */; };
 		0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AFD12B5087A147D00439BEA /* NIBLoader.cp */; };
-		0AC6BB390A8C0BA100AFF37A /* DuplicateDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A82CE13069A374C0047E652 /* DuplicateDialog.cp */; };
 		0AC6BB3A0A8C0BA100AFF37A /* Initialize.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE8055432A400ACDF3A /* Initialize.cp */; };
 		0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD6055432A400ACDF3A /* FileUtilities.cp */; };
 		0AC6BB3C0A8C0BA100AFF37A /* TerminalView.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE28055432A400ACDF3A /* TerminalView.cp */; };
@@ -469,9 +468,6 @@
 		0A766E0A0FB54D8E00259E56 /* kvp.py */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.python; name = kvp.py; path = Application/PythonCode/pymactelnet/file/kvp.py; sourceTree = "<group>"; };
 		0A7F8CBF0ACF8555009DA83D /* IconForItemRemove.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemRemove.icns; path = Application/Resources/IconForItemRemove.icns; sourceTree = "<group>"; };
 		0A7F8CC00ACF8555009DA83D /* IconForItemAdd.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForItemAdd.icns; path = Application/Resources/IconForItemAdd.icns; sourceTree = "<group>"; };
-		0A82CE13069A374C0047E652 /* DuplicateDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = DuplicateDialog.cp; path = Application/Code/DuplicateDialog.cp; sourceTree = "<group>"; };
-		0A82CE16069A3A030047E652 /* DuplicateDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DuplicateDialog.h; path = Application/Code/DuplicateDialog.h; sourceTree = "<group>"; };
-		0A84509C0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/DuplicateDialog.nib; sourceTree = "<group>"; };
 		0A84509E0554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/FindDialog.nib; sourceTree = "<group>"; };
 		0A8450A60554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/PrefsWindow.nib; sourceTree = "<group>"; };
 		0A8450A80554CB8E00CFF440 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ProgressDialog.nib; sourceTree = "<group>"; };
@@ -744,7 +740,6 @@
 				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
 				0A46FDD1055432A400ACDF3A /* DNR.cp */,
 				0A46FDD2055432A400ACDF3A /* DragAndDrop.cp */,
-				0A82CE13069A374C0047E652 /* DuplicateDialog.cp */,
 				0A46FDD4055432A400ACDF3A /* ErrorAlerts.cp */,
 				0A46FDD5055432A400ACDF3A /* EventLoop.cp */,
 				0A46FDD6055432A400ACDF3A /* FileUtilities.cp */,
@@ -816,7 +811,6 @@
 				0A4603D80554376100ACDF3A /* DialogUtilities.h */,
 				0A4603D90554376100ACDF3A /* DNR.h */,
 				0A4603DA0554376100ACDF3A /* DragAndDrop.h */,
-				0A82CE16069A3A030047E652 /* DuplicateDialog.h */,
 				0A4603DC0554376100ACDF3A /* ErrorAlerts.h */,
 				0A4603E00554376100ACDF3A /* EventLoop.h */,
 				0A4603E10554376100ACDF3A /* FileUtilities.h */,
@@ -991,7 +985,6 @@
 				0ADEFCCC06C34E1B00814772 /* Clipboard.nib */,
 				0A060B29078BA0D500A8BB55 /* ColorBox.nib */,
 				0A35F51A0DEDDAA300F16B03 /* CommandLineCocoa.nib */,
-				0A84509B0554CB8E00CFF440 /* DuplicateDialog.nib */,
 				0A84509D0554CB8E00CFF440 /* FindDialog.nib */,
 				0ACA57C40AEADC5C00B5F482 /* GenericDialog.nib */,
 				0AB64A93057819E5005702BA /* InfoWindow.nib */,
@@ -1420,7 +1413,6 @@
 				0AC6BB350A8C0BA100AFF37A /* TerminalFile.cp in Sources */,
 				0AC6BB360A8C0BA100AFF37A /* Workspace.cp in Sources */,
 				0AC6BB370A8C0BA100AFF37A /* NIBLoader.cp in Sources */,
-				0AC6BB390A8C0BA100AFF37A /* DuplicateDialog.cp in Sources */,
 				0AC6BB3A0A8C0BA100AFF37A /* Initialize.cp in Sources */,
 				0AC6BB3B0A8C0BA100AFF37A /* FileUtilities.cp in Sources */,
 				0AC6BB3C0A8C0BA100AFF37A /* TerminalView.cp in Sources */,
@@ -1590,14 +1582,6 @@
 				0A7530D20580470F00BCC5E4 /* English */,
 			);
 			name = MenuForDockIcon.nib;
-			sourceTree = "<group>";
-		};
-		0A84509B0554CB8E00CFF440 /* DuplicateDialog.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0A84509C0554CB8E00CFF440 /* English */,
-			);
-			name = DuplicateDialog.nib;
 			sourceTree = "<group>";
 		};
 		0A84509D0554CB8E00CFF440 /* FindDialog.nib */ = {
