@@ -202,7 +202,6 @@ struct My_PreferenceProxies
 	UInt16						renderMarginAtColumn; // the value 0 means “no rendering”; column 1 is first column, etc.
 };
 
-typedef std::vector< TerminalView_CellRange >	My_CellRangeList;
 typedef std::vector< CGDeviceColor >			My_CGColorList;
 typedef std::map< UInt16, CGDeviceColor >		My_CGColorByIndex; // a map is necessary because "vector" cannot handle 256 sequential color structures
 typedef std::vector< EventTime >				My_TimeIntervalList;
@@ -381,8 +380,8 @@ struct TerminalView
 			Boolean						isRectangular;	// is the text selection unattached from the left and right screen edges?
 		} selection;
 		
-		My_CellRangeList			searchResults;			// regions matching the most recent Find results
-		My_CellRangeList::iterator	toCurrentSearchResult;	// most recently focused match; MUST change if "searchResults" changes
+		TerminalView_CellRangeList				searchResults;			// regions matching the most recent Find results
+		TerminalView_CellRangeList::iterator	toCurrentSearchResult;	// most recently focused match; MUST change if "searchResults" changes
 	} text;
 	
 	TerminalViewRef		selfRef;				// redundant opaque reference that would resolve to point to this structure
@@ -792,6 +791,10 @@ TerminalView_DisplaySaveSelectedTextUI	(TerminalViewRef	inView)
 Removes all highlighted search results ranges, and clears the
 current search result focus.
 
+This triggers a "kTerminalView_EventScrolling" event so that
+listeners can respond (for instance, to clear a scroll bar that
+is showing the positions of the search results).
+
 \retval kTerminalView_ResultOK
 if no error occurred
 
@@ -810,7 +813,7 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
 	else
 	{
-		for (My_CellRangeList::const_iterator toRange = viewPtr->text.searchResults.begin();
+		for (TerminalView_CellRangeList::const_iterator toRange = viewPtr->text.searchResults.begin();
 				toRange != viewPtr->text.searchResults.end(); ++toRange)
 		{
 			highlightVirtualRange(viewPtr, *toRange, kTerminalTextAttributeSearchResult,
@@ -818,6 +821,9 @@ TerminalView_FindNothing	(TerminalViewRef	inView)
 		}
 		viewPtr->text.searchResults.clear();
 		viewPtr->text.toCurrentSearchResult = viewPtr->text.searchResults.end();
+		
+		// TEMPORARY - efficiency may demand a unique type of event for this
+		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
 	}
 	return result;
 }// FindNothing
@@ -833,6 +839,10 @@ Unlike TerminalView_SelectVirtualRange(), this does not replace
 any current selection: it adds the specified range to a group of
 ranges representing all the search results for the view.  To
 remove ranges, use TerminalView_FindNothing().
+
+This triggers a "kTerminalView_EventScrolling" event so that
+listeners can respond (for instance, to update a scroll bar that
+is showing the positions of the search results).
 
 \retval kTerminalView_ResultOK
 if no error occurred
@@ -862,6 +872,9 @@ TerminalView_FindVirtualRange	(TerminalViewRef				inView,
 		highlightVirtualRange(viewPtr, viewPtr->text.searchResults.back(),
 								kTerminalTextAttributeSearchResult,
 								true/* is highlighted */, true/* redraw */);
+		
+		// TEMPORARY - efficiency may demand a unique type of event for this
+		eventNotifyForView(viewPtr, kTerminalView_EventScrolling, inView/* context */);
 	}
 	return result;
 }// FindVirtualRange
@@ -1145,6 +1158,36 @@ TerminalView_GetRange	(TerminalViewRef			inView,
 	
 	return result;
 }// GetRange
+
+
+/*!
+Returns all of the ranges highlighted as search results, as
+determined by repeated calls to TerminalView_FindVirtualRange()
+(and cleared by TerminalView_FindNothing()).
+
+\retval kTerminalView_ResultOK
+if no error occurred
+
+\retval kTerminalView_ResultInvalidID
+if the view reference is unrecognized
+
+(4.0)
+*/
+TerminalView_Result
+TerminalView_GetSearchResults	(TerminalViewRef				inView,
+								 TerminalView_CellRangeList&	outResults)
+{
+	TerminalView_Result		result = kTerminalView_ResultOK;
+	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), inView);
+	
+	
+	if (nullptr == viewPtr) result = kTerminalView_ResultInvalidID;
+	else
+	{
+		outResults = viewPtr->text.searchResults;
+	}
+	return result;
+}// GetSearchResults
 
 
 /*!

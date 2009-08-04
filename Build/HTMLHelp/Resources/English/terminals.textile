@@ -44,7 +44,13 @@ results.
 
 As you type, every match for the forming pattern is immediately
 found and highlighted, in a special way that does not cancel any
-other text selection in the window.
+other text selection in the window.  In addition, red tick marks
+appear on the scroll bar, showing you where you can find even
+more matches in the scrollback buffer.
+
+For performance reasons, single-character searches are not
+dynamic, although you can still close the dialog to initiate a
+one-character search.
 
 The "A=a" checkbox, again an abbreviated interface, simply makes
 the search case-insensitive.

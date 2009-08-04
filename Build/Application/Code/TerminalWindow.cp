@@ -57,6 +57,7 @@ extern "C"
 #include <CarbonEventHandlerWrap.template.h>
 #include <CarbonEventUtilities.template.h>
 #include <CFRetainRelease.h>
+#include <CGContextSaveRestore.h>
 #include <ColorUtilities.h>
 #include <CommonEventHandlers.h>
 #include <Console.h>
@@ -104,6 +105,15 @@ extern "C"
 
 SInt16 const		kMaximumNumberOfArrangedWindows = 20; // TEMPORARY RESTRICTION
 
+/*!
+These are hacks.  But they make up for the fact that theme
+APIs do not really work very well at all, and it is
+necessary in a few places to figure out how much space is
+occupied by certain parts of a scroll bar.
+*/
+float const		kMy_ScrollBarThumbEndCapSize = 16.0; // pixels
+float const		kMy_ScrollBarThumbMinimumSize = kMy_ScrollBarThumbEndCapSize + 32.0 + kMy_ScrollBarThumbEndCapSize; // pixels
+float const		kMy_ScrollBarArrowHeight = 16.0; // pixels
 
 /*!
 Use with getScrollBarKind() for an unknown scroll bar.
@@ -193,6 +203,7 @@ struct TerminalWindow
 	CommonEventHandlers_WindowResizer	windowResizeHandler;			// responds to changes in the window size
 	CommonEventHandlers_WindowResizer	tabDrawerWindowResizeHandler;	// responds to changes in the tab drawer size
 	CarbonEventHandlerWrap		mouseWheelHandler;						// responds to scroll wheel events
+	CarbonEventHandlerWrap		scrollTickHandler;						// responds to drawing events in the scroll bar
 	EventHandlerUPP				commandUPP;								// wrapper for command callback
 	EventHandlerRef				commandHandler;							// invoked whenever a terminal window command is executed
 	EventHandlerUPP				windowClickActivationUPP;				// wrapper for window background clicks callback
@@ -303,6 +314,7 @@ static void					installUndoScreenDimensionChanges	(TerminalWindowRef);
 static pascal OSStatus		receiveGrowBoxClick				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveMouseWheelEvent			(EventHandlerCallRef, EventRef, void*);
+static pascal OSStatus		receiveScrollBarDraw			(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveTabDragDrop				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveToolbarEvent				(EventHandlerCallRef, EventRef, void*);
 static pascal OSStatus		receiveWindowCursorChange		(EventHandlerCallRef, EventRef, void*);
@@ -1687,6 +1699,7 @@ tabDrawerWindowResizeHandler(),
 mouseWheelHandler(GetApplicationEventTarget(), receiveMouseWheelEvent,
 					CarbonEventSetInClass(CarbonEventClass(kEventClassMouse), kEventMouseWheelMoved),
 					this->selfRef/* user data */),
+scrollTickHandler(), // see createViews()
 commandUPP(nullptr),
 commandHandler(nullptr),
 windowClickActivationUPP(nullptr),
@@ -2750,6 +2763,10 @@ createViews		(TerminalWindowPtr	inPtr)
 	assert_noerr(error);
 	error = HIViewAddSubview(contentView, inPtr->controls.scrollBarV);
 	assert_noerr(error);
+	inPtr->scrollTickHandler.install(GetControlEventTarget(inPtr->controls.scrollBarV), receiveScrollBarDraw,
+										CarbonEventSetInClass(CarbonEventClass(kEventClassControl), kEventControlDraw),
+										inPtr->selfRef/* user data */);
+	assert(inPtr->scrollTickHandler.isInstalled());
 	
 	// create a horizontal scroll bar; the resize event handler initializes its size correctly
 	SetRect(&rect, 0, 0, 0, 0);
@@ -4278,6 +4295,157 @@ receiveMouseWheelEvent	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveMouseWheelEvent
+
+
+/*!
+Embellishes "kEventControlDraw" of "kEventClassControl"
+for scroll bars.
+
+Invoked by Mac OS X whenever a scroll bar needs to be
+rendered; calls through to the default renderer, and
+then adds “on top” tick marks for any active searches.
+
+(4.0)
+*/
+static pascal OSStatus
+receiveScrollBarDraw	(EventHandlerCallRef	inHandlerCallRef,
+						 EventRef				inEvent,
+						 void*					UNUSED_ARGUMENT(inContext))
+{
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	assert(kEventClass == kEventClassControl);
+	assert(kEventKind == kEventControlDraw);
+	OSStatus		result = eventNotHandledErr;
+	HIViewRef		view = nullptr;
+	
+	
+	// first use the system implementation to draw the scroll bar,
+	// because this drawing should appear “on top”
+	(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+	
+	// get the target view
+	result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef, view);
+	
+	// if the view was found, continue
+	if (noErr == result)
+	{
+		TerminalWindowRef	terminalWindow = nullptr;
+		OSStatus			error = noErr;
+		UInt32				actualSize = 0L;
+		CGContextRef		drawingContext = nullptr;
+		
+		
+		// retrieve TerminalWindowRef from the scroll bar
+		error = GetControlProperty(view, AppResources_ReturnCreatorCode(),
+									kConstantsRegistry_ControlPropertyTypeTerminalWindowRef,
+									sizeof(terminalWindow), &actualSize, &terminalWindow);
+		assert_noerr(error);
+		assert(actualSize == sizeof(terminalWindow));
+		
+		// determine the context to draw in with Core Graphics
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamCGContextRef, typeCGContextRef,
+														drawingContext);
+		assert_noerr(result);
+		
+		// if all information can be found, proceed with drawing
+		if ((noErr == error) && (noErr == result) && (nullptr != terminalWindow))
+		{
+			TerminalScreenRef	activeScreen = TerminalWindow_ReturnScreenWithFocus(terminalWindow);
+			TerminalViewRef		activeView = TerminalWindow_ReturnViewWithFocus(terminalWindow);
+			
+			
+			// draw line markers
+			if (nullptr != activeView)
+			{
+				HIRect		floatBounds;
+				
+				
+				// determine boundaries of the content view being drawn;
+				// ensure view-local coordinates
+				HIViewGetBounds(view, &floatBounds);
+				
+				// overlay tick marks on the region, assuming a vertical scroll bar
+				// and using the scale of the underlying terminal screen buffer
+				if (TerminalView_SearchResultsExist(activeView))
+				{
+					TerminalView_CellRangeList	searchResults;
+					SInt32						kNumberOfScrollbackLines = Terminal_ReturnInvisibleRowCount(activeScreen);
+					SInt32						kNumberOfLines = Terminal_ReturnRowCount(activeScreen) + kNumberOfScrollbackLines;
+					TerminalView_Result			viewResult = kTerminalView_ResultOK;
+					
+					
+					viewResult = TerminalView_GetSearchResults(activeView, searchResults);
+					if (kTerminalView_ResultOK == viewResult)
+					{
+						HIRect						trackBounds = floatBounds;
+						ThemeScrollBarThumbStyle	arrowLocations = kThemeScrollBarArrowsSingle;
+						
+						
+						// It would be nice to use HITheme APIs here, but after a few trials
+						// they seem to be largely broken, returning at best a subset of the
+						// required information (e.g. scroll bar boundaries without taking
+						// into account the location of arrows).  Therefore, a series of hacks
+						// is used instead, to approximate where the arrows will be, in order
+						// to avoid drawing on top of any arrows.
+						(OSStatus)GetThemeScrollBarThumbStyle(&arrowLocations);
+						trackBounds.size.height -= 2 * kMy_ScrollBarThumbEndCapSize;
+						trackBounds.origin.y += kMy_ScrollBarThumbEndCapSize;
+						if (kThemeScrollBarArrowsSingle == arrowLocations)
+						{
+							trackBounds.size.height -= 2 * kMy_ScrollBarArrowHeight;
+							trackBounds.origin.y += kMy_ScrollBarArrowHeight;
+						}
+						else
+						{
+							// make space for two arrows at each end, regardless
+							// (since that is a hidden style that many people use)
+							trackBounds.size.height -= 4 * kMy_ScrollBarArrowHeight;
+							trackBounds.origin.y += 2 * kMy_ScrollBarArrowHeight;
+						}
+						
+						// now draw the tick marks
+						{
+							float const				kXPad = 4; // in pixels, arbitrary; reduces line size
+							float const				kYPad = 0; // in pixels, arbitrary
+							float const				kX1 = trackBounds.origin.x + kXPad;
+							float const				kX2 = trackBounds.origin.x + trackBounds.size.width - kXPad - kXPad;
+							float const				kY1 = trackBounds.origin.y + kYPad;
+							float const				kHeight = trackBounds.size.height - kYPad - kYPad;
+							CGContextSaveRestore	_(drawingContext);
+							float					y = 0;
+							SInt32					topRelativeRow = 0;
+							
+							
+							// arbitrary color
+							// TEMPORARY - this could be a preference, even if it is just a low-level setting
+							CGContextSetRGBStrokeColor(drawingContext, 1.0/* red */, 0/* green */, 0/* blue */, 1.0/* alpha */);
+							
+							// draw a line in the scroll bar for each thumb
+							// TEMPORARY - this might be very inefficient to calculate per draw;
+							// it is probably better to detect changes in the search results,
+							// cache the line locations, and then render as often as required
+							CGContextBeginPath(drawingContext);
+							for (TerminalView_CellRangeList::const_iterator toRange = searchResults.begin();
+									toRange != searchResults.end(); ++toRange)
+							{
+								// negative means “in scrollback” and positive means “main screen”, so
+								// translate into a single space
+								topRelativeRow = toRange->first.second + kNumberOfScrollbackLines;
+								
+								y = kY1 + topRelativeRow * (kHeight / STATIC_CAST(kNumberOfLines, Float32));
+								CGContextMoveToPoint(drawingContext, kX1, y);
+								CGContextAddLineToPoint(drawingContext, kX2, y);
+							}
+							CGContextStrokePath(drawingContext);
+						}
+					}
+				}
+			}
+		}
+	}
+	return result;
+}// receiveScrollBarDraw
 
 
 /*!
@@ -6369,7 +6537,7 @@ updateScrollBars	(TerminalWindowPtr		inPtr)
 			(OSStatus)HIViewGetBounds(scrollBarView, &scrollBarBounds);
 			
 			// adjust the numerator to require a larger minimum size for the thumb
-			barScale = 64.0 / (scrollBarBounds.size.height - 32.0/* arbitrary; approximation of space taken by arrows */);
+			barScale = kMy_ScrollBarThumbMinimumSize / (scrollBarBounds.size.height - 2 * kMy_ScrollBarArrowHeight);
 			if (viewScale < barScale)
 			{
 				proposedViewSize = barScale * viewDenominator;

@@ -54,6 +54,7 @@
 
 // standard-C++ includes
 #include <utility>
+#include <vector>
 
 // Mac includes
 #include <Carbon/Carbon.h>
@@ -179,6 +180,8 @@ typedef std::pair< UInt16, SInt32 >							TerminalView_Cell;		//!< order: column
 
 typedef std::pair< TerminalView_Cell, TerminalView_Cell >	TerminalView_CellRange;	//!< order: inclusive start, exclusive end
 
+typedef std::vector< TerminalView_CellRange >				TerminalView_CellRangeList;
+
 
 
 #pragma mark Public Methods
@@ -258,6 +261,10 @@ TerminalView_Result
 void
 	TerminalView_FlashSelection					(TerminalViewRef				inView);
 
+TerminalView_Result
+	TerminalView_GetSearchResults				(TerminalViewRef				inView,
+												 TerminalView_CellRangeList&	outResults);
+
 void
 	TerminalView_GetSelectedTextAsAudio			(TerminalViewRef				inView);
 
@@ -285,6 +292,9 @@ RgnHandle
 
 size_t
 	TerminalView_ReturnSelectedTextSize			(TerminalViewRef				inView);
+
+Boolean
+	TerminalView_SearchResultsExist				(TerminalViewRef				inView);
 
 void
 	TerminalView_SelectBeforeCursorCharacter	(TerminalViewRef				inView);
@@ -493,9 +503,6 @@ void
 void
 	TerminalView_RotateSearchResultHighlight	(TerminalViewRef					inView,
 												 SInt16								inHowFarWhichWay);
-
-Boolean
-	TerminalView_SearchResultsExist				(TerminalViewRef					inView);
 
 TerminalView_Result
 	TerminalView_TranslateTerminalScreenRange	(TerminalViewRef					inView,

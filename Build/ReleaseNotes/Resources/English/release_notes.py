@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090804',
     '20090803',
     '20090802',
     '20090731',
@@ -259,6 +260,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090804': [
+        'Terminal view scroll bars now have tick marks during searches, showing the scrollback positions of all matching words.',
+    ],
     '20090803': [
         'Fixed crashes on Panther when opening the Preferences window.',
     ],
