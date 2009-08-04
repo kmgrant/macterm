@@ -730,7 +730,6 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 						//else
 						{
 							MenuRef		originalMenu = nullptr;
-							MenuRef		duplicateMenu = nullptr;
 							Size		actualSize = 0;
 							
 							
@@ -738,16 +737,99 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 													sizeof(originalMenu), &originalMenu, &actualSize);
 							if (noErr == result)
 							{
-								result = DuplicateMenu(originalMenu, &duplicateMenu);
-								if (noErr == result)
+								OSStatus	error = noErr;
+								Boolean		isSegmentedViewPlaceholder = false;
+								
+								
+								// Although segmented views are available in Mac OS X 10.3,
+								// Interface Builder does not support them on 10.3.  To
+								// work around this extreme annoyance, pop-up menus are
+								// used as placeholders (to contain all relevant details,
+								// like the size, the option titles and their command IDs),
+								// and a property is set to identify the menu as a segmented
+								// view.  These menus are scrapped, and real segmented views
+								// are created instead.  All calling code should use
+								// segmented view APIs when dealing with the “duplicate”.
+								error =  GetControlProperty(inTemplateControl, AppResources_ReturnCreatorCode(),
+															'Segm', sizeof(isSegmentedViewPlaceholder), nullptr/* actual size */,
+															&isSegmentedViewPlaceholder);
+								if ((noErr == error) && (isSegmentedViewPlaceholder))
 								{
-									SetMenuID(duplicateMenu, MenuBar_ReturnUniqueMenuID());
-									InsertMenu(duplicateMenu, kInsertHierarchicalMenu);
-									result = CreatePopupButtonControl(inDestinationWindow, &templateBounds, CFSTR(""),
-																		GetMenuID(duplicateMenu), true/* variable width */,
-																		0/* title width */,
-																		teFlushDefault/* title justification */, normal/* title style */,
-																		&outNewControl);
+									// this is actually supposed to be a segmented view;
+									// use the menu items as the base for all segments,
+									// and make the first item initially selected
+									result = HISegmentedViewCreate(&templateFrame, &outNewControl);
+									if (noErr == result)
+									{
+										UInt32				segmentCount = CountMenuItems(originalMenu);
+										HISegmentBehavior	segmentBehavior = kHISegmentBehaviorRadio;
+										OptionBits			segmentAttributes = 0L;
+										SInt32				segmentValue = 0;
+										UInt32				segmentCommand = 0;
+										CFStringRef			segmentLabelCFString = nullptr;
+										// The content width per segment appears to exclude the padding in the
+										// buttons, and there is no apparent way to automatically determine
+										// what the padding is.  Therefore, a HARD-CODED APPROXIMATION (TEMPORARY)
+										// is used, that should be replaced by a future API call, if an API
+										// becomes available.  This adjustment prevents the segmented view from
+										// having boundaries that exceed the original frame.
+										float				segmentWidth = (templateFrame.size.width - 9 * segmentCount) /
+																			segmentCount;
+										Boolean				segmentEnabled = true;
+										
+										
+										(OSStatus)HISegmentedViewSetSegmentCount(outNewControl, segmentCount);
+										for (UInt32 i = 1; i <= segmentCount; ++i)
+										{
+											error = HISegmentedViewSetSegmentBehavior(outNewControl, i, segmentBehavior);
+											assert_noerr(error);
+											
+											if (1 == i)
+											{
+												error = HISegmentedViewSetSegmentValue(outNewControl, i,
+																						kControlRadioButtonCheckedValue);
+												assert_noerr(error);
+											}
+											
+											error = GetMenuItemCommandID(originalMenu, i, &segmentCommand);
+											assert_noerr(error);
+											error = HISegmentedViewSetSegmentCommand(outNewControl, i, segmentCommand);
+											assert_noerr(error);
+											
+											if (noErr == CopyMenuItemTextAsCFString(originalMenu, i, &segmentLabelCFString))
+											{
+												error = HISegmentedViewSetSegmentLabel(outNewControl, i, segmentLabelCFString);
+												assert_noerr(error);
+												CFRelease(segmentLabelCFString), segmentLabelCFString = nullptr;
+											}
+											
+											error = HISegmentedViewSetSegmentContentWidth(outNewControl, i, false/* auto-calculate */,
+																							segmentWidth);
+											assert_noerr(error);
+											
+											error = HISegmentedViewSetSegmentEnabled(outNewControl, i, segmentEnabled);
+											assert_noerr(error);
+										}
+										(OSStatus)HIViewSetVisible(outNewControl, true);
+									}
+								}
+								else
+								{
+									MenuRef		duplicateMenu = nullptr;
+									
+									
+									// not a segmented view, but a pop-up menu after all
+									result = DuplicateMenu(originalMenu, &duplicateMenu);
+									if (noErr == result)
+									{
+										SetMenuID(duplicateMenu, MenuBar_ReturnUniqueMenuID());
+										InsertMenu(duplicateMenu, kInsertHierarchicalMenu);
+										result = CreatePopupButtonControl(inDestinationWindow, &templateBounds, CFSTR(""),
+																			GetMenuID(duplicateMenu), true/* variable width */,
+																			0/* title width */,
+																			teFlushDefault/* title justification */, normal/* title style */,
+																			&outNewControl);
+									}
 								}
 							}
 						}

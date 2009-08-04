@@ -2,148 +2,131 @@
 <object class="NSIBObjectData">
   <object name="rootObject" class="NSCustomObject" id="1">
   </object>
-  <array count="131" name="allObjects">
-    <object class="IBCarbonStaticText" id="1012">
-      <int name="controlSize">1</int>
-      <string name="title">spaces per tab</string>
-      <string name="viewFrame">290 187 192 13 </string>
-      <string name="bounds">187 290 200 482 </string>
+  <array count="132" name="allObjects">
+    <object class="IBCarbonCheckBox" id="219">
+      <ostype name="controlSignature">MIKE</ostype>
+      <ostype name="command">MIKE</ostype>
+      <string name="title">Menu item key equivalents</string>
+      <string name="viewFrame">228 237 254 18 </string>
+      <string name="bounds">237 228 255 482 </string>
     </object>
-    <object class="IBCarbonStaticText" id="1280">
+    <object class="IBCarbonStaticText" id="1373">
       <string name="title">Pre-action:</string>
-      <string name="viewFrame">253 449 102 16 </string>
-      <string name="bounds">449 253 465 355 </string>
+      <string name="viewFrame">253 -361 102 16 </string>
+      <string name="bounds">-361 253 -345 355 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1269">
+      <string name="title">Green:</string>
+      <string name="viewFrame">87 -245 75 16 </string>
+      <string name="bounds">-245 87 -229 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1325">
+      <string name="title">Normal</string>
+      <string name="viewFrame">112 -347 114 16 </string>
+      <string name="bounds">-347 112 -331 226 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1336">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -112 47 22 </string>
+      <string name="bounds">-112 164 -90 211 </string>
+    </object>
+    <object class="IBCarbonMenuItem" id="1553">
+      <string name="title">▊</string>
+      <boolean name="disabled">TRUE</boolean>
+      <boolean name="notPreviousAlternate">TRUE</boolean>
+      <ostype name="command">CrBl</ostype>
+    </object>
+    <object class="IBCarbonMenuItem" id="1556">
+      <string name="title">┃</string>
+      <boolean name="disabled">TRUE</boolean>
+      <boolean name="notPreviousAlternate">TRUE</boolean>
+      <ostype name="command">CrBV</ostype>
+    </object>
+    <object class="IBCarbonStaticText" id="1316">
+      <string name="title">White:</string>
+      <string name="viewFrame">87 -95 75 16 </string>
+      <string name="bounds">-95 87 -79 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1304">
+      <string name="title">Pre-action:</string>
+      <string name="viewFrame">258 -420 102 16 </string>
+      <string name="bounds">-420 258 -404 360 </string>
+    </object>
+    <object class="IBCarbonMenuItem" id="1220">
+      <string name="title">Default</string>
+      <boolean name="checked">TRUE</boolean>
+      <boolean name="updateSingleItem">TRUE</boolean>
+      <ostype name="command">BpBl</ostype>
+    </object>
+    <object class="IBCarbonStaticText" id="1231">
+      <string name="title">Red:</string>
+      <string name="viewFrame">87 -275 75 16 </string>
+      <string name="bounds">-275 87 -259 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1374">
+      <string name="title">White:</string>
+      <string name="viewFrame">87 -101 75 16 </string>
+      <string name="bounds">-101 87 -85 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1284">
+      <string name="title">Post-action:</string>
+      <string name="viewFrame">258 -394 102 16 </string>
+      <string name="bounds">-394 258 -378 360 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1001">
+      <int name="fontStyle">107</int>
+      <string name="title">Window Stacking Origin:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 55 200 16 </string>
+      <string name="bounds">55 20 71 220 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1318">
+      <string name="title">Blue:</string>
+      <string name="viewFrame">87 -185 75 16 </string>
+      <string name="bounds">-185 87 -169 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1414">
+      <string name="title">Yellow:</string>
+      <string name="viewFrame">87 -221 75 16 </string>
+      <string name="bounds">-221 87 -205 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1364">
+      <string name="title">Cyan:</string>
+      <string name="viewFrame">87 -131 75 16 </string>
+      <string name="bounds">-131 87 -115 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1366">
+      <string name="title">Pre-action:</string>
+      <string name="viewFrame">258 -426 102 16 </string>
+      <string name="bounds">-426 258 -410 360 </string>
+    </object>
+    <object class="IBCarbonCheckBox" id="223">
+      <ostype name="controlSignature">DCNW</ostype>
+      <ostype name="command">DCNW</ostype>
+      <string name="title">No automatic new windows</string>
+      <string name="viewFrame">228 43 254 18 </string>
+      <string name="bounds">43 228 61 482 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1287">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -136 47 22 </string>
+      <string name="bounds">-136 164 -114 211 </string>
+    </object>
+    <object class="IBCarbonMenuItem" id="1554">
+      <string name="title">│</string>
+      <boolean name="disabled">TRUE</boolean>
+      <boolean name="notPreviousAlternate">TRUE</boolean>
+      <ostype name="command">CrVB</ostype>
     </object>
     <object class="IBCarbonStaticText" id="1371">
       <string name="title">Close window:</string>
-      <string name="viewFrame">67 643 173 16 </string>
-      <string name="bounds">643 67 659 240 </string>
+      <string name="viewFrame">67 -361 173 16 </string>
+      <string name="bounds">-361 67 -345 240 </string>
     </object>
-    <object class="IBCarbonStaticText" id="1241">
-      <int name="fontStyle">107</int>
-      <string name="title">Scripts Menu:</string>
-      <int name="justification">-1</int>
-      <string name="viewFrame">20 20 200 16 </string>
-      <string name="bounds">20 20 36 220 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1350">
-      <string name="title">Close window:</string>
-      <string name="viewFrame">72 708 173 16 </string>
-      <string name="bounds">708 72 724 245 </string>
-    </object>
-    <object class="IBCarbonRadioButton" id="1448">
-      <ostype name="controlSignature">WRFS</ostype>
-      <ostype name="command">WRFS</ostype>
-      <string name="title">Text size</string>
-      <string name="viewFrame">228 110 254 18 </string>
-      <string name="bounds">110 228 128 482 </string>
-    </object>
-    <object class="IBCarbonRadioButton" id="1520">
-      <ostype name="controlSignature">CNLI</ostype>
-      <ostype name="command">CNLI</ostype>
-      <string name="title">Log-In Shell</string>
-      <string name="viewFrame">228 262 254 18 </string>
-      <string name="bounds">262 228 280 482 </string>
-    </object>
-    <object class="IBCarbonWindow" id="1323">
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="hasCollapseBox">FALSE</boolean>
-      <boolean name="hasHorizontalZoom">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="hasVerticalZoom">FALSE</boolean>
-      <boolean name="liveResize">TRUE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <boolean name="isConstrained">FALSE</boolean>
-      <int name="themeBrush">1</int>
-      <int name="windowPosition">1</int>
-      <string name="title">Kiosk</string>
-      <object name="rootControl" class="IBCarbonRootControl" id="1324">
-        <string name="viewFrame">0 0 502 298 </string>
-        <array count="11" name="subviews">
-          <object class="IBCarbonStaticText" id="1418">
-            <int name="fontStyle">107</int>
-            <string name="title">Access Control:</string>
-            <int name="justification">-1</int>
-            <string name="viewFrame">20 20 200 16 </string>
-            <string name="bounds">20 20 36 220 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="1422">
-            <int name="fontStyle">107</int>
-            <string name="title">Deactivation:</string>
-            <int name="justification">-1</int>
-            <string name="viewFrame">20 233 200 16 </string>
-            <string name="bounds">233 20 249 220 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="1424">
-            <ostype name="controlSignature">HTDK</ostype>
-            <int name="controlSize">1</int>
-            <string name="title">You can also press Option-Esc or use the toolbar to turn off Full Screen.</string>
-            <string name="viewFrame">248 252 234 26 </string>
-            <string name="bounds">252 248 278 482 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="1471">
-            <ostype name="controlSignature">HTSG</ostype>
-            <int name="controlSize">1</int>
-            <string name="title">Attempts to make your full-screen terminals look even more like real terminal devices.</string>
-            <string name="viewFrame">248 162 234 39 </string>
-            <string name="bounds">162 248 201 482 </string>
-          </object>
-          <object class="IBCarbonCheckBox" id="1419">
-            <ostype name="controlSignature">XKSM</ostype>
-            <string name="title">Show menu bar on demand</string>
-            <string name="viewFrame">228 19 254 18 </string>
-            <string name="bounds">19 228 37 482 </string>
-          </object>
-          <object class="IBCarbonCheckBox" id="1420">
-            <ostype name="controlSignature">XKSS</ostype>
-            <int name="initialState">1</int>
-            <string name="title">Show scroll bar</string>
-            <string name="viewFrame">228 43 254 18 </string>
-            <string name="bounds">43 228 61 482 </string>
-          </object>
-          <object class="IBCarbonCheckBox" id="1549">
-            <ostype name="controlSignature">XKWF</ostype>
-            <int name="initialState">1</int>
-            <string name="title">Show window frame</string>
-            <string name="viewFrame">228 67 254 18 </string>
-            <string name="bounds">67 228 85 482 </string>
-          </object>
-          <object class="IBCarbonCheckBox" id="1421">
-            <ostype name="controlSignature">XKFQ</ostype>
-            <string name="helpTagText">Disabling Force Quit makes it harder for users to interact with the computer without using the kiosk.</string>
-            <int name="initialState">1</int>
-            <string name="title">Allow “Force Quit” command</string>
-            <string name="viewFrame">228 91 254 18 </string>
-            <string name="bounds">91 228 109 482 </string>
-          </object>
-          <object class="IBCarbonCheckBox" id="1470">
-            <ostype name="controlSignature">XKFX</ostype>
-            <string name="helpTagText">Disabling Force Quit makes it harder for users to interact with the computer without using the kiosk.</string>
-            <int name="initialState">1</int>
-            <string name="title">Superfluous graphical effects</string>
-            <string name="viewFrame">228 140 254 18 </string>
-            <string name="bounds">140 228 158 482 </string>
-          </object>
-          <object class="IBCarbonCheckBox" id="1425">
-            <ostype name="controlSignature">XKFW</ostype>
-            <string name="helpTagText">Enables a floating window in Kiosk Mode that can be used to disable the kiosk.</string>
-            <int name="initialState">1</int>
-            <string name="title">Display an “off switch” window</string>
-            <string name="viewFrame">228 232 254 18 </string>
-            <string name="bounds">232 228 250 482 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="1473">
-            <int name="fontStyle">107</int>
-            <string name="title">Effects:</string>
-            <int name="justification">-1</int>
-            <string name="viewFrame">20 141 200 16 </string>
-            <string name="bounds">141 20 157 220 </string>
-          </object>
-        </array>
-        <string name="bounds">0 0 298 502 </string>
-      </object>
-      <string name="windowRect">345 304 643 806 </string>
-      <string name="ScreenRectAtEncodeTime">0 110 1178 1920 </string>
+    <object class="IBCarbonStaticText" id="1349">
+      <string name="title">Blue:</string>
+      <string name="viewFrame">87 -191 75 16 </string>
+      <string name="bounds">-191 87 -175 162 </string>
     </object>
     <object class="IBCarbonRootControl" id="1029">
       <string name="viewFrame">0 0 502 324 </string>
@@ -155,13 +138,7 @@
           <string name="viewFrame">20 221 200 16 </string>
           <string name="bounds">221 20 237 220 </string>
         </object>
-        <object class="IBCarbonStaticText" id="1001">
-          <int name="fontStyle">107</int>
-          <string name="title">Window Stacking Origin:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 55 200 16 </string>
-          <string name="bounds">55 20 71 220 </string>
-        </object>
+        <reference idRef="1001"/>
         <object class="IBCarbonStaticText" id="1030">
           <int name="fontStyle">107</int>
           <string name="title">Copy With Tab Substitution:</string>
@@ -169,7 +146,12 @@
           <string name="viewFrame">20 185 200 16 </string>
           <string name="bounds">185 20 201 220 </string>
         </object>
-        <reference idRef="1012"/>
+        <object class="IBCarbonStaticText" id="1012">
+          <int name="controlSize">1</int>
+          <string name="title">spaces per tab</string>
+          <string name="viewFrame">291 187 192 13 </string>
+          <string name="bounds">187 291 200 483 </string>
+        </object>
         <object class="IBCarbonStaticText" id="1002">
           <ostype name="controlSignature">LCrs</ostype>
           <int name="fontStyle">107</int>
@@ -190,50 +172,8 @@
           <ostype name="controlSignature">HTWR</ostype>
           <int name="controlSize">1</int>
           <string name="title">Hold down Option to temporarily switch to the other effect, when resizing windows or entering Full Screen.</string>
-          <string name="viewFrame">228 135 254 39 </string>
-          <string name="bounds">135 228 174 482 </string>
-        </object>
-        <object class="IBCarbonSegmentView" id="1522">
-          <ostype name="controlSignature">CShp</ostype>
-          <array count="5" name="segments">
-            <object class="IBCarbonSegment" id="1523">
-              <ostype name="command">CrBl</ostype>
-              <int name="behavior">0</int>
-              <boolean name="autoWidth">FALSE</boolean>
-              <float name="width">30.000000</float>
-              <string name="label">▊</string>
-            </object>
-            <object class="IBCarbonSegment" id="1524">
-              <ostype name="command">CrVB</ostype>
-              <int name="behavior">0</int>
-              <boolean name="autoWidth">FALSE</boolean>
-              <float name="width">30.000000</float>
-              <string name="label">│</string>
-            </object>
-            <object class="IBCarbonSegment" id="1525">
-              <ostype name="command">CrUn</ostype>
-              <int name="behavior">0</int>
-              <boolean name="autoWidth">FALSE</boolean>
-              <float name="width">30.000000</float>
-              <string name="label">▁</string>
-            </object>
-            <object class="IBCarbonSegment" id="1526">
-              <ostype name="command">CrBV</ostype>
-              <int name="behavior">0</int>
-              <boolean name="autoWidth">FALSE</boolean>
-              <float name="width">30.000000</float>
-              <string name="label">┃</string>
-            </object>
-            <object class="IBCarbonSegment" id="1527">
-              <ostype name="command">CrBU</ostype>
-              <int name="behavior">0</int>
-              <boolean name="autoWidth">FALSE</boolean>
-              <float name="width">30.000000</float>
-              <string name="label">▂</string>
-            </object>
-          </array>
-          <string name="viewFrame">226 17 184 24 </string>
-          <string name="bounds">17 226 41 410 </string>
+          <string name="viewFrame">229 135 253 39 </string>
+          <string name="bounds">135 229 174 482 </string>
         </object>
         <object class="IBCarbonCheckBox" id="1013">
           <ostype name="controlSignature">CurF</ostype>
@@ -249,12 +189,18 @@
           <string name="viewFrame">228 89 254 18 </string>
           <string name="bounds">89 228 107 482 </string>
         </object>
-        <reference idRef="1448"/>
+        <object class="IBCarbonRadioButton" id="1448">
+          <ostype name="controlSignature">WRFS</ostype>
+          <ostype name="command">WRFS</ostype>
+          <string name="title">Text size</string>
+          <string name="viewFrame">228 110 254 18 </string>
+          <string name="bounds">110 228 128 482 </string>
+        </object>
         <object class="IBCarbonEditText" id="1003">
           <ostype name="controlSignature">CUST</ostype>
           <boolean name="isUnicode">TRUE</boolean>
-          <string name="viewFrame">231 185 48 16 </string>
-          <string name="bounds">185 231 201 279 </string>
+          <string name="viewFrame">232 185 48 16 </string>
+          <string name="bounds">185 232 201 280 </string>
         </object>
         <object class="IBCarbonRadioButton" id="1006">
           <ostype name="controlSignature">CNDf</ostype>
@@ -270,7 +216,13 @@
           <string name="viewFrame">228 241 254 18 </string>
           <string name="bounds">241 228 259 482 </string>
         </object>
-        <reference idRef="1520"/>
+        <object class="IBCarbonRadioButton" id="1520">
+          <ostype name="controlSignature">CNLI</ostype>
+          <ostype name="command">CNLI</ostype>
+          <string name="title">Log-In Shell</string>
+          <string name="viewFrame">228 262 254 18 </string>
+          <string name="bounds">262 228 280 482 </string>
+        </object>
         <object class="IBCarbonRadioButton" id="1007">
           <ostype name="controlSignature">CNDg</ostype>
           <ostype name="command">CNDg</ostype>
@@ -282,113 +234,457 @@
           <ostype name="command">WLoc</ostype>
           <int name="iconPosition">0</int>
           <string name="title">Set…</string>
-          <string name="viewFrame">228 53 70 20 </string>
-          <string name="bounds">53 228 73 298 </string>
+          <string name="viewFrame">229 53 70 20 </string>
+          <string name="bounds">53 229 73 299 </string>
+        </object>
+        <object class="IBCarbonPopupButton" id="1551">
+          <ostype name="controlSignature">CShp</ostype>
+          <object name="menu" class="IBCarbonMenu" id="1552">
+            <array count="5" name="items">
+              <reference idRef="1553"/>
+              <reference idRef="1554"/>
+              <object class="IBCarbonMenuItem" id="1555">
+                <string name="title">▁</string>
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <ostype name="command">CrUn</ostype>
+              </object>
+              <reference idRef="1556"/>
+              <object class="IBCarbonMenuItem" id="1557">
+                <string name="title">▂</string>
+                <boolean name="disabled">TRUE</boolean>
+                <boolean name="notPreviousAlternate">TRUE</boolean>
+                <ostype name="command">CrBU</ostype>
+              </object>
+            </array>
+          </object>
+          <null name="title"/>
+          <int name="titleJustification">0</int>
+          <dictionary count="4" name="auxiliaryDictionary">
+            <string>creators</string>
+            <array count="1">
+              <string>KevG</string>
+            </array>
+            <string>tags</string>
+            <array count="1">
+              <string>Segm</string>
+            </array>
+            <string>types</string>
+            <array count="1">
+              <string>2</string>
+            </array>
+            <string>values</string>
+            <array count="1">
+              <string>true</string>
+            </array>
+          </dictionary>
+          <string name="viewFrame">228 18 182 20 </string>
+          <string name="bounds">18 228 38 410 </string>
         </object>
       </array>
       <string name="bounds">0 0 324 502 </string>
     </object>
-    <object class="IBCarbonStaticText" id="1414">
-      <string name="title">Yellow:</string>
-      <string name="viewFrame">87 503 75 16 </string>
-      <string name="bounds">503 87 519 162 </string>
+    <object class="IBCarbonCheckBox" id="1465">
+      <ostype name="controlSignature">VisB</ostype>
+      <ostype name="command">VisB</ostype>
+      <string name="title">Always use visual bell</string>
+      <string name="viewFrame">228 46 254 18 </string>
+      <string name="bounds">46 228 64 482 </string>
     </object>
-    <object class="IBCarbonRootControl" id="207">
-      <string name="viewFrame">0 0 502 323 </string>
-      <array count="13" name="subviews">
-        <object class="IBCarbonStaticText" id="1454">
-          <int name="fontStyle">107</int>
-          <string name="title">Keyboard:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 238 200 16 </string>
-          <string name="bounds">238 20 254 220 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1456">
-          <int name="fontStyle">107</int>
-          <string name="title">Text:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 117 200 16 </string>
-          <string name="bounds">117 20 133 220 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1458">
-          <int name="fontStyle">107</int>
-          <string name="title">Menus and Windows:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 20 200 16 </string>
-          <string name="bounds">20 20 36 220 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="215">
-          <ostype name="controlSignature">DACW</ostype>
-          <ostype name="command">DACW</ostype>
-          <string name="title">No window close on process exit</string>
-          <string name="viewFrame">228 19 254 18 </string>
-          <string name="bounds">19 228 37 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="223">
-          <ostype name="controlSignature">DCNW</ostype>
-          <ostype name="command">DCNW</ostype>
-          <string name="title">No automatic new windows</string>
-          <string name="viewFrame">228 43 254 18 </string>
-          <string name="bounds">43 228 61 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="220">
-          <ostype name="controlSignature">ISel</ostype>
-          <ostype name="command">ISel</ostype>
-          <string name="title">Invert selected text</string>
-          <string name="viewFrame">228 116 254 18 </string>
-          <string name="bounds">116 228 134 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="213">
-          <ostype name="controlSignature">ACST</ostype>
-          <ostype name="command">ACST</ostype>
-          <string name="title">Automatically Copy selected text</string>
-          <string name="viewFrame">228 140 254 18 </string>
-          <string name="bounds">140 228 158 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="214">
-          <ostype name="controlSignature">MCTD</ostype>
-          <ostype name="command">MCTD</ostype>
-          <string name="title">Move cursor to text drop location</string>
-          <string name="viewFrame">228 164 254 18 </string>
-          <string name="bounds">164 228 182 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="221">
-          <ostype name="controlSignature">DDBW</ostype>
-          <ostype name="command">DDBW</ostype>
-          <string name="title">Don’t dim background terminal text</string>
-          <string name="viewFrame">228 188 254 18 </string>
-          <string name="bounds">188 228 206 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="219">
-          <ostype name="controlSignature">MIKE</ostype>
-          <ostype name="command">MIKE</ostype>
-          <string name="title">Menu item key equivalents</string>
-          <string name="viewFrame">228 237 254 18 </string>
-          <string name="bounds">237 228 255 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="218">
-          <ostype name="controlSignature">MBQE</ostype>
-          <ostype name="command">MBQE</ostype>
-          <string name="title">Treat backquote key like Escape</string>
-          <string name="viewFrame">228 261 254 18 </string>
-          <string name="bounds">261 228 279 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="1499">
-          <ostype name="controlSignature">FcFM</ostype>
-          <ostype name="command">MBQE</ostype>
-          <string name="title">Focus follows mouse</string>
-          <string name="viewFrame">228 285 254 18 </string>
-          <string name="bounds">285 228 303 482 </string>
-        </object>
-        <object class="IBCarbonCheckBox" id="1540">
-          <ostype name="controlSignature">McMn</ostype>
-          <ostype name="command">McMn</ostype>
-          <string name="title">Display a macros menu</string>
-          <string name="viewFrame">228 67 254 18 </string>
-          <string name="bounds">67 228 85 482 </string>
+    <object class="IBCarbonStaticText" id="1363">
+      <string name="title">Close window:</string>
+      <string name="viewFrame">72 -426 173 16 </string>
+      <string name="bounds">-426 72 -410 245 </string>
+    </object>
+    <reference idRef="1448"/>
+    <object class="IBCarbonStaticText" id="1280">
+      <string name="title">Pre-action:</string>
+      <string name="viewFrame">253 -355 102 16 </string>
+      <string name="bounds">-355 253 -339 355 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1335">
+      <string name="title">Pre-action:</string>
+      <string name="viewFrame">258 -426 102 16 </string>
+      <string name="bounds">-426 258 -410 360 </string>
+    </object>
+    <reference idRef="1012"/>
+    <object class="IBCarbonRadioButton" id="1216">
+      <ostype name="controlSignature">NotB</ostype>
+      <ostype name="command">NotB</ostype>
+      <string name="title">…and bounce the icon</string>
+      <string name="viewFrame">228 193 254 18 </string>
+      <string name="bounds">193 228 211 482 </string>
+    </object>
+    <object class="IBCarbonRadioButton" id="1224">
+      <ostype name="controlSignature">NotD</ostype>
+      <ostype name="command">NotD</ostype>
+      <string name="title">Modify the Dock icon</string>
+      <string name="viewFrame">228 172 254 18 </string>
+      <string name="bounds">172 228 190 482 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1462">
+      <int name="fontStyle">107</int>
+      <string name="title">Background Notification:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 152 200 16 </string>
+      <string name="bounds">152 20 168 220 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1473">
+      <int name="fontStyle">107</int>
+      <string name="title">Effects:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 141 200 16 </string>
+      <string name="bounds">141 20 157 220 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1396">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -322 47 22 </string>
+      <string name="bounds">-322 164 -300 211 </string>
+    </object>
+    <object class="IBCarbonWindow" id="1212">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="isConstrained">FALSE</boolean>
+      <int name="themeBrush">1</int>
+      <int name="windowPosition">1</int>
+      <string name="title">Notification</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="1226">
+        <string name="viewFrame">0 0 502 252 </string>
+        <array count="10" name="subviews">
+          <object class="IBCarbonStaticText" id="1217">
+            <ostype name="controlSignature">LSnd</ostype>
+            <int name="fontStyle">107</int>
+            <string name="title">Terminal Bell:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">20 20 200 16 </string>
+            <string name="bounds">20 20 36 220 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="1219">
+            <ostype name="controlSignature">HTBT</ostype>
+            <int name="controlSize">1</int>
+            <string name="title">When a bell sounds in an inactive window, a visual appears automatically.</string>
+            <string name="viewFrame">248 68 234 26 </string>
+            <string name="bounds">68 248 94 482 </string>
+          </object>
+          <reference idRef="1462"/>
+          <object class="IBCarbonPopupButton" id="1218">
+            <ostype name="controlSignature">BSnd</ostype>
+            <int name="selectedItem">2</int>
+            <object name="menu" class="IBCarbonMenu" id="1222">
+              <string name="title">Popup:</string>
+              <array count="2" name="items">
+                <object class="IBCarbonMenuItem" id="1468">
+                  <string name="title">Off</string>
+                  <boolean name="updateSingleItem">TRUE</boolean>
+                  <ostype name="command">NoBp</ostype>
+                </object>
+                <reference idRef="1220"/>
+              </array>
+            </object>
+            <string name="viewFrame">228 18 199 20 </string>
+            <string name="bounds">18 228 38 427 </string>
+          </object>
+          <reference idRef="1465"/>
+          <object class="IBCarbonCheckBox" id="1227">
+            <ostype name="controlSignature">BelN</ostype>
+            <ostype name="command">MarB</ostype>
+            <string name="helpTagText">What to do if MacTelnet is not the active application when a terminal bell occurs.</string>
+            <string name="title">Background notification on bell</string>
+            <string name="viewFrame">228 102 254 18 </string>
+            <string name="bounds">102 228 120 482 </string>
+          </object>
+          <object class="IBCarbonRadioButton" id="1225">
+            <ostype name="controlSignature">NotN</ostype>
+            <ostype name="command">NotN</ostype>
+            <string name="title">None</string>
+            <string name="viewFrame">228 151 254 18 </string>
+            <string name="bounds">151 228 169 482 </string>
+          </object>
+          <reference idRef="1224"/>
+          <reference idRef="1216"/>
+          <object class="IBCarbonRadioButton" id="1213">
+            <ostype name="controlSignature">NotM</ostype>
+            <ostype name="command">NotM</ostype>
+            <string name="title">…and display a message</string>
+            <string name="viewFrame">228 214 254 18 </string>
+            <string name="bounds">214 228 232 482 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 252 502 </string>
+      </object>
+      <string name="windowRect">542 575 794 1077 </string>
+      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1404">
+      <string name="title">Magenta:</string>
+      <string name="viewFrame">87 -161 75 16 </string>
+      <string name="bounds">-161 87 -145 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1454">
+      <int name="fontStyle">107</int>
+      <string name="title">Keyboard:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 238 200 16 </string>
+      <string name="bounds">238 20 254 220 </string>
+    </object>
+    <reference idRef="1468"/>
+    <reference idRef="1552"/>
+    <object class="IBCarbonStaticText" id="1357">
+      <string name="title">Green:</string>
+      <string name="viewFrame">87 -251 75 16 </string>
+      <string name="bounds">-251 87 -235 162 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1279">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -196 47 22 </string>
+      <string name="bounds">-196 164 -174 211 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1328">
+      <string name="title">Red:</string>
+      <string name="viewFrame">87 -281 75 16 </string>
+      <string name="bounds">-281 87 -265 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1267">
+      <string name="title">Magenta:</string>
+      <string name="viewFrame">87 -155 75 16 </string>
+      <string name="bounds">-155 87 -139 162 </string>
+    </object>
+    <object class="IBCarbonIcon" id="1298">
+      <int name="contentType">1</int>
+      <int name="contentResID">203</int>
+      <int name="creator">0</int>
+      <string name="viewFrame">182 58 32 32 </string>
+      <string name="bounds">58 182 90 214 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1369">
+      <string name="title">Black:</string>
+      <string name="viewFrame">87 -311 75 16 </string>
+      <string name="bounds">-311 87 -295 162 </string>
+    </object>
+    <reference idRef="1551"/>
+    <reference idRef="1450"/>
+    <object class="IBCarbonCheckBox" id="1499">
+      <ostype name="controlSignature">FcFM</ostype>
+      <ostype name="command">MBQE</ostype>
+      <string name="title">Focus follows mouse</string>
+      <string name="viewFrame">228 285 254 18 </string>
+      <string name="bounds">285 228 303 482 </string>
+    </object>
+    <reference idRef="1218"/>
+    <object class="IBCarbonStaticText" id="1252">
+      <ostype name="controlSignature">HTSM</ostype>
+      <int name="controlSize">1</int>
+      <string name="title">This menu has a special icon, and contains items in your Scripts Menu Items folder.</string>
+      <string name="viewFrame">228 46 254 39 </string>
+      <string name="bounds">46 228 85 482 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1368">
+      <string name="title">Post-action:</string>
+      <string name="viewFrame">258 -400 102 16 </string>
+      <string name="bounds">-400 258 -384 360 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1241">
+      <int name="fontStyle">107</int>
+      <string name="title">Scripts Menu:</string>
+      <int name="justification">-1</int>
+      <string name="viewFrame">20 20 200 16 </string>
+      <string name="bounds">20 20 36 220 </string>
+    </object>
+    <reference idRef="1226"/>
+    <object class="IBCarbonCheckBox" id="1425">
+      <ostype name="controlSignature">XKFW</ostype>
+      <string name="helpTagText">Enables a floating window in Kiosk Mode that can be used to disable the kiosk.</string>
+      <int name="initialState">1</int>
+      <string name="title">Display an “off switch” window</string>
+      <string name="viewFrame">228 232 254 18 </string>
+      <string name="bounds">232 228 250 482 </string>
+    </object>
+    <object class="IBCarbonRootControl" id="1311">
+      <string name="viewFrame">0 0 502 110 </string>
+      <array count="4" name="subviews">
+        <reference idRef="1241"/>
+        <reference idRef="1252"/>
+        <reference idRef="1298"/>
+        <object class="IBCarbonButton" id="1306">
+          <ostype name="controlSignature">OSMI</ostype>
+          <ostype name="command">OSMI</ostype>
+          <string name="title">Open Scripts Menu Items Folder…</string>
+          <string name="viewFrame">228 18 254 20 </string>
+          <string name="bounds">18 228 38 482 </string>
         </object>
       </array>
-      <string name="bounds">0 0 323 502 </string>
+      <string name="bounds">0 0 110 502 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1471">
+      <ostype name="controlSignature">HTSG</ostype>
+      <int name="controlSize">1</int>
+      <string name="title">Attempts to make your full-screen terminals look even more like real terminal devices.</string>
+      <string name="viewFrame">248 162 234 39 </string>
+      <string name="bounds">162 248 201 482 </string>
+    </object>
+    <reference idRef="1225"/>
+    <object class="IBCarbonCheckBox" id="1421">
+      <ostype name="controlSignature">XKFQ</ostype>
+      <string name="helpTagText">Disabling Force Quit makes it harder for users to interact with the computer without using the kiosk.</string>
+      <int name="initialState">1</int>
+      <string name="title">Allow “Force Quit” command</string>
+      <string name="viewFrame">228 91 254 18 </string>
+      <string name="bounds">91 228 109 482 </string>
+    </object>
+    <reference idRef="1007"/>
+    <object class="IBCarbonStaticText" id="1268">
+      <string name="title">Close window:</string>
+      <string name="viewFrame">72 -420 173 16 </string>
+      <string name="bounds">-420 72 -404 245 </string>
+    </object>
+    <object class="IBCarbonWindow" id="208">
+      <boolean name="receiveUpdates">FALSE</boolean>
+      <boolean name="hasCollapseBox">FALSE</boolean>
+      <boolean name="hasHorizontalZoom">FALSE</boolean>
+      <boolean name="isResizable">FALSE</boolean>
+      <boolean name="hasVerticalZoom">FALSE</boolean>
+      <boolean name="liveResize">TRUE</boolean>
+      <boolean name="compositing">TRUE</boolean>
+      <boolean name="isConstrained">FALSE</boolean>
+      <int name="themeBrush">1</int>
+      <int name="windowPosition">1</int>
+      <string name="title">Options</string>
+      <object name="rootControl" class="IBCarbonRootControl" id="207">
+        <string name="viewFrame">0 0 502 323 </string>
+        <array count="13" name="subviews">
+          <reference idRef="1454"/>
+          <object class="IBCarbonStaticText" id="1456">
+            <int name="fontStyle">107</int>
+            <string name="title">Text:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">20 117 200 16 </string>
+            <string name="bounds">117 20 133 220 </string>
+          </object>
+          <object class="IBCarbonStaticText" id="1458">
+            <int name="fontStyle">107</int>
+            <string name="title">Menus and Windows:</string>
+            <int name="justification">-1</int>
+            <string name="viewFrame">20 20 200 16 </string>
+            <string name="bounds">20 20 36 220 </string>
+          </object>
+          <object class="IBCarbonCheckBox" id="215">
+            <ostype name="controlSignature">DACW</ostype>
+            <ostype name="command">DACW</ostype>
+            <string name="title">No window close on process exit</string>
+            <string name="viewFrame">228 19 254 18 </string>
+            <string name="bounds">19 228 37 482 </string>
+          </object>
+          <reference idRef="223"/>
+          <object class="IBCarbonCheckBox" id="220">
+            <ostype name="controlSignature">ISel</ostype>
+            <ostype name="command">ISel</ostype>
+            <string name="title">Invert selected text</string>
+            <string name="viewFrame">228 116 254 18 </string>
+            <string name="bounds">116 228 134 482 </string>
+          </object>
+          <object class="IBCarbonCheckBox" id="213">
+            <ostype name="controlSignature">ACST</ostype>
+            <ostype name="command">ACST</ostype>
+            <string name="title">Automatically Copy selected text</string>
+            <string name="viewFrame">228 140 254 18 </string>
+            <string name="bounds">140 228 158 482 </string>
+          </object>
+          <object class="IBCarbonCheckBox" id="214">
+            <ostype name="controlSignature">MCTD</ostype>
+            <ostype name="command">MCTD</ostype>
+            <string name="title">Move cursor to text drop location</string>
+            <string name="viewFrame">228 164 254 18 </string>
+            <string name="bounds">164 228 182 482 </string>
+          </object>
+          <object class="IBCarbonCheckBox" id="221">
+            <ostype name="controlSignature">DDBW</ostype>
+            <ostype name="command">DDBW</ostype>
+            <string name="title">Don’t dim background terminal text</string>
+            <string name="viewFrame">228 188 254 18 </string>
+            <string name="bounds">188 228 206 482 </string>
+          </object>
+          <reference idRef="219"/>
+          <object class="IBCarbonCheckBox" id="218">
+            <ostype name="controlSignature">MBQE</ostype>
+            <ostype name="command">MBQE</ostype>
+            <string name="title">Treat backquote key like Escape</string>
+            <string name="viewFrame">228 261 254 18 </string>
+            <string name="bounds">261 228 279 482 </string>
+          </object>
+          <reference idRef="1499"/>
+          <object class="IBCarbonCheckBox" id="1540">
+            <ostype name="controlSignature">McMn</ostype>
+            <ostype name="command">McMn</ostype>
+            <string name="title">Display a macros menu</string>
+            <string name="viewFrame">228 67 254 18 </string>
+            <string name="bounds">67 228 85 482 </string>
+          </object>
+        </array>
+        <string name="bounds">0 0 323 502 </string>
+      </object>
+      <string name="windowRect">193 263 516 765 </string>
+      <string name="ScreenRectAtEncodeTime">0 110 1178 1920 </string>
+    </object>
+    <object class="IBCarbonBevelButton" id="1530">
+      <ostype name="controlSignature">UFNm</ostype>
+      <int name="fontStyle">105</int>
+      <ostype name="command">EdBF</ostype>
+      <int name="contentType">0</int>
+      <int name="textAlignment">-2</int>
+      <string name="title">&lt;font name&gt;</string>
+      <unsigned_int name="behavior">512</unsigned_int>
+      <string name="viewFrame">248 194 234 24 </string>
+      <string name="bounds">194 248 218 482 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1282">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -226 47 22 </string>
+      <string name="bounds">-226 164 -204 211 </string>
+    </object>
+    <reference idRef="1555"/>
+    <object class="IBCarbonCheckBox" id="1549">
+      <ostype name="controlSignature">XKWF</ostype>
+      <int name="initialState">1</int>
+      <string name="title">Show window frame</string>
+      <string name="viewFrame">228 67 254 18 </string>
+      <string name="bounds">67 228 85 482 </string>
+    </object>
+    <reference idRef="207"/>
+    <reference idRef="1002"/>
+    <reference idRef="1021"/>
+    <object class="IBCarbonCheckBox" id="1470">
+      <ostype name="controlSignature">XKFX</ostype>
+      <string name="helpTagText">Disabling Force Quit makes it harder for users to interact with the computer without using the kiosk.</string>
+      <int name="initialState">1</int>
+      <string name="title">Superfluous graphical effects</string>
+      <string name="viewFrame">228 140 254 18 </string>
+      <string name="bounds">140 228 158 482 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1266">
+      <string name="title">Yellow:</string>
+      <string name="viewFrame">87 -215 75 16 </string>
+      <string name="bounds">-215 87 -199 162 </string>
+    </object>
+    <object class="IBCarbonStaticText" id="1533">
+      <ostype name="controlSignature">HFTs</ostype>
+      <int name="controlSize">1</int>
+      <string name="title">A backup font is used as a source for characters that might not be available in the font used by the Format of a window.</string>
+      <int name="justification">-2</int>
+      <string name="viewFrame">248 226 234 78 </string>
+      <string name="bounds">226 248 304 482 </string>
+    </object>
+    <reference idRef="218"/>
+    <reference idRef="1447"/>
+    <reference idRef="1015"/>
+    <object class="IBCarbonStaticText" id="1273">
+      <string name="title">Normal</string>
+      <string name="viewFrame">112 -341 114 16 </string>
+      <string name="bounds">-341 112 -325 226 </string>
     </object>
     <object class="IBCarbonWindow" id="1474">
       <boolean name="receiveUpdates">FALSE</boolean>
@@ -433,25 +729,8 @@
             <string name="viewFrame">228 170 254 18 </string>
             <string name="bounds">170 228 188 482 </string>
           </object>
-          <object class="IBCarbonBevelButton" id="1530">
-            <ostype name="controlSignature">UFNm</ostype>
-            <int name="fontStyle">105</int>
-            <ostype name="command">EdBF</ostype>
-            <int name="contentType">0</int>
-            <int name="textAlignment">-2</int>
-            <string name="title">&lt;font name&gt;</string>
-            <unsigned_int name="behavior">512</unsigned_int>
-            <string name="viewFrame">248 194 234 24 </string>
-            <string name="bounds">194 248 218 482 </string>
-          </object>
-          <object class="IBCarbonStaticText" id="1533">
-            <ostype name="controlSignature">HFTs</ostype>
-            <int name="controlSize">1</int>
-            <string name="title">A backup font is used as a source for characters that might not be available in the font used by the Format of a window.</string>
-            <int name="justification">-2</int>
-            <string name="viewFrame">248 226 234 78 </string>
-            <string name="bounds">226 248 304 482 </string>
-          </object>
+          <reference idRef="1530"/>
+          <reference idRef="1533"/>
           <object class="IBCarbonStaticText" id="1538">
             <ostype name="controlSignature">SBTT</ostype>
             <int name="controlSize">1</int>
@@ -466,24 +745,76 @@
       <string name="windowRect">542 1098 866 1600 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="218"/>
-    <object class="IBCarbonUserPane" id="1299">
+    <reference idRef="1542"/>
+    <reference idRef="1030"/>
+    <reference idRef="1475"/>
+    <object class="IBCarbonRootControl" id="1324">
+      <string name="viewFrame">0 0 502 298 </string>
+      <array count="11" name="subviews">
+        <object class="IBCarbonStaticText" id="1418">
+          <int name="fontStyle">107</int>
+          <string name="title">Access Control:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">20 20 200 16 </string>
+          <string name="bounds">20 20 36 220 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="1422">
+          <int name="fontStyle">107</int>
+          <string name="title">Deactivation:</string>
+          <int name="justification">-1</int>
+          <string name="viewFrame">20 233 200 16 </string>
+          <string name="bounds">233 20 249 220 </string>
+        </object>
+        <object class="IBCarbonStaticText" id="1424">
+          <ostype name="controlSignature">HTDK</ostype>
+          <int name="controlSize">1</int>
+          <string name="title">You can also press Option-Esc or use the toolbar to turn off Full Screen.</string>
+          <string name="viewFrame">248 252 234 26 </string>
+          <string name="bounds">252 248 278 482 </string>
+        </object>
+        <reference idRef="1471"/>
+        <object class="IBCarbonCheckBox" id="1419">
+          <ostype name="controlSignature">XKSM</ostype>
+          <string name="title">Show menu bar on demand</string>
+          <string name="viewFrame">228 19 254 18 </string>
+          <string name="bounds">19 228 37 482 </string>
+        </object>
+        <object class="IBCarbonCheckBox" id="1420">
+          <ostype name="controlSignature">XKSS</ostype>
+          <int name="initialState">1</int>
+          <string name="title">Show scroll bar</string>
+          <string name="viewFrame">228 43 254 18 </string>
+          <string name="bounds">43 228 61 482 </string>
+        </object>
+        <reference idRef="1549"/>
+        <reference idRef="1421"/>
+        <reference idRef="1470"/>
+        <reference idRef="1425"/>
+        <reference idRef="1473"/>
+      </array>
+      <string name="bounds">0 0 298 502 </string>
+    </object>
+    <reference idRef="1485"/>
+    <reference idRef="1557"/>
+    <object class="IBCarbonStaticText" id="1281">
+      <string name="title">Close window:</string>
+      <string name="viewFrame">72 -420 173 16 </string>
+      <string name="bounds">-420 72 -404 245 </string>
+    </object>
+    <reference idRef="1458"/>
+    <object class="IBCarbonUserPane" id="1348">
       <int name="featureBits">2</int>
-      <string name="viewFrame">164 194 47 22 </string>
-      <string name="bounds">194 164 216 211 </string>
+      <string name="viewFrame">164 -292 47 22 </string>
+      <string name="bounds">-292 164 -270 211 </string>
     </object>
-    <reference idRef="1540"/>
-    <object class="IBCarbonStaticText" id="1231">
-      <string name="title">Red:</string>
-      <string name="viewFrame">87 369 75 16 </string>
-      <string name="bounds">369 87 385 162 </string>
+    <reference idRef="1419"/>
+    <reference idRef="214"/>
+    <object class="IBCarbonStaticText" id="1295">
+      <string name="title">Pre-action:</string>
+      <string name="viewFrame">258 -420 102 16 </string>
+      <string name="bounds">-420 258 -404 360 </string>
     </object>
-    <object class="IBCarbonStaticText" id="1284">
-      <string name="title">Post-action:</string>
-      <string name="viewFrame">258 488 102 16 </string>
-      <string name="bounds">488 258 504 360 </string>
-    </object>
-    <reference idRef="1533"/>
+    <reference idRef="1006"/>
     <object class="IBCarbonWindow" id="1019">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
@@ -500,97 +831,17 @@
       <string name="windowRect">167 577 491 1079 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <reference idRef="1522"/>
-    <reference idRef="1418"/>
-    <reference idRef="1527"/>
-    <object class="IBCarbonUserPane" id="1271">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 254 47 22 </string>
-      <string name="bounds">254 164 276 211 </string>
-    </object>
-    <reference idRef="1456"/>
-    <object class="IBCarbonStaticText" id="1477">
-      <string name="title">New Line:</string>
-      <string name="viewFrame">68 135241 148 16 </string>
-      <string name="bounds">4169 68 4185 216 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1335">
-      <string name="title">Pre-action:</string>
-      <string name="viewFrame">258 708 102 16 </string>
-      <string name="bounds">708 258 724 360 </string>
-    </object>
-    <object class="IBCarbonCheckBox" id="1465">
-      <ostype name="controlSignature">VisB</ostype>
-      <ostype name="command">VisB</ostype>
-      <string name="title">Always use visual bell</string>
-      <string name="viewFrame">228 46 254 18 </string>
-      <string name="bounds">46 228 64 482 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1266">
-      <string name="title">Yellow:</string>
-      <string name="viewFrame">87 309 75 16 </string>
-      <string name="bounds">309 87 325 162 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1364">
-      <string name="title">Cyan:</string>
-      <string name="viewFrame">87 413 75 16 </string>
-      <string name="bounds">413 87 429 162 </string>
-    </object>
-    <reference idRef="1475"/>
-    <object class="IBCarbonStaticText" id="1268">
-      <string name="title">Close window:</string>
-      <string name="viewFrame">72 514 173 16 </string>
-      <string name="bounds">514 72 530 245 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1313">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 404 47 22 </string>
-      <string name="bounds">404 164 426 211 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1349">
-      <string name="title">Blue:</string>
-      <string name="viewFrame">87 473 75 16 </string>
-      <string name="bounds">473 87 489 162 </string>
-    </object>
-    <reference idRef="1549"/>
-    <reference idRef="1473"/>
-    <reference idRef="1324"/>
-    <reference idRef="1499"/>
-    <object class="IBCarbonStaticText" id="1267">
-      <string name="title">Magenta:</string>
-      <string name="viewFrame">87 249 75 16 </string>
-      <string name="bounds">249 87 265 162 </string>
-    </object>
+    <reference idRef="1420"/>
+    <reference idRef="1306"/>
     <reference idRef="1003"/>
-    <object class="IBCarbonUserPane" id="1246">
+    <reference idRef="1424"/>
+    <reference idRef="1217"/>
+    <object class="IBCarbonUserPane" id="1334">
       <int name="featureBits">2</int>
-      <string name="viewFrame">165 374 47 22 </string>
-      <string name="bounds">374 165 396 212 </string>
+      <string name="viewFrame">164 -232 47 22 </string>
+      <string name="bounds">-232 164 -210 211 </string>
     </object>
-    <reference idRef="1425"/>
-    <object class="IBCarbonStaticText" id="1273">
-      <string name="title">Normal</string>
-      <string name="viewFrame">112 435 114 16 </string>
-      <string name="bounds">435 112 451 226 </string>
-    </object>
-    <object class="IBCarbonCheckBox" id="1227">
-      <ostype name="controlSignature">BelN</ostype>
-      <ostype name="command">MarB</ostype>
-      <string name="helpTagText">What to do if MacTelnet is not the active application when a terminal bell occurs.</string>
-      <string name="title">Background notification on bell</string>
-      <string name="viewFrame">228 102 254 18 </string>
-      <string name="bounds">102 228 120 482 </string>
-    </object>
-    <object class="IBCarbonIcon" id="1298">
-      <int name="contentType">1</int>
-      <int name="contentResID">203</int>
-      <int name="creator">0</int>
-      <string name="viewFrame">182 58 32 32 </string>
-      <string name="bounds">58 182 90 214 </string>
-    </object>
-    <reference idRef="1523"/>
-    <reference idRef="1525"/>
-    <object class="IBCarbonWindow" id="208">
+    <object class="IBCarbonWindow" id="1323">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
       <boolean name="hasHorizontalZoom">FALSE</boolean>
@@ -601,109 +852,60 @@
       <boolean name="isConstrained">FALSE</boolean>
       <int name="themeBrush">1</int>
       <int name="windowPosition">1</int>
-      <string name="title">Options</string>
-      <reference name="rootControl" idRef="207"/>
-      <string name="windowRect">193 263 516 765 </string>
+      <string name="title">Kiosk</string>
+      <reference name="rootControl" idRef="1324"/>
+      <string name="windowRect">345 304 643 806 </string>
       <string name="ScreenRectAtEncodeTime">0 110 1178 1920 </string>
     </object>
-    <object class="IBCarbonRootControl" id="1226">
-      <string name="viewFrame">0 0 502 252 </string>
-      <array count="10" name="subviews">
-        <object class="IBCarbonStaticText" id="1217">
-          <ostype name="controlSignature">LSnd</ostype>
-          <int name="fontStyle">107</int>
-          <string name="title">Terminal Bell:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 20 200 16 </string>
-          <string name="bounds">20 20 36 220 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1219">
-          <ostype name="controlSignature">HTBT</ostype>
-          <int name="controlSize">1</int>
-          <string name="title">When a bell sounds in an inactive window, a visual appears automatically.</string>
-          <string name="viewFrame">248 68 234 26 </string>
-          <string name="bounds">68 248 94 482 </string>
-        </object>
-        <object class="IBCarbonStaticText" id="1462">
-          <int name="fontStyle">107</int>
-          <string name="title">Background Notification:</string>
-          <int name="justification">-1</int>
-          <string name="viewFrame">20 152 200 16 </string>
-          <string name="bounds">152 20 168 220 </string>
-        </object>
-        <object class="IBCarbonPopupButton" id="1218">
-          <ostype name="controlSignature">BSnd</ostype>
-          <int name="selectedItem">2</int>
-          <object name="menu" class="IBCarbonMenu" id="1222">
-            <string name="title">Popup:</string>
-            <array count="2" name="items">
-              <object class="IBCarbonMenuItem" id="1468">
-                <string name="title">Off</string>
-                <boolean name="updateSingleItem">TRUE</boolean>
-                <ostype name="command">NoBp</ostype>
-              </object>
-              <object class="IBCarbonMenuItem" id="1220">
-                <string name="title">Default</string>
-                <boolean name="checked">TRUE</boolean>
-                <boolean name="updateSingleItem">TRUE</boolean>
-                <ostype name="command">BpBl</ostype>
-              </object>
-            </array>
-          </object>
-          <string name="viewFrame">228 18 199 20 </string>
-          <string name="bounds">18 228 38 427 </string>
-        </object>
-        <reference idRef="1465"/>
-        <reference idRef="1227"/>
-        <object class="IBCarbonRadioButton" id="1225">
-          <ostype name="controlSignature">NotN</ostype>
-          <ostype name="command">NotN</ostype>
-          <string name="title">None</string>
-          <string name="viewFrame">228 151 254 18 </string>
-          <string name="bounds">151 228 169 482 </string>
-        </object>
-        <object class="IBCarbonRadioButton" id="1224">
-          <ostype name="controlSignature">NotD</ostype>
-          <ostype name="command">NotD</ostype>
-          <string name="title">Modify the Dock icon</string>
-          <string name="viewFrame">228 172 254 18 </string>
-          <string name="bounds">172 228 190 482 </string>
-        </object>
-        <object class="IBCarbonRadioButton" id="1216">
-          <ostype name="controlSignature">NotB</ostype>
-          <ostype name="command">NotB</ostype>
-          <string name="title">…and bounce the icon</string>
-          <string name="viewFrame">228 193 254 18 </string>
-          <string name="bounds">193 228 211 482 </string>
-        </object>
-        <object class="IBCarbonRadioButton" id="1213">
-          <ostype name="controlSignature">NotM</ostype>
-          <ostype name="command">NotM</ostype>
-          <string name="title">…and display a message</string>
-          <string name="viewFrame">228 214 254 18 </string>
-          <string name="bounds">214 228 232 482 </string>
-        </object>
-      </array>
-      <string name="bounds">0 0 252 502 </string>
-    </object>
-    <reference idRef="1542"/>
-    <reference idRef="1470"/>
-    <reference idRef="1476"/>
-    <reference idRef="221"/>
-    <object class="IBCarbonUserPane" id="1287">
+    <object class="IBCarbonUserPane" id="1271">
       <int name="featureBits">2</int>
-      <string name="viewFrame">164 224 47 22 </string>
-      <string name="bounds">224 164 246 211 </string>
+      <string name="viewFrame">164 -166 47 22 </string>
+      <string name="bounds">-166 164 -144 211 </string>
     </object>
-    <object class="IBCarbonStaticText" id="1369">
+    <reference idRef="1456"/>
+    <reference idRef="1227"/>
+    <object class="IBCarbonStaticText" id="1272">
+      <string name="title">Close window:</string>
+      <string name="viewFrame">67 -355 173 16 </string>
+      <string name="bounds">-355 67 -339 240 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1302">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -256 47 22 </string>
+      <string name="bounds">-256 164 -234 211 </string>
+    </object>
+    <reference idRef="1422"/>
+    <object class="IBCarbonStaticText" id="1350">
+      <string name="title">Close window:</string>
+      <string name="viewFrame">72 -426 173 16 </string>
+      <string name="bounds">-426 72 -410 245 </string>
+    </object>
+    <reference idRef="1516"/>
+    <reference idRef="1540"/>
+    <object class="IBCarbonStaticText" id="1232">
       <string name="title">Black:</string>
-      <string name="viewFrame">87 593 75 16 </string>
-      <string name="bounds">593 87 609 162 </string>
+      <string name="viewFrame">87 -305 75 16 </string>
+      <string name="bounds">-305 87 -289 162 </string>
     </object>
-    <reference idRef="1216"/>
-    <reference idRef="1454"/>
-    <reference idRef="1450"/>
-    <reference idRef="1015"/>
+    <reference idRef="1219"/>
+    <reference idRef="1449"/>
+    <object class="IBCarbonUserPane" id="1407">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -262 47 22 </string>
+      <string name="bounds">-262 164 -240 211 </string>
+    </object>
+    <object class="IBCarbonUserPane" id="1246">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">165 -286 47 22 </string>
+      <string name="bounds">-286 165 -264 212 </string>
+    </object>
+    <reference idRef="1222"/>
+    <object class="IBCarbonUserPane" id="1342">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -142 47 22 </string>
+      <string name="bounds">-142 164 -120 211 </string>
+    </object>
+    <reference idRef="220"/>
     <object class="IBCarbonWindow" id="1250">
       <boolean name="receiveUpdates">FALSE</boolean>
       <boolean name="hasCollapseBox">FALSE</boolean>
@@ -716,366 +918,183 @@
       <int name="themeBrush">1</int>
       <int name="windowPosition">1</int>
       <string name="title">Scripts</string>
-      <object name="rootControl" class="IBCarbonRootControl" id="1311">
-        <string name="viewFrame">0 0 502 110 </string>
-        <array count="4" name="subviews">
-          <reference idRef="1241"/>
-          <object class="IBCarbonStaticText" id="1252">
-            <ostype name="controlSignature">HTSM</ostype>
-            <int name="controlSize">1</int>
-            <string name="title">This menu has a special icon, and contains items in your Scripts Menu Items folder.</string>
-            <string name="viewFrame">228 46 254 39 </string>
-            <string name="bounds">46 228 85 482 </string>
-          </object>
-          <reference idRef="1298"/>
-          <object class="IBCarbonButton" id="1306">
-            <ostype name="controlSignature">OSMI</ostype>
-            <ostype name="command">OSMI</ostype>
-            <string name="title">Open Scripts Menu Items Folder…</string>
-            <string name="viewFrame">228 18 254 20 </string>
-            <string name="bounds">18 228 38 482 </string>
-          </object>
-        </array>
-        <string name="bounds">0 0 110 502 </string>
-      </object>
+      <reference name="rootControl" idRef="1311"/>
       <string name="windowRect">849 578 959 1080 </string>
       <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
     </object>
-    <object class="IBCarbonWindow" id="1212">
-      <boolean name="receiveUpdates">FALSE</boolean>
-      <boolean name="hasCollapseBox">FALSE</boolean>
-      <boolean name="hasHorizontalZoom">FALSE</boolean>
-      <boolean name="isResizable">FALSE</boolean>
-      <boolean name="hasVerticalZoom">FALSE</boolean>
-      <boolean name="liveResize">TRUE</boolean>
-      <boolean name="compositing">TRUE</boolean>
-      <boolean name="isConstrained">FALSE</boolean>
-      <int name="themeBrush">1</int>
-      <int name="windowPosition">1</int>
-      <string name="title">Notification</string>
-      <reference name="rootControl" idRef="1226"/>
-      <string name="windowRect">542 575 794 1077 </string>
-      <string name="ScreenRectAtEncodeTime">0 0 768 1024 </string>
+    <reference idRef="213"/>
+    <reference idRef="215"/>
+    <reference idRef="1529"/>
+    <object class="IBCarbonUserPane" id="1331">
+      <int name="featureBits">2</int>
+      <string name="viewFrame">164 -172 47 22 </string>
+      <string name="bounds">-172 164 -150 211 </string>
     </object>
-    <object class="IBCarbonStaticText" id="1316">
-      <string name="title">White:</string>
-      <string name="viewFrame">87 189 75 16 </string>
-      <string name="bounds">189 87 205 162 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1325">
-      <string name="title">Normal</string>
-      <string name="viewFrame">112 629 114 16 </string>
-      <string name="bounds">629 112 645 226 </string>
+    <reference idRef="1213"/>
+    <object class="IBCarbonStaticText" id="1477">
+      <string name="title">New Line:</string>
+      <string name="viewFrame">68 -134933 148 16 </string>
+      <string name="bounds">-3861 68 -3845 216 </string>
     </object>
     <object class="IBCarbonStaticText" id="1303">
       <string name="title">Cyan:</string>
-      <string name="viewFrame">87 219 75 16 </string>
-      <string name="bounds">219 87 235 162 </string>
+      <string name="viewFrame">87 -125 75 16 </string>
+      <string name="bounds">-125 87 -109 162 </string>
     </object>
-    <reference idRef="1524"/>
-    <object class="IBCarbonStaticText" id="1269">
-      <string name="title">Green:</string>
-      <string name="viewFrame">87 339 75 16 </string>
-      <string name="bounds">339 87 355 162 </string>
-    </object>
-    <reference idRef="1471"/>
-    <reference idRef="1224"/>
-    <reference idRef="1422"/>
-    <object class="IBCarbonStaticText" id="1318">
-      <string name="title">Blue:</string>
-      <string name="viewFrame">87 279 75 16 </string>
-      <string name="bounds">279 87 295 162 </string>
-    </object>
-    <reference idRef="213"/>
-    <reference idRef="1007"/>
-    <reference idRef="1220"/>
-    <object class="IBCarbonUserPane" id="1336">
+    <object class="IBCarbonUserPane" id="1313">
       <int name="featureBits">2</int>
-      <string name="viewFrame">164 388 47 22 </string>
-      <string name="bounds">388 164 410 211 </string>
+      <string name="viewFrame">164 -316 47 22 </string>
+      <string name="bounds">-316 164 -294 211 </string>
     </object>
-    <reference idRef="1213"/>
-    <object class="IBCarbonUserPane" id="1282">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 314 47 22 </string>
-      <string name="bounds">314 164 336 211 </string>
-    </object>
-    <reference idRef="1225"/>
-    <reference idRef="1419"/>
-    <reference idRef="1311"/>
-    <reference idRef="1030"/>
-    <object class="IBCarbonStaticText" id="1374">
-      <string name="title">White:</string>
-      <string name="viewFrame">87 383 75 16 </string>
-      <string name="bounds">383 87 399 162 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1331">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 448 47 22 </string>
-      <string name="bounds">448 164 470 211 </string>
-    </object>
-    <reference idRef="1306"/>
-    <object class="IBCarbonStaticText" id="1373">
-      <string name="title">Pre-action:</string>
-      <string name="viewFrame">253 643 102 16 </string>
-      <string name="bounds">643 253 659 355 </string>
-    </object>
-    <reference idRef="1222"/>
-    <reference idRef="219"/>
-    <reference idRef="1217"/>
-    <reference idRef="1252"/>
-    <object class="IBCarbonUserPane" id="1396">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 598 47 22 </string>
-      <string name="bounds">598 164 620 211 </string>
-    </object>
-    <reference idRef="1013"/>
-    <object class="IBCarbonStaticText" id="1304">
-      <string name="title">Pre-action:</string>
-      <string name="viewFrame">258 514 102 16 </string>
-      <string name="bounds">514 258 530 360 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1302">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 344 47 22 </string>
-      <string name="bounds">344 164 366 211 </string>
-    </object>
-    <reference idRef="1006"/>
-    <reference idRef="1516"/>
-    <reference idRef="1449"/>
-    <reference idRef="1219"/>
-    <reference idRef="1002"/>
-    <reference idRef="1538"/>
-    <reference idRef="1529"/>
-    <reference idRef="1421"/>
     <object class="IBCarbonUserPane" id="1332">
       <int name="featureBits">2</int>
-      <string name="viewFrame">164 478 47 22 </string>
-      <string name="bounds">478 164 500 211 </string>
+      <string name="viewFrame">164 -202 47 22 </string>
+      <string name="bounds">-202 164 -180 211 </string>
     </object>
-    <reference idRef="1530"/>
-    <reference idRef="1424"/>
-    <object class="IBCarbonStaticText" id="1272">
-      <string name="title">Close window:</string>
-      <string name="viewFrame">67 449 173 16 </string>
-      <string name="bounds">449 67 465 240 </string>
-    </object>
-    <object class="IBCarbonUserPane" id="1348">
+    <object class="IBCarbonUserPane" id="1299">
       <int name="featureBits">2</int>
-      <string name="viewFrame">164 568 47 22 </string>
-      <string name="bounds">568 164 590 211 </string>
+      <string name="viewFrame">164 -106 47 22 </string>
+      <string name="bounds">-106 164 -84 211 </string>
     </object>
-    <object class="IBCarbonUserPane" id="1334">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 508 47 22 </string>
-      <string name="bounds">508 164 530 211 </string>
-    </object>
-    <reference idRef="1485"/>
-    <object class="IBCarbonStaticText" id="1363">
-      <string name="title">Close window:</string>
-      <string name="viewFrame">72 708 173 16 </string>
-      <string name="bounds">708 72 724 245 </string>
-    </object>
-    <reference idRef="215"/>
-    <reference idRef="1447"/>
-    <object class="IBCarbonStaticText" id="1281">
-      <string name="title">Close window:</string>
-      <string name="viewFrame">72 514 173 16 </string>
-      <string name="bounds">514 72 530 245 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1404">
-      <string name="title">Magenta:</string>
-      <string name="viewFrame">87 443 75 16 </string>
-      <string name="bounds">443 87 459 162 </string>
-    </object>
-    <reference idRef="214"/>
-    <object class="IBCarbonUserPane" id="1407">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 538 47 22 </string>
-      <string name="bounds">538 164 560 211 </string>
-    </object>
-    <reference idRef="1468"/>
-    <object class="IBCarbonUserPane" id="1279">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 284 47 22 </string>
-      <string name="bounds">284 164 306 211 </string>
-    </object>
-    <reference idRef="1021"/>
-    <object class="IBCarbonStaticText" id="1366">
-      <string name="title">Pre-action:</string>
-      <string name="viewFrame">258 708 102 16 </string>
-      <string name="bounds">708 258 724 360 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1295">
-      <string name="title">Pre-action:</string>
-      <string name="viewFrame">258 514 102 16 </string>
-      <string name="bounds">514 258 530 360 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1357">
-      <string name="title">Green:</string>
-      <string name="viewFrame">87 533 75 16 </string>
-      <string name="bounds">533 87 549 162 </string>
-    </object>
-    <reference idRef="223"/>
-    <reference idRef="1462"/>
-    <object class="IBCarbonStaticText" id="1368">
-      <string name="title">Post-action:</string>
-      <string name="viewFrame">258 682 102 16 </string>
-      <string name="bounds">682 258 698 360 </string>
-    </object>
-    <reference idRef="1458"/>
-    <object class="IBCarbonUserPane" id="1342">
-      <int name="featureBits">2</int>
-      <string name="viewFrame">164 418 47 22 </string>
-      <string name="bounds">418 164 440 211 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1328">
-      <string name="title">Red:</string>
-      <string name="viewFrame">87 563 75 16 </string>
-      <string name="bounds">563 87 579 162 </string>
-    </object>
-    <object class="IBCarbonStaticText" id="1232">
-      <string name="title">Black:</string>
-      <string name="viewFrame">87 399 75 16 </string>
-      <string name="bounds">399 87 415 162 </string>
-    </object>
-    <reference idRef="1526"/>
-    <reference idRef="220"/>
-    <reference idRef="1218"/>
-    <reference idRef="1420"/>
-    <reference idRef="1001"/>
+    <reference idRef="1013"/>
+    <reference idRef="1476"/>
+    <reference idRef="1418"/>
+    <reference idRef="221"/>
+    <reference idRef="1538"/>
+    <reference idRef="1520"/>
   </array>
-  <array count="131" name="allParents">
-    <reference idRef="1029"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1029"/>
-    <reference idRef="1029"/>
-    <reference idRef="1"/>
-    <reference idRef="1019"/>
-    <reference idRef="1324"/>
-    <reference idRef="208"/>
-    <reference idRef="1"/>
+  <array count="132" name="allParents">
     <reference idRef="207"/>
-    <reference idRef="1311"/>
-    <reference idRef="207"/>
-    <reference idRef="1311"/>
-    <reference idRef="1311"/>
-    <reference idRef="1475"/>
-    <reference idRef="1"/>
-    <reference idRef="1029"/>
     <reference idRef="1324"/>
-    <reference idRef="1522"/>
-    <reference idRef="1311"/>
-    <reference idRef="207"/>
-    <reference idRef="1475"/>
-    <reference idRef="1324"/>
-    <reference idRef="1226"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1474"/>
-    <reference idRef="1311"/>
     <reference idRef="1311"/>
     <reference idRef="1324"/>
     <reference idRef="1324"/>
-    <reference idRef="1324"/>
-    <reference idRef="1323"/>
-    <reference idRef="207"/>
+    <reference idRef="1552"/>
+    <reference idRef="1552"/>
     <reference idRef="1311"/>
-    <reference idRef="1029"/>
     <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1311"/>
-    <reference idRef="1226"/>
-    <reference idRef="1311"/>
-    <reference idRef="1522"/>
-    <reference idRef="1522"/>
-    <reference idRef="1"/>
-    <reference idRef="1212"/>
-    <reference idRef="1029"/>
-    <reference idRef="1324"/>
-    <reference idRef="1475"/>
-    <reference idRef="207"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1226"/>
-    <reference idRef="207"/>
-    <reference idRef="1029"/>
-    <reference idRef="1029"/>
-    <reference idRef="1"/>
-    <reference idRef="1"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1311"/>
-    <reference idRef="1522"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1226"/>
-    <reference idRef="1324"/>
-    <reference idRef="1311"/>
-    <reference idRef="207"/>
-    <reference idRef="1029"/>
     <reference idRef="1222"/>
+    <reference idRef="1311"/>
     <reference idRef="1324"/>
+    <reference idRef="1311"/>
+    <reference idRef="1029"/>
+    <reference idRef="1311"/>
+    <reference idRef="1324"/>
+    <reference idRef="1324"/>
+    <reference idRef="1324"/>
+    <reference idRef="207"/>
+    <reference idRef="1311"/>
+    <reference idRef="1552"/>
+    <reference idRef="1324"/>
+    <reference idRef="1324"/>
+    <reference idRef="1019"/>
+    <reference idRef="1226"/>
+    <reference idRef="1324"/>
+    <reference idRef="1029"/>
+    <reference idRef="1311"/>
+    <reference idRef="1324"/>
+    <reference idRef="1029"/>
+    <reference idRef="1226"/>
+    <reference idRef="1226"/>
+    <reference idRef="1226"/>
+    <reference idRef="1324"/>
+    <reference idRef="1324"/>
+    <reference idRef="1"/>
+    <reference idRef="1324"/>
+    <reference idRef="207"/>
+    <reference idRef="1222"/>
+    <reference idRef="1551"/>
+    <reference idRef="1324"/>
+    <reference idRef="1311"/>
+    <reference idRef="1324"/>
+    <reference idRef="1311"/>
+    <reference idRef="1311"/>
+    <reference idRef="1324"/>
+    <reference idRef="1029"/>
+    <reference idRef="1029"/>
+    <reference idRef="207"/>
     <reference idRef="1226"/>
     <reference idRef="1311"/>
-    <reference idRef="1226"/>
+    <reference idRef="1324"/>
+    <reference idRef="1311"/>
+    <reference idRef="1212"/>
     <reference idRef="1324"/>
     <reference idRef="1250"/>
+    <reference idRef="1324"/>
+    <reference idRef="1226"/>
+    <reference idRef="1324"/>
+    <reference idRef="1029"/>
+    <reference idRef="1311"/>
+    <reference idRef="1"/>
+    <reference idRef="1475"/>
+    <reference idRef="1311"/>
+    <reference idRef="1552"/>
+    <reference idRef="1324"/>
+    <reference idRef="208"/>
+    <reference idRef="1029"/>
     <reference idRef="1029"/>
     <reference idRef="1324"/>
+    <reference idRef="1311"/>
+    <reference idRef="1475"/>
+    <reference idRef="207"/>
+    <reference idRef="1029"/>
+    <reference idRef="1029"/>
+    <reference idRef="1311"/>
+    <reference idRef="1"/>
+    <reference idRef="1029"/>
+    <reference idRef="1029"/>
+    <reference idRef="1474"/>
+    <reference idRef="1323"/>
+    <reference idRef="1475"/>
+    <reference idRef="1552"/>
+    <reference idRef="1311"/>
+    <reference idRef="207"/>
+    <reference idRef="1324"/>
+    <reference idRef="1324"/>
+    <reference idRef="207"/>
+    <reference idRef="1311"/>
+    <reference idRef="1029"/>
+    <reference idRef="1"/>
     <reference idRef="1324"/>
     <reference idRef="1311"/>
+    <reference idRef="1029"/>
     <reference idRef="1324"/>
+    <reference idRef="1226"/>
+    <reference idRef="1324"/>
+    <reference idRef="1"/>
+    <reference idRef="1311"/>
+    <reference idRef="207"/>
+    <reference idRef="1226"/>
+    <reference idRef="1311"/>
+    <reference idRef="1311"/>
+    <reference idRef="1324"/>
+    <reference idRef="1324"/>
+    <reference idRef="1475"/>
+    <reference idRef="207"/>
+    <reference idRef="1311"/>
+    <reference idRef="1226"/>
+    <reference idRef="1029"/>
+    <reference idRef="1324"/>
+    <reference idRef="1311"/>
     <reference idRef="1218"/>
+    <reference idRef="1324"/>
     <reference idRef="207"/>
+    <reference idRef="1"/>
+    <reference idRef="207"/>
+    <reference idRef="207"/>
+    <reference idRef="1475"/>
+    <reference idRef="1324"/>
     <reference idRef="1226"/>
+    <reference idRef="1475"/>
+    <reference idRef="1311"/>
     <reference idRef="1311"/>
     <reference idRef="1324"/>
-    <reference idRef="1029"/>
-    <reference idRef="1311"/>
     <reference idRef="1311"/>
     <reference idRef="1029"/>
     <reference idRef="1475"/>
-    <reference idRef="1029"/>
-    <reference idRef="1226"/>
-    <reference idRef="1029"/>
+    <reference idRef="1324"/>
+    <reference idRef="207"/>
     <reference idRef="1475"/>
-    <reference idRef="1475"/>
-    <reference idRef="1324"/>
-    <reference idRef="1324"/>
-    <reference idRef="1475"/>
-    <reference idRef="1324"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="1324"/>
-    <reference idRef="1475"/>
-    <reference idRef="1324"/>
-    <reference idRef="207"/>
-    <reference idRef="1029"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="207"/>
-    <reference idRef="1324"/>
-    <reference idRef="1222"/>
-    <reference idRef="1311"/>
-    <reference idRef="1029"/>
-    <reference idRef="1324"/>
-    <reference idRef="1311"/>
-    <reference idRef="1324"/>
-    <reference idRef="207"/>
-    <reference idRef="1226"/>
-    <reference idRef="1324"/>
-    <reference idRef="207"/>
-    <reference idRef="1324"/>
-    <reference idRef="1324"/>
-    <reference idRef="1311"/>
-    <reference idRef="1522"/>
-    <reference idRef="207"/>
-    <reference idRef="1226"/>
-    <reference idRef="1324"/>
     <reference idRef="1029"/>
   </array>
   <dictionary count="7" name="nameTable">
@@ -1095,5 +1114,5 @@
     <reference idRef="1474"/>
   </dictionary>
   <string name="targetFramework">IBCarbonFramework</string>
-  <unsigned_int name="nextObjectID">1550</unsigned_int>
+  <unsigned_int name="nextObjectID">1558</unsigned_int>
 </object>
