@@ -232,7 +232,7 @@ UIStrings_Copy	(UIStrings_AlertWindowCFString	inWhichString,
 		break;
 	
 	case kUIStrings_AlertWindowQuitHelpText:
-		outString = CFCopyLocalizedStringFromTable(CFSTR("Windows opened recently are skipped."), CFSTR("Alerts"),
+		outString = CFCopyLocalizedStringFromTable(CFSTR("Any recently-opened windows will be closed automatically."), CFSTR("Alerts"),
 													CFSTR("kUIStrings_AlertWindowQuitHelpText"));
 		break;
 	
