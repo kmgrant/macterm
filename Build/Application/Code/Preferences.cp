@@ -981,6 +981,8 @@ Preferences_Init ()
 										CFSTR("no-auto-close"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagDontAutoNewOnApplicationReopen,
 										CFSTR("no-auto-new"), Quills::Prefs::GENERAL);
+	My_PreferenceDefinition::createFlag(kPreferences_TagDontDimBackgroundScreens,
+										CFSTR("terminal-no-dim-on-deactivate"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagEMACSMetaKey,
 									CFSTR("key-map-emacs-meta"), typeCFStringRef,
 									sizeof(Session_EMACSMetaKey), Quills::Prefs::TERMINAL);

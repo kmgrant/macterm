@@ -262,6 +262,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20090804': [
         'Terminal view scroll bars now have tick marks during searches, showing the scrollback positions of all matching words.',
+        'Fixed the "do not dim background terminal text" preference.',
     ],
     '20090803': [
         'Fixed crashes on Panther when opening the Preferences window.',

@@ -570,8 +570,6 @@ TerminalView_Init ()
 		
 		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks,
 											true/* call immediately to get initial value */);
-		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens,
-											true/* call immediately to get initial value */);
 		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps,
 											true/* call immediately to get initial value */);
 		error = Preferences_StartMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse,
@@ -605,7 +603,6 @@ TerminalView_Done ()
 	EventLoop_StopMonitoring(kEventLoop_GlobalEventSuspendResume, gMainEventLoopEventListener);
 	ListenerModel_ReleaseListener(&gMainEventLoopEventListener);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagCursorBlinks);
-	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagDontDimBackgroundScreens);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagNotifyOfBeeps);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagPureInverse);
 	Preferences_StopMonitoring(gPreferenceChangeEventListener, kPreferences_TagTerminalCursorType);
@@ -3406,6 +3403,8 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
+		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagDontDimBackgroundScreens,
+													true/* call immediately to get initial value */);
 		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType,
 													false/* call immediately to get initial value */);
 		prefsResult = Preferences_StartMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize,
@@ -3446,6 +3445,7 @@ TerminalView::
 	ListenerModel_ReleaseListener(&this->screen.cursorMonitor);
 	
 	// stop receiving preference change notifications
+	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagDontDimBackgroundScreens);
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalCursorType);
 	Preferences_StopMonitoring(this->screen.preferenceMonitor, kPreferences_TagTerminalResizeAffectsFontSize);
 	(Preferences_Result)Preferences_ContextStopMonitoring(this->encodingConfig, this->screen.preferenceMonitor,
@@ -7369,16 +7369,6 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
-	case kPreferences_TagDontDimBackgroundScreens:
-		// update global variable with current preference value
-		unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(gPreferenceProxies.dontDimTerminals),
-									&gPreferenceProxies.dontDimTerminals, &actualSize) ==
-				kPreferences_ResultOK)
-		{
-			gPreferenceProxies.dontDimTerminals = false; // assume a value, if preference can’t be found
-		}
-		break;
-	
 	case kPreferences_TagNotifyOfBeeps:
 		// update global variable with current preference value
 		unless (Preferences_GetData(kPreferences_TagNotifyOfBeeps, sizeof(gPreferenceProxies.notifyOfBeeps),
@@ -7453,6 +7443,24 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	{
 		switch (inPreferenceTagThatChanged)
 		{
+		case kPreferences_TagDontDimBackgroundScreens:
+			{
+				size_t		actualSize = 0;
+				
+				
+				// update global variable with current preference value
+				unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(gPreferenceProxies.dontDimTerminals),
+											&gPreferenceProxies.dontDimTerminals, &actualSize) ==
+						kPreferences_ResultOK)
+				{
+					gPreferenceProxies.dontDimTerminals = false; // assume a value, if preference can’t be found
+				}
+				
+				// redraw the screen
+				(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
+			}
+			break;
+		
 		case kPreferences_TagTerminalCursorType:
 			// recalculate cursor boundaries for the specified view
 			{
@@ -10258,7 +10266,6 @@ setUpCursorBounds	(TerminalViewPtr			inTerminalViewPtr,
 	Point						characterSizeInPixels; // based on font metrics
 	UInt16						thickness = 0; // used for non-block-shaped cursors
 	TerminalView_CursorType		terminalCursorType = inTerminalCursorType;
-	size_t						actualSize = 0L;
 	
 	
 	// if requested, use whatever cursor shape the user wants;
