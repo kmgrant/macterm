@@ -103,10 +103,13 @@ HIViewID const	idMyPopUpMenuTranslation		= { 'Xlat', 0/* ID */ };
 HIViewID const	idMyHelpTextPresets				= { 'THlp', 0/* ID */ };
 HIViewID const	idMySliderScrollSpeed			= { 'SSpd', 0/* ID */ };
 HIViewID const	idMyStaticTextCaptureFilePath	= { 'CapP', 0/* ID */ };
-HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
+HIViewID const	idMyButtonNoCaptureFile			= { 'NoCF', 0/* ID */ };
+HIViewID const	idMyButtonChooseCaptureFile		= { 'CapF', 0/* ID */ };
 HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
 HIViewID const	idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
 HIViewID const	idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
+HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
+HIViewID const	idMySeparatorKeyboardOptions	= { 'KSep', 0/* ID */ };
 HIViewID const	idMyRadioButtonTEKDisabled		= { 'RTNo', 0/* ID */ };
 HIViewID const	idMyRadioButtonTEK4014			= { '4014', 0/* ID */ };
 HIViewID const	idMyRadioButtonTEK4105			= { '4105', 0/* ID */ };
@@ -695,11 +698,10 @@ deltaSize	(HIViewRef		inContainer,
 	
 	viewWrap = HIViewWrap(idMyStaticTextCaptureFilePath, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	// INCOMPLETE
-	//viewWrap = HIViewWrap(idMySliderScrollSpeed, kPanelWindow);
-	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
-	//viewWrap = HIViewWrap(idMyLabelScrollSpeedFast, kPanelWindow);
-	//viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyButtonNoCaptureFile, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMyButtonChooseCaptureFile, kPanelWindow);
+	viewWrap << HIViewWrap_MoveBy(inDeltaX, 0/* delta Y */);
 }// My_SessionsPanelDataFlowUI::deltaSize
 
 
@@ -1301,6 +1303,8 @@ deltaSize	(HIViewRef		inContainer,
 	
 	
 	viewWrap = HIViewWrap(idMyHelpTextControlKeys, kPanelWindow);
+	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
+	viewWrap = HIViewWrap(idMySeparatorKeyboardOptions, kPanelWindow);
 	viewWrap << HIViewWrap_DeltaSize(inDeltaX, 0/* delta Y */);
 }// My_SessionsPanelKeyboardUI::deltaSize
 

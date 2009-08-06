@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090805',
     '20090804',
     '20090803',
     '20090802',
@@ -260,6 +261,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090805': [
+        'Fixed certain views that were not responding to window resizes, in the Preferences window Sessions pane.',
+    ],
     '20090804': [
         'Terminal view scroll bars now have tick marks during searches, showing the scrollback positions of all matching words.',
         'Fixed the "do not dim background terminal text" preference.',
