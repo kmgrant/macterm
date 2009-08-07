@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090806',
     '20090805',
     '20090804',
     '20090803',
@@ -261,6 +262,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090806': [
+        'Fixed control key settings in the Preferences window Sessions pane Keyboard tab.',
+    ],
     '20090805': [
         'Fixed certain views that were not responding to window resizes, in the Preferences window Sessions pane.',
     ],

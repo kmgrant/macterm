@@ -33,6 +33,7 @@
 
 // standard-C includes
 #include <cstring>
+#include <map>
 
 // Unix includes
 extern "C"
@@ -71,6 +72,7 @@ extern "C"
 #include "DialogUtilities.h"
 #include "DNR.h"
 #include "GenericPanelTabs.h"
+#include "Keypads.h"
 #include "NetEvents.h"
 #include "Panel.h"
 #include "Preferences.h"
@@ -119,6 +121,8 @@ HIViewID const	idMyCheckBoxTEKPageClearsScreen	= { 'XPCS', 0/* ID */ };
 
 #pragma mark Types
 namespace {
+
+typedef std::map< UInt8, CFStringRef >	My_CharacterToCFStringMap;	//!< e.g. '\0' maps to CFSTR("^@")
 
 /*!
 Implements the “Data Flow” tab.
@@ -201,6 +205,9 @@ struct My_SessionsPanelKeyboardUI
 	
 	void
 	readPreferences		(Preferences_ContextRef);
+	
+	OSStatus
+	setButtonFromKey	(HIViewRef, char);
 
 protected:
 	HIViewWrap
@@ -355,6 +362,7 @@ typedef My_SessionsPanelResourceData*		My_SessionsPanelResourceDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
+My_CharacterToCFStringMap&	initCharacterToCFStringMap		();
 void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
 void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal OSStatus		receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
@@ -362,6 +370,13 @@ pascal OSStatus		receiveHICommand						(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
+
+#pragma mark Variables
+
+namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
+{
+	My_CharacterToCFStringMap&		gCharacterToCFStringMap ()	{ return initCharacterToCFStringMap(); }
+}
 
 
 
@@ -1440,9 +1455,102 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		// UNIMPLEMENTED
+		HIWindowRef				window = HIViewGetWindow(this->mainView);
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		OSStatus				error = noErr;
+		size_t					actualSize = 0;
+		
+		
+		// INCOMPLETE
+		
+		// set interrupt key
+		{
+			char	keyCode = '\0';
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagKeyInterruptProcess,
+														sizeof(keyCode), &keyCode,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				HIViewWrap		button(idMyButtonChangeInterruptKey, window);
+				
+				
+				error = this->setButtonFromKey(button, keyCode);
+				assert_noerr(error);
+			}
+		}
+		
+		// set suspend key
+		{
+			char	keyCode = '\0';
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagKeySuspendOutput,
+														sizeof(keyCode), &keyCode,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				HIViewWrap		button(idMyButtonChangeSuspendKey, window);
+				
+				
+				error = this->setButtonFromKey(button, keyCode);
+				assert_noerr(error);
+			}
+		}
+		
+		// set resume key
+		{
+			char	keyCode = '\0';
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagKeyResumeOutput,
+														sizeof(keyCode), &keyCode,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				HIViewWrap		button(idMyButtonChangeResumeKey, window);
+				
+				
+				error = this->setButtonFromKey(button, keyCode);
+				assert_noerr(error);
+			}
+		}
 	}
 }// My_SessionsPanelKeyboardUI::readPreferences
+
+
+/*!
+Sets the title of the specified button to a string that
+describes the given key character.
+
+\retval noErr
+if successful
+
+\retval paramErr
+if the given character is not supported
+
+\retval (other)
+any OSStatus value based on Mac OS APIs used
+
+(4.0)
+*/
+OSStatus
+My_SessionsPanelKeyboardUI::
+setButtonFromKey	(HIViewRef		inView,
+					 char			inCharacter)
+{
+	CFStringRef		newTitle = gCharacterToCFStringMap()[inCharacter];
+	OSStatus		result = noErr;
+	
+	
+	if (newTitle == nullptr) result = paramErr;
+	else
+	{
+		result = SetControlTitleWithCFString(inView, newTitle);
+	}
+	return result;
+}// My_SessionsPanelKeyboardUI::setButtonFromKey
 
 
 /*!
@@ -2535,6 +2643,62 @@ updateCommandLine	(Session_Protocol	inProtocol,
 
 
 /*!
+Returns a reference to a map from character codes (which
+may be invisible ASCII) to descriptive strings; the map
+is automatically initialized the first time this is called.
+
+(3.1)
+*/
+My_CharacterToCFStringMap&
+initCharacterToCFStringMap ()
+{
+	// instantiate only one of these
+	static My_CharacterToCFStringMap	result;
+	
+	
+	if (result.empty())
+	{
+		// set up map of ASCII codes to CFStrings, for convenience
+		result['@' - '@'] = CFSTR("^@");
+		result['A' - '@'] = CFSTR("^A");
+		result['B' - '@'] = CFSTR("^B");
+		result['C' - '@'] = CFSTR("^C");
+		result['D' - '@'] = CFSTR("^D");
+		result['E' - '@'] = CFSTR("^E");
+		result['F' - '@'] = CFSTR("^F");
+		result['G' - '@'] = CFSTR("^G");
+		result['H' - '@'] = CFSTR("^H");
+		result['I' - '@'] = CFSTR("^I");
+		result['J' - '@'] = CFSTR("^J");
+		result['K' - '@'] = CFSTR("^K");
+		result['L' - '@'] = CFSTR("^L");
+		result['M' - '@'] = CFSTR("^M");
+		result['N' - '@'] = CFSTR("^N");
+		result['O' - '@'] = CFSTR("^O");
+		result['P' - '@'] = CFSTR("^P");
+		result['Q' - '@'] = CFSTR("^Q");
+		result['R' - '@'] = CFSTR("^R");
+		result['S' - '@'] = CFSTR("^S");
+		result['T' - '@'] = CFSTR("^T");
+		result['U' - '@'] = CFSTR("^U");
+		result['V' - '@'] = CFSTR("^V");
+		result['W' - '@'] = CFSTR("^W");
+		result['X' - '@'] = CFSTR("^X");
+		result['Y' - '@'] = CFSTR("^Y");
+		result['Z' - '@'] = CFSTR("^Z");
+		result['[' - '@'] = CFSTR("^[");
+		result['\\' - '@'] = CFSTR("^\\");
+		result[']' - '@'] = CFSTR("^]");
+		result['~' - '@'] = CFSTR("^~");
+		result['\?' - '@'] = CFSTR("^?");
+		assert(result.size() == 32/* number of entries above */);
+	}
+	
+	return result;
+}// initializeCharacterStringMap
+
+
+/*!
 Changes the theme font of all bevel button controls
 in the specified window to use the system font
 (which automatically sets the font size).  By default
@@ -2660,8 +2824,9 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 	OSStatus						result = eventNotHandledErr;
 	// WARNING: More than one UI uses this handler.  The context will
 	// depend on the command ID.
-	My_SessionsPanelGraphicsUI*		graphicsInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelGraphicsUI*);
 	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelResourceUI*);
+	My_SessionsPanelKeyboardUI*		keyboardInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelKeyboardUI*);
+	My_SessionsPanelGraphicsUI*		graphicsInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelGraphicsUI*);
 	UInt32 const					kEventClass = GetEventClass(inEvent);
 	UInt32 const					kEventKind = GetEventKind(inEvent);
 	
@@ -2678,6 +2843,13 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 		// if the command information was found, proceed
 		if (noErr == result)
 		{
+			enum
+			{
+				kInitialChosenCharValue		= 'X'
+			};
+			char	chosenChar = kInitialChosenCharValue;
+			
+			
 			switch (received.commandID)
 			{
 			case kCommandFormatDefault:
@@ -2907,6 +3079,163 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 				}
 				break;
 			
+			case kCommandEditInterruptKey:
+			case kCommandEditSuspendKey:
+			case kCommandEditResumeKey:
+				{
+					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
+					HIViewWrap		buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
+					HIViewWrap		buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
+					HIViewWrap		buttonSetResumeKey(idMyButtonChangeResumeKey, window);
+					
+					
+					// show the control keys palette and target the button
+					Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(window));
+					
+					// change the active button
+					SetControl32BitValue(buttonSetInterruptKey,
+											(kCommandEditInterruptKey == received.commandID)
+											? kControlCheckBoxCheckedValue
+											: kControlCheckBoxUncheckedValue);
+					SetControl32BitValue(buttonSetSuspendKey,
+											(kCommandEditSuspendKey == received.commandID)
+											? kControlCheckBoxCheckedValue
+											: kControlCheckBoxUncheckedValue);
+					SetControl32BitValue(buttonSetResumeKey,
+											(kCommandEditResumeKey == received.commandID)
+											? kControlCheckBoxCheckedValue
+											: kControlCheckBoxUncheckedValue);
+				}
+				break;
+			
+			case kCommandKeypadControlAtSign:
+				chosenChar = '@' - '@';
+				break;
+			
+			case kCommandKeypadControlA:
+				chosenChar = 'A' - '@';
+				break;
+			
+			case kCommandKeypadControlB:
+				chosenChar = 'B' - '@';
+				break;
+			
+			case kCommandKeypadControlC:
+				chosenChar = 'C' - '@';
+				break;
+			
+			case kCommandKeypadControlD:
+				chosenChar = 'D' - '@';
+				break;
+			
+			case kCommandKeypadControlE:
+				chosenChar = 'E' - '@';
+				break;
+			
+			case kCommandKeypadControlF:
+				chosenChar = 'F' - '@';
+				break;
+			
+			case kCommandKeypadControlG:
+				chosenChar = 'G' - '@';
+				break;
+			
+			case kCommandKeypadControlH:
+				chosenChar = 'H' - '@';
+				break;
+			
+			case kCommandKeypadControlI:
+				chosenChar = 'I' - '@';
+				break;
+			
+			case kCommandKeypadControlJ:
+				chosenChar = 'J' - '@';
+				break;
+			
+			case kCommandKeypadControlK:
+				chosenChar = 'K' - '@';
+				break;
+			
+			case kCommandKeypadControlL:
+				chosenChar = 'L' - '@';
+				break;
+			
+			case kCommandKeypadControlM:
+				chosenChar = 'M' - '@';
+				break;
+			
+			case kCommandKeypadControlN:
+				chosenChar = 'N' - '@';
+				break;
+			
+			case kCommandKeypadControlO:
+				chosenChar = 'O' - '@';
+				break;
+			
+			case kCommandKeypadControlP:
+				chosenChar = 'P' - '@';
+				break;
+			
+			case kCommandKeypadControlQ:
+				chosenChar = 'Q' - '@';
+				break;
+			
+			case kCommandKeypadControlR:
+				chosenChar = 'R' - '@';
+				break;
+			
+			case kCommandKeypadControlS:
+				chosenChar = 'S' - '@';
+				break;
+			
+			case kCommandKeypadControlT:
+				chosenChar = 'T' - '@';
+				break;
+			
+			case kCommandKeypadControlU:
+				chosenChar = 'U' - '@';
+				break;
+			
+			case kCommandKeypadControlV:
+				chosenChar = 'V' - '@';
+				break;
+			
+			case kCommandKeypadControlW:
+				chosenChar = 'W' - '@';
+				break;
+			
+			case kCommandKeypadControlX:
+				chosenChar = 'X' - '@';
+				break;
+			
+			case kCommandKeypadControlY:
+				chosenChar = 'Y' - '@';
+				break;
+			
+			case kCommandKeypadControlZ:
+				chosenChar = 'Z' - '@';
+				break;
+			
+			case kCommandKeypadControlLeftSquareBracket:
+				chosenChar = '[' - '@';
+				break;
+			
+			case kCommandKeypadControlBackslash:
+				chosenChar = '\\' - '@';
+				break;
+			
+			case kCommandKeypadControlRightSquareBracket:
+				chosenChar = ']' - '@';
+				break;
+			
+			case kCommandKeypadControlTilde:
+				chosenChar = '~' - '@';
+				break;
+			
+			case kCommandKeypadControlQuestionMark:
+				chosenChar = '\?' - '@';
+				break;
+			
 			case kCommandSetTEKModeDisabled:
 			case kCommandSetTEKModeTEK4014:
 			case kCommandSetTEKModeTEK4105:
@@ -2955,6 +3284,51 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 				// wouldn’t be able to select menu commands while the window is open
 				result = eventNotHandledErr;
 				break;
+			}
+			
+			// if the chosen character is not the default value, a control key in
+			// the palette was clicked; use it to change the Interrupt, Suspend or
+			// Resume key (whichever is active)
+			if (chosenChar != kInitialChosenCharValue)
+			{
+				My_SessionsPanelKeyboardDataPtr		dataPtr = REINTERPRET_CAST
+																(Panel_ReturnImplementation(keyboardInterfacePtr->panel),
+																	My_SessionsPanelKeyboardDataPtr);
+				HIWindowRef							window = HIViewGetWindow(keyboardInterfacePtr->mainView);
+				HIViewWrap							buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
+				HIViewWrap							buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
+				HIViewWrap							buttonSetResumeKey(idMyButtonChangeResumeKey, window);
+				HIViewRef							view = nullptr;
+				Preferences_Tag						chosenPreferencesTag = '----';
+				Preferences_Result					prefsResult = kPreferences_ResultOK;
+				OSStatus							error = noErr;
+				
+				
+				// one of the 3 buttons should always be active
+				// INCOMPLETE - arrange to remember the selected key somewhere
+				if (GetControl32BitValue(buttonSetInterruptKey) == kControlCheckBoxCheckedValue)
+				{
+					chosenPreferencesTag = kPreferences_TagKeyInterruptProcess;
+					view = buttonSetInterruptKey;
+				}
+				else if (GetControl32BitValue(buttonSetSuspendKey) == kControlCheckBoxCheckedValue)
+				{
+					chosenPreferencesTag = kPreferences_TagKeySuspendOutput;
+					view = buttonSetSuspendKey;
+				}
+				else if (GetControl32BitValue(buttonSetResumeKey) == kControlCheckBoxCheckedValue)
+				{
+					chosenPreferencesTag = kPreferences_TagKeyResumeOutput;
+					view = buttonSetResumeKey;
+				}
+				
+				prefsResult = Preferences_ContextSetData(dataPtr->dataModel, chosenPreferencesTag,
+															sizeof(chosenChar), &chosenChar);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					error = keyboardInterfacePtr->setButtonFromKey(view, chosenChar);
+					assert_noerr(error);
+				}
 			}
 		}
 	}
