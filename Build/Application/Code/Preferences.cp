@@ -6988,7 +6988,8 @@ getSessionPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							char* const		data = REINTERPRET_CAST(outDataPtr, char*);
 							
 							
-							*data = STATIC_CAST(CFStringGetCharacterAtIndex(keystrokeCFString, 1), char);
+							// convert to invisible character, e.g. 'C' should become control-C
+							*data = STATIC_CAST(CFStringGetCharacterAtIndex(keystrokeCFString, 1), char) - '@';
 							CFRelease(keystrokeCFString), keystrokeCFString = nullptr;
 						}
 					}
