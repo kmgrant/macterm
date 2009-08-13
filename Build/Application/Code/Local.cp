@@ -729,18 +729,6 @@ Local_SpawnProcess	(SessionRef			inUninitializedSession,
 				pthread_t						thread;
 				
 				
-				// synchronize somewhat with terminal control structure
-				{
-					Session_EventKeys		keys;
-					
-					
-					bzero(&keys, sizeof(keys));
-					keys.interrupt = terminalControl.c_cc[VINTR];
-					keys.suspend = terminalControl.c_cc[VSTOP];
-					keys.resume = terminalControl.c_cc[VSTART];
-					Session_SetEventKeys(inUninitializedSession, keys);
-				}
-				
 				// store process information for session
 				{
 					Local_ProcessRef	newProcess = nullptr;

@@ -239,9 +239,10 @@ any code outside this module.  See Session_New().
 */
 struct My_Session
 {
-	My_Session		(Boolean);
+	My_Session		(Preferences_ContextRef, Boolean);
 	~My_Session		();
 	
+	Preferences_ContextRef		configuration;				// not always in sync; see Session_ReturnConfiguration()
 	Boolean						readOnly;					// whether or not user input is allowed
 	Session_Type				kind;						// type of session; affects use of the union below
 	Session_State				status;						// indicates whether session is initialized, etc.
@@ -347,6 +348,7 @@ void						changeStateAttributes				(My_SessionPtr, Session_StateAttributes,
 void						configureSaveDialog					(SessionRef, NavDialogCreationOptions&);
 void						connectionStateChanged				(ListenerModel_Ref, ListenerModel_Event,
 																 void*, void*);
+UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, Boolean);
 My_HMHelpContentRecWrap&	createHelpTagForInterrupt			();
 My_HMHelpContentRecWrap&	createHelpTagForResume				();
 My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
@@ -595,14 +597,15 @@ has arrived.
 (3.0)
 */
 SessionRef
-Session_New		(Boolean	inIsReadOnly)
+Session_New		(Preferences_ContextRef		inConfigurationOrNull,
+				 Boolean					inIsReadOnly)
 {
 	SessionRef		result = nullptr;
 	
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_Session(inIsReadOnly), SessionRef);
+		result = REINTERPRET_CAST(new My_Session(inConfigurationOrNull, inIsReadOnly), SessionRef);
 	}
 	catch (std::bad_alloc)
 	{
@@ -2085,6 +2088,41 @@ Session_ReturnActiveWindow	(SessionRef		inRef)
 	
 	return result;
 }// ReturnActiveWindow
+
+
+/*!
+Returns a variety of preferences unique to this session.
+
+You can make changes to this context ONLY if you do it in “batch
+mode” with Preferences_ContextCopy().  In other words, even to
+make a single change, you must first add the change to a new
+temporary context, then use Preferences_ContextCopy() to read
+the temporary settings into the context returned by this routine.
+Batch mode changes are detected by the Session and used to
+automatically update internal data structures.
+
+Note that you cannot expect all possible tags to be present;
+be prepared to not find what you look for.  In addition, tags
+that are present in one session may be absent in another.
+
+(4.0)
+*/
+Preferences_ContextRef
+Session_ReturnConfiguration		(SessionRef		inRef)
+{
+	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	Preferences_ContextRef	result = ptr->configuration;
+	
+	
+	// since many settings are represented internally, this context
+	// will not contain the latest information; update the context
+	// based on current settings
+	
+	// UNIMPLEMENTED
+	
+	return result;
+}// ReturnConfiguration
 
 
 /*!
@@ -3960,8 +3998,13 @@ Constructor.  See Session_New().
 (4.0)
 */
 My_Session::
-My_Session	(Boolean	inIsReadOnly)
+My_Session	(Preferences_ContextRef		inConfigurationOrNull,
+			 Boolean					inIsReadOnly)
 :
+// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
+configuration((nullptr == inConfigurationOrNull)
+				? Preferences_NewContext(Quills::Prefs::SESSION)
+				: Preferences_NewCloneContext(inConfigurationOrNull, true/* detach */)),
 readOnly(inIsReadOnly),
 kind(kSession_TypeLocalNonLoginShell),
 status(kSession_StateBrandNew),
@@ -4016,7 +4059,6 @@ auxiliaryDataMap(),
 selfRef(REINTERPRET_CAST(this, SessionRef))
 // echo initialized below
 // preferencesCache initialized below
-// IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 {
 	bzero(&this->echo, sizeof(this->echo));
 	bzero(&this->preferencesCache, sizeof(this->preferencesCache));
@@ -4026,8 +4068,13 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 	
 	assert(nullptr != this->readBufferPtr);
 	
-	// these are initialized later by the Local module
 	bzero(&this->eventKeys, sizeof(this->eventKeys));
+	{
+		UInt16		preferenceCount = copyEventKeyPreferences(this, inConfigurationOrNull, true/* search defaults too */);
+		
+		
+		assert(preferenceCount > 0);
+	}
 	
 	Session_StartMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
 	Session_StartMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
@@ -4049,6 +4096,7 @@ selfRef(REINTERPRET_CAST(this, SessionRef))
 								true/* call immediately to initialize */);
 	Preferences_StartMonitoring(this->preferencesListener, kPreferences_TagMapBackquote,
 								true/* call immediately to initialize */);
+	Preferences_ContextStartMonitoring(this->configuration, this->preferencesListener, kPreferences_ChangeContextBatchMode);
 }// My_Session default constructor
 
 
@@ -4064,9 +4112,12 @@ My_Session::
 	changeNotifyForSession(this, kSession_ChangeState, this->selfRef/* context */);
 	
 	// clean up
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->preferencesListener,
+															kPreferences_ChangeContextBatchMode);
 	Preferences_StopMonitoring(this->preferencesListener, kPreferences_TagCursorBlinks);
 	Preferences_StopMonitoring(this->preferencesListener, kPreferences_TagMapBackquote);
 	ListenerModel_ReleaseListener(&this->preferencesListener);
+	Preferences_ReleaseContext(&this->configuration);
 	
 	Session_StopMonitoring(this->selfRef, kSession_ChangeState, this->changeListener);
 	Session_StopMonitoring(this->selfRef, kSession_ChangeWindowValid, this->windowValidationListener);
@@ -4326,6 +4377,53 @@ connectionStateChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// connectionStateChanged
+
+
+/*!
+Attempts to read all supported key mapping tags from the given
+preference context, and any mappings that exist will be used to
+update the specified session.
+
+Returns the number of mappings that were changed.
+
+(4.0)
+*/
+UInt16
+copyEventKeyPreferences		(My_SessionPtr				inPtr,
+							 Preferences_ContextRef		inSource,
+							 Boolean					inSearchDefaults)
+{
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	char					eventKey = '\0';
+	UInt16					result = 0;
+	
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagKeyInterruptProcess,
+												sizeof(eventKey), &eventKey, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		inPtr->eventKeys.interrupt = eventKey;
+		++result;
+	}
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagKeySuspendOutput,
+												sizeof(eventKey), &eventKey, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		inPtr->eventKeys.suspend = eventKey;
+		++result;
+	}
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagKeyResumeOutput,
+												sizeof(eventKey), &eventKey, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		inPtr->eventKeys.resume = eventKey;
+		++result;
+	}
+	
+	return result;
+}// copyEventKeyPreferences
 
 
 /*!
@@ -5246,9 +5344,10 @@ are up to date for the changed preference.
 void
 preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					 ListenerModel_Event	inPreferenceTagThatChanged,
-					 void*					UNUSED_ARGUMENT(inEventContextPtr),
+					 void*					inPreferencesContext,
 					 void*					inListenerContextPtr)
 {
+	Preferences_ContextRef	prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
 	SessionRef				ref = REINTERPRET_CAST(inListenerContextPtr, SessionRef);
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), ref);
 	size_t					actualSize = 0L;
@@ -5279,7 +5378,16 @@ preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	
 	default:
-		// ???
+		if (kPreferences_ChangeContextBatchMode == inPreferenceTagThatChanged)
+		{
+			// batch mode; multiple things have changed, so check for the new values
+			// of everything that is understood by a terminal view
+			(UInt16)copyEventKeyPreferences(ptr, prefsContext, false/* search for defaults */);
+		}
+		else
+		{
+			// ???
+		}
 		break;
 	}
 }// preferenceChanged

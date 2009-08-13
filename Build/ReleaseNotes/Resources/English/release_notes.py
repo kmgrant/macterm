@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090813',
     '20090806',
     '20090805',
     '20090804',
@@ -262,6 +263,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090813': [
+        'Fixed default control key preferences to be the fallback for all sessions, including shells.',
+    ],
     '20090806': [
         'Fixed control key settings in the Preferences window Sessions pane Keyboard tab.',
     ],

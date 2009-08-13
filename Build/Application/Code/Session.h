@@ -367,7 +367,8 @@ struct Session_EventKeys
 
 // DO NOT CREATE SESSIONS THIS WAY; THIS IS A TRANSITIONAL ROUTINE (USE SessionFactory METHODS, INSTEAD)
 SessionRef
-	Session_New								(Boolean							inIsReadOnly = false);
+	Session_New								(Preferences_ContextRef				inConfigurationOrNull = nullptr,
+											 Boolean							inIsReadOnly = false);
 
 void
 	Session_Dispose							(SessionRef*						inoutRefPtr);
@@ -634,6 +635,9 @@ TerminalWindowRef
 
 HIWindowRef
 	Session_ReturnActiveWindow				(SessionRef							inRef);
+
+Preferences_ContextRef
+	Session_ReturnConfiguration				(SessionRef							inRef);
 
 Session_EventKeys
 	Session_ReturnEventKeys					(SessionRef							inRef);

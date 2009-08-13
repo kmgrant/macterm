@@ -478,7 +478,7 @@ SessionFactory_NewSessionArbitraryCommand	(TerminalWindowRef			inTerminalWindowO
 			Console_Warning(Console_WriteLine, "unable to reconfigure terminal window");
 		}
 		
-		result = Session_New();
+		result = Session_New(inContext);
 		if (nullptr != result)
 		{
 			Local_Result	localResult = kLocal_ResultOK;
@@ -1191,7 +1191,7 @@ SessionFactory_NewSessionUserFavorite	(TerminalWindowRef			inTerminalWindowOrNul
 		if (kPreferences_ResultOK == prefsResult)
 		{
 			result = SessionFactory_NewSessionArbitraryCommand(terminalWindow, argumentCFArray,
-																nullptr/* context */);
+																inSessionContext);
 			CFRelease(argumentCFArray), argumentCFArray = nullptr;
 		}
 		// INCOMPLETE!!!
@@ -1267,7 +1267,7 @@ SessionFactory_DisplayUserCustomizationUI	(TerminalWindowRef			inTerminalWindowO
 	Boolean					result = true;
 	
 	
-	
+
 	prefsResult = Preferences_GetDefaultContext(&sessionContext, Quills::Prefs::SESSION);
 	if (kPreferences_ResultOK != prefsResult)
 	{
