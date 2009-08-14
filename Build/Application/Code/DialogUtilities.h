@@ -232,6 +232,10 @@ OSStatus
 											 CFStringRef			inText,
 											 MenuItemIndex			inFallbackSelection = 1);
 
+OSStatus
+	DialogUtilities_SetSegmentByCommand		(HIViewRef				inSegmentedView,
+											 UInt32					inCommandID);
+
 HIViewWrap&
 	DialogUtilities_SetUpHelpButton			(HIViewWrap&			inoutView);
 

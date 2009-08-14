@@ -1778,6 +1778,34 @@ DialogUtilities_SetPopUpItemByText	(HIViewRef		inPopUpMenuView,
 
 
 /*!
+Determines the first segment matching the given command ID,
+and makes that the currently-selected segment.
+
+(4.0)
+*/
+OSStatus
+DialogUtilities_SetSegmentByCommand		(HIViewRef		inSegmentedView,
+										 UInt32			inCommandID)
+{
+	UInt32 const	kNumberOfSegments = HISegmentedViewGetSegmentCount(inSegmentedView);
+	UInt32			segmentCommandID = 0;
+	OSStatus		result = errUnknownControl;
+	
+	
+	for (UInt32 i = 1; i <= kNumberOfSegments; ++i)
+	{
+		segmentCommandID = HISegmentedViewGetSegmentCommand(inSegmentedView, i);
+		if (inCommandID == segmentCommandID)
+		{
+			result = HISegmentedViewSetSegmentValue(inSegmentedView, i, kControlRadioButtonCheckedValue);
+		}
+	}
+	
+	return result;
+}// SetSegmentByCommand
+
+
+/*!
 Call this routine on the Help button control of every window.
 This routine checks to see if all necessary components for
 contextual help are available (disabling the button if help
