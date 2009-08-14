@@ -63,6 +63,7 @@
 #include <Localization.h>
 #include <MemoryBlockPtrLocker.template.h>
 #include <MemoryBlocks.h>
+#include <Panel.h>
 #include <RegionUtilities.h>
 #include <SoundSystem.h>
 #include <StringUtilities.h>
@@ -83,6 +84,8 @@
 #include "MacroManager.h"
 #include "NetEvents.h"
 #include "Preferences.h"
+#include "PrefPanelSessions.h"
+#include "PrefsContextDialog.h"
 #include "QuillsSession.h"
 #include "RasterGraphicsKernel.h"
 #include "RasterGraphicsScreen.h"
@@ -90,7 +93,6 @@
 #include "Session.h"
 #include "SessionDescription.h"
 #include "SessionFactory.h"
-#include "SpecialKeySequencesDialog.h"
 #include "Terminal.h"
 #include "TerminalView.h"
 #include "TerminalWindow.h"
@@ -1064,12 +1066,15 @@ be handled automatically, asynchronously, in that case.
 void
 Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 {
-	SpecialKeySequencesDialog_Ref	dialog = nullptr;
+	// display a key mapping customization dialog
+	PrefsContextDialog_Ref	dialog = nullptr;
+	Panel_Ref				prefsPanel = PrefPanelSessions_NewKeyboardPane();
 	
 	
 	// display the sheet
-	dialog = SpecialKeySequencesDialog_New(inRef, SpecialKeySequencesDialog_StandardCloseNotifyProc);
-	SpecialKeySequencesDialog_Display(dialog); // automatically disposed when the user clicks a button
+	dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
+									Session_ReturnConfiguration(inRef));
+	PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
 }// DisplaySpecialKeySequencesDialog
 
 
