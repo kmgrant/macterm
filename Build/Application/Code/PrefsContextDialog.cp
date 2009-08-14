@@ -55,7 +55,7 @@ namespace {
 
 struct My_PrefsContextDialog
 {
-	My_PrefsContextDialog	(HIWindowRef, Panel_Ref, Preferences_ContextRef);
+	My_PrefsContextDialog	(HIWindowRef, Panel_Ref, Preferences_ContextRef, PrefsContextDialog_DisplayOptions);
 	
 	~My_PrefsContextDialog	();
 	
@@ -111,9 +111,10 @@ that occur when the dialog is closed.
 (4.0)
 */
 PrefsContextDialog_Ref
-PrefsContextDialog_New	(HIWindowRef				inParentWindowOrNullForModalDialog,
-						 Panel_Ref					inHostedPanel,
-						 Preferences_ContextRef		inoutData)
+PrefsContextDialog_New	(HIWindowRef						inParentWindowOrNullForModalDialog,
+						 Panel_Ref							inHostedPanel,
+						 Preferences_ContextRef				inoutData,
+						 PrefsContextDialog_DisplayOptions	inOptions)
 {
 	PrefsContextDialog_Ref	result = nullptr;
 	
@@ -121,7 +122,7 @@ PrefsContextDialog_New	(HIWindowRef				inParentWindowOrNullForModalDialog,
 	try
 	{
 		result = REINTERPRET_CAST(new My_PrefsContextDialog(inParentWindowOrNullForModalDialog, inHostedPanel,
-															inoutData), PrefsContextDialog_Ref);
+															inoutData, inOptions), PrefsContextDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -211,9 +212,10 @@ Constructor.  See PrefsContextDialog_New().
 (4.0)
 */
 My_PrefsContextDialog::
-My_PrefsContextDialog	(HIWindowRef				inParentWindowOrNullForModalDialog,
-						 Panel_Ref					inHostedPanel,
-						 Preferences_ContextRef		inoutData)
+My_PrefsContextDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
+						 Panel_Ref							inHostedPanel,
+						 Preferences_ContextRef				inoutData,
+						 PrefsContextDialog_DisplayOptions	inOptions)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
 selfRef				(REINTERPRET_CAST(this, PrefsContextDialog_Ref)),
@@ -231,8 +233,9 @@ commandHandler		(GetWindowEventTarget(Panel_ReturnOwningWindow(GenericDialog_Ret
 	// note that the cloned context is implicitly retained
 	Preferences_RetainContext(this->originalDataModel);
 	
-	// add a button for copying the context to user defaults
+	if (0 == (inOptions & kPrefsContextDialog_DisplayOptionNoAddToPrefsButton))
 	{
+		// add a button for copying the context to user defaults
 		CFStringRef			buttonCFString = nullptr;
 		UIStrings_Result	stringResult = UIStrings_Copy
 											(kUIStrings_PreferencesWindowAddToFavoritesButton, buttonCFString);

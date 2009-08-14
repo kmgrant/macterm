@@ -52,6 +52,18 @@
 
 
 
+#pragma mark Constants
+
+/*!
+Which characters are used for line endings in text files
+(such as file captures and saved selections).
+*/
+enum PrefsContextDialog_DisplayOptions
+{
+	kPrefsContextDialog_DisplayOptionsDefault				= 0,
+	kPrefsContextDialog_DisplayOptionNoAddToPrefsButton		= 1 << 0	//!< suppress “Add to Preferences” button
+};
+
 #pragma mark Types
 
 typedef struct PrefsContextDialog_OpaqueStruct*		PrefsContextDialog_Ref;
@@ -63,7 +75,8 @@ typedef struct PrefsContextDialog_OpaqueStruct*		PrefsContextDialog_Ref;
 PrefsContextDialog_Ref
 	PrefsContextDialog_New					(HIWindowRef						inParentWindowOrNullForModalDialog,
 											 Panel_Ref							inHostedPanel,
-											 Preferences_ContextRef				inoutData);
+											 Preferences_ContextRef				inoutData,
+											 PrefsContextDialog_DisplayOptions	inOptions = kPrefsContextDialog_DisplayOptionsDefault);
 
 void
 	PrefsContextDialog_Dispose				(PrefsContextDialog_Ref*			inoutDialogPtr);
