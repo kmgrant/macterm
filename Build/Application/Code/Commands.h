@@ -200,9 +200,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 
 // Map menu
 // WARNING: These are referenced by value in the MainMenus.nib file!
-#define kCommandDeletePressSendsBackspace		'DBks'
-#define kCommandDeletePressSendsDelete			'DDel'
-#define kCommandEMACSArrowMapping				'EMAC'
+#define kCommandDeletePressSendsBackspace		'DBks'	// multiple interfaces
+#define kCommandDeletePressSendsDelete			'DDel'	// multiple interfaces
+#define kCommandEMACSArrowMapping				'EMAC'	// multiple interfaces
 #define kCommandLocalPageUpDown					'LcPg'
 #define kCommandSetKeys							'SetK'
 #define kCommandMacroSetNone					'XMcr'
@@ -490,6 +490,11 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandEditInterruptKey				'SIKy'		// multiple interfaces
 #define kCommandEditResumeKey					'SRKy'		// multiple interfaces
 #define kCommandEditSuspendKey					'SSKy'		// multiple interfaces
+#define kCommandSetMetaNone						'EMNo'		// multiple interfaces
+#define kCommandSetMetaOptionKey				'EMOp'		// multiple interfaces
+#define kCommandSetMetaControlAndCommandKeys	'EMCC'		// multiple interfaces
+#define kCommandSetNewlineCarriageReturnLineFeed	'CRLF'	// multiple interfaces
+#define kCommandSetNewlineCarriageReturnNull	'CR00'		// multiple interfaces
 #define kCommandToggleTerminalLED1				'LED1'		// terminal window toolbars
 #define kCommandToggleTerminalLED2				'LED2'		// terminal window toolbars
 #define kCommandToggleTerminalLED3				'LED3'		// terminal window toolbars

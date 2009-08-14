@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090814',
     '20090813',
     '20090806',
     '20090805',
@@ -263,6 +264,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090814': [
+        'Preferences window Sessions pane Keyboard tab is now fully implemented.',
+        'Custom Key Sequences dialog is now internally identical to the Preferences window Sessions pane Keyboard tab.',
+    ],
     '20090813': [
         'Fixed default control key preferences to be the fallback for all sessions, including shells.',
     ],

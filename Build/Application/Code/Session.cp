@@ -1073,7 +1073,8 @@ Session_DisplaySpecialKeySequencesDialog	(SessionRef		inRef)
 	
 	// display the sheet
 	dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
-									Session_ReturnConfiguration(inRef));
+									Session_ReturnConfiguration(inRef),
+									kPrefsContextDialog_DisplayOptionNoAddToPrefsButton);
 	PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
 }// DisplaySpecialKeySequencesDialog
 
@@ -2124,7 +2125,75 @@ Session_ReturnConfiguration		(SessionRef		inRef)
 	// will not contain the latest information; update the context
 	// based on current settings
 	
-	// UNIMPLEMENTED
+	{
+		char const	kKeyChar = ptr->eventKeys.interrupt;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagKeyInterruptProcess,
+													sizeof(kKeyChar), &kKeyChar);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		char const	kKeyChar = ptr->eventKeys.suspend;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagKeySuspendOutput,
+													sizeof(kKeyChar), &kKeyChar);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		char const	kKeyChar = ptr->eventKeys.resume;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagKeyResumeOutput,
+													sizeof(kKeyChar), &kKeyChar);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		Boolean const	kMapCRToCRNull = (kSession_NewlineModeMapCRNull == ptr->eventKeys.newline);
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagMapCarriageReturnToCRNull,
+													sizeof(kMapCRToCRNull), &kMapCRToCRNull);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagEMACSMetaKey,
+													sizeof(ptr->eventKeys.meta), &ptr->eventKeys.meta);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagMapDeleteToBackspace,
+													sizeof(ptr->eventKeys.deleteSendsBackspace),
+													&ptr->eventKeys.deleteSendsBackspace);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagMapArrowsForEMACS,
+													sizeof(ptr->eventKeys.arrowsRemappedForEMACS),
+													&ptr->eventKeys.arrowsRemappedForEMACS);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagPageKeysControlLocalTerminal,
+													sizeof(ptr->eventKeys.pageKeysLocalControl),
+													&ptr->eventKeys.pageKeysLocalControl);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagMapKeypadTopRowForVT220,
+													sizeof(ptr->eventKeys.keypadRemappedForVT220),
+													&ptr->eventKeys.keypadRemappedForVT220);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
 	
 	return result;
 }// ReturnConfiguration
@@ -4424,6 +4493,57 @@ copyEventKeyPreferences		(My_SessionPtr				inPtr,
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		inPtr->eventKeys.resume = eventKey;
+		++result;
+	}
+	
+	{
+		Boolean		mapCRToCRNull = false;
+		
+		
+		prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagMapCarriageReturnToCRNull,
+													sizeof(mapCRToCRNull), &mapCRToCRNull, inSearchDefaults);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			inPtr->eventKeys.newline = (mapCRToCRNull) ? kSession_NewlineModeMapCRNull : kSession_NewlineModeMapCRLF;
+			++result;
+		}
+	}
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagEMACSMetaKey,
+												sizeof(inPtr->eventKeys.meta), &inPtr->eventKeys.meta, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagMapDeleteToBackspace,
+												sizeof(inPtr->eventKeys.deleteSendsBackspace),
+												&inPtr->eventKeys.deleteSendsBackspace, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagMapArrowsForEMACS,
+												sizeof(inPtr->eventKeys.arrowsRemappedForEMACS),
+												&inPtr->eventKeys.arrowsRemappedForEMACS, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagPageKeysControlLocalTerminal,
+												sizeof(inPtr->eventKeys.pageKeysLocalControl),
+												&inPtr->eventKeys.pageKeysLocalControl, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
+		++result;
+	}
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagMapKeypadTopRowForVT220,
+												sizeof(inPtr->eventKeys.keypadRemappedForVT220),
+												&inPtr->eventKeys.keypadRemappedForVT220, inSearchDefaults);
+	if (kPreferences_ResultOK == prefsResult)
+	{
 		++result;
 	}
 	

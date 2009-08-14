@@ -110,6 +110,10 @@ HIViewID const	idMyButtonChooseCaptureFile		= { 'CapF', 0/* ID */ };
 HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
 HIViewID const	idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
 HIViewID const	idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
+HIViewID const	idMyCheckBoxMapArrowsForEMACS	= { 'XEAr', 0/* ID */ };
+HIViewID const	idMySegmentsEMACSMetaKey		= { 'Meta', 0/* ID */ };
+HIViewID const	idMySegmentsDeleteKeyMapping	= { 'DMap', 0/* ID */ };
+HIViewID const	idMyPopUpMenuNewLineMapping		= { 'NewL', 0/* ID */ };
 HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
 HIViewID const	idMySeparatorKeyboardOptions	= { 'KSep', 0/* ID */ };
 HIViewID const	idMyRadioButtonTEKDisabled		= { 'RTNo', 0/* ID */ };
@@ -1372,13 +1376,6 @@ createContainerView		(Panel_Ref		inPanel,
 	this->idealWidth = idealContainerBounds.right - idealContainerBounds.left;
 	this->idealHeight = idealContainerBounds.bottom - idealContainerBounds.top;
 	
-	// this tab has extra buttons because it is also used for a sheet;
-	// hide the extra buttons
-	HIViewWrap		okayButton(HIViewIDWrap('Okay', 0), inOwningWindow);
-	HIViewWrap		cancelButton(HIViewIDWrap('Canc', 0), inOwningWindow);
-	okayButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
-	cancelButton << HIViewWrap_AssertExists << HIViewWrap_SetVisibleState(false);
-	
 	// make the container match the ideal size, because the tabs view
 	// will need this guideline when deciding its largest size
 	{
@@ -1566,8 +1563,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		size_t					actualSize = 0;
 		
 		
-		// INCOMPLETE
-		
 		// set interrupt key
 		{
 			char	keyCode = '\0';
@@ -1621,6 +1616,96 @@ readPreferences		(Preferences_ContextRef		inSettings)
 				assert_noerr(error);
 			}
 		}
+		
+		// set EMACS arrows checkbox
+		{
+			Boolean		mapArrows = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapArrowsForEMACS,
+														sizeof(mapArrows), &mapArrows,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				HIViewWrap		checkBox(idMyCheckBoxMapArrowsForEMACS, window);
+				
+				
+				SetControl32BitValue(checkBox, BooleanToCheckBoxValue(mapArrows));
+			}
+		}
+		
+		// set meta key
+		{
+			Session_EMACSMetaKey	metaKey = kSession_EMACSMetaKeyOff;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagEMACSMetaKey,
+														sizeof(metaKey), &metaKey,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				HIViewWrap		segmentedView(idMySegmentsEMACSMetaKey, window);
+				UInt32			commandID = kCommandSetMetaNone;
+				
+				
+				switch (metaKey)
+				{
+				case kSession_EMACSMetaKeyControlCommand:
+					commandID = kCommandSetMetaControlAndCommandKeys;
+					break;
+				
+				case kSession_EMACSMetaKeyOption:
+					commandID = kCommandSetMetaOptionKey;
+					break;
+				
+				case kSession_EMACSMetaKeyOff:
+				default:
+					commandID = kCommandSetMetaNone;
+					break;
+				}
+				(OSStatus)DialogUtilities_SetSegmentByCommand(segmentedView, commandID);
+			}
+		}
+		
+		// set delete key mapping
+		{
+			Boolean		deleteUsesBackspace = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapDeleteToBackspace,
+														sizeof(deleteUsesBackspace), &deleteUsesBackspace,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				HIViewWrap		segmentedView(idMySegmentsDeleteKeyMapping, window);
+				
+				
+				(OSStatus)DialogUtilities_SetSegmentByCommand(segmentedView,
+																(deleteUsesBackspace)
+																? kCommandDeletePressSendsBackspace
+																: kCommandDeletePressSendsDelete);
+			}
+		}
+		
+		// set new-line mapping
+		{
+			Boolean		useCRNULL = false;
+			
+			
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapCarriageReturnToCRNull,
+														sizeof(useCRNULL), &useCRNULL,
+														true/* search defaults too */, &actualSize);
+			if (kPreferences_ResultOK == prefsResult)
+			{
+				HIViewWrap		popUpMenu(idMyPopUpMenuNewLineMapping, window);
+				
+				
+				(OSStatus)DialogUtilities_SetPopUpItemByCommand(popUpMenu,
+																(useCRNULL)
+																? kCommandSetNewlineCarriageReturnNull
+																: kCommandSetNewlineCarriageReturnLineFeed);
+			}
+		}
 	}
 }// My_SessionsPanelKeyboardUI::readPreferences
 
@@ -1633,7 +1718,7 @@ for the buttons in the Keyboard tab.
 */
 pascal OSStatus
 My_SessionsPanelKeyboardUI::
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inMySessionsUIPtr)
 {
@@ -1660,7 +1745,11 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			{
 				kInitialChosenCharValue		= 'X'
 			};
-			char	chosenChar = kInitialChosenCharValue;
+			HIWindowRef							window = HIViewGetWindow(keyboardInterfacePtr->mainView);
+			My_SessionsPanelKeyboardDataPtr		dataPtr = REINTERPRET_CAST
+															(Panel_ReturnImplementation(keyboardInterfacePtr->panel),
+																My_SessionsPanelKeyboardDataPtr);
+			char								chosenChar = kInitialChosenCharValue;
 			
 			
 			switch (received.commandID)
@@ -1669,7 +1758,6 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			case kCommandEditSuspendKey:
 			case kCommandEditResumeKey:
 				{
-					HIWindowRef		window = HIViewGetWindow(keyboardInterfacePtr->mainView);
 					HIViewWrap		buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
 					HIViewWrap		buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
 					HIViewWrap		buttonSetResumeKey(idMyButtonChangeResumeKey, window);
@@ -1822,6 +1910,80 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				chosenChar = '\?' - '@';
 				break;
 			
+			case kCommandEMACSArrowMapping:
+				{
+					HIViewWrap				checkBox(idMyCheckBoxMapArrowsForEMACS, window);
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
+					Boolean					flag = (GetControl32BitValue(checkBox) == kControlCheckBoxCheckedValue);
+					
+					
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagMapArrowsForEMACS,
+																sizeof(flag), &flag);
+					assert(kPreferences_ResultOK == prefsResult);
+				}
+				break;
+			
+			case kCommandSetMetaNone:
+			case kCommandSetMetaOptionKey:
+			case kCommandSetMetaControlAndCommandKeys:
+				{
+					Session_EMACSMetaKey	metaKey = kSession_EMACSMetaKeyOff;
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
+					
+					
+					switch (received.commandID)
+					{
+					case kCommandSetMetaControlAndCommandKeys:
+						metaKey = kSession_EMACSMetaKeyControlCommand;
+						break;
+					
+					case kCommandSetMetaOptionKey:
+						metaKey = kSession_EMACSMetaKeyOption;
+						break;
+					
+					case kCommandSetMetaNone:
+					default:
+						metaKey = kSession_EMACSMetaKeyOff;
+						break;
+					}
+					
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagEMACSMetaKey,
+																sizeof(metaKey), &metaKey);
+					assert(kPreferences_ResultOK == prefsResult);
+				}
+				break;
+			
+			case kCommandDeletePressSendsBackspace:
+			case kCommandDeletePressSendsDelete:
+				{
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
+					Boolean					flag = (kCommandDeletePressSendsBackspace == received.commandID);
+					
+					
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel,
+																kPreferences_TagMapDeleteToBackspace,
+																sizeof(flag), &flag);
+					assert(kPreferences_ResultOK == prefsResult);
+				}
+				break;
+			
+			case kCommandSetNewlineCarriageReturnLineFeed:
+			case kCommandSetNewlineCarriageReturnNull:
+				{
+					Preferences_Result		prefsResult = kPreferences_ResultOK;
+					Boolean					flag = (kCommandSetNewlineCarriageReturnNull == received.commandID);
+					
+					
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel,
+																kPreferences_TagMapCarriageReturnToCRNull,
+																sizeof(flag), &flag);
+					assert(kPreferences_ResultOK == prefsResult);
+					
+					// update the pop-up button
+					result = eventNotHandledErr;
+				}
+				break;
+			
 			default:
 				// must return "eventNotHandledErr" here, or (for example) the user
 				// wouldn’t be able to select menu commands while the window is open
@@ -1834,17 +1996,13 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			// Resume key (whichever is active)
 			if (chosenChar != kInitialChosenCharValue)
 			{
-				My_SessionsPanelKeyboardDataPtr		dataPtr = REINTERPRET_CAST
-																(Panel_ReturnImplementation(keyboardInterfacePtr->panel),
-																	My_SessionsPanelKeyboardDataPtr);
-				HIWindowRef							window = HIViewGetWindow(keyboardInterfacePtr->mainView);
-				HIViewWrap							buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
-				HIViewWrap							buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
-				HIViewWrap							buttonSetResumeKey(idMyButtonChangeResumeKey, window);
-				HIViewRef							view = nullptr;
-				Preferences_Tag						chosenPreferencesTag = '----';
-				Preferences_Result					prefsResult = kPreferences_ResultOK;
-				OSStatus							error = noErr;
+				HIViewWrap			buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
+				HIViewWrap			buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
+				HIViewWrap			buttonSetResumeKey(idMyButtonChangeResumeKey, window);
+				HIViewRef			view = nullptr;
+				Preferences_Tag		chosenPreferencesTag = '----';
+				Preferences_Result	prefsResult = kPreferences_ResultOK;
+				OSStatus			error = noErr;
 				
 				
 				// one of the 3 buttons should always be active
