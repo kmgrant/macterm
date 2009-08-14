@@ -171,6 +171,9 @@ struct My_SessionsPanelGraphicsUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
+	static pascal OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+	
 	void
 	setMode		(VectorInterpreter_Mode);
 	
@@ -186,6 +189,7 @@ protected:
 
 private:
 	CommonEventHandlers_HIViewResizer	_containerResizer;
+	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a radio button is clicked
 };
 
 /*!
@@ -206,6 +210,9 @@ struct My_SessionsPanelKeyboardUI
 	void
 	readPreferences		(Preferences_ContextRef);
 	
+	static pascal OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+	
 	OSStatus
 	setButtonFromKey	(HIViewRef, char);
 
@@ -218,6 +225,7 @@ protected:
 
 private:
 	CommonEventHandlers_HIViewResizer	_containerResizer;
+	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a button is clicked
 };
 
 /*!
@@ -255,6 +263,9 @@ struct My_SessionsPanelResourceUI
 	
 	void
 	rebuildTranslationMenu ();
+	
+	static pascal OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 	
 	void
 	saveFieldPreferences	(Preferences_ContextRef);
@@ -366,7 +377,6 @@ My_CharacterToCFStringMap&	initCharacterToCFStringMap		();
 void				makeAllBevelButtonsUseTheSystemFont		(HIWindowRef);
 void				preferenceChanged						(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 pascal OSStatus		receiveFieldChangedInCommandLine		(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveHICommand						(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveServerBrowserEvent				(EventHandlerCallRef, EventRef, void*);
 
 } // anonymous namespace
@@ -899,7 +909,10 @@ idealHeight				(0.0),
 mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-							My_SessionsPanelGraphicsUI::deltaSize, this/* context */)
+							My_SessionsPanelGraphicsUI::deltaSize, this/* context */),
+_buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */)
 {
 	assert(this->mainView.exists());
 	assert(_containerResizer.isInstalled());
@@ -1144,6 +1157,95 @@ readPreferences		(Preferences_ContextRef		inSettings)
 
 
 /*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the radio buttons in the Graphics tab.
+
+(3.1)
+*/
+pascal OSStatus
+My_SessionsPanelGraphicsUI::
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMySessionsUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelGraphicsUI*		graphicsInterfacePtr = REINTERPRET_CAST
+															(inMySessionsUIPtr, My_SessionsPanelGraphicsUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			switch (received.commandID)
+			{
+			case kCommandSetTEKModeDisabled:
+			case kCommandSetTEKModeTEK4014:
+			case kCommandSetTEKModeTEK4105:
+				{
+					VectorInterpreter_Mode				newMode = kVectorInterpreter_ModeDisabled;
+					My_SessionsPanelGraphicsDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(graphicsInterfacePtr->panel),
+																					My_SessionsPanelGraphicsDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					if (kCommandSetTEKModeTEK4014 == received.commandID) newMode = kVectorInterpreter_ModeTEK4014;
+					if (kCommandSetTEKModeTEK4105 == received.commandID) newMode = kVectorInterpreter_ModeTEK4105;
+					graphicsInterfacePtr->setMode(newMode);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTektronixMode,
+																sizeof(newMode), &newMode);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteLine, "unable to save TEK mode setting");
+					}
+					result = noErr;
+				}
+				break;
+			
+			case kCommandSetTEKPageClearsScreen:
+				assert(received.attributes & kHICommandFromControl);
+				{
+					HIViewRef const						kCheckBox = received.source.control;
+					Boolean const						kIsSet = (kControlCheckBoxCheckedValue == GetControl32BitValue(kCheckBox));
+					My_SessionsPanelGraphicsDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(graphicsInterfacePtr->panel),
+																					My_SessionsPanelGraphicsDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					graphicsInterfacePtr->setPageClears(kIsSet);
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTektronixPAGEClearsScreen,
+																sizeof(kIsSet), &kIsSet);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						Console_Warning(Console_WriteLine, "unable to save TEK PAGE setting");
+					}
+				}
+				break;
+			
+			default:
+				// must return "eventNotHandledErr" here, or (for example) the user
+				// wouldn’t be able to select menu commands while the window is open
+				result = eventNotHandledErr;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// My_SessionsPanelGraphicsUI::receiveHICommand
+
+
+/*!
 Updates the TEK clear checkbox based on the given setting.
 
 (3.1)
@@ -1225,7 +1327,10 @@ idealHeight				(0.0),
 mainView				(createContainerView(inPanel, inOwningWindow)
 							<< HIViewWrap_AssertExists),
 _containerResizer		(mainView, kCommonEventHandlers_ChangedBoundsEdgeSeparationH,
-							My_SessionsPanelKeyboardUI::deltaSize, this/* context */)
+							My_SessionsPanelKeyboardUI::deltaSize, this/* context */),
+_buttonCommandsHandler	(GetWindowEventTarget(inOwningWindow), receiveHICommand,
+							CarbonEventSetInClass(CarbonEventClass(kEventClassCommand), kEventCommandProcess),
+							this/* user data */)
 {
 	assert(this->mainView.exists());
 	assert(_containerResizer.isInstalled());
@@ -1518,6 +1623,261 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		}
 	}
 }// My_SessionsPanelKeyboardUI::readPreferences
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons in the Keyboard tab.
+
+(3.1)
+*/
+pascal OSStatus
+My_SessionsPanelKeyboardUI::
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMySessionsUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelKeyboardUI*		keyboardInterfacePtr = REINTERPRET_CAST
+															(inMySessionsUIPtr, My_SessionsPanelKeyboardUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			enum
+			{
+				kInitialChosenCharValue		= 'X'
+			};
+			char	chosenChar = kInitialChosenCharValue;
+			
+			
+			switch (received.commandID)
+			{
+			case kCommandEditInterruptKey:
+			case kCommandEditSuspendKey:
+			case kCommandEditResumeKey:
+				{
+					HIWindowRef		window = HIViewGetWindow(keyboardInterfacePtr->mainView);
+					HIViewWrap		buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
+					HIViewWrap		buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
+					HIViewWrap		buttonSetResumeKey(idMyButtonChangeResumeKey, window);
+					
+					
+					// show the control keys palette and target the button
+					Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(window));
+					
+					// change the active button
+					SetControl32BitValue(buttonSetInterruptKey,
+											(kCommandEditInterruptKey == received.commandID)
+											? kControlCheckBoxCheckedValue
+											: kControlCheckBoxUncheckedValue);
+					SetControl32BitValue(buttonSetSuspendKey,
+											(kCommandEditSuspendKey == received.commandID)
+											? kControlCheckBoxCheckedValue
+											: kControlCheckBoxUncheckedValue);
+					SetControl32BitValue(buttonSetResumeKey,
+											(kCommandEditResumeKey == received.commandID)
+											? kControlCheckBoxCheckedValue
+											: kControlCheckBoxUncheckedValue);
+				}
+				break;
+			
+			case kCommandKeypadControlAtSign:
+				chosenChar = '@' - '@';
+				break;
+			
+			case kCommandKeypadControlA:
+				chosenChar = 'A' - '@';
+				break;
+			
+			case kCommandKeypadControlB:
+				chosenChar = 'B' - '@';
+				break;
+			
+			case kCommandKeypadControlC:
+				chosenChar = 'C' - '@';
+				break;
+			
+			case kCommandKeypadControlD:
+				chosenChar = 'D' - '@';
+				break;
+			
+			case kCommandKeypadControlE:
+				chosenChar = 'E' - '@';
+				break;
+			
+			case kCommandKeypadControlF:
+				chosenChar = 'F' - '@';
+				break;
+			
+			case kCommandKeypadControlG:
+				chosenChar = 'G' - '@';
+				break;
+			
+			case kCommandKeypadControlH:
+				chosenChar = 'H' - '@';
+				break;
+			
+			case kCommandKeypadControlI:
+				chosenChar = 'I' - '@';
+				break;
+			
+			case kCommandKeypadControlJ:
+				chosenChar = 'J' - '@';
+				break;
+			
+			case kCommandKeypadControlK:
+				chosenChar = 'K' - '@';
+				break;
+			
+			case kCommandKeypadControlL:
+				chosenChar = 'L' - '@';
+				break;
+			
+			case kCommandKeypadControlM:
+				chosenChar = 'M' - '@';
+				break;
+			
+			case kCommandKeypadControlN:
+				chosenChar = 'N' - '@';
+				break;
+			
+			case kCommandKeypadControlO:
+				chosenChar = 'O' - '@';
+				break;
+			
+			case kCommandKeypadControlP:
+				chosenChar = 'P' - '@';
+				break;
+			
+			case kCommandKeypadControlQ:
+				chosenChar = 'Q' - '@';
+				break;
+			
+			case kCommandKeypadControlR:
+				chosenChar = 'R' - '@';
+				break;
+			
+			case kCommandKeypadControlS:
+				chosenChar = 'S' - '@';
+				break;
+			
+			case kCommandKeypadControlT:
+				chosenChar = 'T' - '@';
+				break;
+			
+			case kCommandKeypadControlU:
+				chosenChar = 'U' - '@';
+				break;
+			
+			case kCommandKeypadControlV:
+				chosenChar = 'V' - '@';
+				break;
+			
+			case kCommandKeypadControlW:
+				chosenChar = 'W' - '@';
+				break;
+			
+			case kCommandKeypadControlX:
+				chosenChar = 'X' - '@';
+				break;
+			
+			case kCommandKeypadControlY:
+				chosenChar = 'Y' - '@';
+				break;
+			
+			case kCommandKeypadControlZ:
+				chosenChar = 'Z' - '@';
+				break;
+			
+			case kCommandKeypadControlLeftSquareBracket:
+				chosenChar = '[' - '@';
+				break;
+			
+			case kCommandKeypadControlBackslash:
+				chosenChar = '\\' - '@';
+				break;
+			
+			case kCommandKeypadControlRightSquareBracket:
+				chosenChar = ']' - '@';
+				break;
+			
+			case kCommandKeypadControlTilde:
+				chosenChar = '~' - '@';
+				break;
+			
+			case kCommandKeypadControlQuestionMark:
+				chosenChar = '\?' - '@';
+				break;
+			
+			default:
+				// must return "eventNotHandledErr" here, or (for example) the user
+				// wouldn’t be able to select menu commands while the window is open
+				result = eventNotHandledErr;
+				break;
+			}
+			
+			// if the chosen character is not the default value, a control key in
+			// the palette was clicked; use it to change the Interrupt, Suspend or
+			// Resume key (whichever is active)
+			if (chosenChar != kInitialChosenCharValue)
+			{
+				My_SessionsPanelKeyboardDataPtr		dataPtr = REINTERPRET_CAST
+																(Panel_ReturnImplementation(keyboardInterfacePtr->panel),
+																	My_SessionsPanelKeyboardDataPtr);
+				HIWindowRef							window = HIViewGetWindow(keyboardInterfacePtr->mainView);
+				HIViewWrap							buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
+				HIViewWrap							buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
+				HIViewWrap							buttonSetResumeKey(idMyButtonChangeResumeKey, window);
+				HIViewRef							view = nullptr;
+				Preferences_Tag						chosenPreferencesTag = '----';
+				Preferences_Result					prefsResult = kPreferences_ResultOK;
+				OSStatus							error = noErr;
+				
+				
+				// one of the 3 buttons should always be active
+				// INCOMPLETE - arrange to remember the selected key somewhere
+				if (GetControl32BitValue(buttonSetInterruptKey) == kControlCheckBoxCheckedValue)
+				{
+					chosenPreferencesTag = kPreferences_TagKeyInterruptProcess;
+					view = buttonSetInterruptKey;
+				}
+				else if (GetControl32BitValue(buttonSetSuspendKey) == kControlCheckBoxCheckedValue)
+				{
+					chosenPreferencesTag = kPreferences_TagKeySuspendOutput;
+					view = buttonSetSuspendKey;
+				}
+				else if (GetControl32BitValue(buttonSetResumeKey) == kControlCheckBoxCheckedValue)
+				{
+					chosenPreferencesTag = kPreferences_TagKeyResumeOutput;
+					view = buttonSetResumeKey;
+				}
+				
+				prefsResult = Preferences_ContextSetData(dataPtr->dataModel, chosenPreferencesTag,
+															sizeof(chosenChar), &chosenChar);
+				if (kPreferences_ResultOK == prefsResult)
+				{
+					error = keyboardInterfacePtr->setButtonFromKey(view, chosenChar);
+					assert_noerr(error);
+				}
+			}
+		}
+	}
+	
+	return result;
+}// My_SessionsPanelKeyboardUI::receiveHICommand
 
 
 /*!
@@ -2167,6 +2527,279 @@ rebuildTranslationMenu ()
 
 
 /*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons in the Resource tab.
+
+(3.1)
+*/
+pascal OSStatus
+My_SessionsPanelResourceUI::
+receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
+					 EventRef				inEvent,
+					 void*					inMySessionsUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST
+															(inMySessionsUIPtr, My_SessionsPanelResourceUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if (noErr == result)
+		{
+			switch (received.commandID)
+			{
+			case kCommandFormatDefault:
+				{
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// delete the “associated Format” preference, which will cause
+					// a fallback to the default when it is later queried
+					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedFormatFavorite);
+					
+					// pass this handler through to the window, which will update the font and colors!
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandFormatByFavoriteName:
+				{
+					Boolean		isError = true;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// determine the name of the selected item
+					if (received.attributes & kHICommandFromMenu)
+					{
+						CFStringRef		collectionName = nullptr;
+						
+						
+						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
+																received.source.menu.menuItemIndex, &collectionName))
+						{
+							My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
+																							(resourceInterfacePtr->panel),
+																							My_SessionsPanelResourceDataPtr);
+							Preferences_Result					prefsResult = kPreferences_ResultOK;
+							
+							
+							// set this name as the new preference value
+							prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagAssociatedFormatFavorite,
+																		sizeof(collectionName), &collectionName);
+							if (kPreferences_ResultOK == prefsResult) isError = false;
+							CFRelease(collectionName), collectionName = nullptr;
+						}
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window, which will update the font and colors!
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandTerminalDefault:
+				{
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// delete the “associated Terminal” preference, which will cause
+					// a fallback to the default when it is later queried
+					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTerminalFavorite);
+					
+					// pass this handler through to the window
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandTerminalByFavoriteName:
+				{
+					Boolean		isError = true;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// determine the name of the selected item
+					if (received.attributes & kHICommandFromMenu)
+					{
+						CFStringRef		collectionName = nullptr;
+						
+						
+						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
+																received.source.menu.menuItemIndex, &collectionName))
+						{
+							My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
+																							(resourceInterfacePtr->panel),
+																							My_SessionsPanelResourceDataPtr);
+							Preferences_Result					prefsResult = kPreferences_ResultOK;
+							
+							
+							// set this name as the new preference value
+							prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagAssociatedTerminalFavorite,
+																		sizeof(collectionName), &collectionName);
+							if (kPreferences_ResultOK == prefsResult) isError = false;
+							CFRelease(collectionName), collectionName = nullptr;
+						}
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window, which will update the terminal settings!
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandTranslationTableDefault:
+				{
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// delete the “associated Translation” preference, which will cause
+					// a fallback to the default when it is later queried
+					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTranslationFavorite);
+					
+					// pass this handler through to the window
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandTranslationTableByFavoriteName:
+				{
+					Boolean		isError = true;
+					
+					
+					// update the pop-up button
+					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
+					
+					// determine the name of the selected item
+					if (received.attributes & kHICommandFromMenu)
+					{
+						CFStringRef		collectionName = nullptr;
+						
+						
+						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
+																received.source.menu.menuItemIndex, &collectionName))
+						{
+							My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
+																							(resourceInterfacePtr->panel),
+																							My_SessionsPanelResourceDataPtr);
+							Preferences_Result					prefsResult = kPreferences_ResultOK;
+							
+							
+							// set this name as the new preference value
+							prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagAssociatedTranslationFavorite,
+																		sizeof(collectionName), &collectionName);
+							if (kPreferences_ResultOK == prefsResult) isError = false;
+							CFRelease(collectionName), collectionName = nullptr;
+						}
+					}
+					
+					if (isError)
+					{
+						// failed...
+						Sound_StandardAlert();
+					}
+					
+					// pass this handler through to the window, which will update the translation settings!
+					result = eventNotHandledErr;
+				}
+				break;
+			
+			case kCommandShowCommandLine:
+				// this normally means “show command line floater”, but in the context
+				// of an active New Session sheet, it means “select command line field”
+				{
+					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
+					
+					
+					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
+					result = noErr;
+				}
+				break;
+			
+			case kCommandEditCommandLine:
+				// show the server browser panel and target the command line field
+				{
+					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
+																					My_SessionsPanelResourceDataPtr);
+					HIWindowRef							window = HIViewGetWindow(resourceInterfacePtr->mainView);
+					HIViewWrap							panelDisplayButton(idMyButtonConnectToServer, window);
+					Session_Protocol					dataModelProtocol = kSession_ProtocolSSH1;
+					CFStringRef							dataModelHostName = nullptr;
+					UInt16								dataModelPort = 0;
+					CFStringRef							dataModelUserID = nullptr;
+					UInt16								preferenceCountOK = 0;
+					
+					
+					preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers
+										(dataPtr->dataModel, true/* search defaults too */,
+											dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
+					if (4 != preferenceCountOK)
+					{
+						Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
+					}
+					SetControl32BitValue(panelDisplayButton, kControlCheckBoxCheckedValue);
+					ServerBrowser_SetVisible(true);
+					ServerBrowser_SetEventTarget(GetWindowEventTarget(window), dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
+					
+					CFRelease(dataModelHostName), dataModelHostName = nullptr;
+					CFRelease(dataModelUserID), dataModelUserID = nullptr;
+					
+					result = noErr;
+				}
+				break;
+			
+			default:
+				// must return "eventNotHandledErr" here, or (for example) the user
+				// wouldn’t be able to select menu commands while the window is open
+				result = eventNotHandledErr;
+				break;
+			}
+		}
+	}
+	
+	return result;
+}// My_SessionsPanelResourceUI::receiveHICommand
+
+
+/*!
 Saves every text field in the panel to the data model.
 It is necessary to treat fields specially because they
 do not have obvious state changes (as, say, buttons do);
@@ -2808,533 +3441,6 @@ receiveFieldChangedInCommandLine	(EventHandlerCallRef	inHandlerCallRef,
 	
 	return result;
 }// receiveFieldChangedInCommandLine
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the buttons in various tabs.
-
-(3.1)
-*/
-pascal OSStatus
-receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
-					 EventRef				inEvent,
-					 void*					inMySessionsUIPtr)
-{
-	OSStatus						result = eventNotHandledErr;
-	// WARNING: More than one UI uses this handler.  The context will
-	// depend on the command ID.
-	My_SessionsPanelResourceUI*		resourceInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelResourceUI*);
-	My_SessionsPanelKeyboardUI*		keyboardInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelKeyboardUI*);
-	My_SessionsPanelGraphicsUI*		graphicsInterfacePtr = REINTERPRET_CAST(inMySessionsUIPtr, My_SessionsPanelGraphicsUI*);
-	UInt32 const					kEventClass = GetEventClass(inEvent);
-	UInt32 const					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
-	{
-		HICommandExtended	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if (noErr == result)
-		{
-			enum
-			{
-				kInitialChosenCharValue		= 'X'
-			};
-			char	chosenChar = kInitialChosenCharValue;
-			
-			
-			switch (received.commandID)
-			{
-			case kCommandFormatDefault:
-				{
-					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
-																					My_SessionsPanelResourceDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-					
-					// delete the “associated Format” preference, which will cause
-					// a fallback to the default when it is later queried
-					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedFormatFavorite);
-					
-					// pass this handler through to the window, which will update the font and colors!
-					result = eventNotHandledErr;
-				}
-				break;
-			
-			case kCommandFormatByFavoriteName:
-				{
-					Boolean		isError = true;
-					
-					
-					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-					
-					// determine the name of the selected item
-					if (received.attributes & kHICommandFromMenu)
-					{
-						CFStringRef		collectionName = nullptr;
-						
-						
-						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
-																received.source.menu.menuItemIndex, &collectionName))
-						{
-							My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
-																							(resourceInterfacePtr->panel),
-																							My_SessionsPanelResourceDataPtr);
-							Preferences_Result					prefsResult = kPreferences_ResultOK;
-							
-							
-							// set this name as the new preference value
-							prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagAssociatedFormatFavorite,
-																		sizeof(collectionName), &collectionName);
-							if (kPreferences_ResultOK == prefsResult) isError = false;
-							CFRelease(collectionName), collectionName = nullptr;
-						}
-					}
-					
-					if (isError)
-					{
-						// failed...
-						Sound_StandardAlert();
-					}
-					
-					// pass this handler through to the window, which will update the font and colors!
-					result = eventNotHandledErr;
-				}
-				break;
-			
-			case kCommandTerminalDefault:
-				{
-					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
-																					My_SessionsPanelResourceDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-					
-					// delete the “associated Terminal” preference, which will cause
-					// a fallback to the default when it is later queried
-					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTerminalFavorite);
-					
-					// pass this handler through to the window
-					result = eventNotHandledErr;
-				}
-				break;
-			
-			case kCommandTerminalByFavoriteName:
-				{
-					Boolean		isError = true;
-					
-					
-					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-					
-					// determine the name of the selected item
-					if (received.attributes & kHICommandFromMenu)
-					{
-						CFStringRef		collectionName = nullptr;
-						
-						
-						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
-																received.source.menu.menuItemIndex, &collectionName))
-						{
-							My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
-																							(resourceInterfacePtr->panel),
-																							My_SessionsPanelResourceDataPtr);
-							Preferences_Result					prefsResult = kPreferences_ResultOK;
-							
-							
-							// set this name as the new preference value
-							prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagAssociatedTerminalFavorite,
-																		sizeof(collectionName), &collectionName);
-							if (kPreferences_ResultOK == prefsResult) isError = false;
-							CFRelease(collectionName), collectionName = nullptr;
-						}
-					}
-					
-					if (isError)
-					{
-						// failed...
-						Sound_StandardAlert();
-					}
-					
-					// pass this handler through to the window, which will update the terminal settings!
-					result = eventNotHandledErr;
-				}
-				break;
-			
-			case kCommandTranslationTableDefault:
-				{
-					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
-																					My_SessionsPanelResourceDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-					
-					// delete the “associated Translation” preference, which will cause
-					// a fallback to the default when it is later queried
-					prefsResult = Preferences_ContextDeleteData(dataPtr->dataModel, kPreferences_TagAssociatedTranslationFavorite);
-					
-					// pass this handler through to the window
-					result = eventNotHandledErr;
-				}
-				break;
-			
-			case kCommandTranslationTableByFavoriteName:
-				{
-					Boolean		isError = true;
-					
-					
-					// update the pop-up button
-					(OSStatus)CallNextEventHandler(inHandlerCallRef, inEvent);
-					
-					// determine the name of the selected item
-					if (received.attributes & kHICommandFromMenu)
-					{
-						CFStringRef		collectionName = nullptr;
-						
-						
-						if (noErr == CopyMenuItemTextAsCFString(received.source.menu.menuRef,
-																received.source.menu.menuItemIndex, &collectionName))
-						{
-							My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation
-																							(resourceInterfacePtr->panel),
-																							My_SessionsPanelResourceDataPtr);
-							Preferences_Result					prefsResult = kPreferences_ResultOK;
-							
-							
-							// set this name as the new preference value
-							prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagAssociatedTranslationFavorite,
-																		sizeof(collectionName), &collectionName);
-							if (kPreferences_ResultOK == prefsResult) isError = false;
-							CFRelease(collectionName), collectionName = nullptr;
-						}
-					}
-					
-					if (isError)
-					{
-						// failed...
-						Sound_StandardAlert();
-					}
-					
-					// pass this handler through to the window, which will update the translation settings!
-					result = eventNotHandledErr;
-				}
-				break;
-			
-			case kCommandShowCommandLine:
-				// this normally means “show command line floater”, but in the context
-				// of an active New Session sheet, it means “select command line field”
-				{
-					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
-					
-					
-					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyFieldCommandLine, window));
-					result = noErr;
-				}
-				break;
-			
-			case kCommandEditCommandLine:
-				// show the server browser panel and target the command line field
-				{
-					My_SessionsPanelResourceDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(resourceInterfacePtr->panel),
-																					My_SessionsPanelResourceDataPtr);
-					HIWindowRef							window = HIViewGetWindow(resourceInterfacePtr->mainView);
-					HIViewWrap							panelDisplayButton(idMyButtonConnectToServer, window);
-					Session_Protocol					dataModelProtocol = kSession_ProtocolSSH1;
-					CFStringRef							dataModelHostName = nullptr;
-					UInt16								dataModelPort = 0;
-					CFStringRef							dataModelUserID = nullptr;
-					UInt16								preferenceCountOK = 0;
-					
-					
-					preferenceCountOK = resourceInterfacePtr->readPreferencesForRemoteServers
-										(dataPtr->dataModel, true/* search defaults too */,
-											dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
-					if (4 != preferenceCountOK)
-					{
-						Console_Warning(Console_WriteLine, "unable to read one or more remote server preferences!");
-					}
-					SetControl32BitValue(panelDisplayButton, kControlCheckBoxCheckedValue);
-					ServerBrowser_SetVisible(true);
-					ServerBrowser_SetEventTarget(GetWindowEventTarget(window), dataModelProtocol, dataModelHostName, dataModelPort, dataModelUserID);
-					
-					CFRelease(dataModelHostName), dataModelHostName = nullptr;
-					CFRelease(dataModelUserID), dataModelUserID = nullptr;
-					
-					result = noErr;
-				}
-				break;
-			
-			case kCommandEditInterruptKey:
-			case kCommandEditSuspendKey:
-			case kCommandEditResumeKey:
-				{
-					HIWindowRef		window = HIViewGetWindow(resourceInterfacePtr->mainView);
-					HIViewWrap		buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
-					HIViewWrap		buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
-					HIViewWrap		buttonSetResumeKey(idMyButtonChangeResumeKey, window);
-					
-					
-					// show the control keys palette and target the button
-					Keypads_SetEventTarget(kKeypads_WindowTypeControlKeys, GetWindowEventTarget(window));
-					
-					// change the active button
-					SetControl32BitValue(buttonSetInterruptKey,
-											(kCommandEditInterruptKey == received.commandID)
-											? kControlCheckBoxCheckedValue
-											: kControlCheckBoxUncheckedValue);
-					SetControl32BitValue(buttonSetSuspendKey,
-											(kCommandEditSuspendKey == received.commandID)
-											? kControlCheckBoxCheckedValue
-											: kControlCheckBoxUncheckedValue);
-					SetControl32BitValue(buttonSetResumeKey,
-											(kCommandEditResumeKey == received.commandID)
-											? kControlCheckBoxCheckedValue
-											: kControlCheckBoxUncheckedValue);
-				}
-				break;
-			
-			case kCommandKeypadControlAtSign:
-				chosenChar = '@' - '@';
-				break;
-			
-			case kCommandKeypadControlA:
-				chosenChar = 'A' - '@';
-				break;
-			
-			case kCommandKeypadControlB:
-				chosenChar = 'B' - '@';
-				break;
-			
-			case kCommandKeypadControlC:
-				chosenChar = 'C' - '@';
-				break;
-			
-			case kCommandKeypadControlD:
-				chosenChar = 'D' - '@';
-				break;
-			
-			case kCommandKeypadControlE:
-				chosenChar = 'E' - '@';
-				break;
-			
-			case kCommandKeypadControlF:
-				chosenChar = 'F' - '@';
-				break;
-			
-			case kCommandKeypadControlG:
-				chosenChar = 'G' - '@';
-				break;
-			
-			case kCommandKeypadControlH:
-				chosenChar = 'H' - '@';
-				break;
-			
-			case kCommandKeypadControlI:
-				chosenChar = 'I' - '@';
-				break;
-			
-			case kCommandKeypadControlJ:
-				chosenChar = 'J' - '@';
-				break;
-			
-			case kCommandKeypadControlK:
-				chosenChar = 'K' - '@';
-				break;
-			
-			case kCommandKeypadControlL:
-				chosenChar = 'L' - '@';
-				break;
-			
-			case kCommandKeypadControlM:
-				chosenChar = 'M' - '@';
-				break;
-			
-			case kCommandKeypadControlN:
-				chosenChar = 'N' - '@';
-				break;
-			
-			case kCommandKeypadControlO:
-				chosenChar = 'O' - '@';
-				break;
-			
-			case kCommandKeypadControlP:
-				chosenChar = 'P' - '@';
-				break;
-			
-			case kCommandKeypadControlQ:
-				chosenChar = 'Q' - '@';
-				break;
-			
-			case kCommandKeypadControlR:
-				chosenChar = 'R' - '@';
-				break;
-			
-			case kCommandKeypadControlS:
-				chosenChar = 'S' - '@';
-				break;
-			
-			case kCommandKeypadControlT:
-				chosenChar = 'T' - '@';
-				break;
-			
-			case kCommandKeypadControlU:
-				chosenChar = 'U' - '@';
-				break;
-			
-			case kCommandKeypadControlV:
-				chosenChar = 'V' - '@';
-				break;
-			
-			case kCommandKeypadControlW:
-				chosenChar = 'W' - '@';
-				break;
-			
-			case kCommandKeypadControlX:
-				chosenChar = 'X' - '@';
-				break;
-			
-			case kCommandKeypadControlY:
-				chosenChar = 'Y' - '@';
-				break;
-			
-			case kCommandKeypadControlZ:
-				chosenChar = 'Z' - '@';
-				break;
-			
-			case kCommandKeypadControlLeftSquareBracket:
-				chosenChar = '[' - '@';
-				break;
-			
-			case kCommandKeypadControlBackslash:
-				chosenChar = '\\' - '@';
-				break;
-			
-			case kCommandKeypadControlRightSquareBracket:
-				chosenChar = ']' - '@';
-				break;
-			
-			case kCommandKeypadControlTilde:
-				chosenChar = '~' - '@';
-				break;
-			
-			case kCommandKeypadControlQuestionMark:
-				chosenChar = '\?' - '@';
-				break;
-			
-			case kCommandSetTEKModeDisabled:
-			case kCommandSetTEKModeTEK4014:
-			case kCommandSetTEKModeTEK4105:
-				{
-					VectorInterpreter_Mode				newMode = kVectorInterpreter_ModeDisabled;
-					My_SessionsPanelGraphicsDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(graphicsInterfacePtr->panel),
-																					My_SessionsPanelGraphicsDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					if (kCommandSetTEKModeTEK4014 == received.commandID) newMode = kVectorInterpreter_ModeTEK4014;
-					if (kCommandSetTEKModeTEK4105 == received.commandID) newMode = kVectorInterpreter_ModeTEK4105;
-					graphicsInterfacePtr->setMode(newMode);
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTektronixMode,
-																sizeof(newMode), &newMode);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						Console_Warning(Console_WriteLine, "unable to save TEK mode setting");
-					}
-					result = noErr;
-				}
-				break;
-			
-			case kCommandSetTEKPageClearsScreen:
-				assert(received.attributes & kHICommandFromControl);
-				{
-					HIViewRef const						kCheckBox = received.source.control;
-					Boolean const						kIsSet = (kControlCheckBoxCheckedValue == GetControl32BitValue(kCheckBox));
-					My_SessionsPanelGraphicsDataPtr		dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(graphicsInterfacePtr->panel),
-																					My_SessionsPanelGraphicsDataPtr);
-					Preferences_Result					prefsResult = kPreferences_ResultOK;
-					
-					
-					graphicsInterfacePtr->setPageClears(kIsSet);
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagTektronixPAGEClearsScreen,
-																sizeof(kIsSet), &kIsSet);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						Console_Warning(Console_WriteLine, "unable to save TEK PAGE setting");
-					}
-				}
-				break;
-			
-			default:
-				// must return "eventNotHandledErr" here, or (for example) the user
-				// wouldn’t be able to select menu commands while the window is open
-				result = eventNotHandledErr;
-				break;
-			}
-			
-			// if the chosen character is not the default value, a control key in
-			// the palette was clicked; use it to change the Interrupt, Suspend or
-			// Resume key (whichever is active)
-			if (chosenChar != kInitialChosenCharValue)
-			{
-				My_SessionsPanelKeyboardDataPtr		dataPtr = REINTERPRET_CAST
-																(Panel_ReturnImplementation(keyboardInterfacePtr->panel),
-																	My_SessionsPanelKeyboardDataPtr);
-				HIWindowRef							window = HIViewGetWindow(keyboardInterfacePtr->mainView);
-				HIViewWrap							buttonSetInterruptKey(idMyButtonChangeInterruptKey, window);
-				HIViewWrap							buttonSetSuspendKey(idMyButtonChangeSuspendKey, window);
-				HIViewWrap							buttonSetResumeKey(idMyButtonChangeResumeKey, window);
-				HIViewRef							view = nullptr;
-				Preferences_Tag						chosenPreferencesTag = '----';
-				Preferences_Result					prefsResult = kPreferences_ResultOK;
-				OSStatus							error = noErr;
-				
-				
-				// one of the 3 buttons should always be active
-				// INCOMPLETE - arrange to remember the selected key somewhere
-				if (GetControl32BitValue(buttonSetInterruptKey) == kControlCheckBoxCheckedValue)
-				{
-					chosenPreferencesTag = kPreferences_TagKeyInterruptProcess;
-					view = buttonSetInterruptKey;
-				}
-				else if (GetControl32BitValue(buttonSetSuspendKey) == kControlCheckBoxCheckedValue)
-				{
-					chosenPreferencesTag = kPreferences_TagKeySuspendOutput;
-					view = buttonSetSuspendKey;
-				}
-				else if (GetControl32BitValue(buttonSetResumeKey) == kControlCheckBoxCheckedValue)
-				{
-					chosenPreferencesTag = kPreferences_TagKeyResumeOutput;
-					view = buttonSetResumeKey;
-				}
-				
-				prefsResult = Preferences_ContextSetData(dataPtr->dataModel, chosenPreferencesTag,
-															sizeof(chosenChar), &chosenChar);
-				if (kPreferences_ResultOK == prefsResult)
-				{
-					error = keyboardInterfacePtr->setButtonFromKey(view, chosenChar);
-					assert_noerr(error);
-				}
-			}
-		}
-	}
-	
-	return result;
-}// receiveHICommand
 
 
 /*!
