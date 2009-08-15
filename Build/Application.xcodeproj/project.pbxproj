@@ -39,7 +39,6 @@
 		0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE22055432A400ACDF3A /* VectorInterpreter.cp */; };
 		0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */; };
 		0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A33CD0007FAC07A00248DDF /* FlagManager.cp */; };
-		0AC6BAEF0A8C0BA000AFF37A /* IconListDef.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE5055432A400ACDF3A /* IconListDef.cp */; };
 		0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE36055432A400ACDF3A /* Undoables.cp */; };
 		0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBA055432A400ACDF3A /* BasicTypesAE.cp */; };
 		0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE06055432A400ACDF3A /* PrefPanelMacros.cp */; };
@@ -385,7 +384,6 @@
 		0A46FDE2055432A400ACDF3A /* HiddenAE.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HiddenAE.cp; path = Application/Code/HiddenAE.cp; sourceTree = "<group>"; };
 		0A46FDE3055432A400ACDF3A /* UIStrings.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = UIStrings.cp; path = Application/Code/UIStrings.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ICGluePPC.cp; path = Application/Code/ICGluePPC.cp; sourceTree = SOURCE_ROOT; };
-		0A46FDE5055432A400ACDF3A /* IconListDef.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IconListDef.cp; path = Application/Code/IconListDef.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE6055432A400ACDF3A /* IconManager.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = IconManager.cp; path = Application/Code/IconManager.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE7055432A400ACDF3A /* InfoWindow.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = InfoWindow.cp; path = Application/Code/InfoWindow.cp; sourceTree = SOURCE_ROOT; };
 		0A46FDE8055432A400ACDF3A /* Initialize.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Initialize.cp; path = Application/Code/Initialize.cp; sourceTree = SOURCE_ROOT; };
@@ -747,7 +745,6 @@
 				0A46FDDC055432A400ACDF3A /* GenericThreads.cp */,
 				0A46FDE1055432A400ACDF3A /* HelpSystem.cp */,
 				0A46FDE4055432A400ACDF3A /* ICGluePPC.cp */,
-				0A46FDE5055432A400ACDF3A /* IconListDef.cp */,
 				0A46FDE6055432A400ACDF3A /* IconManager.cp */,
 				0A46FDE7055432A400ACDF3A /* InfoWindow.cp */,
 				0A46FDE8055432A400ACDF3A /* Initialize.cp */,
@@ -1346,7 +1343,6 @@
 				0AC6BAEC0A8C0BA000AFF37A /* VectorInterpreter.cp in Sources */,
 				0AC6BAED0A8C0BA000AFF37A /* PrefPanelTerminals.cp in Sources */,
 				0AC6BAEE0A8C0BA000AFF37A /* FlagManager.cp in Sources */,
-				0AC6BAEF0A8C0BA000AFF37A /* IconListDef.cp in Sources */,
 				0AC6BAF00A8C0BA000AFF37A /* Undoables.cp in Sources */,
 				0AC6BAF20A8C0BA000AFF37A /* BasicTypesAE.cp in Sources */,
 				0AC6BAF30A8C0BA000AFF37A /* PrefPanelMacros.cp in Sources */,
