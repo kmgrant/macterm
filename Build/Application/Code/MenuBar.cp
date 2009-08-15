@@ -2941,7 +2941,6 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
 		result = connectionCommandResult;
-		if (result) result = Terminal_EmulatorIsVT220(currentScreen);
 		if (nullptr != currentSession)
 		{
 			Session_EventKeys		keyMappings = Session_ReturnEventKeys(currentSession);
@@ -2957,7 +2956,6 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 		// perhaps by inquiring the Terminal module whether or not the
 		// active terminal type supports this
 		result = connectionCommandResult;
-		if (result) result = Terminal_EmulatorIsVT220(currentScreen);
 		if (nullptr != currentSession)
 		{
 			Session_EventKeys		keyMappings = Session_ReturnEventKeys(currentSession);

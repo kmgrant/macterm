@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090815',
     '20090814',
     '20090813',
     '20090806',
@@ -264,6 +265,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090815': [
+        'Menu commands for Emacs key mappings and local page controls are no longer restricted to VT220 terminals.',
+    ],
     '20090814': [
         'Fixed meta key mapping to correctly trigger a meta sequence in Emacs.',
         'Preferences window Sessions pane Keyboard tab is now fully implemented.',
