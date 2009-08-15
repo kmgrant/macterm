@@ -6,17 +6,11 @@
 	rule of thumb is, do not place anything in this file that
 	is specific to an application or library.  These defines
 	should be applicable to any modern Mac program.
-	
-	There is a section for “Carbon helpers”, which create
-	mock-up macros that mimic the proposed Carbon APIs.  When
-	compiling under the Carbon APIs, TARGET_API_MAC_CARBON is
-	defined, making the macros disappear and allowing the true
-	Carbon APIs to take their place.
 */
 /*###############################################################
 
 	Universal Defines
-		© 1998-2007 by Kevin Grant
+		© 1998-2009 by Kevin Grant
 	
 	This program is free software; you can redistribute it or
 	modify it under the terms of the GNU General Public License
@@ -64,20 +58,7 @@
 
 //! use to make unused function parameters unnamed;
 //! e.g. int f (int arg) would be int f (int UNUSED_ARGUMENT(arg))
-#ifdef __MRC__
-#	define UNUSED_ARGUMENT(arg) (arg)
-#	define UNUSED_ARGUMENT_CARBON(arg) (arg)
-#	define UNUSED_ARGUMENT_CLASSIC(arg) (arg)
-#else
-#	define UNUSED_ARGUMENT(arg)
-#	if TARGET_API_MAC_CARBON
-#		define UNUSED_ARGUMENT_CARBON(arg)
-#		define UNUSED_ARGUMENT_CLASSIC(arg) (arg)
-#	else
-#		define UNUSED_ARGUMENT_CARBON(arg) (arg)
-#		define UNUSED_ARGUMENT_CLASSIC(arg)
-#	endif
-#endif
+#define UNUSED_ARGUMENT(arg)
 
 
 
@@ -206,10 +187,6 @@ inline double FLOAT64_EIGHTHED		(double a)				{ return (a / 8.0); }				//!< divi
 #	define FLOAT64_QUARTERED(a)		((a) / 4.0)
 #	define FLOAT64_EIGHTHED(a)		((a) / 8.0)
 #endif
-
-// accessors for corner points within a QuickDraw rectangle ("Rect")
-#define topLeft(r)	(((Point*)&(r))[0])
-#define botRight(r)	(((Point*)&(r))[1])
 
 // HIObjectGetEventTarget() is defined back to 10.2, but the 10.3 headers
 // do not declare HIViewInstallEventHandler(); to minimize the need to

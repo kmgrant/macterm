@@ -404,7 +404,7 @@ will become obsolete.
 (1.0)
 */
 Boolean
-ColorUtilities_IsColorGrafPort	(GrafPtr	UNUSED_ARGUMENT_CARBON(inPort))
+ColorUtilities_IsColorGrafPort	(GrafPtr	UNUSED_ARGUMENT(inPort))
 {
 	Boolean		result = true;
 	

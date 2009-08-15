@@ -1107,7 +1107,7 @@ been dismissed.
 */
 void
 Session_DisplayTerminationWarning	(SessionRef		inRef,
-									 Boolean		UNUSED_ARGUMENT_CLASSIC(inForceModalDialog))
+									 Boolean		inForceModalDialog)
 {
 	My_SessionAutoLocker		ptr(gSessionPtrLocks(), inRef);
 	HIWindowRef					window = Session_ReturnActiveWindow(inRef);

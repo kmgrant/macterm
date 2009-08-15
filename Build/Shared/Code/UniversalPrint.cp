@@ -1117,7 +1117,7 @@ ignored under Mac OS 8.
 void
 UniversalPrint_SetNumberOfCopies	(UniversalPrint_ContextRef	inRef,
 									 UInt16						inNumberOfCopies,
-									 Boolean					UNUSED_ARGUMENT_CLASSIC(inLock))
+									 Boolean					inLock)
 {
 	if (inRef != nullptr)
 	{

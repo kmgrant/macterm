@@ -536,7 +536,7 @@ call to dialogDisplayPreparation().
 static void
 dialogClose		(HIWindowRef	inWindow,
 				 Boolean		inIsSheet,
-				 Boolean		UNUSED_ARGUMENT_CLASSIC(inNoAnimation))
+				 Boolean		inNoAnimation)
 {
 	if (inIsSheet)
 	{
