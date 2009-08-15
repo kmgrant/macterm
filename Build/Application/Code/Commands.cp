@@ -888,13 +888,13 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			}
 			break;
 		
-		case kCommandEMACSArrowMapping:
+		case kCommandEmacsArrowMapping:
 			if (isSession)
 			{
 				Session_EventKeys		keyMappings = Session_ReturnEventKeys(frontSession);
 				
 				
-				keyMappings.arrowsRemappedForEMACS = !(keyMappings.arrowsRemappedForEMACS);
+				keyMappings.arrowsRemappedForEmacs = !(keyMappings.arrowsRemappedForEmacs);
 				Session_SetEventKeys(frontSession, keyMappings);
 			}
 			break;

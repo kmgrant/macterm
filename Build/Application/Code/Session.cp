@@ -2162,7 +2162,7 @@ Session_ReturnConfiguration		(SessionRef		inRef)
 	}
 	
 	{
-		prefsResult = Preferences_ContextSetData(result, kPreferences_TagEMACSMetaKey,
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagEmacsMetaKey,
 													sizeof(ptr->eventKeys.meta), &ptr->eventKeys.meta);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
@@ -2175,9 +2175,9 @@ Session_ReturnConfiguration		(SessionRef		inRef)
 	}
 	
 	{
-		prefsResult = Preferences_ContextSetData(result, kPreferences_TagMapArrowsForEMACS,
-													sizeof(ptr->eventKeys.arrowsRemappedForEMACS),
-													&ptr->eventKeys.arrowsRemappedForEMACS);
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagMapArrowsForEmacs,
+													sizeof(ptr->eventKeys.arrowsRemappedForEmacs),
+													&ptr->eventKeys.arrowsRemappedForEmacs);
 		assert(kPreferences_ResultOK == prefsResult);
 	}
 	
@@ -3727,8 +3727,7 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 /*!
 Sends the appropriate sequence for the specified key and
 optional modifiers, taking into account terminal settings
-(such as whether or not arrows are remapped to EMACS
-commands).
+(such as whether or not arrows are remapped to Emacs commands).
 
 \retval kSession_ResultOK
 if the key was apparently input successfully
@@ -3755,13 +3754,13 @@ Session_UserInputKey	(SessionRef		inRef,
 			// 7-bit ASCII; send as-is
 			Session_SendData(ptr->selfRef, &inKeyOrASCII, 1);
 		}
-		else if (ptr->eventKeys.arrowsRemappedForEMACS && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
+		else if (ptr->eventKeys.arrowsRemappedForEmacs && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
 		{
 			UInt8		actualKeySeq[2] = { inKeyOrASCII, '\0' };
 			size_t		sequenceLength = 1;
 			
 			
-			// map from arrow keys to EMACS control keys; consider all standard
+			// map from arrow keys to Emacs control keys; consider all standard
 			// Mac modes, i.e. option-arrow for words, command-arrows for lines
 			switch (inKeyOrASCII)
 			{
@@ -4576,7 +4575,7 @@ copyEventKeyPreferences		(My_SessionPtr				inPtr,
 		}
 	}
 	
-	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagEMACSMetaKey,
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagEmacsMetaKey,
 												sizeof(inPtr->eventKeys.meta), &inPtr->eventKeys.meta, inSearchDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
@@ -4591,9 +4590,9 @@ copyEventKeyPreferences		(My_SessionPtr				inPtr,
 		++result;
 	}
 	
-	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagMapArrowsForEMACS,
-												sizeof(inPtr->eventKeys.arrowsRemappedForEMACS),
-												&inPtr->eventKeys.arrowsRemappedForEMACS, inSearchDefaults);
+	prefsResult = Preferences_ContextGetData(inSource, kPreferences_TagMapArrowsForEmacs,
+												sizeof(inPtr->eventKeys.arrowsRemappedForEmacs),
+												&inPtr->eventKeys.arrowsRemappedForEmacs, inSearchDefaults);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		++result;
@@ -4906,12 +4905,12 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	if (optionDown) eventModifiers |= optionKey;
 	if (shiftDown) eventModifiers |= shiftKey;
 	
-	// technically add-on support for an EMACS concept
-	if (ptr->eventKeys.meta == kSession_EMACSMetaKeyControlCommand)
+	// technically add-on support for an Emacs concept
+	if (ptr->eventKeys.meta == kSession_EmacsMetaKeyControlCommand)
 	{
 		metaDown = ((commandDown) && (controlDown));
 	}
-	else if (ptr->eventKeys.meta == kSession_EMACSMetaKeyOption)
+	else if (ptr->eventKeys.meta == kSession_EmacsMetaKeyOption)
 	{
 		metaDown = (optionDown);
 	}
@@ -5117,7 +5116,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				size_t		theSize = sizeof(charactersToSend);
 				
 				
-				// perform one final substitution: the meta key in EMACS
+				// perform one final substitution: the meta key in Emacs
 				if (metaDown)
 				{
 					if (characterCode <= 32)
@@ -5133,7 +5132,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				
 				if (metaDown)
 				{
-					// EMACS respects a prefixing Escape character as being
+					// Emacs respects a prefixing Escape character as being
 					// equivalent to meta; so ESC-CtrlA is like MetaCtrlA
 					charactersToSend[1] = charactersToSend[0];
 					charactersToSend[0] = 0x1B; // ESC

@@ -983,9 +983,9 @@ Preferences_Init ()
 										CFSTR("no-auto-new"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagDontDimBackgroundScreens,
 										CFSTR("terminal-no-dim-on-deactivate"), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::create(kPreferences_TagEMACSMetaKey,
+	My_PreferenceDefinition::create(kPreferences_TagEmacsMetaKey,
 									CFSTR("key-map-emacs-meta"), typeCFStringRef,
-									sizeof(Session_EMACSMetaKey), Quills::Prefs::TERMINAL);
+									sizeof(Session_EmacsMetaKey), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::createFlag(kPreferences_TagFocusFollowsMouse,
 										CFSTR("terminal-focus-follows-mouse"), Quills::Prefs::GENERAL);
 	My_PreferenceDefinition::create(kPreferences_TagFontCharacterWidthMultiplier,
@@ -1052,7 +1052,7 @@ Preferences_Init ()
 										CFSTR("data-send-local-echo-half-duplex"), Quills::Prefs::SESSION);
 	My_PreferenceDefinition::createFlag(kPreferences_TagMacrosMenuVisible,
 										CFSTR("menu-macros-visible"), Quills::Prefs::GENERAL);
-	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEMACS,
+	My_PreferenceDefinition::create(kPreferences_TagMapArrowsForEmacs,
 									CFSTR("command-key-emacs-move-down"), typeCFStringRef,
 									sizeof(Boolean), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagMapBackquote,
@@ -7294,7 +7294,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagEMACSMetaKey:
+				case kPreferences_TagEmacsMetaKey:
 					{
 						assert(typeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
@@ -7311,15 +7311,15 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 							
 							if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR(""), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kSession_EMACSMetaKeyOff;
+								*storedValuePtr = kSession_EmacsMetaKeyOff;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("control+command"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kSession_EMACSMetaKeyControlCommand;
+								*storedValuePtr = kSession_EmacsMetaKeyControlCommand;
 							}
 							else if (kCFCompareEqualTo == CFStringCompare(valueCFString, CFSTR("option"), kCFCompareCaseInsensitive))
 							{
-								*storedValuePtr = kSession_EMACSMetaKeyOption;
+								*storedValuePtr = kSession_EmacsMetaKeyOption;
 							}
 							else
 							{
@@ -7330,7 +7330,7 @@ getTerminalPreference	(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
-				case kPreferences_TagMapArrowsForEMACS:
+				case kPreferences_TagMapArrowsForEmacs:
 					{
 						assert(typeCFStringRef == keyValueType);
 						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
@@ -9368,7 +9368,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagEMACSMetaKey:
+			case kPreferences_TagEmacsMetaKey:
 				{
 					UInt16 const	data = *(REINTERPRET_CAST(inDataPtr, UInt16 const*));
 					
@@ -9376,15 +9376,15 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 					assert(typeCFStringRef == keyValueType);
 					switch (data)
 					{
-					case kSession_EMACSMetaKeyOption:
+					case kSession_EmacsMetaKeyOption:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("option"));
 						break;
 					
-					case kSession_EMACSMetaKeyControlCommand:
+					case kSession_EmacsMetaKeyControlCommand:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR("control+command"));
 						break;
 					
-					case kSession_EMACSMetaKeyOff:
+					case kSession_EmacsMetaKeyOff:
 					default:
 						inContextPtr->addString(inDataPreferenceTag, keyName, CFSTR(""));
 						break;
@@ -9392,7 +9392,7 @@ setTerminalPreference	(My_ContextInterfacePtr		inContextPtr,
 				}
 				break;
 			
-			case kPreferences_TagMapArrowsForEMACS:
+			case kPreferences_TagMapArrowsForEmacs:
 				{
 					Boolean const	data = *(REINTERPRET_CAST(inDataPtr, Boolean const*));
 					

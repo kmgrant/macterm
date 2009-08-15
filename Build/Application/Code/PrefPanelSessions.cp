@@ -110,8 +110,8 @@ HIViewID const	idMyButtonChooseCaptureFile		= { 'CapF', 0/* ID */ };
 HIViewID const	idMyButtonChangeInterruptKey	= { 'Intr', 0/* ID */ };
 HIViewID const	idMyButtonChangeSuspendKey		= { 'Susp', 0/* ID */ };
 HIViewID const	idMyButtonChangeResumeKey		= { 'Resu', 0/* ID */ };
-HIViewID const	idMyCheckBoxMapArrowsForEMACS	= { 'XEAr', 0/* ID */ };
-HIViewID const	idMySegmentsEMACSMetaKey		= { 'Meta', 0/* ID */ };
+HIViewID const	idMyCheckBoxMapArrowsForEmacs	= { 'XEAr', 0/* ID */ };
+HIViewID const	idMySegmentsEmacsMetaKey		= { 'Meta', 0/* ID */ };
 HIViewID const	idMySegmentsDeleteKeyMapping	= { 'DMap', 0/* ID */ };
 HIViewID const	idMyPopUpMenuNewLineMapping		= { 'NewL', 0/* ID */ };
 HIViewID const	idMyHelpTextControlKeys			= { 'CtlH', 0/* ID */ };
@@ -1617,17 +1617,17 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			}
 		}
 		
-		// set EMACS arrows checkbox
+		// set Emacs arrows checkbox
 		{
 			Boolean		mapArrows = false;
 			
 			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapArrowsForEMACS,
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagMapArrowsForEmacs,
 														sizeof(mapArrows), &mapArrows,
 														true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				HIViewWrap		checkBox(idMyCheckBoxMapArrowsForEMACS, window);
+				HIViewWrap		checkBox(idMyCheckBoxMapArrowsForEmacs, window);
 				
 				
 				SetControl32BitValue(checkBox, BooleanToCheckBoxValue(mapArrows));
@@ -1636,29 +1636,29 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		
 		// set meta key
 		{
-			Session_EMACSMetaKey	metaKey = kSession_EMACSMetaKeyOff;
+			Session_EmacsMetaKey	metaKey = kSession_EmacsMetaKeyOff;
 			
 			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagEMACSMetaKey,
+			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagEmacsMetaKey,
 														sizeof(metaKey), &metaKey,
 														true/* search defaults too */, &actualSize);
 			if (kPreferences_ResultOK == prefsResult)
 			{
-				HIViewWrap		segmentedView(idMySegmentsEMACSMetaKey, window);
+				HIViewWrap		segmentedView(idMySegmentsEmacsMetaKey, window);
 				UInt32			commandID = kCommandSetMetaNone;
 				
 				
 				switch (metaKey)
 				{
-				case kSession_EMACSMetaKeyControlCommand:
+				case kSession_EmacsMetaKeyControlCommand:
 					commandID = kCommandSetMetaControlAndCommandKeys;
 					break;
 				
-				case kSession_EMACSMetaKeyOption:
+				case kSession_EmacsMetaKeyOption:
 					commandID = kCommandSetMetaOptionKey;
 					break;
 				
-				case kSession_EMACSMetaKeyOff:
+				case kSession_EmacsMetaKeyOff:
 				default:
 					commandID = kCommandSetMetaNone;
 					break;
@@ -1910,14 +1910,14 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 				chosenChar = '\?' - '@';
 				break;
 			
-			case kCommandEMACSArrowMapping:
+			case kCommandEmacsArrowMapping:
 				{
-					HIViewWrap				checkBox(idMyCheckBoxMapArrowsForEMACS, window);
+					HIViewWrap				checkBox(idMyCheckBoxMapArrowsForEmacs, window);
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
 					Boolean					flag = (GetControl32BitValue(checkBox) == kControlCheckBoxCheckedValue);
 					
 					
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagMapArrowsForEMACS,
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagMapArrowsForEmacs,
 																sizeof(flag), &flag);
 					assert(kPreferences_ResultOK == prefsResult);
 				}
@@ -1927,27 +1927,27 @@ receiveHICommand	(EventHandlerCallRef	inHandlerCallRef,
 			case kCommandSetMetaOptionKey:
 			case kCommandSetMetaControlAndCommandKeys:
 				{
-					Session_EMACSMetaKey	metaKey = kSession_EMACSMetaKeyOff;
+					Session_EmacsMetaKey	metaKey = kSession_EmacsMetaKeyOff;
 					Preferences_Result		prefsResult = kPreferences_ResultOK;
 					
 					
 					switch (received.commandID)
 					{
 					case kCommandSetMetaControlAndCommandKeys:
-						metaKey = kSession_EMACSMetaKeyControlCommand;
+						metaKey = kSession_EmacsMetaKeyControlCommand;
 						break;
 					
 					case kCommandSetMetaOptionKey:
-						metaKey = kSession_EMACSMetaKeyOption;
+						metaKey = kSession_EmacsMetaKeyOption;
 						break;
 					
 					case kCommandSetMetaNone:
 					default:
-						metaKey = kSession_EMACSMetaKeyOff;
+						metaKey = kSession_EmacsMetaKeyOff;
 						break;
 					}
 					
-					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagEMACSMetaKey,
+					prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kPreferences_TagEmacsMetaKey,
 																sizeof(metaKey), &metaKey);
 					assert(kPreferences_ResultOK == prefsResult);
 				}

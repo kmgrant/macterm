@@ -721,16 +721,16 @@ actionLegacyUpdates ()
 									}
 									
 									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-down"),
-																		(0 != dataPtr->usesEMACSArrows)
+																		(0 != dataPtr->usesEmacsArrows)
 																		? CFSTR("down-arrow") : CFSTR(""));
 									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-left"),
-																		(0 != dataPtr->usesEMACSArrows)
+																		(0 != dataPtr->usesEmacsArrows)
 																		? CFSTR("left-arrow") : CFSTR(""));
 									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-right"),
-																		(0 != dataPtr->usesEMACSArrows)
+																		(0 != dataPtr->usesEmacsArrows)
 																		? CFSTR("right-arrow") : CFSTR(""));
 									terminalKeyValueMgrPtr->addString(CFSTR("command-key-emacs-move-up"),
-																		(0 != dataPtr->usesEMACSArrows)
+																		(0 != dataPtr->usesEmacsArrows)
 																		? CFSTR("up-arrow") : CFSTR(""));
 									
 									terminalKeyValueMgrPtr->addString(CFSTR("command-key-terminal-end"),

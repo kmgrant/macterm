@@ -191,13 +191,13 @@ typedef enum Session_Echo	Session_Echo;
 
 /*!
 Possible mappings to simulate a meta key on a Mac keyboard
-(useful for the EMACS text editor).
+(useful for the Emacs text editor).
 */
-enum Session_EMACSMetaKey
+enum Session_EmacsMetaKey
 {
-	kSession_EMACSMetaKeyOff = 0,				//!< no mapping
-	kSession_EMACSMetaKeyControlCommand = 1,	//!< by holding down control and command keys, meta is simulated
-	kSession_EMACSMetaKeyOption = 2				//!< by holding down option key, meta is simulated
+	kSession_EmacsMetaKeyOff = 0,				//!< no mapping
+	kSession_EmacsMetaKeyControlCommand = 1,	//!< by holding down control and command keys, meta is simulated
+	kSession_EmacsMetaKeyOption = 2				//!< by holding down option key, meta is simulated
 };
 
 /*!
@@ -351,11 +351,11 @@ struct Session_EventKeys
 	UInt8					resume;					//!< the ASCII code for the control key used to start the flow of data;
 													//!  see Session_SetNetworkSuspended()
 	Session_NewlineMode		newline;				//!< what new-line means
-	Session_EMACSMetaKey	meta;					//!< meta key generator, i.e. for EMACS
+	Session_EmacsMetaKey	meta;					//!< meta key generator, i.e. for Emacs
 	Boolean					deleteSendsBackspace;	//!< if false, delete sends “delete”; if true, it sends a backspace
-	Boolean					arrowsRemappedForEMACS;	//!< if false, arrows are not special; if true, they become EMACS cursor keys
+	Boolean					arrowsRemappedForEmacs;	//!< if false, arrows are not special; if true, they become Emacs cursor keys
 	Boolean					pageKeysLocalControl;	//!< if false, page keys are sent to the session; if true, they manage scrolling
-	Boolean					keypadRemappedForVT220;	//!< if false, arrows are not special; if true, they become EMACS cursor keys
+	Boolean					keypadRemappedForVT220;	//!< if false, arrows are not special; if true, they become Emacs cursor keys
 };
 
 

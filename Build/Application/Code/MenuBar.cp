@@ -1421,7 +1421,7 @@ installMenuItemStateTrackers ()
 	// Map
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandDeletePressSendsBackspace, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandDeletePressSendsDelete, stateTrackerCheckableItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEMACSArrowMapping, stateTrackerCheckableItems);
+	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandEmacsArrowMapping, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandLocalPageUpDown, stateTrackerCheckableItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandSetKeys, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandMacroSetNone, stateTrackerGenericSessionItems);
@@ -2935,7 +2935,7 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 		}
 		break;
 	
-	case kCommandEMACSArrowMapping:
+	case kCommandEmacsArrowMapping:
 		// this is a VT220-only option, so disable the command otherwise
 		// TEMPORARY: this needs to be determined in a more abstract way,
 		// perhaps by inquiring the Terminal module whether or not the
@@ -2947,7 +2947,7 @@ stateTrackerCheckableItems		(UInt32				inCommandID,
 			Session_EventKeys		keyMappings = Session_ReturnEventKeys(currentSession);
 			
 			
-			checked = (result) ? keyMappings.arrowsRemappedForEMACS : false;
+			checked = (result) ? keyMappings.arrowsRemappedForEmacs : false;
 		}
 		break;
 	

@@ -273,8 +273,8 @@ These should also have localized names in
 enum
 {
 	kPreferences_TagDataReceiveDoNotStripHighBit		= '8bit',	//!< data: "Boolean"
-	kPreferences_TagEMACSMetaKey						= 'meta',	//!< data: "Session_EMACSMetaKey"
-	kPreferences_TagMapArrowsForEMACS					= 'mapE',	//!< data: "Boolean"
+	kPreferences_TagEmacsMetaKey						= 'meta',	//!< data: "Session_EmacsMetaKey"
+	kPreferences_TagMapArrowsForEmacs					= 'mapE',	//!< data: "Boolean"
 	kPreferences_TagMapKeypadTopRowForVT220				= 'mapK',	//!< data: "Boolean"
 	kPreferences_TagPageKeysControlLocalTerminal		= 'pgtm',	//!< data: "Boolean"
 	kPreferences_TagTerminalAnswerBackMessage			= 'ansb',	//!< data: "CFStringRef"

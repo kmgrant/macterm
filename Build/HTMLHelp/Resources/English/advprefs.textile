@@ -206,13 +206,13 @@ h3(#terminals). Terminal Collections
 
 table(deftable).
 (deftop). |(key). @command-key-emacs-move-down@|(types). _string_: @down-arrow@ or _empty_|
-(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the Emacs text editor.|
 (deftop). |(key). @command-key-emacs-move-left@|(types). _string_: @left-arrow@ or _empty_|
-(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the Emacs text editor.|
 (deftop). |(key). @command-key-emacs-move-right@|(types). _string_: @right-arrow@ or _empty_|
-(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the Emacs text editor.|
 (deftop). |(key). @command-key-emacs-move-up@|(types). _string_: @up-arrow@ or _empty_|
-(defbottom). |(desc)\2. Using this key triggers a cursor movement in the EMACS text editor.|
+(defbottom). |(desc)\2. Using this key triggers a cursor movement in the Emacs text editor.|
 (deftop). |(key). @command-key-terminal-end@|(types). _string_: @end@ or _empty_|
 (defbottom). |(desc)\2. Using this key causes the local terminal display to scroll without notifying the session.|
 (deftop). |(key). @command-key-terminal-home@|(types). _string_: @home@ or _empty_|
@@ -232,7 +232,7 @@ table(deftable).
 (deftop). |(key). @data-receive-do-not-strip-high-bit@|(types). _true or false_|
 (defbottom). |(desc)\2. Characters are considered to be 8 bits.|
 (deftop). |(key). @key-map-emacs-meta@|(types). _string_: @control+command@ or @option@ or _empty_|
-(defbottom). |(desc)\2. This Mac keyboard input is interpreted as a meta keypress in the EMACS text editor.|
+(defbottom). |(desc)\2. This Mac keyboard input is interpreted as a meta keypress in the Emacs text editor.|
 (deftop). |(key). @terminal-clear-saves-lines@|(types). _true or false_|
 (defbottom). |(desc)\2. A session request to clear the screen will first copy screen lines to the scrollback before obliterating them.|
 (deftop). |(key). @terminal-emulator-answerback@|(types). _string_|

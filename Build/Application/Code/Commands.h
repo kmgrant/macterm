@@ -202,7 +202,7 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 // WARNING: These are referenced by value in the MainMenus.nib file!
 #define kCommandDeletePressSendsBackspace		'DBks'	// multiple interfaces
 #define kCommandDeletePressSendsDelete			'DDel'	// multiple interfaces
-#define kCommandEMACSArrowMapping				'EMAC'	// multiple interfaces
+#define kCommandEmacsArrowMapping				'Emac'	// multiple interfaces
 #define kCommandLocalPageUpDown					'LcPg'
 #define kCommandSetKeys							'SetK'
 #define kCommandMacroSetNone					'XMcr'

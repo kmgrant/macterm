@@ -46,9 +46,9 @@
 
 enum
 {
-	kEMACSMetaKeyOff = 0,
-	kEMACSMetaKeyControlCommand = 1,
-	kEMACSMetaKeyOption = 2
+	kEmacsMetaKeyOff = 0,
+	kEmacsMetaKeyControlCommand = 1,
+	kEmacsMetaKeyOption = 2
 };
 
 enum
@@ -208,8 +208,8 @@ struct TerminalPrefs
 	UInt8			usesANSIColors,			// Recognize ANSI color sequences
 					usesXTermSequences,		// Recognize Xterm sequences
 					usesVTWrap,				// Use VT wrap mode
-					metaKey,				// EMACS meta key - simulated with Macintosh key combinations
-					usesEMACSArrows,		// Arrow keys and mouse position are EMACS flavor
+					metaKey,				// Emacs meta key - simulated with Macintosh key combinations
+					usesEmacsArrows,		// Arrow keys and mouse position are Emacs flavor
 					mapsPageJumpKeys,		// Map PageUp, PageDown, Home, End. (MAT == Mark Tamsky)
 					usesEightBits,			// Don’t strip the high bit
 					savesOnClear;			// Save cleared lines
