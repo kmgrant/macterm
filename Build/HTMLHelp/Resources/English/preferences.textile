@@ -570,7 +570,11 @@ h4. EMACS Cursor
 
 The EMACS text editor has its own commands for moving the cursor
 in the buffer.  You can choose to have your Mac arrow keys
-trigger the appropriate EMACS commands.
+trigger the appropriate EMACS commands; this includes the effects
+of using Option and Command on arrow keys to move by larger
+increments.  For instance, in Mac text editors, you can move to
+the next word with option-right-arrow; MacTelnet will cause this
+sequence to send a "forward-word" EMACS command.
 
 h4. EMACS Meta
 

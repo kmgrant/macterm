@@ -268,6 +268,7 @@ notes_by_version = {
         'Fixed meta key mapping to correctly trigger a meta sequence in EMACS.',
         'Preferences window Sessions pane Keyboard tab is now fully implemented.',
         'Custom Key Sequences dialog is now internally identical to the Preferences window Sessions pane Keyboard tab.',
+        'The "EMACS Cursor" arrow mapping settings have expanded in meaning to include several standard Mac modifiers for editing; for instance, option-right-arrow now sends the EMACS command for moving one word, and command-down-arrow sends the command for moving to the end of the buffer.',
     ],
     '20090813': [
         'Fixed default control key preferences to be the fallback for all sessions, including shells.',

@@ -3725,8 +3725,10 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 
 
 /*!
-Sends the appropriate sequence for the specified key,
-taking into account the terminal mode settings.
+Sends the appropriate sequence for the specified key and
+optional modifiers, taking into account terminal settings
+(such as whether or not arrows are remapped to EMACS
+commands).
 
 \retval kSession_ResultOK
 if the key was apparently input successfully
@@ -3738,7 +3740,8 @@ if "inRef" is invalid
 */
 Session_Result
 Session_UserInputKey	(SessionRef		inRef,
-						 UInt8			inKeyOrASCII)
+						 UInt8			inKeyOrASCII,
+						 UInt32			inEventModifiers)
 {
 	My_SessionAutoLocker	ptr(gSessionPtrLocks(), inRef);
 	Session_Result			result = kSession_ResultOK;
@@ -3754,34 +3757,98 @@ Session_UserInputKey	(SessionRef		inRef,
 		}
 		else if (ptr->eventKeys.arrowsRemappedForEMACS && (inKeyOrASCII <= VSLT) && (inKeyOrASCII >= VSUP))
 		{
-			UInt8		actualKey = inKeyOrASCII;
+			UInt8		actualKeySeq[2] = { inKeyOrASCII, '\0' };
+			size_t		sequenceLength = 1;
 			
 			
-			// map from arrow keys to EMACS control keys;
-			// note that option-arrow-keys could do things
-			// as well, if modifiers were considered here
+			// map from arrow keys to EMACS control keys; consider all standard
+			// Mac modes, i.e. option-arrow for words, command-arrows for lines
 			switch (inKeyOrASCII)
 			{
 			case VSLT:
-				actualKey = 0x02; // ^B
+				if (inEventModifiers & optionKey)
+				{
+					// move one word backward (meta-b)
+					actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
+					actualKeySeq[1] = 'b';
+					sequenceLength = 2;
+				}
+				else if (inEventModifiers & cmdKey)
+				{
+					// move to beginning of line (^A)
+					actualKeySeq[0] = 0x01;
+				}
+				else
+				{
+					// move one character backward (^B)
+					actualKeySeq[0] = 0x02;
+				}
 				break;
 			
 			case VSRT:
-				actualKey = 0x06; // ^F
+				if (inEventModifiers & optionKey)
+				{
+					// move one word forward (meta-f)
+					actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
+					actualKeySeq[1] = 'f';
+					sequenceLength = 2;
+				}
+				else if (inEventModifiers & cmdKey)
+				{
+					// move to beginning of line (^E)
+					actualKeySeq[0] = 0x05;
+				}
+				else
+				{
+					// move one character forward (^F)
+					actualKeySeq[0] = 0x06;
+				}
 				break;
 			
 			case VSUP:
-				actualKey = 0x10; // ^P
+				if (inEventModifiers & optionKey)
+				{
+					// move to beginning of line (^A)
+					actualKeySeq[0] = 0x01;
+				}
+				else if (inEventModifiers & cmdKey)
+				{
+					// move to beginning of buffer (meta-<)
+					actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
+					actualKeySeq[1] = '<';
+					sequenceLength = 2;
+				}
+				else
+				{
+					// move one line up (^P)
+					actualKeySeq[0] = 0x10; // ^P
+				}
 				break;
 			
 			case VSDN:
-				actualKey = 0x0E; // ^N
+				if (inEventModifiers & optionKey)
+				{
+					// move to end of line (^E)
+					actualKeySeq[0] = 0x05;
+				}
+				else if (inEventModifiers & cmdKey)
+				{
+					// move to end of buffer (meta-<)
+					actualKeySeq[0] = 0x1B; // ESC (meta equivalent)
+					actualKeySeq[1] = '>';
+					sequenceLength = 2;
+				}
+				else
+				{
+					// move one line down (^N)
+					actualKeySeq[0] = 0x0E;
+				}
 				break;
 			
 			default:
 				break;
 			}
-			Session_SendData(ptr->selfRef, &actualKey, 1);
+			Session_SendData(ptr->selfRef, &actualKeySeq, sequenceLength);
 		}
 		else
 		{
@@ -4818,6 +4885,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	static Boolean			optionDown  = false;
 	static Boolean			shiftDown = false;
 	static Boolean			metaDown = false;
+	static UInt32			eventModifiers = 0;
 	
 	
 	characterCode = keyPressInfoPtr->characterCode;
@@ -4827,6 +4895,16 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	controlDown = keyPressInfoPtr->controlDown;
 	optionDown = keyPressInfoPtr->optionDown;
 	shiftDown = keyPressInfoPtr->shiftDown;
+	
+	// create bit-flag short-cuts that are useful in some cases
+	// (TEMPORARY - this is a hack, the input should be cleaned up
+	// to simply pass an established set of flags in the first place)
+	eventModifiers = 0;
+	if (commandDown) eventModifiers |= cmdKey;
+	if (controlDown) eventModifiers |= controlKey;
+	if (commandDown) eventModifiers |= cmdKey;
+	if (optionDown) eventModifiers |= optionKey;
+	if (shiftDown) eventModifiers |= shiftKey;
 	
 	// technically add-on support for an EMACS concept
 	if (ptr->eventKeys.meta == kSession_EMACSMetaKeyControlCommand)
@@ -4965,25 +5043,25 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	case 0x7B: // Left arrow
 	case 0x3B: // Left arrow on non-extended keyboards
-		Session_UserInputKey(session, VSLT);
+		Session_UserInputKey(session, VSLT, eventModifiers);
 		result = true;
 		break;
 	
 	case 0x7C: // Right arrow
 	case 0x3C: // Right arrow on non-extended keyboards
-		Session_UserInputKey(session, VSRT);
+		Session_UserInputKey(session, VSRT, eventModifiers);
 		result = true;
 		break;
 	
 	case 0x7D: // Down arrow
 	case 0x3D: // Down arrow on non-extended keyboards
-		Session_UserInputKey(session, VSDN);
+		Session_UserInputKey(session, VSDN, eventModifiers);
 		result = true;
 		break;
 	
 	case 0x7E: // Up arrow
 	case 0x3E: // Up arrow on non-extended keyboards
-		Session_UserInputKey(session, VSUP);
+		Session_UserInputKey(session, VSUP, eventModifiers);
 		result = true;
 		break;
 	

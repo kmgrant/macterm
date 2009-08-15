@@ -425,7 +425,8 @@ void
 
 Session_Result
 	Session_UserInputKey					(SessionRef							inRef,
-											 UInt8								inKeyOrASCII);
+											 UInt8								inKeyOrASCII,
+											 UInt32								inEventModifiers = 0);
 
 Session_Result
 	Session_UserInputPaste					(SessionRef							inRef,
