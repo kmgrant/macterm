@@ -4829,8 +4829,14 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	shiftDown = keyPressInfoPtr->shiftDown;
 	
 	// technically add-on support for an EMACS concept
-	metaDown = ((commandDown) && (controlDown) &&
-				(ptr->eventKeys.meta == kSession_EMACSMetaKeyControlCommand));
+	if (ptr->eventKeys.meta == kSession_EMACSMetaKeyControlCommand)
+	{
+		metaDown = ((commandDown) && (controlDown));
+	}
+	else if (ptr->eventKeys.meta == kSession_EMACSMetaKeyOption)
+	{
+		metaDown = (optionDown);
+	}
 	
 	// scan for keys that invoke instant commands
 	switch (virtualKeyCode)
@@ -5051,6 +5057,7 @@ handleSessionKeyDown	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 				{
 					// EMACS respects a prefixing Escape character as being
 					// equivalent to meta; so ESC-CtrlA is like MetaCtrlA
+					charactersToSend[1] = charactersToSend[0];
 					charactersToSend[0] = 0x1B; // ESC
 				}
 				else if (0 == charactersToSend[0])

@@ -265,6 +265,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20090814': [
+        'Fixed meta key mapping to correctly trigger a meta sequence in EMACS.',
         'Preferences window Sessions pane Keyboard tab is now fully implemented.',
         'Custom Key Sequences dialog is now internally identical to the Preferences window Sessions pane Keyboard tab.',
     ],
