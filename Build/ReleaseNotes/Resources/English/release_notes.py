@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090816',
     '20090815',
     '20090814',
     '20090813',
@@ -265,6 +266,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090816': [
+        'Session Info window is now displayed or activated with the renamed "Session Info" command.',
+    ],
     '20090815': [
         'Menu commands for Emacs key mappings and local page controls are no longer restricted to VT220 terminals.',
     ],

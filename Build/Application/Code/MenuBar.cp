@@ -1457,7 +1457,6 @@ installMenuItemStateTrackers ()
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandNextWindowHideCurrent, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandPreviousWindow, stateTrackerGenericSessionItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowConnectionStatus, stateTrackerShowHideItems);
-	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandHideConnectionStatus, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowCommandLine, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowKeypad, stateTrackerShowHideItems);
 	MenuBar_SetMenuItemStateTrackerProcByCommandID(kCommandShowFunction, stateTrackerShowHideItems);
@@ -3329,13 +3328,8 @@ stateTrackerShowHideItems	(UInt32			inCommandID,
 		break;
 	
 	case kCommandShowConnectionStatus:
+		// this really means “show or activate”, so it is always available
 		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber, false == InfoWindow_IsVisible());
-		break;
-	
-	case kCommandHideConnectionStatus:
-		result = true;
-		setMenuItemVisibility(inMenu, inItemNumber, InfoWindow_IsVisible());
 		break;
 	
 	case kCommandShowCommandLine:
