@@ -55,7 +55,6 @@
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
-#include "Preferences.h"
 #include "UIStrings.h"
 
 

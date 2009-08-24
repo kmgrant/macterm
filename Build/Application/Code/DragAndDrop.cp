@@ -47,12 +47,9 @@
 #include <WindowInfo.h>
 
 // MacTelnet includes
-#include "CommandLine.h"
 #include "ConstantsRegistry.h"
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"
-#include "EventLoop.h"
-#include "MacroManager.h"
 #include "RegionUtilities.h"
 
 

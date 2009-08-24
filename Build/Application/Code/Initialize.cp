@@ -65,7 +65,6 @@
 // MacTelnet includes
 #include "AppResources.h"
 #include "Clipboard.h"
-#include "CommandLine.h"
 #include "Commands.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
@@ -76,8 +75,6 @@
 #include "Initialize.h"
 #include "InstallAE.h"
 #include "InternetPrefs.h"
-#include "Keypads.h"
-#include "MacroManager.h"
 #include "MainEntryPoint.h"
 #include "MenuBar.h"
 #include "Preferences.h"
@@ -91,7 +88,6 @@
 #include "Terminology.h"
 #include "TextTranslation.h"
 #include "UIStrings.h"
-#include "VectorInterpreter.h"
 
 
 

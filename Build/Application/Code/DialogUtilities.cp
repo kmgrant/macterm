@@ -66,7 +66,6 @@
 // MacTelnet includes
 #include "AppResources.h"
 #include "ConstantsRegistry.h"
-#include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "GenericThreads.h"

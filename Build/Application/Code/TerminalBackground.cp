@@ -49,7 +49,6 @@
 #include "ConstantsRegistry.h"
 #include "ContextualMenuBuilder.h"
 #include "DialogUtilities.h"
-#include "DragAndDrop.h"
 #include "EventLoop.h"
 #include "NetEvents.h"
 #include "TerminalBackground.h"

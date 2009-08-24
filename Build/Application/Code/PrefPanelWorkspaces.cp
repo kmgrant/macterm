@@ -74,7 +74,6 @@
 #include "Panel.h"
 #include "Preferences.h"
 #include "PrefPanelWorkspaces.h"
-#include "SessionFactory.h"
 #include "UIStrings.h"
 #include "UIStrings_PrefsWindow.h"
 

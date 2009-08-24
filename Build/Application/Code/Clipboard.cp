@@ -70,7 +70,6 @@
 #include "EventLoop.h"
 #include "Preferences.h"
 #include "Session.h"
-#include "TextTranslation.h"
 #include "TerminalView.h"
 #include "UIStrings.h"
 #include "VectorCanvas.h"

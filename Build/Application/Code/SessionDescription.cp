@@ -82,9 +82,6 @@
 // MacTelnet includes
 #include "AppResources.h"
 #include "DialogUtilities.h"
-#include "EventLoop.h"
-#include "FileUtilities.h"
-#include "MacroManager.h"
 #include "Preferences.h"
 #include "SessionDescription.h"
 #include "SessionFactory.h"

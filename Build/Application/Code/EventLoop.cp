@@ -79,8 +79,6 @@
 #include "TerminalView.h"
 #include "TerminalWindow.h"
 #include "Terminology.h"
-#include "VectorCanvas.h"
-#include "VectorInterpreter.h"
 
 
 

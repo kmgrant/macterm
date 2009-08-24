@@ -20,21 +20,19 @@ use strict;
 use FileHandle;
 
 # the following MacTelnet modules do not follow the
-# proper convention and therefore no warnings are
-# issued if they are used (or they are expected to
-# always be included)
+# proper convention, or are expected to be included
+# frequently, so no warnings are issued for them
 #
 my @skip_modules = qw
 (
 	AlertMessages
 	Commands
 	Configure
-	ConnectionData
 	Console
+	ConstantsRegistry
 	DialogUtilities
 	InternetConfig
 	ObjectClassesAE
-	MacroManager
 	QuillsBase
 	QuillsEvents
 	QuillsPrefs
@@ -42,14 +40,9 @@ my @skip_modules = qw
 	QuillsTerminal
 	RasterGraphicsKernel
 	RasterGraphicsScreen
-	tekdefs
-	TektronixFont
-	TektronixRealGraphics
-	TektronixVirtualGraphics
 	Terminology
 	UIStrings_PrefsWindow
 	UniversalDefines
-	vskeys
 	VTKeys
 );
 

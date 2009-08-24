@@ -74,7 +74,6 @@
 #include "DialogUtilities.h"
 #include "DragAndDrop.h"
 #include "EventLoop.h"
-#include "FileUtilities.h"
 #include "GenericThreads.h"
 #include "NetEvents.h"
 #include "Preferences.h"
@@ -85,7 +84,6 @@
 #include "TextTranslation.h"
 #include "UIStrings.h"
 #include "URL.h"
-#include "VectorInterpreter.h"
 
 
 

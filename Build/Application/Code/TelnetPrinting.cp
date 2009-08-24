@@ -59,8 +59,6 @@
 #include "TerminalView.h"
 #include "TerminalWindow.h"
 #include "UIStrings.h"
-#include "VectorCanvas.h"
-#include "VectorInterpreter.h"
 
 
 

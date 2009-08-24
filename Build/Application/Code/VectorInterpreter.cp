@@ -51,7 +51,6 @@
 #include <SoundSystem.h>
 
 // MacTelnet includes
-#include "SessionFactory.h"
 #include "VectorCanvas.h"
 #include "VectorInterpreter.h"
 
