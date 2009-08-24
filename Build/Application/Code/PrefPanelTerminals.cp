@@ -1605,6 +1605,18 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
+	case kPanel_MessageFocusFirst: // notification that the first logical view should become focused
+		{
+			My_TerminalsPanelScreenDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																			My_TerminalsPanelScreenDataPtr);
+			HIWindowRef						owningWindow = HIViewGetWindow(panelDataPtr->interfacePtr->mainView);
+			HIViewWrap						columnsField(idMyFieldColumns, owningWindow);
+			
+			
+			DialogUtilities_SetKeyboardFocus(columnsField);
+		}
+		break;
+	
 	case kPanel_MessageFocusGained: // notification that a view is now focused
 		{
 			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);
@@ -1703,8 +1715,6 @@ readPreferences		(Preferences_ContextRef		inSettings)
 		size_t					actualSize = 0;
 		
 		
-		// INCOMPLETE
-		
 		// set columns
 		{
 			UInt16		dimension = 0;
@@ -1715,6 +1725,10 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setColumns(dimension);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read screen columns");
 			}
 		}
 		
@@ -1729,6 +1743,10 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			{
 				this->setRows(dimension);
 			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read screen rows");
+			}
 		}
 		
 		// set scrollback rows
@@ -1742,6 +1760,10 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			{
 				this->setScrollbackRows(dimension);
 			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read scrollback rows");
+			}
 		}
 		
 		// set scrollback type
@@ -1754,6 +1776,10 @@ readPreferences		(Preferences_ContextRef		inSettings)
 			if (kPreferences_ResultOK == prefsResult)
 			{
 				this->setScrollbackType(allocationRule);
+			}
+			else
+			{
+				Console_Warning(Console_WriteLine, "failed to read scrollback type");
 			}
 		}
 	}

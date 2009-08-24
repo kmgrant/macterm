@@ -90,10 +90,10 @@ extern "C"
 #include "Keypads.h"
 #include "Preferences.h"
 #include "PrefPanelFormats.h"
+#include "PrefPanelTerminals.h"
 #include "PrefPanelTranslations.h"
 #include "PrefsContextDialog.h"
 #include "SessionFactory.h"
-#include "SizeDialog.h"
 #include "Terminal.h"
 #include "TerminalWindow.h"
 #include "TerminalView.h"
@@ -333,7 +333,6 @@ static void					setWindowAndTabTitle			(TerminalWindowPtr, CFStringRef);
 static void					stackWindowTerminalWindowOp		(TerminalWindowRef, void*, SInt32, void*);
 static void					terminalStateChanged			(ListenerModel_Ref, ListenerModel_Event, void*, void*);
 static void					terminalViewStateChanged		(ListenerModel_Ref, ListenerModel_Event, void*, void*);
-static void		updateScreenSizeDialogCloseNotifyProc		(SizeDialog_Ref, Boolean);
 static void					updateScrollBars				(TerminalWindowPtr);
 
 #pragma mark Variables
@@ -1194,20 +1193,16 @@ TerminalWindow_SetObscured	(TerminalWindowRef	inRef,
 
 
 /*!
-Changes the dimensions of the visible screen area
-in the given terminal window.  If split-panes are
-active, the total view size is shared among the
-panes, proportional to their current sizes.
+Changes the dimensions of the visible screen area in the
+given terminal window.  If split-panes are active, the
+total view size is shared among the panes, proportional to
+their current sizes.
 
-The screen size is currently tied to the window
-dimensions, so adjusting these parameters will
-force the window to resize to use the new space.
-In the future, it may make more sense to leave
-the user’s chosen size intact (at least, when the
-new view size will fit within the current window).
-
-As a convenience, you may choose to send the resize
-event back to MacTelnet, for recording into scripts.
+The screen size is currently tied to the window dimensions,
+so adjusting these parameters will force the window to
+resize to use the new space.  In the future, it may make
+more sense to leave the user’s chosen size intact (at least,
+when the new view size will fit within the current window).
 
 (3.0)
 */
@@ -1215,38 +1210,16 @@ void
 TerminalWindow_SetScreenDimensions	(TerminalWindowRef	inRef,
 									 UInt16				inNewColumnCount,
 									 UInt16				inNewRowCount,
-									 Boolean			inSendToRecordingScripts)
+									 Boolean			UNUSED_ARGUMENT(inSendToRecordingScripts))
 {
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	TerminalScreenRef			activeScreen = getActiveScreen(ptr);
 	
 	
-	// set the standard state to be large enough for the specified number of columns and rows;
-	// and, set window dimensions to this new standard size
-	{
-		TerminalViewRef				activeView = getActiveView(ptr);
-		TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
-		TerminalView_Result			viewResult = kTerminalView_ResultOK;
-		SInt16						screenWidth = 0;
-		SInt16						screenHeight = 0;
-		
-		
-		// changing the window size will force the view to match;
-		// temporarily change the view mode to allow this, since
-		// the view might automatically be controlling its font size
-		oldMode = TerminalView_ReturnDisplayMode(activeView);
-		viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
-		assert(kTerminalView_ResultOK == viewResult);
-		TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
-											inNewColumnCount, inNewRowCount,
-											&screenWidth, &screenHeight);
-		setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
-		viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
-		assert(kTerminalView_ResultOK == viewResult);
-	}
-	
-	changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeScreenDimensions, inRef/* context */);
-	
-	if (inSendToRecordingScripts) SizeDialog_SendRecordableDimensionChangeEvents(inNewColumnCount, inNewRowCount);
+	// there are monitors installed to detect size changes in the screen
+	// (to make the window adjust accordingly), so just alter the screen
+	Terminal_SetVisibleColumnCount(activeScreen, inNewColumnCount);
+	Terminal_SetVisibleRowCount(activeScreen, inNewRowCount);
 }// SetScreenDimensions
 
 
@@ -1942,6 +1915,7 @@ installedActions()
 	this->terminalStateChangeEventListener = ListenerModel_NewStandardListener(terminalStateChanged, REINTERPRET_CAST(this, TerminalWindowRef)/* context */);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
+	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScreenSize, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
 	Terminal_StartMonitoring(newScreen, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener);
@@ -2203,6 +2177,7 @@ TerminalWindow::
 		{
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeAudioState, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeNewLEDState, this->terminalStateChangeEventListener);
+			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScreenSize, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeScrollActivity, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowFrameTitle, this->terminalStateChangeEventListener);
 			Terminal_StopMonitoring(*screenIterator, kTerminal_ChangeWindowIconTitle, this->terminalStateChangeEventListener);
@@ -3990,12 +3965,17 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				
 				case kCommandSetScreenSize:
 					{
-						SizeDialog_Ref		dialog = nullptr;
+						// display a format customization dialog
+						PrefsContextDialog_Ref		dialog = nullptr;
+						Panel_Ref					prefsPanel = PrefPanelTerminals_NewScreenPane();
 						
 						
 						// display the sheet
-						dialog = SizeDialog_New(terminalWindow, updateScreenSizeDialogCloseNotifyProc);
-						SizeDialog_Display(dialog); // automatically disposed when the user clicks a button
+						dialog = PrefsContextDialog_New(GetUserFocusWindow(), prefsPanel,
+														Terminal_ReturnConfiguration
+														(TerminalWindow_ReturnScreenWithFocus(terminalWindow)),
+														kPrefsContextDialog_DisplayOptionNoAddToPrefsButton);
+						PrefsContextDialog_Display(dialog); // automatically disposed when the user clicks a button
 						
 						result = noErr;
 					}
@@ -6302,6 +6282,43 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		}
 		break;
 	
+	case kTerminal_ChangeScreenSize:
+		// set the standard state to be large enough for the specified number of columns and rows;
+		// and, set window dimensions to this new standard size
+		{
+			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			
+			
+			if (nullptr != terminalWindow)
+			{
+				TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), terminalWindow);
+				TerminalViewRef				activeView = getActiveView(ptr);
+				TerminalView_DisplayMode	oldMode = kTerminalView_DisplayModeNormal;
+				TerminalView_Result			viewResult = kTerminalView_ResultOK;
+				SInt16						screenWidth = 0;
+				SInt16						screenHeight = 0;
+				
+				
+				// changing the window size will force the view to match;
+				// temporarily change the view mode to allow this, since
+				// the view might automatically be controlling its font size
+				oldMode = TerminalView_ReturnDisplayMode(activeView);
+				viewResult = TerminalView_SetDisplayMode(activeView, kTerminalView_DisplayModeNormal);
+				assert(kTerminalView_ResultOK == viewResult);
+				TerminalView_GetTheoreticalViewSize(activeView/* TEMPORARY - must consider a list of views */,
+													Terminal_ReturnColumnCount(screen),
+													Terminal_ReturnRowCount(screen),
+													&screenWidth, &screenHeight);
+				setStandardState(ptr, screenWidth, screenHeight, true/* resize window */);
+				viewResult = TerminalView_SetDisplayMode(activeView, oldMode);
+				assert(kTerminalView_ResultOK == viewResult);
+				
+				changeNotifyForTerminalWindow(ptr, kTerminalWindow_ChangeScreenDimensions, ptr->selfRef/* context */);
+			}
+		}
+		break;
+	
 	case kTerminal_ChangeScrollActivity:
 		// recalculate appearance of the scroll bars to match current screen attributes, and redraw them
 		{
@@ -6445,37 +6462,6 @@ terminalViewStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 		break;
 	}
 }// terminalViewStateChanged
-
-
-/*!
-Responds to a close of the Screen Dimensions dialog
-box by updating the terminal area of the parent
-window to reflect changes to the column and row count.
-
-(3.1)
-*/
-static void
-updateScreenSizeDialogCloseNotifyProc	(SizeDialog_Ref		inDialogThatClosed,
-										 Boolean				inOKButtonPressed)
-{
-	if (inOKButtonPressed)
-	{
-		TerminalWindowRef	forWhichTerminalWindow = SizeDialog_ReturnParentTerminalWindow(inDialogThatClosed);
-		
-		
-		if (nullptr != forWhichTerminalWindow)
-		{
-			UInt16		columns = 0;
-			UInt16		rows = 0;
-			
-			
-			// save the changes
-			installUndoScreenDimensionChanges(forWhichTerminalWindow);
-			SizeDialog_GetDisplayedDimensions(inDialogThatClosed, columns, rows);
-			TerminalWindow_SetScreenDimensions(forWhichTerminalWindow, columns, rows, true/* recordable */);
-		}
-	}
-}// updateScreenSizeDialogCloseNotifyProc
 
 
 /*!

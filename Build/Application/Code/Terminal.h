@@ -111,6 +111,8 @@ enum
 													//!  Terminal has changed (context: TerminalScreenRef)
 	kTerminal_ChangeReset				= 'Rset',	//!< terminal was explicitly reset (context:
 													//!  TerminalScreenRef)
+	kTerminal_ChangeScreenSize			= 'SSiz',	//!< number of columns or rows has changed
+													//!  (context: TerminalScreenRef)
 	kTerminal_ChangeScrollActivity		= '^v<>',	//!< screen size or visible area has changed
 													//!  (context: TerminalScreenRef)
 	kTerminal_ChangeText				= 'UpdT',	//!< text has changed, requiring an update (context:

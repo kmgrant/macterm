@@ -650,6 +650,9 @@ public:
 	My_ScreenBuffer	(Preferences_ContextRef, Preferences_ContextRef);
 	~My_ScreenBuffer ();
 	
+	static void
+	preferenceChanged	(ListenerModel_Ref, ListenerModel_Event, void*, void*);
+	
 	CFStringRef
 	returnAnswerBackMessage		(Preferences_ContextRef);
 	
@@ -690,6 +693,7 @@ public:
 	CFRetainRelease						iconTitleCFString;			//!< stores the string that the terminal considers its icon title
 	
 	ListenerModel_Ref					changeListenerModel;		//!< registry of listeners for various terminal events
+	ListenerModel_ListenerRef			preferenceMonitor;			//!< listener for changes to preferences that affect a particular screen
 	
 	/*!
 	IMPORTANT:  It may be useful (and implemented so as) to retain iterators.
@@ -734,7 +738,6 @@ public:
 	{
 		struct
 		{
-			My_ScreenRowIndex	numberOfRowsAllocated;  //!< how many lines of scrollback are currently taking up memory
 			My_ScreenRowIndex	numberOfRowsPermitted;  //!< maximum lines of scrollback specified by the user
 														//!  (NOTE: this is inflexible; cooler scrollback handling schemes are limited by it...)
 			Boolean				enabled;				//!< true if scrolled lines should be appended to the buffer automatically
@@ -742,9 +745,6 @@ public:
 		
 		struct
 		{
-			My_ScreenRowIndex	numberOfRowsAllocated;		//!< how many lines of non-scrollback are currently taking up memory; it follows
-															//!  that this is the maximum possible value for "numberOfRowsPermitted"
-			My_ScreenRowIndex	numberOfRowsPermitted;		//!< maximum lines of non-scrollback specified by the user
 			UInt16				numberOfColumnsAllocated;	//!< how many characters per line are currently taking up memory; it follows
 															//!  that this is the maximum possible value for "numberOfColumnsPermitted"
 			UInt16				numberOfColumnsPermitted;	//!< maximum columns per line specified by the user; but see current.returnNumberOfColumnsPermitted()
@@ -1126,6 +1126,7 @@ Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
 void						saveToScrollback						(My_ScreenBufferPtr);
 void						scrollTerminalBuffer					(My_ScreenBufferPtr);
 void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
+void						setScrollbackSize						(My_ScreenBufferPtr, UInt16);
 // IMPORTANT: Attribute bit manipulation is fully described in "TerminalTextAttributes.typedef.h".
 //            Changes must be kept consistent everywhere.  See below, for usage.
 inline TerminalTextAttributes	styleOfVTParameter					(UInt8	inPs)
@@ -3589,13 +3590,43 @@ Preferences_ContextRef
 Terminal_ReturnConfiguration	(TerminalScreenRef		inRef)
 {
 	My_ScreenBufferConstPtr		dataPtr = getVirtualScreenData(inRef);
+	Preferences_Result			prefsResult = kPreferences_ResultOK;
 	Preferences_ContextRef		result = dataPtr->configuration;
 	
 	
 	// since many settings are represented internally, this context
 	// will not contain the latest information; update the context
 	// based on current settings
-	// UNIMPLEMENTED
+	
+	// INCOMPLETE
+	
+	{
+		UInt16		dimension = dataPtr->text.visibleScreen.numberOfColumnsPermitted;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagTerminalScreenColumns,
+													sizeof(dimension), &dimension);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		UInt16		dimension = dataPtr->screenBuffer.size();
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagTerminalScreenRows,
+													sizeof(dimension), &dimension);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
+	{
+		UInt16		dimension = dataPtr->text.scrollback.numberOfRowsPermitted;
+		
+		
+		prefsResult = Preferences_ContextSetData(result, kPreferences_TagTerminalScreenScrollbackRows,
+													sizeof(dimension), &dimension);
+		assert(kPreferences_ResultOK == prefsResult);
+	}
+	
 	return result;
 }// ReturnConfiguration
 
@@ -4183,6 +4214,8 @@ Terminal_SetVisibleColumnCount	(TerminalScreenRef	inRef,
 		}
 		dataPtr->text.visibleScreen.numberOfColumnsPermitted = inNewNumberOfCharactersWide;
 		dataPtr->printing.wrapColumnCount = inNewNumberOfCharactersWide;
+		
+		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScreenSize, dataPtr->selfRef/* context */);
 	}
 	return result;
 }// SetVisibleColumnCount
@@ -4299,6 +4332,8 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 			range.rowCount = kLineDelta;
 			changeNotifyForTerminal(dataPtr, kTerminal_ChangeText, &range);
 		}
+		
+		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScreenSize, dataPtr->selfRef/* context */);
 	}
 	
 	return result;
@@ -5036,6 +5071,7 @@ speaker(nullptr),
 windowTitleCFString(),
 iconTitleCFString(),
 changeListenerModel(ListenerModel_New(kListenerModel_StyleStandard, kConstantsRegistry_ListenerModelDescriptorTerminalChanges)),
+preferenceMonitor(ListenerModel_NewStandardListener(preferenceChanged, this/* context */)),
 scrollbackBuffer(),
 screenBuffer(),
 bytesToEcho(),
@@ -5098,8 +5134,8 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	}
 	
 	this->current.characterSetInfoPtr = &this->vtG0; // by definition, G0 is active initially
-	this->text.scrollback.numberOfRowsPermitted = returnScrollbackRows(inTerminalConfig);
-	this->text.scrollback.enabled = (returnForceSave(inTerminalConfig) || (this->text.scrollback.numberOfRowsPermitted > 0));
+	setScrollbackSize(this, returnScrollbackRows(inTerminalConfig));
+	this->text.scrollback.enabled = (this->text.scrollback.enabled && returnForceSave(inTerminalConfig));
 	this->text.visibleScreen.numberOfColumnsPermitted = returnScreenColumns(inTerminalConfig);
 	this->current.cursorAttributes = kNoTerminalTextAttributes;
 	this->current.drawingAttributes = kNoTerminalTextAttributes;
@@ -5132,6 +5168,14 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	assertScrollingRegion(this);
 	
 	this->speaker = TerminalSpeaker_New(REINTERPRET_CAST(this, TerminalScreenRef));
+	
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_ContextStartMonitoring(this->configuration, this->preferenceMonitor,
+															kPreferences_ChangeContextBatchMode);
+	}
 }// My_ScreenBuffer 1-argument constructor
 
 
@@ -5143,10 +5187,50 @@ Destructor.  See Terminal_DisposeScreen().
 My_ScreenBuffer::
 ~My_ScreenBuffer ()
 {
+	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->preferenceMonitor,
+															kPreferences_ChangeContextBatchMode);
+	ListenerModel_ReleaseListener(&this->preferenceMonitor);
 	Preferences_ReleaseContext(&this->configuration);
 	TerminalSpeaker_Dispose(&this->speaker);
 	ListenerModel_Dispose(&this->changeListenerModel);
 }// My_ScreenBuffer destructor
+
+
+/*!
+Invoked whenever a monitored preference value is changed for
+a particular screen (see the constructor for the calls that
+arrange to monitor preferences).  This routine responds by
+updating internal caches.
+
+(4.0)
+*/
+void
+My_ScreenBuffer::
+preferenceChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+					 ListenerModel_Event	inPreferenceTagThatChanged,
+					 void*					inPreferencesContext,
+					 void*					inMyScreenBufferPtr)
+{
+	// WARNING: The context is only defined for the preferences monitored in a
+	// context-specific way through Preferences_ContextStartMonitoring() calls.
+	// Otherwise, the data type of the input is "Preferences_ChangeContext*".
+	Preferences_ContextRef		prefsContext = REINTERPRET_CAST(inPreferencesContext, Preferences_ContextRef);
+	My_ScreenBufferPtr			ptr = REINTERPRET_CAST(inMyScreenBufferPtr, My_ScreenBufferPtr);
+	
+	
+	if (kPreferences_ChangeContextBatchMode == inPreferenceTagThatChanged)
+	{
+		// batch mode; multiple things have changed; this should basically mirror
+		// what is copied by Terminal_ReturnConfiguration()
+		Terminal_SetVisibleColumnCount(ptr->selfRef, ptr->returnScreenColumns(prefsContext));
+		Terminal_SetVisibleRowCount(ptr->selfRef, ptr->returnScreenRows(prefsContext));
+		setScrollbackSize(ptr, ptr->returnScrollbackRows(prefsContext));
+	}
+	else
+	{
+		// ???
+	}
+}// preferenceChanged
 
 
 /*!
@@ -11255,6 +11339,51 @@ setCursorVisible	(My_ScreenBufferPtr		inDataPtr,
 	inDataPtr->cursorVisible = inIsVisible;
 	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeCursorState, inDataPtr->selfRef);
 }// setCursorVisible
+
+
+/*!
+Changes the maximum size of the scrollback buffer.  If the
+current content is larger, its memory is truncated.
+
+This triggers two events: "kTerminal_ChangeScrollActivity"
+to indicate that data has been removed, and also
+"kTerminal_ChangeText" (given a range consisting of all
+previous scrollback lines).
+
+(4.0)
+*/
+void
+setScrollbackSize	(My_ScreenBufferPtr		inDataPtr,
+					 UInt16					inLineCount)
+{
+	SInt16 const	kPreviousScrollbackCount = inDataPtr->scrollbackBuffer.size();
+	
+	
+	inDataPtr->text.scrollback.numberOfRowsPermitted = inLineCount;
+	inDataPtr->text.scrollback.enabled = (inDataPtr->text.scrollback.numberOfRowsPermitted > 0);
+	
+	if (inDataPtr->scrollbackBuffer.size() > inLineCount)
+	{
+		// notify listeners of the range of text that has gone away
+		{
+			Terminal_RangeDescription	range;
+			
+			
+			range.screen = inDataPtr->selfRef;
+			range.firstRow = -kPreviousScrollbackCount;
+			range.firstColumn = 0;
+			range.columnCount = inDataPtr->text.visibleScreen.numberOfColumnsPermitted;
+			range.rowCount = kPreviousScrollbackCount - inLineCount;
+			
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range/* context */);
+		}
+	}
+	
+	inDataPtr->scrollbackBuffer.resize(inLineCount);
+	
+	// notify listeners that scroll activity has taken place
+	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, inDataPtr->selfRef/* context */);
+}// setScrollbackSize
 
 
 /*!

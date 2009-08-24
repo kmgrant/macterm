@@ -83,7 +83,6 @@
 		0AC6BB220A8C0BA000AFF37A /* ContextualMenuBuilder.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */; };
 		0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDE3055432A400ACDF3A /* UIStrings.cp */; };
 		0AC6BB240A8C0BA000AFF37A /* FindDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD7055432A400ACDF3A /* FindDialog.cp */; };
-		0AC6BB250A8C0BA000AFF37A /* SizeDialog.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE18055432A400ACDF3A /* SizeDialog.cp */; };
 		0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */; };
 		0AC6BB270A8C0BA000AFF37A /* CoercionsAE.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FDBD055432A400ACDF3A /* CoercionsAE.cp */; };
 		0AC6BB280A8C0BA000AFF37A /* RasterGraphicsKernel.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE0D055432A400ACDF3A /* RasterGraphicsKernel.cp */; };
@@ -318,7 +317,6 @@
 		0A4604260554376100ACDF3A /* SessionDescription.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SessionDescription.h; path = Application/Code/SessionDescription.h; sourceTree = SOURCE_ROOT; };
 		0A4604280554376100ACDF3A /* SessionFactory.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SessionFactory.h; path = Application/Code/SessionFactory.h; sourceTree = SOURCE_ROOT; };
 		0A4604290554376100ACDF3A /* SessionRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SessionRef.typedef.h; path = Application/Code/SessionRef.typedef.h; sourceTree = SOURCE_ROOT; };
-		0A46042A0554376100ACDF3A /* SizeDialog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = SizeDialog.h; path = Application/Code/SizeDialog.h; sourceTree = SOURCE_ROOT; };
 		0A46042E0554376100ACDF3A /* StatusIcon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = StatusIcon.h; path = Application/Code/StatusIcon.h; sourceTree = SOURCE_ROOT; };
 		0A4604360554376100ACDF3A /* VectorCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorCanvas.h; path = Application/Code/VectorCanvas.h; sourceTree = "<group>"; };
 		0A4604370554376100ACDF3A /* VectorInterpreter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VectorInterpreter.h; path = Application/Code/VectorInterpreter.h; sourceTree = "<group>"; };
@@ -415,7 +413,6 @@
 		0A46FE14055432A400ACDF3A /* Session.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Session.cp; path = Application/Code/Session.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE15055432A400ACDF3A /* SessionDescription.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SessionDescription.cp; path = Application/Code/SessionDescription.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE17055432A400ACDF3A /* SessionFactory.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SessionFactory.cp; path = Application/Code/SessionFactory.cp; sourceTree = SOURCE_ROOT; };
-		0A46FE18055432A400ACDF3A /* SizeDialog.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SizeDialog.cp; path = Application/Code/SizeDialog.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE19055432A400ACDF3A /* SoundSystem.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SoundSystem.cp; path = Shared/Code/SoundSystem.cp; sourceTree = "<group>"; };
 		0A46FE1C055432A400ACDF3A /* StatusIcon.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = StatusIcon.cp; path = Application/Code/StatusIcon.cp; sourceTree = SOURCE_ROOT; };
 		0A46FE21055432A400ACDF3A /* VectorCanvas.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = VectorCanvas.cp; path = Application/Code/VectorCanvas.cp; sourceTree = "<group>"; };
@@ -576,7 +573,6 @@
 		0AF502380F872D590068CB19 /* CollectionWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CollectionWrap.cp; path = Shared/Code/CollectionWrap.cp; sourceTree = "<group>"; };
 		0AF5023A0F872DB90068CB19 /* CollectionWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CollectionWrap.h; path = Shared/Code/CollectionWrap.h; sourceTree = "<group>"; };
 		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
-		0AF5080509006B3D00E6FE79 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/SizeDialog.nib; sourceTree = "<group>"; };
 		0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadSelect.icns; path = Application/Resources/IconForKeypadSelect.icns; sourceTree = "<group>"; };
 		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
 		0AF995F20CC3C849000A11DC /* IconForBellOff.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForBellOff.icns; path = Application/Resources/IconForBellOff.icns; sourceTree = "<group>"; };
@@ -769,7 +765,6 @@
 				0A46FE14055432A400ACDF3A /* Session.cp */,
 				0A46FE15055432A400ACDF3A /* SessionDescription.cp */,
 				0A46FE17055432A400ACDF3A /* SessionFactory.cp */,
-				0A46FE18055432A400ACDF3A /* SizeDialog.cp */,
 				0A46FE1C055432A400ACDF3A /* StatusIcon.cp */,
 				0A46FE23055432A400ACDF3A /* TelnetPrinting.cp */,
 				0A46FE25055432A400ACDF3A /* Terminal.cp */,
@@ -838,7 +833,6 @@
 				0A4604260554376100ACDF3A /* SessionDescription.h */,
 				0A4604280554376100ACDF3A /* SessionFactory.h */,
 				0A4604290554376100ACDF3A /* SessionRef.typedef.h */,
-				0A46042A0554376100ACDF3A /* SizeDialog.h */,
 				0A46042E0554376100ACDF3A /* StatusIcon.h */,
 				0A4604390554376100ACDF3A /* TelnetPrinting.h */,
 				0A46043B0554376100ACDF3A /* Terminal.h */,
@@ -994,7 +988,6 @@
 				0A4C9D200FE9B1A0005EAE9D /* PrefPanelWorkspaces.nib */,
 				0A8450A50554CB8E00CFF440 /* PrefsWindow.nib */,
 				0A8450A70554CB8E00CFF440 /* ProgressDialog.nib */,
-				0AF5080409006B3D00E6FE79 /* SizeDialog.nib */,
 				0A8450A90554CB8E00CFF440 /* TEKWindow.nib */,
 				0A1BCD8805CA2B21005CF1E5 /* TerminalWindow.nib */,
 				0A8450AF0554CB8E00CFF440 /* WindowTitleDialog.nib */,
@@ -1387,7 +1380,6 @@
 				0AC6BB220A8C0BA000AFF37A /* ContextualMenuBuilder.cp in Sources */,
 				0AC6BB230A8C0BA000AFF37A /* UIStrings.cp in Sources */,
 				0AC6BB240A8C0BA000AFF37A /* FindDialog.cp in Sources */,
-				0AC6BB250A8C0BA000AFF37A /* SizeDialog.cp in Sources */,
 				0AC6BB260A8C0BA000AFF37A /* DialogUtilities.cp in Sources */,
 				0AC6BB270A8C0BA000AFF37A /* CoercionsAE.cp in Sources */,
 				0AC6BB280A8C0BA000AFF37A /* RasterGraphicsKernel.cp in Sources */,
@@ -1716,14 +1708,6 @@
 				0AEA45D80642041B00E701DA /* English */,
 			);
 			name = Dictionary.sdef;
-			sourceTree = "<group>";
-		};
-		0AF5080409006B3D00E6FE79 /* SizeDialog.nib */ = {
-			isa = PBXVariantGroup;
-			children = (
-				0AF5080509006B3D00E6FE79 /* English */,
-			);
-			name = SizeDialog.nib;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
