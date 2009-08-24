@@ -3,7 +3,7 @@
 	Panel.cp
 	
 	MacTelnet
-		© 1998-2006 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -489,6 +489,27 @@ Panel_SendMessageCreateViews	(Panel_Ref		inRef,
 		(SInt32)panelChanged(ptr, kPanel_MessageCreateViews, &inOwningWindow);
 	}
 }// SendMessageCreateViews
+
+
+/*!
+Sends the "kPanel_MessageFocusFirst" to the specified
+panel’s handler.
+
+See "Panel.h" for more information on this event.
+
+(4.0)
+*/
+void
+Panel_SendMessageFocusFirst		(Panel_Ref		inRef)
+{
+	if (nullptr != inRef)
+	{
+		PanelAutoLocker		ptr(gPanelPtrLocks(), inRef);
+		
+		
+		(SInt32)panelChanged(ptr, kPanel_MessageFocusFirst, nullptr/* context */);
+	}
+}// SendMessageFocusFirst
 
 
 /*!

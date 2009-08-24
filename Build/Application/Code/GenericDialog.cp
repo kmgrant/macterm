@@ -289,8 +289,7 @@ IMPORTANT:	Invoking this routine means it is no longer your
 (3.1)
 */
 void
-GenericDialog_Display	(GenericDialog_Ref		inDialog,
-						 HIViewID const&		inInitialFocusViewID)
+GenericDialog_Display	(GenericDialog_Ref		inDialog)
 {
 	My_GenericDialogAutoLocker	ptr(gGenericDialogPtrLocks(), inDialog);
 	
@@ -314,38 +313,16 @@ GenericDialog_Display	(GenericDialog_Ref		inDialog,
 			// handle events
 			ShowWindow(ptr->dialogWindow);
 			EventLoop_SelectOverRealFrontWindow(ptr->dialogWindow);
-			{
-				HIViewWrap		focusedView(inInitialFocusViewID, ptr->dialogWindow);
-				
-				
-				if (focusedView.exists())
-				{
-					(OSStatus)DialogUtilities_SetKeyboardFocus(focusedView);
-				}
-				else
-				{
-					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
-				}
-			}
+			(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
+			Panel_SendMessageFocusFirst(ptr->hostedPanel);
 			error = RunAppModalLoopForWindow(ptr->dialogWindow);
 			assert_noerr(error);
 		}
 		else
 		{
 			ShowSheetWindow(ptr->dialogWindow, ptr->parentWindow);
-			{
-				HIViewWrap		focusedView(inInitialFocusViewID, ptr->dialogWindow);
-				
-				
-				if (focusedView.exists())
-				{
-					(OSStatus)DialogUtilities_SetKeyboardFocus(focusedView);
-				}
-				else
-				{
-					(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
-				}
-			}
+			(OSStatus)DialogUtilities_SetKeyboardFocus(HIViewWrap(idMyButtonCancel, ptr->dialogWindow));
+			Panel_SendMessageFocusFirst(ptr->hostedPanel);
 			// handle events; on Mac OS X, the dialog is a sheet and events are handled via callback
 		}
 	}

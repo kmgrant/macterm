@@ -171,12 +171,8 @@ PrefsContextDialog_Display	(PrefsContextDialog_Ref		inDialog)
 	if (nullptr == ptr) Alert_ReportOSStatus(memFullErr);
 	else
 	{
-		// TEMPORARY - there is no way to ask a panel what a logical focus view would be, so do not use one
-		HIViewID const		kViewUnknown = { '----', 0/* ID */ };
-		
-		
 		ptr->wasDisplayed = true;
-		GenericDialog_Display(ptr->genericDialog, kViewUnknown/* focus view */);
+		GenericDialog_Display(ptr->genericDialog);
 	}
 }// Display
 

@@ -162,11 +162,8 @@ NewSessionDialog_Display	(NewSessionDialog_Ref		inDialog)
 	if (ptr == nullptr) Alert_ReportOSStatus(memFullErr);
 	else
 	{
-		HIViewID const		kFieldCommandLine = { 'CmdL', 0/* ID */ };
-		
-		
 		ptr->wasDisplayed = true;
-		GenericDialog_Display(ptr->genericDialog, kFieldCommandLine/* focus view */);
+		GenericDialog_Display(ptr->genericDialog);
 	}
 }// Display
 

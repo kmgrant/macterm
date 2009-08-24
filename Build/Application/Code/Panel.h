@@ -15,7 +15,7 @@
 /*###############################################################
 
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -113,6 +113,13 @@ kPanel_MessageDestroyed
 	your panel.  This message is issued only when the
 	Panel_Dispose() method is called.
 
+kPanel_MessageFocusFirst
+	This property indicates that the user interface is
+	ready to be used and the keyboard focus should be
+	set to the first logical view (typically a text
+	field).  If this is not handled, some view will be
+	focused arbitrarily by the container of the panel.
+
 kPanel_MessageFocusGained
 	This property indicates that the user has shifted
 	focus to another control.  The given control is the
@@ -192,6 +199,7 @@ enum
 {
 	kPanel_MessageCreateViews = '1win',					// data: -> HIWindowRef*, the owning window
 	kPanel_MessageDestroyed = 'tobe',					// data: -> void*, the auxiliary data pointer
+	kPanel_MessageFocusFirst = 'focf',					// data: -> nullptr
 	kPanel_MessageFocusGained = 'focg',					// data: -> HIViewRef*, the field gaining focus
 	kPanel_MessageFocusLost = 'focl',					// data: -> HIViewRef*, the field losing focus
 	kPanel_MessageGetEditType = 'edit',					// data: -> nullptr
@@ -296,6 +304,9 @@ class Panel_Resizer; // STL Unary Function - returns: void, argument: Panel_Ref
 void
 	Panel_SendMessageCreateViews		(Panel_Ref					inRef,
 										 HIWindowRef				inOwningWindow);
+
+void
+	Panel_SendMessageFocusFirst			(Panel_Ref					inRef);
 
 void
 	Panel_SendMessageFocusGained		(Panel_Ref					inRef,

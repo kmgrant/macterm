@@ -2287,6 +2287,18 @@ panelChanged	(Panel_Ref		inPanel,
 		}
 		break;
 	
+	case kPanel_MessageFocusFirst: // notification that the first logical view should become focused
+		{
+			My_SessionsPanelResourceDataPtr		panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(inPanel),
+																				My_SessionsPanelResourceDataPtr);
+			HIWindowRef							owningWindow = HIViewGetWindow(panelDataPtr->interfacePtr->mainView);
+			HIViewWrap							commandLineField(idMyFieldCommandLine, owningWindow);
+			
+			
+			DialogUtilities_SetKeyboardFocus(commandLineField);
+		}
+		break;
+	
 	case kPanel_MessageFocusGained: // notification that a view is now focused
 		{
 			//HIViewRef const*	viewPtr = REINTERPRET_CAST(inDataPtr, HIViewRef*);

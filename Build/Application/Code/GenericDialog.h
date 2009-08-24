@@ -101,8 +101,7 @@ void
 												 UInt32								inButtonCommandID);
 
 void
-	GenericDialog_Display						(GenericDialog_Ref					inDialog,
-												 HIViewID const&					inInitialFocusViewID);
+	GenericDialog_Display						(GenericDialog_Ref					inDialog);
 
 Panel_Ref
 	GenericDialog_ReturnHostedPanel				(GenericDialog_Ref					inDialog);
