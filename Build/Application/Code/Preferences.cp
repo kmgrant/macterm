@@ -2272,7 +2272,11 @@ will be checked before returning an error.  This allows you
 to retrieve sensible default values when a specific context
 does not contain what you need.  If you also define the
 result "outIsDefaultOrNull", you can find out whether or not
-the returned data was read from the defaults.
+the returned data was read from the defaults.  This is also
+always true if "inContext" is identical to the default context
+of its class; that is, it always returns true if "inContext"
+matches what Preferences_GetDefaultContext() would return for
+Preferences_ContextReturnClass(inContext).
 
 \retval kPreferences_ResultOK
 if data is acquired without errors; "outActualSizePtr" then
@@ -2281,6 +2285,11 @@ points to the exact number of bytes used by the data
 \retval kPreferences_ResultInvalidContextReference
 if the specified context does not exist, and there was no
 request to search defaults as a fallback
+
+\retval kPreferences_ResultNoMoreGeneralContext
+if the requested data was not found in the specified context,
+there was a request to search defaults, and there was a problem
+finding the default context
 
 \retval kPreferences_ResultUnknownTagOrClass
 if the specified tag is not understood
@@ -2316,8 +2325,14 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 	if (kPreferences_ResultOK == result)
 	{
 		My_ContextAutoLocker	ptr(gMyContextPtrLocks(), inContext);
+		Preferences_ContextRef	defaultContext = nullptr;
 		Boolean					searchDefaults = inSearchDefaults;
 		
+		
+		if (kPreferences_ResultOK == Preferences_GetDefaultContext(&defaultContext, dataClass))
+		{
+			isDefault = (inContext == defaultContext);
+		}
 		
 		if (nullptr != ptr)
 		{
@@ -2333,33 +2348,41 @@ Preferences_ContextGetData	(Preferences_ContextRef		inContext,
 		if (searchDefaults)
 		{
 			// not available...try another context
-			Preferences_ContextRef		alternateContext = nullptr;
+			Preferences_ContextRef		alternateContext = defaultContext;
 			
 			
 			isDefault = true;
-			result = Preferences_GetDefaultContext(&alternateContext, dataClass);
-			if (kPreferences_ResultOK == result)
+			if (nullptr == alternateContext)
+			{
+				result = kPreferences_ResultNoMoreGeneralContext;
+			}
+			else
 			{
 				My_ContextAutoLocker	alternatePtr(gMyContextPtrLocks(), alternateContext);
 				
 				
 				result = contextGetData(alternatePtr, dataClass, inDataPreferenceTag, inDataStorageSize,
 										outDataStorage, outActualSizePtrOrNull);
+			}
+			
+			if (kPreferences_ResultOK != result)
+			{
+				// not available...try yet another context
+				Preferences_ContextRef		rootContext = nullptr;
+				
+				
+				result = Preferences_GetDefaultContext(&rootContext);
 				if (kPreferences_ResultOK != result)
 				{
-					// not available...try yet another context
-					Preferences_ContextRef		rootContext = nullptr;
+					result = kPreferences_ResultNoMoreGeneralContext;
+				}
+				else
+				{
+					My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
 					
 					
-					result = Preferences_GetDefaultContext(&rootContext);
-					if (kPreferences_ResultOK == result)
-					{
-						My_ContextAutoLocker	rootPtr(gMyContextPtrLocks(), rootContext);
-						
-						
-						result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
-												outDataStorage, outActualSizePtrOrNull);
-					}
+					result = contextGetData(rootPtr, dataClass, inDataPreferenceTag, inDataStorageSize,
+											outDataStorage, outActualSizePtrOrNull);
 				}
 			}
 		}
