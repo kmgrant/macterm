@@ -91,6 +91,12 @@ DialogUtilities_InvokeDrawViewProc	(DialogUtilities_DrawViewProcPtr	inProc,
 
 #define	BooleanToCheckBoxValue(a)			((a) ? (kControlCheckBoxCheckedValue) : (kControlCheckBoxUncheckedValue))
 
+#define	BooleansToCheckBoxValue(a,b)		(((a) && (b)) \
+												? (kControlCheckBoxCheckedValue) \
+												: (((a) || (b)) \
+													? (kControlCheckBoxMixedValue) \
+													: (kControlCheckBoxUncheckedValue)))
+
 #define	BooleanToRadioButtonValue(a)		((a) ? (kControlRadioButtonCheckedValue) : (kControlRadioButtonUncheckedValue))
 
 OSStatus
