@@ -660,6 +660,27 @@ DialogUtilities_DuplicateControl	(ControlRef		inTemplateControl,
 															true/* auto-toggle; Carbon Events are assumed */,
 															&outNewControl);
 							CFRelease(titleCFString), titleCFString = nullptr;
+							
+							// checkboxes that restore defaults are common and are identified
+							// by an important property that must be preserved for later use
+							// note: this is kind of a hack, but is necessary right now and
+							// good enough until the UI is eventually moved to Cocoa
+							{
+								OSType		tagValue = '----';
+								OSStatus	error = GetControlProperty(inTemplateControl, AppResources_ReturnCreatorCode(),
+																		kConstantsRegistry_ControlPropertyTypeDefaultPreferenceTag,
+																		sizeof(tagValue), nullptr/* actual size */,
+																		&tagValue);
+								
+								
+								if (noErr == error)
+								{
+									error = SetControlProperty(outNewControl, AppResources_ReturnCreatorCode(),
+																kConstantsRegistry_ControlPropertyTypeDefaultPreferenceTag,
+																sizeof(tagValue), &tagValue);
+									assert_noerr(error);
+								}
+							}
 						}
 					}
 					break;

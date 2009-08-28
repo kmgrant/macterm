@@ -70,6 +70,7 @@ enum
 	kConstantsRegistry_ControlPropertyTypeAddressDialog				= 'ADlg',	//!< data: AddressDialog_Ref
 	kConstantsRegistry_ControlPropertyTypeBackgroundColor			= 'BkCl',	//!< data: RGBColor
 	kConstantsRegistry_ControlPropertyTypeColorBoxData				= 'ClBx',	//!< data: MyColorBoxDataPtr (internal to ColorBox.cp)
+	kConstantsRegistry_ControlPropertyTypeDefaultPreferenceTag		= 'DPrf',	//!< data: Preferences_Tag
 	kConstantsRegistry_ControlPropertyTypeOwningPanel				= 'Panl',	//!< data: Panel_Ref
 	kConstantsRegistry_ControlPropertyTypeShowDragHighlight			= 'Drag',	//!< data: Boolean (if true, draw highlight; if false; erase)
 	kConstantsRegistry_ControlPropertyTypeTerminalBackgroundData	= 'TrmB',	//!< data: MyTerminalBackgroundPtr (internal to TerminalView.cp)
