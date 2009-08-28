@@ -1,5 +1,8 @@
 #!/bin/sh
 
+PATH=/Developer/usr/bin:$PATH
+export PATH
+
 cd `dirname $0`
 
 # !!! IMPORTANT !!!
