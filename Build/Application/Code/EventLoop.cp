@@ -1262,8 +1262,8 @@ receiveSheetOpening		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 			//	HIToolbox.framework/Versions/A/Resources/English.lproj/Toolbar.nib)
 			// to hack in a more Cocoa-like look-and-feel; this is obviously
 			// completely cosmetic, so any errors are ignored, etc.; this hack works
-			// on 10.4 and 10.5, but do NOT assume it does on 10.6 or 10.3 (for now)
-			if (FlagManager_Test(kFlagOS10_4API) && (false == FlagManager_Test(kFlagOS10_6API)) &&
+			// on 10.4-10.6, but do NOT assume it does on 10.7 or 10.3 (for now)
+			if (FlagManager_Test(kFlagOS10_4API) && (false == FlagManager_Test(kFlagOS10_7API)) &&
 				(noErr == CopyWindowTitleAsCFString(sheetWindow, &sheetTitleCFString)))
 			{
 				// attempt to identify the customization sheet using its title

@@ -378,10 +378,11 @@ enum
 	kFlagOS10_4API					= (kFlagManager_FirstValidFlag + 7),	//!< is Mac OS 10.4 or later in use?
 	kFlagOS10_5API					= (kFlagManager_FirstValidFlag + 8),	//!< is Mac OS 10.5 or later in use?
 	kFlagOS10_6API					= (kFlagManager_FirstValidFlag + 9),	//!< is Mac OS 10.6 or later in use?
-	kFlagQuickTime					= (kFlagManager_FirstValidFlag + 10),	//!< is QuickTime (any version) installed?
-	kFlagSuspended					= (kFlagManager_FirstValidFlag + 11),	//!< is MacTelnet’s process in the background?
-	kFlagThreadManager				= (kFlagManager_FirstValidFlag + 12),	//!< is the Thread Manager (any version) installed?
-	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 13)	//!< skip auto-new-window on application launch?
+	kFlagOS10_7API					= (kFlagManager_FirstValidFlag + 10),	//!< is Mac OS 10.7 or later in use?
+	kFlagQuickTime					= (kFlagManager_FirstValidFlag + 11),	//!< is QuickTime (any version) installed?
+	kFlagSuspended					= (kFlagManager_FirstValidFlag + 12),	//!< is MacTelnet’s process in the background?
+	kFlagThreadManager				= (kFlagManager_FirstValidFlag + 13),	//!< is the Thread Manager (any version) installed?
+	kFlagUserOverrideAutoNew		= (kFlagManager_FirstValidFlag + 14)	//!< skip auto-new-window on application launch?
 };
 
 //@}
