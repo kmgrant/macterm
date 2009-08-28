@@ -68,7 +68,11 @@ mac_os_name = pymactelnet.utilities.mac_os_name()
 # - Leopard is universal and requires the Python 2.5 SWIG wrapper
 # - version "A" of the framework supports PowerPC only (and Python 2.3)
 # - version "B" of the framework is universal (for Python 2.3.5 or 2.5)
-if mac_os_name == "Leopard":
+if mac_os_name == "Snow Leopard":
+    py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
+    quills_fw_ver = "B"
+    quills_pylib_ver = "2.5"
+elif mac_os_name == "Leopard":
     py_interpreter = os.path.join(macos_dir, "MacTelnet_python2.5_wrap")
     quills_fw_ver = "B"
     quills_pylib_ver = "2.5"

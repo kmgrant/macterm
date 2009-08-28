@@ -32,6 +32,7 @@ def mac_os_name():
     if darwin_version.startswith('7.'): result = "Panther"
     if darwin_version.startswith('8.'): result = "Tiger"
     if darwin_version.startswith('9.'): result = "Leopard"
+    if darwin_version.startswith('10.'): result = "Snow Leopard"
     return result
 
 def slash_free_path(path):

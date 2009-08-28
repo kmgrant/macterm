@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090828',
     '20090823',
     '20090816',
     '20090815',
@@ -267,6 +268,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090828': [
+        'Added Snow Leopard compatibility.',
+    ],
     '20090823': [
         'Custom Screen Size dialog is now internally identical to the Preferences window Terminals pane Screen tab.  As such, it is now possible to change scrollback characteristics from the sheet.',
     ],

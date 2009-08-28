@@ -63,7 +63,7 @@ RMDIR=/bin/rmdir
 RSYNC=/usr/bin/rsync
 SYMLINK_REPLACE=/bin/ln -snf
 XARGS=/usr/bin/xargs
-XCB=/usr/bin/xcodebuild $(XCODE_ENV)
+XCB=/Developer/usr/bin/xcodebuild $(XCODE_ENV)
 
 # set this to "no" if you want to disable Panther support (may
 # make MacTelnet easier to build if you don't care about 10.3);
