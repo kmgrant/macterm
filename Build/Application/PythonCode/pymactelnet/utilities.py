@@ -21,7 +21,7 @@ def mac_os_name():
     standard way, because (for instance) platform.mac_version()
     fails with the Panther version of Python.
     
-    >>> mac_os_name() in ['Leopard', 'Tiger', 'Panther']
+    >>> mac_os_name() in ['Snow Leopard', 'Leopard', 'Tiger', 'Panther']
     True
     
     """
