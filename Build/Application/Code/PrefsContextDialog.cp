@@ -62,6 +62,7 @@ struct My_PrefsContextDialog
 	PrefsContextDialog_Ref		selfRef;			// identical to address of structure, but typed as ref
 	Boolean						wasDisplayed;		// controls whose responsibility it is to destroy the Generic Dialog
 	Preferences_ContextRef		originalDataModel;	// data used to initialize the dialog; updated when the dialog is accepted
+	Preferences_TagSnapshotRef	originalKeys;		// the set of keys that were defined in the original data model, before user changes
 	Preferences_ContextRef		temporaryDataModel;	// data used to initialize the dialog, and store any changes made
 	GenericDialog_Ref			genericDialog;		// handles most of the work
 	CarbonEventHandlerWrap		commandHandler;		// responds to certain command events in the panel’s window
@@ -217,6 +218,7 @@ My_PrefsContextDialog	(HIWindowRef						inParentWindowOrNullForModalDialog,
 selfRef				(REINTERPRET_CAST(this, PrefsContextDialog_Ref)),
 wasDisplayed		(false),
 originalDataModel	(inoutData),
+originalKeys		(Preferences_NewTagSnapshot(inoutData)),
 temporaryDataModel	(Preferences_NewCloneContext(inoutData, true/* must detach */)),
 genericDialog		(GenericDialog_New(inParentWindowOrNullForModalDialog, inHostedPanel,
 										temporaryDataModel, handleDialogClose,
@@ -259,6 +261,7 @@ My_PrefsContextDialog::
 ~My_PrefsContextDialog ()
 {
 	Preferences_ReleaseContext(&this->originalDataModel);
+	Preferences_ReleaseTagSnapshot(&this->originalKeys);
 	Preferences_ReleaseContext(&this->temporaryDataModel);
 	
 	// if the dialog is displayed, then Generic Dialog takes over responsibility to dispose of it
@@ -286,7 +289,7 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
 		
 		
-		prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel, dataPtr->originalDataModel);
+		prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel, dataPtr->originalDataModel, dataPtr->originalKeys);
 	}
 }// handleDialogClose
 
