@@ -100,6 +100,9 @@ public:
 	inline void
 	deleteValue	(CFStringRef);
 	
+	inline Boolean
+	exists	(CFStringRef) const;
+	
 	CFArrayRef
 	returnArrayCopy	(CFStringRef) const;
 	
@@ -265,6 +268,21 @@ deleteValue		(CFStringRef	inKey)
 	if (false == _dictionary.isMutable()) throw std::logic_error("warning, attempt to remove a value from an immutable dictionary");
 	CFDictionaryRemoveValue(_dictionary.returnCFMutableDictionaryRef(), inKey);
 }// deleteValue
+
+
+/*!
+Returns true only if the specified key exists in the
+dictionary.
+
+(2.1)
+*/
+Boolean
+CFDictionaryManager::
+exists	(CFStringRef	inKey)
+const
+{
+	return CFDictionaryContainsKey(_dictionary.returnCFMutableDictionaryRef(), inKey);
+}// exists
 
 
 /*!

@@ -104,6 +104,10 @@ public:
 	virtual void
 	deleteValue		(CFStringRef	inKey) = 0;
 	
+	//! returns true only if a key exists in the dictionary
+	virtual Boolean
+	exists	(CFStringRef	inKey) const = 0;
+	
 	//! retrieves an array value from the dictionary (use only if the value really is an array!); release it yourself!
 	virtual CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey) const = 0;
@@ -208,6 +212,13 @@ public:
 	deleteValue		(CFStringRef	inKey)
 	{
 		_delegate.deleteValue(inKey);
+	}
+	
+	virtual Boolean
+	exists	(CFStringRef	inKey)
+	const
+	{
+		return _delegate.exists(inKey);
 	}
 	
 	virtual CFArrayRef
@@ -328,6 +339,10 @@ public:
 	inline void
 	deleteValue		(CFStringRef	inKey);
 	
+	//! returns true only if a key exists in the dictionary
+	inline Boolean
+	exists	(CFStringRef	inKey) const;
+	
 	//! retrieves an array value from the dictionary (use only if the value really is an array!)
 	inline CFArrayRef
 	returnArrayCopy		(CFStringRef	inKey) const;
@@ -433,6 +448,10 @@ public:
 	//! removes an arbitrary value from Core Foundation Preferences
 	inline void
 	deleteValue		(CFStringRef	inKey);
+	
+	//! returns true only if a preference in Core Foundation Preferences has the given key
+	inline Boolean
+	exists	(CFStringRef	inKey) const;
 	
 	//! retrieves an array value from global preferences (use only if the value really is an array!)
 	inline CFArrayRef
@@ -620,6 +639,21 @@ deleteValue		(CFStringRef	inKey)
 {
 	_dataDictionary.deleteValue(inKey);
 }// deleteValue
+
+
+/*!
+Returns true only if the specified key exists in the
+dictionary.
+
+(2.1)
+*/
+Boolean
+CFKeyValueDictionary::
+exists	(CFStringRef	inKey)
+const
+{
+	return _dataDictionary.exists(inKey);
+}// exists
 
 
 /*!
@@ -905,6 +939,25 @@ deleteValue		(CFStringRef	inKey)
 {
 	CFPreferencesSetAppValue(inKey, nullptr/* value */, _targetApplication.returnCFStringRef());
 }// deleteValue
+
+
+/*!
+Returns true only if the specified key exists in
+the global application preferences.
+
+(2.1)
+*/
+Boolean
+CFKeyValuePreferences::
+exists	(CFStringRef	inKey)
+const
+{
+	CFRetainRelease		ignoredValue(CFPreferencesCopyAppValue(inKey, _targetApplication.returnCFStringRef()),
+										true/* is retained */);
+	
+	
+	return ignoredValue.exists();
+}// exists
 
 
 /*!

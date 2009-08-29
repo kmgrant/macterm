@@ -304,6 +304,13 @@ public:
 	virtual Preferences_Result
 	destroy () NO_METHOD_IMPL = 0;
 	
+	//! returns true only if the specified key is defined in the dictionary
+	virtual Boolean
+	exists	(CFStringRef	inKey) const
+	{
+		return _implementorPtr->exists(inKey);
+	}
+	
 	//! invokes callbacks for an event; usually done automatically
 	void
 	notifyListeners	(Preferences_Tag);
@@ -636,6 +643,28 @@ private:
 My_PreferenceDefinition::DefinitionPtrByKeyName		My_PreferenceDefinition::_definitionsByKeyName;
 My_PreferenceDefinition::DefinitionPtrByTag			My_PreferenceDefinition::_definitionsByTag;
 
+/*!
+A wrapper for a list of keys, that can be used externally to
+refer indefinitely to a particular set of preference tags.
+
+This is commonly used to take a “snapshot”, so that it is
+possible to detect if any keys have been removed from a set
+of preferences over time.
+*/
+class My_TagSnapshot
+{
+public:
+	My_TagSnapshot	(My_ContextInterfacePtr);
+	
+	Preferences_TagSnapshotRef	selfRef;	//!< convenient, redundant self-reference
+	CFRetainRelease				contextKeys;	//!< CFArrayRef; the keys for which preferences are defined
+};
+typedef My_TagSnapshot const*	My_TagSnapshotConstPtr;
+typedef My_TagSnapshot*			My_TagSnapshotPtr;
+
+typedef MemoryBlockPtrLocker< Preferences_TagSnapshotRef, My_TagSnapshot >	My_TagSnapshotPtrLocker;
+typedef LockAcquireRelease< Preferences_TagSnapshotRef, My_TagSnapshot >	My_TagSnapshotAutoLocker;
+
 } // anonymous namespace
 
 #pragma mark Internal Method Prototypes
@@ -736,6 +765,7 @@ My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x
 My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gWorkspaceDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::WORKSPACE); return x; }
 My_FavoriteContextList&		gWorkspaceNamedContexts ()	{ static My_FavoriteContextList x; return x; }
+My_TagSnapshotPtrLocker&	gMyTagSnapshotPtrLocks ()	{ static My_TagSnapshotPtrLocker x; return x; }
 
 } // anonymous namespace
 
@@ -1863,6 +1893,37 @@ Preferences_NewSavedAlias	(Preferences_AliasID	inAliasID)
 
 
 /*!
+Creates an object representing the preferences tags that are
+currently defined in the specified context.
+
+This can be used with APIs such as Preferences_ContextCopy(),
+to restrict their scope to the tags in the snapshot.
+
+(4.0)
+*/
+Preferences_TagSnapshotRef
+Preferences_NewTagSnapshot	(Preferences_ContextRef		inContext)
+{
+	Preferences_TagSnapshotRef		result = nullptr;
+	
+	
+	try
+	{
+		My_ContextAutoLocker	contextPtr(gMyContextPtrLocks(), inContext);
+		
+		
+		result = REINTERPRET_CAST(new My_TagSnapshot(contextPtr), Preferences_TagSnapshotRef);
+	}
+	catch (std::exception const&	inException)
+	{
+		Console_WriteLine(inException.what());
+		result = nullptr;
+	}
+	return result;
+}// NewTagSnapshot
+
+
+/*!
 Destroys the in-memory version of an alias, not affecting
 its on-disk version.  To write the contents of an alias in
 memory to the preferences file first, use
@@ -1940,6 +2001,33 @@ Preferences_ReleaseContext	(Preferences_ContextRef*	inoutRefPtr)
 		*inoutRefPtr = nullptr;
 	}
 }// ReleaseContext
+
+
+/*!
+Disposes of the specified snapshot.  Your copy of the reference
+is set to "nullptr".
+
+(4.0)
+*/
+void
+Preferences_ReleaseTagSnapshot	(Preferences_TagSnapshotRef*	inoutRefPtr)
+{
+	if (gMyTagSnapshotPtrLocks().isLocked(*inoutRefPtr))
+	{
+		Console_Warning(Console_WriteLine, "attempt to dispose of locked tag snapshot");
+	}
+	else
+	{
+		// clean up
+		{
+			My_TagSnapshotAutoLocker	ptr(gMyTagSnapshotPtrLocks(), *inoutRefPtr);
+			
+			
+			delete ptr;
+		}
+		*inoutRefPtr = nullptr;
+	}
+}// ReleaseTagSnapshot
 
 
 /*!
@@ -2103,13 +2191,23 @@ Preferences_AliasSave	(Preferences_AliasID	inAliasID,
 
 
 /*!
-Copies all the key-value pairs from the source to the
-destination (regardless of class), and does not remove
-or change any other keys defined in the destination.
+Copies all the key-value pairs (or, if "inRestrictedSetOrNull" is
+defined, only those keys) from the source to the destination,
+regardless of class.
 
-Unlike Preferences_NewCloneContext(), this routine does
-not create any new contexts.  It might be used to apply
-changes in a temporary context to a more permanent one.
+When copying all keys, any other keys defined in the destination
+are unchanged and are not removed.
+
+When copying a restricted set of keys, every key in the set is
+checked: if it no longer exists in the source, it will be deleted
+in the destination, otherwise the value is copied.  No other keys
+are checked in the restricted case.  This is very useful when
+working with contexts that might be huge supersets, such as
+default contexts.
+
+Unlike Preferences_NewCloneContext(), this routine does not
+create any new contexts.  It might be used to apply changes in a
+temporary context to a more permanent one.
 
 \retval kPreferences_ResultOK
 if the context was successfully copied
@@ -2123,8 +2221,9 @@ if there was a problem determining what data is in the source
 (3.1)
 */
 Preferences_Result
-Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
-							 Preferences_ContextRef		inDestinationContext)
+Preferences_ContextCopy		(Preferences_ContextRef			inBaseContext,
+							 Preferences_ContextRef			inDestinationContext,
+							 Preferences_TagSnapshotRef		inRestrictedSetOrNull)
 {
 	My_ContextAutoLocker	basePtr(gMyContextPtrLocks(), inBaseContext);
 	My_ContextAutoLocker	destPtr(gMyContextPtrLocks(), inDestinationContext);
@@ -2134,8 +2233,11 @@ Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
 	if ((nullptr == basePtr) || (nullptr == destPtr)) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
-		CFRetainRelease		sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
-		CFArrayRef			sourceKeysCFArray = sourceKeys.returnCFArrayRef();
+		My_TagSnapshotAutoLocker	snapshotPtr(gMyTagSnapshotPtrLocks(), inRestrictedSetOrNull);
+		CFRetainRelease				sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
+		CFArrayRef					sourceKeysCFArray = (nullptr != snapshotPtr)
+															? snapshotPtr->contextKeys.returnCFArrayRef()
+															: sourceKeys.returnCFArrayRef();
 		
 		
 		if (nullptr == sourceKeysCFArray) result = kPreferences_ResultOneOrMoreNamesNotAvailable;
@@ -2148,11 +2250,28 @@ Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
 			{
 				CFStringRef const	kKeyCFStringRef = CFUtilities_StringCast
 														(CFArrayGetValueAtIndex(sourceKeysCFArray, i));
-				CFRetainRelease		keyValueCFType(basePtr->returnValueCopy(kKeyCFStringRef),
-													true/* is retained */);
+				Boolean				addValue = true;
 				
 				
-				destPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
+				if (nullptr != inRestrictedSetOrNull)
+				{
+					//Console_WriteValueCFString("check restricted-set key", kKeyCFStringRef); // debug
+					unless (basePtr->exists(kKeyCFStringRef))
+					{
+						// no longer exists; delete from destination
+						destPtr->deleteValue(kKeyCFStringRef);
+						addValue = false;
+					}
+				}
+				
+				if (addValue)
+				{
+					CFRetainRelease		keyValueCFType(basePtr->returnValueCopy(kKeyCFStringRef),
+														true/* is retained */);
+					
+					
+					destPtr->addValue(0/* do not notify */, kKeyCFStringRef, keyValueCFType.returnCFTypeRef());
+				}
 			}
 			
 			// it is not easy to tell what the tags are of the changed keys, so send
@@ -4957,6 +5076,41 @@ findByTag	(Preferences_Tag	inTag)
 	if (_definitionsByTag.end() != toDefPtr) result = toDefPtr->second;
 	return result;
 }// My_PreferenceDefinition::findByTag
+
+
+/*!
+Constructor.
+
+(4.0)
+*/
+My_TagSnapshot::
+My_TagSnapshot	(My_ContextInterfacePtr		inContextPtr)
+:
+selfRef(REINTERPRET_CAST(this, Preferences_TagSnapshotRef)),
+contextKeys(inContextPtr->returnKeyListCopy(), true/* is retained */)
+{
+	//TMP DEBUG:
+	{
+		CFArrayRef		sourceKeysCFArray = this->contextKeys.returnCFArrayRef();
+		
+		
+		if (nullptr == sourceKeysCFArray) Console_WriteLine("warning, null tags array!");
+		else
+		{
+			CFIndex const	kNumberOfKeys = CFArrayGetCount(sourceKeysCFArray);
+			
+			
+			for (CFIndex i = 0; i < kNumberOfKeys; ++i)
+			{
+				CFStringRef const	kKeyCFStringRef = CFUtilities_StringCast
+														(CFArrayGetValueAtIndex(sourceKeysCFArray, i));
+				
+				
+				Console_WriteValueCFString("context snapshot contains key", kKeyCFStringRef);
+			}
+		}
+	}
+}// My_TagSnapshot 1-argument constructor
 
 
 /*!

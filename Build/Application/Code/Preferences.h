@@ -393,6 +393,14 @@ typedef Preferences_Tag		Preferences_Change;
 #include "PreferencesContextRef.typedef.h"
 
 /*!
+A tag snapshot is a statement about which preferences were
+defined in a context at the time the snapshot was taken.  This
+tag list can be useful when using other APIs later on, such as
+Preferences_ContextCopy().
+*/
+typedef struct Preferences_OpaqueTagSnapshot*	Preferences_TagSnapshotRef;
+
+/*!
 A zero-based preferences index is added to the tag value to
 generate a unique tag that can be hashed.  So, a tag must have
 enough unused bits to allow this arithmetic (and other tags
@@ -475,6 +483,17 @@ void
 
 //@}
 
+//!\name Creating and Releasing Preferences Tag Snapshots
+//@{
+
+Preferences_TagSnapshotRef
+	Preferences_NewTagSnapshot				(Preferences_ContextRef				inContext);
+
+void
+	Preferences_ReleaseTagSnapshot			(Preferences_TagSnapshotRef*		inoutSnapshotPtr);
+
+//@}
+
 //!\name Using Existing Contexts (No Dispose Necessary)
 //@{
 
@@ -535,7 +554,8 @@ Preferences_Result
 
 Preferences_Result
 	Preferences_ContextCopy					(Preferences_ContextRef				inBaseContext,
-											 Preferences_ContextRef				inDestinationContext);
+											 Preferences_ContextRef				inDestinationContext,
+											 Preferences_TagSnapshotRef			inRestrictedSetOrNull = nullptr);
 
 Preferences_Result
 	Preferences_ContextDeleteData			(Preferences_ContextRef				inContext,
