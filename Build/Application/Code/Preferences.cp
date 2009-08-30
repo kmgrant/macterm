@@ -647,23 +647,28 @@ My_PreferenceDefinition::DefinitionPtrByTag			My_PreferenceDefinition::_definiti
 A wrapper for a list of keys, that can be used externally to
 refer indefinitely to a particular set of preference tags.
 
-This is commonly used to take a “snapshot”, so that it is
-possible to detect if any keys have been removed from a set
-of preferences over time.
+This is commonly used to take a “set”, so that it is possible
+to detect if any keys have been removed from a set of
+preferences over time.
 */
-class My_TagSnapshot
+class My_TagSet
 {
 public:
-	My_TagSnapshot	(My_ContextInterfacePtr);
+	My_TagSet	(My_ContextInterfacePtr);
+	My_TagSet	(std::vector< Preferences_Tag > const&);
 	
-	Preferences_TagSnapshotRef	selfRef;	//!< convenient, redundant self-reference
-	CFRetainRelease				contextKeys;	//!< CFArrayRef; the keys for which preferences are defined
-};
-typedef My_TagSnapshot const*	My_TagSnapshotConstPtr;
-typedef My_TagSnapshot*			My_TagSnapshotPtr;
+	Preferences_TagSetRef	selfRef;	//!< convenient, redundant self-reference
+	CFRetainRelease			contextKeys;	//!< CFArrayRef; the keys for which preferences are defined
 
-typedef MemoryBlockPtrLocker< Preferences_TagSnapshotRef, My_TagSnapshot >	My_TagSnapshotPtrLocker;
-typedef LockAcquireRelease< Preferences_TagSnapshotRef, My_TagSnapshot >	My_TagSnapshotAutoLocker;
+protected:
+	CFArrayRef
+	returnNewKeyListForTags		(std::vector< Preferences_Tag > const&);
+};
+typedef My_TagSet const*	My_TagSetConstPtr;
+typedef My_TagSet*			My_TagSetPtr;
+
+typedef MemoryBlockPtrLocker< Preferences_TagSetRef, My_TagSet >	My_TagSetPtrLocker;
+typedef LockAcquireRelease< Preferences_TagSetRef, My_TagSet >		My_TagSetAutoLocker;
 
 } // anonymous namespace
 
@@ -765,7 +770,7 @@ My_ContextInterface&		gTranslationDefaultContext ()	{ static My_ContextDefault x
 My_FavoriteContextList&		gTranslationNamedContexts ()	{ static My_FavoriteContextList x; return x; }
 My_ContextInterface&		gWorkspaceDefaultContext ()	{ static My_ContextDefault x(Quills::Prefs::WORKSPACE); return x; }
 My_FavoriteContextList&		gWorkspaceNamedContexts ()	{ static My_FavoriteContextList x; return x; }
-My_TagSnapshotPtrLocker&	gMyTagSnapshotPtrLocks ()	{ static My_TagSnapshotPtrLocker x; return x; }
+My_TagSetPtrLocker&			gMyTagSetPtrLocks ()	{ static My_TagSetPtrLocker x; return x; }
 
 } // anonymous namespace
 
@@ -1897,14 +1902,14 @@ Creates an object representing the preferences tags that are
 currently defined in the specified context.
 
 This can be used with APIs such as Preferences_ContextCopy(),
-to restrict their scope to the tags in the snapshot.
+to restrict their scope to the tags in the set.
 
 (4.0)
 */
-Preferences_TagSnapshotRef
-Preferences_NewTagSnapshot	(Preferences_ContextRef		inContext)
+Preferences_TagSetRef
+Preferences_NewTagSet	(Preferences_ContextRef		inContext)
 {
-	Preferences_TagSnapshotRef		result = nullptr;
+	Preferences_TagSetRef	result = nullptr;
 	
 	
 	try
@@ -1912,7 +1917,7 @@ Preferences_NewTagSnapshot	(Preferences_ContextRef		inContext)
 		My_ContextAutoLocker	contextPtr(gMyContextPtrLocks(), inContext);
 		
 		
-		result = REINTERPRET_CAST(new My_TagSnapshot(contextPtr), Preferences_TagSnapshotRef);
+		result = REINTERPRET_CAST(new My_TagSet(contextPtr), Preferences_TagSetRef);
 	}
 	catch (std::exception const&	inException)
 	{
@@ -1920,7 +1925,34 @@ Preferences_NewTagSnapshot	(Preferences_ContextRef		inContext)
 		result = nullptr;
 	}
 	return result;
-}// NewTagSnapshot
+}// NewTagSet (Preferences_ContextRef)
+
+
+/*!
+Creates an object representing the specified preferences tags.
+
+This can be used with APIs such as Preferences_ContextCopy(),
+to restrict their scope to the tags in the set.
+
+(4.0)
+*/
+Preferences_TagSetRef
+Preferences_NewTagSet	(std::vector< Preferences_Tag > const&		inTags)
+{
+	Preferences_TagSetRef	result = nullptr;
+	
+	
+	try
+	{
+		result = REINTERPRET_CAST(new My_TagSet(inTags), Preferences_TagSetRef);
+	}
+	catch (std::exception const&	inException)
+	{
+		Console_WriteLine(inException.what());
+		result = nullptr;
+	}
+	return result;
+}// NewTagSet (Preferences_Tag...)
 
 
 /*!
@@ -2004,30 +2036,30 @@ Preferences_ReleaseContext	(Preferences_ContextRef*	inoutRefPtr)
 
 
 /*!
-Disposes of the specified snapshot.  Your copy of the reference
-is set to "nullptr".
+Disposes of the specified set.  Your copy of the reference is
+set to "nullptr".
 
 (4.0)
 */
 void
-Preferences_ReleaseTagSnapshot	(Preferences_TagSnapshotRef*	inoutRefPtr)
+Preferences_ReleaseTagSet	(Preferences_TagSetRef*		inoutRefPtr)
 {
-	if (gMyTagSnapshotPtrLocks().isLocked(*inoutRefPtr))
+	if (gMyTagSetPtrLocks().isLocked(*inoutRefPtr))
 	{
-		Console_Warning(Console_WriteLine, "attempt to dispose of locked tag snapshot");
+		Console_Warning(Console_WriteLine, "attempt to dispose of locked tag set");
 	}
 	else
 	{
 		// clean up
 		{
-			My_TagSnapshotAutoLocker	ptr(gMyTagSnapshotPtrLocks(), *inoutRefPtr);
+			My_TagSetAutoLocker		ptr(gMyTagSetPtrLocks(), *inoutRefPtr);
 			
 			
 			delete ptr;
 		}
 		*inoutRefPtr = nullptr;
 	}
-}// ReleaseTagSnapshot
+}// ReleaseTagSet
 
 
 /*!
@@ -2221,9 +2253,9 @@ if there was a problem determining what data is in the source
 (3.1)
 */
 Preferences_Result
-Preferences_ContextCopy		(Preferences_ContextRef			inBaseContext,
-							 Preferences_ContextRef			inDestinationContext,
-							 Preferences_TagSnapshotRef		inRestrictedSetOrNull)
+Preferences_ContextCopy		(Preferences_ContextRef		inBaseContext,
+							 Preferences_ContextRef		inDestinationContext,
+							 Preferences_TagSetRef		inRestrictedSetOrNull)
 {
 	My_ContextAutoLocker	basePtr(gMyContextPtrLocks(), inBaseContext);
 	My_ContextAutoLocker	destPtr(gMyContextPtrLocks(), inDestinationContext);
@@ -2233,11 +2265,11 @@ Preferences_ContextCopy		(Preferences_ContextRef			inBaseContext,
 	if ((nullptr == basePtr) || (nullptr == destPtr)) result = kPreferences_ResultInvalidContextReference;
 	else
 	{
-		My_TagSnapshotAutoLocker	snapshotPtr(gMyTagSnapshotPtrLocks(), inRestrictedSetOrNull);
-		CFRetainRelease				sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
-		CFArrayRef					sourceKeysCFArray = (nullptr != snapshotPtr)
-															? snapshotPtr->contextKeys.returnCFArrayRef()
-															: sourceKeys.returnCFArrayRef();
+		My_TagSetAutoLocker		setPtr(gMyTagSetPtrLocks(), inRestrictedSetOrNull);
+		CFRetainRelease			sourceKeys(basePtr->returnKeyListCopy(), true/* is retained */);
+		CFArrayRef				sourceKeysCFArray = (nullptr != setPtr)
+														? setPtr->contextKeys.returnCFArrayRef()
+														: sourceKeys.returnCFArrayRef();
 		
 		
 		if (nullptr == sourceKeysCFArray) result = kPreferences_ResultOneOrMoreNamesNotAvailable;
@@ -5083,13 +5115,14 @@ Constructor.
 
 (4.0)
 */
-My_TagSnapshot::
-My_TagSnapshot	(My_ContextInterfacePtr		inContextPtr)
+My_TagSet::
+My_TagSet	(My_ContextInterfacePtr		inContextPtr)
 :
-selfRef(REINTERPRET_CAST(this, Preferences_TagSnapshotRef)),
+selfRef(REINTERPRET_CAST(this, Preferences_TagSetRef)),
 contextKeys(inContextPtr->returnKeyListCopy(), true/* is retained */)
 {
-	//TMP DEBUG:
+#if 0
+	// DEBUG
 	{
 		CFArrayRef		sourceKeysCFArray = this->contextKeys.returnCFArrayRef();
 		
@@ -5106,11 +5139,60 @@ contextKeys(inContextPtr->returnKeyListCopy(), true/* is retained */)
 														(CFArrayGetValueAtIndex(sourceKeysCFArray, i));
 				
 				
-				Console_WriteValueCFString("context snapshot contains key", kKeyCFStringRef);
+				Console_WriteValueCFString("context set contains key", kKeyCFStringRef);
 			}
 		}
 	}
-}// My_TagSnapshot 1-argument constructor
+#endif
+}// My_TagSet 1-argument (Preferences_ContextRef) constructor
+
+
+/*!
+Constructor.
+
+(4.0)
+*/
+My_TagSet::
+My_TagSet	(std::vector< Preferences_Tag > const&		inTags)
+:
+selfRef(REINTERPRET_CAST(this, Preferences_TagSetRef)),
+contextKeys(returnNewKeyListForTags(inTags), true/* is retained */)
+{
+}// My_TagSet 1-argument (vector) constructor
+
+
+/*!
+Creates an array containing Core Foundation Strings with
+the key names corresponding to the given preference tags.
+
+(4.0)
+*/
+CFArrayRef
+My_TagSet::
+returnNewKeyListForTags		(std::vector< Preferences_Tag > const&		inTags)
+{
+	CFMutableArrayRef		result = CFArrayCreateMutable(kCFAllocatorDefault,
+															STATIC_CAST(inTags.size(), CFIndex)/* capacity */,
+															&kCFTypeArrayCallBacks);
+	Preferences_Result		prefsResult = kPreferences_ResultOK;
+	CFStringRef				keyNameCFString = nullptr;
+	FourCharCode			keyValueType = '----';
+	size_t					nonDictionaryValueSize = 0;
+	Quills::Prefs::Class	prefsClass = Quills::Prefs::GENERAL;
+	
+	
+	for (std::vector< Preferences_Tag >::const_iterator toTag = inTags.begin();
+			toTag != inTags.end(); ++toTag)
+	{
+		prefsResult = getPreferenceDataInfo(*toTag, keyNameCFString, keyValueType, nonDictionaryValueSize, prefsClass);
+		assert(kPreferences_ResultOK == prefsResult);
+		if (nullptr != keyNameCFString)
+		{
+			CFArrayAppendValue(result, keyNameCFString);
+		}
+	}
+	return result;
+}// My_TagSet::returnNewKeyListForTags
 
 
 /*!

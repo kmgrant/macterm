@@ -393,12 +393,11 @@ typedef Preferences_Tag		Preferences_Change;
 #include "PreferencesContextRef.typedef.h"
 
 /*!
-A tag snapshot is a statement about which preferences were
-defined in a context at the time the snapshot was taken.  This
-tag list can be useful when using other APIs later on, such as
-Preferences_ContextCopy().
+A tag set refers to only specific preferences, and is a way to
+operate on a subset of a context (such as, with the
+Preferences_ContextCopy() API).
 */
-typedef struct Preferences_OpaqueTagSnapshot*	Preferences_TagSnapshotRef;
+typedef struct Preferences_OpaqueTagSet*	Preferences_TagSetRef;
 
 /*!
 A zero-based preferences index is added to the tag value to
@@ -486,11 +485,14 @@ void
 //!\name Creating and Releasing Preferences Tag Snapshots
 //@{
 
-Preferences_TagSnapshotRef
-	Preferences_NewTagSnapshot				(Preferences_ContextRef				inContext);
+Preferences_TagSetRef
+	Preferences_NewTagSet					(Preferences_ContextRef				inContext);
+
+Preferences_TagSetRef
+	Preferences_NewTagSet					(std::vector< Preferences_Tag > const&);
 
 void
-	Preferences_ReleaseTagSnapshot			(Preferences_TagSnapshotRef*		inoutSnapshotPtr);
+	Preferences_ReleaseTagSet				(Preferences_TagSetRef*				inoutTagSetPtr);
 
 //@}
 
@@ -555,7 +557,7 @@ Preferences_Result
 Preferences_Result
 	Preferences_ContextCopy					(Preferences_ContextRef				inBaseContext,
 											 Preferences_ContextRef				inDestinationContext,
-											 Preferences_TagSnapshotRef			inRestrictedSetOrNull = nullptr);
+											 Preferences_TagSetRef				inRestrictedSetOrNull = nullptr);
 
 Preferences_Result
 	Preferences_ContextDeleteData			(Preferences_ContextRef				inContext,
