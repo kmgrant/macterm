@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090831',
     '20090830',
     '20090828',
     '20090823',
@@ -269,6 +270,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090831': [
+        'Fixed a bug introduced in the previous build, where sheet changes could occasionally be ignored.',
+    ],
     '20090830': [
         'Preferences window Formats pane now provides checkboxes that allow settings to inherit from existing (or Default) values.',
     ],

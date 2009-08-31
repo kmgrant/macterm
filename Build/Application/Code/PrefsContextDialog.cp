@@ -285,11 +285,47 @@ handleDialogClose	(GenericDialog_Ref		inDialogThatClosed,
 	
 	if (inOKButtonPressed)
 	{
-		// copy temporary context key-value pairs back into original context
+		// copy temporary context key-value pairs back into original context;
+		// since it is possible for tags to be deleted, first copy all of
+		// the defaults for the keys that were originally in place, then
+		// copy the new values “on top”; the net result is a correct set
 		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		Preferences_ContextRef	defaultContext = nullptr;
 		
 		
-		prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel, dataPtr->originalDataModel, dataPtr->originalKeys);
+		// start with the defaults
+		prefsResult = Preferences_GetDefaultContext(&defaultContext, Preferences_ContextReturnClass(dataPtr->originalDataModel));
+		if (kPreferences_ResultOK != prefsResult)
+		{
+			Console_Warning(Console_WriteLine, "unable to find default context");
+		}
+		else
+		{
+			// TEMPORARY - technically, defaults only need to be copied for the
+			// keys that are actually different between the current set and
+			// the original set; but for now, just copy everything
+			prefsResult = Preferences_ContextCopy(defaultContext, dataPtr->originalDataModel, dataPtr->originalKeys);
+			if (kPreferences_ResultOK != prefsResult)
+			{
+				Console_Warning(Console_WriteLine, "unable to save defaults to context");
+			}
+		}
+		
+		// copy the new settings on top
+		{
+			Preferences_TagSetRef	currentKeys = Preferences_NewTagSet(dataPtr->temporaryDataModel);
+			
+			
+			if (nullptr == currentKeys)
+			{
+				Console_Warning(Console_WriteLine, "unable to create key list for context changes");
+			}
+			else
+			{
+				prefsResult = Preferences_ContextCopy(dataPtr->temporaryDataModel, dataPtr->originalDataModel, currentKeys);
+				Preferences_ReleaseTagSet(&currentKeys);
+			}
+		}
 	}
 }// handleDialogClose
 
