@@ -3672,14 +3672,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 												(nullptr != alternateDisplayWindow) &&
 												(activeWindow != alternateDisplayWindow));
 									
-									if (validAlternative)
-									{
-										// a background window on a different display was found,
-										// so zoom that window as well
-										// UNIMPLEMENTED
-										Console_WriteLine("a candidate for full screen was found on another display");
-									}
-									else
+									if (false == validAlternative)
 									{
 										alternateDisplayWindow = nullptr;
 									}
