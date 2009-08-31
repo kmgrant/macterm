@@ -911,6 +911,13 @@ choose a name from the list in the drawer, and then
 edit that collection's settings in the main Preferences
 window.
 
+bq. Preferences in this category allow inheritance;
+checking this box for a setting will erase the custom
+value for that setting.  When applied to a window, a
+collection with inherited settings will only overwrite
+the settings that are not inherited.  In new windows,
+inherited settings will match Default settings.
+
 <a name="helpwithscreenformatting"></a><!-- must use this exact tag; see ExactMatch.kv -->
 
 Formats are collections of fonts, font sizes, colors, and more,

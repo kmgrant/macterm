@@ -90,36 +90,51 @@ the NIBs from the package "PrefPanelsFavorites.nib".
 
 In addition, they MUST be unique across all panels.
 */
+HIViewID const	idMyCheckBoxDefaultFontName			= { 'XDFt', 0/* ID */ };
 HIViewID const	idMyButtonFontName					= { 'Font', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultFontSize			= { 'XDFS', 0/* ID */ };
 HIViewID const	idMyButtonFontSize					= { 'Size', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultCharacterWidth	= { 'XDCW', 0/* ID */ };
 HIViewID const	idMySliderFontCharacterWidth		= { 'CWid', 0/* ID */ };
 HIViewID const	idMyStaticTextNonMonospacedWarning	= { 'WMno', 0/* ID */ };
 HIViewID const	idMyHelpTextCharacterWidth			= { 'HChW', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultNormalColors		= { 'XDNC', 0/* ID */ };
 HIViewID const	idMyBevelButtonNormalText			= { 'NTxt', 0/* ID */ };
 HIViewID const	idMyBevelButtonNormalBackground		= { 'NBkg', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultBoldColors		= { 'XDBC', 0/* ID */ };
 HIViewID const	idMyBevelButtonBoldText				= { 'BTxt', 0/* ID */ };
 HIViewID const	idMyBevelButtonBoldBackground		= { 'BBkg', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultBlinkingColors	= { 'XDBl', 0/* ID */ };
 HIViewID const	idMyBevelButtonBlinkingText			= { 'BlTx', 0/* ID */ };
 HIViewID const	idMyBevelButtonBlinkingBackground	= { 'BlBk', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultMatteColors		= { 'XDMC', 0/* ID */ };
 HIViewID const	idMyBevelButtonMatteForeground		= { 'MtTx', 0/* ID */ };
 HIViewID const	idMyBevelButtonMatteBackground		= { 'MtBk', 0/* ID */ };
 HIViewID const	idMyUserPaneSampleTerminalView		= { 'Smpl', 0/* ID */ };
 HIViewID const	idMyHelpTextSampleTerminalView		= { 'HSmp', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSIBlackColors	= { 'XDAB', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSINormalBlack		= { 'Cblk', 0/* ID */ };
-HIViewID const	idMyBevelButtonANSINormalRed		= { 'Cred', 0/* ID */ };
-HIViewID const	idMyBevelButtonANSINormalGreen		= { 'Cgrn', 0/* ID */ };
-HIViewID const	idMyBevelButtonANSINormalYellow		= { 'Cyel', 0/* ID */ };
-HIViewID const	idMyBevelButtonANSINormalBlue		= { 'Cblu', 0/* ID */ };
-HIViewID const	idMyBevelButtonANSINormalMagenta	= { 'Cmag', 0/* ID */ };
-HIViewID const	idMyBevelButtonANSINormalCyan		= { 'Ccyn', 0/* ID */ };
-HIViewID const	idMyBevelButtonANSINormalWhite		= { 'Cwht', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldBlack		= { 'CBlk', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSIRedColors	= { 'XDAR', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalRed		= { 'Cred', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldRed			= { 'CRed', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSIGreenColors	= { 'XDAG', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalGreen		= { 'Cgrn', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldGreen		= { 'CGrn', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSIYellowColors	= { 'XDAY', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalYellow		= { 'Cyel', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldYellow		= { 'CYel', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSIBlueColors	= { 'XDAb', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalBlue		= { 'Cblu', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldBlue			= { 'CBlu', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSIMagentaColors= { 'XDAM', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalMagenta	= { 'Cmag', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldMagenta		= { 'CMag', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSICyanColors	= { 'XDAC', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalCyan		= { 'Ccyn', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldCyan			= { 'CCyn', 0/* ID */ };
+HIViewID const	idMyCheckBoxDefaultANSIWhiteColors	= { 'XDAW', 0/* ID */ };
+HIViewID const	idMyBevelButtonANSINormalWhite		= { 'Cwht', 0/* ID */ };
 HIViewID const	idMyBevelButtonANSIBoldWhite		= { 'CWht', 0/* ID */ };
 HIViewID const	idMyHelpTextANSIColors				= { 'HANS', 0/* ID */ };
 
@@ -150,7 +165,31 @@ struct My_FormatsPanelANSIColorsUI
 	readPreferences		(Preferences_ContextRef);
 	
 	void
-	resetColors ();
+	readPreferencesForBlack		(Preferences_ContextRef);
+	
+	void
+	readPreferencesForRed		(Preferences_ContextRef);
+	
+	void
+	readPreferencesForGreen		(Preferences_ContextRef);
+	
+	void
+	readPreferencesForYellow	(Preferences_ContextRef);
+	
+	void
+	readPreferencesForBlue		(Preferences_ContextRef);
+	
+	void
+	readPreferencesForMagenta	(Preferences_ContextRef);
+	
+	void
+	readPreferencesForCyan		(Preferences_ContextRef);
+	
+	void
+	readPreferencesForWhite		(Preferences_ContextRef);
+	
+	static pascal OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
 
 protected:
 	HIViewWrap
@@ -158,6 +197,9 @@ protected:
 	
 	static void
 	deltaSize	(HIViewRef, Float32, Float32, void*);
+	
+	void
+	setInheritanceCheckBox	(HIViewWrap, SInt32);
 	
 private:
 	CarbonEventHandlerWrap				_buttonCommandsHandler;		//!< invoked when a button is clicked
@@ -194,16 +236,43 @@ struct My_FormatsPanelNormalUI
 	readPreferences		(Preferences_ContextRef);
 	
 	void
+	readPreferencesForBlinkingColors	(Preferences_ContextRef, Boolean = true);
+	
+	void
+	readPreferencesForBoldColors	(Preferences_ContextRef, Boolean = true);
+	
+	void
+	readPreferencesForFontCharacterWidth	(Preferences_ContextRef, Boolean = true);
+	
+	void
+	readPreferencesForFontName	(Preferences_ContextRef, Boolean = true);
+	
+	void
+	readPreferencesForFontSize	(Preferences_ContextRef, Boolean = true);
+	
+	void
+	readPreferencesForMatteColors	(Preferences_ContextRef, Boolean = true);
+	
+	void
+	readPreferencesForNormalColors	(Preferences_ContextRef, Boolean = true);
+	
+	static pascal OSStatus
+	receiveHICommand	(EventHandlerCallRef, EventRef, void*);
+	
+	void
 	saveFieldPreferences	(Preferences_ContextRef);
 	
 	void
-	setFontName		(StringPtr);
+	setFontName		(StringPtr, Boolean);
 	
 	void
-	setFontSize		(SInt16);
+	setFontSize		(SInt16, Boolean);
 	
 	void
-	setFontWidthScaleFactor		(Float32);
+	setFontWidthScaleFactor		(Float32, Boolean);
+	
+	void
+	setSampleArea	(Preferences_ContextRef, Preferences_Tag = '----', Preferences_Tag = '----');
 
 protected:
 	HIViewWrap
@@ -211,6 +280,9 @@ protected:
 	
 	TerminalScreenRef
 	createSampleTerminalScreen () const;
+	
+	void
+	setInheritanceCheckBox	(HIViewWrap, SInt32);
 	
 	HIViewRef
 	setUpSampleTerminalHIView	(TerminalViewRef, TerminalScreenRef);
@@ -241,6 +313,7 @@ struct My_FormatsPanelANSIColorsData
 	Panel_Ref						panel;			//!< the panel this data is for
 	My_FormatsPanelANSIColorsUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
 	Preferences_ContextRef			dataModel;		//!< source of initializations and target of changes
+	Boolean							isDefaultModel;	//!< true only if "dataModel" matches the class default context
 };
 typedef My_FormatsPanelANSIColorsData*	My_FormatsPanelANSIColorsDataPtr;
 
@@ -256,6 +329,7 @@ struct My_FormatsPanelNormalData
 	Panel_Ref					panel;			//!< the panel this data is for
 	My_FormatsPanelNormalUI*	interfacePtr;	//!< if not nullptr, the panel user interface is active
 	Preferences_ContextRef		dataModel;		//!< source of initializations and target of changes
+	Boolean						isDefaultModel;	//!< true only if "dataModel" matches the class default context
 };
 typedef My_FormatsPanelNormalData*	My_FormatsPanelNormalDataPtr;
 
@@ -264,12 +338,14 @@ typedef My_FormatsPanelNormalData*	My_FormatsPanelNormalDataPtr;
 #pragma mark Internal Method Prototypes
 namespace {
 
+Preferences_Result	copyColor						(Preferences_Tag, Preferences_ContextRef, Preferences_ContextRef,
+													 Boolean = false, Boolean* = nullptr);
 Boolean				isMonospacedFont				(Str255);
 pascal OSStatus		receiveFontChange				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus		receiveWindowFocusChange		(EventHandlerCallRef, EventRef, void*);
 void				resetANSIWarningCloseNotifyProc	(InterfaceLibAlertRef, SInt16, void*);
-void				setColorBox						(Preferences_ContextRef, Preferences_Tag, HIViewRef);
+void				setColorBox						(Preferences_ContextRef, Preferences_Tag, HIViewRef, Boolean&);
+void				setInheritanceCheckBox			(HIViewWrap, SInt32, Boolean);
 
 } // anonymous namespace
 
@@ -419,7 +495,8 @@ My_FormatsPanelANSIColorsData ()
 :
 panel(nullptr),
 interfacePtr(nullptr),
-dataModel(nullptr)
+dataModel(nullptr),
+isDefaultModel(false)
 {
 }// My_FormatsPanelANSIColorsData default constructor
 
@@ -492,9 +569,69 @@ colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
 		if (nullptr == dataPtr->dataModel) isOK = false;
 		else
 		{
-			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
+			HIWindowRef const		kOwningWindow = HIViewGetWindow(interfacePtr->mainView);
+			Preferences_Tag const	kTag = STATIC_CAST(colorID, Preferences_Tag);
+			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kTag,
 																				sizeof(*inNewColor), inNewColor);
 			
+			
+			// update the inheritance checkbox
+			// INCOMPLETE - for double-color cases, check to see if the other setting
+			// is using the default, to determine whether to use “unchecked” or “mixed”
+			switch (kTag)
+			{
+			case kPreferences_TagTerminalColorANSIBlack:
+			case kPreferences_TagTerminalColorANSIBlackBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIBlackColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorANSIRed:
+			case kPreferences_TagTerminalColorANSIRedBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIRedColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorANSIGreen:
+			case kPreferences_TagTerminalColorANSIGreenBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIGreenColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorANSIYellow:
+			case kPreferences_TagTerminalColorANSIYellowBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIYellowColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorANSIBlue:
+			case kPreferences_TagTerminalColorANSIBlueBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIBlueColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorANSIMagenta:
+			case kPreferences_TagTerminalColorANSIMagentaBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIMagentaColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorANSICyan:
+			case kPreferences_TagTerminalColorANSICyanBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSICyanColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorANSIWhite:
+			case kPreferences_TagTerminalColorANSIWhiteBold:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIWhiteColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			default:
+				// ???
+				break;
+			}
 			
 			isOK = (kPreferences_ResultOK == prefsResult);
 		}
@@ -703,8 +840,13 @@ panelChanged	(Panel_Ref		inPanel,
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext)
 			{
+				panelDataPtr->isDefaultModel = false;
 				panelDataPtr->dataModel = defaultContext;
 				panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			}
+			else
+			{
+				panelDataPtr->isDefaultModel = true;
 			}
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
@@ -739,50 +881,469 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-		
-		
-		// read each color, skipping ones that are not defined
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlack, HIViewWrap(idMyBevelButtonANSINormalBlack, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIRed, HIViewWrap(idMyBevelButtonANSINormalRed, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIGreen, HIViewWrap(idMyBevelButtonANSINormalGreen, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIYellow, HIViewWrap(idMyBevelButtonANSINormalYellow, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlue, HIViewWrap(idMyBevelButtonANSINormalBlue, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIMagenta, HIViewWrap(idMyBevelButtonANSINormalMagenta, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSICyan, HIViewWrap(idMyBevelButtonANSINormalCyan, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIWhite, HIViewWrap(idMyBevelButtonANSINormalWhite, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlackBold, HIViewWrap(idMyBevelButtonANSIBoldBlack, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIRedBold, HIViewWrap(idMyBevelButtonANSIBoldRed, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIGreenBold, HIViewWrap(idMyBevelButtonANSIBoldGreen, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIYellowBold, HIViewWrap(idMyBevelButtonANSIBoldYellow, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlueBold, HIViewWrap(idMyBevelButtonANSIBoldBlue, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIMagentaBold, HIViewWrap(idMyBevelButtonANSIBoldMagenta, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSICyanBold, HIViewWrap(idMyBevelButtonANSIBoldCyan, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorANSIWhiteBold, HIViewWrap(idMyBevelButtonANSIBoldWhite, kOwningWindow));
+		this->readPreferencesForBlack(inSettings);
+		this->readPreferencesForRed(inSettings);
+		this->readPreferencesForGreen(inSettings);
+		this->readPreferencesForYellow(inSettings);
+		this->readPreferencesForBlue(inSettings);
+		this->readPreferencesForMagenta(inSettings);
+		this->readPreferencesForCyan(inSettings);
+		this->readPreferencesForWhite(inSettings);
 	}
-}// My_FormatsPanelNormalUI::readPreferences
+}// My_FormatsPanelANSIColorsUI::readPreferences
 
 
 /*!
-Restores all 16 colors to the values from the
-application’s default preferences.
+Updates the display based on the given settings.
 
-(3.1)
+(4.0)
 */
 void
 My_FormatsPanelANSIColorsUI::
-resetColors ()
+readPreferencesForBlack		(Preferences_ContextRef		inSettings)
 {
-	Preferences_ContextRef		defaultFormat = nullptr;
-	Preferences_Result			prefsResult = kPreferences_ResultOK;
-	
-	
-	prefsResult = Preferences_GetFactoryDefaultsContext(&defaultFormat);
-	if (kPreferences_ResultOK == prefsResult)
+	if (nullptr != inSettings)
 	{
-		readPreferences(defaultFormat);
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlack,
+					HIViewWrap(idMyBevelButtonANSINormalBlack, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlackBold,
+					HIViewWrap(idMyBevelButtonANSIBoldBlack, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIBlackColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
 	}
-}// My_FormatsPanelANSIColorsUI::resetColors
+}// My_FormatsPanelANSIColorsUI::readPreferencesForBlack
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferencesForBlue		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlue,
+					HIViewWrap(idMyBevelButtonANSINormalBlue, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIBlueBold,
+					HIViewWrap(idMyBevelButtonANSIBoldBlue, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIBlueColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+	}
+}// My_FormatsPanelANSIColorsUI::readPreferencesForBlue
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferencesForCyan		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSICyan,
+					HIViewWrap(idMyBevelButtonANSINormalCyan, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSICyanBold,
+					HIViewWrap(idMyBevelButtonANSIBoldCyan, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSICyanColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+	}
+}// My_FormatsPanelANSIColorsUI::readPreferencesForCyan
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferencesForGreen		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIGreen,
+					HIViewWrap(idMyBevelButtonANSINormalGreen, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIGreenBold,
+					HIViewWrap(idMyBevelButtonANSIBoldGreen, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIGreenColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+	}
+}// My_FormatsPanelANSIColorsUI::readPreferencesForGreen
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferencesForMagenta	(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIMagenta,
+					HIViewWrap(idMyBevelButtonANSINormalMagenta, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIMagentaBold,
+					HIViewWrap(idMyBevelButtonANSIBoldMagenta, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIMagentaColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+	}
+}// My_FormatsPanelANSIColorsUI::readPreferencesForMagenta
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferencesForRed	(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIRed,
+					HIViewWrap(idMyBevelButtonANSINormalRed, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIRedBold,
+					HIViewWrap(idMyBevelButtonANSIBoldRed, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIRedColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+	}
+}// My_FormatsPanelANSIColorsUI::readPreferencesForRed
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferencesForWhite		(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIWhite,
+					HIViewWrap(idMyBevelButtonANSINormalWhite, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIWhiteBold,
+					HIViewWrap(idMyBevelButtonANSIBoldWhite, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIWhiteColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+	}
+}// My_FormatsPanelANSIColorsUI::readPreferencesForWhite
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+readPreferencesForYellow	(Preferences_ContextRef		inSettings)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIYellow,
+					HIViewWrap(idMyBevelButtonANSINormalYellow, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorANSIYellowBold,
+					HIViewWrap(idMyBevelButtonANSIBoldYellow, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultANSIYellowColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+	}
+}// My_FormatsPanelANSIColorsUI::readPreferencesForYellow
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons in this panel.
+
+(3.1)
+*/
+pascal OSStatus
+My_FormatsPanelANSIColorsUI::
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyFormatsPanelUIPtr)
+{
+	OSStatus						result = eventNotHandledErr;
+	My_FormatsPanelANSIColorsUI*	interfacePtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelANSIColorsUI*);
+	UInt32 const					kEventClass = GetEventClass(inEvent);
+	UInt32 const					kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if ((noErr == result) && (received.attributes & kHICommandFromControl))
+		{
+			HIViewRef	buttonHit = received.source.control;
+			
+			
+			result = eventNotHandledErr; // initially...
+			
+			switch (received.commandID)
+			{
+			case kCommandResetANSIColors:
+				// check with the user first!
+				{
+					AlertMessages_BoxRef	box = nullptr;
+					UIStrings_Result		stringResult = kUIStrings_ResultOK;
+					CFStringRef				dialogTextCFString = nullptr;
+					CFStringRef				helpTextCFString = nullptr;
+					
+					
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowANSIColorsResetPrimaryText, dialogTextCFString);
+					assert(stringResult.ok());
+					stringResult = UIStrings_Copy(kUIStrings_AlertWindowGenericCannotUndoHelpText, helpTextCFString);
+					assert(stringResult.ok());
+					
+					box = Alert_New();
+					Alert_SetHelpButton(box, false);
+					Alert_SetParamsFor(box, kAlert_StyleOKCancel);
+					Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
+					Alert_SetType(box, kAlertCautionAlert);
+					Alert_MakeWindowModal(box, HIViewGetWindow(interfacePtr->mainView), false/* is window close alert */,
+											resetANSIWarningCloseNotifyProc, interfacePtr/* user data */);
+					Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
+				}
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandColorBlack:
+			case kCommandColorBlackEmphasized:
+			case kCommandColorRed:
+			case kCommandColorRedEmphasized:
+			case kCommandColorGreen:
+			case kCommandColorGreenEmphasized:
+			case kCommandColorYellow:
+			case kCommandColorYellowEmphasized:
+			case kCommandColorBlue:
+			case kCommandColorBlueEmphasized:
+			case kCommandColorMagenta:
+			case kCommandColorMagentaEmphasized:
+			case kCommandColorCyan:
+			case kCommandColorCyanEmphasized:
+			case kCommandColorWhite:
+			case kCommandColorWhiteEmphasized:
+				// see which of the color boxes was hit, display a color chooser
+				// and then (if the user accepts a new color) update open windows
+				ColorBox_UserSetColor(buttonHit);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandRestoreToDefault:
+				// a preferences tag is encoded among the properties of the view
+				// that sends this command
+				assert(received.attributes & kHICommandFromControl);
+				{
+					HIViewRef const						kCheckBox = received.source.control;
+					My_FormatsPanelANSIColorsDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																					My_FormatsPanelANSIColorsDataPtr);
+					Preferences_ContextRef				targetContext = dataPtr->dataModel;
+					Preferences_ContextRef				defaultContext = nullptr;
+					Preferences_Result					prefsResult = kPreferences_ResultOK;
+					UInt32								actualSize = 0;
+					Preferences_Tag						defaultPreferencesTag = '----';
+					OSStatus							error = GetControlProperty
+																(kCheckBox, AppResources_ReturnCreatorCode(),
+																	kConstantsRegistry_ControlPropertyTypeDefaultPreferenceTag,
+																	sizeof(defaultPreferencesTag), &actualSize,
+																	&defaultPreferencesTag);
+					
+					
+					assert_noerr(error);
+					
+					// since this destroys preferences under the assumption that the
+					// default will fall through, make sure the current context is
+					// not actually the default!
+					{
+						Quills::Prefs::Class const	kPrefsClass = Preferences_ContextReturnClass(targetContext);
+						
+						
+						prefsResult = Preferences_GetDefaultContext(&defaultContext, kPrefsClass);
+						assert(kPreferences_ResultOK == prefsResult);
+					}
+					
+					if (defaultContext == targetContext)
+					{
+						// do nothing in this case, except to ensure that the
+						// user cannot change the checkbox value
+						if (kControlCheckBoxCheckedValue != GetControl32BitValue(kCheckBox))
+						{
+							interfacePtr->setInheritanceCheckBox(kCheckBox, kControlCheckBoxCheckedValue);
+						}
+					}
+					else
+					{
+						result = noErr; // event is handled initially...
+						
+						// by convention, the property must match a known tag;
+						// however, the tag only needs to refer to the “main”
+						// preference in a section, not all preferences (for
+						// example, both normal and bold ANSI black colors are
+						// defaulted at the same time, but only the “normal”
+						// tag is ever attached to a checkbox)
+						switch (defaultPreferencesTag)
+						{
+						case kPreferences_TagTerminalColorANSIBlack:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIBlack);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIBlackBold);
+							interfacePtr->readPreferencesForBlack(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorANSIRed:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIRed);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIRedBold);
+							interfacePtr->readPreferencesForRed(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorANSIGreen:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIGreen);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIGreenBold);
+							interfacePtr->readPreferencesForGreen(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorANSIYellow:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIYellow);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIYellowBold);
+							interfacePtr->readPreferencesForYellow(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorANSIBlue:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIBlue);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIBlueBold);
+							interfacePtr->readPreferencesForBlue(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorANSIMagenta:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIMagenta);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIMagentaBold);
+							interfacePtr->readPreferencesForMagenta(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorANSICyan:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSICyan);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSICyanBold);
+							interfacePtr->readPreferencesForCyan(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorANSIWhite:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIWhite);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorANSIWhiteBold);
+							interfacePtr->readPreferencesForWhite(defaultContext);
+							break;
+						
+						default:
+							// ???
+							result = eventNotHandledErr;
+							break;
+						}
+					}
+				}
+				break;
+			
+			default:
+				break;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// My_FormatsPanelANSIColorsUI::receiveHICommand
+
+
+/*!
+Calls the file-scope setInheritanceCheckBox(), automatically
+setting the “is default” parameter to an appropriate value
+based on the current data model.
+
+(4.0)
+*/
+void
+My_FormatsPanelANSIColorsUI::
+setInheritanceCheckBox		(HIViewWrap		inCheckBox,
+							 SInt32			inValue)
+{
+	My_FormatsPanelANSIColorsDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
+																		My_FormatsPanelANSIColorsDataPtr);
+	
+	
+	::setInheritanceCheckBox(inCheckBox, inValue, panelDataPtr->isDefaultModel);
+}// My_FormatsPanelANSIColorsUI::setInheritanceCheckBox
 
 
 /*!
@@ -795,7 +1356,8 @@ My_FormatsPanelNormalData ()
 :
 panel(nullptr),
 interfacePtr(nullptr),
-dataModel(nullptr)
+dataModel(nullptr),
+isDefaultModel(false)
 {
 }// My_FormatsPanelNormalData default constructor
 
@@ -884,12 +1446,47 @@ colorBoxChangeNotify	(HIViewRef			inColorBoxThatChanged,
 		if (nullptr == dataPtr->dataModel) isOK = false;
 		else
 		{
-			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, colorID,
+			HIWindowRef const		kOwningWindow = HIViewGetWindow(interfacePtr->mainView);
+			Preferences_Tag const	kTag = STATIC_CAST(colorID, Preferences_Tag);
+			Preferences_Result		prefsResult = Preferences_ContextSetData(dataPtr->dataModel, kTag,
 																				sizeof(*inNewColor), inNewColor);
 			
 			
 			// update the sample area
-			Preferences_ContextCopy(dataPtr->dataModel, TerminalView_ReturnFormatConfiguration(interfacePtr->terminalView));
+			interfacePtr->setSampleArea(dataPtr->dataModel);
+			
+			// update the inheritance checkbox
+			// INCOMPLETE - for double-color cases, check to see if the other setting
+			// is using the default, to determine whether to use “unchecked” or “mixed”
+			switch (kTag)
+			{
+			case kPreferences_TagTerminalColorNormalForeground:
+			case kPreferences_TagTerminalColorNormalBackground:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultNormalColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorBoldForeground:
+			case kPreferences_TagTerminalColorBoldBackground:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultBoldColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorBlinkingForeground:
+			case kPreferences_TagTerminalColorBlinkingBackground:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultBlinkingColors, kOwningWindow),
+														kControlCheckBoxMixedValue);
+				break;
+			
+			case kPreferences_TagTerminalColorMatteBackground:
+				interfacePtr->setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultMatteColors, kOwningWindow),
+														kControlCheckBoxUncheckedValue);
+				break;
+			
+			default:
+				// ???
+				break;
+			}
 			
 			isOK = (kPreferences_ResultOK == prefsResult);
 		}
@@ -1225,8 +1822,13 @@ panelChanged	(Panel_Ref		inPanel,
 			assert(kPreferences_ResultOK == prefsResult);
 			if (newContext != defaultContext)
 			{
+				panelDataPtr->isDefaultModel = false;
 				panelDataPtr->dataModel = defaultContext;
 				panelDataPtr->interfacePtr->readPreferences(defaultContext); // reset to known state first
+			}
+			else
+			{
+				panelDataPtr->isDefaultModel = true;
 			}
 			panelDataPtr->dataModel = newContext;
 			panelDataPtr->interfacePtr->readPreferences(newContext);
@@ -1261,63 +1863,480 @@ readPreferences		(Preferences_ContextRef		inSettings)
 {
 	if (nullptr != inSettings)
 	{
-		HIWindowRef const		kOwningWindow = Panel_ReturnOwningWindow(this->panel);
-		Preferences_Result		prefsResult = kPreferences_ResultOK;
-		size_t					actualSize = 0;
-		
-		
-		// set font
-		{
-			Str255		fontName;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontName, sizeof(fontName),
-														&fontName, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				this->setFontName(fontName);
-			}
-		}
-		
-		// set font size
-		{
-			SInt16		fontSize = 0;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontSize, sizeof(fontSize),
-														&fontSize, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				this->setFontSize(fontSize);
-			}
-		}
-		
-		// set font character width scaling
-		{
-			Float32		scaleFactor = 1.0;
-			
-			
-			prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontCharacterWidthMultiplier, sizeof(scaleFactor),
-														&scaleFactor, true/* search defaults too */, &actualSize);
-			if (kPreferences_ResultOK == prefsResult)
-			{
-				this->setFontWidthScaleFactor(scaleFactor);
-			}
-		}
+		this->readPreferencesForFontName(inSettings, false/* update sample area */);
+		this->readPreferencesForFontSize(inSettings, false/* update sample area */);
+		this->readPreferencesForFontCharacterWidth(inSettings, false/* update sample area */);
 		
 		// read each color, skipping ones that are not defined
-		setColorBox(inSettings, kPreferences_TagTerminalColorNormalForeground, HIViewWrap(idMyBevelButtonNormalText, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorNormalBackground, HIViewWrap(idMyBevelButtonNormalBackground, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorBoldForeground, HIViewWrap(idMyBevelButtonBoldText, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorBoldBackground, HIViewWrap(idMyBevelButtonBoldBackground, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingForeground, HIViewWrap(idMyBevelButtonBlinkingText, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingBackground, HIViewWrap(idMyBevelButtonBlinkingBackground, kOwningWindow));
-		setColorBox(inSettings, kPreferences_TagTerminalColorMatteBackground, HIViewWrap(idMyBevelButtonMatteBackground, kOwningWindow));
+		this->readPreferencesForNormalColors(inSettings, false/* update sample area */);
+		this->readPreferencesForBoldColors(inSettings, false/* update sample area */);
+		this->readPreferencesForBlinkingColors(inSettings, false/* update sample area */);
+		this->readPreferencesForMatteColors(inSettings, false/* update sample area */);
 		
 		// update the sample area
-		Preferences_ContextCopy(inSettings, TerminalView_ReturnFormatConfiguration(this->terminalView));
+		this->setSampleArea(inSettings);
 	}
 }// My_FormatsPanelNormalUI::readPreferences
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForBlinkingColors	(Preferences_ContextRef		inSettings,
+									 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingForeground,
+					HIViewWrap(idMyBevelButtonBlinkingText, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorBlinkingBackground,
+					HIViewWrap(idMyBevelButtonBlinkingBackground, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultBlinkingColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+		
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagTerminalColorBlinkingForeground,
+								kPreferences_TagTerminalColorBlinkingBackground);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForBlinkingColors
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForBoldColors	(Preferences_ContextRef		inSettings,
+								 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorBoldForeground,
+					HIViewWrap(idMyBevelButtonBoldText, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorBoldBackground,
+					HIViewWrap(idMyBevelButtonBoldBackground, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultBoldColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+		
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagTerminalColorBoldForeground,
+								kPreferences_TagTerminalColorBoldBackground);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForBoldColors
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForFontCharacterWidth	(Preferences_ContextRef		inSettings,
+										 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		Float32				scaleFactor = 1.0;
+		size_t				actualSize = 0;
+		Boolean				isDefault = false;
+		
+		
+		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontCharacterWidthMultiplier,
+													sizeof(scaleFactor), &scaleFactor, true/* search defaults too */,
+													&actualSize, &isDefault);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			this->setFontWidthScaleFactor(scaleFactor, isDefault);
+		}
+		
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagFontCharacterWidthMultiplier);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForFontCharacterWidth
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForFontName	(Preferences_ContextRef		inSettings,
+							 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		Str255				fontName;
+		size_t				actualSize = 0;
+		Boolean				isDefault = false;
+		
+		
+		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontName, sizeof(fontName),
+													&fontName, true/* search defaults too */, &actualSize,
+													&isDefault);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			this->setFontName(fontName, isDefault);
+		}
+		
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagFontName);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForFontName
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForFontSize	(Preferences_ContextRef		inSettings,
+							 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		Preferences_Result	prefsResult = kPreferences_ResultOK;
+		SInt16				fontSize = 0;
+		size_t				actualSize = 0;
+		Boolean				isDefault = false;
+		
+		
+		prefsResult = Preferences_ContextGetData(inSettings, kPreferences_TagFontSize, sizeof(fontSize),
+													&fontSize, true/* search defaults too */, &actualSize,
+													&isDefault);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			this->setFontSize(fontSize, isDefault);
+		}
+		
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagFontSize);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForFontSize
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForMatteColors	(Preferences_ContextRef		inSettings,
+								 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorMatteBackground,
+					HIViewWrap(idMyBevelButtonMatteBackground, kOwningWindow), isDefault);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultMatteColors, kOwningWindow),
+								BooleanToCheckBoxValue(isDefault));
+		
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagTerminalColorMatteBackground);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForMatteColors
+
+
+/*!
+Updates the display based on the given settings.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+readPreferencesForNormalColors	(Preferences_ContextRef		inSettings,
+								 Boolean					inUpdateSample)
+{
+	if (nullptr != inSettings)
+	{
+		HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
+		Boolean				isDefault = false;
+		Boolean				isDefault2 = false;
+		
+		
+		setColorBox(inSettings, kPreferences_TagTerminalColorNormalForeground,
+					HIViewWrap(idMyBevelButtonNormalText, kOwningWindow), isDefault);
+		setColorBox(inSettings, kPreferences_TagTerminalColorNormalBackground,
+					HIViewWrap(idMyBevelButtonNormalBackground, kOwningWindow), isDefault2);
+		setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultNormalColors, kOwningWindow),
+								BooleansToCheckBoxValue(isDefault, isDefault2));
+		
+		if (inUpdateSample)
+		{
+			this->setSampleArea(inSettings, kPreferences_TagTerminalColorNormalForeground,
+								kPreferences_TagTerminalColorNormalBackground);
+		}
+	}
+}// My_FormatsPanelNormalUI::readPreferencesForNormalColors
+
+
+/*!
+Handles "kEventCommandProcess" of "kEventClassCommand"
+for the buttons in this panel.
+
+(3.1)
+*/
+pascal OSStatus
+My_FormatsPanelNormalUI::
+receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
+					 EventRef				inEvent,
+					 void*					inMyFormatsPanelUIPtr)
+{
+	OSStatus					result = eventNotHandledErr;
+	My_FormatsPanelNormalUI*	interfacePtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelNormalUI*);
+	UInt32 const				kEventClass = GetEventClass(inEvent);
+	UInt32 const				kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassCommand);
+	assert(kEventKind == kEventCommandProcess);
+	{
+		HICommandExtended	received;
+		
+		
+		// determine the command in question
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
+		
+		// if the command information was found, proceed
+		if ((noErr == result) && (received.attributes & kHICommandFromControl))
+		{
+			HIViewRef	buttonHit = received.source.control;
+			
+			
+			result = eventNotHandledErr; // initially...
+			
+			switch (received.commandID)
+			{
+			case kCommandEditFontAndSize:
+				// select the button that was hit, and transmit font information
+				{
+					My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																					My_FormatsPanelNormalDataPtr);
+					FontSelectionQDStyle			fontInfo;
+					Str255							fontName;
+					SInt16							fontSize = 0;
+					size_t							actualSize = 0;
+					Preferences_Result				prefsResult = kPreferences_ResultOK;
+					
+					
+					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontName, sizeof(fontName),
+																fontName, false/* search defaults too */, &actualSize);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						// error...pick an arbitrary value
+						PLstrcpy(fontName, "\pMonaco");
+					}
+					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontSize, sizeof(fontSize),
+																&fontSize, false/* search defaults too */, &actualSize);
+					if (kPreferences_ResultOK != prefsResult)
+					{
+						// error...pick an arbitrary value
+						fontSize = 12;
+					}
+					
+					bzero(&fontInfo, sizeof(fontInfo));
+					fontInfo.version = kFontSelectionQDStyleVersionZero;
+					fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontName);
+					fontInfo.instance.fontStyle = normal;
+					fontInfo.size = fontSize;
+					fontInfo.hasColor = false;
+					// apparently this API can return paramErr even though it
+					// successfully sets the desired font information...
+					(OSStatus)SetFontInfoForSelection(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
+													// NOTE: This API is misdeclared in older headers, the last argument is supposed to
+													// be an event target.  It is bastardized into HIObjectRef form for older compiles.
+													#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+														GetControlEventTarget(buttonHit)
+													#else
+														REINTERPRET_CAST(buttonHit, HIObjectRef)
+													#endif
+													);
+					if (1)
+					{
+						SetControl32BitValue(HIViewWrap(idMyButtonFontName, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
+						SetControl32BitValue(HIViewWrap(idMyButtonFontSize, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
+						if (false == FPIsFontPanelVisible())
+						{
+							result = FPShowHideFontPanel();
+						}
+					}
+				}
+				break;
+			
+			case kCommandColorMatteBackground:
+			case kCommandColorBlinkingForeground:
+			case kCommandColorBlinkingBackground:
+			case kCommandColorBoldForeground:
+			case kCommandColorBoldBackground:
+			case kCommandColorNormalForeground:
+			case kCommandColorNormalBackground:
+				// see which of the color boxes was hit, display a color chooser
+				// and then (if the user accepts a new color) update open windows
+				ColorBox_UserSetColor(buttonHit);
+				result = noErr; // event is handled
+				break;
+			
+			case kCommandRestoreToDefault:
+				// a preferences tag is encoded among the properties of the view
+				// that sends this command
+				assert(received.attributes & kHICommandFromControl);
+				{
+					HIViewRef const					kCheckBox = received.source.control;
+					My_FormatsPanelNormalDataPtr	dataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(interfacePtr->panel),
+																				My_FormatsPanelNormalDataPtr);
+					Preferences_ContextRef			targetContext = dataPtr->dataModel;
+					Preferences_ContextRef			defaultContext = nullptr;
+					Preferences_Result				prefsResult = kPreferences_ResultOK;
+					UInt32							actualSize = 0;
+					Preferences_Tag					defaultPreferencesTag = '----';
+					OSStatus						error = GetControlProperty
+															(kCheckBox, AppResources_ReturnCreatorCode(),
+																kConstantsRegistry_ControlPropertyTypeDefaultPreferenceTag,
+																sizeof(defaultPreferencesTag), &actualSize,
+																&defaultPreferencesTag);
+					
+					
+					assert_noerr(error);
+					
+					// since this destroys preferences under the assumption that the
+					// default will fall through, make sure the current context is
+					// not actually the default!
+					{
+						Quills::Prefs::Class const	kPrefsClass = Preferences_ContextReturnClass(targetContext);
+						
+						
+						prefsResult = Preferences_GetDefaultContext(&defaultContext, kPrefsClass);
+						assert(kPreferences_ResultOK == prefsResult);
+					}
+					
+					if (defaultContext == targetContext)
+					{
+						// do nothing in this case, except to ensure that the
+						// user cannot change the checkbox value
+						if (kControlCheckBoxCheckedValue != GetControl32BitValue(kCheckBox))
+						{
+							interfacePtr->setInheritanceCheckBox(kCheckBox, kControlCheckBoxCheckedValue);
+						}
+					}
+					else
+					{
+						result = noErr; // event is handled initially...
+						
+						// by convention, the property must match a known tag;
+						// however, the tag only needs to refer to the “main”
+						// preference in a section, not all preferences (for
+						// example, both normal and bold ANSI black colors are
+						// defaulted at the same time, but only the “normal”
+						// tag is ever attached to a checkbox)
+						switch (defaultPreferencesTag)
+						{
+						case kPreferences_TagFontName:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, defaultPreferencesTag);
+							interfacePtr->readPreferencesForFontName(defaultContext);
+							break;
+						
+						case kPreferences_TagFontSize:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, defaultPreferencesTag);
+							interfacePtr->readPreferencesForFontSize(defaultContext);
+							break;
+						
+						case kPreferences_TagFontCharacterWidthMultiplier:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, defaultPreferencesTag);
+							interfacePtr->readPreferencesForFontCharacterWidth(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorNormalForeground:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorNormalForeground);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorNormalBackground);
+							interfacePtr->readPreferencesForNormalColors(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorBoldForeground:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorBoldForeground);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorBoldBackground);
+							interfacePtr->readPreferencesForBoldColors(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorBlinkingForeground:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorBlinkingForeground);
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, kPreferences_TagTerminalColorBlinkingBackground);
+							interfacePtr->readPreferencesForBlinkingColors(defaultContext);
+							break;
+						
+						case kPreferences_TagTerminalColorMatteBackground:
+							(Preferences_Result)Preferences_ContextDeleteData
+												(targetContext, defaultPreferencesTag);
+							interfacePtr->readPreferencesForMatteColors(defaultContext);
+							break;
+						
+						default:
+							// ???
+							result = eventNotHandledErr;
+							break;
+						}
+					}
+				}
+				break;
+			
+			default:
+				break;
+			}
+		}
+		else
+		{
+			result = eventNotHandledErr;
+		}
+	}
+	return result;
+}// My_FormatsPanelNormalUI::receiveHICommand
 
 
 /*!
@@ -1362,30 +2381,35 @@ saveFieldPreferences	(Preferences_ContextRef		inoutSettings)
 
 
 /*!
-Updates the font name display based on the given setting.
+Updates the font name display and its Default checkbox,
+based on the given setting.
 
 (3.1)
 */
 void
 My_FormatsPanelNormalUI::
-setFontName		(StringPtr		inFontName)
+setFontName		(StringPtr		inFontName,
+				 Boolean		inIsDefault)
 {
 	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	
 	
 	SetControlTitle(HIViewWrap(idMyButtonFontName, kOwningWindow), inFontName);
 	HIViewSetVisible(HIViewWrap(idMyStaticTextNonMonospacedWarning, kOwningWindow), false == isMonospacedFont(inFontName));
+	setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultFontName, kOwningWindow), BooleanToCheckBoxValue(inIsDefault));
 }// My_FormatsPanelNormalUI::setFontName
 
 
 /*!
-Updates the font size display based on the given setting.
+Updates the font size display and its Default checkbox,
+based on the given setting.
 
 (3.1)
 */
 void
 My_FormatsPanelNormalUI::
-setFontSize		(SInt16		inFontSize)
+setFontSize		(SInt16		inFontSize,
+				 Boolean	inIsDefault)
 {
 	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	Str255				sizeString;
@@ -1393,12 +2417,13 @@ setFontSize		(SInt16		inFontSize)
 	
 	NumToString(inFontSize, sizeString);
 	SetControlTitle(HIViewWrap(idMyButtonFontSize, kOwningWindow), sizeString);
+	setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultFontSize, kOwningWindow), BooleanToCheckBoxValue(inIsDefault));
 }// My_FormatsPanelNormalUI::setFontSize
 
 
 /*!
-Updates the font character width display based on the
-given setting.
+Updates the font character width display and its Default
+checkbox, based on the given setting.
 
 If the value does not exactly match a slider tick, the
 closest matching value will be chosen.
@@ -1407,7 +2432,8 @@ closest matching value will be chosen.
 */
 void
 My_FormatsPanelNormalUI::
-setFontWidthScaleFactor		(Float32	inFontWidthScaleFactor)
+setFontWidthScaleFactor		(Float32	inFontWidthScaleFactor,
+							 Boolean	inIsDefault)
 {
 	HIWindowRef const	kOwningWindow = Panel_ReturnOwningWindow(this->panel);
 	Float32 const		kTolerance = 0.05;
@@ -1443,7 +2469,68 @@ setFontWidthScaleFactor		(Float32	inFontWidthScaleFactor)
 	{
 		assert(false && "scale factor value should have triggered one of the preceding if/else cases");
 	}
+	setInheritanceCheckBox(HIViewWrap(idMyCheckBoxDefaultCharacterWidth, kOwningWindow),
+							BooleanToCheckBoxValue(inIsDefault));
 }// My_FormatsPanelNormalUI::setFontWidthScaleFactor
+
+
+/*!
+Calls the file-scope setInheritanceCheckBox(), automatically
+setting the “is default” parameter to an appropriate value
+based on the current data model.
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+setInheritanceCheckBox		(HIViewWrap		inCheckBox,
+							 SInt32			inValue)
+{
+	My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(this->panel),
+																		My_FormatsPanelNormalDataPtr);
+	
+	
+	::setInheritanceCheckBox(inCheckBox, inValue, panelDataPtr->isDefaultModel);
+}// My_FormatsPanelNormalUI::setInheritanceCheckBox
+
+
+/*!
+Updates the sample terminal display using the settings in the
+specified context.  All relevant settings are copied, unless
+one or more valid restriction tags are given; when restricted,
+only the settings indicated by the tags are used (and all other
+parts of the display are unchanged).
+
+(4.0)
+*/
+void
+My_FormatsPanelNormalUI::
+setSampleArea	(Preferences_ContextRef		inSettingsToCopy,
+				 Preferences_Tag			inTagRestriction1,
+				 Preferences_Tag			inTagRestriction2)
+{
+	Preferences_TagSetRef				tagSet = nullptr;
+	std::vector< Preferences_Tag >		tags;
+	
+	
+	if ('----' != inTagRestriction1) tags.push_back(inTagRestriction1);
+	if ('----' != inTagRestriction2) tags.push_back(inTagRestriction2);
+	if (false == tags.empty())
+	{
+		tagSet = Preferences_NewTagSet(tags);
+		if (nullptr == tagSet) Console_WriteLine("warning, unable to create tag set, cannot update sample area");
+		else
+		{
+			Preferences_ContextCopy(inSettingsToCopy, TerminalView_ReturnFormatConfiguration(this->terminalView),
+									tagSet);
+			Preferences_ReleaseTagSet(&tagSet);
+		}
+	}
+	else
+	{
+		Preferences_ContextCopy(inSettingsToCopy, TerminalView_ReturnFormatConfiguration(this->terminalView));
+	}
+}// My_FormatsPanelNormalUI::setSampleArea
 
 
 /*!
@@ -1519,11 +2606,49 @@ sliderProc	(HIViewRef			inSlider,
 		
 		
 		panelDataPtr->interfacePtr->saveFieldPreferences(panelDataPtr->dataModel);
+		{
+			HIWindowRef const	kOwningWindow = HIViewGetWindow(panelDataPtr->interfacePtr->mainView);
+			
+			
+			panelDataPtr->interfacePtr->setInheritanceCheckBox
+										(HIViewWrap(idMyCheckBoxDefaultCharacterWidth, kOwningWindow),
+											kControlCheckBoxUncheckedValue);
+		}
 		
 		// update the sample area
-		Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnFormatConfiguration(panelDataPtr->interfacePtr->terminalView));
+		panelDataPtr->interfacePtr->setSampleArea(panelDataPtr->dataModel, kPreferences_TagFontCharacterWidthMultiplier);
 	}
 }// sliderProc
+
+
+/*!
+Copies a preference tag for a color from the specified
+source context to the given destination.  All color
+data has the same size, which is currently that of an
+"RGBColor".
+
+(4.0)
+*/
+Preferences_Result
+copyColor	(Preferences_Tag			inSourceTag,
+			 Preferences_ContextRef		inSource,
+			 Preferences_ContextRef		inoutDestination,
+			 Boolean					inSearchDefaults,
+			 Boolean*					outIsDefaultOrNull)
+{
+	Preferences_Result	result = kPreferences_ResultOK;
+	RGBColor			colorValue;
+	size_t				actualSize = 0;
+	
+	
+	result = Preferences_ContextGetData(inSource, inSourceTag, sizeof(colorValue), &colorValue,
+										inSearchDefaults, &actualSize, outIsDefaultOrNull);
+	if (kPreferences_ResultOK == result)
+	{
+		result = Preferences_ContextSetData(inoutDestination, inSourceTag, sizeof(colorValue), &colorValue);
+	}
+	return result;
+}// copyColor
 
 
 /*!
@@ -1638,7 +2763,7 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					else
 					{
 						// success!
-						normalDataPtr->setFontName(fontName);
+						normalDataPtr->setFontName(fontName, false/* is default */);
 					}
 				}
 			}
@@ -1656,12 +2781,12 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 				else
 				{
 					// success!
-					normalDataPtr->setFontSize(fontSize);
+					normalDataPtr->setFontSize(fontSize, false/* is default */);
 				}
 			}
 			
 			// update the sample area
-			Preferences_ContextCopy(panelDataPtr->dataModel, TerminalView_ReturnFormatConfiguration(normalDataPtr->terminalView));
+			panelDataPtr->interfacePtr->setSampleArea(panelDataPtr->dataModel);
 		}
 		break;
 	
@@ -1671,169 +2796,6 @@ receiveFontChange	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 	}
 	return result;
 }// receiveFontChange
-
-
-/*!
-Handles "kEventCommandProcess" of "kEventClassCommand"
-for the buttons in this panel.
-
-(3.1)
-*/
-pascal OSStatus
-receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-					 EventRef				inEvent,
-					 void*					inMyFormatsPanelUIPtr)
-{
-	OSStatus						result = eventNotHandledErr;
-	// WARNING: More than one UI uses this handler.  The context will
-	// depend on the command ID.
-	My_FormatsPanelANSIColorsUI*	ansiDataPtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelANSIColorsUI*);
-	My_FormatsPanelNormalUI*		normalDataPtr = REINTERPRET_CAST(inMyFormatsPanelUIPtr, My_FormatsPanelNormalUI*);
-	UInt32 const					kEventClass = GetEventClass(inEvent);
-	UInt32 const					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassCommand);
-	assert(kEventKind == kEventCommandProcess);
-	{
-		HICommandExtended	received;
-		
-		
-		// determine the command in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeHICommand, received);
-		
-		// if the command information was found, proceed
-		if ((noErr == result) && (received.attributes & kHICommandFromControl))
-		{
-			HIViewRef	buttonHit = received.source.control;
-			
-			
-			result = eventNotHandledErr; // initially...
-			
-			switch (received.commandID)
-			{
-			case kCommandEditFontAndSize:
-				// select the button that was hit, and transmit font information
-				{
-					My_FormatsPanelNormalDataPtr	panelDataPtr = REINTERPRET_CAST(Panel_ReturnImplementation(normalDataPtr->panel),
-																					My_FormatsPanelNormalDataPtr);
-					FontSelectionQDStyle			fontInfo;
-					Str255							fontName;
-					SInt16							fontSize = 0;
-					size_t							actualSize = 0;
-					Preferences_Result				prefsResult = kPreferences_ResultOK;
-					
-					
-					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontName, sizeof(fontName),
-																fontName, false/* search defaults too */, &actualSize);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						// error...pick an arbitrary value
-						PLstrcpy(fontName, "\pMonaco");
-					}
-					prefsResult = Preferences_ContextGetData(panelDataPtr->dataModel, kPreferences_TagFontSize, sizeof(fontSize),
-																&fontSize, false/* search defaults too */, &actualSize);
-					if (kPreferences_ResultOK != prefsResult)
-					{
-						// error...pick an arbitrary value
-						fontSize = 12;
-					}
-					
-					bzero(&fontInfo, sizeof(fontInfo));
-					fontInfo.version = kFontSelectionQDStyleVersionZero;
-					fontInfo.instance.fontFamily = FMGetFontFamilyFromName(fontName);
-					fontInfo.instance.fontStyle = normal;
-					fontInfo.size = fontSize;
-					fontInfo.hasColor = false;
-					// apparently this API can return paramErr even though it
-					// successfully sets the desired font information...
-					(OSStatus)SetFontInfoForSelection(kFontSelectionQDType, 1/* number of styles */, &fontInfo,
-													// NOTE: This API is misdeclared in older headers, the last argument is supposed to
-													// be an event target.  It is bastardized into HIObjectRef form for older compiles.
-													#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
-														GetControlEventTarget(buttonHit)
-													#else
-														REINTERPRET_CAST(buttonHit, HIObjectRef)
-													#endif
-													);
-					if (1)
-					{
-						SetControl32BitValue(HIViewWrap(idMyButtonFontName, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
-						SetControl32BitValue(HIViewWrap(idMyButtonFontSize, HIViewGetWindow(buttonHit)), kControlCheckBoxCheckedValue);
-						if (false == FPIsFontPanelVisible())
-						{
-							result = FPShowHideFontPanel();
-						}
-					}
-				}
-				break;
-			
-			case kCommandResetANSIColors:
-				// check with the user first!
-				{
-					AlertMessages_BoxRef	box = nullptr;
-					UIStrings_Result		stringResult = kUIStrings_ResultOK;
-					CFStringRef				dialogTextCFString = nullptr;
-					CFStringRef				helpTextCFString = nullptr;
-					
-					
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowANSIColorsResetPrimaryText, dialogTextCFString);
-					assert(stringResult.ok());
-					stringResult = UIStrings_Copy(kUIStrings_AlertWindowGenericCannotUndoHelpText, helpTextCFString);
-					assert(stringResult.ok());
-					
-					box = Alert_New();
-					Alert_SetHelpButton(box, false);
-					Alert_SetParamsFor(box, kAlert_StyleOKCancel);
-					Alert_SetTextCFStrings(box, dialogTextCFString, helpTextCFString);
-					Alert_SetType(box, kAlertCautionAlert);
-					Alert_MakeWindowModal(box, HIViewGetWindow(ansiDataPtr->mainView), false/* is window close alert */,
-											resetANSIWarningCloseNotifyProc, ansiDataPtr/* user data */);
-					Alert_Display(box); // notifier disposes the alert when the sheet eventually closes
-				}
-				result = noErr; // event is handled
-				break;
-			
-			case kCommandColorMatteBackground:
-			case kCommandColorBlinkingForeground:
-			case kCommandColorBlinkingBackground:
-			case kCommandColorBoldForeground:
-			case kCommandColorBoldBackground:
-			case kCommandColorNormalForeground:
-			case kCommandColorNormalBackground:
-			case kCommandColorBlack:
-			case kCommandColorBlackEmphasized:
-			case kCommandColorRed:
-			case kCommandColorRedEmphasized:
-			case kCommandColorGreen:
-			case kCommandColorGreenEmphasized:
-			case kCommandColorYellow:
-			case kCommandColorYellowEmphasized:
-			case kCommandColorBlue:
-			case kCommandColorBlueEmphasized:
-			case kCommandColorMagenta:
-			case kCommandColorMagentaEmphasized:
-			case kCommandColorCyan:
-			case kCommandColorCyanEmphasized:
-			case kCommandColorWhite:
-			case kCommandColorWhiteEmphasized:
-				// see which of the color boxes was hit, display a color chooser
-				// and then (if the user accepts a new color) update open windows
-				ColorBox_UserSetColor(buttonHit);
-				result = noErr; // event is handled
-				break;
-			
-			default:
-				break;
-			}
-		}
-		else
-		{
-			result = eventNotHandledErr;
-		}
-	}
-	return result;
-}// receiveHICommand
 
 
 /*!
@@ -1891,13 +2853,48 @@ resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 									 SInt16					inItemHit,
 									 void*					inMyFormatsPanelANSIColorsUIPtr)
 {
-	My_FormatsPanelANSIColorsUI*	dataPtr = REINTERPRET_CAST(inMyFormatsPanelANSIColorsUIPtr, My_FormatsPanelANSIColorsUI*);
+	My_FormatsPanelANSIColorsUI*	interfacePtr = REINTERPRET_CAST(inMyFormatsPanelANSIColorsUIPtr,
+																	My_FormatsPanelANSIColorsUI*);
 	
 	
 	// if user consented to color reset, then change all colors to defaults
 	if (kAlertStdAlertOKButton == inItemHit)
 	{
-		dataPtr->resetColors();
+		Preferences_ContextRef		defaultFormat = nullptr;
+		Preferences_Result			prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_GetFactoryDefaultsContext(&defaultFormat);
+		if (kPreferences_ResultOK == prefsResult)
+		{
+			My_FormatsPanelANSIColorsDataPtr	dataPtr = REINTERPRET_CAST
+															(Panel_ReturnImplementation(interfacePtr->panel),
+																My_FormatsPanelANSIColorsDataPtr);
+			Preferences_ContextRef				targetContext = dataPtr->dataModel;
+			
+			
+			// do not use Preferences_ContextCopy(), because the “factory defaults”
+			// context contains more than just colors; copyColor() is called to
+			// ensure that only color preferences are changed
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlack, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlackBold, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIRed, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIRedBold, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIGreen, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIGreenBold, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIYellow, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIYellowBold, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlue, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIBlueBold, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIMagenta, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIMagentaBold, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSICyan, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSICyanBold, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIWhite, defaultFormat, targetContext);
+			prefsResult = copyColor(kPreferences_TagTerminalColorANSIWhiteBold, defaultFormat, targetContext);
+			
+			interfacePtr->readPreferences(defaultFormat);
+		}
 	}
 	
 	// dispose of the alert
@@ -1909,12 +2906,18 @@ resetANSIWarningCloseNotifyProc		(InterfaceLibAlertRef	inAlertThatClosed,
 Updates the specified color box with the value (if any)
 of the specified preference of type RGBColor.
 
+The "outIsDefault" flag is set based on whether or not
+the color box ended up with the default value; that is,
+if the specified color did not exist in the specified
+context.
+
 (3.1)
 */
 void
 setColorBox		(Preferences_ContextRef		inSettings,
 				 Preferences_Tag			inSourceTag,
-				 HIViewRef					inDestinationBox)
+				 HIViewRef					inDestinationBox,
+				 Boolean&					outIsDefault)
 {
 	Preferences_Result		prefsResult = kPreferences_ResultOK;
 	RGBColor				colorValue;
@@ -1923,12 +2926,46 @@ setColorBox		(Preferences_ContextRef		inSettings,
 	
 	// read each color, falling back to defaults for anything not defined
 	prefsResult = Preferences_ContextGetData(inSettings, inSourceTag, sizeof(colorValue),
-												&colorValue, true/* search defaults too */, &actualSize);
+												&colorValue, true/* search defaults too */, &actualSize,
+												&outIsDefault);
 	if (kPreferences_ResultOK == prefsResult)
 	{
 		ColorBox_SetColor(inDestinationBox, &colorValue);
 	}
 }// setColorBox
+
+
+/*!
+Sets the value of a checkbox that represents an
+inheritance.
+
+Since inheritance is not reversed by clicking the
+box, but by setting the associated preference to
+a new value, the checkbox is disabled whenever
+a “checked” value is given, and enabled otherwise.
+
+When "inIsDefaultContext" is true, the value is
+ignored, because all settings in the Default will
+not have anything to inherit from.
+
+(4.0)
+*/
+void
+setInheritanceCheckBox		(HIViewWrap		inCheckBox,
+							 SInt32			inValue,
+							 Boolean		inIsDefaultContext)
+{
+	if (inIsDefaultContext)
+	{
+		SetControl32BitValue(inCheckBox, kControlCheckBoxUncheckedValue);
+		inCheckBox << HIViewWrap_SetActiveState(false);
+	}
+	else
+	{
+		SetControl32BitValue(inCheckBox, inValue);
+		inCheckBox << HIViewWrap_SetActiveState(kControlCheckBoxCheckedValue != inValue);
+	}
+}// setInheritanceCheckBox
 
 } // anonymous namespace
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090830',
     '20090828',
     '20090823',
     '20090816',
@@ -268,6 +269,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090830': [
+        'Preferences window Formats pane now provides checkboxes that allow settings to inherit from existing (or Default) values.',
+    ],
     '20090828': [
         'Added Snow Leopard compatibility.',
     ],
