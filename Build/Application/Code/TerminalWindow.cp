@@ -195,8 +195,8 @@ struct TerminalWindow
 	Boolean						isObscured;				// is the window hidden, via a command in the Window menu?
 	Boolean						isDead;					// is the window title flagged to indicate a disconnected session?
 	Boolean						isLEDOn[4];				// true only if this terminal light is lit
-	FindDialog_Ref				searchSheet;			// search dialog, if any (retained so that history is kept each time, etc.)
-	FindDialog_Options			recentSearchOptions;	// used to implement Find Again baesd on the most recent Find
+	FindDialog_Options			recentSearchOptions;	// the options used during the last search in the dialog
+	CFRetainRelease				recentSearchStrings;	// CFMutableArrayRef; the CFStrings used in searches since this window was opened
 	CFRetainRelease				baseTitleString;		// user-provided title string; may be adorned prior to becoming the window title
 	CFRetainRelease				preResizeTitleString;	// used to save the old title during resizes, where the title is overwritten
 	ControlActionUPP			scrollProcUPP;							// handles scrolling activity
@@ -434,15 +434,13 @@ void
 TerminalWindow_DisplayTextSearchDialog	(TerminalWindowRef		inRef)
 {
 	TerminalWindowAutoLocker	ptr(gTerminalWindowPtrLocks(), inRef);
+	FindDialog_Ref				findDialog = FindDialog_New(inRef, handleFindDialogClose,
+															ptr->recentSearchStrings.returnCFMutableArrayRef(),
+															ptr->recentSearchOptions);
 	
-	
-	if (ptr->searchSheet == nullptr)
-	{
-		ptr->searchSheet = FindDialog_New(inRef, handleFindDialogClose, ptr->recentSearchOptions);
-	}
 	
 	// display a text search dialog (automatically disposed when the user clicks a button)
-	FindDialog_Display(ptr->searchSheet);
+	FindDialog_Display(findDialog);
 }// DisplayTextSearchDialog
 
 
@@ -1663,8 +1661,9 @@ windowInfo(WindowInfo_New()),
 staggerPositionIndex(0),
 isObscured(false),
 isDead(false),
-searchSheet(nullptr),
 recentSearchOptions(kFindDialog_OptionsDefault),
+recentSearchStrings(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks),
+					true/* is retained */),
 baseTitleString(),
 scrollProcUPP(nullptr), // reset below
 windowResizeHandler(),
@@ -2089,12 +2088,6 @@ TerminalWindow::
 		{
 			Undoables_RemoveAction(*actionIter);
 		}
-	}
-	
-	// destroy any open Find dialog
-	if (this->searchSheet != nullptr)
-	{
-		FindDialog_Dispose(&this->searchSheet);
 	}
 	
 	// show a hidden window just before it is destroyed (most importantly, notifying callbacks)
@@ -3057,10 +3050,12 @@ handleFindDialogClose	(FindDialog_Ref		inDialogThatClosed)
 		
 		
 		// save things the user entered in the dialog
+		// (history array is implicitly saved because
+		// the mutable array given at construction is
+		// retained by reference)
 		ptr->recentSearchOptions = FindDialog_ReturnOptions(inDialogThatClosed);
 		
-		// DO NOT destroy the dialog here; it is potentially reopened later
-		// (and is destroyed when the Terminal Window is destroyed)
+		FindDialog_Dispose(&inDialogThatClosed);
 	}
 }// handleFindDialogClose
 

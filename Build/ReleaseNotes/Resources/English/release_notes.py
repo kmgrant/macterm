@@ -271,6 +271,7 @@ daily_build_lineage = [
 
 notes_by_version = {
     '20090831': [
+        'Fixed display problems that could appear when the Find sheet was used on Snow Leopard.',
         'Fixed a bug introduced in the previous build, where sheet changes could occasionally be ignored.',
     ],
     '20090830': [

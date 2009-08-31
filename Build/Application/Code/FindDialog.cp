@@ -3,7 +3,7 @@
 	FindDialog.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -99,9 +99,8 @@ typedef std::vector< Terminal_RangeDescription >	My_TerminalRangeList;
 
 struct My_FindDialog
 {
-	My_FindDialog	(TerminalWindowRef				inTerminalWindow,
-					 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
-					 FindDialog_Options				inFlags);
+	My_FindDialog	(TerminalWindowRef, FindDialog_CloseNotifyProcPtr,
+					 CFMutableArrayRef, FindDialog_Options);
 	~My_FindDialog ();
 	
 	FindDialog_Ref							selfRef;					//!< identical to address of structure, but typed as ref
@@ -136,13 +135,14 @@ typedef LockAcquireRelease< FindDialog_Ref, My_FindDialog >		My_FindDialogAutoLo
 #pragma mark Internal Method Prototypes
 namespace {
 
-void				addToHistory					(My_FindDialogPtr, CFStringRef);
-Boolean				handleItemHit					(My_FindDialogPtr, HIViewID const&);
-void				handleNewSize					(WindowRef, Float32, Float32, void*);
-Boolean				initiateSearch					(My_FindDialogPtr, UInt32 = 1);
-pascal OSStatus		receiveFieldChanged				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
-pascal OSStatus		receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
+void			addToHistory					(My_FindDialogPtr, CFStringRef);
+Boolean			handleItemHit					(My_FindDialogPtr, HIViewID const&);
+void			handleNewSize					(WindowRef, Float32, Float32, void*);
+Boolean			initiateSearch					(My_FindDialogPtr, UInt32 = 1);
+OSStatus		receiveFieldChanged				(EventHandlerCallRef, EventRef, void*);
+OSStatus		receiveHICommand				(EventHandlerCallRef, EventRef, void*);
+OSStatus		receiveHistoryCommandProcess	(EventHandlerCallRef, EventRef, void*);
+void			updateHistoryMenu				(My_FindDialogPtr);
 
 } // anonymous namespace
 
@@ -170,6 +170,7 @@ is made.
 My_FindDialog::
 My_FindDialog	(TerminalWindowRef				inTerminalWindow,
 				 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+				 CFMutableArrayRef				inoutQueryStringHistory,
 				 FindDialog_Options				inFlags)
 :
 // IMPORTANT: THESE ARE EXECUTED IN THE ORDER MEMBERS APPEAR IN THE CLASS.
@@ -208,7 +209,7 @@ historyMenuCommandUPP		(nullptr),
 historyMenuCommandHandler	(nullptr),
 windowResizeHandler			(),
 keywordHistoryMenuRef		(nullptr),
-keywordHistory				(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no size limit */, &kCFTypeArrayCallBacks))
+keywordHistory				(inoutQueryStringHistory)
 {
 	// history menu setup
 	{
@@ -254,10 +255,18 @@ keywordHistory				(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no s
 			}
 		}
 	#endif
+		
+		updateHistoryMenu(this);
 	}
 	
 	// initialize the search text field
-	// UNIMPLEMENTED
+	if (CFArrayGetCount(inoutQueryStringHistory) > 0)
+	{
+		CFStringRef		firstCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(inoutQueryStringHistory, 0));
+		
+		
+		SetControlTextWithCFString(this->fieldKeywords, firstCFString);
+	}
 	
 	// initialize checkboxes
 	SetControl32BitValue(this->checkboxIgnoreCase,
@@ -302,7 +311,7 @@ keywordHistory				(CFArrayCreateMutable(kCFAllocatorDefault, 0/* limit; 0 = no s
 											currentBounds.bottom - currentBounds.top/* maximum height */);
 		assert(this->windowResizeHandler.isInstalled());
 	}
-}// My_FindDialog 3-argument constructor
+}// My_FindDialog 4-argument constructor
 
 
 /*!
@@ -331,6 +340,7 @@ the contents of the specified window.
 FindDialog_Ref
 FindDialog_New  (TerminalWindowRef				inTerminalWindow,
 				 FindDialog_CloseNotifyProcPtr	inCloseNotifyProcPtr,
+				 CFMutableArrayRef				inoutQueryStringHistory,
 				 FindDialog_Options				inFlags)
 {
 	FindDialog_Ref		result = nullptr;
@@ -338,7 +348,8 @@ FindDialog_New  (TerminalWindowRef				inTerminalWindow,
 	
 	try
 	{
-		result = REINTERPRET_CAST(new My_FindDialog(inTerminalWindow, inCloseNotifyProcPtr, inFlags), FindDialog_Ref);
+		result = REINTERPRET_CAST(new My_FindDialog(inTerminalWindow, inCloseNotifyProcPtr, inoutQueryStringHistory,
+													inFlags), FindDialog_Ref);
 	}
 	catch (std::bad_alloc)
 	{
@@ -511,8 +522,7 @@ addToHistory	(My_FindDialogPtr	inPtr,
 			if (CFStringGetLength(mutableCopy.returnCFStringRef()) > 0)
 			{
 				CFArrayInsertValueAtIndex(inPtr->keywordHistory.returnCFMutableArrayRef(), 0, inText);
-				InsertMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, inText, 0/* after which index */,
-												kMenuItemAttrIgnoreMeta/* attributes */, 0/* command ID */);
+				updateHistoryMenu(inPtr);
 			}
 		}
 	}
@@ -565,12 +575,6 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 			HideSheetWindow(inPtr->dialogWindow);
 		}
 		
-		// notify of close
-		if (nullptr != inPtr->closeNotifyProc)
-		{
-			FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
-		}
-		
 		// remember this string for later
 		{
 			CFStringRef		newHistoryString = nullptr;
@@ -578,6 +582,12 @@ handleItemHit	(My_FindDialogPtr	inPtr,
 			
 			FindDialog_GetSearchString(inPtr->selfRef, newHistoryString);
 			addToHistory(inPtr, newHistoryString);
+		}
+		
+		// notify of close
+		if (nullptr != inPtr->closeNotifyProc)
+		{
+			FindDialog_InvokeCloseNotifyProc(inPtr->closeNotifyProc, inPtr->selfRef);
 		}
 	}
 	else if (idWrap == idMyButtonCancel)
@@ -780,7 +790,7 @@ find-as-you-type.
 
 (3.1)
 */
-pascal OSStatus
+OSStatus
 receiveFieldChanged	(EventHandlerCallRef	inHandlerCallRef,
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
@@ -812,7 +822,7 @@ for the buttons in window title dialogs.
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 					 EventRef				inEvent,
 					 void*					inFindDialogRef)
@@ -880,7 +890,7 @@ pop-up menu’s currently-checked item).
 
 (3.0)
 */
-pascal OSStatus
+OSStatus
 receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 								 EventRef				inEvent,
 								 void*					inFindDialogRef)
@@ -921,6 +931,30 @@ receiveHistoryCommandProcess	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallR
 	}
 	return result;
 }// receiveHistoryCommandProcess
+
+
+/*!
+Synchronizes the pop-up menu’s contents with the array
+that stores the history strings.
+
+(4.0)
+*/
+void
+updateHistoryMenu	(My_FindDialogPtr	inPtr)
+{
+	CFArrayRef		historyCFArray = inPtr->keywordHistory.returnCFArrayRef();
+	
+	
+	(OSStatus)DeleteMenuItems(inPtr->keywordHistoryMenuRef, 1, CountMenuItems(inPtr->keywordHistoryMenuRef));
+	for (CFIndex i = 0; i < CFArrayGetCount(historyCFArray); ++i)
+	{
+		CFStringRef		thisCFString = CFUtilities_StringCast(CFArrayGetValueAtIndex(historyCFArray, i));
+		
+		
+		AppendMenuItemTextWithCFString(inPtr->keywordHistoryMenuRef, thisCFString,
+										kMenuItemAttrIgnoreMeta/* attributes */, 0/* command ID */, nullptr/* new index */);
+	}
+}// updateHistoryMenu
 
 } // anonymous namespace
 
