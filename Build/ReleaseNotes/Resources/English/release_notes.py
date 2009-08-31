@@ -273,6 +273,7 @@ notes_by_version = {
     '20090831': [
         'Fixed display problems that could appear when the Find sheet was used on Snow Leopard.',
         'Fixed a bug introduced in the previous build, where sheet changes could occasionally be ignored.',
+        'A help tag now appears above the cursor in the terminal window when its output is being redirected to a graphics window.',
     ],
     '20090830': [
         'Preferences window Formats pane now provides checkboxes that allow settings to inherit from existing (or Default) values.',

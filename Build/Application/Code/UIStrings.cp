@@ -1545,6 +1545,11 @@ UIStrings_Copy	(UIStrings_TerminalCFString		inWhichString,
 													CFSTR("kUIStrings_TerminalSearchNumberOfMatches; %1$u will be the number of times the query found a match"));
 		break;
 	
+	case kUIStrings_TerminalVectorGraphicsRedirect:
+		outString = CFCopyLocalizedStringFromTable(CFSTR("[Output in Canvas Window]"), CFSTR("Terminal"),
+													CFSTR("kUIStrings_TerminalVectorGraphicsRedirect"));
+		break;
+	
 	default:
 		// ???
 		result = kUIStrings_ResultNoSuchString;

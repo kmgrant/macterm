@@ -350,6 +350,7 @@ enum UIStrings_TerminalCFString
 	kUIStrings_TerminalSuspendOutput						= 'Susp',
 	kUIStrings_TerminalSearchNothingFound					= 'NotF',
 	kUIStrings_TerminalSearchNumberOfMatches				= 'NumM',
+	kUIStrings_TerminalVectorGraphicsRedirect				= 'Vect',
 };
 
 /*!

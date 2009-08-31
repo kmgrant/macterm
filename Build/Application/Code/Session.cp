@@ -351,6 +351,7 @@ UInt16						copyEventKeyPreferences				(My_SessionPtr, Preferences_ContextRef, B
 My_HMHelpContentRecWrap&	createHelpTagForInterrupt			();
 My_HMHelpContentRecWrap&	createHelpTagForResume				();
 My_HMHelpContentRecWrap&	createHelpTagForSuspend				();
+My_HMHelpContentRecWrap&	createHelpTagForVectorGraphics		();
 PMPageFormat				createSessionPageFormat				();
 IconRef						createSessionStateActiveIcon		();
 IconRef						createSessionStateDeadIcon			();
@@ -3324,6 +3325,28 @@ Session_TEKCreateTargetGraphic		(SessionRef		inRef)
 		}
 		Session_AddDataTarget(inRef, kSession_DataTargetTektronixGraphicsCanvas, &id);
 		SelectWindow(Session_ReturnActiveWindow(inRef));
+		
+		// display a help tag over the cursor in an unobtrusive location
+		// that confirms for the user that a suspend has in fact occurred
+		{
+			My_HMHelpContentRecWrap&	tagData = createHelpTagForVectorGraphics();
+			HIRect						globalCursorBounds;
+			
+			
+			TerminalView_GetCursorGlobalBounds(TerminalWindow_ReturnViewWithFocus
+												(Session_ReturnActiveTerminalWindow(inRef)),
+												globalCursorBounds);
+			tagData.setFrame(globalCursorBounds);
+			(OSStatus)HMDisplayTag(tagData.ptr());
+		#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_4
+			// this call does not immediately hide the tag, but rather after a short delay
+			if (FlagManager_Test(kFlagOS10_4API))
+			{
+				(OSStatus)HMHideTagWithOptions(kHMHideTagFade);
+			}
+		#endif
+		}
+		
 		result = true;
 	}
 	return result;
@@ -4720,6 +4743,42 @@ createHelpTagForSuspend ()
 	
 	return gTag;
 }// createHelpTagForSuspend
+
+
+/*!
+Returns (creating if necessary) the global help tag record
+for a help tag that tells the user that input is now being
+redirected to a vector graphics window.
+
+If the title of the tag has not been set already, it is
+initialized.
+
+Normally, this tag should be displayed at the terminal
+cursor location, so prior to using the result you should
+call its setFrame() method.
+
+(4.0)
+*/
+My_HMHelpContentRecWrap&
+createHelpTagForVectorGraphics ()
+{
+	static My_HMHelpContentRecWrap		gTag;
+	
+	
+	if (nullptr == gTag.mainName())
+	{
+		CFStringRef		tagCFString = nullptr;
+		
+		
+		if (UIStrings_Copy(kUIStrings_TerminalVectorGraphicsRedirect, tagCFString).ok())
+		{
+			gTag.rename(tagCFString, nullptr/* alternate name */);
+			// you CANNOT release this string because you do not know when the system is done with the tag
+		}
+	}
+	
+	return gTag;
+}// createHelpTagForVectorGraphics
 
 
 /*!
