@@ -38,6 +38,7 @@ p(#externalnavigation). "MacTelnet.com":http://www.mactelnet.com/
 
 <dt>Interesting Features</dt><dd>
 
+* "tabbed terminal windows":content/preferences.html#workspaces
 * "floating command line":content/terminals.html#commandline
 * "rectangular text selections":content/terminals.html#select
 * "cursor location finder":content/terminals.html#findcursor
