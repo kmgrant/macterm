@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090901',
     '20090831',
     '20090830',
     '20090828',
@@ -270,6 +271,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090901': [
+        'Preferences window Workspaces pane icon is now more detailed.  The Session Info window toolbar also uses this icon.',
+    ],
     '20090831': [
         'Fixed display problems that could appear when the Find sheet was used on Snow Leopard.',
         'Fixed a bug introduced in the previous build, where sheet changes could occasionally be ignored.',
