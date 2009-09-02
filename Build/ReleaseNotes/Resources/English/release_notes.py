@@ -273,6 +273,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20090901': [
         'Preferences window Workspaces pane icon is now more detailed.  The Session Info window toolbar also uses this icon.',
+        'Preferences window Terminals pane icon is slightly improved.  The Session Info window and Window menu also use this icon.',
     ],
     '20090831': [
         'Fixed display problems that could appear when the Find sheet was used on Snow Leopard.',
