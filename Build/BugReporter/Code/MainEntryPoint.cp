@@ -59,7 +59,7 @@ namespace // an unnamed namespace is the preferred replacement for "static" decl
 
 #pragma mark Internal Method Prototypes
 
-static OSStatus				addErrorToReply				(ConstStringPtr, OSStatus, AppleEventPtr);
+static OSStatus				addErrorToReply				(UInt8 const*, size_t, OSStatus, AppleEventPtr);
 static Boolean				installRequiredHandlers		();
 static pascal OSErr			receiveApplicationOpen		(AppleEvent const*, AppleEvent*, SInt32);
 static pascal OSErr			receiveApplicationPrefs		(AppleEvent const*, AppleEvent*, SInt32);
@@ -133,7 +133,8 @@ a specific error code.
 (3.1)
 */
 static OSStatus
-addErrorToReply		(ConstStringPtr		inErrorMessageOrNull,
+addErrorToReply		(UInt8 const*		inErrorMessageOrNull,
+					 size_t				inErrorMessageSize,
 					 OSStatus			inError,
 					 AppleEventPtr		inoutReplyAppleEventPtr)
 {
@@ -154,9 +155,8 @@ addErrorToReply		(ConstStringPtr		inErrorMessageOrNull,
 		// if provided, also put the error message
 		if (inErrorMessageOrNull != nullptr)
 		{
-			result = AEPutParamPtr(inoutReplyAppleEventPtr, keyErrorString, typeChar,
-									inErrorMessageOrNull + 1/* skip length byte */,
-									STATIC_CAST(PLstrlen(inErrorMessageOrNull) * sizeof(UInt8), Size));
+			result = AEPutParamPtr(inoutReplyAppleEventPtr, keyErrorString, typeUTF8Text,
+									inErrorMessageOrNull, STATIC_CAST(inErrorMessageSize, Size));
 		}
 	}
 	else
@@ -483,7 +483,7 @@ receiveApplicationOpen	(AppleEvent const*	inAppleEventPtr,
 		AEDisposeDesc(&quitEvent);
 	}
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(nullptr/* message */, 0/* message string length */, error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationOpen
 
@@ -505,7 +505,7 @@ receiveApplicationReopen	(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(nullptr/* message */, 0/* message string length */, error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationReopen
 
@@ -527,7 +527,7 @@ receiveApplicationPrefs		(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(nullptr/* message */, 0/* message string length */, error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationPrefs
 
@@ -556,7 +556,7 @@ receiveApplicationQuit	(AppleEvent const*	inAppleEventPtr,
 		QuitApplicationEventLoop();
 	}
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(nullptr/* message */, 0/* message string length */, error, outReplyAppleEventPtr);
 	return result;
 }// receiveApplicationQuit
 
@@ -578,7 +578,7 @@ receiveOpenDocuments	(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(nullptr/* message */, 0/* message string length */, error, outReplyAppleEventPtr);
 	return result;
 }// receiveOpenDocuments
 
@@ -600,7 +600,7 @@ receivePrintDocuments	(AppleEvent const*	inAppleEventPtr,
 	
 	error = noErr;
 	
-	(OSStatus)addErrorToReply(nullptr/* message */, error, outReplyAppleEventPtr);
+	(OSStatus)addErrorToReply(nullptr/* message */, 0/* message string length */, error, outReplyAppleEventPtr);
 	return result;
 }// receivePrintDocuments
 
