@@ -141,7 +141,6 @@
 		0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */; };
 		0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502330F872D420068CB19 /* CFUtilities.cp */; };
 		0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */; };
-		0AF502390F872D590068CB19 /* CollectionWrap.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AF502380F872D590068CB19 /* CollectionWrap.cp */; };
 		0AFA782C0B470144001FCE83 /* parse.py in pymactelnet-url */ = {isa = PBXBuildFile; fileRef = 0AFA78260B470136001FCE83 /* parse.py */; };
 		0AFA782D0B470144001FCE83 /* utilities.py in pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AFA78270B470136001FCE83 /* utilities.py */; };
 		0AFA782E0B470144001FCE83 /* open.py in pymactelnet-url */ = {isa = PBXBuildFile; fileRef = 0AFA78280B470136001FCE83 /* open.py */; };
@@ -570,8 +569,6 @@
 		0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CGContextSaveRestore.cp; path = Shared/Code/CGContextSaveRestore.cp; sourceTree = "<group>"; };
 		0AF502330F872D420068CB19 /* CFUtilities.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFUtilities.cp; path = Shared/Code/CFUtilities.cp; sourceTree = "<group>"; };
 		0AF502360F872D4C0068CB19 /* CFRetainRelease.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CFRetainRelease.cp; path = Shared/Code/CFRetainRelease.cp; sourceTree = "<group>"; };
-		0AF502380F872D590068CB19 /* CollectionWrap.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = CollectionWrap.cp; path = Shared/Code/CollectionWrap.cp; sourceTree = "<group>"; };
-		0AF5023A0F872DB90068CB19 /* CollectionWrap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CollectionWrap.h; path = Shared/Code/CollectionWrap.h; sourceTree = "<group>"; };
 		0AF5023B0F872DF80068CB19 /* ResultCode.template.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ResultCode.template.h; path = Shared/Code/ResultCode.template.h; sourceTree = "<group>"; };
 		0AF5B8AE0B8ED23A0061B480 /* IconForKeypadSelect.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadSelect.icns; path = Application/Resources/IconForKeypadSelect.icns; sourceTree = "<group>"; };
 		0AF5B8B00B8ED24A0061B480 /* IconForKeypadInsert.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = IconForKeypadInsert.icns; path = Application/Resources/IconForKeypadInsert.icns; sourceTree = "<group>"; };
@@ -641,7 +638,6 @@
 				0AF502310F872D250068CB19 /* CGContextSaveRestore.cp */,
 				0ACBC3560D5BBC6300FCF05F /* CocoaBasic.mm */,
 				0AE852720D9463B400B6834B /* CocoaUserDefaults.mm */,
-				0AF502380F872D590068CB19 /* CollectionWrap.cp */,
 				0A46FDC1055432A400ACDF3A /* ColorUtilities.cp */,
 				0A46FDC6055432A400ACDF3A /* Console.cp */,
 				0A46FDC8055432A400ACDF3A /* ContextSensitiveMenu.cp */,
@@ -671,7 +667,6 @@
 				0AF502300F872D150068CB19 /* CGContextSaveRestore.h */,
 				0ACBC3580D5BBC6800FCF05F /* CocoaBasic.h */,
 				0AE852740D9463B900B6834B /* CocoaUserDefaults.h */,
-				0AF5023A0F872DB90068CB19 /* CollectionWrap.h */,
 				0A4603C50554376100ACDF3A /* ColorUtilities.h */,
 				0A4603CB0554376100ACDF3A /* Console.h */,
 				0A4603CD0554376100ACDF3A /* ContextSensitiveMenu.h */,
@@ -1438,7 +1433,6 @@
 				0AF502320F872D2F0068CB19 /* CGContextSaveRestore.cp in Sources */,
 				0AF502340F872D420068CB19 /* CFUtilities.cp in Sources */,
 				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
-				0AF502390F872D590068CB19 /* CollectionWrap.cp in Sources */,
 				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
