@@ -75,10 +75,6 @@ clean: $(foreach L,$(ALL_LANGUAGES),clean-$(L))
 .PHONY: build
 build: $(foreach L,$(ALL_LANGUAGES),build-$(L))
 
-# this rule works only on Tiger
-.PHONY: index
-index: $(foreach L,$(ALL_LANGUAGES),install-index-$(L))
-
 build-%:
 	$(begin_target)
 	install -d "$(strip $(MACTELNET_HELP_LOCALIZED))"
@@ -88,7 +84,6 @@ build-%:
 	$(MAKE) install-stylesheets-$*
 	perl -pi -e 's/LAST_UPDATED/$(shell date +"%A, %B %d, %Y, %H:%M %Z")/' \
 		"$(strip $(MACTELNET_HELP_LOCALIZED))/index.html"
-	$(MAKE) install-index-$*
 	$(end_target)
 
 install-html-%: $(call SOURCE_HTML,%) $(call SOURCE_INDEX_HTML,%)
@@ -120,16 +115,6 @@ install-stylesheets-%:
 
 clean-install-stylesheets-%:
 	$(RM) $(foreach CSS,$(notdir $(call SOURCE_CSS,$*)),"$(strip $(MACTELNET_HELP_LOCALIZED_CONTENT))/$(CSS)")
-
-# this rule works only on Tiger
-install-index-%:
-	cd /Developer/Applications/Utilities/Help\ Indexer.app/Contents/MacOS/ && \
-	./Help\ Indexer "$(strip $(MACTELNET_HELP_LOCALIZED))" \
-		-Tokenizer 1 -ShowProgress YES -UseRemoteRoot NO \
-		-PreferNetworkFiles NO -LogStyle 2 -IndexAnchors YES \
-		-PantherIndexing YES
-	cd /Developer/Applications/Utilities/Help\ Indexer.app/Contents/Resources/ && \
-	./Unarchiver -v "$(strip $(MACTELNET_HELP_LOCALIZED))/Help.helpindex"
 
 clean-install-index-%:
 	$(RM) "$(strip $(MACTELNET_HELP_LOCALIZED))/Help.helpindex"

@@ -246,14 +246,17 @@ $(DEST_APP_RESOURCES_TOP)/%: $(SRC_APP_RESOURCES_TOP)/%
 
 .PHONY: install-quills-framework
 install-quills-framework:
+	$(call banner,$@)
 	@# keep in sync with the matching clean rule
 	@#-
 	@# it is only necessary to build the code once per architecture,
 	@# which the Tiger build handles; however, a (PPC-only) Panther
 	@# build is done because 10.3 doesn't support universal binaries
 ifeq ($(strip $(FOR_PANTHER)),yes)
+	$(call banner,BEGIN PANTHER BUILD)
 	$(XCB) -project Application.xcodeproj -target Quills.framework -configuration ForPantherDebug
 endif
+	$(call banner,BEGIN TIGER BUILD)
 	@# Tiger and Leopard share this configuration...
 	$(XCB) -project Application.xcodeproj -target Quills.framework -configuration ForTigerDebug
 	@# merge in the built frameworks to one root; start with the
@@ -284,6 +287,7 @@ endif
 
 $(SYMROOT)/ForPantherDebug/_Quills.so \
 $(SYMROOT)/ForPantherDebug/Quills.py: $(SWIG_DEPENDENCIES)
+	$(call banner,build SWIG wrapper: Panther)
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
 
 # reinstalls a SWIG wrapper when it changes
@@ -293,6 +297,7 @@ $(DEST_SWIG_TOP_PANTHER)/%: $(SYMROOT)/ForPantherDebug/%
 
 $(SYMROOT)/ForTigerDebug/_Quills.so \
 $(SYMROOT)/ForTigerDebug/Quills.py: $(SWIG_DEPENDENCIES)
+	$(call banner,build SWIG wrapper: Tiger)
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
 
 # reinstalls a SWIG wrapper when it changes
@@ -302,6 +307,7 @@ $(DEST_SWIG_TOP_TIGER)/%: $(SYMROOT)/ForTigerDebug/%
 
 $(SYMROOT)/ForLeopardDebug/_Quills.so \
 $(SYMROOT)/ForLeopardDebug/Quills.py: $(SWIG_DEPENDENCIES)
+	$(call banner,build SWIG wrapper: Leopard)
 	@# Python versions are different on each Mac OS, so the lightweight
 	@# SWIG wrapper code *does* have to be compiled for each separately
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForLeopardDebug
@@ -342,6 +348,7 @@ endif
 
 .PHONY: install-py-framework
 install-py-framework:
+	$(call banner,$@)
 	@# keep in sync with the matching clean rule
 	$(XCB) -project Application.xcodeproj -target PyMacTelnet.framework -configuration $(PY_CONFIG)
 	@# avoid rsyncing from /
@@ -366,6 +373,7 @@ clean-py-framework:
 
 .PHONY: install-growl-framework
 install-growl-framework:
+	$(call banner,$@)
 	@# keep in sync with the matching clean rule
 	@if [ ! -d "$(GROWL_SDK_ROOT)" ] ; then \
 		echo "(current working directory: '$(CURDIR)')" >&2 ; \
@@ -459,6 +467,7 @@ clean-executables:
 
 .PHONY: install-app-dot-strings
 install-app-dot-strings: $(SRC_APP_CODE_TOP)/UIStrings.cp
+	$(call banner,$@)
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
 	/usr/bin/genstrings $(SRC_APP_CODE_TOP)/UIStrings.cp -o $(DEST_APP_RESOURCES_TOP)/English.lproj
@@ -470,6 +479,7 @@ clean-app-dot-strings:
 # Component: MacTelnet Help
 
 $(DEST_APP_RESOURCES_TOP)/English.lproj/Help:
+	$(call banner,$@)
 	$(CURDIR)/HTMLHelpBuild.command
 	$(MKDIR_P) $(dir $@)
 	$(RSYNC) --archive $(CURDIR)/HTMLHelp/_Generated/English/Help/ $@
@@ -478,6 +488,7 @@ $(DEST_APP_RESOURCES_TOP)/English.lproj/Help:
 
 .PHONY: install-bug-reporter
 install-bug-reporter:
+	$(call banner,$@)
 	@# keep in sync with the matching clean rule
 	$(XCB) -project BugReporter.xcodeproj
 	@# avoid rsyncing from /
@@ -497,6 +508,7 @@ clean-bug-reporter:
 
 .PHONY: install-prefs-converter
 install-prefs-converter:
+	$(call banner,$@)
 	@# keep in sync with the matching clean rule
 	$(XCB) -project PrefsConverter.xcodeproj
 	@# avoid rsyncing from /
@@ -517,6 +529,7 @@ clean-prefs-converter:
 .PHONY: install-resources
 install-resources: \
 $(addprefix $(DEST_APP_RESOURCES_TOP)/,$(APP_RESOURCES))
+	$(call banner,$@)
 	@# keep in sync with the matching clean rule
 	$(MKDIR_P) $(DEST_APP_RESOURCES_TOP)/English.lproj
 	$(MAKE) install-app-dot-strings
@@ -559,6 +572,17 @@ $(DEST_APP_TOP)/Info.plist: FORCE
 $(DEST_APP_TOP)/PkgInfo: FORCE
 	$(MKDIR_P) $(dir $@)
 	/bin/echo -n 'APPLKevG' >| $@
+
+#
+# Utilities
+#
+
+# print a line in huge text (on VT100 terminals)
+define banner
+	@printf "\033#3$(1)\n"
+	@printf "\033#4$(1)\n"
+
+endef
 
 #
 # Primary Rules

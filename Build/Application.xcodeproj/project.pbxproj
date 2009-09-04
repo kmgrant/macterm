@@ -531,7 +531,7 @@
 		0ACDC7910DDA5688000AE3CD /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AddressDialogCocoa.nib; sourceTree = "<group>"; };
 		0ACDD8750ABD104300040553 /* FileSelectionDialogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FileSelectionDialogs.h; path = Shared/Code/FileSelectionDialogs.h; sourceTree = "<group>"; };
 		0ACDD9250ABD16C200040553 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/AlertMessages.nib; sourceTree = "<group>"; };
-		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.interfacer; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
+		0ACE9A7A0A9EE48B00C693D7 /* Quills.i */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c.preprocessed; name = Quills.i; path = Application/Code/Quills.i; sourceTree = "<group>"; };
 		0AD0B09D0A9EAAA3002064BA /* QuillsBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = QuillsBase.h; path = Application/Code/QuillsBase.h; sourceTree = "<group>"; };
 		0AD0B2EC0A9EAD4E002064BA /* QuillsBase.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsBase.cp; path = Application/Code/QuillsBase.cp; sourceTree = "<group>"; };
 		0AD0B3770A9EB88E002064BA /* QuillsEvents.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = QuillsEvents.cp; path = Application/Code/QuillsEvents.cp; sourceTree = "<group>"; };
@@ -1721,6 +1721,7 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
@@ -1747,6 +1748,7 @@
 					"-IApplication/Resources",
 					"-IApplication/Resources/English.lproj",
 					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
+					"$(SDK_PATCH_INCLUDES)",
 				);
 				PREBINDING = NO;
 				WARNING_CFLAGS = (
@@ -1845,6 +1847,7 @@
 					"-IApplication/Resources",
 					"-IApplication/Resources/English.lproj",
 					"$(SWIG_PYTHON_INCLUDE)",
+					"$(SDK_PATCH_INCLUDES)",
 				);
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -1878,6 +1881,7 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
@@ -1904,6 +1908,7 @@
 					"-IApplication/Resources",
 					"-IApplication/Resources/English.lproj",
 					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
+					"$(SDK_PATCH_INCLUDES)",
 				);
 				PREBINDING = NO;
 				WARNING_CFLAGS = (
@@ -2016,6 +2021,7 @@
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "$(SOURCE_ROOT)/Application/Code/MacTelnetPrefix.pch";
+				GCC_VERSION = 4.0;
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_CHECK_SWITCH_STATEMENTS = YES;
@@ -2042,6 +2048,7 @@
 					"-IApplication/Resources",
 					"-IApplication/Resources/English.lproj",
 					"-I$(GROWL_SDK_ROOT)/Frameworks/Growl.framework/Headers",
+					"$(SDK_PATCH_INCLUDES)",
 				);
 				PREBINDING = NO;
 				WARNING_CFLAGS = (

@@ -6,6 +6,12 @@ MACOSX_DEPLOYMENT_TARGET_ppc = 10.4
 FRAMEWORK_SEARCH_PATHS = "$(SDKROOT)/System/Library/Frameworks"
 SDKROOT = $(DEVELOPER_SDK_DIR)/MacOSX10.4u.sdk
 
+// when building on Snow Leopard, the default compiler path is no longer
+// valid for the 10.4u SDK because files like "stdarg.h" in the SDK will
+// #error out due to being Metrowerks-specific; so, explicitly locate
+// headers in the SDK that will compile
+SDK_PATCH_INCLUDES = -I$(SDKROOT)/usr/include/c++/4.0.0/powerpc-apple-darwin10 -I$(SDKROOT)/usr/lib/gcc/powerpc-apple-darwin10/4.0.1/include -I$(SDKROOT)/usr/lib/gcc/powerpc-apple-darwin10/4.0.1/../../../../powerpc-apple-darwin10/include -I$(SDKROOT)/usr/include
+
 // Growl is not available for Panther
 LDFLAGS_EXTRA_FRAMEWORKS = -framework Growl
 
