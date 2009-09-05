@@ -3935,7 +3935,7 @@ receiveHICommand	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
 						else if (received.commandID == kCommandTallScreen)
 						{
 							columns = 80;
-							rows = 48;
+							rows = 40;
 						}
 						else
 						{

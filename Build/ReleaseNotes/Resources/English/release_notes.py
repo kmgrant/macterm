@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090905',
     '20090901',
     '20090831',
     '20090830',
@@ -271,6 +272,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090905': [
+        'The Tall variant has been redefined as 80 x 40, to be more useful on small displays.',
+    ],
     '20090901': [
         'Preferences window Workspaces pane icon is now more detailed.  The Session Info window toolbar also uses this icon.',
         'Preferences window Terminals pane icon is slightly improved.  The Session Info window and Window menu also use this icon.',
