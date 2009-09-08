@@ -3,7 +3,7 @@
 	RecordAE.cp
 	
 	MacTelnet
-		© 1998-2007 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -49,31 +49,31 @@
 
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	AEEventHandlerUPP		gRecordingBeginUPP = nullptr;		//!< wrapper for callback that hears about new recordings
-	AEEventHandlerUPP		gRecordingEndUPP = nullptr;			//!< wrapper for callback that hears about halted recordings
-	EventHandlerUPP			gWindowClosedUPP = nullptr;			//!< wrapper for callback that hears about windows that have closed
-	EventHandlerRef			gWindowClosedHandler = nullptr;
-	EventHandlerUPP			gWindowCollapseToggleUPP = nullptr;	//!< wrapper for callback that hears about windows that have closed
-	EventHandlerRef			gWindowCollapseToggleHandler = nullptr;
-	EventHandlerUPP			gWindowZoomedUPP = nullptr;			//!< wrapper for callback that hears about windows that have closed
-	EventHandlerRef			gWindowZoomedHandler = nullptr;
-	AEAddressDesc			gSelfAddress;						//!< allows application to be recordable
-	ProcessSerialNumber		gSelfProcessID;						//!< identifies application in terms of an OS process
-	SInt32					gRecordingCount = 0L;				//!< number of recordings taking place
-}
+AEEventHandlerUPP		gRecordingBeginUPP = nullptr;		//!< wrapper for callback that hears about new recordings
+AEEventHandlerUPP		gRecordingEndUPP = nullptr;			//!< wrapper for callback that hears about halted recordings
+EventHandlerUPP			gWindowClosedUPP = nullptr;			//!< wrapper for callback that hears about windows that have closed
+EventHandlerRef			gWindowClosedHandler = nullptr;
+EventHandlerUPP			gWindowCollapseToggleUPP = nullptr;	//!< wrapper for callback that hears about windows that have closed
+EventHandlerRef			gWindowCollapseToggleHandler = nullptr;
+EventHandlerUPP			gWindowZoomedUPP = nullptr;			//!< wrapper for callback that hears about windows that have closed
+EventHandlerRef			gWindowZoomedHandler = nullptr;
+AEAddressDesc			gSelfAddress;						//!< allows application to be recordable
+ProcessSerialNumber		gSelfProcessID;						//!< identifies application in terms of an OS process
+SInt32					gRecordingCount = 0L;				//!< number of recordings taking place
+
+} // anonymous namespace
 
 #pragma mark Internal Method Prototypes
+namespace {
 
-static pascal OSErr		handleRecordingBegunEvent				(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSErr		handleRecordingTerminatedEvent			(AppleEvent const*, AppleEvent*, SInt32);
-static pascal OSStatus  receiveWindowClosed						(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus  receiveWindowCollapsedOrExpanded		(EventHandlerCallRef, EventRef, void*);
-static pascal OSStatus  receiveWindowZoomed						(EventHandlerCallRef, EventRef, void*);
-static OSStatus			startRecording							();
-static OSStatus			stopRecording							();
+pascal OSErr	handleRecordingBegunEvent			(AppleEvent const*, AppleEvent*, SInt32);
+pascal OSErr	handleRecordingTerminatedEvent		(AppleEvent const*, AppleEvent*, SInt32);
+OSStatus		startRecording						();
+OSStatus		stopRecording						();
+
+} // anonymous namespace
 
 
 
@@ -208,13 +208,14 @@ RecordAE_ReturnSelfAddress ()
 
 
 #pragma mark Internal Methods
+namespace {
 
 /*!
 Handles event "kAENotifyStartRecording" of "kCoreEventClass".
 
 (3.0)
 */
-static pascal OSErr
+pascal OSErr
 handleRecordingBegunEvent	(AppleEvent const*	inAppleEventPtr,
 							 AppleEvent*		UNUSED_ARGUMENT(outReplyAppleEventPtr),
 							 SInt32				UNUSED_ARGUMENT(inData))
@@ -243,7 +244,7 @@ Handles event "kAENotifyStopRecording" of "kCoreEventClass".
 
 (3.0)
 */
-static pascal OSErr
+pascal OSErr
 handleRecordingTerminatedEvent	(AppleEvent const*	inAppleEventPtr,
 								 AppleEvent*		UNUSED_ARGUMENT(outReplyAppleEventPtr),
 								 SInt32				UNUSED_ARGUMENT(inData))
@@ -268,293 +269,12 @@ handleRecordingTerminatedEvent	(AppleEvent const*	inAppleEventPtr,
 
 
 /*!
-Embellishes "kEventWindowClosed" of "kEventClassWindow"
-for any window, while a script is recording.  A fake
-event is sent back that causes an appropriate command
-to appear in a recording script.
-
-IMPORTANT:  The “closed” event is handled here, as opposed
-			to the “closing” event; this is because many
-			handlers tend to override the closing-event
-			completely, which would mean this is never
-			invoked when it should be.  Technically it is
-			slightly more appropriate to record a close
-			event the instant a window starts to close,
-			but recording it just after a window is hidden
-			should be fine too.
-
-(3.0)
-*/
-static pascal OSStatus
-receiveWindowClosed		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inContext))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent),
-					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowClosed);
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			OSStatus			error = noErr;
-			WindowAttributes	attributes = 0L;
-			
-			
-			error = GetWindowAttributes(window, &attributes);
-			if ((error == noErr) && (attributes & kWindowCloseBoxAttribute))
-			{
-				AEDesc		closeEvent,
-							replyDescriptor;
-				
-				
-				RecordAE_CreateRecordableAppleEvent(kAECoreSuite, kAEClose, &closeEvent);
-				if (error == noErr)
-				{
-					AEDesc		containerDesc,
-								keyDesc,
-								objectDesc;
-					Str255		windowTitle;
-					
-					
-					(OSStatus)AppleEventUtilities_InitAEDesc(&containerDesc); // remains a null container
-					(OSStatus)AppleEventUtilities_InitAEDesc(&keyDesc);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&objectDesc);
-					
-					// send a request for "window <title>", which resides in a null container;
-					// then, issue an event to bring it to the front
-					GetWTitle(window, windowTitle);
-					(OSStatus)BasicTypesAE_CreatePStringDesc(windowTitle, &keyDesc);
-					error = CreateObjSpecifier(cMyWindow, &containerDesc, formName, &keyDesc, true/* dispose inputs */, &objectDesc);
-					if (error != noErr) Console_WriteValue("window access error", error);
-					if (error == noErr)
-					{
-						// reference to the window to be selected - REQUIRED
-						(OSStatus)AEPutParamDesc(&closeEvent, keyDirectObject, &objectDesc);
-						
-						// send the event, which will record it into any open script
-						(OSStatus)AESend(&closeEvent, &replyDescriptor, kAENoReply | kAEDontExecute,
-											kAENormalPriority, kAEDefaultTimeout,
-											nullptr/* idle routine */, nullptr/* filter routine */);
-					}
-				}
-				AEDisposeDesc(&closeEvent);
-			}
-			result = eventNotHandledErr; // IMPORTANT: return "eventNotHandledErr" because this routine only fires no-op events
-		}
-	}
-	
-	return result;
-}// receiveWindowClosed
-
-
-/*!
-Embellishes "kEventWindowCollapsed" and "kEventWindowExpanded"
-of "kEventClassWindow" for any window, while a script is
-recording.  A fake event is sent back that causes an
-appropriate command to appear in a recording script.
-
-(3.0)
-*/
-static pascal OSStatus
-receiveWindowCollapsedOrExpanded	(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-									 EventRef				inEvent,
-									 void*					UNUSED_ARGUMENT(inContext))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent),
-					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert((kEventKind == kEventWindowCollapsed) || (kEventKind == kEventWindowExpanded));
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			OSStatus			error = noErr;
-			WindowAttributes	attributes = 0L;
-			
-			
-			error = GetWindowAttributes(window, &attributes);
-			if ((error == noErr) && (attributes & kWindowCollapseBoxAttribute))
-			{
-				AEDesc		setDataEvent,
-							replyDescriptor;
-				
-				
-				RecordAE_CreateRecordableAppleEvent(kAECoreSuite, kAESetData, &setDataEvent);
-				if (error == noErr)
-				{
-					AEDesc		containerDesc,
-								keyDesc,
-								objectDesc,
-								propertyDesc,
-								valueDesc;
-					Str255		windowTitle;
-					
-					
-					(OSStatus)AppleEventUtilities_InitAEDesc(&containerDesc); // remains a null container
-					(OSStatus)AppleEventUtilities_InitAEDesc(&keyDesc);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&objectDesc);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&propertyDesc);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&valueDesc);
-					
-					// send a request for "window <title>", which resides in a null container;
-					// then, issue an event to minimize it (effectively setting a window property)
-					GetWTitle(window, windowTitle);
-					(OSStatus)BasicTypesAE_CreatePStringDesc(windowTitle, &keyDesc);
-					error = CreateObjSpecifier(cMyWindow, &containerDesc, formName, &keyDesc, true/* dispose inputs */, &objectDesc);
-					if (error != noErr) Console_WriteValue("window access error", error);
-					(OSStatus)BasicTypesAE_CreatePropertyIDDesc(pMyWindowIsCollapsed, &keyDesc);
-					error = CreateObjSpecifier(cProperty, &objectDesc,
-												formPropertyID, &keyDesc, true/* dispose inputs */,
-												&propertyDesc);
-					if (error != noErr) Console_WriteValue("property access error", error);
-					if (error == noErr)
-					{
-						// reference to the window to be minimized or restored - REQUIRED
-						(OSStatus)AEPutParamDesc(&setDataEvent, keyDirectObject, &propertyDesc);
-						
-						// the property’s new value - REQUIRED
-						(OSStatus)BasicTypesAE_CreateBooleanDesc((kEventKind == kEventWindowCollapsed), &valueDesc);
-						(OSStatus)AEPutParamDesc(&setDataEvent, keyAEParamMyTo, &valueDesc);
-						
-						// send the event, which will record it into any open script
-						(OSStatus)AESend(&setDataEvent, &replyDescriptor, kAENoReply | kAEDontExecute,
-											kAENormalPriority, kAEDefaultTimeout,
-											nullptr/* idle routine */, nullptr/* filter routine */);
-					}
-				}
-				AEDisposeDesc(&setDataEvent);
-			}
-			result = eventNotHandledErr; // IMPORTANT: return "eventNotHandledErr" because this routine only fires no-op events
-		}
-	}
-	
-	return result;
-}// receiveWindowCollapsedOrExpanded
-
-
-/*!
-Embellishes "kEventWindowZoomed"of "kEventClassWindow"
-for any window, while a script is recording.  A fake
-event is sent back that causes an appropriate command
-to appear in a recording script.
-
-(3.0)
-*/
-static pascal OSStatus
-receiveWindowZoomed		(EventHandlerCallRef	UNUSED_ARGUMENT(inHandlerCallRef),
-						 EventRef				inEvent,
-						 void*					UNUSED_ARGUMENT(inContext))
-{
-	OSStatus		result = eventNotHandledErr;
-	UInt32 const	kEventClass = GetEventClass(inEvent),
-					kEventKind = GetEventKind(inEvent);
-	
-	
-	assert(kEventClass == kEventClassWindow);
-	assert(kEventKind == kEventWindowZoomed);
-	{
-		WindowRef	window = nullptr;
-		
-		
-		// determine the window in question
-		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeWindowRef, window);
-		
-		// if the window was found, proceed
-		if (result == noErr)
-		{
-			OSStatus			error = noErr;
-			WindowAttributes	attributes = 0L;
-			
-			
-			error = GetWindowAttributes(window, &attributes);
-			if ((error == noErr) && ((attributes & kWindowHorizontalZoomAttribute) || (attributes & kWindowVerticalZoomAttribute)))
-			{
-				AEDesc		setDataEvent,
-							replyDescriptor;
-				
-				
-				RecordAE_CreateRecordableAppleEvent(kAECoreSuite, kAESetData, &setDataEvent);
-				if (error == noErr)
-				{
-					AEDesc		containerDesc,
-								keyDesc,
-								objectDesc,
-								propertyDesc,
-								valueDesc;
-					Str255		windowTitle;
-					
-					
-					(OSStatus)AppleEventUtilities_InitAEDesc(&containerDesc); // remains a null container
-					(OSStatus)AppleEventUtilities_InitAEDesc(&keyDesc);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&objectDesc);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&propertyDesc);
-					(OSStatus)AppleEventUtilities_InitAEDesc(&valueDesc);
-					
-					// send a request for "window <title>", which resides in a null container;
-					// then, issue an event to minimize it (effectively setting a window property)
-					GetWTitle(window, windowTitle);
-					(OSStatus)BasicTypesAE_CreatePStringDesc(windowTitle, &keyDesc);
-					error = CreateObjSpecifier(cMyWindow, &containerDesc, formName, &keyDesc, true/* dispose inputs */, &objectDesc);
-					if (error != noErr) Console_WriteValue("window access error", error);
-					(OSStatus)BasicTypesAE_CreatePropertyIDDesc(pMyWindowIsZoomed, &keyDesc);
-					error = CreateObjSpecifier(cProperty, &objectDesc,
-												formPropertyID, &keyDesc, true/* dispose inputs */,
-												&propertyDesc);
-					if (error != noErr) Console_WriteValue("property access error", error);
-					if (error == noErr)
-					{
-						// reference to the window to be minimized or restored - REQUIRED
-						(OSStatus)AEPutParamDesc(&setDataEvent, keyDirectObject, &propertyDesc);
-						
-						// the property’s new value - REQUIRED
-						(OSStatus)BasicTypesAE_CreateBooleanDesc
-									(IsWindowInStandardState(window, nullptr/* ideal size */, nullptr/* ideal standard state */),
-										&valueDesc);
-						(OSStatus)AEPutParamDesc(&setDataEvent, keyAEParamMyTo, &valueDesc);
-						
-						// send the event, which will record it into any open script
-						(OSStatus)AESend(&setDataEvent, &replyDescriptor, kAENoReply | kAEDontExecute,
-											kAENormalPriority, kAEDefaultTimeout,
-											nullptr/* idle routine */, nullptr/* filter routine */);
-					}
-				}
-				AEDisposeDesc(&setDataEvent);
-			}
-			result = eventNotHandledErr; // IMPORTANT: return "eventNotHandledErr" because this routine only fires no-op events
-		}
-	}
-	
-	return result;
-}// receiveWindowZoomed
-
-
-/*!
 Worker routine for recording-begun handler; exists primarily
 so that it can be called without faking an Apple Event.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 startRecording ()
 {
 	OSStatus	result = noErr;
@@ -564,59 +284,6 @@ startRecording ()
 	// Assume that it is, and keep track of the number of recordings in progress.
 	++gRecordingCount;
 	FlagManager_Set(kFlagAppleScriptRecording, true);
-	
-	//
-	// install Carbon Event handlers that fire events to recording scripts
-	//
-	
-	// install a callback that sends events like "close window 1" when a window is closed
-	{
-		EventTypeSpec const		whenWindowClosed[] =
-								{
-									{ kEventClassWindow, kEventWindowClosed }
-								};
-		OSStatus				error = noErr;
-		
-		
-		gWindowClosedUPP = NewEventHandlerUPP(receiveWindowClosed);
-		error = InstallApplicationEventHandler(gWindowClosedUPP, GetEventTypeCount(whenWindowClosed),
-												whenWindowClosed, nullptr/* user data */,
-												&gWindowClosedHandler/* event handler reference */);
-		assert(error == noErr);
-	}
-	
-	// install a callback that sends events like "set the minimized of window 1 to true" when a window is minimized
-	{
-		EventTypeSpec const		whenWindowCollapsedOrExpanded[] =
-								{
-									{ kEventClassWindow, kEventWindowCollapsed },
-									{ kEventClassWindow, kEventWindowExpanded }
-								};
-		OSStatus				error = noErr;
-		
-		
-		gWindowCollapseToggleUPP = NewEventHandlerUPP(receiveWindowCollapsedOrExpanded);
-		error = InstallApplicationEventHandler(gWindowCollapseToggleUPP, GetEventTypeCount(whenWindowCollapsedOrExpanded),
-												whenWindowCollapsedOrExpanded, nullptr/* user data */,
-												&gWindowCollapseToggleHandler/* event handler reference */);
-		assert(error == noErr);
-	}
-	
-	// install a callback that sends events like "set the zoomed of window 1 to true" when a window is zoomed
-	{
-		EventTypeSpec const		whenWindowZoomed[] =
-								{
-									{ kEventClassWindow, kEventWindowZoomed }
-								};
-		OSStatus				error = noErr;
-		
-		
-		gWindowZoomedUPP = NewEventHandlerUPP(receiveWindowZoomed);
-		error = InstallApplicationEventHandler(gWindowZoomedUPP, GetEventTypeCount(whenWindowZoomed),
-												whenWindowZoomed, nullptr/* user data */,
-												&gWindowZoomedHandler/* event handler reference */);
-		assert(error == noErr);
-	}
 	
 	return result;
 }// startRecording
@@ -629,7 +296,7 @@ Apple Event.
 
 (3.0)
 */
-static OSStatus
+OSStatus
 stopRecording ()
 {
 	OSStatus	result = noErr;
@@ -641,18 +308,9 @@ stopRecording ()
 	--gRecordingCount;
 	if (gRecordingCount <= 0) FlagManager_Set(kFlagAppleScriptRecording, false);
 	
-	//
-	// remove Carbon Event handlers installed in handleRecordingBegunEvent()
-	//
-	
-	RemoveEventHandler(gWindowClosedHandler), gWindowClosedHandler = nullptr;
-	DisposeEventHandlerUPP(gWindowClosedUPP), gWindowClosedUPP = nullptr;
-	RemoveEventHandler(gWindowCollapseToggleHandler), gWindowCollapseToggleHandler = nullptr;
-	DisposeEventHandlerUPP(gWindowCollapseToggleUPP), gWindowCollapseToggleUPP = nullptr;
-	RemoveEventHandler(gWindowZoomedHandler), gWindowZoomedHandler = nullptr;
-	DisposeEventHandlerUPP(gWindowZoomedUPP), gWindowZoomedUPP = nullptr;
-	
 	return result;
 }// stopRecording
+
+} // anonymous namespace
 
 // BELOW IS REQUIRED NEWLINE TO END FILE

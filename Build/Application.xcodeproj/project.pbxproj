@@ -311,7 +311,7 @@
 		0A4604400554376100ACDF3A /* TerminalView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalView.h; path = Application/Code/TerminalView.h; sourceTree = SOURCE_ROOT; };
 		0A4604410554376100ACDF3A /* TerminalViewRef.typedef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalViewRef.typedef.h; path = Application/Code/TerminalViewRef.typedef.h; sourceTree = SOURCE_ROOT; };
 		0A4604420554376100ACDF3A /* TerminalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TerminalWindow.h; path = Application/Code/TerminalWindow.h; sourceTree = SOURCE_ROOT; };
-		0A4604430554376100ACDF3A /* Terminology.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Terminology.h; path = Application/Code/Terminology.h; sourceTree = SOURCE_ROOT; };
+		0A4604430554376100ACDF3A /* Terminology.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Terminology.h; path = Application/Code/Terminology.h; sourceTree = "<group>"; };
 		0A4604470554376100ACDF3A /* TextTranslation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TextTranslation.h; path = Application/Code/TextTranslation.h; sourceTree = SOURCE_ROOT; };
 		0A4604480554376100ACDF3A /* ThreadEntryPoints.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ThreadEntryPoints.h; path = Application/Code/ThreadEntryPoints.h; sourceTree = SOURCE_ROOT; };
 		0A4604510554376100ACDF3A /* Undoables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Undoables.h; path = Shared/Code/Undoables.h; sourceTree = "<group>"; };
@@ -815,7 +815,6 @@
 				0A4604400554376100ACDF3A /* TerminalView.h */,
 				0A4604410554376100ACDF3A /* TerminalViewRef.typedef.h */,
 				0A4604420554376100ACDF3A /* TerminalWindow.h */,
-				0A4604430554376100ACDF3A /* Terminology.h */,
 				0A4604470554376100ACDF3A /* TextTranslation.h */,
 				0A4604480554376100ACDF3A /* ThreadEntryPoints.h */,
 				0A4603EF0554376100ACDF3A /* UIStrings.h */,
@@ -897,6 +896,7 @@
 				0A4604200554376100ACDF3A /* RecordAE.h */,
 				0A46FE11055432A400ACDF3A /* RequiredAE.cp */,
 				0A4604220554376100ACDF3A /* RequiredAE.h */,
+				0A4604430554376100ACDF3A /* Terminology.h */,
 				0A46FE39055432A400ACDF3A /* URLAccessAE.cp */,
 				0A4604550554376100ACDF3A /* URLAccessAE.h */,
 			);

@@ -375,9 +375,6 @@ pascal OSStatus				receiveTerminalViewTextInput		(EventHandlerCallRef, EventRef,
 pascal OSStatus				receiveWindowClosing				(EventHandlerCallRef, EventRef, void*);
 pascal OSStatus				receiveWindowFocusChange			(EventHandlerCallRef, EventRef, void*);
 HIWindowRef					returnActiveWindow					(My_SessionPtr);
-void						sendRecordableDataTransmitEvent		(CFStringRef, Boolean);
-void						sendRecordableDataTransmitEvent		(char const*, SInt16, Boolean);
-void						sendRecordableSpecialTransmitEvent	(FourCharCode, Boolean);
 OSStatus					sessionDragDrop						(EventHandlerCallRef, EventRef, SessionRef,
 																 HIViewRef, DragRef);
 void						terminalWindowChanged				(ListenerModel_Ref, ListenerModel_Event,
@@ -3668,12 +3665,6 @@ Session_UserInputCFString	(SessionRef		inRef,
 			Console_WriteLine("user input failed, out of memory!");
 		}
 	}
-	
-	// 3.0 - send to any scripts that may be recording
-	if (inSendToRecordingScripts)
-	{
-		sendRecordableDataTransmitEvent(inStringBuffer, false/* execute */);
-	}
 }// UserInputCFString
 
 
@@ -3733,13 +3724,6 @@ Session_UserInputInterruptProcess	(SessionRef		inRef,
 				Console_Warning(Console_WriteLine, "failed to send interrupt character to session");
 			}
 		}
-	}
-	
-	// 3.0 - send to any scripts that may be recording
-	if (inSendToRecordingScripts)
-	{
-		sendRecordableSpecialTransmitEvent
-			(kTelnetEnumeratedClassSpecialCharacterInterruptProcess, false/* execute */);
 	}
 }// UserInputInterruptProcess
 
@@ -4060,12 +4044,6 @@ Session_UserInputString		(SessionRef		inRef,
 	{
 		Session_TerminalWrite(inRef, (UInt8 const*)inStringBuffer,
 								inStringBufferSize / sizeof(char));
-	}
-	
-	// 3.0 - send to any scripts that may be recording
-	if (inSendToRecordingScripts)
-	{
-		sendRecordableDataTransmitEvent(inStringBuffer, inStringBufferSize / sizeof(char), false/* execute */);
 	}
 }// UserInputString
 
@@ -6279,252 +6257,6 @@ returnActiveWindow	(My_SessionPtr		inPtr)
 	
 	return result;
 }// returnActiveWindow
-
-
-/*!
-Sends Apple Events back to MacTelnet that instruct
-it to send the specified data to the frontmost
-connection ("connection 1").  If desired, you can
-simultaneously execute the send (although it is
-usually faster to execute separately, or perhaps
-you may not want to execute at all).
-
-Currently, this is implemented backwards by calling
-the non-CFString version, which might result in
-incorrect translation and unnecessary copying.  This
-will be fixed later.
-
-(3.0)
-*/
-void
-sendRecordableDataTransmitEvent	(CFStringRef	inStringToType,
-								 Boolean		inExecute)
-{
-	// TEMPORARY - the CFString implementation should be preferred;
-	//             translating CF data into a regular byte array is backwards
-	Handle		buffer = Memory_NewHandle(CFStringGetLength(inStringToType) * sizeof(UniChar));
-	
-	
-	if (nullptr != buffer)
-	{
-		CFIndex		actualSize = 0;
-		CFIndex		numberOfCharactersCopied = CFStringGetBytes(inStringToType,
-																CFRangeMake(0, CFStringGetLength(inStringToType)),
-																kCFStringEncodingMacRoman/* TEMPORARY - should be session-dependent */,
-																0/* loss byte, or 0 for no lossy conversion */,
-																false/* is external representation */,
-																REINTERPRET_CAST(*buffer, UInt8*),
-																GetHandleSize(buffer), &actualSize);
-		
-		
-		if (numberOfCharactersCopied < CFStringGetLength(inStringToType))
-		{
-			// error...
-		}
-		if (actualSize > GetHandleSize(buffer))
-		{
-			// error...
-		}
-		sendRecordableDataTransmitEvent(*buffer, GetHandleSize(buffer), inExecute);
-		Memory_DisposeHandle(&buffer);
-	}
-}// sendRecordableDataTransmitEvent
-
-
-/*!
-Sends Apple Events back to MacTelnet that instruct
-it to send the specified data to the frontmost
-connection ("connection 1").  If desired, you can
-simultaneously execute the send (although it is
-usually faster to execute separately, or perhaps
-you may not want to execute at all).
-
-(3.0)
-*/
-void
-sendRecordableDataTransmitEvent		(char const*	inStringToType,
-									 SInt16			inStringLength,
-									 Boolean		inExecute)
-{
-	OSStatus	error = noErr;
-	AEDesc		dataSendEvent;
-	AEDesc		replyDescriptor;
-	
-	
-	RecordAE_CreateRecordableAppleEvent(kMySuite, kTelnetEventIDDataSend, &dataSendEvent);
-	if (error == noErr)
-	{
-		Boolean		sendNewLine = false;
-		SInt16		stringLength = inStringLength;
-		AEDesc		containerDesc;
-		AEDesc		keyDesc;
-		AEDesc		objectDesc;
-		AEDesc		textDesc;
-		
-		
-		(OSStatus)AppleEventUtilities_InitAEDesc(&containerDesc);
-		(OSStatus)AppleEventUtilities_InitAEDesc(&keyDesc);
-		(OSStatus)AppleEventUtilities_InitAEDesc(&objectDesc);
-		(OSStatus)AppleEventUtilities_InitAEDesc(&textDesc);
-		
-		// clip newlines and turn them into "with newline" parameters (newlines
-		// might be represented by \n, \r, "\012", "\015", or "\015\012"; look
-		// for any of these and decrement the length to prevent including them
-		// in the recorded string)
-		if ((stringLength >= 1) && inStringToType[stringLength - 1] == '\n')
-		{
-			Console_WriteLine("\\n: removing");
-			--stringLength;
-			sendNewLine = true;
-		}
-		if ((stringLength >= 1) && inStringToType[stringLength - 1] == '\r')
-		{
-			Console_WriteLine("\\r: removing");
-			--stringLength;
-			sendNewLine = true;
-		}
-		if ((stringLength >= 4) &&
-					(inStringToType[stringLength - 1] == '2') &&
-					(inStringToType[stringLength - 2] == '1') &&
-					(inStringToType[stringLength - 2] == '0') &&
-					(inStringToType[stringLength - 3] == '\\'))
-		{
-			Console_WriteLine("\\012: removing");
-			stringLength -= 4;
-			sendNewLine = true;
-		}
-		if ((stringLength >= 4) &&
-					(inStringToType[stringLength - 1] == '5') &&
-					(inStringToType[stringLength - 2] == '1') &&
-					(inStringToType[stringLength - 2] == '0') &&
-					(inStringToType[stringLength - 3] == '\\'))
-		{
-			Console_WriteLine("\\015: removing");
-			stringLength -= 4;
-			sendNewLine = true;
-		}
-		
-		// create a descriptor containing the given string
-		error = AECreateDesc(cString, inStringToType, stringLength * sizeof(char), &textDesc);
-		if (error != noErr) Console_WriteValue("text descriptor creation error", error);
-		
-		// send a request for "session window <index>", which resides in a null container
-		(OSStatus)BasicTypesAE_CreateSInt32Desc(1/* frontmost window */, &keyDesc);
-		error = CreateObjSpecifier(cMySessionWindow, &containerDesc,
-									formAbsolutePosition, &keyDesc, true/* dispose inputs */,
-									&objectDesc);
-		if (error != noErr) Console_WriteValue("connection access error", error);
-		
-		if (error == noErr)
-		{
-			// the data to transmit - REQUIRED
-			(OSStatus)AEPutParamDesc(&dataSendEvent, keyDirectObject, &textDesc);
-			
-			// reference to the connection where the data will be sent - REQUIRED
-			(OSStatus)AEPutParamDesc(&dataSendEvent, keyAEParamMyToDestination, &objectDesc);
-			
-			if (sendNewLine)
-			{
-				// add a parameter to send a newline
-				(OSStatus)AEPutParamPtr(&dataSendEvent, keyAEParamMyNewline,
-										typeBoolean, &sendNewLine, sizeof(sendNewLine));
-			}
-			
-			// send the event, which will record it into any open script;
-			// this event is only executed if requested to do so by the caller
-			{
-				UInt32		flags = kAENoReply | kAECanInteract;
-				
-				
-				unless (inExecute) flags |= kAEDontExecute;
-				(OSStatus)AESend(&dataSendEvent, &replyDescriptor,
-								flags, kAENormalPriority, kAEDefaultTimeout, nullptr/* idle routine */,
-								nullptr/* filter routine */);
-			}
-		}
-		AEDisposeDesc(&textDesc);
-		AEDisposeDesc(&objectDesc);
-	}
-	AEDisposeDesc(&dataSendEvent);
-}// sendRecordableDataTransmitEvent
-
-
-/*!
-Sends Apple Events back to MacTelnet that instruct
-it to send the specified special character to the
-frontmost connection ("connection 1").  If desired,
-you can simultaneously execute the send (although
-it is usually faster to execute separately, or
-perhaps you may not want to execute at all).
-
-The value of "inSpecialCharacterEnumeration" is an
-enumeration (see "Terminology.h") identifying the
-special character to send.  This routine directly
-sends its value as a parameter to the event, no
-error checking is done.
-
-(3.0)
-*/
-void
-sendRecordableSpecialTransmitEvent	(FourCharCode	inSpecialCharacterEnumeration,
-									 Boolean		inExecute)
-{
-	OSStatus	error = noErr;
-	AEDesc		dataSendEvent;
-	AEDesc		replyDescriptor;
-	
-	
-	RecordAE_CreateRecordableAppleEvent(kMySuite, kTelnetEventIDDataSend, &dataSendEvent);
-	if (error == noErr)
-	{
-		AEDesc		containerDesc;
-		AEDesc		keyDesc;
-		AEDesc		objectDesc;
-		AEDesc		specialCharacterDesc;
-		
-		
-		(OSStatus)AppleEventUtilities_InitAEDesc(&containerDesc);
-		(OSStatus)AppleEventUtilities_InitAEDesc(&keyDesc);
-		(OSStatus)AppleEventUtilities_InitAEDesc(&objectDesc);
-		(OSStatus)AppleEventUtilities_InitAEDesc(&specialCharacterDesc);
-		
-		// create a descriptor containing the given enumeration
-		error = AECreateDesc(typeEnumerated, &inSpecialCharacterEnumeration,
-								sizeof(inSpecialCharacterEnumeration), &specialCharacterDesc);
-		if (error != noErr) Console_WriteValue("special character descriptor creation error", error);
-		
-		// send a request for "session window <index>", which resides in a null container
-		(OSStatus)BasicTypesAE_CreateSInt32Desc(1/* frontmost window */, &keyDesc);
-		error = CreateObjSpecifier(cMySessionWindow, &containerDesc,
-									formAbsolutePosition, &keyDesc, true/* dispose inputs */,
-									&objectDesc);
-		if (error != noErr) Console_WriteValue("connection access error", error);
-		
-		if (error == noErr)
-		{
-			// the data to transmit - REQUIRED
-			(OSStatus)AEPutParamDesc(&dataSendEvent, keyDirectObject, &specialCharacterDesc);
-			
-			// reference to the connection where the data will be sent - REQUIRED
-			(OSStatus)AEPutParamDesc(&dataSendEvent, keyAEParamMyToDestination, &objectDesc);
-			
-			// send the event, which will record it into any open script;
-			// this event is only executed if requested to do so by the caller
-			{
-				UInt32		flags = kAENoReply | kAECanInteract;
-				
-				
-				unless (inExecute) flags |= kAEDontExecute;
-				(OSStatus)AESend(&dataSendEvent, &replyDescriptor,
-									flags, kAENormalPriority, kAEDefaultTimeout, nullptr/* idle routine */,
-									nullptr/* filter routine */);
-			}
-		}
-		AEDisposeDesc(&specialCharacterDesc);
-		AEDisposeDesc(&objectDesc);
-	}
-	AEDisposeDesc(&dataSendEvent);
-}// sendRecordableSpecialTransmitEvent
 
 
 /*!

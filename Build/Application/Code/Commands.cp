@@ -419,31 +419,6 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 			else Sound_StandardAlert();
 			break;
 		
-		case kCommandFindFiles:
-			// send a Launch Find Apple Event, to allow scripts that may be recording to pick up the command
-			{
-				AppleEvent		launchFindEvent;
-				AppleEvent		reply;
-				OSStatus		error = noErr;
-				
-				
-				error = AppleEventUtilities_InitAEDesc(&launchFindEvent);
-				assert_noerr(error);
-				error = AppleEventUtilities_InitAEDesc(&reply);
-				assert_noerr(error);
-				
-				error = RecordAE_CreateRecordableAppleEvent(kMySuite, kTelnetEventIDLaunchFind,
-															&launchFindEvent);
-				if (noErr == error)
-				{
-					error = AESend(&launchFindEvent, &reply, kAENoReply | kAENeverInteract, kAENormalPriority,
-									kAEDefaultTimeout, nullptr, nullptr);
-					AEDisposeDesc(&launchFindEvent);
-				}
-				Alert_ReportOSStatus(error);
-			}
-			break;
-		
 		case kCommandPrint:
 			// print the selection using the print dialog
 			UniversalPrint_SetMode(kUniversalPrint_ModeNormal);
@@ -579,40 +554,16 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 					}
 					else
 					{
-						// copy text by sending a recordable Apple Event back to MacTelnet
-						AppleEvent		copyEvent;
-						AppleEvent		reply;
-						OSStatus		error = noErr;
-						
-						
-						error = AppleEventUtilities_InitAEDesc(&copyEvent);
-						assert_noerr(error);
-						error = AppleEventUtilities_InitAEDesc(&reply);
-						assert_noerr(error);
-						
-						error = RecordAE_CreateRecordableAppleEvent(kMySuite, kTelnetEventIDCopyToClipboard,
-																		&copyEvent);
-						if (noErr == error)
+						if (nullptr != activeView)
 						{
-							// include “copy using spaces for tabs” option
-							{
-								Boolean		copyTable = (inCommandID == kCommandCopyTable);
-								
-								
-								error = AEPutParamPtr(&copyEvent, keyAEParamMyTabsInPlaceOfMultipleSpaces,
-														typeBoolean, &copyTable, sizeof(copyTable));
-							}
-							
-							error = AESend(&copyEvent, &reply, kAENoReply | kAENeverInteract, kAENormalPriority,
-											kAEDefaultTimeout, nullptr, nullptr);
-							
-							AEDisposeDesc(&copyEvent);
+							Clipboard_TextToScrap(activeView, (kCommandCopyTable == inCommandID)
+																? kClipboard_CopyMethodTable
+																: kClipboard_CopyMethodStandard);
 						}
-						Alert_ReportOSStatus(error);
 					}
 				}
 			}
-			if ((inCommandID == kCommandCut) || (inCommandID == kCommandClear))
+			if (inCommandID == kCommandClear)
 			{
 				// delete selection -- unimplemented, impossible to implement?
 				// at least, impossible until MacTelnet supports “generic”
