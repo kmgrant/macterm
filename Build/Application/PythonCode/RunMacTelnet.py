@@ -55,8 +55,8 @@ Base.all_init()
 # undo environment settings made by the "MacTelnet" script, so as not
 # to pollute the user environment too much
 for removed_var in (
-	# this list should basically correspond to any uses of
-	# "os.environ" in the "MacTelnet" front-end script
+    # this list should basically correspond to any uses of
+    # "os.environ" in the "MacTelnet" front-end script
     'DYLD_FRAMEWORK_PATH',
     'DYLD_LIBRARY_PATH',
     'INITIAL_APP_BUNDLE_DIR',
