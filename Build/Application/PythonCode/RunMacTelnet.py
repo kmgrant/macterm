@@ -29,6 +29,13 @@ except ImportError, err:
     print >>sys.stderr, "Python path:", sys.path
     raise err
 
+# if you intend to use your own GUI elements with "wx", you need to
+# import and construct the application object at this point (that is,
+# before Quills is initialized); this allows your callbacks to pop up
+# simple interfaces, such as wx.MessageDialog(), within MacTelnet!
+#import wx
+#app = wx.PySimpleApp()
+
 # below are examples of things you might want to enable for debugging...
 
 # memory allocation changes - see "man malloc" for more options here
