@@ -9696,8 +9696,6 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	TerminalViewAutoLocker	viewPtr(gTerminalViewPtrLocks(), view);
 	
 	
-	assert((inTerminalChange == kTerminal_ChangeText) || (inTerminalChange == kTerminal_ChangeScrollActivity));
-	
 	switch (inTerminalChange)
 	{
 	case kTerminal_ChangeText:
@@ -9721,20 +9719,26 @@ screenBufferChanged		(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	
 	case kTerminal_ChangeScrollActivity:
 		{
-			TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef);
+			Terminal_ScrollDescriptionConstPtr	rangeInfoPtr = REINTERPRET_CAST(inEventContextPtr,
+																				Terminal_ScrollDescriptionConstPtr);
 			
 			
-			assert(screen == viewPtr->screen.ref);
 			if (viewPtr->animation.timer.isActive)
 			{
 				SetEmptyRgn(viewPtr->animation.rendering.region);
 			}
 			recalculateCachedDimensions(viewPtr);
+			
+			highlightCurrentSelection(viewPtr, false/* highlight */, true/* draw */);
+			viewPtr->text.selection.range.first.second += rangeInfoPtr->rowDelta;
+			viewPtr->text.selection.range.second.second += rangeInfoPtr->rowDelta;
+			highlightCurrentSelection(viewPtr, true/* highlight */, true/* draw */);
 		}
 		break;
 	
 	default:
 		// ???
+		assert(false && "unexpected screen buffer event sent to terminal view handler");
 		break;
 	}
 }// screenBufferChanged

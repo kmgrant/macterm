@@ -6310,8 +6310,8 @@ terminalStateChanged	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 	case kTerminal_ChangeScrollActivity:
 		// recalculate appearance of the scroll bars to match current screen attributes, and redraw them
 		{
-			//TerminalScreenRef	screen = REINTERPRET_CAST(inEventContextPtr, TerminalScreenRef); // not needed
-			TerminalWindowRef	terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
+			//Terminal_ScrollDescriptionConstPtr		scrollInfoPtr = REINTERPRET_CAST(inEventContextPtr, Terminal_ScrollDescriptionConstPtr); // not needed
+			TerminalWindowRef					terminalWindow = REINTERPRET_CAST(inListenerContextPtr, TerminalWindowRef);
 			
 			
 			if (nullptr != terminalWindow)

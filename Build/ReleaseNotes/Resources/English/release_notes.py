@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090910',
     '20090905',
     '20090901',
     '20090831',
@@ -272,6 +273,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090910': [
+        'Fixed terminal view text selections to use the right mouse region even after scrolling within the main screen.',
+    ],
     '20090905': [
         'The Tall variant has been redefined as 80 x 40, to be more useful on small displays.',
     ],

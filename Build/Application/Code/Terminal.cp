@@ -2160,8 +2160,17 @@ Terminal_DeleteAllSavedLines	(TerminalScreenRef		inRef)
 			changeNotifyForTerminal(dataPtr, kTerminal_ChangeText, &range/* context */);
 		}
 		
-		// notify listeners that scroll activity has taken place
-		changeNotifyForTerminal(dataPtr, kTerminal_ChangeScrollActivity, inRef/* context */);
+		// notify listeners that scroll activity has taken place,
+		// though technically no remaining lines have been affected
+		{
+			Terminal_ScrollDescription	scrollInfo;
+			
+			
+			bzero(&scrollInfo, sizeof(scrollInfo));
+			scrollInfo.screen = dataPtr->selfRef;
+			scrollInfo.rowDelta = 0;
+			changeNotifyForTerminal(dataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
+		}
 	}
 }// DeleteAllSavedLines
 
@@ -11270,9 +11279,18 @@ saveToScrollback	(My_ScreenBufferPtr		inDataPtr)
 	if ((inDataPtr->text.scrollback.enabled) &&
 		(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 	{
-		if (insertNewLines(inDataPtr, inDataPtr->screenBuffer.size(), false/* append only */))
+		SInt16 const	kLineCount = inDataPtr->screenBuffer.size();
+		
+		
+		if (insertNewLines(inDataPtr, kLineCount, false/* append only */))
 		{
-			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, inDataPtr->selfRef/* context */);
+			Terminal_ScrollDescription	scrollInfo;
+			
+			
+			bzero(&scrollInfo, sizeof(scrollInfo));
+			scrollInfo.screen = inDataPtr->selfRef;
+			scrollInfo.rowDelta = -kLineCount;
+			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
 		}
 	}
 }// saveToScrollback
@@ -11308,6 +11326,17 @@ scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 				range.rowCount = inDataPtr->visibleBoundary.rows.lastRow - inDataPtr->visibleBoundary.rows.firstRow + 1;
 				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 			}
+			
+			// notify about the scrolling amount
+			{
+				Terminal_ScrollDescription	scrollInfo;
+				
+				
+				bzero(&scrollInfo, sizeof(scrollInfo));
+				scrollInfo.screen = inDataPtr->selfRef;
+				scrollInfo.rowDelta = -1;
+				changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
+			}
 		}
 		else
 		{
@@ -11318,8 +11347,6 @@ scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 			locateScrollingRegionTop(inDataPtr, scrollingRegionBegin);
 			bufferRemoveLines(inDataPtr, 1/* number of lines */, scrollingRegionBegin);
 		}
-		
-		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, inDataPtr->selfRef/* context */);
 	}
 }// scrollTerminalBuffer
 
@@ -11381,8 +11408,17 @@ setScrollbackSize	(My_ScreenBufferPtr		inDataPtr,
 	
 	inDataPtr->scrollbackBuffer.resize(inLineCount);
 	
-	// notify listeners that scroll activity has taken place
-	changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, inDataPtr->selfRef/* context */);
+	// notify listeners that scroll activity has taken place,
+	// though technically no remaining lines have been affected
+	{
+		Terminal_ScrollDescription	scrollInfo;
+		
+		
+		bzero(&scrollInfo, sizeof(scrollInfo));
+		scrollInfo.screen = inDataPtr->selfRef;
+		scrollInfo.rowDelta = 0;
+		changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
+	}
 }// setScrollbackSize
 
 

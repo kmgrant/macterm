@@ -113,8 +113,8 @@ enum
 													//!  TerminalScreenRef)
 	kTerminal_ChangeScreenSize			= 'SSiz',	//!< number of columns or rows has changed
 													//!  (context: TerminalScreenRef)
-	kTerminal_ChangeScrollActivity		= '^v<>',	//!< screen size or visible area has changed
-													//!  (context: TerminalScreenRef)
+	kTerminal_ChangeScrollActivity		= '^v<>',	//!< screen or scrollback changes that would affect a scroll bar
+													//!  have occurred (context: Terminal_ScrollDescriptionConstPtr)
 	kTerminal_ChangeText				= 'UpdT',	//!< text has changed, requiring an update (context:
 													//!  Terminal_RangeDescriptionConstPtr)
 	kTerminal_ChangeVideoMode			= 'RevV',	//!< terminal has toggled between normal and reverse
@@ -274,6 +274,17 @@ enum
 typedef struct Terminal_OpaqueLineIterator*		Terminal_LineRef;	//!< efficient access to an arbitrary screen line
 
 #include "TerminalRangeDescription.typedef.h"
+
+struct Terminal_ScrollDescription
+{
+	TerminalScreenRef	screen;				//!< the screen for which the scroll applies
+	SInt16				rowDelta;			//!< less than zero (typical) if content scrolled upward by this
+											//!  number of rows, moving lines into the scrollback or oblivion;
+											//!  greater than zero if content scrolled downward and clipped
+											//!  the bottom of the main screen; equal to zero if the scrollback
+											//!  was modified in some unspecified way (e.g. being cleared)
+};
+typedef Terminal_ScrollDescription const*	Terminal_ScrollDescriptionConstPtr;
 
 #pragma mark Callbacks
 
