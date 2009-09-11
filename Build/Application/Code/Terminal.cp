@@ -77,6 +77,7 @@
 #include "Folder.h"
 #include "Preferences.h"
 #include "Session.h"
+#include "StreamCapture.h"
 #include "TelnetPrinting.h"
 #include "Terminal.h"
 #include "TerminalSpeaker.h"
@@ -716,8 +717,7 @@ public:
 	My_TabStopList						tabSettings;				//!< array of characters representing tab stops; values are either kMy_TabClear
 																	//!  (for most columns), or kMy_TabSet at tab columns
 	
-	Session_LineEnding					captureFileLineEndings;		//!< carriage return and/or line feed
-	SInt16								captureFileRefNum;			//!< file reference number of opened capture file
+	StreamCapture_Ref					captureFile;				//!< used to manage streaming data to a file
 	
 	Boolean								bellDisabled;				//!< if true, all bell signals are completely ignored (no audio or visual)
 	Boolean								cursorVisible;				//!< if true, cursor state is visible (as opposed to invisible)
@@ -2735,9 +2735,8 @@ Terminal_FileCaptureBegin	(TerminalScreenRef	inRef,
 	
 	if (dataPtr != nullptr)
 	{
-		dataPtr->captureFileRefNum = inOpenWritableFile;
+		result = StreamCapture_Begin(dataPtr->captureFile, inOpenWritableFile);
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeFileCaptureBegun, inRef);
-		result = true;
 	}
 	
 	return result;
@@ -2767,7 +2766,7 @@ Terminal_FileCaptureEnd		(TerminalScreenRef		inRef)
 	if (dataPtr != nullptr)
 	{
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeFileCaptureEnding, inRef);
-		dataPtr->captureFileRefNum = 0;
+		StreamCapture_End(dataPtr->captureFile);
 	}
 }// FileCaptureEnd
 
@@ -2790,10 +2789,10 @@ Terminal_FileCaptureGetReferenceNumber	(TerminalScreenRef	inRef)
 	
 	if (dataPtr != nullptr)
 	{
-		result = dataPtr->captureFileRefNum;
+		result = StreamCapture_ReturnReferenceNumber(dataPtr->captureFile);
 	}
 	return result;
-}// FileCaptureInProgress
+}// FileCaptureGetReferenceNumber
 
 
 /*!
@@ -2811,7 +2810,7 @@ Terminal_FileCaptureInProgress	(TerminalScreenRef		inRef)
 	
 	if (dataPtr != nullptr)
 	{
-		result = (dataPtr->captureFileRefNum != 0);
+		result = StreamCapture_InProgress(dataPtr->captureFile);
 	}
 	return result;
 }// FileCaptureInProgress
@@ -2840,100 +2839,11 @@ Terminal_FileCaptureWriteData	(TerminalScreenRef	inRef,
 	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
 	
 	
-	if ((dataPtr != nullptr) && (dataPtr->captureFileRefNum != 0))
+	if (dataPtr != nullptr)
 	{
-		Session_LineEnding const	kFileLineEndings = dataPtr->captureFileLineEndings;
-		size_t const				kFileEndingLength = (kSession_LineEndingCRLF == kFileLineEndings) ? 2 : 1;
-		size_t const				kCaptureBufferSize = 512;
-		UInt8						chunkBuffer[kCaptureBufferSize];
-		UInt8*						chunkBufferIterator = nullptr;
-		UInt8 const*				paramBufferIterator = nullptr;
-		UInt8						fileEndingData[kFileEndingLength];
-		OSStatus					error = noErr;
-		size_t						bytesLeft = inLength;
-		SInt32						bytesInCaptureBuffer = 0;
-		SInt32						chunkByteCount = 0;
-		
-		
-		// initialize the iterator for the buffer given as input
-		paramBufferIterator = inBuffer;
-		
-		// set up line ending translation
-		// TEMPORARY - this might be set up sooner, for the whole screen,
-		// at the point the line ending setting is made
-		switch (kFileLineEndings)
-		{
-		case kSession_LineEndingCR:
-			fileEndingData[0] = '\015';
-			break;
-		
-		case kSession_LineEndingCRLF:
-			fileEndingData[0] = '\015';
-			fileEndingData[1] = '\012';
-			break;
-		
-		case kSession_LineEndingLF:
-		default:
-			fileEndingData[0] = '\012';
-			break;
-		}
-		
-		// iterate over the input buffer until every byte has been
-		// written, or until FSWrite() returns an error (big problem!);
-		// if the new-line sentinel is seen, skip over the original
-		// new-line sequence and write the preferred sequence instead
-		while ((bytesLeft > 0) && (error == noErr))
-		{
-			// initialize the iterator for the chunk buffer
-			chunkBufferIterator = chunkBuffer;
-			bytesInCaptureBuffer = 0; // each time through, initially nothing important in the chunk buffer
-			chunkByteCount = (bytesLeft < kCaptureBufferSize) ? bytesLeft : kCaptureBufferSize; // only copy data that’s there!!!
-			
-			// fill in the buffer until a new-line character is reached;
-			// since a mixture of characters is likely in practice, stop
-			// on the first carriage return or line-feed, regardless of
-			// which “should” indicate a new-line
-			while ((chunkByteCount > 0) && ('\015' != *paramBufferIterator) && ('\012' != *paramBufferIterator))
-			{
-				*chunkBufferIterator++ = *paramBufferIterator++;
-				++bytesInCaptureBuffer;
-				--chunkByteCount;
-			}
-			
-			// write the chunk buffer to disk - the number of bytes
-			// actually copied to it were tracked during the iteration;
-			// FSWrite() will use that as input, and then on output
-			// the value will CHANGE to be the number of bytes that
-			// were actually successfully written to the file (so,
-			// the mega-count "bytesLeft" takes into account the latter)
-			error = FSWrite(dataPtr->captureFileRefNum, &bytesInCaptureBuffer, chunkBuffer);
-			if (noErr == error)
-			{
-				bytesLeft -= bytesInCaptureBuffer;
-				
-				// if a new-line was found, write the preferred sequence
-				// and skip over the actual sequence from the input
-				if (('\015' == *paramBufferIterator) || ('\012' == *paramBufferIterator))
-				{
-					SInt32		dummySize = kFileEndingLength;
-					
-					
-					error = FSWrite(dataPtr->captureFileRefNum, &dummySize, fileEndingData);
-					while ((bytesLeft > 0) && (('\015' == *paramBufferIterator) || ('\012' == *paramBufferIterator)))
-					{
-						--bytesLeft;
-						++paramBufferIterator;
-					}
-				}
-			}
-		}
-		
-		// this REALLY should trigger a user alert of some sort
-		if (error != noErr)
-		{
-			Terminal_FileCaptureEnd(inRef);
-			Console_WriteValue("file capture unexpectedly terminated, error", error);
-		}
+		// INCOMPLETE - translate to UTF-8, or redefine the interfaces
+		// to allow different encodings
+		StreamCapture_WriteUTF8Data(dataPtr->captureFile, inBuffer, inLength);
 	}
 }// FileCaptureWriteData
 
@@ -5085,8 +4995,7 @@ scrollbackBuffer(),
 screenBuffer(),
 bytesToEcho(),
 tabSettings(),
-captureFileLineEndings(returnLineEndings()),
-captureFileRefNum(0),
+captureFile(StreamCapture_New(returnLineEndings())),
 bellDisabled(false),
 cursorVisible(true),
 reverseVideo(false),
@@ -5191,11 +5100,12 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 /*!
 Destructor.  See Terminal_DisposeScreen().
 
-(1.1)
+(3.1)
 */
 My_ScreenBuffer::
 ~My_ScreenBuffer ()
 {
+	StreamCapture_Release(&this->captureFile);
 	(Preferences_Result)Preferences_ContextStopMonitoring(this->configuration, this->preferenceMonitor,
 															kPreferences_ChangeContextBatchMode);
 	ListenerModel_ReleaseListener(&this->preferenceMonitor);
