@@ -160,6 +160,16 @@ StreamCapture_Begin		(StreamCapture_Ref		inRef,
 	ptr->captureFileRefNum = inOpenWritableFile;
 	result = true;
 	
+	// write a UTF-8 byte-order mark; this is not technically
+	// necessary, however it does unambiguously identify the
+	// file as UTF-8 encoding to any editor that opens it
+	{
+		UInt8	byteOrderMark[] = { 0xEF, 0xBB, 0xBF };
+		
+		
+		StreamCapture_WriteUTF8Data(inRef, byteOrderMark, sizeof(byteOrderMark) / sizeof(UInt8));
+	}
+	
 	return result;
 }// Begin
 

@@ -653,16 +653,8 @@ Boolean
 void
 	Terminal_FileCaptureEnd					(TerminalScreenRef			inScreen);
 
-SInt16
-	Terminal_FileCaptureGetReferenceNumber	(TerminalScreenRef			inScreen);
-
 Boolean
 	Terminal_FileCaptureInProgress			(TerminalScreenRef			inScreen);
-
-void
-	Terminal_FileCaptureWriteData			(TerminalScreenRef			inScreen,
-											 UInt8 const*				inBuffer,
-											 size_t						inLength);
 
 //@}
 

@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090912',
     '20090910',
     '20090905',
     '20090901',
@@ -273,6 +274,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090912': [
+        'Internal improvements to the efficiency of streaming to terminal capture files.',
+        'Capture files now contain an explicit byte-order mark, to help some text editors automatically identify the encoding.',
+    ],
     '20090910': [
         'Fixed terminal view text selections to use the right mouse region even after scrolling within the main screen.',
     ],

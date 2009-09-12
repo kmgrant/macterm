@@ -2715,10 +2715,7 @@ Terminal_EmulatorSet	(TerminalScreenRef	inRef,
 Initiates a capture to a file for the specified screen,
 notifying listeners of "kTerminal_ChangeFileCaptureBegun"
 events if successful.  The callbacks are invoked after
-internal file capture state has been set up, so APIs
-like Terminal_FileCaptureGetReferenceNumber() can be
-used in callbacks to determine the given file reference
-number.
+internal file capture state has been set up.
 
 If the capture begins successfully, "true" is returned;
 otherwise, "false" is returned.
@@ -2738,7 +2735,6 @@ Terminal_FileCaptureBegin	(TerminalScreenRef	inRef,
 		result = StreamCapture_Begin(dataPtr->captureFile, inOpenWritableFile);
 		changeNotifyForTerminal(dataPtr, kTerminal_ChangeFileCaptureBegun, inRef);
 	}
-	
 	return result;
 }// FileCaptureBegin
 
@@ -2746,11 +2742,7 @@ Terminal_FileCaptureBegin	(TerminalScreenRef	inRef,
 /*!
 Terminates the file capture for the specified screen,
 notifying listeners of "kTerminal_ChangeFileCaptureEnding"
-events just prior to clearing internal file capture state
-(therefore, Terminal_FileCaptureGetReferenceNumber() will
-return a valid value in a callback invoked by this routine,
-but would not return a valid value after this routine
-returns).
+events just prior to clearing internal file capture state.
 
 Since the Terminal module does not open the capture file,
 you must subsequently close it using FSClose().
@@ -2772,30 +2764,6 @@ Terminal_FileCaptureEnd		(TerminalScreenRef		inRef)
 
 
 /*!
-Returns the file reference number of the open capture
-file for the specified terminal, if any.  If no
-capture is open, returns an invalid number (you can
-also use Terminal_FileCaptureInProgress() to ascertain
-this).
-
-(3.0)
-*/
-SInt16
-Terminal_FileCaptureGetReferenceNumber	(TerminalScreenRef	inRef)
-{
-	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
-	SInt16				result = 0;
-	
-	
-	if (dataPtr != nullptr)
-	{
-		result = StreamCapture_ReturnReferenceNumber(dataPtr->captureFile);
-	}
-	return result;
-}// FileCaptureGetReferenceNumber
-
-
-/*!
 Returns "true" only if there is a file capture in
 progress for the specified screen.
 
@@ -2814,38 +2782,6 @@ Terminal_FileCaptureInProgress	(TerminalScreenRef		inRef)
 	}
 	return result;
 }// FileCaptureInProgress
-
-
-/*!
-Writes the specified text to the capture file of the
-specified screen.
-
-The data is assumed to use the input text encoding of
-the given screen’s emulator.
-
-This functionality has been re-written in MacTelnet 3.0
-(like so many other god damned things).  This time, the
-impetus was to make file captures safe from buffer
-overflows, to use constant pointers, and to recover from
-unexpected failures to write all bytes via FSWrite().
-
-(3.0)
-*/
-void
-Terminal_FileCaptureWriteData	(TerminalScreenRef	inRef,
-								 UInt8 const*		inBuffer,
-								 size_t				inLength)
-{
-	My_ScreenBufferPtr	dataPtr = getVirtualScreenData(inRef);
-	
-	
-	if (dataPtr != nullptr)
-	{
-		// INCOMPLETE - translate to UTF-8, or redefine the interfaces
-		// to allow different encodings
-		StreamCapture_WriteUTF8Data(dataPtr->captureFile, inBuffer, inLength);
-	}
-}// FileCaptureWriteData
 
 
 /*!
@@ -6555,7 +6491,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	case kStateControlHT:
 		// horizontal tab
 		moveCursorRightToNextTabStop(inDataPtr);
-		Terminal_FileCaptureWriteData(inDataPtr->selfRef, inBuffer, 1);
+		StreamCapture_WriteUTF8Data(inDataPtr->captureFile, inBuffer, 1);
 		break;
 	
 	case kStateControlLFVTFF:
@@ -6581,7 +6517,7 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 			moveCursorDownOrScroll(inDataPtr);
 		}
 	#endif
-		Terminal_FileCaptureWriteData(inDataPtr->selfRef, inBuffer, 1);
+		StreamCapture_WriteUTF8Data(inDataPtr->captureFile, inBuffer, 1);
 		break;
 	
 	case kStateControlSO:
@@ -8844,33 +8780,53 @@ echoCFString	(My_ScreenBufferPtr		inDataPtr,
 		// UNIMPLEMENTED
 	}
 	
-	// append to capture file, if one is open
+	// append to capture file, if one is open; try to avoid conversion,
+	// but if necessary convert the bytes into a Unicode format
 	{
-		// TEMPORARY - traditionally file captures have been implicitly encoded;
-		// now that the input is a CFString, its content must be temporarily
-		// back-converted to a regular buffer of bytes for compatibility with
-		// the old API (in the future, the API needs to be updated to, say,
-		// write a text file in UTF-8 format)
-		CFIndex		bytesNeeded = 0;
-		CFIndex		conversionResult = CFStringGetBytes(inString, CFRangeMake(0, kLength),
-														kCFStringEncodingMacRoman, '?'/* loss byte */,
-														true/* is external representation */,
-														nullptr/* buffer; do not use, just find size */, 0/* buffer size, ignored */,
-														&bytesNeeded);
+		CFStringEncoding const		kDesiredEncoding = kCFStringEncodingUTF8;
+		CFIndex						bytesNeeded = 0;
+		UInt8 const*				bufferReadOnly = REINTERPRET_CAST(CFStringGetCStringPtr(inString, kDesiredEncoding),
+																		UInt8 const*);
+		UInt8*						buffer = nullptr;
+		Boolean						freeBuffer = false;
 		
 		
-		if (conversionResult > 0)
+		if (nullptr != bufferReadOnly)
 		{
-			UInt8*	buffer = new UInt8[bytesNeeded];
+			bytesNeeded = CPP_STD::strlen(REINTERPRET_CAST(bufferReadOnly, char const*));
+		}
+		else
+		{
+			CFIndex		conversionResult = CFStringGetBytes(inString, CFRangeMake(0, kLength),
+															kDesiredEncoding, '?'/* loss byte */,
+															true/* is external representation */,
+															nullptr/* buffer; do not use, just find size */, 0/* buffer size, ignored */,
+															&bytesNeeded);
 			
 			
-			conversionResult = CFStringGetBytes(inString, CFRangeMake(0, kLength),
-												kCFStringEncodingMacRoman, '?'/* loss byte */,
-												true/* is external representation */,
-												buffer, bytesNeeded, &bytesNeeded);
-			assert(conversionResult > 0);
-			Terminal_FileCaptureWriteData(inDataPtr->selfRef, buffer, bytesNeeded);
-			delete [] buffer;
+			if (conversionResult > 0)
+			{
+				buffer = new UInt8[bytesNeeded];
+				freeBuffer = true;
+				
+				conversionResult = CFStringGetBytes(inString, CFRangeMake(0, kLength),
+													kDesiredEncoding, '?'/* loss byte */,
+													true/* is external representation */,
+													buffer, bytesNeeded, &bytesNeeded);
+				assert(conversionResult > 0);
+				
+				bufferReadOnly = buffer;
+			}
+		}
+		
+		if (nullptr != bufferReadOnly)
+		{
+			StreamCapture_WriteUTF8Data(inDataPtr->captureFile, bufferReadOnly, bytesNeeded);
+		}
+		
+		if (freeBuffer)
+		{
+			delete [] buffer, buffer = nullptr;
 		}
 	}
 	
@@ -9065,7 +9021,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			
 			case 0x09: // control-I; horizontal tab
 				moveCursorRightToNextTabStop(inDataPtr);
-				Terminal_FileCaptureWriteData(inDataPtr->selfRef, c, 1);
+				StreamCapture_WriteUTF8Data(inDataPtr->captureFile, c, 1);
 				break;
 			
 			case 0x0A: // control-J; line feed
@@ -9080,7 +9036,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 			
 			case 0x0D: // control-M; carriage return
 				moveCursorLeftToEdge(inDataPtr);
-				Terminal_FileCaptureWriteData(inDataPtr->selfRef, c, 1);
+				StreamCapture_WriteUTF8Data(inDataPtr->captureFile, c, 1);
 				break;
 			
 			case 0x0E: // control-N; shift-out
@@ -9280,7 +9236,7 @@ emulatorFrontEndOld	(My_ScreenBufferPtr		inDataPtr,
 					changeNotifyForTerminal(inDataPtr, kTerminal_ChangeText, &range);
 				}
 				
-				Terminal_FileCaptureWriteData(inDataPtr->selfRef, (UInt8*)startPtr/* data to write */, extra/* buffer length */);
+				StreamCapture_WriteUTF8Data(inDataPtr->captureFile, (UInt8*)startPtr/* data to write */, extra/* buffer length */);
 				
 			#if 0
 				// 3.0 - test speech (this implementation will be greatly enhanced in the near future
