@@ -53,6 +53,7 @@
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "NetEvents.h"
+#include "Preferences.h"
 #include "TerminalBackground.h"
 #include "UIStrings.h"
 
@@ -79,6 +80,7 @@ namespace {
 struct My_TerminalBackground
 {
 	My_TerminalBackground	(HIViewRef	inSuperclassViewInstance);
+	~My_TerminalBackground	();
 	
 	static pascal OSStatus
 	receiveViewBoundsChanged	(EventHandlerCallRef, EventRef, void*);
@@ -102,6 +104,8 @@ struct My_TerminalBackground
 	CarbonEventHandlerWrap		windowActivationHandler;	//!< detects when the window is activated or deactivated, to hide/show the overlay
 	CarbonEventHandlerWrap		windowMinimizationHandler;	//!< detects when the window is collapsed or expanded, to hide/show the overlay
 	CarbonEventHandlerWrap		windowMovementHandler;		//!< detects changes to the window position, and updates any associated focus overlay
+	Boolean						dontDimBackgroundScreens;	//!< a cache of the preferences value, updated by the callback
+	ListenerModel_ListenerRef	preferenceMonitor;			//!< detects changes to important preference settings
 };
 typedef My_TerminalBackground*			My_TerminalBackgroundPtr;
 typedef My_TerminalBackground const*	My_TerminalBackgroundConstPtr;
@@ -114,6 +118,10 @@ namespace {
 void				acquireFocusOverlay						(HIViewRef, Boolean);
 HIWindowRef			createFocusOverlayWindow				();
 Boolean				isKeyboardFocus							(HIViewRef);
+void				preferenceChangedForBackground			(ListenerModel_Ref, ListenerModel_Event,
+															 void*, void*);
+OSStatus			receiveBackgroundActiveStateChange		(EventHandlerCallRef, EventRef,
+															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundContextualMenuSelect	(EventHandlerCallRef, EventRef,
 															 My_TerminalBackgroundPtr);
 OSStatus			receiveBackgroundDraw					(EventHandlerCallRef, EventRef,
@@ -164,6 +172,8 @@ TerminalBackground_Init ()
 									{ kEventClassHIObject, kEventHIObjectDestruct },
 									{ kEventClassControl, kEventControlInitialize },
 									{ kEventClassControl, kEventControlDraw },
+									{ kEventClassControl, kEventControlActivate },
+									{ kEventClassControl, kEventControlDeactivate },
 									{ kEventClassControl, kEventControlContextualMenuClick },
 									{ kEventClassControl, kEventControlGetPartRegion },
 									{ kEventClassControl, kEventControlGetFocusPart },
@@ -326,7 +336,9 @@ windowChangedHandler		(GetControlEventTarget(inSuperclassViewInstance),
 								this/* user data */),
 windowActivationHandler		(), // set up later, in the window-changed handler
 windowMinimizationHandler	(), // set up later, in the window-changed handler
-windowMovementHandler		() // set up later, in the window-changed handler
+windowMovementHandler		(), // set up later, in the window-changed handler
+dontDimBackgroundScreens	(false), // reset by callback
+preferenceMonitor			(ListenerModel_NewStandardListener(preferenceChangedForBackground, this/* context */))
 {
 	OSStatus	error = noErr;
 	RGBColor	initialColor;
@@ -342,7 +354,30 @@ windowMovementHandler		() // set up later, in the window-changed handler
 	
 	assert(boundsChangingHandler.isInstalled());
 	assert(windowChangedHandler.isInstalled());
+	
+	// set up a callback to receive preference change notifications
+	{
+		Preferences_Result		prefsResult = kPreferences_ResultOK;
+		
+		
+		prefsResult = Preferences_StartMonitoring(this->preferenceMonitor, kPreferences_TagDontDimBackgroundScreens,
+													true/* call immediately to get initial value */);
+	}
 }// My_TerminalBackground 1-argument constructor
+
+
+/*!
+Destructor.
+
+(4.0)
+*/
+My_TerminalBackground::
+~My_TerminalBackground ()
+{
+	// stop receiving preference change notifications
+	Preferences_StopMonitoring(this->preferenceMonitor, kPreferences_TagDontDimBackgroundScreens);
+	ListenerModel_ReleaseListener(&this->preferenceMonitor);
+}// My_TerminalBackground destructor
 
 
 /*!
@@ -736,6 +771,92 @@ isKeyboardFocus		(HIViewRef		inView)
 
 
 /*!
+Invoked whenever a monitored preference value is changed for
+a particular view (see the My_TerminalBackground constructor
+to see which preferences are monitored).  This routine responds
+by updating any necessary data and display elements.
+
+(4.0)
+*/
+void
+preferenceChangedForBackground	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
+								 ListenerModel_Event	inPreferenceTagThatChanged,
+								 void*					UNUSED_ARGUMENT(inContext),
+								 void*					inMyTerminalBackgroundPtr)
+{
+	My_TerminalBackgroundPtr	dataPtr = REINTERPRET_CAST(inMyTerminalBackgroundPtr, My_TerminalBackgroundPtr);
+	
+	
+	switch (inPreferenceTagThatChanged)
+	{
+	case kPreferences_TagDontDimBackgroundScreens:
+		{
+			size_t		actualSize = 0;
+			
+			
+			// update global variable with current preference value
+			unless (Preferences_GetData(kPreferences_TagDontDimBackgroundScreens, sizeof(dataPtr->dontDimBackgroundScreens),
+										&dataPtr->dontDimBackgroundScreens, &actualSize) ==
+					kPreferences_ResultOK)
+			{
+				dataPtr->dontDimBackgroundScreens = false; // assume a value, if preference can’t be found
+			}
+			
+			// redraw the background
+			(OSStatus)HIViewSetNeedsDisplay(dataPtr->view, true);
+		}
+		break;
+	
+	default:
+		// ???
+		break;
+	}
+}// preferenceChangedForBackground
+
+
+/*!
+Handles "kEventControlActivate" and "kEventControlDeactivate"
+of "kEventClassControl".
+
+Invoked by Mac OS X whenever a terminal background is activated
+or dimmed.
+
+(4.0)
+*/
+OSStatus
+receiveBackgroundActiveStateChange	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
+									 EventRef					inEvent,
+									 My_TerminalBackgroundPtr	inMyTerminalBackgroundPtr)
+{
+	OSStatus		result = eventNotHandledErr;
+	UInt32 const	kEventClass = GetEventClass(inEvent);
+	UInt32 const	kEventKind = GetEventKind(inEvent);
+	
+	
+	assert(kEventClass == kEventClassControl);
+	assert((kEventKind == kEventControlActivate) || (kEventKind == kEventControlDeactivate));
+	
+	// since inactive and active terminal backgrounds have different appearances,
+	// force redraws when they are activated or deactivated
+	unless (inMyTerminalBackgroundPtr->dontDimBackgroundScreens)
+	{
+		HIViewRef	viewBeingActivatedOrDeactivated = nullptr;
+		
+		
+		// get the target view
+		result = CarbonEventUtilities_GetEventParameter(inEvent, kEventParamDirectObject, typeControlRef,
+														viewBeingActivatedOrDeactivated);
+		if (noErr == result)
+		{
+			result = HIViewSetNeedsDisplay(viewBeingActivatedOrDeactivated, true);
+		}
+	}
+	
+	return result;
+}// receiveBackgroundActiveStateChange
+
+
+/*!
 Handles "kEventControlContextualMenuClick" of "kEventClassControl"
 for terminal backgrounds.
 
@@ -793,10 +914,10 @@ Paints the background color of the specified view.
 OSStatus
 receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 						 EventRef					inEvent,
-						 My_TerminalBackgroundPtr	UNUSED_ARGUMENT(inMyTerminalBackgroundPtr))
+						 My_TerminalBackgroundPtr	inMyTerminalBackgroundPtr)
 {
 	OSStatus					result = eventNotHandledErr;
-	//My_TerminalBackgroundPtr	dataPtr = inMyTerminalBackgroundPtr;
+	My_TerminalBackgroundPtr	dataPtr = inMyTerminalBackgroundPtr;
 	UInt32 const				kEventClass = GetEventClass(inEvent);
 	UInt32 const				kEventKind = GetEventKind(inEvent);
 	
@@ -891,6 +1012,10 @@ receiveBackgroundDraw	(EventHandlerCallRef		UNUSED_ARGUMENT(inHandlerCallRef),
 				OffsetRect(&bounds, -bounds.left, -bounds.top);
 				
 				RGBBackColor(&backgroundColor);
+				if ((false == IsControlActive(view)) && (false == dataPtr->dontDimBackgroundScreens))
+				{
+					UseInactiveColors();
+				}
 				EraseRect(&bounds);
 			}
 			
@@ -1391,6 +1516,12 @@ receiveBackgroundHIObjectEvents		(EventHandlerCallRef	inHandlerCallRef,
 											sizeof(controlFeatures), &controlFeatures);
 				assert_noerr(result);
 			}
+			break;
+		
+		case kEventControlActivate:
+		case kEventControlDeactivate:
+			//Console_WriteLine("HI OBJECT control activate or deactivate for terminal background");
+			result = receiveBackgroundActiveStateChange(inHandlerCallRef, inEvent, dataPtr);
 			break;
 		
 		case kEventControlContextualMenuClick:

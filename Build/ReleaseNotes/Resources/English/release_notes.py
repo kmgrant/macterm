@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090915',
     '20090914',
     '20090912',
     '20090910',
@@ -275,6 +276,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090915': [
+        'Fixed the dimming of background terminals to also apply dimming to the color of the matte.',
+    ],
     '20090914': [
         'Fixed problems with terminal views appearing to have the keyboard focus, when they did not.',
         'Terminal view focus rings now appear around the edge of the matte, for a cleaner look that does not clash with colors.',
