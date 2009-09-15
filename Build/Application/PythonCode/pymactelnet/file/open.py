@@ -9,7 +9,7 @@ __version__ = '4.0.0'
 import sys
 import pymactelnet.file.kvp
 # note: Quills is a compiled module, library path must be set properly
-import Quills
+import quills
 
 def macros(pathname):
     """macros(pathname) -> None
@@ -39,7 +39,7 @@ def macros(pathname):
     try:
         parser = pymactelnet.file.kvp.Parser(file_object=sfile)
         defs = parser.results()
-        macro_set = Quills.Prefs(Quills.Prefs.MACRO_SET)
+        macro_set = quills.Prefs(quills.Prefs.MACRO_SET)
         for key in defs:
             data = defs[key]
             first_part = key.rstrip('0123456789')
@@ -48,7 +48,7 @@ def macros(pathname):
             # need a one-based index, files normally start with 0 (except F1...)
             if first_part != "f" and first_part != "F": number += 1
             macro_set.define_macro(number, name="Macro %i" % number, contents=data)
-        Quills.Prefs.set_current_macros(macro_set)
+        quills.Prefs.set_current_macros(macro_set)
     finally:
         sfile.close()
 
@@ -60,7 +60,7 @@ def script(pathname):
     
     """
     args = [pathname]
-    session = Quills.Session(args)
+    session = quills.Session(args)
 
 def session(pathname):
     """session(pathname) -> None
@@ -84,7 +84,7 @@ def session(pathname):
         defs = parser.results()
         if 'command' in defs:
             args = defs['command'].split()
-            session = Quills.Session(args)
+            session = quills.Session(args)
         else:
             raise KeyError('no "command" was found in the file')
     finally:

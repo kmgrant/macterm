@@ -115,9 +115,9 @@ DEST_SWIG_TOP_LEOPARD := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.5
 DEST_SWIG_TOP_TIGER := $(DEST_QUILLS_TOP)/Versions/B/lib/python2.3.5
 DEST_SWIG_TOP_PANTHER := $(DEST_QUILLS_TOP)/Versions/A/lib/python2.3
 
-SWIG_WRAPPERS := _Quills.so Quills.py
+SWIG_WRAPPERS := _quills.so quills.py
 # .pyc files can be created by Python when code runs...not important
-SWIG_WRAPPERS_EXTRA := Quills.pyc
+SWIG_WRAPPERS_EXTRA := quills.pyc
 
 PANTHER_SWIG_WRAPPERS :=
 PANTHER_SWIG_WRAPPERS_EXTRA :=
@@ -285,8 +285,8 @@ endif
 	fi
 	$(RM) -R $(DEST_QUILLS_TOP)
 
-$(SYMROOT)/ForPantherDebug/_Quills.so \
-$(SYMROOT)/ForPantherDebug/Quills.py: $(SWIG_DEPENDENCIES)
+$(SYMROOT)/ForPantherDebug/_quills.so \
+$(SYMROOT)/ForPantherDebug/quills.py: $(SWIG_DEPENDENCIES)
 	$(call banner,build SWIG wrapper: Panther)
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
 
@@ -295,8 +295,8 @@ $(DEST_SWIG_TOP_PANTHER)/%: $(SYMROOT)/ForPantherDebug/%
 	$(MKDIR_P) $(dir $@)
 	$(COPY) $< $@
 
-$(SYMROOT)/ForTigerDebug/_Quills.so \
-$(SYMROOT)/ForTigerDebug/Quills.py: $(SWIG_DEPENDENCIES)
+$(SYMROOT)/ForTigerDebug/_quills.so \
+$(SYMROOT)/ForTigerDebug/quills.py: $(SWIG_DEPENDENCIES)
 	$(call banner,build SWIG wrapper: Tiger)
 	$(XCB) -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
 
@@ -305,8 +305,8 @@ $(DEST_SWIG_TOP_TIGER)/%: $(SYMROOT)/ForTigerDebug/%
 	$(MKDIR_P) $(dir $@)
 	$(COPY) $< $@
 
-$(SYMROOT)/ForLeopardDebug/_Quills.so \
-$(SYMROOT)/ForLeopardDebug/Quills.py: $(SWIG_DEPENDENCIES)
+$(SYMROOT)/ForLeopardDebug/_quills.so \
+$(SYMROOT)/ForLeopardDebug/quills.py: $(SWIG_DEPENDENCIES)
 	$(call banner,build SWIG wrapper: Leopard)
 	@# Python versions are different on each Mac OS, so the lightweight
 	@# SWIG wrapper code *does* have to be compiled for each separately
@@ -328,14 +328,14 @@ $(LEOPARD_SWIG_WRAPPERS)
 clean-swig-wrappers:
 ifeq ($(strip $(FOR_PANTHER)),yes)
 	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForPantherDebug
-	$(RM) $(SYMROOT)/ForPantherDebug/Quills.py
+	$(RM) $(SYMROOT)/ForPantherDebug/quills.py
 endif
 ifeq ($(strip $(FOR_TIGER)),yes)
 	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForTigerDebug
-	$(RM) $(SYMROOT)/ForTigerDebug/Quills.py
+	$(RM) $(SYMROOT)/ForTigerDebug/quills.py
 endif
 	$(XCB) clean -project Application.xcodeproj -target PythonWrapper -configuration ForLeopardDebug
-	$(RM) $(SYMROOT)/ForLeopardDebug/Quills.py
+	$(RM) $(SYMROOT)/ForLeopardDebug/quills.py
 	echo '$(PANTHER_SWIG_WRAPPERS) $(PANTHER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)
 	-$(RMDIR) $(DEST_SWIG_TOP_PANTHER)
 	echo '$(TIGER_SWIG_WRAPPERS) $(TIGER_SWIG_WRAPPERS_EXTRA)' | $(XARGS) $(RM)

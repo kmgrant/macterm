@@ -278,6 +278,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20090915': [
         'Fixed the dimming of background terminals to also apply dimming to the color of the matte.',
+        'The "Quills" Python module has been renamed to the more Pythonic lowercase name, "quills".',
     ],
     '20090914': [
         'Fixed problems with terminal views appearing to have the keyboard focus, when they did not.',

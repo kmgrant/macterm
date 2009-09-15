@@ -20,7 +20,7 @@ import os, string
 import pymactelnet.file.open
 import pymactelnet.url.open
 try:
-    from Quills import Base, Events, Prefs, Session, Terminal
+    from quills import Base, Events, Prefs, Session, Terminal
 except ImportError, err:
     import sys, os
     print >>sys.stderr, "Unable to import Quills."
@@ -47,11 +47,11 @@ except ImportError, err:
 
 # if you want to read documentation on the API, try one of these (and
 # run MacTelnet from a shell so you can see the documentation)...
-#os.system("pydoc Quills.Base")
-#os.system("pydoc Quills.Events")
-#os.system("pydoc Quills.Prefs")
-#os.system("pydoc Quills.Session")
-#os.system("pydoc Quills.Terminal")
+#os.system("pydoc quills.Base")
+#os.system("pydoc quills.Events")
+#os.system("pydoc quills.Prefs")
+#os.system("pydoc quills.Session")
+#os.system("pydoc quills.Terminal")
 
 
 

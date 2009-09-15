@@ -19,7 +19,7 @@ __date__ = '24 August 2006'
 __version__ = '4.0.0'
 
 # note: Quills is a compiled module, library path must be set properly
-import Quills
+import quills
 from pymactelnet.url.parse import \
     file as _parse_file, \
     ftp as _parse_ftp, \
@@ -67,7 +67,7 @@ def file(url):
         # option to set a start location, it is an excellent file
         # browser and it can remain running to perform other tasks
         args = ['/usr/bin/emacs', "--file=%s" % path]
-        session = Quills.Session(args)
+        session = quills.Session(args)
     else:
         raise ValueError("unsupported form of file URL")
 
@@ -104,7 +104,7 @@ def ftp(url):
         if user is not None: host = "%s@%s" % (user, host)
         args.append(host)
         if port is not None: args.append(str(port)) # standalone port
-        session = Quills.Session(args)
+        session = quills.Session(args)
     else:
         raise ValueError("unsupported form of ftp URL")
 
@@ -174,7 +174,7 @@ def sftp(url):
         # sftp uses "user@host" form
         if user is not None: host = "%s@%s" % (user, host)
         args.append(host)
-        session = Quills.Session(args)
+        session = quills.Session(args)
     else:
         raise ValueError("unsupported form of sftp URL")
 
@@ -218,7 +218,7 @@ def ssh(url):
         if user is not None: args.extend(['-l', user])
         if port is not None: args.extend(['-p', str(port)])
         args.append(host)
-        session = Quills.Session(args)
+        session = quills.Session(args)
     else:
         raise ValueError("unsupported form of ssh URL")
 
@@ -254,7 +254,7 @@ def telnet(url):
         if user is not None: args.extend(['-l', user])
         args.append(host)
         if port is not None: args.append(str(port)) # standalone port
-        session = Quills.Session(args)
+        session = quills.Session(args)
     else:
         raise ValueError("unsupported form of telnet URL")
 
@@ -280,9 +280,9 @@ def x_man_page(url):
     section = url_info.get('section', None)
     # pull the command name and optional section number out of the URL path
     if section is not None:
-        session = Quills.Session(['/usr/bin/man', section, cmd])
+        session = quills.Session(['/usr/bin/man', section, cmd])
     elif cmd is not None:
-        session = Quills.Session(['/usr/bin/man', cmd])
+        session = quills.Session(['/usr/bin/man', cmd])
     else:
         raise ValueError("unsupported form of x-man-page URL")
 

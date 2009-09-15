@@ -3,7 +3,7 @@
 allowing you to directly access core functionality from scripts!"
 %enddef
 
-%module(docstring=DOCSTRING) Quills
+%module(docstring=DOCSTRING) quills
 
 %include "exception.i"
 %include "stl.i"
