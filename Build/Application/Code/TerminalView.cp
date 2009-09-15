@@ -247,7 +247,8 @@ struct TerminalView
 	CFRetainRelease		accessibilityObject;	// AXUIElementRef; makes terminal views compatible with accessibility technologies
 	HIViewRef			encompassingHIView;		// contains all other HIViews but is otherwise invisible
 	HIViewRef			backgroundHIView;		// view that renders the background of the terminal screen (border included)
-	HIViewRef			focusAndPaddingHIView;	// view that renders the focus ring and is outset by the padding amount from the content view
+	HIViewRef			focusHIView;			// view whose current focus part determines the visibility and boundaries of the focus ring
+	HIViewRef			paddingHIView;			// view that is outset by the padding amount from the content view
 	HIViewRef			contentHIView;			// view that renders the text of the terminal screen
 	
 	HIViewPartCode		currentContentFocus;	// used in the content view focus handler to determine where (if anywhere) a ring goes
@@ -1819,7 +1820,7 @@ TerminalView_ReturnUserFocusHIView	(TerminalViewRef	inView)
 	
 	
 	// should match whichever view has the set-focus-part event handler installed on it
-	result = viewPtr->focusAndPaddingHIView;
+	result = viewPtr->focusHIView;
 	return result;
 }// ReturnUserFocusHIView
 
@@ -3136,7 +3137,8 @@ accessibilityObject(AXUIElementCreateWithHIObjectAndIdentifier
 					(REINTERPRET_CAST(inSuperclassViewInstance, HIObjectRef), 0/* identifier */)),
 encompassingHIView(nullptr), // set later
 backgroundHIView(nullptr), // set later
-focusAndPaddingHIView(nullptr), // set later
+focusHIView(nullptr), // set later
+paddingHIView(nullptr), // set later
 contentHIView(inSuperclassViewInstance),
 currentContentFocus(kControlEntireControl), // set later
 containerResizeHandler(), // set later
@@ -3295,12 +3297,12 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		error = HIViewSetVisible(this->contentHIView, true);
 		assert_noerr(error);
 		
-		assert_noerr(TerminalBackground_CreateHIView(this->focusAndPaddingHIView));
-		error = HIViewSetVisible(this->focusAndPaddingHIView, true);
+		assert_noerr(TerminalBackground_CreateHIView(this->paddingHIView));
+		error = HIViewSetVisible(this->paddingHIView, true);
 		assert_noerr(error);
 		// IMPORTANT: Set a property with the TerminalViewRef, so that
 		// TerminalView_ReturnUserFocusHIView() works properly
-		error = SetControlProperty(this->focusAndPaddingHIView,
+		error = SetControlProperty(this->paddingHIView,
 									AppResources_ReturnCreatorCode(),
 									kConstantsRegistry_ControlPropertyTypeTerminalViewRef,
 									sizeof(this->selfRef), &this->selfRef);
@@ -3309,6 +3311,10 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		assert_noerr(TerminalBackground_CreateHIView(this->backgroundHIView));
 		error = HIViewSetVisible(this->backgroundHIView, true);
 		assert_noerr(error);
+		
+		// specify the view to use for focus and basic input
+		//this->focusHIView = this->paddingHIView;
+		this->focusHIView = this->backgroundHIView;
 		
 		// initialize matte color
 		{
@@ -3328,9 +3334,9 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 		this->encompassingHIView = this->backgroundHIView;
 		
 		// set up embedding hierarchy
-		error = HIViewAddSubview(this->backgroundHIView, this->focusAndPaddingHIView);
+		error = HIViewAddSubview(this->backgroundHIView, this->paddingHIView);
 		assert_noerr(error);
-		error = HIViewAddSubview(this->focusAndPaddingHIView, this->contentHIView);
+		error = HIViewAddSubview(this->paddingHIView, this->contentHIView);
 		assert_noerr(error);
 	}
 	
@@ -3367,7 +3373,7 @@ initialize		(TerminalScreenRef			inScreenDataSource,
 	assert(this->contextualMenuHandler.isInstalled());
 	
 	// set up keyboard text selection on the focus view
-	this->rawKeyDownHandler.install(GetControlEventTarget(this->focusAndPaddingHIView),
+	this->rawKeyDownHandler.install(GetControlEventTarget(this->focusHIView),
 										receiveTerminalViewRawKeyDown,
 										CarbonEventSetInClass(CarbonEventClass(kEventClassKeyboard),
 																kEventRawKeyDown, kEventRawKeyRepeat),
@@ -6820,7 +6826,7 @@ handleNewViewContainerBounds	(HIViewRef		inHIView,
 		
 		// TEMPORARY: this should in fact respect margin values too
 		RegionUtilities_CenterHIRectIn(terminalFocusFrame, terminalViewBounds);
-		HIViewSetFrame(viewPtr->focusAndPaddingHIView, &terminalFocusFrame);
+		HIViewSetFrame(viewPtr->paddingHIView, &terminalFocusFrame);
 		HIViewSetFrame(viewPtr->contentHIView, &terminalInteriorFrame);
 	}
 	
@@ -7521,7 +7527,7 @@ preferenceChangedForView	(ListenerModel_Ref		UNUSED_ARGUMENT(inUnusedModel),
 					(UInt16)copyFontPreferences(viewPtr, prefsContext, false/* search for defaults */);
 				}
 				(OSStatus)HIViewSetNeedsDisplay(viewPtr->contentHIView, true);
-				(OSStatus)HIViewSetNeedsDisplay(viewPtr->focusAndPaddingHIView, true);
+				(OSStatus)HIViewSetNeedsDisplay(viewPtr->paddingHIView, true);
 				(OSStatus)HIViewSetNeedsDisplay(viewPtr->backgroundHIView, true);
 			}
 			else
@@ -10114,12 +10120,12 @@ setScreenBaseColor	(TerminalViewPtr			inTerminalViewPtr,
 	{
 	case kTerminalView_ColorIndexNormalBackground:
 		inTerminalViewPtr->text.colors[kMyBasicColorIndexNormalBackground] = *inColorPtr;
-		if (nullptr != inTerminalViewPtr->focusAndPaddingHIView)
+		if (nullptr != inTerminalViewPtr->paddingHIView)
 		{
 			OSStatus	error = noErr;
 			
 			
-			error = SetControlProperty(inTerminalViewPtr->focusAndPaddingHIView, AppResources_ReturnCreatorCode(),
+			error = SetControlProperty(inTerminalViewPtr->paddingHIView, AppResources_ReturnCreatorCode(),
 										kConstantsRegistry_ControlPropertyTypeBackgroundColor,
 										sizeof(*inColorPtr), inColorPtr);
 			assert_noerr(error);

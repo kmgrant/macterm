@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090914',
     '20090912',
     '20090910',
     '20090905',
@@ -274,6 +275,10 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090914': [
+        'Fixed problems with terminal views appearing to have the keyboard focus, when they did not.',
+        'Terminal view focus rings now appear around the edge of the matte, for a cleaner look that does not clash with colors.',
+    ],
     '20090912': [
         'Internal improvements to the efficiency of streaming to terminal capture files.',
         'Capture files now contain an explicit byte-order mark, to help some text editors automatically identify the encoding.',
