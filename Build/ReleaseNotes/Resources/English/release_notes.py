@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090916',
     '20090915',
     '20090914',
     '20090912',
@@ -276,6 +277,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090916': [
+        'Fixed drag and drop of single files or directories, to type the equivalent pathname text.',
+    ],
     '20090915': [
         'Fixed the dimming of background terminals to also apply dimming to the color of the matte.',
         'The "Quills" Python module has been renamed to the more Pythonic lowercase name, "quills".',

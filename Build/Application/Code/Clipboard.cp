@@ -35,6 +35,9 @@
 #include <climits>
 #include <map>
 
+// Unix includes
+#include <sys/param.h>
+
 // Mac includes
 #include <ApplicationServices/ApplicationServices.h>
 #include <Carbon/Carbon.h>
@@ -417,156 +420,6 @@ Clipboard_AEDescToScrap		(AEDesc const*		inDescPtr)
 
 
 /*!
-Returns true only if the specified pasteboard contains text
-that was successfully converted.
-
-You must CFRelease() the UTI string.
-
-This routine is aware of several Unicode variants and other
-common return types, and as a last resort calls upon
-Translation Services.  However, even translation will fail
-if the system does not have a way to handle the required
-conversion (which is to Unicode, from whatever is given).
-
-(3.1)
-*/
-Boolean
-Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
-										 CFStringRef&		outUTI,
-										 PasteboardRef		inPasteboardOrNull)
-{
-	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
-											? Clipboard_ReturnPrimaryPasteboard()
-											: inPasteboardOrNull;
-	PasteboardItemID		itemID = 0;
-	Boolean					result = false;
-	
-	
-	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
-							outUTI, itemID, kPasteboard))
-	{
-		CFDataRef	textData = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
-		if (noErr == error)
-		{
-			// try anything that works, as long as previous translations fail
-			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
-																			kUTTypeUTF16ExternalPlainText)))
-			{
-				outCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
-																		kCFStringEncodingUnicode);
-				result = (nullptr != outCFString);
-			}
-			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
-																			kUTTypeUTF16PlainText)))
-			{
-				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-														CFDataGetLength(textData), kCFStringEncodingUnicode,
-														false/* is external */);
-				result = (nullptr != outCFString);
-			}
-			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
-																			kUTTypeUTF8PlainText)))
-			{
-				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-														CFDataGetLength(textData), kCFStringEncodingUTF8,
-														false/* is external */);
-				result = (nullptr != outCFString);
-			}
-			if ((false == result) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
-			{
-				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-														CFDataGetLength(textData), kCFStringEncodingUTF8,
-														false/* is external */);
-				result = (nullptr != outCFString);
-			}
-			if (false == result)
-			{
-				TranslationRef		translationInfo = nullptr;
-				
-				
-				// don’t give up just yet...attempt to translate this data into something presentable
-				outCFString = nullptr;
-				error = TranslationCreate(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
-											kTranslationDataTranslation, &translationInfo);
-				if (noErr == error)
-				{
-					CFDataRef	translatedData = nullptr;
-					
-					
-					error = TranslationPerformForData(translationInfo, textData, &translatedData);
-					if (noErr == error)
-					{
-						outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(translatedData),
-																CFDataGetLength(translatedData), kCFStringEncodingUnicode,
-																false/* is external */);
-						CFRelease(translatedData), translatedData = nullptr;
-					}
-					CFRelease(translationInfo), translationInfo = nullptr;
-				}
-				
-				if (nullptr == outCFString)
-				{
-					// WARNING: in this case, the encoding cannot be known, so choose to show nothing
-					Console_Warning(Console_WriteValueCFString, "unknown text encoding and unable to translate", outUTI);
-					outCFString = CFSTR("?");
-					CFRetain(outCFString);	
-				}
-				result = (nullptr != outCFString);
-			}
-			CFRelease(textData), textData = nullptr;
-		}
-	}
-	return result;
-}// CreateCFStringFromPasteboard
-
-
-/*!
-Returns true only if some item on the specified pasteboard
-is an image.
-
-You must CFRelease() the UTI string.
-
-This routine is aware of several image types, and relies on
-QuickTime to handle as many kinds of images as possible.
-
-(3.1)
-*/
-Boolean
-Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
-										 CFStringRef&		outUTI,
-										 PasteboardRef		inPasteboardOrNull)
-{
-	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
-											? Clipboard_ReturnPrimaryPasteboard()
-											: inPasteboardOrNull;
-	PasteboardItemID		itemID = 0;
-	OSStatus				error = noErr;
-	Boolean					result = false;
-	
-	
-	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.image"), kUTTypeImage),
-							outUTI, itemID, kPasteboard))
-	{
-		CFDataRef	imageData = nullptr;
-		
-		
-		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &imageData);
-		if (noErr == error)
-		{
-			error = createCGImageFromData(imageData, outImage);
-			result = (noErr == error);
-			CFRelease(imageData), imageData = nullptr;
-		}
-	}
-	return result;
-}// CreateCGImageFromPasteboard
-
-
-/*!
 Returns true only if the specified type of data (or something
 similar enough to be compatible) is available from the given data
 source.
@@ -717,6 +570,226 @@ Clipboard_ContainsText	(PasteboardRef		inDataSourceOrNull)
 	}
 	return result;
 }// ContainsText
+
+
+/*!
+Returns true only if the specified pasteboard contains text
+that was successfully converted.  This includes any data that
+might be converted into text, such as converting a file or
+directory into an escaped file system path.
+
+You must CFRelease() the UTI string.
+
+This routine is aware of several Unicode variants and other
+common return types, and as a last resort calls upon
+Translation Services.  However, even translation will fail
+if the system does not have a way to handle the required
+conversion (which is to Unicode, from whatever is given).
+
+(3.1)
+*/
+Boolean
+Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
+										 CFStringRef&		outUTI,
+										 PasteboardRef		inPasteboardOrNull)
+{
+	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
+											? Clipboard_ReturnPrimaryPasteboard()
+											: inPasteboardOrNull;
+	PasteboardItemID		itemID = 0;
+	Boolean					result = false;
+	
+	
+	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
+							outUTI, itemID, kPasteboard))
+	{
+		CFDataRef	textData = nullptr;
+		OSStatus	error = noErr;
+		
+		
+		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
+		if (noErr == error)
+		{
+			// try anything that works, as long as previous translations fail
+			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
+																			kUTTypeUTF16ExternalPlainText)))
+			{
+				outCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
+																		kCFStringEncodingUnicode);
+				result = (nullptr != outCFString);
+			}
+			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
+																			kUTTypeUTF16PlainText)))
+			{
+				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+														CFDataGetLength(textData), kCFStringEncodingUnicode,
+														false/* is external */);
+				result = (nullptr != outCFString);
+			}
+			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
+																			kUTTypeUTF8PlainText)))
+			{
+				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+														CFDataGetLength(textData), kCFStringEncodingUTF8,
+														false/* is external */);
+				result = (nullptr != outCFString);
+			}
+			if ((false == result) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
+			{
+				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+														CFDataGetLength(textData), kCFStringEncodingUTF8,
+														false/* is external */);
+				result = (nullptr != outCFString);
+			}
+			if (false == result)
+			{
+				TranslationRef		translationInfo = nullptr;
+				
+				
+				// don’t give up just yet...attempt to translate this data into something presentable
+				outCFString = nullptr;
+				error = TranslationCreate(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
+											kTranslationDataTranslation, &translationInfo);
+				if (noErr == error)
+				{
+					CFDataRef	translatedData = nullptr;
+					
+					
+					error = TranslationPerformForData(translationInfo, textData, &translatedData);
+					if (noErr == error)
+					{
+						outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(translatedData),
+																CFDataGetLength(translatedData), kCFStringEncodingUnicode,
+																false/* is external */);
+						CFRelease(translatedData), translatedData = nullptr;
+					}
+					CFRelease(translationInfo), translationInfo = nullptr;
+				}
+				
+				if (nullptr == outCFString)
+				{
+					// WARNING: in this case, the encoding cannot be known, so choose to show nothing
+					Console_Warning(Console_WriteValueCFString, "unknown text encoding and unable to translate", outUTI);
+					outCFString = CFSTR("?");
+					CFRetain(outCFString);	
+				}
+				result = (nullptr != outCFString);
+			}
+			CFRelease(textData), textData = nullptr;
+		}
+	}
+	else if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.file-url"), kUTTypeFileURL),
+								outUTI, itemID, kPasteboard))
+	{
+		CFDataRef	textData = nullptr;
+		OSStatus	error = noErr;
+		
+		
+		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
+		if (noErr == error)
+		{
+			CFRetainRelease		urlString(CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+																	CFDataGetLength(textData), kCFStringEncodingUTF8,
+																	false/* is external */),
+											true/* is retained */);
+			
+			
+			if (urlString.exists())
+			{
+				CFRetainRelease		urlObject(CFURLCreateWithString(kCFAllocatorDefault, urlString.returnCFStringRef(),
+																	nullptr/* base URL */),
+												true/* is retained */);
+				
+				
+				if (urlObject.exists())
+				{
+					CFURLRef const		kURL = CFUtilities_URLCast(urlObject.returnCFTypeRef());
+					UInt8				pathBuffer[MAXPATHLEN];
+					
+					
+					// the API does not specify, but the implication is that the returned
+					// buffer must always be null-terminated; also, the similar API
+					// CFStringGetFileSystemRepresentation() *does* specify null-termination
+					if (CFURLGetFileSystemRepresentation(kURL, true/* resolve against base */, pathBuffer, sizeof(pathBuffer)))
+					{
+						CFRetainRelease		pathCFString(CFStringCreateWithCString(kCFAllocatorDefault,
+																					REINTERPRET_CAST(pathBuffer, char const*),
+																					kCFStringEncodingUTF8),
+															true/* is retained */);
+						
+						
+						if (pathCFString.exists())
+						{
+							CFRetainRelease		workArea(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */,
+																					pathCFString.returnCFStringRef()),
+															false/* is retained; used to set return value released by caller */);
+							
+							
+							if (workArea.exists())
+							{
+								CFMutableStringRef const	kMutableCFString = workArea.returnCFMutableStringRef();
+								
+								
+								// escape any characters that will screw up a typical Unix shell;
+								// TEMPORARY, INCOMPLETE - only escapes spaces, there might be
+								// other characters that are important to handle here
+								(CFIndex)CFStringFindAndReplace(kMutableCFString, CFSTR(" "), CFSTR("\\ "),
+																CFRangeMake(0, CFStringGetLength(kMutableCFString)),
+																0/* comparison flags */);
+								outCFString = kMutableCFString;
+								result = (nullptr != outCFString);
+							}
+						}
+					}
+				}
+			}
+			CFRelease(textData), textData = nullptr;
+		}
+	}
+	return result;
+}// CreateCFStringFromPasteboard
+
+
+/*!
+Returns true only if some item on the specified pasteboard
+is an image.
+
+You must CFRelease() the UTI string.
+
+This routine is aware of several image types, and relies on
+QuickTime to handle as many kinds of images as possible.
+
+(3.1)
+*/
+Boolean
+Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
+										 CFStringRef&		outUTI,
+										 PasteboardRef		inPasteboardOrNull)
+{
+	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
+											? Clipboard_ReturnPrimaryPasteboard()
+											: inPasteboardOrNull;
+	PasteboardItemID		itemID = 0;
+	OSStatus				error = noErr;
+	Boolean					result = false;
+	
+	
+	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.image"), kUTTypeImage),
+							outUTI, itemID, kPasteboard))
+	{
+		CFDataRef	imageData = nullptr;
+		
+		
+		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &imageData);
+		if (noErr == error)
+		{
+			error = createCGImageFromData(imageData, outImage);
+			result = (noErr == error);
+			CFRelease(imageData), imageData = nullptr;
+		}
+	}
+	return result;
+}// CreateCGImageFromPasteboard
 
 
 /*!
