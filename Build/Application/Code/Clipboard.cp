@@ -603,7 +603,9 @@ from all items is combined.  For file URL items, each is
 joined by spaces; for other forms of text, items are joined
 with new-lines.
 
-You must CFRelease() the UTI string.
+When successful (returning true), the "outCFString" and
+"outUTI" will both be defined and you must call CFRelease()
+on them when finished.  Otherwise, neither will be defined.
 
 This routine is aware of several Unicode variants and other
 common return types, and as a last resort calls upon
@@ -626,6 +628,9 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 	Boolean					result = false;
 	
 	
+	outCFString = nullptr; // initially...
+	outUTI = nullptr; // initially...
+	
 	error = PasteboardGetItemCount(inPasteboardOrNull, &totalItems);
 	assert_noerr(error);
 	if (totalItems > 0)
@@ -635,9 +640,6 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 		
 		
 		assert(nullptr != allItems);
-		outCFString = allItems; // do not release
-		result = (nullptr != outCFString);
-		
 		for (ItemCount i = 1; i <= totalItems; ++i)
 		{
 			PasteboardItemID	itemID = 0;
@@ -799,6 +801,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 			
 			if (nullptr != thisCFString)
 			{
+				result = true;
 				CFStringAppend(allItems, thisCFString);
 				if (nullptr != thisDelimiter)
 				{
@@ -806,6 +809,16 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 				}
 				CFRelease(thisCFString), thisCFString = nullptr;
 			}
+		}
+		
+		if (result)
+		{
+			// ownership transfers to caller
+			outCFString = allItems;
+		}
+		else
+		{
+			CFRelease(allItems), allItems = nullptr;
 		}
 	}
 	return result;

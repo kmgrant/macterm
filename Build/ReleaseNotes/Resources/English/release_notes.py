@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090917',
     '20090916',
     '20090915',
     '20090914',
@@ -277,6 +278,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090917': [
+        'Fixed a possible crash that depended on the current state of the system-wide Clipboard.',
+    ],
     '20090916': [
         'Fixed drag and drop of single files or directories, to type the equivalent pathname text.',
         'Dragging multiple files and/or folders into a terminal now works; a single line of space-delimited, escaped pathnames is produced.',
