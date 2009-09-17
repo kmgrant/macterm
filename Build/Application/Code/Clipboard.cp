@@ -651,8 +651,8 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 				CFDataRef	textData = nullptr;
 				
 				
-				// text buffers are separated by line-feeds (Unix-style new-line)
-				thisDelimiter = CFSTR("\012");
+				// text buffers are separated by nothing
+				thisDelimiter = CFSTR("");
 				
 				error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
 				if (noErr == error)
@@ -666,6 +666,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 					{
 						thisCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
 																				kCFStringEncodingUnicode);
+						translationOK = (nullptr != thisCFString);
 					}
 					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
 																							kUTTypeUTF16PlainText)))
@@ -673,6 +674,7 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																CFDataGetLength(textData), kCFStringEncodingUnicode,
 																false/* is external */);
+						translationOK = (nullptr != thisCFString);
 					}
 					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
 																							kUTTypeUTF8PlainText)))
@@ -680,12 +682,14 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																CFDataGetLength(textData), kCFStringEncodingUTF8,
 																false/* is external */);
+						translationOK = (nullptr != thisCFString);
 					}
 					if ((false == translationOK) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
 					{
 						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
 																CFDataGetLength(textData), kCFStringEncodingUTF8,
 																false/* is external */);
+						translationOK = (nullptr != thisCFString);
 					}
 					if (false == translationOK)
 					{
