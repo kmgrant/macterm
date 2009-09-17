@@ -126,6 +126,7 @@ OSStatus
 
 Boolean
 	Clipboard_Contains						(CFStringRef				inUTI,
+											 UInt16						inDesiredItemOrZeroForAll,
 											 CFStringRef&				outConformingItemActualType,
 											 PasteboardItemID&			outConformingItemID,
 											 PasteboardRef				inDataSourceOrNull = nullptr);

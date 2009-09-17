@@ -425,9 +425,14 @@ similar enough to be compatible) is available from the given data
 source.
 
 If true is returned, the actual type name and Pasteboard item ID
-of the first conforming item is provided, so that you can easily
-retrieve its data if desired.  You must CFRelease() the type name
-string.
+of the first (or specified) conforming item is provided, so that
+you can easily retrieve its data if desired.  You must
+CFRelease() the type name string.
+
+Specify 0 for "inDesiredItemOrZeroForAll", unless you know how
+many items are on the pasteboard and want to test a specific
+item.  Either way, the number of total items found is returned in
+"outNumberOfItems".
 
 The source is first synchronized before checking its contents.
 
@@ -440,13 +445,16 @@ Clipboard_ReturnPrimaryPasteboard() is used.
 */
 Boolean
 Clipboard_Contains	(CFStringRef			inUTI,
+					 UInt16					inDesiredItemOrZeroForAll,
 					 CFStringRef&			outConformingItemActualType,
 					 PasteboardItemID&		outConformingItemID,
 					 PasteboardRef			inDataSourceOrNull)
 {
 	Boolean		result = false;
 	OSStatus	error = noErr;
-	ItemCount	numberOfItems = 0;
+	ItemCount	totalItems = 0;
+	ItemCount	firstItem = 1;
+	ItemCount	lastItem = 1;
 	ItemCount	itemIndex = 0;
 	
 	
@@ -459,9 +467,21 @@ Clipboard_Contains	(CFStringRef			inUTI,
 	// the data could be out of date if another application changed it...resync
 	(PasteboardSyncFlags)PasteboardSynchronize(inDataSourceOrNull);
 	
-	error = PasteboardGetItemCount(inDataSourceOrNull, &numberOfItems);
+	error = PasteboardGetItemCount(inDataSourceOrNull, &totalItems);
 	assert_noerr(error);
-	for (itemIndex = 1; itemIndex <= numberOfItems; ++itemIndex)
+	
+	if (0 == inDesiredItemOrZeroForAll)
+	{
+		firstItem = 1;
+		lastItem = totalItems;
+	}
+	else
+	{
+		firstItem = inDesiredItemOrZeroForAll;
+		lastItem = inDesiredItemOrZeroForAll;
+	}
+	
+	for (itemIndex = firstItem; itemIndex <= lastItem; ++itemIndex)
 	{
 		PasteboardItemID	itemID = 0;
 		CFArrayRef			flavorArray = nullptr;
@@ -578,6 +598,11 @@ that was successfully converted.  This includes any data that
 might be converted into text, such as converting a file or
 directory into an escaped file system path.
 
+When there is more than one item on the pasteboard, all text
+from all items is combined.  For file URL items, each is
+joined by spaces; for other forms of text, items are joined
+with new-lines.
+
 You must CFRelease() the UTI string.
 
 This routine is aware of several Unicode variants and other
@@ -596,154 +621,187 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 	PasteboardRef const		kPasteboard = (nullptr == inPasteboardOrNull)
 											? Clipboard_ReturnPrimaryPasteboard()
 											: inPasteboardOrNull;
-	PasteboardItemID		itemID = 0;
+	ItemCount				totalItems = 0;
+	OSStatus				error = noErr;
 	Boolean					result = false;
 	
 	
-	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
-							outUTI, itemID, kPasteboard))
+	error = PasteboardGetItemCount(inPasteboardOrNull, &totalItems);
+	assert_noerr(error);
+	if (totalItems > 0)
 	{
-		CFDataRef	textData = nullptr;
-		OSStatus	error = noErr;
+		// assemble the text representations of all items into one string
+		CFMutableStringRef		allItems = CFStringCreateMutable(kCFAllocatorDefault, 0/* length limit */);
 		
 		
-		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
-		if (noErr == error)
+		assert(nullptr != allItems);
+		outCFString = allItems; // do not release
+		result = (nullptr != outCFString);
+		
+		for (ItemCount i = 1; i <= totalItems; ++i)
 		{
-			// try anything that works, as long as previous translations fail
-			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
-																			kUTTypeUTF16ExternalPlainText)))
+			PasteboardItemID	itemID = 0;
+			CFStringRef			thisCFString = nullptr; // contract is to always release this at the end, if defined
+			CFStringRef			thisDelimiter = nullptr; // contract is to never release this string
+			
+			
+			if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText), i/* which item */,
+									outUTI, itemID, kPasteboard))
 			{
-				outCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
-																		kCFStringEncodingUnicode);
-				result = (nullptr != outCFString);
-			}
-			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
-																			kUTTypeUTF16PlainText)))
-			{
-				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-														CFDataGetLength(textData), kCFStringEncodingUnicode,
-														false/* is external */);
-				result = (nullptr != outCFString);
-			}
-			if ((false == result) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
-																			kUTTypeUTF8PlainText)))
-			{
-				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-														CFDataGetLength(textData), kCFStringEncodingUTF8,
-														false/* is external */);
-				result = (nullptr != outCFString);
-			}
-			if ((false == result) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
-			{
-				outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-														CFDataGetLength(textData), kCFStringEncodingUTF8,
-														false/* is external */);
-				result = (nullptr != outCFString);
-			}
-			if (false == result)
-			{
-				TranslationRef		translationInfo = nullptr;
+				CFDataRef	textData = nullptr;
 				
 				
-				// don’t give up just yet...attempt to translate this data into something presentable
-				outCFString = nullptr;
-				error = TranslationCreate(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
-											kTranslationDataTranslation, &translationInfo);
+				// text buffers are separated by line-feeds (Unix-style new-line)
+				thisDelimiter = CFSTR("\012");
+				
+				error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
 				if (noErr == error)
 				{
-					CFDataRef	translatedData = nullptr;
+					Boolean		translationOK = false;
 					
 					
-					error = TranslationPerformForData(translationInfo, textData, &translatedData);
-					if (noErr == error)
+					// try anything that works, as long as previous translations fail
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-external-plain-text"),
+																							kUTTypeUTF16ExternalPlainText)))
 					{
-						outCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(translatedData),
-																CFDataGetLength(translatedData), kCFStringEncodingUnicode,
-																false/* is external */);
-						CFRelease(translatedData), translatedData = nullptr;
+						thisCFString = CFStringCreateFromExternalRepresentation(kCFAllocatorDefault, textData,
+																				kCFStringEncodingUnicode);
 					}
-					CFRelease(translationInfo), translationInfo = nullptr;
-				}
-				
-				if (nullptr == outCFString)
-				{
-					// WARNING: in this case, the encoding cannot be known, so choose to show nothing
-					Console_Warning(Console_WriteValueCFString, "unknown text encoding and unable to translate", outUTI);
-					outCFString = CFSTR("?");
-					CFRetain(outCFString);	
-				}
-				result = (nullptr != outCFString);
-			}
-			CFRelease(textData), textData = nullptr;
-		}
-	}
-	else if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.file-url"), kUTTypeFileURL),
-								outUTI, itemID, kPasteboard))
-	{
-		CFDataRef	textData = nullptr;
-		OSStatus	error = noErr;
-		
-		
-		error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
-		if (noErr == error)
-		{
-			CFRetainRelease		urlString(CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
-																	CFDataGetLength(textData), kCFStringEncodingUTF8,
-																	false/* is external */),
-											true/* is retained */);
-			
-			
-			if (urlString.exists())
-			{
-				CFRetainRelease		urlObject(CFURLCreateWithString(kCFAllocatorDefault, urlString.returnCFStringRef(),
-																	nullptr/* base URL */),
-												true/* is retained */);
-				
-				
-				if (urlObject.exists())
-				{
-					CFURLRef const		kURL = CFUtilities_URLCast(urlObject.returnCFTypeRef());
-					UInt8				pathBuffer[MAXPATHLEN];
-					
-					
-					// the API does not specify, but the implication is that the returned
-					// buffer must always be null-terminated; also, the similar API
-					// CFStringGetFileSystemRepresentation() *does* specify null-termination
-					if (CFURLGetFileSystemRepresentation(kURL, true/* resolve against base */, pathBuffer, sizeof(pathBuffer)))
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"),
+																							kUTTypeUTF16PlainText)))
 					{
-						CFRetainRelease		pathCFString(CFStringCreateWithCString(kCFAllocatorDefault,
-																					REINTERPRET_CAST(pathBuffer, char const*),
-																					kCFStringEncodingUTF8),
-															true/* is retained */);
+						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+																CFDataGetLength(textData), kCFStringEncodingUnicode,
+																false/* is external */);
+					}
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, FUTURE_SYMBOL(CFSTR("public.utf8-plain-text"),
+																							kUTTypeUTF8PlainText)))
+					{
+						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+																CFDataGetLength(textData), kCFStringEncodingUTF8,
+																false/* is external */);
+					}
+					if ((false == translationOK) && UTTypeConformsTo(outUTI, CFSTR("com.apple.traditional-mac-plain-text")))
+					{
+						thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+																CFDataGetLength(textData), kCFStringEncodingUTF8,
+																false/* is external */);
+					}
+					if (false == translationOK)
+					{
+						TranslationRef		translationInfo = nullptr;
 						
 						
-						if (pathCFString.exists())
+						// don’t give up just yet...attempt to translate this data into something presentable
+						thisCFString = nullptr;
+						error = TranslationCreate(outUTI, FUTURE_SYMBOL(CFSTR("public.utf16-plain-text"), kUTTypeUTF16PlainText),
+													kTranslationDataTranslation, &translationInfo);
+						if (noErr == error)
 						{
-							CFRetainRelease		workArea(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */,
-																					pathCFString.returnCFStringRef()),
-															false/* is retained; used to set return value released by caller */);
+							CFDataRef	translatedData = nullptr;
 							
 							
-							if (workArea.exists())
+							error = TranslationPerformForData(translationInfo, textData, &translatedData);
+							if (noErr == error)
 							{
-								CFMutableStringRef const	kMutableCFString = workArea.returnCFMutableStringRef();
+								thisCFString = CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(translatedData),
+																		CFDataGetLength(translatedData), kCFStringEncodingUnicode,
+																		false/* is external */);
+								CFRelease(translatedData), translatedData = nullptr;
+							}
+							CFRelease(translationInfo), translationInfo = nullptr;
+						}
+						
+						if (nullptr == thisCFString)
+						{
+							// WARNING: in this case, the encoding cannot be known, so choose to show nothing
+							Console_Warning(Console_WriteValueCFString, "unknown text encoding and unable to translate", outUTI);
+							thisCFString = CFSTR("?");
+							CFRetain(thisCFString);	
+						}
+					}
+					CFRelease(textData), textData = nullptr;
+				}
+			}
+			else if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.file-url"), kUTTypeFileURL), i/* which item */,
+										outUTI, itemID, kPasteboard))
+			{
+				CFDataRef	textData = nullptr;
+				
+				
+				// file paths are separated by whitespace
+				thisDelimiter = CFSTR("  ");
+				
+				error = PasteboardCopyItemFlavorData(kPasteboard, itemID, outUTI, &textData);
+				if (noErr == error)
+				{
+					CFRetainRelease		urlString(CFStringCreateWithBytes(kCFAllocatorDefault, CFDataGetBytePtr(textData),
+																			CFDataGetLength(textData), kCFStringEncodingUTF8,
+																			false/* is external */),
+													true/* is retained */);
+					
+					
+					if (urlString.exists())
+					{
+						CFRetainRelease		urlObject(CFURLCreateWithString(kCFAllocatorDefault, urlString.returnCFStringRef(),
+																			nullptr/* base URL */),
+														true/* is retained */);
+						
+						
+						if (urlObject.exists())
+						{
+							CFURLRef const		kURL = CFUtilities_URLCast(urlObject.returnCFTypeRef());
+							UInt8				pathBuffer[MAXPATHLEN];
+							
+							
+							// the API does not specify, but the implication is that the returned
+							// buffer must always be null-terminated; also, the similar API
+							// CFStringGetFileSystemRepresentation() *does* specify null-termination
+							if (CFURLGetFileSystemRepresentation(kURL, true/* resolve against base */, pathBuffer, sizeof(pathBuffer)))
+							{
+								CFRetainRelease		pathCFString(CFStringCreateWithCString(kCFAllocatorDefault,
+																							REINTERPRET_CAST(pathBuffer, char const*),
+																							kCFStringEncodingUTF8),
+																	true/* is retained */);
 								
 								
-								// escape any characters that will screw up a typical Unix shell;
-								// TEMPORARY, INCOMPLETE - only escapes spaces, there might be
-								// other characters that are important to handle here
-								(CFIndex)CFStringFindAndReplace(kMutableCFString, CFSTR(" "), CFSTR("\\ "),
-																CFRangeMake(0, CFStringGetLength(kMutableCFString)),
-																0/* comparison flags */);
-								outCFString = kMutableCFString;
-								result = (nullptr != outCFString);
+								if (pathCFString.exists())
+								{
+									CFRetainRelease		workArea(CFStringCreateMutableCopy(kCFAllocatorDefault, 0/* length limit */,
+																							pathCFString.returnCFStringRef()),
+																	false/* is retained; used to set return value released by caller */);
+									
+									
+									if (workArea.exists())
+									{
+										CFMutableStringRef const	kMutableCFString = workArea.returnCFMutableStringRef();
+										
+										
+										// escape any characters that will screw up a typical Unix shell;
+										// TEMPORARY, INCOMPLETE - only escapes spaces, there might be
+										// other characters that are important to handle here
+										(CFIndex)CFStringFindAndReplace(kMutableCFString, CFSTR(" "), CFSTR("\\ "),
+																		CFRangeMake(0, CFStringGetLength(kMutableCFString)),
+																		0/* comparison flags */);
+										thisCFString = kMutableCFString;
+									}
+								}
 							}
 						}
 					}
+					CFRelease(textData), textData = nullptr;
 				}
 			}
-			CFRelease(textData), textData = nullptr;
+			
+			if (nullptr != thisCFString)
+			{
+				CFStringAppend(allItems, thisCFString);
+				if (nullptr != thisDelimiter)
+				{
+					CFStringAppend(allItems, thisDelimiter);
+				}
+				CFRelease(thisCFString), thisCFString = nullptr;
+			}
 		}
 	}
 	return result;
@@ -774,7 +832,7 @@ Clipboard_CreateCGImageFromPasteboard	(CGImageRef&		outImage,
 	Boolean					result = false;
 	
 	
-	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.image"), kUTTypeImage),
+	if (Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.image"), kUTTypeImage), 0/* which item, or zero to check them all */,
 							outUTI, itemID, kPasteboard))
 	{
 		CFDataRef	imageData = nullptr;
@@ -867,7 +925,7 @@ Clipboard_GetData	(Clipboard_DataConstraint	inConstraint,
 	assert(nullptr != inDataSourceOrNull);
 	
 	// NOTE: This returns only the first text format available.
-	isText = Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText),
+	isText = Clipboard_Contains(FUTURE_SYMBOL(CFSTR("public.plain-text"), kUTTypePlainText), 0/* which item, or zero to check them all */,
 								actualTypeName, outConformingItemID, inDataSourceOrNull);
 	if (isText)
 	{

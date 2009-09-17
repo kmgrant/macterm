@@ -279,6 +279,7 @@ daily_build_lineage = [
 notes_by_version = {
     '20090916': [
         'Fixed drag and drop of single files or directories, to type the equivalent pathname text.',
+        'Dragging multiple files and/or folders into a terminal now works; a single line of space-delimited, escaped pathnames is produced.',
     ],
     '20090915': [
         'Fixed the dimming of background terminals to also apply dimming to the color of the matte.',
