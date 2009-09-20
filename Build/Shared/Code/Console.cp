@@ -49,19 +49,16 @@
 
 #pragma mark Constants
 
-#define DEBUGGING_LOG_FILE_NAME				"\p! MacTelnet Debugging Log"
-#define DEBUGGING_CONSOLE_NAME				"Standard Error"
-#define DEBUGGING_CONSOLE_NAME_ALTERNATE	"Debugging Console"
 #define DEBUGGING_PREFIX_MAX				200
 #define DEBUGGING_SPACES_PER_INDENT			4
 
 #pragma mark Variables
+namespace {
 
-namespace // an unnamed namespace is the preferred replacement for "static" declarations in C++
-{
-	SInt16		gIndentationLevel = 0;
-	char		gIndentPrefix[DEBUGGING_PREFIX_MAX]; // arbitrary size
-	Boolean		gConsoleInitialized = false;
+SInt16		gIndentationLevel = 0;
+char		gIndentPrefix[DEBUGGING_PREFIX_MAX]; // arbitrary size
+Boolean		gConsoleInitialized = false;
+
 }
 
 
