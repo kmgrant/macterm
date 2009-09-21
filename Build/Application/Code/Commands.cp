@@ -3,7 +3,7 @@
 	Commands.cp
 	
 	MacTelnet
-		© 1998-2008 by Kevin Grant.
+		© 1998-2009 by Kevin Grant.
 		© 2001-2003 by Ian Anderson.
 		© 1986-1994 University of Illinois Board of Trustees
 		(see About box for full list of U of I contributors).
@@ -73,6 +73,7 @@ extern "C"
 #include "Clipboard.h"
 #include "CommandLine.h"
 #include "ContextualMenuBuilder.h"
+#include "DebugInterface.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "Folder.h"
@@ -1096,6 +1097,10 @@ Commands_ExecuteByID	(UInt32		inCommandID)
 		case kCommandShowKeypad:
 			// in the Cocoa implementation this really means “show or activate”
 			Keypads_SetVisible(kKeypads_WindowTypeVT220Keys, true);
+			break;
+		
+		case kCommandDebuggingOptions:
+			DebugInterface_Display();
 			break;
 		
 		case kCommandMainHelp:

@@ -20,6 +20,7 @@
 		0A766E0B0FB54D8E00259E56 /* kvp.py in pymactelnet-file */ = {isa = PBXBuildFile; fileRef = 0A766E0A0FB54D8E00259E56 /* kvp.py */; };
 		0A983AA70D11090A0054B4D2 /* Quills.i in Sources */ = {isa = PBXBuildFile; fileRef = 0ACE9A7A0A9EE48B00C693D7 /* Quills.i */; };
 		0AB3B2670F0C1B92000559AB /* __init__.py in pymactelnet */ = {isa = PBXBuildFile; fileRef = 0AB3B2640F0C1B69000559AB /* __init__.py */; };
+		0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */ = {isa = PBXBuildFile; fileRef = 0ABD01CF1068000A00BBB87A /* DebugInterface.mm */; };
 		0AC6A4EF0AC4D25500FF6FC6 /* QuillsTerminal.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A4E00AC4D23C00FF6FC6 /* QuillsTerminal.cp */; };
 		0AC6A6110AC4E46900FF6FC6 /* QuillsSession.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0AC6A6000AC4E3E500FF6FC6 /* QuillsSession.cp */; };
 		0AC6BADC0A8C0BA000AFF37A /* UniversalPrint.cp in Sources */ = {isa = PBXBuildFile; fileRef = 0A46FE09055432A400ACDF3A /* UniversalPrint.cp */; };
@@ -485,6 +486,9 @@
 		0ABC0CFF0A45007A009D07FC /* PrefPanelFormats.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PrefPanelFormats.h; path = Application/Code/PrefPanelFormats.h; sourceTree = "<group>"; };
 		0ABC0D230A4503A3009D07FC /* PrefPanelSessions.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelSessions.cp; path = Application/Code/PrefPanelSessions.cp; sourceTree = "<group>"; };
 		0ABC0D3D0A45041D009D07FC /* PrefPanelTerminals.cp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = PrefPanelTerminals.cp; path = Application/Code/PrefPanelTerminals.cp; sourceTree = "<group>"; };
+		0ABD01CF1068000A00BBB87A /* DebugInterface.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = DebugInterface.mm; path = Application/Code/DebugInterface.mm; sourceTree = "<group>"; };
+		0ABD01D11068002C00BBB87A /* DebugInterface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DebugInterface.h; path = Application/Code/DebugInterface.h; sourceTree = "<group>"; };
+		0ABD01D7106800F700BBB87A /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/DebugInterfaceCocoa.nib; sourceTree = "<group>"; };
 		0AC0D8B00F7408AD004F9709 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/ServerBrowserCocoa.nib; sourceTree = "<group>"; };
 		0AC1FAF30D1992D600ED3102 /* _Quills.so */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = _Quills.so; sourceTree = BUILT_PRODUCTS_DIR; };
 		0AC57BC50B1AE73B000F0250 /* English */ = {isa = PBXFileReference; lastKnownFileType = wrapper.nib; name = English; path = Application/Resources/English.lproj/MainMenus.nib; sourceTree = "<group>"; };
@@ -700,6 +704,7 @@
 				0A46FDC3055432A400ACDF3A /* Commands.cp */,
 				0A3D04BF0A4CEB3E00A79DDF /* CommonEventHandlers.cp */,
 				0A46FDC9055432A400ACDF3A /* ContextualMenuBuilder.cp */,
+				0ABD01CF1068000A00BBB87A /* DebugInterface.mm */,
 				0A46FDCF055432A400ACDF3A /* DialogTransitions.cp */,
 				0A46FDD0055432A400ACDF3A /* DialogUtilities.cp */,
 				0A46FDD1055432A400ACDF3A /* DNR.cp */,
@@ -769,6 +774,7 @@
 				0A4603CC0554376100ACDF3A /* ConstantsRegistry.h */,
 				0A4603CF0554376100ACDF3A /* ContextualMenuBuilder.h */,
 				0A4603D30554376100ACDF3A /* Cursors.h */,
+				0ABD01D11068002C00BBB87A /* DebugInterface.h */,
 				0A4603D70554376100ACDF3A /* DialogTransitions.h */,
 				0A4603D80554376100ACDF3A /* DialogUtilities.h */,
 				0A4603D90554376100ACDF3A /* DNR.h */,
@@ -922,6 +928,7 @@
 		0AFF112F0AF4202B006CCA34 /* NIBs */ = {
 			isa = PBXGroup;
 			children = (
+				0ABD01D6106800F700BBB87A /* DebugInterfaceCocoa.nib */,
 				0A7530D10580470F00BCC5E4 /* MenuForDockIcon.nib */,
 				0AC57BC40B1AE73B000F0250 /* MainMenus.nib */,
 				0ADC6B4008739552000A7EFC /* MainMenuHelp.nib */,
@@ -1390,6 +1397,7 @@
 				0AF502370F872D4C0068CB19 /* CFRetainRelease.cp in Sources */,
 				0A4C9D250FE9B95F005EAE9D /* PrefPanelWorkspaces.cp in Sources */,
 				0A64C5EB1059E423005B8A48 /* StreamCapture.cp in Sources */,
+				0ABD01D01068000A00BBB87A /* DebugInterface.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1578,6 +1586,14 @@
 				0AB64A94057819E5005702BA /* English */,
 			);
 			name = InfoWindow.nib;
+			sourceTree = "<group>";
+		};
+		0ABD01D6106800F700BBB87A /* DebugInterfaceCocoa.nib */ = {
+			isa = PBXVariantGroup;
+			children = (
+				0ABD01D7106800F700BBB87A /* English */,
+			);
+			name = DebugInterfaceCocoa.nib;
 			sourceTree = "<group>";
 		};
 		0AC0D8AF0F7408AD004F9709 /* ServerBrowserCocoa.nib */ = {

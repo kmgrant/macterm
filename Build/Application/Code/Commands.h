@@ -234,6 +234,9 @@ MacTelnet commands, such as Cut, Copy, Paste or Undo).
 #define kCommandShowKeypad						'ShKp'
 #define kCommandSessionByWindowName				'Wind'
 
+// Debug menu
+#define kCommandDebuggingOptions				'Dbug'
+
 // Help menu
 #define kCommandMainHelp						kHICommandAppHelp
 #define kCommandContextSensitiveHelp			'?Ctx'

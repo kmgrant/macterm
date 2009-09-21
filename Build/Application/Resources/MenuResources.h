@@ -53,6 +53,7 @@
 #define	kMenuIDTerminal				516
 #define	kMenuIDKeys					517
 #define	kMenuIDWindow				518
+#define	kMenuIDDebug				519
 #define	kMenuIDScripts				520
 #define	kMenuIDContextual			521
 #define	kMenuIDMacros				522

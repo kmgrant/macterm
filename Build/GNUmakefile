@@ -198,6 +198,7 @@ English.lproj/AlertMessages.nib \
 English.lproj/Clipboard.nib \
 English.lproj/ColorBox.nib \
 English.lproj/CommandLineCocoa.nib \
+English.lproj/DebugInterfaceCocoa.nib \
 English.lproj/FindDialog.nib \
 English.lproj/GenericDialog.nib \
 English.lproj/InfoWindow.nib \

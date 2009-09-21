@@ -72,6 +72,7 @@
 
 // MacTelnet includes
 #include "Commands.h"
+#include "DebugInterface.h"
 #include "DialogUtilities.h"
 #include "EventLoop.h"
 #include "Folder.h"
@@ -6003,7 +6004,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< standard handler transition from state", inOldNew.first);
-	//Console_WriteValueFourChars(">>>     standard handler transition to state  ", inOldNew.second);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     standard handler transition to state  ", inOldNew.second);
+	}
 	
 	// decide what to do based on the proposed transition
 	//Console_WriteValueFourChars("WARNING, no known actions associated with new terminal state", inOldNew.second);
@@ -6159,7 +6163,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< dumb terminal transition from state", inOldNew.first);
-	//Console_WriteValueFourChars(">>>     dumb terminal transition to state  ", inOldNew.second);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     dumb terminal transition to state  ", inOldNew.second);
+	}
 	
 	// decide what to do based on the proposed transition
 	result = invokeEmulatorStateTransitionProc
@@ -6462,7 +6469,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT100 ANSI transition from state", inOldNew.first);
-	//Console_WriteValueFourChars(">>>     VT100 ANSI transition to state  ", inOldNew.second);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     VT100 ANSI transition to state  ", inOldNew.second);
+	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -7179,7 +7189,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT100 VT52 transition from state", inOldNew.first);
-	//Console_WriteValueFourChars(">>>     VT100 VT52 transition to state  ", inOldNew.second);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     VT100 VT52 transition to state  ", inOldNew.second);
+	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -7540,7 +7553,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT102 transition from state", inOldNew.first);
-	//Console_WriteValueFourChars(">>>     VT102 transition to state  ", inOldNew.second);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     VT102 transition to state  ", inOldNew.second);
+	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -7651,7 +7667,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< VT220 transition from state", inOldNew.first);
-	//Console_WriteValueFourChars(">>>     VT220 transition to state  ", inOldNew.second);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     VT220 transition to state  ", inOldNew.second);
+	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
@@ -7794,7 +7813,10 @@ stateTransition		(My_ScreenBufferPtr			inDataPtr,
 	
 	// debug
 	//Console_WriteValueFourChars("    <<< XTerm Window Alteration transition from state", inOldNew.first);
-	//Console_WriteValueFourChars(">>>     XTerm Window Alteration transition to state  ", inOldNew.second);
+	if (DebugInterface_LogsTerminalState())
+	{
+		Console_WriteValueFourChars(">>>     XTerm Window Alteration transition to state  ", inOldNew.second);
+	}
 	
 	// decide what to do based on the proposed transition
 	// INCOMPLETE
