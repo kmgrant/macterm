@@ -2354,7 +2354,10 @@ Terminal_EmulatorProcessData	(TerminalScreenRef	inRef,
 				
 				
 				// debugging only
-				//Console_WriteValueCharacter("received", *ptr);
+				if (DebugInterface_LogsTerminalInputChar())
+				{
+					Console_WriteValueCharacter("terminal loop: received character", *ptr);
+				}
 				
 				// find a new state, which may or may not interrupt the
 				// state that is currently forming

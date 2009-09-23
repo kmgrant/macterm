@@ -28,15 +28,15 @@
 				<string key="NSClassName">NSApplication</string>
 			</object>
 			<object class="NSWindowTemplate" id="1047098468">
-				<int key="NSWindowStyleMask">8347</int>
+				<int key="NSWindowStyleMask">8339</int>
 				<int key="NSWindowBacking">2</int>
-				<string key="NSWindowRect">{{191, 838}, {300, 54}}</string>
+				<string key="NSWindowRect">{{191, 818}, {300, 74}}</string>
 				<int key="NSWTFlags">-469761024</int>
 				<string key="NSWindowTitle">Debugging Options</string>
 				<string key="NSWindowClass">NSPanel</string>
 				<nil key="NSViewClass"/>
-				<string key="NSWindowContentMaxSize">{300, 54}</string>
-				<string key="NSWindowContentMinSize">{300, 54}</string>
+				<string key="NSWindowContentMaxSize">{300, 74}</string>
+				<string key="NSWindowContentMinSize">{300, 74}</string>
 				<object class="NSView" key="NSWindowView" id="64225887">
 					<reference key="NSNextResponder"/>
 					<int key="NSvFlags">256</int>
@@ -44,7 +44,7 @@
 						<object class="NSButton" id="301053687">
 							<reference key="NSNextResponder" ref="64225887"/>
 							<int key="NSvFlags">268</int>
-							<string key="NSFrame">{{18, 18}, {264, 18}}</string>
+							<string key="NSFrame">{{18, 38}, {264, 18}}</string>
 							<reference key="NSSuperview" ref="64225887"/>
 							<bool key="NSViewIsLayerTreeHost">YES</bool>
 							<array key="NSViewContentFilters">
@@ -58,7 +58,7 @@
 								<int key="NSCellFlags">-2080244224</int>
 								<int key="NSCellFlags2">0</int>
 								<string key="NSContents">Log Terminal State</string>
-								<object class="NSFont" key="NSSupport">
+								<object class="NSFont" key="NSSupport" id="569083415">
 									<string key="NSName">LucidaGrande</string>
 									<double key="NSSize">13</double>
 									<int key="NSfFlags">1044</int>
@@ -66,11 +66,11 @@
 								<reference key="NSControlView" ref="301053687"/>
 								<int key="NSButtonFlags">1211912703</int>
 								<int key="NSButtonFlags2">2</int>
-								<object class="NSCustomResource" key="NSNormalImage">
+								<object class="NSCustomResource" key="NSNormalImage" id="157475183">
 									<string key="NSClassName">NSImage</string>
 									<string key="NSResourceName">NSSwitch</string>
 								</object>
-								<object class="NSButtonImageSource" key="NSAlternateImage">
+								<object class="NSButtonImageSource" key="NSAlternateImage" id="188520896">
 									<string key="NSImageName">NSSwitch</string>
 								</object>
 								<string key="NSAlternateContents"/>
@@ -79,14 +79,43 @@
 								<int key="NSPeriodicInterval">25</int>
 							</object>
 						</object>
+						<object class="NSButton" id="971188678">
+							<reference key="NSNextResponder" ref="64225887"/>
+							<int key="NSvFlags">268</int>
+							<string key="NSFrame">{{18, 18}, {264, 18}}</string>
+							<reference key="NSSuperview" ref="64225887"/>
+							<bool key="NSViewIsLayerTreeHost">YES</bool>
+							<array key="NSViewContentFilters">
+								<object class="CIColorInvert">
+									<bool key="CIEnabled">YES</bool>
+								</object>
+							</array>
+							<int key="NSViewLayerContentsRedrawPolicy">2</int>
+							<bool key="NSEnabled">YES</bool>
+							<object class="NSButtonCell" key="NSCell" id="105382666">
+								<int key="NSCellFlags">-2080244224</int>
+								<int key="NSCellFlags2">0</int>
+								<string key="NSContents">Log Terminal Input Characters</string>
+								<reference key="NSSupport" ref="569083415"/>
+								<reference key="NSControlView" ref="971188678"/>
+								<int key="NSButtonFlags">1211912703</int>
+								<int key="NSButtonFlags2">2</int>
+								<reference key="NSNormalImage" ref="157475183"/>
+								<reference key="NSAlternateImage" ref="188520896"/>
+								<string key="NSAlternateContents"/>
+								<string key="NSKeyEquivalent"/>
+								<int key="NSPeriodicDelay">200</int>
+								<int key="NSPeriodicInterval">25</int>
+							</object>
+						</object>
 					</array>
-					<string key="NSFrameSize">{300, 54}</string>
+					<string key="NSFrameSize">{300, 74}</string>
 					<reference key="NSSuperview"/>
 					<int key="NSViewLayerContentsRedrawPolicy">2</int>
 				</object>
 				<string key="NSScreenRect">{{0, 0}, {1920, 1178}}</string>
-				<string key="NSMinSize">{300, 73}</string>
-				<string key="NSMaxSize">{300, 73}</string>
+				<string key="NSMinSize">{300, 93}</string>
+				<string key="NSMaxSize">{300, 93}</string>
 				<string key="NSFrameAutosaveName">Debugging</string>
 			</object>
 		</array>
@@ -115,6 +144,22 @@
 						</object>
 					</object>
 					<int key="connectionID">51</int>
+				</object>
+				<object class="IBConnectionRecord">
+					<object class="IBBindingConnection" key="connection">
+						<string key="label">value: self.logsTerminalInputChar</string>
+						<reference key="source" ref="971188678"/>
+						<reference key="destination" ref="491703908"/>
+						<object class="NSNibBindingConnector" key="connector">
+							<reference key="NSSource" ref="971188678"/>
+							<reference key="NSDestination" ref="491703908"/>
+							<string key="NSLabel">value: self.logsTerminalInputChar</string>
+							<string key="NSBinding">value</string>
+							<string key="NSKeyPath">self.logsTerminalInputChar</string>
+							<int key="NSNibBindingConnectorVersion">2</int>
+						</object>
+					</object>
+					<int key="connectionID">55</int>
 				</object>
 			</array>
 			<object class="IBMutableOrderedSet" key="objectRecords">
@@ -157,6 +202,7 @@
 						<reference key="object" ref="64225887"/>
 						<array class="NSMutableArray" key="children">
 							<reference ref="301053687"/>
+							<reference ref="971188678"/>
 						</array>
 						<reference key="parent" ref="1047098468"/>
 					</object>
@@ -173,36 +219,55 @@
 						<reference key="object" ref="299997940"/>
 						<reference key="parent" ref="301053687"/>
 					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">52</int>
+						<reference key="object" ref="971188678"/>
+						<array class="NSMutableArray" key="children">
+							<reference ref="105382666"/>
+						</array>
+						<reference key="parent" ref="64225887"/>
+					</object>
+					<object class="IBObjectRecord">
+						<int key="objectID">53</int>
+						<reference key="object" ref="105382666"/>
+						<reference key="parent" ref="971188678"/>
+					</object>
 				</array>
 			</object>
 			<dictionary class="NSMutableDictionary" key="flattenedProperties">
 				<string key="-3.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="-3.ImportedFromIB2"/>
-				<string key="1.IBEditorWindowLastContentRect">{{948, 868}, {300, 54}}</string>
+				<string key="1.IBEditorWindowLastContentRect">{{948, 848}, {300, 74}}</string>
 				<string key="1.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
-				<string key="1.IBWindowTemplateEditedContentRect">{{948, 868}, {300, 54}}</string>
+				<string key="1.IBWindowTemplateEditedContentRect">{{948, 848}, {300, 74}}</string>
 				<boolean value="YES" key="1.ImportedFromIB2"/>
 				<boolean value="YES" key="1.windowTemplate.hasMaxSize"/>
 				<boolean value="YES" key="1.windowTemplate.hasMinSize"/>
-				<string key="1.windowTemplate.maxSize">{300, 54}</string>
-				<string key="1.windowTemplate.minSize">{300, 54}</string>
+				<string key="1.windowTemplate.maxSize">{300, 74}</string>
+				<string key="1.windowTemplate.minSize">{300, 74}</string>
 				<string key="2.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<boolean value="YES" key="2.ImportedFromIB2"/>
 				<string key="47.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 				<real value="0.0" key="47.IBViewIntegration.shadowBlurRadius"/>
-				<object class="NSColor" key="47.IBViewIntegration.shadowColor">
+				<object class="NSColor" key="47.IBViewIntegration.shadowColor" id="620740402">
 					<int key="NSColorSpace">3</int>
 					<bytes key="NSWhite">MAA</bytes>
 				</object>
 				<real value="0.0" key="47.IBViewIntegration.shadowOffsetHeight"/>
 				<real value="0.0" key="47.IBViewIntegration.shadowOffsetWidth"/>
 				<string key="48.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<string key="52.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
+				<real value="0.0" key="52.IBViewIntegration.shadowBlurRadius"/>
+				<reference key="52.IBViewIntegration.shadowColor" ref="620740402"/>
+				<real value="0.0" key="52.IBViewIntegration.shadowOffsetHeight"/>
+				<real value="0.0" key="52.IBViewIntegration.shadowOffsetWidth"/>
+				<string key="53.IBPluginDependency">com.apple.InterfaceBuilder.CocoaPlugin</string>
 			</dictionary>
 			<dictionary class="NSMutableDictionary" key="unlocalizedProperties"/>
 			<nil key="activeLocalization"/>
 			<dictionary class="NSMutableDictionary" key="localizations"/>
 			<nil key="sourceID"/>
-			<int key="maxID">51</int>
+			<int key="maxID">55</int>
 		</object>
 		<object class="IBClassDescriber" key="IBDocument.Classes">
 			<array class="NSMutableArray" key="referencedPartialClassDescriptions">

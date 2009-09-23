@@ -55,7 +55,9 @@ changes to an interface declared in a ".mm" file.
 // the following MUST match what is in "DebugInterfaceCocoa.nib"
 + (id)		sharedDebugInterfacePanelController;
 // accessors
+- (BOOL)	logsTerminalInputChar;
 - (BOOL)	logsTerminalState;
+- (void)	setLogsTerminalInputChar:(BOOL)flag; // binding
 - (void)	setLogsTerminalState:(BOOL)flag; // binding
 @end
 
@@ -64,6 +66,7 @@ changes to an interface declared in a ".mm" file.
 #pragma mark Variables
 
 // These are exposed for maximum efficiency.
+extern Boolean		gDebugInterface_LogsTerminalInputChar;
 extern Boolean		gDebugInterface_LogsTerminalState;
 
 
@@ -71,10 +74,20 @@ extern Boolean		gDebugInterface_LogsTerminalState;
 #pragma mark Public Methods
 
 void
-	DebugInterface_Display				();
+	DebugInterface_Display					();
 
 inline Boolean
-	DebugInterface_LogsTerminalState	()
+	DebugInterface_LogsTerminalInputChar	()
+	{
+	#ifndef NDEBUG
+		return gDebugInterface_LogsTerminalInputChar;
+	#else
+		return false;
+	#endif
+	}
+
+inline Boolean
+	DebugInterface_LogsTerminalState		()
 	{
 	#ifndef NDEBUG
 		return gDebugInterface_LogsTerminalState;

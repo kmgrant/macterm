@@ -43,6 +43,7 @@
 
 
 #pragma mark Variables
+Boolean		gDebugInterface_LogsTerminalInputChar = false;
 Boolean		gDebugInterface_LogsTerminalState = false;
 
 
@@ -87,6 +88,29 @@ init
 	self = [super initWithWindowNibName:@"DebugInterfaceCocoa"];
 	return self;
 }
+
+
+/*!
+Accessor.
+
+(4.0)
+*/
+- (BOOL)
+logsTerminalInputChar
+{
+	return gDebugInterface_LogsTerminalInputChar;
+}
+- (void)
+setLogsTerminalInputChar:(BOOL)		flag
+{
+	if (flag != gDebugInterface_LogsTerminalInputChar)
+	{
+		if (flag) Console_WriteLine("started logging of terminal input characters");
+		else Console_WriteLine("stopped logging of terminal input characters");
+		
+		gDebugInterface_LogsTerminalInputChar = flag;
+	}
+}// setLogsTerminalInputChar:
 
 
 /*!
