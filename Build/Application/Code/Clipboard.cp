@@ -631,8 +631,10 @@ Clipboard_CreateCFStringFromPasteboard	(CFStringRef&		outCFString,
 	outCFString = nullptr; // initially...
 	outUTI = nullptr; // initially...
 	
+	// the data could be out of date if another application changed it...resync
+	(PasteboardSyncFlags)PasteboardSynchronize(kPasteboard);
+	
 	error = PasteboardGetItemCount(inPasteboardOrNull, &totalItems);
-	assert_noerr(error);
 	if (totalItems > 0)
 	{
 		// assemble the text representations of all items into one string

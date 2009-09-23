@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090923',
     '20090917',
     '20090916',
     '20090915',
@@ -278,6 +279,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090923': [
+        'Fixed a possible crash if a Paste was done too quickly after copying text from another application.',
+    ],
     '20090917': [
         'Fixed a possible crash that depended on the current state of the system-wide Clipboard.',
     ],
