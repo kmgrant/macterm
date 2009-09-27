@@ -701,7 +701,7 @@ public:
 	IMPORTANT:  It may be useful (and implemented so as) to retain iterators.
 				However, lines can move between the two buffers, which screws
 				up the iterators, as they assume screen lines; and lines can
-				be deleted.  The insertNewLines() routine is the ONLY place
+				be deleted.  The screen...() routines are the ONLY places
 				these manipulations are ever performed, so that it is easy to
 				check and resynchronize retained iterators at the same time.
 				TO MAKE LIFE EASY, DON’T MESS WITH THE BUFFER LISTS ELSEWHERE.
@@ -712,7 +712,7 @@ public:
 																	//!  at the home line and growing outwards from one another
 	My_ScreenBufferLineList				screenBuffer;				//!< a double-ended queue containing all the visible text for the terminal;
 																	//!  insertion or deletion from either end is fast, other operations are slow;
-																	//!  NOTE you should ONLY modify this using insertNewLines()!
+																	//!  NOTE you should ONLY modify this using screen...() routines!
 	std::string							bytesToEcho;				//!< captures contiguous blocks of text to be translated and echoed
 	
 	My_TabStopList						tabSettings;				//!< array of characters representing tab stops; values are either kMy_TabClear
@@ -1099,8 +1099,6 @@ inline My_LineIteratorPtr	getLineIterator							(Terminal_LineRef);
 My_ScreenBufferPtr			getVirtualScreenData					(TerminalScreenRef);
 void						highlightLED							(My_ScreenBufferPtr, SInt16);
 void						initializeParserStateStack				(My_EmulatorPtr);
-Boolean						insertNewLines							(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type,
-																	 Boolean);
 void						locateCursorLine						(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&);
 void						locateScrollingRegion					(My_ScreenBufferPtr, My_ScreenBufferLineList::iterator&,
 																	 My_ScreenBufferLineList::iterator&);
@@ -1124,8 +1122,10 @@ void						resetTerminal							(My_ScreenBufferPtr);
 SessionRef					returnListeningSession					(My_ScreenBufferPtr);
 Terminal_EmulatorType		returnTerminalType						(Terminal_Emulator);
 Terminal_EmulatorVariant	returnTerminalVariant					(Terminal_Emulator);
-void						saveToScrollback						(My_ScreenBufferPtr);
-void						scrollTerminalBuffer					(My_ScreenBufferPtr);
+Boolean						screenCopyLinesToScrollback				(My_ScreenBufferPtr);
+Boolean						screenInsertNewLines					(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
+Boolean						screenMoveLinesToScrollback				(My_ScreenBufferPtr, My_ScreenBufferLineList::size_type);
+void						screenScroll							(My_ScreenBufferPtr);
 void						setCursorVisible						(My_ScreenBufferPtr, Boolean);
 void						setScrollbackSize						(My_ScreenBufferPtr, UInt16);
 // IMPORTANT: Attribute bit manipulation is fully described in "TerminalTextAttributes.typedef.h".
@@ -4131,7 +4131,7 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 		{
 			// if more lines are in the screen buffer than before,
 			// allocate space for them (but don’t scroll them off!)
-			Boolean		insertOK = insertNewLines(dataPtr, kLineDelta, true/* append only */);
+			Boolean		insertOK = screenInsertNewLines(dataPtr, kLineDelta);
 			
 			
 			unless (insertOK) result = kTerminal_ResultNotEnoughMemory;
@@ -4144,7 +4144,7 @@ Terminal_SetVisibleRowCount		(TerminalScreenRef	inRef,
 			// main screen, which is basically undesirable most of the time)
 			if (dataPtr->text.scrollback.enabled)
 			{
-				(Boolean)insertNewLines(dataPtr, kOriginalNumberOfLines, false/* append only */);
+				(Boolean)screenCopyLinesToScrollback(dataPtr);
 			}
 		#endif
 			
@@ -4972,7 +4972,7 @@ selfRef(REINTERPRET_CAST(this, TerminalScreenRef))
 	
 	// now “append” the desired number of main screen lines, which will have
 	// the effect of allocating a screen buffer of the right size
-	unless (insertNewLines(this, returnScreenRows(inTerminalConfig), true/* append only */))
+	unless (screenInsertNewLines(this, returnScreenRows(inTerminalConfig)))
 	{
 		throw kTerminal_ResultNotEnoughMemory;
 	}
@@ -7975,7 +7975,7 @@ bufferEraseFromCursorColumnToLineEnd	(My_ScreenBufferPtr		inDataPtr)
 		(inDataPtr->mayNeedToSaveToScrollback))
 	{
 		inDataPtr->mayNeedToSaveToScrollback = false;
-		saveToScrollback(inDataPtr);
+		screenCopyLinesToScrollback(inDataPtr);
 	}
 	
 	// figure out where the cursor is, but first force it to
@@ -8035,7 +8035,7 @@ bufferEraseFromCursorToEnd  (My_ScreenBufferPtr  inDataPtr)
 		(inDataPtr->mayNeedToSaveToScrollback))
 	{
 		inDataPtr->mayNeedToSaveToScrollback = false;
-		saveToScrollback(inDataPtr);
+		screenCopyLinesToScrollback(inDataPtr);
 	}
 	
 	// blank out current line from cursor to end, and update
@@ -8262,7 +8262,7 @@ bufferEraseVisibleScreenWithUpdate		(My_ScreenBufferPtr		inDataPtr)
 	// save screen contents in scrollback buffer, if appropriate
 	if (inDataPtr->saveToScrollbackOnClear)
 	{
-		saveToScrollback(inDataPtr);
+		screenCopyLinesToScrollback(inDataPtr);
 	}
 	
 	// clear buffer
@@ -10401,170 +10401,6 @@ initializeParserStateStack	(My_EmulatorPtr		inDataPtr)
 
 
 /*!
-Modifies the screen and/or scrollback buffers according to
-the given parameters.
-
-If "inAppendOnly" is true, the new lines will expand the
-screen buffer *without* affecting the scrollback buffer at
-all; if false, the screen buffer size remains effectively
-unchanged, as the topmost (first) screen line will be moved
-to the scrollback before each new line is appended.
-
-The resultant lines may share a large memory block.  So, it
-is usually better to invoke this routine once for the number
-of lines you’ll ultimately need, than to invoke it many
-times to add a single line.
-
-Returns "true" only if successful.
-
-(3.0)
-*/
-Boolean
-insertNewLines	(My_ScreenBufferPtr						inDataPtr,
-				 My_ScreenBufferLineList::size_type		inNumberOfElements,
-				 Boolean								inAppendOnly)
-{
-	Boolean		result = true;
-	
-	
-	//Console_WriteValue("request to insert new lines", inNumberOfElements);
-	//Console_WriteValue("append lines only", inAppendOnly);
-	if (inNumberOfElements != 0)
-	{
-		Boolean		recycleLines = false;
-		
-		
-		if (inAppendOnly)
-		{
-			My_ScreenBufferLineList::size_type   kOldSize = inDataPtr->screenBuffer.size();
-			
-			
-			// start by allocating more lines if necessary, or freeing unneeded lines
-			if (inNumberOfElements != 0)
-			{
-				inDataPtr->screenBuffer.resize(kOldSize + inNumberOfElements);
-				
-				// make sure the cursor line doesn’t fall off the end
-				if (inDataPtr->current.cursorY >= inDataPtr->screenBuffer.size())
-				{
-					moveCursorY(inDataPtr, inDataPtr->screenBuffer.size() - 1);
-				}
-				
-				// stop now if the resize failed
-				if (inDataPtr->screenBuffer.size() != (kOldSize + inNumberOfElements))
-				{
-					// failed to resize!
-					result = false;
-				}
-				else
-				{
-					//Console_WriteValue("append new lines", inNumberOfElements);
-					//Console_WriteValue("final size", inDataPtr->screenBuffer.size());
-				}
-			}
-		}
-		else
-		{
-			register My_ScreenBufferLineList::size_type		i = 0;
-			
-			
-			// scrolling will be done; figure out whether or not to recycle old lines
-			recycleLines = (!(inDataPtr->text.scrollback.enabled)) ||
-							(!(inDataPtr->scrollbackBuffer.empty()) &&
-								(inDataPtr->scrollbackBuffer.size() >= inDataPtr->text.scrollback.numberOfRowsPermitted));
-			
-			// adjust screen and scrollback buffers appropriately; new lines
-			// will either be rotated in from the oldest scrollback, or
-			// allocated anew; in either case, they'll end up initialized
-			if (recycleLines)
-			{
-				//Console_WriteValue("recycled lines", inNumberOfElements);
-				
-				// get the line destined for the new bottom of the main screen;
-				// either extract it from elsewhere, or allocate a new line
-				for (i = 0; i < inNumberOfElements; ++i)
-				{
-					// extract the oldest line
-					assert(!inDataPtr->screenBuffer.empty());
-					if (inDataPtr->scrollbackBuffer.empty())
-					{
-						// make the oldest screen line the newest one
-						inDataPtr->screenBuffer.splice(inDataPtr->screenBuffer.end()/* the next newest screen line */,
-														inDataPtr->screenBuffer/* the list to move from */,
-														inDataPtr->screenBuffer.begin()/* the line to move */);
-					}
-					else
-					{
-						My_ScreenBufferLineList::iterator	oldestScrollbackLine;
-						
-						
-						// make the oldest screen line the newest scrollback line
-						inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
-															inDataPtr->screenBuffer/* the list to move from */,
-															inDataPtr->screenBuffer.begin()/* the line to move */);
-						
-						// end() points one past the end, so nudge it back
-						oldestScrollbackLine = inDataPtr->scrollbackBuffer.end();
-						std::advance(oldestScrollbackLine, -1);
-						
-						// make the oldest scrollback line the newest screen line
-						inDataPtr->screenBuffer.splice(inDataPtr->screenBuffer.end()/* the next newest screen line */,
-														inDataPtr->scrollbackBuffer/* the list to move from */,
-														oldestScrollbackLine/* the line to move */);
-					}
-					
-					// the recycled line may have data in it, so clear it out
-					inDataPtr->screenBuffer.back().structureInitialize();
-				}
-				
-				//Console_WriteValue("post-recycle scrollback size", inDataPtr->scrollbackBuffer.size());
-			}
-			else
-			{
-				//Console_WriteValue("moved-and-reallocated lines", inNumberOfElements);
-				
-				My_ScreenBufferLineList::iterator	pastLastLineToScroll = inDataPtr->screenBuffer.begin();
-				My_ScreenBufferLineList				movedLines;
-				
-				
-				// find the last line that will remain in the screen buffer
-				std::advance(pastLastLineToScroll, inNumberOfElements);
-				
-				// make the oldest screen lines the newest scrollback lines; since the
-				// “front” scrollback line is adjacent to the “front” screen line, a
-				// single splice is wrong; the lines have to insert in reverse order
-				movedLines.splice(movedLines.begin()/* where to insert */,
-									inDataPtr->screenBuffer/* the list to move from */,
-									inDataPtr->screenBuffer.begin()/* the first line to move */,
-									pastLastLineToScroll/* the first line that will not be moved */);
-				movedLines.reverse();
-				inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
-													movedLines/* the list to move from */,
-													movedLines.begin(), movedLines.end());
-				
-				//Console_WriteValue("post-move scrollback size", inDataPtr->scrollbackBuffer.size());
-				
-				// allocate new lines
-				try
-				{
-					inDataPtr->screenBuffer.resize(inDataPtr->screenBuffer.size() + inNumberOfElements);
-				}
-				catch (std::bad_alloc)
-				{
-					// abort
-					result = false;
-				}
-				
-				//Console_WriteValue("post-allocation screen size", inDataPtr->screenBuffer.size());
-			}
-		}
-	}
-	
-	return result;
-}// insertNewLines
-
-
-/*!
 Locates the screen buffer line that the cursor is on,
 providing an iterator into its list (which may be
 past-the-end, that is, invalid).
@@ -10738,7 +10574,7 @@ moveCursorDownOrScroll	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY == inDataPtr->customScrollingRegion.lastRow)
 	{
-		scrollTerminalBuffer(inDataPtr);
+		screenScroll(inDataPtr);
 	}
 	else if (inDataPtr->current.cursorY < (inDataPtr->screenBuffer.size() - 1))
 	{
@@ -11156,24 +10992,30 @@ returnTerminalVariant		(Terminal_Emulator	inEmulator)
 
 
 /*!
-Appends the contents of the visible screen to the scrollback
-buffer, usually in preparation for then blanking the visible
-screen area.
+Appends the visible screen to the scrollback buffer, usually in
+preparation for then blanking the visible screen area.
+
+Returns "true" only if successful.
 
 (3.0)
 */
-void
-saveToScrollback	(My_ScreenBufferPtr		inDataPtr)
+Boolean
+screenCopyLinesToScrollback		(My_ScreenBufferPtr		inDataPtr)
 {
-	//Console_WriteLine("saveToScrollback");
+	Boolean		result = true;
+	
 	
 	if ((inDataPtr->text.scrollback.enabled) &&
 		(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 	{
-		SInt16 const	kLineCount = inDataPtr->screenBuffer.size();
+		SInt16 const			kLineCount = inDataPtr->screenBuffer.size();
+		My_ScreenBufferLine		templateLine;
 		
 		
-		if (insertNewLines(inDataPtr, kLineCount, false/* append only */))
+		inDataPtr->scrollbackBuffer.insert(inDataPtr->scrollbackBuffer.begin(), kLineCount/* number of lines */, templateLine);
+		std::copy(inDataPtr->screenBuffer.rbegin(), inDataPtr->screenBuffer.rend(), inDataPtr->scrollbackBuffer.begin());
+		
+		if (result)
 		{
 			Terminal_ScrollDescription	scrollInfo;
 			
@@ -11184,7 +11026,188 @@ saveToScrollback	(My_ScreenBufferPtr		inDataPtr)
 			changeNotifyForTerminal(inDataPtr, kTerminal_ChangeScrollActivity, &scrollInfo/* context */);
 		}
 	}
-}// saveToScrollback
+	return result;
+}// screenCopyLinesToScrollback
+
+
+/*!
+Modifies only the screen buffer, to include the specified
+number of additional lines (at the end).  The new lines are
+cleared.
+
+This is rarely required, because scrolling will rotate the
+oldest lines to the bottom.  However, if the screen buffer
+becomes physically larger, or a screen is being created for
+the first time, this can be useful.
+
+The resultant lines may share a large memory block.  So, it
+is usually better to invoke this routine once for the number
+of lines you’ll ultimately need, than to invoke it many
+times to add a single line.
+
+Returns "true" only if successful.
+
+(3.0)
+*/
+Boolean
+screenInsertNewLines	(My_ScreenBufferPtr						inDataPtr,
+						 My_ScreenBufferLineList::size_type		inNumberOfElements)
+{
+	Boolean		result = true;
+	
+	
+	//Console_WriteValue("request to insert new lines", inNumberOfElements);
+	if (0 != inNumberOfElements)
+	{
+		My_ScreenBufferLineList::size_type   kOldSize = inDataPtr->screenBuffer.size();
+		
+		
+		// start by allocating more lines if necessary, or freeing unneeded lines
+		inDataPtr->screenBuffer.resize(kOldSize + inNumberOfElements);
+		
+		// make sure the cursor line doesn’t fall off the end
+		if (inDataPtr->current.cursorY >= inDataPtr->screenBuffer.size())
+		{
+			moveCursorY(inDataPtr, inDataPtr->screenBuffer.size() - 1);
+		}
+		
+		// stop now if the resize failed
+		if (inDataPtr->screenBuffer.size() != (kOldSize + inNumberOfElements))
+		{
+			// failed to resize!
+			result = false;
+		}
+		else
+		{
+			//Console_WriteValue("append new lines", inNumberOfElements);
+			//Console_WriteValue("final size", inDataPtr->screenBuffer.size());
+		}
+	}
+	return result;
+}// screenInsertNewLines
+
+
+/*!
+Removes lines from the top of the screen buffer, to the
+adjacent part of the scrollback buffer, and replaces the
+lost lines with blank ones at the bottom (so that the overall
+screen buffer size is unchanged).
+
+The data structures used for the “new” lines may actually
+exist already, stripped from the oldest lines of the
+scrollback buffer.
+
+Returns "true" only if successful.
+
+See also screenCopyLinesToScrollback().
+
+(3.0)
+*/
+Boolean
+screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
+								 My_ScreenBufferLineList::size_type		inNumberOfElements)
+{
+	Boolean		result = true;
+	
+	
+	//Console_WriteValue("request to move lines to the scrollback", inNumberOfElements);
+	if (0 != inNumberOfElements)
+	{
+		Boolean		recycleLines = false;
+		
+		
+		// scrolling will be done; figure out whether or not to recycle old lines
+		recycleLines = (!(inDataPtr->text.scrollback.enabled)) ||
+						(!(inDataPtr->scrollbackBuffer.empty()) &&
+							(inDataPtr->scrollbackBuffer.size() >= inDataPtr->text.scrollback.numberOfRowsPermitted));
+		
+		// adjust screen and scrollback buffers appropriately; new lines
+		// will either be rotated in from the oldest scrollback, or
+		// allocated anew; in either case, they'll end up initialized
+		if (recycleLines)
+		{
+			//Console_WriteValue("recycled lines", inNumberOfElements);
+			
+			// get the line destined for the new bottom of the main screen;
+			// either extract it from elsewhere, or allocate a new line
+			for (register My_ScreenBufferLineList::size_type i = 0; i < inNumberOfElements; ++i)
+			{
+				// extract the oldest line
+				assert(!inDataPtr->screenBuffer.empty());
+				if (inDataPtr->scrollbackBuffer.empty())
+				{
+					// make the oldest screen line the newest one
+					inDataPtr->screenBuffer.splice(inDataPtr->screenBuffer.end()/* the next newest screen line */,
+													inDataPtr->screenBuffer/* the list to move from */,
+													inDataPtr->screenBuffer.begin()/* the line to move */);
+				}
+				else
+				{
+					My_ScreenBufferLineList::iterator	oldestScrollbackLine;
+					
+					
+					// make the oldest screen line the newest scrollback line
+					inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
+														inDataPtr->screenBuffer/* the list to move from */,
+														inDataPtr->screenBuffer.begin()/* the line to move */);
+					
+					// end() points one past the end, so nudge it back
+					oldestScrollbackLine = inDataPtr->scrollbackBuffer.end();
+					std::advance(oldestScrollbackLine, -1);
+					
+					// make the oldest scrollback line the newest screen line
+					inDataPtr->screenBuffer.splice(inDataPtr->screenBuffer.end()/* the next newest screen line */,
+													inDataPtr->scrollbackBuffer/* the list to move from */,
+													oldestScrollbackLine/* the line to move */);
+				}
+				
+				// the recycled line may have data in it, so clear it out
+				inDataPtr->screenBuffer.back().structureInitialize();
+			}
+			
+			//Console_WriteValue("post-recycle scrollback size", inDataPtr->scrollbackBuffer.size());
+		}
+		else
+		{
+			//Console_WriteValue("moved-and-reallocated lines", inNumberOfElements);
+			
+			My_ScreenBufferLineList::iterator	pastLastLineToScroll = inDataPtr->screenBuffer.begin();
+			My_ScreenBufferLineList				movedLines;
+			
+			
+			// find the last line that will remain in the screen buffer
+			std::advance(pastLastLineToScroll, inNumberOfElements);
+			
+			// make the oldest screen lines the newest scrollback lines; since the
+			// “front” scrollback line is adjacent to the “front” screen line, a
+			// single splice is wrong; the lines have to insert in reverse order
+			movedLines.splice(movedLines.begin()/* where to insert */,
+								inDataPtr->screenBuffer/* the list to move from */,
+								inDataPtr->screenBuffer.begin()/* the first line to move */,
+								pastLastLineToScroll/* the first line that will not be moved */);
+			movedLines.reverse();
+			inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
+												movedLines/* the list to move from */,
+												movedLines.begin(), movedLines.end());
+			
+			//Console_WriteValue("post-move scrollback size", inDataPtr->scrollbackBuffer.size());
+			
+			// allocate new lines
+			try
+			{
+				inDataPtr->screenBuffer.resize(inDataPtr->screenBuffer.size() + inNumberOfElements);
+			}
+			catch (std::bad_alloc)
+			{
+				// abort
+				result = false;
+			}
+			
+			//Console_WriteValue("post-allocation screen size", inDataPtr->screenBuffer.size());
+		}
+	}
+	return result;
+}// screenMoveLinesToScrollback
 
 
 /*!
@@ -11193,7 +11216,7 @@ Moves the scrolling region up one line.
 (3.0)
 */
 void
-scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
+screenScroll	(My_ScreenBufferPtr		inDataPtr)
 {
 	if (inDataPtr->current.cursorY < inDataPtr->screenBuffer.size())
 	{
@@ -11201,7 +11224,7 @@ scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 			(inDataPtr->customScrollingRegion == inDataPtr->visibleBoundary.rows))
 		{
 			// scrolling region is entire screen, and lines are being saved off the top
-			(Boolean)insertNewLines(inDataPtr, 1/* number of lines */, false/* append only */);
+			(Boolean)screenMoveLinesToScrollback(inDataPtr, 1/* number of lines */);
 			
 			// displaying right from top of scrollback buffer; topmost line being shown
 			// has in fact vanished; update the display to show this
@@ -11239,7 +11262,7 @@ scrollTerminalBuffer	(My_ScreenBufferPtr		inDataPtr)
 			bufferRemoveLines(inDataPtr, 1/* number of lines */, scrollingRegionBegin);
 		}
 	}
-}// scrollTerminalBuffer
+}// screenScroll
 
 
 /*!

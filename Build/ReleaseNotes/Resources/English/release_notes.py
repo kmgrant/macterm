@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090926',
     '20090923',
     '20090917',
     '20090916',
@@ -279,6 +280,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090926': [
+        'Fixed accidental clear of the terminal in certain situations, such as inserting lines in a text editor (Trac #35).',
+    ],
     '20090923': [
         'Fixed a possible crash if a Paste was done too quickly after copying text from another application.',
     ],
