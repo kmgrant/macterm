@@ -11015,6 +11015,11 @@ screenCopyLinesToScrollback		(My_ScreenBufferPtr		inDataPtr)
 		inDataPtr->scrollbackBuffer.insert(inDataPtr->scrollbackBuffer.begin(), kLineCount/* number of lines */, templateLine);
 		std::copy(inDataPtr->screenBuffer.rbegin(), inDataPtr->screenBuffer.rend(), inDataPtr->scrollbackBuffer.begin());
 		
+		if (inDataPtr->scrollbackBuffer.size() > inDataPtr->text.scrollback.numberOfRowsPermitted)
+		{
+			inDataPtr->scrollbackBuffer.resize(inDataPtr->text.scrollback.numberOfRowsPermitted);
+		}
+		
 		if (result)
 		{
 			Terminal_ScrollDescription	scrollInfo;
@@ -11189,6 +11194,11 @@ screenMoveLinesToScrollback		(My_ScreenBufferPtr						inDataPtr,
 			inDataPtr->scrollbackBuffer.splice(inDataPtr->scrollbackBuffer.begin()/* the next oldest scrollback line */,
 												movedLines/* the list to move from */,
 												movedLines.begin(), movedLines.end());
+			
+			if (inDataPtr->scrollbackBuffer.size() > inDataPtr->text.scrollback.numberOfRowsPermitted)
+			{
+				inDataPtr->scrollbackBuffer.resize(inDataPtr->text.scrollback.numberOfRowsPermitted);
+			}
 			
 			//Console_WriteValue("post-move scrollback size", inDataPtr->scrollbackBuffer.size());
 			

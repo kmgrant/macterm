@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090928',
     '20090926',
     '20090923',
     '20090917',
@@ -280,6 +281,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090928': [
+        'Fixed some cases where the scrollback buffer could grow larger than its specified maximum number of lines.',
+    ],
     '20090926': [
         'Fixed accidental clear of the terminal in certain situations, such as inserting lines in a text editor (Trac #35).',
     ],
