@@ -155,6 +155,7 @@ enum
 	kPreferences_TagTerminalColorANSIMagentaBold		= kCommandColorMagentaEmphasized,	//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSICyanBold			= kCommandColorCyanEmphasized,		//!< data: "RGBColor"
 	kPreferences_TagTerminalColorANSIWhiteBold			= kCommandColorWhiteEmphasized,		//!< data: "RGBColor"
+	kPreferences_TagTerminalImageNormalBackground		= 'imnb',	//!< data: "CFStringRef", an image file URL
 	kPreferences_TagTerminalMarginLeft					= 'mgnl',	//!< data: "Float32", multiplies against font “m” width (even for vertical margins)
 	kPreferences_TagTerminalMarginRight					= 'mgnr',	//!< data: "Float32"
 	kPreferences_TagTerminalMarginTop					= 'mgnt',	//!< data: "Float32"

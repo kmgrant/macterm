@@ -1204,6 +1204,9 @@ Preferences_Init ()
 	My_PreferenceDefinition::create(kPreferences_TagTerminalEmulatorType,
 									CFSTR("terminal-emulator-type"), typeCFStringRef,
 									sizeof(Terminal_Emulator), Quills::Prefs::TERMINAL);
+	My_PreferenceDefinition::create(kPreferences_TagTerminalImageNormalBackground,
+									CFSTR("terminal-image-normal-background-url"), typeCFStringRef,
+									sizeof(CFStringRef), Quills::Prefs::FORMAT);
 	My_PreferenceDefinition::createFlag(kPreferences_TagTerminalLineWrap,
 										CFSTR("terminal-line-wrap"), Quills::Prefs::TERMINAL);
 	My_PreferenceDefinition::create(kPreferences_TagTerminalMarginLeft,
@@ -6171,6 +6174,27 @@ getFormatPreference		(My_ContextInterfaceConstPtr	inContextPtr,
 					}
 					break;
 				
+				case kPreferences_TagTerminalImageNormalBackground:
+					{
+						assert(typeCFStringRef == keyValueType);
+						CFStringRef		valueCFString = inContextPtr->returnStringCopy(keyName);
+						
+						
+						if (nullptr == valueCFString)
+						{
+							result = kPreferences_ResultBadVersionDataNotAvailable;
+						}
+						else
+						{
+							CFStringRef* const	data = REINTERPRET_CAST(outDataPtr, CFStringRef*);
+							
+							
+							*data = valueCFString;
+							// do not release because the string is returned
+						}
+					}
+					break;
+				
 				case kPreferences_TagTerminalMarginLeft:
 				case kPreferences_TagTerminalMarginRight:
 				case kPreferences_TagTerminalMarginTop:
@@ -8499,6 +8523,16 @@ setFormatPreference		(My_ContextInterfacePtr		inContextPtr,
 						CFRelease(colorCFArray), colorCFArray = nullptr;
 					}
 					else result = kPreferences_ResultGenericFailure;
+				}
+				break;
+			
+			case kPreferences_TagTerminalImageNormalBackground:
+				{
+					CFStringRef const* const	data = REINTERPRET_CAST(inDataPtr, CFStringRef const*);
+					
+					
+					assert(typeCFStringRef == keyValueType);
+					inContextPtr->addString(inDataPreferenceTag, keyName, *data);
 				}
 				break;
 			
