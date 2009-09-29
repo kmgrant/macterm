@@ -2955,15 +2955,18 @@ setInheritanceCheckBox		(HIViewWrap		inCheckBox,
 							 SInt32			inValue,
 							 Boolean		inIsDefaultContext)
 {
-	if (inIsDefaultContext)
+	if (IsValidControlHandle(inCheckBox))
 	{
-		SetControl32BitValue(inCheckBox, kControlCheckBoxUncheckedValue);
-		inCheckBox << HIViewWrap_SetActiveState(false);
-	}
-	else
-	{
-		SetControl32BitValue(inCheckBox, inValue);
-		inCheckBox << HIViewWrap_SetActiveState(kControlCheckBoxCheckedValue != inValue);
+		if (inIsDefaultContext)
+		{
+			SetControl32BitValue(inCheckBox, kControlCheckBoxUncheckedValue);
+			inCheckBox << HIViewWrap_SetActiveState(false);
+		}
+		else
+		{
+			SetControl32BitValue(inCheckBox, inValue);
+			inCheckBox << HIViewWrap_SetActiveState(kControlCheckBoxCheckedValue != inValue);
+		}
 	}
 }// setInheritanceCheckBox
 

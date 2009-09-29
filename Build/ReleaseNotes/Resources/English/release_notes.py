@@ -19,6 +19,7 @@ version_lineage = [
 ]
 
 daily_build_lineage = [
+    '20090929',
     '20090928',
     '20090926',
     '20090923',
@@ -281,6 +282,9 @@ daily_build_lineage = [
 ]
 
 notes_by_version = {
+    '20090929': [
+        'Fixed a possible crash when closing the Custom Format sheet.',
+    ],
     '20090928': [
         'Fixed some cases where the scrollback buffer could grow larger than its specified maximum number of lines.',
     ],
