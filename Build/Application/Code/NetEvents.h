@@ -108,6 +108,8 @@ enum
 	kEventNetEvents_HostLookupComplete = 'KDLC'
 };
 
+//@}
+
 //!\name Server Browser Carbon Events
 //@{
 
